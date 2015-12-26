@@ -69,7 +69,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "var name = require('other');" + "name()",
         "goog.provide('module$test');"
             + "goog.require('module$other');"
-            + "var name$$module$test = module$other;"
+            + "var name$$module$test= module$other.default;"
             + "name$$module$test();");
     setFilename("test/sub");
     ProcessEs6ModulesTest.testModules(
@@ -82,7 +82,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
                 + "(function() { name(); })();")),
                 "goog.provide('module$test$sub');"
                 + "goog.require('module$mod$name');"
-                + "var name$$module$test$sub = module$mod$name;"
+                + "var name$$module$test$sub = module$mod$name.default;"
                 + "(function() { name$$module$test$sub(); })();");
   }
 
@@ -91,15 +91,16 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "var name = require('other');" + "exports.foo = 1;",
         "goog.provide('module$test');"
+            + "module$test.default={};"
             + "goog.require('module$other');"
-            + "var name$$module$test = module$other;"
-            + "module$test.foo = 1;");
+            + "var name$$module$test = module$other.default;"
+            + "module$test.default.foo = 1;");
     testModules(
         "var name = require('other');" + "module.exports = function() {};",
         "goog.provide('module$test');"
             + "goog.require('module$other');"
-            + "var name$$module$test = module$other;"
-            + "module$test = function () {};");
+            + "var name$$module$test=module$other.default;"
+            + "module$test.default = function () {};");
   }
 
   public void testPropertyExports() {
@@ -107,9 +108,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "exports.one = 1;" + "module.exports.obj = {};" + "module.exports.obj.two = 2;",
         "goog.provide('module$test');"
-            + "module$test.one = 1;"
-            + "module$test.obj = {};"
-            + "module$test.obj.two = 2;");
+            + "module$test.default = {};"
+            + "module$test.default.one = 1;"
+            + "module$test.default.obj = {};"
+            + "module$test.default.obj.two = 2;");
   }
 
   public void testModuleExportsWrittenWithExportsRefs() {
@@ -117,9 +119,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "exports.one = 1;" + "module.exports = {};",
         "goog.provide('module$test');"
-            + "var exports$$module$test = module$test;"
+            + "module$test.default = {};"
+            + "var exports$$module$test = module$test.default;"
             + "exports$$module$test.one = 1;"
-            + "module$test = {};");
+            + "module$test.default = {};");
   }
 
   public void testVarRenaming() {
@@ -136,9 +139,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "var name = require('other'); exports.foo = 1;",
         "goog.provide('module$test_test');"
+            + "module$test_test.default = {};"
             + "goog.require('module$other');"
-            + "var name$$module$test_test = module$other;"
-            + "module$test_test.foo = 1;");
+            + "var name$$module$test_test = module$other.default;"
+            + "module$test_test.default.foo = 1;");
   }
 
   public void testIndex() {
@@ -146,9 +150,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "var name = require('../other'); exports.bar = 1;",
         "goog.provide('module$foo$index');"
+            + "module$foo$index.default={};"
             + "goog.require('module$other');"
-            + "var name$$module$foo$index = module$other;"
-            + "module$foo$index.bar = 1;");
+            + "var name$$module$foo$index = module$other.default;"
+            + "module$foo$index.default.bar = 1;");
   }
 
   public void testModuleName() {
@@ -157,7 +162,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "var name = require('other');",
         "goog.provide('module$foo$bar');"
             + "goog.require('module$other');"
-            + "var name$$module$foo$bar = module$other;");
+            + "var name$$module$foo$bar = module$other.default;");
     ProcessEs6ModulesTest.testModules(
         this,
         ImmutableList.of(
@@ -165,7 +170,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"), "var name = require('./name');")),
         "goog.provide('module$foo$bar');"
             + "goog.require('module$foo$name');"
-            + "var name$$module$foo$bar = module$foo$name;");
+            + "var name$$module$foo$bar = module$foo$name.default;");
   }
 
   public void testModuleExportsScope() {
@@ -175,13 +180,13 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "module.exports = foo;",
         "goog.provide('module$test');" +
         "var foo$$module$test=function(module){module.exports={}};" +
-        "module$test=foo$$module$test");
+        "module$test.default=foo$$module$test");
     testModules(
         "var foo = function () {var module = {};module.exports = {};};" +
         "module.exports = foo;",
         "goog.provide('module$test');" +
         "var foo$$module$test=function(){var module={};module.exports={}};" +
-        "module$test=foo$$module$test");
+        "module$test.default=foo$$module$test");
     testModules(
         "var foo = function () {if (true) var module = {};" +
         "module.exports = {};};" +
@@ -189,7 +194,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "goog.provide('module$test');" +
         "var foo$$module$test=function(){if(true)var module={};" +
         "module.exports={}};" +
-        "module$test=foo$$module$test");
+        "module$test.default=foo$$module$test");
   }
 
   public void testUMDPatternConversion() {
@@ -204,7 +209,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "  this.foobar = foobar;}",
         "goog.provide('module$test');" +
         "var foobar$$module$test = {foo: 'bar'};" +
-        "module$test = foobar$$module$test;");
+        "module$test.default = foobar$$module$test;");
     testModules(
         "var foobar = {foo: 'bar'};" +
         "if (typeof define === 'function' && define.amd) {" +
@@ -215,7 +220,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "  this.foobar = foobar;}",
         "goog.provide('module$test');" +
         "var foobar$$module$test = {foo: 'bar'};" +
-        "module$test = foobar$$module$test;");
+        "module$test.default = foobar$$module$test;");
     testModules(
         "var foobar = {foo: 'bar'};" +
         "if (typeof module === 'object' && module.exports) {" +
@@ -224,7 +229,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "  define([], function () {return foobar;});}",
         "goog.provide('module$test');" +
         "var foobar$$module$test = {foo: 'bar'};" +
-        "module$test = foobar$$module$test;");
+        "module$test.default = foobar$$module$test;");
   }
 
   public void testEs6ObjectShorthand() {
@@ -239,7 +244,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             + "}",
         "goog.provide('module$test');"
             + "function foo$$module$test() {}"
-            + "module$test = { prop: 'value', foo }");
+            + "module$test.default = { prop: 'value', foo }");
 
     testModules(
         "module.exports = {\n"
@@ -249,7 +254,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             + "  }\n"
             + "};",
         "goog.provide('module$test');"
-            + "module$test = { prop: 'value', foo() { console.log('bar'); }}" );
+            + "module$test.default = { prop: 'value', foo() { console.log('bar'); }}" );
   }
 
   public void testSortInputs() throws Exception {
