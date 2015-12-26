@@ -26,6 +26,8 @@ import com.google.javascript.rhino.Node;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -181,6 +183,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private int scriptNodeCount = 0;
     private List<Node> moduleExportRefs = new ArrayList<>();
     private List<Node> exportRefs = new ArrayList<>();
+    Map<String, Integer> propertyExportRefCount = new HashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -245,6 +248,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         // variable or function parameter
         if (v == null) {
           moduleExportRefs.add(n);
+          maybeAddReferenceCount(n);
         }
       }
 
@@ -252,8 +256,46 @@ public final class ProcessCommonJSModules implements CompilerPass {
         Var v = t.getScope().getVar(n.getString());
         if (v == null || v.isGlobal()) {
           exportRefs.add(n);
+          maybeAddReferenceCount(n);
         }
       }
+    }
+
+    private Node getBaseQualifiedNameNode(Node n) {
+      Node refParent = n;
+      while (refParent.getParent() != null && refParent.getParent().isQualifiedName()) {
+        refParent = refParent.getParent();
+      }
+
+      if (refParent == null || !refParent.getParent().isAssign()) {
+        return null;
+      }
+
+      return refParent;
+    }
+
+    private void maybeAddReferenceCount(Node n) {
+      Node refParent = getBaseQualifiedNameNode(n);
+
+      if (refParent == null) {
+        return;
+      }
+
+      String qName = refParent.getQualifiedName();
+      if (qName.startsWith("module.exports.")) {
+        qName = qName.substring(15);
+      } else if (qName.startsWith("exports.")) {
+        qName = qName.substring(8);
+      } else {
+        return;
+      }
+
+      int assignCount = 1;
+      if (propertyExportRefCount.containsKey(qName)) {
+        assignCount = propertyExportRefCount.get(qName) + 1;
+        propertyExportRefCount.remove(qName);
+      }
+      propertyExportRefCount.put(qName, assignCount);
     }
 
     /**
@@ -417,6 +459,19 @@ public final class ProcessCommonJSModules implements CompilerPass {
               initializeDefaultProperty(script, moduleName, defaultPropertyInitializer);
         }
 
+        String qName = null;
+        if (ref.isQualifiedName()) {
+          Node baseName = getBaseQualifiedNameNode(ref);
+          if (baseName != null) {
+            qName = baseName.getQualifiedName();
+            if (qName.startsWith("module.exports.")) {
+              qName = qName.substring(15);
+            } else {
+              qName = qName.substring(8);
+            }
+          }
+        }
+
         Node rhsValue = ref.getNext();
         if (rhsValue != null && rhsValue.isObjectLit()) {
           copyTypeInfoForObjectLit(rhsValue, script);
@@ -429,7 +484,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
         Node assign = ref.getParent();
         assign.replaceChild(ref, newName);
 
-        if (assign.isAssign()) {
+        // If the property was assigned to exactly once, add an @const annotation
+        if (assign.isAssign() && qName != null && propertyExportRefCount.containsKey(qName) &&
+            propertyExportRefCount.get(qName) == 1) {
           JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
           builder.recordConstancy();
           JSDocInfo info = builder.build();
