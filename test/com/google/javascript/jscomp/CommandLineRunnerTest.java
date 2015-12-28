@@ -45,6 +45,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -54,6 +56,8 @@ import java.util.zip.ZipOutputStream;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class CommandLineRunnerTest extends TestCase {
+
+  private static final Logger logger = Logger.getLogger(CommandLineRunnerTest.class.getName());
 
   private Compiler lastCompiler = null;
   private CommandLineRunner lastCommandLineRunner = null;
@@ -1519,7 +1523,7 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       runner.doRun();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.log(Level.WARNING, "Unexpected exception", e);
       fail("Unexpected exception " + e);
     }
     String output = runner.getCompiler().toSource();
@@ -1540,7 +1544,7 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       runner.doRun();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.log(Level.WARNING, "Unexpected exception", e);
       fail("Unexpected exception " + e);
     }
     String output = new String(outReader.toByteArray(), UTF_8);
@@ -1567,7 +1571,7 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       runner.doRun();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.log(Level.WARNING, "Unexpected exception", e);
       fail("Unexpected exception " + e);
     }
     String output = new String(outReader.toByteArray(), UTF_8);
@@ -1594,7 +1598,7 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       runner.doRun();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.log(Level.WARNING, "Unexpected exception", e);
       fail("Unexpected exception " + e);
     }
     String output = new String(outReader.toByteArray(), UTF_8);
@@ -1751,7 +1755,7 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       runner.doRun();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.log(Level.WARNING, "Unexpected exception", e);
       fail("Unexpected exception " + e);
     }
     String output = runner.getCompiler().toSource();
