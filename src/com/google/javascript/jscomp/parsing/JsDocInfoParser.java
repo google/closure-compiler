@@ -1709,7 +1709,7 @@ public final class JsDocInfoParser {
             builder.append('*');
             token = next();
           }
-          continue;
+          break;
 
         case EOL:
           if (option != WhitespaceOption.SINGLE_LINE) {
@@ -1719,7 +1719,7 @@ public final class JsDocInfoParser {
           ignoreStar = true;
           lineStartChar = 0;
           token = next();
-          continue;
+          break;
 
         default:
           ignoreStar = false;
@@ -1762,6 +1762,7 @@ public final class JsDocInfoParser {
 
           builder.append(line);
           token = next();
+          break;
       }
     } while (true);
   }

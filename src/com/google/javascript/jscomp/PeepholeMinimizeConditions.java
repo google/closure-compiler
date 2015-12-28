@@ -932,7 +932,7 @@ class PeepholeMinimizeConditions
         case Token.WHILE:
         case Token.FOR:
           n = n.getLastChild();
-          continue;
+          break;
         default:
           return false;
       }

@@ -1150,14 +1150,14 @@ class GlobalNamespace
         switch (ref.type) {
           case SET_FROM_GLOBAL:
             // Expect one global set
-            continue;
+            break;
           case SET_FROM_LOCAL:
             throw new IllegalStateException();
           case ALIASING_GET:
           case DIRECT_GET:
           case PROTOTYPE_GET:
           case CALL_GET:
-            continue;
+            break;
           case DELETE_PROP:
             return false;
           default:
