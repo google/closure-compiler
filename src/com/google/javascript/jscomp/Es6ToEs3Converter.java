@@ -339,8 +339,8 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       Node typeNode = type.getRoot();
       Node memberType =
           typeNode.getType() == Token.ELLIPSIS
-              ? typeNode.getFirstChild().cloneNode()
-              : typeNode.cloneNode();
+              ? typeNode.getFirstChild().cloneTree()
+              : typeNode.cloneTree();
       arrayType.addChildToFront(
           new Node(Token.BLOCK, memberType).useSourceInfoIfMissingFrom(typeNode));
       JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
