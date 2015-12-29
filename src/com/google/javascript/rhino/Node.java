@@ -519,7 +519,7 @@ public class Node implements Serializable {
     sourcePosition = -1;
   }
 
-  public Node(int nodeType, Node left, Node mid, Node mid2, Node right) {
+  Node(int nodeType, Node left, Node mid, Node mid2, Node right) {
     Preconditions.checkArgument(left.parent == null);
     Preconditions.checkArgument(left.next == null);
     Preconditions.checkArgument(mid.parent == null);
@@ -554,29 +554,7 @@ public class Node implements Serializable {
     sourcePosition = mergeLineCharNo(lineno, charno);
   }
 
-  public Node(int nodeType, Node left, Node right, int lineno, int charno) {
-    this(nodeType, left, right);
-    sourcePosition = mergeLineCharNo(lineno, charno);
-  }
-
-  public Node(int nodeType, Node left, Node mid, Node right,
-      int lineno, int charno) {
-    this(nodeType, left, mid, right);
-    sourcePosition = mergeLineCharNo(lineno, charno);
-  }
-
-  public Node(int nodeType, Node left, Node mid, Node mid2, Node right,
-      int lineno, int charno) {
-    this(nodeType, left, mid, mid2, right);
-    sourcePosition = mergeLineCharNo(lineno, charno);
-  }
-
-  public Node(int nodeType, Node[] children, int lineno, int charno) {
-    this(nodeType, children);
-    sourcePosition = mergeLineCharNo(lineno, charno);
-  }
-
-  public Node(int nodeType, Node[] children) {
+  private Node(int nodeType, Node[] children) {
     this.type = nodeType;
     parent = null;
     if (children.length != 0) {
