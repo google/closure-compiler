@@ -2022,7 +2022,7 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   boolean hasScopeChanged(Node n) {
-    if (!analyzeChangedScopesOnly || phaseOptimizer == null) {
+    if (phaseOptimizer == null) {
       return true;
     }
     return phaseOptimizer.hasScopeChanged(n);

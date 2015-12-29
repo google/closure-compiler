@@ -62,12 +62,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   private LifeCycleStage stage = LifeCycleStage.RAW;
 
-  // For passes that traverse a list of functions rather than the AST.
-  // If false, the pass will analyze all functions, even those that didn't
-  // change since the last time it ran.
-  // Intended for use by the compiler only; not accessed by compiler users.
-  protected boolean analyzeChangedScopesOnly = true;
-
   // TODO(nicksantos): Decide if all of these are really necessary.
   // Many of them are just accessors that should be passed to the
   // CompilerPass's constructor.
