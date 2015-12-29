@@ -104,6 +104,12 @@ public abstract class CompilerTestCase extends TestCase {
   /** Whether the expected JS strings should be normalized. */
   private boolean normalizeExpected = false;
 
+  /** Whether the tranpilation passes runs before pass being tested. */
+  private boolean transpileEnabled = false;
+
+  /** Whether the expected JS strings should be transpiled. */
+  private boolean transpileExpected = false;
+
   /** Whether we run InferConsts before checking. */
   private boolean enableInferConsts = false;
 
@@ -386,6 +392,25 @@ public abstract class CompilerTestCase extends TestCase {
   protected void enableNormalize(boolean normalizeExpected) {
     normalizeEnabled = true;
     this.normalizeExpected = normalizeExpected;
+  }
+
+
+  /**
+   * Perform AST transpilation before running the test pass.
+   */
+  protected void enableTranspile() {
+    enableTranspile(true);
+  }
+
+  /**
+   * Perform AST transpilation before running the test pass.
+   *
+   * @param transpileExpected Whether to perform transpilation on the
+   * expected JS result.
+   */
+  protected void enableTranspile(boolean transpileExpected) {
+    transpileEnabled = true;
+    this.transpileExpected = transpileExpected;
   }
 
   /**
@@ -1124,6 +1149,12 @@ public abstract class CompilerTestCase extends TestCase {
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
+        if (transpileEnabled && i == 0) {
+          recentChange.reset();
+          transpileToEs5(compiler, externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
+
         // Only run the type checking pass once, if asked.
         // Running it twice can cause unpredictable behavior because duplicate
         // objects for the same type are created, and the type system
@@ -1370,6 +1401,18 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
+  private void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
+    new Es6RewriteArrowFunction(compiler).process(externsRoot, codeRoot);
+    new Es6RenameVariablesInParamLists(compiler).process(externsRoot, codeRoot);
+    new Es6SplitVariableDeclarations(compiler).process(externsRoot, codeRoot);
+    new Es6RewriteDestructuring(compiler).process(externsRoot, codeRoot);
+
+    new Es6ConvertSuper(compiler).process(externsRoot, codeRoot);
+    new Es6ToEs3Converter(compiler).process(externsRoot, codeRoot);
+    new Es6RewriteBlockScopedDeclaration(compiler).process(externsRoot, codeRoot);
+    new Es6RewriteGenerators(compiler).process(externsRoot, codeRoot);
+  }
+
   private void validateSourceLocation(JSError jserror) {
     // Make sure that source information is always provided.
     if (!allowSourcelessWarnings) {
@@ -1416,6 +1459,17 @@ public abstract class CompilerTestCase extends TestCase {
 
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false).process(null, mainRoot);
+    }
+
+    if (rewriteClosureCode) {
+      new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
+      new ClosureRewriteModule(compiler).process(externsRoot, mainRoot);
+      new ScopedAliases(compiler, null, CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER)
+          .process(externsRoot, mainRoot);
+    }
+
+    if (transpileEnabled && transpileExpected && !compiler.hasErrors()) {
+      transpileToEs5(compiler, externsRoot, mainRoot);
     }
     return mainRoot;
   }

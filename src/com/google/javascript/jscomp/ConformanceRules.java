@@ -1399,7 +1399,11 @@ public final class ConformanceRules {
     }
 
     private boolean isWhitelisted(Node n) {
-      return n.isVar() && n.getFirstChild().getString().equals("$jscomp");
+      return n.isVar() && isWhitelistedName(n.getFirstChild().getString());
+    }
+
+    private boolean isWhitelistedName(String name) {
+      return name.equals("$jscomp") || name.startsWith("$jscomp$compprop");
     }
   }
 

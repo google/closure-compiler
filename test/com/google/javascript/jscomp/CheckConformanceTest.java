@@ -73,6 +73,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
   public CheckConformanceTest() {
     super(EXTERNS, true);
+    enableTranspile();
     enableNormalize();
     enableClosurePass();
     enableClosurePassForExpected();
@@ -1190,6 +1191,25 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "goog.provide('x'); var x;",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanGlobalVars Message");
+  }
+
+  public void testCustomBanGlobalVars2() {
+    configuration =
+        "requirement: {\n"
+            + "  type: CUSTOM\n"
+            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'\n"
+            + "  error_message: 'BanGlobalVars Message'\n"
+            + "}";
+
+    testSame(
+        EXTERNS,
+        "goog.scope(function() {\n"
+            + "  var x = {y: 'y'}\n"
+            + "  var z = {\n"
+            + "     [x.y]: 2\n"
+            + "  }\n"
+            + "});",
+        null);
   }
 
   public void testRequireFileoverviewVisibility() {
