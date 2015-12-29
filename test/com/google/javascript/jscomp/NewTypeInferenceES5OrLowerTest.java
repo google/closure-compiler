@@ -13837,6 +13837,31 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  return x.length - 1;",
         "}"),
         NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** ?Object */ x) {",
+        "  if (x.prop) {",
+        "    x.prop();",
+        "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** ?Object */ x) {",
+        "  if (typeof x.prop == 'function') {",
+        "    x.prop();",
+        "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** ?Object */ x) {",
+        "  var y = x;",
+        "  if (goog.isDef(y.prop)) {",
+        "    y.prop();",
+        "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testSingletonGetter() {
