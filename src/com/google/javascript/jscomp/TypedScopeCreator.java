@@ -762,7 +762,7 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     void assertDefinitionNode(Node n, int type) {
       Preconditions.checkState(sourceName != null);
-      Preconditions.checkState(n.getType() == type);
+      Preconditions.checkState(n.getType() == type, n);
     }
 
     /**

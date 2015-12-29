@@ -452,7 +452,7 @@ public final class NodeUtil {
    */
   @Deprecated
   static Node getFunctionNameNode(Node n) {
-    Preconditions.checkState(n.isFunction());
+    Preconditions.checkState(n.isFunction(), n);
     return getNameNode(n);
   }
 
@@ -466,7 +466,7 @@ public final class NodeUtil {
   }
 
   private static Node getNameNode(Node n) {
-    Preconditions.checkState(n.isFunction() || n.isClass());
+    Preconditions.checkState(n.isFunction() || n.isClass(), n);
     Node parent = n.getParent();
     switch (parent.getType()) {
       case Token.NAME:
@@ -1245,7 +1245,7 @@ public final class NodeUtil {
    * @return Whether the call has a local result.
    */
   static boolean callHasLocalResult(Node n) {
-    Preconditions.checkState(n.isCall());
+    Preconditions.checkState(n.isCall(), n);
     return (n.getSideEffectFlags() & Node.FLAG_LOCAL_RESULTS) > 0;
   }
 
@@ -1253,7 +1253,7 @@ public final class NodeUtil {
    * @return Whether the new has a local result.
    */
   static boolean newHasLocalResult(Node n) {
-    Preconditions.checkState(n.isNew());
+    Preconditions.checkState(n.isNew(), n);
     return n.isOnlyModifiesThisCall();
   }
 
@@ -2020,7 +2020,7 @@ public final class NodeUtil {
    * @return The value node representing the new value.
    */
   public static Node getAssignedValue(Node n) {
-    Preconditions.checkState(n.isName());
+    Preconditions.checkState(n.isName(), n);
     Node parent = n.getParent();
     if (parent.isVar()) {
       return n.getFirstChild();

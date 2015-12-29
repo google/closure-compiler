@@ -85,7 +85,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   private final Function<Node, String> getNamespace =
       new Function<Node, String>() {
         public String apply(Node n) {
-          Preconditions.checkState(n.isCall());
+          Preconditions.checkState(n.isCall(), n);
           return n.getLastChild().getString();
         }
       };

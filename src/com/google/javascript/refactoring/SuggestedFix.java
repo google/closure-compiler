@@ -262,7 +262,7 @@ public final class SuggestedFix {
       } else if (n.isStringKey()) {
         nodeToRename = n;
       } else if (n.isString()) {
-        Preconditions.checkState(n.getParent().isGetProp());
+        Preconditions.checkState(n.getParent().isGetProp(), n);
         nodeToRename = n;
       } else {
         // TODO(mknichel): Implement the rest of this function.

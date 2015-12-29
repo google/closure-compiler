@@ -459,7 +459,7 @@ class Normalize implements CompilerPass {
      * @see https://github.com/google/closure-compiler/pull/429
      */
     static boolean maybeNormalizeFunctionDeclaration(Node n) {
-      Preconditions.checkState(n.isFunction());
+      Preconditions.checkState(n.isFunction(), n);
       if (!NodeUtil.isFunctionExpression(n)
           && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n);

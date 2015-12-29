@@ -623,7 +623,7 @@ public class NodeTraversal {
 
   /** Traverses a function. */
   private void traverseFunction(Node n, Node parent) {
-    Preconditions.checkState(n.getChildCount() == 3);
+    Preconditions.checkState(n.getChildCount() == 3, n);
     Preconditions.checkState(n.isFunction());
 
     final Node fnName = n.getFirstChild();

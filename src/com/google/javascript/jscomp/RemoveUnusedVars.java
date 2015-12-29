@@ -349,12 +349,11 @@ class RemoveUnusedVars
    * no need to treat CATCH blocks differently like we do functions.
    */
   private void traverseFunction(Node n, Scope parentScope) {
-    Preconditions.checkState(n.getChildCount() == 3);
-    Preconditions.checkState(n.isFunction());
+    Preconditions.checkState(n.getChildCount() == 3, n);
+    Preconditions.checkState(n.isFunction(), n);
 
     final Node body = n.getLastChild();
-    Preconditions.checkState(body.getNext() == null &&
-            body.isBlock());
+    Preconditions.checkState(body.getNext() == null && body.isBlock(), body);
 
     Scope fnScope = SyntacticScopeCreator.makeUntyped(compiler).createScope(n, parentScope);
     traverseNode(body, n, fnScope);

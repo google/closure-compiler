@@ -449,7 +449,7 @@ public final class CodingConventions {
 
     @Override
     public boolean isInlinableFunction(Node n) {
-      Preconditions.checkState(n.isFunction());
+      Preconditions.checkState(n.isFunction(), n);
       return true;
     }
 

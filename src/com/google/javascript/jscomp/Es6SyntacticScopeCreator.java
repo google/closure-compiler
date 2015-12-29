@@ -190,7 +190,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         return;  // should not examine class's children
 
       case Token.CATCH:
-        Preconditions.checkState(n.getChildCount() == 2);
+        Preconditions.checkState(n.getChildCount() == 2, n);
         // the first child is the catch var and the second child
         // is the code block
 

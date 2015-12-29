@@ -976,7 +976,7 @@ class CodeGenerator {
           } else {
             // Computed properties must either have an initializer or be computed member-variable
             // properties that exist for their type declaration.
-            Preconditions.checkState(n.getBooleanProp(Node.COMPUTED_PROP_VARIABLE));
+            Preconditions.checkState(n.getBooleanProp(Node.COMPUTED_PROP_VARIABLE), n);
           }
         }
         break;

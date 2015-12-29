@@ -151,17 +151,18 @@ class SyntacticScopeCreator implements ScopeCreator {
         return;   // should not examine function's children
 
       case Token.CATCH:
-        Preconditions.checkState(n.getChildCount() == 2);
-        Preconditions.checkState(n.getFirstChild().isName());
-        // the first child is the catch var and the second child
-        // is the code block
+        Preconditions.checkState(n.getChildCount() == 2, n);
+        // The first child is the catch var and the second child
+        // is the code block.
 
         final Node var = n.getFirstChild();
+        Preconditions.checkState(var.isName(), var);
+
         final Node block = var.getNext();
 
         declareVar(var);
         scanVars(block);
-        return;  // only one child to scan
+        return; // only one child to scan
 
       case Token.SCRIPT:
         inputId = n.getInputId();
@@ -203,7 +204,7 @@ class SyntacticScopeCreator implements ScopeCreator {
    * @param n The node corresponding to the variable name.
    */
   private void declareVar(Node n) {
-    Preconditions.checkState(n.isName());
+    Preconditions.checkState(n.isName(), n);
 
     CompilerInput input = compiler.getInput(inputId);
     String name = n.getString();

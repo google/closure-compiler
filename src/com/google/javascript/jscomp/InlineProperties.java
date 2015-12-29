@@ -207,7 +207,7 @@ final class InlineProperties implements CompilerPass {
      */
     private boolean maybeCandidateDefinition(
         NodeTraversal t, Node n, Node parent) {
-      Preconditions.checkState(n.isGetProp() && parent.isAssign());
+      Preconditions.checkState(n.isGetProp() && parent.isAssign(), n);
       boolean isCandidate = false;
       Node src = n.getFirstChild();
       String propName = n.getLastChild().getString();

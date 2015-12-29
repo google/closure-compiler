@@ -379,7 +379,7 @@ class TypeValidator {
    */
   void expectIndexMatch(NodeTraversal t, Node n, JSType objType,
                         JSType indexType) {
-    Preconditions.checkState(n.isGetElem());
+    Preconditions.checkState(n.isGetElem(), n);
     Node indexNode = n.getLastChild();
     if (objType.isStruct()) {
       report(JSError.make(indexNode,

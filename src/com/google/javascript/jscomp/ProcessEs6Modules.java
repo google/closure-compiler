@@ -404,7 +404,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   }
 
   private static void checkStrictModeDirective(NodeTraversal t, Node n) {
-    Preconditions.checkState(n.isScript());
+    Preconditions.checkState(n.isScript(), n);
     Set<String> directives = n.getDirectives();
     if (directives != null && directives.contains("use strict")) {
       t.report(n, USELESS_USE_STRICT_DIRECTIVE);

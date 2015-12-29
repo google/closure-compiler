@@ -114,7 +114,7 @@ class Denormalize implements CompilerPass, Callback {
         newInitializer = n;
       } else {
         // Extract the expression from EXPR_RESULT node.
-        Preconditions.checkState(n.hasOneChild());
+        Preconditions.checkState(n.hasOneChild(), n);
         newInitializer = n.getFirstChild();
         n.removeChild(newInitializer);
       }

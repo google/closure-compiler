@@ -184,7 +184,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
   }
 
   private static void checkStrictModeDirective(NodeTraversal t, Node n) {
-    Preconditions.checkState(n.isScript());
+    Preconditions.checkState(n.isScript(), n);
     Set<String> directives = n.getDirectives();
     if (directives != null && directives.contains("use strict")) {
       t.report(n, USELESS_USE_STRICT_DIRECTIVE);
@@ -438,7 +438,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
    *     is not (it is an assignment to a property of an exported value).
    */
   private static boolean isExportPropAssign(Node n) {
-    Preconditions.checkState(n.isGetProp());
+    Preconditions.checkState(n.isGetProp(), n);
     Node target = n.getFirstChild();
     return isAssignTarget(n) && target.isName()
         && target.getString().equals("exports");
@@ -599,7 +599,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
   }
 
   private Node getModuleScopeRootForLoadModuleCall(Node n) {
-    Preconditions.checkState(n.isCall());
+    Preconditions.checkState(n.isCall(), n);
     Node fn = n.getLastChild();
     Preconditions.checkState(fn.isFunction());
     return fn.getLastChild();

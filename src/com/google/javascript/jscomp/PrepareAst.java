@@ -130,7 +130,7 @@ class PrepareAst implements CompilerPass {
      * "this" values (what we are call "free" calls) and direct call to eval.
      */
     private static void annotateCalls(Node n) {
-      Preconditions.checkState(n.isCall());
+      Preconditions.checkState(n.isCall(), n);
 
       // Keep track of of the "this" context of a call.  A call without an
       // explicit "this" is a free call.

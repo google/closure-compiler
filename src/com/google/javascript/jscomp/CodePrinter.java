@@ -383,7 +383,7 @@ public final class CodePrinter {
      */
     @Override
     boolean breakAfterBlockFor(Node n,  boolean isStatementContext) {
-      Preconditions.checkState(n.isBlock());
+      Preconditions.checkState(n.isBlock(), n);
       Node parent = n.getParent();
       if (parent != null) {
         int type = parent.getType();

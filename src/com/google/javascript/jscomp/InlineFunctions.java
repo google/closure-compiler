@@ -204,12 +204,13 @@ class InlineFunctions implements CompilerPass {
       }
 
       switch (n.getType()) {
-        // Functions expressions in the form of:
-        //   var fooFn = function(x) { return ... }
+          // Functions expressions in the form of:
+          //   var fooFn = function(x) { return ... }
         case Token.VAR:
-          Preconditions.checkState(n.hasOneChild());
+          Preconditions.checkState(n.hasOneChild(), n);
           Node nameNode = n.getFirstChild();
-          if (nameNode.isName() && nameNode.hasChildren()
+          if (nameNode.isName()
+              && nameNode.hasChildren()
               && nameNode.getFirstChild().isFunction()) {
             maybeAddFunction(new FunctionVar(n), t.getModule());
           }
@@ -564,7 +565,7 @@ class InlineFunctions implements CompilerPass {
      * Find functions that can be inlined.
      */
     private void checkNameUsage(Node n, Node parent) {
-      Preconditions.checkState(n.isName());
+      Preconditions.checkState(n.isName(), n);
 
       if (isCandidateUsage(n)) {
         return;

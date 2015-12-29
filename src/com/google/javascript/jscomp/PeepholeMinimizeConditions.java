@@ -382,8 +382,7 @@ class PeepholeMinimizeConditions
 
   static boolean isExceptionPossible(Node n) {
     // TODO(johnlenz): maybe use ControlFlowAnalysis.mayThrowException?
-    Preconditions.checkState(n.isReturn()
-        || n.isThrow());
+    Preconditions.checkState(n.isReturn() || n.isThrow(), n);
     return n.isThrow()
         || (n.hasChildren()
             && !NodeUtil.isLiteralValue(n.getLastChild(), true));
@@ -757,7 +756,7 @@ class PeepholeMinimizeConditions
    * @param n The IF node to examine.
    */
   private void tryRemoveRepeatedStatements(Node n) {
-    Preconditions.checkState(n.isIf());
+    Preconditions.checkState(n.isIf(), n);
 
     Node parent = n.getParent();
     if (!NodeUtil.isStatementBlock(parent)) {

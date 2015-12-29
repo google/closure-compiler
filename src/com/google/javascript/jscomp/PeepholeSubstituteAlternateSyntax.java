@@ -156,7 +156,7 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node tryFoldSimpleFunctionCall(Node n) {
-    Preconditions.checkState(n.isCall());
+    Preconditions.checkState(n.isCall(), n);
     Node callTarget = n.getFirstChild();
     if (callTarget != null && callTarget.isName() &&
           callTarget.getString().equals("String")) {

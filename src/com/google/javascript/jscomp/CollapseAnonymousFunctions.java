@@ -71,7 +71,7 @@ class CollapseAnonymousFunctions implements CompilerPass {
 
       // Need to store the next name in case the current name is removed from
       // the linked list.
-      Preconditions.checkState(n.hasOneChild());
+      Preconditions.checkState(n.hasOneChild(), n);
       Node name = n.getFirstChild();
       Node value = name.getFirstChild();
       if (value != null &&

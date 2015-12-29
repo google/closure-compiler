@@ -174,7 +174,7 @@ class RemoveUnusedClassProperties
   }
 
   private boolean isRemovablePropertyDefinition(Node n) {
-    Preconditions.checkState(n.isGetProp());
+    Preconditions.checkState(n.isGetProp(), n);
     Node target = n.getFirstChild();
     return target.isThis()
         || (this.removeUnusedConstructorProperties && isConstructor(target))

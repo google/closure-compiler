@@ -514,7 +514,7 @@ public final class JSTypeCreatorFromJSDoc {
     ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
     if (n.hasChildren()) {
       // Compute instantiation of polymorphic class/interface.
-      Preconditions.checkState(n.getFirstChild().isBlock());
+      Preconditions.checkState(n.getFirstChild().isBlock(), n);
       for (Node child : n.getFirstChild().children()) {
         typeList.add(
             getTypeFromCommentHelper(child, registry, outerTypeParameters));

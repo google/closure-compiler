@@ -1098,8 +1098,8 @@ class CollapseProperties implements CompilerPass {
    */
   private int addStubsForUndeclaredProperties(
       Name n, String alias, Node parent, Node addAfter) {
-    Preconditions.checkState(n.canCollapseUnannotatedChildNames());
-    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
+    Preconditions.checkState(n.canCollapseUnannotatedChildNames(), n);
+    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent), parent);
     Preconditions.checkNotNull(addAfter);
     if (n.props == null) {
       return 0;

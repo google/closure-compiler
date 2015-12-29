@@ -335,7 +335,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   private Node tryFoldUnaryOperator(Node n) {
-    Preconditions.checkState(n.hasOneChild());
+    Preconditions.checkState(n.hasOneChild(), n);
 
     Node left = n.getFirstChild();
     Node parent = n.getParent();

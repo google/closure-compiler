@@ -413,7 +413,7 @@ class ReplaceIdGenerators implements CompilerPass {
   }
 
   static String getIdForGeneratorNode(boolean consistent, Node n) {
-    Preconditions.checkState(n.isString() || n.isStringKey());
+    Preconditions.checkState(n.isString() || n.isStringKey(), n);
     if (consistent) {
       return n.getString();
     } else {
