@@ -408,7 +408,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
             groups.toArray(new Node[groups.size()]));
     if (node.isArrayLit()) {
       result = joinedGroups;
-    } else if (node.isCall()) {
+    } else if (node.isCall() && callee != null) {
       if (NodeUtil.mayHaveSideEffects(callee) && callee.isGetProp()) {
         Node statement = node;
         while (!NodeUtil.isStatement(statement)) {

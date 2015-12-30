@@ -116,7 +116,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
           return;
         }
 
-        if (!callback.isFunction() ||
+        if ((callback != null && !callback.isFunction()) ||
             (requiresNode != null && !requiresNode.isArrayLit())) {
           unsupportedDefineError(t, n);
           return;

@@ -345,7 +345,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           break;
         }
       }
-      if (!def.equals(info)) {
+      if (def != null && !def.equals(info)) {
         symbolGraph.connect(def, module, info);
       }
     }

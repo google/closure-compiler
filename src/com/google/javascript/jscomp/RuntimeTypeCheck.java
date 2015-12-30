@@ -114,7 +114,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
     private void visitFunction(Node n) {
       FunctionType funType = n.getJSType().toMaybeFunctionType();
-      if (funType != null && !funType.isConstructor()) {
+      if (funType == null || !funType.isConstructor()) {
         return;
       }
 

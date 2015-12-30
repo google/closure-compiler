@@ -160,7 +160,7 @@ class TypeTransformation {
     }
 
     // Resolve the name and get the corresponding type
-    StaticTypedSlot<JSType> slot = scope.getSlot(name);
+    StaticTypedSlot<JSType> slot = scope != null ? scope.getSlot(name) : null;
     if (slot != null) {
       JSType rawType = slot.getType();
       if (rawType != null) {

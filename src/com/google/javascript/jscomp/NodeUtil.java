@@ -2899,8 +2899,8 @@ public final class NodeUtil {
     }
 
     // make sure that the adding root looks ok
-    Preconditions.checkState(addingRoot.isBlock() ||
-        addingRoot.isScript());
+    Preconditions.checkState(addingRoot != null && (addingRoot.isBlock() ||
+        addingRoot.isScript()));
     Preconditions.checkState(addingRoot.getFirstChild() == null ||
         !addingRoot.getFirstChild().isScript());
     return addingRoot;

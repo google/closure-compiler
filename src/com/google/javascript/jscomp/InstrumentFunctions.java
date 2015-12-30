@@ -311,7 +311,9 @@ class InstrumentFunctions implements CompilerPass {
             }
             beforeChild = ancestor;
           }
-          addingRoot.addChildBefore(expr, beforeChild);
+          if (addingRoot != null) {
+            addingRoot.addChildBefore(expr, beforeChild);
+          }
         }
         compiler.reportCodeChange();
       }

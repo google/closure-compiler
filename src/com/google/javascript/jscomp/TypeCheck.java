@@ -914,8 +914,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // The generic checks for 'object.property' when 'object' is known,
       // and 'property' is declared on it.
       // object.property = ...;
-      ObjectType type = ObjectType.cast(
-          objectJsType.restrictByNotNullOrUndefined());
+      ObjectType type = objectJsType != null
+            ? ObjectType.cast(
+                objectJsType.restrictByNotNullOrUndefined())
+            : null;
       if (type != null) {
         if (type.hasProperty(pname) &&
             !type.isPropertyTypeInferred(pname)) {
