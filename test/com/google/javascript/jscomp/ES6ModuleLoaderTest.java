@@ -21,14 +21,127 @@ import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Tests for {@link ES6ModuleLoader}.
  *
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
-
 public final class ES6ModuleLoaderTest extends TestCase {
+  public void testRelocateSingleModule() {
+    Map<String, String> moduleMappings = new HashMap<>();
+	ES6ModuleLoader loader = new ES6ModuleLoader(ImmutableList.of("."),
+            RELOCATE_INPUTS, moduleMappings);
+    assertUri("libs/1.0.0/module1.js", loader.locateCommonJsModule(
+            "./libs/1.0.0/module1", input("main.js")));
+
+    moduleMappings.put("libs/1.0.0/module1.js", "./libs/2.0.0/module1");
+    loader = new ES6ModuleLoader(ImmutableList.of("."),
+            RELOCATE_INPUTS, moduleMappings);
+    assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "./libs/1.0.0/module1.js", input("main.js")));
+    assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "libs/1.0.0/module1.js", input("main.js")));
+    assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "libs/1.0.0/module1", input("main.js")));
+    assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "libs/1.0.0/module1.js", input("main.js")));
+    assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "./module1.js", input("libs/1.0.0/module2.js")));
+    assertUri("libs/1.0.0/module2.js", loader.locateCommonJsModule(
+            "libs/1.0.0/module2.js", input("main.js")));
+  }
+
+  public void testRelocateMultipleModules() {
+    Map<String, String> moduleMappings = new HashMap<>();
+    moduleMappings.put("./libs/1.0.0/module1.js", "libs/2.0.0/module1.js");
+    moduleMappings.put("./libs/1.0.0/module2.js", "./libs/2.0.0/module2");
+    moduleMappings.put("/lib/js/1.0.0/module3.js", "/lib/js/2.0.0/module3");
+    moduleMappings.put("module4.js", "./module5.js");
+	ES6ModuleLoader loader = new ES6ModuleLoader(ImmutableList.of("."),
+            RELOCATE_INPUTS, moduleMappings);
+	assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "./libs/1.0.0/module1.js", input("main.js")));
+	assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "./libs/1.0.0/module1", input("main.js")));
+	assertUri("libs/2.0.0/module2.js", loader.locateCommonJsModule(
+            "./libs/1.0.0/module2.js", input("main.js")));
+    assertUri("module5.js", loader.locateCommonJsModule("./module4.js",
+            input("main.js")));
+  }
+
+  public void testRelocateDirectory() {
+    Map<String, String> moduleMappings = new HashMap<>();
+    moduleMappings.put("libs/1.0.0", "libs/2.0.0/");
+    ES6ModuleLoader loader = new ES6ModuleLoader(ImmutableList.of("."),
+            RELOCATE_INPUTS, moduleMappings);
+    assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "./libs/1.0.0/module1.js", input("main.js")));
+    assertUri("libs/2.0.0/module2.js", loader.locateCommonJsModule(
+            "libs/1.0.0/module2.js", input("main.js")));
+    assertUri("module4.js", loader.locateCommonJsModule("module4.js",
+            input("main.js")));
+    assertUri("module5.js", loader.locateCommonJsModule("module5.js",
+            input("main.js")));
+
+    moduleMappings.clear();
+    moduleMappings.put("./libs/1.0.0/", "./libs/2.0.0");
+    loader = new ES6ModuleLoader(ImmutableList.of("."),
+            RELOCATE_INPUTS, moduleMappings);
+    assertUri("libs/2.0.0/module1.js", loader.locateCommonJsModule(
+            "./libs/1.0.0/module1.js", input("main.js")));
+    assertUri("libs/2.0.0/module2.js", loader.locateCommonJsModule(
+            "libs/1.0.0/module2.js", input("main.js")));
+    assertUri("module4.js", loader.locateCommonJsModule("module4.js",
+            input("main.js")));
+    assertUri("module5.js", loader.locateCommonJsModule("module5.js",
+            input("main.js")));
+  }
+
+  public void testRelocateEmptyKey() {
+    Map<String, String> moduleMappings = new HashMap<>();
+    moduleMappings.put("", "./some/other/libs/");
+    ES6ModuleLoader loader = new ES6ModuleLoader(ImmutableList.of("."),
+            RELOCATE_INPUTS, moduleMappings);
+    assertUri("some/other/libs/module4.js", loader.locateCommonJsModule(
+            "./module4.js", input("main.js")));
+    assertUri("some/other/libs/libs/1.0.0/module1.js",
+            loader.locateCommonJsModule("./libs/1.0.0/module1.js",
+                    input("main.js")));
+    assertUri("some/other/libs/module4.js", loader.locateCommonJsModule(
+            "../../module4.js", input("./libs/1.0.0/module1.js")));
+    assertNull(loader.locateCommonJsModule("module5.js", input("main.js")));
+  }
+
+  public void testRelocateNonExistingInput() {
+    Map<String, String> moduleMappings = new HashMap<>();
+    moduleMappings.put("./libs/1.0.0/module1.js", "./libs/2.0.0/module99.js");
+    ES6ModuleLoader loader = new ES6ModuleLoader(ImmutableList.of("."),
+            RELOCATE_INPUTS, moduleMappings);
+    assertNull(loader.locateCommonJsModule("./libs/1.0.0/module1.js",
+            input("main.js")));
+    assertNull(loader.locateCommonJsModule("./libs/1.0.0/module1",
+            input("main.js")));
+    assertNull(loader.locateCommonJsModule("libs/1.0.0/module1",
+            input("main.js")));
+    assertNull(loader.locateCommonJsModule("./libs/1.0.0/module1",
+            input("main.js")));
+
+    moduleMappings.clear();
+    moduleMappings.put("./libs/1.0.0/", "./libs/99.0.0/");
+    loader = new ES6ModuleLoader(ImmutableList.of("."), RELOCATE_INPUTS,
+            moduleMappings);
+    assertNull(loader.locateCommonJsModule("./libs/1.0.0/module1.js",
+            input("main.js")));
+    assertNull(loader.locateCommonJsModule("./libs/1.0.0/module1",
+            input("main.js")));
+    assertNull(loader.locateCommonJsModule("libs/1.0.0/module1",
+            input("main.js")));
+    assertNull(loader.locateCommonJsModule("./libs/1.0.0/module1",
+            input("main.js")));
+  }
 
   public void testWindowsAddresses() {
     ES6ModuleLoader loader =
@@ -76,7 +189,7 @@ public final class ES6ModuleLoaderTest extends TestCase {
         "a.js' module root is stripped", loader.locateEs6Module("../a/a.js", input("b/b.js")));
   }
 
-  ImmutableList<CompilerInput> inputs(String... names) {
+  static ImmutableList<CompilerInput> inputs(String... names) {
     ImmutableList.Builder<CompilerInput> builder = ImmutableList.builder();
     for (String name : names) {
       builder.add(input(name));
@@ -84,11 +197,17 @@ public final class ES6ModuleLoaderTest extends TestCase {
     return builder.build();
   }
 
-  CompilerInput input(String name) {
+  static CompilerInput input(String name) {
     return new CompilerInput(SourceFile.fromCode(name, ""), false);
   }
 
   private static void assertUri(String expected, URI actual) {
     assertEquals(expected, actual.toString());
   }
+
+  private static final ImmutableList<CompilerInput> RELOCATE_INPUTS =
+          inputs("main.js", "libs/1.0.0/module1.js", "libs/1.0.0/module2.js",
+                 "libs/2.0.0/module1.js", "libs/2.0.0/module2.js",
+                 "module4.js", "module5.js", "./some/other/libs/module4.js",
+                 "./some/other/libs/libs/1.0.0/module1.js");
 }
