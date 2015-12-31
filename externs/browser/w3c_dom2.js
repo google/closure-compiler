@@ -393,6 +393,12 @@ HTMLElement.prototype.dir;
 HTMLElement.prototype.className;
 
 /**
+ * @type {number}
+ * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-40676705
+ */
+HTMLElement.prototype.tabIndex;
+
+/**
  * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-33759296
@@ -770,12 +776,6 @@ HTMLSelectElement.prototype.name;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-18293826
  */
 HTMLSelectElement.prototype.size;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-40676705
- */
-HTMLSelectElement.prototype.tabIndex;
 
 /**
  * @param {HTMLElement} element

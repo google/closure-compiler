@@ -594,6 +594,17 @@ function Element() {}
 Element.prototype.tagName;
 
 /**
+ * @implicitCast
+ * @type {?}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/className
+ *    We type it as ? even though it is a string, because some SVG elements have
+ *    className that is an object, which isn't a subtype of string.
+ *    Alternative: TypeScript types this as string and types className on
+ *    SVGElement as ?.
+ */
+Element.prototype.className;
+
+/**
  * @param {string} name
  * @param {number?=} opt_flags
  * @return {string}
