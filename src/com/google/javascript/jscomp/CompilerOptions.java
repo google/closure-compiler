@@ -788,6 +788,8 @@ public class CompilerOptions {
   /** Runtime libraries to never inject. */
   Set<String> preventLibraryInjection = ImmutableSet.of();
 
+  Map<String, String> commonJSModuleRelocations = new HashMap<>();
+
 
   //--------------------------------
   // Output options

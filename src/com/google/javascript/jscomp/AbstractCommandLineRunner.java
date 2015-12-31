@@ -468,6 +468,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.tracer = config.tracerMode;
     options.setNewTypeInference(config.useNewTypeInference);
     options.instrumentationTemplateFile = config.instrumentationTemplateFile;
+    options.commonJSModuleRelocations = config.relocateCommonJSModule;
   }
 
   protected final A getCompiler() {
@@ -2424,6 +2425,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setModuleRoots(List<String> jsModuleRoots) {
       this.moduleRoots = jsModuleRoots;
+      return this;
+    }
+
+    private Map<String, String> relocateCommonJSModule;
+
+    CommandLineConfig setRelocateCommonJSModule(Map<String, String> moduleRelocations) {
+      if (moduleRelocations == null) {
+        this.relocateCommonJSModule = new HashMap<>();
+      } else {
+        this.relocateCommonJSModule = moduleRelocations;
+      }
       return this;
     }
 

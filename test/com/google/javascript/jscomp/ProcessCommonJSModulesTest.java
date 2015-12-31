@@ -47,7 +47,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         ProcessCommonJSModules processor =
             new ProcessCommonJSModules(
                 compiler,
-                new ES6ModuleLoader(ImmutableList.of("foo/bar/"), compiler.getInputsForTesting()),
+                new ES6ModuleLoader(ImmutableList.of("foo/bar/"), compiler.getInputsForTesting(), null),
                 false);
         processor.process(externs, testCodeScript);
       }

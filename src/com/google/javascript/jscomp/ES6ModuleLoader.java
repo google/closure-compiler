@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -52,7 +53,7 @@ public final class ES6ModuleLoader {
    * @param moduleRoots The root directories to locate modules in.
    * @param inputs All inputs to the compilation process.
    */
-  public ES6ModuleLoader(List<String> moduleRoots, Iterable<CompilerInput> inputs) {
+  public ES6ModuleLoader(List<String> moduleRoots, Iterable<CompilerInput> inputs, Map<String, String> moduleRelocations) {
     this.moduleRootUris =
         Lists.transform(
             moduleRoots,
@@ -87,6 +88,7 @@ public final class ES6ModuleLoader {
       // * the require'd name with a potential trailing ".js"
       loadAddress = locate(requireName + ".js", context);
     }
+    
     return loadAddress; // could be null.
   }
 

@@ -1470,7 +1470,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   void processEs6Modules() {
-    ES6ModuleLoader loader = new ES6ModuleLoader(options.moduleRoots, inputs);
+    ES6ModuleLoader loader = new ES6ModuleLoader(options.moduleRoots, inputs, options.commonJSModuleRelocations);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
@@ -1493,7 +1493,7 @@ public class Compiler extends AbstractCompiler {
     // with multiple ways to express dependencies. Directly support JSModules
     // that are equivalent to a single file and which express their deps
     // directly in the source.
-    ES6ModuleLoader loader = new ES6ModuleLoader(options.moduleRoots, inputs);
+    ES6ModuleLoader loader = new ES6ModuleLoader(options.moduleRoots, inputs, options.commonJSModuleRelocations);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
