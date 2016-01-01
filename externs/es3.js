@@ -513,6 +513,7 @@ Array.prototype.push = function(var_args) {};
  * Transposes the elements of an array in place: the first array element becomes the
  * last and the last becomes the first.
  *
+ * @return {!Array<T>}
  * @this {{length: number}}
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse
@@ -551,6 +552,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
  *
  * @param {function(T,T):number=} opt_compareFunction Specifies a function that
  *     defines the sort order.
+ * @return {!Array<T>}
  * @this {{length: number}|Array<T>}
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
