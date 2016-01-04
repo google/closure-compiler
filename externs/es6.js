@@ -232,6 +232,15 @@ Math.cbrt = function(value) {};
  */
 Math.hypot = function(value1, var_args) {};
 
+/**
+ * @param {number} value1
+ * @param {number} value2
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/imul
+ */
+Math.imul = function(value1, value2) {};
+
 
 /**
  * @param {*} a
