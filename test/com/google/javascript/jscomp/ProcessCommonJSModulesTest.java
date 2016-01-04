@@ -102,6 +102,28 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             + "module$test = function () {};");
   }
 
+  public void testExportsInExpression() {
+    setFilename("test");
+    testModules(
+        "var name = require('other');" + "var e; e = module.exports = function() {};",
+        "goog.provide('module$test');var module$test;"
+            + "goog.require('module$other');"
+            + "var name$$module$test = module$other;"
+            + "var e$$module$test; e$$module$test = module$test = function () {};");
+    testModules(
+        "var name = require('other');" + "var e = module.exports = function() {};",
+        "goog.provide('module$test');var module$test;"
+            + "goog.require('module$other');"
+            + "var name$$module$test = module$other;"
+            + "var e$$module$test = module$test = function () {};");
+    testModules(
+        "var name = require('other');" + "(module.exports = function() {})();",
+        "goog.provide('module$test');var module$test;"
+            + "goog.require('module$other');"
+            + "var name$$module$test = module$other;"
+            + "(module$test = function () {})();");
+  }
+
   public void testPropertyExports() {
     setFilename("test");
     testModules(

@@ -426,7 +426,25 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       // Transform module.exports to moduleName
+      boolean declaredModuleExports = false;
       for (Node ref : moduleExportRefs) {
+        // If there is a module exports assignment at this point, we need to
+        // add a variable declaration for the module name, because otherwise
+        // the default declaration for the goog.provide is a constant and the
+        // assignment would violate that constant.
+        // Note that the hasOneTopLevelModuleExportAssign() case handles the
+        // more common case of assigning to module.exports on the top level,
+        // but CommonJS code also sometimes assigns to module.exports inside
+        // of more complex expressions.
+        if (ref.getParent().isAssign()
+            && !ref.getParent().getParent().isExprResult()
+            && !declaredModuleExports) {
+          // Adds "var moduleName" to front of the current file.
+          script.addChildToFront(
+              IR.var(IR.name(moduleName))
+                  .useSourceInfoIfMissingFromForTree(ref));
+          declaredModuleExports = true;
+        }
         Node newRef = IR.name(moduleName).useSourceInfoIfMissingFrom(ref);
         ref.getParent().replaceChild(ref, newRef);
       }
