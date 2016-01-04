@@ -40,43 +40,109 @@ var jQuerySelector;
 /** @typedef {function(...)|Array<function(...)>} */
 var jQueryCallback;
 
-/** @typedef {
-              {
-               accepts: (Object<string, string>|undefined),
-               async: (?boolean|undefined),
-               beforeSend: (function(jQuery.jqXHR, (jQueryAjaxSettings|Object<string, *>))|undefined),
-               cache: (?boolean|undefined),
-               complete: (function(jQuery.jqXHR, string)|undefined),
-               contents: (Object<string, RegExp>|undefined),
-               contentType: (?string|undefined),
-               context: (Object<?, ?>|jQueryAjaxSettings|undefined),
-               converters: (Object<string, Function>|undefined),
-               crossDomain: (?boolean|undefined),
-               data: (Object<?, ?>|?string|Array<?>|undefined),
-               dataFilter: (function(string, string):?|undefined),
-               dataType: (?string|undefined),
-               error: (function(jQuery.jqXHR, string, string)|undefined),
-               global: (?boolean|undefined),
-               headers: (Object<?, ?>|undefined),
-               ifModified: (?boolean|undefined),
-               isLocal: (?boolean|undefined),
-               jsonp: (?string|undefined),
-               jsonpCallback: (?string|function()|undefined),
-               mimeType: (?string|undefined),
-               password: (?string|undefined),
-               processData: (?boolean|undefined),
-               scriptCharset: (?string|undefined),
-               statusCode: (Object<number, function()>|undefined),
-               success: (function(?, string, jQuery.jqXHR)|undefined),
-               timeout: (?number|undefined),
-               traditional: (?boolean|undefined),
-               type: (?string|undefined),
-               url: (?string|undefined),
-               username: (?string|undefined),
-               xhr: (function():(ActiveXObject|XMLHttpRequest)|undefined),
-               xhrFields: (Object<?, ?>|undefined)
-              }} */
-var jQueryAjaxSettings;
+/**
+ * @record
+ */
+function jQueryAjaxSettings() {};
+
+/** @type {(Object<string, string>|undefined)} */
+jQueryAjaxSettings.prototype.accepts;
+
+/** @type {(?boolean|undefined)} */
+jQueryAjaxSettings.prototype.async;
+
+/** @type {(function(jQuery.jqXHR, (jQueryAjaxSettings|Object<string, *>))|undefined)} */
+jQueryAjaxSettings.prototype.beforeSend;
+
+/** @type {(?boolean|undefined)} */
+jQueryAjaxSettings.prototype.cache;
+
+/** @type {(function(jQuery.jqXHR, string)|undefined)} */
+jQueryAjaxSettings.prototype.complete;
+
+/** @type {(Object<string, RegExp>|undefined)} */
+jQueryAjaxSettings.prototype.contents;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.contentType;
+
+/** @type {(Object<?, ?>|jQueryAjaxSettings|undefined)} */
+jQueryAjaxSettings.prototype.context;
+
+/** @type {(Object<string, Function>|undefined)} */
+jQueryAjaxSettings.prototype.converters;
+
+/** @type {(?boolean|undefined)} */
+jQueryAjaxSettings.prototype.crossDomain;
+
+/** @type {(Object<?, ?>|?string|Array<?>|undefined)} */
+jQueryAjaxSettings.prototype.data;
+
+/** @type {(function(string, string):?|undefined)} */
+jQueryAjaxSettings.prototype.dataFilter;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.dataType;
+
+/** @type {(function(jQuery.jqXHR, string, string)|undefined)} */
+jQueryAjaxSettings.prototype.error;
+
+/** @type {(?boolean|undefined)} */
+jQueryAjaxSettings.prototype.global;
+
+/** @type {(Object<?, ?>|undefined)} */
+jQueryAjaxSettings.prototype.headers;
+
+/** @type {(?boolean|undefined)} */
+jQueryAjaxSettings.prototype.ifModified;
+
+/** @type {(?boolean|undefined)} */
+jQueryAjaxSettings.prototype.isLocal;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.jsonp;
+
+/** @type {(?string|function()|undefined)} */
+jQueryAjaxSettings.prototype.jsonpCallback;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.mimeType;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.password;
+
+/** @type {(?boolean|undefined)} */
+jQueryAjaxSettings.prototype.processData;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.scriptCharset;
+
+/** @type {(Object<number, function()>|undefined)} */
+jQueryAjaxSettings.prototype.statusCode;
+
+/** @type {(function(?, string, jQuery.jqXHR)|undefined)} */
+jQueryAjaxSettings.prototype.success;
+
+/** @type {(?number|undefined)} */
+jQueryAjaxSettings.prototype.timeout;
+
+/** @type {(?boolean|undefined)} */
+jQueryAjaxSettings.prototype.traditional;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.type;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.url;
+
+/** @type {(?string|undefined)} */
+jQueryAjaxSettings.prototype.username;
+
+/** @type {(function():(ActiveXObject|XMLHttpRequest)|undefined)} */
+jQueryAjaxSettings.prototype.xhr;
+
+/** @type {(Object<?, ?>|undefined)} */
+jQueryAjaxSettings.prototype.xhrFields;
 
 /**
  * @constructor
