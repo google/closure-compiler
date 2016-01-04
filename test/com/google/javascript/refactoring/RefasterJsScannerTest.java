@@ -183,7 +183,7 @@ public class RefasterJsScannerTest {
         + "obj.bar();\n"
         + "obj.baz();\n"
         + postamble;
-    String expectedCode = preamble + "\n" + postamble;
+    String expectedCode = preamble + postamble;
     String template = ""
         + "/**\n"
         + " * @param {FooType} foo\n"

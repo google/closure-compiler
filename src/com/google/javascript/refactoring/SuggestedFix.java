@@ -172,7 +172,12 @@ public final class SuggestedFix {
      */
     private Builder delete(Node n, boolean deleteWhitespaceBefore) {
       int startPosition = n.getSourceOffset();
-      int length = n.getLength();
+      int length;
+      if (n.getNext() != null && NodeUtil.getBestJSDocInfo(n.getNext()) == null) {
+        length = n.getNext().getSourceOffset() - startPosition;
+      } else {
+        length = n.getLength();
+      }
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
       if (jsDoc != null) {
         length += (startPosition - jsDoc.getOriginalCommentPosition());
