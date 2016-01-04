@@ -246,7 +246,7 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
 
     // Calling #traverseAtScope starts traversal from the scope's root.
-    Node fn = tree.getFirstChild().getNext();
+    Node fn = tree.getSecondChild();
     Scope fnScope = creator.createScope(fn, topScope);
     callback.expect(fn, fn);
     t.traverseAtScope(fnScope);

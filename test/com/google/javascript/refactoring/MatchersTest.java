@@ -257,7 +257,7 @@ public class MatchersTest {
     Compiler compiler = getCompiler(input);
     NodeMetadata metadata = new NodeMetadata(compiler);
     Node root = compileToScriptRoot(compiler);
-    Node prototypeVarAssign = root.getFirstChild().getNext().getFirstChild();
+    Node prototypeVarAssign = root.getSecondChild().getFirstChild();
     Node prototypeFnAssign = root.getLastChild().getFirstChild();
 
     assertTrue(Matchers.prototypeVariableDeclaration().matches(

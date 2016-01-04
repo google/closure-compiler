@@ -445,7 +445,7 @@ class AmbiguateProperties implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP: {
-          Node propNode = n.getFirstChild().getNext();
+          Node propNode = n.getSecondChild();
           JSType jstype = getJSType(n.getFirstChild());
           maybeMarkCandidate(propNode, jstype);
           break;

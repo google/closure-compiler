@@ -148,6 +148,6 @@ public final class RecordFunctionInformationTest extends TestCase {
   }
 
   private Node main(Node root) {
-    return root.getFirstChild().getNext();
+    return root.getSecondChild();
   }
 }

@@ -620,6 +620,10 @@ public class Node implements Serializable {
     return first;
   }
 
+  public Node getSecondChild() {
+    return first.next;
+  }
+
   public Node getLastChild() {
     return last;
   }

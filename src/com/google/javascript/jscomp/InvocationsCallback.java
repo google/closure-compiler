@@ -47,7 +47,7 @@ abstract class InvocationsCallback extends AbstractPostOrderCallback {
       return;
     }
 
-    Node nameNode = function.getFirstChild().getNext();
+    Node nameNode = function.getSecondChild();
 
     // Don't care about numerical or variable indexes
     if (!nameNode.isString()) {

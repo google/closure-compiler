@@ -370,7 +370,7 @@ class DevirtualizePrototypeMethods
 
     // add extra argument
     String self = newMethodName + "$self";
-    Node argList = functionNode.getFirstChild().getNext();
+    Node argList = functionNode.getSecondChild();
     argList.addChildToFront(IR.name(self)
         .useSourceInfoIfMissingFrom(functionNode));
 

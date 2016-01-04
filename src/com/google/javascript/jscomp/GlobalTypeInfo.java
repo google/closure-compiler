@@ -1588,7 +1588,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       if (funType.isGeneric()) {
         ImmutableList.Builder<JSType> argTypes = ImmutableList.builder();
-        for (Node argNode = n.getFirstChild().getNext();
+        for (Node argNode = n.getSecondChild();
              argNode != null;
              argNode = argNode.getNext()) {
           JSType t = simpleInferExprType(argNode);
@@ -1812,7 +1812,7 @@ class GlobalTypeInfo implements CompilerPass {
         }
       }
       int declaredArity = funType.getOptionalArity();
-      int parameterCount = funNode.getFirstChild().getNext().getChildCount();
+      int parameterCount = funNode.getSecondChild().getChildCount();
       if (!funType.hasRestFormals() && parameterCount != declaredArity) {
         warnings.add(JSError.make(funNode, WRONG_PARAMETER_COUNT,
             String.valueOf(declaredArity), String.valueOf(parameterCount)));

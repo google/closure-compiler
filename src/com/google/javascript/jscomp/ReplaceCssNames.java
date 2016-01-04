@@ -146,7 +146,7 @@ class ReplaceCssNames implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall() && n.getFirstChild().matchesQualifiedName(GET_CSS_NAME_FUNCTION)) {
         int count = n.getChildCount();
-        Node first = n.getFirstChild().getNext();
+        Node first = n.getSecondChild();
         switch (count) {
           case 2:
             // Replace the function call with the processed argument.

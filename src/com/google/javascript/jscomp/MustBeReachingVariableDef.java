@@ -274,7 +274,7 @@ final class MustBeReachingVariableDef extends
 
       case Token.HOOK:
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
-        computeMustDef(n.getFirstChild().getNext(), cfgNode, output, true);
+        computeMustDef(n.getSecondChild(), cfgNode, output, true);
         computeMustDef(n.getLastChild(), cfgNode, output, true);
         return;
 

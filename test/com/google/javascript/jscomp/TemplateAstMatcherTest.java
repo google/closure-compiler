@@ -413,7 +413,7 @@ public final class TemplateAstMatcherTest extends TestCase {
         externs, template, "var ac = new AppContext(); ac.location = '3'; delete ac.location;");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild().getFirstChild());
-    assertMatch(pair.templateNode, pair.testNode.getFirstChild().getNext());
+    assertMatch(pair.templateNode, pair.testNode.getSecondChild());
 
     // Ensure that if a variable is declared within the template and reused
     // across multiple statements, ensure that the test code matches the same
@@ -437,7 +437,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
     pair = compile(
         externs, template, "var baz = 'qux'; var loc = 'string'; bar(baz);");
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstChild().getNext());
+    assertNotMatch(pair.templateNode, pair.testNode.getSecondChild());
   }
 
   public void testMatches_subclasses() {

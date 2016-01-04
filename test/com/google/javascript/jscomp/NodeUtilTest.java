@@ -757,7 +757,7 @@ public final class NodeUtilTest extends TestCase {
     Node ifNode = root.getFirstChild();
 
     Node ifCondition = ifNode.getFirstChild();
-    Node ifCase = ifNode.getFirstChild().getNext();
+    Node ifCase = ifNode.getSecondChild();
     Node elseCase = ifNode.getLastChild();
 
     assertFalse(NodeUtil.isControlStructureCodeBlock(ifNode, ifCondition));
@@ -832,7 +832,7 @@ public final class NodeUtilTest extends TestCase {
     Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
-    Node catchBlocks = tryNode.getFirstChild().getNext();
+    Node catchBlocks = tryNode.getSecondChild();
     Node catchBlock = catchBlocks.getFirstChild();
 
     NodeUtil.removeChild(catchBlocks, catchBlock);
@@ -848,7 +848,7 @@ public final class NodeUtilTest extends TestCase {
     Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
-    Node catchBlocks = tryNode.getFirstChild().getNext();
+    Node catchBlocks = tryNode.getSecondChild();
 
     NodeUtil.removeChild(tryNode, catchBlocks);
     String expected = "try {foo()} finally {}";
@@ -862,7 +862,7 @@ public final class NodeUtilTest extends TestCase {
     Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
-    Node catchBlocks = tryNode.getFirstChild().getNext();
+    Node catchBlocks = tryNode.getSecondChild();
     Node catchBlock = catchBlocks.getFirstChild();
 
     NodeUtil.removeChild(catchBlocks, catchBlock);
@@ -892,7 +892,7 @@ public final class NodeUtilTest extends TestCase {
     actual = parse("var foo, goo, hoo");
 
     varNode = actual.getFirstChild();
-    nameNode = varNode.getFirstChild().getNext();
+    nameNode = varNode.getSecondChild();
 
     NodeUtil.removeChild(varNode, nameNode);
     expected = "var foo, hoo";
@@ -905,7 +905,7 @@ public final class NodeUtilTest extends TestCase {
     actual = parse("var foo, hoo");
 
     varNode = actual.getFirstChild();
-    nameNode = varNode.getFirstChild().getNext();
+    nameNode = varNode.getSecondChild();
 
     NodeUtil.removeChild(varNode, nameNode);
     expected = "var foo";
@@ -975,7 +975,7 @@ public final class NodeUtilTest extends TestCase {
     actual = parse("for(var a=0;a<0;a++)foo()");
 
     forNode = actual.getFirstChild();
-    child = forNode.getFirstChild().getNext();
+    child = forNode.getSecondChild();
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(var a=0;;a++)foo()";
@@ -987,7 +987,7 @@ public final class NodeUtilTest extends TestCase {
     actual = parse("for(var a=0;a<0;a++)foo()");
 
     forNode = actual.getFirstChild();
-    child = forNode.getFirstChild().getNext().getNext();
+    child = forNode.getSecondChild().getNext();
 
     NodeUtil.removeChild(forNode, child);
     expected = "for(var a=0;a<0;)foo()";
@@ -2029,7 +2029,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring5() {
     Node root = parse("function fn([a, b] = [c, d]){}");
-    Node destructPat = root.getFirstChild().getFirstChild().getNext()
+    Node destructPat = root.getFirstChild().getSecondChild()
         .getFirstChild().getFirstChild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 

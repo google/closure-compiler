@@ -117,7 +117,7 @@ public class SuggestedFixTest {
 
     // Delete the 2nd variable.
     fix = new SuggestedFix.Builder()
-        .delete(root.getFirstChild().getFirstChild().getNext())
+        .delete(root.getFirstChild().getSecondChild())
         .build();
     replacement = new CodeReplacement(13, "bar, ".length(), "");
     assertReplacement(fix, replacement);

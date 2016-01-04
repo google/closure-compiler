@@ -73,7 +73,7 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
       return;
     }
 
-    Node args = n.getFirstChild().getNext();
+    Node args = n.getSecondChild();
     if (args.hasChildren()) {
       t.report(args.getFirstChild(), INTERFACE_SHOULD_NOT_TAKE_ARGS);
     }

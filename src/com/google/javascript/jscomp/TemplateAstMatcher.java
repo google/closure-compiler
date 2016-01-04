@@ -203,7 +203,7 @@ public final class TemplateAstMatcher {
     fn.getFirstChild().setString("");
 
     // Build a list of parameter names and types.
-    Node templateParametersNode = fn.getFirstChild().getNext();
+    Node templateParametersNode = fn.getSecondChild();
     JSDocInfo info = NodeUtil.getBestJSDocInfo(fn);
     if (templateParametersNode.hasChildren()) {
       Preconditions.checkNotNull(info,

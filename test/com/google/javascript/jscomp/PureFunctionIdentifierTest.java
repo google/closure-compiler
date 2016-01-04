@@ -1353,7 +1353,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         return "(" + generateNameString(node.getFirstChild()) +
             " || " + generateNameString(node.getLastChild()) + ")";
       } else if (node.isHook()) {
-        return "(" + generateNameString(node.getFirstChild().getNext()) +
+        return "(" + generateNameString(node.getSecondChild()) +
             " : " + generateNameString(node.getLastChild()) + ")";
       } else {
         String result = node.getQualifiedName();

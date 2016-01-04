@@ -1021,7 +1021,7 @@ public final class Es6RewriteGenerators
       Node incr = null;
       switch (n.getType()) {
         case Token.FOR:
-          guard = n.getFirstChild().getNext();
+          guard = n.getSecondChild();
           incr = guard.getNext();
           break;
         case Token.WHILE:

@@ -219,7 +219,7 @@ final class ClosureCodeRemoval implements CompilerPass {
       } else {
         // Otherwise, replace the assertion with its first argument,
         // which is the return value of the assertion.
-        Node firstArg = call.getFirstChild().getNext();
+        Node firstArg = call.getSecondChild();
         if (firstArg == null) {
           parent.replaceChild(call, NodeUtil.newUndefinedNode(call));
         } else {

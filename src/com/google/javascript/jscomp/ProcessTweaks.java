@@ -359,7 +359,7 @@ class ProcessTweaks implements CompilerPass {
       }
 
       // Ensure the first parameter (the tweak ID) is a string literal.
-      Node tweakIdNode = n.getFirstChild().getNext();
+      Node tweakIdNode = n.getSecondChild();
       if (!tweakIdNode.isString()) {
         compiler.report(t.makeError(tweakIdNode, NON_LITERAL_TWEAK_ID_ERROR));
         return;
@@ -445,7 +445,7 @@ class ProcessTweaks implements CompilerPass {
     }
 
     Node getIdNode() {
-      return callNode.getFirstChild().getNext();
+      return callNode.getSecondChild();
     }
   }
 

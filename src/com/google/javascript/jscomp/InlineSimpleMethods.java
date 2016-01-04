@@ -264,7 +264,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    * @param call The call node of a method invocation.
    */
   private boolean argsMayHaveSideEffects(Node call) {
-    for (Node currentChild = call.getFirstChild().getNext();
+    for (Node currentChild = call.getSecondChild();
          currentChild != null;
          currentChild = currentChild.getNext()) {
       if (NodeUtil.mayHaveSideEffects(currentChild, compiler)) {

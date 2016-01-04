@@ -487,7 +487,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       // The cls parameter is unused, but leave it there so that it
       // matches the JsDoc.
       // TODO(tbreisacher): Add a warning if the param is shadowed or reassigned.
-      Node argList = cls.classModifier.getFirstChild().getNext();
+      Node argList = cls.classModifier.getSecondChild();
       Node arg = argList.getFirstChild();
       final String argName = arg.getString();
       NodeTraversal.traverseEs6(compiler, cls.classModifier.getLastChild(),

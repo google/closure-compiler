@@ -96,7 +96,7 @@ public final class NodeUtil {
       }
       case Token.HOOK:  {
         TernaryValue trueValue = getImpureBooleanValue(
-            n.getFirstChild().getNext());
+            n.getSecondChild());
         TernaryValue falseValue = getImpureBooleanValue(n.getLastChild());
         if (trueValue.equals(falseValue)) {
           return trueValue;
@@ -1301,7 +1301,7 @@ public final class NodeUtil {
   }
 
   static boolean allArgsUnescapedLocal(Node callOrNew) {
-    for (Node arg = callOrNew.getFirstChild().getNext();
+    for (Node arg = callOrNew.getSecondChild();
          arg != null; arg = arg.getNext()) {
       if (!evaluatesToLocalValue(arg)) {
         return false;
@@ -1528,7 +1528,7 @@ public final class NodeUtil {
         return allResultsMatch(n.getFirstChild(), p)
             && allResultsMatch(n.getLastChild(), p);
       case Token.HOOK:
-        return allResultsMatch(n.getFirstChild().getNext(), p)
+        return allResultsMatch(n.getSecondChild(), p)
             && allResultsMatch(n.getLastChild(), p);
       default:
         return p.apply(n);
@@ -1565,7 +1565,7 @@ public final class NodeUtil {
             getKnownValueType(n.getLastChild()));
       case Token.HOOK:
         return and(
-            getKnownValueType(n.getFirstChild().getNext()),
+            getKnownValueType(n.getSecondChild()),
             getKnownValueType(n.getLastChild()));
 
       case Token.ADD: {
@@ -2200,7 +2200,7 @@ public final class NodeUtil {
       case Token.DO:
         return n.getLastChild();
       case Token.FOR:
-        return NodeUtil.isForIn(n) ? null : n.getFirstChild().getNext();
+        return NodeUtil.isForIn(n) ? null : n.getSecondChild();
       case Token.FOR_OF:
       case Token.CASE:
         return null;
@@ -2312,7 +2312,7 @@ public final class NodeUtil {
   static boolean isTryCatchNodeContainer(Node n) {
     Node parent = n.getParent();
     return parent.isTry()
-        && parent.getFirstChild().getNext() == n;
+        && parent.getSecondChild() == n;
   }
 
   /** Safely remove children while maintaining a valid node structure. */
@@ -3546,7 +3546,7 @@ public final class NodeUtil {
    */
   static Node getCatchBlock(Node n) {
     Preconditions.checkArgument(n.isTry());
-    return n.getFirstChild().getNext();
+    return n.getSecondChild();
   }
 
   /**
@@ -3565,7 +3565,7 @@ public final class NodeUtil {
   public static Node getFunctionParameters(Node fnNode) {
     // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
     Preconditions.checkArgument(fnNode.isFunction());
-    return fnNode.getFirstChild().getNext();
+    return fnNode.getSecondChild();
   }
 
   static boolean isConstantVar(Node node, Scope scope) {
@@ -3737,7 +3737,7 @@ public final class NodeUtil {
         return evaluatesToLocalValue(value.getFirstChild(), locals)
            && evaluatesToLocalValue(value.getLastChild(), locals);
       case Token.HOOK:
-        return evaluatesToLocalValue(value.getFirstChild().getNext(), locals)
+        return evaluatesToLocalValue(value.getSecondChild(), locals)
            && evaluatesToLocalValue(value.getLastChild(), locals);
       case Token.INC:
       case Token.DEC:
@@ -3808,7 +3808,7 @@ public final class NodeUtil {
   static Node getArgumentForFunction(Node function, int index) {
     Preconditions.checkState(function.isFunction());
     return getNthSibling(
-        function.getFirstChild().getNext().getFirstChild(), index);
+        function.getSecondChild().getFirstChild(), index);
   }
 
   /**
@@ -3818,7 +3818,7 @@ public final class NodeUtil {
   static Node getArgumentForCallOrNew(Node call, int index) {
     Preconditions.checkState(isCallOrNew(call));
     return getNthSibling(
-      call.getFirstChild().getNext(), index);
+      call.getSecondChild(), index);
   }
 
   /**

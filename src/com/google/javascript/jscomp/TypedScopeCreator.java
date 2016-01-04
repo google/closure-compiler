@@ -912,7 +912,7 @@ final class TypedScopeCreator implements ScopeCreator {
             rValue != null && rValue.isFunction();
         Node fnRoot = isFnLiteral ? rValue : null;
         Node parametersNode = isFnLiteral ?
-            rValue.getFirstChild().getNext() : null;
+            rValue.getSecondChild() : null;
 
         if (info != null && info.hasType()) {
           JSType type = info.getType().evaluate(scope, typeRegistry);
@@ -2081,7 +2081,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * Declares all of a function's arguments.
      */
     private void declareArguments(Node functionNode) {
-      Node astParameters = functionNode.getFirstChild().getNext();
+      Node astParameters = functionNode.getSecondChild();
       Node iifeArgumentNode = null;
 
       if (NodeUtil.isCallOrNewTarget(functionNode)) {

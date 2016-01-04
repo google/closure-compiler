@@ -161,7 +161,7 @@ public class ControlFlowGraph<N> extends
         // is atomic without change in control flow. The next change of
         // control is going into the function's body, represented by the second
         // child.
-        return n != parent.getFirstChild().getNext();
+        return n != parent.getSecondChild();
       case Token.WHILE:
       case Token.DO:
       case Token.IF:

@@ -127,7 +127,7 @@ class TypeInference
    */
   private void inferArguments(TypedScope functionScope) {
     Node functionNode = functionScope.getRootNode();
-    Node astParameters = functionNode.getFirstChild().getNext();
+    Node astParameters = functionNode.getSecondChild();
     Node iifeArgumentNode = null;
 
     if (NodeUtil.isCallOrNewTarget(functionNode)) {

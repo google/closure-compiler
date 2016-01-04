@@ -282,7 +282,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
       }
     } else {
       // Replace all parameters.
-      Node firstParam = n.getFirstChild().getNext();
+      Node firstParam = n.getSecondChild();
       for (Node arg = firstParam; arg != null; arg = arg.getNext()) {
         arg = replaceExpression(t, arg, n);
       }

@@ -475,7 +475,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     public com.google.javascript.rhino.jstype.JSType
         getAssertedOldType(Node call, JSTypeRegistry registry) {
       if (call.getChildCount() > 2) {
-        Node constructor = call.getFirstChild().getNext().getNext();
+        Node constructor = call.getSecondChild().getNext();
         if (constructor != null) {
           com.google.javascript.rhino.jstype.JSType ownerType =
               constructor.getJSType();
@@ -493,7 +493,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     @Override
     public JSType getAssertedNewType(Node call, DeclaredTypeRegistry scope) {
       if (call.getChildCount() > 2) {
-        Node constructor = call.getFirstChild().getNext().getNext();
+        Node constructor = call.getSecondChild().getNext();
         if (constructor != null && constructor.isQualifiedName()) {
           QualifiedName qname = QualifiedName.fromNode(constructor);
           JSType functionType = scope.getDeclaredTypeOf(qname.getLeftmostName());

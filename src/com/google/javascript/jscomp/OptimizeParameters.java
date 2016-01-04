@@ -488,7 +488,7 @@ class OptimizeParameters
    * @return true if a parameter has been removed.
    */
   private boolean eliminateParamsAfter(Node function, int argIndex) {
-    Node formalArgPtr = function.getFirstChild().getNext().getFirstChild();
+    Node formalArgPtr = function.getSecondChild().getFirstChild();
     while (argIndex != 0 && formalArgPtr != null) {
       formalArgPtr = formalArgPtr.getNext();
       argIndex--;
@@ -524,7 +524,7 @@ class OptimizeParameters
         function, argIndex);
 
     if (formalArgPtr != null) {
-      function.getFirstChild().getNext().removeChild(formalArgPtr);
+      function.getSecondChild().removeChild(formalArgPtr);
     }
     return formalArgPtr;
   }

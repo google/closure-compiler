@@ -419,7 +419,7 @@ public final class SuggestedFix {
       Preconditions.checkArgument(
           n.isCall(), "insertArguments is only applicable to function call nodes.");
       int startPosition;
-      Node argument = n.getFirstChild().getNext();
+      Node argument = n.getSecondChild();
       int i = 0;
       while (argument != null && i < position) {
         argument = argument.getNext();
@@ -466,7 +466,7 @@ public final class SuggestedFix {
           "deleteArgument() cannot be used on a function call with no arguments");
       Preconditions.checkArgument(position >= 0 && position < numArguments,
           "The specified position must be less than the number of arguments.");
-      Node argument = n.getFirstChild().getNext();
+      Node argument = n.getSecondChild();
 
       // Points at the first position in the code we will remove.
       int startOfArgumentToRemove = -1;

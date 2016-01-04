@@ -110,7 +110,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       return;
     }
 
-    Node paramList = function.getFirstChild().getNext();
+    Node paramList = function.getSecondChild();
     if (paramsFromJsDoc.size() != paramList.getChildCount()) {
       t.report(paramList, WRONG_NUMBER_OF_PARAMS);
       return;

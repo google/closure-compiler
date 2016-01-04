@@ -229,7 +229,7 @@ class FunctionInjector {
     if (!callNode.getFirstChild().isName()) {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
         if (!assumeStrictThis) {
-          Node thisValue = callNode.getFirstChild().getNext();
+          Node thisValue = callNode.getSecondChild();
           if (thisValue == null || !thisValue.isThis()) {
             return false;
           }
@@ -724,7 +724,7 @@ class FunctionInjector {
 
     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
     Node callNode = ref.callNode;
-    Node cArg = callNode.getFirstChild().getNext();
+    Node cArg = callNode.getSecondChild();
 
     // Functions called via 'call' and 'apply' have a this-object as
     // the first parameter, but this is not part of the called function's

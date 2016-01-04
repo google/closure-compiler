@@ -66,7 +66,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
   private void checkMissingSemicolon(NodeTraversal t, Node n) {
     switch (n.getType()) {
       case Token.IF:
-        Node trueCase = n.getFirstChild().getNext();
+        Node trueCase = n.getSecondChild();
         reportIfWasEmpty(t, trueCase);
         Node elseCase = trueCase.getNext();
         if (elseCase != null) {

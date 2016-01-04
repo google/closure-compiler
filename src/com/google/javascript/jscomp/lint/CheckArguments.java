@@ -62,7 +62,7 @@ public final class CheckArguments extends AbstractPostOrderCallback implements C
   private void checkArgumentsUsage(Node arguments, Node parent) {
     if (parent.isSpread()
         || (parent.isGetProp() && parent.matchesQualifiedName("arguments.length"))
-        || (parent.isForOf() && arguments == parent.getFirstChild().getNext())
+        || (parent.isForOf() && arguments == parent.getSecondChild())
         || (parent.isGetElem() && arguments == parent.getFirstChild())) {
       // No warning.
       return;

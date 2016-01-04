@@ -114,7 +114,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     // a work-around for an IE bug where it throws an exception if you
     // write to the parameters of the callback in a sort(). See:
     // http://code.google.com/p/closure-compiler/issues/detail?id=58
-    if (scope.getRootNode().getFirstChild().getNext().getChildCount() == 2) {
+    if (scope.getRootNode().getSecondChild().getChildCount() == 2) {
       liveness.markAllParametersEscaped();
     }
     liveness.analyze();

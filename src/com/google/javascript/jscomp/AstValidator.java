@@ -1035,7 +1035,7 @@ public final class AstValidator implements CompilerPass {
     validateMinimumChildCount(n, 1);
     validateExpression(n.getFirstChild());
     int defaults = 0;
-    for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
+    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
       validateSwitchMember(n.getLastChild());
       if (c.isDefaultCase()) {
         defaults++;

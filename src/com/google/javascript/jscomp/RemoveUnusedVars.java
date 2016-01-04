@@ -296,7 +296,7 @@ class RemoveUnusedVars
           // If arguments is escaped, we just assume the worst and continue
           // on all the parameters.
           if ("arguments".equals(n.getString()) && scope.isLocal()) {
-            Node lp = scope.getRootNode().getFirstChild().getNext();
+            Node lp = scope.getRootNode().getSecondChild();
             for (Node a = lp.getFirstChild(); a != null; a = a.getNext()) {
               markReferencedVar(scope.getVar(a.getString()));
             }
@@ -428,7 +428,7 @@ class RemoveUnusedVars
    * @return the LP node containing the function parameters.
    */
   private static Node getFunctionArgList(Node function) {
-    return function.getFirstChild().getNext();
+    return function.getSecondChild();
   }
 
   private static class CallSiteOptimizer {

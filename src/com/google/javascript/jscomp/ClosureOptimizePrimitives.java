@@ -71,7 +71,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
    * do so.
    */
   private void processObjectCreateCall(Node callNode) {
-    Node curParam = callNode.getFirstChild().getNext();
+    Node curParam = callNode.getSecondChild();
     if (canOptimizeObjectCreate(curParam)) {
       Node objNode = IR.objectlit().srcref(callNode);
       while (curParam != null) {
@@ -122,7 +122,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
    * do so.
    */
   private void processObjectCreateSetCall(Node callNode) {
-    Node curParam = callNode.getFirstChild().getNext();
+    Node curParam = callNode.getSecondChild();
     if (canOptimizeObjectCreateSet(curParam)) {
       Node objNode = IR.objectlit().srcref(callNode);
       while (curParam != null) {

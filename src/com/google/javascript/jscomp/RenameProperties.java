@@ -225,7 +225,7 @@ class RenameProperties implements CompilerPass {
     // Update the call nodes.
     for (Map.Entry<Node, Node> nodeEntry : callNodeToParentMap.entrySet()) {
       Node parent = nodeEntry.getValue();
-      Node firstArg = nodeEntry.getKey().getFirstChild().getNext();
+      Node firstArg = nodeEntry.getKey().getSecondChild();
       StringBuilder sb = new StringBuilder();
       for (String oldName : Splitter.on('.').split(firstArg.getString())) {
         Property p = propertyMap.get(oldName);
@@ -328,7 +328,7 @@ class RenameProperties implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:
-          Node propNode = n.getFirstChild().getNext();
+          Node propNode = n.getSecondChild();
           if (propNode.isString()) {
             maybeMarkCandidate(propNode);
           }
@@ -413,7 +413,7 @@ class RenameProperties implements CompilerPass {
      * @param t The traversal
      */
     private void countCallCandidates(NodeTraversal t, Node callNode) {
-      Node firstArg = callNode.getFirstChild().getNext();
+      Node firstArg = callNode.getSecondChild();
       if (!firstArg.isString()) {
         t.report(callNode, BAD_CALL);
         return;

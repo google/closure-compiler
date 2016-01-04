@@ -561,7 +561,7 @@ class GlobalNamespace
           return getValueType(n.getLastChild());
         case Token.HOOK:
           // The same line of reasoning used for the OR case applies here.
-          Node second = n.getFirstChild().getNext();
+          Node second = n.getSecondChild();
           Name.Type t = getValueType(second);
           if (t != Name.Type.OTHER) {
             return t;

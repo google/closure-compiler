@@ -214,7 +214,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
   private void rewriteGetModuleCall(NodeTraversal t, Node n) {
     // "use(goog.module.get('a.namespace'))" to "use(a.namespace)"
-    Node namespace = n.getFirstChild().getNext();
+    Node namespace = n.getSecondChild();
     if (!namespace.isString()) {
       t.report(namespace, INVALID_GET_IDENTIFIER);
       return;
@@ -511,10 +511,10 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
   private List<String> collectRoots(ModuleDescription module) {
     List<String> result = new ArrayList<>();
     for (Node n : module.provides) {
-      result.add(getRootName(n.getFirstChild().getNext()));
+      result.add(getRootName(n.getSecondChild()));
     }
     for (Node n : module.requires) {
-      result.add(getRootName(n.getFirstChild().getNext()));
+      result.add(getRootName(n.getSecondChild()));
     }
     return result;
   }

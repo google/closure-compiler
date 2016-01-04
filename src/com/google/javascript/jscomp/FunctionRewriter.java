@@ -320,7 +320,7 @@ class FunctionRewriter implements CompilerPass {
      * @return Whether the function matches the pattern.
      */
     private boolean isIdentityFunction(Node functionNode) {
-      Node argList = functionNode.getFirstChild().getNext();
+      Node argList = functionNode.getSecondChild();
       Node paramNode = argList.getFirstChild();
       if (paramNode == null) {
         return false;
@@ -500,7 +500,7 @@ class FunctionRewriter implements CompilerPass {
         return null;
       }
 
-      Node argList = functionNode.getFirstChild().getNext();
+      Node argList = functionNode.getSecondChild();
       Node paramNode = argList.getFirstChild();
       if (paramNode == null) {
         return null;

@@ -465,7 +465,7 @@ class PeepholeMinimizeConditions
     Node placeholder = minCond.getPlaceholder();
     if (mNode.getNode().isNot()) {
       // Swap the HOOK
-      Node thenBranch = n.getFirstChild().getNext();
+      Node thenBranch = n.getSecondChild();
       n.replaceChild(placeholder, mNode.getNode().removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
@@ -1060,7 +1060,7 @@ class PeepholeMinimizeConditions
 
       case Token.HOOK: {
         Node condition = n.getFirstChild();
-        Node trueNode = n.getFirstChild().getNext();
+        Node trueNode = n.getSecondChild();
         Node falseNode = n.getLastChild();
 
         // Because the expression is in a boolean context minimize

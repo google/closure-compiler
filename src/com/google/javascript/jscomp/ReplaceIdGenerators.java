@@ -345,7 +345,7 @@ class ReplaceIdGenerators implements CompilerPass {
         }
       }
 
-      Node arg = n.getFirstChild().getNext();
+      Node arg = n.getSecondChild();
       if (arg == null) {
         compiler.report(t.makeError(n, INVALID_GENERATOR_PARAMETER));
       } else if (arg.isString()) {

@@ -118,7 +118,7 @@ class MinimizeExitPoints
 
     // Just an 'if'.
     if (n.isIf()) {
-      Node ifBlock = n.getFirstChild().getNext();
+      Node ifBlock = n.getSecondChild();
       tryMinimizeExits(ifBlock, exitType, labelName);
       Node elseBlock = ifBlock.getNext();
       if (elseBlock != null) {
@@ -169,14 +169,14 @@ class MinimizeExitPoints
         Node trueBlock, falseBlock;
 
         // First, the true condition block.
-        trueBlock = ifTree.getFirstChild().getNext();
+        trueBlock = ifTree.getSecondChild();
         falseBlock = trueBlock.getNext();
         tryMinimizeIfBlockExits(trueBlock, falseBlock,
             ifTree, exitType, labelName);
 
         // Now the else block.
         // The if blocks may have changed, get them again.
-        trueBlock = ifTree.getFirstChild().getNext();
+        trueBlock = ifTree.getSecondChild();
         falseBlock = trueBlock.getNext();
         if (falseBlock != null) {
           tryMinimizeIfBlockExits(falseBlock, trueBlock,

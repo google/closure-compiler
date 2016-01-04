@@ -1987,7 +1987,7 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeAssertionCall(
       Node callNode, TypeEnv env, AssertionFunctionSpec assertionFunctionSpec) {
-    Node firstParam = callNode.getFirstChild().getNext();
+    Node firstParam = callNode.getSecondChild();
     if (firstParam == null) {
       return new EnvTypePair(env, JSType.UNKNOWN);
     }
@@ -2123,7 +2123,7 @@ final class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeCallNodeArgsFwdWhenError(
       Node callNode, TypeEnv inEnv) {
     TypeEnv env = inEnv;
-    for (Node arg = callNode.getFirstChild().getNext(); arg != null;
+    for (Node arg = callNode.getSecondChild(); arg != null;
         arg = arg.getNext()) {
       env = analyzeExprFwd(arg, env).env;
     }
@@ -3966,7 +3966,7 @@ final class NewTypeInference implements CompilerPass {
             fnSummary.getReturnType().toString()));
       }
       int i = 0;
-      Node argNode = callSite.getFirstChild().getNext();
+      Node argNode = callSite.getSecondChild();
       // this.argTypes can be null if in the fwd direction the analysis of the
       // call return prematurely, eg, because of a WRONG_ARGUMENT_COUNT.
       if (this.argTypes == null) {

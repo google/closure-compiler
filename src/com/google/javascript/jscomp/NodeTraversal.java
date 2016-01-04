@@ -374,7 +374,7 @@ public class NodeTraversal {
       curNode = n;
       pushScope(s);
 
-      Node args = n.getFirstChild().getNext();
+      Node args = n.getSecondChild();
       Node body = args.getNext();
       traverseBranch(args, n);
       traverseBranch(body, n);

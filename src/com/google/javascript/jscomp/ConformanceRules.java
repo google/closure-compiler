@@ -487,7 +487,7 @@ public final class ConformanceRules {
       }
 
       Node thisNode = isCallInvocation
-          ? callOrNew.getFirstChild().getNext()
+          ? callOrNew.getSecondChild()
           : callOrNew.getFirstChild().getFirstChild();
       JSType thisNodeType =
           thisNode.getJSType().restrictByNotNullOrUndefined();

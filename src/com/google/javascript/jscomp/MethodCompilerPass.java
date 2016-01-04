@@ -124,7 +124,7 @@ abstract class MethodCompilerPass implements CompilerPass {
       switch (n.getType()) {
         case Token.GETPROP:
         case Token.GETELEM: {
-          Node dest = n.getFirstChild().getNext();
+          Node dest = n.getSecondChild();
 
           if (!dest.isString()) {
             return;
@@ -178,7 +178,7 @@ abstract class MethodCompilerPass implements CompilerPass {
       switch (n.getType()) {
         case Token.GETPROP:
         case Token.GETELEM:
-          Node dest = n.getFirstChild().getNext();
+          Node dest = n.getSecondChild();
 
           if (dest.isString()) {
             if (dest.getString().equals("prototype")) {
@@ -238,12 +238,12 @@ abstract class MethodCompilerPass implements CompilerPass {
         //     function or name            <- assignee
         case Token.GETPROP:
         case Token.GETELEM:
-          Node dest = n.getFirstChild().getNext();
+          Node dest = n.getSecondChild();
           Node parent = n.getParent().getParent();
 
           if (dest.isString() &&
               parent.isAssign()) {
-            Node assignee = parent.getFirstChild().getNext();
+            Node assignee = parent.getSecondChild();
 
             addPossibleSignature(dest.getString(), assignee, t);
           }

@@ -468,7 +468,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Tries to convert x = x + y -> x += y;
     if (!right.hasChildren() ||
-        right.getFirstChild().getNext() != right.getLastChild()) {
+        right.getSecondChild() != right.getLastChild()) {
       // RHS must have two children.
       return n;
     }
@@ -541,7 +541,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     if (!n.hasChildren() ||
-        n.getFirstChild().getNext() != n.getLastChild()) {
+        n.getSecondChild() != n.getLastChild()) {
       return n;
     }
 

@@ -325,7 +325,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     if (name != null) {
       constructors.add(name);
     }
-    Node extendClass = classNode.getFirstChild().getNext();
+    Node extendClass = classNode.getSecondChild();
     if (extendClass.isQualifiedName()) {
       usages.put(extendClass.getQualifiedName(), extendClass);
     }

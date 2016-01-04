@@ -548,7 +548,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       replaceWithNodes(n, n.children());
     } else if (n.hasMoreThanOneChild()) {
       Node insertPoint = n;
-      for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
+      for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
         Node toAdd;
         if (!c.isExprResult()) {
           toAdd = n.cloneNode();
@@ -788,7 +788,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       String restName = null;
       TypeDeclarationNode restType = null;
 
-      for (Node param : function.getFirstChild().getNext().children()) {
+      for (Node param : function.getSecondChild().children()) {
         if (param.isName()) {
           if (param.isOptionalEs6Typed()) {
             optional.put(param.getString(), param.getDeclaredTypeExpression());

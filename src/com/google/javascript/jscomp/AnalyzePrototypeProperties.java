@@ -254,7 +254,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp()) {
-        String propName = n.getFirstChild().getNext().getString();
+        String propName = n.getSecondChild().getString();
 
         if (n.isQualifiedName()) {
           if (propName.equals("prototype")) {
@@ -463,7 +463,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       switch (n.getType()) {
         // Foo.prototype.getBar = function() { ... }
         case Token.GETPROP:
-          Node dest = n.getFirstChild().getNext();
+          Node dest = n.getSecondChild();
           Node parent = n.getParent();
           Node grandParent = parent.getParent();
 
@@ -482,7 +482,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
         // Foo.prototype = { "getBar" : function() { ... } }
         case Token.ASSIGN:
-          Node map = n.getFirstChild().getNext();
+          Node map = n.getSecondChild();
           if (map.isObjectLit()) {
             for (Node key = map.getFirstChild();
                  key != null; key = key.getNext()) {

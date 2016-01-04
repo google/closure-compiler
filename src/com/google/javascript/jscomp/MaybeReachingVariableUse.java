@@ -210,7 +210,7 @@ class MaybeReachingVariableUse extends
 
       case Token.HOOK:
         computeMayUse(n.getLastChild(), cfgNode, output, true);
-        computeMayUse(n.getFirstChild().getNext(), cfgNode, output, true);
+        computeMayUse(n.getSecondChild(), cfgNode, output, true);
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;
 

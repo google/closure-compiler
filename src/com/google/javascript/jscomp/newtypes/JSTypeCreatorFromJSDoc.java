@@ -837,7 +837,7 @@ public final class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry, FunctionTypeBuilder builder,
       boolean ignoreJsdoc /* for when the jsdoc is malformed */) {
     boolean ignoreFunNode  = !funNode.isFunction();
-    Node params = ignoreFunNode ? null : funNode.getFirstChild().getNext();
+    Node params = ignoreFunNode ? null : funNode.getSecondChild();
     ParamIterator iterator = new ParamIterator(params, jsdoc);
     while (iterator.hasNext()) {
       String pname = iterator.nextString();

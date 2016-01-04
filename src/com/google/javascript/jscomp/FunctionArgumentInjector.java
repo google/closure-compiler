@@ -115,7 +115,7 @@ class FunctionArgumentInjector {
     LinkedHashMap<String, Node> argMap = new LinkedHashMap<>();
 
     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
-    Node cArg = callNode.getFirstChild().getNext();
+    Node cArg = callNode.getSecondChild();
     if (cArg != null && NodeUtil.isFunctionObjectCall(callNode)) {
       argMap.put(THIS_MARKER, cArg);
       cArg = cArg.getNext();

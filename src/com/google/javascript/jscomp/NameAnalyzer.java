@@ -569,7 +569,7 @@ final class NameAnalyzer implements CompilerPass {
           //
           // TODO(user) revisit the dependency scope calculation
           // logic.
-          if (parent.getFirstChild().getNext() != n) {
+          if (parent.getSecondChild() != n) {
             recordDepScope(recordNode, ns);
           } else {
             recordDepScope(nameNode, ns);
@@ -1901,7 +1901,7 @@ final class NameAnalyzer implements CompilerPass {
         return parent.getFirstChild() == n;
 
       case Token.FOR:
-        return parent.getFirstChild().getNext() == n;
+        return parent.getSecondChild() == n;
 
       case Token.DO:
         return parent.getLastChild() == n;

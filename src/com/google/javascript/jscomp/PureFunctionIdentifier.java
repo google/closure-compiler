@@ -211,7 +211,7 @@ class PureFunctionIdentifier implements CompilerPass {
     } else if (name.isOr() || name.isHook()) {
       Node firstVal;
       if (name.isHook()) {
-        firstVal = name.getFirstChild().getNext();
+        firstVal = name.getSecondChild();
       } else {
         firstVal = name.getFirstChild();
       }
@@ -851,7 +851,7 @@ class PureFunctionIdentifier implements CompilerPass {
           // the "this" is going to be one of its arguments.
           boolean isCallOrApply = isCallOrApply(callSite);
           Node objectNode = isCallOrApply ?
-              callSite.getFirstChild().getNext() :
+              callSite.getSecondChild() :
               callSite.getFirstChild().getFirstChild();
           if (objectNode != null && objectNode.isName()
               && !isCallOrApply) {

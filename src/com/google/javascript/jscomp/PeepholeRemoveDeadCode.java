@@ -179,7 +179,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // Simplify the results of conditional expressions
     switch (n.getType()) {
       case Token.HOOK:
-        Node trueNode = trySimplifyUnusedResult(n.getFirstChild().getNext());
+        Node trueNode = trySimplifyUnusedResult(n.getSecondChild());
         Node falseNode = trySimplifyUnusedResult(n.getLastChild());
         // If one or more of the conditional children were removed,
         // transform the HOOK to an equivalent operation:
@@ -395,7 +395,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node lastNonRemovable = n.getFirstChild();  // The switch condition
 
     // The first child is the switch conditions skip it when looking for cases.
-    for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
+    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
       if (c.isDefaultCase()) {
         // Remove cases that fall-through to the default case
         Node caseToRemove = lastNonRemovable.getNext();
@@ -763,7 +763,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
       if (condTrue) {
         // Replace "if (true) { X }" with "X".
-        Node thenStmt = n.getFirstChild().getNext();
+        Node thenStmt = n.getSecondChild();
         n.removeChild(thenStmt);
         parent.replaceChild(n, thenStmt);
         reportCodeChange();
@@ -778,7 +778,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     } else {
       // Replace "if (true) { X } else { Y }" with X, or
       // replace "if (false) { X } else { Y }" with Y.
-      Node trueBranch = n.getFirstChild().getNext();
+      Node trueBranch = n.getSecondChild();
       Node falseBranch = trueBranch.getNext();
       Node branchToKeep = condTrue ? trueBranch : falseBranch;
       Node branchToRemove = condTrue ? falseBranch : trueBranch;

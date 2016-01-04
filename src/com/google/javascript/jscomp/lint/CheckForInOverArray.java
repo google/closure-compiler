@@ -53,7 +53,7 @@ public final class CheckForInOverArray
       Preconditions.checkState(n.getChildCount() == 3, n);
       // get the second child, which represents
       // B in construct "for (A in B) { C }"
-      Node child = n.getFirstChild().getNext();
+      Node child = n.getSecondChild();
       JSType type = child.getJSType();
       if (type != null && containsArray(type)) {
         return true;

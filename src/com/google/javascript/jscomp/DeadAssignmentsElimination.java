@@ -410,7 +410,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
           return first;
         }
         return checkHookBranchReadBeforeKill(
-            n.getFirstChild().getNext(), n.getLastChild(), variable);
+            n.getSecondChild(), n.getLastChild(), variable);
 
       default:
         // Expressions are evaluated left-right, depth first.

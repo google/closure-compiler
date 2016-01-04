@@ -240,7 +240,7 @@ class LiveVariablesAnalysis extends
       case Token.HOOK:
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // Assume both sides are conditional.
-        computeGenKill(n.getFirstChild().getNext(), gen, kill, true);
+        computeGenKill(n.getSecondChild(), gen, kill, true);
         computeGenKill(n.getLastChild(), gen, kill, true);
         return;
 
@@ -289,7 +289,7 @@ class LiveVariablesAnalysis extends
    * names in the escaped set.
    */
   void markAllParametersEscaped() {
-    Node lp = jsScope.getRootNode().getFirstChild().getNext();
+    Node lp = jsScope.getRootNode().getSecondChild();
     for (Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
       escaped.add(jsScope.getVar(arg.getString()));
     }

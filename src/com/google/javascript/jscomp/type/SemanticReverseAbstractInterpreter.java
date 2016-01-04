@@ -218,7 +218,7 @@ public final class SemanticReverseAbstractInterpreter
         return firstPreciserScopeKnowingConditionOutcome(
             condition.getFirstChild(),
             firstPreciserScopeKnowingConditionOutcome(
-                condition.getFirstChild().getNext(), blindScope, outcome),
+                condition.getSecondChild(), blindScope, outcome),
             outcome);
 
       case Token.NOT:

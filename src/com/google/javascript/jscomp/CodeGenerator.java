@@ -958,7 +958,7 @@ class CodeGenerator {
             || n.getBooleanProp(Node.COMPUTED_PROP_GETTER)
             || n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
           Node function = first.getNext();
-          Node params = function.getFirstChild().getNext();
+          Node params = function.getSecondChild();
           Node body = function.getLastChild();
 
           add(params);
@@ -1305,7 +1305,7 @@ class CodeGenerator {
     do {
       current = current.getParent();
       cc.addOp(opStr, true);
-      addExpr(current.getFirstChild().getNext(), rightPrecedence, rhsContext);
+      addExpr(current.getSecondChild(), rightPrecedence, rhsContext);
     } while (current != n);
   }
 
