@@ -957,7 +957,8 @@ public abstract class JSType implements TypeI {
     }
     int newMask = getMask() & ~otherMask;
     if ((otherMask & NON_SCALAR_MASK) == 0) {
-      return makeType(newMask, getObjs(), getTypeVar(), getEnums());
+      return newMask == getMask()
+          ? this : makeType(newMask, getObjs(), getTypeVar(), getEnums());
     }
     // TODO(dimvar): If objs and enums stay unchanged, reuse, don't recreate.
     Preconditions.checkState(other.getObjs().size() == 1,

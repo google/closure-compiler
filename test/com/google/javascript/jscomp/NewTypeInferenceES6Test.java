@@ -89,4 +89,35 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         "function f(x) {}",
         "f(Foo.prototype.method);"));
   }
+
+  public void testDetectPropertyDefinitionOnNullableObject() {
+    typeCheck(LINE_JOINER.join(
+        "/** @unrestricted */",
+        "class Foo {}",
+        "function f(/** ?Foo */ x) {",
+        "  /** @type {number} */",
+        "  x.prop = 123;",
+        "}",
+        "function g(/** !Foo */ x) {",
+        "  return x.prop - 5;",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+  }
+
+  public void testDetectPropertyDefinitionOnQualifiedName() {
+    typeCheck(LINE_JOINER.join(
+        "/** @unrestricted */",
+        "class A {}",
+        "/** @unrestricted */",
+        "class B {}",
+        "function f(/** !B */ x) {",
+        "  return x.prop;",
+        "}",
+        "/** @type {!A} */",
+        "var a = new A;",
+        "/** @type {!B} */",
+        "a.b = new B;",
+        "/** @type {number} */",
+        "a.b.prop = 123;"));
+  }
 }

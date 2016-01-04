@@ -1479,20 +1479,19 @@ class GlobalTypeInfo implements CompilerPass {
       if (isAnnotatedAsConst(getProp)) {
         warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
       }
-      QualifiedName recvQname = QualifiedName.fromNode(getProp.getFirstChild());
+      Node recv = getProp.getFirstChild();
+      QualifiedName recvQname = QualifiedName.fromNode(recv);
       Declaration d = this.currentScope.getDeclaration(recvQname, false);
-      if (d == null) {
-        return;
-      }
-      if (d.getTypedef() != null) {
+      if (d != null && d.getTypedef() != null) {
         warnings.add(JSError.make(getProp, CANNOT_ADD_PROPERTIES_TO_TYPEDEF));
         getProp.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         return;
       }
-      JSType recvType = d.getTypeOfSimpleDecl();
+      JSType recvType = simpleInferExprType(recv);
       if (recvType == null) {
         return;
       }
+      recvType = recvType.removeType(JSType.NULL);
       NominalType nt = recvType.getNominalTypeIfSingletonObj();
       // Don't add stray properties to Object.
       if (nt == null || nt.equals(commonTypes.getObjectType())) {
