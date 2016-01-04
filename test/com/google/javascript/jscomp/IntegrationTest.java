@@ -2454,12 +2454,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilationLevel.SIMPLE_OPTIMIZATIONS
         .setOptionsForCompilationLevel(options);
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
-    test(options,
-        "while (function () {\n" +
-        " function f(){};\n" +
-        " L: while (void(f += 3)) {}\n" +
-        "}) {}",
-        "for( ; function(){} ; );");
+    test(
+        options,
+        "while (function () {\n" + " function f(){};\n" + " L: while (void(f += 3)) {}\n" + "}) {}",
+        "for( ; ; );");
   }
 
   public void testIssue1198() throws Exception {

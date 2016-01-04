@@ -176,7 +176,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("x == undefined");
   }
 
-
   public void testUndefinedComparison2() {
     fold("\"123\" !== void 0", "true");
     fold("\"123\" === void 0", "false");
@@ -300,6 +299,20 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     foldSame("this == null");
     foldSame("x == null");
+  }
+
+  public void testObjectComparison1() {
+    fold("!new Date()", "false");
+    fold("!!new Date()", "true");
+
+    fold("new Date() == null", "false");
+    fold("new Date() == undefined", "false");
+    fold("new Date() != null", "true");
+    fold("new Date() != undefined", "true");
+    fold("null == new Date()", "false");
+    fold("undefined == new Date()", "false");
+    fold("null != new Date()", "true");
+    fold("undefined != new Date()", "true");
   }
 
   public void testUnaryOps() {
@@ -729,11 +742,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("\"\" === ''", "true");
     foldSame("foo() === bar()");
 
-    // TODO(johnlenz): It would be nice to handle these cases as well.
-    foldSame("1 === '1'");
-    foldSame("1 === true");
-    foldSame("1 !== '1'");
-    foldSame("1 !== true");
+    fold("1 === '1'", "false");
+    fold("1 === true", "false");
+    fold("1 !== '1'", "true");
+    fold("1 !== true", "true");
 
     fold("1 !== 0", "true");
     fold("'abc' !== 'def'", "true");

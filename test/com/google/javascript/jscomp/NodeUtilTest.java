@@ -119,7 +119,7 @@ public final class NodeUtilTest extends TestCase {
     assertPureBooleanUnknown("`${indefinite}Length`");
 
     assertPureBooleanTrue("class Klass{}");
-
+    assertPureBooleanTrue("new Date()");
   }
 
   private void assertPureBooleanTrue(String val) {
@@ -196,6 +196,7 @@ public final class NodeUtilTest extends TestCase {
 
     assertImpureBooleanTrue("{a:foo()}");
     assertImpureBooleanTrue("[foo()]");
+    assertImpureBooleanTrue("new Date()");
   }
 
   private void assertImpureBooleanTrue(String val) {

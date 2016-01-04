@@ -214,6 +214,8 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
          "do { foo(); } while(false)");
     fold("do { foo(); break; } while(false)",
          "do { foo(); } while(false)");
+
+    fold("do{break}while(!new Date());", "do{}while(!new Date());");
   }
 
   public void testForContinueOptimization() throws Exception {

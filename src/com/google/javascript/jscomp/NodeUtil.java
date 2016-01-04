@@ -104,6 +104,7 @@ public final class NodeUtil {
           return TernaryValue.UNKNOWN;
         }
       }
+      case Token.NEW:
       case Token.ARRAYLIT:
       case Token.OBJECTLIT:
         // ignoring side-effects
@@ -162,11 +163,18 @@ public final class NodeUtil {
         }
         break;
 
-      case Token.TRUE:
-      case Token.REGEXP:
+        // TODO: Fix this. CLASS expressions can have side-effects due to the extend clause.
       case Token.CLASS:
         return TernaryValue.TRUE;
 
+      case Token.TRUE:
+      case Token.REGEXP:
+        return TernaryValue.TRUE;
+
+      case Token.FUNCTION:
+        // Function declarations have the side effect of introducing a symbol.
+        return isFunctionExpression(n) ? TernaryValue.TRUE : TernaryValue.UNKNOWN;
+      case Token.NEW:
       case Token.ARRAYLIT:
       case Token.OBJECTLIT:
         if (!mayHaveSideEffects(n)) {
@@ -1542,6 +1550,8 @@ public final class NodeUtil {
    * all possible result Nodes of the expression.
    */
   static ValueType getKnownValueType(Node n) {
+    // TODO(johnlenz): INC/DEC, assign ops
+
     switch (n.getType()) {
       case Token.CAST:
         return getKnownValueType(n.getFirstChild());
@@ -1650,6 +1660,7 @@ public final class NodeUtil {
       case Token.VOID:
         return ValueType.VOID;
 
+      case Token.FUNCTION:
       case Token.NEW:
       case Token.ARRAYLIT:
       case Token.OBJECTLIT:

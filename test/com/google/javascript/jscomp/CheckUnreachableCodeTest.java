@@ -226,9 +226,8 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("if(`${sub}`) {x = 1;} else {x = 2;}");
     testSame("if(tagged`tempLit`) {x = 1;} else {x = 2;}");
 
-    // Functions were deemed UNKNOWN, so they remain UNKNOWN.
-    // TODO(tbreisacher): Treat functions as truthy.
-    testSame("if(()=>true) {x = 1;} else {x = 2;}");
+    // Functions are truthy.
+    assertUnreachable("if(()=>true) {x = 1;} else {x = 2;}");
   }
 
   public void testES6FeaturesInTryCatch() {
