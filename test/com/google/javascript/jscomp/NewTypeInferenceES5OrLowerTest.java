@@ -11005,6 +11005,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    return obj.myfun();",
         "  }",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  if (goog.isArrayLike(x)) {",
+        "    return x.length - 1;",
+        "  }",
+        "}"));
   }
 
   public void testGoogIsPredicatesFalse() {

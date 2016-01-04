@@ -345,7 +345,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   private final Set<String> propertyTestFunctions = ImmutableSet.of(
       "goog.isDef", "goog.isNull", "goog.isDefAndNotNull",
       "goog.isString", "goog.isNumber", "goog.isBoolean",
-      "goog.isFunction", "goog.isArray", "goog.isObject");
+      "goog.isFunction", "goog.isArray", "goog.isArrayLike", "goog.isObject");
 
   @Override
   public boolean isPropertyTestFunction(Node call) {

@@ -128,7 +128,7 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   public DeclaredFunctionType getDeclaredFunctionType() {
-    return declaredType;
+    return this.declaredType;
   }
 
   boolean isFunction() {

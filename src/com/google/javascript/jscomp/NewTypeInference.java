@@ -2537,13 +2537,17 @@ final class NewTypeInference implements CompilerPass {
       String typeHint, JSType booleanContext, JSType beforeType) {
     switch (typeHint) {
       case "array":
-      case "isArray":
+      case "isArray": {
         JSType arrayType = commonTypes.getArrayInstance();
-      if (arrayType.isUnknown()) {
-        return JSType.UNKNOWN;
+        if (arrayType.isUnknown()) {
+          return JSType.UNKNOWN;
+        }
+        return booleanContext.isTrueOrTruthy()
+            ? arrayType : beforeType.removeType(arrayType);
       }
-      return booleanContext.isTrueOrTruthy()
-          ? arrayType : beforeType.removeType(arrayType);
+      case "isArrayLike":
+        return JSType.TOP_OBJECT.withProperty(
+            new QualifiedName("length"), JSType.NUMBER);
       case "boolean":
       case "isBoolean":
         return booleanContext.isTrueOrTruthy()
