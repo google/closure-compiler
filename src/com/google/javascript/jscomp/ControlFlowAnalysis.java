@@ -615,10 +615,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     Node lastJump;
 
     // Similar to handBreak's logic with a few minor variation.
-    Node parent = node.getParent();
     for (cur = node, lastJump = node;
-        !isContinueTarget(cur, parent, label);
-        cur = parent, parent = parent.getParent()) {
+        !isContinueTarget(cur, label);
+        cur = cur.getParent()) {
       if (cur.isTry() && NodeUtil.hasFinally(cur)
           && cur.getLastChild() != previous) {
         if (lastJump == node) {
@@ -628,7 +627,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         }
         lastJump = cur;
       }
-      Preconditions.checkState(parent != null, "Cannot find continue target.");
+      Preconditions.checkState(cur.getParent() != null, "Cannot find continue target.");
       previous = cur;
     }
     Node iter = cur;
@@ -901,10 +900,11 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * Checks if target is actually the continue target of labeled continue. The
    * label can be null if it is an unlabeled continue.
    */
-  private static boolean isContinueTarget(
-      Node target, Node parent, String label) {
-    return isContinueStructure(target) && matchLabel(parent, label);
+  static boolean isContinueTarget(
+      Node target, String label) {
+    return isContinueStructure(target) && matchLabel(target.getParent(), label);
   }
+
   /**
    * Check if label is actually referencing the target control structure. If
    * label is null, it always returns true.
