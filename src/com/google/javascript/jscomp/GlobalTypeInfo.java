@@ -1837,7 +1837,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (declType == null) {
         return null;
       }
-      int numFormals = declNode.getChildAtIndex(1).getChildCount();
+      int numFormals = declNode.getSecondChild().getChildCount();
       int reqArity = declType.getRequiredArity();
       int optArity = declType.getOptionalArity();
       boolean hasRestFormals = declType.hasRestFormals();

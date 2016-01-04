@@ -789,7 +789,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case Token.FOR:
         if (NodeUtil.isForIn(n)) {
-          Node obj = n.getChildAtIndex(1);
+          Node obj = n.getSecondChild();
           if (getJSType(obj).isStruct()) {
             report(t, obj, IN_USED_WITH_STRUCT);
           }

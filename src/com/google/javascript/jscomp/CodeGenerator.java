@@ -514,12 +514,12 @@ class CodeGenerator {
           switch (type) {
             case Token.GETTER_DEF:
               // Get methods have no parameters.
-              Preconditions.checkState(!first.getChildAtIndex(1).hasChildren());
+              Preconditions.checkState(!first.getSecondChild().hasChildren());
               add("get ");
               break;
             case Token.SETTER_DEF:
               // Set methods have one parameter.
-              Preconditions.checkState(first.getChildAtIndex(1).hasOneChild());
+              Preconditions.checkState(first.getSecondChild().hasOneChild());
               add("set ");
               break;
             case Token.MEMBER_FUNCTION_DEF:
@@ -542,7 +542,7 @@ class CodeGenerator {
             Preconditions.checkState(first.getFirstChild().getString().isEmpty());
 
             Node fn = first;
-            Node parameters = fn.getChildAtIndex(1);
+            Node parameters = fn.getSecondChild();
             Node body = fn.getLastChild();
 
             // Add the property name.

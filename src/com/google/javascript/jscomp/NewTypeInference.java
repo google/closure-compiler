@@ -863,7 +863,7 @@ final class NewTypeInference implements CompilerPass {
         case Token.FOR:
         case Token.WHILE:
           if (NodeUtil.isForIn(n)) {
-            Node obj = n.getChildAtIndex(1);
+            Node obj = n.getSecondChild();
             EnvTypePair pair = analyzeExprFwd(obj, inEnv, pickReqObjType(n));
             pair = mayWarnAboutNullableReferenceAndTighten(n, pair.type, null, inEnv);
             JSType objType = pair.type;
@@ -1819,14 +1819,14 @@ final class NewTypeInference implements CompilerPass {
       Map<String, JSType> typeMap = calcTypeInstantiationFwd(
           expr,
           callee.isGetProp() ? callee.getFirstChild() : null,
-          expr.getChildAtIndex(1), funType, inEnv);
+          expr.getSecondChild(), funType, inEnv);
       funType = funType.instantiateGenerics(typeMap);
       println("Instantiated function type: " + funType);
     }
     // argTypes collects types of actuals for deferred checks.
     List<JSType> argTypes = new ArrayList<>();
     TypeEnv tmpEnv = analyzeCallNodeArgumentsFwd(
-        expr, expr.getChildAtIndex(1), funType, argTypes, inEnv);
+        expr, expr.getSecondChild(), funType, argTypes, inEnv);
     if (callee.isName()) {
       String calleeName = callee.getString();
       if (currentScope.isKnownFunction(calleeName)
@@ -2244,7 +2244,7 @@ final class NewTypeInference implements CompilerPass {
   private Map<String, JSType> calcTypeInstantiationBwd(
       Node callNode, FunctionType funType, TypeEnv typeEnv) {
     return calcTypeInstantiation(
-        callNode, null, callNode.getChildAtIndex(1), funType, typeEnv, false);
+        callNode, null, callNode.getSecondChild(), funType, typeEnv, false);
   }
 
   /*

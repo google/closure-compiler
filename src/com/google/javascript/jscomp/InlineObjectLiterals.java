@@ -456,7 +456,7 @@ class InlineObjectLiterals implements CompilerPass {
           Preconditions.checkState(getprop.isGetProp());
 
           // The key being looked up in the original map.
-          String var = getprop.getChildAtIndex(1).getString();
+          String var = getprop.getSecondChild().getString();
 
           // If the variable hasn't already been declared, add an empty
           // declaration near all the other declarations.

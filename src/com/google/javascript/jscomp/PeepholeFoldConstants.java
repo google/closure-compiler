@@ -252,7 +252,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         tryConvertToNumber(n.getLastChild());
         return;
       case Token.HOOK:
-        tryConvertToNumber(n.getChildAtIndex(1));
+        tryConvertToNumber(n.getSecondChild());
         tryConvertToNumber(n.getLastChild());
         return;
       case Token.NAME:
@@ -1196,7 +1196,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       Node srcObj = n.getLastChild();
       if (srcObj.isObjectLit() && !srcObj.hasChildren()) {
         Node parent = n.getParent();
-        Node destObj = n.getChildAtIndex(1).detachFromParent();
+        Node destObj = n.getSecondChild().detachFromParent();
         parent.replaceChild(n, destObj);
         reportCodeChange();
       }

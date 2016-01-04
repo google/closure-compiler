@@ -334,7 +334,7 @@ class PeepholeSubstituteAlternateSyntax
       if ("RegExp".equals(className)) {
         // Fold "new RegExp()" to "RegExp()", but only if the argument is a string.
         // See issue 1260.
-        if (n.getChildAtIndex(1) == null || n.getChildAtIndex(1).isString()) {
+        if (n.getSecondChild() == null || n.getSecondChild().isString()) {
           return true;
         }
       }

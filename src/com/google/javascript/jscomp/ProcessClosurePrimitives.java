@@ -222,7 +222,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private void replaceGoogDefines(Node n) {
     Node parent = n.getParent();
     Preconditions.checkState(parent.isExprResult());
-    String name = n.getChildAtIndex(1).getString();
+    String name = n.getSecondChild().getString();
     Node value = n.getChildAtIndex(2).detachFromParent();
 
     Node replacement = NodeUtil.newQNameDeclaration(
@@ -813,7 +813,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    */
   private void processInheritsCall(Node n) {
     if (n.getChildCount() == 3) {
-      Node subClass = n.getChildAtIndex(1);
+      Node subClass = n.getSecondChild();
       Node superClass = subClass.getNext();
       if (subClass.isUnscopedQualifiedName() &&
           superClass.isUnscopedQualifiedName()) {

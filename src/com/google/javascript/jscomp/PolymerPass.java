@@ -196,7 +196,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         newDocs.recordNoCollapse();
         n.setJSDocInfo(newDocs.build());
 
-        Node behaviorValue = n.getChildAtIndex(1);
+        Node behaviorValue = n.getSecondChild();
         if (n.isVar()) {
           behaviorValue = n.getFirstChild().getFirstChild();
         }
@@ -579,7 +579,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     // Add {@code @lends} to the object literal.
     Node call = exprRoot.getFirstChild();
     if (call.isAssign()) {
-      call = call.getChildAtIndex(1);
+      call = call.getSecondChild();
     } else if (call.isName()) {
       call = call.getFirstChild();
     }

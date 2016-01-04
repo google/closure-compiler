@@ -1163,7 +1163,7 @@ class TypeInference
     if (call.hasMoreThanOneChild()) {
       maybeResolveTemplateTypeFromNodes(
           fnType.getParameters(),
-          call.getChildAtIndex(1).siblings(),
+          call.getSecondChild().siblings(),
           resolvedTypes,
           seenTypes);
     }

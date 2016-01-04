@@ -353,7 +353,7 @@ public final class AstValidator implements CompilerPass {
       validateNodeType(Token.EMPTY, n.getFirstChild());
     }
 
-    Node secondChild = n.getChildAtIndex(1);
+    Node secondChild = n.getSecondChild();
     switch (secondChild.getType()) {
       case Token.IMPORT_SPECS:
         validateImportSpecifiers(secondChild);
@@ -388,7 +388,7 @@ public final class AstValidator implements CompilerPass {
     if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) { // export * from "mod"
       validateChildCount(n, 2);
       validateNodeType(Token.EMPTY, n.getFirstChild());
-      validateString(n.getChildAtIndex(1));
+      validateString(n.getSecondChild());
     } else if (n.getBooleanProp(Node.EXPORT_DEFAULT)) { // export default foo = 2
       validateChildCount(n, 1);
       validateExpression(n.getFirstChild());
@@ -400,7 +400,7 @@ public final class AstValidator implements CompilerPass {
         validateStatement(n.getFirstChild(), isAmbient);
       }
       if (n.getChildCount() == 2) {
-        validateString(n.getChildAtIndex(1));
+        validateString(n.getSecondChild());
       }
     }
   }
@@ -681,7 +681,7 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.FUNCTION, n);
     validateChildCount(n);
     validateName(n.getFirstChild());
-    validateParameters(n.getChildAtIndex(1));
+    validateParameters(n.getSecondChild());
     validateFunctionBody(n.getLastChild(), false);
   }
 
@@ -697,7 +697,7 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.FUNCTION, n);
     validateChildCount(n);
 
-    validateParameters(n.getChildAtIndex(1));
+    validateParameters(n.getSecondChild());
 
     Node name = n.getFirstChild();
     Node body = n.getLastChild();
@@ -892,12 +892,12 @@ public final class AstValidator implements CompilerPass {
       // FOR-IN
       validateChildCount(n, 3);
       validateVarOrAssignmentTarget(n.getFirstChild());
-      validateExpression(n.getChildAtIndex(1));
+      validateExpression(n.getSecondChild());
     } else {
       // FOR
       validateChildCount(n, 4);
       validateVarOrOptionalExpression(n.getFirstChild());
-      validateOptionalExpression(n.getChildAtIndex(1));
+      validateOptionalExpression(n.getSecondChild());
       validateOptionalExpression(n.getChildAtIndex(2));
     }
     validateBlock(n.getLastChild());
@@ -907,7 +907,7 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.FOR_OF, n);
     validateChildCount(n);
     validateVarOrAssignmentTarget(n.getFirstChild());
-    validateExpression(n.getChildAtIndex(1));
+    validateExpression(n.getSecondChild());
     validateBlock(n.getLastChild());
   }
 
@@ -954,7 +954,7 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.IF, n);
     validateChildCountIn(n, 2, 3);
     validateExpression(n.getFirstChild());
-    validateBlock(n.getChildAtIndex(1));
+    validateBlock(n.getSecondChild());
     if (n.getChildCount() == 3) {
       validateBlock(n.getLastChild());
     }
@@ -1004,7 +1004,7 @@ public final class AstValidator implements CompilerPass {
     boolean seenCatchOrFinally = false;
 
     // Validate catch
-    Node catches = n.getChildAtIndex(1);
+    Node catches = n.getSecondChild();
     validateNodeType(Token.BLOCK, catches);
     validateMaximumChildCount(catches, 1);
     if (catches.hasChildren()) {
@@ -1189,7 +1189,7 @@ public final class AstValidator implements CompilerPass {
     if (!function.getFirstChild().getString().isEmpty()) {
       violation("Expected unnamed function expression.", n);
     }
-    Node functionParams = function.getChildAtIndex(1);
+    Node functionParams = function.getSecondChild();
     if (functionParams.hasChildren()) {
       violation("get methods must not have parameters.", n);
     }
@@ -1205,7 +1205,7 @@ public final class AstValidator implements CompilerPass {
     if (!function.getFirstChild().getString().isEmpty()) {
       violation("Expected unnamed function expression.", n);
     }
-    Node functionParams = function.getChildAtIndex(1);
+    Node functionParams = function.getSecondChild();
     if (!functionParams.hasOneChild()) {
       violation("set methods must have exactly one parameter.", n);
     }

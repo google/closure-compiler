@@ -103,13 +103,13 @@ public final class TransformAMDToCJSModule implements CompilerPass {
           unsupportedDefineError(t, n);
           return;
         } else if (defineArity == 1) {
-          callback = n.getChildAtIndex(1);
+          callback = n.getSecondChild();
           if (callback.isObjectLit()) {
             handleDefineObjectLiteral(parent, callback, script);
             return;
           }
         } else if (defineArity == 2) {
-          requiresNode = n.getChildAtIndex(1);
+          requiresNode = n.getSecondChild();
           callback = n.getChildAtIndex(2);
         } else if (defineArity >= 3) {
           unsupportedDefineError(t, n);
@@ -155,7 +155,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
      */
     private void handleRequiresAndParamList(NodeTraversal t, Node defineNode,
         Node script, Node requiresNode, Node callback) {
-      Iterator<Node> paramList = callback.getChildAtIndex(1).children().
+      Iterator<Node> paramList = callback.getSecondChild().children().
           iterator();
       Iterator<Node> requires = requiresNode != null ?
           requiresNode.children().iterator() : Collections.<Node>emptyIterator();

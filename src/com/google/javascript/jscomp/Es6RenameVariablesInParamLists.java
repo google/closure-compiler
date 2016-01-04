@@ -48,7 +48,7 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
       return;
     }
 
-    Node paramList = n.getChildAtIndex(1);
+    Node paramList = n.getSecondChild();
     final CollectReferences collector = new CollectReferences();
     NodeTraversal.traverseEs6(compiler, paramList, new NodeTraversal.AbstractPreOrderCallback() {
       @Override

@@ -280,7 +280,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
    * property assignment with GETPROP nodes to allow for renaming.
    */
   private void maybeExpandJqueryEachCall(NodeTraversal t, Node n) {
-    Node objectToLoopOver = n.getChildAtIndex(1);
+    Node objectToLoopOver = n.getSecondChild();
 
     if (objectToLoopOver == null) {
       return;
@@ -293,12 +293,12 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
     // Run the peephole optimizations on the first argument to handle
     // cases like ("a " + "b").split(" ")
-    peepholePasses.process(null, n.getChildAtIndex(1));
+    peepholePasses.process(null, n.getSecondChild());
 
     // Create a reference tree
     Node nClone = n.cloneTree();
 
-    objectToLoopOver = nClone.getChildAtIndex(1);
+    objectToLoopOver = nClone.getSecondChild();
 
     // Check to see if the first argument is something we recognize and can
     // expand.
@@ -402,8 +402,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
           Node ancestorClone = ancestor.cloneTree();
           // Run the peephole passes to handle cases such as
           // obj['lit' + key] = val;
-          peepholePasses.process(null, ancestorClone.getChildAtIndex(1));
-          Node prop = ancestorClone.getChildAtIndex(1);
+          peepholePasses.process(null, ancestorClone.getSecondChild());
+          Node prop = ancestorClone.getSecondChild();
 
           if (prop.isString() &&
             NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {

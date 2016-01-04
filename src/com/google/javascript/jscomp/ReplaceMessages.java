@@ -60,7 +60,7 @@ final class ReplaceMessages extends JsMessageVisitor {
         (bundle.getMessage(message2.getId()) != null);
     Node replacementNode =
         isSecondMessageTranslated && !isFirstMessageTranslated ?
-        callNode.getChildAtIndex(2) : callNode.getChildAtIndex(1);
+        callNode.getChildAtIndex(2) : callNode.getSecondChild();
     callNode.getParent().replaceChild(callNode,
         replacementNode.detachFromParent());
   }

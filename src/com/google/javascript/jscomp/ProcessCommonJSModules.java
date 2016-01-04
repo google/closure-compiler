@@ -184,7 +184,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall() && n.getChildCount() == 2 &&
           n.getFirstChild().matchesQualifiedName("require") &&
-          n.getChildAtIndex(1).isString()) {
+          n.getSecondChild().isString()) {
         visitRequireCall(t, n, parent);
       }
 
@@ -259,7 +259,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
      * to be a direct reference to name of require module.
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = require.getChildAtIndex(1).getString();
+      String requireName = require.getSecondChild().getString();
       URI loadAddress = loader.locateCommonJsModule(requireName, t.getInput());
       if (loadAddress == null) {
         compiler.report(t.makeError(require, ES6ModuleLoader.LOAD_ERROR, requireName));
@@ -320,7 +320,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       Node p = n.getParent();
       if (p != null) {
         // pull out then-branch
-        replaceIfStatementWithBranch(n, n.getChildAtIndex(1));
+        replaceIfStatementWithBranch(n, n.getSecondChild());
       }
     }
 

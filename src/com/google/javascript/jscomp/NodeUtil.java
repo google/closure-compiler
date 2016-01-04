@@ -3645,7 +3645,7 @@ public final class NodeUtil {
       return true;
     }
     // Check inline parameter annotations
-    Node param = fn.getChildAtIndex(1).getFirstChild();
+    Node param = fn.getSecondChild().getFirstChild();
     while (param != null) {
       if (param.getJSDocInfo() != null) {
         return true;
@@ -3989,7 +3989,7 @@ public final class NodeUtil {
         if (!NodeUtil.isForIn(parent)) {
           // Only an expression whose result is in the condition part of the
           // expression is used.
-          return (parent.getChildAtIndex(1) == expr);
+          return (parent.getSecondChild() == expr);
         }
         break;
     }
@@ -4016,7 +4016,7 @@ public final class NodeUtil {
           continue inspect;
         case Token.FOR:
           if (NodeUtil.isForIn(parent)) {
-            if (parent.getChildAtIndex(1) != n) {
+            if (parent.getSecondChild() != n) {
               return false;
             }
           } else {

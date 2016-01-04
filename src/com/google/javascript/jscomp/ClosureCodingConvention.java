@@ -295,7 +295,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     // Identify forward declaration of form goog.forwardDeclare('foo.bar')
     if (callName.matchesQualifiedName("goog.forwardDeclare") &&
         n.getChildCount() == 2) {
-      Node typeDeclaration = n.getChildAtIndex(1);
+      Node typeDeclaration = n.getSecondChild();
       if (typeDeclaration.isString()) {
         return ImmutableList.of(typeDeclaration.getString());
       }

@@ -117,7 +117,7 @@ public final class TypeSyntaxTest extends TestCase {
         n.getFirstChild().getFirstChild().getFirstChild().getFirstChild().getFirstChild());
     n = parse("var x = {set a(v: number) {\n}};", LanguageMode.ECMASCRIPT6_TYPED);
     assertDeclaredType("number type", numberType(),
-        n.getFirstChild().getFirstChild().getFirstChild().getFirstChild().getFirstChild().getChildAtIndex(1)
+        n.getFirstChild().getFirstChild().getFirstChild().getFirstChild().getFirstChild().getSecondChild()
             .getFirstChild());
   }
 

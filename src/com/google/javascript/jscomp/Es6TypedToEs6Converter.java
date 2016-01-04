@@ -236,7 +236,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       n.removeProp(Node.IMPLEMENTS);
     }
 
-    Node superType = n.getChildAtIndex(1);
+    Node superType = n.getSecondChild();
     Node newSuperType = maybeGetQualifiedNameNode(superType);
     if (newSuperType != superType) {
       n.replaceChild(superType, newSuperType);
@@ -409,7 +409,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       if (!processedOverloads.contains(overloadStack)) {
         Node original = overloadStack.peek().get(name);
         processedOverloads.add(original);
-        Node paramList = original.getChildAtIndex(1);
+        Node paramList = original.getSecondChild();
         paramList.removeChildren();
         Node originalParent = original.getParent();
         Node originalJsDocNode = originalParent.isMemberFunctionDef() || originalParent.isAssign()

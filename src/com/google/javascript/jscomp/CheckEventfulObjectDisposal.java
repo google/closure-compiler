@@ -763,7 +763,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
 
       Node listener = n.getChildAtIndex(3);
 
-      Node objectWithListener = n.getChildAtIndex(1);
+      Node objectWithListener = n.getSecondChild();
       if (!objectWithListener.isQualifiedName()) {
         return;
       }

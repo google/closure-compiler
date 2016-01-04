@@ -113,7 +113,7 @@ class PeepholeMinimizeConditions
     Node block = n.getLastChild();
     Node maybeIf = block.getFirstChild();
     if (maybeIf != null && maybeIf.isIf()) {
-      Node thenBlock = maybeIf.getChildAtIndex(1);
+      Node thenBlock = maybeIf.getSecondChild();
       Node maybeBreak = thenBlock.getFirstChild();
       if (maybeBreak != null && maybeBreak.isBreak()
           && !maybeBreak.hasChildren()) {
