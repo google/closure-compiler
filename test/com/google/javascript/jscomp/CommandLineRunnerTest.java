@@ -1452,7 +1452,7 @@ public final class CommandLineRunnerTest extends TestCase {
            "var module$Baz=Baz$$module$Baz;",
 
            "var module$app={}," +
-           "    Baz$$module$app=module$Baz," +
+           "    Baz$$module$app=Baz$$module$Baz," +
            "    baz$$module$app=new Baz$$module$app;" +
            "console.log(baz$$module$app.baz());" +
            "console.log(baz$$module$app.bar())"
