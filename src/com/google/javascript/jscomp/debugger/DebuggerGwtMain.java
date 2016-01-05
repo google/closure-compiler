@@ -59,18 +59,24 @@ public class DebuggerGwtMain implements EntryPoint {
     options.getDependencyOptions().setEs6ModuleOrder(false); // This is currently not GWT compatible
     try {
       Result result = compiler.compile(externFile, srcFile, options);
-      updateUi(compiler.toSource(), Arrays.asList(result.warnings), Arrays.asList(result.errors));
+      updateUi(compiler, result);
     } catch (Exception e) {
       updateUiException(e);
     }
   }
 
-  private void updateUi(String outputCode, List<JSError> warnings, List<JSError> errors) {
+  private void updateUi(Compiler compiler, Result result) {
     rightPane.clear();
     rightPane.add(new HTML("<h4>Output</h4>"));
+    String outputCode = compiler.toSource();
     rightPane.add(new Label(outputCode));
     rightPane.add(new HTML("<h4>Warnings</h4>"));
+    List<JSError> errors = Arrays.asList(result.errors);
+    List<JSError> warnings = Arrays.asList(result.warnings);
     rightPane.add(new Label(Joiner.on("\n\n").join(Iterables.concat(errors, warnings))));
+    rightPane.add(new HTML("<h4>AST</h4>"));
+    String outputAst = compiler.getRoot().toStringTree();
+    rightPane.add(new Label(outputAst));
   }
 
   private void updateUiException(Exception e) {
