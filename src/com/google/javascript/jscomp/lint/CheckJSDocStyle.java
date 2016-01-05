@@ -89,7 +89,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
     checkParams(t, function, jsDoc);
 
-    String name = NodeUtil.getFunctionName(function);
+    String name = NodeUtil.getName(function);
     if (name != null && compiler.getCodingConvention().isPrivate(name)
         && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
       t.report(function, MUST_BE_PRIVATE, name);

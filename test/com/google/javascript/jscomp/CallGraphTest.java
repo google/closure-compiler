@@ -88,9 +88,9 @@ public final class CallGraphTest extends CompilerTestCase {
     CallGraph.Function functionC =
         callgraph.getUniqueFunctionWithName("C");
 
-    assertEquals("A", NodeUtil.getFunctionName(functionA.getAstNode()));
-    assertEquals("B", NodeUtil.getFunctionName(functionB.getAstNode()));
-    assertEquals("C", NodeUtil.getFunctionName(functionC.getAstNode()));
+    assertEquals("A", NodeUtil.getName(functionA.getAstNode()));
+    assertEquals("B", NodeUtil.getName(functionB.getAstNode()));
+    assertEquals("C", NodeUtil.getName(functionC.getAstNode()));
   }
 
   public void testGetAllFunctionsContainsNormalFunction() {
@@ -213,7 +213,7 @@ public final class CallGraphTest extends CompilerTestCase {
 
     Node bTargetExpression = firstCallsiteInB.getAstNode().getFirstChild();
     assertEquals(Token.FUNCTION, bTargetExpression.getType());
-    assertEquals("C", NodeUtil.getFunctionName(bTargetExpression));
+    assertEquals("C", NodeUtil.getName(bTargetExpression));
 
     CallGraph.Function functionC =
         callgraph.getUniqueFunctionWithName("C");
@@ -649,7 +649,7 @@ public final class CallGraphTest extends CompilerTestCase {
 
     // Regular function's AST node should be the function for A
     assertTrue(functionA.getAstNode().isFunction());
-    assertEquals("A", NodeUtil.getFunctionName(functionA.getAstNode()));
+    assertEquals("A", NodeUtil.getName(functionA.getAstNode()));
   }
 
   public void testFunctionGetBodyNode() {
@@ -687,8 +687,7 @@ public final class CallGraphTest extends CompilerTestCase {
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
 
     // Regular function's name should be its name
-    assertEquals(NodeUtil.getFunctionName(functionA.getAstNode()),
-        functionA.getName());
+    assertEquals(NodeUtil.getName(functionA.getAstNode()), functionA.getName());
   }
 
   public void testFunctionGetCallsitesInFunction() {

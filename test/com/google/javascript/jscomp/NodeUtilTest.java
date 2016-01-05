@@ -344,7 +344,7 @@ public final class NodeUtilTest extends TestCase {
 
   private void testGetFunctionName(Node function, String name) {
     assertEquals(Token.FUNCTION, function.getType());
-    assertEquals(name, NodeUtil.getFunctionName(function));
+    assertEquals(name, NodeUtil.getName(function));
   }
 
   public void testContainsFunctionDeclaration() {

@@ -67,14 +67,14 @@ class ExportTestFunctions implements CompilerPass {
       if (parent.isScript()) {
         if (NodeUtil.isFunctionDeclaration(n)) {
           // Check for a test function statement.
-          String functionName = NodeUtil.getFunctionName(n);
+          String functionName = NodeUtil.getName(n);
           if (isTestFunction(functionName)) {
             exportTestFunctionAsSymbol(functionName, n, parent);
           }
         } else if (isNameDeclaredFunction(n)) {
           // Check for a test function expression.
           Node functionNode = n.getFirstChild().getFirstChild();
-          String functionName = NodeUtil.getFunctionName(functionNode);
+          String functionName = NodeUtil.getName(functionNode);
           if (isTestFunction(functionName)) {
             exportTestFunctionAsSymbol(functionName, n, parent);
           }

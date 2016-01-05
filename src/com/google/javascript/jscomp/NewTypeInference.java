@@ -1033,7 +1033,7 @@ final class NewTypeInference implements CompilerPass {
     summary = mayChangeSummaryForFunctionsWithProperties(fn, summary);
     summaries.put(fn, summary);
     maybeSetTypeI(fnRoot, summary);
-    Node fnNameNode = NodeUtil.getFunctionNameNode(fnRoot);
+    Node fnNameNode = NodeUtil.getNameNode(fnRoot);
     if (fnNameNode != null) {
       maybeSetTypeI(fnNameNode, summary);
     }
@@ -1042,7 +1042,7 @@ final class NewTypeInference implements CompilerPass {
   private JSType mayChangeSummaryForFunctionsWithProperties(
       NTIScope fnScope, JSType currentSummary) {
     NTIScope enclosingScope = fnScope.getParent();
-    Node fnNameNode = NodeUtil.getFunctionNameNode(fnScope.getRoot());
+    Node fnNameNode = NodeUtil.getNameNode(fnScope.getRoot());
     JSType summary = currentSummary;
     JSType namespaceType = null;
     if (fnNameNode == null) {

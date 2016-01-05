@@ -111,7 +111,7 @@ class CheckProvides implements HotSwapCompilerPass {
     }
 
     private void visitClassNode(Node classNode) {
-      String name = NodeUtil.getClassName(classNode);
+      String name = NodeUtil.getName(classNode);
       if (name != null && !isPrivate(classNode)) {
         ctors.put(name, classNode);
       }

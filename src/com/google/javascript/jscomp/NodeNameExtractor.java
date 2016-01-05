@@ -47,10 +47,8 @@ class NodeNameExtractor {
   String getName(Node node) {
     switch (node.getType()) {
       case Token.CLASS:
-        return NodeUtil.getClassName(node);
       case Token.FUNCTION:
-        Node functionNameNode = node.getFirstChild();
-        return functionNameNode.getString();
+        return NodeUtil.getName(node);
       case Token.GETPROP:
         Node lhsOfDot = node.getFirstChild();
         Node rhsOfDot = lhsOfDot.getNext();

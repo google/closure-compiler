@@ -590,7 +590,7 @@ public final class CallGraph implements CompilerPass {
       if (isMain()) {
         return MAIN_FUNCTION_NAME;
       } else {
-        return NodeUtil.getFunctionName(astNode);
+        return NodeUtil.getName(astNode);
       }
     }
 

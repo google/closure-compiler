@@ -284,7 +284,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   }
 
   private void checkClassReassignment(Node clazz) {
-    Node name = NodeUtil.getClassNameNode(clazz);
+    Node name = NodeUtil.getNameNode(clazz);
     Node enclosingFunction = NodeUtil.getEnclosingFunction(clazz);
     if (enclosingFunction == null) {
       return;

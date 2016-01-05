@@ -357,7 +357,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
         if (!parentScopeType.isGlobalThisType()) {
           key = parentScopeType + "~" + key;
         }
-        key = NodeUtil.getFunctionName(scopeNode) + "=" + key;
+        key = NodeUtil.getName(scopeNode) + "=" + key;
       }
     } else {
       /*
@@ -683,7 +683,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
        * TypedScope entered is a function definition
        */
       if (n.isFunction()) {
-        functionName = NodeUtil.getFunctionName(n);
+        functionName = NodeUtil.getName(n);
 
         /*
          *  Skip anonymous functions
@@ -1140,8 +1140,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
             paramNode = paramNode.getNext();
           }
         }
-        addDisposeCall(NodeUtil.getFunctionName(n),
-            positionalDisposedParameters);
+        addDisposeCall(NodeUtil.getName(n), positionalDisposedParameters);
       }
     }
 

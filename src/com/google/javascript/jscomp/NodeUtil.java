@@ -412,7 +412,7 @@ public final class NodeUtil {
   }
 
   /**
-   * Gets the node of a class's name. This method recognizes five forms:
+   * Gets the node of a function or class's name. This method recognizes five forms:
    * <ul>
    * <li>{@code class name {...}}</li>
    * <li>{@code var name = class {...}}</li>
@@ -423,58 +423,11 @@ public final class NodeUtil {
    * In two last cases with named function expressions, the second name is
    * returned (the variable or qualified name).
    *
-   * @param clazz A class node
+   * @param n A function or class node
    * @return the node best representing the class's name
-   * @deprecated Use getNameNode.
    */
-  @Deprecated
-  static Node getClassNameNode(Node clazz) {
-    Preconditions.checkState(clazz.isClass());
-    return getNameNode(clazz);
-  }
-
-  /**
-   * @deprecated Use getName.
-   */
-  @Deprecated
-  static String getClassName(Node n) {
-    Node nameNode = getClassNameNode(n);
-    return nameNode == null ? null : nameNode.getQualifiedName();
-  }
-
-  /**
-   * Gets the node of a function's name. This method recognizes five forms:
-   * <ul>
-   * <li>{@code function name() ...}</li>
-   * <li>{@code var name = function() ...}</li>
-   * <li>{@code qualified.name = function() ...}</li>
-   * <li>{@code var name2 = function name1() ...}</li>
-   * <li>{@code qualified.name2 = function name1() ...}</li>
-   * </ul>
-   * In two last cases with named function expressions, the second name is
-   * returned (the variable or qualified name).
-   *
-   * @param n A function node
-   * @return the node best representing the function's name
-   * @deprecated Use getNameNode.
-   */
-  @Deprecated
-  static Node getFunctionNameNode(Node n) {
-    Preconditions.checkState(n.isFunction(), n);
-    return getNameNode(n);
-  }
-
-  /**
-   * @deprecated Use getName.
-   */
-  @Deprecated
-  public static String getFunctionName(Node n) {
-    Node nameNode = getFunctionNameNode(n);
-    return nameNode == null ? null : nameNode.getQualifiedName();
-  }
-
-  private static Node getNameNode(Node n) {
-    Preconditions.checkState(n.isFunction() || n.isClass(), n);
+  static Node getNameNode(Node n) {
+    Preconditions.checkState(n.isFunction() || n.isClass());
     Node parent = n.getParent();
     switch (parent.getType()) {
       case Token.NAME:
@@ -522,7 +475,7 @@ public final class NodeUtil {
       return null;
     }
 
-    String name = getFunctionName(n);
+    String name = getName(n);
     if (name != null) {
       return name;
     }

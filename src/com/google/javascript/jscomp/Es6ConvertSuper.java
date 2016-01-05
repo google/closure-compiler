@@ -120,7 +120,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
       compiler.report(JSError.make(node, NO_SUPERTYPE));
       return;
     }
-    if (NodeUtil.getClassNameNode(clazz) == null) {
+    if (NodeUtil.getNameNode(clazz) == null) {
       // Unnamed classes of the form:
       //   f(class extends D { ... });
       // will be rejected when the class is processed.

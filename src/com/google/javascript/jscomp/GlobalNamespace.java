@@ -530,7 +530,7 @@ class GlobalNamespace
     String getNameForClassMembers(Node n) {
       Node parent = n.getParent();
       Preconditions.checkState(parent.isClassMembers());
-      String className = NodeUtil.getClassName(parent.getParent());
+      String className = NodeUtil.getName(parent.getParent());
       return className == null ? null : className + '.' + n.getString();
     }
 

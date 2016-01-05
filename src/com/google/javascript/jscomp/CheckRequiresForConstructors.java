@@ -321,7 +321,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   }
 
   private void visitClassNode(Node classNode) {
-    String name = NodeUtil.getClassName(classNode);
+    String name = NodeUtil.getName(classNode);
     if (name != null) {
       constructors.add(name);
     }

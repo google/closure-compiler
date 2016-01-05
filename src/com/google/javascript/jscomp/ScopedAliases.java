@@ -613,7 +613,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       } else {
         Node anonymousFnNode = n.getSecondChild();
         if (!anonymousFnNode.isFunction()
-            || NodeUtil.getFunctionName(anonymousFnNode) != null
+            || NodeUtil.getName(anonymousFnNode) != null
             || NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
           report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
         } else {

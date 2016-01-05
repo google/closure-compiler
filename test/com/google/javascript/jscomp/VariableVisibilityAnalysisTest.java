@@ -191,16 +191,16 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
 
     final Node[] foundNode = new Node[1];
 
-    AbstractPostOrderCallback findFunction = new AbstractPostOrderCallback() {
+    AbstractPostOrderCallback findFunction =
+        new AbstractPostOrderCallback() {
 
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.isFunction()
-            && functionName.equals(NodeUtil.getFunctionName(n))) {
-          foundNode[0] = n;
-        }
-      }
-    };
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isFunction() && functionName.equals(NodeUtil.getName(n))) {
+              foundNode[0] = n;
+            }
+          }
+        };
 
     NodeTraversal.traverseEs6(lastCompiler, lastCompiler.jsRoot, findFunction);
 

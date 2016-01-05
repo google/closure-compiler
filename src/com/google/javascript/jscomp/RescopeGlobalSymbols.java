@@ -171,7 +171,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isFunctionDeclaration(n)) {
-        String name = NodeUtil.getFunctionName(n);
+        String name = NodeUtil.getName(n);
         n.getFirstChild().setString("");
         Node prev = parent.getChildBefore(n);
         n.detachFromParent();

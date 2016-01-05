@@ -111,7 +111,7 @@ final class NTIScope implements DeclaredTypeRegistry {
   /** Used only for error messages; null for top scope */
   String getReadableName() {
     // TODO(dimvar): don't return null for anonymous functions
-    return isTopLevel() ? null : NodeUtil.getFunctionName(root);
+    return isTopLevel() ? null : NodeUtil.getName(root);
   }
 
   String getName() {

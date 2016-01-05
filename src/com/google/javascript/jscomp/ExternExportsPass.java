@@ -526,7 +526,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       return;
     }
 
-    String constructorName = NodeUtil.getFunctionName(constructorNode);
+    String constructorName = NodeUtil.getName(constructorNode);
     String propertyName = definitionNode.getLastChild().getString();
     String prototypeName = constructorName + ".prototype";
     Node propertyNameNode = NodeUtil.newQName(compiler, "this." + propertyName);

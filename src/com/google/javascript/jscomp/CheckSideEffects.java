@@ -241,7 +241,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isFunction()) {
-        String name = NodeUtil.getFunctionName(n);
+        String name = NodeUtil.getName(n);
         JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
         if (jsDoc != null && jsDoc.isNoSideEffects()) {
           noSideEffectExterns.put(name, null);

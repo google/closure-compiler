@@ -224,10 +224,8 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       Node child = export.getFirstChild();
       String name = null;
 
-      if (child.isFunction()) {
-        name = NodeUtil.getFunctionName(child);
-      } else if (child.isClass()) {
-        name = NodeUtil.getClassName(child);
+      if (child.isFunction() || child.isClass()) {
+        name = NodeUtil.getName(child);
       }
 
       if (name != null) {

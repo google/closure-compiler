@@ -318,7 +318,7 @@ class GlobalTypeInfo implements CompilerPass {
     if (anonFunNames.containsKey(n)) {
       return anonFunNames.get(n);
     }
-    Node fnNameNode = NodeUtil.getFunctionNameNode(n);
+    Node fnNameNode = NodeUtil.getNameNode(n);
     // We don't want to use qualified names here
     Preconditions.checkState(fnNameNode != null);
     Preconditions.checkState(fnNameNode.isName());
@@ -841,7 +841,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitFunctionEarly(Node fn) {
       JSDocInfo fnDoc = NodeUtil.getBestJSDocInfo(fn);
-      Node nameNode = NodeUtil.getFunctionNameNode(fn);
+      Node nameNode = NodeUtil.getNameNode(fn);
       String internalName = createFunctionInternalName(fn, nameNode);
       boolean isRedeclaration;
       if (nameNode == null || !nameNode.isQualifiedName()) {
@@ -1789,8 +1789,7 @@ class GlobalTypeInfo implements CompilerPass {
           declNode.isFunction() ? nominaltypesByNode.get(declNode) : null;
       FunctionAndSlotType result = typeParser.getFunctionType(
           fnDoc, functionName, declNode, ctorType, ownerType, parentScope);
-      Node qnameNode = declNode.isGetProp()
-          ? declNode : NodeUtil.getFunctionNameNode(declNode);
+      Node qnameNode = declNode.isGetProp() ? declNode : NodeUtil.getNameNode(declNode);
       if (result.slotType != null && qnameNode != null && qnameNode.isName()) {
         parentScope.addLocal(qnameNode.getString(),
             result.slotType, false, qnameNode.isFromExterns());

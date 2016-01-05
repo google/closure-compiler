@@ -139,7 +139,7 @@ class RuntimeTypeCheck implements CompilerPass {
         return nodeToInsertAfter;
       }
 
-      String className = NodeUtil.getFunctionName(funType.getSource());
+      String className = NodeUtil.getName(funType.getSource());
 
       // This can happen with anonymous classes declared with the type
       // {@code Function}.
