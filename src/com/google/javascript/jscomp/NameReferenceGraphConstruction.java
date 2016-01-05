@@ -172,11 +172,11 @@ class NameReferenceGraphConstruction implements CompilerPass {
           }
 
           if (isPrototypeNameReference(n)) {
-            recordPrototypePropUse(n, parent);
+            recordPrototypePropUse(n);
           } else if (isStaticNameReference(n, t.getScope())) {
-            recordStaticNameUse(n, parent);
+            recordStaticNameUse(n);
           } else {
-            recordUnknownUse(n, parent);
+            recordUnknownUse(n);
           }
           break;
 
@@ -418,8 +418,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       return prototypeProp;
     }
 
-    private Reference recordStaticNameUse(
-        Node n, Node parent) {
+    private Reference recordStaticNameUse(Node n) {
       if (isExtern) {
         // Don't count reference in extern as a use.
         return null;
@@ -432,7 +431,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       }
     }
 
-    private void recordPrototypePropUse(Node n, Node parent) {
+    private void recordPrototypePropUse(Node n) {
       Preconditions.checkArgument(n.isGetProp());
       Node instance = n.getFirstChild();
       JSType instanceType = getType(instance);
@@ -457,7 +456,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
           // TODO(user): TightenType can help a whole lot here.
           recordSubclassPrototypePropUse(constructor, propName, ref);
         } else {
-          recordUnknownUse(n, parent);
+          recordUnknownUse(n);
         }
       }
     }
@@ -498,7 +497,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       }
     }
 
-    private void recordUnknownUse(Node n, Node parent) {
+    private void recordUnknownUse(Node n) {
       if (isExtern) {
         // Don't count reference in extern as a use.
         return;

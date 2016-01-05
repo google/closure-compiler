@@ -931,7 +931,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
             iterable);
       }
     }
-    return callEs6RuntimeFunction(t, compiler, iterable, "makeIterator");
+    return callEs6RuntimeFunction(compiler, iterable, "makeIterator");
   }
 
   /**
@@ -947,11 +947,11 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         fnName = "arrayFromArguments";
       }
     }
-    return callEs6RuntimeFunction(t, compiler, iterable, fnName);
+    return callEs6RuntimeFunction(compiler, iterable, fnName);
   }
 
   private static Node callEs6RuntimeFunction(
-      NodeTraversal t, AbstractCompiler compiler, Node iterable, String function) {
+      AbstractCompiler compiler, Node iterable, String function) {
     compiler.needsEs6Runtime = true;
     return IR.call(
         NodeUtil.newQName(compiler, "$jscomp." + function),
