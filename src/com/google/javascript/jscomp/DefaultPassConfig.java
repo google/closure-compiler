@@ -175,6 +175,13 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
   }
+  
+  @Override
+  protected List<PassFactory> getWhitespaceOnlyPasses() {
+    List<PassFactory> passes = new ArrayList<>();
+    passes.add(whitespaceWrapGoogModules);
+    return passes;
+  }
 
   @Override
   protected List<PassFactory> getChecks() {
@@ -2705,4 +2712,14 @@ public final class DefaultPassConfig extends PassConfig {
       return new RewriteBindThis(compiler);
     }
   };
+
+  /** Rewrites goog.module in whitespace only mode */
+  private final HotSwapPassFactory whitespaceWrapGoogModules =
+      new HotSwapPassFactory("whitespaceWrapGoogModules", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return new WhitespaceWrapGoogModules(compiler);
+    }
+  };
+
 }

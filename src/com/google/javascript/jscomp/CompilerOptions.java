@@ -958,6 +958,7 @@ public class CompilerOptions {
 
   /** List of conformance configs to use in CheckConformance */
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
+  
 
   /**
    * Initializes compiler options. All options are disabled by default.

@@ -4224,4 +4224,24 @@ public final class NodeUtil {
     // but the result must always be 32 lower bits of l
     return (int) l;
   }
+
+  /**
+   * Is the node a CALL goog.module()?
+   */
+  static boolean isGoogModuleCall(Node n) {
+    if (isExprCall(n)) {
+      Node target = n.getFirstChild().getFirstChild();
+      return (target.matchesQualifiedName("goog.module"));
+    }
+    return false;
+  }
+
+  /**
+   * Is the node a a SCRIPT declaring a goog.module?
+   */
+  static boolean isModuleFile(Node n) {
+    return n.isScript() && n.hasChildren()
+        && isGoogModuleCall(n.getFirstChild());
+  }
+
 }
