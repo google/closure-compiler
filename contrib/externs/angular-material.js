@@ -158,6 +158,11 @@ md.$dialog.AlertConfig_.prototype.clickOutsideToClose = function(close) {};
  */
 md.$dialog.AlertConfig_.prototype.targetEvent = function(event) {};
 
+/**
+ * @param {string} css
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.css = function(css) {};
 
 /**
  * @param {angular.JQLite|Element|undefined} parent
@@ -236,6 +241,12 @@ md.$dialog.ConfirmConfig_.prototype.targetEvent = function(event) {};
  * @return {!md.$dialog.ConfirmConfig_}
  */
 md.$dialog.ConfirmConfig_.prototype.parent = function(parent) {};
+
+/**
+ * @param {string} css
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.css = function(css) {};
 
 /** @typedef {!md.$dialog.options|!md.$dialog.ConfirmConfig_|
  *     !md.$dialog.AlertConfig_} */
