@@ -252,8 +252,8 @@ public class RewritePolyfills implements HotSwapCompilerPass {
       // ($jscomp or $jscomp.*) will replace the empty string argument indicating that the
       // polyfill should actually be used.
 
-      // (Soon-to-be) Implemented classes.
-      .addClasses(ES6_IMPL, ES6_IMPL, "", "Map", "Set")
+      // Implemented classes.
+      .addClasses(ES6_IMPL, ES3, "$jscomp", "Map", "Set")
       // (Soon-to-be implemented) Math methods.
       .addStatics(ES6_IMPL, ES6_IMPL, "", "Math",
           "clz32", "imul", "sign", "log2", "log10", "log1p", "expm1", "cosh", "sinh", "tanh",
