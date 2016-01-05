@@ -149,6 +149,11 @@ class AmbiguateProperties implements CompilerPass {
       addInvalidatingType(mis.typeB);
     }
 
+    for (TypeMismatch mis : compiler.getImplicitInterfaceUses()) {
+      addInvalidatingType(mis.typeA);
+      addInvalidatingType(mis.typeB);
+    }
+
     externedNames = compiler.getExternProperties();
   }
 

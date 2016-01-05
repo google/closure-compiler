@@ -673,4 +673,23 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "}";
     test(js, result);
   }
+
+  // See https://github.com/google/closure-compiler/issues/1358
+  public void testAmbiguateWithStructuralInterfaces() {
+    String js = LINE_JOINER.join(
+        "/** @record */",
+        "function Record() {}",
+        "/** @type {number|undefined} */",
+        "Record.prototype.recordProp;",
+        "",
+        "function f(/** !Record */ a) { use(a.recordProp); }",
+        "",
+        "/** @constructor */",
+        "function Type() {",
+        "  /** @const */",
+        "  this.classProp = 'a';",
+        "}",
+        "f(new Type)");
+    testSame(js);
+  }
 }
