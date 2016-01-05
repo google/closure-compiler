@@ -68,7 +68,7 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
     typeCheck("const x = [];");
   }
 
-  public void testFunctionSubtypingContravariantReceiver() {
+  public void testFunctionSubtypingForReceiverType() {
     typeCheck(LINE_JOINER.join(
         "class Foo {",
         "  method() {}",
@@ -88,6 +88,15 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         " */",
         "function f(x) {}",
         "f(Foo.prototype.method);"));
+
+    typeCheck(LINE_JOINER.join(
+        "class Controller {}",
+        "class SubController extends Controller {",
+        "  method() {}",
+        "}",
+        "/** @param {{always: function(this:Controller)}} spec */",
+        "function vsyncMethod(spec) {}",
+        "vsyncMethod({always: (new SubController).method});"));
   }
 
   public void testDetectPropertyDefinitionOnNullableObject() {

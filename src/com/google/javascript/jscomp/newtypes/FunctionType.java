@@ -496,8 +496,12 @@ public final class FunctionType {
       // A function without @this can be a subtype of a function with @this.
       if (this.receiverType != null && other.receiverType == null
           || this.receiverType != null && other.receiverType != null
-          // contravariance for the receiver type
-          && !other.receiverType.isSubtypeOf(this.receiverType)) {
+          // Contravariance for the receiver type
+          && !other.receiverType.isSubtypeOf(this.receiverType)
+          // NOTE(dimvar): Covariance for the receiver type.
+          // Not correct, but allowed to make migration easier.
+          // After bounded generics, we could probably drop support for this.
+          && !this.receiverType.isSubtypeOf(other.receiverType)) {
         return false;
       }
     }

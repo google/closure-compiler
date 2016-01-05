@@ -125,8 +125,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var fun = (1 < 2) ? low : high;",
         "  var /** function(this:High) */ f2 = fun;",
         "  var /** function(this:Low) */ f3 = fun;",
-        "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "}"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -138,8 +137,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var fun = (1 < 2) ? low : high;",
         "  var /** function(function(this:High)) */ f2 = fun;",
         "  var /** function(function(this:Low)) */ f3 = fun;",
-        "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "}"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
