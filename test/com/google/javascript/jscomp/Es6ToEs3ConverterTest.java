@@ -309,6 +309,36 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @struct",
             " */",
             "var C = function() {};"));
+
+    test(
+        "class C { /** @template T */ constructor() {} }",
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @struct",
+            " * @template T",
+            " */",
+            "var C = function() {};"));
+
+    test(
+        "/** @template S */ class C { /** @template T */ constructor() {} }",
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @struct",
+            " * @template S, T",
+            " */",
+            "var C = function() {};"));
+
+    test(
+        "/** @template S */ class C { /** @template T, U */ constructor() {} }",
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @struct",
+            " * @template S, T, U",
+            " */",
+            "var C = function() {};"));
   }
 
   public void testMemberWithJsDoc() {

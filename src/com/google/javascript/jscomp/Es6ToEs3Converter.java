@@ -660,6 +660,10 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       }
 
       newInfo.mergePropertyBitfieldFrom(ctorJSDocInfo);
+
+      for (String templateType : ctorJSDocInfo.getTemplateTypeNames()) {
+        newInfo.recordTemplateTypeName(templateType);
+      }
     }
 
     if (NodeUtil.isStatement(classNode)) {
