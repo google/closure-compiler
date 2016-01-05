@@ -1095,13 +1095,12 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(testLocalValue("[x]"));
     assertTrue(testLocalValue("{'a':x}"));
 
-    // Pre-increment results in primitive number
+    // increment/decrement results in primitive number, the previous value is
+    // always coersed to a number (even in the post.
     assertTrue(testLocalValue("++x"));
     assertTrue(testLocalValue("--x"));
-
-    // Post-increment, the previous value matters.
-    assertFalse(testLocalValue("x++"));
-    assertFalse(testLocalValue("x--"));
+    assertTrue(testLocalValue("x++"));
+    assertTrue(testLocalValue("x--"));
 
     // The left side of an only assign matters if it is an alias or mutable.
     assertTrue(testLocalValue("x=1"));
@@ -1455,6 +1454,15 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.isNumericResult(getNode("a ? 2 : 3")));
     assertTrue(NodeUtil.isNumericResult(getNode("a,1")));
     assertTrue(NodeUtil.isNumericResult(getNode("a=1")));
+
+    assertFalse(NodeUtil.isNumericResult(getNode("a += 1")));
+
+    assertTrue(NodeUtil.isNumericResult(getNode("a -= 1")));
+    assertTrue(NodeUtil.isNumericResult(getNode("a *= 1")));
+    assertTrue(NodeUtil.isNumericResult(getNode("--a")));
+    assertTrue(NodeUtil.isNumericResult(getNode("++a")));
+    assertTrue(NodeUtil.isNumericResult(getNode("a++")));
+    assertTrue(NodeUtil.isNumericResult(getNode("a--")));
   }
 
   public void testIsBooleanResult() {
@@ -1566,6 +1574,9 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.mayBeString(getNode("(1+{})")));
     assertTrue(NodeUtil.mayBeString(getNode("([]+1)")));
     assertTrue(NodeUtil.mayBeString(getNode("(1+[])")));
+
+    assertTrue(NodeUtil.mayBeString(getNode("a += 'x'")));
+    assertTrue(NodeUtil.mayBeString(getNode("a += 1")));
   }
 
   public void test1() {
@@ -1629,6 +1640,8 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isStringResult(getNode("(1+{})")));
     assertFalse(NodeUtil.isStringResult(getNode("([]+1)")));
     assertFalse(NodeUtil.isStringResult(getNode("(1+[])")));
+
+    assertTrue(NodeUtil.isStringResult(getNode("a += 'x'")));
   }
 
   public void testIsObjectResult() {

@@ -1550,8 +1550,6 @@ public final class NodeUtil {
    * all possible result Nodes of the expression.
    */
   static ValueType getKnownValueType(Node n) {
-    // TODO(johnlenz): INC/DEC, assign ops
-
     switch (n.getType()) {
       case Token.CAST:
         return getKnownValueType(n.getFirstChild());
@@ -1598,6 +1596,14 @@ public final class NodeUtil {
         return ValueType.UNDETERMINED;
       }
 
+      case Token.ASSIGN_ADD: {
+        ValueType last = getKnownValueType(n.getLastChild());
+        if (last == ValueType.STRING) {
+          return ValueType.STRING;
+        }
+        return ValueType.UNDETERMINED;
+      }
+
       case Token.NAME:
         String name = n.getString();
         if (name.equals("undefined")) {
@@ -1611,6 +1617,16 @@ public final class NodeUtil {
         }
         return ValueType.UNDETERMINED;
 
+      case Token.ASSIGN_BITOR:
+      case Token.ASSIGN_BITXOR:
+      case Token.ASSIGN_BITAND:
+      case Token.ASSIGN_LSH:
+      case Token.ASSIGN_RSH:
+      case Token.ASSIGN_URSH:
+      case Token.ASSIGN_SUB:
+      case Token.ASSIGN_MUL:
+      case Token.ASSIGN_DIV:
+      case Token.ASSIGN_MOD:
       case Token.BITNOT:
       case Token.BITOR:
       case Token.BITXOR:
@@ -3741,11 +3757,7 @@ public final class NodeUtil {
            && evaluatesToLocalValue(value.getLastChild(), locals);
       case Token.INC:
       case Token.DEC:
-        if (value.getBooleanProp(Node.INCRDECR_PROP)) {
-          return evaluatesToLocalValue(value.getFirstChild(), locals);
-        } else {
-          return true;
-        }
+        return true;
       case Token.THIS:
         return locals.apply(value);
       case Token.NAME:
