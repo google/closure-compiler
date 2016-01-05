@@ -233,13 +233,13 @@ angular.mock.$interval = function() {};
  * @param {!angular.$q.Promise} promise
  * @return {boolean}
  */
-angular.mock.$interval.cancel = function(promise) {};
+angular.mock.$interval.prototype.cancel = function(promise) {};
 
 /**
  * @param {number=} opt_millis
  * @return {number}
  */
-angular.mock.$interval.flush = function(opt_millis) {};
+angular.mock.$interval.prototype.flush = function(opt_millis) {};
 
 /** @constructor */
 angular.mock.$TimeoutDecorator = function() {};
