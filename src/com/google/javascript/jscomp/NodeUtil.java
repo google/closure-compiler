@@ -163,17 +163,12 @@ public final class NodeUtil {
         }
         break;
 
-        // TODO: Fix this. CLASS expressions can have side-effects due to the extend clause.
-      case Token.CLASS:
-        return TernaryValue.TRUE;
-
       case Token.TRUE:
       case Token.REGEXP:
         return TernaryValue.TRUE;
 
       case Token.FUNCTION:
-        // Function declarations have the side effect of introducing a symbol.
-        return isFunctionExpression(n) ? TernaryValue.TRUE : TernaryValue.UNKNOWN;
+      case Token.CLASS:
       case Token.NEW:
       case Token.ARRAYLIT:
       case Token.OBJECTLIT:
@@ -938,6 +933,11 @@ public final class NodeUtil {
         // declarations change the namespace. Either way, we don't need to
         // check the children, since they aren't executed at declaration time.
         return checkForNewObjects || !isFunctionExpression(n);
+
+      case Token.CLASS:
+        // Must also check the extends clause for side effects.
+        return checkForNewObjects || !isClassExpression(n)
+            || checkForStateChangeHelper(n.getSecondChild(), checkForNewObjects, compiler);
 
       case Token.NEW:
         if (checkForNewObjects) {

@@ -390,6 +390,7 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, "a + c - d()");
 
     assertSideEffect(true, "function foo() {}");
+    assertSideEffect(true, "class Foo {}");
     assertSideEffect(true, "while(true);");
     assertSideEffect(true, "if(true){a()}");
 
@@ -397,6 +398,10 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(false, "(function() { })");
     assertSideEffect(false, "(function() { i++ })");
     assertSideEffect(false, "[function a(){}]");
+    assertSideEffect(false, "(class { })");
+    assertSideEffect(false, "(class { method() { i++ } })");
+    assertSideEffect(false, "(class Foo extends Bar { })");
+    assertSideEffect(true, "(class extends foo() { })");
 
     assertSideEffect(false, "a");
     assertSideEffect(false, "[b, c [d, [e]]]");
