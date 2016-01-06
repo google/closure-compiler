@@ -29,12 +29,21 @@ public final class CodeReplacement {
   private final int length;
   private final String newContent;
 
+  // Used for sorting a list of CodeReplacements, in case of a "tie": two replacements with the
+  // same startPosition.
+  private final String sortKey;
+
   // TODO(tbreisacher): Make this package-private by refactoring tests so they
   // don't need to call it directly.
   public CodeReplacement(int startPosition, int length, String newContent) {
+    this(startPosition, length, newContent, "");
+  }
+
+  CodeReplacement(int startPosition, int length, String newContent, String sortKey) {
     this.startPosition = startPosition;
     this.length = length;
     this.newContent = newContent;
+    this.sortKey = sortKey;
   }
 
   /**
@@ -58,6 +67,13 @@ public final class CodeReplacement {
    */
   public String getNewContent() {
     return newContent;
+  }
+
+  /**
+   * Returns an additional String key that can be used to sort replacements using lexical ordering.
+   */
+  public String getSortKey() {
+    return sortKey;
   }
 
   @Override public String toString() {

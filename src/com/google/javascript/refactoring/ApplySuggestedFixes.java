@@ -50,6 +50,11 @@ public final class ApplySuggestedFixes {
         @Override public Integer apply(CodeReplacement replacement) {
           return replacement.getLength();
         }
+      }))
+      .compound(Ordering.natural().onResultOf(new Function<CodeReplacement, String>() {
+        @Override public String apply(CodeReplacement replacement) {
+          return replacement.getSortKey();
+        }
       }));
 
 
