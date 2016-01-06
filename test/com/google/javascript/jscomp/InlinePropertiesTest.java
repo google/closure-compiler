@@ -22,11 +22,13 @@ package com.google.javascript.jscomp;
  */
 public final class InlinePropertiesTest extends CompilerTestCase {
 
-  private static final String EXTERNS =
-      "Function.prototype.call=function(){};" +
-      "Function.prototype.inherits=function(){};" +
-      "prop.toString;" +
-      "var google = { gears: { factory: {}, workerPool: {} } };";
+  private static final String EXTERNS = LINE_JOINER.join(
+      "Function.prototype.call=function(){};",
+      "Function.prototype.inherits=function(){};",
+      "prop.toString;",
+      "var google = { gears: { factory: {}, workerPool: {} } };",
+      "/** @type {?} */ var externUnknownVar;",
+      "/** @type {!Function} */ var externGenericFn;");
 
   public InlinePropertiesTest() {
     super(EXTERNS);
@@ -44,16 +46,17 @@ public final class InlinePropertiesTest extends CompilerTestCase {
 
   public void testConstInstanceProp1() {
     // Replace a reference to known constant property.
-    test(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "new C().foo;",
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "new C(), 1;");
+    test(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  this.foo = 1;",
+        "}",
+        "new C().foo;"),
+        LINE_JOINER.join(
+        "function C() {",
+        "  this.foo = 1;",
+        "}",
+        "new C(), 1;"));
 
     test(LINE_JOINER.join(
         "/** @constructor */",
@@ -74,146 +77,231 @@ public final class InlinePropertiesTest extends CompilerTestCase {
 
   public void testConstInstanceProp2() {
     // Replace a constant reference
-    test(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "var x = new C();\n" +
-        "x.foo;",
-        "function C() {\n" +
-        "  this.foo = 1\n" +
-        "}\n" +
-        "var x = new C();\n" +
-        "1;\n");
+    test(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  this.foo = 1;",
+        "}",
+        "var x = new C();",
+        "x.foo;"),
+        LINE_JOINER.join(
+        "function C() {",
+        "  this.foo = 1",
+        "}",
+        "var x = new C();",
+        "1;\n"));
   }
 
 
   public void testConstInstanceProp3() {
     // Replace a constant reference
-    test(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "/** @type {C} */\n" +
-        "var x = new C();\n" +
-        "x.foo;",
-        "function C() {\n" +
-        "  this.foo = 1\n" +
-        "}\n" +
-        "var x = new C();\n" +
-        "1;\n");
+    test(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  this.foo = 1;",
+        "}",
+        "/** @type {C} */",
+        "var x = new C();",
+        "x.foo;"),
+        LINE_JOINER.join(
+        "function C() {",
+        "  this.foo = 1",
+        "}",
+        "var x = new C();",
+        "1;\n"));
   }
 
   public void testConstInstanceProp4() {
     // This pass replies on DisambiguateProperties to distinguish like named
     // properties so it doesn't handle this case.
     testSame(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "/** @constructor */\n" +
-        "function B() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "new C().foo;\n");
+        LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  this.foo = 1;",
+        "}",
+        "/** @constructor */",
+        "function B() {",
+        "  this.foo = 1;",
+        "}",
+        "new C().foo;\n"));
   }
 
 
   public void testConstClassProps1() {
-    // For now, don't inline constant class properties,
-    // CollapseProperties should handle this in most cases.
-    testSame(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "}\n" +
-        "C.foo = 1;\n" +
-        "C.foo;");
+    // Inline constant class properties,
+    test(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "}",
+        "C.foo = 1;",
+        "C.foo;"),
+        LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "}",
+        "C.foo = 1;",
+        "1;"));
   }
 
   public void testConstClassProps2() {
     // Don't confuse, class properties with instance properties
-    testSame(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "C.foo;");
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  this.foo = 1;",
+        "}",
+        "C.foo;"));
   }
 
   public void testConstClassProps3() {
     // Don't confuse, class properties with prototype properties
-    testSame(
-        "/** @constructor */\n" +
-        "function C() {}\n" +
-        "C.prototype.foo = 1;\n" +
-        "c.foo;\n");
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "C.prototype.foo = 1;",
+        "C.foo;\n"));
+  }
+
+  public void testConstClassProps4() {
+    // Don't confuse unique constructors with similiar function types
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "/** @constructor @extends {C} */",
+        "function D() {}",
+        "/** @type {function(new:C)} */",
+        "var x = D;",
+        "x.foo = 1;",
+        "C.foo;\n"));
+  }
+
+  public void testConstClassProps5() {
+    // Don't confuse subtype constructors properties
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "/** @constructor @extends {C} */",
+        "function D() {}",
+        "D.foo = 1;",
+        "C.foo;\n"));
+  }
+
+  public void testConstClassProps6() {
+    // Don't inline to unknowns
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "C.foo = 1;",
+        "externUnknownVar.foo;\n"));
+  }
+
+  public void testConstClassProps7() {
+    // Don't inline to Function prop
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "C.foo = 1;",
+        "externGenericFn.foo;\n"));
   }
 
   public void testNonConstClassProp1() {
-    testSame(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "var x = new C();\n" +
-        "alert(x.foo);\n" +
-        "delete x.foo;");
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "}",
+        "C.foo = 1;",
+        "alert(C.foo);",
+        "delete C.foo;"));
   }
 
   public void testNonConstClassProp2() {
-    testSame(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "}\n" +
-        "var x = new C();\n" +
-        "alert(x.foo);\n" +
-        "x.foo = 2;");
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "}",
+        "C.foo = 1;",
+        "alert(C.foo);",
+        "C.foo = 2;"));
   }
 
-  public void testNonConstructorClassProp1() {
-    testSame(
-        "function C() {\n" +
-        "  this.foo = 1;\n" +
-        "  return this;\n" +
-        "}\n" +
-        "C().foo;");
+  public void testNonConstClassProp3() {
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "}",
+        "C.foo = 1;",
+        "function f(a) {",
+        " a.foo = 2;",
+        "}",
+        "alert(C.foo);",
+        "f(C);"));
   }
 
-  public void testConditionalClassProp1() {
-    testSame(
-        "/** @constructor */\n" +
-        "function C() {\n" +
-        "  if (false) this.foo = 1;\n" +
-        "}\n" +
-        "new C().foo;");
+  public void testNonConstInstanceProp1() {
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  this.foo = 1;",
+        "}",
+        "var x = new C();",
+        "alert(x.foo);",
+        "delete x.foo;"));
+  }
+
+  public void testNonConstInstanceProp2() {
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  this.foo = 1;",
+        "}",
+        "var x = new C();",
+        "alert(x.foo);",
+        "x.foo = 2;"));
+  }
+
+  public void testNonConstructorInstanceProp1() {
+    testSame(LINE_JOINER.join(
+        "function C() {",
+        "  this.foo = 1;",
+        "  return this;",
+        "}",
+        "C().foo;"));
+  }
+
+  public void testConditionalInstanceProp1() {
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  if (false) this.foo = 1;",
+        "}",
+        "new C().foo;"));
   }
 
   public void testConstPrototypeProp1() {
-    test(
-        "/** @constructor */\n" +
-        "function C() {}\n" +
-        "C.prototype.foo = 1;\n" +
-        "new C().foo;\n",
-        "function C() {}\n" +
-        "C.prototype.foo = 1;\n" +
-        "new C(), 1;\n");
+    test(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "C.prototype.foo = 1;",
+        "new C().foo;\n"),
+        LINE_JOINER.join(
+        "function C() {}",
+        "C.prototype.foo = 1;",
+        "new C(), 1;\n"));
   }
 
   public void testConstPrototypeProp2() {
-    test(
-        "/** @constructor */\n" +
-        "function C() {}\n" +
-        "C.prototype.foo = 1;\n" +
-        "var x = new C();\n" +
-        "x.foo;\n",
-        "function C() {}\n" +
-        "C.prototype.foo = 1;\n" +
-        "var x = new C();\n" +
-        "1;\n");
+    test(LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "C.prototype.foo = 1;",
+        "var x = new C();",
+        "x.foo;\n"),
+        LINE_JOINER.join(
+        "function C() {}",
+        "C.prototype.foo = 1;",
+        "var x = new C();",
+        "1;\n"));
   }
 
   public void testConstPrototypePropInGlobalBlockScope() {

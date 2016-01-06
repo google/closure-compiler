@@ -193,6 +193,7 @@ final class InlineProperties implements CompilerPass {
         // For now, any object literal key invalidates
         // TODO(johnlenz): support prototype properties like:
         //   foo.prototype = { a: 1, b: 2 };
+        // TODO(johnlenz): Object.create(), Object.createProperty
         invalidatingPropRef = true;
       }
 
@@ -230,6 +231,11 @@ final class InlineProperties implements CompilerPass {
         if (instanceType != null) {
           isCandidate = maybeStoreCandidateValue(
               instanceType, propName, value);
+        }
+      } else if (t.inGlobalHoistScope()) {
+        JSType targetType = getJSType(src);
+        if (targetType != null && targetType.isConstructor()) {
+           isCandidate = maybeStoreCandidateValue(targetType, propName, value);
         }
       }
       return isCandidate;
@@ -294,7 +300,19 @@ final class InlineProperties implements CompilerPass {
     private boolean isMatchingType(Node n, JSType src) {
       src = src.restrictByNotNullOrUndefined();
       JSType dest = getJSType(n).restrictByNotNullOrUndefined();
-      return !isInvalidatingType(dest) && dest.isSubtype(src);
+      if (!isInvalidatingType(dest)) {
+        if (dest.isConstructor()) {
+          // Don't inline constructor properties referenced from
+          // subclass constructor references. This would be appropriate
+          // for ES6 class with Class-side inheritence but not
+          // traditional Closure classes from which subclass constructor
+          // don't inherit the super-classes constructor properties.
+          return dest.isEquivalentTo(src);
+        } else {
+          return dest.isSubtype(src);
+        }
+      }
+      return false;
     }
   }
 }
