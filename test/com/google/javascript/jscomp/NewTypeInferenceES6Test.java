@@ -129,4 +129,17 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         "/** @type {number} */",
         "a.b.prop = 123;"));
   }
+
+  public void testThisIsNull() {
+    typeCheck(LINE_JOINER.join(
+        "class Foo {",
+        "  method() {}",
+        "}",
+        "/**",
+        " * @param {function(this:null)} x",
+        " */",
+        "function f(x) {}",
+        "f((new Foo).method);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }

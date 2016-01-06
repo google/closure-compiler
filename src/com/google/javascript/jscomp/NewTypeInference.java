@@ -2833,6 +2833,8 @@ final class NewTypeInference implements CompilerPass {
     Preconditions.checkNotNull(type);
     if (lvalue.isName()) {
       return envPutType(env, lvalue.getString(), type);
+    } else if (lvalue.isThis()) {
+      return envPutType(env, THIS_ID, type);
     } else if (lvalue.isVar()) { // Can happen iff its parent is a for/in.
       Preconditions.checkState(NodeUtil.isForIn(lvalue.getParent()));
       return envPutType(env, lvalue.getFirstChild().getString(), type);

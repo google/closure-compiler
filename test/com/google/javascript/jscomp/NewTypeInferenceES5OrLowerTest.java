@@ -13456,18 +13456,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @this {Number|String} */",
         "function f() {",
         "  return this.toString();",
-        "}"));
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
 
     // Don't warn for unknown this
     typeCheck(LINE_JOINER.join(
         "/** @type {function(this:(Number|String))} */",
         "function f() {",
         "  return this.toString();",
-        "}"));
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
 
     // Don't warn that f isn't a constructor
     typeCheck(LINE_JOINER.join(
-        "/** @type {function(new:(Number|String))} */",
+        "/** @type {function(new:(!Number|!String))} */",
         "function f() {}",
         "var x = new f();"));
   }
@@ -14072,7 +14074,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @this {Foo|Bar} */",
         "function f() {",
         "  return this.p - 1;",
-        "}"));
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -14084,7 +14087,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Bar() {}",
         "/** @type {number} */",
         "Bar.prototype.p;",
-        "/** @this {Foo|Bar} */",
+        "/** @this {!Foo|!Bar} */",
         "function f() {",
         "  var /** string */ n = this.p;",
         "}"),

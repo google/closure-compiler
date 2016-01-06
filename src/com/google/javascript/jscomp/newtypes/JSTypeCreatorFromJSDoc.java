@@ -617,7 +617,8 @@ public final class JSTypeCreatorFromJSDoc {
 
   private JSType getThisOrNewType(Node n,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
-    return getTypeFromComment(n, registry, typeParameters).removeType(JSType.NULL);
+    JSType t = getTypeFromComment(n, registry, typeParameters);
+    return t.isSingletonObjWithNull() ? t.removeType(JSType.NULL) : t;
   }
 
   private ImmutableSet<NominalType> getImplementedInterfaces(

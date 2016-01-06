@@ -993,6 +993,10 @@ public abstract class JSType implements TypeI {
     return getMask() == NON_SCALAR_MASK && getObjs().size() == 1;
   }
 
+  boolean isSingletonObjWithNull() {
+    return getMask() == (NON_SCALAR_MASK | NULL_MASK) && getObjs().size() == 1;
+  }
+
   public ObjectType getObjTypeIfSingletonObj() {
     return isSingletonObj() ? Iterables.getOnlyElement(getObjs()) : null;
   }
