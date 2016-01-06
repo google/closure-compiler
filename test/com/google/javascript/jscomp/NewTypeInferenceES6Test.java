@@ -142,4 +142,31 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         "f((new Foo).method);"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
+
+  public void testFunctionsWithUntypecheckedArguments() {
+    typeCheck(LINE_JOINER.join(
+        "class Foo {}",
+        "/**",
+        " * @param {function(function(new:Foo, ...?))} f1",
+        " * @param {function(new:Foo, ?)} f2",
+        " */",
+        "function f(f1, f2) {",
+        "  f1(f2);",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "class Foo {}",
+        "/**",
+        " * @template T",
+        " * @param {function(...?):T} x",
+        " * @return {T}",
+        " */",
+        "function f(x) {",
+        "  return x();",
+        "}",
+        "/** @type {function(?):!Foo} */",
+        "function g(x) { return new Foo; }",
+        "f(g) - 5;"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }

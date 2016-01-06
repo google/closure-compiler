@@ -427,6 +427,15 @@ public final class FunctionType {
     return isSubtypeOfHelper(other, true);
   }
 
+  // When we write ...?, it has a special meaning, it is NOT a variable-arity
+  // function with arguments of ? type. It means that we should not typecheck
+  // the arguments, eg, we can use that to express the type: a constructor of
+  // Foos with whatever arguments.
+  private boolean acceptsAnyArguments() {
+    return this.requiredFormals.isEmpty() && this.optionalFormals.isEmpty()
+        && this.restFormals != null && this.restFormals.isUnknown();
+  }
+
   private boolean isSubtypeOfHelper(FunctionType other, boolean checkThisType) {
     if (other.isTopFunction() ||
         other.isQmarkFunction() || this.isQmarkFunction()) {
@@ -450,36 +459,38 @@ public final class FunctionType {
           .isSubtypeOfHelper(other, checkThisType);
     }
 
-    // The subtype must have an equal or smaller number of required formals
-    if (requiredFormals.size() > other.requiredFormals.size()) {
-      return false;
-    }
-    int otherMaxTotalArity =
-        other.requiredFormals.size() + other.optionalFormals.size();
-    for (int i = 0; i < otherMaxTotalArity; i++) {
-      // contravariance in the arguments
-      JSType thisFormal = getFormalType(i);
-      JSType otherFormal = other.getFormalType(i);
-      if (thisFormal != null
-          && !thisFormal.isUnknown() && !otherFormal.isUnknown()
-          && !otherFormal.isSubtypeOf(thisFormal)) {
+    if (!other.acceptsAnyArguments()) {
+      // The subtype must have an equal or smaller number of required formals
+      if (requiredFormals.size() > other.requiredFormals.size()) {
         return false;
       }
-    }
-
-    if (other.restFormals != null) {
-      int thisMaxTotalArity =
-          this.requiredFormals.size() + this.optionalFormals.size();
-      if (this.restFormals != null) {
-        thisMaxTotalArity++;
-      }
-      for (int i = otherMaxTotalArity; i < thisMaxTotalArity; i++) {
+      int otherMaxTotalArity =
+          other.requiredFormals.size() + other.optionalFormals.size();
+      for (int i = 0; i < otherMaxTotalArity; i++) {
+        // contravariance in the arguments
         JSType thisFormal = getFormalType(i);
         JSType otherFormal = other.getFormalType(i);
         if (thisFormal != null
             && !thisFormal.isUnknown() && !otherFormal.isUnknown()
             && !otherFormal.isSubtypeOf(thisFormal)) {
           return false;
+        }
+      }
+
+      if (other.restFormals != null) {
+        int thisMaxTotalArity =
+            this.requiredFormals.size() + this.optionalFormals.size();
+        if (this.restFormals != null) {
+          thisMaxTotalArity++;
+        }
+        for (int i = otherMaxTotalArity; i < thisMaxTotalArity; i++) {
+          JSType thisFormal = getFormalType(i);
+          JSType otherFormal = other.getFormalType(i);
+          if (thisFormal != null
+              && !thisFormal.isUnknown() && !otherFormal.isUnknown()
+              && !otherFormal.isSubtypeOf(thisFormal)) {
+            return false;
+          }
         }
       }
     }
@@ -751,33 +762,35 @@ public final class FunctionType {
     if (this == LOOSE_TOP_FUNCTION || other.isTopFunction() || other.isLoose()) {
       return true;
     }
-    if (other.requiredFormals.size() > this.requiredFormals.size()) {
-      return false;
-    }
-    int maxNonInfiniteArity = getMaxArityWithoutRestFormals();
-    for (int i = 0; i < maxNonInfiniteArity; i++) {
-      JSType thisFormal = getFormalType(i);
-      JSType otherFormal = other.getFormalType(i);
-      // NOTE(dimvar): The correct handling here would be to implement
-      // unifyWithSupertype for JSType, ObjectType, etc, to handle the
-      // contravariance here.
-      // But it's probably an overkill to do, so instead we just do a subtype
-      // check if unification fails. Same for restFormals and receiverType.
-      // Altenatively, maybe the unifyWith function could handle both subtype
-      // and supertype, and we'd catch type errors as invalid-argument-type
-      // after unification. (Not sure this is correct, I'd have to try it.)
-      if (otherFormal != null
-          && !thisFormal.unifyWithSubtype(otherFormal, typeParameters, typeMultimap)
-          && !thisFormal.isSubtypeOf(otherFormal)) {
+    if (!acceptsAnyArguments()) {
+      if (other.requiredFormals.size() > this.requiredFormals.size()) {
         return false;
       }
-    }
-    if (this.restFormals != null) {
-      JSType otherRestFormals = other.getFormalType(maxNonInfiniteArity);
-      if (otherRestFormals != null
-          && !this.restFormals.unifyWithSubtype(otherRestFormals, typeParameters, typeMultimap)
-          && !this.restFormals.isSubtypeOf(otherRestFormals)) {
-        return false;
+      int maxNonInfiniteArity = getMaxArityWithoutRestFormals();
+      for (int i = 0; i < maxNonInfiniteArity; i++) {
+        JSType thisFormal = getFormalType(i);
+        JSType otherFormal = other.getFormalType(i);
+        // NOTE(dimvar): The correct handling here would be to implement
+        // unifyWithSupertype for JSType, ObjectType, etc, to handle the
+        // contravariance here.
+        // But it's probably an overkill to do, so instead we just do a subtype
+        // check if unification fails. Same for restFormals and receiverType.
+        // Altenatively, maybe the unifyWith function could handle both subtype
+        // and supertype, and we'd catch type errors as invalid-argument-type
+        // after unification. (Not sure this is correct, I'd have to try it.)
+        if (otherFormal != null
+            && !thisFormal.unifyWithSubtype(otherFormal, typeParameters, typeMultimap)
+            && !thisFormal.isSubtypeOf(otherFormal)) {
+          return false;
+        }
+      }
+      if (this.restFormals != null) {
+        JSType otherRestFormals = other.getFormalType(maxNonInfiniteArity);
+        if (otherRestFormals != null
+            && !this.restFormals.unifyWithSubtype(otherRestFormals, typeParameters, typeMultimap)
+            && !this.restFormals.isSubtypeOf(otherRestFormals)) {
+          return false;
+        }
       }
     }
 
