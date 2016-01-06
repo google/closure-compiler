@@ -116,6 +116,13 @@ Touch.prototype.radiusY;
 
 
 /**
+ * @type {number}
+ * @see http://www.w3.org/TR/2011/WD-touch-events-20110505/#widl-Touch-rotationAngle
+ */
+Touch.prototype.rotationAngle;
+
+
+/**
  * Creates a new Touch object.
  * @see http://www.w3.org/TR/touch-events/#widl-Document-createTouch-Touch-WindowProxy-view-EventTarget-target-long-identifier-long-pageX-long-pageY-long-screenX-long-screenY
  * @param {Window} view
