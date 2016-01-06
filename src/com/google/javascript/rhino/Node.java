@@ -1585,7 +1585,7 @@ public class Node implements Serializable {
 
           return "Node tree inequality:" +
               "\nTree:\n" + toStringTree() +
-              "\n\nJSDoc differs on subtree: " + diff.nodeActual +
+              "\n\nJSDoc differs on subtree: " + diff.nodeExpected +
               "\nExpected JSDoc: " + jsDocExpected +
               "\nActual JSDoc  : " + jsDocActual;
         }
