@@ -33,6 +33,9 @@ public final class NamespaceLit extends Namespace {
     }
     if (this.namespaceType == null) {
       ObjectType ot = obj.getObjTypeIfSingletonObj();
+      if (ot == null) {
+        ot = ObjectType.TOP_OBJECT;
+      }
       this.namespaceType = computeJSType(commonTypes, ot.getNominalType(), ot.getFunType());
     }
     return this.namespaceType;

@@ -14593,4 +14593,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"));
   }
+
+  public void testDontCrashOnMistypedWindow() {
+    typeCheckCustomExterns(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @param {...*} var_args",
+        " */",
+        "function Function(var_args) {}",
+        "/** @type {?} */",
+        "var window;",
+        "/** @constructor */",
+        "window.Foo = function() {};"),
+        "");
+  }
 }
