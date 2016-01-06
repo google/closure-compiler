@@ -2311,6 +2311,9 @@ public final class JsDocInfoParser {
         token = next();
         Preconditions.checkState(
             token == JsDocToken.PIPE || token == JsDocToken.COMMA);
+        if (token == JsDocToken.COMMA) {
+          reportTypeSyntaxWarning("msg.jsdoc.union.comma");
+        }
 
         skipEOLs();
         token = next();

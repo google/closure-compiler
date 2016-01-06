@@ -276,7 +276,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseTemplatizedType3() throws Exception {
-    JSDocInfo info = parse("@type {!Array.<(number,null)>}*/");
+    JSDocInfo info =
+        parse(
+            "@type {!Array.<(number,null)>}*/",
+            "Bad type annotation. union types should use | instead of ,");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)), info.getType());
   }
@@ -369,7 +372,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseUnionType1() throws Exception {
-    JSDocInfo info = parse("@type {(boolean,null)}*/");
+    JSDocInfo info =
+        parse(
+            "@type {(boolean,null)}*/",
+            "Bad type annotation. union types should use | instead of ,");
     assertTypeEquals(createUnionType(BOOLEAN_TYPE, NULL_TYPE), info.getType());
   }
 
@@ -379,14 +385,20 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseUnionType4() throws Exception {
-    JSDocInfo info = parse("@type {(Array.<boolean>,null)}*/");
+    JSDocInfo info =
+        parse(
+            "@type {(Array.<boolean>,null)}*/",
+            "Bad type annotation. union types should use | instead of ,");
     assertTypeEquals(createUnionType(
         createTemplatizedType(
             ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
   public void testParseUnionType5() throws Exception {
-    JSDocInfo info = parse("@type {(null, Array.<boolean>)}*/");
+    JSDocInfo info =
+        parse(
+            "@type {(null, Array.<boolean>)}*/",
+            "Bad type annotation. union types should use | instead of ,");
     assertTypeEquals(createUnionType(
         createTemplatizedType(
             ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
@@ -412,7 +424,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseUnionType11() throws Exception {
-    parse("@type {(string,)}*/",
+    parse(
+        "@type {(string,)}*/",
+        "Bad type annotation. union types should use | instead of ,",
         "Bad type annotation. type not recognized due to syntax error");
   }
 
@@ -422,15 +436,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseUnionType13() throws Exception {
-    testParseType(
-        "(function(this:Date),function(this:String):number)",
-        "Function");
+    testParseType("(function(this:Date)|function(this:String):number)", "Function");
   }
 
   public void testParseUnionType14() throws Exception {
     testParseType(
-        "(function(...(function(number):boolean)):number)|" +
-        "function(this:String, string):number",
+        "(function(...(function(number):boolean)):number)|function(this:String, string):number",
         "Function");
   }
 
@@ -446,17 +457,15 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("string|number|*", "*");
   }
 
-  public void testParseUnionType18() throws Exception {
-    testParseType("(string,*,number)", "*");
-  }
-
   public void testParseUnionType19() throws Exception {
     JSDocInfo info = parse("@type {(?)} */");
     assertTypeEquals(UNKNOWN_TYPE, info.getType());
   }
 
   public void testParseUnionTypeError1() throws Exception {
-    parse("@type {(string,|number)} */",
+    parse(
+        "@type {(string,|number)} */",
+        "Bad type annotation. union types should use | instead of ,",
         "Bad type annotation. type not recognized due to syntax error");
   }
 
@@ -690,7 +699,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseArrayTypeError4() throws Exception {
-    parse("@type {(number,boolean,[Object?)]}*/",
+    parse(
+        "@type {(number,boolean,[Object?)]}*/",
+        "Bad type annotation. union types should use | instead of ,",
+        "Bad type annotation. union types should use | instead of ,",
         "Bad type annotation. type not recognized due to syntax error");
   }
 
@@ -736,21 +748,30 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseNullableModifiers4() throws Exception {
-    JSDocInfo info = parse("@type {(string,boolean)?}*/");
+    JSDocInfo info =
+        parse(
+            "@type {(string,boolean)?}*/",
+            "Bad type annotation. union types should use | instead of ,");
     assertTypeEquals(
         createNullableType(createUnionType(STRING_TYPE, BOOLEAN_TYPE)),
         info.getType());
   }
 
   public void testParseNullableModifiers5() throws Exception {
-    JSDocInfo info = parse("@type {(string?,boolean)}*/");
+    JSDocInfo info =
+        parse(
+            "@type {(string?,boolean)}*/",
+            "Bad type annotation. union types should use | instead of ,");
     assertTypeEquals(
         createUnionType(createNullableType(STRING_TYPE), BOOLEAN_TYPE),
         info.getType());
   }
 
   public void testParseNullableModifiers6() throws Exception {
-    JSDocInfo info = parse("@type {(string,boolean?)}*/");
+    JSDocInfo info =
+        parse(
+            "@type {(string,boolean?)}*/",
+            "Bad type annotation. union types should use | instead of ,");
     assertTypeEquals(
         createUnionType(STRING_TYPE, createNullableType(BOOLEAN_TYPE)),
         info.getType());
@@ -798,7 +819,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseNewline3() throws Exception {
-    JSDocInfo info = parse("@type {!Array.<(number,\n* null)>}*/");
+    JSDocInfo info =
+        parse(
+            "@type {!Array.<(number,\n* null)>}*/",
+            "Bad type annotation. union types should use | instead of ,");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)), info.getType());
   }
@@ -827,8 +851,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseReturnType2() throws Exception {
-    JSDocInfo info =
-        parse("@returns {null|(string,Array.<boolean>)}*/");
+    JSDocInfo info = parse("@returns {null|(string|Array.<boolean>)}*/");
     assertTypeEquals(
         createUnionType(createTemplatizedType(ARRAY_TYPE, BOOLEAN_TYPE),
             NULL_TYPE, STRING_TYPE),
@@ -836,8 +859,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseReturnType3() throws Exception {
-    JSDocInfo info =
-        parse("@return {((null|Array.<boolean>,string),boolean)}*/");
+    JSDocInfo info = parse("@return {((null|Array.<boolean>|string)|boolean)}*/");
     assertTypeEquals(
         createUnionType(createTemplatizedType(ARRAY_TYPE, BOOLEAN_TYPE),
             NULL_TYPE, STRING_TYPE, BOOLEAN_TYPE),
@@ -2155,7 +2177,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * test structural interface matching
    */
   public void testBadTypeDefInterfaceAndStructuralTyping4() throws Exception {
-    JSDocInfo jsdoc = parse("@interface\n@record*/",
+    parse("@interface\n@record*/",
         "Bad type annotation. conflicting @record tag");
   }
 
