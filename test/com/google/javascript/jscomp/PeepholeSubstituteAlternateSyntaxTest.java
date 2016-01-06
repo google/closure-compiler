@@ -458,11 +458,29 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     new StringCompareTestCase().testBindToCall3();
   }
 
-  public void testSimpleFunctionCall() {
+  public void testSimpleFunctionCall1() {
     test("var a = String(23)", "var a = '' + 23");
     test("var a = String('hello')", "var a = '' + 'hello'");
     testSame("var a = String('hello', bar());");
     testSame("var a = String({valueOf: function() { return 1; }});");
+  }
+
+  public void testSimpleFunctionCall2() {
+    test("var a = Number()", "var a = 0");
+    test("var a = Number(1)", "var a = 1");
+    test("var a = Number(x)", "var a = +x");
+    test("var a = Number({})", "var a = +({})");
+    testSame("var a = Number(1, 2);");
+  }
+
+  public void testSimpleFunctionCall3() {
+    test("var a = Boolean(true)", "var a = !0");
+    test("var a = Boolean(false)", "var a = !1");
+    test("var a = Boolean(1)", "var a = !!1");
+    test("var a = Boolean(x)", "var a = !!x");
+    test("var a = Boolean({})", "var a = !!{}");
+    testSame("var a = Boolean()");
+    testSame("var a = Boolean(!0, !1);");
   }
 
   public void testRotateAssociativeOperators() {

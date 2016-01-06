@@ -134,7 +134,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
   /**
    * Try to evaluate known Numeric methods
-   *    .parseInt(), parseFloat()
+   *    parseInt(), parseFloat()
    */
   private Node tryFoldKnownNumericMethods(Node subtree) {
     Preconditions.checkArgument(subtree.isCall());

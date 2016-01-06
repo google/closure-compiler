@@ -158,24 +158,84 @@ class PeepholeSubstituteAlternateSyntax
   private Node tryFoldSimpleFunctionCall(Node n) {
     Preconditions.checkState(n.isCall(), n);
     Node callTarget = n.getFirstChild();
-    if (callTarget != null && callTarget.isName() &&
-          callTarget.getString().equals("String")) {
-      // Fold String(a) to '' + (a) on immutable literals,
-      // which allows further optimizations
-      //
-      // We can't do this in the general case, because String(a) has
-      // slightly different semantics than '' + (a). See
-      // http://code.google.com/p/closure-compiler/issues/detail?id=759
-      Node value = callTarget.getNext();
-      if (value != null && value.getNext() == null &&
-          NodeUtil.isImmutableValue(value)) {
-        Node addition = IR.add(
-            IR.string("").srcref(callTarget),
-            value.detachFromParent());
-        n.getParent().replaceChild(n, addition);
-        reportCodeChange();
-        return addition;
+    if (callTarget == null || !callTarget.isName()) {
+      return n;
+    }
+    String targetName = callTarget.getString();
+    switch (targetName) {
+      case "Boolean": {
+        // Fold Boolean(a) to !!a
+        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-boolean-constructor-boolean-value
+        // and
+        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-logical-not-operator-runtime-semantics-evaluation
+        int paramCount = n.getChildCount() - 1;
+        // only handle the single known parameter case
+        if (paramCount == 1) {
+          Node value = n.getLastChild().detachFromParent();
+          Node replacement;
+          if (NodeUtil.isBooleanResult(value)) {
+            // If it is already a boolean do nothing.
+            replacement = value;
+          } else {
+            // Replace it with a "!!value"
+            replacement = IR.not(IR.not(value).srcref(n));
+          }
+          n.getParent().replaceChild(n, replacement);
+          reportCodeChange();
+        }
+        break;
       }
+
+      case "Number": {
+        // Fold Number(a) to +a
+        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-number-constructor-number-value
+        // and
+        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-unary-plus-operator
+        int paramCount = n.getChildCount() - 1;
+        if (paramCount == 0 || paramCount == 1) {
+          Node replacement;
+          if (paramCount == 0) {
+            // replace "Number()" with "0"
+            replacement = IR.number(0);
+          } else {
+            Node value = n.getLastChild().detachFromParent();
+            if (NodeUtil.isNumericResult(value)) {
+              // If it is already a number do nothing.
+              replacement = value;
+            } else {
+              // Replace it with a "+value"
+              replacement =  IR.pos(value);
+            }
+          }
+          n.getParent().replaceChild(n, replacement);
+          reportCodeChange();
+        }
+        break;
+      }
+
+      case "String": {
+        // Fold String(a) to '' + (a) on immutable literals,
+        // which allows further optimizations
+        //
+        // We can't do this in the general case, because String(a) has
+        // slightly different semantics than '' + (a). See
+        // http://code.google.com/p/closure-compiler/issues/detail?id=759
+        Node value = callTarget.getNext();
+        if (value != null && value.getNext() == null &&
+            NodeUtil.isImmutableValue(value)) {
+          Node addition = IR.add(
+              IR.string("").srcref(callTarget),
+              value.detachFromParent());
+          n.getParent().replaceChild(n, addition);
+          reportCodeChange();
+          return addition;
+        }
+        break;
+      }
+
+      default:
+        // nothing.
+        break;
     }
     return n;
   }
