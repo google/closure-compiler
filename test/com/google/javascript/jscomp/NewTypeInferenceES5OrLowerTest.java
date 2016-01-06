@@ -1777,6 +1777,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  x(true, 'asdf');",
         "  x(false);",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  var y = x();",
+        "  var /** (number|string) */ w = y;",
+        "  var /** number */ z = y;",
+        "}"));
   }
 
   public void testBackwardForwardPathologicalCase2() {

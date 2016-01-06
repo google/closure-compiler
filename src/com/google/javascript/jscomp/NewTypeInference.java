@@ -1791,7 +1791,7 @@ final class NewTypeInference implements CompilerPass {
         || funType.isTopFunction() || funType.isQmarkFunction()) {
       return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
     } else if (funType.isLoose()) {
-      return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
+      return analyzeLooseCallNodeFwd(expr, funType, inEnv, requiredType);
     } else if (expr.isCall()
         && funType.isSomeConstructorOrInterface()
         && funType.getReturnType().isUnknown()) {
@@ -2123,8 +2123,7 @@ final class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeCallNodeArgsFwdWhenError(
       Node callNode, TypeEnv inEnv) {
     TypeEnv env = inEnv;
-    for (Node arg = callNode.getSecondChild(); arg != null;
-        arg = arg.getNext()) {
+    for (Node arg = callNode.getSecondChild(); arg != null; arg = arg.getNext()) {
       env = analyzeExprFwd(arg, env).env;
     }
     return new EnvTypePair(env, JSType.UNKNOWN);
@@ -2888,8 +2887,9 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private EnvTypePair analyzeLooseCallNodeFwd(
-      Node callNode, TypeEnv inEnv, JSType retType) {
+      Node callNode, FunctionType calleeType, TypeEnv inEnv, JSType requiredType) {
     Preconditions.checkArgument(callNode.isCall() || callNode.isNew());
+    Preconditions.checkArgument(calleeType.isLoose());
     Node callee = callNode.getFirstChild();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     TypeEnv tmpEnv = inEnv;
@@ -2898,13 +2898,16 @@ final class NewTypeInference implements CompilerPass {
       tmpEnv = pair.env;
       builder.addReqFormal(pair.type);
     }
-    JSType looseRetType = retType.isUnknown() ? JSType.BOTTOM : retType;
+    JSType looseRetType = requiredType.isUnknown() ? JSType.BOTTOM : requiredType;
     JSType looseFunctionType = commonTypes.fromFunctionType(
         builder.addRetType(looseRetType).addLoose().buildFunction());
     // Unsound if the arguments and callee have interacting side effects
     EnvTypePair calleePair = analyzeExprFwd(
         callee, tmpEnv, commonTypes.topFunction(), looseFunctionType);
-    return new EnvTypePair(calleePair.env, retType);
+    return new EnvTypePair(calleePair.env,
+        calleeType.getReturnType().isNonLooseSubtypeOf(requiredType)
+        ? calleeType.getReturnType()
+        : requiredType);
   }
 
   private EnvTypePair analyzeLooseCallNodeBwd(
