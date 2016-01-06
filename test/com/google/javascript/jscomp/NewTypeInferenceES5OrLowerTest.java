@@ -8006,6 +8006,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** (!Foo|!Low) */ x) {",
         "  return /** @type {!High} */ (x);",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(function(number)=) */ f1) {",
+        "  return /** @type {function(function(string)=)} */ (f1);",
+        "}"),
+        NewTypeInference.INVALID_CAST);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(... function(number)) */ f1) {",
+        "  return /** @type {function(... function(string))} */ (f1);",
+        "}"),
+        NewTypeInference.INVALID_CAST);
   }
 
   public void testOverride() {
@@ -14553,5 +14565,32 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @enum {string} */",
         "var E = { A:'a', B:'b' };",
         "'c' < E.A;"));
+  }
+
+  public void testDeclaredFunctionOnNamespace() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @return {number} */",
+        "ns.retNum = function() { return 123; };",
+        "function f(x) {",
+        "  var x0 = ns.retNum();",
+        "  var x1 = ns.retNum();",
+        "  if (x0 <= x1) {",
+        "    x1 - 123;",
+        "  }",
+        "}"));
+  }
+
+  public void testNoSpuriousWarningBecauseOfTopScalarInComparison() {
+    typeCheck(LINE_JOINER.join(
+        "function retNum() { return 123; };",
+        "function f(x) {",
+        "  var x0 = retNum();",
+        "  var x1 = retNum();",
+        "  if (x0 <= x1) {",
+        "    x1 - 123;",
+        "  }",
+        "}"));
   }
 }

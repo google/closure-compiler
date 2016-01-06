@@ -1721,11 +1721,6 @@ final class NewTypeInference implements CompilerPass {
     } else if (rhsPair.type.isScalar()) {
       lhsPair = analyzeExprFwd(lhs, inEnv, rhsPair.type);
       rhsPair = analyzeExprFwd(rhs, lhsPair.env, rhsPair.type);
-    } else if (lhs.isName() && lhsPair.type.isUnknown() &&
-        rhs.isName() && rhsPair.type.isUnknown()) {
-      TypeEnv env = envPutType(rhsPair.env, lhs.getString(), JSType.TOP_SCALAR);
-      env = envPutType(rhsPair.env, rhs.getString(), JSType.TOP_SCALAR);
-      return new EnvTypePair(env, JSType.BOOLEAN);
     }
     JSType lhsType = lhsPair.type;
     JSType rhsType = rhsPair.type;

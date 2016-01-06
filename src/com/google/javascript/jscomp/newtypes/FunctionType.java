@@ -686,12 +686,20 @@ public final class FunctionType {
         f1.requiredFormals.size() + f1.optionalFormals.size(),
         f2.requiredFormals.size() + f2.optionalFormals.size());
     for (int i = minRequiredArity; i < maxTotalArity; i++) {
-      builder.addOptFormal(JSType.nullAcceptingJoin(
-          f1.getFormalType(i), f2.getFormalType(i)));
+      JSType optFormalType =
+          JSType.nullAcceptingJoin(f1.getFormalType(i), f2.getFormalType(i));
+      if (optFormalType.isBottom()) {
+        return BOTTOM_FUNCTION;
+      }
+      builder.addOptFormal(optFormalType);
     }
     if (f1.restFormals != null || f2.restFormals != null) {
-      builder.addRestFormals(
-          JSType.nullAcceptingJoin(f1.restFormals, f2.restFormals));
+      JSType restFormalsType =
+          JSType.nullAcceptingJoin(f1.restFormals, f2.restFormals);
+      if (restFormalsType.isBottom()) {
+        return BOTTOM_FUNCTION;
+      }
+      builder.addRestFormals(restFormalsType);
     }
     JSType retType = JSType.meet(f1.returnType, f2.returnType);
     if (retType.isBottom()) {

@@ -71,7 +71,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   static final DiagnosticType REDECLARED_PROPERTY = DiagnosticType.warning(
       "JSC_NTI_REDECLARED_PROPERTY",
-      "Found two declarations for property {0} on type {1}.\n");
+      "Found two declarations for property {0} on {1}.\n");
 
   static final DiagnosticType INVALID_PROP_OVERRIDE = DiagnosticType.warning(
       "JSC_NTI_INVALID_PROP_OVERRIDE",
@@ -1278,9 +1278,12 @@ class GlobalTypeInfo implements CompilerPass {
       String internalName = getFunInternalName(fn);
       NTIScope fnScope = currentScope.getScope(internalName);
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(fn);
-      DeclaredFunctionType declFunType = computeFnDeclaredType(
-        jsdoc, internalName, fn, ownerType, currentScope);
-      fnScope.setDeclaredType(declFunType);
+      DeclaredFunctionType declFunType = fnScope.getDeclaredFunctionType();
+      if (declFunType == null) {
+        declFunType = computeFnDeclaredType(
+            jsdoc, internalName, fn, ownerType, currentScope);
+        fnScope.setDeclaredType(declFunType);
+      }
       return fnScope;
     }
 
@@ -1364,8 +1367,8 @@ class GlobalTypeInfo implements CompilerPass {
         if (classType.hasCtorProp(pname)
             && previousPropType != null
             && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType)) {
-          warnings.add(JSError.make(getProp, REDECLARED_PROPERTY,
-                  pname, classType.toString()));
+          warnings.add(JSError.make(
+              getProp, REDECLARED_PROPERTY, pname, "type " + classType));
           return;
         }
         if (propDeclType == null) {
@@ -1402,17 +1405,27 @@ class GlobalTypeInfo implements CompilerPass {
       if (et != null && et.enumLiteralHasKey(pname)) {
         return;
       }
+
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
-      JSType propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
+      Node initializer = NodeUtil.getRValueOfLValue(declNode);
+      JSType propDeclType = null;
+      if (jsdoc != null && jsdoc.hasType()) {
+        propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
+      } else if (initializer != null && initializer.isFunction()) {
+        DeclaredFunctionType declType = visitFunctionLate(initializer, null)
+            .getDeclaredFunctionType();
+        propDeclType = commonTypes.fromFunctionType(declType.toFunctionType());
+      }
+
       boolean isConst = isConst(declNode);
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
         if (ns.hasProp(pname)
             && previousPropType != null
             && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType)) {
-          warnings.add(JSError.make(declNode, REDECLARED_PROPERTY,
-                  pname, ns.toString()));
+          warnings.add(JSError.make(
+              declNode, REDECLARED_PROPERTY, pname, "namespace " + ns));
           return;
         }
         if (propDeclType == null) {
@@ -1425,7 +1438,6 @@ class GlobalTypeInfo implements CompilerPass {
         }
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
-        Node initializer = NodeUtil.getRValueOfLValue(declNode);
         JSType t = initializer == null
             ? null : simpleInferExprType(initializer);
         if (t == null) {
@@ -1740,8 +1752,8 @@ class GlobalTypeInfo implements CompilerPass {
       if (classType.mayHaveOwnProp(pname)
           && previousPropType != null
           && !suppressDupPropWarning(jsdoc, typeInJsdoc, previousPropType)) {
-        warnings.add(JSError.make(propCreationNode, REDECLARED_PROPERTY,
-                pname, classType.toString()));
+        warnings.add(JSError.make(
+            propCreationNode, REDECLARED_PROPERTY, pname, "type " + classType));
         return true;
       }
       return false;
@@ -2029,8 +2041,16 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   private static boolean isPrototypePropertyDeclaration(Node n) {
-    return NodeUtil.isExprAssign(n)
-        && isPrototypeProperty(n.getFirstChild().getFirstChild());
+    if (NodeUtil.isExprAssign(n)
+        && isPrototypeProperty(n.getFirstChild().getFirstChild())) {
+      return true;
+    }
+    if (n.isObjectLit()) {
+      JSDocInfo jsdoc = n.getJSDocInfo();
+      return jsdoc != null && jsdoc.getLendsName() != null
+          && jsdoc.getLendsName().endsWith("prototype");
+    }
+    return false;
   }
 
   private static boolean isAnnotatedAsConst(Node defSite) {

@@ -48,4 +48,8 @@ public final class NamespaceLit extends Namespace {
   protected JSType computeJSType(JSTypes commonTypes) {
     return computeJSType(commonTypes, null, null);
   }
+
+  public String toString() {
+    return this.name;
+  }
 }

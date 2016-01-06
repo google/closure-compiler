@@ -225,6 +225,9 @@ public final class Es6RewriteGenerators
     hasTranslatedTry = false;
     Node genBlock = compiler
         .parseSyntheticCode(Joiner.on('\n').join(
+            // TODO(dimvar): Remove annotation once Iterable is a @record and NTI can
+            // handle @record.
+            "/** @return {!Iterable<?>} */",
             "function generatorBody() {",
             "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
             "  function $jscomp$generator$impl(" + GENERATOR_NEXT_ARG + ", ",
@@ -241,7 +244,7 @@ public final class Es6RewriteGenerators
             "  };",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return iterator;",
+            "  return /** @type {!Iterable<?>} */ (iterator);",
             "}"))
         .getFirstChild()
         .getLastChild()
