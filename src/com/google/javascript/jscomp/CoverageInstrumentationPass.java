@@ -39,10 +39,10 @@ class CoverageInstrumentationPass implements CompilerPass {
   private Map<String, FileInstrumentationData> instrumentationData;
   private CoverageReach reach;
 
-  private static final String JS_INSTRUMENTATION_EXTERNS_CODE =
-      "var JSCompiler_lcov_executedLines;\n" +
-      "var JSCompiler_lcov_instrumentedLines;\n" +
-      "var JSCompiler_lcov_fileNames;\n";
+  private static final String JS_INSTRUMENTATION_EXTERNS_CODE = ""
+      + "var JSCompiler_lcov_executedLines;\n"
+      + "var JSCompiler_lcov_instrumentedLines;\n"
+      + "var JSCompiler_lcov_fileNames;\n";
 
   public enum CoverageReach {
     ALL,
@@ -66,11 +66,11 @@ class CoverageInstrumentationPass implements CompilerPass {
    */
   private void addHeaderCode(Node script) {
     script.addChildToFront(
-        createConditionalVarDecl("JSCompiler_lcov_executedLines"));
+        createConditionalVarDecl("JSCompiler_lcov_executedLines", script));
     script.addChildToFront(
-        createConditionalVarDecl("JSCompiler_lcov_instrumentedLines"));
+        createConditionalVarDecl("JSCompiler_lcov_instrumentedLines", script));
     script.addChildToFront(
-        createConditionalVarDecl("JSCompiler_lcov_fileNames"));
+        createConditionalVarDecl("JSCompiler_lcov_fileNames", script));
   }
 
   /**
@@ -89,7 +89,8 @@ class CoverageInstrumentationPass implements CompilerPass {
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
       NodeTraversal.traverseEs6(compiler, rootNode,
-          new CoverageInstrumentationCallback(instrumentationData, reach));
+          new CoverageInstrumentationCallback(
+              compiler, instrumentationData, reach));
 
       Node firstScript = rootNode.getFirstChild();
       Preconditions.checkState(firstScript.isScript());
@@ -99,7 +100,7 @@ class CoverageInstrumentationPass implements CompilerPass {
     externsNode.addChildToBack(getInstrumentationExternsNode());
   }
 
-  private static Node createConditionalVarDecl(String name) {
+  private static Node createConditionalVarDecl(String name, Node srcref) {
     Node var = IR.var(
         IR.name(name),
         IR.or(
@@ -109,6 +110,6 @@ class CoverageInstrumentationPass implements CompilerPass {
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
     builder.recordSuppressions(ImmutableSet.of("duplicate"));
     var.setJSDocInfo(builder.build());
-    return var;
+    return var.useSourceInfoIfMissingFromForTree(srcref);
   }
 }

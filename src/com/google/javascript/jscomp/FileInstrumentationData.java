@@ -82,9 +82,8 @@ class FileInstrumentationData {
    * @param lineNumber the line number which was instrumented
    */
   void setLineAsInstrumented(int lineNumber) {
-    Preconditions.checkArgument(lineNumber > 0,
-                                "Expected non-zero positive integer as line " +
-                                "number.");
+    Preconditions.checkArgument(
+        lineNumber > 0, "Expected non-zero positive integer as line number: %s", lineNumber);
 
     // Map the 1-based line number to 0-based bit position
     instrumentedBits.set(lineNumber - 1);

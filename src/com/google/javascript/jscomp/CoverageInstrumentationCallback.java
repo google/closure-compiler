@@ -33,16 +33,17 @@ import java.util.Map;
 class CoverageInstrumentationCallback extends
     NodeTraversal.AbstractPostOrderCallback {
 
+  private final AbstractCompiler compiler;
   private final Map<String, FileInstrumentationData> instrumentationData;
-
-  private CoverageReach reach;
+  private final CoverageReach reach;
 
   static final String ARRAY_NAME_PREFIX = "JSCompiler_lcov_data_";
 
-
   public CoverageInstrumentationCallback(
+      AbstractCompiler compiler,
       Map<String, FileInstrumentationData> instrumentationData,
       CoverageReach reach) {
+    this.compiler = compiler;
     this.instrumentationData = instrumentationData;
     this.reach = reach;
   }
@@ -61,8 +62,8 @@ class CoverageInstrumentationCallback extends
    * source filename of the AST node.
    */
   private String createArrayName(NodeTraversal traversal) {
-    return ARRAY_NAME_PREFIX +
-        CoverageUtil.createIdentifierFromText(getFileName(traversal));
+    return ARRAY_NAME_PREFIX
+        + CoverageUtil.createIdentifierFromText(getFileName(traversal));
   }
 
   /**
@@ -78,27 +79,25 @@ class CoverageInstrumentationCallback extends
    *  node is needed
    * @return an instrumentation node corresponding to the line number
    */
-  private Node newInstrumentationNode(NodeTraversal traversal, int lineNumber) {
-    String fileName = getFileName(traversal);
+  private Node newInstrumentationNode(NodeTraversal traversal, Node node) {
+    int lineNumber = node.getLineno();
     String arrayName = createArrayName(traversal);
 
     // Create instrumentation Node
-    //   arr[line] = true;
-    Node nameNode = IR.name(arrayName);
-    Node numNode = IR.number(lineNumber - 1);  // Make line number 0-based
-    Node getElemNode = IR.getelem(nameNode, numNode);
-    Node trueNode = IR.trueNode();
-    Node assignNode = IR.assign(getElemNode, trueNode);
-    Node exprNode = IR.exprResult(assignNode);
+    Node getElemNode = IR.getelem(
+        IR.name(arrayName),
+        IR.number(lineNumber - 1));  // Make line number 0-based
+    Node exprNode = IR.exprResult(IR.assign(getElemNode, IR.trueNode()));
 
     // Note line as instrumented
+    String fileName = getFileName(traversal);
     if (!instrumentationData.containsKey(fileName)) {
       instrumentationData.put(fileName,
                               new FileInstrumentationData(fileName, arrayName));
     }
     instrumentationData.get(fileName).setLineAsInstrumented(lineNumber);
 
-    return exprNode;
+    return exprNode.useSourceInfoIfMissingFromForTree(node);
   }
 
   /**
@@ -107,17 +106,15 @@ class CoverageInstrumentationCallback extends
    * "var arrayNameUsedInFile = [];"
    */
   private Node newArrayDeclarationNode(NodeTraversal traversal) {
-    Node arraylitNode = IR.arraylit();
-    Node nameNode = IR.name(createArrayName(traversal));
-    nameNode.addChildToFront(arraylitNode);
-    Node varNode = IR.var(nameNode);
-    return varNode;
+    return IR.var(
+        IR.name(createArrayName(traversal)),
+        IR.arraylit());
   }
 
   /**
    * @return a Node containing file specific setup logic.
    */
-  private Node newHeaderNode(NodeTraversal traversal) {
+  private Node newHeaderNode(NodeTraversal traversal, Node srcref) {
     String fileName = getFileName(traversal);
     String arrayName = createArrayName(traversal);
     FileInstrumentationData data = instrumentationData.get(fileName);
@@ -139,7 +136,7 @@ class CoverageInstrumentationCallback extends
           IR.getprop(
               IR.name("JSCompiler_lcov_fileNames"),
               IR.string("push")),
-          IR.string(fileName))));
+          IR.string(fileName)))).useSourceInfoIfMissingFromForTree(srcref);
   }
 
   /**
@@ -153,8 +150,9 @@ class CoverageInstrumentationCallback extends
     if (node.isScript()) {
       String fileName = getFileName(traversal);
       if (instrumentationData.get(fileName) != null) {
-        node.addChildToFront(newHeaderNode(traversal));
+        node.addChildToFront(newHeaderNode(traversal, node));
       }
+      compiler.reportCodeChange();
       return;
     }
 
@@ -166,14 +164,15 @@ class CoverageInstrumentationCallback extends
 
     // Add instrumentation code just before a function block.
     // Similarly before other constructs: 'with', 'case', 'default', 'catch'
-    if (node.isFunction() ||
-        node.isWith() ||
-        node.isCase() ||
-        node.isDefaultCase() ||
-        node.isCatch()) {
+    if (node.isFunction()
+        || node.isWith()
+        || node.isCase()
+        || node.isDefaultCase()
+        || node.isCatch()) {
       Node codeBlock = node.getLastChild();
       codeBlock.addChildToFront(
-          newInstrumentationNode(traversal, node.getLineno()));
+          newInstrumentationNode(traversal, node));
+      compiler.reportCodeChange();
       return;
     }
 
@@ -181,14 +180,17 @@ class CoverageInstrumentationCallback extends
     if (node.isTry()) {
       Node firstChild = node.getFirstChild();
       firstChild.addChildToFront(
-          newInstrumentationNode(traversal, node.getLineno()));
+          newInstrumentationNode(traversal, node));
+      compiler.reportCodeChange();
       return;
     }
 
     // For any other statement, add instrumentation code just before it.
     if (parent != null && NodeUtil.isStatementBlock(parent)) {
       parent.addChildBefore(
-          newInstrumentationNode(traversal, node.getLineno()), node);
+          newInstrumentationNode(traversal, node),
+          node);
+      compiler.reportCodeChange();
       return;
     }
   }
