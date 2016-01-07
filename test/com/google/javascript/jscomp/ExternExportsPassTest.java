@@ -279,6 +279,32 @@ public final class ExternExportsPassTest extends TestCase {
                     "var externalName = function() {\n};\n");
   }
 
+  public void testNonNullTypes() {
+    compileAndCheck(
+        Joiner.on("\n").join(
+            "/**",
+            " * @constructor",
+            " */",
+            "function Foo() {}",
+            "goog.exportSymbol('Foo', Foo);",
+            "/**",
+            " * @param {!Foo} x",
+            " * @return {!Foo}",
+            " */",
+            "Foo.f = function(x) { return x; };",
+            "goog.exportProperty(Foo, 'f', Foo.f);"),
+        Joiner.on("\n").join(
+            "/**",
+            " * @constructor",
+            " */",
+            "var Foo = function() {\n};",
+            "/**",
+            " * @param {!Foo} x",
+            " * @return {!Foo}",
+            " */",
+            "Foo.f = function(x) {\n};\n"));
+  }
+
   public void testExportSymbolWithConstructorWithoutTypeCheck() {
     // For now, skipping type checking should prevent generating
     // annotations of any kind, so, e.g., @constructor is not preserved.

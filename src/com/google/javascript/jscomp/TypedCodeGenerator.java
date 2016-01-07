@@ -142,7 +142,7 @@ class TypedCodeGenerator extends CodeGenerator {
         !funType.isInterface() && // Interfaces never return a value.
         !(funType.isConstructor() && retType.isVoidType())) {
       sb.append(" * ");
-      appendAnnotation(sb, "return", retType.toAnnotationString());
+      appendAnnotation(sb, "return", retType.toNonNullAnnotationString());
       sb.append("\n");
     }
 
@@ -211,13 +211,13 @@ class TypedCodeGenerator extends CodeGenerator {
     String typeString;
 
     if (parameterNode.isOptionalArg()) {
-      typeString = restrictByUndefined(parameterType).toAnnotationString() +
+      typeString = restrictByUndefined(parameterType).toNonNullAnnotationString() +
           "=";
     } else if (parameterNode.isVarArgs()) {
       typeString = "..." +
-          restrictByUndefined(parameterType).toAnnotationString();
+          restrictByUndefined(parameterType).toNonNullAnnotationString();
     } else {
-      typeString = parameterType.toAnnotationString();
+      typeString = parameterType.toNonNullAnnotationString();
     }
 
     return typeString;

@@ -1476,6 +1476,12 @@ public abstract class JSType implements TypeI, Serializable {
     return toStringHelper(true);
   }
 
+  public final String toNonNullAnnotationString() {
+    return !isUnknownType() && !isTemplateType() && !isRecordType() && isObject()
+        ? "!" + toAnnotationString()
+        : toAnnotationString();
+  }
+
   /**
    * @param forAnnotations Whether this is for use in code generator
    *     annotations. Otherwise, it's for warnings.

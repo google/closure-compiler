@@ -950,6 +950,26 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "function Foo() {\n}\n");
   }
 
+  public void testNonNullTypes() {
+    assertTypeAnnotations(
+        Joiner.on("\n").join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @return {!Foo} */",
+            "Foo.prototype.f = function() { return new Foo; };"),
+        Joiner.on("\n").join(
+            "/**",
+            " * @constructor",
+            " */",
+            "function Foo() {\n}",
+            "/**",
+            " * @return {!Foo}",
+            " */",
+            "Foo.prototype.f = function() {",
+            "  return new Foo;",
+            "};\n"));
+  }
+
   public void testTypeAnnotationsTypeDef() {
     // TODO(johnlenz): It would be nice if there were some way to preserve
     // typedefs but currently they are resolved into the basic types in the
