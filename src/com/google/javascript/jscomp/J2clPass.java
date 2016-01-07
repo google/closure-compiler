@@ -33,9 +33,14 @@ import java.util.Set;
  * <p>Inlines Arrays.$create(), Arrays.$init(), Arrays.$instanceIsOfType(), Arrays.$castTo() and
  * Casts.to() so that all references to Object.$isInstance() functions will be fully qualified
  * and easy to strip.
+ *
+ * <p>Inlines all Interface.$markImplementor(FooClass) metaclass calls so that FooClass and others
+ * like it are not unnecessarily retained and so that static analysis of interface instanceof calls
+ * becomes possible.
  */
 public class J2clPass implements CompilerPass {
 
+  private static final String ALL_CLASS_FILE_NAMES = "*";
   private final AbstractCompiler compiler;
   private final Supplier<String> safeNameIdSupplier;
 
@@ -52,7 +57,9 @@ public class J2clPass implements CompilerPass {
       @Override
       public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
         // Only look inside the referenced class file.
-        return !n.isScript() || n.getSourceFileName().endsWith(classFileName);
+        return !n.isScript()
+            || n.getSourceFileName().endsWith(classFileName)
+            || classFileName.equals(ALL_CLASS_FILE_NAMES);
       }
 
       @Override
@@ -105,22 +112,24 @@ public class J2clPass implements CompilerPass {
         // Otherwise inline the call.
         Node inlinedCall =
             injector.inline(
-                new Reference(n, t.getScope(), t.getModule(), InliningMode.DIRECT), fnName, fnImpl);
+                new Reference(n, t.getScope(), t.getModule(), inliningMode), fnName, fnImpl);
         t.getCompiler().reportChangeToEnclosingScope(inlinedCall);
       }
     }
 
     private final String classFileName;
     private final Set<String> fnNamesToInline;
+    private final InliningMode inliningMode;
     private final Map<String, Node> fnsToInlineByQualifiedName = new HashMap<>();
     private final FunctionInjector injector;
     private final Node root;
 
     private ClassStaticFunctionsInliner(
-        Node root, String classFileName, Set<String> fnNamesToInline) {
+        Node root, String classFileName, Set<String> fnNamesToInline, InliningMode inliningMode) {
       this.root = root;
       this.classFileName = classFileName;
       this.fnNamesToInline = fnNamesToInline;
+      this.inliningMode = inliningMode;
 
       this.injector = new FunctionInjector(compiler, safeNameIdSupplier, true, true, true);
       this.injector.setKnownConstants(fnNamesToInline);
@@ -142,11 +151,19 @@ public class J2clPass implements CompilerPass {
     inlineFunctionsInFile(
         root,
         "j2cl/transpiler/vmbootstrap/Arrays.impl.js",
-        ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo"));
-    inlineFunctionsInFile(root, "j2cl/transpiler/vmbootstrap/Casts.impl.js", ImmutableSet.of("to"));
+        ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo"),
+        InliningMode.DIRECT);
+    inlineFunctionsInFile(
+        root,
+        "j2cl/transpiler/vmbootstrap/Casts.impl.js",
+        ImmutableSet.of("to"),
+        InliningMode.DIRECT);
+    inlineFunctionsInFile(
+        root, ALL_CLASS_FILE_NAMES, ImmutableSet.of("$markImplementor"), InliningMode.BLOCK);
   }
 
-  private void inlineFunctionsInFile(Node root, String classFileName, Set<String> fnNamesToInline) {
-    new ClassStaticFunctionsInliner(root, classFileName, fnNamesToInline).run();
+  private void inlineFunctionsInFile(
+      Node root, String classFileName, Set<String> fnNamesToInline, InliningMode inliningMode) {
+    new ClassStaticFunctionsInliner(root, classFileName, fnNamesToInline, inliningMode).run();
   }
 }

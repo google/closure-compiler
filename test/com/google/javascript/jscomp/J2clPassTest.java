@@ -91,6 +91,33 @@ public class J2clPassTest extends CompilerTestCase {
                     "Casts.to = function() { return 1; }",
                     "",
                     "alert(1);"))));
+
+    // Interface $markImplementor() functions.
+    test(
+        Lists.newArrayList(
+            SourceFile.fromCode(
+                "name/doesnt/matter/Foo.impl.js",
+                LINE_JOINER.join(
+                    // Function definitions and calls are qualified globals.
+                    "var FooInterface = function() {};",
+                    "FooInterface.$markImplementor = function(classDef) {",
+                    "  classDef.$implements__FooInterface = true;",
+                    "}",
+                    "",
+                    "var Foo = function() {};",
+                    "FooInterface.$markImplementor(Foo);"))),
+        Lists.newArrayList(
+            SourceFile.fromCode(
+                "name/doesnt/matter/Foo.impl.js",
+                LINE_JOINER.join(
+                    // Function definitions and calls are qualified globals.
+                    "var FooInterface = function() {};",
+                    "FooInterface.$markImplementor = function(classDef) {",
+                    "  classDef.$implements__FooInterface = true;",
+                    "}",
+                    "",
+                    "var Foo = function() {};",
+                    "{Foo.$implements__FooInterface = true;}"))));
   }
 
   public void testRenamedQualifierStillInlines() {
@@ -151,6 +178,37 @@ public class J2clPassTest extends CompilerTestCase {
                     "Casts.to = function() { return 1; }",
                     "",
                     "alert(1);"))));
+
+    // Interface $markImplementor() functions.
+    test(
+        Lists.newArrayList(
+            SourceFile.fromCode(
+                "name/doesnt/matter/Foo.impl.js",
+                LINE_JOINER.join(
+                    // Function definitions and calls are qualified globals.
+                    "var $jscomp = {};",
+                    "$jscomp.scope = {};",
+                    "$jscomp.scope.FooInterface = function() {};",
+                    "$jscomp.scope.FooInterface.$markImplementor = function(classDef) {",
+                    "  classDef.$implements__FooInterface = true;",
+                    "}",
+                    "",
+                    "$jscomp.scope.Foo = function() {};",
+                    "$jscomp.scope.FooInterface.$markImplementor($jscomp.scope.Foo);"))),
+        Lists.newArrayList(
+            SourceFile.fromCode(
+                "name/doesnt/matter/Foo.impl.js",
+                LINE_JOINER.join(
+                    // Function definitions and calls are qualified globals.
+                    "var $jscomp = {};",
+                    "$jscomp.scope = {};",
+                    "$jscomp.scope.FooInterface = function() {};",
+                    "$jscomp.scope.FooInterface.$markImplementor = function(classDef) {",
+                    "  classDef.$implements__FooInterface = true;",
+                    "}",
+                    "",
+                    "$jscomp.scope.Foo = function() {};",
+                    "{$jscomp.scope.Foo.$implements__FooInterface = true;}"))));
   }
 
   public void testUnexpectedFunctionDoesntInline() {
@@ -177,6 +235,9 @@ public class J2clPassTest extends CompilerTestCase {
                     "Casts.fooBar = function() { return 4; }",
                     "",
                     "alert(Casts.fooBar());"))));
+
+    // No applicable for $markImplementor() inlining since it is not limited to just certain class
+    // files and so there are no specific files in which "other" functions should be ignored.
   }
 
   public void testUnqualifiedDoesntInline() {
@@ -205,6 +266,31 @@ public class J2clPassTest extends CompilerTestCase {
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var to = function() { return 1; }", "", "alert(to());"))));
+
+    // Interface $markImplementor() functions.
+    test(
+        Lists.newArrayList(
+            SourceFile.fromCode(
+                "name/doesnt/matter/Foo.impl.js",
+                LINE_JOINER.join(
+                    // Function definitions and calls are qualified globals.
+                    "var $markImplementor = function(classDef) {",
+                    "  classDef.$implements__FooInterface = true;",
+                    "}",
+                    "",
+                    "var Foo = function() {};",
+                    "$markImplementor(Foo);"))),
+        Lists.newArrayList(
+            SourceFile.fromCode(
+                "name/doesnt/matter/Foo.impl.js",
+                LINE_JOINER.join(
+                    // Function definitions and calls are qualified globals.
+                    "var $markImplementor = function(classDef) {",
+                    "  classDef.$implements__FooInterface = true;",
+                    "}",
+                    "",
+                    "var Foo = function() {};",
+                    "$markImplementor(Foo);"))));
   }
 
   public void testWrongFileNameDoesntInline() {
@@ -237,5 +323,8 @@ public class J2clPassTest extends CompilerTestCase {
                     "Casts.to = function() { return 1; }",
                     "",
                     "alert(Casts.to());"))));
+
+    // No applicable for $markImplementor() inlining since it is not limited to just certain class
+    // files.
   }
 }
