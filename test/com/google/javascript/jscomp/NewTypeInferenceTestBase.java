@@ -156,8 +156,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         "parsing warning: " + Joiner.on(", ").join(compiler.getWarnings()), 0,
         compiler.getWarningCount());
 
-
-    // Create common parent of externs and ast; needed by Es6RewriteLetConst.
+    // Create common parent of externs and ast; needed by Es6RewriteBlockScopedDeclaration.
     Node block = IR.block(externsRoot, astRoot);
     block.setIsSyntheticBlock(true);
 
