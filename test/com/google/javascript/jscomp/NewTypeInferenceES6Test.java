@@ -31,7 +31,6 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
   protected void setUp() {
     super.setUp();
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
-    addES6TranspilationPasses();
   }
 
   public void testSimpleClasses() {

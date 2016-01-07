@@ -36,9 +36,6 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
   protected void setUp() {
     super.setUp();
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
-    passes.add(makePassFactory("convertEs6TypedToEs6",
-            new Es6TypedToEs6Converter(compiler)));
-    addES6TranspilationPasses();
   }
 
   public void testSimpleAnnotationsNoWarnings() {

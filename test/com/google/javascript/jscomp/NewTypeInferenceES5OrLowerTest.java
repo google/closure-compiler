@@ -14598,6 +14598,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testDontCrashOnMistypedWindow() {
+    // deliberately not adding the default externs here, to avoid the definition
+    // of window.
     typeCheckCustomExterns(LINE_JOINER.join(
         "/**",
         " * @constructor",

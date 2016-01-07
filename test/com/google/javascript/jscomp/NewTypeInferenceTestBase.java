@@ -130,25 +130,6 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     };
   }
 
-  protected final void addES6TranspilationPasses() {
-    passes.add(makePassFactory("Es6RenameVariablesInParamLists",
-            new Es6RenameVariablesInParamLists(compiler)));
-    passes.add(makePassFactory("Es6SplitVariableDeclarations",
-            new Es6SplitVariableDeclarations(compiler)));
-    passes.add(makePassFactory("es6ConvertSuper",
-            new Es6ConvertSuper(compiler)));
-    passes.add(makePassFactory("convertEs6",
-            new Es6ToEs3Converter(compiler)));
-    passes.add(makePassFactory("Es6RewriteBlockScopedDeclaration",
-            new Es6RewriteBlockScopedDeclaration(compiler)));
-    passes.add(makePassFactory("rewriteGenerators",
-            new Es6RewriteGenerators(compiler)));
-    passes.add(makePassFactory("Es6RuntimeLibrary",
-            new InjectEs6RuntimeLibrary(compiler)));
-    passes.add(makePassFactory("Es6StaticInheritance",
-            new Es6ToEs3ClassSideInheritance(compiler)));
-  }
-
   private final void parseAndTypeCheck(String externs, String js) {
     setUp();
     final CompilerOptions options = compiler.getOptions();
@@ -183,9 +164,34 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     // Run ASTValidator
     (new AstValidator(compiler)).validateRoot(block);
 
+    DeclaredGlobalExternsOnWindow rewriteExterns =
+        new DeclaredGlobalExternsOnWindow(compiler);
+    passes.add(makePassFactory("globalExternsOnWindow", rewriteExterns));
     ProcessClosurePrimitives closurePass =
         new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false);
     passes.add(makePassFactory("ProcessClosurePrimitives", closurePass));
+    if (options.getLanguageIn() == CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED) {
+      passes.add(makePassFactory("convertEs6TypedToEs6",
+              new Es6TypedToEs6Converter(compiler)));
+    }
+    if (options.getLanguageIn().isEs6OrHigher()) {
+      passes.add(makePassFactory("Es6RenameVariablesInParamLists",
+              new Es6RenameVariablesInParamLists(compiler)));
+      passes.add(makePassFactory("Es6SplitVariableDeclarations",
+              new Es6SplitVariableDeclarations(compiler)));
+      passes.add(makePassFactory("es6ConvertSuper",
+              new Es6ConvertSuper(compiler)));
+      passes.add(makePassFactory("convertEs6",
+              new Es6ToEs3Converter(compiler)));
+      passes.add(makePassFactory("Es6RewriteBlockScopedDeclaration",
+              new Es6RewriteBlockScopedDeclaration(compiler)));
+      passes.add(makePassFactory("rewriteGenerators",
+              new Es6RewriteGenerators(compiler)));
+      passes.add(makePassFactory("Es6RuntimeLibrary",
+              new InjectEs6RuntimeLibrary(compiler)));
+      passes.add(makePassFactory("Es6StaticInheritance",
+              new Es6ToEs3ClassSideInheritance(compiler)));
+    }
     passes.add(makePassFactory("GlobalTypeInfo", compiler.getSymbolTable()));
     passes.add(makePassFactory("NewTypeInference", new NewTypeInference(compiler)));
 
