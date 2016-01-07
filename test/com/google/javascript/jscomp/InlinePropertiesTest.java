@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
 /**
  * @author johnlenz@google.com (John Lenz)
  */
@@ -42,6 +41,11 @@ public final class InlinePropertiesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new InlineProperties(compiler);
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
   }
 
   public void testConstInstanceProp1() {
@@ -329,5 +333,66 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "function C() {",
         "  foo;",
         "}"));
+  }
+
+  public void testConstPrototypePropFromSuper() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.prototype.foo = 1;",
+            "/** @constructor @extends {C} */",
+            "function D() {}",
+            "(new D).foo;"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.prototype.foo = 1;",
+            "/** @constructor @extends {C} */",
+            "function D() {}",
+            "new D, 1;"));
+  }
+
+  public void testTypedPropInlining() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.prototype.foo = 1;",
+            "function f(/** !C */ x) { return x.foo; }",
+            "f(new C);"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.prototype.foo = 1;",
+            "function f(/** !C */ x) { return 1; }",
+            "f(new C);"));
+  }
+
+  public void testTypeMismatchNoPropInlining() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "C.prototype.foo = 1;",
+        "function f(/** !C */ x) { return x.foo; }",
+        "f([]);");
+
+    testSame(js, TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
+  public void testStructuralInterfacesNoPropInlining() {
+    String js = LINE_JOINER.join(
+        "/** @record */ function I() {}",
+        "/** @type {number|undefined} */ I.prototype.foo;",
+        "",
+        "/** @constructor @implements {I} */",
+        "function C() {}",
+        "/** @override */",
+        "C.prototype.foo = 1;",
+        "",
+        "function f(/** !I */ x) { return x.foo; }",
+        "f([]);");
+
+    testSame(js);
   }
 }
