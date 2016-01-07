@@ -148,9 +148,9 @@ Console.prototype.dirxml = function(var_args) {};
 Console.prototype.table = function(data, opt_columns) {};
 
 /**
- * @return {undefined}
+ * @param {...*} var_args
  */
-Console.prototype.trace = function() {};
+Console.prototype.trace = function(var_args) {};
 
 /**
  * @param {*} value
