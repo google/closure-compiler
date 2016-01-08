@@ -329,23 +329,22 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     Node extendClass = classNode.getSecondChild();
     
     // If the superclass is something other than a qualified name, ignore it.
-    if (extendClass.isQualifiedName()) {
-      // Grab the root superclass namespace.
-      Node root = NodeUtil.getRootOfQualifiedName(extendClass);
-      
-      // It should always be a name. Extending this.something or 
-      // super.something is unlikely.
-      // We only consider programmer-defined superclasses that are
-      // global variables, or are defined on global variables.
-      if (root.isName()) {
-        String rootName = root.getString();
-        Var var = t.getScope().getVar(rootName);
-        if (var != null && (var.isLocal() || var.isExtern())) {
-          // "require" not needed for these
-        } else {
-          usages.put(extendClass.getQualifiedName(), extendClass);
-        }
-      }
+    if (!extendClass.isQualifiedName()) return;
+    
+    Node root = NodeUtil.getRootOfQualifiedName(extendClass);
+	  
+	// It should always be a name. Extending this.something or 
+    // super.something is unlikely.
+    // We only consider programmer-defined superclasses that are
+    // global variables, or are defined on global variables.
+    if (root.isName()) {
+	  String rootName = root.getString();
+	  Var var = t.getScope().getVar(rootName);
+	  if (var != null && (var.isLocal() || var.isExtern())) {
+		// "require" not needed for these
+	  } else {
+		usages.put(extendClass.getQualifiedName(), extendClass);
+	  }
     }
   }
 
