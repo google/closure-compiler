@@ -895,8 +895,7 @@ public final class ConformanceRules {
         if (paramClasses.length == 2) {
           TypeToken<?> param1 = TypeToken.of(paramClasses[0]);
           TypeToken<?> param2 = TypeToken.of(paramClasses[1]);
-          if (param1.isAssignableFrom(COMPILER_TYPE)
-              && param2.isAssignableFrom(REQUIREMENT_TYPE)) {
+          if (param1.isSupertypeOf(COMPILER_TYPE) && param2.isSupertypeOf(REQUIREMENT_TYPE)) {
             return ctor;
           }
         }
@@ -922,7 +921,7 @@ public final class ConformanceRules {
       } catch (ClassNotFoundException e) {
         throw new InvalidRequirementSpec("JavaClass not found.");
       }
-      if (RULE_TYPE.isAssignableFrom(TypeToken.of(customClass))) {
+      if (RULE_TYPE.isSupertypeOf(TypeToken.of(customClass))) {
         @SuppressWarnings("unchecked") // Assignable to Rule;
         Class<Rule> ruleClass = (Class<Rule>) customClass;
         return ruleClass;
