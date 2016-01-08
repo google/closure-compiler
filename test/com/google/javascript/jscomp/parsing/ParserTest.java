@@ -227,6 +227,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("foo:(function(){foo:2})");
   }
 
+  public void testConditional() {
+    parse("1 ? 2 ? 3 : 4 : 5;");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    expectedFeatures = FeatureSet.ES6_IMPL;
+    Node hook = parse(LINE_JOINER.join(
+        "function f(cond) {",
+        "  return cond ?",
+        "      (v = 7, f = () => v) :",
+        "      n => 2 * n;",
+        "}")).getFirstChild().getLastChild().getFirstFirstChild();
+    assertNode(hook).hasType(Token.HOOK);
+  }
+
   public void testLinenoCharnoAssign1() throws Exception {
     Node assign = parse("a = b").getFirstFirstChild();
 
