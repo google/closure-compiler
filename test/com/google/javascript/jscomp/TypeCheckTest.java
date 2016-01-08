@@ -6093,6 +6093,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "must be called with a \"this\" type");
   }
 
+  public void testThisTypeOfFunction5() throws Exception {
+    testTypes(Joiner.on('\n').join(
+        "/** @type {function(this:number)} */",
+        "function f() {",
+        "  var /** number */ n = this;",
+        "}"));
+  }
+
   public void testGlobalThis1() throws Exception {
     testTypes("/** @constructor */ function Window() {}" +
         "/** @param {string} msg */ " +

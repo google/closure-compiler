@@ -1616,14 +1616,14 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
           if (candidateThisType.isNullType() ||
               candidateThisType.isVoidType()) {
             thisType = candidateThisType;
-          } else {
+          } else if (current.getType() == Token.THIS) {
+            thisType = candidateThisType.restrictByNotNullOrUndefined();
+          } else if (current.getType() == Token.NEW) {
             thisType = ObjectType.cast(
                 candidateThisType.restrictByNotNullOrUndefined());
             if (thisType == null) {
               reporter.warning(
                   SimpleErrorReporter.getMessage0(
-                      current.getType() == Token.THIS ?
-                      "msg.jsdoc.function.thisnotobject" :
                       "msg.jsdoc.function.newnotobject"),
                   sourceName,
                   contextNode.getLineno(), contextNode.getCharno());
