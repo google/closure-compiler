@@ -409,7 +409,7 @@ function fit(description, handler) {}
 /**
  * @param {Object} spiedOnObject
  * @param {string} methodName
- * @return {jasmine.Spy} spy
+ * @return {!jasmine.Spy} spy
  */
 function spyOn(spiedOnObject, methodName) {}
 
