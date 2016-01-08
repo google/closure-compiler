@@ -132,17 +132,26 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     if (!letConsts.isEmpty()) {
       for (Node n : letConsts) {
         if (n.isConst()) {
-          JSDocInfo existingInfo = n.getJSDocInfo();
-          if (existingInfo == null) {
-            existingInfo = n.getFirstChild().getJSDocInfo();
-            n.getFirstChild().setJSDocInfo(null);
+          // Normalize declarations like "const x = 1, y = 2;" so that inline
+          // type annotations are preserved.
+          for (Node child : n.children()) {
+            Node declaration = IR.var(child.detachFromParent());
+            declaration.useSourceInfoFrom(n);
+            JSDocInfo existingInfo = n.getJSDocInfo();
+            if (existingInfo == null) {
+              existingInfo = child.getJSDocInfo();
+              child.setJSDocInfo(null);
+            }
+            JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(existingInfo);
+            builder.recordConstancy();
+            JSDocInfo info = builder.build();
+            declaration.setJSDocInfo(info);
+            n.getParent().addChildAfter(declaration, n);
           }
-          JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(existingInfo);
-          builder.recordConstancy();
-          JSDocInfo info = builder.build();
-          n.setJSDocInfo(info);
+          n.detachFromParent();
+        } else {
+          n.setType(Token.VAR);
         }
-        n.setType(Token.VAR);
       }
       compiler.reportCodeChange();
     }
