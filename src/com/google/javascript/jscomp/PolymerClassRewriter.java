@@ -62,7 +62,7 @@ final class PolymerClassRewriter {
     }
 
     Node objLit = cls.descriptor;
-    if (hasShorthandAssignment(objLit)){
+    if (hasShorthandAssignment(objLit)) {
       compiler.report(JSError.make(objLit, PolymerPassErrors.POLYMER_SHORTHAND_NOT_SUPPORTED));
       return;
     }
@@ -75,6 +75,12 @@ final class PolymerClassRewriter {
     addTypesToFunctions(objLit, cls.target.getQualifiedName());
     PolymerPassStaticUtils.switchDollarSignPropsToBrackets(objLit, compiler);
     PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(objLit);
+
+    for (MemberDefinition prop : cls.props) {
+      if (prop.value.isObjectLit()) {
+        PolymerPassStaticUtils.switchDollarSignPropsToBrackets(prop.value, compiler);
+      }
+    }
 
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
