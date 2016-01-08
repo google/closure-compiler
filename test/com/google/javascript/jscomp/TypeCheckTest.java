@@ -50,6 +50,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       + "Suggest.prototype.veryPossible = 1;\n"
       + "Suggest.prototype.veryPossible2 = 1;\n";
 
+  private static final String ILLEGAL_PROPERTY_CREATION_MESSAGE = "Cannot add a property"
+      + " to a struct instance after it is constructed. (If you already declared the property,"
+      + " make sure to give it a type.)";
+
   @Override
   public void setUp() {
     super.setUp();
@@ -4333,8 +4337,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               " */\n" +
               "function Foo() {}\n" +
               "(new Foo()).x = 123;",
-              "Cannot add a property to a struct instance " +
-              "after it is constructed.");
+              ILLEGAL_PROPERTY_CREATION_MESSAGE);
   }
 
   public void testSetprop3() throws Exception {
@@ -4345,8 +4348,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               " */\n" +
               "function Foo() {}\n" +
               "(function() { (new Foo()).x = 123; })();",
-              "Cannot add a property to a struct instance " +
-              "after it is constructed.");
+              ILLEGAL_PROPERTY_CREATION_MESSAGE);
   }
 
   public void testSetprop4() throws Exception {
@@ -4367,8 +4369,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               " */\n" +
               "function Foo() {}\n" +
               "(true ? new Foo() : {}).x = 123;",
-              "Cannot add a property to a struct instance " +
-              "after it is constructed.");
+              ILLEGAL_PROPERTY_CREATION_MESSAGE);
   }
 
   public void testSetprop6() throws Exception {
@@ -4383,8 +4384,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               " * @param{Foo} f\n" +
               " */\n" +
               "function Bar(f) { f.x = 123; }",
-              "Cannot add a property to a struct instance " +
-              "after it is constructed.");
+             ILLEGAL_PROPERTY_CREATION_MESSAGE);
   }
 
   public void testSetprop7() throws Exception {
@@ -4397,8 +4397,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               "  var t = this;\n" +
               "  t.x = 123;\n" +
               "}",
-              "Cannot add a property to a struct instance " +
-              "after it is constructed.");
+              ILLEGAL_PROPERTY_CREATION_MESSAGE);
   }
 
   public void testSetprop8() throws Exception {
@@ -4410,8 +4409,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               "function Foo() {}\n" +
               "(new Foo()).x--;",
               new String[] {
-                "Cannot add a property to a struct instance " +
-                "after it is constructed.",
+                ILLEGAL_PROPERTY_CREATION_MESSAGE,
                 "Property x never defined on Foo"
               });
   }
@@ -4425,8 +4423,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               "function Foo() {}\n" +
               "(new Foo()).x += 123;",
               new String[] {
-                "Cannot add a property to a struct instance " +
-                "after it is constructed.",
+                ILLEGAL_PROPERTY_CREATION_MESSAGE,
                 "Property x never defined on Foo"
               });
   }
