@@ -227,6 +227,10 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("foo:(function(){foo:2})");
   }
 
+  public void testConditional() {
+    parse("1 ? 2 ? 3 : 4 : 5;");
+  }
+
   public void testLinenoCharnoAssign1() throws Exception {
     Node assign = parse("a = b").getFirstFirstChild();
 
