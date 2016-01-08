@@ -162,6 +162,15 @@ class CoverageInstrumentationCallback extends
       return;
     }
 
+    // For arrow functions whose body is an expression instead of a block,
+    // convert it to a block so that it can be instrumented.
+    if (node.isFunction() && !NodeUtil.getFunctionBody(node).isBlock()) {
+      Node returnValue = NodeUtil.getFunctionBody(node);
+      Node body = IR.block(IR.returnNode(returnValue.detachFromParent()));
+      body.useSourceInfoIfMissingFromForTree(returnValue);
+      node.addChildToBack(body);
+    }
+
     // Add instrumentation code just before a function block.
     // Similarly before other constructs: 'with', 'case', 'default', 'catch'
     if (node.isFunction()
