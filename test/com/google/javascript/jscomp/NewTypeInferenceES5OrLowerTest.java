@@ -13762,6 +13762,49 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
+  public void testNamespaceAliasingWithoutJsdoc() {
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @const */",
+            "var ns = {};",
+            "/** @constructor */",
+            "ns.Foo = function() {};",
+            "var ns2 = ns;"),
+        LINE_JOINER.join(
+            "/** @type {!ns2.Foo} */",
+            "var x;"));
+
+    // In non externs we still require @const
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "var ns2 = ns;",
+        "/** @type {!ns2.Foo} */",
+        "var x;"),
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    // spurious warning, the second assignment to ns.prop is ignored.
+    typeCheckCustomExterns(LINE_JOINER.join(
+        DEFAULT_EXTERNS,
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "var ns2 = {};",
+        "/** @type {number} */",
+        "ns2.x;",
+        "/** @const */",
+        "var ns3 = {};",
+        "/** @type {string} */",
+        "ns3.x;",
+        "ns.prop = ns2;",
+        "ns.prop = ns3;"),
+        "function f() { var /** string */ s = ns.prop.x; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testOptionalPropertiesInRecordTypes() {
     typeCheck("var /** { a: (number|undefined) } */ obj = {};");
 

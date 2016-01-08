@@ -720,8 +720,15 @@ class GlobalTypeInfo implements CompilerPass {
         return false;
       }
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
-      return jsdoc != null
-          && (jsdoc.isConstructorOrInterface() || jsdoc.hasConstAnnotation());
+      if (jsdoc == null) {
+        return qnameNode.isFromExterns()
+            // If the aliased namespace is a variable, do the aliasing at
+            // declaration, not at a random assignment later.
+            && (qnameNode.getParent().isVar() || !qnameNode.isName())
+            && this.currentScope.getNamespace(QualifiedName.fromNode(rhs)) != null;
+      } else {
+        return jsdoc.isConstructorOrInterface() || jsdoc.hasConstAnnotation();
+      }
     }
 
     private boolean isQualifiedFunctionDefinition(Node qnameNode) {
@@ -991,6 +998,9 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void visitAliasedNamespace(Node lhs) {
+      if (this.currentScope.isDefined(lhs)) {
+        return;
+      }
       Node rhs = NodeUtil.getRValueOfLValue(lhs);
       QualifiedName rhsQname = QualifiedName.fromNode(rhs);
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(lhs);

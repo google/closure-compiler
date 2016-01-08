@@ -209,6 +209,8 @@ final class NTIScope implements DeclaredTypeRegistry {
     return false;
   }
 
+  // For variables it is the same as isDefinedLocally; for properties it looks
+  // for a definition in any scope.
   boolean isDefined(Node qnameNode) {
     Preconditions.checkArgument(qnameNode.isQualifiedName());
     if (qnameNode.isName()) {
