@@ -507,17 +507,26 @@ FileReader.prototype.abort = function() {};
  */
 FileReader.prototype.EMPTY = 0;
 
+/** @type {number} */
+FileReader.EMPTY = 0;
+
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-loading
  * @type {number}
  */
 FileReader.prototype.LOADING = 1;
 
+/** @type {number} */
+FileReader.LOADING = 1;
+
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-done
  * @type {number}
  */
 FileReader.prototype.DONE = 2;
+
+/** @type {number} */
+FileReader.DONE = 2;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-readystate
