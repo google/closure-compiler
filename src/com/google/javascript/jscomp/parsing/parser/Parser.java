@@ -1040,14 +1040,10 @@ public class Parser {
       SourcePosition start,
       GenericTypeListTree generics,
       FormalParameterListTree formalParameterList,
+      ParseTree returnType,
       Expression expressionIn) {
 
     inGeneratorContext.addLast(false);
-
-    ParseTree returnType = null;
-    if (peek(TokenType.COLON)) {
-      returnType = parseTypeAnnotation();
-    }
 
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed before '=>'");
@@ -1893,7 +1889,7 @@ public class Parser {
       switch (peekType()) {
       case CASE:
         eat(TokenType.CASE);
-        ParseTree expression = parseExpression();
+        ParseTree expression = parse(Expression.NORMAL, false);
         eat(TokenType.COLON);
         ImmutableList<ParseTree> statements = parseCaseStatementsOpt();
         result.add(new CaseClauseTree(getTreeLocation(start), expression, statements));
@@ -2596,8 +2592,12 @@ public class Parser {
   }
 
   private ParseTree parse(Expression expressionIn) {
+    return parse(expressionIn, true);
+  }
+
+  private ParseTree parse(Expression expressionIn, boolean mayHaveColonType) {
     SourcePosition start = getTreeStartLocation();
-    ParseTree result = parseAssignment(expressionIn);
+    ParseTree result = parseAssignment(expressionIn, mayHaveColonType);
     if (peek(TokenType.COMMA) && !peek(1, TokenType.SPREAD)) {
       ImmutableList.Builder<ParseTree> exprs = ImmutableList.builder();
       exprs.add(result);
@@ -2620,16 +2620,29 @@ public class Parser {
   }
 
   private ParseTree parseAssignment(Expression expressionIn) {
+    return parseAssignment(expressionIn, true);
+  }
+
+  private ParseTree parseAssignment(Expression expressionIn, boolean mayHaveColonType) {
     if (peek(TokenType.YIELD) && inGeneratorContext()) {
       return parseYield(expressionIn);
     }
 
     SourcePosition start = getTreeStartLocation();
-    // TODO(blickly): Allow TypeScript syntax in arrow function parameters
+    GenericTypeListTree generics = maybeParseGenericTypes();
     ParseTree left = parseConditional(expressionIn);
+
+    ParseTree returnType = null;
+    if (peek(TokenType.COLON) && mayHaveColonType) {
+      returnType = parseTypeAnnotation();
+    }
+
     if (peek(TokenType.ARROW)) {
       FormalParameterListTree params = transformArrowFunctionParameters(start, left);
-      return parseArrowFunctionTail(start, null, params, expressionIn);
+      if (peek(TokenType.COLON)) {
+        parseTypeAnnotation();
+      }
+      return parseArrowFunctionTail(start, generics, params, returnType, expressionIn);
     }
     if (left.type == ParseTreeType.FORMAL_PARAMETER_LIST) {
       reportError("invalid paren expression");
@@ -2641,7 +2654,7 @@ public class Parser {
         reportError("invalid assignment target");
       }
       Token operator = nextToken();
-      ParseTree right = parseAssignment(expressionIn);
+      ParseTree right = parseAssignment(expressionIn, mayHaveColonType);
       return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
     }
     return left;
@@ -2740,9 +2753,9 @@ public class Parser {
     ParseTree condition = parseLogicalOR(expressionIn);
     if (peek(TokenType.QUESTION)) {
       eat(TokenType.QUESTION);
-      ParseTree left = parseAssignment(expressionIn);
+      ParseTree left = parseAssignment(expressionIn, false);
       eat(TokenType.COLON);
-      ParseTree right = parseAssignment(expressionIn);
+      ParseTree right = parseAssignment(expressionIn, false);
       return new ConditionalExpressionTree(
           getTreeLocation(start), condition, left, right);
     }

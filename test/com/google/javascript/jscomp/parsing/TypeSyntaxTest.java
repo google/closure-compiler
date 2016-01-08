@@ -152,7 +152,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("function foo({x}: any) {\n}");
   }
 
-  public void disabled_testFunctionParamDeclaration_arrow() {
+  public void testFunctionParamDeclaration_arrow() {
     Node fn = parse("(x: string) => 'hello' + x;").getFirstFirstChild();
     Node param = fn.getSecondChild().getFirstChild();
     assertDeclaredType("string type", stringType(), param);
@@ -172,7 +172,7 @@ public final class TypeSyntaxTest extends TestCase {
     assertDeclaredType("string type", stringType(), fn);
   }
 
-  public void disabled_testFunctionReturn_arrow() {
+  public void testFunctionReturn_arrow() {
     Node fn = parse("(): string => 'hello';").getFirstFirstChild();
     assertDeclaredType("string type", stringType(), fn);
   }
@@ -314,7 +314,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: (p1: string, p2: number) => boolean;");
     parse("var n: () => () => number;");
     parse("var n: (p1: string) => {};");
-    // parse("(number): () => number => number;");
+    parse("(number): () => number => number;");
 
     Node ast = parse("var n: (p1: string, p2: number) => boolean[];");
     TypeDeclarationNode function = (TypeDeclarationNode)
@@ -510,7 +510,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   public void testGenericFunction() {
     parse("function foo<T>() {\n}");
-    // parse("var x = <K, V>(p) => 3;");
+    parse("var x = <K, V>(p) => 3;");
     parse("class Foo {\n  f<T>() {\n  }\n}");
     parse("(function<T>() {\n})();");
     parse("function* foo<T>() {\n}");
@@ -523,7 +523,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("function foo<>() {\n}");
 
     // Typecasting, not supported yet.
-    expectErrors("Parse error. primary expression expected");
+    // TODO(moz): Give an error on this
     parse("var x = <T>((p:T) => 3);");
 
     testNotEs6Typed("function foo<T>() {}", "generics");
