@@ -234,6 +234,7 @@ public final class Es6RewriteGenerators
             "        return {value: undefined, done: true};",
             "    }",
             "  }",
+            // TODO(tbreisacher): Remove this cast if we start returning an actual Generator object.
             "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg) { return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg) { return $jscomp$generator$impl(undefined, arg); },",
@@ -242,8 +243,8 @@ public final class Es6RewriteGenerators
             "    return: function(arg) { throw Error('Not yet implemented'); },",
             "  });",
             "  $jscomp.initSymbolIterator();",
+            "  /** @this {!Generator<?>} */",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            // TODO(tbreisacher): Remove this cast if we start returning an actual Generator object.
             "  return iterator;",
             "}"))
         .getFirstChild() // function
