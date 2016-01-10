@@ -483,7 +483,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
         Node rhsValue = ref.getNext();
         Node newName = IR.name(moduleName).srcref(ref);
-        newName.putProp(Node.ORIGINALNAME_PROP, rhsValue);
+        newName.putProp(Node.ORIGINALNAME_PROP, qName);
 
         Node parent = ref.getParent();
         parent.replaceChild(ref, newName);
