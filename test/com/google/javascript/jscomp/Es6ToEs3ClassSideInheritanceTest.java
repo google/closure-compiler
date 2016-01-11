@@ -177,10 +177,10 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
-            "$jscomp.inherits(Subclass, Example);",
             "",
             "/** @type {string} @suppress {visibility} */",
-            "Subclass.property;"));
+            "Subclass.property;",
+            "$jscomp.inherits(Subclass, Example);"));
   }
 
   public void testGetterSetter_noType() {
@@ -202,10 +202,10 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
-            "$jscomp.inherits(Subclass, Example);",
             "",
             "/** @type {?} @suppress {visibility} */",
-            "Subclass.property;"));
+            "Subclass.property;",
+            "$jscomp.inherits(Subclass, Example);"));
   }
 
   public void testInheritFromExterns() {

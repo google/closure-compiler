@@ -564,8 +564,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       }
     }
 
-    addDeclarations(metadata);
-
     if (metadata.definePropertiesObjForPrototype.hasChildren()) {
       Node definePropsCall =
           IR.exprResult(
@@ -592,6 +590,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       visitObject(metadata.definePropertiesObjForClass);
     }
 
+
     Preconditions.checkNotNull(constructor);
 
     JSDocInfo classJSDoc = NodeUtil.getBestJSDocInfo(classNode);
@@ -599,6 +598,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
     newInfo.recordConstructor();
 
+    Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
     if (metadata.hasSuperClass()) {
       String superClassString = metadata.superClassNameNode.getQualifiedName();
       if (newInfo.isInterfaceRecorded()) {
@@ -615,7 +615,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           compiler.needsEs6Runtime = true;
 
           inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
-          Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
           enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
         }
         newInfo.recordBaseType(new JSTypeExpression(new Node(Token.BANG,
@@ -623,6 +622,8 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
             metadata.superClassNameNode.getSourceFileName()));
       }
     }
+
+    addTypeDeclarations(metadata, enclosingStatement);
 
     // Classes are @struct by default.
     if (!newInfo.isUnrestrictedRecorded() && !newInfo.isDictRecorded()
@@ -837,15 +838,17 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * This is a temporary solution. Eventually, the type checker should understand
    * Object.defineProperties calls directly.
    */
-  private void addDeclarations(ClassDeclarationMetadata metadata) {
+  private void addTypeDeclarations(ClassDeclarationMetadata metadata, Node insertionPoint) {
     for (Map.Entry<String, JSDocInfo> entry : metadata.prototypeMembersToDeclare.entrySet()) {
       String declaredMember = entry.getKey();
       Node declaration = IR.getprop(
           NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"),
           IR.string(declaredMember));
       declaration.setJSDocInfo(entry.getValue());
-      metadata.insertNodeAndAdvance(
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode));
+      declaration =
+          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode);
+      insertionPoint.getParent().addChildAfter(declaration, insertionPoint);
+      insertionPoint = declaration;
     }
     for (Map.Entry<String, JSDocInfo> entry : metadata.classMembersToDeclare.entrySet()) {
       String declaredMember = entry.getKey();
@@ -853,8 +856,10 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           NodeUtil.newQName(compiler, metadata.fullClassName),
           IR.string(declaredMember));
       declaration.setJSDocInfo(entry.getValue());
-      metadata.insertNodeAndAdvance(
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode));
+      declaration =
+          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode);
+      insertionPoint.getParent().addChildAfter(declaration, insertionPoint);
+      insertionPoint = declaration;
     }
     for (Map.Entry<String, JSDocInfo> entry : metadata.prototypeComputedPropsToDeclare.entrySet()) {
       String declaredMember = entry.getKey();
@@ -862,8 +867,10 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"),
           NodeUtil.newQName(compiler, declaredMember));
       declaration.setJSDocInfo(entry.getValue());
-      metadata.insertNodeAndAdvance(
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode));
+      declaration =
+          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode);
+      insertionPoint.getParent().addChildAfter(declaration, insertionPoint);
+      insertionPoint = declaration;
     }
   }
 

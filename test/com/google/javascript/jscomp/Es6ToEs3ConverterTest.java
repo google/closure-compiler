@@ -1008,6 +1008,39 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    }",
             "  },",
             "});"));
+
+  }
+
+  public void testEs5GettersAndSettersOnClassesWithClassSideInheritance() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        "class C { static get value() {} }  class D extends C { static get value() {} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @nocollapse @type {?} */",
+            "C.value;",
+            "Object.defineProperties(C, {",
+            "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {C} */",
+            "    get: function() {}",
+            "  }",
+            "});",
+            "/** @constructor @struct @extends {C} */",
+            "var D = function(var_args) { C.apply(this,arguments); };",
+            "/** @nocollapse @type {?} */",
+            "D.value;",
+            "$jscomp.inherits(D, C);",
+            "Object.defineProperties(D, {",
+            "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {D} */",
+            "    get: function() {}",
+            "  }",
+            "});"));
   }
 
   /**

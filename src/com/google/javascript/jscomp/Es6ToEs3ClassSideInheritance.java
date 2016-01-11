@@ -192,7 +192,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     Node declaration = IR.exprResult(getprop);
     declaration.useSourceInfoIfMissingFromForTree(inheritsCall);
     Node parent = inheritsCall.getParent();
-    parent.getParent().addChildAfter(declaration, parent);
+    parent.getParent().addChildBefore(declaration, parent);
     subclassProps.add(staticProperty);
     compiler.reportCodeChange();
   }
