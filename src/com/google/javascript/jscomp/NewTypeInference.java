@@ -2679,9 +2679,20 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
+  private boolean isPropertyAbsentTest(Node propAccessNode) {
+    Node parent = propAccessNode.getParent();
+    if (parent.getType() == Token.EQ || parent.getType() == Token.SHEQ) {
+      Node other = parent.getFirstChild() == propAccessNode
+          ? parent.getSecondChild() : parent.getFirstChild();
+      return NodeUtil.isUndefined(other);
+    }
+    return false;
+  }
+
   private boolean mayWarnAboutInexistentProp(
       Node propAccessNode, JSType recvType, QualifiedName propQname) {
-    if (!propAccessNode.isGetProp() || recvType.hasProp(propQname)) {
+    if (!propAccessNode.isGetProp() || isPropertyAbsentTest(propAccessNode)
+        || recvType.hasProp(propQname)) {
       return false;
     }
     // To avoid giant types in the error message, we use a heuristic:

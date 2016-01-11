@@ -3232,6 +3232,13 @@ public final class NodeUtil {
       case Token.AND:
         return true;
 
+      case Token.NE:
+      case Token.SHNE: {
+        Node other = parent.getFirstChild() == propAccess
+            ? parent.getSecondChild() : parent.getFirstChild();
+        return isUndefined(other);
+      }
+
       case Token.HOOK:
         return parent.getFirstChild() == propAccess;
 

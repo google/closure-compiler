@@ -10894,7 +10894,9 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testGoogIsPredicatesNoSpecializedContext() {
-    typeCheck(CLOSURE_BASE + "goog.isNull();", NewTypeInference.WRONG_ARGUMENT_COUNT);
+    typeCheck(
+        CLOSURE_BASE + "goog.isNull();",
+        NewTypeInference.WRONG_ARGUMENT_COUNT);
 
     typeCheck(
         CLOSURE_BASE + "goog.isNull(1, 2, 5 - 'str');",
@@ -11917,6 +11919,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    x.call(null);",
         "  } else {",
         "    x();",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  if (x.prop === undefined) {}",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  if (x.prop !== undefined) {",
+        "    x.prop();",
         "  }",
         "}"));
   }
