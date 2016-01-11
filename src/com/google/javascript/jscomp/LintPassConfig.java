@@ -42,6 +42,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
         checkRequiresAndProvidesSorted,
+        jsdocChecks,
         closureRewriteModule,
         closureGoogScopeAliases,
         closureRewriteClass,
@@ -85,6 +86,18 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         }
       };
 
+    private final PassFactory jsdocChecks =
+      new PassFactory("jsdocChecks", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new CombinedCompilerPass(
+              compiler,
+              ImmutableList.<Callback>of(
+                  new CheckJSDocStyle(compiler),
+                  new CheckJSDoc(compiler)));
+        }
+      };
+
   private final PassFactory lintChecks =
       new PassFactory("lintChecks", true) {
         @Override
@@ -96,8 +109,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckEmptyStatements(compiler),
                   new CheckEnums(compiler),
                   new CheckInterfaces(compiler),
-                  new CheckJSDocStyle(compiler),
-                  new CheckJSDoc(compiler),
                   new CheckPrototypeProperties(compiler)));
         }
       };
