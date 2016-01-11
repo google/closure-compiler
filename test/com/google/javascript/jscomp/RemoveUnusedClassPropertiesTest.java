@@ -294,4 +294,43 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
         "Object.defineProperties(foo(), {prop:{value:1}});",
         "Object.defineProperties(foo(), {});");
   }
+
+  public void testObjectDefineProperties7() {
+    enableTypeCheck();
+
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {prop:{get:function () {return new C}}});"),
+        LINE_JOINER.join(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {});"));
+  }
+
+  public void testObjectDefineProperties8() {
+    enableTypeCheck();
+
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {prop:{set:function (a) {return alert(a)}}});"),
+        LINE_JOINER.join(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {});"));
+  }
+
+  public void testObjectDefineProperties_used_setter_removed() {
+    // TODO: Either remove fix this or document it as a limitation of advanced mode optimizations.
+    enableTypeCheck();
+
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
+            "C.prop = 2;"),
+        LINE_JOINER.join(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {});2"));
+  }
+
 }
