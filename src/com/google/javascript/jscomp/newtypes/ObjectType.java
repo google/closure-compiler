@@ -528,14 +528,15 @@ final class ObjectType implements TypeWithProperties {
       String pname = entry.getKey();
       Property prop2 = entry.getValue();
       Property prop1 = this.getLeftmostProp(new QualifiedName(pname));
+      JSType prop2type = prop2.getType();
 
-      if (prop2.isOptional()) {
-        if (prop1 != null && !prop1.getType().isSubtypeOf(prop2.getType())) {
+      if (prop2.isOptional() || prop2type.isUnknown()) {
+        if (prop1 != null && !prop1.getType().isSubtypeOf(prop2type)) {
           return false;
         }
       } else {
         if (prop1 == null || prop1.isOptional() ||
-            !prop1.getType().isSubtypeOf(prop2.getType())) {
+            !prop1.getType().isSubtypeOf(prop2type)) {
           return false;
         }
       }
