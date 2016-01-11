@@ -218,7 +218,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         options,
         Joiner.on('\n').join(
             "var goog = {};",
-            "goog.forwardDeclare = function(/** string */ typeName) {};",
+            "goog.forwardDeclare = function(typeName) {};",
             "goog.forwardDeclare('fwd.declared.Type');",
             "",
             "/** @type {!fwd.declared.Type<string>} */",

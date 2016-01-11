@@ -17,7 +17,6 @@ package com.google.javascript.jscomp.lint;
 
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
-import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL;
@@ -80,16 +79,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         " */",
         "function f(...args) {}"));
 
-    testSame(LINE_JOINER.join(
-        "function f() {",
-        "  myArray.forEach(function(elem) { alert(elem); });",
-        "}"));
-
-    testSame(LINE_JOINER.join(
-        "function f() {",
-        "  myArray.forEach(elem => alert(elem));",
-        "}"));
-
     testSame("function f(/** string */ inlineArg) {}");
     testSame("/** @export */ function f(/** string */ inlineArg) {}");
 
@@ -101,14 +90,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   public void testMissingParam() {
-    testWarning(
-        "function f(x) {}",
-        MISSING_PARAMETER_JSDOC);
-
-    testWarning(
-        "function f(x, y) {}",
-        MISSING_PARAMETER_JSDOC);
-
     testWarning(
         LINE_JOINER.join(
             "/**",
@@ -217,10 +198,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             " * @return {number}",
             " */",
             "X.prototype.foo_ = function() { return 0; }"),
-        MUST_BE_PRIVATE);
-
-    testSame(
-        "X.prototype.foo_ = function() { return 0; }",
         MUST_BE_PRIVATE);
 
     testSame(

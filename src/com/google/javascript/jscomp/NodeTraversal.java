@@ -798,7 +798,7 @@ public class NodeTraversal {
    * Determines whether the traversal is currently in the global scope. Note that this returns false
    * in a global block scope.
    */
-  public boolean inGlobalScope() {
+  boolean inGlobalScope() {
     return getScopeDepth() == 0;
   }
 
