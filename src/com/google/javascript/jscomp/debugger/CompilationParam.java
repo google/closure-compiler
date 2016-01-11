@@ -373,6 +373,14 @@ enum CompilationParam {
     }
   },
 
+  /** Removes unused static class prototypes */
+  REMOVE_UNUSED_CLASS_PROPERTIES {
+    @Override
+    void apply(CompilerOptions options, boolean value) {
+      options.setRemoveUnusedClassProperties(value);
+    }
+  },
+
   /** Tells AnalyzePrototypeProperties it can remove externed props. */
   REMOVE_UNUSED_PROTOTYPE_PROPERTIES_IN_EXTERNS {
     @Override
