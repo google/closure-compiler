@@ -168,4 +168,39 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         "f(g) - 5;"),
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
+
+  public void testMethodOverridesWithoutJsdoc() {
+    typeCheck(LINE_JOINER.join(
+        "class A {  someMethod(x) {}  }",
+        "class B extends A {  someMethod() {}  }"));
+
+    typeCheck(LINE_JOINER.join(
+        "class A {  someMethod(x) {}  }",
+        "class B extends A {  someMethod(x, y) { return y + 1; }  }"),
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "class Foo {",
+        "  /** @param {...number} var_args */",
+        "  method(var_args) {}",
+        "}",
+        "class Bar extends Foo {",
+        "  method(x) {}",
+        "}",
+        "(new Bar).method('str');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "class Foo {",
+        "  /** @param {...number} var_args */",
+        "  method(var_args) {}",
+        "}",
+        "class Bar extends Foo {",
+        "  method(x,y,z) {}",
+        "}",
+        "(new Bar).method('str');"),
+        NewTypeInference.WRONG_ARGUMENT_COUNT);
+  }
 }

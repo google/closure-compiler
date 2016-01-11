@@ -127,6 +127,19 @@ public final class DeclaredFunctionType {
     return requiredFormals.size() + optionalFormals.size();
   }
 
+  public int getMaxArity() {
+    if (this.restFormals != null) {
+      return Integer.MAX_VALUE; // "Infinite" arity
+    } else {
+      return this.getOptionalArity();
+    }
+  }
+
+  private int getSyntacticArity() {
+    return this.getOptionalArity()
+        + (this.restFormals == null ? 0 : 1);
+  }
+
   public boolean hasRestFormals() {
     return restFormals != null;
   }
@@ -194,7 +207,8 @@ public final class DeclaredFunctionType {
     // getsTypeInfoFromParentMethod is true when a method w/out jsdoc overrides
     // a parent method. In this case, the parent may be declaring some formals
     // as optional and we want to preserve that type information here.
-    if (getsTypeInfoFromParentMethod) {
+    if (getsTypeInfoFromParentMethod
+        && getSyntacticArity() == superType.getSyntacticArity()) {
       NominalType nt = superType.nominalType == null
           ? null : superType.nominalType.getNominalTypeIfSingletonObj();
       // Only keep this.receiverType from the current type

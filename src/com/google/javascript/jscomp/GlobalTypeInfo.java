@@ -497,11 +497,20 @@ class GlobalTypeInfo implements CompilerPass {
           propertyDefs.get(rawType, pname);
       // To find the declared type of a method, we must meet declared types
       // from all inherited methods.
-      DeclaredFunctionType superMethodType =
-          DeclaredFunctionType.meet(methodTypes);
-      DeclaredFunctionType updatedMethodType =
-          localPropDef.methodType.withTypeInfoFromSuper(
-              superMethodType, getsTypeInfoFromParentMethod(localPropDef));
+      DeclaredFunctionType superMethodType = DeclaredFunctionType.meet(methodTypes);
+      DeclaredFunctionType localMethodType = localPropDef.methodType;
+      boolean getsTypeFromParent = getsTypeInfoFromParentMethod(localPropDef);
+      // When getsTypeFromParent is true, we will miss the invalid override
+      // earlier, so we check here.
+      if (getsTypeFromParent
+          && localMethodType.getMaxArity() > superMethodType.getMaxArity()) {
+        warnings.add(JSError.make(
+            localPropDef.defSite, INVALID_PROP_OVERRIDE, pname,
+            superMethodType.toFunctionType().toString(),
+            localMethodType.toFunctionType().toString()));
+      }
+      DeclaredFunctionType updatedMethodType = localMethodType
+          .withTypeInfoFromSuper(superMethodType, getsTypeFromParent);
       localPropDef.updateMethodType(updatedMethodType);
       propTypesToProcess.put(pname,
           commonTypes.fromFunctionType(updatedMethodType.toFunctionType()));
