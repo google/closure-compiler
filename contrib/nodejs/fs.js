@@ -356,7 +356,6 @@ fs.utimes;
  * @param {number|Date} atime
  * @param {number|Date} mtime
  * @return {void}
- * @nosideeffects
  */
 fs.utimesSync;
 
@@ -374,7 +373,6 @@ fs.futimes;
  * @param {number|Date} atime
  * @param {number|Date} mtime
  * @return {void}
- * @nosideeffects
  */
 fs.futimesSync;
 
