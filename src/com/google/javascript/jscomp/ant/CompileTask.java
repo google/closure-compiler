@@ -75,7 +75,7 @@ public final class CompileTask
   private WarningLevel warningLevel;
   private boolean debugOptions;
   private String encoding = "UTF-8";
-  private String outputEncoding = "UTF-8";
+  private Charset outputEncoding = UTF_8;
   private CompilationLevel compilationLevel;
   private CompilerOptions.Environment environment;
   private boolean manageDependencies;
@@ -275,7 +275,7 @@ public final class CompileTask
   /**
    * Set output file encoding
    */
-  public void setOutputEncoding(String outputEncoding) {
+  public void setOutputEncoding(Charset outputEncoding) {
     this.outputEncoding = outputEncoding;
   }
 

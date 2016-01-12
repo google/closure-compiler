@@ -614,11 +614,11 @@ public class CompilerOptions {
   public void setReplaceMessagesWithChromeI18n(
       boolean replaceMessagesWithChromeI18n,
       String tcProjectId) {
-    if (replaceMessagesWithChromeI18n &&
-        messageBundle != null &&
-        !(messageBundle instanceof EmptyMessageBundle)) {
-      throw new RuntimeException("When replacing messages with " +
-          "chrome.i18n.getMessage, a message bundle should not be specified.");
+    if (replaceMessagesWithChromeI18n
+        && messageBundle != null
+        && !(messageBundle instanceof EmptyMessageBundle)) {
+    throw new RuntimeException("When replacing messages with"
+          + " chrome.i18n.getMessage, a message bundle should not be specified.");
     }
 
     this.replaceMessagesWithChromeI18n = replaceMessagesWithChromeI18n;
@@ -917,10 +917,8 @@ public class CompilerOptions {
 
   /**
    * Charset to use when generating code.  If null, then output ASCII.
-   * This is a string because CompilerOptions used to be serializable.
-   * TODO(tbreisacher): Switch to java.nio.Charset.
    */
-  String outputCharset;
+  Charset outputCharset;
 
   /**
    * Transitional option.
@@ -1614,17 +1612,17 @@ public class CompilerOptions {
   }
 
   /**
-   * Sets the output charset by name.
+   * Sets the output charset.
    */
-  public void setOutputCharset(String charsetName) {
+  public void setOutputCharset(Charset charsetName) {
     this.outputCharset = charsetName;
   }
 
   /**
-   * Gets the output charset as a rich object.
+   * Gets the output charset.
    */
   Charset getOutputCharset() {
-    return outputCharset == null ? null : Charset.forName(outputCharset);
+    return outputCharset;
   }
 
   /**

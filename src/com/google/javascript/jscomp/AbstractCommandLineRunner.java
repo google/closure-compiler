@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -167,7 +168,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   // New outputs should use outputCharset2, which is how I would have
   // designed this if I had a time machine.
   private Charset outputCharset2;
-  private String legacyOutputCharset;
+  private Charset legacyOutputCharset;
 
   private boolean testMode = false;
   private Supplier<List<SourceFile>> externsSupplierForTesting = null;
@@ -753,7 +754,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param specs A list of module specifications, not null or empty. The spec
    *        format is: <code>name:num-js-files[:[dep,...][:]]</code>. Module
    *        names must not contain the ':' character.
-   * @param jsFiles A list of JS file paths, not null
+   * @param inputs A list of JS file paths, not null
    * @return An array of module objects
    */
   List<JSModule> createJsModules(
@@ -1396,15 +1397,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    *    be a supported charset.
    * @throws FlagUsageException if flag is not a valid Charset name.
    */
-  private String getLegacyOutputCharset() throws FlagUsageException {
+  private Charset getLegacyOutputCharset() throws FlagUsageException {
     if (!config.charset.isEmpty()) {
       if (!Charset.isSupported(config.charset)) {
-        throw new FlagUsageException(config.charset +
-            " is not a valid charset name.");
+        throw new FlagUsageException(config.charset + " is not a valid charset name.");
       }
-      return config.charset;
+      return Charset.forName(config.charset);
     }
-    return "US-ASCII";
+    return US_ASCII;
   }
 
   /**

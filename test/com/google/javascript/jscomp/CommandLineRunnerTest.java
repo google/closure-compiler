@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
@@ -1123,10 +1124,10 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testCharSetExpansion() {
     testSame("");
-    assertThat(lastCompiler.getOptions().outputCharset).isEqualTo("US-ASCII");
+    assertThat(lastCompiler.getOptions().outputCharset).isEqualTo(US_ASCII);
     args.add("--charset=UTF-8");
     testSame("");
-    assertThat(lastCompiler.getOptions().outputCharset).isEqualTo("UTF-8");
+    assertThat(lastCompiler.getOptions().outputCharset).isEqualTo(UTF_8);
   }
 
   public void testChainModuleManifest() throws Exception {
