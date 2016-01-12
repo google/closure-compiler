@@ -16,13 +16,19 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.Lists.transform;
+
+import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSType;
+
+import java.util.List;
 
 /**
  * Warn about types in JSDoc that are implicitly nullable.
@@ -61,10 +67,22 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     }
     final TypeIRegistry registry = compiler.getTypeIRegistry();
 
+    final List<Node> thrownTypes =
+        transform(
+            info.getThrownTypes(),
+            new Function<JSTypeExpression, Node>() {
+              public Node apply(JSTypeExpression expr) {
+                return expr.getRoot();
+              }
+            });
+
     for (Node typeRoot : info.getTypeNodes()) {
       NodeUtil.visitPreOrder(typeRoot, new NodeUtil.Visitor() {
         public void visit(Node node) {
           if (!node.isString()) {
+            return;
+          }
+          if (thrownTypes.contains(node)) {
             return;
           }
           Node parent = node.getParent();

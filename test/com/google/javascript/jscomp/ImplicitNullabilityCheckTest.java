@@ -72,6 +72,11 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
         RhinoErrorReporter.TYPE_PARSE_ERROR);
   }
 
+  public void testThrowsDoesntWarn() {
+    noWarning("/** @throws {Error} */ function f() {}");
+    noWarning("/** @throws {TypeError}\n * @throws {SyntaxError} */ function f() {}");
+  }
+
   private void warnImplicitlyNullable(String js) {
     testSame(js, ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
   }
