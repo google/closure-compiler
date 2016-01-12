@@ -90,7 +90,7 @@ public final class ClosureBundlerTest extends TestCase {
     new ClosureBundler()
         .useEval(true)
         .appendTo(sb, TRADITIONAL, "\"a string\"");
-    assertThat(sb.toString()).isEqualTo("(0,eval)(\"\\x22a string\\x22\");");
+    assertThat(sb.toString()).isEqualTo("(0,eval(\"\\x22a string\\x22\"));");
   }
 
   public void testTraditionalWithEvalWithSourceUrl() throws IOException {
@@ -100,6 +100,6 @@ public final class ClosureBundlerTest extends TestCase {
         .withSourceUrl("URL")
         .appendTo(sb, TRADITIONAL, "\"a string\"");
     assertThat(sb.toString())
-        .isEqualTo("(0,eval)(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");");
+        .isEqualTo("(0,eval(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\"));");
   }
 }
