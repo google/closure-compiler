@@ -17,6 +17,7 @@ package com.google.javascript.jscomp.lint;
 
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL;
@@ -79,6 +80,21 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         " */",
         "function f(...args) {}"));
 
+    testSame(LINE_JOINER.join(
+        "function f() {",
+        "  myArray.forEach(function(elem) { alert(elem); });",
+        "}"));
+
+    testSame(LINE_JOINER.join(
+        "function f() {",
+        "  myArray.forEach(elem => alert(elem));",
+        "}"));
+
+    testSame("function f(x) {}");
+    testSame("function f(x, y) {}");
+
+    testSame("/** @type {function(number)} */ function f(x) {}");
+
     testSame("function f(/** string */ inlineArg) {}");
     testSame("/** @export */ function f(/** string */ inlineArg) {}");
 
@@ -115,6 +131,10 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             " */",
             "function f(x, y = 1) {}"),
         WRONG_NUMBER_OF_PARAMS);
+
+    testWarning("function f(/** string */ x, y) {}", MISSING_PARAMETER_JSDOC);
+    testWarning("function f(x, /** string */ y) {}", MISSING_PARAMETER_JSDOC);
+    testWarning("function /** string */ f(x) {}", MISSING_PARAMETER_JSDOC);
   }
 
   public void testMissingParamWithDestructuringPattern() {

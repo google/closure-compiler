@@ -30,11 +30,16 @@ import com.google.javascript.rhino.Node;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Checks for various JSDoc-related style issues, such as function definitions without JsDoc, params
  * with no corresponding {@code @param} annotation, coding conventions not being respected, etc.
  */
 public final class CheckJSDocStyle extends AbstractPostOrderCallback implements CompilerPass {
+  public static final DiagnosticType MISSING_PARAMETER_JSDOC =
+      DiagnosticType.warning("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.");
+
   public static final DiagnosticType MIXED_PARAM_JSDOC_STYLES =
       DiagnosticType.warning("JSC_MIXED_PARAM_JSDOC_STYLES",
       "Functions may not use both @param annotations and inline JSDoc");
@@ -83,75 +88,130 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
   private void visitFunction(NodeTraversal t, Node function) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(function);
-    if (jsDoc == null) {
-      return;
+
+    if (jsDoc != null || hasAnyInlineJsDoc(function)) {
+      checkParams(t, function, jsDoc);
     }
 
-    checkParams(t, function, jsDoc);
-
     String name = NodeUtil.getName(function);
-    if (name != null && compiler.getCodingConvention().isPrivate(name)
+    if (jsDoc != null
+        && name != null
+        && compiler.getCodingConvention().isPrivate(name)
         && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
       t.report(function, MUST_BE_PRIVATE, name);
     }
   }
 
   private void checkParams(NodeTraversal t, Node function, JSDocInfo jsDoc) {
-    if (jsDoc.isOverride()) {
+    if (jsDoc != null && jsDoc.isOverride()) {
       return;
     }
 
-    List<String> paramsFromJsDoc = ImmutableList.copyOf(jsDoc.getParameterNames());
+    if (jsDoc != null && jsDoc.getType() != null) {
+      // Sometimes functions are declared with @type {function(Foo, Bar)} instead of
+      //   @param {Foo} foo
+      //   @param {Bar} bar
+      // which is fine.
+      return;
+    }
+
+    List<String> paramsFromJsDoc =
+        jsDoc == null
+            ? ImmutableList.<String>of()
+            : ImmutableList.<String>copyOf(jsDoc.getParameterNames());
     if (paramsFromJsDoc.isEmpty()) {
-      // The user hasn't provided any @param annotations at all. Either this is a simple
-      // enough function they decided not to bother, or they're using inline annotations instead.
-      // TODO(tbreisacher): If they are using inline annotations, check that there is an
-      // annotation on every param.
-      return;
-    }
-
-    Node paramList = function.getSecondChild();
-    if (paramsFromJsDoc.size() != paramList.getChildCount()) {
-      t.report(paramList, WRONG_NUMBER_OF_PARAMS);
-      return;
-    }
-
-    Node param = paramList.getFirstChild();
-    for (int i = 0; i < paramsFromJsDoc.size(); i++) {
-      if (param.getJSDocInfo() != null) {
-        t.report(param, MIXED_PARAM_JSDOC_STYLES);
-      }
-
-      boolean nameOptional;
-      Node nodeToCheck = param;
-      if (param.isDefaultValue()) {
-        nodeToCheck = param.getFirstChild();
-        nameOptional = true;
-      } else if (param.isName()) {
-        nameOptional = param.getString().startsWith("opt_");
-      } else {
-        Preconditions.checkState(param.isDestructuringPattern() || param.isRest(), param);
-        nameOptional = false;
-      }
-
-      if (nodeToCheck.isName() && !nodeToCheck.getString().equals(paramsFromJsDoc.get(i))) {
-        t.report(nodeToCheck, INCORRECT_PARAM_NAME);
+      checkInlineParams(t, function);
+    } else {
+      Node paramList = NodeUtil.getFunctionParameters(function);
+      if (paramsFromJsDoc.size() != paramList.getChildCount()) {
+        t.report(paramList, WRONG_NUMBER_OF_PARAMS);
         return;
       }
-      // If `nodeToCheck` is not a NAME node (i.e. it's a destructuring pattern) then the JSDoc
-      // can have any param name.
 
-      JSTypeExpression paramType = jsDoc.getParameterType(paramsFromJsDoc.get(i));
-      // TODO(tbreisacher): Do we want to warn if there is a @param with no type information?
-      boolean jsDocOptional = paramType != null && paramType.isOptionalArg();
-      if (nameOptional && !jsDocOptional) {
-        t.report(nodeToCheck, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, nodeToCheck.getString());
-      } else if (!nameOptional && jsDocOptional) {
-        t.report(nodeToCheck, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, nodeToCheck.getString());
+      Node param = paramList.getFirstChild();
+      for (int i = 0; i < paramsFromJsDoc.size(); i++) {
+        if (param.getJSDocInfo() != null) {
+          t.report(param, MIXED_PARAM_JSDOC_STYLES);
+        }
+        String name = paramsFromJsDoc.get(i);
+        JSTypeExpression paramType = jsDoc.getParameterType(name);
+        if (checkParam(t, param, name, paramType)) {
+          return;
+        }
+        param = param.getNext();
       }
-
-      param = param.getNext();
     }
+  }
+
+  /**
+   * Checks that the inline type annotations are correct.
+   */
+  private void checkInlineParams(NodeTraversal t, Node function) {
+    Node paramList = NodeUtil.getFunctionParameters(function);
+
+    for (Node param : paramList.children()) {
+      JSDocInfo jsDoc = param.getJSDocInfo();
+      if (jsDoc == null) {
+        t.report(param, MISSING_PARAMETER_JSDOC);
+        return;
+      } else {
+        JSTypeExpression paramType = jsDoc.getType();
+        Preconditions.checkNotNull(paramType, "Inline JSDoc info should always have a type");
+        checkParam(t, param, null, paramType);
+      }
+    }
+  }
+
+  /**
+   * Checks that the given parameter node has the given name, and that the given type is
+   * compatible.
+   * @param param If this is a non-NAME node, such as a destructuring pattern, skip the name check.
+   * @param name If null, skip the name check
+   * @return Whether a warning was reported
+   */
+  private boolean checkParam(
+      NodeTraversal t, Node param, @Nullable String name, JSTypeExpression paramType) {
+    boolean nameOptional;
+    Node nodeToCheck = param;
+    if (param.isDefaultValue()) {
+      nodeToCheck = param.getFirstChild();
+      nameOptional = true;
+    } else if (param.isName()) {
+      nameOptional = param.getString().startsWith("opt_");
+    } else {
+      Preconditions.checkState(param.isDestructuringPattern() || param.isRest(), param);
+      nameOptional = false;
+    }
+
+    if (name == null || !nodeToCheck.isName()) {
+      // Skip the name check.
+    } else if (!nodeToCheck.matchesQualifiedName(name)) {
+      t.report(nodeToCheck, INCORRECT_PARAM_NAME);
+      return true;
+    }
+
+    boolean jsDocOptional = paramType != null && paramType.isOptionalArg();
+    if (nameOptional && !jsDocOptional) {
+      t.report(nodeToCheck, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, nodeToCheck.getString());
+      return true;
+    } else if (!nameOptional && jsDocOptional) {
+      t.report(nodeToCheck, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, nodeToCheck.getString());
+      return true;
+    }
+    return false;
+  }
+
+  private boolean hasAnyInlineJsDoc(Node function) {
+    if (function.getFirstChild().getJSDocInfo() != null) {
+      // Inline return annotation.
+      return true;
+    }
+    for (Node param : NodeUtil.getFunctionParameters(function).children()) {
+      if (param.getJSDocInfo() != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class ExternsCallback implements NodeTraversal.Callback {
