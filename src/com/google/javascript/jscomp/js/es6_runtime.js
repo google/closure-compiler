@@ -281,6 +281,8 @@
 @return {!Iterator<T>} */$jscomp.Map.prototype.iter_ = function(func) {
   /**@const */var map = this;
   var entry = this.head_;
+  $jscomp.initSymbol();
+  $jscomp.initSymbolIterator();
   var $jscomp$compprop2 = {};
   return /**@type {!Iterator} */($jscomp$compprop2.next = function() {
     if (entry) {
@@ -294,7 +296,7 @@
       entry = null;
     }
     return {done:true, value:void 0};
-  }, $jscomp$compprop2[$jscomp.global.Symbol.iterator] = function() {
+  }, $jscomp$compprop2[Symbol.iterator] = function() {
     return this;
   }, $jscomp$compprop2);
 };
@@ -322,8 +324,11 @@
   if (!$jscomp.Map.ASSUME_NO_NATIVE && $jscomp.Map.checkBrowserConformance_()) {
     $jscomp.Map = $jscomp.global["Map"];
   } else {
-    $jscomp.Map.prototype[$jscomp.global.Symbol.iterator] = $jscomp.Map.prototype.entries;
-    /**@const @private */$jscomp.Map.key_ = $jscomp.global.Symbol("map-id-key");
+    $jscomp.initSymbol();
+    $jscomp.initSymbolIterator();
+    $jscomp.Map.prototype[Symbol.iterator] = $jscomp.Map.prototype.entries;
+    $jscomp.initSymbol();
+    /**@const @private */$jscomp.Map.key_ = Symbol("map-id-key");
   }
   $jscomp.Map$install = function() {
   };
@@ -434,13 +439,13 @@
 };
 /**@define {boolean} */$jscomp.Set.ASSUME_NO_NATIVE = false;
 /***/$jscomp.Set$install = function() {
-  $jscomp.initSymbol();
-  $jscomp.initSymbolIterator();
   if (!$jscomp.Set.ASSUME_NO_NATIVE && $jscomp.Set.checkBrowserConformance_()) {
     $jscomp.Set = $jscomp.global["Set"];
   } else {
     $jscomp.Map$install();
-    $jscomp.Set.prototype[$jscomp.global.Symbol.iterator] = $jscomp.Set.prototype.values;
+    $jscomp.initSymbol();
+    $jscomp.initSymbolIterator();
+    $jscomp.Set.prototype[Symbol.iterator] = $jscomp.Set.prototype.values;
   }
   $jscomp.Set$install = function() {
   };
