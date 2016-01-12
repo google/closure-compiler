@@ -954,7 +954,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   public void testRecordWithoutTypesJsdoc() {
     typeCheck(LINE_JOINER.join(
         "function f(/** {a, b} */ x) {}",
-        "f({c: 123});"));
+        "f({c: 123});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testBackwardForwardPathologicalCase() {
@@ -13852,7 +13853,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(LINE_JOINER.join(
         "/** @param {{foo: ?}} x */",
         "function g(x) {}",
-        "g({bar:123});"));
+        "g({bar:123});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testJoinWithTruthyOrFalsy() {
@@ -14529,11 +14531,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(LINE_JOINER.join(
         "/**",
-        " * @param {{metadata:METADATA}} spec",
-        " * @template METADATA",
+        " * @template T",
+        " * @param {{foo: (T)}} x",
         " */",
-        "function viewId(spec) {}",
-        "viewId({});"));
+        "function g(x) {}",
+        "g({bar:1});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testFunctionUnificationWithSubtyping() {
