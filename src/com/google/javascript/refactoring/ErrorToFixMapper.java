@@ -69,7 +69,8 @@ public final class ErrorToFixMapper {
       case "JSC_PROVIDES_NOT_SORTED":
         return getFixForUnsortedRequiresOrProvides("goog.provide", error, compiler);
       case "JSC_DEBUGGER_STATEMENT_PRESENT":
-        return getFixForDebuggerStatement(error);
+      case "JSC_USELESS_EMPTY_STATEMENT":
+        return removeNode(error);
       case "JSC_INEXISTENT_PROPERTY":
         return getFixForInexistentProperty(error);
       case "JSC_MISSING_REQUIRE_WARNING":
@@ -98,7 +99,7 @@ public final class ErrorToFixMapper {
     return ImmutableList.of(qmark, bang);
   }
 
-  private static SuggestedFix getFixForDebuggerStatement(JSError error) {
+  private static SuggestedFix removeNode(JSError error) {
     return new SuggestedFix.Builder()
         .setOriginalMatchedNode(error.node)
         .delete(error.node).build();
