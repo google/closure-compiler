@@ -1165,6 +1165,7 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
  */
 Promise.prototype.catch = function(onRejected) {};
 
+
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of
  * @param {...T} var_args
@@ -1173,13 +1174,17 @@ Promise.prototype.catch = function(onRejected) {};
  */
 Array.of = function(var_args) {};
 
+
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
- * @param {!Array<T>|!IArrayLike<T>|!Iterable<T>} arrayLike
- * @return {!Array<T>}
- * @template T
+ * @param {string|!Array<T>|!IArrayLike<T>|!Iterable<T>} arrayLike
+ * @param {?function(this:S, string|T, number,
+ *     string|!Array<T>|!IArrayLike<T>|!Iterable<T>): R} opt_mapFn
+ * @param {S=} opt_this
+ * @return {!Array<R>}
+ * @template T,S,R
  */
-Array.from = function(arrayLike) {};
+Array.from = function(arrayLike, opt_mapFn, opt_this) {};
 
 
 /** @return {!Array<number>} */
