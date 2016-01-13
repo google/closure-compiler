@@ -42,7 +42,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
   static final DiagnosticType INSUFFICIENT_OUTPUT_VERSION_ERROR = DiagnosticType.warning(
       "JSC_INSUFFICIENT_OUTPUT_VERSION",
-      "Built-in '{0}' not supported in output version {1}: set --language_out to at least {2}");
+      "Built-in ''{0}'' not supported in output version {1}: set --language_out to at least {2}");
 
   // Also polyfill references to e.g. goog.global.Map or window.Map.
   private static final String GLOBAL = "goog.global.";
