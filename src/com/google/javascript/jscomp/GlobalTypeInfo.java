@@ -284,6 +284,7 @@ class GlobalTypeInfo implements CompilerPass {
     this.convention = compiler.getCodingConvention();
     this.typeParser = new JSTypeCreatorFromJSDoc(this.convention);
     this.commonTypes = JSTypes.make();
+    JSType.setCommonTypes(this.commonTypes);
   }
 
   Collection<NTIScope> getScopes() {

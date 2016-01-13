@@ -1094,7 +1094,7 @@ public final class FunctionType {
     } else if (this == TOP_FUNCTION) {
       return builder.append("TOP_FUNCTION");
     } else if (this == QMARK_FUNCTION) {
-      return builder.append("QMARK_FUNCTION");
+      return builder.append("Function");
     }
     builder.append("function(");
     if (nominalType != null) {

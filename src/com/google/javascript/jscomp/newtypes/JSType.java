@@ -68,6 +68,11 @@ public abstract class JSType implements TypeI {
   protected static final int TOP_SCALAR_MASK =
       NUMBER_MASK | STRING_MASK | BOOLEAN_MASK | NULL_MASK | UNDEFINED_MASK;
 
+  // NOTE(dimvar): This may cause problems when doing many compiles in the
+  // same Java process. But passing the JSTypes object around just to avoid
+  // making the field non-static is a huge readability pain.
+  private static JSTypes commonTypes = null;
+
   static final Map<String, JSType> MAP_TO_UNKNOWN =
       new Map<String, JSType>() {
     public void clear() {
@@ -332,6 +337,10 @@ public abstract class JSType implements TypeI {
     return true;
   }
 
+  public static void setCommonTypes(JSTypes commonTypes) {
+    JSType.commonTypes = commonTypes;
+  }
+
   boolean hasScalar() {
     return (getMask() & TOP_SCALAR_MASK) != 0 || EnumType.hasScalar(getEnums());
   }
@@ -438,7 +447,7 @@ public abstract class JSType implements TypeI {
         Iterables.getOnlyElement(getEnums()).getEnumeratedType() : null;
   }
 
-  public JSType autobox(JSTypes commonTypes) {
+  public JSType autobox() {
     if (isTop() || isUnknown()) {
       return this;
     }
@@ -474,7 +483,7 @@ public abstract class JSType implements TypeI {
         mask & ~(NUMBER_MASK | STRING_MASK | BOOLEAN_MASK),
         builder.build(), getTypeVar(), ImmutableSet.<EnumType>of());
     for (EnumType e : getEnums()) {
-      result = join(result, e.getEnumeratedType().autobox(commonTypes));
+      result = join(result, e.getEnumeratedType().autobox());
     }
     return result;
   }
@@ -726,6 +735,21 @@ public abstract class JSType implements TypeI {
   }
 
   public JSType specialize(JSType other) {
+    JSType t = specializeHelper(other);
+    if (t.isBottom() && (isLoose() || other.isLoose())) {
+      t = autobox().specializeHelper(other.autobox());
+      // If the autoboxed specialization is not null, this means that one of
+      // the two types contains scalars that when autoboxed are compatible with
+      // the loose object in the other type. In this case, don't return bottom,
+      // just leave the type unspecialized.
+      if (!t.isBottom()) {
+        return this;
+      }
+    }
+    return t;
+  }
+
+  private JSType specializeHelper(JSType other) {
     if (other.isTop() || other.isUnknown() || this == other) {
       return this;
     }
@@ -763,6 +787,29 @@ public abstract class JSType implements TypeI {
   }
 
   public static JSType meet(JSType lhs, JSType rhs) {
+    JSType t = meetHelper(lhs, rhs);
+    if (t.isBottom() && (lhs.isLoose() || rhs.isLoose())) {
+      t = meetHelper(lhs.autobox(), rhs.autobox());
+      // If the autoboxed meet is not null, this means that one of
+      // the two types contains scalars that when autoboxed are compatible with
+      // the loose object in the other type. In this case, don't return bottom,
+      // use some heuristic to return a result.
+      if (!t.isBottom()) {
+        if (!lhs.isLoose()) {
+          return lhs;
+        } else {
+          // If this fails, find repro case, add a test, and return ? here.
+          Preconditions.checkState(!rhs.isLoose(), "Two loose types %s and %s"
+              + " that meet to bottom, meet to non-bottom after autoboxing.",
+              lhs.toString(), rhs.toString());
+          return rhs;
+        }
+      }
+    }
+    return t;
+  }
+
+  public static JSType meetHelper(JSType lhs, JSType rhs) {
     if (lhs.isTop()) {
       return rhs;
     } else if (rhs.isTop()) {
@@ -911,7 +958,12 @@ public abstract class JSType implements TypeI {
 
   @Override
   public boolean isSubtypeOf(TypeI other) {
-    return isSubtypeOfHelper(true, (JSType) other);
+    JSType type2 = (JSType) other;
+    if (isLoose() || type2.isLoose()) {
+      return autobox().isSubtypeOfHelper(true, type2.autobox());
+    } else {
+      return isSubtypeOfHelper(true, type2);
+    }
   }
 
   private boolean isSubtypeOfHelper(boolean keepLoosenessOfThis, JSType other) {

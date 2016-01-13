@@ -14669,4 +14669,32 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "window.Foo = function() {};"),
         "");
   }
+
+  public void testSubtypingBetweenScalarsAndLooseTypes() {
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  var y = x.match;",
+        "  y(/asdf/);",
+        "}",
+        "f('asdf');"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x, y) {",
+        "  if (y) {",
+        "    var /** string */ s = x;",
+        "  } else {",
+        "    var z = x.prop - 123;",
+        "  }",
+        "}",
+        "f('asdf', true);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x, y) {",
+        "  var z = x.match;",
+        "  y(x);",
+        "  return y;",
+        "}",
+        "function g(/** string */ s) {}",
+        "f('asdf', g);"));
+  }
 }

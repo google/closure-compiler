@@ -2015,7 +2015,7 @@ final class NewTypeInference implements CompilerPass {
     JSType reqObjType = pickReqObjType(expr);
     EnvTypePair pair = analyzeExprFwd(receiver, inEnv, reqObjType);
     pair = mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, null, pair.env);
-    JSType recvType = pair.type.autobox(commonTypes);
+    JSType recvType = pair.type.autobox();
     if (!mayWarnAboutNonObject(receiver, recvType, specializedType)
         && !mayWarnAboutStructPropAccess(receiver, recvType)) {
       if (isArrayType(recvType) || recvType.equals(commonTypes.getArgumentsArrayType())) {
@@ -2771,7 +2771,7 @@ final class NewTypeInference implements CompilerPass {
     pair = analyzeExprFwd(receiver, inEnv, recvReqType, recvSpecType);
     pair = mayWarnAboutNullableReferenceAndTighten(
         receiver, pair.type, recvSpecType, pair.env);
-    JSType recvType = pair.type.autobox(commonTypes);
+    JSType recvType = pair.type.autobox();
     if (recvType.isUnknown()
         || mayWarnAboutNonObject(receiver, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
@@ -3740,7 +3740,7 @@ final class NewTypeInference implements CompilerPass {
     EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
         obj, lvalue.type, null, lvalue.env);
     TypeEnv lvalueEnv = pair.env;
-    JSType lvalueType = pair.type.autobox(commonTypes);
+    JSType lvalueType = pair.type.autobox();
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
       warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
           pnameAsString, lvalueType.toString()));
