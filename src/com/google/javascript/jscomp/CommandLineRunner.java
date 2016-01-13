@@ -378,6 +378,13 @@ public class CommandLineRunner extends
         "may result in incorrect results.")
     private boolean useTypesForOptimization = true;
 
+    @Option(name = "--assume_function_wrapper",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage = "Enable additional optimizations based on the assumption that the output will be " +
+        "wrapped with a function wrapper, that will de-globalize top-level declarations.")
+    private boolean assumeFunctionWrapper = false;
+
     @Option(name = "--warning_level",
         aliases = {"-W"},
         usage = "Specifies the warning level to use. Options: " +
@@ -675,7 +682,6 @@ public class CommandLineRunner extends
         throw new CmdLineException(
             parser, "Bad value for --compilation_level: " + compilationLevel);
       }
-
     }
 
     private void printUsage(PrintStream ps) {
@@ -1209,6 +1215,10 @@ public class CommandLineRunner extends
 
     if (flags.useTypesForOptimization) {
       level.setTypeBasedOptimizationOptions(options);
+    }
+
+    if (flags.assumeFunctionWrapper) {
+      level.setWrappedOutputOptimizations(options);
     }
 
     if (flags.generateExports) {

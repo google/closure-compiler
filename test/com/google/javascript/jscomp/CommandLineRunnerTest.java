@@ -1607,6 +1607,23 @@ public final class CommandLineRunnerTest extends TestCase {
         + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
   }
 
+  public void testAssumeFunctionWrapper() {
+    args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
+    args.add("--assume_function_wrapper");
+    // remove used vars enabled
+    test(
+        "var someName = function(a) {};",
+        "");
+    // function inlining enabled.
+    test(
+        "var someName = function() {return 'hi'};alert(someName())",
+        "alert('hi')");
+    // renaming enabled, and collapse anonymous functions enabled
+    test(
+        "var someName = function() {return 'hi'};alert(someName);alert(someName)",
+        "function a() {return 'hi'}alert(a);alert(a)");
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
