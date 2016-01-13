@@ -325,7 +325,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
               loopNode.getLastChild().addChildToFront(
                   IR.exprResult(IR.assign(
                       IR.getprop(IR.name(object.name), IR.string(var.name)),
-                      IR.name(var.name)))
+                      var.getNameNode().cloneNode()))
                       .useSourceInfoIfMissingFromForTree(reference));
             } else {
               if (NodeUtil.isNameDeclaration(reference.getParent())) {
@@ -345,15 +345,29 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 // no initial value.
                 if (reference.hasChildren()) {
                   declaration = reference.getParent(); // Might have changed now
-                  Node newReference = IR.name(var.name);
-                  Node replacement = IR.exprResult(
-                      IR.assign(newReference, reference.removeFirstChild()))
-                          .useSourceInfoIfMissingFromForTree(declaration);
+                  JSDocInfo existingInfo = declaration.getJSDocInfo();
+                  if (existingInfo == null) {
+                    existingInfo = reference.getJSDocInfo();
+                    reference.setJSDocInfo(null);
+                  }
+                  JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(existingInfo);
+                  if (declaration.isConst()) {
+                    builder.recordConstancy();
+                  }
+
+                  Node newReference = reference.cloneNode();
+                  Node assign = IR.assign(newReference, reference.removeFirstChild());
+                  assign.setJSDocInfo(builder.build());
+
+                  Node replacement = IR.exprResult(assign)
+                      .useSourceInfoIfMissingFromForTree(declaration);
                   grandParent.replaceChild(declaration, replacement);
                   reference = newReference;
                 } else {
                   grandParent.removeChild(declaration);
                 }
+                letConsts.remove(declaration);
+                compiler.reportCodeChange();
               }
 
               if (reference.getParent().isCall()
