@@ -1720,7 +1720,7 @@ public final class CommandLineRunnerTest extends TestCase {
         new PrintStream(errReader));
   }
 
-  private String createZipFile(Map<String, String> entryContentsByName) throws IOException {
+  private static String createZipFile(Map<String, String> entryContentsByName) throws IOException {
     File tempZipFile = File.createTempFile("testdata", ".js.zip");
 
     try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(tempZipFile))) {

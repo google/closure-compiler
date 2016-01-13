@@ -210,11 +210,11 @@ public class Scanner {
     return true;
   }
 
-  private boolean isRegularExpressionFirstChar(char ch) {
+  private static boolean isRegularExpressionFirstChar(char ch) {
     return isRegularExpressionChar(ch) && ch != '*';
   }
 
-  private boolean isRegularExpressionChar(char ch) {
+  private static boolean isRegularExpressionChar(char ch) {
     switch (ch) {
     case '/':
       return false;
@@ -741,7 +741,7 @@ public class Scanner {
     return value;
   }
 
-  private boolean isIdentifierStart(char ch) {
+  private static boolean isIdentifierStart(char ch) {
     switch (ch) {
     case '$':
     case '_':
@@ -752,7 +752,7 @@ public class Scanner {
     }
   }
 
-  private boolean isIdentifierPart(char ch) {
+  private static boolean isIdentifierPart(char ch) {
     // TODO: identifier part character classes
     // CombiningMark
     //   Non-Spacing mark (Mn)

@@ -155,7 +155,7 @@ public final class CompilerTest extends TestCase {
         error.contains("Failed to load module \"missing\" at gin.js"));
   }
 
-  private String normalize(String path) {
+  private static String normalize(String path) {
     return path.replace(File.separator, "/");
   }
 
