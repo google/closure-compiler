@@ -2582,12 +2582,24 @@ chrome.tabs.remove = function(tabIds, opt_callback) {};
 
 
 /**
+ * @typedef {?{
+ *   frameId: (number|undefined)
+ * }}
+ */
+chrome.tabs.SendMessageOptions;
+
+
+/**
  * @param {number} tabId Tab id.
  * @param {*} request The request value of any type.
+ * @param {(!chrome.tabs.SendMessageOptions|function(*): void)=}
+ *     opt_optionsOrCallback The object with an optional "frameId" or the
+ *     callback function.
  * @param {function(*): void=} opt_callback The callback function which
  *     takes a JSON response object sent by the handler of the request.
  */
-chrome.tabs.sendMessage = function(tabId, request, opt_callback) {};
+chrome.tabs.sendMessage = function(tabId, request, opt_optionsOrCallback,
+    opt_callback) {};
 
 
 /**
