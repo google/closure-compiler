@@ -388,7 +388,7 @@ md.$mdThemingProvider.prototype.generateThemesOnDemand = function(onDemand) {};
 /**
  * @param {string} name
  * @param {!Object<string,string>} palette
- * @return {md.$mdThemingProvider}
+ * @return {!md.$mdThemingProvider}
  */
 md.$mdThemingProvider.prototype.definePalette = function(name, palette) {};
 
@@ -438,7 +438,7 @@ md.$mdThemingProvider.Theme.prototype.colors;
 /**
  * @param {string} primaryPalette
  * @param {Object<string,string>=} opt_colors
- * @return {md.$mdThemingProvider.Theme}
+ * @return {!md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.primaryPalette =
     function(primaryPalette, opt_colors) {};
@@ -446,7 +446,7 @@ md.$mdThemingProvider.Theme.prototype.primaryPalette =
 /**
  * @param {string} accentPalette
  * @param {Object<string,string>=} opt_colors
- * @return {md.$mdThemingProvider.Theme}
+ * @return {!md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.accentPalette =
     function(accentPalette, opt_colors) {};
@@ -454,20 +454,20 @@ md.$mdThemingProvider.Theme.prototype.accentPalette =
 /**
  * @param {string} backgroundPalette
  * @param {Object<string,string>=} opt_colors
- * @return {md.$mdThemingProvider.Theme}
+ * @return {!md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.backgroundPalette =
     function(backgroundPalette, opt_colors) {};
 
 /**
  * @param {string} warnPalette
- * @return {md.$mdThemingProvider.Theme}
+ * @return {!md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.warnPalette = function(warnPalette) {};
 
 /**
  * @param {boolean=} isDark
- * @return {md.$mdThemingProvider.Theme}
+ * @return {!md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.dark = function(isDark) {};
 
@@ -483,7 +483,7 @@ md.$mdIconProvider = function() {};
  * @param {string} id
  * @param {string} url
  * @param {number=} iconSize
- * @return {md.$mdIconProvider}
+ * @return {!md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.icon = function(id, url, iconSize) {};
 
@@ -491,26 +491,26 @@ md.$mdIconProvider.prototype.icon = function(id, url, iconSize) {};
  * @param {string} id
  * @param {string} url
  * @param {number=} iconSize
- * @return {md.$mdIconProvider}
+ * @return {!md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.iconSet = function(id, url, iconSize) {};
 
 /**
  * @param {string} url
  * @param {number=} iconSize
- * @return {md.$mdIconProvider}
+ * @return {!md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.defaultIconSet = function(url, iconSize) {};
 
 /**
  * @param {number} iconSize
- * @return {md.$mdIconProvider}
+ * @return {!md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.defaultIconSize = function(iconSize) {};
 
 /**
  * @param {string} name
- * @return {md.$mdIconProvider}
+ * @return {!md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.defaultFontSet = function(name) {};
 
