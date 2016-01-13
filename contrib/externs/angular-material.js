@@ -153,6 +153,12 @@ md.$dialog.AlertConfig_.prototype.theme = function(theme) {};
 md.$dialog.AlertConfig_.prototype.clickOutsideToClose = function(close) {};
 
 /**
+ * @param {boolean} close
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.escapeToClose = function(close) {};
+
+/**
  * @param {Object|undefined} event
  * @return {!md.$dialog.AlertConfig_}
  */
@@ -229,6 +235,12 @@ md.$dialog.ConfirmConfig_.prototype.theme = function(theme) {};
  * @return {!md.$dialog.ConfirmConfig_}
  */
 md.$dialog.ConfirmConfig_.prototype.clickOutsideToClose = function(close) {};
+
+/**
+ * @param {boolean} close
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.escapeToClose = function(close) {};
 
 /**
  * @param {Object|undefined} event
