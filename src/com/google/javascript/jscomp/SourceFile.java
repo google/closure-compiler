@@ -348,7 +348,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
       while (zipEntries.hasMoreElements()) {
         ZipEntry zipEntry = zipEntries.nextElement();
-        URL zipEntryUrl = new URL("jar:file:" + absoluteZipPath + "!/" + zipEntry.getName());
+        String entryName = zipEntry.getName();
+        if (!entryName.endsWith(".js")) { // Only accept js files
+          continue;
+        }
+        URL zipEntryUrl = new URL("jar:file:" + absoluteZipPath + "!/" + entryName);
         sourceFiles.add(
             builder()
                 .withCharset(inputCharset)
