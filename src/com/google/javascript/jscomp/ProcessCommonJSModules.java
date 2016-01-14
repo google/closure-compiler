@@ -282,9 +282,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       String qName = refParent.getQualifiedName();
       if (qName.startsWith("module.exports.")) {
-        qName = qName.substring(15);
+        qName = qName.substring("module.exports.".length());
       } else if (qName.startsWith("exports.")) {
-        qName = qName.substring(8);
+        qName = qName.substring("exports.".length());
       } else {
         return;
       }
@@ -474,9 +474,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
           if (baseName != null) {
             qName = baseName.getQualifiedName();
             if (qName.startsWith("module.exports.")) {
-              qName = qName.substring(15);
+              qName = qName.substring("module.exports.".length());
             } else {
-              qName = qName.substring(8);
+              qName = qName.substring("exports.".length());
             }
           }
         }
