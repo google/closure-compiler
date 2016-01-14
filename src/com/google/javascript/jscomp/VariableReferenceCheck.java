@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
@@ -103,6 +102,12 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
    */
   private class ReferenceCheckingBehavior implements Behavior {
 
+    private Set<String> varsInFunctionBody;
+
+    private ReferenceCheckingBehavior() {
+      varsInFunctionBody = new HashSet<>();
+    }
+
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
       // TODO(bashir) In hot-swap version this means that for global scope we
@@ -111,13 +116,19 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
       // Check all vars after finishing a scope
       Scope scope = t.getScope();
+      if (scope.isFunctionBlockScope()) {
+        varsInFunctionBody.clear();
+        for (Iterator<Var> it = scope.getVars(); it.hasNext();) {
+          varsInFunctionBody.add(it.next().name);
+        }
+      }
       for (Iterator<Var> it = scope.getVars(); it.hasNext();) {
         Var v = it.next();
         ReferenceCollection referenceCollection = referenceMap.getReferences(v);
         // TODO(moz): Figure out why this could be null
         if (referenceCollection != null) {
           if (scope.getRootNode().isFunction() && v.isDefaultParam()) {
-            checkDefaultParam(v, scope);
+            checkDefaultParam(v, scope, varsInFunctionBody);
           }
           if (scope.getRootNode().isFunction()) {
             checkShadowParam(v, scope, referenceCollection.references);
@@ -146,13 +157,13 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       }
     }
 
-    private void checkDefaultParam(Var v, Scope scope) {
+    private void checkDefaultParam(Var param, Scope scope, Set<String> varsInFunctionBody) {
       ShallowReferenceCollector check = new ShallowReferenceCollector();
-      NodeTraversal.traverseEs6(compiler, v.getParentNode().getSecondChild(), check);
+      NodeTraversal.traverseEs6(compiler, param.getParentNode().getSecondChild(), check);
       for (Node ref : check.currParamReferences) {
         String refName = ref.getString();
-        if (!scope.isDeclared(refName, true)) {
-          compiler.report(JSError.make(ref, EARLY_REFERENCE_ERROR, v.name));
+        if (varsInFunctionBody.contains(refName) && !scope.isDeclared(refName, true)) {
+          compiler.report(JSError.make(ref, EARLY_REFERENCE_ERROR, refName));
         }
       }
     }
@@ -182,7 +193,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
      */
     private void checkVar(Var v, List<Reference> references) {
       blocksWithDeclarations.clear();
-      ImmutableSet<Reference> referenceSet = ImmutableSet.copyOf(references);
       boolean isDeclaredInScope = false;
       boolean isUnhoistedNamedFunction = false;
       boolean hasErrors = false;
