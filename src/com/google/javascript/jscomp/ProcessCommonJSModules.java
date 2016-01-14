@@ -17,6 +17,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -26,8 +28,6 @@ import com.google.javascript.rhino.Node;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
 
 /**
@@ -182,7 +182,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private int scriptNodeCount = 0;
     private List<Node> moduleExportRefs = new ArrayList<>();
     private List<Node> exportRefs = new ArrayList<>();
-    Map<String, Integer> propertyExportRefCount = new HashMap<>();
+    Multiset<String> propertyExportRefCount = HashMultiset.create();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -289,12 +289,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return;
       }
 
-      int assignCount = 1;
-      if (propertyExportRefCount.containsKey(qName)) {
-        assignCount = propertyExportRefCount.get(qName) + 1;
-        propertyExportRefCount.remove(qName);
-      }
-      propertyExportRefCount.put(qName, assignCount);
+      propertyExportRefCount.add(qName);
     }
 
     /**
@@ -489,8 +484,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         parent.replaceChild(ref, newName);
 
         // If the property was assigned to exactly once, add an @const annotation
-        if (parent.isAssign() && qName != null && propertyExportRefCount.containsKey(qName) &&
-            propertyExportRefCount.get(qName) == 1) {
+        if (parent.isAssign() && qName != null &&  propertyExportRefCount.count(qName) == 1) {
           if (rhsValue != null && rhsValue.isObjectLit()) {
             addConstToObjLitKeys(rhsValue);
           }
