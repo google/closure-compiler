@@ -29,10 +29,6 @@ import java.util.List;
 
 public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
-  public ProcessCommonJSModulesTest() {
-    compareJsDoc = false;
-  }
-
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
@@ -99,7 +95,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "goog.provide('module$test');"
             + "goog.require('module$other');"
             + "var name$$module$test = module$other;"
-            + "module$test = function () {};");
+            + "/** @const */ module$test = function () {};");
   }
 
   public void testExportsInExpression() {
@@ -197,13 +193,13 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "module.exports = foo;",
         "goog.provide('module$test');" +
         "var foo$$module$test=function(module){module.exports={}};" +
-        "module$test=foo$$module$test");
+        "/** @const */ module$test=foo$$module$test");
     testModules(
         "var foo = function () {var module = {};module.exports = {};};" +
         "module.exports = foo;",
         "goog.provide('module$test');" +
         "var foo$$module$test=function(){var module={};module.exports={}};" +
-        "module$test=foo$$module$test");
+        "/** @const */ module$test=foo$$module$test");
     testModules(
         "var foo = function () {if (true) var module = {};" +
         "module.exports = {};};" +
@@ -211,7 +207,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "goog.provide('module$test');" +
         "var foo$$module$test=function(){if(true)var module={};" +
         "module.exports={}};" +
-        "module$test=foo$$module$test");
+        "/** @const */ module$test=foo$$module$test");
   }
 
   public void testUMDPatternConversion() {
@@ -254,24 +250,36 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         CompilerOptions.LanguageMode.ECMASCRIPT5);
     setFilename("test");
     testModules(
-        "function foo() {}"
-            + "module.exports = {"
-            + "  prop: 'value',"
-            + "  foo"
-            + "}",
-        "goog.provide('module$test');"
-            + "function foo$$module$test() {}"
-            + "module$test = { prop: 'value', foo }");
+        LINE_JOINER.join(
+            "function foo() {}",
+            "module.exports = {",
+            "  prop: 'value',",
+            "  foo",
+            "};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "function foo$$module$test() {}",
+            "/** @const */ module$test = {",
+            "  /** @const */ prop: 'value',",
+            "  /** @const */ foo",
+            "};"));
 
     testModules(
-        "module.exports = {\n"
-            + "  prop: 'value',\n"
-            + "  foo() {\n"
-            + "    console.log('bar');\n"
-            + "  }\n"
-            + "};",
-        "goog.provide('module$test');"
-            + "module$test = { prop: 'value', foo() { console.log('bar'); }}" );
+        LINE_JOINER.join(
+            "module.exports = {",
+            "  prop: 'value',",
+            "  foo() {",
+            "    console.log('bar');",
+            "  }",
+            "};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ module$test = {",
+            "  /** @const */ prop: 'value',",
+            "  /** @const */ foo() {",
+            "    console.log('bar');",
+            "  }",
+            "};"));
   }
 
   public void testSortInputs() throws Exception {
