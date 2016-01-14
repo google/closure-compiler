@@ -297,7 +297,7 @@
     }
     return {done:true, value:void 0};
   }, $jscomp$compprop2[Symbol.iterator] = function() {
-    return this;
+    return /**@type {!Iterator} */(this);
   }, $jscomp$compprop2);
 };
 /**@private @type {number} */$jscomp.Map.index_ = 0;
