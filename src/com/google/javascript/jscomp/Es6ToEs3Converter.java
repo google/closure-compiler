@@ -404,8 +404,10 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       groups.add(currGroup);
     }
     Node result = null;
-    Node joinedGroups = IR.call(IR.getprop(IR.arraylit(), IR.string("concat")),
-            groups.toArray(new Node[groups.size()]));
+    Node firstGroup = node.isNew() ? IR.arraylit(IR.nullNode()) : IR.arraylit();
+    Node joinedGroups = IR.call(
+        IR.getprop(firstGroup, IR.string("concat")),
+        groups.toArray(new Node[groups.size()]));
     if (node.isArrayLit()) {
       result = joinedGroups;
     } else if (node.isCall()) {
@@ -428,9 +430,13 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         result = IR.call(IR.getprop(callee, IR.string("apply")), context, joinedGroups);
       }
     } else {
+      if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
+        // TODO(tbreisacher): Support this in ES3 too by not relying on Function.bind.
+        cannotConvert(node, "\"...\" passed to a constructor (consider using --language_out=ES5)");
+      }
       Node bindApply = NodeUtil.newQName(compiler,
           "Function.prototype.bind.apply");
-      result = IR.newNode(bindApply, callee, joinedGroups);
+      result = IR.newNode(IR.call(bindApply, callee, joinedGroups));
     }
     result.useSourceInfoIfMissingFromForTree(node);
     parent.replaceChild(node, result);

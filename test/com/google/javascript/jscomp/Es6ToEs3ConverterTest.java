@@ -1569,8 +1569,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("f(a, ...b, c, ...d, e);",
         "f.apply(null, [].concat([a], $jscomp.arrayFromIterable(b),"
         + " [c], $jscomp.arrayFromIterable(d), [e]));");
-    test("new F(...args);",
-        "new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)));");
 
     test("Factory.create().m(...arr);",
         LINE_JOINER.join(
@@ -1633,6 +1631,13 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "($jscomp$spread$args0 = Factory.create()).m.apply(",
         "    $jscomp$spread$args0, [].concat($jscomp.arrayFromIterable(arr)));"
     ), null, null);
+  }
+
+  public void testSpreadNew() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test("new F(...args);",
+        "new (Function.prototype.bind.apply(F, [null].concat($jscomp.arrayFromIterable(args))));");
   }
 
   public void testMethodInObject() {
