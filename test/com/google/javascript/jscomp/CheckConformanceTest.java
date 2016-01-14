@@ -1425,6 +1425,24 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "/** @param {?} n */ function f(n) { alert(n.prop); }", null);
   }
 
+  public void testCustomBanNullDeref2() {
+    configuration =
+        config(rule("BanNullDeref"), "My rule message");
+
+    final String code = "/** @param {?String} n */ function f(n) { alert(n.prop); }";
+
+    testSame(
+        EXTERNS,
+        code,
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+
+    configuration =
+        config(rule("BanNullDeref"), "My rule message", value("String"));
+
+    testSame(EXTERNS, code, null);
+  }
+
   public void testRequireUseStrict0() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 

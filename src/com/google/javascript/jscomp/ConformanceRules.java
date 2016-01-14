@@ -230,6 +230,82 @@ public final class ConformanceRules {
           : "\n";
       t.report(n, msg, message, seperator, result.note);
     }
+
+
+  }
+
+
+  abstract static class AbstractTypeRestrictionRule extends AbstractRule {
+
+    private final JSType nativeObjectType;
+    private final JSType whitelistedTypes;
+
+    public AbstractTypeRestrictionRule(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      nativeObjectType = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
+      List<String> whitelistedTypeNames = requirement.getValueList();
+      whitelistedTypes = union(whitelistedTypeNames);
+    }
+
+    protected boolean isWhitelistedType(Node n) {
+      if (whitelistedTypes != null && n.getJSType() != null) {
+        JSType targetType = n.getJSType().restrictByNotNullOrUndefined();
+        if (targetType.isSubtype(whitelistedTypes)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    protected boolean isKnown(Node n) {
+      return !isUnknown(n)
+          && !isNoResolvedType(n)
+          && !isTemplateType(n); // TODO(johnlenz): Remove this restriction
+    }
+
+    protected boolean isNativeObjectType(Node n) {
+      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      return type.isEquivalentTo(nativeObjectType);
+    }
+
+    protected boolean isAllType(Node n) {
+      JSType type = n.getJSType();
+      return type != null && type.isAllType();
+    }
+
+    protected boolean isUnknown(Node n) {
+      JSType type = n.getJSType();
+      return (type == null || type.isUnknownType());
+    }
+
+    protected boolean isTemplateType(Node n) {
+      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      return type.isTemplateType();
+    }
+
+    private boolean isNoResolvedType(Node n) {
+      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      return type.isNoResolvedType();
+    }
+
+    protected JSType union(List<String> typeNames) {
+      JSTypeRegistry registry = compiler.getTypeRegistry();
+      List<JSType> types = new ArrayList<>();
+
+      for (String typeName : typeNames) {
+        JSType type = registry.getType(typeName);
+        if (type != null) {
+          types.add(type);
+        }
+      }
+      if (types.isEmpty()) {
+        return null;
+      } else {
+        JSType[] variants = types.toArray(new JSType[0]);
+        return registry.createUnionType(variants);
+      }
+    }
   }
 
   /**
@@ -1007,7 +1083,7 @@ public final class ConformanceRules {
   /**
    * Banned dereferencing null or undefined types.
    */
-  public static final class BanNullDeref extends AbstractRule {
+  public static final class BanNullDeref extends AbstractTypeRestrictionRule {
     public BanNullDeref(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
@@ -1015,33 +1091,37 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      boolean valid;
+      boolean violation;
 
       switch (n.getType()) {
           case Token.GETPROP:
           case Token.GETELEM:
           case Token.NEW:
           case Token.CALL:
-             valid = maybeValidDerefType(n.getFirstChild());
-             break;
+            violation = report(n.getFirstChild());
+            break;
           case Token.IN:
-             valid = maybeValidDerefType(n.getLastChild());
-             break;
+            violation = report(n.getLastChild());
+            break;
           default:
-             valid = true;
-             break;
+            violation = false;
+            break;
       }
 
-      return valid ? ConformanceResult.CONFORMANCE : ConformanceResult.VIOLATION;
+      return violation ? ConformanceResult.VIOLATION : ConformanceResult.CONFORMANCE;
     }
 
-    // Whether the type is known to be valid.
-    private boolean maybeValidDerefType(Node n) {
+    boolean report(Node n) {
+      return n.getJSType() != null
+          && isKnown(n)
+          && invalidDeref(n)
+          && !isWhitelistedType(n);
+    }
+
+    // Whether the type is known to be invalid to dereference.
+    private boolean invalidDeref(Node n) {
       JSType type = n.getJSType();
-      return type == null
-          || type.isUnknownType()
-          || type.isEmptyType()
-          || (!type.isNullable() && !type.isVoidable());
+      return type.isNullable() || type.isVoidable();
     }
   }
 
@@ -1170,18 +1250,15 @@ public final class ConformanceRules {
    * (d) the source object type is unknown (to avoid error cascades), or
    * (e) it is a whitelisted type
    */
-  public static final class BanUnknownTypedClassPropsReferences extends AbstractRule {
-    final JSType nativeObjectType;
+  public static final class BanUnknownTypedClassPropsReferences
+      extends AbstractTypeRestrictionRule {
     private final ImmutableList<AssertionFunctionSpec> assertions;
-    private final JSType whitelistedTypes;
 
     public BanUnknownTypedClassPropsReferences(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
       assertions = ImmutableList.copyOf(compiler.getCodingConvention().getAssertionFunctions());
-      nativeObjectType = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
       List<String> whitelistedTypeNames = requirement.getValueList();
-      whitelistedTypes = union(whitelistedTypeNames);
     }
 
     @Override
@@ -1207,24 +1284,6 @@ public final class ConformanceRules {
           && isClassType(n)
           && !isNativeObjectType(n)
           && !isWhitelistedType(n);
-    }
-
-    private JSType union(List<String> typeNames) {
-      JSTypeRegistry registry = compiler.getTypeRegistry();
-      List<JSType> types = new ArrayList<>();
-
-      for (String typeName : typeNames) {
-        JSType type = registry.getType(typeName);
-        if (type != null) {
-          types.add(type);
-        }
-      }
-      if (types.isEmpty()) {
-        return null;
-      } else {
-        JSType[] variants = types.toArray(new JSType[0]);
-        return registry.createUnionType(variants);
-      }
     }
 
     private boolean isClassType(Node n) {
@@ -1260,37 +1319,6 @@ public final class ConformanceRules {
       return false;
     }
 
-    private boolean isKnown(Node n) {
-      return !isUnknown(n)
-          && !isNoResolvedType(n)
-          && !isTemplateType(n); // TODO(johnlenz): Remove this restriction
-    }
-
-    private boolean isNativeObjectType(Node n) {
-      JSType type = n.getJSType().restrictByNotNullOrUndefined();
-      return type != null && type.isEquivalentTo(nativeObjectType);
-    }
-
-    private boolean isAllType(Node n) {
-      JSType type = n.getJSType();
-      return type != null && type.isAllType();
-    }
-
-    private boolean isUnknown(Node n) {
-      JSType type = n.getJSType();
-      return (type == null || type.isUnknownType());
-    }
-
-    private boolean isTemplateType(Node n) {
-      JSType type = n.getJSType().restrictByNotNullOrUndefined();
-      return (type != null && type.isTemplateType());
-    }
-
-    private boolean isNoResolvedType(Node n) {
-      JSType type = n.getJSType().restrictByNotNullOrUndefined();
-      return (type != null && type.isNoResolvedType());
-    }
-
     private boolean isUsed(Node n) {
       return (NodeUtil.isAssignmentOp(n.getParent()))
           ? NodeUtil.isExpressionResultUsed(n.getParent())
@@ -1301,16 +1329,6 @@ public final class ConformanceRules {
     private boolean isWhiteListed(Node n) {
       Node parent = n.getParent();
       return parent.isCast() || isAssertionCall(parent);
-    }
-
-    private boolean isWhitelistedType(Node n) {
-      if (whitelistedTypes != null && n.getJSType() != null) {
-        JSType targetType = n.getJSType().restrictByNotNullOrUndefined();
-        if (targetType.isSubtype(whitelistedTypes)) {
-          return true;
-        }
-      }
-      return false;
     }
 
     private boolean isAssertionCall(Node n) {
