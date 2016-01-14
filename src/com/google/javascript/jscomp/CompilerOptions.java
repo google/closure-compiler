@@ -1581,7 +1581,15 @@ public class CompilerOptions {
   public void setManageClosureDependencies(List<String> entryPoints) {
     Preconditions.checkNotNull(entryPoints);
     setManageClosureDependencies(true);
-    dependencyOptions.setEntryPoints(entryPoints);
+
+    List<DependencyOptions.ModuleIdentifier> normalizedEntryPoints =
+        new ArrayList<>();
+
+    for (String entryPoint : entryPoints) {
+      normalizedEntryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
+    }
+
+    dependencyOptions.setEntryPoints(normalizedEntryPoints);
   }
 
   /**
@@ -2666,5 +2674,28 @@ public class CompilerOptions {
      * stdin and stdout are both json streams.
      */
     BOTH
+  }
+
+  static enum DependencyMode {
+    /**
+     * All files will be included in the compilation
+     */
+    NONE,
+
+    /**
+     * Files must be discoverable from specified entry points. Files
+     * which do not goog.provide a namespace and and are not either
+     * an ES6 or CommonJS module will be automatically treated as entry points.
+     * Module files will be included only if referenced from an entry point.
+     */
+    LOOSE,
+
+    /**
+     * Files must be discoverable from specified entry points. Files which
+     * do not goog.provide a namespace and are neither
+     * an ES6 or CommonJS module will be dropped. Module files will be included
+     * only if referenced from an entry point.
+     */
+    STRICT
   }
 }

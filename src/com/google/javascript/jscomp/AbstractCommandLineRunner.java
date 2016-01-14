@@ -277,34 +277,26 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * A helper function for creating the dependency options object.
    */
   static DependencyOptions createDependencyOptions(
-      boolean manageClosureDependencies,
-      boolean onlyClosureDependencies,
-      boolean processCommonJSModules,
-      List<String> closureEntryPoints)
+      CompilerOptions.DependencyMode dependencyMode,
+      List<DependencyOptions.ModuleIdentifier> entryPoints)
       throws FlagUsageException {
-    if (onlyClosureDependencies) {
-      if (closureEntryPoints.isEmpty()) {
-        throw new FlagUsageException("When only_closure_dependencies is "
-          + "on, you must specify at least one closure_entry_point");
+    if (dependencyMode == CompilerOptions.DependencyMode.STRICT) {
+      if (entryPoints.isEmpty()) {
+        throw new FlagUsageException("When dependency_mode=STRICT, you must "
+            + "specify at least one entry_point");
       }
 
       return new DependencyOptions()
           .setDependencyPruning(true)
           .setDependencySorting(true)
           .setMoocherDropping(true)
-          .setEntryPoints(closureEntryPoints);
-    } else if (processCommonJSModules) {
-      return new DependencyOptions()
-        .setDependencyPruning(false)
-        .setDependencySorting(true)
-        .setMoocherDropping(false)
-        .setEntryPoints(closureEntryPoints);
-    } else if (manageClosureDependencies || !closureEntryPoints.isEmpty()) {
+          .setEntryPoints(entryPoints);
+    } else if (dependencyMode == CompilerOptions.DependencyMode.LOOSE || !entryPoints.isEmpty()) {
       return new DependencyOptions()
           .setDependencyPruning(true)
           .setDependencySorting(true)
           .setMoocherDropping(false)
-          .setEntryPoints(closureEntryPoints);
+          .setEntryPoints(entryPoints);
     }
     return null;
   }
@@ -355,10 +347,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     createDefineOrTweakReplacements(config.tweak, options, true);
 
     DependencyOptions depOptions = createDependencyOptions(
-        config.manageClosureDependencies,
-        config.onlyClosureDependencies,
-        config.processCommonJSModules,
-        config.closureEntryPoints);
+        config.dependencyMode,
+        config.entryPoints);
     if (depOptions != null) {
       options.setDependencyOptions(depOptions);
     }
@@ -1771,8 +1761,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Writes the manifest or bundle of all compiler input files that survived
-   * manage_closure_dependencies, if requested.
+   * Writes the manifest or bundle of all compiler input files that were included
+   * as controlled by --dependency_mode, if requested.
    */
   private void outputManifestOrBundle(List<String> outputFiles,
       boolean isManifest) throws IOException {
@@ -2287,38 +2277,26 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private boolean manageClosureDependencies = false;
+    private CompilerOptions.DependencyMode dependencyMode = CompilerOptions.DependencyMode.NONE;
 
     /**
      * Sets whether to sort files by their goog.provide/require deps,
      * and prune inputs that are not required.
      */
-    CommandLineConfig setManageClosureDependencies(boolean newVal) {
-      this.manageClosureDependencies = newVal;
+    CommandLineConfig setDependencyMode(CompilerOptions.DependencyMode newVal) {
+      this.dependencyMode = newVal;
       return this;
     }
 
-    private boolean onlyClosureDependencies = false;
-
-    /**
-     * Sets whether to sort files by their goog.provide/require deps,
-     * and prune inputs that are not required, and drop all non-closure
-     * files.
-     */
-    CommandLineConfig setOnlyClosureDependencies(boolean newVal) {
-      this.onlyClosureDependencies = newVal;
-      return this;
-    }
-
-    private List<String> closureEntryPoints = ImmutableList.of();
+    private List<DependencyOptions.ModuleIdentifier> entryPoints = ImmutableList.of();
 
     /**
      * Set closure entry points, which makes the compiler only include
      * those files and sort them in dependency order.
      */
-    CommandLineConfig setClosureEntryPoints(List<String> entryPoints) {
+    CommandLineConfig setEntryPoints(List<DependencyOptions.ModuleIdentifier> entryPoints) {
       Preconditions.checkNotNull(entryPoints);
-      this.closureEntryPoints = entryPoints;
+      this.entryPoints = entryPoints;
       return this;
     }
 

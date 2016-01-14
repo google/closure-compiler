@@ -425,8 +425,7 @@ public class CommandLineRunner extends
     @Option(
       name = "--common_js_module_path_prefix",
       hidden = true,
-      usage = "Path prefix to be removed from CommonJS module names."
-    )
+      usage = "Deprecated: use --js_module_root.")
     private List<String> commonJsPathPrefix = new ArrayList<>();
 
     @Option(
@@ -438,8 +437,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--common_js_entry_module",
         hidden = true,
-        usage = "Root of your common JS dependency hierarchy. " +
-            "Your main script.")
+        usage = "Deprecated: use --entry_point.")
     private String commonJsEntryModule;
 
     @Option(name = "--transform_amd_modules",
@@ -459,31 +457,18 @@ public class CommandLineRunner extends
     @Option(name = "--manage_closure_dependencies",
         hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "Automatically sort dependencies so that a file that "
-        + "goog.provides symbol X will always come before a file that "
-        + "goog.requires symbol X. If an input provides symbols, and "
-        + "those symbols are never required, then that input will not "
-        + "be included in the compilation.")
+        usage = "Deprecated: use --dependency_mode=LOOSE.")
     private boolean manageClosureDependencies = false;
 
     @Option(name = "--only_closure_dependencies",
         hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "Only include files in the transitive dependency of the "
-        + "entry points (specified by closure_entry_point). Files that do "
-        + "not provide dependencies will be removed. This supersedes "
-        + "manage_closure_dependencies")
+        usage = "Deprecated: use --dependency_mode=STRICT.")
     private boolean onlyClosureDependencies = false;
 
     @Option(name = "--closure_entry_point",
         hidden = true,
-        usage = "Entry points to the program. Must be goog.provide'd "
-        + "symbols. Any goog.provide'd symbols that are not a transitive "
-        + "dependency of the entry points will be removed. Files without "
-        + "goog.provides, and their dependencies, will always be left in. "
-        + "If any entry points are specified, then the "
-        + "manage_closure_dependencies option will be set to true and "
-        + "all files will be sorted in dependency order.")
+        usage = "Deprecated: use --entry_point.")
     private List<String> closureEntryPoint = new ArrayList<>();
 
     @Option(name = "--process_jquery_primitives",
@@ -521,7 +506,7 @@ public class CommandLineRunner extends
     @Option(name = "--output_manifest",
         hidden = true,
         usage = "Prints out a list of all the files in the compilation. "
-        + "If --manage_closure_dependencies is on, this will not include "
+        + "If --dependency_mode=STRICT or LOOSE is specified, this will not include "
         + "files that got dropped because they were not required. "
         + "The %outname% placeholder expands to the JS output file. "
         + "If you're using modularization, using %outname% will create "
@@ -649,6 +634,28 @@ public class CommandLineRunner extends
         usage = "Prevent injecting the named runtime libraries.")
     private List<String> noinjectLibrary = new ArrayList<>();
 
+    @Option(name = "--dependency_mode",
+        hidden = true,
+        usage = "Specifies how the compiler should determine the set and order "
+            + "of files for a compilation. Options: NONE the compiler will include all "
+            + "src files in the order listed, STRICT files will be included and sorted by "
+            + "starting from namespaces or files listed by the --entry_point flag - files "
+            + "will only be included if they are referenced by a goog.require or CommonJS "
+            + "require or ES6 import, LOOSE same as with STRICT but files which do not "
+            + "goog.provide a namespace and are not modules will be automatically added as "
+            + "--entry_point entries. Defaults to NONE.")
+    private CompilerOptions.DependencyMode dependencyMode =
+        CompilerOptions.DependencyMode.NONE;
+
+    @Option(name = "--entry_point",
+        hidden = true,
+        usage = "A file or namespace to use as the starting point for determining "
+            + "which src files to include in the compilation. ES6 and CommonJS modules "
+            + "are specified as file paths (without the extension). Closure-library "
+            + "namespaces are specified with a \"goog:\" prefix. "
+            + "Example: --entry_point=goog:goog.Promise")
+    private List<String> entryPoints = new ArrayList<>();
+
     @Argument
     private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
@@ -703,7 +710,7 @@ public class CommandLineRunner extends
      * Closure Compiler in combination with {@code find} and {@code xargs}:
      * <pre>
      * find MY_JS_SRC_DIR -name '*.js' \
-     *     | xargs java -jar compiler.jar --manage_closure_dependencies
+     *     | xargs java -jar compiler.jar --dependency_mode=LOOSE
      * </pre>
      * The {@code find} command will produce a list of '*.js' source files in
      * the {@code MY_JS_SRC_DIR} directory while {@code xargs} will convert them
@@ -711,7 +718,7 @@ public class CommandLineRunner extends
      * {@code java} command to run the Compiler.
      * <p>
      * Note that it is important to use the
-     * {@code --manage_closure_dependencies} option in this case because the
+     * {@code --dependency_mode=LOOSE or STRICT} option in this case because the
      * order produced by {@code find} is unlikely to be sorted correctly with
      * respect to {@code goog.provide()} and {@code goog.requires()}.
      */
@@ -1073,14 +1080,17 @@ public class CommandLineRunner extends
       reportError("ERROR - " + flags.flagFile + " read error.");
     }
 
+    List<DependencyOptions.ModuleIdentifier> entryPoints = new ArrayList<>();
+
     if (flags.processCommonJsModules) {
       flags.processClosurePrimitives = true;
-      flags.manageClosureDependencies = true;
-      if (flags.commonJsEntryModule == null) {
-        reportError("Please specify --common_js_entry_module.");
+      if (flags.commonJsEntryModule != null) {
+        if (flags.entryPoints.isEmpty()) {
+          entryPoints.add(DependencyOptions.ModuleIdentifier.forFile(flags.commonJsEntryModule));
+        } else {
+          reportError("--common_js_entry_module cannot be used with --entry_point.");
+        }
       }
-      flags.closureEntryPoint =
-          ImmutableList.of(ES6ModuleLoader.toModuleName(URI.create(flags.commonJsEntryModule)));
     }
 
     if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
@@ -1122,11 +1132,53 @@ public class CommandLineRunner extends
       }
 
       // For backwards compatibility, allow both commonJsPathPrefix and jsModuleRoot.
-      List<String> moduleRoots = new ArrayList<>(flags.commonJsPathPrefix);
+      List<String> moduleRoots = new ArrayList<>();
       if (!flags.moduleRoot.isEmpty()) {
         moduleRoots.addAll(flags.moduleRoot);
+
+        if (!flags.commonJsPathPrefix.isEmpty()) {
+          reportError("--commonJsPathPrefix cannot be used with --js_module_root.");
+        }
+      } else if (flags.commonJsPathPrefix != null) {
+        moduleRoots.addAll(flags.commonJsPathPrefix);
       } else {
         moduleRoots.add(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+      }
+
+      for(String entryPoint : flags.entryPoints) {
+        if (entryPoint.startsWith("goog:")) {
+          entryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
+        } else {
+          entryPoints.add(DependencyOptions.ModuleIdentifier.forFile(entryPoint));
+        }
+      }
+
+      if (flags.dependencyMode == CompilerOptions.DependencyMode.STRICT && entryPoints.isEmpty()) {
+          reportError("When --dependency_mode=STRICT, you must specify at least "
+              + "one --entry_point.");
+      }
+
+      CompilerOptions.DependencyMode depMode = flags.dependencyMode;
+
+      if (flags.onlyClosureDependencies || flags.manageClosureDependencies) {
+        if (flags.dependencyMode != CompilerOptions.DependencyMode.NONE) {
+          reportError((flags.onlyClosureDependencies ? "--only_closure_dependencies" :
+              "--manage_closure_dependencies") + " cannot be used with --dependency_mode.");
+        } else {
+          if (flags.manageClosureDependencies) {
+            depMode = CompilerOptions.DependencyMode.LOOSE;
+          } else if (flags.onlyClosureDependencies) {
+            depMode = CompilerOptions.DependencyMode.STRICT;
+          }
+
+          if (!flags.closureEntryPoint.isEmpty() && !flags.entryPoints.isEmpty()) {
+            reportError("--closure_entry_point cannot be used with --entry_point.");
+          } else {
+            for (String entryPoint : flags.closureEntryPoint) {
+              entryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
+            }
+          }
+        }
       }
 
       getCommandLineConfig()
@@ -1155,9 +1207,8 @@ public class CommandLineRunner extends
           .setWarningGuardSpec(Flags.getWarningGuardSpec())
           .setDefine(flags.define)
           .setCharset(flags.charset)
-          .setManageClosureDependencies(flags.manageClosureDependencies)
-          .setOnlyClosureDependencies(flags.onlyClosureDependencies)
-          .setClosureEntryPoints(flags.closureEntryPoint)
+          .setDependencyMode(depMode)
+          .setEntryPoints(entryPoints)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputModuleDependencies(flags.outputModuleDependencies)
           .setLanguageIn(flags.languageIn)
