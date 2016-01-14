@@ -467,10 +467,14 @@ public class DiagnosticGroups {
           CheckArguments.BAD_ARGUMENTS_USAGE,
           CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
           CheckEnums.DUPLICATE_ENUM_VALUE,
+          CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
+          CheckEnums.SHORTHAND_ASSIGNMENT_IN_ENUM,
+          CheckForInOverArray.FOR_IN_OVER_ARRAY,
           // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
           // checkTypes DiagnosticGroup
           CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
           CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
+          CheckJSDocStyle.MISSING_PARAMETER_JSDOC,
           CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED,
           CheckJSDocStyle.INCORRECT_PARAM_NAME,
           CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES,
