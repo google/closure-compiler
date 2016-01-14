@@ -381,8 +381,10 @@ public class CommandLineRunner extends
     @Option(name = "--assume_function_wrapper",
         hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "Enable additional optimizations based on the assumption that the output will be " +
-        "wrapped with a function wrapper, that will de-globalize top-level declarations.")
+        usage = "Enable additional optimizations based on the assumption that the output will be "
+        + "wrapped with a function wrapper.  This flag is used to indicate that \"global\" "
+        + "declarations will not actually be global but instead isolated to the compilation unit. "
+        + "This enables additional optimizations.")
     private boolean assumeFunctionWrapper = false;
 
     @Option(name = "--warning_level",
