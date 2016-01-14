@@ -554,32 +554,6 @@ public class Node implements Serializable {
     sourcePosition = mergeLineCharNo(lineno, charno);
   }
 
-  private Node(int nodeType, Node[] children) {
-    this.type = nodeType;
-    parent = null;
-    if (children.length != 0) {
-      this.first = children[0];
-      this.last = children[children.length - 1];
-
-      for (int i = 1; i < children.length; i++) {
-        if (null != children[i - 1].next) {
-          // fail early on loops. implies same node in array twice
-          throw new IllegalArgumentException("duplicate child");
-        }
-        children[i - 1].next = children[i];
-        Preconditions.checkArgument(children[i - 1].parent == null);
-        children[i - 1].parent = this;
-      }
-      Preconditions.checkArgument(children[children.length - 1].parent == null);
-      children[children.length - 1].parent = this;
-
-      if (null != this.last.next) {
-        // fail early on loops. implies same node in array twice
-        throw new IllegalArgumentException("duplicate child");
-      }
-    }
-  }
-
   public static Node newNumber(double number) {
     return new NumberNode(number);
   }

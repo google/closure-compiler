@@ -94,7 +94,7 @@ public class Util {
   }
 
   /**
-   * @see #appendHexJavaScriptRepresentation(Appendable, int)
+   * @see #appendHexJavaScriptRepresentation(int, Appendable)
    */
   public static void appendHexJavaScriptRepresentation(
       StringBuilder sb, char c) {

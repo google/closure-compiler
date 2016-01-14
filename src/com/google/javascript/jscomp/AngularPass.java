@@ -36,28 +36,28 @@ import java.util.List;
  * @see http://docs.angularjs.org/tutorial/step_05#a-note-on-minification
  *
  * <p>For example, the following code:</p>
- * <pre>{@code
+ * <pre><code>
  *
  * /** @ngInject * /
  * function Controller(dependency1, dependency2) {
  *   // do something
  * }
  *
- * }</pre>
+ * </code></pre>
  *
  * <p>will be transformed into:
- * <pre>{@code
+ * <pre><code>
  *
  * function Controller(dependency1, dependency2) {
  *   // do something
  * }
  * Controller.$inject = ['dependency1', 'dependency2'];
  *
- * }</pre>
+ * </code></pre>
  *
  * <p> This pass also supports assignments of function expressions to variables
  * like:
- * <pre>{@code
+ * <pre><code>
  *
  * /** @ngInject * /
  * var filter = function(a, b) {};
@@ -69,7 +69,7 @@ import java.util.List;
  * /** @ngInject * /
  * var shorthand = ns.method2 = function(a,b,c,) {}
  *
- * }</pre>
+ * </code></pre>
  */
 class AngularPass extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
@@ -295,11 +295,11 @@ class AngularPass extends AbstractPostOrderCallback
   /**
    * Given a VAR node (variable declaration) returns the node of initial value.
    *
-   * <pre>{@code
+   * <pre><code>
    * var x;  // null
    * var y = "value"; // STRING "value" node
    * var z = x = y = function() {}; // FUNCTION node
-   * }</pre>
+   * <code></pre>
    * @param n VAR node.
    * @return the assigned initial value, or the rightmost rvalue of an assignment
    * chain, or null.

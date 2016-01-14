@@ -121,9 +121,6 @@ class UnreachableCodeElimination implements CompilerPass {
      * we first look at the first break, we see that it branches to the 2nd
      * break. However, if we remove the last break, the 2nd break becomes
      * useless and finally the first break becomes useless as well.
-     *
-     * @return The target of this jump. If the target is also useless jump,
-     *     the target of that useless jump recursively.
      */
     @SuppressWarnings("fallthrough")
     private void tryRemoveUnconditionalBranching(Node n) {

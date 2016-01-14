@@ -46,7 +46,6 @@ public final class JsMessageDefinition {
    * Constructs JS message definition.
    * @param messageNode A node that contains the message. It could be node with
    *     goog.getMsg() call or string/function for old-style messages.
-   * @param messageParentNode The parent of the message node.
    */
   JsMessageDefinition(Node messageNode) {
     this.messageNode = messageNode;

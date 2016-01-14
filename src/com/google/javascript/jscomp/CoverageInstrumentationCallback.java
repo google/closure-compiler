@@ -75,8 +75,6 @@ class CoverageInstrumentationCallback extends
    * correspondence of the line number seen on instrumented files and their bit
    * encodings.
    *
-   * @param lineNumber the line number corresponding to which an instrumentation
-   *  node is needed
    * @return an instrumentation node corresponding to the line number
    */
   private Node newInstrumentationNode(NodeTraversal traversal, Node node) {

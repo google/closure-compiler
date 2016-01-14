@@ -1074,8 +1074,6 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param rValue The node of the enum.
      * @param name The enum's name
      * @param info The {@link JSDocInfo} attached to the enum definition.
-     * @param lValueNode The node where this function is being
-     *     assigned.
      */
     private EnumType createEnumTypeFromNodes(Node rValue, String name, JSDocInfo info) {
       Preconditions.checkNotNull(info);

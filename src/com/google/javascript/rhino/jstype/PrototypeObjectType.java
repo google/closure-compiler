@@ -122,7 +122,7 @@ public class PrototypeObjectType extends ObjectType {
    *        (a.k.a. {@code [[Prototype]]}) as defined by ECMA-262. If the
    *        implicit prototype is {@code null} the implicit prototype will be
    *        set to the {@link JSTypeNative#OBJECT_TYPE}.
-   * @param isAnonymous True if the class is intended to be anonymous.
+   * @param anonymousType True if the class is intended to be anonymous.
    */
   PrototypeObjectType(JSTypeRegistry registry, String className,
       ObjectType implicitPrototype, boolean anonymousType) {

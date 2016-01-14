@@ -198,8 +198,6 @@ class DisambiguateProperties implements CompilerPass {
 
     /**
      * Record that this property is referenced from this type.
-     * @return true if the type was recorded for this property, else false,
-     *     which would happen if the type was invalidating.
      */
     void addType(JSType type, JSType relatedType) {
       checkState(!skipRenaming, "Attempt to record skipped property: %s", name);

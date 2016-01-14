@@ -1497,7 +1497,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     return createFromTypeNodesInternal(n, sourceName, (StaticTypedScope<JSType>) scope);
   }
 
-  /** @see #createFromTypeNodes(Node, String, StaticTypedScope) */
   private JSType createFromTypeNodesInternal(Node n, String sourceName,
       StaticTypedScope<JSType> scope) {
     switch (n.getType()) {

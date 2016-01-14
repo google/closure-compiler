@@ -22,7 +22,6 @@ import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +54,7 @@ final class DefaultNameGenerator implements NameGenerator {
       this.occurrence = 0;
     }
 
+    // @Override removed for GWT compatibility
     public CharPriority clone() {
       CharPriority result = new CharPriority(name, order);
       result.occurrence = occurrence;
@@ -185,7 +185,7 @@ final class DefaultNameGenerator implements NameGenerator {
 
   /**
    * Increase the prioritization of all the chars in a String. This information
-   * is not used until {@link #reset()} is called. A compiler would be
+   * is not used until {@link #reset} is called. A compiler would be
    * able to generate names while changing the prioritization of the name
    * generator for the <b>next</b> pass.
    */
