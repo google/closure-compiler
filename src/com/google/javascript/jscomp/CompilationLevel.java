@@ -207,8 +207,6 @@ public enum CompilationLevel {
     // Global variables and properties names can't conflict.
     options.reserveRawExports = false;
     switch (this) {
-      case ADVANCED_OPTIMIZATIONS:
-        break;
       case SIMPLE_OPTIMIZATIONS:
         // Enable global variable optimizations (but not property optimizations)
         options.setVariableRenaming(VariableRenamingPolicy.ALL);
@@ -218,6 +216,7 @@ public enum CompilationLevel {
         options.setInlineVariables(Reach.ALL);
         options.setRemoveUnusedVariables(Reach.ALL);
         break;
+      case ADVANCED_OPTIMIZATIONS:
       case WHITESPACE_ONLY:
         break;
     }
