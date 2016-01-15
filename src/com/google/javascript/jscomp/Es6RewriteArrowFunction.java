@@ -27,6 +27,8 @@ import com.google.javascript.rhino.Token;
 public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallback
     implements HotSwapCompilerPass {
 
+  // TODO(tbreisacher): Move this to a separate pass as the warning is still valid when not
+  // transpiling.
   static final DiagnosticType THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT = DiagnosticType.warning(
       "JSC_THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT",
       "You have 'this' reference in an arrow function inside an object literal. "
