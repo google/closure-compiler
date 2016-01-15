@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-goog.module('$jscomp.set_test');
+goog.module('$jscomp_set_test');
 goog.setTestOnly();
 
 const jsunit = goog.require('goog.testing.jsunit');

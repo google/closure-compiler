@@ -21,7 +21,7 @@
 @return {!Object} */$jscomp.getGlobal = function(maybeGlobal) {
   return typeof window != "undefined" && window === maybeGlobal ? maybeGlobal : typeof global != "undefined" ? global : maybeGlobal;
 };
-/**@const */$jscomp.global = $jscomp.getGlobal(this);
+/**@const @type {!Object} */$jscomp.global = $jscomp.getGlobal(this);
 /**@suppress {reportUnknownTypes} */$jscomp.initSymbol = function() {
   if (!$jscomp.global.Symbol) {
     $jscomp.global.Symbol = $jscomp.Symbol;
@@ -103,7 +103,7 @@
   /**@override */childCtor.prototype.constructor = childCtor;
   for (var p in parentCtor) {
     if ($jscomp.global.Object.defineProperties) {
-      /**@const */var descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(parentCtor, p);
+      var descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(parentCtor, p);
       $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
     } else {
       childCtor[p] = parentCtor[p];
@@ -127,17 +127,17 @@
 };
 /**@private
 @return {boolean} */$jscomp.Map.checkBrowserConformance_ = function() {
-  /**@const */var Map = $jscomp.global["Map"];
+  /**@const @type {function(new:Map,...?)} */var Map = $jscomp.global["Map"];
   if (!Map || !Map.prototype.entries || !Object.seal) {
     return false;
   }
   try {
-    /**@const */var key = Object.seal({x:4});
+    /**@const @type {!Object} */var key = Object.seal({x:4});
     /**@const */var map = new Map($jscomp.makeIterator([[key, "s"]]));
     if (map.get(key) != "s" || map.size != 1 || map.get({x:4}) || map.set({x:4}, "t") != map || map.size != 2) {
       return false;
     }
-    /**@const */var iter = map.entries();
+    /**@const @type {!Iterator<!Array<?>>} */var iter = map.entries();
     var item = iter.next();
     if (item.done || item.value[0] != key || item.value[1] != "s") {
       return false;
@@ -199,10 +199,10 @@
 @param {KEY} key
 @return {boolean} */$jscomp.Map.prototype["delete"] = function(key) {
   var $jscomp$destructuring$var1 = this.maybeGetEntry_(key);
-  /**@const */var id = $jscomp$destructuring$var1.id;
-  /**@const */var list = $jscomp$destructuring$var1.list;
-  /**@const */var index = $jscomp$destructuring$var1.index;
-  /**@const */var entry = $jscomp$destructuring$var1.entry;
+  var id = $jscomp$destructuring$var1.id;
+  var list = $jscomp$destructuring$var1.list;
+  var index = $jscomp$destructuring$var1.index;
+  var entry = $jscomp$destructuring$var1.entry;
   if (entry) {
     list.splice(index, 1);
     if (!list.length) {
@@ -229,17 +229,16 @@
 /**
 @param {*} key
 @return {(VALUE|undefined)} */$jscomp.Map.prototype.get = function(key) {
-  /**@const */var entry = this.maybeGetEntry_(key).entry;
+  /**@const @type {(!$jscomp.Map.Entry_<KEY,VALUE>|undefined)} */var entry = this.maybeGetEntry_(key).entry;
   return entry && entry.value;
 };
 /**@private
 @param {KEY} key
 @return {{id:string,list:(!Array<!$jscomp.Map.Entry_<KEY,VALUE>>|undefined),index:number,entry:(!$jscomp.Map.Entry_<KEY,VALUE>|undefined)}} */$jscomp.Map.prototype.maybeGetEntry_ = function(key) {
-  /**@const */var id = $jscomp.Map.getId_(key);
-  /**@const */var list = this.data_[id];
+  /**@const @type {string} */var id = $jscomp.Map.getId_(key);
+  /**@const @type {!Array<!$jscomp.Map.Entry_<KEY,VALUE>>} */var list = this.data_[id];
   if (list) {
-    /**@const */var len = list.length;
-    for (var index = 0;index < len;index++) {
+    for (var index = 0;index < list.length;index++) {
       var entry = list[index];
       if (key !== key && entry.key !== entry.key || key === entry.key) {
         return {id:id, list:list, index:index, entry:entry};
@@ -279,7 +278,7 @@
 
 @param {function(!$jscomp.Map.Entry_<KEY,VALUE>):T} func
 @return {!Iterator<T>} */$jscomp.Map.prototype.iter_ = function(func) {
-  /**@const */var map = this;
+  /**@const @type {$jscomp.Map} */var map = this;
   var entry = this.head_;
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
@@ -328,7 +327,7 @@
     $jscomp.initSymbolIterator();
     $jscomp.Map.prototype[Symbol.iterator] = $jscomp.Map.prototype.entries;
     $jscomp.initSymbol();
-    /**@const @private */$jscomp.Map.key_ = Symbol("map-id-key");
+    /**@private */$jscomp.Map.key_ = Symbol("map-id-key");
   }
   $jscomp.Map$install = function() {
   };
@@ -379,16 +378,16 @@
 };
 /**@private
 @return {boolean} */$jscomp.Set.checkBrowserConformance_ = function() {
-  /**@const */var Set = $jscomp.global["Set"];
+  /**@const @type {function(new:Set,...?)} */var Set = $jscomp.global["Set"];
   if (!Set || !Set.prototype.entries || !Object.seal) {
     return false;
   }
-  /**@const */var value = Object.seal({x:4});
+  /**@const @type {!Object} */var value = Object.seal({x:4});
   /**@const */var set = new Set($jscomp.makeIterator([value]));
-  if (set.has(value) || set.size != 1 || set.set(value) != set || set.size != 1 || set.set({x:4}) != set || set.size != 2) {
+  if (set.has(value) || set.size != 1 || set.add(value) != set || set.size != 1 || set.add({x:4}) != set || set.size != 2) {
     return false;
   }
-  /**@const */var iter = set.entries();
+  /**@const @type {!Iterator<!Array<?>>} */var iter = set.entries();
   var item = iter.next();
   if (item.done || item.value[0] != value || item.value[1] != value) {
     return false;
@@ -406,8 +405,9 @@
   return this;
 };
 /**@suppress {checkTypes}
-@param {VALUE} value */$jscomp.Set.prototype["delete"] = function(value) {
-  /**@const */var result = this.map_["delete"](value);
+@param {VALUE} value
+@return {boolean} */$jscomp.Set.prototype["delete"] = function(value) {
+  /**@const @type {boolean} */var result = this.map_["delete"](value);
   this.size = this.map_.size;
   return result;
 };
@@ -432,9 +432,9 @@
 
 @param {function(this:THIS,VALUE,VALUE,!$jscomp.Set<VALUE>)} callback
 @param {THIS=} opt_thisArg */$jscomp.Set.prototype.forEach = function(callback, opt_thisArg) {
-  /**@const */var $jscomp$this = this;
+  var self = this;
   this.map_.forEach(function(value) {
-    return callback.call(opt_thisArg, value, value, $jscomp$this);
+    return callback.call(opt_thisArg, value, value, self);
   });
 };
 /**@define {boolean} */$jscomp.Set.ASSUME_NO_NATIVE = false;

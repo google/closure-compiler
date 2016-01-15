@@ -37,7 +37,7 @@ $jscomp.getGlobal = function(maybeGlobal) {
 /**
  * The global object. For browsers we could just use `this` but in Node that
  * doesn't work.
- * @const
+ * @const {!Object}
  */
 $jscomp.global = $jscomp.getGlobal(this);
 
@@ -209,7 +209,7 @@ $jscomp.inherits = function(childCtor, parentCtor) {
 
   for (let p in parentCtor) {
     if ($jscomp.global.Object.defineProperties) {
-      const descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(
+      let descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(
           parentCtor, p);
       $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
     } else {
