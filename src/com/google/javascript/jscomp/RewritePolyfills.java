@@ -300,6 +300,9 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    if (languageOutIsAtLeast(ES6) || !compiler.getOptions().rewritePolyfills) {
+      return; // no rewriting in this case.
+    }
     this.globals = new GlobalNamespace(compiler, externs, root);
     hotSwapScript(root, null);
   }
@@ -459,25 +462,25 @@ public class RewritePolyfills implements HotSwapCompilerPass {
         enclosingScript.addChildrenToFront(installer);
       }
     }
+  }
 
-    private boolean languageOutIsAtLeast(LanguageMode mode) {
-      return compiler.getOptions().getLanguageOut().compareTo(mode) >= 0;
-    }
+  private boolean languageOutIsAtLeast(LanguageMode mode) {
+    return compiler.getOptions().getLanguageOut().compareTo(mode) >= 0;
+  }
 
-    private boolean languageOutIsAtLeast(FeatureSet features) {
-      switch (features.version()) {
-        case "ts":
-          return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6_TYPED);
-        case "es6":
-        case "es6-impl": // TODO(sdh): support a separate language mode for es6-impl?
-          return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6);
-        case "es5":
-          return languageOutIsAtLeast(LanguageMode.ECMASCRIPT5);
-        case "es3":
-          return languageOutIsAtLeast(LanguageMode.ECMASCRIPT3);
-        default:
-          return false;
-      }
+  private boolean languageOutIsAtLeast(FeatureSet features) {
+    switch (features.version()) {
+      case "ts":
+        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6_TYPED);
+      case "es6":
+      case "es6-impl": // TODO(sdh): support a separate language mode for es6-impl?
+        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6);
+      case "es5":
+        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT5);
+      case "es3":
+        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT3);
+      default:
+        return false;
     }
   }
 

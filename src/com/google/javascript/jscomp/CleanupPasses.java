@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.DefaultPassConfig.HotSwapPassFactory;
 import com.google.javascript.jscomp.GlobalVarReferenceMap.GlobalVarRefCleanupPass;
+import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;

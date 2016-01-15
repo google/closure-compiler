@@ -50,6 +50,13 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   }
 
   @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.rewritePolyfills = true;
+    return options;
+  }
+
+  @Override
   protected int getNumRepetitions() {
     return 1;
   }

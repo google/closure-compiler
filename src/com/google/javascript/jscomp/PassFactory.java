@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.Node;
+
 /**
  * A factory for creating JSCompiler passes based on the Options
  * injected.  Contains all meta-data about compiler passes (like
@@ -56,7 +58,7 @@ public abstract class PassFactory {
   /**
    * Creates a new compiler pass to be run.
    */
-  abstract CompilerPass create(AbstractCompiler compiler);
+  protected abstract CompilerPass create(AbstractCompiler compiler);
 
   /**
    * Any factory whose CompilerPass has a corresponding hot-swap version should
@@ -64,10 +66,44 @@ public abstract class PassFactory {
    *
    * @param compiler The compiler that can has been used to do the full compile.
    */
-  HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
+  protected HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
     // TODO(bashir): If in future most of PassFactory's in DefaultPassConfig
     // turns out to be DefaultPassConfig.HotSwapPassFactory, we should probably
     // change the implementation here by the one in HotSwapPassFactory.
     return null;
+  }
+
+
+  /**
+   * Create a no-op pass that can only run once. Used to break up loops.
+   */
+  public static PassFactory createEmptyPass(String name) {
+    return new PassFactory(name, true) {
+      @Override
+      protected CompilerPass create(final AbstractCompiler compiler) {
+        return new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {}
+        };
+      }
+    };
+  }
+
+  /**
+   * A pass-factory that is good for {@code HotSwapCompilerPass} passes.
+   */
+  public abstract static class HotSwapPassFactory extends PassFactory {
+
+    HotSwapPassFactory(String name, boolean isOneTimePass) {
+      super(name, isOneTimePass);
+    }
+
+    @Override
+    protected abstract HotSwapCompilerPass create(AbstractCompiler compiler);
+
+    @Override
+    protected HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
+      return this.create(compiler);
+    }
   }
 }
