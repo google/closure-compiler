@@ -2402,7 +2402,7 @@ XMLHttpRequest.prototype.response;
  * Implemented as a draft spec in Firefox 4 as the way to get a requested array
  * buffer from an XMLHttpRequest.
  * @see https://developer.mozilla.org/En/Using_XMLHttpRequest#Receiving_binary_data_using_JavaScript_typed_arrays
- * 
+ *
  * This property is not used anymore and should be removed.
  * @see https://github.com/google/closure-compiler/pull/1389
  */
