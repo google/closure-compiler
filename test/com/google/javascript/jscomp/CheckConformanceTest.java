@@ -1443,6 +1443,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testSame(EXTERNS, code, null);
   }
 
+  public void testCustomBanNullDeref3() {
+    configuration =
+        config(rule("BanNullDeref"), "My rule message");
+
+
+    final String typedefExterns = LINE_JOINER.join(
+        EXTERNS,
+        "/** @const */ var ns = {};",
+        "/** @enum {number} */ ns.Type.State = {OPEN: 0};",
+        "/** @typedef {{a:string}} */ ns.Type;",
+        "");
+
+    final String code = "/** @return {void} n */ function f() { alert(ns.Type.State.OPEN); }";
+    testSame(typedefExterns, code, null);
+  }
+
   public void testRequireUseStrict0() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 

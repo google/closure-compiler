@@ -260,7 +260,7 @@ public final class ConformanceRules {
 
     protected boolean isKnown(Node n) {
       return !isUnknown(n)
-          && !isNoResolvedType(n)
+          && !isEmptyType(n)
           && !isTemplateType(n); // TODO(johnlenz): Remove this restriction
     }
 
@@ -284,9 +284,9 @@ public final class ConformanceRules {
       return type.isTemplateType();
     }
 
-    private boolean isNoResolvedType(Node n) {
+    private boolean isEmptyType(Node n) {
       JSType type = n.getJSType().restrictByNotNullOrUndefined();
-      return type.isNoResolvedType();
+      return type.isEmptyType();
     }
 
     protected JSType union(List<String> typeNames) {
@@ -1258,7 +1258,6 @@ public final class ConformanceRules {
         throws InvalidRequirementSpec {
       super(compiler, requirement);
       assertions = ImmutableList.copyOf(compiler.getCodingConvention().getAssertionFunctions());
-      List<String> whitelistedTypeNames = requirement.getValueList();
     }
 
     @Override
