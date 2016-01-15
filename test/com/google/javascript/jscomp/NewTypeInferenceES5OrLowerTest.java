@@ -4766,6 +4766,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "ns.prop = 1;",
         "function f() { var /** string */ s = ns.prop; }"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/**",
+        " * @constructor",
+        " * @param {number} x",
+        " */",
+        "ns.Foo = function (x) {};",
+        "function f() {",
+        "  return new ns.Foo('asdf');",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testNamespacesInExterns() {
@@ -14742,5 +14755,57 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var params = obj.getParams();",
         "  for (var p in params) {}",
         "}"));
+  }
+
+  public void testConstructorInitializedWithCall() {
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "var TestCase;"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var Foo = TestCase('asdf');",
+            "Foo.prototype.method = function() {",
+            "  /** @type {number} */",
+            "  this.prop = 123;",
+            "}",
+            "var /** string */ s = (new Foo).prop;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "var TestCase;"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var Foo = TestCase('asdf');",
+            "function f() { var /** !Foo */ obj = 123; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "var TestCase;"),
+        LINE_JOINER.join(
+            "/** @const */ var ns = {}",
+            "/** @constructor */",
+            "ns.Foo = TestCase('asdf');",
+            "ns.Foo.prototype.method = function() {",
+            "  /** @type {number} */",
+            "  this.prop = 123;",
+            "}",
+            "var /** string */ s = (new ns.Foo).prop;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "var TestCase;"),
+        LINE_JOINER.join(
+            "/** @const */ var ns = {}",
+            "/** @constructor */",
+            "ns.Foo = TestCase('asdf');",
+            "function f() { var /** !ns.Foo */ obj = 123; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }

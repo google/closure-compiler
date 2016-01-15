@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -35,7 +36,8 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class RawNominalType extends Namespace {
-  // The function node (if any) that defines the type
+  // The node (if any) that defines the type. Most times it's a function, in
+  // rare cases it's a call node.
   private final Node defSite;
   // If true, we can't add more properties to this type.
   private boolean isFinalized;
@@ -73,7 +75,9 @@ public final class RawNominalType extends Namespace {
       Node defSite, String name, ImmutableList<String> typeParameters,
       boolean isInterface, ObjectKind objectKind) {
     Preconditions.checkNotNull(objectKind);
-    Preconditions.checkState(defSite == null || defSite.isFunction());
+    Preconditions.checkState(defSite == null || defSite.isFunction()
+        || defSite.isCall(), "Expected function or call but found %s",
+        Token.name(defSite.getType()));
     if (typeParameters == null) {
       typeParameters = ImmutableList.of();
     }
