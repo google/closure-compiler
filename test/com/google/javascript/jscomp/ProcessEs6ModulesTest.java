@@ -68,11 +68,10 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     String fileName = test.getFilename() + ".js";
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
-    String fileoverview = "/** @fileoverview\n * @suppress {missingProvide|missingRequire}\n */";
     ImmutableList<SourceFile> expecteds =
         ImmutableList.of(
             SourceFile.fromCode("other.js", ""),
-            SourceFile.fromCode(fileName, fileoverview + expected));
+            SourceFile.fromCode(fileName, expected));
     test.test(inputs, expecteds);
   }
 
@@ -86,7 +85,8 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   void testModules(String input, String expected) {
-    testModules(this, input, expected);
+    testModules(this, input,
+        "/** @fileoverview\n * @suppress {missingProvide|missingRequire}\n */" + expected);
   }
 
   private static void testModules(CompilerTestCase test, String input, DiagnosticType error) {
