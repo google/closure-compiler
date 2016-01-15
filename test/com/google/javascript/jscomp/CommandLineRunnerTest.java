@@ -27,7 +27,9 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
+import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.Node;
@@ -1051,9 +1053,9 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
       zip1Contents.put("run.js", "console.log(\"Hello World\");");
-      String zipFile1 = createZipFile(zip1Contents);
+      FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
 
-      compileZipFiles("console.log(\"Hello World\");", zipFile1);
+      compileFiles("console.log(\"Hello World\");", zipFile1);
     } catch (FlagUsageException e) {
       fail("Unexpected exception" + e);
     }
@@ -1063,13 +1065,13 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
       zip1Contents.put("run.js", "console.log(\"Hello World\");");
-      String zipFile1 = createZipFile(zip1Contents);
+      FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
 
       LinkedHashMap<String, String> zip2Contents = new LinkedHashMap<>();
       zip2Contents.put("run.js", "window.alert(\"Hi Browser\");");
-      String zipFile2 = createZipFile(zip2Contents);
+      FlagEntry<JsSourceType> zipFile2 = createZipFile(zip2Contents);
 
-      compileZipFiles(
+      compileFiles(
           "console.log(\"Hello World\");window.alert(\"Hi Browser\");", zipFile1, zipFile2);
     } catch (FlagUsageException e) {
       fail("Unexpected exception" + e);
@@ -1082,10 +1084,30 @@ public final class CommandLineRunnerTest extends TestCase {
       zip1Contents.put("a.js", "console.log(\"File A\");");
       zip1Contents.put("b.js", "console.log(\"File B\");");
       zip1Contents.put("c.js", "console.log(\"File C\");");
-      String zipFile1 = createZipFile(zip1Contents);
+      FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
 
-      compileZipFiles(
+      compileFiles(
           "console.log(\"File A\");console.log(\"File B\");console.log(\"File C\");", zipFile1);
+    } catch (FlagUsageException e) {
+      fail("Unexpected exception" + e);
+    }
+  }
+
+  public void testInputMultipleFiles() throws IOException {
+    try {
+      LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
+      zip1Contents.put("run.js", "console.log(\"Hello World\");");
+      FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
+
+      FlagEntry<JsSourceType> jsFile1 = createJsFile("testjsfile", "var a;");
+
+      LinkedHashMap<String, String> zip2Contents = new LinkedHashMap<>();
+      zip2Contents.put("run.js", "window.alert(\"Hi Browser\");");
+      FlagEntry<JsSourceType> zipFile2 = createZipFile(zip2Contents);
+
+      compileFiles(
+          "console.log(\"Hello World\");var a;window.alert(\"Hi Browser\");",
+          zipFile1, jsFile1, zipFile2);
     } catch (FlagUsageException e) {
       fail("Unexpected exception" + e);
     }
@@ -1737,7 +1759,8 @@ public final class CommandLineRunnerTest extends TestCase {
         new PrintStream(errReader));
   }
 
-  private String createZipFile(Map<String, String> entryContentsByName) throws IOException {
+  private FlagEntry<JsSourceType> createZipFile(Map<String, String> entryContentsByName)
+      throws IOException {
     File tempZipFile = File.createTempFile("testdata", ".js.zip");
 
     try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(tempZipFile))) {
@@ -1747,18 +1770,27 @@ public final class CommandLineRunnerTest extends TestCase {
       }
     }
 
-    return tempZipFile.getAbsolutePath();
+    return new FlagEntry<>(JsSourceType.JS_ZIP, tempZipFile.getAbsolutePath());
+  }
+
+  private FlagEntry<JsSourceType> createJsFile(String filename, String fileContent)
+      throws IOException {
+    File tempJsFile = File.createTempFile(filename, ".js");
+    FileOutputStream fileOutputStream = new FileOutputStream(tempJsFile);
+    fileOutputStream.write(fileContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+    return new FlagEntry<>(JsSourceType.JS, tempJsFile.getAbsolutePath());
   }
 
   /**
    * Helper for compiling from a zip file and checking output string.
    * @param expectedOutput string representation of expected output.
-   * @param filenames filenames of zip containing source to compile.
+   * @param entries entries of flags for zip and js files containing source to compile.
    */
-  private void compileZipFiles(String expectedOutput, String... filenames)
+  private void compileFiles(String expectedOutput, FlagEntry<JsSourceType>... entries)
       throws FlagUsageException {
-    for (String filename : filenames) {
-      args.add("--jszip=" + filename);
+    for (FlagEntry<JsSourceType> entry : entries) {
+      args.add("--" + entry.flag.flagName + "=" + entry.value);
     }
 
     String[] argStrings = args.toArray(new String[] {});

@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
+import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.TextFormat;
@@ -121,23 +123,16 @@ public class CommandLineRunner extends
   // Allowable module name characters that aren't valid in a JS identifier
   private static final Pattern extraModuleNameChars = Pattern.compile("[-.]+");
 
-  private static class GuardLevel {
-    final String name;
-    final CheckLevel level;
-    GuardLevel(String name, CheckLevel level) {
-      this.name = name;
-      this.level = level;
-    }
-  }
-
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
   private static class Flags {
     // Some clients run a few copies of the compiler through CommandLineRunner
     // on parallel threads (thankfully, with the same flags),
-    // so the access to |guardLevels| should be at least synchronized.
-    private static List<GuardLevel> guardLevels =
-        Collections.synchronizedList(new ArrayList<CommandLineRunner.GuardLevel>());
+    // so the access to these lists should be synchronized.
+    private static List<FlagEntry<CheckLevel>> guardLevels =
+        Collections.synchronizedList(new ArrayList<FlagEntry<CheckLevel>>());
+    private static List<FlagEntry<JsSourceType>> mixedJsSources =
+        Collections.synchronizedList(new ArrayList<FlagEntry<JsSourceType>>());
 
     @Option(name = "--help",
         hidden = true,
@@ -186,6 +181,7 @@ public class CommandLineRunner extends
     private List<String> externs = new ArrayList<>();
 
     @Option(name = "--js",
+        handler = JsOptionHandler.class,
         usage = "The JavaScript filename. You may specify multiple. " +
             "The flag name is optional, because args are interpreted as files by default. " +
             "You may also use minimatch-style glob patterns. For example, use " +
@@ -195,6 +191,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--jszip",
         hidden = true,
+        handler = JsZipOptionHandler.class,
         usage = "The JavaScript zip filename. You may specify multiple.")
     private List<String> jszip = new ArrayList<>();
 
@@ -815,7 +812,8 @@ public class CommandLineRunner extends
       public WarningGuardErrorOptionHandler(
           CmdLineParser parser, OptionDef option,
           Setter<? super String> setter) {
-        super(parser, option, new WarningGuardSetter(setter, CheckLevel.ERROR));
+        super(parser, option,
+            new MultiFlagSetter<>(setter, CheckLevel.ERROR, guardLevels));
       }
     }
 
@@ -825,7 +823,7 @@ public class CommandLineRunner extends
           CmdLineParser parser, OptionDef option,
           Setter<? super String> setter) {
         super(parser, option,
-            new WarningGuardSetter(setter, CheckLevel.WARNING));
+            new MultiFlagSetter<>(setter, CheckLevel.WARNING, guardLevels));
       }
     }
 
@@ -834,18 +832,39 @@ public class CommandLineRunner extends
       public WarningGuardOffOptionHandler(
           CmdLineParser parser, OptionDef option,
           Setter<? super String> setter) {
-        super(parser, option, new WarningGuardSetter(setter, CheckLevel.OFF));
+        super(parser, option,
+            new MultiFlagSetter<>(setter, CheckLevel.OFF, guardLevels));
       }
     }
 
-    private static class WarningGuardSetter implements Setter<String> {
-      private final Setter<? super String> proxy;
-      private final CheckLevel level;
+    public static class JsOptionHandler extends StringOptionHandler {
+      public JsOptionHandler(
+          CmdLineParser parser, OptionDef option,
+          Setter<? super String> setter) {
+        super(parser, option,
+            new MultiFlagSetter<>(setter, JsSourceType.JS, mixedJsSources));
+      }
+    }
 
-      private WarningGuardSetter(
-          Setter<? super String> proxy, CheckLevel level) {
+    public static class JsZipOptionHandler extends StringOptionHandler {
+      public JsZipOptionHandler(
+          CmdLineParser parser, OptionDef option,
+          Setter<? super String> setter) {
+        super(parser, option,
+            new MultiFlagSetter<>(setter, JsSourceType.JS_ZIP, mixedJsSources));
+      }
+    }
+
+    private static class MultiFlagSetter<T> implements Setter<String> {
+      private final Setter<? super String> proxy;
+      private final T flag;
+      private final List<FlagEntry<T>> entries;
+
+      private MultiFlagSetter(
+          Setter<? super String> proxy, T flag, List<FlagEntry<T>> entries) {
         this.proxy = proxy;
-        this.level = level;
+        this.flag = flag;
+        this.entries = entries;
       }
 
       @Override public boolean isMultiValued() {
@@ -858,7 +877,7 @@ public class CommandLineRunner extends
 
       @Override public void addValue(String value) throws CmdLineException {
         proxy.addValue(value);
-        guardLevels.add(new GuardLevel(value, level));
+        entries.add(new FlagEntry<>(flag, value));
       }
 
       @Override public FieldSetter asFieldSetter() {
@@ -868,14 +887,6 @@ public class CommandLineRunner extends
       @Override public AnnotatedElement asAnnotatedElement() {
         return proxy.asAnnotatedElement();
       }
-    }
-
-    public static WarningGuardSpec getWarningGuardSpec() {
-      WarningGuardSpec spec = new WarningGuardSpec();
-      for (GuardLevel guardLevel : guardLevels) {
-        spec.add(guardLevel.level, guardLevel.name);
-      }
-      return spec;
     }
   }
 
@@ -1036,10 +1047,13 @@ public class CommandLineRunner extends
 
     // Command-line warning levels should override flag file settings,
     // which means they should go last.
-    List<GuardLevel> previous = new ArrayList<>(Flags.guardLevels);
+    List<FlagEntry<CheckLevel>> previousGuardLevels = new ArrayList<>(Flags.guardLevels);
+    List<FlagEntry<JsSourceType>> previousMixedJsSources = new ArrayList<>(Flags.mixedJsSources);
     Flags.guardLevels.clear();
+    Flags.mixedJsSources.clear();
     flags.parse(tokens);
-    Flags.guardLevels.addAll(previous);
+    Flags.guardLevels.addAll(previousGuardLevels);
+    Flags.mixedJsSources.addAll(previousMixedJsSources);
 
     // Currently we are not supporting this (prevent direct/indirect loops)
     if (!flags.flagFile.isEmpty()) {
@@ -1054,6 +1068,7 @@ public class CommandLineRunner extends
     List<String> processedArgs = processArgs(args);
 
     Flags.guardLevels.clear();
+    Flags.mixedJsSources.clear();
 
     List<String> jsFiles = null;
     List<LocationMapping> mappings = null;
@@ -1140,6 +1155,7 @@ public class CommandLineRunner extends
           .setExterns(flags.externs)
           .setJs(jsFiles)
           .setJsZip(flags.jszip)
+          .setMixedJsSources(Flags.mixedJsSources)
           .setJsOutputFile(flags.jsOutputFile)
           .setModule(flags.module)
           .setVariableMapOutputFile(flags.variableMapOutputFile)
@@ -1154,7 +1170,7 @@ public class CommandLineRunner extends
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
           .setSourceMapInputFiles(sourceMapInputs)
-          .setWarningGuardSpec(Flags.getWarningGuardSpec())
+          .setWarningGuards(Flags.guardLevels)
           .setDefine(flags.define)
           .setCharset(flags.charset)
           .setManageClosureDependencies(flags.manageClosureDependencies)

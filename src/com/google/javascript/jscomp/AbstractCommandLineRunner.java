@@ -323,18 +323,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 
     if (config.warningGuards != null) {
-      for (WarningGuardSpec.Entry entry : config.warningGuards.entries) {
-        if ("*".equals(entry.groupName)) {
+      for (FlagEntry<CheckLevel> entry : config.warningGuards) {
+        if ("*".equals(entry.value)) {
           Set<String> groupNames =
               diagnosticGroups.getRegisteredGroups().keySet();
           for (String groupName : groupNames) {
             if (!DiagnosticGroups.wildcardExcludedGroups.contains(groupName)) {
-              diagnosticGroups.setWarningLevel(options, groupName, entry.level);
+              diagnosticGroups.setWarningLevel(options, groupName, entry.flag);
             }
           }
         } else {
-          diagnosticGroups.setWarningLevel(options, entry.groupName,
-              entry.level);
+          diagnosticGroups.setWarningLevel(options, entry.value, entry.flag);
         }
       }
     }
@@ -608,14 +607,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * Can be overridden by subclasses who want to pull files from different
    * places.
    *
-   * @param files A list of filenames
+   * @param files A list of flag entries indicates js and zip file names.
    * @param allowStdIn Whether '-' is allowed appear as a filename to represent
    *        stdin. If true, '-' is only allowed to appear once.
    * @return An array of inputs
    */
-  protected List<SourceFile> createInputs(List<String> files,
+  protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
       boolean allowStdIn) throws FlagUsageException, IOException {
-    return createInputs(files, new ArrayList<String>() /* zips */, allowStdIn);
+    return createInputs(files, null /* jsonFiles */, allowStdIn);
   }
 
   /**
@@ -624,30 +623,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * Can be overridden by subclasses who want to pull files from different
    * places.
    *
-   * @param files A list of filenames.
+   * @param files A list of flag entries indicates js and zip file names.
    * @param jsonFiles A list of json encoded files.
    * @return An array of inputs
    */
-  protected List<SourceFile> createInputs(List<String> files,
+  protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles) throws FlagUsageException, IOException {
-    return createInputs(files, new ArrayList<String>() /* zips */, jsonFiles, false);
-  }
-
-  /**
-   * Creates inputs from a list of source files and zips.
-   *
-   * Can be overridden by subclasses who want to pull files from different
-   * places.
-   *
-   * @param files A list of filenames.
-   * @param zips A list of zip filenames.
-   * @param allowStdIn Whether '-' is allowed appear as a filename to represent
-   *        stdin. If true, '-' is only allowed to appear once.
-   * @return An array of inputs
-   */
-  protected List<SourceFile> createInputs(List<String> files,
-      List<String> zips, boolean allowStdIn) throws FlagUsageException, IOException {
-    return createInputs(files, zips, null, allowStdIn);
+    return createInputs(files, jsonFiles, false);
   }
 
   /**
@@ -656,20 +638,25 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * Can be overridden by subclasses who want to pull files from different
    * places.
    *
-   * @param files A list of filenames.
-   * @param zips A list of zip filenames.
+   * @param files A list of flag entries indicates js and zip file names
    * @param jsonFiles A list of json encoded files.
    * @param allowStdIn Whether '-' is allowed appear as a filename to represent
    *        stdin. If true, '-' is only allowed to appear once.
    * @return An array of inputs
    */
-  protected List<SourceFile> createInputs(List<String> files,
-      List<String> zips, List<JsonFileSpec> jsonFiles, boolean allowStdIn)
+  protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
+      List<JsonFileSpec> jsonFiles, boolean allowStdIn)
       throws FlagUsageException, IOException {
     List<SourceFile> inputs = new ArrayList<>(files.size());
     boolean usingStdin = false;
-    for (String filename : files) {
-      if (!"-".equals(filename)) {
+    for (FlagEntry<JsSourceType> file : files) {
+      String filename = file.value;
+      if (file.flag == JsSourceType.JS_ZIP) {
+        if (!"-".equals(filename)) {
+          List<SourceFile> newFiles = SourceFile.fromZipFile(filename, inputCharset);
+          inputs.addAll(newFiles);
+        }
+      } else if (!"-".equals(filename)) {
         SourceFile newFile = SourceFile.fromFile(filename, inputCharset);
         inputs.add(newFile);
       } else {
@@ -694,12 +681,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         usingStdin = true;
       }
     }
-    for (String zipName : zips) {
-      if (!"-".equals(zipName)) {
-        List<SourceFile> newFiles = SourceFile.fromZipFile(zipName, inputCharset);
-        inputs.addAll(newFiles);
-      }
-    }
     if (jsonFiles != null) {
       for (JsonFileSpec jsonFile : jsonFiles) {
         inputs.add(SourceFile.fromCode(jsonFile.getPath(), jsonFile.getSrc()));
@@ -711,22 +692,24 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Creates JS source code inputs from a list of files.
    */
-  private List<SourceFile> createSourceInputs(List<String> files, List<String> zips,
+  private List<SourceFile> createSourceInputs(
+      List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles)
       throws FlagUsageException, IOException {
     if (isInTestMode()) {
       return inputsSupplierForTesting != null ? inputsSupplierForTesting.get()
           : null;
     }
-    if (files.isEmpty() && zips.isEmpty() && jsonFiles == null) {
+    if (files.isEmpty() && jsonFiles == null) {
       // Request to read from stdin.
-      files = Collections.singletonList("-");
+      files = Collections.singletonList(
+          new FlagEntry<JsSourceType>(JsSourceType.JS, "-"));
     }
     try {
       if (jsonFiles != null) {
         return createInputs(files, jsonFiles);
       } else {
-        return createInputs(files, zips, true);
+        return createInputs(files, true);
       }
     } catch (FlagUsageException e) {
       throw new FlagUsageException("Bad --js flag. " + e.getMessage());
@@ -741,8 +724,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (files.isEmpty()) {
       return ImmutableList.of(SourceFile.fromCode("/dev/null", ""));
     }
+    List<FlagEntry<JsSourceType>> externFiles = new ArrayList<>();
+    for (String file : files) {
+      externFiles.add(new FlagEntry<JsSourceType>(JsSourceType.EXTERN, file));
+    }
     try {
-      return createInputs(files, false);
+      return createInputs(externFiles, false);
     } catch (FlagUsageException e) {
       throw new FlagUsageException("Bad --externs flag. " + e.getMessage());
     }
@@ -1060,7 +1047,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       outputFileNames.add(config.jsOutputFile);
     }
 
-    List<String> jsFiles = config.js;
     List<String> moduleSpecs = config.module;
     List<JsonFileSpec> jsonFiles = null;
 
@@ -1094,7 +1080,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       createCommonJsModules = true;
       moduleSpecs.remove(0);
     }
-    List<SourceFile> inputs = createSourceInputs(jsFiles, config.jsZip, jsonFiles);
+
+    List<SourceFile> inputs =
+        createSourceInputs(config.mixedJsSources, jsonFiles);
     if (!moduleSpecs.isEmpty()) {
       modules = createJsModules(moduleSpecs, inputs);
       for (JSModule m : modules) {
@@ -2028,6 +2016,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    private final List<FlagEntry<JsSourceType>> mixedJsSources =
+        new ArrayList<>();
+
+    /**
+     * The JavaScript source file names, including .js and .zip files. You may
+     * specify multiple.
+     */
+    CommandLineConfig setMixedJsSources(
+        List<FlagEntry<JsSourceType>> mixedJsSources) {
+      this.mixedJsSources.clear();
+      this.mixedJsSources.addAll(mixedJsSources);
+      return this;
+    }
+
     private String jsOutputFile = "";
 
     /**
@@ -2228,13 +2230,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private WarningGuardSpec warningGuards = null;
+    private ArrayList<FlagEntry<CheckLevel>> warningGuards = new ArrayList<>();
 
     /**
      * Add warning guards.
      */
-    CommandLineConfig setWarningGuardSpec(WarningGuardSpec spec) {
-      this.warningGuards = spec;
+    CommandLineConfig setWarningGuards(List<FlagEntry<CheckLevel>> warningGuards) {
+      this.warningGuards.clear();
+      this.warningGuards.addAll(warningGuards);
       return this;
     }
 
@@ -2489,33 +2492,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * A little helper class to make it easier to collect warning types
-   * from --jscomp_error, --jscomp_warning, and --jscomp_off.
-   */
-  protected static class WarningGuardSpec {
-    private static class Entry {
-      private final CheckLevel level;
-      private final String groupName;
-
-      private Entry(CheckLevel level, String groupName) {
-        this.level = level;
-        this.groupName = groupName;
-      }
-    }
-
-    // The entries, in the order that they were added.
-    private final List<Entry> entries = new ArrayList<>();
-
-    protected void add(CheckLevel level, String groupName) {
-      entries.add(new Entry(level, groupName));
-    }
-
-    protected void clear() {
-      entries.clear();
-    }
-  }
-
-  /**
    * Representation of a source file from an encoded json stream input
    */
   private class JsonFileSpec {
@@ -2545,6 +2521,37 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     public void setSourceMap(String map) {
       this.source_map = map;
+    }
+  }
+
+  /**
+   * Flag types for js source files.
+   */
+  protected enum JsSourceType {
+    EXTERN("extern"),
+    JS("js"),
+    JS_ZIP("jszip");
+
+    @VisibleForTesting
+    final String flagName;
+
+    private JsSourceType(String flagName) {
+      this.flagName = flagName;
+    }
+  }
+
+  /**
+   * A pair from flag to its value.
+   */
+  protected static class FlagEntry<T> {
+    @VisibleForTesting
+    final T flag;
+    @VisibleForTesting
+    final String value;
+
+    protected FlagEntry(T flag, String value) {
+      this.flag = flag;
+      this.value = value;
     }
   }
 }
