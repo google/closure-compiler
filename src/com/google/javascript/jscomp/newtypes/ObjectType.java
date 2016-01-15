@@ -89,10 +89,30 @@ final class ObjectType implements TypeWithProperties {
           "Cannot create Function instance without a FunctionType");
     }
     this.nominalType = nominalType;
-    this.props = props;
+    this.props = isLoose ? loosenProps(props) : props;
     this.fn = fn;
     this.isLoose = isLoose;
-    this.objectKind = objectKind;
+    // Don't track @struct-ness/@dict-ness for loose objects
+    this.objectKind = isLoose ? ObjectKind.UNRESTRICTED : objectKind;
+  }
+
+  // Loose object types may have properties that are also loose objects, eg,
+  //   function f(obj) { obj.a.b.c = 123; }
+  // This function makes sure we mark these object properties as loose.
+  private static PersistentMap<String, Property> loosenProps(
+      PersistentMap<String, Property> props) {
+    PersistentMap<String, Property> newProps = props;
+    for (Map.Entry<String, Property> entry : props.entrySet()) {
+      JSType propType = entry.getValue().getType();
+      ObjectType objType = propType.getObjTypeIfSingletonObj();
+      if (objType != null
+          && !objType.getNominalType().isClassy() && !objType.isLoose()) {
+        newProps = newProps.with(
+            entry.getKey(),
+            Property.make(propType.withLoose(), null));
+      }
+    }
+    return newProps;
   }
 
   static ObjectType makeObjectType(NominalType nominalType,
@@ -154,10 +174,6 @@ final class ObjectType implements TypeWithProperties {
 
   boolean isLoose() {
     return isLoose;
-  }
-
-  boolean isLooseStruct() {
-    return isLoose && objectKind.isStruct();
   }
 
   boolean isDict() {
@@ -559,9 +575,6 @@ final class ObjectType implements TypeWithProperties {
     }
 
     if (!isLoose) {
-      if (!objectKind.isSubtypeOf(other.objectKind)) {
-        return false;
-      }
       for (String pname : other.props.keySet()) {
         QualifiedName qname = new QualifiedName(pname);
         if (!mayHaveProp(qname) ||
@@ -595,7 +608,6 @@ final class ObjectType implements TypeWithProperties {
     }
     NominalType resultNomType =
         NominalType.pickSubclass(this.nominalType, other.nominalType);
-    ObjectKind ok = ObjectKind.meet(this.objectKind, other.objectKind);
     if (resultNomType != null && resultNomType.isClassy()) {
       Preconditions.checkState(this.fn == null && other.fn == null);
       PersistentMap<String, Property> newProps =
@@ -603,7 +615,7 @@ final class ObjectType implements TypeWithProperties {
       if (newProps == BOTTOM_MAP) {
         return BOTTOM_OBJECT;
       }
-      return new ObjectType(resultNomType, newProps, null, false, ok);
+      return new ObjectType(resultNomType, newProps, null, false, this.objectKind);
     }
     FunctionType thisFn = this.fn;
     boolean isLoose = this.isLoose;
@@ -620,7 +632,7 @@ final class ObjectType implements TypeWithProperties {
     if (!FunctionType.isInhabitable(newFn)) {
       return BOTTOM_OBJECT;
     }
-    return new ObjectType(resultNomType, newProps, newFn, isLoose, ok);
+    return new ObjectType(resultNomType, newProps, newFn, isLoose, this.objectKind);
   }
 
   static ObjectType meet(ObjectType obj1, ObjectType obj2) {
@@ -846,6 +858,7 @@ final class ObjectType implements TypeWithProperties {
    * @return The unified type, or null if unification fails
    */
   static ObjectType unifyUnknowns(ObjectType t1, ObjectType t2) {
+    Preconditions.checkState(!t1.isLoose() && !t2.isLoose());
     NominalType nt1 = t1.nominalType;
     NominalType nt2 = t2.nominalType;
     NominalType nt;
@@ -880,8 +893,7 @@ final class ObjectType implements TypeWithProperties {
       newProps = newProps.with(propName, p);
     }
     return makeObjectType(nt, newProps, newFn,
-        t1.isLoose || t2.isLoose,
-        ObjectKind.join(t1.objectKind, t2.objectKind));
+        false, ObjectKind.join(t1.objectKind, t2.objectKind));
   }
 
   /**

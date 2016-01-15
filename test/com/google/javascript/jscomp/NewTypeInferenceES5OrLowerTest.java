@@ -9187,20 +9187,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
-  public void testInferStructDictFormal() {
+  public void testDontInferStructDictFormal() {
     typeCheck(LINE_JOINER.join(
         "function f(obj) {",
         "  return obj.prop;",
         "}",
-        "f(/** @dict */ { 'prop': 123 });"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "f(/** @dict */ { 'prop': 123 });"));
 
     typeCheck(LINE_JOINER.join(
         "function f(obj) {",
         "  return obj['prop'];",
         "}",
-        "f(/** @struct */ { prop: 123 });"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "f(/** @struct */ { prop: 123 });"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor @struct */",
@@ -9208,7 +9206,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(obj) { obj['prop']; return obj; }",
         "var /** !Foo */ x = f({ prop: 123 });"));
 
-    // We infer unrestricted loose obj for mixed . and [] access
     typeCheck(LINE_JOINER.join(
         "function f(obj) {",
         "  if (obj['p1']) {",
@@ -9859,12 +9856,10 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(LINE_JOINER.join(
-        "/** @constructor */ function RegExp(){}",
         "/** @const */",
         "var r = /find/;"));
 
     typeCheck(LINE_JOINER.join(
-        "/** @constructor */ function RegExp(){}",
         "/** @const */",
         "var r = /find/;",
         "function g() { r - 5; }"),
@@ -14696,5 +14691,56 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}",
         "function g(/** string */ s) {}",
         "f('asdf', g);"));
+  }
+
+  public void testAvoidInstantiatingWithLooseTypes() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */ this.prop = 123;",
+        "}",
+        "function f(x) {",
+        "  x.prop = 234;",
+        "  return x;",
+        "}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " * @return {T}",
+        " */",
+        "function g(x, y) { return x; }",
+        "var /** !Foo */ obj = g(new Foo, f(new Foo));"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */ this.prop = 123;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  /** @type {number} */ this.prop = 456;",
+        "}",
+        "function f(x) {",
+        "  x.prop = 234;",
+        "  return x;",
+        "}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " * @return {T}",
+        " */",
+        "function g(x, y) { return x; }",
+        "var /** !Bar */ obj = g(new Foo, f(new Foo));"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testDontCrashOnBottomRettypeFromLooseFun() {
+    typeCheck(LINE_JOINER.join(
+        "function f(obj) {",
+        "  var params = obj.getParams();",
+        "  for (var p in params) {}",
+        "}"));
   }
 }

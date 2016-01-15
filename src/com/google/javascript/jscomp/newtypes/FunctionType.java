@@ -737,12 +737,11 @@ public final class FunctionType {
     int minRequiredArity =
         Math.min(this.requiredFormals.size(), f2.requiredFormals.size());
     for (int i = 0; i < minRequiredArity; i++) {
-      if (JSType.meet(this.getFormalType(i), f2.getFormalType(i)).isBottom()) {
+      if (!JSType.haveCommonSubtype(this.getFormalType(i), f2.getFormalType(i))) {
         return false;
       }
     }
-    return this.getReturnType().isBottom() || f2.getReturnType().isBottom()
-        || !JSType.meet(this.getReturnType(), f2.getReturnType()).isBottom();
+    return JSType.haveCommonSubtype(this.getReturnType(), f2.getReturnType());
   }
 
   public boolean isGeneric() {
@@ -833,6 +832,7 @@ public final class FunctionType {
     if (f1 == null || f2 == null) {
       return null;
     }
+    Preconditions.checkState(!f1.isLoose() && !f2.isLoose());
     Preconditions.checkArgument(f1.typeParameters.isEmpty());
     Preconditions.checkArgument(f2.typeParameters.isEmpty());
     Preconditions.checkArgument(f1.outerVarPreconditions.isEmpty());

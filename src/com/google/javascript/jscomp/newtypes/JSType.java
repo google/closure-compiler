@@ -384,19 +384,6 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  public boolean isLooseStruct() {
-    boolean foundLooseStruct = false;
-    boolean foundNonLooseStruct = false;
-    for (ObjectType objType : getObjs()) {
-      if (objType.isLooseStruct()) {
-        foundLooseStruct = true;
-      } else if (objType.isStruct()) {
-        foundNonLooseStruct = true;
-      }
-    }
-    return foundLooseStruct && !foundNonLooseStruct;
-  }
-
   public boolean isLoose() {
     ImmutableSet<ObjectType> objs = getObjs();
     return objs.size() == 1 && Iterables.getOnlyElement(objs).isLoose();
@@ -572,6 +559,16 @@ public abstract class JSType implements TypeI {
       if (type == null) {
         break;
       }
+      // The only way to instantiate with a loose type is if there are no
+      // concrete types available. We may miss some warnings this way but we
+      // also avoid false positives.
+      if (type.isLoose()) {
+        type = null;
+        break;
+      } else if (other.isLoose()) {
+        typesToRemove.add(other);
+        continue;
+      }
       JSType unified = unifyUnknowns(type, other);
       if (unified != null) {
         // Can't remove elms while iterating over the collection, so do it later
@@ -606,9 +603,9 @@ public abstract class JSType implements TypeI {
   static JSType unifyUnknowns(JSType t1, JSType t2) {
     Preconditions.checkNotNull(t1);
     Preconditions.checkNotNull(t2);
-    if (t1.isUnknown()) {
+    if (t1.isUnknown() || t1.isLoose()) {
       return t2;
-    } else if (t2.isUnknown()) {
+    } else if (t2.isUnknown() || t2.isLoose()) {
       return t1;
     } else if (t1.isTop() && t2.isTop()) {
       return TOP;

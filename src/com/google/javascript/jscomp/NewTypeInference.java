@@ -2666,13 +2666,12 @@ final class NewTypeInference implements CompilerPass {
   private boolean mayWarnAboutPropCreation(
       QualifiedName pname, Node getProp, JSType recvType) {
     Preconditions.checkArgument(getProp.isGetProp());
-    // Inferred formals used as objects have a loose type.
-    // For these, we don't warn about property creation.
-    // Consider: function f(obj) { obj.prop = 123; }
-    // We want f to be able to take objects without prop, so we don't want to
-    // require that obj be a struct that already has prop.
-    if (recvType.mayBeStruct() && !recvType.isLooseStruct() &&
-        !recvType.hasProp(pname)) {
+    // For inferred formals used as objects, we don't warn about property
+    // creation. Consider:
+    //   function f(obj) { obj.prop = 123; }
+    // f should accept objects without prop, so we don't require that obj
+    // already have prop.
+    if (recvType.mayBeStruct() && !recvType.hasProp(pname)) {
       warnings.add(JSError.make(getProp, ILLEGAL_PROPERTY_CREATION));
       return true;
     }
@@ -2912,9 +2911,10 @@ final class NewTypeInference implements CompilerPass {
     // Unsound if the arguments and callee have interacting side effects
     EnvTypePair calleePair = analyzeExprFwd(
         callee, tmpEnv, commonTypes.topFunction(), looseFunctionType);
+    JSType retType = calleeType.getReturnType();
     return new EnvTypePair(calleePair.env,
-        calleeType.getReturnType().isNonLooseSubtypeOf(requiredType)
-        ? calleeType.getReturnType()
+        !retType.isBottom() && retType.isNonLooseSubtypeOf(requiredType)
+        ? retType
         : requiredType);
   }
 
@@ -3893,10 +3893,6 @@ final class NewTypeInference implements CompilerPass {
   private static JSType pickReqObjType(Node expr) {
     int exprKind = expr.getType();
     switch (exprKind) {
-      case Token.GETPROP:
-        return JSType.TOP_STRUCT;
-      case Token.GETELEM:
-        return JSType.TOP_DICT;
       case Token.OBJECTLIT: {
         JSDocInfo jsdoc = expr.getJSDocInfo();
         if (jsdoc != null && jsdoc.makesStructs()) {
@@ -3910,6 +3906,8 @@ final class NewTypeInference implements CompilerPass {
       case Token.FOR:
         Preconditions.checkState(NodeUtil.isForIn(expr));
         return JSType.TOP_OBJECT;
+      case Token.GETPROP:
+      case Token.GETELEM:
       case Token.IN:
         return JSType.TOP_OBJECT;
       default:
