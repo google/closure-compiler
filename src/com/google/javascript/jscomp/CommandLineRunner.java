@@ -64,6 +64,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -427,6 +428,18 @@ public class CommandLineRunner extends
       usage = "Path prefix to be removed from CommonJS module names."
     )
     private List<String> commonJsPathPrefix = new ArrayList<>();
+
+    @Option(
+      name = "--relocate_common_js_module",
+      hidden = true,
+      usage = "Mapping for required CommonJS modules. You may specify " +
+          "multiple. This allows the compiler to map the path of the " +
+          "required module to the given mapping and to load the mapped " +
+          "module instead of the original module, e.g. " +
+          "--relocate_common_js_module=./lib/1.0.0/module.js=" +
+          "./lib/2.0.0/module.js"
+    )
+    private Map<String, String> comonJSModuleRelocations = new HashMap<>();
 
     @Option(
       name = "--js_module_root",
@@ -1100,6 +1113,10 @@ public class CommandLineRunner extends
           ImmutableList.of(ES6ModuleLoader.toModuleName(URI.create(flags.commonJsEntryModule)));
     }
 
+    if (!flags.processCommonJsModules && flags.comonJSModuleRelocations.size() != 0) {
+      reportError("Error - --relocate_common_js_module must be used together with --process_common_js_modules");
+    }
+
     if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
       flags.outputWrapper = "";
       try {
@@ -1189,7 +1206,8 @@ public class CommandLineRunner extends
           .setTracerMode(flags.tracerMode)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
           .setNewTypeInference(flags.useNewTypeInference)
-          .setJsonStreamMode(flags.jsonStreamMode);
+          .setJsonStreamMode(flags.jsonStreamMode)
+          .setRelocateCommonJSModule(flags.comonJSModuleRelocations);
     }
     errorStream = null;
   }

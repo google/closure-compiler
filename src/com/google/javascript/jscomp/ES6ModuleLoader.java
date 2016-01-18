@@ -20,8 +20,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -33,7 +36,7 @@ import java.util.regex.Pattern;
  */
 public final class ES6ModuleLoader {
   /** According to the spec, the forward slash should be the delimiter on all platforms. */
-  static final String MODULE_SLASH = "/";
+  static final char MODULE_SLASH = '/';
   /** The default module root, the current directory. */
   public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
 
@@ -45,14 +48,22 @@ public final class ES6ModuleLoader {
   private final List<URI> moduleRootUris;
   /** The set of all known input module URIs (including trailing .js), after normalization. */
   private final Set<URI> moduleUris;
+  /**
+   * Contains a mapping of module paths. If such a module is required, the
+   * mapped file path is used.
+   */
+  private Map<URI, URI> commonJSModuleRelocations;
 
   /**
    * Creates an instance of the module loader which can be used to locate ES6 and CommonJS modules.
    *
    * @param moduleRoots The root directories to locate modules in.
    * @param inputs All inputs to the compilation process.
+   * @param commonJSModuleRelocations All CommonJS module mappings to be use
+   *        to locate required CommonJS modules.
    */
-  public ES6ModuleLoader(List<String> moduleRoots, Iterable<CompilerInput> inputs) {
+  public ES6ModuleLoader(List<String> moduleRoots, Iterable<CompilerInput> inputs,
+	      Map<String, String> commonJSModuleRelocations) {
     this.moduleRootUris =
         Lists.transform(
             moduleRoots,
@@ -70,6 +81,19 @@ public final class ES6ModuleLoader {
             "Duplicate module URI after resolving: " + input.getName());
       }
     }
+
+    this.commonJSModuleRelocations = new HashMap<>();
+    if (commonJSModuleRelocations != null) {
+      for(Entry<String, String> mapping : commonJSModuleRelocations.entrySet()) {
+        // Normalize the original module name and normalize the mapped module
+        // name. The user must specify the path to both module names based on
+        // CWD, here we rebase it on the actual file which requires this
+        // module.
+        this.commonJSModuleRelocations.put(
+                normalizeAddress(createUri(mapping.getKey())),
+                normalizeAddress(createUri(mapping.getValue())));
+      }
+    }
   }
 
   /**
@@ -77,17 +101,67 @@ public final class ES6ModuleLoader {
    * @return The normalized module URI, or {@code null} if not found.
    */
   URI locateCommonJsModule(String requireName, CompilerInput context) {
+	URI loadAddress = null;
+    for (String possibleLoadUri : getAllModuleNamePossibilities(requireName)) {
+      String resolvedPossibleLoadUri =
+              resolveModuleName(possibleLoadUri, context).toString();
+      String mappedLoadUri =
+              relocateCommonJSModule(resolvedPossibleLoadUri, context);
+      if (resolvedPossibleLoadUri.equals(mappedLoadUri)) {
+        loadAddress = isModuleUri(mappedLoadUri);
+        if (loadAddress != null) {
+          return loadAddress;
+        }
+      } else {
+        for (String mappedUri : getAllModuleNamePossibilities(mappedLoadUri)) {
+          loadAddress = isModuleUri(mappedUri);
+          if (loadAddress != null) {
+            return loadAddress;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  private String relocateCommonJSModule(String loadUri, CompilerInput referrer) {
+    if (loadUri == null || loadUri.length() == 0) {
+      return loadUri;
+    }
+    for (URI key : this.commonJSModuleRelocations.keySet()) {
+      String keyUri = key.toString();
+      // Replace the entire module path by the mapped value.
+      if (loadUri.equals(keyUri)) {
+        return this.commonJSModuleRelocations.get(key).toString();
+      }
+      // Prefix the entire module path by the mapped value.
+      if (keyUri.isEmpty()) {
+        return URI.create(this.commonJSModuleRelocations.get(key).toString() +
+                MODULE_SLASH + loadUri).normalize().toString();
+      }
+      // Replace the matched part of the original URI (only if it was a valid
+      // directory path and stopped at a separator) by the mapped value.
+      if (loadUri.startsWith(keyUri) &&
+              (loadUri.charAt(keyUri.length() - 1) == MODULE_SLASH &&
+               keyUri.endsWith(String.valueOf(MODULE_SLASH))) ||
+              (loadUri.length() > keyUri.length() &&
+               loadUri.charAt(keyUri.length()) == MODULE_SLASH &&
+               !keyUri.endsWith(String.valueOf(MODULE_SLASH)))) {
+        String prefix = this.commonJSModuleRelocations.get(key).toString();
+        String postfix = loadUri.substring(keyUri.length());
+        return URI.create(prefix + MODULE_SLASH + postfix)
+                .normalize().toString();
+      }
+    }
+    return loadUri;
+  }
+
+  private String[] getAllModuleNamePossibilities(String requireName) {
     // * the immediate name require'd
-    URI loadAddress = locate(requireName, context);
-    if (loadAddress == null) {
-      // * the require'd name + /index.js
-      loadAddress = locate(requireName + MODULE_SLASH + "index.js", context);
-    }
-    if (loadAddress == null) {
-      // * the require'd name with a potential trailing ".js"
-      loadAddress = locate(requireName + ".js", context);
-    }
-    return loadAddress; // could be null.
+    // * the require'd name + /index.js
+    // * the require'd name with a potential trailing ".js"
+    return new String[]{requireName, requireName + MODULE_SLASH + "index.js",
+            requireName + ".js"};
   }
 
   /**
@@ -98,15 +172,28 @@ public final class ES6ModuleLoader {
     return locate(moduleName + ".js", context);
   }
 
-  private URI locate(String name, CompilerInput referrer) {
-    URI uri = createUri(name);
-    if (isRelativeIdentifier(name)) {
+  private URI resolveModuleName (String uri, CompilerInput referrer) {
+    URI result = createUri(uri);
+    if (isRelativeIdentifier(uri)) {
       URI referrerUri = normalizeInputAddress(referrer);
-      uri = referrerUri.resolve(uri);
+      result = referrerUri.resolve(uri);
     }
+	return result;
+  }
+
+  private URI locate(String name, CompilerInput referrer) {
+    URI uri = resolveModuleName(name, referrer);
     URI normalized = normalizeAddress(uri);
-    if (moduleUris.contains(normalized)) {
-      return normalized;
+    return isModuleUri(normalized);
+  }
+
+  private URI isModuleUri(String uri) {
+    return isModuleUri(URI.create(uri));
+  }
+
+  private URI isModuleUri(URI uri) {
+    if (moduleUris.contains(uri)) {
+      return uri;
     }
     return null;
   }
@@ -137,7 +224,7 @@ public final class ES6ModuleLoader {
   private static URI createUri(String input) {
     // Colons might cause URI.create() to fail
     String forwardSlashes =
-        input.replace(':', '-').replace("\\", MODULE_SLASH).replace(" ", "%20");
+        input.replace(':', '-').replace("\\", String.valueOf(MODULE_SLASH)).replace(" ", "%20");
     return URI.create(forwardSlashes).normalize();
   }
 
@@ -161,8 +248,8 @@ public final class ES6ModuleLoader {
   public static String toModuleName(URI filename) {
     String moduleName =
         stripJsExtension(filename.toString())
-            .replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
-            .replace(MODULE_SLASH, "$")
+            .replaceAll("^\\." + Pattern.quote(String.valueOf(MODULE_SLASH)), "")
+            .replace(String.valueOf(MODULE_SLASH), "$")
             .replace('\\', '$')
             .replace('-', '_')
             .replace(':', '_')
