@@ -301,7 +301,7 @@ public class DiagnosticGroups {
 //           NewTypeInference.MISTYPED_ASSIGN_RHS,
 //           NewTypeInference.NON_NUMERIC_ARRAY_INDEX,
 //           NewTypeInference.NOT_A_CONSTRUCTOR,
-          NewTypeInference.NOT_CALLABLE,
+//           NewTypeInference.NOT_CALLABLE,
 //           NewTypeInference.NOT_UNIQUE_INSTANTIATION,
 //           NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
 //           NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT,

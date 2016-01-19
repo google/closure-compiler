@@ -226,7 +226,7 @@ final class NewTypeInference implements CompilerPass {
   static final DiagnosticType ILLEGAL_PROPERTY_CREATION =
       DiagnosticType.warning(
           "JSC_NTI_ILLEGAL_PROPERTY_CREATION",
-          "Cannot add a property to a struct instance after it is constructed.");
+          "Cannot add property {0} to a struct instance after it is constructed.");
 
   static final DiagnosticType IN_USED_WITH_STRUCT =
       DiagnosticType.warning(
@@ -1434,7 +1434,8 @@ final class NewTypeInference implements CompilerPass {
     JSType preciseType = inferredType.specialize(specializedType);
     println(varName, "'s preciseType: ", preciseType);
     if (!preciseType.isBottom()
-        && currentScope.isUndeclaredFormal(varName)
+        && (currentScope.isUndeclaredFormal(varName)
+            || currentScope.isUndeclaredOuterVar(varName))
         && preciseType.hasNonScalar()) {
       // In the bwd direction, we may infer a loose type and then join w/
       // top and forget it. That's why we also loosen types going fwd.
@@ -2672,7 +2673,8 @@ final class NewTypeInference implements CompilerPass {
     // f should accept objects without prop, so we don't require that obj
     // already have prop.
     if (recvType.mayBeStruct() && !recvType.hasProp(pname)) {
-      warnings.add(JSError.make(getProp, ILLEGAL_PROPERTY_CREATION));
+      warnings.add(JSError.make(
+          getProp, ILLEGAL_PROPERTY_CREATION, pname.toString()));
       return true;
     }
     return false;
@@ -2753,7 +2755,7 @@ final class NewTypeInference implements CompilerPass {
     QualifiedName propQname = new QualifiedName(pname);
     Node propAccessNode = receiver.getParent();
     EnvTypePair pair;
-    JSType reqObjType = pickReqObjType(propAccessNode).withLoose();
+    JSType reqObjType = pickReqObjType(propAccessNode);
     JSType recvReqType, recvSpecType;
 
     // First, analyze the receiver object.
@@ -3117,7 +3119,8 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(outEnv, inferredType);
     }
     JSType preciseType = inferredType.specialize(requiredType);
-    if (currentScope.isUndeclaredFormal(varName)
+    if ((currentScope.isUndeclaredFormal(varName)
+        || currentScope.isUndeclaredOuterVar(varName))
         && preciseType.hasNonScalar()) {
       preciseType = preciseType.withLoose();
     }
@@ -3388,7 +3391,7 @@ final class NewTypeInference implements CompilerPass {
       Node receiver, String pname, TypeEnv outEnv, JSType requiredType) {
     Node propAccessNode = receiver.getParent();
     QualifiedName qname = new QualifiedName(pname);
-    JSType reqObjType = pickReqObjType(propAccessNode).withLoose();
+    JSType reqObjType = pickReqObjType(propAccessNode);
     if (!NodeUtil.isPropertyTest(compiler, propAccessNode)) {
       reqObjType = reqObjType.withProperty(qname, requiredType);
     }
@@ -3735,7 +3738,7 @@ final class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(pname.isIdentifier());
     String pnameAsString = pname.getLeftmostName();
     JSType reqObjType =
-        pickReqObjType(obj.getParent()).withLoose().withProperty(pname, type);
+        pickReqObjType(obj.getParent()).withProperty(pname, type);
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
     EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
         obj, lvalue.type, null, lvalue.env);
@@ -3871,7 +3874,7 @@ final class NewTypeInference implements CompilerPass {
       TypeEnv outEnv, JSType type, boolean doSlicing) {
     Preconditions.checkArgument(pname.isIdentifier());
     JSType reqObjType =
-        pickReqObjType(obj.getParent()).withLoose().withProperty(pname, type);
+        pickReqObjType(obj.getParent()).withProperty(pname, type);
     LValueResultBwd lvalue =
         analyzeLValueBwd(obj, outEnv, reqObjType, false, true);
     if (lvalue.ptr != null) {

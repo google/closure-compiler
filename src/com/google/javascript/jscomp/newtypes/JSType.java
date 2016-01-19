@@ -762,8 +762,12 @@ public abstract class JSType implements TypeI {
     // NOTE(dimvar): I couldn't find a case where this.hasFalsyMask(). If the
     // preconditions check breaks, add code analogous to the hasTruthyMask case.
     Preconditions.checkState(!hasFalsyMask());
-    if (this.isTop() || this.isUnknown()) {
+    if (this.isTop()) {
       return other;
+    }
+    if (this.isUnknown()) {
+      NominalType otherNt = other.getNominalTypeIfSingletonObj();
+      return otherNt != null && otherNt.isBuiltinObject() ? other.withLoose() : other;
     }
     int newMask = getMask() & other.getMask();
     String newTypevar;
@@ -1046,7 +1050,7 @@ public abstract class JSType implements TypeI {
     return getMask() == (NON_SCALAR_MASK | NULL_MASK) && getObjs().size() == 1;
   }
 
-  public ObjectType getObjTypeIfSingletonObj() {
+  ObjectType getObjTypeIfSingletonObj() {
     return isSingletonObj() ? Iterables.getOnlyElement(getObjs()) : null;
   }
 

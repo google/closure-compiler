@@ -235,7 +235,7 @@ final class ObjectType implements TypeWithProperties {
       newProps = newProps.with(pname, prop.withRequired());
     }
     // No need to call makeObjectType; we know that the new object is inhabitable.
-    return new ObjectType(nominalType, newProps, fn, true, this.objectKind);
+    return new ObjectType(this.nominalType, newProps, fn, true, this.objectKind);
   }
 
   ObjectType withFunction(FunctionType ft, NominalType fnNominal) {
@@ -526,15 +526,6 @@ final class ObjectType implements TypeWithProperties {
     NominalType otherNt = other.nominalType;
     if (thisNt == null && otherNt != null
         || thisNt != null && otherNt != null && !thisNt.isSubtypeOf(otherNt)) {
-      return false;
-    }
-
-    if (otherNt == null
-        && !this.objectKind.isSubtypeOf(other.objectKind)
-        // Interfaces are structs but we allow them to be used in a context that
-        // expects a record type, even though it is unsound.
-        // TODO(dimvar): Remove this when we switch to structural interfaces.
-        && !(this.isInterfaceInstance() && other.objectKind.isUnrestricted())) {
       return false;
     }
 

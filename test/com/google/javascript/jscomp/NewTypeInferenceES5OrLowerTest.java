@@ -8662,6 +8662,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  x(1, 2);",
         "  return x;",
         "})(function(x, y) {});"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T,U",
+        " * @param {function(T,U):T} x",
+        " */",
+        "function f(x) {}",
+        "function g(arr, fun) {",
+        "  arr.push(fun());",
+        "  return arr;",
+        "}",
+        "f(g);"));
   }
 
   public void testMeetOfLooseObjAndNamedDoesntCrash() {
@@ -9196,8 +9208,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(LINE_JOINER.join(
         "function f(/** { a : number } */ x) {}",
-        "f(/** @dict */ { 'a' : 5 });"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "f(/** @dict */ { 'a' : 5 });"));
   }
 
   public void testDontInferStructDictFormal() {
@@ -11941,6 +11952,26 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    x.prop();",
         "  }",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @struct",
+        " */",
+        "function Foo() {",
+        "  /** @type {?Foo} */",
+        "  this.prop;",
+        "}",
+        "function f(x) {",
+        "  /**@type {!Foo} */",
+        "  var y = x;",
+        "  function g() {",
+        "    if (y.prop == null) {",
+        "      return;",
+        "    }",
+        "    var /** !Foo */ z = y.prop;",
+        "  }",
+        "}"));
   }
 
   public void testFunctionReturnTypeSpecialization() {
@@ -14041,14 +14072,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(LINE_JOINER.join(
         "var goog = {};", // @const missing on purpose
         "goog.inherits = function(childCtor, parentCtor) {};",
-        "  /**",
-        "   * @constructor",
-        "   * @extends {goog.Plugin}",
-        "   */",
-        "  goog.Emoticons = function() { goog.Plugin.call(this); };",
-        "  goog.inherits(goog.Emoticons, goog.Plugin);",
-        "  goog.Emoticons.COMMAND = '+emoticon';",
-        "  goog.Emoticons.prototype.getTrogClassId = goog.Emoticons.COMMAND;"),
+        "/**",
+        " * @constructor",
+        " * @extends {goog.Plugin}",
+        " */",
+        "goog.Emoticons = function() { goog.Plugin.call(this); };",
+        "goog.inherits(goog.Emoticons, goog.Plugin);",
+        "goog.Emoticons.COMMAND = '+emoticon';",
+        "goog.Emoticons.prototype.getTrogClassId = goog.Emoticons.COMMAND;"),
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
 
     typeCheck(LINE_JOINER.join(
@@ -14821,5 +14852,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "ns.Foo = TestCase('asdf');",
             "function f() { var /** !ns.Foo */ obj = 123; }"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testLocalWithCallableObjectType() {
+    typeCheck(LINE_JOINER.join(
+        "function f(z) {",
+        "  var x = z;",
+        "  if (x) {",
+        "    var y = x.prop;",
+        "    x();",
+        "  }",
+        "};"));
+  }
+
+  public void testSpecializeUnknownToLooseObject() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** ? */ x) {",
+        "  var y = x.prop1;",
+        "  var /** {prop2:number} */ z = x.prop2;",
+        "}"));
   }
 }
