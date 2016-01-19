@@ -13863,6 +13863,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function g(x) {}",
         "g({bar:123});"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // Don't warn about possibly inexistent property. The property type includes
+    // undefined, so the context where the property is used determines if there
+    // will be a warning.
+    typeCheck(LINE_JOINER.join(
+        "function f(/** {a: (number|undefined)} */ x) {",
+        "  return x.a - 5;",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** {a: (number|undefined)} */ x) {",
+        "  var /** number|undefined */ y = x.a;",
+        "}"));
   }
 
   public void testJoinWithTruthyOrFalsy() {
