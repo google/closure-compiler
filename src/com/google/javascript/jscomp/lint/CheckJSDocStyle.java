@@ -37,6 +37,9 @@ import javax.annotation.Nullable;
  * with no corresponding {@code @param} annotation, coding conventions not being respected, etc.
  */
 public final class CheckJSDocStyle extends AbstractPostOrderCallback implements CompilerPass {
+  public static final DiagnosticType MISSING_JSDOC =
+      DiagnosticType.warning("JSC_MISSING_JSDOC", "Function must have JSDoc.");
+
   public static final DiagnosticType MISSING_PARAMETER_JSDOC =
       DiagnosticType.warning("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.");
 
@@ -89,7 +92,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   private void visitFunction(NodeTraversal t, Node function) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(function);
 
-    if (jsDoc != null || hasAnyInlineJsDoc(function)) {
+    if (jsDoc == null && !hasAnyInlineJsDoc(function)) {
+      checkMissingJsDoc(t, function);
+    } else {
       checkParams(t, function, jsDoc);
     }
 
@@ -99,6 +104,15 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         && compiler.getCodingConvention().isPrivate(name)
         && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
       t.report(function, MUST_BE_PRIVATE, name);
+    }
+  }
+
+  private void checkMissingJsDoc(NodeTraversal t, Node function) {
+    if (t.inGlobalScope()
+        && (NodeUtil.isFunctionDeclaration(function)
+            || NodeUtil.isNameDeclaration(function.getParent().getParent())
+            || function.getParent().isAssign())) {
+      t.report(function, MISSING_JSDOC);
     }
   }
 

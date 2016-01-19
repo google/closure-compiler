@@ -2393,7 +2393,7 @@ public final class NodeUtil {
    * that has a name that is added to the current scope (i.e. a function that
    * is not part of a expression; see {@link #isFunctionExpression}).
    */
-  static boolean isFunctionDeclaration(Node n) {
+  public static boolean isFunctionDeclaration(Node n) {
     return n.isFunction() && isDeclarationParent(n.getParent());
   }
 
