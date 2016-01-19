@@ -1625,6 +1625,16 @@ google.maps.ElevationStatus = {
 /**
  * @interface
  */
+google.maps.FullscreenControlOptions = function() {};
+
+/**
+ * @type {google.maps.ControlPosition}
+ */
+google.maps.FullscreenControlOptions.prototype.position;
+
+/**
+ * @interface
+ */
 google.maps.FusionTablesCell = function() {};
 
 /**
@@ -3117,6 +3127,16 @@ google.maps.MapOptions.prototype.draggableCursor;
 google.maps.MapOptions.prototype.draggingCursor;
 
 /**
+ * @type {boolean}
+ */
+google.maps.MapOptions.prototype.fullscreenControl;
+
+/**
+ * @type {google.maps.FullscreenControlOptions|Object.<string>}
+ */
+google.maps.MapOptions.prototype.fullscreenControlOptions;
+
+/**
  * @type {number}
  */
 google.maps.MapOptions.prototype.heading;
@@ -3205,6 +3225,11 @@ google.maps.MapOptions.prototype.scaleControlOptions;
  * @type {boolean}
  */
 google.maps.MapOptions.prototype.scrollwheel;
+
+/**
+ * @type {boolean}
+ */
+google.maps.MapOptions.prototype.signInControl;
 
 /**
  * @type {google.maps.StreetViewPanorama}
@@ -3452,6 +3477,11 @@ google.maps.MapTypeStyler.prototype.weight;
  * @constructor
  */
 google.maps.MapsEventListener = function() {};
+
+/**
+ * @return {undefined}
+ */
+google.maps.MapsEventListener.prototype.remove = function() {};
 
 /**
  * @param {(google.maps.MarkerOptions|Object.<string>)=} opt_opts
@@ -4882,6 +4912,16 @@ google.maps.StreetViewPanoramaOptions.prototype.enableCloseButton;
 /**
  * @type {boolean}
  */
+google.maps.StreetViewPanoramaOptions.prototype.fullscreenControl;
+
+/**
+ * @type {google.maps.FullscreenControlOptions|Object.<string>}
+ */
+google.maps.StreetViewPanoramaOptions.prototype.fullscreenControlOptions;
+
+/**
+ * @type {boolean}
+ */
 google.maps.StreetViewPanoramaOptions.prototype.imageDateControl;
 
 /**
@@ -6222,9 +6262,9 @@ google.maps.places.PlaceSearchRequest.prototype.radius;
 google.maps.places.PlaceSearchRequest.prototype.rankBy;
 
 /**
- * @type {Array<string>}
+ * @type {string}
  */
-google.maps.places.PlaceSearchRequest.prototype.types;
+google.maps.places.PlaceSearchRequest.prototype.type;
 
 /**
  * @param {HTMLDivElement|google.maps.Map} attrContainer
@@ -6390,9 +6430,9 @@ google.maps.places.RadarSearchRequest.prototype.name;
 google.maps.places.RadarSearchRequest.prototype.radius;
 
 /**
- * @type {Array<string>}
+ * @type {string}
  */
-google.maps.places.RadarSearchRequest.prototype.types;
+google.maps.places.RadarSearchRequest.prototype.type;
 
 /**
  * @enum {number}
@@ -6464,9 +6504,9 @@ google.maps.places.TextSearchRequest.prototype.query;
 google.maps.places.TextSearchRequest.prototype.radius;
 
 /**
- * @type {Array<string>}
+ * @type {string}
  */
-google.maps.places.TextSearchRequest.prototype.types;
+google.maps.places.TextSearchRequest.prototype.type;
 
 /** @const */
 google.maps.visualization = {};
