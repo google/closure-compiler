@@ -720,7 +720,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceSortingOn3() {
-    args.add("--manage_closure_dependencies=true");
+    args.add("--dependency_mode=LOOSE");
     args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.addDependency('sym', [], []);\nvar x = 3;",
@@ -733,7 +733,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceSortingCircularDeps1() {
-    args.add("--manage_closure_dependencies=true");
+    args.add("--dependency_mode=LOOSE");
     args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.provide('gin'); goog.require('tonic'); var gin = {};",
@@ -744,7 +744,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceSortingCircularDeps2() {
-    args.add("--manage_closure_dependencies=true");
+    args.add("--dependency_mode=LOOSE");
     args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.provide('roses.lime.juice');",
@@ -757,7 +757,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourcePruningOn1() {
-    args.add("--manage_closure_dependencies=true");
+    args.add("--dependency_mode=LOOSE");
     args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.require('beer');",
@@ -771,7 +771,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourcePruningOn2() {
-    args.add("--closure_entry_point=guinness");
+    args.add("--entry_point=goog:guinness");
     test(new String[] {
           "goog.provide('guinness');\ngoog.require('beer');",
           "goog.provide('beer');",
@@ -784,7 +784,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourcePruningOn3() {
-    args.add("--closure_entry_point=scotch");
+    args.add("--entry_point=goog:scotch");
     test(new String[] {
           "goog.provide('guinness');\ngoog.require('beer');",
           "goog.provide('beer');",
@@ -796,8 +796,8 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourcePruningOn4() {
-    args.add("--closure_entry_point=scotch");
-    args.add("--closure_entry_point=beer");
+    args.add("--entry_point=goog:scotch");
+    args.add("--entry_point=goog:beer");
     test(new String[] {
           "goog.provide('guinness');\ngoog.require('beer');",
           "goog.provide('beer');",
@@ -810,7 +810,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourcePruningOn5() {
-    args.add("--closure_entry_point=shiraz");
+    args.add("--entry_point=goog:shiraz");
     test(new String[] {
           "goog.provide('guinness');\ngoog.require('beer');",
           "goog.provide('beer');",
@@ -820,7 +820,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourcePruningOn6() {
-    args.add("--closure_entry_point=scotch");
+    args.add("--entry_point=goog:scotch");
     test(new String[] {
           "goog.require('beer');",
           "goog.provide('beer');",
@@ -834,7 +834,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourcePruningOn7() {
-    args.add("--manage_closure_dependencies=true");
+    args.add("--dependency_mode=LOOSE");
     test(new String[] {
           "var COMPILED = false;",
          },
@@ -844,8 +844,8 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourcePruningOn8() {
-    args.add("--only_closure_dependencies");
-    args.add("--closure_entry_point=scotch");
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point=goog:scotch");
     args.add("--warning_level=VERBOSE");
     test(new String[] {
           "/** @externs */\n" +
@@ -859,8 +859,8 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testModuleEntryPoint() throws Exception {
     useModules = ModulePattern.STAR;
-    args.add("--only_closure_dependencies");
-    args.add("--closure_entry_point=m1:a");
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point=goog:m1:a");
     test(
         new String[] {
           "goog.provide('a');",
@@ -888,7 +888,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testDependencySortingWhitespaceMode() {
-    args.add("--manage_closure_dependencies");
+    args.add("--dependency_mode=LOOSE");
     args.add("--compilation_level=WHITESPACE_ONLY");
     test(new String[] {
           "goog.require('beer');",
@@ -903,18 +903,18 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testForwardDeclareDroppedTypes() {
-    args.add("--manage_closure_dependencies=true");
+    args.add("--dependency_mode=LOOSE");
 
     args.add("--warning_level=VERBOSE");
-    test(new String[] {
-          "goog.require('beer');",
-          "goog.provide('beer'); /** @param {Scotch} x */ function f(x) {}",
-          "goog.provide('Scotch'); var x = 3;"
-         },
-         new String[] {
-           "var beer = {}; function f(a) {}",
-           ""
-         });
+    test(new String[]{
+            "goog.require('beer');",
+            "goog.provide('beer'); /** @param {Scotch} x */ function f(x) {}",
+            "goog.provide('Scotch'); var x = 3;"
+        },
+        new String[]{
+            "var beer = {}; function f(a) {}",
+            ""
+        });
 
     test(new String[] {
           "goog.require('beer');",
@@ -931,20 +931,20 @@ public final class CommandLineRunnerTest extends TestCase {
     // Prevents this from trying to load externs.zip
     args.add("--env=CUSTOM");
 
-    args.add("--only_closure_dependencies=true");
+    args.add("--dependency_mode=STRICT");
     try {
       CommandLineRunner runner = createCommandLineRunner(new String[0]);
       runner.doRun();
       fail("Expected FlagUsageException");
     } catch (FlagUsageException e) {
       assertTrue(e.getMessage(),
-          e.getMessage().contains("only_closure_dependencies"));
+          e.getMessage().contains("dependency_mode=STRICT"));
     }
   }
 
   public void testOnlyClosureDependenciesOneEntryPoint() throws Exception {
-    args.add("--only_closure_dependencies=true");
-    args.add("--closure_entry_point=beer");
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point=goog:beer");
     test(new String[] {
           "goog.require('beer'); var beerRequired = 1;",
           "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
@@ -973,7 +973,7 @@ public final class CommandLineRunnerTest extends TestCase {
     useModules = ModulePattern.CHAIN;
     args.add("--create_source_map=%outname%.map");
     args.add("--module_output_path_prefix=foo");
-    testSame(new String[] {"var x = 3;", "var y = 5;"});
+    testSame(new String[]{"var x = 3;", "var y = 5;"});
     assertThat(lastCommandLineRunner.expandSourceMapPath(lastCompiler.getOptions(), null))
         .isEqualTo("foo.map");
   }
@@ -982,7 +982,7 @@ public final class CommandLineRunnerTest extends TestCase {
     useModules = ModulePattern.CHAIN;
     args.add("--create_source_map=%outname%.map");
     args.add("--module_output_path_prefix=foo_");
-    testSame(new String[] {"var x = 3;", "var y = 5;"});
+    testSame(new String[]{"var x = 3;", "var y = 5;"});
     assertThat(
         lastCommandLineRunner.expandSourceMapPath(
             lastCompiler.getOptions(), lastCompiler.getModuleGraph().getRootModule()))
@@ -1030,7 +1030,7 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(ImmutableSet.copyOf(mappings).toString())
         .isEqualTo(
             ImmutableSet.of(new LocationMapping("foo/", "http://bar"), new LocationMapping(
-                                                                           "xxx/", "http://yyy"))
+                "xxx/", "http://yyy"))
                 .toString());
   }
 
@@ -1154,8 +1154,8 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testChainModuleManifest() throws Exception {
     useModules = ModulePattern.CHAIN;
-    testSame(new String[] {
-          "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
+    testSame(new String[]{
+        "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
     lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
@@ -1198,7 +1198,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testOutputModuleGraphJson() throws Exception {
     useModules = ModulePattern.STAR;
-    testSame(new String[] {
+    testSame(new String[]{
         "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
@@ -1261,13 +1261,13 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--jscomp_error=checkVars");
     args.add("--warning_level=VERBOSE");
     test("var theirVar = {}; var myVar = {}; var myVar = {};",
-         VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
+        VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testGoogAssertStripping() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     test("goog.asserts.assert(false)",
-         "");
+        "");
     args.add("--debug");
     test("goog.asserts.assert(false)", "goog.$asserts$.$assert$(!1)");
   }
@@ -1403,7 +1403,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testProcessCJS() {
     useStringComparison = true;
     args.add("--process_common_js_modules");
-    args.add("--common_js_entry_module=foo/bar");
+    args.add("--entry_point=foo/bar");
     setFilename(0, "foo/bar.js");
     String expected = "var module$foo$bar={test:1};";
     test("exports.test = 1", expected);
@@ -1411,9 +1411,8 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testProcessCJSWithModuleOutput() {
-    useStringComparison = true;
     args.add("--process_common_js_modules");
-    args.add("--common_js_entry_module=foo/bar");
+    args.add("--entry_point=foo/bar");
     args.add("--module=auto");
     setFilename(0, "foo/bar.js");
     test("exports.test = 1",
@@ -1429,37 +1428,37 @@ public final class CommandLineRunnerTest extends TestCase {
    */
   public void testProcessCJSWithClosureRequires() {
     args.add("--process_common_js_modules");
-    args.add("--common_js_entry_module=app.js");
-    args.add("--manage_closure_dependencies");
+    args.add("--entry_point=app");
+    args.add("--dependency_mode=STRICT");
     setFilename(0, "base.js");
     setFilename(1, "array.js");
     setFilename(2, "Baz.js");
     setFilename(3, "app.js");
     test(new String[] {
            "/** @provideGoog */\n" +
-           "/** @const */ var goog = goog || {};\n" +
-           "var COMPILED = false;\n" +
-           "goog.provide = function (arg) {};\n" +
-           "goog.require = function (arg) {};\n",
+               "/** @const */ var goog = goog || {};\n" +
+               "var COMPILED = false;\n" +
+               "goog.provide = function (arg) {};\n" +
+               "goog.require = function (arg) {};",
 
-           "goog.provide('goog.array');\n",
+           "goog.provide('goog.array');",
 
-           "goog.require('goog.array');\n" +
-           "function Baz() {}\n" +
-           "Baz.prototype = {\n" +
-           "  baz: function() {\n" +
-           "    return goog.array.last(['asdf','asd','baz']);\n" +
-           "  },\n" +
-           "  bar: function () {\n" +
-           "    return 4 + 4;\n" +
-           "  }\n" +
-           "}\n" +
-           "module.exports = Baz;",
+           "goog.require('goog.array');" +
+               "function Baz() {}" +
+               "Baz.prototype = {" +
+               "  baz: function() {" +
+               "    return goog.array.last(['asdf','asd','baz']);" +
+               "  }," +
+               "  bar: function () {" +
+               "    return 4 + 4;" +
+               "  }" +
+               "};" +
+               "module.exports = Baz;",
 
-           "var Baz = require('./Baz');\n" +
-           "var baz = new Baz();\n" +
-           "console.log(baz.baz());\n" +
-           "console.log(baz.bar());\n"
+           "var Baz = require('./Baz');" +
+               "var baz = new Baz();" +
+               "console.log(baz.baz());" +
+               "console.log(baz.bar());"
          },
          new String[] {
            "var goog=goog||{},COMPILED=!1;" +
@@ -1482,6 +1481,123 @@ public final class CommandLineRunnerTest extends TestCase {
          });
   }
 
+  /**
+   * closure requires mixed with cjs, raised in
+   * https://github.com/google/closure-compiler/pull/630
+   * https://gist.github.com/sayrer/c4c4ce0c1748573f863e
+   */
+  public void testProcessCJSWithClosureRequires2() {
+    args.add("--process_common_js_modules");
+    args.add("--dependency_mode=LOOSE");
+    args.add("--entry_point=app");
+    setFilename(0, "base.js");
+    setFilename(1, "array.js");
+    setFilename(2, "Baz.js");
+    setFilename(3, "app.js");
+
+    test(new String[]{
+            "/** @provideGoog */" +
+                "/** @const */ var goog = goog || {};" +
+                "var COMPILED = false;" +
+                "goog.provide = function (arg) {};" +
+                "goog.require = function (arg) {};",
+
+            "goog.provide('goog.array');",
+
+            "goog.require('goog.array');" +
+                "function Baz() {}" +
+                "Baz.prototype = {" +
+                "  baz: function() {" +
+                "    return goog.array.last(['asdf','asd','baz']);" +
+                "  }," +
+                "  bar: function () {" +
+                "    return 4 + 4;" +
+                "  }" +
+                "};" +
+                "module.exports = Baz;",
+
+            "var Baz = require('./Baz');" +
+                "var baz = new Baz();" +
+                "console.log(baz.baz());" +
+                "console.log(baz.bar());"
+        },
+        new String[]{
+            "var goog=goog||{},COMPILED=!1;" +
+                "goog.provide=function(a){};goog.require=function(a){};",
+
+            "goog.array={};",
+
+            "function Baz$$module$Baz(){}" +
+                "Baz$$module$Baz.prototype={" +
+                "baz:function(){return goog.array.last([\"asdf\",\"asd\",\"baz\"])}," +
+                "bar:function(){return 8}" +
+                "};" +
+                "var module$Baz=Baz$$module$Baz;",
+
+            "var module$app={}," +
+                "Baz$$module$app=Baz$$module$Baz," +
+                "baz$$module$app=new Baz$$module$app;" +
+                "console.log(baz$$module$app.baz());" +
+                "console.log(baz$$module$app.bar());"
+        });
+  }
+
+  public void testProcessCJSWithES6Export() {
+    args.add("--process_common_js_modules");
+    args.add("--entry_point=app");
+    args.add("--dependency_mode=STRICT");
+    args.add("--language_in=ECMASCRIPT6");
+    setFilename(0, "foo.js");
+    setFilename(1, "app.js");
+    test(new String[]{
+            "export default class Foo {"
+                + "  bar() { console.log('bar'); }"
+                + "}",
+
+            "var FooBar = require('./foo');" +
+                "var baz = new FooBar.default();" +
+                "console.log(baz.bar());"
+        },
+        new String[]{
+            "var module$foo={}," +
+                "Foo$$module$foo=function(){};" +
+                "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};" +
+                "module$foo.default=Foo$$module$foo;",
+
+            "var module$app={}," +
+                "FooBar$$module$app=module$foo," +
+                "baz$$module$app=new FooBar$$module$app.default();" +
+                "console.log(baz$$module$app.bar());"
+        });
+  }
+
+  public void testES6ImportOfCJS() {
+    args.add("--process_common_js_modules");
+    args.add("--entry_point=app");
+    args.add("--dependency_mode=STRICT");
+    args.add("--language_in=ECMASCRIPT6");
+    setFilename(0, "foo.js");
+    setFilename(1, "app.js");
+    test(new String[] {
+            "/** @constructor */ function Foo () {}" +
+                "Foo.prototype.bar = function() { console.log('bar'); };" +
+                "module.exports = Foo;",
+
+            "import * as FooBar from './foo';" +
+                "var baz = new FooBar();" +
+                "console.log(baz.bar());"
+        },
+        new String[] {
+            "function Foo$$module$foo(){}" +
+                "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};" +
+                "var module$foo=Foo$$module$foo;",
+
+            "var module$app={}," +
+                "baz$$module$app$$module$app=new Foo$$module$foo();" +
+                "console.log(baz$$module$app$$module$app.bar());"
+        });
+  }
+
   public void testFormattingSingleQuote() {
     testSame("var x = '';");
     assertThat(lastCompiler.toSource()).isEqualTo("var x=\"\";");
@@ -1492,20 +1608,18 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testTransformAMDAndProcessCJS() {
-    useStringComparison = true;
     args.add("--transform_amd_modules");
     args.add("--process_common_js_modules");
-    args.add("--common_js_entry_module=foo/bar");
+    args.add("--entry_point=foo/bar");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
         "var module$foo$bar={foo:1};");
   }
 
   public void testModuleJSON() {
-    useStringComparison = true;
     args.add("--transform_amd_modules");
     args.add("--process_common_js_modules");
-    args.add("--common_js_entry_module=foo/bar");
+    args.add("--entry_point=foo/bar");
     args.add("--output_module_dependencies=test.json");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",

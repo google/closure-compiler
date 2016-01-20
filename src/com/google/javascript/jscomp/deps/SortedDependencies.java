@@ -71,8 +71,12 @@ public interface SortedDependencies<INPUT extends DependencyInfo> {
   }
 
   public static class MissingProvideException extends Exception {
-    MissingProvideException(String provide) {
+    public MissingProvideException(String provide) {
       super(provide);
+    }
+
+    public MissingProvideException(String provide, Exception e) {
+      super(provide, e);
     }
   }
 }
