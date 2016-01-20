@@ -1074,6 +1074,12 @@ public abstract class JSType implements TypeI {
         ? Iterables.getOnlyElement(getObjs()).getNominalType() : null;
   }
 
+  // True for functions and instances of Object (including object literals).
+  public boolean isNonClassyObject() {
+    NominalType nt = getNominalTypeIfSingletonObj();
+    return nt != null && !nt.isClassy();
+  }
+
   public boolean isInterfaceDefinition() {
     FunctionType ft = getFunTypeIfSingletonObj();
     return ft != null && ft.isInterfaceDefinition();

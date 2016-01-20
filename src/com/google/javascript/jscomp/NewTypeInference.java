@@ -1775,8 +1775,9 @@ final class NewTypeInference implements CompilerPass {
       return analyzeAssertionCall(expr, inEnv, assertionFunctionSpec);
     }
     EnvTypePair calleePair = analyzeExprFwd(callee, inEnv, commonTypes.topFunction());
+    TypeEnv envAfterCallee = calleePair.env;
     calleePair = mayWarnAboutNullableReferenceAndTighten(
-        callee, calleePair.type, null, inEnv);
+        callee, calleePair.type, null, envAfterCallee);
     JSType calleeType = calleePair.type;
     if (calleeType.isBottom() || !calleeType.isSubtypeOf(commonTypes.topFunction())) {
       warnings.add(JSError.make(
@@ -1785,19 +1786,19 @@ final class NewTypeInference implements CompilerPass {
     FunctionType funType = calleeType.getFunTypeIfSingletonObj();
     if (funType == null
         || funType.isTopFunction() || funType.isQmarkFunction()) {
-      return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
+      return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
     } else if (funType.isLoose()) {
-      return analyzeLooseCallNodeFwd(expr, funType, inEnv, requiredType);
+      return analyzeLooseCallNodeFwd(expr, envAfterCallee, requiredType);
     } else if (expr.isCall()
         && funType.isSomeConstructorOrInterface()
         && funType.getReturnType().isUnknown()) {
       warnings.add(JSError.make(expr, CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
-      return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
+      return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
     } else if (expr.isNew()
         && (!funType.isSomeConstructorOrInterface()
             || funType.isInterfaceDefinition())) {
       warnings.add(JSError.make(expr, NOT_A_CONSTRUCTOR, funType.toString()));
-      return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
+      return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
     }
     int maxArity = funType.getMaxArity();
     int minArity = funType.getMinArity();
@@ -1808,21 +1809,21 @@ final class NewTypeInference implements CompilerPass {
           getReadableCalleeName(callee),
           Integer.toString(numArgs), Integer.toString(minArity),
           " and at most " + maxArity));
-      return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
+      return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
     }
     FunctionType origFunType = funType; // save for later
     if (funType.isGeneric()) {
       Map<String, JSType> typeMap = calcTypeInstantiationFwd(
           expr,
           callee.isGetProp() ? callee.getFirstChild() : null,
-          expr.getSecondChild(), funType, inEnv);
+          expr.getSecondChild(), funType, envAfterCallee);
       funType = funType.instantiateGenerics(typeMap);
       println("Instantiated function type: " + funType);
     }
     // argTypes collects types of actuals for deferred checks.
     List<JSType> argTypes = new ArrayList<>();
     TypeEnv tmpEnv = analyzeCallNodeArgumentsFwd(
-        expr, expr.getSecondChild(), funType, argTypes, inEnv);
+        expr, expr.getSecondChild(), funType, argTypes, envAfterCallee);
     if (callee.isName()) {
       String calleeName = callee.getString();
       if (currentScope.isKnownFunction(calleeName)
@@ -2896,9 +2897,8 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private EnvTypePair analyzeLooseCallNodeFwd(
-      Node callNode, FunctionType calleeType, TypeEnv inEnv, JSType requiredType) {
+      Node callNode, TypeEnv inEnv, JSType requiredType) {
     Preconditions.checkArgument(callNode.isCall() || callNode.isNew());
-    Preconditions.checkArgument(calleeType.isLoose());
     Node callee = callNode.getFirstChild();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     TypeEnv tmpEnv = inEnv;
@@ -2913,11 +2913,15 @@ final class NewTypeInference implements CompilerPass {
     // Unsound if the arguments and callee have interacting side effects
     EnvTypePair calleePair = analyzeExprFwd(
         callee, tmpEnv, commonTypes.topFunction(), looseFunctionType);
-    JSType retType = calleeType.getReturnType();
+    JSType result = calleePair.type.getFunTypeIfSingletonObj().getReturnType();
     return new EnvTypePair(calleePair.env,
-        !retType.isBottom() && retType.isNonLooseSubtypeOf(requiredType)
-        ? retType
-        : requiredType);
+        isImpreciseType(result) ? requiredType : result);
+  }
+
+  private static boolean isImpreciseType(JSType t) {
+    return t.isBottom() || t.isTop() || t.isUnknown() || t.isUnion()
+        || t.isTrueOrTruthy() || t.isFalseOrFalsy()
+        || t.isLoose() || t.isNonClassyObject();
   }
 
   private EnvTypePair analyzeLooseCallNodeBwd(
@@ -2929,9 +2933,11 @@ final class NewTypeInference implements CompilerPass {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (int i = callNode.getChildCount() - 2; i >= 0; i--) {
       Node arg = callNode.getChildAtIndex(i + 1);
-      tmpEnv = analyzeExprBwd(arg, tmpEnv).env;
-      // Wait until FWD to get more precise argument types.
-      builder.addReqFormal(JSType.BOTTOM);
+      EnvTypePair pair = analyzeExprBwd(arg, tmpEnv);
+      JSType argType = pair.type;
+      tmpEnv = pair.env;
+      // May wait until FWD to get more precise argument types.
+      builder.addReqFormal(isImpreciseType(argType) ? JSType.BOTTOM : argType);
     }
     JSType looseRetType = retType.isUnknown() ? JSType.BOTTOM : retType;
     JSType looseFunctionType = commonTypes.fromFunctionType(
@@ -3253,32 +3259,32 @@ final class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv outEnv, JSType requiredType) {
     Preconditions.checkArgument(expr.isNew() || expr.isCall());
     Node callee = expr.getFirstChild();
-    JSType calleeTypeGeneral =
-        analyzeExprBwd(callee, outEnv, commonTypes.topFunction()).type;
-    FunctionType funType = calleeTypeGeneral.getFunType();
+    EnvTypePair pair = analyzeExprBwd(callee, outEnv, commonTypes.topFunction());
+    TypeEnv envAfterCallee = pair.env;
+    FunctionType funType = pair.type.getFunType();
     if (funType == null) {
-      return analyzeCallNodeArgumentsBwd(expr, outEnv);
+      return analyzeCallNodeArgumentsBwd(expr, envAfterCallee);
     } else if (funType.isLoose()) {
-      return analyzeLooseCallNodeBwd(expr, outEnv, requiredType);
+      return analyzeLooseCallNodeBwd(expr, envAfterCallee, requiredType);
     } else if (expr.isCall() && funType.isSomeConstructorOrInterface()
         || expr.isNew() && !funType.isSomeConstructorOrInterface()) {
-      return analyzeCallNodeArgumentsBwd(expr, outEnv);
+      return analyzeCallNodeArgumentsBwd(expr, envAfterCallee);
     } else if (funType.isTopFunction()) {
-      return analyzeCallNodeArgumentsBwd(expr, outEnv);
+      return analyzeCallNodeArgumentsBwd(expr, envAfterCallee);
     }
     if (callee.isName() && !funType.isGeneric() && expr.isCall()) {
       createDeferredCheckBwd(expr, requiredType);
     }
     int numArgs = expr.getChildCount() - 1;
     if (numArgs < funType.getMinArity() || numArgs > funType.getMaxArity()) {
-      return analyzeCallNodeArgumentsBwd(expr, outEnv);
+      return analyzeCallNodeArgumentsBwd(expr, envAfterCallee);
     }
     if (funType.isGeneric()) {
       Map<String, JSType> typeMap =
-          calcTypeInstantiationBwd(expr, funType, outEnv);
+          calcTypeInstantiationBwd(expr, funType, envAfterCallee);
       funType = funType.instantiateGenerics(typeMap);
     }
-    TypeEnv tmpEnv = outEnv;
+    TypeEnv tmpEnv = envAfterCallee;
     // In bwd direction, analyze arguments in reverse
     for (int i = expr.getChildCount() - 2; i >= 0; i--) {
       JSType formalType = funType.getFormalType(i);

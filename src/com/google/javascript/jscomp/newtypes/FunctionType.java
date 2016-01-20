@@ -832,11 +832,13 @@ public final class FunctionType {
     if (f1 == null || f2 == null) {
       return null;
     }
+    if (!f1.typeParameters.isEmpty()) {
+      f1 = instantiateGenericsWithUnknown(f1);
+    }
+    if (!f2.typeParameters.isEmpty()) {
+      f2 = instantiateGenericsWithUnknown(f2);
+    }
     Preconditions.checkState(!f1.isLoose() && !f2.isLoose());
-    Preconditions.checkArgument(f1.typeParameters.isEmpty());
-    Preconditions.checkArgument(f2.typeParameters.isEmpty());
-    Preconditions.checkArgument(f1.outerVarPreconditions.isEmpty());
-    Preconditions.checkArgument(f2.outerVarPreconditions.isEmpty());
     if (f1.equals(f2)) {
       return f1;
     }
@@ -926,21 +928,23 @@ public final class FunctionType {
       return this;
     }
     Map<String, JSType> reducedMap = typeMap;
-    boolean foundShadowedTypeParam = false;
-    for (String typeParam : this.typeParameters) {
-      if (typeMap.containsKey(typeParam)) {
-        foundShadowedTypeParam = true;
-        break;
-      }
-    }
-    if (foundShadowedTypeParam) {
-      ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-      for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
-        if (!typeParameters.contains(entry.getKey())) {
-          builder.put(entry);
+    if (!JSType.MAP_TO_UNKNOWN.equals(typeMap)) {
+      boolean foundShadowedTypeParam = false;
+      for (String typeParam : this.typeParameters) {
+        if (typeMap.containsKey(typeParam)) {
+          foundShadowedTypeParam = true;
+          break;
         }
       }
-      reducedMap = builder.build();
+      if (foundShadowedTypeParam) {
+        ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+        for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
+          if (!typeParameters.contains(entry.getKey())) {
+            builder.put(entry);
+          }
+        }
+        reducedMap = builder.build();
+      }
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (JSType reqFormal : this.requiredFormals) {
@@ -1016,8 +1020,7 @@ public final class FunctionType {
    * methods of generic nominal types.
    */
   FunctionType substituteGenerics(Map<String, JSType> concreteTypes) {
-    Preconditions.checkState(outerVarPreconditions.isEmpty());
-    if (!isGeneric()) {
+    if (!isGeneric() || JSType.MAP_TO_UNKNOWN.equals(concreteTypes)) {
       return substituteNominalGenerics(concreteTypes);
     }
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();

@@ -14749,6 +14749,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}",
         "function g(/** string */ s) {}",
         "f('asdf', g);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) { x - 5; }",
+        "function g(x) { x.match(/asdf/); return x.match; }",
+        "var /** function(number) */ tmp = g({match: f});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testAvoidInstantiatingWithLooseTypes() {
@@ -14871,5 +14878,35 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var y = x.prop1;",
         "  var /** {prop2:number} */ z = x.prop2;",
         "}"));
+  }
+
+  public void testGenericsWithUnknownMapNoCrash() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template CLASS",
+        " */",
+        "function EventHandler() {}",
+        "/**",
+        " * @param {function(this:CLASS, FUN)} fn",
+        " * @template FUN",
+        " */",
+        "EventHandler.prototype.listen = function(fn) {};",
+        "/**",
+        " * @param {function(FUN)} fn",
+        " * @template FUN",
+        " */",
+        "EventHandler.prototype.unlisten = function(fn) {};",
+        "/**",
+        " * @template T",
+        " * @this {T}",
+        " * @return {!EventHandler<T>}",
+        " */",
+        "function getHandler() {",
+        "  return new EventHandler;",
+        "};",
+        "var z = {getHandler: getHandler};",
+        "var handler = z.getHandler();",
+        "var method = (1 < 2) ? handler.listen : handler.unlisten;"));
   }
 }
