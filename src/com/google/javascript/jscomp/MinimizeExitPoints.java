@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 
 /**
  * Transform the structure of the AST so that the number of explicit exits
- * are minimized.
+ * are minimized and instead flows to implicit exits conditions.
  *
  * @author johnlenz@google.com (John Lenz)
  */
@@ -43,6 +43,7 @@ class MinimizeExitPoints
 
   @Override
   public void process(Node externs, Node root) {
+    // TODO(johnlenz): only inspect changed functions
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 
@@ -77,6 +78,13 @@ class MinimizeExitPoints
         // there is code that relies on NodeTraversal knowing the correct scope.
         tryMinimizeExits(n.getLastChild(), Token.RETURN, null);
         break;
+
+      case Token.SWITCH:
+        tryMinimizeSwitchExits(n, Token.BREAK, null);
+        break;
+
+      // TODO(johnlenz): Minimize any block that ends in a optimizable statements:
+      //   break, continue, return
     }
   }
 
@@ -150,7 +158,11 @@ class MinimizeExitPoints
       tryMinimizeExits(labelBlock, exitType, labelName);
     }
 
-    // TODO(johnlenz): The last case of SWITCH statement?
+    // We can only minimize switch cases if we are not trying to remove unlabeled breaks.
+    if (n.isSwitch()  && (exitType != Token.BREAK || labelName != null)) {
+      tryMinimizeSwitchExits(n, exitType, labelName);
+      return;
+    }
 
     // The rest assumes a block with at least one child, bail on anything else.
     if (!n.isBlock() || n.getLastChild() == null) {
@@ -195,6 +207,48 @@ class MinimizeExitPoints
       tryMinimizeExits(c, exitType, labelName);
       // If the node is still the last child, we are done.
       if (c == n.getLastChild()) {
+        break;
+      }
+    }
+  }
+
+  void tryMinimizeSwitchExits(Node n, int exitType, @Nullable String labelName) {
+    Preconditions.checkState(n.isSwitch());
+    // Skipping the switch condition, visit all the children.
+    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+      if (c != n.getLastChild()) {
+        tryMinimizeSwitchCaseExits(c, exitType, labelName);
+      } else {
+        // Last case, the last case block can be optimized more aggressively.
+        tryMinimizeExits(c.getLastChild(), exitType, labelName);
+      }
+    }
+  }
+
+  /**
+   * Attempt to remove explicit exits from switch cases that also occur implicitly
+   * after the switch.
+   */
+  void tryMinimizeSwitchCaseExits(Node n, int exitType, @Nullable String labelName) {
+    Preconditions.checkState(NodeUtil.isSwitchCase(n));
+
+    Preconditions.checkState(n != n.getParent().getLastChild());
+    Node block = n.getLastChild();
+    Node maybeBreak = block.getLastChild();
+    if (maybeBreak == null || !maybeBreak.isBreak() || maybeBreak.hasChildren()) {
+      // Can not minimize exits from a case without an explicit break from the switch.
+      return;
+    }
+
+    // Now try to minimize the exits of the last child before the break, if it is removed
+    // look at what has become the child before the break.
+    Node childBeforeBreak = block.getChildBefore(maybeBreak);
+    while (childBeforeBreak != null) {
+      Node c = childBeforeBreak;
+      tryMinimizeExits(c, exitType, labelName);
+      // If the node is still the last child, we are done.
+      childBeforeBreak = block.getChildBefore(maybeBreak);
+      if (c == childBeforeBreak) {
         break;
       }
     }

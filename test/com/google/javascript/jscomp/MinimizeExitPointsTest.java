@@ -216,6 +216,8 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
          "do { foo(); } while(false)");
 
     fold("do{break}while(!new Date());", "do{}while(!new Date());");
+
+    foldSame("do { foo(); switch (x) { case 1: break; default: f()}; } while(false)");
   }
 
   public void testForContinueOptimization() throws Exception {
@@ -254,7 +256,6 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
 
     fold("for(x=0;x<y;x++){g:continue}",
          "for(x=0;x<y;x++){}");
-    // This case could be improved.
     fold("for(x=0;x<y;x++){g:if(a()){continue;}else{continue;} continue;}",
          "for(x=0;x<y;x++){g:if(a());else;}");
   }
@@ -276,5 +277,17 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
    */
   public void testDontFoldBreakInDoWhileIfConditionHasSideEffects() {
     foldSame("var b=true;do{break}while(b=false);");
+  }
+
+  public void testSwitchExitPoints1() {
+    fold(
+        "switch (x) { case 1: f(); break; }",
+        "switch (x) { case 1: f();        }");
+    fold(
+        "switch (x) { case 1: f(); break; case 2: g(); break; }",
+        "switch (x) { case 1: f(); break; case 2: g();        }");
+    fold(
+        "switch (x) { case 1: if (x) { f(); break; } break; default: g(); break; }",
+        "switch (x) { case 1: if (x) { f();        } break; default: g();        }");
   }
 }
