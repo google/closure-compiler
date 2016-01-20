@@ -72,7 +72,7 @@ public class SimpleErrorReporter implements ErrorReporter {
         errors.add(formatDetailedMessage(message, sourceName, line));
     }
 
-    private String formatDetailedMessage(
+    private static String formatDetailedMessage(
         String message, String sourceName, int lineNumber) {
       String details = message;
       if (sourceName == null || lineNumber <= 0) {

@@ -100,7 +100,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     invert = false;
   }
 
-  private String wrapInFunction(String s) {
+  private static String wrapInFunction(String s) {
     return "function f(){" + s + "}";
   }
 
