@@ -155,6 +155,7 @@ jQueryAjaxSettings.prototype.xhrFields;
 function jQuery(arg1, arg2) {}
 
 /**
+ * @type {!jQuery}
  * @const
  */
 var $ = jQuery;
