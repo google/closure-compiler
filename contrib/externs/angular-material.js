@@ -61,15 +61,15 @@ md.$bottomSheet.prototype.show = function(options) {};
 
 
 /**
- * @type {function(*=)}
+ * @param {*=} opt_response An argument for the resolved promise.
  */
-md.$bottomSheet.prototype.hide = function() {};
+md.$bottomSheet.prototype.hide = function(opt_response) {};
 
 
 /**
- * @type {function(*=)}
+ * @param {*=} opt_response An argument for the resolved promise.
  */
-md.$bottomSheet.prototype.cancel = function() {};
+md.$bottomSheet.prototype.cancel = function(opt_response) {};
 
 
 /******************************************************************************
@@ -272,15 +272,15 @@ md.$dialog.prototype.show = function(options) {};
 
 
 /**
- * @type {function(*=)}
+ * @param {*=} opt_response An argument for the resolved promise.
  */
-md.$dialog.prototype.hide = function() {};
+md.$dialog.prototype.hide = function(opt_response) {};
 
 
 /**
- * @type {function(*=)}
+ * @param {*=} opt_response An argument for the resolved promise.
  */
-md.$dialog.prototype.cancel = function() {};
+md.$dialog.prototype.cancel = function(opt_response) {};
 
 
 /** @return {!md.$dialog.AlertConfig_} */
@@ -317,10 +317,10 @@ md.$toast.options;
 
 
 /**
- * @param {md.$toast.options} options
+ * @param {md.$toast.options|md.$toast.preset} optionsOrPreset
  * @return {!angular.$q.Promise}
  */
-md.$toast.prototype.show = function(options) {};
+md.$toast.prototype.show = function(optionsOrPreset) {};
 
 
 /**
@@ -331,31 +331,77 @@ md.$toast.prototype.showSimple = function(text) {};
 
 
 /**
- * @type {function(*=)}
+ * @param {*=} opt_response An argument for the resolved promise.
  */
-md.$toast.prototype.hide = function() {};
+md.$toast.prototype.hide = function(opt_response) {};
 
 
 /**
- * @type {function(*=)}
+ * @param {*=} opt_response An argument for the resolved promise.
  */
-md.$toast.prototype.cancel = function() {};
+md.$toast.prototype.cancel = function(opt_response) {};
+
+
+/** @record */
+md.$toast.preset = function() {};
 
 /**
- * @typedef {{
- *   content: function(string):md.$toast.preset,
- *   action: function(string):md.$toast.preset,
- *   highlightAction: function(boolean):md.$toast.preset,
- *   capsule: function(boolean):md.$toast.preset,
- *   position: function(string):md.$toast.preset,
- *   hideDelay: function(number):md.$toast.preset
- * }}
+ * @param {string} action
+ * @return {!md.$toast.preset}
  */
-md.$toast.preset;
+md.$toast.preset.prototype.action = function(action) {};
+
+/**
+ * @param {boolean} capsule
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.capsule = function(capsule) {};
+
+/**
+ * @param {string} content
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.content = function(content) {};
+
+/**
+ * @param {boolean|number} delay
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.hideDelay = function(delay) {};
+
+/**
+ * @param {string} content
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.textContent = function(content) {};
+
+/**
+ * @param {boolean} highlight
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.highlightAction = function(highlight) {};
+
+/**
+ * @param {string} theme
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.theme = function(theme) {};
+
+/**
+ * @param {?JQLiteSelector} parent
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.parent = function(parent) {};
+
+/**
+ * @param {string} position
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.position = function(position) {};
 
 
 /**
- * @return {md.$toast.preset}
+ * @return {!md.$toast.preset}
  */
 md.$toast.prototype.simple = function() {};
 
@@ -478,10 +524,10 @@ md.$mdThemingProvider.Theme.prototype.backgroundPalette =
 md.$mdThemingProvider.Theme.prototype.warnPalette = function(warnPalette) {};
 
 /**
- * @param {boolean=} isDark
+ * @param {boolean=} opt_isDark
  * @return {!md.$mdThemingProvider.Theme}
  */
-md.$mdThemingProvider.Theme.prototype.dark = function(isDark) {};
+md.$mdThemingProvider.Theme.prototype.dark = function(opt_isDark) {};
 
 
 /******************************************************************************
@@ -494,25 +540,25 @@ md.$mdIconProvider = function() {};
 /**
  * @param {string} id
  * @param {string} url
- * @param {number=} iconSize
+ * @param {number=} opt_iconSize
  * @return {!md.$mdIconProvider}
  */
-md.$mdIconProvider.prototype.icon = function(id, url, iconSize) {};
+md.$mdIconProvider.prototype.icon = function(id, url, opt_iconSize) {};
 
 /**
  * @param {string} id
  * @param {string} url
- * @param {number=} iconSize
+ * @param {number=} opt_iconSize
  * @return {!md.$mdIconProvider}
  */
-md.$mdIconProvider.prototype.iconSet = function(id, url, iconSize) {};
+md.$mdIconProvider.prototype.iconSet = function(id, url, opt_iconSize) {};
 
 /**
  * @param {string} url
- * @param {number=} iconSize
+ * @param {number=} opt_iconSize
  * @return {!md.$mdIconProvider}
  */
-md.$mdIconProvider.prototype.defaultIconSet = function(url, iconSize) {};
+md.$mdIconProvider.prototype.defaultIconSet = function(url, opt_iconSize) {};
 
 /**
  * @param {number} iconSize
