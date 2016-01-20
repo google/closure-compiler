@@ -2272,6 +2272,18 @@ History.prototype.replaceState = function(data, title, opt_url) {};
 History.prototype.state;
 
 /**
+ * Allows web applications to explicitly set default scroll restoration behavior
+ * on history navigation. This property can be either auto or manual.
+ *
+ * Non-standard. Only supported in Chrome 46+.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/History
+ * @see https://majido.github.io/scroll-restoration-proposal/history-based-api.html
+ * @type {string}
+ */
+History.prototype.scrollRestoration;
+
+/**
  * @see http://www.whatwg.org/specs/web-apps/current-work/#popstateevent
  * @constructor
  * @extends {Event}
