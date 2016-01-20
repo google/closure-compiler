@@ -26,18 +26,6 @@ public enum PropertyRenamingPolicy {
   OFF,
 
   /**
-   * Rename properties heuristically.
-   * @see RenameProperties
-   */
-  HEURISTIC,
-
-  /**
-   * Rename properties more heuristically.
-   * @see RenameProperties
-   */
-  AGGRESSIVE_HEURISTIC,
-
-  /**
    * Rename all properties that aren't explicitly quoted and aren't
    * externally defined (i.e. declared in an externs file). This policy
    * achieves better compaction than the others.
