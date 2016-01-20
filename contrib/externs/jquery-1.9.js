@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.9 - 1.11 & 2.0 - 2.1
+ * @fileoverview Externs for jQuery 1.9 - 1.12 & 2.0 - 2.2
  *
  * The jQuery API is identical for the 1.9.x+ and 2.0+ branches. In addition,
  * the API has not changed in releases since that date. These externs are valid
@@ -897,7 +897,7 @@ jQuery.fx.interval;
 jQuery.fx.off;
 
 /**
- * @param {string} url
+ * @param {(string|!jQueryAjaxSettings)} url
  * @param {(Object<string,*>|string|
  *     function(string,string,jQuery.jqXHR))=} data
  * @param {(function(string,string,jQuery.jqXHR)|string)=} success
@@ -992,6 +992,12 @@ jQuery.prototype.hover = function(arg1, handlerOut) {};
  * @return {(string|!jQuery)}
  */
 jQuery.prototype.html = function(arg1) {};
+
+/**
+ * @param {string} html
+ * @returns {string}
+ */
+jQuery.htmlPrefilter = function(html) {};
 
 /**
  * @param {*} value
@@ -1442,7 +1448,7 @@ jQuery.parseXML = function(data) {};
 jQuery.prototype.position = function() {};
 
 /**
- * @param {string} url
+ * @param {(string|!jQueryAjaxSettings)} url
  * @param {(Object<string,*>|string|
  *     function(string,string,jQuery.jqXHR))=} data
  * @param {(function(string,string,jQuery.jqXHR)|string|null)=} success
@@ -1862,10 +1868,21 @@ jQuery.prototype.unbind = function(arg1, arg2) {};
 jQuery.prototype.undelegate = function(arg1, arg2, handler) {};
 
 /**
+ * Deprecated since 1.12 & 2.2:
+ * To make it clear that jQuery.unique() also sorts, we’ve update the name.
+ * jQuery.unique will still exist, but jQuery.uniqueSort will become the documented method.
+ * 
  * @param {Array<Element>} arr
  * @return {Array<Element>}
  */
 jQuery.unique = function(arr) {};
+
+/**
+ * @param {Array<Element>} arr
+ * @return {Array<Element>}
+ * @since 1.12
+ */
+jQuery.uniqueSort = function(arr) {};
 
 /**
  * @deprecated Please use .on( "unload", handler ) instead.
