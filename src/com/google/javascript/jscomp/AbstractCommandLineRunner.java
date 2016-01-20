@@ -2294,12 +2294,27 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     private List<DependencyOptions.ModuleIdentifier> entryPoints = ImmutableList.of();
 
     /**
-     * Set closure entry points, which makes the compiler only include
+     * Set module entry points, which makes the compiler only include
      * those files and sort them in dependency order.
      */
     CommandLineConfig setEntryPoints(List<DependencyOptions.ModuleIdentifier> entryPoints) {
       Preconditions.checkNotNull(entryPoints);
       this.entryPoints = entryPoints;
+      return this;
+    }
+
+    /**
+     * Set closure entry points, which makes the compiler only include
+     * those files and sort them in dependency order.
+     *
+     * This method should eventually be replaced with setEntryPoints calls
+     */
+    CommandLineConfig setClosureEntryPoints(List<String> entryPoints) {
+      Preconditions.checkNotNull(entryPoints);
+
+      for(String entryPoint : entryPoints) {
+        this.entryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
+      }
       return this;
     }
 
