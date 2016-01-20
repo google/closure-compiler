@@ -1182,6 +1182,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "/** @type {(Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n");
   }
 
+  public void testDeprecatedAnnotationIncludesNewline() {
+    String js = LINE_JOINER.join(
+        "/**@deprecated See {@link replacementClass} for more details.",
+        "@type {number} */var x;",
+        "");
+
+    assertPrettyPrint(js, js);
+  }
+
   private void assertPrettyPrint(String js, String expected) {
     assertPrettyPrint(js, expected, new CompilerOptionBuilder() {
       @Override void setOptions(CompilerOptions options) { /* no-op */ }
@@ -1195,6 +1204,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
           @Override
           void setOptions(CompilerOptions options) {
             options.setPrettyPrint(true);
+            options.setPreserveTypeAnnotations(true);
             options.setLineBreak(false);
             options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
             optionBuilder.setOptions(options);

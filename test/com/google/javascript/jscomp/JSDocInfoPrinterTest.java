@@ -300,4 +300,15 @@ public final class JSDocInfoPrinterTest extends TestCase {
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/**@define {string} */", JSDocInfoPrinter.print(info));
   }
+
+  public void testDeprecated() {
+    builder.recordDeprecated();
+    builder.recordDeprecationReason("See {@link otherClass} for more info.");
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("string"), ""));
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals(
+        "/**@deprecated See {@link otherClass} for more info.\n@type {string} */",
+        JSDocInfoPrinter.print(info));
+  }
 }

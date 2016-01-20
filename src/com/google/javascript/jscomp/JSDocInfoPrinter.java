@@ -68,7 +68,7 @@ public final class JSDocInfoPrinter {
     }
     if (info.isDeprecated()) {
       sb.append("@deprecated ");
-      sb.append(info.getDeprecationReason() + " ");
+      sb.append(info.getDeprecationReason() + "\n");
     }
     if (info.getVisibility() != null
         && info.getVisibility() != Visibility.INHERITED) {
