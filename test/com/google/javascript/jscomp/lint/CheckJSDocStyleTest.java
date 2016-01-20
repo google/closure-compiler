@@ -97,6 +97,18 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         "});"));
   }
 
+  public void testMissingJsDoc_noWarningOnTestFunctions() {
+    testSame("function testSomeFunctionality() {}");
+    testSame("var testSomeFunctionality = function() {};");
+    testSame("let testSomeFunctionality = function() {};");
+    testSame("const testSomeFunctionality = function() {};");
+
+    testSame("function setUp() {}");
+    testSame("function tearDown() {}");
+    testSame("var setUp = function() {};");
+    testSame("var tearDown = function() {};");
+  }
+
   private String inIIFE(String js) {
     return "(function() {\n" + js + "\n})()";
   }

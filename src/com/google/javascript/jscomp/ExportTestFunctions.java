@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * by the test runner, even if the code is compiled.
  *
  */
-class ExportTestFunctions implements CompilerPass {
+public class ExportTestFunctions implements CompilerPass {
 
   private static final Pattern TEST_FUNCTIONS_NAME_PATTERN =
       Pattern.compile(
@@ -191,7 +191,7 @@ class ExportTestFunctions implements CompilerPass {
    * @param functionName The name of the function
    * @return {@code true} if the function is recognized as a test function.
    */
-  private static boolean isTestFunction(String functionName) {
+  public static boolean isTestFunction(String functionName) {
     return functionName != null
         && TEST_FUNCTIONS_NAME_PATTERN.matcher(functionName).matches();
   }

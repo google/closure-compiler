@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.ExportTestFunctions;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
@@ -112,7 +113,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         && (NodeUtil.isFunctionDeclaration(function)
             || NodeUtil.isNameDeclaration(function.getParent().getParent())
             || function.getParent().isAssign())) {
-      t.report(function, MISSING_JSDOC);
+      String name = NodeUtil.getName(function);
+      // Don't warn for test functions, setUp, tearDown, etc.
+      if (name == null || !ExportTestFunctions.isTestFunction(name)) {
+        t.report(function, MISSING_JSDOC);
+      }
     }
   }
 
