@@ -1300,8 +1300,8 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testGenerateExports() {
     args.add("--generate_exports=true");
-    test("/** @export */ foo.prototype.x = function() {};",
-        "foo.prototype.x=function(){};" +
+    test("var goog; /** @export */ foo.prototype.x = function() {};",
+        "var goog; foo.prototype.x=function(){};" +
         "goog.exportProperty(foo.prototype,\"x\",foo.prototype.x);");
   }
 
@@ -1790,7 +1790,9 @@ public final class CommandLineRunnerTest extends TestCase {
    */
   private void test(String[] original, String[] compiled,
                     DiagnosticType warning) {
+    exitCodes.clear();
     Compiler compiler = compile(original);
+    assertThat(exitCodes).containsExactly(0);
 
     if (warning == null) {
       assertEquals("Expected no warnings or errors\n" +
