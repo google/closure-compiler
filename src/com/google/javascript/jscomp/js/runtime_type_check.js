@@ -235,7 +235,7 @@ $jscomp.typecheck.ExternClassChecker_.oldOpenFuns = [];
 /**
  * Redefines the open method on the given window, adding tracking.
  *
- * @param {!Object} win the window to track.
+ * @param {!Window} win the window to track.
  */
 $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
   if (win.tracked) {
@@ -260,7 +260,7 @@ $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
 /**
  * Returns the global 'this' object. This will normally be the same as 'window'
  * but when running in a worker thread, the DOM is not available.
- * @return {!Object}
+ * @return {!Window}
  * @private
  */
 $jscomp.typecheck.ExternClassChecker_.getGlobalThis_ = function() {
