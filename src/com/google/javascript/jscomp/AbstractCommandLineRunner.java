@@ -2312,9 +2312,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     CommandLineConfig setClosureEntryPoints(List<String> entryPoints) {
       Preconditions.checkNotNull(entryPoints);
 
+      List<DependencyOptions.ModuleIdentifier> closureEntryPoints = new ArrayList<>();
+
       for(String entryPoint : entryPoints) {
-        this.entryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
+        closureEntryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
       }
+      this.entryPoints = closureEntryPoints;
+
       return this;
     }
 
