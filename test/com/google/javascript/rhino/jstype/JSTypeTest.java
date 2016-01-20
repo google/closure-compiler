@@ -5140,8 +5140,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testNullableNamedTypeChain() throws Exception {
     List<JSType> typeChain = ImmutableList.of(
-        registry.createOptionalNullableType(
-            registry.getNativeType(JSTypeNative.ALL_TYPE)),
+        registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.createOptionalNullableType(
             registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE)),
         registry.createOptionalNullableType(

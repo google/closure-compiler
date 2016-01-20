@@ -92,11 +92,6 @@ public class VoidType extends ValueType {
   }
 
   @Override
-  public boolean isExplicitlyVoidable() {
-    return true;
-  }
-
-  @Override
   String toStringHelper(boolean forAnnotations) {
     return getDisplayName();
   }
