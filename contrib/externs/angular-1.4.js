@@ -17,7 +17,6 @@
 /**
  * @fileoverview Externs for Angular 1.
  *
- * TODO: Mocks.
  * TODO: Remaining Services:
  *     $cookieStore
  *     $document
@@ -26,16 +25,6 @@
  *     $rootElement
  *     $rootScope
  *     $rootScopeProvider
- *
- * TODO: Resolve two issues with angular.$http
- *         1) angular.$http isn't declared as a
- *            callable type. It should be declared as a function, and properties
- *            added following the technique used by $timeout, $parse and
- *            $interval.
- *         2) angular.$http.delete cannot be added as an extern
- *            as it is a reserved keyword.
- *            Its use is potentially not supported in IE.
- *            It may be aliased as 'remove' in a future version.
  *
  * @see http://angularjs.org/
  * @externs
@@ -1389,26 +1378,8 @@ angular.$filterProvider.register = function(name, fn) {};
  * $http Service
  *****************************************************************************/
 
-/**
- * This is a typedef because the closure compiler does not allow
- * defining a type that is a function with properties.
- * If you are trying to use the $http service as a function, try
- * using one of the helper functions instead.
- * @typedef {{
- *   delete: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
- *   get: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
- *   head: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
- *   jsonp: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
- *   patch: function(string, *, angular.$http.Config=):
- *       !angular.$http.HttpPromise,
- *   post: function(string, *, angular.$http.Config=):
- *       !angular.$http.HttpPromise,
- *   put: function(string, *, angular.$http.Config=):!angular.$http.HttpPromise,
- *   defaults: angular.$http.Config,
- *   pendingRequests: !Array.<angular.$http.Config>
- * }}
- */
-angular.$http;
+/** @interface */
+angular.$http = function() {};
 
 /**
  * @typedef {{
@@ -1433,48 +1404,39 @@ angular.$http;
  */
 angular.$http.Config;
 
-angular.$http.Config.transformRequest;
+angular.$http.Config.prototype.transformRequest;
 
-angular.$http.Config.transformResponse;
+angular.$http.Config.prototype.transformResponse;
 
-// /**
-//  * This extern is currently incomplete as delete is a reserved word.
-//  * To use delete, index $http.
-//  * Example: $http['delete'](url, opt_config);
-//  * @param {string} url
-//  * @param {angular.$http.Config=} opt_config
-//  * @return {!angular.$http.HttpPromise}
-//  */
-// angular.$http.delete = function(url, opt_config) {};
+/**
+ * Externs are parsed as ES5, so using 'delete'
+ * should be fine, even though it is a reserved word.
+ *
+ * @param {angular.$http.Config=} opt_config
+ * @return {!angular.$http.HttpPromise}
+ */
+angular.$http.prototype.delete = function(url, opt_config) {};
 
 /**
  * @param {string} url
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.get = function(url, opt_config) {};
+angular.$http.prototype.get = function(url, opt_config) {};
 
 /**
  * @param {string} url
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.head = function(url, opt_config) {};
+angular.$http.prototype.head = function(url, opt_config) {};
 
 /**
  * @param {string} url
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.jsonp = function(url, opt_config) {};
-
-/**
- * @param {string} url
- * @param {*} data
- * @param {angular.$http.Config=} opt_config
- * @return {!angular.$http.HttpPromise}
- */
-angular.$http.patch = function(url, data, opt_config) {};
+angular.$http.prototype.jsonp = function(url, opt_config) {};
 
 /**
  * @param {string} url
@@ -1482,7 +1444,7 @@ angular.$http.patch = function(url, data, opt_config) {};
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.post = function(url, data, opt_config) {};
+angular.$http.prototype.patch = function(url, data, opt_config) {};
 
 /**
  * @param {string} url
@@ -1490,18 +1452,26 @@ angular.$http.post = function(url, data, opt_config) {};
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.put = function(url, data, opt_config) {};
+angular.$http.prototype.post = function(url, data, opt_config) {};
+
+/**
+ * @param {string} url
+ * @param {*} data
+ * @param {angular.$http.Config=} opt_config
+ * @return {!angular.$http.HttpPromise}
+ */
+angular.$http.prototype.put = function(url, data, opt_config) {};
 
 /**
  * @type {angular.$http.Config}
  */
-angular.$http.defaults;
+angular.$http.prototype.defaults;
 
 /**
  * @type {Array.<angular.$http.Config>}
  * @const
  */
-angular.$http.pendingRequests;
+angular.$http.prototype.pendingRequests;
 
 /**
  * @typedef {{
