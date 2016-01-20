@@ -1881,7 +1881,7 @@ jQuery.unique = function(arr) {};
 /**
  * @param {Array<Element>} arr
  * @return {Array<Element>}
- * @since 1.12
+ * @since 1.12 & 2.2
  */
 jQuery.uniqueSort = function(arr) {};
 
