@@ -1406,8 +1406,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f() {",
         "  var /** ? */ x = g();",
         "  return x.y;",
-        "}"),
-        NewTypeInference.INVALID_INFERRED_RETURN_TYPE);
+        "}"));
 
     typeCheck(LINE_JOINER.join(
         "function g() { return {}; }",
@@ -2497,14 +2496,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var /** !Foo */ x = new Foo;",
         "f(x);",
         "var /** !Bar */ y = x;"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE,
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */ function Foo() {}",
         "function f(obj) { obj.prop - 5; }",
-        "f(new Foo);"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "f(new Foo);"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -2559,6 +2556,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}",
         "f({ abc: 123 }); "));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function UnrestrictedClass() {}",
+        "function f(x) {",
+        "  x.someprop = 123;",
+        "}",
+        "function g(x) {",
+        "  return x.someprop - 1;",
+        "}",
+        "/** @type {function(!UnrestrictedClass)} */",
+        "var z = g;"));
   }
 
   public void testUnionOfRecords() {
@@ -3370,8 +3379,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  if (!(obj instanceof Object)) { throw -1; }",
         "  return obj.x - 5;",
         "}",
-        "g(new Object);"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "g(new Object);"));
   }
 
   public void testFunctionWithProps() {

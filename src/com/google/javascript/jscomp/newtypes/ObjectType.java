@@ -568,16 +568,23 @@ final class ObjectType implements TypeWithProperties {
     if (!isLoose) {
       for (String pname : other.props.keySet()) {
         QualifiedName qname = new QualifiedName(pname);
-        if (!mayHaveProp(qname) ||
-            !getProp(qname).isSubtypeOf(other.getProp(qname))) {
-          return false;
+        if (isStruct()) {
+          if (!mayHaveProp(qname)
+              || !getProp(qname).isSubtypeOf(other.getProp(qname))) {
+            return false;
+          }
+        } else {
+          if (mayHaveProp(qname)
+              && !getProp(qname).isSubtypeOf(other.getProp(qname))) {
+            return false;
+          }
         }
       }
     } else { // this is loose, other may be loose
-      for (String pname : props.keySet()) {
+      for (String pname : this.props.keySet()) {
         QualifiedName qname = new QualifiedName(pname);
-        if (other.mayHaveProp(qname) &&
-            !getProp(qname).isSubtypeOf(other.getProp(qname))) {
+        if (other.mayHaveProp(qname)
+            && !getProp(qname).isSubtypeOf(other.getProp(qname))) {
           return false;
         }
       }
