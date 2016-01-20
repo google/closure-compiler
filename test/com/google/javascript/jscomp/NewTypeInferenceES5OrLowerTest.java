@@ -14407,6 +14407,42 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "x = window.closed;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS,
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @type {number} */",
+            "window.mynum;"),
+        LINE_JOINER.join(
+            "function f(/** !Window */ w) {",
+            "  var /** string */ s = w.mynum;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @type {number} */",
+            "var mynum;"),
+        LINE_JOINER.join(
+            "function f(/** !Window */ w) {",
+            "  var /** string */ s = w.mynum;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // When Window is shadowed, don't copy properties to the wrong class
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @type {number} */",
+            "window.mynum;"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  /** @constructor */",
+            "  function Window() {}",
+            "  var x = (new Window).mynum;",
+            "}"),
+        NewTypeInference.INEXISTENT_PROPERTY);
   }
 
   public void testInstantiateToTheSuperType() {

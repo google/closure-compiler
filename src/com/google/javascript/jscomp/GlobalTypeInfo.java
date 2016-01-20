@@ -264,7 +264,8 @@ class GlobalTypeInfo implements CompilerPass {
   private final CodingConvention convention;
   private final Map<Node, String> anonFunNames = new LinkedHashMap<>();
   private static final String ANON_FUN_PREFIX = "%anon_fun";
-  private static final String WINDOW = "window";
+  private static final String WINDOW_INSTANCE = "window";
+  private static final String WINDOW_CLASS = "Window";
   private int freshId = 1;
   // Only for original definitions, not for aliased constructors
   private Map<Node, RawNominalType> nominaltypesByNode = new LinkedHashMap<>();
@@ -292,7 +293,7 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   NTIScope getGlobalScope() {
-    return globalScope;
+    return this.globalScope;
   }
 
   JSTypes getTypesUtilObject() {
@@ -331,24 +332,24 @@ class GlobalTypeInfo implements CompilerPass {
     Preconditions.checkNotNull(warnings, "Cannot rerun GlobalTypeInfo.process");
     Preconditions.checkArgument(externs == null || externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
-    globalScope = new NTIScope(root, null, ImmutableList.<String>of(), commonTypes);
-    globalScope.addUnknownTypeNames(this.unknownTypeNames);
+    this.globalScope = new NTIScope(root, null, ImmutableList.<String>of(), commonTypes);
+    this.globalScope.addUnknownTypeNames(this.unknownTypeNames);
     this.unknownTypeNames = null; // Don't retain the LinkedHashSet
-    scopes.add(globalScope);
+    scopes.add(this.globalScope);
 
     // Processing of a scope is split into many separate phases, and it's not
     // straightforward to remember which phase does what.
 
     // (1) Find names of classes, interfaces, typedefs, enums, and namespaces
     //   defined in the global scope.
-    CollectNamedTypes rootCnt = new CollectNamedTypes(globalScope);
+    CollectNamedTypes rootCnt = new CollectNamedTypes(this.globalScope);
     if (externs != null) {
       NodeTraversal.traverseEs6(compiler, externs, rootCnt);
     }
     NodeTraversal.traverseEs6(compiler, root, rootCnt);
     // (2) Determine the type represented by each typedef and each enum
-    globalScope.resolveTypedefs(typeParser);
-    globalScope.resolveEnums(typeParser);
+    this.globalScope.resolveTypedefs(typeParser);
+    this.globalScope.resolveEnums(typeParser);
     // (3) Repeat steps 1-2 for all the other scopes (outer-to-inner)
     for (int i = 1; i < scopes.size(); i++) {
       NTIScope s = scopes.get(i);
@@ -371,7 +372,7 @@ class GlobalTypeInfo implements CompilerPass {
     // (4) The bulk of the global-scope processing happens here:
     //     - Create scopes for functions
     //     - Declare properties on types
-    ProcessScope rootPs = new ProcessScope(globalScope);
+    ProcessScope rootPs = new ProcessScope(this.globalScope);
     if (externs != null) {
       NodeTraversal.traverseEs6(compiler, externs, rootPs);
     }
@@ -391,9 +392,24 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     // (7) Adjust types of properties based on inheritance information.
-    //     Report errors in the inheritance chain.
-    for (RawNominalType rawType : nominaltypesByNode.values()) {
+    //     Report errors in the inheritance chain. Do Window last.
+    RawNominalType win = null;
+    for (Map.Entry<Node, RawNominalType> entry : nominaltypesByNode.entrySet()) {
+      RawNominalType rawType = entry.getValue();
+      if (rawType.getName().equals(WINDOW_CLASS) && entry.getKey().isFromExterns()) {
+        win = rawType;
+        continue;
+      }
       checkAndFinalizeNominalType(rawType);
+    }
+    if (win != null) {
+      // Copy properties from window to Window.prototype, because in rare cases
+      // people pass window around rather than using it directly.
+      Namespace winNs = this.globalScope.getNamespace(WINDOW_INSTANCE);
+      if (winNs != null) {
+        winNs.copyWindowProperties(this.commonTypes, win);
+      }
+      checkAndFinalizeNominalType(win);
     }
 
     nominaltypesByNode = null;
@@ -542,11 +558,15 @@ class GlobalTypeInfo implements CompilerPass {
 
     // Warn for a prop declared with @override that isn't overriding anything.
     for (String pname : nonInheritedPropNames) {
-      Node propDefsite = propertyDefs.get(rawType, pname).defSite;
-      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propDefsite);
-      if (jsdoc != null && jsdoc.isOverride()) {
-        warnings.add(JSError.make(propDefsite, UNKNOWN_OVERRIDE,
-                pname, rawType.getName()));
+      PropertyDef propDef = propertyDefs.get(rawType, pname);
+      Preconditions.checkState(propDef != null || rawType.getName().equals(WINDOW_CLASS));
+      if (propDef != null) {
+        Node propDefsite = propDef.defSite;
+        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propDefsite);
+        if (jsdoc != null && jsdoc.isOverride()) {
+          warnings.add(JSError.make(propDefsite, UNKNOWN_OVERRIDE,
+                  pname, rawType.getName()));
+        }
       }
     }
 
@@ -664,11 +684,11 @@ class GlobalTypeInfo implements CompilerPass {
             visitEnum(nameNode);
           } else if (isAliasedNamespaceDefinition(nameNode)) {
             visitAliasedNamespace(nameNode);
-          } else if (varName.equals(WINDOW)
+          } else if (varName.equals(WINDOW_INSTANCE)
               && nameNode.isFromExterns()
-              && !this.currentScope.isDefinedLocally(WINDOW, false)) {
+              && !this.currentScope.isDefinedLocally(WINDOW_INSTANCE, false)) {
             this.currentScope.addLocal(
-                WINDOW,
+                WINDOW_INSTANCE,
                 getVarTypeFromAnnotation(nameNode, this.currentScope),
                 false, true);
           } else if (this.currentScope.isFunction()
@@ -782,8 +802,8 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private boolean mayCreateWindowNamespace(Node qnameNode) {
-      if (qnameNode.isName() && qnameNode.getString().equals(WINDOW)
-          && this.currentScope.isGlobalVar(WINDOW)) {
+      if (qnameNode.isName() && qnameNode.getString().equals(WINDOW_INSTANCE)
+          && this.currentScope.isGlobalVar(WINDOW_INSTANCE)) {
         globalScope.addNamespaceLit(qnameNode);
         return true;
       }

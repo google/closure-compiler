@@ -278,4 +278,48 @@ public abstract class Namespace {
     this.duringComputeJSType = false;
     return JSType.fromObjectType(obj);
   }
+
+  // Very similar to withNamedTypes, but copies the properties to Window's
+  // RawNominalType instead of an ObjectType.
+  public final void copyWindowProperties(JSTypes commonTypes, RawNominalType win) {
+    Preconditions.checkArgument(win.getName().equals("Window"));
+    Preconditions.checkNotNull(this.nominals,
+        "The built-in types are missing from window. "
+        + "Perhaps you forgot to run DeclaredGlobalExternsOnWindow?");
+    for (Map.Entry<String, RawNominalType> entry : this.nominals.entrySet()) {
+      RawNominalType rawType = entry.getValue();
+      // Hack: circular namespace here, skip adding Window.
+      if (!rawType.isFinalized()) {
+        Preconditions.checkState(rawType.getName().equals("Window"),
+            "Unexpected unfinalized type %s", rawType.getName());
+        continue;
+      }
+      win.addProtoProperty(
+          entry.getKey(), null, rawType.toJSType(commonTypes), true);
+    }
+    if (this.enums != null) {
+      for (Map.Entry<String, EnumType> entry : enums.entrySet()) {
+        win.addProtoProperty(
+            entry.getKey(), null, entry.getValue().toJSType(commonTypes), true);
+      }
+    }
+    if (this.namespaces != null) {
+      for (Map.Entry<String, NamespaceLit> entry : this.namespaces.entrySet()) {
+        String pname = entry.getKey();
+        JSType fun = null;
+        // If it's a function namespace, add the function type to the result
+        if (this.scopes.containsKey(pname)) {
+          DeclaredFunctionType dft =
+              this.scopes.get(pname).getDeclaredFunctionType();
+          fun = commonTypes.fromFunctionType(dft.toFunctionType());
+        }
+        JSType nsType = entry.getValue().toJSTypeIncludingObject(commonTypes, fun);
+        win.addProtoProperty(pname, null, nsType, true);
+      }
+    }
+    for (Map.Entry<String, Property> entry : this.otherProps.entrySet()) {
+      win.addProtoProperty(
+          entry.getKey(), null, entry.getValue().getType(), true);
+    }
+  }
 }
