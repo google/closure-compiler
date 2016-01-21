@@ -34,10 +34,7 @@ import com.google.javascript.rhino.Token;
  */
 
 public final class IntegrationTest extends IntegrationTestCase {
-
-  @Override public void setUp() {
-    super.setUp();
-  }
+  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private static final String CLOSURE_BOILERPLATE =
       "/** @define {boolean} */ var COMPILED = false; var goog = {};" +
@@ -216,7 +213,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "var goog = {};",
             "goog.forwardDeclare = function(/** string */ typeName) {};",
             "goog.forwardDeclare('fwd.declared.Type');",
@@ -508,7 +505,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     externs = ImmutableList.of(SourceFile.fromCode(
         "externs",
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @const */",
             "var ns = {};",
             "/** @type {number} */",
@@ -622,7 +619,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
     options.setNewTypeInference(true);
-    test(options, Joiner.on('\n').join(
+    test(options, LINE_JOINER.join(
         "/** @param {(boolean|number} x */",
         "function f(x) {}"),
         RhinoErrorReporter.TYPE_PARSE_ERROR);
@@ -655,7 +652,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setDisambiguateProperties(true);
     options.setLegacyCodeCompile(true);
     testSame(options,
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Foo() {",
             "  this.p = 123;",
@@ -931,7 +928,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setDisambiguateProperties(true);
     options.setRemoveDeadCode(true);
     test(options,
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @const */ var goog = {};",
             "/** @interface */ function I() {}",
             "I.prototype.a = function(x) {};",
@@ -939,7 +936,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "/** @override */ Foo.prototype.a = goog.abstractMethod;",
             "/** @constructor @extends Foo */ function Bar() {}",
             "/** @override */ Bar.prototype.a = function(x) {};"),
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "var goog={};",
             "function I(){}",
             "I.prototype.a=function(x){};",
@@ -1451,9 +1448,18 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
 
-    String code = Joiner.on('\n').join("/** @constructor @template T */", "function F() {}", "",
-        "/** @return {?T} */", "F.prototype.foo = function() {", "  return null;", "}", "",
-        "/** @type {F<string>} */", "var f = new F;", "/** @type {string} */",
+    String code = LINE_JOINER.join(
+        "/** @constructor @template T */",
+        "function F() {}",
+        "",
+        "/** @return {?T} */",
+        "F.prototype.foo = function() {",
+        "  return null;",
+        "}",
+        "",
+        "/** @type {F<string>} */",
+        "var f = new F;",
+        "/** @type {string} */",
         "var s = f.foo(); // Type error: f.foo() has type {?string}.");
 
     test(options, code, TYPE_MISMATCH_WARNING);
@@ -1463,9 +1469,17 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
 
-    String code = Joiner.on('\n').join("/** @constructor @template T */", "function F() {}", "",
-        "/** @param {T} t */", "F.prototype.foo = function(t) {", "}", "",
-        "/** @type {F<string>} */", "var f = new F;", "/** @type {?string} */", "var s = null;",
+    String code = LINE_JOINER.join("/** @constructor @template T */",
+        "function F() {}",
+        "",
+        "/** @param {T} t */",
+        "F.prototype.foo = function(t) {",
+        "}",
+        "",
+        "/** @type {F<string>} */",
+        "var f = new F;",
+        "/** @type {?string} */",
+        "var s = null;",
         "f.foo(s); // Type error: f.foo() takes a {string}, not a {?string}");
 
     test(options, code, TYPE_MISMATCH_WARNING);
@@ -3046,7 +3060,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setCodingConvention(convention);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    Compiler compiler = compile(options, Joiner.on('\n').join(
+    Compiler compiler = compile(options, LINE_JOINER.join(
         "class Base {}",
         "class Sub extends Base {}",
         "alert(1);"));
@@ -3077,7 +3091,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   public void testES6StaticsAreRemoved1() {
-    testES6StaticsAreRemoved(Joiner.on('\n').join(
+    testES6StaticsAreRemoved(LINE_JOINER.join(
         "class Base {",
         "  static called() { alert('I am called'); }",
         "  static notCalled() { alert('No one ever calls me'); }",
@@ -3090,7 +3104,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   public void failing_testES6StaticsAreRemoved2() {
-    testES6StaticsAreRemoved(Joiner.on('\n').join(
+    testES6StaticsAreRemoved(LINE_JOINER.join(
         "class Base {",
         "  static calledInSubclassOnly() { alert('No one ever calls me'); }",
         "}",
