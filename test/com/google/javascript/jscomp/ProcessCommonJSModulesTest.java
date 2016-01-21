@@ -19,10 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Unit tests for {@link ProcessCommonJSModules}
  */
@@ -280,39 +276,5 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "    console.log('bar');",
             "  }",
             "};"));
-  }
-
-  public void testSortInputs() throws Exception {
-    SourceFile a = SourceFile.fromCode("a.js", "require('b');require('c')");
-    SourceFile b = SourceFile.fromCode("b.js", "require('d')");
-    SourceFile c = SourceFile.fromCode("c.js", "require('d')");
-    SourceFile d = SourceFile.fromCode("d.js", "1;");
-
-    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(a, b, c, d));
-    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(d, b, c, a));
-    assertSortedInputs(ImmutableList.of(d, c, b, a), ImmutableList.of(d, c, b, a));
-    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(d, a, b, c));
-  }
-
-  private void assertSortedInputs(List<SourceFile> expected, List<SourceFile> shuffled)
-      throws Exception {
-    Compiler compiler = new Compiler(System.err);
-    compiler.initCompilerOptionsIfTesting();
-    compiler.getOptions().setProcessCommonJSModules(true);
-    compiler
-        .getOptions()
-        .dependencyOptions
-        .setEntryPoints(ImmutableList.of(ES6ModuleLoader.toModuleName(URI.create("a"))));
-    compiler.compile(
-        ImmutableList.of(SourceFile.fromCode("externs.js", "")), shuffled, compiler.getOptions());
-
-    List<SourceFile> result = new ArrayList<>();
-    for (JSModule m : compiler.getModuleGraph().getAllModules()) {
-      for (CompilerInput i : m.getInputs()) {
-        result.add(i.getSourceFile());
-      }
-    }
-
-    assertEquals(expected, result);
   }
 }

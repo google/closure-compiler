@@ -123,25 +123,6 @@ public final class CompilerTest extends TestCase {
     compiler.compile(externs, input, options);
   }
 
-  public void testCommonJSProvidesAndRequire() throws Exception {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("gin.js", "require('tonic')"),
-        SourceFile.fromCode("tonic.js", ""),
-        SourceFile.fromCode("mix.js", "require('gin'); require('tonic');"));
-    List<String> entryPoints = ImmutableList.of("module$mix");
-
-    Compiler compiler = initCompilerForCommonJS(inputs, entryPoints);
-    JSModuleGraph graph = compiler.getModuleGraph();
-    assertEquals(3, graph.getModuleCount());
-    List<CompilerInput> result = graph.manageDependencies(entryPoints,
-        compiler.getInputsForTesting());
-    assertEquals("module$tonic$fillFile", result.get(0).getName());
-    assertEquals("module$gin$fillFile", result.get(1).getName());
-    assertEquals("tonic.js", result.get(2).getName());
-    assertEquals("gin.js", result.get(3).getName());
-    assertEquals("mix.js", result.get(4).getName());
-  }
-
   public void testCommonJSMissingRequire() throws Exception {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("gin.js", "require('missing')"));

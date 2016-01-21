@@ -345,11 +345,8 @@ public final class JSModuleGraph {
    * @see DependencyOptions for more info on how this works.
    */
   public List<CompilerInput> manageDependencies(
-      List<String> entryPoints,
-      List<CompilerInput> inputs)
-      throws CircularDependencyException,
-          MissingModuleException,
-          MissingProvideException {
+      List<DependencyOptions.ModuleIdentifier> entryPoints, List<CompilerInput> inputs)
+      throws CircularDependencyException, MissingModuleException, MissingProvideException {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
@@ -452,26 +449,22 @@ public final class JSModuleGraph {
         entryPointInputs.addAll(sorter.getInputsWithoutProvides());
       }
 
-      for (String entryPoint : depOptions.getEntryPoints()) {
-        // An entry point is either formatted as:
-        // 'foo.bar' - peg foo.bar to its current module
-        // 'modC:foo.bar' - peg foo.bar to modC
-        String inputName = entryPoint;
-        int splitPoint = entryPoint.indexOf(':');
+      for (DependencyOptions.ModuleIdentifier entryPoint : depOptions.getEntryPoints()) {
         CompilerInput entryPointInput = null;
-        if (splitPoint != -1) {
-          String moduleName = entryPoint.substring(0, splitPoint);
-          inputName = entryPoint.substring(
-              Math.min(splitPoint + 1, entryPoint.length() - 1));
-          JSModule module = modulesByName.get(moduleName);
-          if (module == null) {
-            throw new MissingModuleException(moduleName);
+        try {
+          if (entryPoint.getClosureNamespace().equals(entryPoint.getModuleName())) {
+            entryPointInput = sorter.getInputProviding(entryPoint.getClosureNamespace());
           } else {
-            entryPointInput = sorter.getInputProviding(inputName);
-            entryPointInput.overrideModule(module);
+            JSModule module = modulesByName.get(entryPoint.getModuleName());
+            if (module == null) {
+              throw new MissingModuleException(entryPoint.getModuleName());
+            } else {
+              entryPointInput = sorter.getInputProviding(entryPoint.getClosureNamespace());
+              entryPointInput.overrideModule(module);
+            }
           }
-        } else {
-          entryPointInput = sorter.getInputProviding(inputName);
+        } catch (MissingProvideException e) {
+          throw new MissingProvideException(entryPoint.getName(), e);
         }
 
         entryPointInputs.add(entryPointInput);
