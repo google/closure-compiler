@@ -21,26 +21,29 @@ goog.setTestOnly();
  * Asserts deep equality for objects and arrays.
  * @param {*} expected
  * @param {*} actual
+ * @param {string=} position
  */
-exports.assertDeepEquals = function(expected, actual) {
-  assertEquals(
-      'both arrays', expected instanceof Array, actual instanceof Array);
-  assertEquals(
-      'both objects', expected instanceof Object, actual instanceof Object);
+exports.assertDeepEquals = function(expected, actual, position = '') {
+  position = position || '<actual>';
+  assertEquals(position + ' instanceof Array',
+      expected instanceof Array, actual instanceof Array);
+  assertEquals(position + ' instanceof Object',
+      expected instanceof Object, actual instanceof Object);
   if (expected instanceof Array) {
-    assertEquals(expected.length, actual.length);
+    assertEquals(position + '.length', expected.length, actual.length);
     for (let i = 0; i < expected.length; i++) {
-      exports.assertDeepEquals(expected[i], actual[i]);
+      exports.assertDeepEquals(expected[i], actual[i], `${position}[${i}]`);
     }
   } else if (expected instanceof Object) {
     for (let key in expected) {
-      assertTrue('Missing key: ' + key, key in actual);
-      exports.assertDeepEquals(expected[key], actual[key]);
+      assertTrue(`Missing key: ${position}.${key}`, key in actual);
+      exports.assertDeepEquals(
+          expected[key], actual[key], `${position}.${key}`);
     }
     for (let key in actual) {
-      assertTrue('Unexpected key: ' + key, key in expected);
+      assertTrue(`Unexpected key: ${position}.${key}`, key in expected);
     }
   } else {
-    assertEquals(expected, actual);
+    assertEquals(position, expected, actual);
   }
 };

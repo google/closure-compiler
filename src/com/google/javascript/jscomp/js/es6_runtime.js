@@ -110,6 +110,217 @@
     }
   }
 };
+/***/$jscomp.array = $jscomp.array || {};
+/**@private
+@return {{done:boolean}} */$jscomp.array.done_ = function() {
+  return {done:true, value:void 0};
+};
+/**@private @suppress {checkTypes} @template INPUT,OUTPUT
+
+@param {!IArrayLike<INPUT>} array
+@param {function(number,INPUT):OUTPUT} func
+@return {!Iterator<OUTPUT>} */$jscomp.array.arrayIterator_ = function(array, func) {
+  if (array instanceof String) {
+    array = String(array);
+  }
+  var i = 0;
+  $jscomp.initSymbol();
+  $jscomp.initSymbolIterator();
+  var $jscomp$compprop0 = {};
+  /**@const */var iter = ($jscomp$compprop0.next = function() {
+    if (i < array.length) {
+      /**@const */var index = i++;
+      return {value:func(index, array[index]), done:false};
+    }
+    iter.next = $jscomp.array.done_;
+    return $jscomp.array.done_();
+  }, $jscomp$compprop0[Symbol.iterator] = function() {
+    return iter;
+  }, $jscomp$compprop0);
+  return iter;
+};
+/**@private @template THIS,VALUE
+
+@param {!IArrayLike<VALUE>} array
+@param {function(this:THIS,VALUE,number,!IArrayLike<VALUE>):*} callback
+@param {THIS} thisArg
+@return {{i:number,v:(VALUE|undefined)}} */$jscomp.array.findInternal_ = function(array, callback, thisArg) {
+  if (array instanceof String) {
+    array = /**@type {!IArrayLike} */(String(array));
+  }
+  /**@const */var len = array.length;
+  for (var i = 0;i < len;i++) {
+    /**@const */var value = array[i];
+    if (callback.call(thisArg, value, i, array)) {
+      return {i:i, v:value};
+    }
+  }
+  return {i:-1, v:void 0};
+};
+/**@template INPUT,OUTPUT,THIS
+
+@param {(!IArrayLike<INPUT>|!Iterable<INPUT>)} arrayLike
+@param {function(this:THIS,INPUT):OUTPUT=} opt_mapFn
+@param {THIS=} opt_thisArg
+@return {!Array<OUTPUT>} */$jscomp.array.from = function(arrayLike, opt_mapFn, opt_thisArg) {
+  opt_mapFn = opt_mapFn === undefined ? function(x) {
+    return x;
+  } : opt_mapFn;
+  /**@const */var result = [];
+  $jscomp.initSymbol();
+  $jscomp.initSymbolIterator();
+  if (arrayLike[Symbol.iterator]) {
+    $jscomp.initSymbol();
+    $jscomp.initSymbolIterator();
+    /**@const */var iter = arrayLike[Symbol.iterator]();
+    var next = undefined;
+    while (!(next = iter.next()).done) {
+      result.push(opt_mapFn.call(opt_thisArg, next.value));
+    }
+  } else {
+    /**@const */var len = arrayLike.length;
+    for (var i = 0;i < len;i++) {
+      result.push(opt_mapFn.call(opt_thisArg, arrayLike[i]));
+    }
+  }
+  return result;
+};
+/**@suppress {checkTypes} @template VALUE
+
+@param {...VALUE} elements
+@return {!Array<VALUE>} */$jscomp.array.of = function(elements) {
+  var $jscomp$restParams = [];
+  for (var $jscomp$restIndex = 0;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
+    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
+  }
+  var elements$6 = $jscomp$restParams;
+  return $jscomp.array.from(elements$6);
+};
+/**@template VALUE
+
+@return {!Iterator<!Array<(number|VALUE)>>}
+@this {!IArrayLike<VALUE>} */$jscomp.array.entries = function() {
+  return $jscomp.array.arrayIterator_(this, function(i, v) {
+    return [i, v];
+  });
+};
+/**@suppress {checkTypes,const} */$jscomp.array.entries$install = function() {
+  if (!Array.prototype.entries) {
+    Array.prototype.entries = $jscomp.array.entries;
+  }
+};
+/**
+@return {!Iterator<number>}
+@this {!IArrayLike} */$jscomp.array.keys = function() {
+  return $jscomp.array.arrayIterator_(this, function(i) {
+    return i;
+  });
+};
+/**@suppress {checkTypes,const} */$jscomp.array.keys$install = function() {
+  if (!Array.prototype.keys) {
+    Array.prototype.keys = $jscomp.array.keys;
+  }
+};
+/**@template VALUE
+
+@return {!Iterator<VALUE>}
+@this {!IArrayLike<VALUE>} */$jscomp.array.values = function() {
+  return $jscomp.array.arrayIterator_(this, function(_, v) {
+    return v;
+  });
+};
+/**@suppress {checkTypes,const} */$jscomp.array.values$install = function() {
+  if (!Array.prototype.values) {
+    Array.prototype.values = $jscomp.array.values;
+  }
+};
+/**@template VALUE
+
+@param {number} target
+@param {number} start
+@param {number=} opt_end
+@return {!IArrayLike<VALUE>}
+@this {!IArrayLike<VALUE>} */$jscomp.array.copyWithin = function(target, start, opt_end) {
+  /**@const */var len = this.length;
+  target = Number(target);
+  start = Number(start);
+  opt_end = Number(opt_end != null ? opt_end : len);
+  if (target < start) {
+    opt_end = Math.min(opt_end, len);
+    while (start < opt_end) {
+      if (start in this) {
+        this[target++] = this[start++];
+      } else {
+        delete this[target++];
+        start++;
+      }
+    }
+  } else {
+    opt_end = Math.min(opt_end, len + start - target);
+    target += opt_end - start;
+    while (opt_end > start) {
+      if (--opt_end in this) {
+        this[--target] = this[opt_end];
+      } else {
+        delete this[target];
+      }
+    }
+  }
+  return this;
+};
+/**@suppress {checkTypes,const} */$jscomp.array.copyWithin$install = function() {
+  if (!Array.prototype.copyWithin) {
+    Array.prototype.copyWithin = $jscomp.array.copyWithin;
+  }
+};
+/**@template VALUE
+
+@param {VALUE} value
+@param {number=} opt_start
+@param {number=} opt_end
+@return {!IArrayLike<VALUE>}
+@this {!IArrayLike<VALUE>} */$jscomp.array.fill = function(value, opt_start, opt_end) {
+  opt_start = opt_start === undefined ? 0 : opt_start;
+  if (opt_end == null || !value.length) {
+    opt_end = this.length || 0;
+  }
+  opt_end = Number(opt_end);
+  for (var i = Number(opt_start || 0);i < opt_end;i++) {
+    this[i] = value;
+  }
+  return this;
+};
+/**@suppress {checkTypes,const} */$jscomp.array.fill$install = function() {
+  if (!Array.prototype.fill) {
+    Array.prototype.fill = $jscomp.array.fill;
+  }
+};
+/**@template VALUE,THIS
+
+@param {function(this:THIS,VALUE,number,!IArrayLike<VALUE>):*} callback
+@param {THIS=} opt_thisArg
+@return {(VALUE|undefined)}
+@this {!IArrayLike<VALUE>} */$jscomp.array.find = function(callback, opt_thisArg) {
+  return $jscomp.array.findInternal_(this, callback, opt_thisArg).v;
+};
+/**@suppress {checkTypes,const} */$jscomp.array.find$install = function() {
+  if (!Array.prototype.find) {
+    Array.prototype.find = $jscomp.array.find;
+  }
+};
+/**@template VALUE,THIS
+
+@param {function(this:THIS,VALUE,number,!IArrayLike<VALUE>):*} callback
+@param {THIS=} opt_thisArg
+@return {(VALUE|undefined)}
+@this {!IArrayLike<VALUE>} */$jscomp.array.findIndex = function(callback, opt_thisArg) {
+  return $jscomp.array.findInternal_(this, callback, opt_thisArg).i;
+};
+/**@suppress {checkTypes,const} */$jscomp.array.findIndex$install = function() {
+  if (!Array.prototype.findIndex) {
+    Array.prototype.findIndex = $jscomp.array.findIndex;
+  }
+};
 /***/ /**@constructor @struct @template KEY,VALUE
 
 @param {(!Iterable<!Array<(KEY|VALUE)>>|!Array<!Array<(KEY|VALUE)>>)=} opt_iterable
@@ -119,7 +330,7 @@
   /**@private @type {!$jscomp.Map.Entry_<KEY,VALUE>} */this.head_ = $jscomp.Map.createHead_();
   /**@type {number} */this.size = 0;
   if (opt_iterable) {
-    for (var $jscomp$iter$0 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$0.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$0.next()) {
+    for (var $jscomp$iter$1 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$1.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$1.next()) {
       /**@const */var item = $jscomp$key$item.value;
       this.set(/**@type {KEY} */(item[0]), /**@type {VALUE} */(item[1]));
     }
@@ -270,7 +481,7 @@
 
 @param {function(this:THIS,KEY,VALUE,!$jscomp.Map<KEY,VALUE>)} callback
 @param {THIS=} opt_thisArg */$jscomp.Map.prototype.forEach = function(callback, opt_thisArg) {
-  for (var $jscomp$iter$1 = $jscomp.makeIterator(this.entries()), $jscomp$key$entry = $jscomp$iter$1.next();!$jscomp$key$entry.done;$jscomp$key$entry = $jscomp$iter$1.next()) {
+  for (var $jscomp$iter$2 = $jscomp.makeIterator(this.entries()), $jscomp$key$entry = $jscomp$iter$2.next();!$jscomp$key$entry.done;$jscomp$key$entry = $jscomp$iter$2.next()) {
     /**@const */var entry = $jscomp$key$entry.value;
     callback.call(opt_thisArg, /**@type {VALUE} */(entry[1]), /**@type {KEY} */(entry[0]), /**@type {!$jscomp.Map<KEY,VALUE>} */(this));
   }
@@ -283,8 +494,8 @@
   var entry = this.head_;
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
-  var $jscomp$compprop2 = {};
-  return /**@type {!Iterator} */($jscomp$compprop2.next = function() {
+  var $jscomp$compprop3 = {};
+  return /**@type {!Iterator} */($jscomp$compprop3.next = function() {
     if (entry) {
       while (entry.head != map.head_) {
         entry = entry.previous;
@@ -296,9 +507,9 @@
       entry = null;
     }
     return {done:true, value:void 0};
-  }, $jscomp$compprop2[Symbol.iterator] = function() {
+  }, $jscomp$compprop3[Symbol.iterator] = function() {
     return /**@type {!Iterator} */(this);
-  }, $jscomp$compprop2);
+  }, $jscomp$compprop3);
 };
 /**@private @type {number} */$jscomp.Map.index_ = 0;
 /**@private
@@ -342,8 +553,8 @@
   for (var $jscomp$restIndex = 1;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 1] = arguments[$jscomp$restIndex];
   }
-  var sources$5 = $jscomp$restParams;
-  for (var $jscomp$iter$3 = $jscomp.makeIterator(sources$5), $jscomp$key$source = $jscomp$iter$3.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$3.next()) {
+  var sources$7 = $jscomp$restParams;
+  for (var $jscomp$iter$4 = $jscomp.makeIterator(sources$7), $jscomp$key$source = $jscomp$iter$4.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$4.next()) {
     /**@const */var source = $jscomp$key$source.value;
     for (/**@const */var key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
@@ -370,7 +581,7 @@
   opt_iterable = opt_iterable === undefined ? [] : opt_iterable;
   /**@const @private @type {!$jscomp.Map<VALUE,VALUE>} */this.map_ = new $jscomp.Map;
   if (opt_iterable) {
-    for (var $jscomp$iter$4 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$4.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$4.next()) {
+    for (var $jscomp$iter$5 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$5.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$5.next()) {
       /**@const */var item = $jscomp$key$item.value;
       this.add(/**@type {VALUE} */(item));
     }
