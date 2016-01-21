@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,8 +33,6 @@ import com.google.javascript.rhino.Token;
  */
 
 public final class IntegrationTest extends IntegrationTestCase {
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
-
   private static final String CLOSURE_BOILERPLATE =
       "/** @define {boolean} */ var COMPILED = false; var goog = {};" +
       "goog.exportSymbol = function() {};";

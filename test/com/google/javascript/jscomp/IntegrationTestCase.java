@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
@@ -32,32 +34,42 @@ import java.util.List;
  * @author nicksantos@google.com (Nick Santos)
  */
 abstract class IntegrationTestCase extends TestCase {
+  protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   /** Externs for the test */
-  protected final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
-    SourceFile.fromCode("externs",
-        "var arguments;\n"
-        + "/** @constructor */ function Window() {}\n"
-        + "/** @type {string} */ Window.prototype.name;\n"
-        + "/** @type {string} */ Window.prototype.offsetWidth;\n"
-        + "/** @type {Window} */ var window;\n"
-        + "/** @nosideeffects */ function noSideEffects() {}\n"
-        + "/** @constructor\n * @nosideeffects */ function Widget() {}\n"
-        + "/** @modifies {this} */ Widget.prototype.go = function() {};\n"
-        + "/** @return {string} */ var widgetToken = function() {};\n"
-        + "function alert(message) {}"
-        + "function Object() {}"
-        + "Object.seal;"
-        + "Object.defineProperties;"
-        + "/**\n"
-        + " * @param {...*} var_args\n"
-        + " * @constructor\n"
-        + " */\n"
-        + "function Function(var_args) {}\n"
-        + "/** @param {...*} var_args */\n"
-        + "Function.prototype.call = function (var_args) {};\n"
-        + "/** @constructor */\n"
-        + "function Arguments() {}"));
+  protected static final List<SourceFile> DEFAULT_EXTERNS =
+      ImmutableList.of(SourceFile.fromCode("externs", LINE_JOINER.join(
+          "var arguments;",
+          "/** @constructor */ function Window() {}",
+          "/** @type {string} */ Window.prototype.name;",
+          "/** @type {string} */ Window.prototype.offsetWidth;",
+          "/** @type {Window} */ var window;",
+          "",
+          "/** @nosideeffects */ function noSideEffects() {}",
+          "",
+          "/**",
+          " * @constructor",
+          " * @nosideeffects",
+          " */",
+          "function Widget() {}",
+          "/** @modifies {this} */ Widget.prototype.go = function() {};",
+          "/** @return {string} */ var widgetToken = function() {};",
+          "",
+          "function alert(message) {}",
+          "function Object() {}",
+          "Object.seal;",
+          "Object.defineProperties;",
+          "",
+          "/**",
+          " * @param {...*} var_args",
+          " * @constructor",
+          " */",
+          "function Function(var_args) {}",
+          "/** @param {...*} var_args */",
+          "Function.prototype.call = function (var_args) {};",
+          "",
+          "/** @constructor */",
+          "function Arguments() {}")));
 
   protected List<SourceFile> externs = DEFAULT_EXTERNS;
 
@@ -141,9 +153,9 @@ abstract class IntegrationTestCase extends TestCase {
     assertEquals("Expected exactly one warning or error",
         1, compiler.getErrors().length + compiler.getWarnings().length);
     if (compiler.getErrors().length > 0) {
-      assertEquals(warning, compiler.getErrors()[0].getType());
+      assertError(compiler.getErrors()[0]).hasType(warning);
     } else {
-      assertEquals(warning, compiler.getWarnings()[0].getType());
+      assertError(compiler.getWarnings()[0]).hasType(warning);
     }
 
     if (compiled != null) {
