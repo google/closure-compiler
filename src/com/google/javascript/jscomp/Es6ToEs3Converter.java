@@ -405,9 +405,8 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
     Node result = null;
     Node firstGroup = node.isNew() ? IR.arraylit(IR.nullNode()) : IR.arraylit();
-    Node joinedGroups = IR.call(
-        IR.getprop(firstGroup, IR.string("concat")),
-        groups.toArray(new Node[groups.size()]));
+    Node joinedGroups =
+        IR.call(IR.getprop(firstGroup, IR.string("concat")), groups.toArray(new Node[0]));
     if (node.isArrayLit()) {
       result = joinedGroups;
     } else if (node.isCall()) {

@@ -1043,7 +1043,7 @@ public class CommandLineRunner extends
 
     flags.flagFile = "";
 
-    tokens = processArgs(tokens.toArray(new String[tokens.size()]));
+    tokens = processArgs(tokens.toArray(new String[0]));
 
     // Command-line warning levels should override flag file settings,
     // which means they should go last.

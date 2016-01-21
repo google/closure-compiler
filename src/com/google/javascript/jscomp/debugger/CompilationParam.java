@@ -681,7 +681,7 @@ enum CompilationParam {
       }
     });
 
-    return values.toArray(new CompilationParam[values.size()]);
+    return values.toArray(new CompilationParam[0]);
   }
 
   /** Applies a CGI parameter to the options. */

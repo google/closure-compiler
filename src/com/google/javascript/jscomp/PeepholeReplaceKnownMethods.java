@@ -736,7 +736,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       }
     }
 
-    return splitStrings.toArray(new String[splitStrings.size()]);
+    return splitStrings.toArray(new String[0]);
   }
 
   /**

@@ -106,7 +106,7 @@ public abstract class BasicErrorManager implements ErrorManager {
         errors.add(p.error);
       }
     }
-    return errors.toArray(new JSError[errors.size()]);
+    return errors.toArray(new JSError[0]);
   }
 
   /**

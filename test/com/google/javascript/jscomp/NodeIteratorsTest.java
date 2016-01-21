@@ -146,8 +146,7 @@ public final class NodeIteratorsTest extends TestCase {
       ancestors.add(0, n);
     }
 
-    FunctionlessLocalScope searchIt = new FunctionlessLocalScope(
-        ancestors.toArray(new Node[ancestors.size()]));
+    FunctionlessLocalScope searchIt = new FunctionlessLocalScope(ancestors.toArray(new Node[0]));
 
     boolean found = false;
     while (searchIt.hasNext()) {
