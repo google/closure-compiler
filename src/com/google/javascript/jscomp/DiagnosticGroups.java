@@ -97,7 +97,7 @@ public class DiagnosticGroups {
       + "conformanceViolations, const, constantProperty, deprecated, "
       + "deprecatedAnnotations, duplicateMessage, es3, "
       + "es5Strict, externsValidation, fileoverviewTags, globalThis, "
-      + "inferredConstCheck, internetExplorerChecks, invalidCasts, "
+      + "internetExplorerChecks, invalidCasts, "
       + "misplacedTypeAnnotation, missingGetCssName, missingProperties, "
       + "missingProvide, missingRequire, missingReturn, msgDescriptions, "
       + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, "
@@ -148,8 +148,11 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("unnecessaryCasts",
           TypeValidator.UNNECESSARY_CAST);
 
+  // TODO(tbreisacher): Remove the CANNOT_INFER_CONST_TYPE check after the next
+  // release, and switch this to registerDeprecatedGroup.
+  @Deprecated
   public static final DiagnosticGroup INFERRED_CONST_CHECKS =
-      DiagnosticGroups.registerGroup("inferredConstCheck",
+      DiagnosticGroups.registerGroup("inferredConstCheck",  // undocumented
           TypedScopeCreator.CANNOT_INFER_CONST_TYPE);
 
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =

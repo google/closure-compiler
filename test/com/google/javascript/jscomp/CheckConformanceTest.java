@@ -293,6 +293,67 @@ public final class CheckConformanceTest extends CompilerTestCase {
     }
   }
 
+  public void testInferredConstCheck() {
+    configuration =
+        LINE_JOINER.join(
+            "requirement: {",
+            "  type: CUSTOM",
+            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$InferredConstCheck'",
+            "  error_message: 'Failed to infer type of constant'",
+            "}");
+
+    testSame("/** @const */ var x = 0;");
+
+    testConformance(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function f() {",
+            "  /** @const */ this.foo = unknown;",
+            "}",
+            "var x = new f();"),
+        CheckConformance.CONFORMANCE_VIOLATION);
+
+    testConformance(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function f() {}",
+            "/** @this {f} */",
+            "var init_f = function() {",
+            "  /** @const */ this.foo = unknown;",
+            "};",
+            "var x = new f();"),
+        CheckConformance.CONFORMANCE_VIOLATION);
+
+    testConformance(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function f() {}",
+            "var init_f = function() {",
+            "  /** @const */ this.FOO = unknown;",
+            "};",
+            "var x = new f();"),
+        CheckConformance.CONFORMANCE_VIOLATION);
+
+    testConformance(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function f() {}",
+            "f.prototype.init_f = function() {",
+            "  /** @const */ this.FOO = unknown;",
+            "};",
+            "var x = new f();"),
+        CheckConformance.CONFORMANCE_VIOLATION);
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function f() {}",
+            "f.prototype.init_f = function() {",
+            "  /** @const {?} */ this.FOO = unknown;",
+            "};",
+            "var x = new f();"));
+  }
+
   public void testBannedCodePattern1() {
     configuration =
         "requirement: {\n" +
@@ -346,6 +407,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "anything;",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: testcode is not allowed");
+  }
+
+  private void testConformance(String src, DiagnosticType warning) {
+    testConformance(src, "", warning);
   }
 
   private void testConformance(String src1, String src2) {

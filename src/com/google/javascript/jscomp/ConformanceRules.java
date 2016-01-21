@@ -309,6 +309,30 @@ public final class ConformanceRules {
   }
 
   /**
+   * Check that variables annotated as @const have an inferred type, if there is
+   * no type given explicitly.
+   */
+  static class InferredConstCheck extends AbstractRule {
+    public InferredConstCheck(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      JSDocInfo jsDoc = n.getJSDocInfo();
+      if (jsDoc != null && jsDoc.isConstant() && jsDoc.getType() == null) {
+        JSType type = n.getJSType();
+        if (type != null && type.isUnknownType()) {
+          return ConformanceResult.VIOLATION;
+        }
+      }
+
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
+  /**
    * Banned dependency rule
    */
   static class BannedDependency extends AbstractRule {
