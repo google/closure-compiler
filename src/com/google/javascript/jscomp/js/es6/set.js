@@ -41,18 +41,18 @@ $jscomp.Set = class {
     // TODO(sdh): DEFINE to assume not conformant (try-catch especially)
     // TODO(sdh): how to do this without using goog?
 
-    const /** function(new:Set, ...?) */ Set = $jscomp.global['Set'];
+    const Set = $jscomp.global['Set'];
     if (!Set || !Set.prototype.entries || !Object.seal) return false;
     // Some implementations don't support constructor arguments.
     // TODO(sdh): this whole function from here to the end was wrapped
     // in a try, just in case for some reason it failed - is that reasonable?
-    const /** !Object */ value = Object.seal({x: 4});
+    const value = Object.seal({x: 4});
     const set = new Set($jscomp.makeIterator([value]));
     if (set.has(value) || set.size != 1 || set.add(value) != set ||
         set.size != 1 || set.add({x: 4}) != set || set.size != 2) {
       return false;
     }
-    const /** !Iterator<!Array<?>> */ iter = set.entries();
+    const iter = set.entries();
     let item = iter.next();
     if (item.done || item.value[0] != value || item.value[1] != value) {
       return false;
@@ -75,7 +75,7 @@ $jscomp.Set = class {
     /** @private @const {!$jscomp.Map<VALUE, VALUE>} */
     this.map_ = new $jscomp.Map();
     if (opt_iterable) {
-      for (let item of opt_iterable) {
+      for (const item of opt_iterable) {
         this.add(/** @type {VALUE} */ (item));
       }
     }
@@ -104,7 +104,7 @@ $jscomp.Set = class {
    * @suppress {checkTypes} .delete -> ['delete'] breaks @struct
    */
   delete(value) {
-    const /** boolean */ result = this.map_.delete(value);
+    const result = this.map_.delete(value);
     this.size = this.map_.size;
     return result;
   }
@@ -152,8 +152,7 @@ $jscomp.Set = class {
    * @template THIS
    */
   forEach(callback, opt_thisArg = void 0) {
-    let self = this;
-    this.map_.forEach(value => callback.call(opt_thisArg, value, value, self));
+    this.map_.forEach(value => callback.call(opt_thisArg, value, value, this));
   }
 };
 

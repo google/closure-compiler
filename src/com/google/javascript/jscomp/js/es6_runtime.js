@@ -101,7 +101,7 @@
   tempCtor.prototype = parentCtor.prototype;
   childCtor.prototype = new tempCtor;
   /**@override */childCtor.prototype.constructor = childCtor;
-  for (var p in parentCtor) {
+  for (/**@const */var p in parentCtor) {
     if ($jscomp.global.Object.defineProperties) {
       var descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(parentCtor, p);
       $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
@@ -120,24 +120,24 @@
   /**@type {number} */this.size = 0;
   if (opt_iterable) {
     for (var $jscomp$iter$0 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$0.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$0.next()) {
-      var item = $jscomp$key$item.value;
+      /**@const */var item = $jscomp$key$item.value;
       this.set(/**@type {KEY} */(item[0]), /**@type {VALUE} */(item[1]));
     }
   }
 };
 /**@private
 @return {boolean} */$jscomp.Map.checkBrowserConformance_ = function() {
-  /**@const @type {function(new:Map,...?)} */var Map = $jscomp.global["Map"];
+  /**@const */var Map = $jscomp.global["Map"];
   if (!Map || !Map.prototype.entries || !Object.seal) {
     return false;
   }
   try {
-    /**@const @type {!Object} */var key = Object.seal({x:4});
+    /**@const */var key = Object.seal({x:4});
     /**@const */var map = new Map($jscomp.makeIterator([[key, "s"]]));
     if (map.get(key) != "s" || map.size != 1 || map.get({x:4}) || map.set({x:4}, "t") != map || map.size != 2) {
       return false;
     }
-    /**@const @type {!Iterator<!Array<?>>} */var iter = map.entries();
+    /**@const */var iter = map.entries();
     var item = iter.next();
     if (item.done || item.value[0] != key || item.value[1] != "s") {
       return false;
@@ -199,10 +199,10 @@
 @param {KEY} key
 @return {boolean} */$jscomp.Map.prototype["delete"] = function(key) {
   var $jscomp$destructuring$var1 = this.maybeGetEntry_(key);
-  var id = $jscomp$destructuring$var1.id;
-  var list = $jscomp$destructuring$var1.list;
-  var index = $jscomp$destructuring$var1.index;
-  var entry = $jscomp$destructuring$var1.entry;
+  /**@const */var id = $jscomp$destructuring$var1.id;
+  /**@const */var list = $jscomp$destructuring$var1.list;
+  /**@const */var index = $jscomp$destructuring$var1.index;
+  /**@const */var entry = $jscomp$destructuring$var1.entry;
   if (entry) {
     list.splice(index, 1);
     if (!list.length) {
@@ -229,17 +229,18 @@
 /**
 @param {*} key
 @return {(VALUE|undefined)} */$jscomp.Map.prototype.get = function(key) {
-  /**@const @type {(!$jscomp.Map.Entry_<KEY,VALUE>|undefined)} */var entry = this.maybeGetEntry_(key).entry;
+  var $jscomp$destructuring$var2 = this.maybeGetEntry_(key);
+  /**@const */var entry = $jscomp$destructuring$var2.entry;
   return entry && entry.value;
 };
 /**@private
 @param {KEY} key
 @return {{id:string,list:(!Array<!$jscomp.Map.Entry_<KEY,VALUE>>|undefined),index:number,entry:(!$jscomp.Map.Entry_<KEY,VALUE>|undefined)}} */$jscomp.Map.prototype.maybeGetEntry_ = function(key) {
-  /**@const @type {string} */var id = $jscomp.Map.getId_(key);
-  /**@const @type {!Array<!$jscomp.Map.Entry_<KEY,VALUE>>} */var list = this.data_[id];
+  /**@const */var id = $jscomp.Map.getId_(key);
+  /**@const */var list = this.data_[id];
   if (list) {
     for (var index = 0;index < list.length;index++) {
-      var entry = list[index];
+      /**@const */var entry = list[index];
       if (key !== key && entry.key !== entry.key || key === entry.key) {
         return {id:id, list:list, index:index, entry:entry};
       }
@@ -270,7 +271,7 @@
 @param {function(this:THIS,KEY,VALUE,!$jscomp.Map<KEY,VALUE>)} callback
 @param {THIS=} opt_thisArg */$jscomp.Map.prototype.forEach = function(callback, opt_thisArg) {
   for (var $jscomp$iter$1 = $jscomp.makeIterator(this.entries()), $jscomp$key$entry = $jscomp$iter$1.next();!$jscomp$key$entry.done;$jscomp$key$entry = $jscomp$iter$1.next()) {
-    var entry = $jscomp$key$entry.value;
+    /**@const */var entry = $jscomp$key$entry.value;
     callback.call(opt_thisArg, /**@type {VALUE} */(entry[1]), /**@type {KEY} */(entry[0]), /**@type {!$jscomp.Map<KEY,VALUE>} */(this));
   }
 };
@@ -278,7 +279,7 @@
 
 @param {function(!$jscomp.Map.Entry_<KEY,VALUE>):T} func
 @return {!Iterator<T>} */$jscomp.Map.prototype.iter_ = function(func) {
-  /**@const @type {$jscomp.Map} */var map = this;
+  /**@const */var map = this;
   var entry = this.head_;
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
@@ -327,7 +328,7 @@
     $jscomp.initSymbolIterator();
     $jscomp.Map.prototype[Symbol.iterator] = $jscomp.Map.prototype.entries;
     $jscomp.initSymbol();
-    /**@private */$jscomp.Map.key_ = Symbol("map-id-key");
+    /**@const @private @type {symbol} */$jscomp.Map.key_ = Symbol("map-id-key");
   }
   $jscomp.Map$install = function() {
   };
@@ -343,8 +344,8 @@
   }
   var sources$5 = $jscomp$restParams;
   for (var $jscomp$iter$3 = $jscomp.makeIterator(sources$5), $jscomp$key$source = $jscomp$iter$3.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$3.next()) {
-    var source = $jscomp$key$source.value;
-    for (var key in source) {
+    /**@const */var source = $jscomp$key$source.value;
+    for (/**@const */var key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
         target[key] = source[key];
       }
@@ -370,7 +371,7 @@
   /**@const @private @type {!$jscomp.Map<VALUE,VALUE>} */this.map_ = new $jscomp.Map;
   if (opt_iterable) {
     for (var $jscomp$iter$4 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$4.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$4.next()) {
-      var item = $jscomp$key$item.value;
+      /**@const */var item = $jscomp$key$item.value;
       this.add(/**@type {VALUE} */(item));
     }
   }
@@ -378,16 +379,16 @@
 };
 /**@private
 @return {boolean} */$jscomp.Set.checkBrowserConformance_ = function() {
-  /**@const @type {function(new:Set,...?)} */var Set = $jscomp.global["Set"];
+  /**@const */var Set = $jscomp.global["Set"];
   if (!Set || !Set.prototype.entries || !Object.seal) {
     return false;
   }
-  /**@const @type {!Object} */var value = Object.seal({x:4});
+  /**@const */var value = Object.seal({x:4});
   /**@const */var set = new Set($jscomp.makeIterator([value]));
   if (set.has(value) || set.size != 1 || set.add(value) != set || set.size != 1 || set.add({x:4}) != set || set.size != 2) {
     return false;
   }
-  /**@const @type {!Iterator<!Array<?>>} */var iter = set.entries();
+  /**@const */var iter = set.entries();
   var item = iter.next();
   if (item.done || item.value[0] != value || item.value[1] != value) {
     return false;
@@ -407,7 +408,7 @@
 /**@suppress {checkTypes}
 @param {VALUE} value
 @return {boolean} */$jscomp.Set.prototype["delete"] = function(value) {
-  /**@const @type {boolean} */var result = this.map_["delete"](value);
+  /**@const */var result = this.map_["delete"](value);
   this.size = this.map_.size;
   return result;
 };
@@ -432,9 +433,9 @@
 
 @param {function(this:THIS,VALUE,VALUE,!$jscomp.Set<VALUE>)} callback
 @param {THIS=} opt_thisArg */$jscomp.Set.prototype.forEach = function(callback, opt_thisArg) {
-  var self = this;
+  /**@const */var $jscomp$this = this;
   this.map_.forEach(function(value) {
-    return callback.call(opt_thisArg, value, value, self);
+    return callback.call(opt_thisArg, value, value, $jscomp$this);
   });
 };
 /**@define {boolean} */$jscomp.Set.ASSUME_NO_NATIVE = false;

@@ -207,7 +207,7 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   /** @override */
   childCtor.prototype.constructor = childCtor;
 
-  for (let p in parentCtor) {
+  for (const p in parentCtor) {
     if ($jscomp.global.Object.defineProperties) {
       let descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(
           parentCtor, p);

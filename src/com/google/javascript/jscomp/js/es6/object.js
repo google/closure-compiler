@@ -32,8 +32,8 @@ $jscomp.object = $jscomp.object || {};
  * @return {!Object} The target object is returned.
  */
 $jscomp.object.assign = function(target, ...sources) {
-  for (let source of sources) {
-    for (let key in source) {
+  for (const source of sources) {
+    for (const key in source) {
       // Note: it's possible that source.hasOwnPropery was overwritten,
       // so call the version on Object.prototype just to be sure.
       if (Object.prototype.hasOwnProperty.call(source, key)) {
