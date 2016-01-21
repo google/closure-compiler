@@ -544,6 +544,36 @@
   $jscomp.Map$install = function() {
   };
 };
+/***/$jscomp.number = $jscomp.number || {};
+/**
+@param {*} x
+@return {boolean} */$jscomp.number.isFinite = function(x) {
+  if (typeof x !== "number") {
+    return false;
+  }
+  return !isNaN(x) && x !== Infinity && x !== -Infinity;
+};
+/**
+@param {*} x
+@return {boolean} */$jscomp.number.isInteger = function(x) {
+  if (!$jscomp.number.isFinite(x)) {
+    return false;
+  }
+  return x === Math.floor(x);
+};
+/**
+@param {*} x
+@return {boolean} */$jscomp.number.isNaN = function(x) {
+  return typeof x === "number" && isNaN(x);
+};
+/**
+@param {*} x
+@return {boolean} */$jscomp.number.isSafeInteger = function(x) {
+  return $jscomp.number.isInteger(x) && Math.abs(x) <= $jscomp.number.MAX_SAFE_INTEGER;
+};
+/**@const @type {number} */$jscomp.number.EPSILON = Math.pow(2, -52);
+/**@const @type {number} */$jscomp.number.MAX_SAFE_INTEGER = 9007199254740991;
+/**@const @type {number} */$jscomp.number.MIN_SAFE_INTEGER = -9007199254740991;
 /***/$jscomp.object = $jscomp.object || {};
 /**
 @param {!Object} target
