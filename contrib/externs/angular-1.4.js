@@ -210,31 +210,8 @@ angular.toJson = function(obj, opt_pretty) {};
  */
 angular.uppercase = function(s) {};
 
-/**
- * @typedef {{
- *   animate: (function(!angular.JQLite, !Object, !Object, !Function,
- *       !Object=):(!Function|undefined)|undefined),
- *   enter: (function(!angular.JQLite, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   leave: (function(!angular.JQLite, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   move: (function(!angular.JQLite, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   beforeAddClass: (function(!angular.JQLite, string, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   addClass: (function(!angular.JQLite, string, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   beforeRemoveClass: (function(!angular.JQLite, string, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   removeClass: (function(!angular.JQLite, string, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   beforeSetClass: (function(!angular.JQLite, string, string, !Function,
- *       !Object=):(!Function|undefined)|undefined),
- *   setClass: (function(!angular.JQLite, string, string, !Function, !Object=):
- *       (!Function|undefined)|undefined)
- *   }}
- */
-angular.Animation;
+/** @interface */
+angular.Animation = function() {};
 
 /**
  * @param {!angular.JQLite} element
@@ -244,7 +221,7 @@ angular.Animation;
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.animate =
+angular.Animation.prototype.animate =
     function(element, from, to, doneFn, opt_options) {};
 
 /**
@@ -253,7 +230,7 @@ angular.Animation.animate =
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.enter = function(element, doneFn, opt_options) {};
+angular.Animation.prototype.enter = function(element, doneFn, opt_options) {};
 
 /**
  * @param {!angular.JQLite} element
@@ -261,7 +238,7 @@ angular.Animation.enter = function(element, doneFn, opt_options) {};
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.leave = function(element, doneFn, opt_options) {};
+angular.Animation.prototype.leave = function(element, doneFn, opt_options) {};
 
 /**
  * @param {!angular.JQLite} element
@@ -269,7 +246,7 @@ angular.Animation.leave = function(element, doneFn, opt_options) {};
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.move = function(element, doneFn, opt_options) {};
+angular.Animation.prototype.move = function(element, doneFn, opt_options) {};
 
 /**
  * @param {!angular.JQLite} element
@@ -278,7 +255,7 @@ angular.Animation.move = function(element, doneFn, opt_options) {};
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.beforeAddClass =
+angular.Animation.prototype.beforeAddClass =
     function(element, className, doneFn, opt_options) {};
 
 /**
@@ -288,7 +265,7 @@ angular.Animation.beforeAddClass =
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.addClass =
+angular.Animation.prototype.addClass =
     function(element, className, doneFn, opt_options) {};
 
 /**
@@ -298,7 +275,7 @@ angular.Animation.addClass =
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.beforeRemoveClass =
+angular.Animation.prototype.beforeRemoveClass =
     function(element, className, doneFn, opt_options) {};
 
 /**
@@ -308,7 +285,7 @@ angular.Animation.beforeRemoveClass =
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.removeClass =
+angular.Animation.prototype.removeClass =
     function(element, className, doneFn, opt_options) {};
 
 /**
@@ -319,7 +296,7 @@ angular.Animation.removeClass =
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.beforeSetClass =
+angular.Animation.prototype.beforeSetClass =
     function(element, addedClass, removedClass, doneFn, opt_options) {};
 
 /**
@@ -330,7 +307,7 @@ angular.Animation.beforeSetClass =
  * @param {!Object=} opt_options
  * @return {(!Function|undefined)}
  */
-angular.Animation.setClass =
+angular.Animation.prototype.setClass =
     function(element, addedClass, removedClass, doneFn, opt_options) {};
 
 /**
