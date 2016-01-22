@@ -414,7 +414,7 @@
   /**@const */var list = $jscomp$destructuring$var1.list;
   /**@const */var index = $jscomp$destructuring$var1.index;
   /**@const */var entry = $jscomp$destructuring$var1.entry;
-  if (entry) {
+  if (entry && list) {
     list.splice(index, 1);
     if (!list.length) {
       delete this.data_[id];

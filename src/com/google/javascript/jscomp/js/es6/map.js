@@ -176,7 +176,7 @@ $jscomp.Map = class {
    */
   delete(key) {
     const {id, list, index, entry} = this.maybeGetEntry_(key);
-    if (entry) {
+    if (entry && list) {
       list.splice(index, 1);
       if (!list.length) delete this.data_[id];
       entry.previous.next = entry.next;
