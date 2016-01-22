@@ -92,6 +92,7 @@ public final class RefactoringDriver {
     options.setCheckSymbols(true);
     options.setCheckTypes(true);
     options.setClosurePass(true);
+    options.setGenerateExports(true);
     options.setPreserveGoogRequires(true);
 
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
