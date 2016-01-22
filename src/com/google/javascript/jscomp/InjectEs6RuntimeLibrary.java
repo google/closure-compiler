@@ -30,6 +30,7 @@ class InjectEs6RuntimeLibrary implements CompilerPass {
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     for (String forced : compiler.getOptions().forceLibraryInjection) {
       compiler.ensureLibraryInjected(forced, false);
@@ -42,7 +43,7 @@ class InjectEs6RuntimeLibrary implements CompilerPass {
       // undeclared. Add synthetic externs for them. The VarCheck pass would do this for us but it
       // runs before this one.
       for (String name : new String[] {"window", "global"}) {
-        compiler.getSynthesizedExternsInput().getAstRoot(compiler).addChildToBack(
+        compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler).addChildToBack(
             IR.var(IR.name(name)));
       }
     }

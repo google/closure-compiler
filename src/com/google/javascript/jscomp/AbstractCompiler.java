@@ -78,14 +78,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract SourceFile getSourceFileByName(String sourceName);
 
   /**
-   * Creates a new externs file.
-   * @param name A name for the new externs file.
-   * @throws IllegalArgumentException If the name of the externs file conflicts
-   *     with a pre-existing externs file.
-   */
-  abstract CompilerInput newExternInput(String name);
-
-  /**
    * Gets the module graph. May return null if there aren't at least two
    * modules.
    */
@@ -410,10 +402,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract GlobalVarReferenceMap getGlobalVarReferences();
 
   /**
-   * @return a CompilerInput that can be modified to add addition extern
-   * definitions;
+   * @return a CompilerInput that can be modified to add additional extern
+   * definitions to the beginning of the externs AST
    */
   abstract CompilerInput getSynthesizedExternsInput();
+
+  /**
+   * @return a CompilerInput that can be modified to add additional extern
+   * definitions to the end of the externs AST
+   */
+  abstract CompilerInput getSynthesizedExternsInputAtEnd();
 
   /**
    * @return a number in [0,1] range indicating an approximate progress of the

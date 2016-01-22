@@ -1012,16 +1012,26 @@ public class Compiler extends AbstractCompiler {
     }
   }
 
-  @Override
-  public CompilerInput newExternInput(String name) {
+  // Where to put a new synthetic externs file.
+  private static enum SyntheticExternsPosition {
+    START,
+    END
+  }
+
+  CompilerInput newExternInput(String name, SyntheticExternsPosition pos) {
     SourceAst ast = new SyntheticAst(name);
     if (inputsById.containsKey(ast.getInputId())) {
       throw new IllegalArgumentException("Conflicting externs name: " + name);
     }
     CompilerInput input = new CompilerInput(ast, true);
     putCompilerInput(input.getInputId(), input);
-    externsRoot.addChildToFront(ast.getAstRoot(this));
-    externs.add(0, input);
+    if (pos == SyntheticExternsPosition.START) {
+      externsRoot.addChildToFront(ast.getAstRoot(this));
+      externs.add(0, input);
+    } else {
+      externsRoot.addChildToBack(ast.getAstRoot(this));
+      externs.add(input);
+    }
     return input;
   }
 
@@ -1916,7 +1926,14 @@ public class Compiler extends AbstractCompiler {
   /** Name of the synthetic input that holds synthesized externs. */
   static final String SYNTHETIC_EXTERNS = "{SyntheticVarsDeclar}";
 
+  /**
+   * Name of the synthetic input that holds synthesized externs which
+   * must be at the end of the externs AST.
+   */
+  static final String SYNTHETIC_EXTERNS_AT_END = "{SyntheticVarsAtEnd}";
+
   private CompilerInput synthesizedExternsInput = null;
+  private CompilerInput synthesizedExternsInputAtEnd = null;
 
   private ImmutableMap<String, Node> defaultDefineValues = ImmutableMap.of();
 
@@ -1991,6 +2008,7 @@ public class Compiler extends AbstractCompiler {
     return options.ideMode;
   }
 
+  @Override
   Config getParserConfig(ConfigContext context) {
     if (parserConfig == null) {
       switch (options.getLanguageIn()) {
@@ -2333,9 +2351,18 @@ public class Compiler extends AbstractCompiler {
   @Override
   CompilerInput getSynthesizedExternsInput() {
     if (synthesizedExternsInput == null) {
-      synthesizedExternsInput = newExternInput(SYNTHETIC_EXTERNS);
+      synthesizedExternsInput = newExternInput(SYNTHETIC_EXTERNS, SyntheticExternsPosition.START);
     }
     return synthesizedExternsInput;
+  }
+
+  @Override
+  CompilerInput getSynthesizedExternsInputAtEnd() {
+    if (synthesizedExternsInputAtEnd == null) {
+      synthesizedExternsInputAtEnd = newExternInput(
+          SYNTHETIC_EXTERNS_AT_END, SyntheticExternsPosition.END);
+    }
+    return synthesizedExternsInputAtEnd;
   }
 
   @Override
