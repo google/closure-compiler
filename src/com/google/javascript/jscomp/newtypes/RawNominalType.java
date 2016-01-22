@@ -313,7 +313,10 @@ public final class RawNominalType extends Namespace {
   }
 
   ImmutableSet<String> getAllPropsOfInterface() {
-    Preconditions.checkState(isInterface);
+    if (!this.isInterface) {
+      Preconditions.checkState(this.name.equals("Object"));
+      return getAllPropsOfClass();
+    }
     Preconditions.checkState(this.isFinalized);
     if (allProps == null) {
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();

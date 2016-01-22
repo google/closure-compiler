@@ -14965,4 +14965,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var handler = z.getHandler();",
         "var method = (1 < 2) ? handler.listen : handler.unlisten;"));
   }
+
+  public void testInterfacesInheritFromObject() {
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "function /** boolean */ f(/** !Foo */ x) {",
+        "  return x.hasOwnProperty('asdf');",
+        "}"));
+  }
 }

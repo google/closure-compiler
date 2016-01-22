@@ -439,7 +439,8 @@ class GlobalTypeInfo implements CompilerPass {
   private Collection<PropertyDef> getPropDefsFromInterface(
       NominalType nominalType, String pname) {
     Preconditions.checkArgument(nominalType.isFinalized());
-    Preconditions.checkArgument(nominalType.isInterface());
+    Preconditions.checkArgument(
+        nominalType.isInterface() || nominalType.isBuiltinObject());
     if (nominalType.getPropDeclaredType(pname) == null) {
       return ImmutableSet.of();
     } else if (propertyDefs.get(nominalType.getId(), pname) != null) {

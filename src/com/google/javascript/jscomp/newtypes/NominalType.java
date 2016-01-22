@@ -79,7 +79,7 @@ public final class NominalType {
     return "Function".equals(rawType.name);
   }
 
-  boolean isBuiltinObject() {
+  public boolean isBuiltinObject() {
     return "Object".equals(rawType.name);
   }
 

@@ -975,8 +975,12 @@ public final class JSTypeCreatorFromJSDoc {
       warnings.add(JSError.make(
           funNode, CONFLICTING_IMPLEMENTED_TYPE, functionName));
     }
+    ImmutableSet<NominalType> extendedInterfaces =
+        getExtendedInterfaces(jsdoc, registry, typeParameters);
     boolean noCycles = constructorType.addInterfaces(
-        getExtendedInterfaces(jsdoc, registry, typeParameters));
+        extendedInterfaces.isEmpty()
+        ? ImmutableSet.of(registry.getCommonTypes().getObjectType())
+        : extendedInterfaces);
     if (!noCycles) {
       warnings.add(JSError.make(
           funNode, INHERITANCE_CYCLE, constructorType.toString()));
