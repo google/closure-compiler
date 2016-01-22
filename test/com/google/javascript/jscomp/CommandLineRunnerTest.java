@@ -482,9 +482,6 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Integration tests
-
   public void testIssue70a() {
     args.add("--language_in=ECMASCRIPT5");
     test("function foo({}) {}", RhinoErrorReporter.ES6_FEATURE);
@@ -1158,17 +1155,19 @@ public final class CommandLineRunnerTest extends TestCase {
     lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
         lastCompiler.getModuleGraph(), builder, true);
     assertThat(builder.toString())
-        .isEqualTo("{m0}\n"
-            + "i0\n"
-            + "\n"
-            + "{m1:m0}\n"
-            + "i1\n"
-            + "\n"
-            + "{m2:m1}\n"
-            + "i2\n"
-            + "\n"
-            + "{m3:m2}\n"
-            + "i3\n");
+        .isEqualTo(Joiner.on('\n').join(
+            "{m0}",
+            "i0",
+            "",
+            "{m1:m0}",
+            "i1",
+            "",
+            "{m2:m1}",
+            "i2",
+            "",
+            "{m3:m2}",
+            "i3",
+            ""));
   }
 
   public void testStarModuleManifest() throws Exception {
@@ -1180,17 +1179,19 @@ public final class CommandLineRunnerTest extends TestCase {
     lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
         lastCompiler.getModuleGraph(), builder, true);
     assertThat(builder.toString())
-        .isEqualTo("{m0}\n"
-            + "i0\n"
-            + "\n"
-            + "{m1:m0}\n"
-            + "i1\n"
-            + "\n"
-            + "{m2:m0}\n"
-            + "i2\n"
-            + "\n"
-            + "{m3:m0}\n"
-            + "i3\n");
+        .isEqualTo(Joiner.on('\n').join(
+            "{m0}",
+            "i0",
+            "",
+            "{m1:m0}",
+            "i1",
+            "",
+            "{m2:m0}",
+            "i2",
+            "",
+            "{m3:m0}",
+            "i3",
+            ""));
   }
 
   public void testOutputModuleGraphJson() throws Exception {

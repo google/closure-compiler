@@ -599,11 +599,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param files A list of flag entries indicates js and zip file names.
    * @param allowStdIn Whether '-' is allowed appear as a filename to represent
    *        stdin. If true, '-' is only allowed to appear once.
+   * @param jsModuleSpecs A list js module specs.
    * @return An array of inputs
    */
   protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
-      boolean allowStdIn) throws FlagUsageException, IOException {
-    return createInputs(files, null /* jsonFiles */, allowStdIn);
+      boolean allowStdIn, List<JsModuleSpec> jsModuleSpecs)
+      throws FlagUsageException, IOException {
+    return createInputs(files, null /* jsonFiles */, allowStdIn, jsModuleSpecs);
   }
 
   /**
@@ -614,11 +616,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    *
    * @param files A list of flag entries indicates js and zip file names.
    * @param jsonFiles A list of json encoded files.
+   * @param jsModuleSpecs A list js module specs.
    * @return An array of inputs
    */
   protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
-      List<JsonFileSpec> jsonFiles) throws FlagUsageException, IOException {
-    return createInputs(files, jsonFiles, false);
+      List<JsonFileSpec> jsonFiles, List<JsModuleSpec> jsModuleSpecs)
+      throws FlagUsageException, IOException {
+    return createInputs(files, jsonFiles, false, jsModuleSpecs);
   }
 
   /**
@@ -631,19 +635,28 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param jsonFiles A list of json encoded files.
    * @param allowStdIn Whether '-' is allowed appear as a filename to represent
    *        stdin. If true, '-' is only allowed to appear once.
+   * @param jsModuleSpecs A list js module specs.
    * @return An array of inputs
    */
   protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
-      List<JsonFileSpec> jsonFiles, boolean allowStdIn)
-      throws FlagUsageException, IOException {
+      List<JsonFileSpec> jsonFiles, boolean allowStdIn,
+      List<JsModuleSpec> jsModuleSpecs) throws FlagUsageException, IOException {
     List<SourceFile> inputs = new ArrayList<>(files.size());
     boolean usingStdin = false;
-    for (FlagEntry<JsSourceType> file : files) {
+    int jsModuleIndex = 0;
+    JsModuleSpec jsModuleSpec = jsModuleSpecs.isEmpty() ? null : jsModuleSpecs.get(0);
+    int cumulatedInputFilesExpected =
+        jsModuleSpec == null ? Integer.MAX_VALUE : jsModuleSpec.numInputs;
+    for (int i = 0; i < files.size(); i++) {
+      FlagEntry<JsSourceType> file = files.get(i);
       String filename = file.value;
       if (file.flag == JsSourceType.JS_ZIP) {
         if (!"-".equals(filename)) {
           List<SourceFile> newFiles = SourceFile.fromZipFile(filename, inputCharset);
           inputs.addAll(newFiles);
+          if (jsModuleSpec != null) {
+            jsModuleSpec.numJsFiles += newFiles.size() - 1;
+          }
         }
       } else if (!"-".equals(filename)) {
         SourceFile newFile = SourceFile.fromFile(filename, inputCharset);
@@ -669,6 +682,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         inputs.add(SourceFile.fromInputStream("stdin", this.in, inputCharset));
         usingStdin = true;
       }
+      if (i >= cumulatedInputFilesExpected - 1) {
+        jsModuleIndex++;
+        if (jsModuleIndex < jsModuleSpecs.size()) {
+          jsModuleSpec = jsModuleSpecs.get(jsModuleIndex);
+          cumulatedInputFilesExpected += jsModuleSpec.numInputs;
+        }
+      }
     }
     if (jsonFiles != null) {
       for (JsonFileSpec jsonFile : jsonFiles) {
@@ -682,6 +702,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * Creates JS source code inputs from a list of files.
    */
   private List<SourceFile> createSourceInputs(
+      List<JsModuleSpec> jsModuleSpecs,
       List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles)
       throws FlagUsageException, IOException {
@@ -696,9 +717,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
     try {
       if (jsonFiles != null) {
-        return createInputs(files, jsonFiles);
+        return createInputs(files, jsonFiles, jsModuleSpecs);
       } else {
-        return createInputs(files, true);
+        return createInputs(files, true, jsModuleSpecs);
       }
     } catch (FlagUsageException e) {
       throw new FlagUsageException("Bad --js flag. " + e.getMessage());
@@ -718,23 +739,21 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       externFiles.add(new FlagEntry<JsSourceType>(JsSourceType.EXTERN, file));
     }
     try {
-      return createInputs(externFiles, false);
+      return createInputs(externFiles, false, new ArrayList<JsModuleSpec>());
     } catch (FlagUsageException e) {
       throw new FlagUsageException("Bad --externs flag. " + e.getMessage());
     }
   }
 
   /**
-   * Creates module objects from a list of module specifications.
+   * Creates module objects from a list of js module specifications.
    *
-   * @param specs A list of module specifications, not null or empty. The spec
-   *        format is: <code>name:num-js-files[:[dep,...][:]]</code>. Module
-   *        names must not contain the ':' character.
+   * @param specs A list of js module specifications, not null or empty.
    * @param inputs A list of JS file paths, not null
    * @return An array of module objects
    */
   List<JSModule> createJsModules(
-      List<String> specs, List<SourceFile> inputs)
+      List<JsModuleSpec> specs, List<SourceFile> inputs)
       throws FlagUsageException, IOException {
     if (isInTestMode()) {
       return modulesSupplierForTesting.get();
@@ -748,79 +767,41 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     Map<String, JSModule> modulesByName = new LinkedHashMap<>();
     Map<String, Integer> modulesFileCountMap = new LinkedHashMap<>();
     int numJsFilesExpected = 0, minJsFilesRequired = 0;
-    boolean isFirstModule = true;
-    for (String spec : specs) {
-      // Format is "<name>:<num-js-files>[:[<dep>,...][:]]".
-      String[] parts = spec.split(":");
-      if (parts.length < 2 || parts.length > 4) {
-        throw new FlagUsageException("Expected 2-4 colon-delimited parts in "
-            + "module spec: " + spec);
+    for (JsModuleSpec spec : specs) {
+      checkModuleName(spec.name);
+      if (modulesByName.containsKey(spec.name)) {
+        throw new FlagUsageException("Duplicate module name: " + spec.name);
       }
+      JSModule module = new JSModule(spec.name);
 
-      // Parse module name.
-      String name = parts[0];
-      checkModuleName(name);
-      if (modulesByName.containsKey(name)) {
-        throw new FlagUsageException("Duplicate module name: " + name);
-      }
-      JSModule module = new JSModule(name);
-
-      if (parts.length > 2) {
-        // Parse module dependencies.
-        String depList = parts[2];
-        if (depList.length() > 0) {
-          String[] deps = depList.split(",");
-          for (String dep : deps) {
-            JSModule other = modulesByName.get(dep);
-            if (other == null) {
-              throw new FlagUsageException("Module '" + name
-                  + "' depends on unknown module '" + dep
-                  + "'. Be sure to list modules in dependency order.");
-            }
-            module.addDependency(other);
-          }
+      for (String dep : spec.deps) {
+        JSModule other = modulesByName.get(dep);
+        if (other == null) {
+          throw new FlagUsageException("Module '" + spec.name
+              + "' depends on unknown module '" + dep
+              + "'. Be sure to list modules in dependency order.");
         }
-      }
-
-      // Parse module inputs.
-      int numJsFiles = -1;
-      try {
-        numJsFiles = Integer.parseInt(parts[1]);
-      } catch (NumberFormatException ignored) {
-        numJsFiles = -1;
+        module.addDependency(other);
       }
 
       // We will allow modules of zero input.
-      if (numJsFiles < 0) {
-        // A size of 'auto' is only allowed on the base module if
-        // and it must also be the first module
-        if (parts.length == 2 && "auto".equals(parts[1])) {
-          if (isFirstModule) {
-            numJsFilesExpected = -1;
-          } else {
-            throw new FlagUsageException("Invalid JS file count '" + parts[1]
-                + "' for module: " + name + ". Only the first module may specify " +
-                "a size of 'auto' and it must have no dependencies.");
-          }
-        } else {
-          throw new FlagUsageException("Invalid JS file count '" + parts[1]
-              + "' for module: " + name);
-        }
+      if (spec.numJsFiles < 0) {
+        numJsFilesExpected = -1;
       } else {
-        minJsFilesRequired += numJsFiles;
+        minJsFilesRequired += spec.numJsFiles;
       }
 
 
       if (numJsFilesExpected >= 0) {
-        numJsFilesExpected += numJsFiles;
+        numJsFilesExpected += spec.numJsFiles;
       }
 
       // Add modules in reverse order so that source files are allocated to
       // modules in reverse order. This allows the first module
       // (presumably the base module) to have a size of 'auto'
-      moduleNames.add(0, name);
-      modulesFileCountMap.put(name, numJsFiles);
-      modulesByName.put(name, module);
+      moduleNames.add(0, spec.name);
+      modulesFileCountMap.put(spec.name, spec.numJsFiles);
+      modulesByName.put(spec.name, module);
     }
 
     final int totalNumJsFiles = inputs.size();
@@ -845,7 +826,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       int numJsFiles = modulesFileCountMap.get(moduleName);
       JSModule module = modulesByName.get(moduleName);
 
-      // Check if the first module specified 'auto' for the number of files
+      // Check if the first js module specified 'auto' for the number of files
       if (moduleIndex == moduleNames.size() - 1 && numJsFiles == -1) {
         numJsFiles = numJsFilesLeft;
       }
@@ -1036,7 +1017,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       outputFileNames.add(config.jsOutputFile);
     }
 
-    List<String> moduleSpecs = config.module;
+    boolean createCommonJsModules = false;
+    if (options.processCommonJSModules
+        && (config.module.size() == 1 && "auto".equals(config.module.get(0)))) {
+      createCommonJsModules = true;
+      config.module.remove(0);
+    }
+
+    List<JsModuleSpec> jsModuleSpecs = new ArrayList<>();
+    for (int i = 0; i < config.module.size(); i++) {
+      jsModuleSpecs.add(JsModuleSpec.create(config.module.get(i), i == 0));
+    }
     List<JsonFileSpec> jsonFiles = null;
 
     if (config.jsonStreamMode == JsonStreamMode.IN ||
@@ -1063,17 +1054,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
-    boolean createCommonJsModules = false;
-    if (options.processCommonJSModules
-        && (moduleSpecs.size() == 1 && "auto".equals(moduleSpecs.get(0)))) {
-      createCommonJsModules = true;
-      moduleSpecs.remove(0);
-    }
-
     List<SourceFile> inputs =
-        createSourceInputs(config.mixedJsSources, jsonFiles);
-    if (!moduleSpecs.isEmpty()) {
-      modules = createJsModules(moduleSpecs, inputs);
+        createSourceInputs(jsModuleSpecs, config.mixedJsSources, jsonFiles);
+    if (!jsModuleSpecs.isEmpty()) {
+      modules = createJsModules(jsModuleSpecs, inputs);
       for (JSModule m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));
       }
@@ -2557,6 +2541,78 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     protected FlagEntry(T flag, String value) {
       this.flag = flag;
       this.value = value;
+    }
+  }
+
+  /**
+   * Represents a specification for a js module.
+   */
+  static class JsModuleSpec {
+    private final String name;
+    // Number of input files, including js and zip files.
+    private final int numInputs;
+    private final String[] deps;
+    // Number of input js files. All zip files should be expended.
+    private int numJsFiles;
+
+    private JsModuleSpec(String name, int numInputs, String[] deps) {
+      this.name = name;
+      this.numInputs = numInputs;
+      this.deps = deps;
+      this.numJsFiles = numInputs;
+    }
+
+    /**
+     *
+     * @param specString The spec format is:
+     *        <code>name:num-js-files[:[dep,...][:]]</code>. Module names must
+     *        not contain the ':' character.
+     * @param isFirstModule Whether the spec is for the first module.
+     * @return A parsed js module spec.
+     * @throws FlagUsageException
+     */
+    static JsModuleSpec create(String specString, boolean isFirstModule)
+        throws FlagUsageException {
+      // Format is "<name>:<num-js-files>[:[<dep>,...][:]]".
+      String[] parts = specString.split(":");
+      if (parts.length < 2 || parts.length > 4) {
+        throw new FlagUsageException("Expected 2-4 colon-delimited parts in "
+            + "js module spec: " + specString);
+      }
+
+      // Parse module name.
+      String name = parts[0];
+
+      // Parse module dependencies.
+      String[] deps = parts.length > 2 && parts[2].length() > 0
+          ? parts[2].split(",")
+          : new String[0];
+
+      // Parse module inputs.
+      int numInputs = -1;
+      try {
+        numInputs = Integer.parseInt(parts[1]);
+      } catch (NumberFormatException ignored) {
+        numInputs = -1;
+      }
+
+      // We will allow modules of zero input.
+      if (numInputs < 0) {
+        // A size of 'auto' is only allowed on the base module if
+        // and it must also be the first module
+        if (parts.length == 2 && "auto".equals(parts[1])) {
+          if (!isFirstModule) {
+            throw new FlagUsageException("Invalid JS file count '" + parts[1]
+                + "' for module: " + name + ". Only the first module may specify "
+                + "a size of 'auto' and it must have no dependencies.");
+          }
+        } else {
+          throw new FlagUsageException("Invalid JS file count '" + parts[1]
+              + "' for module: " + name);
+        }
+      }
+
+      return new JsModuleSpec(name, numInputs, deps);
     }
   }
 }
