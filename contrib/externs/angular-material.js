@@ -467,6 +467,9 @@ md.$mdThemingProvider.prototype.setDefaultTheme = function(name) {};
  */
 md.$mdThemingProvider.prototype.theme = function(name, opt_parentTheme) {};
 
+/** @param {string} nonce */
+md.$mdThemingProvider.prototype.setNonce = function(nonce) {};
+
 /******************************************************************************
  * $mdTheming service
  *****************************************************************************/
