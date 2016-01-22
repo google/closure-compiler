@@ -685,12 +685,8 @@ class GlobalTypeInfo implements CompilerPass {
           } else if (isAliasedNamespaceDefinition(nameNode)) {
             visitAliasedNamespace(nameNode);
           } else if (varName.equals(WINDOW_INSTANCE)
-              && nameNode.isFromExterns()
-              && !this.currentScope.isDefinedLocally(WINDOW_INSTANCE, false)) {
-            this.currentScope.addLocal(
-                WINDOW_INSTANCE,
-                getVarTypeFromAnnotation(nameNode, this.currentScope),
-                false, true);
+              && nameNode.isFromExterns()) {
+            visitWindowVar(nameNode);
           } else if (this.currentScope.isFunction()
               && !this.currentScope.isDefinedLocally(varName, false)) {
             // Add a dummy local to avoid shadowing errors
@@ -726,6 +722,23 @@ class GlobalTypeInfo implements CompilerPass {
           }
           break;
         }
+      }
+    }
+
+    private void visitWindowVar(Node nameNode) {
+      JSType typeInJsdoc = getVarTypeFromAnnotation(nameNode, this.currentScope);
+      if (!this.currentScope.isDefinedLocally(WINDOW_INSTANCE, false)) {
+        this.currentScope.addLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
+        return;
+      }
+      // The externs may contain multiple definitions of window, or they may add
+      // properties to the window instance before "var window" is defined.
+      // In those cases, we want to pick the definition that has the Window
+      // nominal type.
+      NominalType maybeWin = typeInJsdoc == null
+          ? null : typeInJsdoc.getNominalTypeIfSingletonObj();
+      if (maybeWin != null && maybeWin.getName().equals(WINDOW_CLASS)) {
+        this.currentScope.addLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
       }
     }
 

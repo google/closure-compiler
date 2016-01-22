@@ -14443,6 +14443,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "  var x = (new Window).mynum;",
             "}"),
         NewTypeInference.INEXISTENT_PROPERTY);
+
+    // When the externs add properties to window before defining "var window;",
+    // we still infer that window has nominal type Window, not Object.
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "window.ns = ns;",
+            DEFAULT_EXTERNS),
+        LINE_JOINER.join(
+            "var /** !Window */ n = window;",
+            // ns is present on window
+            "var x = window.ns;"));
   }
 
   public void testInstantiateToTheSuperType() {
