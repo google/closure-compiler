@@ -254,8 +254,8 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
       // Implemented classes.
       .addClasses(ES6_IMPL, ES3, "$jscomp", "Map", "Set")
-      // (Soon-to-be implemented) Math methods.
-      .addStatics(ES6_IMPL, ES6_IMPL, "", "Math",
+      // Math methods.
+      .addStatics(ES6_IMPL, ES3, "$jscomp.math", "Math",
           "clz32", "imul", "sign", "log2", "log10", "log1p", "expm1", "cosh", "sinh", "tanh",
           "acosh", "asinh", "atanh", "hypot", "trunc", "cbrt")
       // Number methods.

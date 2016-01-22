@@ -193,8 +193,8 @@
   for (var $jscomp$restIndex = 0;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
   }
-  var elements$6 = $jscomp$restParams;
-  return $jscomp.array.from(elements$6);
+  var elements$9 = $jscomp$restParams;
+  return $jscomp.array.from(elements$9);
 };
 /**@template VALUE
 
@@ -544,6 +544,205 @@
   $jscomp.Map$install = function() {
   };
 };
+/***/$jscomp.math = $jscomp.math || {};
+/**
+@param {*} x
+@return {number} */$jscomp.math.clz32 = function(x) {
+  x = Number(x) >>> 0;
+  if (x === 0) {
+    return 32;
+  }
+  var result = 0;
+  if ((x & 4294901760) === 0) {
+    x <<= 16;
+    result += 16;
+  }
+  if ((x & 4278190080) === 0) {
+    x <<= 8;
+    result += 8;
+  }
+  if ((x & 4026531840) === 0) {
+    x <<= 4;
+    result += 4;
+  }
+  if ((x & 3221225472) === 0) {
+    x <<= 2;
+    result += 2;
+  }
+  if ((x & 2147483648) === 0) {
+    result++;
+  }
+  return result;
+};
+/**
+@param {*} a
+@param {*} b
+@return {number} */$jscomp.math.imul = function(a, b) {
+  a = Number(a);
+  b = Number(b);
+  /**@const */var ah = a >>> 16 & 65535;
+  /**@const */var al = a & 65535;
+  /**@const */var bh = b >>> 16 & 65535;
+  /**@const */var bl = b & 65535;
+  /**@const */var lh = ah * bl + al * bh << 16 >>> 0;
+  return al * bl + lh | 0;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.sign = function(x) {
+  x = Number(x);
+  return x === 0 || isNaN(x) ? x : x > 0 ? 1 : -1;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.log10 = function(x) {
+  return Math.log(x) / Math.LN10;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.log2 = function(x) {
+  return Math.log(x) / Math.LN2;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.log1p = function(x) {
+  x = Number(x);
+  if (x < .25 && x > -.25) {
+    var y = x;
+    var d = 1;
+    var z = x;
+    var zPrev = 0;
+    var s = 1;
+    while (zPrev != z) {
+      y *= x;
+      s *= -1;
+      z = (zPrev = z) + s * y / ++d;
+    }
+    return z;
+  }
+  return Math.log(1 + x);
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.expm1 = function(x) {
+  x = Number(x);
+  if (x < .25 && x > -.25) {
+    var y = x;
+    var d = 1;
+    var z = x;
+    var zPrev = 0;
+    while (zPrev != z) {
+      y *= x / ++d;
+      z = (zPrev = z) + y;
+    }
+    return z;
+  }
+  return Math.exp(x) - 1;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.cosh = function(x) {
+  x = Number(x);
+  return (Math.exp(x) + Math.exp(-x)) / 2;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.sinh = function(x) {
+  x = Number(x);
+  if (x === 0) {
+    return x;
+  }
+  return (Math.exp(x) - Math.exp(-x)) / 2;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.tanh = function(x) {
+  x = Number(x);
+  if (x === 0) {
+    return x;
+  }
+  /**@const */var y = Math.exp(2 * -Math.abs(x));
+  /**@const */var z = (1 - y) / (1 + y);
+  return x < 0 ? -z : z;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.acosh = function(x) {
+  x = Number(x);
+  return Math.log(x + Math.sqrt(x * x - 1));
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.asinh = function(x) {
+  x = Number(x);
+  if (x === 0) {
+    return x;
+  }
+  /**@const */var y = Math.log(Math.abs(x) + Math.sqrt(x * x + 1));
+  return x < 0 ? -y : y;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.atanh = function(x) {
+  x = Number(x);
+  return ($jscomp.math.log1p(x) - $jscomp.math.log1p(-x)) / 2;
+};
+/**
+@param {*} x
+@param {*} y
+@param {...*} rest
+@return {number} */$jscomp.math.hypot = function(x, y, rest) {
+  var $jscomp$restParams = [];
+  for (var $jscomp$restIndex = 2;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
+    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];
+  }
+  var rest$10 = $jscomp$restParams;
+  x = Number(x);
+  y = Number(y);
+  var max = Math.max(Math.abs(x), Math.abs(y));
+  for (var $jscomp$iter$4 = $jscomp.makeIterator(rest$10), $jscomp$key$z = $jscomp$iter$4.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$4.next()) {
+    var z = $jscomp$key$z.value;
+    max = Math.max(max, Math.abs(z));
+  }
+  if (max > 1E100 || max < 1E-100) {
+    x = x / max;
+    y = y / max;
+    var sum = x * x + y * y;
+    for (var $jscomp$iter$5 = $jscomp.makeIterator(rest$10), $jscomp$key$z = $jscomp$iter$5.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$5.next()) {
+      var z$11 = $jscomp$key$z.value;
+      z$11 = Number(z$11) / max;
+      sum += z$11 * z$11;
+    }
+    return Math.sqrt(sum) * max;
+  } else {
+    var sum$12 = x * x + y * y;
+    for (var $jscomp$iter$6 = $jscomp.makeIterator(rest$10), $jscomp$key$z = $jscomp$iter$6.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$6.next()) {
+      var z$13 = $jscomp$key$z.value;
+      sum$12 += z$13 * z$13;
+    }
+    return Math.sqrt(sum$12);
+  }
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.trunc = function(x) {
+  x = Number(x);
+  if (isNaN(x) || x === Infinity || x === -Infinity || x === 0) {
+    return x;
+  }
+  /**@const */var y = Math.floor(Math.abs(x));
+  return x < 0 ? -y : y;
+};
+/**
+@param {*} x
+@return {number} */$jscomp.math.cbrt = function(x) {
+  if (x === 0) {
+    return x;
+  }
+  x = Number(x);
+  /**@const */var y = Math.pow(Math.abs(x), 1 / 3);
+  return x < 0 ? -y : y;
+};
 /***/$jscomp.number = $jscomp.number || {};
 /**
 @param {*} x
@@ -583,8 +782,8 @@
   for (var $jscomp$restIndex = 1;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 1] = arguments[$jscomp$restIndex];
   }
-  var sources$7 = $jscomp$restParams;
-  for (var $jscomp$iter$4 = $jscomp.makeIterator(sources$7), $jscomp$key$source = $jscomp$iter$4.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$4.next()) {
+  var sources$14 = $jscomp$restParams;
+  for (var $jscomp$iter$7 = $jscomp.makeIterator(sources$14), $jscomp$key$source = $jscomp$iter$7.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$7.next()) {
     /**@const */var source = $jscomp$key$source.value;
     for (/**@const */var key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
@@ -611,7 +810,7 @@
   opt_iterable = opt_iterable === undefined ? [] : opt_iterable;
   /**@const @private @type {!$jscomp.Map<VALUE,VALUE>} */this.map_ = new $jscomp.Map;
   if (opt_iterable) {
-    for (var $jscomp$iter$5 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$5.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$5.next()) {
+    for (var $jscomp$iter$8 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$8.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$8.next()) {
       /**@const */var item = $jscomp$key$item.value;
       this.add(/**@type {VALUE} */(item));
     }
