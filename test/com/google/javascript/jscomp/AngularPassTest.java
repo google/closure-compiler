@@ -474,4 +474,34 @@ public final class AngularPassTest extends Es6CompilerTestCase {
     testErrorEs6("/** @ngInject */ function fn(a, [b, c] = [1, 2]){}",
         AngularPass.INJECTED_FUNCTION_HAS_DEFAULT_VALUE);
   }
+
+  public void testInGoogModule() {
+    enableRewriteClosureCode();
+    test(
+        LINE_JOINER.join(
+            "goog.module('my.module');",
+            "/** @ngInject */",
+            "function fn(a, b) {}"),
+        LINE_JOINER.join(
+            "goog.module('my.module');",
+            "/** @ngInject */",
+            "function fn(a, b) {}",
+            "fn['$inject'] = ['a', 'b'];"));
+  }
+
+  public void testInGoogScope() {
+    enableRewriteClosureCode();
+    test(
+        LINE_JOINER.join(
+            "goog.scope(function() {",
+            "/** @ngInject */",
+            "function fn(a, b) {}",
+            "});"),
+        LINE_JOINER.join(
+            "goog.scope(function() {",
+            "/** @ngInject */",
+            "function fn(a, b) {}",
+            "fn['$inject'] = ['a', 'b'];",
+            "});"));
+  }
 }
