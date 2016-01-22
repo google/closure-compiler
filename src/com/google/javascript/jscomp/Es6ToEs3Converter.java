@@ -298,14 +298,17 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    */
   private void visitRestParam(Node restParam, Node paramList) {
     Node functionBody = paramList.getLastSibling();
+    int restIndex = paramList.getIndexOfChild(restParam);
+    String paramName = restParam.getFirstChild().getString();
 
-    restParam.setType(Token.NAME);
-    restParam.setVarArgs(true);
+    Node nameNode = IR.name(paramName);
+    nameNode.setVarArgs(true);
+    nameNode.setJSDocInfo(restParam.getJSDocInfo());
+    paramList.replaceChild(restParam, nameNode);
 
     // Make sure rest parameters are typechecked
     JSTypeExpression type = null;
     JSDocInfo info = restParam.getJSDocInfo();
-    String paramName = restParam.getString();
     if (info != null) {
       type = info.getType();
     } else {
@@ -349,7 +352,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       name.setJSDocInfo(builder.build());
     }
 
-    int restIndex = paramList.getIndexOfChild(restParam);
     Node newArr = IR.var(IR.name(REST_PARAMS), IR.arraylit());
     functionBody.addChildToFront(newArr.useSourceInfoIfMissingFromForTree(restParam));
     Node init = IR.var(IR.name(REST_INDEX), IR.number(restIndex));

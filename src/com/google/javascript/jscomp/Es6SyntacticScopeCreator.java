@@ -92,7 +92,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
       // Args: Declare function variables
       Preconditions.checkState(args.isParamList());
       for (Node a = args.getFirstChild(); a != null; a = a.getNext()) {
-        if (a.isDefaultValue()) {
+        if (a.isDefaultValue() || a.isRest()) {
           declareLHS(scope, a.getFirstChild());
         } else {
           declareLHS(scope, a);
@@ -121,9 +121,9 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
       }
     } else if (lhs.isComputedProp()) {
       declareLHS(declarationScope, lhs.getLastChild());
-    } else if (lhs.isName() || lhs.isRest()) {
+    } else if (lhs.isName()) {
       declareVar(declarationScope, lhs);
-    } else if (lhs.isDefaultValue()) {
+    } else if (lhs.isDefaultValue() || lhs.isRest()) {
       declareLHS(declarationScope, lhs.getFirstChild());
     } else if (lhs.isArrayPattern() || lhs.isObjectPattern()) {
       for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {
@@ -234,7 +234,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
    * @param n The node corresponding to the variable name.
    */
   private void declareVar(Scope s, Node n) {
-    Preconditions.checkState(n.isName() || n.isRest() || n.isStringKey(),
+    Preconditions.checkState(n.isName() || n.isStringKey(),
         "Invalid node for declareVar: %s", n);
 
     String name = n.getString();
@@ -255,7 +255,6 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   /**
    * Determines whether the name should be declared at current lexical scope.
    * Assume the parent node is a BLOCK, FOR, FOR_OF, SCRIPT or LABEL.
-   * TODO(moz): Make sure this assumption holds.
    *
    * @param n The declaration node to be checked
    * @return whether the name should be declared at current lexical scope

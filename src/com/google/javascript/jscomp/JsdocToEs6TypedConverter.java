@@ -35,6 +35,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -97,7 +98,7 @@ public final class JsdocToEs6TypedConverter
             // Modify the primary AST to represent a function parameter as a
             // REST node, if the type indicates it is a rest parameter.
             if (parameterType.getRoot().getType() == Token.ELLIPSIS) {
-              attachTypeExpr = Node.newString(Token.REST, n.getString());
+              attachTypeExpr = IR.rest(n.getString());
               n.getParent().replaceChild(n, attachTypeExpr);
               compiler.reportCodeChange();
             }

@@ -162,6 +162,7 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclare("function f(x) { function x() {} }");
     assertRedeclare("function f(x) { var x; }");
     assertRedeclare("function f(x=3) { var x; }");
+    assertNoWarning("function f(...x) {}");
     assertRedeclare("function f(...x) { var x; }");
     assertRedeclare("function f(...x) { function x() {} }");
     assertRedeclare("function f(x=3) { function x() {} }");

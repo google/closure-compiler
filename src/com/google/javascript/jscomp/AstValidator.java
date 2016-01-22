@@ -791,8 +791,8 @@ public final class AstValidator implements CompilerPass {
 
   private void validateRest(Node n) {
     validateNodeType(Token.REST, n);
-    validateNonEmptyString(n);
     validateChildCount(n);
+    validateNonEmptyString(n.getFirstChild());
   }
 
   private void validateSpread(Node n) {

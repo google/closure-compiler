@@ -796,7 +796,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
             required.put(param.getString(), param.getDeclaredTypeExpression());
           }
         } else if (param.isRest()) {
-          restName = param.getString();
+          restName = param.getFirstChild().getString();
           restType = param.getDeclaredTypeExpression();
         }
       }

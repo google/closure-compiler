@@ -559,7 +559,7 @@ public class IR {
   }
 
   public static Node rest(String name) {
-    return Node.newString(Token.REST, name);
+    return new Node(Token.REST, name(name));
   }
 
   public static Node spread(Node expr) {

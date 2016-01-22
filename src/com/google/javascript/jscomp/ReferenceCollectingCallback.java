@@ -159,7 +159,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName() || n.isRest() || (n.isStringKey() && !n.hasChildren())) {
+    if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
       Var v;
       if (n.getString().equals("arguments")) {
         v = t.getScope().getArgumentsVar();
@@ -575,7 +575,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     private static final Set<Integer> DECLARATION_PARENTS =
         ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.PARAM_LIST,
-            Token.FUNCTION, Token.CLASS, Token.CATCH);
+            Token.FUNCTION, Token.CLASS, Token.CATCH, Token.REST);
 
     private final Node nameNode;
     private final BasicBlock basicBlock;

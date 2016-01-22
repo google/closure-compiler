@@ -966,7 +966,9 @@ class IRFactory {
     }
 
     Node processAssignmentRestElement(AssignmentRestElementTree tree) {
-      return newStringNode(Token.REST, tree.identifier.value);
+      Node name = newStringNode(Token.NAME, tree.identifier.value);
+      setSourceInfo(name, tree.identifier);
+      return newNode(Token.REST, name);
     }
 
     Node processAstRoot(ProgramTree rootNode) {
@@ -1262,7 +1264,9 @@ class IRFactory {
     Node processRestParameter(RestParameterTree tree) {
       maybeWarnEs6Feature(tree, "rest parameters");
 
-      return newStringNode(Token.REST, tree.identifier.value);
+      Node name = newStringNode(Token.NAME, tree.identifier.value);
+      setSourceInfo(name, tree.identifier);
+      return newNode(Token.REST, name);
     }
 
     Node processSpreadExpression(SpreadExpressionTree tree) {

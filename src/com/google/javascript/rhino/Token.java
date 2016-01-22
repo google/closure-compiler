@@ -54,7 +54,7 @@ public class Token {
   /**
    * Token types.
    */
-  public final static int
+  public static final int
       ERROR = -1,
 
       RETURN = 4,
@@ -601,6 +601,7 @@ public class Token {
       case LC:
       case COLON:
       case YIELD:
+      case REST:
         return -1;
       case NAME:
       case LABEL_NAME:
@@ -611,7 +612,6 @@ public class Token {
       case FALSE:
       case TRUE:
       case EMPTY:
-      case REST:
       case IMPORT_STAR:
       case MEMBER_VARIABLE_DEF:
         return 0;

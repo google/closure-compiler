@@ -347,7 +347,7 @@ class CodeGenerator {
       }
       case Token.REST:
         add("...");
-        add(n.getString());
+        add(first.getString());
         maybeAddTypeDecl(n);
         break;
 

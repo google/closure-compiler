@@ -1841,7 +1841,8 @@ public final class NodeUtilTest extends TestCase {
   public void testIsLValue() {
     assertLValueNamedX(parse("var x;").getFirstChild().getFirstChild());
     assertLValueNamedX(parse("var w, x;").getFirstChild().getLastChild());
-    assertLValueNamedX(parse("var [...x] = y;").getFirstChild().getFirstChild().getFirstChild());
+    assertLValueNamedX(
+        parse("var [...x] = y;").getFirstChild().getFirstChild().getFirstChild().getFirstChild());
     assertLValueNamedX(parse("var x = y;").getFirstChild().getFirstChild());
     assertLValueNamedX(parse("x++;").getFirstChild().getFirstChild().getFirstChild());
     assertLValueNamedX(

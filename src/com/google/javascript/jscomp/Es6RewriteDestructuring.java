@@ -324,8 +324,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         // becomes
         //   var temp = $jscomp.makeIterator(rhs);
         //   x = $jscomp.arrayFromIterator(temp);
-        newLHS = child.detachFromParent();
-        newLHS.setType(Token.NAME);
+        newLHS = child.getFirstChild().detachFromParent();
         newRHS =
             IR.call(
                 NodeUtil.newQName(compiler, "$jscomp.arrayFromIterator"),

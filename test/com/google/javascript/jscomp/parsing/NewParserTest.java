@@ -1304,6 +1304,8 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("const [first, ...rest] = foo();");
 
     parseError("var [first, ...more, last] = foo();", "']' expected");
+
+    // TODO(tbreisacher): This should parse without error. This is valid in ES6.
     parseError("var [first, ...[re, st]] = foo();", "lvalues in rest elements must be identifiers");
 
     mode = LanguageMode.ECMASCRIPT5;
@@ -2356,7 +2358,17 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("(x, ...xs) => xs");
     parse("(x, y, ...xs) => xs");
     parseError("(...xs, x) => xs", "')' expected");
+  }
 
+  public void testRestParameters_ES7() {
+    // Invalid in ES6 but will probably be valid in ES7.
+    // See https://github.com/google/closure-compiler/issues/1383
+    parseError("(...[x]) => xs", "'identifier' expected");
+    parseError("(...[x, y]) => xs", "'identifier' expected");
+    parseError("(a, b, c, ...[x, y, z]) => x", "'identifier' expected");
+  }
+
+  public void testRestParameters_ES5() {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("function f(...b) {}",
         "this language feature is only supported in es6 mode: rest parameters");
