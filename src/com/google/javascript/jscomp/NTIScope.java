@@ -308,7 +308,12 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   boolean hasThis() {
-    return isFunction() && getDeclaredFunctionType().getThisType() != null;
+    if (!isFunction()) {
+      return false;
+    }
+    DeclaredFunctionType dft = getDeclaredFunctionType();
+    // dft is null for function scopes early during GlobalTypeInfo
+    return dft != null && dft.getThisType() != null;
   }
 
   RawNominalType getNominalType(QualifiedName qname) {
@@ -548,7 +553,9 @@ final class NTIScope implements DeclaredTypeRegistry {
     JSType type = null;
     boolean isForwardDeclaration = false;
     boolean isTypeVar = false;
-    if (locals.containsKey(name)) {
+    if ("this".equals(name)) {
+      type = getDeclaredTypeOf("this");
+    } else if (locals.containsKey(name)) {
       type = locals.get(name);
     } else if (formals.contains(name)) {
       int formalIndex = formals.indexOf(name);

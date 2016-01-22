@@ -1625,6 +1625,26 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var /** (!High2|!High3) */ v2 = x;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @param {!Foo} x */",
+        "function f(x) {",
+        "  if (x.prop1) {",
+        "    x.prop1.prop2 += 1234;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @param {!Foo} x */",
+        "function f(x) {",
+        "  if (x.prop1 && x.prop1.prop2) {",
+        "    x.prop1.prop3 += 1234;",
+        "  }",
+        "}"));
   }
 
   public void testLooseConstructors() {
@@ -8424,11 +8444,9 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testBottomPropAccessDoesntCrash() {
-    // TODO(blickly): This warning is not very good.
     typeCheck(LINE_JOINER.join(
         "var obj = null;",
-        "if (obj) obj.prop += 7;"),
-        NewTypeInference.INEXISTENT_PROPERTY);
+        "if (obj) obj.prop += 7;"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -14973,5 +14991,25 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function /** boolean */ f(/** !Foo */ x) {",
         "  return x.hasOwnProperty('asdf');",
         "}"));
+  }
+
+  public void testTrickySpecializationOfNamespaceProperties() {
+    typeCheck(LINE_JOINER.join(
+        "function foo() {}",
+        "/** @type {Array<Object>} */ foo.arr;",
+        "function f() {",
+        "  if (foo.arr.length) {}",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(LINE_JOINER.join(
+        "function foo() {}",
+        "/** @type {Array<Object>} */ foo.arr;",
+        "function f() {",
+        "  if (foo.arr.length) {",
+        "    var z = foo.arr.shift();",
+        "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 }

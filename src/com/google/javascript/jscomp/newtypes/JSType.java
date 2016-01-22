@@ -417,7 +417,8 @@ public abstract class JSType implements TypeI {
 
   public boolean isUnion() {
     if (isBottom() || isTop() || isUnknown()
-        || isScalar() || isTypeVariable() || isEnumElement()) {
+        || isScalar() || isTypeVariable() || isEnumElement()
+        || hasTruthyMask() || hasFalsyMask()) {
       return false;
     }
     return !(getMask() == NON_SCALAR_MASK && getObjs().size() == 1);

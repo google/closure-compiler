@@ -2691,16 +2691,23 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
-  private boolean mayWarnAboutInexistentProp(
-      Node propAccessNode, JSType recvType, QualifiedName propQname) {
+  private boolean mayWarnAboutInexistentProp(Node propAccessNode,
+      JSType recvType, QualifiedName propQname, TypeEnv env) {
     if (!propAccessNode.isGetProp() || isPropertyAbsentTest(propAccessNode)
         || recvType.hasProp(propQname)) {
+      return false;
+    }
+    Node recv = propAccessNode.getFirstChild();
+    // TODO(dimvar): recvType is loose only in a rare case that needs to be
+    // fixed, related to specializing namespace properties. After fixing that,
+    // we need a preconditions check to ban loose types here.
+    if (recvType.isLoose()) {
+      updateLvalueTypeInEnv(env, recv, QualifiedName.fromNode(recv), JSType.UNKNOWN);
       return false;
     }
     // To avoid giant types in the error message, we use a heuristic:
     // if the receiver is a qualified name whose type is too long, we print
     // the qualified name instead.
-    Node recv = propAccessNode.getFirstChild();
     String recvTypeAsString = recvType.toString();
     String pname = propQname.toString();
     String errorMsg;
@@ -2763,7 +2770,15 @@ final class NewTypeInference implements CompilerPass {
     if (NodeUtil.isPropertyTest(compiler, propAccessNode)
         && !specializedType.isFalseOrFalsy()) {
       recvReqType = reqObjType;
-      recvSpecType = reqObjType.withProperty(propQname, specializedType);
+      if (specializedType.isTrueOrTruthy()) {
+        // This handles cases like: if (x.prop1 && x.prop1.prop2) { ... }
+        // In the THEN branch, the only thing we know about x.prop1 is that it
+        // has a truthy property, so x.prop1 should be a loose object to avoid
+        // spurious warnings.
+        recvSpecType = reqObjType.withLoose().withProperty(propQname, specializedType);
+      } else {
+        recvSpecType = reqObjType.withProperty(propQname, specializedType);
+      }
     } else if (specializedType.isFalseOrFalsy()) {
       recvReqType = recvSpecType = reqObjType;
     } else {
@@ -2816,7 +2831,7 @@ final class NewTypeInference implements CompilerPass {
         && !specializedType.isTrueOrTruthy()
         && !specializedType.isFalseOrFalsy()
         && !recvType.mayBeDict()
-        && !mayWarnAboutInexistentProp(propAccessNode, recvType, propQname)
+        && !mayWarnAboutInexistentProp(propAccessNode, recvType, propQname, pair.env)
         && recvType.hasProp(propQname)
         && !resultType.isSubtypeOf(requiredType)
         && tightenTypeAndDontWarn(
@@ -2841,26 +2856,41 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(pair.env, resultType);
   }
 
-  private static TypeEnv updateLvalueTypeInEnv(
+  private TypeEnv updateLvalueTypeInEnv(
       TypeEnv env, Node lvalue, QualifiedName qname, JSType type) {
     Preconditions.checkNotNull(type);
-    if (lvalue.isName()) {
-      return envPutType(env, lvalue.getString(), type);
-    } else if (lvalue.isThis()) {
-      return envPutType(env, THIS_ID, type);
-    } else if (lvalue.isVar()) { // Can happen iff its parent is a for/in.
-      Preconditions.checkState(NodeUtil.isForIn(lvalue.getParent()));
-      return envPutType(env, lvalue.getFirstChild().getString(), type);
+    switch (lvalue.getType()) {
+      case Token.NAME:
+        return envPutType(env, lvalue.getString(), type);
+      case Token.THIS: {
+        JSType t = envGetType(env, THIS_ID);
+        // Don't specialize THIS in functions where it is unknown.
+        return t == null ? env : envPutType(env, THIS_ID, type);
+      }
+      case Token.VAR: // Can happen iff its parent is a for/in.
+        Preconditions.checkState(NodeUtil.isForIn(lvalue.getParent()));
+        return envPutType(env, lvalue.getFirstChild().getString(), type);
+      case Token.GETPROP:
+      case Token.GETELEM: {
+        if (qname != null) {
+          String objName = qname.getLeftmostName();
+          QualifiedName props = qname.getAllButLeftmost();
+          JSType objType = envGetType(env, objName);
+          // TODO(dimvar): In analyzeNameFwd/Bwd, we are careful to not
+          // specialize namespaces, and we need the same check here. But
+          // currently, stopping specialization here causes tests to fail,
+          // because specializing the namespace is our way of updating its
+          // functions after computing summaries. The better solution is to
+          // retain Namespace instances after GTI instead of turning them into
+          // ObjectTypes, and then update those with the summaries and stop
+          // specializing here.
+          env = envPutType(env, objName, objType.withProperty(props, type));
+        }
+        return env;
+      }
+      default:
+        return env;
     }
-    Preconditions.checkState(lvalue.isGetProp() || lvalue.isGetElem(),
-        "Expected getprop/getelem but found: %s", lvalue);
-    if (qname != null) {
-      String objName = qname.getLeftmostName();
-      QualifiedName props = qname.getAllButLeftmost();
-      JSType objType = envGetType(env, objName);
-      env = envPutType(env, objName, objType.withProperty(props, type));
-    }
-    return env;
   }
 
   private TypeEnv collectTypesForFreeVarsFwd(Node n, TypeEnv env) {
@@ -3755,6 +3785,11 @@ final class NewTypeInference implements CompilerPass {
           pnameAsString, lvalueType.toString()));
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
+    if (!lvalueType.isUnion() && !lvalueType.isSingletonObj()) {
+      // The lvalue is a subtype of TOP_OBJECT, but does not contain an object
+      // yet, eg, it is ?, truthy, or bottom.
+      lvalueType = JSType.TOP_OBJECT.withLoose();
+    }
     Node propAccessNode = obj.getParent();
     if (propAccessNode.isGetProp() &&
         propAccessNode.getParent().isAssign() &&
@@ -3765,18 +3800,10 @@ final class NewTypeInference implements CompilerPass {
         && mayWarnAboutConstProp(propAccessNode, lvalueType, pname)) {
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
-    if (lvalueType.isUnknown()) {
-      return new LValueResultFwd(lvalueEnv, type, null, null);
-    }
     if (!lvalueType.hasProp(pname)) {
-      if (insideQualifiedName && lvalueType.isLoose()) {
+      if (lvalueType.isLoose()) {
         // For loose objects, create the inner property if it doesn't exist.
         lvalueType = lvalueType.withProperty(pname, JSType.TOP_OBJECT.withLoose());
-        if (lvalueType.isDict() && propAccessNode.isGetProp()) {
-          lvalueType = lvalueType.specialize(JSType.TOP_STRUCT);
-        } else if (lvalueType.isStruct() && propAccessNode.isGetElem()) {
-          lvalueType = lvalueType.specialize(JSType.TOP_DICT);
-        }
         lvalueEnv = updateLvalueTypeInEnv(lvalueEnv, obj, lvalue.ptr, lvalueType);
       } else {
         // Warn for inexistent prop either on the non-top-level of a qualified
@@ -3786,7 +3813,7 @@ final class NewTypeInference implements CompilerPass {
         if (warnForInexistentProp
             && !lvalueType.isUnknown()
             && !lvalueType.mayBeDict()) {
-          mayWarnAboutInexistentProp(propAccessNode, lvalueType, pname);
+          mayWarnAboutInexistentProp(propAccessNode, lvalueType, pname, lvalueEnv);
           return new LValueResultFwd(lvalueEnv, type, null, null);
         }
       }
