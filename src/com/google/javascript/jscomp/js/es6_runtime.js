@@ -338,7 +338,7 @@
 };
 /**@private
 @return {boolean} */$jscomp.Map.checkBrowserConformance_ = function() {
-  /**@const */var Map = $jscomp.global["Map"];
+  /**@const @type {function(new:Map,!Iterator)} */var Map = $jscomp.global["Map"];
   if (!Map || !Map.prototype.entries || !Object.seal) {
     return false;
   }

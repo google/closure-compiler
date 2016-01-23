@@ -50,6 +50,8 @@ abstract class IntegrationTestCase extends TestCase {
           "var Iterable;",
           "/** @interface */",
           "var IArrayLike;",
+          "/** @constructor */",
+          "var Map;",
           "",
           "/** @constructor */ function Window() {}",
           "/** @type {string} */ Window.prototype.name;",

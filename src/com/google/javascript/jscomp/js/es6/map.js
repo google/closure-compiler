@@ -41,6 +41,7 @@ $jscomp.Map = class {
     // TODO(sdh): DEFINE to assume not conformant (try-catch especially)
     // TODO(sdh): how to do this without using goog?
 
+    /** @type {function(new: Map, !Iterator)} */
     const Map = $jscomp.global['Map'];
     if (!Map || !Map.prototype.entries || !Object.seal) return false;
     // Some implementations don't support constructor arguments.
