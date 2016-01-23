@@ -3230,6 +3230,7 @@ public final class NodeUtil {
       case Token.INSTANCEOF:
       case Token.TYPEOF:
       case Token.AND:
+      case Token.OR:
         return true;
 
       case Token.NE:

@@ -11998,6 +11998,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    var /** !Foo */ z = y.prop;",
         "  }",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {{x: (string|undefined)}} opts */",
+        "function takeOptions(opts) {",
+        "  var /** string */ x = opts.x || 'some string';",
+        "}"));
   }
 
   public void testFunctionReturnTypeSpecialization() {
