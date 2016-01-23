@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.ParserRunner;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -35,6 +36,7 @@ public class JsAst implements SourceAst {
   private transient SourceFile sourceFile;
   private String fileName;
   private Node root;
+  private FeatureSet features;
 
   public JsAst(SourceFile sourceFile) {
     this.inputId = new InputId(sourceFile.getName());
@@ -76,6 +78,11 @@ public class JsAst implements SourceAst {
     sourceFile = file;
   }
 
+  public FeatureSet getFeatures(AbstractCompiler compiler) {
+    getAstRoot(compiler); // parse if required
+    return features;
+  }
+
   private void parse(AbstractCompiler compiler) {
     int startErrorCount = compiler.getErrorManager().getErrorCount();
     try {
@@ -87,6 +94,8 @@ public class JsAst implements SourceAst {
                         : AbstractCompiler.ConfigContext.DEFAULT),
           compiler.getDefaultErrorReporter());
       root = result.ast;
+      features = result.features;
+
       if (compiler.isIdeMode()) {
         compiler.addComments(sourceFile.getName(), result.comments);
       }

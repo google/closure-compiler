@@ -20,6 +20,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.Parser;
 import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
 import com.google.javascript.jscomp.parsing.parser.SourceFile;
@@ -28,6 +29,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile;
 
 import java.util.HashSet;
@@ -109,16 +111,32 @@ public final class ParserRunner {
     ProgramTree tree = p.parseProgram();
     Node root = null;
     List<Comment> comments = ImmutableList.of();
+    FeatureSet features = p.getFeatures();
     if (tree != null && (!es6ErrorReporter.hadError() || config.isIdeMode)) {
-      root = IRFactory.transformTree(
-          tree, sourceFile, sourceString, config, errorReporter);
+      IRFactory factory =
+          IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
+      root = factory.getResultNode();
+      features = features.require(factory.getFeatures());
       root.setIsSyntheticBlock(true);
 
       if (config.isIdeMode) {
         comments = p.getComments();
       }
     }
-    return new ParseResult(root, comments);
+    return new ParseResult(root, comments, features);
+  }
+
+  // TODO(sdh): this is less useful if we end up needing the node for library version detection
+  public static FeatureSet detectFeatures(String sourcePath, String sourceString) {
+    SourceFile file = new SourceFile(sourcePath, sourceString);
+    ErrorReporter reporter = IRFactory.NULL_REPORTER;
+    com.google.javascript.jscomp.parsing.parser.Parser.Config config =
+        new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
+            IRFactory.NULL_CONFIG.languageMode));
+    Parser p = new Parser(config, new Es6ErrorReporter(reporter, false), file);
+    ProgramTree tree = p.parseProgram();
+    StaticSourceFile simpleSourceFile = new SimpleSourceFile(sourcePath, false);
+    return IRFactory.detectFeatures(tree, simpleSourceFile, sourceString).require(p.getFeatures());
   }
 
   private static class Es6ErrorReporter
@@ -179,10 +197,12 @@ public final class ParserRunner {
   public static class ParseResult {
     public final Node ast;
     public final List<Comment> comments;
+    public final FeatureSet features;
 
-    public ParseResult(Node ast, List<Comment> comments) {
+    public ParseResult(Node ast, List<Comment> comments, FeatureSet features) {
       this.ast = ast;
       this.comments = comments;
+      this.features = features;
     }
   }
 }

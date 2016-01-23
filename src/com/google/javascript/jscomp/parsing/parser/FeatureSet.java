@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -31,7 +32,7 @@ import java.util.Objects;
  * separate strict mode flag, and then these could possibly be
  * unified.
  */
-public final class FeatureSet {
+public final class FeatureSet implements Serializable {
 
   /** The number of the language version: 3, 5, or 6. */
   private final int number;
@@ -54,6 +55,81 @@ public final class FeatureSet {
   public static final FeatureSet ES6_MODULES = new FeatureSet(6, true, true, false);
   /** TypeScript syntax. */
   public static final FeatureSet TYPESCRIPT = new FeatureSet(6, true, false, true);
+
+  /**
+   * Specific features that can be included (indirectly) in a FeatureSet.
+   * This primarily adds a name so that helper functions can simultaneously
+   * update the detected features and also warn about unsupported features
+   * by name.  Additionally, collecting these all in one place provides a
+   * single file that needs to be edited to update the current browser support.
+   */
+  public enum Feature {
+    // ES5 features
+    ES3_KEYWORDS_AS_IDENTIFIERS("ES3 keywords as identifiers", ES5),
+    GETTER("getters", ES5),
+    KEYWORDS_AS_PROPERTIES("reserved words as properties", ES5),
+    SETTER("setters", ES5),
+    STRING_CONTINUATION("string continuation", ES5),
+    TRAILING_COMMA("trailing comma", ES5),
+
+    // ES6 features that are already implemented in browsers
+    ARROW_FUNCTIONS("arrow function", ES6_IMPL),
+    BINARY_LITERALS("binary literal", ES6_IMPL),
+    OCTAL_LITERALS("octal literal", ES6_IMPL),
+    CLASSES("class", ES6_IMPL),
+    COMPUTED_PROPERTIES("computed property", ES6_IMPL),
+    CONST_DECLARATIONS("const declaration", ES6_IMPL),
+    EXTENDED_OBJECT_LITERALS("extended object literal", ES6_IMPL),
+    FOR_OF("for-of loop", ES6_IMPL),
+    GENERATORS("generator", ES6_IMPL),
+    LET_DECLARATIONS("let declaration", ES6_IMPL),
+    MEMBER_DECLARATIONS("member declaration", ES6_IMPL),
+    REST_PARAMETERS("rest parameter", ES6_IMPL),
+    SPREAD_EXPRESSIONS("spread expression", ES6_IMPL),
+    SUPER("super", ES6_IMPL),
+    TEMPLATE_LITERALS("template literal", ES6_IMPL),
+
+    // ES6 features that are not yet implemented in browsers
+    DEFAULT_PARAMETERS("default parameter", ES6),
+    DESTRUCTURING("destructuring", ES6),
+    REGEXP_FLAG_U("RegExp flag 'u'", ES6),
+    REGEXP_FLAG_Y("RegExp flag 'y'", ES6),
+
+    // ES6 features that include modules
+    MODULES("modules", ES6_MODULES),
+
+    // ES6 typed features that are not at all implemented in browsers
+    AMBIENT_DECLARATION("ambient declaration", TYPESCRIPT),
+    CALL_SIGNATURE("call signature", TYPESCRIPT),
+    CONSTRUCTOR_SIGNATURE("constructor signature", TYPESCRIPT),
+    ENUM("enum", TYPESCRIPT),
+    GENERICS("generics", TYPESCRIPT),
+    IMPLEMENTS("implements", TYPESCRIPT),
+    INDEX_SIGNATURE("index signature", TYPESCRIPT),
+    INTERFACE("interface", TYPESCRIPT),
+    MEMBER_VARIABLE_IN_CLASS("member variable in class", TYPESCRIPT),
+    NAMESPACE_DECLARATION("namespace declaration", TYPESCRIPT),
+    OPTIONAL_PARAMETER("optional parameter", TYPESCRIPT),
+    TYPE_ALIAS("type alias", TYPESCRIPT),
+    TYPE_ANNOTATION("type annotation", TYPESCRIPT);
+
+    private final String name;
+    private final FeatureSet features;
+
+    private Feature(String name, FeatureSet features) {
+      this.name = name;
+      this.features = features;
+    }
+
+    public FeatureSet features() {
+      return features;
+    }
+
+    @Override
+    public String toString() {
+      return name;
+    }
+  }
 
   private FeatureSet(int number, boolean unsupported, boolean es6Modules, boolean typeScript) {
     this.number = number;
@@ -101,6 +177,11 @@ public final class FeatureSet {
     return this;
   }
 
+  /** Returns a feature set combining all the features from {@code this} and {@code feature}. */
+  public FeatureSet require(Feature feature) {
+    return require(feature.features);
+  }
+
   @Override
   public boolean equals(Object other) {
     return other instanceof FeatureSet
@@ -113,5 +194,14 @@ public final class FeatureSet {
   @Override
   public int hashCode() {
     return Objects.hash(number, unsupported, es6Modules, typeScript);
+  }
+
+  @Override
+  public String toString() {
+    return "FeatureSet{number=" + number
+        + (unsupported ? ", unsupported" : "")
+        + (es6Modules ? ", es6Modules" : "")
+        + (typeScript ? ", typeScript" : "")
+        + "}";
   }
 }

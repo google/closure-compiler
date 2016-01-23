@@ -34,6 +34,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
@@ -261,8 +263,10 @@ class IRFactory {
   private Comment currentComment;
 
   private boolean currentFileIsExterns = false;
-  private boolean hasTypeSyntax = false;
   private boolean hasJsDocTypeAnnotations = false;
+
+  private FeatureSet features = FeatureSet.ES3;
+  private Node resultNode;
 
   private IRFactory(String sourceString,
                     StaticSourceFile sourceFile,
@@ -323,11 +327,11 @@ class IRFactory {
     return templateNode;
   }
 
-  public static Node transformTree(ProgramTree tree,
-                                   StaticSourceFile sourceFile,
-                                   String sourceString,
-                                   Config config,
-                                   ErrorReporter errorReporter) {
+  public static IRFactory transformTree(ProgramTree tree,
+                                        StaticSourceFile sourceFile,
+                                        String sourceString,
+                                        Config config,
+                                        ErrorReporter errorReporter) {
     IRFactory irFactory = new IRFactory(sourceString, sourceFile,
         config, errorReporter, tree.sourceComments);
 
@@ -349,8 +353,40 @@ class IRFactory {
     irFactory.setFileOverviewJsDoc(n);
 
     irFactory.validateAll(n);
+    irFactory.resultNode = n;
 
-    return n;
+    return irFactory;
+  }
+
+  static FeatureSet detectFeatures(
+      ProgramTree tree, StaticSourceFile sourceFile, String sourceString) {
+    IRFactory irFactory =
+        new IRFactory(sourceString, sourceFile, NULL_CONFIG, NULL_REPORTER, tree.sourceComments);
+    Node n = irFactory.justTransform(tree);
+    irFactory.validateAll(n);
+
+    return irFactory.features;
+  }
+
+  static final Config NULL_CONFIG = new Config(
+      ImmutableSet.<String>of(),
+      ImmutableSet.<String>of(),
+      false, // isIdeMode, parseJsDocDocumentation, preserveJsDocWhitespace
+      LanguageMode.ECMASCRIPT6_TYPED);
+
+  static final ErrorReporter NULL_REPORTER = new ErrorReporter() {
+    @Override
+    public void warning(String message, String sourceName, int line, int lineOffset) {}
+    @Override
+    public void error(String message, String sourceName, int line, int lineOffset) {}
+  };
+
+  Node getResultNode() {
+    return resultNode;
+  }
+
+  FeatureSet getFeatures() {
+    return features;
   }
 
   private void validateAll(Node n) {
@@ -488,7 +524,7 @@ class IRFactory {
   private JSDocInfo recordJsDoc(SourceRange location, JSDocInfo info) {
     if (info != null && info.hasTypeInformation()) {
       hasJsDocTypeAnnotations = true;
-      if (hasTypeSyntax) {
+      if (features.isTypeScript()) {
         errorReporter.error("Can only have JSDoc or inline type annotations, not both",
             sourceName, lineno(location.start), charno(location.start));
       }
@@ -497,7 +533,6 @@ class IRFactory {
   }
 
   private void recordTypeSyntax(SourceRange location) {
-    hasTypeSyntax = true;
     if (hasJsDocTypeAnnotations) {
       errorReporter.error("Can only have JSDoc or inline type annotations, not both",
           sourceName, lineno(location.start), charno(location.start));
@@ -946,7 +981,7 @@ class IRFactory {
     }
 
     Node processArrayPattern(ArrayPatternTree tree) {
-      maybeWarnEs6Feature(tree, "destructuring");
+      maybeWarnEs6Feature(tree, Feature.DESTRUCTURING);
 
       Node node = newNode(Token.ARRAY_PATTERN);
       for (ParseTree child : tree.elements) {
@@ -956,7 +991,7 @@ class IRFactory {
     }
 
     Node processObjectPattern(ObjectPatternTree tree) {
-      maybeWarnEs6Feature(tree, "destructuring");
+      maybeWarnEs6Feature(tree, Feature.DESTRUCTURING);
 
       Node node = newNode(Token.OBJECT_PATTERN);
       for (ParseTree child : tree.fields) {
@@ -1100,7 +1135,7 @@ class IRFactory {
     }
 
     Node processForOf(ForOfStatementTree loopNode) {
-      maybeWarnEs6Feature(loopNode, "for-of loop");
+      maybeWarnEs6Feature(loopNode, Feature.FOR_OF);
       Node initializer = transform(loopNode.initializer);
       ImmutableSet<Integer> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
@@ -1159,18 +1194,16 @@ class IRFactory {
       boolean isGenerator = functionTree.isGenerator;
       boolean isSignature = (functionTree.functionBody.type == ParseTreeType.EMPTY_STATEMENT);
 
-      if (!isEs6Mode()) {
-        if (isGenerator) {
-          maybeWarnEs6Feature(functionTree, "generators");
-        }
+      if (isGenerator) {
+        maybeWarnEs6Feature(functionTree, Feature.GENERATORS);
+      }
 
-        if (isMember) {
-          maybeWarnEs6Feature(functionTree, "member declarations");
-        }
+      if (isMember) {
+        maybeWarnEs6Feature(functionTree, Feature.MEMBER_DECLARATIONS);
+      }
 
-        if (isArrow) {
-          maybeWarnEs6Feature(functionTree, "short function syntax");
-        }
+      if (isArrow) {
+        maybeWarnEs6Feature(functionTree, Feature.ARROW_FUNCTIONS);
       }
 
       IdentifierToken name = functionTree.name;
@@ -1256,13 +1289,13 @@ class IRFactory {
     }
 
     Node processDefaultParameter(DefaultParameterTree tree) {
-      maybeWarnEs6Feature(tree, "default parameters");
+      maybeWarnEs6Feature(tree, Feature.DEFAULT_PARAMETERS);
       return newNode(Token.DEFAULT_VALUE,
           transform(tree.lhs), transform(tree.defaultValue));
     }
 
     Node processRestParameter(RestParameterTree tree) {
-      maybeWarnEs6Feature(tree, "rest parameters");
+      maybeWarnEs6Feature(tree, Feature.REST_PARAMETERS);
 
       Node name = newStringNode(Token.NAME, tree.identifier.value);
       setSourceInfo(name, tree.identifier);
@@ -1270,7 +1303,7 @@ class IRFactory {
     }
 
     Node processSpreadExpression(SpreadExpressionTree tree) {
-      maybeWarnEs6Feature(tree, "spread expression");
+      maybeWarnEs6Feature(tree, Feature.SPREAD_EXPRESSIONS);
 
       return newNode(Token.SPREAD, transform(tree.expression));
     }
@@ -1324,13 +1357,7 @@ class IRFactory {
         node = newStringNode(Token.STRING, identifierToken.value);
       } else {
         JSDocInfo info = handleJsDoc(identifierToken);
-        if (isReservedKeyword(identifierToken.toString())) {
-          errorReporter.error(
-            "identifier is a reserved word",
-            sourceName,
-            lineno(identifierToken.location.start),
-            charno(identifierToken.location.start));
-        }
+        maybeWarnReservedKeyword(identifierToken);
         node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
           node.setJSDocInfo(info);
@@ -1361,13 +1388,7 @@ class IRFactory {
 
     Node processNameWithInlineJSDoc(IdentifierToken identifierToken) {
       JSDocInfo info = handleInlineJsDoc(identifierToken);
-      if (isReservedKeyword(identifierToken.toString())) {
-        errorReporter.error(
-          "identifier is a reserved word",
-          sourceName,
-          lineno(identifierToken.location.start),
-          charno(identifierToken.location.start));
-      }
+      maybeWarnReservedKeyword(identifierToken);
       Node node = newStringNode(Token.NAME, identifierToken.toString());
       if (info != null) {
         node.setJSDocInfo(info);
@@ -1376,18 +1397,33 @@ class IRFactory {
       return node;
     }
 
-    private boolean isAllowedProp(String identifier) {
-      if (config.languageMode == LanguageMode.ECMASCRIPT3) {
-        return !TokenStream.isKeyword(identifier);
+    private void maybeWarnKeywordProperty(Node node) {
+      if (TokenStream.isKeyword(node.getString())) {
+        features = features.require(Feature.KEYWORDS_AS_PROPERTIES);
+        if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+          errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
+              node.getLineno(), node.getCharno());
+        }
       }
-      return true;
     }
 
-    private boolean isReservedKeyword(String identifier) {
-      if (config.languageMode == LanguageMode.ECMASCRIPT3) {
-        return TokenStream.isKeyword(identifier);
+    private void maybeWarnReservedKeyword(IdentifierToken token) {
+      String identifier = token.toString();
+      boolean isIdentifier = false;
+      if (TokenStream.isKeyword(identifier)) {
+        features = features.require(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
+        isIdentifier = config.languageMode == LanguageMode.ECMASCRIPT3;
       }
-      return reservedKeywords != null && reservedKeywords.contains(identifier);
+      if (reservedKeywords != null && reservedKeywords.contains(identifier)) {
+        isIdentifier = true;
+      }
+      if (isIdentifier) {
+        errorReporter.error(
+            "identifier is a reserved word",
+            sourceName,
+            lineno(token.location.start),
+            charno(token.location.start));
+      }
     }
 
     Node processNewExpression(NewExpressionTree exprNode) {
@@ -1420,24 +1456,15 @@ class IRFactory {
               sourceName,
               lineno(el), 0);
           continue;
-        }
-        if (config.languageMode == LanguageMode.ECMASCRIPT3) {
-          if (el.type == ParseTreeType.GET_ACCESSOR) {
-            reportGetter(el);
-            continue;
-          } else if (el.type == ParseTreeType.SET_ACCESSOR) {
-            reportSetter(el);
-            continue;
-          }
+        } else if (el.type == ParseTreeType.GET_ACCESSOR && maybeReportGetter(el)) {
+          continue;
+        } else if (el.type == ParseTreeType.SET_ACCESSOR && maybeReportSetter(el)) {
+          continue;
         }
 
         Node key = transform(el);
-        if (!key.isComputedProp()
-            && !key.isQuotedString()
-            && !currentFileIsExterns
-            && !isAllowedProp(key.getString())) {
-          errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
-              key.getLineno(), key.getCharno());
+        if (!key.isComputedProp() && !key.isQuotedString() && !currentFileIsExterns) {
+          maybeWarnKeywordProperty(key);
         }
         if (key.getFirstChild() == null) {
           maybeWarn = true;
@@ -1446,21 +1473,21 @@ class IRFactory {
         node.addChildToBack(key);
       }
       if (maybeWarn) {
-        maybeWarnEs6Feature(objTree, "extended object literals");
+        maybeWarnEs6Feature(objTree, Feature.EXTENDED_OBJECT_LITERALS);
       }
       return node;
     }
 
     Node processComputedPropertyDefinition(ComputedPropertyDefinitionTree tree) {
-      maybeWarnEs6Feature(tree, "computed property");
+      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
 
       return newNode(Token.COMPUTED_PROP,
           transform(tree.property), transform(tree.value));
     }
 
     Node processComputedPropertyMemberVariable(ComputedPropertyMemberVariableTree tree) {
-      maybeWarnEs6Feature(tree, "computed property");
-      maybeWarnTypeSyntax(tree, "computed property");
+      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
+      maybeWarnTypeSyntax(tree, Feature.COMPUTED_PROPERTIES);
 
       Node n = newNode(Token.COMPUTED_PROP, transform(tree.property));
       maybeProcessType(n, tree.declaredType);
@@ -1472,7 +1499,7 @@ class IRFactory {
     }
 
     Node processComputedPropertyMethod(ComputedPropertyMethodTree tree) {
-      maybeWarnEs6Feature(tree, "computed property");
+      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
 
       Node n = newNode(Token.COMPUTED_PROP,
           transform(tree.property), transform(tree.method));
@@ -1485,7 +1512,7 @@ class IRFactory {
     }
 
     Node processComputedPropertyGetter(ComputedPropertyGetterTree tree) {
-      maybeWarnEs6Feature(tree, "computed property");
+      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
 
       Node key = transform(tree.property);
       Node body = transform(tree.body);
@@ -1498,7 +1525,7 @@ class IRFactory {
     }
 
     Node processComputedPropertySetter(ComputedPropertySetterTree tree) {
-      maybeWarnEs6Feature(tree, "computed property");
+      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
 
       Node key = transform(tree.property);
       Node body = transform(tree.body);
@@ -1587,12 +1614,8 @@ class IRFactory {
       Node leftChild = transform(getNode.operand);
       IdentifierToken nodeProp = getNode.memberName;
       Node rightChild = processObjectLitKeyAsString(nodeProp);
-      if (!rightChild.isQuotedString()
-          && !currentFileIsExterns
-          && !isAllowedProp(
-            rightChild.getString())) {
-        errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
-            rightChild.getLineno(), rightChild.getCharno());
+      if (!rightChild.isQuotedString() && !currentFileIsExterns) {
+        maybeWarnKeywordProperty(rightChild);
       }
       return newNode(Token.GETPROP, leftChild, rightChild);
     }
@@ -1627,7 +1650,8 @@ class IRFactory {
           case 'g': case 'i': case 'm':
             break;
           case 'u': case 'y':
-            maybeWarnEs6Feature(tree, "new RegExp flag '" + flag + "'");
+            Feature feature = flag == 'u' ? Feature.REGEXP_FLAG_U : Feature.REGEXP_FLAG_Y;
+            maybeWarnEs6Feature(tree, feature);
             break;
           default:
             errorReporter.error(
@@ -1676,7 +1700,7 @@ class IRFactory {
     }
 
     Node processTemplateLiteral(TemplateLiteralExpressionTree tree) {
-      maybeWarnEs6Feature(tree, "template literals");
+      maybeWarnEs6Feature(tree, Feature.TEMPLATE_LITERALS);
       Node templateLitNode = newNode(Token.TEMPLATELIT);
       setSourceInfo(templateLitNode, tree);
       Node node = tree.operand == null
@@ -1840,11 +1864,11 @@ class IRFactory {
       int declType;
       switch (decl.declarationType) {
         case CONST:
-          maybeWarnEs6Feature(decl, "const declarations");
+          maybeWarnEs6Feature(decl, Feature.CONST_DECLARATIONS);
           declType = Token.CONST;
           break;
         case LET:
-          maybeWarnEs6Feature(decl, "let declarations");
+          maybeWarnEs6Feature(decl, Feature.LET_DECLARATIONS);
           declType = Token.LET;
           break;
         case VAR:
@@ -1907,18 +1931,30 @@ class IRFactory {
       return newNode(Token.EMPTY);
     }
 
-    void reportGetter(ParseTree node) {
-      errorReporter.error(
-          GETTER_ERROR_MESSAGE,
-          sourceName,
-          lineno(node), 0);
+    /** Reports an illegal getter and returns true if the language mode is too low. */
+    boolean maybeReportGetter(ParseTree node) {
+      features = features.require(Feature.GETTER);
+      if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+        errorReporter.error(
+            GETTER_ERROR_MESSAGE,
+            sourceName,
+            lineno(node), 0);
+        return true;
+      }
+      return false;
     }
 
-    void reportSetter(ParseTree node) {
-      errorReporter.error(
-          SETTER_ERROR_MESSAGE,
-          sourceName,
-          lineno(node), 0);
+    /** Reports an illegal setter and returns true if the language mode is too low. */
+    boolean maybeReportSetter(ParseTree node) {
+      features = features.require(Feature.SETTER);
+      if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+        errorReporter.error(
+            SETTER_ERROR_MESSAGE,
+            sourceName,
+            lineno(node), 0);
+        return true;
+      }
+      return false;
     }
 
     Node processBooleanLiteral(LiteralExpressionTree literal) {
@@ -1955,7 +1991,7 @@ class IRFactory {
     }
 
     Node processClassDeclaration(ClassDeclarationTree tree) {
-      maybeWarnEs6Feature(tree, "class");
+      maybeWarnEs6Feature(tree, Feature.CLASSES);
 
       Node name = transformOrEmpty(tree.name, tree);
       maybeProcessGenerics(name, tree.generics);
@@ -1968,21 +2004,21 @@ class IRFactory {
       for (ParseTree child : tree.elements) {
         if (child.type == ParseTreeType.MEMBER_VARIABLE ||
             child.type == ParseTreeType.COMPUTED_PROPERTY_MEMBER_VARIABLE) {
-          maybeWarnTypeSyntax(child, "member variable in class");
+          maybeWarnTypeSyntax(child, Feature.MEMBER_VARIABLE_IN_CLASS);
         }
         body.addChildToBack(transform(child));
       }
 
       Node classNode = newNode(Token.CLASS, name, superClass, body);
       if (!interfaces.isEmpty()) {
-        maybeWarnTypeSyntax(tree, "implements");
+        maybeWarnTypeSyntax(tree, Feature.IMPLEMENTS);
         classNode.putProp(Node.IMPLEMENTS, interfaces);
       }
       return classNode;
     }
 
     Node processInterfaceDeclaration(InterfaceDeclarationTree tree) {
-      maybeWarnTypeSyntax(tree, "interface");
+      maybeWarnTypeSyntax(tree, Feature.INTERFACE);
 
       Node name = processName(tree.name);
       maybeProcessGenerics(name, tree.generics);
@@ -1999,7 +2035,7 @@ class IRFactory {
     }
 
     Node processEnumDeclaration(EnumDeclarationTree tree) {
-      maybeWarnTypeSyntax(tree, "enum");
+      maybeWarnTypeSyntax(tree, Feature.ENUM);
 
       Node name = processName(tree.name);
       Node body = newNode(Token.ENUM_MEMBERS);
@@ -2012,7 +2048,7 @@ class IRFactory {
     }
 
     Node processSuper(SuperExpressionTree tree) {
-      maybeWarnEs6Feature(tree, "super");
+      maybeWarnEs6Feature(tree, Feature.SUPER);
       return newNode(Token.SUPER);
     }
 
@@ -2035,7 +2071,7 @@ class IRFactory {
     }
 
     Node processExportDecl(ExportDeclarationTree tree) {
-      maybeWarnEs6Feature(tree, "modules");
+      maybeWarnEs6Feature(tree, Feature.MODULES);
       Node decls = null;
       if (tree.isExportAll) {
         Preconditions.checkState(
@@ -2075,7 +2111,7 @@ class IRFactory {
     }
 
     Node processImportDecl(ImportDeclarationTree tree) {
-      maybeWarnEs6Feature(tree, "modules");
+      maybeWarnEs6Feature(tree, Feature.MODULES);
 
       Node firstChild = transformOrEmpty(tree.defaultBindingIdentifier, tree);
       Node secondChild = (tree.nameSpaceImportIdentifier != null)
@@ -2098,7 +2134,7 @@ class IRFactory {
     }
 
     Node processModuleImport(ModuleImportTree tree) {
-      maybeWarnEs6Feature(tree, "modules");
+      maybeWarnEs6Feature(tree, Feature.MODULES);
       Node module = newNode(Token.NAMESPACE,
           processName(tree.name),
           processString(tree.from));
@@ -2146,7 +2182,7 @@ class IRFactory {
     }
 
     Node processOptionalParameter(OptionalParameterTree optionalParam) {
-      maybeWarnTypeSyntax(optionalParam, "optional parameter");
+      maybeWarnTypeSyntax(optionalParam, Feature.OPTIONAL_PARAMETER);
       Node param = transform(optionalParam.param);
       param.putBooleanProp(Node.OPT_ES6_TYPED, true);
       return param;
@@ -2166,13 +2202,13 @@ class IRFactory {
 
     private void maybeProcessGenerics(Node n, GenericTypeListTree generics) {
       if (generics != null) {
-        maybeWarnTypeSyntax(generics, "generics");
+        maybeWarnTypeSyntax(generics, Feature.GENERICS);
         n.putProp(Node.GENERIC_TYPE_LIST, transform(generics));
       }
     }
 
     private Node convertTypeTree(ParseTree typeTree) {
-      maybeWarnTypeSyntax(typeTree);
+      maybeWarnTypeSyntax(typeTree, Feature.TYPE_ANNOTATION);
       return transform(typeTree);
     }
 
@@ -2206,19 +2242,19 @@ class IRFactory {
     }
 
     Node processTypeAlias(TypeAliasTree tree) {
-      maybeWarnTypeSyntax(tree, "type alias");
+      maybeWarnTypeSyntax(tree, Feature.TYPE_ALIAS);
       Node typeAlias = newStringNode(Token.TYPE_ALIAS, tree.alias.value);
       typeAlias.addChildrenToFront(transform(tree.original));
       return typeAlias;
     }
 
     Node processAmbientDeclaration(AmbientDeclarationTree tree) {
-      maybeWarnTypeSyntax(tree, "ambient declaration");
+      maybeWarnTypeSyntax(tree, Feature.AMBIENT_DECLARATION);
       return newNode(Token.DECLARE, transform(tree.declaration));
     }
 
     Node processNamespaceDeclaration(NamespaceDeclarationTree tree) {
-      maybeWarnTypeSyntax(tree, "namespace declaration");
+      maybeWarnTypeSyntax(tree, Feature.NAMESPACE_DECLARATION);
       Node name = processNamespaceName(tree.name);
 
       Node body = newNode(Token.NAMESPACE_ELEMENTS);
@@ -2251,7 +2287,7 @@ class IRFactory {
     }
 
     Node processIndexSignature(IndexSignatureTree tree) {
-      maybeWarnTypeSyntax(tree, "index signature");
+      maybeWarnTypeSyntax(tree, Feature.INDEX_SIGNATURE);
       Node name = transform(tree.name);
       Node indexType = name.getDeclaredTypeExpression();
       if (indexType.getType() != Token.NUMBER_TYPE
@@ -2269,7 +2305,8 @@ class IRFactory {
     }
 
     Node processCallSignature(CallSignatureTree tree) {
-      maybeWarnTypeSyntax(tree, tree.isNew ? "constructor signature" : "call signature");
+      maybeWarnTypeSyntax(
+          tree, tree.isNew ? Feature.CONSTRUCTOR_SIGNATURE : Feature.CALL_SIGNATURE);
       Node signature = newNode(Token.CALL_SIGNATURE, transform(tree.formalParameterList));
       maybeProcessType(signature, tree.returnType);
       maybeProcessGenerics(signature, tree.generics);
@@ -2346,7 +2383,7 @@ class IRFactory {
                   type);
               break;
             case OPTIONAL_PARAMETER:
-              maybeWarnTypeSyntax(param, "optional parameter");
+              maybeWarnTypeSyntax(param, Feature.OPTIONAL_PARAMETER);
               optionalParams.put(
                   param.asOptionalParameter().param.asIdentifierExpression()
                       .identifierToken.toString(),
@@ -2406,7 +2443,8 @@ class IRFactory {
       }
     }
 
-    void maybeWarnEs6Feature(ParseTree node, String feature) {
+    void maybeWarnEs6Feature(ParseTree node, Feature feature) {
+      features = features.require(feature);
       if (!isEs6Mode()) {
         errorReporter.warning(
             "this language feature is only supported in es6 mode: " + feature,
@@ -2435,7 +2473,7 @@ class IRFactory {
       }
     }
 
-    void maybeWarnTypeSyntax(ParseTree node, String feature) {
+    void maybeWarnTypeSyntax(ParseTree node, Feature feature) {
       if (config.languageMode != LanguageMode.ECMASCRIPT6_TYPED) {
         errorReporter.warning(
             "type syntax is only supported in ES6 typed mode: " + feature,
@@ -2443,11 +2481,8 @@ class IRFactory {
             lineno(node),
             charno(node));
       }
+      features = features.require(feature);
       recordTypeSyntax(node.location);
-    }
-
-    void maybeWarnTypeSyntax(ParseTree node) {
-      maybeWarnTypeSyntax(node, "type annotation");
     }
 
     Node unsupportedLanguageFeature(ParseTree node, String feature) {
@@ -2736,6 +2771,7 @@ class IRFactory {
           result.append('\u000B');
           break;
         case '\n':
+          features = features.require(Feature.STRING_CONTINUATION);
           if (isEs5OrBetterMode()) {
             errorReporter.warning(STRING_CONTINUATION_WARNING,
                 sourceName,
@@ -2852,6 +2888,7 @@ class IRFactory {
           return Double.valueOf(value);
         case 'b':
         case 'B': {
+          features = features.require(Feature.BINARY_LITERALS);
           if (!isEs6Mode()) {
             errorReporter.warning(BINARY_NUMBER_LITERAL_WARNING,
                 sourceName,
@@ -2866,6 +2903,7 @@ class IRFactory {
         }
         case 'o':
         case 'O': {
+          features = features.require(Feature.OCTAL_LITERALS);
           if (!isEs6Mode()) {
             errorReporter.warning(OCTAL_NUMBER_LITERAL_WARNING,
                 sourceName,

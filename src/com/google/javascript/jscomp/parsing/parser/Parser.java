@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArgumentListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
@@ -170,6 +171,7 @@ public class Parser {
   private final Config config;
   private final CommentRecorder commentRecorder = new CommentRecorder();
   private final ArrayDeque<Boolean> inGeneratorContext = new ArrayDeque<>();
+  private FeatureSet features = FeatureSet.ES3;
 
   public Parser(
       Config config, ErrorReporter errorReporter,
@@ -240,6 +242,10 @@ public class Parser {
 
   public List<Comment> getComments() {
     return commentRecorder.getComments();
+  }
+
+  public FeatureSet getFeatures() {
+    return features;
   }
 
   // 14 Program
@@ -1764,8 +1770,10 @@ public class Parser {
   /** Reports if declaration requires an initializer, assuming initializer is absent. */
   private void maybeReportNoInitializer(TokenType token, ParseTree lvalue) {
     if (token == TokenType.CONST) {
+      features = features.require(Feature.CONST_DECLARATIONS);
       reportError("const variables must have an initializer");
     } else if (lvalue.isPattern()) {
+      features = features.require(Feature.DESTRUCTURING);
       reportError("destructuring must have an initializer");
     }
   }
@@ -2248,11 +2256,14 @@ public class Parser {
   }
 
   void maybeReportTrailingComma(Token commaToken) {
-    if (commaToken != null && config.warnTrailingCommas) {
-      // In ES3 mode warn about trailing commas which aren't accepted by
-      // older browsers (such as IE8).
-      errorReporter.reportWarning(commaToken.location.start,
-          "Trailing comma is not legal in an ECMA-262 object initializer");
+    if (commaToken != null) {
+      features = features.require(Feature.TRAILING_COMMA);
+      if (config.warnTrailingCommas) {
+        // In ES3 mode warn about trailing commas which aren't accepted by
+        // older browsers (such as IE8).
+        errorReporter.reportWarning(commaToken.location.start,
+            "Trailing comma is not legal in an ECMA-262 object initializer");
+      }
     }
   }
 
@@ -3133,6 +3144,7 @@ public class Parser {
   }
 
   private ParseTree parsePattern(PatternKind kind) {
+    features = features.require(Feature.DESTRUCTURING);
     switch (peekType()) {
       case OPEN_SQUARE:
         return parseArrayPattern(kind);
@@ -3445,6 +3457,7 @@ public class Parser {
 
   private TokenType maybeParseAccessibilityModifier() {
     if (peekAccessibilityModifier()) {
+      features = features.require(FeatureSet.TYPESCRIPT);
       if (!config.is6Typed) {
         reportError("Accessibility modifier is only supported in ES6 typed mode");
       }
