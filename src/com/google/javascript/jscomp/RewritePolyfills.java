@@ -264,9 +264,9 @@ public class RewritePolyfills implements HotSwapCompilerPass {
           "EPSILON", "MAX_SAFE_INTEGER", "MIN_SAFE_INTEGER")
       // Object methods.
       .addStatics(ES6_IMPL, ES3, "$jscomp.object", "Object", "assign", "is")
-      // (Soon-to-be implemented) String methods.
-      .addStatics(ES6_IMPL, ES6_IMPL, "", "String", "fromCodePoint")
-      .addMethods(ES6_IMPL, ES6_IMPL, "",
+      // String methods.
+      .addStatics(ES6_IMPL, ES3, "$jscomp.string", "String", "fromCodePoint")
+      .addMethods(ES6_IMPL, ES3, "$jscomp.string",
           "repeat", "codePointAt", "includes", "startsWith", "endsWith")
       // Array methods.
       .addStatics(ES6_IMPL, ES3, "$jscomp.array", "Array", "from", "of")

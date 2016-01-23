@@ -193,8 +193,8 @@
   for (var $jscomp$restIndex = 0;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
   }
-  var elements$9 = $jscomp$restParams;
-  return $jscomp.array.from(elements$9);
+  var elements$10 = $jscomp$restParams;
+  return $jscomp.array.from(elements$10);
 };
 /**@template VALUE
 
@@ -696,11 +696,11 @@
   for (var $jscomp$restIndex = 2;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];
   }
-  var rest$10 = $jscomp$restParams;
+  var rest$11 = $jscomp$restParams;
   x = Number(x);
   y = Number(y);
   var max = Math.max(Math.abs(x), Math.abs(y));
-  for (var $jscomp$iter$4 = $jscomp.makeIterator(rest$10), $jscomp$key$z = $jscomp$iter$4.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$4.next()) {
+  for (var $jscomp$iter$4 = $jscomp.makeIterator(rest$11), $jscomp$key$z = $jscomp$iter$4.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$4.next()) {
     var z = $jscomp$key$z.value;
     max = Math.max(max, Math.abs(z));
   }
@@ -708,19 +708,19 @@
     x = x / max;
     y = y / max;
     var sum = x * x + y * y;
-    for (var $jscomp$iter$5 = $jscomp.makeIterator(rest$10), $jscomp$key$z = $jscomp$iter$5.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$5.next()) {
-      var z$11 = $jscomp$key$z.value;
-      z$11 = Number(z$11) / max;
-      sum += z$11 * z$11;
+    for (var $jscomp$iter$5 = $jscomp.makeIterator(rest$11), $jscomp$key$z = $jscomp$iter$5.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$5.next()) {
+      var z$12 = $jscomp$key$z.value;
+      z$12 = Number(z$12) / max;
+      sum += z$12 * z$12;
     }
     return Math.sqrt(sum) * max;
   } else {
-    var sum$12 = x * x + y * y;
-    for (var $jscomp$iter$6 = $jscomp.makeIterator(rest$10), $jscomp$key$z = $jscomp$iter$6.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$6.next()) {
-      var z$13 = $jscomp$key$z.value;
-      sum$12 += z$13 * z$13;
+    var sum$13 = x * x + y * y;
+    for (var $jscomp$iter$6 = $jscomp.makeIterator(rest$11), $jscomp$key$z = $jscomp$iter$6.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$6.next()) {
+      var z$14 = $jscomp$key$z.value;
+      sum$13 += z$14 * z$14;
     }
-    return Math.sqrt(sum$12);
+    return Math.sqrt(sum$13);
   }
 };
 /**
@@ -782,8 +782,8 @@
   for (var $jscomp$restIndex = 1;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 1] = arguments[$jscomp$restIndex];
   }
-  var sources$14 = $jscomp$restParams;
-  for (var $jscomp$iter$7 = $jscomp.makeIterator(sources$14), $jscomp$key$source = $jscomp$iter$7.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$7.next()) {
+  var sources$15 = $jscomp$restParams;
+  for (var $jscomp$iter$7 = $jscomp.makeIterator(sources$15), $jscomp$key$source = $jscomp$iter$7.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$7.next()) {
     /**@const */var source = $jscomp$key$source.value;
     for (/**@const */var key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
@@ -890,6 +890,155 @@
   }
   $jscomp.Set$install = function() {
   };
+};
+/***/$jscomp.string = $jscomp.string || {};
+/**@private
+@param {*} str
+@param {string} func */$jscomp.string.noRegExp_ = function(str, func) {
+  if (str instanceof RegExp) {
+    throw new TypeError("First argument to String.prototype." + func + " must not be a regular expression");
+  }
+};
+/**
+@param {...number} codepoints
+@return {string} */$jscomp.string.fromCodePoint = function(codepoints) {
+  var $jscomp$restParams = [];
+  for (var $jscomp$restIndex = 0;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
+    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
+  }
+  var codepoints$16 = $jscomp$restParams;
+  var result = "";
+  for (var $jscomp$iter$9 = $jscomp.makeIterator(codepoints$16), $jscomp$key$code = $jscomp$iter$9.next();!$jscomp$key$code.done;$jscomp$key$code = $jscomp$iter$9.next()) {
+    var code = $jscomp$key$code.value;
+    code = +code;
+    if (code < 0 || code > 1114111 || code !== Math.floor(code)) {
+      throw new RangeError("invalid_code_point " + code);
+    }
+    if (code <= 65535) {
+      result += String.fromCharCode(code);
+    } else {
+      code -= 65536;
+      result += String.fromCharCode(code >>> 10 & 1023 | 55296);
+      result += String.fromCharCode(code & 1023 | 56320);
+    }
+  }
+  return result;
+};
+/**
+@param {number} copies
+@return {string}
+@this {*} */$jscomp.string.repeat = function(copies) {
+  var /** string */string = this.toString();
+  if (copies < 0 || copies > 1342177279) {
+    throw new RangeError("Invalid count value");
+  }
+  copies = copies | 0;
+  var result = "";
+  while (copies) {
+    if (copies & 1) {
+      result += string;
+    }
+    if (copies >>>= 1) {
+      string += string;
+    }
+  }
+  return result;
+};
+/**@const @suppress {checkTypes,const} */$jscomp.string.repeat$install = function() {
+  if (!String.prototype.repeat) {
+    String.prototype.repeat = $jscomp.string.repeat;
+  }
+};
+/**
+@param {number} position
+@return {(number|undefined)}
+@this {*} */$jscomp.string.codePointAt = function(position) {
+  /**@const */var string = this.toString();
+  /**@const */var size = string.length;
+  position = Number(position) || 0;
+  if (!(position >= 0 && position < size)) {
+    return void 0;
+  }
+  position = position | 0;
+  /**@const */var first = string.charCodeAt(position);
+  if (first < 55296 || first > 56319 || position + 1 === size) {
+    return first;
+  }
+  /**@const */var second = string.charCodeAt(position + 1);
+  if (second < 56320 || second > 57343) {
+    return first;
+  }
+  return (first - 55296) * 1024 + second + 9216;
+};
+/**@suppress {checkTypes,const} */$jscomp.string.codePointAt$install = function() {
+  if (!String.prototype.codePointAt) {
+    String.prototype.codePointAt = $jscomp.string.codePointAt;
+  }
+};
+/**
+@param {string} searchString
+@param {number=} opt_position
+@return {boolean}
+@this {*} */$jscomp.string.includes = function(searchString, opt_position) {
+  opt_position = opt_position === undefined ? 0 : opt_position;
+  $jscomp.string.noRegExp_(searchString, "includes");
+  /**@const */var string = this.toString();
+  return string.indexOf(searchString, opt_position) !== -1;
+};
+/**@suppress {checkTypes,const} */$jscomp.string.includes$install = function() {
+  if (!String.prototype.includes) {
+    String.prototype.includes = $jscomp.string.includes;
+  }
+};
+/**
+@param {string} searchString
+@param {number=} opt_position
+@return {boolean}
+@this {*} */$jscomp.string.startsWith = function(searchString, opt_position) {
+  opt_position = opt_position === undefined ? 0 : opt_position;
+  $jscomp.string.noRegExp_(searchString, "startsWith");
+  /**@const */var string = this.toString();
+  searchString = searchString + "";
+  /**@const */var strLen = string.length;
+  /**@const */var searchLen = searchString.length;
+  var i = Math.max(0, Math.min(opt_position | 0, string.length));
+  var j = 0;
+  while (j < searchLen && i < strLen) {
+    if (string[i++] != searchString[j++]) {
+      return false;
+    }
+  }
+  return j >= searchLen;
+};
+/**@suppress {checkTypes,const} */$jscomp.string.startsWith$install = function() {
+  if (!String.prototype.startsWith) {
+    String.prototype.startsWith = $jscomp.string.startsWith;
+  }
+};
+/**
+@param {string} searchString
+@param {number=} opt_position
+@return {boolean}
+@this {*} */$jscomp.string.endsWith = function(searchString, opt_position) {
+  $jscomp.string.noRegExp_(searchString, "endsWith");
+  /**@const */var string = this.toString();
+  searchString = searchString + "";
+  if (opt_position === void 0) {
+    opt_position = string.length;
+  }
+  var i = Math.max(0, Math.min(opt_position | 0, string.length));
+  var j = searchString.length;
+  while (j > 0 && i > 0) {
+    if (string[--i] != searchString[--j]) {
+      return false;
+    }
+  }
+  return j <= 0;
+};
+/**@suppress {checkTypes,const} */$jscomp.string.endsWith$install = function() {
+  if (!String.prototype.endsWith) {
+    String.prototype.endsWith = $jscomp.string.endsWith;
+  }
 };
 
 
