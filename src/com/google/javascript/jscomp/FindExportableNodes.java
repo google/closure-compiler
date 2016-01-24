@@ -21,7 +21,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * Records all of the symbols and properties that should be exported.
@@ -50,6 +52,14 @@ class FindExportableNodes extends AbstractPostOrderCallback {
   static final DiagnosticType EXPORT_ANNOTATION_NOT_ALLOWED =
       DiagnosticType.error("JSC_EXPORT_ANNOTATION_NOT_ALLOWED",
           "@export is not supported on this expression.");
+
+  static final DiagnosticType EXPORT_ARRAY_LITERAL_NOT_EXPRESSION =
+      DiagnosticType.error("JSC_EXPORT_NOT_STRING_LITERAL",
+          "An @export array literal's value must be a standalone expression.");
+
+  static final DiagnosticType EXPORT_NOT_STRING_LITERAL =
+      DiagnosticType.error("JSC_EXPORT_NOT_STRING_LITERAL",
+          "All members of an @export array literal must be string literals.");
 
   private final AbstractCompiler compiler;
 
@@ -83,6 +93,7 @@ class FindExportableNodes extends AbstractPostOrderCallback {
       }
 
       String export = null;
+      List<String> exportsList = null;
       GenerateNodeContext context = null;
 
       switch (n.getType()) {
@@ -142,10 +153,38 @@ class FindExportableNodes extends AbstractPostOrderCallback {
             context = new GenerateNodeContext(n, Mode.EXTERN);
           }
           break;
+
+        case Token.ARRAYLIT:
+          if (allowLocalExports) {
+            // Collect exports in the form "/** @export */ ['a', 'b'];"
+            if (!n.getParent().isExprResult()
+                || !(n.getParent().getParent().isScript()
+                     || n.getParent().getParent().isBlock())) {
+              compiler.report(t.makeError(n,
+                  EXPORT_ARRAY_LITERAL_NOT_EXPRESSION));
+            }
+            exportsList = new ArrayList<>();
+            for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+              if (c.isString()) {
+                exportsList.add(c.getString());
+              } else {
+                compiler.report(t.makeError(c, EXPORT_NOT_STRING_LITERAL));
+              }
+            }
+            context = new GenerateNodeContext(n, Mode.EXTERN);
+          }
+          break;
+
+        default:
+          break; // Error handing below.
       }
 
       if (export != null) {
         exports.put(export, context);
+      } else if (exportsList != null) {
+        for (String e : exportsList) {
+          exports.put(e, context);
+        }
       } else {
         // Don't produce extra warnings for functions values of object literals
         if (!n.isFunction() || !NodeUtil.isObjectLitKey(parent)) {
