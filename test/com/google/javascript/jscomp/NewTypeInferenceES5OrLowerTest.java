@@ -10452,6 +10452,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var E = { ONE: 1 };",
         "function f(/** E */ x) { x < 'str'; }"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {string} */",
+        "var E = { A: 'asdf', B: 'adf' };",
+        "function f() { var /** string */ y = E.A + E.B; }"));
   }
 
   public void testEnumsWithNonScalarDeclaredType() {

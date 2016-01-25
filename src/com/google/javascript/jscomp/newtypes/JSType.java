@@ -930,7 +930,8 @@ public abstract class JSType implements TypeI {
   }
 
   public static JSType plus(JSType lhs, JSType rhs) {
-    if (lhs.equals(STRING) || rhs.equals(STRING)) {
+    if (!lhs.isUnknown() && !lhs.isBottom() && lhs.isSubtypeOf(STRING)
+        || !rhs.isUnknown() && !rhs.isBottom() && rhs.isSubtypeOf(STRING)) {
       return STRING;
     }
     if (lhs.isUnknown() || lhs.isTop() || rhs.isUnknown() || rhs.isTop()) {
