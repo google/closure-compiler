@@ -430,7 +430,17 @@ public final class NominalType {
       newTypeMap.put(typeVar, Preconditions.checkNotNull(Iterables.getOnlyElement(c)));
     }
     NominalType instantiated = instantiateGenerics(newTypeMap);
-    return Objects.equals(instantiated.typeMap, other.typeMap);
+    Map<String, JSType> otherMap = other.typeMap;
+    // We can't just compare instantiated.typeMap and otherMap for equality,
+    // because it doesn't take unknown types into account.
+    for (Map.Entry<String, JSType> entry : instantiated.typeMap.entrySet()) {
+      JSType t1 = entry.getValue();
+      JSType t2 = otherMap.get(entry.getKey());
+      if (!t1.isSubtypeOf(t2) || !t2.isSubtypeOf(t1)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override

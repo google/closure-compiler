@@ -975,6 +975,9 @@ public abstract class JSType implements TypeI {
 
   @Override
   public boolean isSubtypeOf(TypeI other) {
+    if (this == other) {
+      return true;
+    }
     JSType type2 = (JSType) other;
     if (isLoose() || type2.isLoose()) {
       return autobox().isSubtypeOfHelper(true, type2.autobox());

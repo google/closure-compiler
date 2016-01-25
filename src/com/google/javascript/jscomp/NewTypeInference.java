@@ -2243,7 +2243,7 @@ final class NewTypeInference implements CompilerPass {
         callNode, null, callNode.getSecondChild(), funType, typeEnv, false);
   }
 
-  /*
+  /**
    * We don't use the requiredType of the context to unify with the return
    * type. There are several difficulties:
    * 1) A polymorphic function is allowed to return ANY subtype of the

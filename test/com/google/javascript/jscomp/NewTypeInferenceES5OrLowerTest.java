@@ -7955,6 +7955,43 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " * @param {T} x",
         " */",
         "Low.prototype.method = function(x) {};"));
+
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T, U",
+        " * @constructor",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {!Foo<T,T>} x",
+        " */",
+        "function f(x) {}",
+        "/**",
+        " * @param {!Foo<?,number>} x",
+        " */",
+        "function g(x) {",
+        "  f(x);",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T, U",
+        " * @constructor",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {!Foo<T,T>} x",
+        " */",
+        "function f(x) {}",
+        "/**",
+        " * @param {!Foo<Foo<?,?>,Foo<number,number>>} x",
+        " */",
+        "function g(x) {",
+        "  f(x);",
+        "}"));
   }
 
   public void testNominalTypeUnification() {
