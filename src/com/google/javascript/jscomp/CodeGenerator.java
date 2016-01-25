@@ -709,7 +709,8 @@ class CodeGenerator {
 
       case Token.GETELEM:
         Preconditions.checkState(
-            childCount == 2, "Bad GETELEM: expected 2 children but got %s", childCount);
+            childCount == 2,
+            "Bad GETELEM node: Expected 2 children but got %s. For node: %s", childCount, n);
         addExpr(first, NodeUtil.precedence(type), context);
         add("[");
         add(first.getNext());
