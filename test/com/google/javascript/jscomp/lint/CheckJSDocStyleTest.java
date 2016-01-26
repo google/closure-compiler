@@ -97,6 +97,14 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         "});"));
   }
 
+  public void testMissingJsDoc_noWarningIfNotTopLevelAndNoParams() {
+    testSame(LINE_JOINER.join(
+        "describe('a karma test', function() {",
+        "  /** @ngInject */",
+        "  var helperFunction = function($compile, $rootScope) {};",
+        "})"));
+  }
+
   public void testMissingJsDoc_noWarningOnTestFunctions() {
     testSame("function testSomeFunctionality() {}");
     testSame("var testSomeFunctionality = function() {};");
@@ -197,6 +205,10 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testWarning("function f(/** string */ x, y) {}", MISSING_PARAMETER_JSDOC);
     testWarning("function f(x, /** string */ y) {}", MISSING_PARAMETER_JSDOC);
     testWarning("function /** string */ f(x) {}", MISSING_PARAMETER_JSDOC);
+
+    testWarning(inIIFE("function f(/** string */ x, y) {}"), MISSING_PARAMETER_JSDOC);
+    testWarning(inIIFE("function f(x, /** string */ y) {}"), MISSING_PARAMETER_JSDOC);
+    testWarning(inIIFE("function /** string */ f(x) {}"), MISSING_PARAMETER_JSDOC);
   }
 
   public void testMissingParamWithDestructuringPattern() {

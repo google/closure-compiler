@@ -95,7 +95,10 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
     if (jsDoc == null && !hasAnyInlineJsDoc(function)) {
       checkMissingJsDoc(t, function);
-    } else {
+    } else if (t.inGlobalScope()
+        || hasAnyInlineJsDoc(function)
+        || !jsDoc.getParameterNames().isEmpty()
+        || jsDoc.hasReturnType()) {
       checkParams(t, function, jsDoc);
     }
 
