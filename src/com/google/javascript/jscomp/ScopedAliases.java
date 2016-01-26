@@ -147,7 +147,6 @@ class ScopedAliases implements HotSwapCompilerPass {
     NodeTraversal.traverseEs6(compiler, root, traversal);
 
     if (!traversal.hasErrors()) {
-
       // Apply the aliases.
       List<AliasUsage> aliasWorkQueue =
            new ArrayList<>(traversal.getAliasUsages());
@@ -398,13 +397,6 @@ class ScopedAliases implements HotSwapCompilerPass {
             // Disallow block-scoped function declarations that leak into the goog.scope
             // function body. Technically they shouldn't leak in ES6 but the browsers don't agree
             // on that yet.
-            report(t, v.getNode(), GOOG_SCOPE_INVALID_VARIABLE, v.getName());
-          }
-        }
-        if (scopeRoot.hasChildren() && scopeRoot.getFirstChild().isCatch()) {
-          for (Var v : t.getClosestHoistScope().getVarIterable()) {
-            // Disallow variables declared in catch blocks that leak into the goog.scope
-            // function body.
             report(t, v.getNode(), GOOG_SCOPE_INVALID_VARIABLE, v.getName());
           }
         }

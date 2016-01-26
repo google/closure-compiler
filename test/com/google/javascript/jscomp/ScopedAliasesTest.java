@@ -866,9 +866,20 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testInvalidVariableInScope() {
-    testScopedError("try { } catch (e) {var x = foo;}", ScopedAliases.GOOG_SCOPE_INVALID_VARIABLE);
     testScopedError("if (true) { function f() {}}", ScopedAliases.GOOG_SCOPE_INVALID_VARIABLE);
     testScopedError("for (;;) { function f() {}}", ScopedAliases.GOOG_SCOPE_INVALID_VARIABLE);
+  }
+
+  public void testWithCatch1() {
+    testScoped(
+        "var x = foo(); try { } catch (e) {}",
+        SCOPE_NAMESPACE + "$jscomp.scope.x = foo(); try { } catch (e) {}");
+  }
+
+  public void testWithCatch2() {
+    testScoped(
+        "try { } catch (e) {var x = foo();}",
+        SCOPE_NAMESPACE + "try { } catch (e) {$jscomp.scope.x = foo();}");
   }
 
   public void testVariablesInCatchBlock() {
