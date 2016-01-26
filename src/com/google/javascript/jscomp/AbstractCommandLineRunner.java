@@ -644,7 +644,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     List<SourceFile> inputs = new ArrayList<>(files.size());
     boolean usingStdin = false;
     int jsModuleIndex = 0;
-    JsModuleSpec jsModuleSpec = jsModuleSpecs.isEmpty() ? null : jsModuleSpecs.get(0);
+    JsModuleSpec jsModuleSpec = Iterables.getFirst(jsModuleSpecs, null);
     int cumulatedInputFilesExpected =
         jsModuleSpec == null ? Integer.MAX_VALUE : jsModuleSpec.numInputs;
     for (int i = 0; i < files.size(); i++) {
