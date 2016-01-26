@@ -63,7 +63,7 @@ jQueryAjaxSettings.prototype.complete;
 /** @type {(Object<string, RegExp>|undefined)} */
 jQueryAjaxSettings.prototype.contents;
 
-/** @type {(?string|undefined)} */
+/** @type {(?string|boolean|undefined)} */
 jQueryAjaxSettings.prototype.contentType;
 
 /** @type {(Object<?, ?>|jQueryAjaxSettings|undefined)} */
