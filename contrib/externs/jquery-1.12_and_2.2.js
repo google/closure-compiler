@@ -15,11 +15,11 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.9 - 1.11 & 2.0 - 2.1
+ * @fileoverview Externs for jQuery 1.12 & 2.2
  *
- * The jQuery API is identical for the 1.9.x+ and 2.0+ branches. In addition,
+ * The jQuery API is identical for the 1.12.x+ and 2.2+ branches. In addition,
  * the API has not changed in releases since that date. These externs are valid
- * for all jQuery releases since 1.9 and 2.0.
+ * for all jQuery releases since 1.12 and 2.2.
  *
  * Note that some functions use different return types depending on the number
  * of parameters passed in. In these cases, you may need to annotate the type
@@ -144,20 +144,26 @@ jQueryAjaxSettings.prototype.xhr;
 /** @type {(Object<?, ?>|undefined)} */
 jQueryAjaxSettings.prototype.xhrFields;
 
+
 /**
  * @constructor
- * @param {(jQuerySelector|Element|Object|Array<Element>|jQuery|string|
- *     function())=} arg1
+ * @param {(jQuerySelector|Object|jQuery|string|function())=} arg1
  * @param {(Element|jQuery|Document|
  *     Object<string, (string|function(!jQuery.Event))>)=} arg2
  * @return {!jQuery}
+ * @implements {Iterable}
  */
 function jQuery(arg1, arg2) {}
 
 /**
- * @const
+ * @constructor
+ * @param {(jQuerySelector|Object|jQuery|string|function())=} arg1
+ * @param {(Element|jQuery|Document|
+ *     Object<string, (string|function(!jQuery.Event))>)=} arg2
+ * @return {!jQuery}
+ * @extends {jQuery}
  */
-var $ = jQuery;
+function $(arg1, arg2) {}
 
 /**
  * @param {(jQuerySelector|Array<Element>|string|jQuery)} arg1
@@ -897,7 +903,7 @@ jQuery.fx.interval;
 jQuery.fx.off;
 
 /**
- * @param {string} url
+ * @param {(string|!jQueryAjaxSettings)} url
  * @param {(Object<string,*>|string|
  *     function(string,string,jQuery.jqXHR))=} data
  * @param {(function(string,string,jQuery.jqXHR)|string)=} success
@@ -992,6 +998,12 @@ jQuery.prototype.hover = function(arg1, handlerOut) {};
  * @return {(string|!jQuery)}
  */
 jQuery.prototype.html = function(arg1) {};
+
+/**
+ * @param {string} html
+ * @returns {string}
+ */
+jQuery.htmlPrefilter = function(html) {};
 
 /**
  * @param {*} value
@@ -1442,7 +1454,7 @@ jQuery.parseXML = function(data) {};
 jQuery.prototype.position = function() {};
 
 /**
- * @param {string} url
+ * @param {(string|!jQueryAjaxSettings)} url
  * @param {(Object<string,*>|string|
  *     function(string,string,jQuery.jqXHR))=} data
  * @param {(function(string,string,jQuery.jqXHR)|string|null)=} success
@@ -1864,8 +1876,15 @@ jQuery.prototype.undelegate = function(arg1, arg2, handler) {};
 /**
  * @param {Array<Element>} arr
  * @return {Array<Element>}
+ * @deprecated Deprecated since 1.12 & 2.2. Use jQuery.uniqueSort instead
  */
 jQuery.unique = function(arr) {};
+
+/**
+ * @param {Array<Element>} arr
+ * @return {Array<Element>}
+ */
+jQuery.uniqueSort = function(arr) {};
 
 /**
  * @deprecated Please use .on( "unload", handler ) instead.
