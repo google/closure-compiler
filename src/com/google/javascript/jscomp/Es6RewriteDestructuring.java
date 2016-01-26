@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.Es6ToEs3Converter.makeIterator;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -174,12 +175,18 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     }
 
     // Convert 'var {a: b, c: d} = rhs' to:
-    // var temp = rhs;
+    // /** @const */ var temp = rhs;
     // var b = temp.a;
     // var d = temp.c;
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
             .useSourceInfoIfMissingFromForTree(objectPattern);
+    // TODO(tbreisacher): Remove the "if" and add this JSDoc unconditionally.
+    if (parent.isConst()) {
+      JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
+      jsDoc.recordConstancy();
+      tempDecl.setJSDocInfo(jsDoc.build());
+    }
     nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
 
     for (Node child = objectPattern.getFirstChild(), next; child != null; child = next) {
