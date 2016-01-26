@@ -508,9 +508,19 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = y | ('x'?'1':'2')", "x=y|('x'?1:2)");
   }
 
-  public void testFoldingAdd() {
+  public void testFoldingAdd1() {
     fold("x = null + true", "x=1");
     foldSame("x = a + true");
+    fold("x = '' + {}", "x = '[object Object]'");
+    fold("x = [] + {}", "x = '[object Object]'");
+    fold("x = {} + []", "x = '[object Object]'");
+    fold("x = {} + ''", "x = '[object Object]'");
+  }
+
+  public void testFoldingAdd2() {
+    fold("x = false + []", "x='false'");
+    fold("x = [] + true",  "x='true'");
+    fold("NaN + []", "'NaN'");
   }
 
   public void testFoldBitwiseOpStringCompare() {
@@ -796,7 +806,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("({}) == true");   // true
   }
 
-  public void testFoldGetElem() {
+  public void testFoldGetElem1() {
     fold("x = [,10][0]", "x = void 0");
     fold("x = [10, 20][0]", "x = 10");
     fold("x = [10, 20][1]", "x = 20");
@@ -812,6 +822,20 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = [0, foo()][1]", "x = foo()");
     foldSame("x = [0, foo()][0]");
     foldSame("for([1][0] in {});");
+  }
+
+  public void testFoldGetElem2() {
+    fold("x = 'string'[5]", "x = 'g'");
+    fold("x = 'string'[0]", "x = 's'");
+    fold("x = 's'[0]", "x = 's'");
+    foldSame("x = '\uD83D\uDCA9'[0]");
+
+    testSame("x = 'string'[0.5]",
+        PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    testSame("x = 'string'[-1]",
+        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
+    testSame("x = 'string'[6]",
+        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
   }
 
   public void testFoldComplex() {
@@ -1074,7 +1098,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public void testFoldMixed() {
     fold("''+[1]", "'1'");
-    foldSame("false+[]"); // would like: "\"false\""
+    fold("false+[]", "\"false\"");
   }
 
   public void testFoldVoid() {

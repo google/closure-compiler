@@ -675,8 +675,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold an ADD node with constant operands
    */
   private Node tryFoldAddConstantString(Node n, Node left, Node right) {
-    if (left.isString() ||
-        right.isString()) {
+    if (left.isString() || right.isString()
+        || left.isArrayLit() || right.isArrayLit()) {
       // Add strings.
       String leftString = NodeUtil.getStringValue(left);
       String rightString = NodeUtil.getStringValue(right);
@@ -687,8 +687,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return newStringNode;
       }
     }
-
-
 
     return n;
   }
@@ -1266,6 +1264,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (left.isArrayLit()) {
       return tryFoldArrayAccess(n, left, right);
     }
+
+    if (left.isString()) {
+      return tryFoldStringArrayAccess(n, left, right);
+    }
     return n;
   }
 
@@ -1359,6 +1361,56 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     } else {
       left.removeChild(elem);
     }
+
+    // Replace the entire GETELEM with the value
+    n.getParent().replaceChild(n, elem);
+    reportCodeChange();
+    return elem;
+  }
+
+  private Node tryFoldStringArrayAccess(Node n, Node left, Node right) {
+    // If GETPROP/GETELEM is used as assignment target the array literal is
+    // acting as a temporary we can't fold it here:
+    //    "[][0] += 1"
+    if (NodeUtil.isAssignmentTarget(n)) {
+      return n;
+    }
+
+    if (!right.isNumber()) {
+      // Sometimes people like to use complex expressions to index into
+      // arrays, or strings to index into array methods.
+      return n;
+    }
+
+    double index = right.getDouble();
+    int intIndex = (int) index;
+    if (intIndex != index) {
+      report(INVALID_GETELEM_INDEX_ERROR, right);
+      return n;
+    }
+
+    if (intIndex < 0) {
+      report(INDEX_OUT_OF_BOUNDS_ERROR, right);
+      return n;
+    }
+
+    Preconditions.checkState(left.isString());
+    String value = left.getString();
+    if (intIndex >= value.length()) {
+      report(INDEX_OUT_OF_BOUNDS_ERROR, right);
+      return n;
+    }
+
+    char c = 0;
+    // Note: For now skip the strings with unicode
+    // between Java and JavaScript.
+    for (int i = 0; i <= intIndex; i++) {
+      c = value.charAt(i);
+      if (c < 32 || c > 127) {
+        return n;
+      }
+    }
+    Node elem = IR.string(Character.toString(c));
 
     // Replace the entire GETELEM with the value
     n.getParent().replaceChild(n, elem);
