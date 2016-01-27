@@ -15085,6 +15085,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function /** boolean */ f(/** !Foo */ x) {",
         "  return x.hasOwnProperty('asdf');",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "Foo.prototype.toString = goog.abstractMethod;"));
   }
 
   public void testTrickySpecializationOfNamespaceProperties() {

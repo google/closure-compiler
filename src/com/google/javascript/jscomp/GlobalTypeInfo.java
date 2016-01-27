@@ -611,6 +611,7 @@ class GlobalTypeInfo implements CompilerPass {
     JSType localPropType = localPropDef == null
         ? null : current.getInstancePropDeclaredType(pname);
     if (localPropDef != null && superType.isClass()
+        && localPropType != null
         && localPropType.getFunType() != null
         && superType.hasConstantProp(pname)) {
       // TODO(dimvar): This doesn't work for multiple levels in the hierarchy.

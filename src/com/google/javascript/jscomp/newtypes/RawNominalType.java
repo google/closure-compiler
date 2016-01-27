@@ -306,7 +306,6 @@ public final class RawNominalType extends Namespace {
       return superClass.getPropDeclaredType(pname);
     }
     return p.getDeclaredType();
-
   }
 
   public Set<String> getAllOwnProps() {
