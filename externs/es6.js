@@ -103,7 +103,7 @@ function IteratorIterable() {}
 /**
  * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
- * @implements {Iterator<VALUE>}
+ * @implements {IteratorIterable<VALUE>}
  * @template VALUE
  */
 function Generator() {}
