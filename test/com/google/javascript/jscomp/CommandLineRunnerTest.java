@@ -84,41 +84,41 @@ public final class CommandLineRunnerTest extends TestCase {
 
   /** Externs for the test */
   private static final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
-    SourceFile.fromCode("externs", Joiner.on('\n').join(
-        "var arguments;",
-        "/**",
-        " * @constructor",
-        " * @param {...*} var_args",
-        " * @nosideeffects",
-        " * @throws {Error}",
-        " */",
-        "function Function(var_args) {}",
-        "/**",
-        " * @param {...*} var_args",
-        " * @return {*}",
-        " */",
-        "Function.prototype.call = function(var_args) {};",
-        "/**",
-        " * @constructor",
-        " * @param {...*} var_args",
-        " * @return {!Array}",
-        " */",
-        "function Array(var_args) {}",
-        "/**",
-        " * @param {*=} opt_begin",
-        " * @param {*=} opt_end",
-        " * @return {!Array}",
-        " * @this {Object}",
-        " */",
-        "Array.prototype.slice = function(opt_begin, opt_end) {};",
-        "/** @constructor */ function Window() {}",
-        "/** @type {string} */ Window.prototype.name;",
-        "/** @type {Window} */ var window;",
-        "/** @constructor */ function Element() {}",
-        "Element.prototype.offsetWidth;",
-        "/** @nosideeffects */ function noSideEffects() {}",
-        "/** @param {...*} x */ function alert(x) {}",
-        "function Symbol() {}")));
+    SourceFile.fromCode("externs",
+        "var arguments;"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @param {...*} var_args\n"
+        + " * @nosideeffects\n"
+        + " * @throws {Error}\n"
+        + " */\n"
+        + "function Function(var_args) {}\n"
+        + "/**\n"
+        + " * @param {...*} var_args\n"
+        + " * @return {*}\n"
+        + " */\n"
+        + "Function.prototype.call = function(var_args) {};"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @param {...*} var_args\n"
+        + " * @return {!Array}\n"
+        + " */\n"
+        + "function Array(var_args) {}"
+        + "/**\n"
+        + " * @param {*=} opt_begin\n"
+        + " * @param {*=} opt_end\n"
+        + " * @return {!Array}\n"
+        + " * @this {Object}\n"
+        + " */\n"
+        + "Array.prototype.slice = function(opt_begin, opt_end) {};"
+        + "/** @constructor */ function Window() {}\n"
+        + "/** @type {string} */ Window.prototype.name;\n"
+        + "/** @type {Window} */ var window;"
+        + "/** @constructor */ function Element() {}"
+        + "Element.prototype.offsetWidth;"
+        + "/** @nosideeffects */ function noSideEffects() {}\n"
+        + "/** @param {...*} x */ function alert(x) {}\n")
+  );
 
   private List<SourceFile> externs;
 
@@ -1245,7 +1245,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testSyntheticExterns() {
     externs = ImmutableList.of(
-        SourceFile.fromCode("externs", "function Symbol() {}; myVar.property;"));
+        SourceFile.fromCode("externs", "myVar.property;"));
     test("var theirVar = {}; var myVar = {}; var yourVar = {};",
          VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
@@ -1768,7 +1768,8 @@ public final class CommandLineRunnerTest extends TestCase {
    * If {@code warning} is non-null, we will also check if the given
    * warning type was emitted.
    */
-  private void test(String[] original, String[] compiled, DiagnosticType warning) {
+  private void test(String[] original, String[] compiled,
+                    DiagnosticType warning) {
     Compiler compiler = compile(original);
 
     if (warning == null) {
