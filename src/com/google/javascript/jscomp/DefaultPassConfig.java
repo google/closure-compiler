@@ -286,6 +286,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
+      checks.add(es6ExternsCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
     }
 
@@ -1153,6 +1154,14 @@ public final class DefaultPassConfig extends PassConfig {
       return new InjectEs6RuntimeLibrary(compiler);
     }
   };
+
+  private final PassFactory es6ExternsCheck =
+      new PassFactory("es6ExternsCheck", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new Es6ExternsCheck(compiler);
+        }
+      };
 
   /**
    * Desugars ES6_TYPED features into ES6 code.
