@@ -223,11 +223,7 @@ public final class Es6RewriteGenerators
   private void visitGenerator(Node n, Node parent) {
     compiler.needsEs6Runtime = true;
     hasTranslatedTry = false;
-    Node genBlock = compiler
-        .parseSyntheticCode(Joiner.on('\n').join(
-            // TODO(dimvar): Remove annotation once Iterable is a @record and NTI can
-            // handle @record.
-            "/** @return {!Iterable<?>} */",
+    Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
             "function generatorBody() {",
             "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
             "  function $jscomp$generator$impl(" + GENERATOR_NEXT_ARG + ", ",
@@ -238,16 +234,20 @@ public final class Es6RewriteGenerators
             "        return {value: undefined, done: true};",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg) { return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg) { return $jscomp$generator$impl(undefined, arg); },",
-            "  };",
+            // TODO(tbreisacher): Implement Generator.return:
+            // http://www.ecma-international.org/ecma-262/6.0/#sec-generator.prototype.return
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            // TODO(tbreisacher): Remove this cast if we start returning an actual Generator object.
+            "  return iterator;",
             "}"))
-        .getFirstChild()
-        .getLastChild()
+        .getFirstChild() // function
+        .getLastChild() // function body
         .detachFromParent();
     generatorCaseCount++;
 

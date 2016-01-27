@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /** Unit tests for {@link Es6RewriteGenerators}. */
+// TODO(tbreisacher): Rewrite direct calls to test() to use rewriteGeneratorBody
+// or rewriteGeneratorBodyWithVars.
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Override
@@ -59,13 +61,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             afterBody,
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg) { return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  };",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -110,13 +113,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  };",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     rewriteGeneratorBodyWithVars(
@@ -195,13 +199,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "          return {value: undefined, done: true}",
             "      }",
             "    }",
-            "    var iterator = {",
+            "    var iterator = /** @type {!Generator<?>} */ ({",
             "      next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "      throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "    };",
+            "      return: function(arg) { throw Error('Not yet implemented'); },",
+            "    });",
             "    $jscomp.initSymbolIterator();",
             "    iterator[Symbol.iterator] = function() { return this; };",
-            "    return /** @type {!Iterable<?>} */ (iterator);",
+            "    return iterator;",
             "  }",
             "}"));
   }
@@ -234,13 +239,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "          return {value: undefined, done: true}",
             "      }",
             "    }",
-            "    var iterator = {",
+            "    var iterator = /** @type {!Generator<?>} */ ({",
             "      next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "      throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "    }",
+            "      return: function(arg) { throw Error('Not yet implemented'); },",
+            "    })",
             "    $jscomp.initSymbolIterator();",
             "    iterator[Symbol.iterator] = function() { return this; };",
-            "    return /** @type {!Iterable<?>} */ (iterator);",
+            "    return iterator;",
             "  }",
             "  function $jscomp$generator$impl($jscomp$generator$next$arg,",
             "      $jscomp$generator$throw$arg) {",
@@ -260,13 +266,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -298,13 +305,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     test(
@@ -340,13 +348,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     rewriteGeneratorBodyWithVars(
@@ -411,13 +420,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     test(
@@ -452,13 +462,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "      }",
             "    }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -496,13 +507,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -523,13 +535,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     test(
@@ -563,13 +576,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -602,13 +616,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     test(
@@ -649,13 +664,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -677,13 +693,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -721,13 +738,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     test(
@@ -763,13 +781,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     test(
@@ -807,13 +826,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     test(
@@ -851,13 +871,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -896,13 +917,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -931,13 +953,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -959,13 +982,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -998,13 +1022,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -1025,13 +1050,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -1072,13 +1098,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
 
     rewriteGeneratorBodyWithVars(
@@ -1137,13 +1164,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -1173,13 +1201,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -1368,13 +1397,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -1402,13 +1432,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -1466,13 +1497,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -1526,13 +1558,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 
@@ -1593,13 +1626,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        return {value: undefined, done: true}",
             "    }",
             "  }",
-            "  var iterator = {",
+            "  var iterator = /** @type {!Generator<?>} */ ({",
             "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
             "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-            "  }",
+            "    return: function(arg) { throw Error('Not yet implemented'); },",
+            "  });",
             "  $jscomp.initSymbolIterator();",
             "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return /** @type {!Iterable<?>} */ (iterator);",
+            "  return iterator;",
             "}"));
   }
 }
