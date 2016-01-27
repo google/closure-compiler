@@ -1504,6 +1504,18 @@ public final class TypeInferenceTest extends TestCase {
     verify("out", CHECKED_UNKNOWN_TYPE);
   }
 
+  public void testIsArray() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("goog.asserts.assert(Array.isArray(x));");
+    verify("x", ARRAY_TYPE);
+  }
+
+  public void testNotIsArray() {
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(!Array.isArray(x));");
+    verify("x", NUMBER_TYPE);
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }

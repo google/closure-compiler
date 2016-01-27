@@ -44,35 +44,6 @@ public final class ClosureReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {
 
   /**
-   * For when {@code goog.isArray} returns true.
-   */
-  private final Visitor<JSType> restrictToArrayVisitor =
-      new RestrictByTrueTypeOfResultVisitor() {
-        @Override
-        protected JSType caseTopType(JSType topType) {
-          return topType.isAllType() ?
-              getNativeType(ARRAY_TYPE) : topType;
-        }
-
-        @Override
-        public JSType caseObjectType(ObjectType type) {
-          JSType arrayType = getNativeType(ARRAY_TYPE);
-          return arrayType.isSubtype(type) ? arrayType : null;
-        }
-      };
-
-  /**
-   * For when {@code goog.isArray} returns false.
-   */
-  private final Visitor<JSType> restrictToNotArrayVisitor =
-      new RestrictByFalseTypeOfResultVisitor() {
-        @Override
-        public JSType caseObjectType(ObjectType type) {
-          return type.isSubtype(getNativeType(ARRAY_TYPE)) ? null : type;
-        }
-      };
-
-  /**
    * For when {@code goog.isObject} returns true. This includes functions, but
    * not {@code null}.
    */
