@@ -10177,6 +10177,27 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheckCustomExterns(
         DEFAULT_EXTERNS + "var NOT_A_CONST_DONT_WARN;",
         "");
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */ var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "/** @const */",
+        "var c = new ns.Foo();"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/**",
+        " * @constructor",
+        " * @param {T} x",
+        " * @template T",
+        " */",
+        "ns.Foo = function(x) {};",
+        "/** @const */",
+        "var c = new ns.Foo(123);",
+        "var /** !ns.Foo<string> */ x = c;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testSuppressions() {

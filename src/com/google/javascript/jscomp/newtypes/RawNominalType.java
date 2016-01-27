@@ -146,11 +146,11 @@ public final class RawNominalType extends Namespace {
   }
 
   public boolean isStruct() {
-    return objectKind.isStruct();
+    return this.objectKind.isStruct();
   }
 
   public boolean isDict() {
-    return objectKind.isDict();
+    return this.objectKind.isDict();
   }
 
   public boolean isFinalized() {
@@ -163,6 +163,10 @@ public final class RawNominalType extends Namespace {
 
   ObjectKind getObjectKind() {
     return this.objectKind;
+  }
+
+  public FunctionType getConstructorFunction() {
+    return this.ctorFn;
   }
 
   public void setCtorFunction(
