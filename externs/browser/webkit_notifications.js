@@ -34,7 +34,7 @@ var NotificationOptions;
 var GetNotificationOptions;
 
 /** @interface */
-var NotificationOptionsInterface_;
+var NotificationOptionsInterface_ = function() {}
 /** @type {string} */ NotificationOptionsInterface_.prototype.dir;
 /** @type {string} */ NotificationOptionsInterface_.prototype.lang;
 /** @type {string} */ NotificationOptionsInterface_.prototype.body;

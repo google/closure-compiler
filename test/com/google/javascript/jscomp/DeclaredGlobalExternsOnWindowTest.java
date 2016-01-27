@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase {
-  private static final String WINDOW_DEFINITION =
-      "/** @constructor */ function Window(){}\nvar /** Window */ window;";
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -40,11 +38,10 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   }
 
   public void testWindowProperty1a() {
-    testExternChanges("function Window(){} var a;", "",
-        "function Window(){} var a; Window.prototype.a");
+    testExternChanges("var window; var a;", "", "var window;var a;window.a");
   }
 
-  // No "function Window(){};" so this is a no-op.
+  // No "var window;" so this is a no-op.
   public void testWindowProperty1b() {
     testExternChanges("var a", "", "var a");
   }
@@ -54,11 +51,11 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   }
 
   public void testWindowProperty3a() {
-    testExternChanges("function Window(){} function f() {}", "var b",
-        "function Window(){} function f(){} Window.prototype.f;");
+    testExternChanges("var window; function f() {}", "var b",
+        "var window;function f(){}window.f;");
   }
 
-  // No "function Window(){};" so this is a no-op.
+  // No "var window;" so this is a no-op.
   public void testWindowProperty3b() {
     testExternChanges("function f() {}", "var b", "function f(){}");
   }
@@ -68,55 +65,62 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   }
 
   public void testWindowProperty5a() {
-    testExternChanges("function Window(){} var x = function f() {}", "var b",
-        "function Window(){} var x=function f(){};Window.prototype.x;");
-    testExternChanges("function Window(){} var x = function () {}", "var b",
-        "function Window(){} var x=function (){};Window.prototype.x;");
+    testExternChanges("var window; var x = function f() {}", "var b",
+        "var window;var x=function f(){};window.x;");
+    testExternChanges("var window; var x = function () {}", "var b",
+        "var window;var x=function(){};window.x;");
   }
 
-  // No "function Window(){};" so this is a no-op.
+  // No "var window;" so this is a no-op.
   public void testWindowProperty5b() {
     testExternChanges("var x = function f() {}", "var b", "var x=function f(){}");
   }
 
   public void testWindowProperty5c() {
-    testExternChanges("function Window(){} var x = ()=>{}", "var b",
-        "function Window(){} var x=()=>{};Window.prototype.x;",
+    testExternChanges("var window; var x = ()=>{}", "var b",
+        "var window;var x=()=>{};window.x;",
         LanguageMode.ECMASCRIPT6);
   }
 
   public void testWindowProperty6() {
-    testExternChanges("function Window(){} /** @const {number} */ var n;", "",
+    testExternChanges("var window; /** @const {number} */ var n;", "",
         LINE_JOINER.join(
-            "function Window(){}",
+            "var window;",
             "/** @const {number} */ var n;",
-            "/** @const {number} @suppress {duplicate} */ Window.prototype.n;"));
+            "/** @const {number} @suppress {duplicate} */ window.n;"));
   }
 
   public void testWindowProperty7() {
-    testExternChanges("function Window(){} /** @const */ var ns = {}", "",
+    testExternChanges("var window; /** @const */ var ns = {}", "",
         LINE_JOINER.join(
-            "function Window(){}",
+            "var window;",
             "/** @const */ var ns = {};",
-            "/** @suppress {duplicate} */ Window.prototype.ns = ns;"));
+            "/** @suppress {duplicate} */ window.ns = ns;"));
   }
 
   public void testWindowProperty8() {
-    testExternChanges("function Window(){} /** @constructor */ function Foo() {}", "",
+    testExternChanges("var window; /** @constructor */ function Foo() {}", "",
         LINE_JOINER.join(
-            "function Window(){}",
+            "var window;",
             "/** @constructor */ function Foo(){}",
-            "/** @constructor @suppress {duplicate} */ Window.prototype.Foo = Foo;"));
+            "/** @constructor @suppress {duplicate} */ window.Foo = Foo;"));
+  }
+
+  public void testEnumWindowProperty() {
+    testExternChanges("var window; /** @enum {string} */ var Enum = { A: 'str' };", "",
+        LINE_JOINER.join(
+            "var window;",
+            "/** @enum {string} */ var Enum = { A: 'str' };",
+            "/** @enum {string} @suppress {duplicate} */ window.Enum = Enum;"));
   }
 
   /**
-   * Test to make sure the compiler knows the type of "Window.prototype.x"
+   * Test to make sure the compiler knows the type of "window.x"
    * is the same as that of "x".
    */
   public void testWindowPropertyWithJsDoc() {
-    testSame(LINE_JOINER.join(
-        WINDOW_DEFINITION,
-        "/** @type {string} */ var x;"),
+    testSame(
+        "var window;\n/** @type {string} */ var x;",
         LINE_JOINER.join(
             "/** @param {number} n*/",
             "function f(n) {}",
@@ -125,16 +129,13 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   }
 
   public void testEnum() {
-    testSame(LINE_JOINER.join(
-        WINDOW_DEFINITION,
-        "/** @enum {string} */",
-        "var Enum = {FOO: 'foo', BAR: 'bar'};"),
+    testSame(
+        "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};",
         LINE_JOINER.join(
             "/** @param {Enum} e*/",
             "function f(e) {}",
-            "f(window.Enum.FOO);",
-            "f(7);"),
-        TypeValidator.TYPE_MISMATCH_WARNING);
+            "f(window.Enum.FOO);"),
+        null);
   }
 
   /**
@@ -143,21 +144,19 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
    */
   public void testConstructorIsSameType() {
     testSame(
-        WINDOW_DEFINITION + "/** @constructor */ function Foo() {}\n",
+        "var window;\n/** @constructor */ function Foo() {}\n",
+        LINE_JOINER.join(
+            "/** @param {!window.Foo} f*/",
+            "function bar(f) {}",
+            "bar(new Foo());"),
+        null);
+
+    testSame(
+        "/** @constructor */ function Foo() {}\n",
         LINE_JOINER.join(
             "/** @param {!Foo} f*/",
             "function bar(f) {}",
-            "bar(new window.Foo());",
-            "bar(7);"),
-        TypeValidator.TYPE_MISMATCH_WARNING);
-
-    testSame(
-        WINDOW_DEFINITION + "/** @constructor */ function Foo() {}\n",
-        LINE_JOINER.join(
-            "/** @param {!Window.prototype.Foo} f*/",
-            "function bar(f) {}",
-            "bar(new Foo());",
-            "bar(7);"),
-        TypeValidator.TYPE_MISMATCH_WARNING);
+            "bar(new window.Foo());"),
+        null);
   }
 }
