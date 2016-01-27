@@ -59,6 +59,7 @@ public final class DeclaredFunctionType {
       JSType nominalType,
       JSType receiverType,
       ImmutableList<String> typeParameters) {
+    Preconditions.checkArgument(retType == null || !retType.isBottom());
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
     this.restFormals = restFormals;
