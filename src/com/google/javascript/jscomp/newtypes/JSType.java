@@ -1247,7 +1247,7 @@ public abstract class JSType implements TypeI {
                 tags &= ~UNDEFINED_MASK;
                 continue;
               case TYPEVAR_MASK:
-                builder.append(getTypeVar());
+                builder.append(getTypeVar().substring(0, getTypeVar().indexOf('#')));
                 tags &= ~TYPEVAR_MASK;
                 continue;
               case NON_SCALAR_MASK: {

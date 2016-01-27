@@ -127,6 +127,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     }
   }
 
+  @Override
   public DeclaredFunctionType getDeclaredFunctionType() {
     return this.declaredType;
   }
@@ -576,7 +577,7 @@ final class NTIScope implements DeclaredTypeRegistry {
       // Any further declarations are shadowed
     } else if (declaredType != null && declaredType.isTypeVariableDefinedLocally(name)) {
       isTypeVar = true;
-      type = JSType.fromTypeVar(name);
+      type = JSType.fromTypeVar(declaredType.getTypeVariableDefinedLocally(name));
     } else if (externs.containsKey(name)) {
       type = externs.get(name);
     } else if (unknownTypeNames.contains(name)) {
@@ -594,6 +595,7 @@ final class NTIScope implements DeclaredTypeRegistry {
         isForwardDeclaration);
   }
 
+  @Override
   public Declaration getDeclaration(QualifiedName qname, boolean includeTypes) {
     if (qname.isIdentifier()) {
       return getDeclaration(qname.getLeftmostName(), includeTypes);

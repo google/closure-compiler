@@ -192,6 +192,7 @@ public final class JSTypeCreatorFromJSDoc {
       WRONG_PARAMETER_ORDER);
 
   private final CodingConvention convention;
+  private final UniqueNameGenerator nameGen;
 
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
@@ -207,10 +208,12 @@ public final class JSTypeCreatorFromJSDoc {
   // Unknown type names indexed by JSDoc AST node at which they were found.
   private Map<Node, String> unknownTypeNames = new LinkedHashMap<>();
 
-  public JSTypeCreatorFromJSDoc(CodingConvention convention) {
+  public JSTypeCreatorFromJSDoc(
+      CodingConvention convention, UniqueNameGenerator nameGen) {
     this.qmarkFunctionDeclared = new FunctionAndSlotType(
         null, FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration());
     this.convention = convention;
+    this.nameGen = nameGen;
   }
 
   private FunctionAndSlotType qmarkFunctionDeclared;
@@ -418,11 +421,12 @@ public final class JSTypeCreatorFromJSDoc {
     }
   }
 
-  private JSType lookupTypeByName(String name,
-      Node n, DeclaredTypeRegistry registry, ImmutableList<String> outerTypeParameters)
+  private JSType lookupTypeByName(String name, Node n,
+      DeclaredTypeRegistry registry, ImmutableList<String> outerTypeParameters)
       throws UnknownTypeException {
-    if (outerTypeParameters.contains(name)) {
-      return JSType.fromTypeVar(name);
+    String tvar = UniqueNameGenerator.findGeneratedName(name, outerTypeParameters);
+    if (tvar != null) {
+      return JSType.fromTypeVar(tvar);
     }
     Declaration decl = registry.getDeclaration(QualifiedName.fromQualifiedString(name), true);
     if (decl == null) {
@@ -765,7 +769,7 @@ public final class JSTypeCreatorFromJSDoc {
       JSDocInfo jsdoc, String functionName, Node funNode,
       RawNominalType constructorType, RawNominalType ownerType,
       DeclaredTypeRegistry registry, FunctionTypeBuilder builder) {
-    ImmutableList.Builder<String> typeParamsBuilder = new ImmutableList.Builder<>();;
+    ImmutableList.Builder<String> typeParamsBuilder = ImmutableList.builder();
     ImmutableList<String> typeParameters = ImmutableList.of();
     Node parent = funNode.getParent();
 
@@ -775,10 +779,20 @@ public final class JSTypeCreatorFromJSDoc {
 
     boolean ignoreJsdoc = false;
     if (jsdoc != null) {
-      typeParamsBuilder.addAll(jsdoc.getTemplateTypeNames());
+      if (constructorType != null) {
+        // We have created new names for these type variables in GTI, don't
+        // create new ones here.
+        typeParamsBuilder.addAll(constructorType.getTypeParameters());
+      } else {
+        for (String typeParam : jsdoc.getTemplateTypeNames()) {
+          typeParamsBuilder.add(this.nameGen.getNextName(typeParam));
+        }
+      }
       // We don't properly support the type transformation language; we treat
       // its type variables as ordinary type variables.
-      typeParamsBuilder.addAll(jsdoc.getTypeTransformations().keySet());
+      for (String typeParam : jsdoc.getTypeTransformations().keySet()) {
+        typeParamsBuilder.add(this.nameGen.getNextName(typeParam));
+      }
       typeParameters = typeParamsBuilder.build();
       if (!typeParameters.isEmpty()) {
         if (parent.isSetterDef() || parent.isGetterDef()) {

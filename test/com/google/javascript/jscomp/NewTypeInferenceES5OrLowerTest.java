@@ -15072,4 +15072,31 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"),
         NewTypeInference.NULLABLE_DEREFERENCE);
   }
+
+  public void testMethodTypeParameterDoesntShadowClassTypeParameter() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template CLASST",
+        " * @param {CLASST} x",
+        " */",
+        "function Foo(x) {}",
+        "/**",
+        " * @template FUNT",
+        " * @param {CLASST} x",
+        " * @param {FUNT} y",
+        " * @return {CLASST}",
+        " */",
+        "Foo.prototype.method = function(x, y) { return x; };",
+        "/**",
+        " * @template FUNT",
+        " * @param {FUNT} x",
+        " * @param {!Foo<FUNT>} afoo",
+        " */",
+        "function f(x, afoo) {",
+        "  var /** string */ s = afoo.method(x, 123);",
+        "}",
+        "f(123, new Foo(123));"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }

@@ -178,8 +178,13 @@ public final class DeclaredFunctionType {
   }
 
   public boolean isTypeVariableDefinedLocally(String tvar) {
-    if (this.typeParameters.contains(tvar)) {
-      return true;
+    return getTypeVariableDefinedLocally(tvar) != null;
+  }
+
+  public String getTypeVariableDefinedLocally(String tvar) {
+    String tmp = UniqueNameGenerator.findGeneratedName(tvar, this.typeParameters);
+    if (tmp != null) {
+      return tmp;
     }
     // We don't look at this.nominalType, b/c if this function is a generic
     // constructor, then typeParameters contains the relevant type variables.
@@ -187,12 +192,13 @@ public final class DeclaredFunctionType {
       NominalType recvType = this.receiverType.getNominalTypeIfSingletonObj();
       if (recvType != null && recvType.isUninstantiatedGenericType()) {
         RawNominalType rawType = recvType.getRawNominalType();
-        if (rawType.getTypeParameters().contains(tvar)) {
-          return true;
+        tmp = UniqueNameGenerator.findGeneratedName(tvar, rawType.getTypeParameters());
+        if (tmp != null) {
+          return tmp;
         }
       }
     }
-    return false;
+    return null;
   }
 
   public DeclaredFunctionType withReceiverType(JSType newReceiverType) {
