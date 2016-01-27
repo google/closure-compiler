@@ -10994,6 +10994,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "function f(x) { var /** boolean */ b = goog.isNull(x); }");
   }
 
+  public void testIsArrayPredicate() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** (Array<number>|number) */ x) {",
+        "  var /** Array<number> */ a;",
+        "  if (Array.isArray(x)) {",
+        "    a = x;",
+        "  }",
+        "  a = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testGoogIsPredicatesTrue() {
     typeCheck(CLOSURE_BASE
         + "function f(x) { if (goog.isNull(x)) { var /** undefined */ y = x; } }",

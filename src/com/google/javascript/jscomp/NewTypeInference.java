@@ -1762,8 +1762,8 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeCallNewFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
-    if (isClosureSpecificCall(expr)) {
-      return analyzeClosureCallFwd(expr, inEnv, specializedType);
+    if (isPropertyTestCall(expr)) {
+      return analyzePropertyTestCallFwd(expr, inEnv, specializedType);
     }
     Node callee = expr.getFirstChild();
     if (isFunctionBind(callee, inEnv, true)) {
@@ -2496,7 +2496,7 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(env, requiredType);
   }
 
-  private EnvTypePair analyzeGoogTypePredicate(
+  private EnvTypePair analyzeTypePredicate(
       Node call, String typeHint, TypeEnv inEnv, JSType specializedType) {
     int numArgs = call.getChildCount() - 1;
     if (numArgs != 1) {
@@ -2508,7 +2508,7 @@ final class NewTypeInference implements CompilerPass {
     EnvTypePair pair = analyzeExprFwd(call.getLastChild(), inEnv);
     if (specializedType.isTrueOrTruthy() || specializedType.isFalseOrFalsy()) {
       pair = analyzeExprFwd(call.getLastChild(), inEnv, JSType.UNKNOWN,
-          googPredicateTransformType(typeHint, specializedType, pair.type));
+          predicateTransformType(typeHint, specializedType, pair.type));
     }
     pair.type = JSType.BOOLEAN;
     return pair;
@@ -2516,20 +2516,21 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeGoogTypeof(
       Node typeof, Node typeString, TypeEnv inEnv, JSType specializedType) {
-    return analyzeGoogTypePredicate(typeof,
+    return analyzeTypePredicate(typeof,
         typeString.isString() ? typeString.getString() : "",
         inEnv, specializedType);
   }
 
-  private EnvTypePair analyzeClosureCallFwd(
+  private EnvTypePair analyzePropertyTestCallFwd(
       Node call, TypeEnv inEnv, JSType specializedType) {
-    return analyzeGoogTypePredicate(call,
+    return analyzeTypePredicate(call,
         call.getFirstChild().getLastChild().getString(),
         inEnv, specializedType);
   }
 
-  // typeHint can come from goog.isXXX and from goog.typeOf.
-  private JSType googPredicateTransformType(
+  // typeHint can come from goog.typeOf or from any function
+  // in CodingConvention's isPropertyTestFunction.
+  private JSType predicateTransformType(
       String typeHint, JSType booleanContext, JSType beforeType) {
     switch (typeHint) {
       case "array":
@@ -3491,7 +3492,7 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(env, requiredType);
   }
 
-  private boolean isClosureSpecificCall(Node expr) {
+  private boolean isPropertyTestCall(Node expr) {
     if (!expr.isCall()) {
       return false;
     }
