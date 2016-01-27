@@ -341,12 +341,12 @@ final class FunctionTypeBuilder {
         reportWarning(CONSTRUCTOR_REQUIRED, "@dict", formatFnName());
       }
 
-      if (typeRegistry.isIObject(fnName, info)) {
+      if (typeRegistry.isTemplatedBuiltin(fnName, info)) {
         // This case is only for setting template types
         // for IObject<KEY1, VALUE1>.
         // In the (old) type system, there should be only one unique template
         // type for <KEY1> and <VALUE1> respectively
-        classTemplateTypeNames = typeRegistry.getIObjectTemplateTypeNames();
+        classTemplateTypeNames = typeRegistry.getTemplateTypesOfBuiltin(fnName);
         typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
       } else {
         // Otherwise, create new template type for

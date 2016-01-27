@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -4722,6 +4723,50 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               "Cannot use the IN operator with structs");
   }
 
+  public void testArrayLegacyAccess1() {
+    String externs = DEFAULT_EXTERNS.replace(
+        " * @implements {IArrayLike<T>}",
+        LINE_JOINER.join(
+          " * @implements {IObject<?, T>} ",
+          " * @implements {IArrayLike<T>} "));
+    Preconditions.checkState(DEFAULT_EXTERNS.length() != externs.length());
+    testTypesWithExterns(externs, "var a = []; var b = a['hi'];");
+  }
+
+  public void testIArrayLikeAccess1() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** ",
+            " * @param {!IArrayLike<T>} x",
+            " * @return {T}",
+            " * @template T",
+            "*/",
+            "function f(x) { return x[0]; }",
+            "function g(/** !Array<string> */ x) {",
+            "  var /** null */ y = f(x);",
+            "}"),
+        "initializing variable\n"
+        + "found   : string\n"
+        + "required: null");
+  }
+
+  public void testIArrayLikeAccess2() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** ",
+            " * @param {!IArrayLike<T>} x",
+            " * @return {T}",
+            " * @template T",
+            "*/",
+            "function f(x) { return x[0]; }",
+            "function g(/** !IArrayLike<string> */ x) {",
+            "  var /** null */ y = f(x);",
+            "}"),
+        "initializing variable\n"
+        + "found   : string\n"
+        + "required: null");
+  }
+
   public void testArrayAccess1() {
     testTypes("var a = []; var b = a['hi'];",
         "restricted index type\n" +
@@ -4756,14 +4801,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("var bar = null[1];",
         "only arrays or objects can be accessed\n" +
         "found   : null\n" +
-        "required: (Array|Object)");
+        "required: Object");
   }
 
   public void testArrayAccess7() {
     testTypes("var bar = void 0; bar[0];",
         "only arrays or objects can be accessed\n" +
         "found   : undefined\n" +
-        "required: (Array|Object)");
+        "required: Object");
   }
 
   public void testArrayAccess8() {
@@ -4772,7 +4817,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("var bar = void 0; bar[0]; bar[1];",
         "only arrays or objects can be accessed\n" +
         "found   : undefined\n" +
-        "required: (Array|Object)");
+        "required: Object");
   }
 
   public void testArrayAccess9() {

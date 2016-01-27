@@ -1222,13 +1222,14 @@ class TypeInference
         seenTypes.remove(paramType);
       }
     } else if (paramType.isTemplatizedType()) {
-      // @param {Array.<T>}
+      // @param {Array<T>}
       ObjectType referencedParamType = paramType
           .toMaybeTemplatizedType()
           .getReferencedType();
       JSType argObjectType = argType
           .restrictByNotNullOrUndefined()
           .collapseUnion();
+
 
       if (argObjectType.isSubtype(referencedParamType)) {
         // If the argument type is a subtype of the parameter type, resolve any
@@ -1372,8 +1373,7 @@ class TypeInference
     }
 
     // Try to infer the template types
-    Map<TemplateType, JSType> rawInferrence = inferTemplateTypesFromParameters(
-        fnType, n);
+    Map<TemplateType, JSType> rawInferrence = inferTemplateTypesFromParameters(fnType, n);
     Map<TemplateType, JSType> inferred = Maps.newIdentityHashMap();
     for (TemplateType key : keys) {
       JSType type = rawInferrence.get(key);
