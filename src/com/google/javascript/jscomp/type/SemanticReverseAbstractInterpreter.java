@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.type;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Function;
@@ -246,7 +247,7 @@ public final class SemanticReverseAbstractInterpreter
         }
         break;
 
-      case Token.CASE:
+      case Token.CASE: {
         Node left =
             condition.getParent().getFirstChild(); // the switch condition
         Node right = condition.getFirstChild();
@@ -255,9 +256,30 @@ public final class SemanticReverseAbstractInterpreter
         } else {
           return caseEquality(left, right, blindScope, SHNE);
         }
+      }
+
+      case Token.CALL: {
+        Node left = condition.getFirstChild();
+        String leftName = left.getQualifiedName();
+        if ("Array.isArray".equals(leftName) && left.getNext() != null) {
+          return caseIsArray(left.getNext(), blindScope, outcome);
+        }
+        break;
+      }
     }
+
     return nextPreciserScopeKnowingConditionOutcome(
         condition, blindScope, outcome);
+  }
+
+  private FlowScope caseIsArray(Node value, FlowScope blindScope, boolean outcome) {
+    JSType type = value.getJSType();
+    JSType restricted = outcome ? getNativeType(ARRAY_TYPE) : null;
+    if (type != null) {
+      Visitor<JSType> visitor = outcome ? restrictToArrayVisitor : restrictToNotArrayVisitor;
+      restricted = type.visit(visitor);
+    }
+    return maybeRestrictName(blindScope, value, type, restricted);
   }
 
   private FlowScope caseEquality(Node condition, FlowScope blindScope,
