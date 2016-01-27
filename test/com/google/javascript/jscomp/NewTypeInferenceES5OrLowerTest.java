@@ -14554,6 +14554,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "var /** !Window */ n = window;",
             // ns is present on window
             "var x = window.ns;"));
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @type {number} */",
+            "Foo.prototype.prop;"),
+        LINE_JOINER.join(
+            "function f(/** !window.Foo */ x) {",
+            "  var /** string */ s = x.prop;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testInstantiateToTheSuperType() {
