@@ -486,6 +486,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
       // The goog.require is the entire statement. There is no var, so there's nothing to do.
       return;
     }
+    Node nameNode = call.getParent();
 
     String namespace = call.getLastChild().getString();
     if (current.requireInsertNode == null) {
@@ -495,7 +496,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
     // rewrite:
     //   var foo = goog.require('ns.foo')
     // to
-    //   goog.require('foo');
+    //   goog.require('ns.foo');
     //   var foo = ns.foo;
 
     // replace the goog.require statement with a reference to the namespace.
