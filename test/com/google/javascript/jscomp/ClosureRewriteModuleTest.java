@@ -63,21 +63,6 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         "});");
   }
 
-  public void testImportOfUnqualifiedName() {
-    test(
-        LINE_JOINER.join(
-            "goog.module('ns.a');",
-            "var b = goog.require('b');",
-            "var c = new b();"),
-        LINE_JOINER.join(
-            "goog.provide('ns.a');",
-            "goog.require('b');",
-            "goog.scope(function(){",
-            "  var b_module = b;",
-            "  var c = new b_module();",
-            "});"));
-  }
-
   public void testDestructuring() {
     testEs6(
         LINE_JOINER.join(
@@ -228,11 +213,17 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
   public void testAliasShadowsGlobal1() {
     // If locals shadow globals they need to be renamed.
     test(
-        "goog.module('a'); var b = goog.require('b');",
-
-        "goog.provide('a');"
-        + "goog.require('b');"
-        + "goog.scope(function(){var b_module = b});");
+        LINE_JOINER.join(
+            "goog.module('ns.a');",
+            "var b = goog.require('b');",
+            "var c = new b();"),
+        LINE_JOINER.join(
+            "goog.provide('ns.a');",
+            "goog.require('b');",
+            "goog.scope(function(){",
+            "  var b_module = b;",
+            "  var c = new b_module();",
+            "});"));
   }
 
   public void testAliasShadowsGlobal2() {
