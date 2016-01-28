@@ -85,8 +85,6 @@ final class ObjectType implements TypeWithProperties {
       Preconditions.checkArgument(fn == null || nominalType.isFunction(),
           "Cannot create objectType of nominal type %s with function (%s)",
           nominalType, fn);
-      Preconditions.checkArgument(!nominalType.isFunction() || fn != null,
-          "Cannot create Function instance without a FunctionType");
     }
     this.nominalType = nominalType;
     this.props = isLoose ? loosenProps(props) : props;

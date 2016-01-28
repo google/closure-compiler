@@ -15138,4 +15138,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "f(123, new Foo(123));"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testDontCrashWhenExtendingFunction() {
+    // We still don't handle this completely, since we give a non-callable
+    // warning even though Spy extends Function. But the unit test ensures that
+    // we at least don't crash.
+    typeCheck(LINE_JOINER.join(
+        "/** @const */ var jasmine = {};",
+        "/**",
+        " * @constructor",
+        " * @extends {Function}",
+        " */",
+        "jasmine.Spy = function() {};",
+        "var x = (new jasmine.Spy).length;",
+        "var /** null */ n = (new jasmine.Spy)();"),
+        NewTypeInference.NOT_CALLABLE);
+  }
 }
