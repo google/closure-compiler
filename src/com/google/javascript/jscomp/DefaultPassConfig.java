@@ -186,6 +186,10 @@ public final class DefaultPassConfig extends PassConfig {
     // Verify JsDoc annotations
     checks.add(checkJsDoc);
 
+    if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
+      checks.add(lintChecks);
+    }
+
     if (!options.skipNonTranspilationPasses && options.closurePass
         && options.enables(DiagnosticGroups.LINT_CHECKS)) {
       checks.add(checkRequiresAndProvidesSorted);
@@ -358,9 +362,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkAccessControls);
     }
 
-    // Lint checks must be run after typechecking.
-    if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
-      checks.add(lintChecks);
+    // Analyzer checks must be run after typechecking.
+    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS)) {
+      checks.add(analyzerChecks);
     }
 
     if (options.checkEventfulObjectDisposalPolicy !=
@@ -1530,10 +1534,19 @@ public final class DefaultPassConfig extends PassConfig {
           .add(new CheckEnums(compiler))
           .add(new CheckInterfaces(compiler))
           .add(new CheckJSDocStyle(compiler))
+          .add(new CheckPrototypeProperties(compiler))
+          .add(new CheckUnusedPrivateProperties(compiler));
+      return combineChecks(compiler, callbacks.build());
+    }
+  };
+
+  private final HotSwapPassFactory analyzerChecks =
+      new HotSwapPassFactory("analyzerChecks", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder()
           .add(new CheckNullableReturn(compiler))
           .add(new CheckForInOverArray(compiler))
-          .add(new CheckPrototypeProperties(compiler))
-          .add(new CheckUnusedPrivateProperties(compiler))
           .add(new ImplicitNullabilityCheck(compiler));
       return combineChecks(compiler, callbacks.build());
     }

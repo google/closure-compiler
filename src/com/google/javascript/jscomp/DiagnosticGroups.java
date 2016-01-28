@@ -472,7 +472,6 @@ public class DiagnosticGroups {
           CheckEnums.DUPLICATE_ENUM_VALUE,
           CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
           CheckEnums.SHORTHAND_ASSIGNMENT_IN_ENUM,
-          CheckForInOverArray.FOR_IN_OVER_ARRAY,
           // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
           // checkTypes DiagnosticGroup
           CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
@@ -486,9 +485,6 @@ public class DiagnosticGroups {
           CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
           CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
           CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS,
-          CheckNullableReturn.NULLABLE_RETURN,
-          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
-          CheckForInOverArray.FOR_IN_OVER_ARRAY,
           CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
           CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
           CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
@@ -497,11 +493,19 @@ public class DiagnosticGroups {
           CheckRequiresAndProvidesSorted.MODULE_AND_PROVIDES,
           CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY,
           Es6RewriteArrowFunction.THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT,
-          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
           RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
           RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
           RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS,
           VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
+
+  // Similar to the lintChecks group above, but includes things that cannot be done on a single
+  // file at a time, for example because they require typechecking.
+  public static final DiagnosticGroup ANALYZER_CHECKS =
+      DiagnosticGroups.registerGroup("analyzerChecks", // undocumented
+          CheckForInOverArray.FOR_IN_OVER_ARRAY,
+          CheckNullableReturn.NULLABLE_RETURN,
+          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
+          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
 
   public static final DiagnosticGroup USE_OF_GOOG_BASE =
       DiagnosticGroups.registerGroup("useOfGoogBase",
