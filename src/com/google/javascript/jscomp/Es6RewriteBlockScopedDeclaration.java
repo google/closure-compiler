@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -24,6 +25,7 @@ import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -66,9 +68,16 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     if (!n.isClass() && !n.isFunction() && !nameNode.hasChildren()
         && (parent == null || !NodeUtil.isEnhancedFor(parent))
         && !n.isCatch()
-        && !n.isFromExterns()) {
-      nameNode.addChildToFront(
-          IR.name("undefined").useSourceInfoIfMissingFrom(nameNode));
+        && inLoop(n)) {
+      Node undefined = IR.name("undefined");
+      if (nameNode.getJSDocInfo() != null || n.getJSDocInfo() != null) {
+        undefined = IR.cast(undefined);
+        JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
+        jsDoc.recordType(new JSTypeExpression(new Node(Token.QMARK), n.getSourceFileName()));
+        undefined.setJSDocInfo(jsDoc.build());
+      }
+      undefined.useSourceInfoFromForTree(nameNode);
+      nameNode.addChildToFront(undefined);
     }
 
     String oldName = nameNode.getString();
@@ -127,6 +136,26 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     varify();
     NodeTraversal.traverseEs6(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
   }
+
+  /**
+   * Whether n is inside a loop. If n is inside a function which is inside a loop, we do not
+   * consider it to be inside a loop.
+   */
+  private boolean inLoop(Node n) {
+    Node enclosingNode = NodeUtil.getEnclosingNode(n, loopPredicate);
+    return enclosingNode != null && enclosingNode.getType() != Token.FUNCTION;
+  }
+
+  private static final Predicate<Node> loopPredicate = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return n.getType() == Token.WHILE
+          || n.getType() == Token.FOR
+          || n.getType() == Token.FOR_OF
+          || n.getType() == Token.DO
+          || n.getType() == Token.FUNCTION;
+    }
+  };
 
   private void varify() {
     if (!letConsts.isEmpty()) {

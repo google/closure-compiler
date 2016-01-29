@@ -1825,15 +1825,13 @@ public final class NodeUtil {
   /**
    * Gets the closest ancestor to the given node of the provided type.
    */
-  private static Node getEnclosingType(Node n, int type) {
-    Node curr = n;
-    while (curr.getType() != type) {
-      curr = curr.getParent();
-      if (curr == null) {
-        return curr;
+  static Node getEnclosingType(Node n, final int type) {
+    return getEnclosingNode(n, new Predicate<Node>() {
+      @Override
+      public boolean apply(Node n) {
+        return n.getType() == type;
       }
-    }
-    return curr;
+    });
   }
 
   /**
@@ -1876,8 +1874,12 @@ public final class NodeUtil {
   }
 
   public static Node getEnclosingStatement(Node n) {
+    return getEnclosingNode(n, isStatement);
+  }
+
+  public static Node getEnclosingNode(Node n, Predicate<Node> pred) {
     Node curr = n;
-    while (curr != null && !isStatement(curr)) {
+    while (curr != null && !pred.apply(curr)) {
       curr = curr.getParent();
     }
     return curr;
@@ -2239,6 +2241,13 @@ public final class NodeUtil {
   public static boolean isStatement(Node n) {
     return isStatementParent(n.getParent());
   }
+
+  private static final Predicate<Node> isStatement = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return isStatement(n);
+    }
+  };
 
   static boolean isStatementParent(Node parent) {
     // It is not possible to determine definitely if a node is a statement

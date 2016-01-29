@@ -67,7 +67,7 @@
 
 @param {!Iterator<T>} iterator
 @return {!Array<T>} */$jscomp.arrayFromIterator = function(iterator) {
-  var i = undefined;
+  var i;
   /**@const */var arr = [];
   while (!(i = iterator.next()).done) {
     arr.push(i.value);
@@ -173,7 +173,7 @@
     $jscomp.initSymbol();
     $jscomp.initSymbolIterator();
     /**@const */var iter = arrayLike[Symbol.iterator]();
-    var next = undefined;
+    var next;
     while (!(next = iter.next()).done) {
       result.push(opt_mapFn.call(opt_thisArg, next.value));
     }

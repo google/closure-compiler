@@ -53,7 +53,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     test("let x = 3;", "var x = 3;");
     test("const x = 3;", "/** @const */ var x = 3;");
     test("const a = 0; a;", "/** @const */ var a = 0; a;");
-    test("if (a) { let x; }", "if (a) { var x = undefined; }");
+    test("if (a) { let x; }", "if (a) { var x; }");
     test("function f() { const x = 3; }",
         "function f() { /** @const */ var x = 3; }");
   }
@@ -91,7 +91,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "function f() {",
             "  /** @const */ var x = 3;",
             "  if (true) {",
-            "    var x$0 = undefined;",
+            "    var x$0;",
             "  }",
             "}"));
 
@@ -173,7 +173,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "    assert(x$0 === 2);",
             "  }",
             "  if (b) {",
-            "    var x$1 = undefined;",
+            "    var x$1;",
             "    assert(x$1 === undefined);",
             "  }",
             "  assert(x === 1);",
@@ -197,7 +197,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "    var x = 2;",
             "    assert(x === 2);",
             "    if (b) {",
-            "      var x$0 = undefined;",
+            "      var x$0;",
             "      assert(x$0 === undefined);",
             "    }",
             "  }",
@@ -271,7 +271,35 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
     test(
         "for (let i = 0;;) {} let i;",
-        "for (var i$0 = 0;;) {} var i = undefined;");
+        "for (var i$0 = 0;;) {} var i;");
+
+    test(
+        LINE_JOINER.join(
+            "for (var x in y) {",
+            "  /** @type {number} */",
+            "  let i;",
+            "}"),
+        LINE_JOINER.join(
+            "for (var x in y) {",
+            "  /** @type {number} */",
+            "  var i = /** @type {?} */ (undefined);",
+            "}"));
+  }
+
+  public void testFunctionInLoop() {
+    test(
+        LINE_JOINER.join(
+            "for (var x of y) {",
+            "  function f() {",
+            "    let z;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "for (var x of y) {",
+            "  var f = function() {",
+            "    var z;",
+            "  };",
+            "}"));
   }
 
   public void testLoopClosure() {
