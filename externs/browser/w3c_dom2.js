@@ -1203,6 +1203,12 @@ function HTMLFieldSetElement() {}
 HTMLFieldSetElement.prototype.form;
 
 /**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/html5/forms.html#attr-fieldset-disabled
+ */
+HTMLFieldSetElement.prototype.disabled;
+
+/**
  * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-21482039
