@@ -517,6 +517,26 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "      return function() { return $jscomp$loop$0.j; };",
             "  })($jscomp$loop$0));",
             "}"));
+
+    test(
+        LINE_JOINER.join(
+            "const arr = [];",
+            "var i;",
+            "for (i = 0;;) {",
+            "  let j = 0;",
+            "  arr.push(function() { return j; });",
+            "}"),
+        LINE_JOINER.join(
+            "/** @const */ var arr = [];",
+            "var i;",
+            "var $jscomp$loop$0 = {j: undefined};",
+            "i = 0;",
+            "for (;;$jscomp$loop$0 = {j : $jscomp$loop$0.j}) {",
+            "  $jscomp$loop$0.j = 0;",
+            "  arr.push((function($jscomp$loop$0) {",
+            "      return function() { return $jscomp$loop$0.j; };",
+            "  })($jscomp$loop$0));",
+            "}"));
   }
 
   public void testLoopClosureMutated() {

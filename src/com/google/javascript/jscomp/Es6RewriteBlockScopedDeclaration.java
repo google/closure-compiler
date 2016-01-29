@@ -290,6 +290,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           Node initializer = loopNode.getFirstChild();
           loopNode.replaceChild(initializer, IR.empty());
           if (!initializer.isEmpty()) {
+            if (!initializer.isExprResult()) {
+              initializer = IR.exprResult(initializer).copyInformationFrom(initializer);
+            }
             loopNode.getParent().addChildBefore(initializer, loopNode);
           }
           Node increment = loopNode.getChildAtIndex(2);
