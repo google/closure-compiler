@@ -488,6 +488,56 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
     // No-op, vars don't need transpilation
     testSame("for (;;) { var /** number */ x = 3; var f = function() { return x; } }");
+
+    test(
+        LINE_JOINER.join(
+            "var i;",
+            "for (i = 0;;) {",
+            "  let x = 0;",
+            "  var f = function() { x; };",
+            "}"),
+        LINE_JOINER.join(
+            "var i;",
+            "var $jscomp$loop$0={x: undefined};",
+            "i = 0;",
+            "for(;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
+            "  $jscomp$loop$0.x = 0;",
+            "  var f = (function($jscomp$loop$0) {",
+            "    return function() { $jscomp$loop$0.x; };",
+            "  })($jscomp$loop$0);",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "for (foo();;) {",
+            "  let x = 0;",
+            "  var f = function() { x; };",
+            "}"),
+        LINE_JOINER.join(
+            "var $jscomp$loop$0={x: undefined};",
+            "foo();",
+            "for(;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
+            "  $jscomp$loop$0.x = 0;",
+            "  var f = (function($jscomp$loop$0) {",
+            "    return function() { $jscomp$loop$0.x; };",
+            "  })($jscomp$loop$0);",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "for (function foo() {};;) {",
+            "  let x = 0;",
+            "  var f = function() { x; };",
+            "}"),
+        LINE_JOINER.join(
+            "var $jscomp$loop$0={x: undefined};",
+            "(function foo() {});",
+            "for(;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
+            "  $jscomp$loop$0.x = 0;",
+            "  var f = (function($jscomp$loop$0) {",
+            "    return function() { $jscomp$loop$0.x; };",
+            "  })($jscomp$loop$0);",
+            "}"));
   }
 
   public void testLoopClosureCommaInBody() {
