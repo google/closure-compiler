@@ -26,8 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
-import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.TextFormat;
@@ -63,10 +61,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -744,6 +742,28 @@ public class CommandLineRunner extends
       return allJsInputs;
     }
 
+    protected List<FlagEntry<JsSourceType>> getMixedJsSources()
+        throws CmdLineException, IOException {
+      List<FlagEntry<JsSourceType>> mixedSources = new ArrayList<>();
+      for (FlagEntry<JsSourceType> source : Flags.mixedJsSources) {
+        if (source.value.endsWith(".zip")) {
+          mixedSources.add(source);
+        } else {
+          for (String filename : findJsFiles(Collections.singletonList(source.value))) {
+            mixedSources.add(new FlagEntry<>(JsSourceType.JS, filename));
+          }
+        }
+      }
+      List<String> fromArguments = findJsFiles(arguments);
+      for (String filename : fromArguments) {
+        mixedSources.add(new FlagEntry<>(JsSourceType.JS, filename));
+      }
+      if (!Flags.mixedJsSources.isEmpty() && !arguments.isEmpty() && mixedSources.isEmpty()) {
+        throw new CmdLineException(parser, "No inputs matched");
+      }
+      return mixedSources;
+    }
+
     List<SourceMap.LocationMapping> getSourceMapLocationMappings() throws CmdLineException {
       ImmutableList.Builder<LocationMapping> locationMappings = ImmutableList.builder();
 
@@ -1090,6 +1110,7 @@ public class CommandLineRunner extends
     Flags.mixedJsSources.clear();
 
     List<String> jsFiles = null;
+    List<FlagEntry<JsSourceType>> mixedSources = null;
     List<LocationMapping> mappings = null;
     ImmutableMap<String, String> sourceMapInputs = null;
     try {
@@ -1101,6 +1122,7 @@ public class CommandLineRunner extends
       }
 
       jsFiles = flags.getJsFiles();
+      mixedSources = flags.getMixedJsSources();
       mappings = flags.getSourceMapLocationMappings();
       sourceMapInputs = flags.getSourceMapInputs();
     } catch (CmdLineException e) {
@@ -1222,7 +1244,7 @@ public class CommandLineRunner extends
           .setExterns(flags.externs)
           .setJs(jsFiles)
           .setJsZip(flags.jszip)
-          .setMixedJsSources(Flags.mixedJsSources)
+          .setMixedJsSources(mixedSources)
           .setJsOutputFile(flags.jsOutputFile)
           .setModule(flags.module)
           .setVariableMapOutputFile(flags.variableMapOutputFile)
@@ -1452,7 +1474,7 @@ public class CommandLineRunner extends
    * within the directory and sub-directories.
    */
   public static List<String> findJsFiles(Collection<String> patterns) throws IOException {
-    Set<String> allJsInputs = new LinkedHashSet<>();
+    Set<String> allJsInputs = new TreeSet<>();
     for (String pattern : patterns) {
       if (!pattern.contains("*") && !pattern.startsWith("!")) {
         File matchedFile = new File(pattern);
@@ -1473,7 +1495,9 @@ public class CommandLineRunner extends
       throws IOException {
     FileSystem fs = FileSystems.getDefault();
     final boolean remove = pattern.indexOf('!') == 0;
-    if (remove) pattern = pattern.substring(1);
+    if (remove) {
+      pattern = pattern.substring(1);
+    }
 
     if (File.separator.equals("\\")) {
       pattern = pattern.replace('\\', '/');
@@ -1488,18 +1512,20 @@ public class CommandLineRunner extends
         if (i == 0) {
           break;
         } else {
-          prefix = Joiner.on("/").join(patternParts.subList(0, i));
-          pattern = Joiner.on("/").join(patternParts.subList(i, patternParts.size()));
+          prefix = Joiner.on(File.separator).join(patternParts.subList(0, i));
+          pattern = Joiner.on(File.separator).join(patternParts.subList(i, patternParts.size()));
         }
       }
     }
 
-    final PathMatcher matcher = fs.getPathMatcher("glob:" + pattern);
+    final PathMatcher matcher = fs.getPathMatcher("glob:" + (prefix.equals(".")
+        ? pattern
+        : prefix + File.separator + pattern));
     java.nio.file.Files.walkFileTree(
         fs.getPath(prefix), new SimpleFileVisitor<Path>() {
           @Override public FileVisitResult visitFile(
               Path p, BasicFileAttributes attrs) {
-            if (matcher.matches(p)) {
+            if (matcher.matches(p.normalize())) {
               if (remove) {
                 allJsInputs.remove(p.toString());
               } else {
