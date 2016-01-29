@@ -198,9 +198,7 @@ class GlobalTypeInfo implements CompilerPass {
       DiagnosticType.warning(
           "JSC_NTI_SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES",
           "Interface {0} has a property {1} with incompatible types in "
-          + "its super interfaces\n"
-          + "Inherited type 1: {2}\n"
-          + "Inherited type 2: {3}\n");
+          + "its super interfaces: {2}");
 
   static final DiagnosticType ONE_TYPE_FOR_MANY_VARS = DiagnosticType.warning(
       "JSC_NTI_ONE_TYPE_FOR_MANY_VARS",
@@ -526,10 +524,16 @@ class GlobalTypeInfo implements CompilerPass {
       DeclaredFunctionType superMethodType = DeclaredFunctionType.meet(methodTypes);
       DeclaredFunctionType localMethodType = localPropDef.methodType;
       boolean getsTypeFromParent = getsTypeInfoFromParentMethod(localPropDef);
-      // When getsTypeFromParent is true, we will miss the invalid override
-      // earlier, so we check here.
-      if (getsTypeFromParent
+      if (superMethodType == null) {
+        // If the inherited types are not compatible, pick one.
+        superMethodType = methodTypes.iterator().next();
+        warnings.add(JSError.make(localPropDef.defSite,
+                SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+                rawType.getName(), pname, methodTypes.toString()));
+      } else if (getsTypeFromParent
           && localMethodType.getMaxArity() > superMethodType.getMaxArity()) {
+        // When getsTypeFromParent is true, we will miss the invalid override
+        // earlier, so we check here.
         warnings.add(JSError.make(
             localPropDef.defSite, INVALID_PROP_OVERRIDE, pname,
             superMethodType.toFunctionType().toString(),
@@ -557,7 +561,7 @@ class GlobalTypeInfo implements CompilerPass {
               rawType.getDefSite(),
               SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
               rawType.getName(), pname,
-              inheritedType.toString(), resultType.toString()));
+              defs.toString()));
           continue add_interface_props;
         }
       }

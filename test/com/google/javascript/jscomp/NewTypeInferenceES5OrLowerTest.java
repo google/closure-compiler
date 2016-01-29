@@ -15154,4 +15154,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var /** null */ n = (new jasmine.Spy)();"),
         NewTypeInference.NOT_CALLABLE);
   }
+
+  public void testDontCrashOnInheritedMethodsWithIncompatibleReturns() {
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @return {number} */",
+        "Foo.prototype.m = function() {};",
+        "/** @interface */",
+        "function Bar() {}",
+        "/** @return {string} */",
+        "Bar.prototype.m = function() {};",
+        "/** @constructor @implements {Foo} @implements {Bar} */",
+        "function Baz() {}",
+        "Baz.prototype.m = function() { return 123; };"),
+        GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+  }
 }
