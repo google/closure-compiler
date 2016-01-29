@@ -26,7 +26,7 @@ import java.nio.charset.Charset;
 /**
  * A utility class to assist in creating JS bundle files.
  */
-public final class ClosureBundler {
+public class ClosureBundler {
   private boolean useEval = false;
   private String sourceUrl = null;
 
@@ -87,7 +87,7 @@ public final class ClosureBundler {
       appendSourceUrl(out, Mode.ESCAPED);
       out.append("\"));");
     } else {
-      out.append(contents.read());
+      append(out, Mode.NORMAL, contents);
       appendSourceUrl(out, Mode.NORMAL);
     }
   }
@@ -114,20 +114,23 @@ public final class ClosureBundler {
   }
 
   private enum Mode {
-    ESCAPED,
-    NORMAL,
-  }
+    ESCAPED {
+      @Override void append(String s, Appendable out) throws IOException {
+        out.append(SourceCodeEscapers.javascriptEscaper().escape(s));
+      }
+    },
+    NORMAL {
+      @Override void append(String s, Appendable out) throws IOException {
+        out.append(s);
+      }
+    };
 
-  private void appendEscaped(Appendable out, String s) throws IOException {
-    out.append(SourceCodeEscapers.javascriptEscaper().escape(s));
+    abstract void append(String s, Appendable out) throws IOException;
   }
 
   private void append(Appendable out, Mode mode, String s) throws IOException {
-    if (mode == Mode.ESCAPED) {
-      appendEscaped(out, s);
-    } else {
-      out.append(s);
-    }
+    String transformed = transformInput(s);
+    mode.append(transformed, out);
   }
 
   private void append(Appendable out, Mode mode, CharSource cs)
@@ -135,13 +138,23 @@ public final class ClosureBundler {
     append(out, mode, cs.read());
   }
 
-  private void appendSourceUrl(Appendable out, Mode mode)
-      throws IOException {
-    if (sourceUrl != null) {
-      append(out, mode, "\n//# sourceURL=");
-      append(out, mode, sourceUrl);
-      append(out, mode, "\n");
+  private void appendSourceUrl(Appendable out, Mode mode) throws IOException {
+    if (sourceUrl == null) {
+      return;
     }
+    String toAppend = "\n//# sourceURL=" + sourceUrl + "\n";
+    // Don't go through #append. That method relies on #transformInput,
+    // but source URLs generally aren't valid JS inputs.
+    mode.append(toAppend, out);
+  }
+
+  /**
+   * Template method. Subclasses that need to transform the inputs should override this method.
+   * (For example, {@link TranspilingClosureBundler#transformInput} transpiles inputs from ES6
+   * to ES5.)
+   */
+  protected String transformInput(String input) {
+    return input;
   }
 }
 
