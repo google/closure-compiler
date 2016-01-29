@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.lint.CheckArguments;
-import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckForInOverArray;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
@@ -468,7 +467,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup("lintChecks", // undocumented
           CheckArguments.BAD_ARGUMENTS_USAGE,
-          CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
           CheckEnums.DUPLICATE_ENUM_VALUE,
           CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
           CheckEnums.SHORTHAND_ASSIGNMENT_IN_ENUM,
