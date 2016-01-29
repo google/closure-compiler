@@ -351,6 +351,8 @@ public class IR {
   }
 
   public static Node name(String name) {
+    Preconditions.checkState(name.indexOf('.') == -1,
+        "Invalid name. Did you mean to use NodeUtil.newQName?");
     return Node.newString(Token.NAME, name);
   }
 
