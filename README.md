@@ -87,7 +87,7 @@ You can also use minimatch-style globs.
 # Recursively include all js files in subdirs
 java -jar compiler.jar --js_output_file=out.js 'src/**.js'
 
-# Recursively include all js files in subdirs, exclusing test files.
+# Recursively include all js files in subdirs, excluding test files.
 # Use single-quotes, so that bash doesn't try to expand the '!'
 java -jar compiler.jar --js_output_file=out.js 'src/**.js' '!**_test.js'
 ```
@@ -114,7 +114,7 @@ will re-order the inputs automatically.
 1. Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ) to make sure that the behaviour you would like isn't specifically excluded (such as string inlining).
 2. Make sure someone hasn't requested the same thing. See the list of [known issues](https://github.com/google/closure-compiler/issues).
 3. Read up on [what type of feature requests are accepted](https://github.com/google/closure-compiler/wiki/FAQ#how-do-i-submit-a-feature-request-for-a-new-type-of-optimization).
-4. Submit your reqest as an issue.
+4. Submit your request as an issue.
 
 ### Submitting patches
 1. All contributors must sign a contributor license agreement (CLA).
