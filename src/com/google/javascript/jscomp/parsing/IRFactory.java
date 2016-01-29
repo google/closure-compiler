@@ -674,6 +674,7 @@ class IRFactory {
     switch (tree.type) {
       case EXPRESSION_STATEMENT:
       case LABELLED_STATEMENT:
+      case EXPORT_DECLARATION:
         return false;
       case CALL_EXPRESSION:
       case CONDITIONAL_EXPRESSION:

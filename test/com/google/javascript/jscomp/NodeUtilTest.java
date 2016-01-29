@@ -2220,6 +2220,20 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
   }
 
+  public void testGetBestJsDocInfoExport() {
+    Node classNode = getClassNode("/** @constructor */ export class Foo {}");
+    assertTrue(NodeUtil.getBestJSDocInfo(classNode).isConstructor());
+
+    Node function = getFunctionNode("/** @constructor */ export function Foo() {}");
+    assertTrue(NodeUtil.getBestJSDocInfo(function).isConstructor());
+
+    function = getFunctionNode("/** @constructor */ export var Foo = function() {}");
+    assertTrue(NodeUtil.getBestJSDocInfo(function).isConstructor());
+
+    function = getFunctionNode("/** @constructor */ export let Foo = function() {}");
+    assertTrue(NodeUtil.getBestJSDocInfo(function).isConstructor());
+  }
+
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, "x");
