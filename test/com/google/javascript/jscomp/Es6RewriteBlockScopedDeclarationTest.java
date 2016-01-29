@@ -81,7 +81,12 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
     test(
         LINE_JOINER.join(
-            "function f() {", "  const x = 3;", "  if (true) {", "    let x;", "  }", "}"),
+            "function f() {",
+            "  const x = 3;",
+            "  if (true) {",
+            "    let x;",
+            "  }",
+            "}"),
         LINE_JOINER.join(
             "function f() {",
             "  /** @const */ var x = 3;",
@@ -112,7 +117,13 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
     test(
         LINE_JOINER.join(
-            "var x = 2;", "function f() {", "  x = 1;", "  if (a) {", "    let x = 2;", "  }", "}"),
+            "var x = 2;",
+            "function f() {",
+            "  x = 1;",
+            "  if (a) {",
+            "    let x = 2;",
+            "  }",
+            "}"),
         LINE_JOINER.join(
             "var x = 2;",
             "function f() {",
@@ -123,9 +134,20 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
 
     test(
-        LINE_JOINER.join("function f() {", "  {", "    let inner = 2;", "  }", "  use(inner)", "}"),
         LINE_JOINER.join(
-            "function f() {", "  {", "    var inner$0 = 2;", "  }", "  use(inner)", "}"));
+            "function f() {",
+            "  {",
+            "    let inner = 2;",
+            "  }",
+            "  use(inner)",
+            "}"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  {",
+            "    var inner$0 = 2;",
+            "  }",
+            "  use(inner)",
+            "}"));
   }
 
   public void testNonUniqueLet() {
@@ -243,8 +265,13 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  }",
             "}"));
 
-    test("for (let i = 0;;) { let i; }", "for (var i = 0;;) { var i$0 = undefined; }");
-    test("for (let i = 0;;) {} let i;", "for (var i$0 = 0;;) {} var i = undefined;");
+    test(
+        "for (let i = 0;;) { let i; }",
+        "for (var i = 0;;) { var i$0 = undefined; }");
+
+    test(
+        "for (let i = 0;;) {} let i;",
+        "for (var i$0 = 0;;) {} var i = undefined;");
   }
 
   public void testLoopClosure() {

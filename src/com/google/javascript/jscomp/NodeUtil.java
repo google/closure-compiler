@@ -1825,7 +1825,7 @@ public final class NodeUtil {
   /**
    * Gets the closest ancestor to the given node of the provided type.
    */
-  static Node getEnclosingType(Node n, int type) {
+  private static Node getEnclosingType(Node n, int type) {
     Node curr = n;
     while (curr.getType() != type) {
       curr = curr.getParent();
@@ -1862,6 +1862,13 @@ public final class NodeUtil {
    */
   public static Node getEnclosingScript(Node n) {
     return getEnclosingType(n, Token.SCRIPT);
+  }
+
+  /**
+   * Finds the block containing the given node.
+   */
+  public static Node getEnclosingBlock(Node n) {
+    return getEnclosingType(n, Token.BLOCK);
   }
 
   public static boolean isInFunction(Node n) {

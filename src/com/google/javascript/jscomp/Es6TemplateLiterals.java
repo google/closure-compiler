@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Helper class for transpiling ES6 template literals.
@@ -88,7 +87,7 @@ class Es6TemplateLiterals {
     Node callsiteId = IR.name(
         TEMPLATELIT_VAR + t.getCompiler().getUniqueNameIdSupplier().get());
     Node var = IR.var(callsiteId, cooked).useSourceInfoIfMissingFromForTree(n);
-    Node script = NodeUtil.getEnclosingType(n, Token.SCRIPT);
+    Node script = NodeUtil.getEnclosingScript(n);
     script.addChildrenToFront(var);
 
     // Define the "raw" property on the introduced variable.

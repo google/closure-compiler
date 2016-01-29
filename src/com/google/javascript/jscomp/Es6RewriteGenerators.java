@@ -1019,7 +1019,7 @@ public final class Es6RewriteGenerators
       if (enclosingFunc == null || !enclosingFunc.isGeneratorFunction() || NodeUtil.isForIn(n)) {
         return;
       }
-      Node enclosingBlock = NodeUtil.getEnclosingType(n, Token.BLOCK);
+      Node enclosingBlock = NodeUtil.getEnclosingBlock(n);
       Node guard = null;
       Node incr = null;
       switch (n.getType()) {
