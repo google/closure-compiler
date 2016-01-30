@@ -2542,6 +2542,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       this.flag = flag;
       this.value = value;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof FlagEntry) {
+        FlagEntry<?> that = (FlagEntry<?>) o;
+        return that.flag.equals(this.flag)
+            && that.value.equals(this.value);
+      }
+      return false;
+    }
   }
 
   /**

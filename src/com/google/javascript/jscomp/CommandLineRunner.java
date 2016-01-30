@@ -61,6 +61,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -745,12 +746,21 @@ public class CommandLineRunner extends
     protected List<FlagEntry<JsSourceType>> getMixedJsSources()
         throws CmdLineException, IOException {
       List<FlagEntry<JsSourceType>> mixedSources = new ArrayList<>();
+      Set<String> excludes = new HashSet<>();
       for (FlagEntry<JsSourceType> source : Flags.mixedJsSources) {
         if (source.value.endsWith(".zip")) {
           mixedSources.add(source);
+        } else if (source.value.startsWith("!")) {
+          for (String filename : findJsFiles(
+              Collections.singletonList(source.value.substring(1)))) {
+            excludes.add(filename);
+            mixedSources.remove(new FlagEntry<>(JsSourceType.JS, filename));
+          }
         } else {
           for (String filename : findJsFiles(Collections.singletonList(source.value))) {
-            mixedSources.add(new FlagEntry<>(JsSourceType.JS, filename));
+            if (!excludes.contains(filename)) {
+              mixedSources.add(new FlagEntry<>(JsSourceType.JS, filename));
+            }
           }
         }
       }
@@ -1475,23 +1485,25 @@ public class CommandLineRunner extends
    */
   public static List<String> findJsFiles(Collection<String> patterns) throws IOException {
     Set<String> allJsInputs = new TreeSet<>();
+    Set<String> excludes = new HashSet<>();
     for (String pattern : patterns) {
       if (!pattern.contains("*") && !pattern.startsWith("!")) {
         File matchedFile = new File(pattern);
         if (matchedFile.isDirectory()) {
-          matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs);
-        } else {
+          matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs, excludes);
+        } else if (!excludes.contains(pattern)) {
           allJsInputs.add(pattern);
         }
       } else {
-        matchPaths(pattern, allJsInputs);
+        matchPaths(pattern, allJsInputs, excludes);
       }
     }
 
     return new ArrayList<>(allJsInputs);
   }
 
-  private static void matchPaths(String pattern, final Set<String> allJsInputs)
+  private static void matchPaths(String pattern, final Set<String> allJsInputs,
+      final Set<String> excludes)
       throws IOException {
     FileSystem fs = FileSystems.getDefault();
     final boolean remove = pattern.indexOf('!') == 0;
@@ -1526,10 +1538,12 @@ public class CommandLineRunner extends
           @Override public FileVisitResult visitFile(
               Path p, BasicFileAttributes attrs) {
             if (matcher.matches(p.normalize())) {
+              String pathString = p.toString();
               if (remove) {
-                allJsInputs.remove(p.toString());
-              } else {
-                allJsInputs.add(p.toString());
+                excludes.add(pathString);
+                allJsInputs.remove(pathString);
+              } else if (!excludes.contains(pathString)) {
+                allJsInputs.add(pathString);
               }
             }
             return FileVisitResult.CONTINUE;
