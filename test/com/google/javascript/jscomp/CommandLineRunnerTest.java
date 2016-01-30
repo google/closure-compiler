@@ -1045,98 +1045,74 @@ public final class CommandLineRunnerTest extends TestCase {
         .contains("Bad value for --source_map_location_mapping");
   }
 
-  public void testInputOneZip() throws IOException {
-    try {
-      LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
-      zip1Contents.put("run.js", "console.log(\"Hello World\");");
-      FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
+  public void testInputOneZip() throws IOException, FlagUsageException {
+    LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
+    zip1Contents.put("run.js", "console.log(\"Hello World\");");
+    FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
 
-      compileFiles("console.log(\"Hello World\");", zipFile1);
-    } catch (FlagUsageException e) {
-      fail("Unexpected exception" + e);
-    }
+    compileFiles("console.log(\"Hello World\");", zipFile1);
   }
 
-  public void testInputMultipleZips() throws IOException {
-    try {
-      LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
-      zip1Contents.put("run.js", "console.log(\"Hello World\");");
-      FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
+  public void testInputMultipleZips() throws IOException, FlagUsageException {
+    LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
+    zip1Contents.put("run.js", "console.log(\"Hello World\");");
+    FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
 
-      LinkedHashMap<String, String> zip2Contents = new LinkedHashMap<>();
-      zip2Contents.put("run.js", "window.alert(\"Hi Browser\");");
-      FlagEntry<JsSourceType> zipFile2 = createZipFile(zip2Contents);
+    LinkedHashMap<String, String> zip2Contents = new LinkedHashMap<>();
+    zip2Contents.put("run.js", "window.alert(\"Hi Browser\");");
+    FlagEntry<JsSourceType> zipFile2 = createZipFile(zip2Contents);
 
-      compileFiles(
-          "console.log(\"Hello World\");window.alert(\"Hi Browser\");", zipFile1, zipFile2);
-    } catch (FlagUsageException e) {
-      fail("Unexpected exception" + e);
-    }
+    compileFiles(
+        "console.log(\"Hello World\");window.alert(\"Hi Browser\");", zipFile1, zipFile2);
   }
 
-  public void testInputMultipleContents() throws IOException {
-    try {
-      LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
-      zip1Contents.put("a.js", "console.log(\"File A\");");
-      zip1Contents.put("b.js", "console.log(\"File B\");");
-      zip1Contents.put("c.js", "console.log(\"File C\");");
-      FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
+  public void testInputMultipleContents() throws IOException, FlagUsageException {
+    LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
+    zip1Contents.put("a.js", "console.log(\"File A\");");
+    zip1Contents.put("b.js", "console.log(\"File B\");");
+    zip1Contents.put("c.js", "console.log(\"File C\");");
+    FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
 
-      compileFiles(
-          "console.log(\"File A\");console.log(\"File B\");console.log(\"File C\");", zipFile1);
-    } catch (FlagUsageException e) {
-      fail("Unexpected exception" + e);
-    }
+    compileFiles(
+        "console.log(\"File A\");console.log(\"File B\");console.log(\"File C\");", zipFile1);
   }
 
-  public void testInputMultipleFiles() throws IOException {
-    try {
-      LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
-      zip1Contents.put("run.js", "console.log(\"Hello World\");");
-      FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
+  public void testInputMultipleFiles() throws IOException, FlagUsageException {
+    LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
+    zip1Contents.put("run.js", "console.log(\"Hello World\");");
+    FlagEntry<JsSourceType> zipFile1 = createZipFile(zip1Contents);
 
-      FlagEntry<JsSourceType> jsFile1 = createJsFile("testjsfile", "var a;");
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("testjsfile", "var a;");
 
-      LinkedHashMap<String, String> zip2Contents = new LinkedHashMap<>();
-      zip2Contents.put("run.js", "window.alert(\"Hi Browser\");");
-      FlagEntry<JsSourceType> zipFile2 = createZipFile(zip2Contents);
+    LinkedHashMap<String, String> zip2Contents = new LinkedHashMap<>();
+    zip2Contents.put("run.js", "window.alert(\"Hi Browser\");");
+    FlagEntry<JsSourceType> zipFile2 = createZipFile(zip2Contents);
 
-      compileFiles(
-          "console.log(\"Hello World\");var a;window.alert(\"Hi Browser\");",
-          zipFile1, jsFile1, zipFile2);
-    } catch (FlagUsageException e) {
-      fail("Unexpected exception" + e);
-    }
+    compileFiles(
+        "console.log(\"Hello World\");var a;window.alert(\"Hi Browser\");",
+        zipFile1, jsFile1, zipFile2);
   }
 
-  public void testGlobJs1() throws IOException {
-    try {
-      FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
-      FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-      // Move test2 to the same directory as test1, also make the filename of test2
-      // lexicographically larger than test1
-      new File(jsFile2.value).renameTo(new File(
-          new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
-      String glob = new File(jsFile1.value).getParent() + File.separator + "**.js";
-      compileFiles(
-          "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
-    } catch (FlagUsageException e) {
-      fail("Unexpected exception" + e);
-    }
+  public void testGlobJs1() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    // Move test2 to the same directory as test1, also make the filename of test2
+    // lexicographically larger than test1
+    new File(jsFile2.value).renameTo(new File(
+        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
+    String glob = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    compileFiles(
+        "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
   }
 
-  public void testGlobJs2() throws IOException {
-    try {
-      FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
-      FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-      new File(jsFile2.value).renameTo(new File(
-          new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
-      String glob = new File(jsFile1.value).getParent() + File.separator + "*test*.js";
-      compileFiles(
-          "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
-    } catch (FlagUsageException e) {
-      fail("Unexpected exception" + e);
-    }
+  public void testGlobJs2() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    new File(jsFile2.value).renameTo(new File(
+        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
+    String glob = new File(jsFile1.value).getParent() + File.separator + "*test*.js";
+    compileFiles(
+        "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
   }
 
   public void testSourceMapInputs() throws Exception {
