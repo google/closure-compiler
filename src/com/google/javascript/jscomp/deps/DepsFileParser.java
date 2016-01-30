@@ -20,6 +20,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.ErrorManager;
 
@@ -30,6 +31,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -56,11 +58,13 @@ public final class DepsFileParser extends JsFileLineParser {
 
   /**
    * Pattern for matching the args of a goog.addDependency(). The group is:
-   * goog.addDependency({1}, {2}, {3});
+   * goog.addDependency({1}, {2}, {3}, {4?});
    */
   private final Matcher depArgsMatch =
       Pattern.compile(
-          "\\s*([^,]*), (\\[[^\\]]*\\]), (\\[[^\\]]*\\])(?:, (true|false))?\\s*").matcher("");
+              "\\s*([^,]*), (\\[[^\\]]*\\]), (\\[[^\\]]*\\])"
+                  + "(?:, (true|false|\\{[^{}]*\\}))?\\s*")
+          .matcher("");
 
   /**
    * The dependency information extracted from the current file.
@@ -160,17 +164,14 @@ public final class DepsFileParser extends JsFileLineParser {
         }
         // Parse the file path.
         String path = pathTranslator.apply(parseJsString(depArgsMatch.group(1)));
-        String moduleMatch = depArgsMatch.group(4);
-        // Legacy deps files may not have a "isModule" parameter, those files are not modules.
-        boolean isModule = moduleMatch == null ? false : parseJsBoolean(moduleMatch);
 
         DependencyInfo depInfo = new SimpleDependencyInfo(path, filePath,
             // Parse the provides.
             parseJsStringArray(depArgsMatch.group(2)),
             // Parse the requires.
             parseJsStringArray(depArgsMatch.group(3)),
-            // "isModule"
-            isModule
+            // Parse the loadFlags map.
+            parseLoadFlags(depArgsMatch.group(4))
             );
 
         if (logger.isLoggable(Level.FINE)) {
@@ -182,5 +183,15 @@ public final class DepsFileParser extends JsFileLineParser {
 
     return !shortcutMode || hasDependencies ||
         CharMatcher.WHITESPACE.matchesAllOf(line);
+  }
+
+  private Map<String, String> parseLoadFlags(String loadFlags) throws ParseException {
+    if (loadFlags == null || loadFlags.equals("false")) {
+      return ImmutableMap.of();
+    } else if (loadFlags.equals("true")) {
+      return ImmutableMap.of("module", "goog");
+    } else {
+      return parseJsStringMap(loadFlags);
+    }
   }
 }

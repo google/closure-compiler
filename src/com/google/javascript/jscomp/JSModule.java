@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ClosureSortedDependencies;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.Es6SortedDependencies;
@@ -86,6 +87,11 @@ public final class JSModule implements DependencyInfo, Serializable {
 
   @Override
   public String getPathRelativeToClosureBase() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getLoadFlags() {
     throw new UnsupportedOperationException();
   }
 

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.deps;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.CharMatcher;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
@@ -26,7 +27,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -261,12 +264,48 @@ public abstract class JsFileLineParser {
     return results;
   }
 
-  boolean parseJsBoolean(String jsBoolean) throws ParseException {
-    if (jsBoolean.equals("true")) {
-      return true;
-    } else if (jsBoolean.equals("false")) {
-      return false;
+  // TODO(sdh): Consider simplifying this by reusing the parser or a separate JSON library.
+  /**
+   * Parses a JavaScript map of string literals. (eg: {'a': 'b', "c": "d"}).
+   * @param input A string containing a JavaScript map of string literals.
+   * @return A map of parsed string literals.
+   * @throws ParseException Thrown if there is a syntax error with the input.
+   */
+  Map<String, String> parseJsStringMap(String input) throws ParseException {
+    input = CharMatcher.WHITESPACE.trimFrom(input);
+    check(
+        !input.isEmpty() && input.charAt(0) == '{' && input.charAt(input.length() - 1) == '}',
+        "Syntax error when parsing JS object");
+    input = input.substring(1, input.length() - 1).trim();
+
+    Map<String, String> results = new LinkedHashMap<>();
+    boolean done = input.isEmpty();
+    valueMatcher.reset(input);
+    while (!done) {
+      // Parse the next key (TODO(sdh): need to support non-quoted keys?).
+      check(valueMatcher.lookingAt(), "Bad key in JS object literal");
+      String key = valueMatcher.group(1) != null ? valueMatcher.group(1) : valueMatcher.group(2);
+      check(!valueMatcher.hitEnd(), "Missing value in JS object literal");
+      check(input.charAt(valueMatcher.end()) == ':', "Missing colon in JS object literal");
+      valueMatcher.region(valueMatcher.end() + 1, valueMatcher.regionEnd());
+
+      // Parse the corresponding value.
+      check(valueMatcher.lookingAt(), "Bad value in JS object literal");
+      String val = valueMatcher.group(1) != null ? valueMatcher.group(1) : valueMatcher.group(2);
+      results.put(key, val);
+      if (!valueMatcher.hitEnd()) {
+        check(input.charAt(valueMatcher.end()) == ',', "Missing comma in JS object literal");
+        valueMatcher.region(valueMatcher.end() + 1, valueMatcher.regionEnd());
+      } else {
+        done = true;
+      }
     }
-    throw new ParseException("Syntax error in JS String literal", true /* fatal */);
+    return results;
+  }
+
+  private static void check(boolean condition, String message) throws ParseException {
+    if (!condition) {
+      throw new ParseException(message, true /* fatal */);
+    }
   }
 }

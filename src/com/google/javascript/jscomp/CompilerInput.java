@@ -18,8 +18,10 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.JsFileParser;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
@@ -29,7 +31,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * A class for the internal representation of an input to the compiler.
@@ -48,7 +52,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   // The AST.
   private final SourceAst ast;
 
-  private boolean isModuleFile = false;
+  private ImmutableMap<String, String> loadFlags;
   // Provided and required symbols.
   private final Set<String> provides = new HashSet<>();
   private final Set<String> requires = new HashSet<>();
@@ -219,7 +223,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
       // compilation scheme. The API needs to be fixed so callers aren't
       // doing weird things like this, and then we should get rid of the
       // multiple-scan strategy.
-      isModuleFile = finder.isModuleFile;
+      loadFlags = ImmutableMap.copyOf(finder.loadFlags);
       provides.addAll(finder.provides);
       requires.addAll(finder.requires);
     } else {
@@ -234,7 +238,14 @@ public class CompilerInput implements SourceAst, DependencyInfo {
             .setIncludeGoogBase(true)
             .parseFile(getName(), getName(), getCode());
 
-        isModuleFile = info.isModule();
+        FeatureSet features = ((JsAst) ast).getFeatures(compiler);
+        Map<String, String> loadFlagsBuilder = new TreeMap<>();
+        loadFlagsBuilder.putAll(info.getLoadFlags());
+        loadFlagsBuilder.put("lang", features.version());
+        if (features.hasEs6Modules()) {
+          loadFlagsBuilder.put("module", "es6"); // NOTE: may be overridden by goog.module
+        }
+        loadFlags = ImmutableMap.copyOf(loadFlagsBuilder);
         provides.addAll(info.getProvides());
         requires.addAll(info.getRequires());
 
@@ -244,7 +255,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   private static class DepsFinder {
-    private boolean isModuleFile;
+    private final Map<String, String> loadFlags = new TreeMap<>();
     private final List<String> provides = new ArrayList<>();
     private final List<String> requires = new ArrayList<>();
     private final CodingConvention codingConvention =
@@ -257,8 +268,9 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     void visitSubtree(Node n, Node parent) {
       if (n.isCall()) {
         boolean isModuleDetected =  codingConvention.extractIsModuleFile(n, parent);
+
         if (isModuleDetected) {
-          this.isModuleFile = true;
+          loadFlags.put("module", "goog");
         }
 
         String require =
@@ -337,15 +349,20 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   @Override
-  public boolean isModule() {
+  public ImmutableMap<String, String> getLoadFlags() {
     checkErrorManager();
     try {
       regenerateDependencyInfoIfNecessary();
-      return isModuleFile;
+      return loadFlags;
     } catch (IOException e) {
       compiler.getErrorManager().report(CheckLevel.ERROR,
           JSError.make(AbstractCompiler.READ_ERROR, getName()));
-      return false;
+      return ImmutableMap.of();
     }
+  }
+
+  @Override
+  public boolean isModule() {
+    return "goog".equals(getLoadFlags().get("module"));
   }
 }
