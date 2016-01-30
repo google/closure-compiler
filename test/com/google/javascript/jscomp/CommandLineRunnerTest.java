@@ -1139,6 +1139,34 @@ public final class CommandLineRunnerTest extends TestCase {
     }
   }
 
+  public void testGlobJs3() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    new File(jsFile2.value).renameTo(new File(
+        new File(jsFile1.value).getParentFile() + File.separator + "test2.js"));
+    // Make sure test2.js is excluded from the inputs when the exclusion
+    // comes after the inclusion
+    String glob1 = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    String glob2 = "!" + new File(jsFile1.value).getParent() + File.separator + "**test2.js";
+    compileFiles(
+        "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
+        new FlagEntry<>(JsSourceType.JS, glob2));
+  }
+
+  public void testGlobJs4() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    new File(jsFile2.value).renameTo(new File(
+        new File(jsFile1.value).getParentFile() + File.separator + "test2.js"));
+    // Make sure test2.js is excluded from the inputs when the exclusion
+    // comes before the inclusion
+    String glob1 = "!" + new File(jsFile1.value).getParent() + File.separator + "**test2.js";
+    String glob2 = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    compileFiles(
+        "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
+        new FlagEntry<>(JsSourceType.JS, glob2));
+  }
+
   public void testSourceMapInputs() throws Exception {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
