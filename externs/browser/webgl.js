@@ -3122,6 +3122,118 @@ EXT_texture_filter_anisotropic.prototype.TEXTURE_MAX_ANISOTROPY_EXT;
 EXT_texture_filter_anisotropic.prototype.MAX_TEXTURE_MAX_ANISOTROPY_EXT;
 
 
+/**
+ * @see https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/
+ * @constructor
+ * @noalias
+ */
+function WEBGL_draw_buffers() {}
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT0_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT1_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT2_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT3_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT4_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT5_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT6_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT7_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT8_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT9_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT10_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT11_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT12_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT13_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT14_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.COLOR_ATTACHMENT15_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER0_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER1_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER2_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER3_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER4_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER5_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER6_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER7_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER8_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER9_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER10_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER11_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER12_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER13_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER14_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.DRAW_BUFFER15_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.MAX_COLOR_ATTACHMENTS_WEBGL;
+
+/** @type {number} */
+WEBGL_draw_buffers.prototype.MAX_DRAW_BUFFERS_WEBGL;
+
+/** @param {Array<number>} buffers Draw buffers. */
+WEBGL_draw_buffers.prototype.drawBuffersWEBGL = function(buffers) {};
+
 
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays/
