@@ -66,10 +66,12 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     // Shared with ProcessCommonJSModulesTest.
     String fileName = test.getFilename() + ".js";
     ImmutableList<SourceFile> inputs =
-        ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
+        ImmutableList.of(
+            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
+            SourceFile.fromCode(fileName, input));
     ImmutableList<SourceFile> expecteds =
         ImmutableList.of(
-            SourceFile.fromCode("other.js", ""),
+            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
             SourceFile.fromCode(fileName, expected));
     test.test(inputs, expecteds);
   }
@@ -78,7 +80,7 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
       CompilerTestCase test, ImmutableList<SourceFile> inputs, String expected) {
     ImmutableList<SourceFile> expecteds =
         ImmutableList.of(
-            SourceFile.fromCode("other.js", ""),
+            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
             SourceFile.fromCode(test.getFilename() + ".js", expected));
     test.test(inputs, expecteds);
   }
@@ -622,5 +624,9 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "  b: b$$module$testcode,",
             "} = module$other.f({foo: foo$$module$testcode});",
             "use(a$$module$testcode, b$$module$testcode);"));
+  }
+
+  public void testImportWithoutReferences() {
+    testModules("import 'other';", "goog.require('module$other');");
   }
 }
