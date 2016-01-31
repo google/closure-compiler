@@ -623,4 +623,10 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "} = module$other.f({foo: foo$$module$testcode});",
             "use(a$$module$testcode, b$$module$testcode);"));
   }
+
+  public void testImportWithoutReferences() {
+    testModules(
+        "import 'other';",
+        "goog.require('module$other');");
+  }
 }

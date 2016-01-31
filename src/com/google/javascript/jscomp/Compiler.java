@@ -1343,6 +1343,40 @@ public class Compiler extends AbstractCompiler {
         processAMDAndCommonJSModules();
       }
 
+      if (options.lowerFromEs6() || options.transformAMDToCJSModules
+          || options.processCommonJSModules) {
+
+        // Build a map of module identifiers for any input which provides no namespace.
+        // These files could be imported modules which have no exports, but do have side effects.
+        Map<String, CompilerInput> inputModuleIdentifiers = new HashMap<>();
+        for (CompilerInput input : inputs) {
+          if (!input.getProvides().isEmpty())  {
+            continue;
+          }
+
+          ModuleIdentifier modInfo =
+              ModuleIdentifier.forFile(input.getSourceFile().getOriginalPath());
+
+          inputModuleIdentifiers.put(modInfo.getClosureNamespace(), input);
+        }
+
+        // Find out if any input attempted to import a module that had no exports.
+        // In this case we must force module rewriting to occur on the imported file
+        Map<String, CompilerInput> inputsToRewrite = new HashMap<>();
+        for (CompilerInput input : inputs) {
+          for (String require : input.getRequires()) {
+            if (inputModuleIdentifiers.containsKey(require)
+                && !inputsToRewrite.containsKey(require)) {
+              inputsToRewrite.put(require, inputModuleIdentifiers.get(require));
+            }
+          }
+        }
+
+        if (!inputsToRewrite.isEmpty()) {
+          processEs6Modules(new ArrayList<>(inputsToRewrite.values()), true);
+        }
+      }
+
       orderInputs();
 
       // If in IDE mode, we ignore the error and keep going.
@@ -1503,14 +1537,18 @@ public class Compiler extends AbstractCompiler {
   }
 
   void processEs6Modules() {
+    processEs6Modules(inputs, false);
+  }
+
+  void processEs6Modules(List<CompilerInput> inputsToProcess, boolean forceRewrite) {
     ES6ModuleLoader loader = new ES6ModuleLoader(options.moduleRoots, inputs);
-    for (CompilerInput input : inputs) {
+    for (CompilerInput input : inputsToProcess) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
       if (root == null) {
         continue;
       }
-      new ProcessEs6Modules(this, loader, true).processFile(root);
+      new ProcessEs6Modules(this, loader, true).processFile(root, forceRewrite);
     }
   }
 

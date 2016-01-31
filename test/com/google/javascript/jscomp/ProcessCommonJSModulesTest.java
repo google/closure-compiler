@@ -297,4 +297,14 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var a$$module$test = module$other;",
             "/** @const */ module$test = { /** @const */ a: a$$module$test };"));
   }
+
+  public void testRequireResultUnused() {
+    setFilename("test");
+    testModules(
+        "require('./other');",
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "goog.require('module$other');")
+    );
+  }
 }
