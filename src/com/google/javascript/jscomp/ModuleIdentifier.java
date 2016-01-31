@@ -94,7 +94,7 @@ public class ModuleIdentifier {
    * @param filepath ES6 or CommonJS module used as an entry point.
    */
   public static ModuleIdentifier forFile(String filepath) {
-    String normalizedName = ES6ModuleLoader.toModuleName(URI.create(filepath));
+    String normalizedName = ES6ModuleLoader.toModuleName(ES6ModuleLoader.createUri(filepath));
     return new ModuleIdentifier(filepath, normalizedName, normalizedName);
   }
 }
