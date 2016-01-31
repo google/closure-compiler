@@ -51,8 +51,9 @@ AudioContext.prototype.createBuffer =
 
 /**
  * @param {ArrayBuffer} audioData
- * @param {function(AudioBuffer)} successCallback
+ * @param {function(AudioBuffer)=} successCallback
  * @param {function(?)=} errorCallback
+ * @return {!Promise<AudioBuffer>}
  */
 AudioContext.prototype.decodeAudioData =
     function(audioData, successCallback, errorCallback) {};
