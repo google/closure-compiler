@@ -1984,6 +1984,15 @@ var WheelEventInit;
  */
 function WheelEvent(type, opt_eventInitDict) {}
 
+/** @type {number} */
+WheelEvent.DOM_DELTA_PIXEL;
+
+/** @type {number} */
+WheelEvent.DOM_DELTA_LINE;
+
+/** @type {number} */
+WheelEvent.DOM_DELTA_PAGE;
+
 /** @const {number} */
 WheelEvent.prototype.deltaX;
 
