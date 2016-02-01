@@ -371,6 +371,7 @@ public class DiagnosticGroups {
   static final DiagnosticGroup ES5_STRICT_UNCOMMON =
       DiagnosticGroups.registerGroup("es5StrictUncommon",
           RhinoErrorReporter.INVALID_OCTAL_LITERAL,
+          RhinoErrorReporter.DUPLICATE_PARAM,
           StrictModeCheck.USE_OF_WITH,
           StrictModeCheck.EVAL_DECLARATION,
           StrictModeCheck.EVAL_ASSIGNMENT,
