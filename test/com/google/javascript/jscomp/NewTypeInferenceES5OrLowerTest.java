@@ -14926,7 +14926,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
-  public void testAvoidInstantiatingWithLooseTypes() {
+  public void testInstantiatingWithLooseTypes() {
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {",
@@ -14967,6 +14967,41 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function g(x, y) { return x; }",
         "var /** !Bar */ obj = g(new Foo, f(new Foo));"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " */",
+        "function f(x, y) {}",
+        "/**",
+        " * @param {!Array<!Function|string>|!Function} f1",
+        " * @param {!Array<!Function|string>|!Function} f2",
+        " */",
+        "function g(f1, f2) {",
+        "  f(f1, f2);",
+        "}"));
+
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor @struct */ function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " */",
+        "function f(x, y) {}",
+        "function g(x) {",
+        "  var z;",
+        "  if (1 < 2) {",
+        "    var /** number */ n = x.prop - 1;",
+        "    z = x;",
+        "  } else {",
+        "    z = new Foo;",
+        "  }",
+        "  f(z, z);",
+        "}"));
   }
 
   public void testDontCrashOnBottomRettypeFromLooseFun() {
