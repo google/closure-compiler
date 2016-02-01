@@ -4868,7 +4868,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testVar1() {
     TypeCheckResult p =
-        parseAndTypeCheckWithScope("/** @type {(string,null)} */var a = null");
+        parseAndTypeCheckWithScope("/** @type {(string|null)} */var a = null");
 
     assertTypeEquals(createUnionType(STRING_TYPE, NULL_TYPE),
         p.scope.getVar("a").getType());

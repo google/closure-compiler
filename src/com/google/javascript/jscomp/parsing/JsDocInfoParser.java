@@ -2309,11 +2309,7 @@ public final class JsDocInfoParser {
       if (expr != null) {
         skipEOLs();
         token = next();
-        Preconditions.checkState(
-            token == JsDocToken.PIPE || token == JsDocToken.COMMA);
-        if (token == JsDocToken.COMMA) {
-          reportTypeSyntaxWarning("msg.jsdoc.union.comma");
-        }
+        Preconditions.checkState(token == JsDocToken.PIPE);
 
         skipEOLs();
         token = next();
@@ -2324,8 +2320,7 @@ public final class JsDocInfoParser {
       }
 
       union.addChildToBack(expr);
-      // We support commas for backwards compatibility.
-    } while (match(JsDocToken.PIPE, JsDocToken.COMMA));
+    } while (match(JsDocToken.PIPE));
 
     if (alternate == null) {
       skipEOLs();
