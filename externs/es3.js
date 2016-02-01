@@ -514,7 +514,8 @@ Array.prototype.push = function(var_args) {};
  * last and the last becomes the first.
  *
  * @return {!Array<T>}
- * @this {{length: number}}
+ * @this {{length: number}|Array<T>}
+ * @template T
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse
  */
