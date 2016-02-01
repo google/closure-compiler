@@ -268,10 +268,12 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node declarationOrAssign;
     if (declType == Token.NAME) {
       declarationOrAssign = IR.exprResult(IR.assign(
-          IR.name(variableName),
+          IR.name(variableName).useSourceInfoFrom(variable),
           IR.getprop(iterResult.cloneTree(), IR.string("value"))));
     } else {
-      declarationOrAssign = new Node(declType, IR.name(variableName));
+      declarationOrAssign = new Node(
+          declType,
+          IR.name(variableName).useSourceInfoFrom(variable.getFirstChild()));
       declarationOrAssign.getFirstChild().addChildToBack(
           IR.getprop(iterResult.cloneTree(), IR.string("value")));
     }
