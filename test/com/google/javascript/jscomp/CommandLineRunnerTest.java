@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -1141,6 +1142,48 @@ public final class CommandLineRunnerTest extends TestCase {
     compileFiles(
         "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
         new FlagEntry<>(JsSourceType.JS, glob2));
+  }
+
+  public void testGlobJs5() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    File ignoreDir = new File("./ignore");
+    if (ignoreDir.isDirectory()) {
+      for (File f : ignoreDir.listFiles()) {
+        f.delete();
+      }
+    } else {
+      ignoreDir.delete();
+      ignoreDir = java.nio.file.Files.createDirectory(Paths.get("./ignore")).toFile();
+    }
+    File ignoredFile = new File(ignoreDir + File.separator + "test2.js");
+    new File(jsFile2.value).renameTo(ignoredFile);
+    // Make sure patterns like "!**\./ignore**.js" work
+    String glob1 = "!**\\." + File.separator + "ignore**.js";
+    String glob2 = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    compileFiles(
+        "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
+        new FlagEntry<>(JsSourceType.JS, glob2));
+    ignoredFile.delete();
+    ignoreDir.delete();
+  }
+
+  public void testGlobJs6() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    File temp1 = Files.createTempDir();
+    File temp2 = Files.createTempDir();
+    File jscompTempDir = new File(jsFile1.value).getParentFile();
+    File newTemp1 = new File(jscompTempDir + File.separator + "temp1");
+    File newTemp2 = new File(jscompTempDir + File.separator + "temp2");
+    temp1.renameTo(newTemp1);
+    temp2.renameTo(newTemp2);
+    new File(jsFile1.value).renameTo(new File(newTemp1 + File.separator + "test1.js"));
+    new File(jsFile2.value).renameTo(new File(newTemp2 + File.separator + "test2.js"));
+    // Test multiple segments with glob patterns, like /foo/bar/**/*.js
+    String glob = jscompTempDir + File.separator + "**" + File.separator + "*.js";
+    compileFiles(
+        "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
   }
 
   public void testSourceMapInputs() throws Exception {
