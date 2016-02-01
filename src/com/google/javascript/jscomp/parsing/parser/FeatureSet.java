@@ -204,4 +204,9 @@ public final class FeatureSet implements Serializable {
         + (typeScript ? ", typeScript" : "")
         + "}";
   }
+
+  /** Returns a the name of a corresponding LanguageMode enum element. */
+  public String toLanguageModeString() {
+    return "ECMASCRIPT" + number;
+  }
 }

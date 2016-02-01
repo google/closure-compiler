@@ -359,7 +359,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
                 INSUFFICIENT_OUTPUT_VERSION_ERROR,
                 name,
                 compiler.getOptions().getLanguageOut().toString(),
-                polyfill.polyfillVersion.toString());
+                polyfill.polyfillVersion.toLanguageModeString());
           }
           if (!languageOutIsAtLeast(polyfill.nativeVersion)) {
 
