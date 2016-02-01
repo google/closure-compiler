@@ -934,17 +934,10 @@ angular.$anchorScroll;
  * $anchorScrollProvider Service
  *****************************************************************************/
 
-/**
- * @typedef {{
- *   disableAutoScrolling: function()
- *   }}
- */
-angular.$anchorScrollProvider;
+/** @interface */
+angular.$anchorScrollProvider = function() {};
 
-/**
- * @type {function()}
- */
-angular.$anchorScrollProvider.disableAutoScrolling = function() {};
+angular.$anchorScrollProvider.prototype.disableAutoScrolling = function() {};
 
 /******************************************************************************
  * $animate Service
@@ -2155,164 +2148,139 @@ angular.$sanitize;
 /**
  * Ref: http://docs.angularjs.org/api/ng.$sce
  *
- * @typedef {{
- *   HTML: string,
- *   CSS: string,
- *   URL: string,
- *   JS: string,
- *   RESOURCE_URL: string,
- *   isEnabled: function(): boolean,
- *   parseAs: function(string, string): !angular.$parse.Expression,
- *   getTrusted: function(string, *): string,
- *   trustAs: function(string, string): *,
- *   parseAsHtml: function(string): !angular.$parse.Expression,
- *   parseAsCss: function(string): !angular.$parse.Expression,
- *   parseAsUrl: function(string): !angular.$parse.Expression,
- *   parseAsJs: function(string): !angular.$parse.Expression,
- *   parseAsResourceUrl: function(string): !angular.$parse.Expression,
- *   getTrustedHtml: function(*): string,
- *   getTrustedCss: function(*): string,
- *   getTrustedUrl: function(*): string,
- *   getTrustedJs: function(*): string,
- *   getTrustedResourceUrl: function(*): string,
- *   trustAsHtml: function(string): *,
- *   trustAsCss: function(string): *,
- *   trustAsUrl: function(string): *,
- *   trustAsJs: function(string): *,
- *   trustAsResourceUrl: function(string): *
- *   }}
- *****************************************************************************/
-angular.$sce;
+ * @interface
+ */
+angular.$sce = function() {};
 
 
 /** @const {string} */
-angular.$sce.HTML;
+angular.$sce.prototype.HTML;
 
 /** @const {string} */
-angular.$sce.CSS;
+angular.$sce.prototype.CSS;
 
 /** @const {string} */
-angular.$sce.URL;
+angular.$sce.prototype.URL;
 
 /** @const {string} */
-angular.$sce.JS;
+angular.$sce.prototype.JS;
 
 /** @const {string} */
-angular.$sce.RESOURCE_URL;
+angular.$sce.prototype.RESOURCE_URL;
 
 /** @return {boolean} */
-angular.$sce.isEnabled = function() {};
+angular.$sce.prototype.isEnabled = function() {};
 
 /**
  * @param {string} type
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAs = function(type, expression) {};
+angular.$sce.prototype.parseAs = function(type, expression) {};
 
 /**
  * @param {string} type
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrusted = function(type, maybeTrusted) {};
+angular.$sce.prototype.getTrusted = function(type, maybeTrusted) {};
 
 /**
  * @param {string} type
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAs = function(type, trustedValue) {};
+angular.$sce.prototype.trustAs = function(type, trustedValue) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsHtml = function(expression) {};
+angular.$sce.prototype.parseAsHtml = function(expression) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsCss = function(expression) {};
+angular.$sce.prototype.parseAsCss = function(expression) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsUrl = function(expression) {};
+angular.$sce.prototype.parseAsUrl = function(expression) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsJs = function(expression) {};
+angular.$sce.prototype.parseAsJs = function(expression) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsResourceUrl = function(expression) {};
+angular.$sce.prototype.parseAsResourceUrl = function(expression) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedHtml = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedHtml = function(maybeTrusted) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedCss = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedCss = function(maybeTrusted) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedUrl = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedUrl = function(maybeTrusted) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedJs = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedJs = function(maybeTrusted) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedResourceUrl = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedResourceUrl = function(maybeTrusted) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsHtml = function(trustedValue) {};
+angular.$sce.prototype.trustAsHtml = function(trustedValue) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsCss = function(trustedValue) {};
+angular.$sce.prototype.trustAsCss = function(trustedValue) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsUrl = function(trustedValue) {};
+angular.$sce.prototype.trustAsUrl = function(trustedValue) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsJs = function(trustedValue) {};
+angular.$sce.prototype.trustAsJs = function(trustedValue) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsResourceUrl = function(trustedValue) {};
+angular.$sce.prototype.trustAsResourceUrl = function(trustedValue) {};
 
 /******************************************************************************
  * $sceDelegate Service
@@ -2321,7 +2289,7 @@ angular.$sce.trustAsResourceUrl = function(trustedValue) {};
 /**
  * Ref: http://docs.angularjs.org/api/ng/service/$sceDelegate
  *
- * @constructor
+ * @interface
  */
 angular.$sceDelegate = function() {};
 
@@ -2333,11 +2301,6 @@ angular.$sceDelegate = function() {};
 angular.$sceDelegate.prototype.trustAs = function(type, value) {};
 
 /**
- * Note: because this method overrides Object.prototype.valueOf, the value
- * parameter needs to be annotated as optional to keep the compiler happy (as
- * otherwise the signature won't match Object.prototype.valueOf).
- *
- * @override
  * @param {*=} value
  * @return {*}
  */
@@ -2357,20 +2320,20 @@ angular.$sceDelegate.prototype.getTrusted = function(type, maybeTrusted) {};
 /**
  * Ref: http://docs.angularjs.org/api/ng/provider/$sceDelegateProvider
  *
- * @constructor
+ * @interface
  */
 angular.$sceDelegateProvider = function() {};
 
 /**
- * @param {Array.<string>=} opt_whitelist
- * @return {!Array.<string>}
+ * @param {Array<string>=} opt_whitelist
+ * @return {!Array<string>}
  */
 angular.$sceDelegateProvider.prototype.resourceUrlWhitelist = function(
     opt_whitelist) {};
 
 /**
- * @param {Array.<string>=} opt_blacklist
- * @return {!Array.<string>}
+ * @param {Array<string>=} opt_blacklist
+ * @return {!Array<string>}
  */
 angular.$sceDelegateProvider.prototype.resourceUrlBlacklist = function(
     opt_blacklist) {};
