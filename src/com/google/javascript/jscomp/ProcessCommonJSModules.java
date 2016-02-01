@@ -111,7 +111,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (parent == null || !parent.isFunction()
           || n == parent.getFirstChild()) {
         if (n.isExprResult()) {
-          Node maybeGetProp = n.getFirstGrandchild();
+          Node maybeGetProp = n.getFirstFirstChild();
           if (maybeGetProp != null
               && (maybeGetProp.matchesQualifiedName("goog.provide")
                   || maybeGetProp.matchesQualifiedName("goog.module"))) {

@@ -620,7 +620,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
       // We're good to go.
       Node className =
-          enclosingFnNameNode.getFirstGrandchild();
+          enclosingFnNameNode.getFirstFirstChild();
       n.replaceChild(
           callee,
           NodeUtil.newQName(
@@ -759,7 +759,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       }
 
       boolean misuseOfBase = !enclosingFnNameNode.
-          getFirstGrandchild().matchesQualifiedName(baseContainer);
+          getFirstFirstChild().matchesQualifiedName(baseContainer);
       if (misuseOfBase) {
         // Report misuse of "base" methods from other known classes.
         reportBadBaseMethodUse(t, n, baseContainer, "Must be used within "
@@ -795,7 +795,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
       // We're good to go.
       Node className =
-          enclosingFnNameNode.getFirstGrandchild();
+          enclosingFnNameNode.getFirstFirstChild();
       n.replaceChild(
           callee,
           NodeUtil.newQName(

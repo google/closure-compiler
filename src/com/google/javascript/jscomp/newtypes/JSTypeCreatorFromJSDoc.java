@@ -369,7 +369,7 @@ public final class JSTypeCreatorFromJSDoc {
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
     Map<String, Property> props = new LinkedHashMap<>();
-    for (Node propNode = n.getFirstGrandchild();
+    for (Node propNode = n.getFirstFirstChild();
          propNode != null;
          propNode = propNode.getNext()) {
       boolean isPropDeclared = propNode.getType() == Token.COLON;

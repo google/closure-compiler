@@ -475,7 +475,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
               return blockChild.getFirstChild() == null;
             case Token.VAR:
               if (blockChild.hasOneChild()
-                  && blockChild.getFirstGrandchild() == null) {
+                  && blockChild.getFirstFirstChild() == null) {
                 // Variable declarations without initializations are OK.
                 continue;
               }
@@ -618,10 +618,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // For our purposes we define a simple assignment to be a assignment
     // to a NAME node, or a VAR declaration with one child and a initializer.
     if (NodeUtil.isExprAssign(n)
-        && n.getFirstGrandchild().isName()) {
+        && n.getFirstFirstChild().isName()) {
       return true;
     } else if (n.isVar() && n.hasOneChild() &&
-        n.getFirstGrandchild() != null) {
+        n.getFirstFirstChild() != null) {
       return true;
     }
 
@@ -634,7 +634,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private Node getSimpleAssignmentName(Node n) {
     Preconditions.checkState(isSimpleAssignment(n));
     if (NodeUtil.isExprAssign(n)) {
-      return n.getFirstGrandchild();
+      return n.getFirstFirstChild();
     } else {
       // A var declaration.
       return n.getFirstChild();
@@ -681,7 +681,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return NodeUtil.getConditionExpression(n);
     } else {
       Preconditions.checkState(isExprConditional(n));
-      return n.getFirstGrandchild();
+      return n.getFirstFirstChild();
     }
   }
 

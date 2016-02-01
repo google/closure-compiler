@@ -143,7 +143,7 @@ public class ApplySuggestedFixesTest {
     SuggestedFix fix1 = new SuggestedFix.Builder()
         .insertBefore(jsdocRoot, "!")
         .build();
-    Node foo = jsdocRoot.getFirstGrandchild();
+    Node foo = jsdocRoot.getFirstFirstChild();
     SuggestedFix fix2 = new SuggestedFix.Builder()
         .insertBefore(foo, "!")
         .build();

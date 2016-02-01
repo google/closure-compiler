@@ -2061,7 +2061,7 @@ class GlobalTypeInfo implements CompilerPass {
     private RawNominalType maybeGetOwnerType(Node funNode, Node parent) {
       Preconditions.checkArgument(funNode.isFunction());
       if (parent.isAssign() && parent.getFirstChild().isGetElem()) {
-        Node recv = parent.getFirstGrandchild();
+        Node recv = parent.getFirstFirstChild();
         if (recv.isGetProp() && recv.getLastChild().getString().equals("prototype")) {
           QualifiedName qname = QualifiedName.fromNode(recv.getFirstChild());
           if (qname != null) {
@@ -2147,7 +2147,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   private static boolean isPrototypePropertyDeclaration(Node n) {
     if (NodeUtil.isExprAssign(n)
-        && isPrototypeProperty(n.getFirstGrandchild())) {
+        && isPrototypeProperty(n.getFirstFirstChild())) {
       return true;
     }
     if (n.isObjectLit()) {

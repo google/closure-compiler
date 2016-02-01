@@ -228,7 +228,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     // for debugging purposes.
     // declar.lhs = x.prototype.y so first child of the first child
     // is 'x'.
-    Node accessNode = declar.lhs.getFirstGrandchild();
+    Node accessNode = declar.lhs.getFirstFirstChild();
     Object originalName = accessNode.getProp(Node.ORIGINALNAME_PROP);
 
     String className = "?";
@@ -359,7 +359,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       if (!NodeUtil.isPrototypePropertyDeclaration(n)) {
         return null;
       }
-      Node lhs = n.getFirstGrandchild();
+      Node lhs = n.getFirstFirstChild();
       return new PrototypeMemberDeclaration(lhs, n);
     }
   }

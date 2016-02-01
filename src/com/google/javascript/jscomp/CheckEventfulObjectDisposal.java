@@ -584,7 +584,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
          *   n.firstChild -> "dispose"
          *   n.firstChild.firstChild -> object
          */
-        return n.getFirstGrandchild().getJSType();
+        return n.getFirstFirstChild().getJSType();
       }
     }
 
@@ -1172,7 +1172,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
 
         JSDocInfo di = n.getJSDocInfo();
         ObjectType objectType =
-            ObjectType.cast(dereference(n.getFirstGrandchild()
+            ObjectType.cast(dereference(n.getFirstFirstChild()
                 .getJSType()));
         String propertyName = n.getFirstChild().getLastChild().getString();
 

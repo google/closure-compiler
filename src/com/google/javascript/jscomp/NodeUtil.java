@@ -3181,7 +3181,7 @@ public final class NodeUtil {
    */
   public static boolean isPrototypePropertyDeclaration(Node n) {
     return isExprAssign(n) &&
-        isPrototypeProperty(n.getFirstGrandchild());
+        isPrototypeProperty(n.getFirstFirstChild());
   }
 
   /**

@@ -35,15 +35,15 @@ public final class TemplateAstMatcherTest extends TestCase {
         + "}\n";
 
     TestNodePair pair = compile("", template, "3");
-    assertMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     pair = compile("", template, "5");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile("", template, "var foo = 3;");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(
-        pair.templateNode, pair.testNode.getFirstGrandchild().getFirstChild());
+        pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
     pair = compile("", template, "obj.foo();");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
@@ -59,9 +59,9 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile("", template, "var foo = 'str';");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(
-        pair.templateNode, pair.testNode.getFirstGrandchild().getFirstChild());
+        pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
     pair = compile("", template, "obj.foo();");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
@@ -80,9 +80,9 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile("", template, "var foo = true;");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(
-        pair.templateNode, pair.testNode.getFirstGrandchild().getFirstChild());
+        pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
     pair = compile("", template, "!undefined");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
   }
@@ -143,9 +143,9 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile(externs, template, "var foo = 'str';");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(
-        pair.templateNode, pair.testNode.getFirstGrandchild().getFirstChild());
+        pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
 
     template = ""
         + "/**\n"
@@ -198,15 +198,15 @@ public final class TemplateAstMatcherTest extends TestCase {
         + "  foo();\n"
         + "}\n";
     TestNodePair pair = compile(externs, template, "foo();");
-    assertMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     pair = compile(externs, template, "bar();");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     pair = compile(externs, template, "bar(foo());");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(
-        pair.templateNode, pair.testNode.getFirstGrandchild().getLastChild());
+        pair.templateNode, pair.testNode.getFirstFirstChild().getLastChild());
   }
 
   public void testMatches_functionCallWithArguments() {
@@ -317,11 +317,11 @@ public final class TemplateAstMatcherTest extends TestCase {
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile(externs, template, "var context = new AppContext(); context.init();");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
     pair = compile(externs, template, "var context = new AppContext(); context.get('str');");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertNotMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
 
     template = ""
@@ -335,7 +335,7 @@ public final class TemplateAstMatcherTest extends TestCase {
 
     pair = compile(externs, template, "var context = new AppContext(); context.init();");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertNotMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
     pair = compile(externs, template, "var context = new AppContext(); context.get('s');");
     assertMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
@@ -356,12 +356,12 @@ public final class TemplateAstMatcherTest extends TestCase {
 
     TestNodePair pair = compile(externs, template, "var foo = new AppContext()");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(
-        pair.templateNode, pair.testNode.getFirstGrandchild().getFirstChild());
+        pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
     pair = compile(externs, template, "var foo = new Object()");
     assertNotMatch(
-        pair.templateNode, pair.testNode.getFirstGrandchild().getFirstChild());
+        pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
   }
 
   public void testMatches_propertyAccess() {
@@ -381,9 +381,9 @@ public final class TemplateAstMatcherTest extends TestCase {
     TestNodePair pair = compile(
         externs, template, "var context = new AppContext(); context.location = '3';");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(
-        pair.templateNode, pair.testNode.getLastChild().getFirstGrandchild());
+        pair.templateNode, pair.testNode.getLastChild().getFirstFirstChild());
   }
 
   public void testMatches_multiLineTemplates() {
@@ -405,14 +405,14 @@ public final class TemplateAstMatcherTest extends TestCase {
     TestNodePair pair = compile(
         externs, template, "var context = new AppContext(); context.location = '3';");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertNotMatch(
-        pair.templateNode, pair.testNode.getLastChild().getFirstGrandchild());
+        pair.templateNode, pair.testNode.getLastChild().getFirstFirstChild());
 
     pair = compile(
         externs, template, "var ac = new AppContext(); ac.location = '3'; delete ac.location;");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(pair.templateNode, pair.testNode.getSecondChild());
 
     // Ensure that if a variable is declared within the template and reused
@@ -463,7 +463,7 @@ public final class TemplateAstMatcherTest extends TestCase {
     TestNodePair pair = compile(
         externs, template, "var context = new SubAppContext(); context.location = '3';");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
-    assertNotMatch(pair.templateNode, pair.testNode.getFirstGrandchild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
   }
 

@@ -313,7 +313,7 @@ class AngularPass extends AbstractPostOrderCallback
   private static Node getDeclarationRValue(Node n) {
     Preconditions.checkNotNull(n);
     Preconditions.checkArgument(NodeUtil.isNameDeclaration(n));
-    n = n.getFirstGrandchild();
+    n = n.getFirstFirstChild();
     if (n == null) {
       return null;
     }

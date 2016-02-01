@@ -288,7 +288,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
   private static boolean isGoogModuleCall(Node n) {
     if (NodeUtil.isExprCall(n)) {
-      Node target = n.getFirstGrandchild();
+      Node target = n.getFirstFirstChild();
       return (target.matchesQualifiedName("goog.module"));
     }
     return false;
@@ -629,7 +629,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
       return true;
     }
     if (NodeUtil.isExprCall(n)) {
-      Node target = n.getFirstGrandchild();
+      Node target = n.getFirstFirstChild();
       return (
           target.matchesQualifiedName("goog.module")
           || target.matchesQualifiedName("goog.provide")

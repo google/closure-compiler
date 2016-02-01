@@ -107,7 +107,7 @@ public final class TypeInferenceTest extends TestCase {
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
 
-    Node n = root.getFirstGrandchild();
+    Node n = root.getFirstFirstChild();
     // Create the scope with the assumptions.
     TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
     TypedScope assumedScope = scopeCreator.createScope(

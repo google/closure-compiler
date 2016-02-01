@@ -852,7 +852,7 @@ class PureFunctionIdentifier implements CompilerPass {
           boolean isCallOrApply = isCallOrApply(callSite);
           Node objectNode = isCallOrApply ?
               callSite.getSecondChild() :
-              callSite.getFirstGrandchild();
+              callSite.getFirstFirstChild();
           if (objectNode != null && objectNode.isName()
               && !isCallOrApply) {
             // Exclude ".call" and ".apply" as the value may still be

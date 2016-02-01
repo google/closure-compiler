@@ -1472,7 +1472,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testIndirectEval() {
     Node n = parse("eval('1');");
     assertPrintNode("eval(\"1\")", n);
-    n.getFirstGrandchild().getFirstChild().putBooleanProp(
+    n.getFirstFirstChild().getFirstChild().putBooleanProp(
         Node.DIRECT_EVAL, false);
     assertPrintNode("(0,eval)(\"1\")", n);
   }
@@ -1485,7 +1485,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testFreeCall2() {
     Node n = parse("foo(a);");
     assertPrintNode("foo(a)", n);
-    Node call =  n.getFirstGrandchild();
+    Node call =  n.getFirstFirstChild();
     assertTrue(call.isCall());
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("foo(a)", n);
@@ -1494,7 +1494,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testFreeCall3() {
     Node n = parse("x.foo(a);");
     assertPrintNode("x.foo(a)", n);
-    Node call =  n.getFirstGrandchild();
+    Node call =  n.getFirstFirstChild();
     assertTrue(call.isCall());
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("(0,x.foo)(a)", n);

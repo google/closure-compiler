@@ -244,7 +244,7 @@ class InlineFunctions implements CompilerPass {
           if (n.getFirstChild().isFunction()) {
             fnNode = n.getFirstChild();
           } else if (NodeUtil.isFunctionObjectCall(n)) {
-            Node fnIdentifingNode = n.getFirstGrandchild();
+            Node fnIdentifingNode = n.getFirstFirstChild();
             if (fnIdentifingNode.isFunction()) {
               fnNode = fnIdentifingNode;
             }
@@ -1057,7 +1057,7 @@ class InlineFunctions implements CompilerPass {
 
     @Override
     public Node getFunctionNode() {
-      return var.getFirstGrandchild();
+      return var.getFirstFirstChild();
     }
 
     @Override

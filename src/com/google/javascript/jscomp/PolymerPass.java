@@ -160,11 +160,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
      */
     private boolean isPolymerElementPropExpr(Node value) {
       return value != null && value.isExprResult()
-          && value.getFirstGrandchild() != null
-          && value.getFirstGrandchild().isGetProp()
-          && value.getFirstGrandchild().isQualifiedName()
+          && value.getFirstFirstChild() != null
+          && value.getFirstFirstChild().isGetProp()
+          && value.getFirstFirstChild().isQualifiedName()
           && NodeUtil.getRootOfQualifiedName(
-              value.getFirstGrandchild()).matchesQualifiedName(POLYMER_ELEMENT_NAME);
+              value.getFirstFirstChild()).matchesQualifiedName(POLYMER_ELEMENT_NAME);
     }
 
     public List<Node> getpolymerElementProps() {
@@ -198,7 +198,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
         Node behaviorValue = n.getSecondChild();
         if (n.isVar()) {
-          behaviorValue = n.getFirstGrandchild();
+          behaviorValue = n.getFirstFirstChild();
         }
         suppressBehavior(behaviorValue);
       }
@@ -945,7 +945,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     for (Node baseProp : polymerElementProps) {
       Node newProp = baseProp.cloneTree();
       Node newPropRootName = NodeUtil.getRootOfQualifiedName(
-           newProp.getFirstGrandchild());
+           newProp.getFirstFirstChild());
       newPropRootName.setString(polymerElementType);
       block.addChildToBack(newProp);
     }

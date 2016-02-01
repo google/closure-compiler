@@ -594,7 +594,7 @@ public class Node implements Serializable {
     return first;
   }
 
-  public Node getFirstGrandchild() {
+  public Node getFirstFirstChild() {
     return first == null ? null : first.first;
   }
 

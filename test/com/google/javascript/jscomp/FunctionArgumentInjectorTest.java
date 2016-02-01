@@ -442,7 +442,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     if (n.isCall()) {
       Node callee;
       if (NodeUtil.isGet(n.getFirstChild())) {
-        callee = n.getFirstGrandchild();
+        callee = n.getFirstFirstChild();
         Node prop = callee.getNext();
         // Only "call" is support at this point.
         Preconditions.checkArgument(prop.isString() &&

@@ -427,7 +427,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertFalse(globalScope.isDeclared("z", false));
     assertFalse(globalScope.isDeclared("e", false));
 
-    Node tryBlock = root.getFirstGrandchild();
+    Node tryBlock = root.getFirstFirstChild();
     Scope tryBlockScope = scopeCreator.createScope(tryBlock, globalScope);
     assertFalse(tryBlockScope.isDeclared("x", false));
     assertFalse(tryBlockScope.isDeclared("y", false));
@@ -504,7 +504,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
     Node fBlock = fNode.getLastChild();
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
-    Node tryBlock = fBlock.getFirstGrandchild();
+    Node tryBlock = fBlock.getFirstFirstChild();
     Scope tryScope = scopeCreator.createScope(tryBlock, fBlockScope);
     Node catchBlock = tryBlock.getNext();
     Scope catchScope = scopeCreator.createScope(catchBlock, tryScope);

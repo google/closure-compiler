@@ -84,14 +84,14 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     if (n.isVar()) {
       return n.getFirstChild();
     } else if (NodeUtil.isExprAssign(n)) {
-      return n.getFirstGrandchild();
+      return n.getFirstFirstChild();
     }
     throw new IllegalStateException();
   }
 
   private static Node getValue(Node n) {
     if (n.isVar()) {
-      return n.getFirstGrandchild();
+      return n.getFirstFirstChild();
     } else if (NodeUtil.isExprAssign(n)) {
       return n.getFirstChild().getLastChild();
     }
@@ -128,7 +128,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
       return false;
     }
 
-    Node lhs = propertyCandidate.getFirstGrandchild();
+    Node lhs = propertyCandidate.getFirstFirstChild();
     // Must be an assignment to the recent variable...
     if (!name.equals(lhs.getFirstChild().getString())) {
       return false;

@@ -657,7 +657,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     @Override
     public Node getPrototype() {
-      return getAssignNode().getFirstGrandchild();
+      return getAssignNode().getFirstFirstChild();
     }
 
     @Override

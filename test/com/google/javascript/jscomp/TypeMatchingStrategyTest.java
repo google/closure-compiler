@@ -116,6 +116,6 @@ public final class TypeMatchingStrategyTest extends TestCase {
             SourceFile.fromCode("test", String.format("/** @type {%s} */ var x;", jsType))),
         options);
     Node node = compiler.getRoot().getLastChild();
-    return node.getFirstGrandchild().getFirstChild().getJSType();
+    return node.getFirstFirstChild().getFirstChild().getJSType();
   }
 }
