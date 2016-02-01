@@ -27,6 +27,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
@@ -1143,6 +1144,31 @@ public final class CommandLineRunnerTest extends TestCase {
         new FlagEntry<>(JsSourceType.JS, glob2));
   }
 
+  public void testGlobJs1() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    // Move test2 to the same directory as test1, also make the filename of test2
+    // lexicographically larger than test1
+    new File(jsFile2.value).renameTo(new File(
+      new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
+    String glob = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    compileFiles("var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
+  }
+
+  public void testGlobJs2() throws IOException {
+    try {
+      FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+      FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+      new File(jsFile2.value).renameTo(new File(
+          new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
+      String glob = new File(jsFile1.value).getParent() + File.separator + "*test*.js";
+      compileFiles(
+          "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
+    } catch (FlagUsageException e) {
+      fail("Unexpected exception" + e);
+    }
+  }
+
   public void testSourceMapInputs() throws Exception {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
@@ -1892,7 +1918,7 @@ public final class CommandLineRunnerTest extends TestCase {
   private static FlagEntry<JsSourceType> createZipFile(Map<String, String> entryContentsByName)
       throws IOException {
     File tempZipFile = File.createTempFile("testdata", ".js.zip",
-        Files.createTempDirectory("jscomp").toFile());
+        java.nio.file.Files.createTempDirectory("jscomp").toFile());
 
     try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(tempZipFile))) {
       for (Entry<String, String> entry : entryContentsByName.entrySet()) {
@@ -1907,7 +1933,7 @@ public final class CommandLineRunnerTest extends TestCase {
   private FlagEntry<JsSourceType> createJsFile(String filename, String fileContent)
       throws IOException {
     File tempJsFile = File.createTempFile(filename, ".js",
-        Files.createTempDirectory("jscomp").toFile());
+        java.nio.file.Files.createTempDirectory("jscomp").toFile());
     try (FileOutputStream fileOutputStream = new FileOutputStream(tempJsFile)) {
       fileOutputStream.write(fileContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
