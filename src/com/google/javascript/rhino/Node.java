@@ -594,6 +594,10 @@ public class Node implements Serializable {
     return first;
   }
 
+  public Node getFirstGrandchild() {
+    return first == null ? null : first.first;
+  }
+
   public Node getSecondChild() {
     return first.next;
   }
@@ -1414,6 +1418,10 @@ public class Node implements Serializable {
 
   public Node getParent() {
     return parent;
+  }
+
+  public Node getGrandparent() {
+    return parent == null ? null : parent.parent;
   }
 
   /**

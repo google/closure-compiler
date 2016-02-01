@@ -343,7 +343,7 @@ class ScopedAliases implements HotSwapCompilerPass {
      *     in a goog.scope() call.
      */
     private Node findScopeMethodCall(Node scopeRoot) {
-      Node n = scopeRoot.getParent().getParent();
+      Node n = scopeRoot.getGrandparent();
       if (isCallToScopeMethod(n)) {
         return n;
       }
@@ -512,7 +512,7 @@ class ScopedAliases implements HotSwapCompilerPass {
                 varDocInfo)
                 .useSourceInfoIfMissingFromForTree(n);
             NodeUtil.setDebugInformation(
-                newDecl.getFirstChild().getFirstChild(), n, name);
+                newDecl.getFirstGrandchild(), n, name);
 
             if (isHoisted) {
               grandparent.addChildToFront(newDecl);

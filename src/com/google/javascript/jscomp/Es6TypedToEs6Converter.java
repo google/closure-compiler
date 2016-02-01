@@ -864,7 +864,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         case Token.DECLARE:
         case Token.EXPORT:
           if (parent.getParent().getType() == Token.EXPORT) {
-            parentModuleRoot = grandParent.getParent().getParent();
+            parentModuleRoot = grandParent.getGrandparent();
           } else {
             parentModuleRoot = grandParent.getParent();
           }

@@ -533,7 +533,7 @@ class ExpressionDecomposer {
 
     // Extracts the object reference to be used as "this". For example:
     //   "a['b']" from "a['b'].c"
-    Node getExprNode = getVarNode.getFirstChild().getFirstChild();
+    Node getExprNode = getVarNode.getFirstGrandchild();
     Preconditions.checkArgument(NodeUtil.isGet(getExprNode));
     Node thisVarNode = extractExpression(
         getExprNode.getFirstChild(), state.extractBeforeStatement);

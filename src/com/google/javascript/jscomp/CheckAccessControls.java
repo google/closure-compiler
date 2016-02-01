@@ -233,7 +233,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return normalizeClassType(n.getJSType());
     } else if (parent.isStringKey()
         || parent.isGetterDef() || parent.isSetterDef()) {
-      Node objectLitParent = parent.getParent().getParent();
+      Node objectLitParent = parent.getGrandparent();
       if (!objectLitParent.isAssign()) {
         return null;
       }

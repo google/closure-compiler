@@ -374,7 +374,7 @@ public final class CodePrinter {
      * @return The TRY node for the specified CATCH node.
      */
     private static Node getTryForCatch(Node n) {
-      return n.getParent().getParent();
+      return n.getGrandparent();
     }
 
     /**

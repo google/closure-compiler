@@ -125,7 +125,7 @@ class GenerateExports implements CompilerPass {
         grandparent = parentNode.getFirstChild().getQualifiedName();
       }
     } else if (node.getParent().isMemberFunctionDef()) {
-      Node classNode = node.getParent().getParent().getParent();
+      Node classNode = node.getGrandparent().getParent();
       parent = NodeUtil.getName(classNode);
       parent += node.getParent().isStaticMember() ? "" : ".prototype";
       export = parent + "." + export;

@@ -239,7 +239,7 @@ abstract class MethodCompilerPass implements CompilerPass {
         case Token.GETPROP:
         case Token.GETELEM:
           Node dest = n.getSecondChild();
-          Node parent = n.getParent().getParent();
+          Node parent = n.getGrandparent();
 
           if (dest.isString() &&
               parent.isAssign()) {

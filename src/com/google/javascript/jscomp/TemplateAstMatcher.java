@@ -171,7 +171,7 @@ public final class TemplateAstMatcher {
     if (body.hasOneChild() && body.getFirstChild().isExprResult()) {
       // When matching an expression, don't require it to be a complete
       // statement.
-      startNode = body.getFirstChild().getFirstChild();
+      startNode = body.getFirstGrandchild();
     } else {
       startNode = body.getFirstChild();
     }

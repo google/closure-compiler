@@ -274,7 +274,7 @@ public final class NodeUtilTest extends TestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.initOptions(options);
     Node root = compiler.parseTestCode(js);
-    return root.getFirstChild().getFirstChild();
+    return root.getFirstGrandchild();
   }
 
   private void testIsObjectLiteralKey(Node node, boolean expected) {
@@ -291,7 +291,7 @@ public final class NodeUtilTest extends TestCase {
   public void testGetFunctionName2() throws Exception {
     Compiler compiler = new Compiler();
     Node parent = compiler.parseTestCode("var name = function(){}")
-        .getFirstChild().getFirstChild();
+        .getFirstGrandchild();
 
     testGetFunctionName(parent.getFirstChild(), "name");
   }
@@ -299,7 +299,7 @@ public final class NodeUtilTest extends TestCase {
   public void testGetFunctionName3() throws Exception {
     Compiler compiler = new Compiler();
     Node parent = compiler.parseTestCode("qualified.name = function(){}")
-        .getFirstChild().getFirstChild();
+        .getFirstGrandchild();
 
     testGetFunctionName(parent.getLastChild(), "qualified.name");
   }
@@ -307,7 +307,7 @@ public final class NodeUtilTest extends TestCase {
   public void testGetFunctionName4() throws Exception {
     Compiler compiler = new Compiler();
     Node parent = compiler.parseTestCode("var name2 = function name1(){}")
-        .getFirstChild().getFirstChild();
+        .getFirstGrandchild();
 
     testGetFunctionName(parent.getFirstChild(), "name2");
   }
@@ -315,7 +315,7 @@ public final class NodeUtilTest extends TestCase {
   public void testGetFunctionName5() throws Exception {
     Compiler compiler = new Compiler();
     Node n = compiler.parseTestCode("qualified.name2 = function name1(){}");
-    Node parent = n.getFirstChild().getFirstChild();
+    Node parent = n.getFirstGrandchild();
 
     testGetFunctionName(parent.getLastChild(), "qualified.name2");
   }
@@ -335,7 +335,7 @@ public final class NodeUtilTest extends TestCase {
     compiler.initOptions(options);
 
     Node parent = compiler.parseTestCode("var obj = {memFunc(){}}")
-        .getFirstChild().getFirstChild().getFirstChild().getFirstChild();
+        .getFirstGrandchild().getFirstGrandchild();
 
     assertEquals("memFunc",
         NodeUtil.getNearestFunctionName(parent.getLastChild()));
@@ -1214,7 +1214,7 @@ public final class NodeUtilTest extends TestCase {
     Node callExpr = getNode("new x().method()");
     assertTrue(NodeUtil.functionCallHasSideEffects(callExpr));
 
-    Node newExpr = callExpr.getFirstChild().getFirstChild();
+    Node newExpr = callExpr.getFirstGrandchild();
     Preconditions.checkState(newExpr.isNew());
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
 
@@ -1839,12 +1839,12 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testIsLValue() {
-    assertLValueNamedX(parse("var x;").getFirstChild().getFirstChild());
+    assertLValueNamedX(parse("var x;").getFirstGrandchild());
     assertLValueNamedX(parse("var w, x;").getFirstChild().getLastChild());
     assertLValueNamedX(
-        parse("var [...x] = y;").getFirstChild().getFirstChild().getFirstChild().getFirstChild());
-    assertLValueNamedX(parse("var x = y;").getFirstChild().getFirstChild());
-    assertLValueNamedX(parse("x++;").getFirstChild().getFirstChild().getFirstChild());
+        parse("var [...x] = y;").getFirstGrandchild().getFirstGrandchild());
+    assertLValueNamedX(parse("var x = y;").getFirstGrandchild());
+    assertLValueNamedX(parse("x++;").getFirstGrandchild().getFirstChild());
     assertLValueNamedX(
        NodeUtil.getFunctionParameters(parse("function f(x) {}").getFirstChild()).getFirstChild());
 
@@ -1854,9 +1854,9 @@ public final class NodeUtilTest extends TestCase {
     assertLValueNamedX(x);
 
     assertLValueNamedX(
-        parse("({x} = obj)").getFirstChild().getFirstChild().getFirstChild().getFirstChild());
+        parse("({x} = obj)").getFirstGrandchild().getFirstGrandchild());
     assertLValueNamedX(
-        parse("([x] = obj)").getFirstChild().getFirstChild().getFirstChild().getFirstChild());
+        parse("([x] = obj)").getFirstGrandchild().getFirstGrandchild());
   }
 
   private void assertNotLValueNamedX(Node n) {
@@ -1865,7 +1865,7 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testIsNotLValue() {
-    assertNotLValueNamedX(parse("var a = x;").getFirstChild().getFirstChild().getFirstChild());
+    assertNotLValueNamedX(parse("var a = x;").getFirstGrandchild().getFirstChild());
 
     Node x = parse("f(...x);")  // script
         .getFirstChild()  // expr result
@@ -1885,7 +1885,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring1() {
     Node root = parse("var [a, b] = obj;");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -1902,7 +1902,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring1b() {
     Node root = parse("var {a: c, b: d} = obj;");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isObjectPattern());
 
     Node strKeyNodeA = destructPat.getFirstChild();
@@ -1925,7 +1925,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring1c() {
     Node root = parse("var {a, b} = obj;");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isObjectPattern());
 
     Node strKeyNodeA = destructPat.getFirstChild();
@@ -1942,7 +1942,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring2() {
     Node root = parse("var [a, [b, c]] = obj;");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -1962,12 +1962,12 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring2b() {
     Node root = parse("var {a: e, b: {c: f, d: g}} = obj;");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isObjectPattern());
 
     Node strKeyNodeA = destructPat.getFirstChild();
     Node strKeyNodeB = strKeyNodeA.getNext();
-    Node strKeyNodeC = strKeyNodeB.getFirstChild().getFirstChild();
+    Node strKeyNodeC = strKeyNodeB.getFirstGrandchild();
     Node strKeyNodeD = strKeyNodeC.getNext();
     Node nameNodeE = strKeyNodeA.getFirstChild();
     Node nameNodeF = strKeyNodeC.getFirstChild();
@@ -1994,7 +1994,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring3() {
     Node root = parse("var [a, b] = [c, d];");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -2014,7 +2014,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring3b() {
     Node root = parse("var {a: c, b: d} = {a: 1, b: 2};");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isObjectPattern());
 
     Node strKeyNodeA = destructPat.getFirstChild();
@@ -2034,7 +2034,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring4() {
     Node root = parse("for ([a, b] of X){}");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -2049,7 +2049,7 @@ public final class NodeUtilTest extends TestCase {
   public void testLhsByDestructuring5() {
     Node root = parse("function fn([a, b] = [c, d]){}");
     Node destructPat = root.getFirstChild().getSecondChild()
-        .getFirstChild().getFirstChild();
+        .getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -2069,7 +2069,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring6() {
     Node root = parse("for ([{a: b}] of c) {}");
-    Node destructPat = root.getFirstChild().getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild().getFirstChild();
     Preconditions.checkArgument(destructPat.isObjectPattern()
         && destructPat.getParent().isArrayPattern());
 
@@ -2087,7 +2087,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring6b() {
     Node root = parse("for ([{a: b}] in c) {}");
-    Node destructPat = root.getFirstChild().getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild().getFirstChild();
     Preconditions.checkArgument(destructPat.isObjectPattern()
         && destructPat.getParent().isArrayPattern());
 
@@ -2105,8 +2105,8 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring6c() {
     Node root = parse("for (var [{a: b}] = [{a: 1}];;) {}");
-    Node destructPat = root.getFirstChild().getFirstChild()
-        .getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild()
+        .getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isObjectPattern()
         && destructPat.getParent().isArrayPattern());
 
@@ -2121,7 +2121,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring7() {
     Node root = parse("for ([a] of c) {}");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -2135,7 +2135,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring7b() {
     Node root = parse("for ([a] in c) {}");
-    Node destructPat = root.getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -2149,7 +2149,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring7c() {
     Node root = parse("for (var [a] = [1];;) {}");
-    Node destructPat = root.getFirstChild().getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild().getFirstChild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -2160,7 +2160,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring7d() {
     Node root = parse("for (let [a] = [1];;) {}");
-    Node destructPat = root.getFirstChild().getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild().getFirstChild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();
@@ -2171,7 +2171,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLhsByDestructuring7e() {
     Node root = parse("for (const [a] = [1];;) {}");
-    Node destructPat = root.getFirstChild().getFirstChild().getFirstChild();
+    Node destructPat = root.getFirstGrandchild().getFirstChild();
     Preconditions.checkArgument(destructPat.isArrayPattern());
 
     Node nameNodeA = destructPat.getFirstChild();

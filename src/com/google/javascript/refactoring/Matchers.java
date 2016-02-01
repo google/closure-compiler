@@ -313,7 +313,7 @@ public final class Matchers {
         // }
         if (!node.isAssign()
             || !node.getFirstChild().isGetProp()
-            || !node.getFirstChild().getFirstChild().isThis()) {
+            || !node.getFirstGrandchild().isThis()) {
           return false;
         }
         while (node != null && !node.isFunction()) {

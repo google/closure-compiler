@@ -262,7 +262,7 @@ public final class TypeTransformationParser {
       return false;
     }
 
-    Node expr = ast.getFirstChild().getFirstChild();
+    Node expr = ast.getFirstGrandchild();
     // The AST of the type transformation must correspond to a valid expression
     if (!validTypeTransformationExpression(expr)) {
       // No need to add a new warning because the validation does it

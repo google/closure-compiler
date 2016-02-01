@@ -388,7 +388,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
     if (NodeUtil.isNameDeclaration(n)
         && n.getFirstChild().hasChildren()
-        && n.getFirstChild().getFirstChild().isFunction()) {
+        && n.getFirstGrandchild().isFunction()) {
       return true;
     }
 

@@ -7726,7 +7726,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     JSType typeC = nodeC.getJSType();
     assertTrue(typeC.isNumber());
 
-    Node nodeB = nodeC.getFirstChild().getFirstChild();
+    Node nodeB = nodeC.getFirstGrandchild();
     JSType typeB = nodeB.getJSType();
     assertEquals("B", typeB.toString());
   }
@@ -8288,7 +8288,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor\n * @extends {base} */function derived() {}\n" +
         "/** @type {!derived} */ var baz = " +
         "/** @type {!derived} */(new base());\n");
-    Node castedExprNode = root.getLastChild().getFirstChild().getFirstChild().getFirstChild();
+    Node castedExprNode = root.getLastChild().getFirstGrandchild().getFirstChild();
     assertEquals("derived", castedExprNode.getJSType().toString());
     assertEquals("base", castedExprNode.getJSTypeBeforeCast().toString());
   }
@@ -9151,7 +9151,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     assertSame(googNodeType, googScopeType);
 
     // goog type on the left of the GETPROP node (under fist ASSIGN)
-    Node getpropFoo1 = varNode.getNext().getFirstChild().getFirstChild();
+    Node getpropFoo1 = varNode.getNext().getFirstGrandchild();
     assertEquals(Token.GETPROP, getpropFoo1.getType());
     assertEquals("goog", getpropFoo1.getFirstChild().getString());
     JSType googGetpropFoo1Type = getpropFoo1.getFirstChild().getJSType();
@@ -9167,7 +9167,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // goog type on the left of the GETPROP lower level node
     // (under second ASSIGN)
     Node getpropFoo2 = varNode.getNext().getNext()
-        .getFirstChild().getFirstChild().getFirstChild();
+        .getFirstGrandchild().getFirstChild();
     assertEquals(Token.GETPROP, getpropFoo2.getType());
     assertEquals("goog", getpropFoo2.getFirstChild().getString());
     JSType googGetpropFoo2Type = getpropFoo2.getFirstChild().getJSType();
@@ -9308,7 +9308,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testValueTypeBuiltInPrototypePropertyType() {
     Node node = parseAndTypeCheck("\"x\".charAt(0)");
-    assertTypeEquals(STRING_TYPE, node.getFirstChild().getFirstChild().getJSType());
+    assertTypeEquals(STRING_TYPE, node.getFirstGrandchild().getJSType());
   }
 
   public void testDeclareBuiltInConstructor() {
@@ -9832,7 +9832,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testObjectLiteral() {
     Node n = parseAndTypeCheck("var a = {m1: 7, m2: 'hello'}");
 
-    Node nameNode = n.getFirstChild().getFirstChild();
+    Node nameNode = n.getFirstGrandchild();
     Node objectNode = nameNode.getFirstChild();
 
     // node extraction
@@ -9938,7 +9938,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // ECMA-262 15.9.2: When Date is called as a function rather than as a
     // constructor, it returns a string.
     Node n = parseAndTypeCheck("Date()");
-    assertTypeEquals(STRING_TYPE, n.getFirstChild().getFirstChild().getJSType());
+    assertTypeEquals(STRING_TYPE, n.getFirstGrandchild().getJSType());
   }
 
   // According to ECMA-262, Error & Array function calls are equivalent to
@@ -9947,13 +9947,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testCallErrorConstructorAsFunction() {
     Node n = parseAndTypeCheck("Error('x')");
     assertTypeEquals(ERROR_TYPE,
-                 n.getFirstChild().getFirstChild().getJSType());
+                 n.getFirstGrandchild().getJSType());
   }
 
   public void testCallArrayConstructorAsFunction() {
     Node n = parseAndTypeCheck("Array()");
     assertTypeEquals(ARRAY_TYPE,
-                 n.getFirstChild().getFirstChild().getJSType());
+                 n.getFirstGrandchild().getJSType());
   }
 
   public void testPropertyTypeOfUnionType() {
@@ -11377,7 +11377,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testUndefinedVar() {
     Node n = parseAndTypeCheck("var undefined;");
     assertTypeEquals(registry.getNativeType(JSTypeNative.VOID_TYPE),
-                 n.getFirstChild().getFirstChild().getJSType());
+                 n.getFirstGrandchild().getJSType());
   }
 
   public void testFlowScopeBug1() {

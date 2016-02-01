@@ -801,7 +801,7 @@ class PeepholeMinimizeConditions
           // We try to detect this case, and not fold EXPR_RESULTs
           // into other expressions.
           if (maybeExpr.getFirstChild().isCall()) {
-            Node calledFn = maybeExpr.getFirstChild().getFirstChild();
+            Node calledFn = maybeExpr.getFirstGrandchild();
 
             // We only have to worry about methods with an implicit 'this'
             // param, or this doesn't happen.
@@ -877,7 +877,7 @@ class PeepholeMinimizeConditions
    */
   private static Node getBlockReturnExpression(Node n) {
     Preconditions.checkState(isReturnExpressBlock(n));
-    return n.getFirstChild().getFirstChild();
+    return n.getFirstGrandchild();
   }
 
   /**

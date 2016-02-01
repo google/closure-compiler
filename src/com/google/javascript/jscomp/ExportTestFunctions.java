@@ -73,7 +73,7 @@ public class ExportTestFunctions implements CompilerPass {
           }
         } else if (isNameDeclaredFunction(n)) {
           // Check for a test function expression.
-          Node functionNode = n.getFirstChild().getFirstChild();
+          Node functionNode = n.getFirstGrandchild();
           String functionName = NodeUtil.getName(functionNode);
           if (isTestFunction(functionName)) {
             exportTestFunctionAsSymbol(functionName, n, parent);
@@ -131,7 +131,7 @@ public class ExportTestFunctions implements CompilerPass {
       if (!NodeUtil.isNameDeclaration(node)) {
         return false;
       }
-      Node grandchild = node.getFirstChild().getFirstChild();
+      Node grandchild = node.getFirstGrandchild();
       return grandchild != null && grandchild.isFunction();
     }
   }

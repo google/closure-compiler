@@ -399,7 +399,7 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     Node getGrandparent() {
-      return node.getParent() == null ? null : node.getParent().getParent();
+      return node.getParent() == null ? null : node.getGrandparent();
     }
   }
 

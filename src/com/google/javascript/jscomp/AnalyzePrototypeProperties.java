@@ -396,9 +396,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
       Node lValue = NodeUtil.getBestLValue(rValue);
       if (lValue == null ||
           lValue.getParent() == null ||
-          lValue.getParent().getParent() == null ||
+          lValue.getGrandparent() == null ||
           !((NodeUtil.isObjectLitKey(lValue) && !lValue.isQuotedString()) ||
-            NodeUtil.isExprAssign(lValue.getParent().getParent()))) {
+            NodeUtil.isExprAssign(lValue.getGrandparent()))) {
         return null;
       }
 
@@ -657,7 +657,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     @Override
     public Node getPrototype() {
-      return getAssignNode().getFirstChild().getFirstChild();
+      return getAssignNode().getFirstGrandchild();
     }
 
     @Override

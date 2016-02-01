@@ -290,7 +290,7 @@ class CollapseProperties implements CompilerPass {
           } else if (NodeUtil.isObjectLitKey(target)) {
             // Object literal key definitions are a little trickier, as we
             // need to find the assignment target
-            Node gparent = target.getParent().getParent();
+            Node gparent = target.getGrandparent();
             if (gparent.isAssign()) {
               target = gparent.getFirstChild();
             } else {

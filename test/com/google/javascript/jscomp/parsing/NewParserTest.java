@@ -228,7 +228,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoAssign1() throws Exception {
-    Node assign = parse("a = b").getFirstChild().getFirstChild();
+    Node assign = parse("a = b").getFirstGrandchild();
 
     assertNode(assign).hasType(Token.ASSIGN);
     assertNode(assign).hasLineno(1);
@@ -236,7 +236,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoAssign2() throws Exception {
-    Node assign = parse("\n a.g.h.k    =  45").getFirstChild().getFirstChild();
+    Node assign = parse("\n a.g.h.k    =  45").getFirstGrandchild();
 
     assertNode(assign).hasType(Token.ASSIGN);
     assertNode(assign).hasLineno(2);
@@ -244,7 +244,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoCall() throws Exception {
-    Node call = parse("\n foo(123);").getFirstChild().getFirstChild();
+    Node call = parse("\n foo(123);").getFirstGrandchild();
 
     assertNode(call).hasType(Token.CALL);
     assertNode(call).hasLineno(2);
@@ -252,7 +252,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoGetProp1() throws Exception {
-    Node getprop = parse("\n foo.bar").getFirstChild().getFirstChild();
+    Node getprop = parse("\n foo.bar").getFirstGrandchild();
 
     assertNode(getprop).hasType(Token.GETPROP);
     assertNode(getprop).hasLineno(2);
@@ -265,7 +265,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoGetProp2() throws Exception {
-    Node getprop = parse("\n foo.\nbar").getFirstChild().getFirstChild();
+    Node getprop = parse("\n foo.\nbar").getFirstGrandchild();
 
     assertNode(getprop).hasType(Token.GETPROP);
     assertNode(getprop).hasLineno(2);
@@ -278,7 +278,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoGetelem1() throws Exception {
-    Node call = parse("\n foo[123]").getFirstChild().getFirstChild();
+    Node call = parse("\n foo[123]").getFirstGrandchild();
 
     assertNode(call).hasType(Token.GETELEM);
     assertNode(call).hasLineno(2);
@@ -286,7 +286,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoGetelem2() throws Exception {
-    Node call = parse("\n   \n foo()[123]").getFirstChild().getFirstChild();
+    Node call = parse("\n   \n foo()[123]").getFirstGrandchild();
 
     assertNode(call).hasType(Token.GETELEM);
     assertNode(call).hasLineno(3);
@@ -294,7 +294,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoGetelem3() throws Exception {
-    Node call = parse("\n   \n (8 + kl)[123]").getFirstChild().getFirstChild();
+    Node call = parse("\n   \n (8 + kl)[123]").getFirstGrandchild();
 
     assertNode(call).hasType(Token.GETELEM);
     assertNode(call).hasLineno(3);
@@ -311,7 +311,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoHook() throws Exception {
-    Node n = parse("\n a ? 9 : 0").getFirstChild().getFirstChild();
+    Node n = parse("\n a ? 9 : 0").getFirstGrandchild();
 
     assertNode(n).hasType(Token.HOOK);
     assertNode(n).hasLineno(2);
@@ -319,7 +319,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLinenoCharnoArrayLiteral() throws Exception {
-    Node n = parse("\n  [8, 9]").getFirstChild().getFirstChild();
+    Node n = parse("\n  [8, 9]").getFirstGrandchild();
 
     assertNode(n).hasType(Token.ARRAYLIT);
     assertNode(n).hasLineno(2);
@@ -340,7 +340,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
   public void testLinenoCharnoObjectLiteral() throws Exception {
     Node n = parse("\n\n var a = {a:0\n,b :1};")
-        .getFirstChild().getFirstChild().getFirstChild();
+        .getFirstGrandchild().getFirstChild();
 
     assertNode(n).hasType(Token.OBJECTLIT);
     assertNode(n).hasLineno(3);
@@ -429,7 +429,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
   private void testLinenoCharnoBinop(String binop) {
     Node op = parse("var a = 89 " + binop + " 76;").getFirstChild().
-        getFirstChild().getFirstChild();
+        getFirstGrandchild();
 
     assertNode(op).hasLineno(1);
     assertNode(op).hasCharno(8);
@@ -500,7 +500,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testJSDocAttachment3() {
-    Node assignNode = parse("/** @type {number} */goog.FOO = 5;").getFirstChild().getFirstChild();
+    Node assignNode = parse("/** @type {number} */goog.FOO = 5;").getFirstGrandchild();
     assertNode(assignNode).hasType(Token.ASSIGN);
     JSDocInfo info = assignNode.getJSDocInfo();
     assertThat(info).isNotNull();
@@ -645,7 +645,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     Node varNode =
        parse("var a = {/** @type {Object} */ b: c};")
         .getFirstChild();
-    Node objectLitNode = varNode.getFirstChild().getFirstChild();
+    Node objectLitNode = varNode.getFirstGrandchild();
     assertNode(objectLitNode).hasType(Token.OBJECTLIT);
     assertThat(objectLitNode.getFirstChild().getJSDocInfo()).isNotNull();
   }
@@ -680,7 +680,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
             "  return /** @type {string} */ (g(1 /** @desc x */));" +
             "};").getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
-    Node cast = fn.getLastChild().getFirstChild().getFirstChild();
+    Node cast = fn.getLastChild().getFirstGrandchild();
     assertNode(cast).hasType(Token.CAST);
   }
 
@@ -691,7 +691,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
             "  var x = /** @type {string} */ (y);" +
             "};").getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
-    Node cast = fn.getLastChild().getFirstChild().getFirstChild().getFirstChild();
+    Node cast = fn.getLastChild().getFirstGrandchild().getFirstChild();
     assertNode(cast).hasType(Token.CAST);
   }
 
@@ -1675,7 +1675,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testObjectLiteralDoc1() {
     Node n = parse("var x = {/** @type {number} */ 1: 2};");
 
-    Node objectLit = n.getFirstChild().getFirstChild().getFirstChild();
+    Node objectLit = n.getFirstGrandchild().getFirstChild();
     assertNode(objectLit).hasType(Token.OBJECTLIT);
 
     Node number = objectLit.getFirstChild();
@@ -1776,22 +1776,22 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT3;
     Node n = parseError("'one\\\ntwo';",
         "String continuations are not supported in this language mode.");
-    assertThat(n.getFirstChild().getFirstChild().getString()).isEqualTo("onetwo");
+    assertThat(n.getFirstGrandchild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
         + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
-    assertThat(n.getFirstChild().getFirstChild().getString()).isEqualTo("onetwo");
+    assertThat(n.getFirstGrandchild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT6;
     parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
         + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
-    assertThat(n.getFirstChild().getFirstChild().getString()).isEqualTo("onetwo");
+    assertThat(n.getFirstGrandchild().getString()).isEqualTo("onetwo");
   }
 
   public void testStringLiteral() {
     Node n = parse("'foo'");
-    Node stringNode = n.getFirstChild().getFirstChild();
+    Node stringNode = n.getFirstGrandchild();
     assertNode(stringNode).hasType(Token.STRING);
     assertThat(stringNode.getString()).isEqualTo("foo");
   }
@@ -1806,7 +1806,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   private void assertSimpleTemplateLiteral(String expectedContents, String literal) {
-    Node node = testTemplateLiteral(literal).getFirstChild().getFirstChild();
+    Node node = testTemplateLiteral(literal).getFirstGrandchild();
     assertNode(node).hasType(Token.TEMPLATELIT);
     assertThat(node.getChildCount()).isEqualTo(1);
     assertNode(node.getFirstChild()).hasType(Token.STRING);
@@ -1849,7 +1849,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     Node n = parseWarning("`string \\\ncontinuation`",
         "String continuations are not recommended. See"
         + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
-    Node templateLiteral = n.getFirstChild().getFirstChild();
+    Node templateLiteral = n.getFirstGrandchild();
     Node stringNode = templateLiteral.getFirstChild();
     assertNode(stringNode).hasType(Token.STRING);
     assertThat(stringNode.getString()).isEqualTo("string continuation");

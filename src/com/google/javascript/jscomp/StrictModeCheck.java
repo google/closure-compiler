@@ -154,7 +154,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
         return true;
 
       case Token.PARAM_LIST:
-        return n.getParent().getParent().isFunction();
+        return n.getGrandparent().isFunction();
 
       default:
         return false;

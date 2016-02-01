@@ -274,7 +274,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           boolean lhsOfForInLoop =
               (NodeUtil.isForIn(declNode.getParent())
                       && declNode == declNode.getParent().getFirstChild())
-                  || (NodeUtil.isForIn(declNode.getParent().getParent())
+                  || (NodeUtil.isForIn(declNode.getGrandparent())
                       && declNode
                               .getParent()
                               .getParent()

@@ -111,7 +111,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (parent == null || !parent.isFunction()
           || n == parent.getFirstChild()) {
         if (n.isExprResult()) {
-          Node maybeGetProp = n.getFirstChild().getFirstChild();
+          Node maybeGetProp = n.getFirstGrandchild();
           if (maybeGetProp != null
               && (maybeGetProp.matchesQualifiedName("goog.provide")
                   || maybeGetProp.matchesQualifiedName("goog.module"))) {
@@ -454,7 +454,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         // but CommonJS code also sometimes assigns to module.exports inside
         // of more complex expressions.
         if (ref.getParent().isAssign()
-            && !ref.getParent().getParent().isExprResult()
+            && !ref.getGrandparent().isExprResult()
             && !declaredModuleExports) {
           // Adds "var moduleName" to front of the current file.
           script.addChildToFront(
@@ -544,7 +544,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       Node parent = n.getParent();
       return parent.isAssign() && n == parent.getFirstChild() &&
           parent.getParent().isExprResult() &&
-          parent.getParent().getParent().isScript();
+          parent.getGrandparent().isScript();
     }
 
     /**

@@ -588,7 +588,7 @@ public final class ConformanceRules {
 
       Node thisNode = isCallInvocation
           ? callOrNew.getSecondChild()
-          : callOrNew.getFirstChild().getFirstChild();
+          : callOrNew.getFirstGrandchild();
       JSType thisNodeType =
           thisNode.getJSType().restrictByNotNullOrUndefined();
       return thisNodeType.isSubtype(thisType);
@@ -824,7 +824,7 @@ public final class ConformanceRules {
       TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
       JSType methodClassType = registry.getType(r.type);
       Node lhs = isCallInvocation
-          ? n.getFirstChild().getFirstChild()
+          ? n.getFirstGrandchild()
           : n.getFirstChild();
       if (methodClassType != null && lhs.getJSType() != null) {
         JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();

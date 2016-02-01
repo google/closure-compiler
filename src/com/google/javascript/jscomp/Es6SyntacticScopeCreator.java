@@ -128,7 +128,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     } else if (lhs.isArrayPattern() || lhs.isObjectPattern()) {
       for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {
         if (NodeUtil.isNameDeclaration(lhs.getParent()) && child.getNext() == null
-            && !lhs.getParent().getParent().isForOf()) {
+            && !lhs.getGrandparent().isForOf()) {
           // If the pattern is a direct child of the var/let/const node,
           // then its last child is the RHS of the assignment, not a variable to
           // be declared.
@@ -266,7 +266,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
     if (parent == scope.getRootNode() || parent.isScript()
         || (parent.getParent().isCatch()
-            && parent.getParent().getParent() == scope.getRootNode())) {
+            && parent.getGrandparent() == scope.getRootNode())) {
       return true;
     }
 

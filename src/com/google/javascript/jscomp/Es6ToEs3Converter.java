@@ -692,7 +692,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       var.setJSDocInfo(newInfo.build());
     } else if (constructor.getParent().isName()) {
       // Is a newly created VAR node.
-      Node var = constructor.getParent().getParent();
+      Node var = constructor.getGrandparent();
       var.setJSDocInfo(newInfo.build());
     } else if (parent.isAssign()) {
       // The constructor function is the RHS of an assignment.

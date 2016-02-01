@@ -815,7 +815,7 @@ class GlobalTypeInfo implements CompilerPass {
         return false;
       }
       if (qnameNode.isGetProp()) {
-        markAssignNodeAsAnalyzed(qnameNode.getParent().getParent());
+        markAssignNodeAsAnalyzed(qnameNode.getGrandparent());
       }
       NTIScope s;
       if (qnameNode.isName()) {
@@ -2061,7 +2061,7 @@ class GlobalTypeInfo implements CompilerPass {
     private RawNominalType maybeGetOwnerType(Node funNode, Node parent) {
       Preconditions.checkArgument(funNode.isFunction());
       if (parent.isAssign() && parent.getFirstChild().isGetElem()) {
-        Node recv = parent.getFirstChild().getFirstChild();
+        Node recv = parent.getFirstGrandchild();
         if (recv.isGetProp() && recv.getLastChild().getString().equals("prototype")) {
           QualifiedName qname = QualifiedName.fromNode(recv.getFirstChild());
           if (qname != null) {
@@ -2147,7 +2147,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   private static boolean isPrototypePropertyDeclaration(Node n) {
     if (NodeUtil.isExprAssign(n)
-        && isPrototypeProperty(n.getFirstChild().getFirstChild())) {
+        && isPrototypeProperty(n.getFirstGrandchild())) {
       return true;
     }
     if (n.isObjectLit()) {

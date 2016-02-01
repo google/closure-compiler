@@ -53,7 +53,7 @@ public class MatchersTest {
   public void testAllOf() {
     String input = "goog.require('goog.dom');";
     Node root = compileToScriptRoot(getCompiler(input));
-    Node fnCall = root.getFirstChild().getFirstChild();
+    Node fnCall = root.getFirstGrandchild();
     assertTrue(fnCall.isCall());
 
     Matcher notMatcher = Matchers.not(Matchers.anything());
@@ -67,7 +67,7 @@ public class MatchersTest {
   public void testAnyOf() {
     String input = "goog.require('goog.dom');";
     Node root = compileToScriptRoot(getCompiler(input));
-    Node fnCall = root.getFirstChild().getFirstChild();
+    Node fnCall = root.getFirstGrandchild();
     assertTrue(fnCall.isCall());
 
     Matcher notMatcher = Matchers.not(Matchers.anything());
@@ -82,7 +82,7 @@ public class MatchersTest {
 
     String input = "goog.require('goog.dom');";
     Node root = compileToScriptRoot(getCompiler(input));
-    Node fnCall = root.getFirstChild().getFirstChild();
+    Node fnCall = root.getFirstGrandchild();
     assertTrue(fnCall.isCall());
     assertFalse(Matchers.not(Matchers.functionCall()).matches(fnCall, null));
     assertFalse(Matchers.not(Matchers.functionCall("goog.require")).matches(fnCall, null));
@@ -112,7 +112,7 @@ public class MatchersTest {
 
     input = "/** @constructor */ bar.Foo = function() {};";
     root = compileToScriptRoot(getCompiler(input));
-    ctorNode = root.getFirstChild().getFirstChild();
+    ctorNode = root.getFirstGrandchild();
     assertTrue(Matchers.constructor("bar.Foo").matches(ctorNode, null));
 
     input = "/** @constructor */ function Foo() {};";
@@ -126,7 +126,7 @@ public class MatchersTest {
     //     + "  Foo: function() {}\n"
     //     + "};";
     // root = compileToScriptRoot(getCompiler(input));
-    // ctorNode = root.getFirstChild().getFirstChild().getLastChild().getFirstChild();
+    // ctorNode = root.getFirstGrandchild().getLastChild().getFirstChild();
     // assertTrue(Matchers.constructor("ns.Foo").matches(ctorNode, null));
   }
 
@@ -134,7 +134,7 @@ public class MatchersTest {
   public void testNewClass() {
     String input = "new Object()";
     Node root = compileToScriptRoot(getCompiler(input));
-    Node newNode = root.getFirstChild().getFirstChild();
+    Node newNode = root.getFirstGrandchild();
     assertTrue(newNode.isNew());
     assertTrue(Matchers.newClass().matches(newNode, null));
     assertFalse(Matchers.newClass().matches(newNode.getFirstChild(), null));
@@ -152,7 +152,7 @@ public class MatchersTest {
     NodeMetadata metadata = new NodeMetadata(compiler);
     Node root = compileToScriptRoot(compiler);
     Node varNode = root.getFirstChild();
-    Node newNode = varNode.getFirstChild().getFirstChild();
+    Node newNode = varNode.getFirstGrandchild();
     assertTrue(newNode.isNew());
     assertTrue(Matchers.newClass("Foo").matches(newNode, metadata));
     assertFalse(Matchers.newClass("Bar").matches(newNode, metadata));
@@ -163,7 +163,7 @@ public class MatchersTest {
   public void testFunctionCall_any() {
     String input = "goog.base(this)";
     Node root = compileToScriptRoot(getCompiler(input));
-    Node fnCall = root.getFirstChild().getFirstChild();
+    Node fnCall = root.getFirstGrandchild();
     assertTrue(fnCall.isCall());
     assertTrue(Matchers.functionCall().matches(fnCall, null));
   }
@@ -172,7 +172,7 @@ public class MatchersTest {
   public void testFunctionCall_numArgs() {
     String input = "goog.base(this)";
     Node root = compileToScriptRoot(getCompiler(input));
-    Node fnCall = root.getFirstChild().getFirstChild();
+    Node fnCall = root.getFirstGrandchild();
     assertTrue(fnCall.isCall());
     assertTrue(Matchers.functionCallWithNumArgs(1).matches(fnCall, null));
     assertFalse(Matchers.functionCallWithNumArgs(2).matches(fnCall, null));
@@ -186,7 +186,7 @@ public class MatchersTest {
   public void testFunctionCall_static() {
     String input = "goog.require('goog.dom');";
     Node root = compileToScriptRoot(getCompiler(input));
-    Node fnCall = root.getFirstChild().getFirstChild();
+    Node fnCall = root.getFirstGrandchild();
     assertTrue(fnCall.isCall());
     assertTrue(Matchers.functionCall("goog.require").matches(fnCall, null));
     assertFalse(Matchers.functionCall("goog.provide").matches(fnCall, null));
@@ -213,7 +213,7 @@ public class MatchersTest {
   public void testEnum() {
     String input = "/** @enum {string} */ var foo = {BAR: 'baz'};";
     Node root = compileToScriptRoot(getCompiler(input));
-    Node enumNode = root.getFirstChild().getFirstChild();
+    Node enumNode = root.getFirstGrandchild();
     assertTrue(Matchers.enumDefinition().matches(enumNode, null));
   }
 
@@ -222,7 +222,7 @@ public class MatchersTest {
     String input = "/** @enum {string} */ var foo = {BAR: 'baz'};";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    Node enumNode = root.getFirstChild().getFirstChild();
+    Node enumNode = root.getFirstGrandchild();
     assertTrue(Matchers.enumDefinitionOfType("string").matches(
         enumNode, new NodeMetadata(compiler)));
     assertFalse(Matchers.enumDefinitionOfType("number").matches(
@@ -238,7 +238,7 @@ public class MatchersTest {
     String input = "someObj.foo = goog.number();";
     Compiler compiler = getCompiler(externs, input);
     Node root = compileToScriptRoot(compiler);
-    Node assignNode = root.getFirstChild().getFirstChild();
+    Node assignNode = root.getFirstGrandchild();
     assertTrue(
         Matchers.assignmentWithRhs(Matchers.functionCall("goog.number")).matches(assignNode, null));
     assertFalse(
@@ -276,7 +276,7 @@ public class MatchersTest {
     String input = "/** @type {number} */ var foo = 1;";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    Node node = root.getFirstChild().getFirstChild();
+    Node node = root.getFirstGrandchild();
     assertTrue(Matchers.jsDocType("number").matches(node, new NodeMetadata(compiler)));
     assertFalse(Matchers.jsDocType("string").matches(node, new NodeMetadata(compiler)));
   }
@@ -286,7 +286,7 @@ public class MatchersTest {
     String input = "foo.bar.method();";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    Node methodNode = root.getFirstChild().getFirstChild().getFirstChild();
+    Node methodNode = root.getFirstGrandchild().getFirstChild();
     Node barNode = methodNode.getFirstChild();
     assertTrue(Matchers.propertyAccess().matches(methodNode, new NodeMetadata(compiler)));
     assertTrue(Matchers.propertyAccess().matches(barNode, new NodeMetadata(compiler)));
@@ -327,7 +327,7 @@ public class MatchersTest {
     Compiler compiler = getCompiler(externs, input);
     Node root = compileToScriptRoot(compiler);
     // The ASSIGN node
-    Node node = root.getFirstChild().getLastChild().getFirstChild().getFirstChild();
+    Node node = root.getFirstChild().getLastChild().getFirstGrandchild();
     assertTrue(
         Matchers.constructorPropertyDeclaration().matches(node, new NodeMetadata(compiler)));
 

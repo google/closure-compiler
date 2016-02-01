@@ -641,7 +641,7 @@ class TypeInference
         //    where Foo.prototype is a struct and the assignment happens at the
         //    top level and the constructor Foo is defined in the same file.
         boolean staticPropCreation = false;
-        Node maybeAssignStm = getprop.getParent().getParent();
+        Node maybeAssignStm = getprop.getGrandparent();
         if (syntacticScope.isGlobal() &&
             NodeUtil.isPrototypePropertyDeclaration(maybeAssignStm)) {
           String propCreationFilename = maybeAssignStm.getSourceFileName();

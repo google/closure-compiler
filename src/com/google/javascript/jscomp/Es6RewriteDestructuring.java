@@ -372,7 +372,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       forNode = pattern.getParent();
       declarationType = Token.ASSIGN;
     } else {
-      forNode = pattern.getParent().getParent();
+      forNode = pattern.getGrandparent();
       declarationType = pattern.getParent().getType();
       Preconditions.checkState(NodeUtil.isEnhancedFor(forNode));
     }

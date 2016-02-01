@@ -104,7 +104,7 @@ class DeclaredGlobalExternsOnWindow
     }
 
     NodeUtil.setDebugInformation(newNode, node, name);
-    node.getParent().getParent().addChildToBack(IR.exprResult(newNode));
+    node.getGrandparent().addChildToBack(IR.exprResult(newNode));
   }
 
   @Override

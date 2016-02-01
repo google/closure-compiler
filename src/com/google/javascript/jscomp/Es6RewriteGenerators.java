@@ -297,7 +297,7 @@ public final class Es6RewriteGenerators
         Node newCase = IR.caseNode(IR.number(caseNumber), IR.block());
         enclosingBlock = newCase.getLastChild();
         if (oldCase.isTry()) {
-          oldCase = oldCase.getParent().getParent();
+          oldCase = oldCase.getGrandparent();
           if (!currentExceptionContext.isEmpty()) {
             Node newTry =
                 IR.tryCatch(IR.block(), currentExceptionContext.get(0).catchBlock.cloneTree());
@@ -460,7 +460,7 @@ public final class Es6RewriteGenerators
     catchBody.addChildToFront(IR.var(caughtError, IR.name(GENERATOR_ERROR)));
 
     if (enclosingBlock.getParent().isTry()) {
-      enclosingBlock = enclosingBlock.getParent().getParent();
+      enclosingBlock = enclosingBlock.getGrandparent();
     }
 
     enclosingBlock.addChildToBack(IR.tryCatch(IR.block(), newCatch));

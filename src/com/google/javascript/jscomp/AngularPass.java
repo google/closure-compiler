@@ -273,7 +273,7 @@ class AngularPass extends AbstractPostOrderCallback
           }
           fn = n.getFirstChild();
           if (classNode.getParent().isAssign() || classNode.getParent().isName()) {
-            target = classNode.getParent().getParent();
+            target = classNode.getGrandparent();
           } else {
             target = classNode;
           }
@@ -313,7 +313,7 @@ class AngularPass extends AbstractPostOrderCallback
   private static Node getDeclarationRValue(Node n) {
     Preconditions.checkNotNull(n);
     Preconditions.checkArgument(NodeUtil.isNameDeclaration(n));
-    n = n.getFirstChild().getFirstChild();
+    n = n.getFirstGrandchild();
     if (n == null) {
       return null;
     }

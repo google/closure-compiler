@@ -789,7 +789,7 @@ public final class NodeUtil {
     if (n.isVar()
         || n.isName() && n.getParent().isVar()
         || (n.isGetProp() && n.getParent().isAssign()
-            && n.getParent().getParent().isExprResult())
+            && n.getGrandparent().isExprResult())
         || (n.isAssign() && n.getParent().isExprResult())) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       return jsdoc != null && jsdoc.hasEnumParameterType();
@@ -2208,7 +2208,7 @@ public final class NodeUtil {
     switch (n.getType()) {
       case Token.BLOCK:
         // Don't create block scope for top-level synthetic block or the one contained in a CATCH.
-        if (n.getParent() == null || n.getParent().getParent() == null
+        if (n.getParent() == null || n.getGrandparent() == null
             || n.getParent().isCatch()) {
           return false;
         }
@@ -2227,7 +2227,7 @@ public final class NodeUtil {
         return true;
       case Token.BLOCK:
         // Only valid for top level synthetic block
-        if (n.getParent() == null || n.getParent().getParent() == null) {
+        if (n.getParent() == null || n.getGrandparent() == null) {
           return true;
         }
       default:
@@ -2313,7 +2313,7 @@ public final class NodeUtil {
       }
     } else if (node.isCatch()) {
       // The CATCH can can only be removed if there is a finally clause.
-      Node tryNode = node.getParent().getParent();
+      Node tryNode = node.getGrandparent();
       Preconditions.checkState(NodeUtil.hasFinally(tryNode));
       node.detachFromParent();
     } else if (isTryCatchNodeContainer(node)) {
@@ -2429,7 +2429,7 @@ public final class NodeUtil {
   public static boolean isHoistedFunctionDeclaration(Node n) {
     return isFunctionDeclaration(n)
         && (n.getParent().isScript()
-            || n.getParent().getParent().isFunction());
+            || n.getGrandparent().isFunction());
   }
 
   static boolean isBlockScopedFunctionDeclaration(Node n) {
@@ -3181,7 +3181,7 @@ public final class NodeUtil {
    */
   public static boolean isPrototypePropertyDeclaration(Node n) {
     return isExprAssign(n) &&
-        isPrototypeProperty(n.getFirstChild().getFirstChild());
+        isPrototypeProperty(n.getFirstGrandchild());
   }
 
   /**
