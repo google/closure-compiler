@@ -345,10 +345,9 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     member.detachFromParent();
     className = maybePrependCurrNamespace(className);
     Node nameAccess = NodeUtil.newQName(compiler, className);
-    Node prototypeAcess = NodeUtil.newPropertyAccess(compiler, nameAccess, "prototype");
-    Node qualifiedMemberAccess =
-        Es6ToEs3Converter.getQualifiedMemberAccess(compiler, member, nameAccess,
-            prototypeAcess);
+    Node prototypeAccess = NodeUtil.newPropertyAccess(compiler, nameAccess, "prototype");
+    Node qualifiedMemberAccess = getQualifiedMemberAccess(
+        compiler, member, nameAccess, prototypeAccess);
     // Copy type information.
     maybeVisitColonType(member, member);
     maybeAddVisibility(member);
@@ -356,6 +355,24 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
     Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
     return newNode.useSourceInfoIfMissingFromForTree(member);
+  }
+
+  /**
+   * Constructs a Node that represents an access to the given class member, qualified by either the
+   * static or the instance access context, depending on whether the member is static.
+   *
+   * <p><b>WARNING:</b> {@code member} may be modified/destroyed by this method, do not use it
+   * afterwards.
+   */
+  private static Node getQualifiedMemberAccess(AbstractCompiler compiler, Node member,
+      Node staticAccess, Node instanceAccess) {
+    Node context = member.isStaticMember() ? staticAccess : instanceAccess;
+    context = context.cloneTree();
+    if (member.isComputedProp()) {
+      return IR.getelem(context, member.removeFirstChild());
+    } else {
+      return NodeUtil.newPropertyAccess(compiler, context, member.getString());
+    }
   }
 
   private void visitEnum(Node n, Node parent) {

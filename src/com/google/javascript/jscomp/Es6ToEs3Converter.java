@@ -888,14 +888,15 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * <p><b>WARNING:</b> {@code member} may be modified/destroyed by this method, do not use it
    * afterwards.
    */
-  static Node getQualifiedMemberAccess(AbstractCompiler compiler, Node member, Node staticAccess,
-      Node instanceAccess) {
+  private static Node getQualifiedMemberAccess(AbstractCompiler compiler, Node member,
+      Node staticAccess, Node instanceAccess) {
     Node context = member.isStaticMember() ? staticAccess : instanceAccess;
     context = context.cloneTree();
     if (member.isComputedProp()) {
       return IR.getelem(context, member.removeFirstChild());
     } else {
-      return NodeUtil.newPropertyAccess(compiler, context, member.getString());
+      Node methodName = member.getFirstChild().getFirstChild();
+      return IR.getprop(context, IR.string(member.getString()).useSourceInfoFrom(methodName));
     }
   }
 

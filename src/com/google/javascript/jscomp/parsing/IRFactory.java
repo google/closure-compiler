@@ -1230,13 +1230,10 @@ class IRFactory {
       }
 
       Node node = newNode(Token.FUNCTION);
-      if (!isMember) {
-        node.addChildToBack(newName);
-      } else {
-        Node emptyName = newStringNode(Token.NAME, "");
-        setSourceInfo(emptyName, functionTree);
-        node.addChildToBack(emptyName);
+      if (isMember) {
+        newName.setString("");
       }
+      node.addChildToBack(newName);
 
       maybeProcessGenerics(node.getFirstChild(), functionTree.generics);
       node.addChildToBack(transform(functionTree.formalParameterList));
