@@ -1094,6 +1094,12 @@ public final class CommandLineRunnerTest extends TestCase {
         zipFile1, jsFile1, zipFile2);
   }
 
+  public void testInputMultipleJsFilesWithOneJsFlag() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    compileJsFiles("var a;var b;", jsFile1, jsFile2);
+  }
+
   public void testGlobJs1() throws IOException, FlagUsageException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
@@ -1959,7 +1965,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   /**
-   * Helper for compiling from a zip file and checking output string.
+   * Helper for compiling from zip and js files and checking output string.
    * @param expectedOutput string representation of expected output.
    * @param entries entries of flags for zip and js files containing source to compile.
    */
@@ -1968,7 +1974,24 @@ public final class CommandLineRunnerTest extends TestCase {
     for (FlagEntry<JsSourceType> entry : entries) {
       args.add("--" + entry.flag.flagName + "=" + entry.value);
     }
+    compileFiles(expectedOutput);
+  }
 
+  /**
+   * Helper for compiling js files and checking output string, using a single --js flag.
+   * @param expectedOutput string representation of expected output.
+   * @param entries entries of flags for js files containing source to compile.
+   */
+  private void compileJsFiles(String expectedOutput, FlagEntry<JsSourceType>... entries)
+      throws FlagUsageException {
+    args.add("--js");
+    for (FlagEntry<JsSourceType> entry : entries) {
+      args.add(entry.value);
+    }
+    compileFiles(expectedOutput);
+  }
+
+  private void compileFiles(String expectedOutput) throws FlagUsageException {
     String[] argStrings = args.toArray(new String[] {});
 
     CommandLineRunner runner =
