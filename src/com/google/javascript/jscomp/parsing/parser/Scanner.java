@@ -651,14 +651,18 @@ public class Scanner {
     valueBuilder.append(ch);
 
     boolean containsUnicodeEscape = ch == '\\';
+    boolean bracedUnicodeEscape = false;
 
     ch = peekChar();
     while (isIdentifierPart(ch)
         || ch == '\\'
         || (ch == '{' && containsUnicodeEscape)
-        || (ch == '}' && containsUnicodeEscape)) {
+        || (ch == '}' && containsUnicodeEscape && bracedUnicodeEscape)) {
       if (ch == '\\') {
         containsUnicodeEscape = true;
+      }
+      if (containsUnicodeEscape && ch == '{') {
+        bracedUnicodeEscape = true;
       }
       valueBuilder.append(nextChar());
       ch = peekChar();
