@@ -43,7 +43,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -1092,56 +1091,6 @@ public final class CommandLineRunnerTest extends TestCase {
     compileFiles(
         "console.log(\"Hello World\");var a;window.alert(\"Hi Browser\");",
         zipFile1, jsFile1, zipFile2);
-  }
-
-  public void testGlobJs1() throws IOException, FlagUsageException {
-    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
-    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    // Move test2 to the same directory as test1, also make the filename of test2
-    // lexicographically larger than test1
-    new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
-    String glob = new File(jsFile1.value).getParent() + File.separator + "**.js";
-    compileFiles(
-        "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
-  }
-
-  public void testGlobJs2() throws IOException, FlagUsageException {
-    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
-    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
-    String glob = new File(jsFile1.value).getParent() + File.separator + "*test*.js";
-    compileFiles(
-        "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
-  }
-
-  public void testGlobJs3() throws IOException, FlagUsageException {
-    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
-    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "test2.js"));
-    // Make sure test2.js is excluded from the inputs when the exclusion
-    // comes after the inclusion
-    String glob1 = new File(jsFile1.value).getParent() + File.separator + "**.js";
-    String glob2 = "!" + new File(jsFile1.value).getParent() + File.separator + "**test2.js";
-    compileFiles(
-        "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
-        new FlagEntry<>(JsSourceType.JS, glob2));
-  }
-
-  public void testGlobJs4() throws IOException, FlagUsageException {
-    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
-    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "test2.js"));
-    // Make sure test2.js is excluded from the inputs when the exclusion
-    // comes before the inclusion
-    String glob1 = "!" + new File(jsFile1.value).getParent() + File.separator + "**test2.js";
-    String glob2 = new File(jsFile1.value).getParent() + File.separator + "**.js";
-    compileFiles(
-        "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
-        new FlagEntry<>(JsSourceType.JS, glob2));
   }
 
   public void testGlobJs1() throws IOException, FlagUsageException {
