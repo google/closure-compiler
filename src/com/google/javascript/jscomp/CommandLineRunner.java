@@ -1491,8 +1491,11 @@ public class CommandLineRunner extends
         File matchedFile = new File(pattern);
         if (matchedFile.isDirectory()) {
           matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs, excludes);
-        } else if (!excludes.contains(pattern)) {
-          allJsInputs.add(pattern);
+        } else {
+          String pathString = Paths.get(pattern).normalize().toString();
+          if (!excludes.contains(pathString)) {
+            allJsInputs.add(pathString);
+          }
         }
       } else {
         matchPaths(pattern, allJsInputs, excludes);
@@ -1511,34 +1514,29 @@ public class CommandLineRunner extends
       pattern = pattern.substring(1);
     }
 
-    if (File.separator.equals("\\")) {
-      pattern = pattern.replace('\\', '/');
-    }
+    String separator = File.separator.equals("\\") ? "\\\\" : File.separator;
 
     // Split the pattern into two pieces: the globbing part
     // and the non-globbing prefix.
-    List<String> patternParts = Splitter.on('/').splitToList(pattern);
+    List<String> patternParts = Splitter.on(File.separator).splitToList(pattern);
     String prefix = ".";
     for (int i = 0; i < patternParts.size(); i++) {
       if (patternParts.get(i).contains("*")) {
-        if (i == 0) {
-          break;
-        } else {
-          prefix = Joiner.on(File.separator).join(patternParts.subList(0, i));
-          pattern = Joiner.on(File.separator).join(patternParts.subList(i, patternParts.size()));
+        if (i > 0) {
+          prefix = Joiner.on(separator).join(patternParts.subList(0, i));
+          pattern = Joiner.on(separator).join(patternParts.subList(i, patternParts.size()));
         }
+        break;
       }
     }
 
-    final PathMatcher matcher = fs.getPathMatcher("glob:" + (prefix.equals(".")
-        ? pattern
-        : prefix + File.separator + pattern));
+    final PathMatcher matcher = fs.getPathMatcher("glob:" + prefix + separator + pattern);
     java.nio.file.Files.walkFileTree(
         fs.getPath(prefix), new SimpleFileVisitor<Path>() {
           @Override public FileVisitResult visitFile(
               Path p, BasicFileAttributes attrs) {
-            if (matcher.matches(p.normalize())) {
-              String pathString = p.toString();
+            if (matcher.matches(p) || matcher.matches(p.normalize())) {
+              String pathString = p.normalize().toString();
               if (remove) {
                 excludes.add(pathString);
                 allJsInputs.remove(pathString);
