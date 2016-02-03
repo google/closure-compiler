@@ -2199,6 +2199,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("var \\u00fb");
     parse("Js\\u00C7ompiler");
     parse("Js\\u0043ompiler");
+    parse("if(true){foo=\\u03b5}");
   }
 
   public void testUnicodePointEscapeInIdentifiers() {
@@ -2218,6 +2219,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testInvalidUnicodePointEscapeInIdentifiers() {
     parseError("var \\u{defg", "Invalid escape sequence");
     parseError("var \\u{defgRestOfIdentifier", "Invalid escape sequence");
+    parseError("\\u03b5}", "primary expression expected");
     parseError("var \\u{DEFG}", "Invalid escape sequence");
     parseError("Js\\u{}ompiler", "Invalid escape sequence");
     // Legal unicode but invalid in identifier
