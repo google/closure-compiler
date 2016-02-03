@@ -16,13 +16,11 @@
 
 package com.google.javascript.jscomp.deps;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -38,8 +36,7 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   /** A list of required symbols. */
   private final List<String> requires;
 
-  /** A map of flags required to load this file. */
-  private final ImmutableMap<String, String> loadFlags;
+  private final boolean isModule;
 
   /** The path of the file relative to closure. */
   private final String srcPathRelativeToClosure;
@@ -47,16 +44,9 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   /** The path to the file from which we extracted the dependency information.*/
   private final String pathOfDefiningFile;
 
-  // TODO(sdh): migrate callers away and deprecate this constructor
-  public SimpleDependencyInfo(
-      String srcPathRelativeToClosure, String pathOfDefiningFile,
-      List<String> provides, List<String> requires, boolean isModule) {
-    this(srcPathRelativeToClosure, pathOfDefiningFile, provides, requires, loadFlags(isModule));
-  }
-
   /**
    * Constructs a DependencyInfo object with the given list of provides and
-   * requires. This does *not* copy the given collections, but uses them directly.
+   * requires. This does *not* copy the given lists, but uses them directly.
    *
    * @param srcPathRelativeToClosure The closure-relative path of the file
    *     associated with this DependencyInfo.
@@ -64,16 +54,15 @@ public final class SimpleDependencyInfo implements DependencyInfo {
    *     information was extracted.
    * @param provides List of provided symbols.
    * @param requires List of required symbols.
-   * @param loadFlags Map of file-loading information.
    */
   public SimpleDependencyInfo(
       String srcPathRelativeToClosure, String pathOfDefiningFile,
-      List<String> provides, List<String> requires, Map<String, String> loadFlags) {
+      List<String> provides, List<String> requires, boolean isModule) {
     this.srcPathRelativeToClosure = srcPathRelativeToClosure;
     this.pathOfDefiningFile = pathOfDefiningFile;
     this.provides = provides;
     this.requires = requires;
-    this.loadFlags = ImmutableMap.copyOf(loadFlags);
+    this.isModule = isModule;
   }
 
   @Override
@@ -87,17 +76,8 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   }
 
   @Override
-  public ImmutableMap<String, String> getLoadFlags() {
-    return loadFlags;
-  }
-
-  private static Map<String, String> loadFlags(boolean isModule) {
-    return isModule ? ImmutableMap.of("module", "goog") : ImmutableMap.<String, String>of();
-  }
-
-  @Override
   public boolean isModule() {
-    return "goog".equals(getLoadFlags().get("module"));
+    return this.isModule;
   }
 
   @Override
@@ -121,19 +101,19 @@ public final class SimpleDependencyInfo implements DependencyInfo {
         Objects.equals(other.pathOfDefiningFile, pathOfDefiningFile) &&
         Objects.equals(other.requires, this.requires) &&
         Objects.equals(other.provides, this.provides) &&
-        Objects.equals(other.loadFlags, this.loadFlags);
+        other.isModule == this.isModule;
   }
 
   @Override
   public String toString() {
     return SimpleFormat.format("DependencyInfo(relativePath='%1$s', path='%2$s', "
-        + "provides=%3$s, requires=%4$s, loadFlags=%5$s)", srcPathRelativeToClosure,
-        pathOfDefiningFile, provides, requires, loadFlags);
+        + "provides=%3$s, requires=%4$s, module=%5$b)", srcPathRelativeToClosure,
+        pathOfDefiningFile, provides, requires, isModule);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(provides, requires,
-        srcPathRelativeToClosure, pathOfDefiningFile, loadFlags);
+        srcPathRelativeToClosure, pathOfDefiningFile, isModule);
   }
 }
