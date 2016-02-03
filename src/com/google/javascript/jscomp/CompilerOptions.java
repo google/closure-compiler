@@ -2354,6 +2354,13 @@ public class CompilerOptions {
   }
 
   /**
+   * Sets whether to rewrite polyfills.
+   */
+  public void setRewritePolyfills(boolean rewritePolyfills) {
+    this.rewritePolyfills = rewritePolyfills;
+  }
+
+  /**
    * Sets list of libraries to always inject, even if not needed.
    */
   public void setForceLibraryInjection(Iterable<String> libraries) {
