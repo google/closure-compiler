@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Collection;
@@ -154,6 +156,17 @@ public final class DependencyOptions implements Serializable {
 
   Collection<ModuleIdentifier> getEntryPoints() {
     return entryPoints;
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("sortDependencies", sortDependencies)
+        .add("pruneDependencies", pruneDependencies)
+        .add("dropMoochers", dropMoochers)
+        .add("es6ModuleOrder", es6ModuleOrder)
+        .add("entryPoints", entryPoints)
+        .toString();
   }
 
   /**
