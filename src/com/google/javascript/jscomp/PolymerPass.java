@@ -43,7 +43,7 @@ import java.util.Set;
  * Rewrites "Polymer({})" calls into a form that is suitable for type checking and dead code
  * elimination. Also ensures proper format and types.
  *
- * <p>Only works with Polymer version: 0.8
+ * <p>Only works with Polymer version 0.8 and above.
  *
  * @author jlklein@google.com (Jeremy Klein)
  */
@@ -126,7 +126,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   /**
-   * Finds the externs for the PolymerElement base class and all of its properties.
+   * Finds the externs for the PolymerElement base class and all of its properties in the externs.
    */
   private static class FindPolymerExterns extends AbstractPostOrderCallback {
     private Node polymerElementExterns;
@@ -418,8 +418,13 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
     overwriteMembersIfPresent(allProperties, extractProperties(descriptor));
 
-    ClassDefinition def = new ClassDefinition(target, descriptor, classInfo,
-        new MemberDefinition(ctorInfo, null, constructor), nativeBaseElement, allProperties,
+    ClassDefinition def = new ClassDefinition(
+        target,
+        descriptor,
+        classInfo,
+        new MemberDefinition(ctorInfo, null, constructor),
+        nativeBaseElement,
+        allProperties,
         behaviors);
     return def;
   }
@@ -561,6 +566,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     return membersToCopy.build();
   }
 
+  /**
+   * Extracts a list of {@link MemberDefinition}s for the {@code properties} block of the given
+   * descriptor Object literal.
+   */
   private static List<MemberDefinition> extractProperties(Node descriptor) {
     Node properties = NodeUtil.getFirstPropMatchingKey(descriptor, "properties");
     if (properties == null) {
@@ -575,6 +584,13 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     return members.build();
   }
 
+  /**
+   * Rewrites a given call to Polymer({}) to a set of declarations and assignments which can be
+   * understood by the compiler.
+   *
+   * @param exprRoot The root expression of the call to Polymer({}).
+   * @param cls The extracted {@link ClassDefinition} for the Polymer element created by this call.
+   */
   private void rewritePolymerClass(Node exprRoot, final ClassDefinition cls, NodeTraversal t) {
     // Add {@code @lends} to the object literal.
     Node call = exprRoot.getFirstChild();
@@ -1047,7 +1063,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   /**
-   * @return Whether the call represents a call to Polymer.
+   * @return Whether the call represents a call to the Polymer function.
    */
   private static boolean isPolymerCall(Node value) {
     return value != null && value.isCall() && value.getFirstChild().matchesQualifiedName("Polymer");

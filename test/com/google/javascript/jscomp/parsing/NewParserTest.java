@@ -731,7 +731,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("/** @param {string} x */ let f = function() {};");
   }
 
-  // Tests that JSDoc gets attached to export nodes, and there are no warnings.
+  // Tests that JSDoc gets attached to the children of export nodes, and there are no warnings.
   // See https://github.com/google/closure-compiler/issues/781
   public void testJSDocAttachment22() {
     mode = LanguageMode.ECMASCRIPT6;
@@ -741,8 +741,9 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     Node export = n.getFirstChild();
 
     assertNode(export).hasType(Token.EXPORT);
-    assertThat(export.getJSDocInfo()).isNotNull();
-    assertThat(export.getJSDocInfo().hasParameter("x")).isTrue();
+    assertThat(export.getJSDocInfo()).isNull();
+    assertThat(export.getFirstChild().getJSDocInfo()).isNotNull();
+    assertThat(export.getFirstChild().getJSDocInfo().hasParameter("x")).isTrue();
   }
 
   public void testInlineJSDocAttachment1() {

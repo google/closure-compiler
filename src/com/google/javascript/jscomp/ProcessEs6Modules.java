@@ -230,7 +230,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
 
       if (name != null) {
         Node decl = child.cloneTree();
-        decl.setJSDocInfo(export.getJSDocInfo());
+        decl.setJSDocInfo(child.getJSDocInfo());
         parent.replaceChild(export, decl);
         exportMap.put("default", new NameNodePair(name, child));
       } else {
@@ -308,12 +308,10 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           if (declaration.isClass()) {
             classes.add(name);
           }
-          if (export.getJSDocInfo() != null && export.getJSDocInfo().hasTypedefType()) {
+          if (declaration.getJSDocInfo() != null && declaration.getJSDocInfo().hasTypedefType()) {
             typedefs.add(name);
           }
         }
-        declaration.setJSDocInfo(export.getJSDocInfo());
-        export.setJSDocInfo(null);
         parent.replaceChild(export, declaration.detachFromParent());
       }
       compiler.reportCodeChange();

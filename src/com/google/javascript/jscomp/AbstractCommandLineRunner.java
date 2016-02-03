@@ -2552,6 +2552,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       }
       return false;
     }
+
+    @Override
+    public int hashCode() {
+      return flag.hashCode() + value.hashCode();
+    }
   }
 
   /**
