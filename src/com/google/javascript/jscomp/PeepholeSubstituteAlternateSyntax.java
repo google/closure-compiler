@@ -186,33 +186,6 @@ class PeepholeSubstituteAlternateSyntax
         break;
       }
 
-      case "Number": {
-        // Fold Number(a) to +a
-        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-number-constructor-number-value
-        // and
-        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-unary-plus-operator
-        int paramCount = n.getChildCount() - 1;
-        if (paramCount == 0 || paramCount == 1) {
-          Node replacement;
-          if (paramCount == 0) {
-            // replace "Number()" with "0"
-            replacement = IR.number(0);
-          } else {
-            Node value = n.getLastChild().detachFromParent();
-            if (NodeUtil.isNumericResult(value)) {
-              // If it is already a number do nothing.
-              replacement = value;
-            } else {
-              // Replace it with a "+value"
-              replacement =  IR.pos(value);
-            }
-          }
-          n.getParent().replaceChild(n, replacement);
-          reportCodeChange();
-        }
-        break;
-      }
-
       case "String": {
         // Fold String(a) to '' + (a) on immutable literals,
         // which allows further optimizations
