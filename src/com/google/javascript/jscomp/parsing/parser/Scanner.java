@@ -652,18 +652,31 @@ public class Scanner {
 
     boolean containsUnicodeEscape = ch == '\\';
     boolean bracedUnicodeEscape = false;
+    int unicodeEscapeLen = (ch == '\\' ? 1 : 0);
 
     ch = peekChar();
     while (isIdentifierPart(ch)
         || ch == '\\'
-        || (ch == '{' && containsUnicodeEscape)
-        || (ch == '}' && containsUnicodeEscape && bracedUnicodeEscape)) {
+        || (ch == '{' && unicodeEscapeLen == 2)
+        || (ch == '}' && bracedUnicodeEscape)) {
       if (ch == '\\') {
         containsUnicodeEscape = true;
       }
-      if (containsUnicodeEscape && ch == '{') {
+      // Update length of current Unicode escape.
+      if (ch == '\\' || unicodeEscapeLen > 0) {
+        unicodeEscapeLen ++;
+      }
+      // Enter Unicode point escape.
+      if (ch == '{') {
         bracedUnicodeEscape = true;
       }
+      // Exit Unicode escape
+      if (ch == '}' || (unicodeEscapeLen >= 6 && !bracedUnicodeEscape)) {
+        bracedUnicodeEscape = false;
+        unicodeEscapeLen = 0;
+      }
+
+      // Add character to token
       valueBuilder.append(nextChar());
       ch = peekChar();
     }
