@@ -1182,6 +1182,59 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "/** @type {(Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n");
   }
 
+  public void testClosureLibraryTypeAnnotationFailures() {
+    // Some cases which started failing between June 2015 and Jan 2016 when printing Closure Library.
+
+    // See "e.g." in TypedCodeGenerator: 
+    // goog.removeHashCode = goog.removeUid;   (base.js)
+    // goog.now = goog.TRUSTED_SITE && Date.now || function() {...   (goog.base)
+    // this.boundTick_ = goog.bind(this.tick_, this);   (timer.js)
+    // goog.math.Vec2.prototype.scale = (goog.math.Coordinate.prototype.scale);   (vec2.js)
+    
+    // These currently are emitted without any types. If this is fixed, these expected outputs
+    // will need revising.
+
+    assertTypeAnnotations(
+        "/** @param {Object} obj */goog.removeUid = function(obj) {};" +
+        "/** @param {Object} obj The object to remove the field from. */goog.removeHashCode = goog.removeUid;",
+        "/**\n" +
+        " * @param {(Object|null)} obj\n" +
+        " * @return {undefined}\n" +
+        " */\n" +
+        "goog.removeUid = function(obj) {\n" +
+        "};\n" +
+        "goog.removeHashCode = goog.removeUid;\n");
+
+    assertTypeAnnotations(
+        "goog.TRUSTED_SITE = true;" +
+        "goog.now = goog.TRUSTED_SITE && Date.now || function() {}",
+        "goog.TRUSTED_SITE = true;\n" +
+        "goog.now = goog.TRUSTED_SITE && Date.now || function() {\n" +
+        "};\n");
+    
+    assertTypeAnnotations(
+        "this.tick_ = function() {};" +
+        "this.boundTick_ = goog.bind(this.tick_, this);",
+        "/**\n" +
+        " * @return {undefined}\n" +
+        " */\n" +
+        "this.tick_ = function() {\n" +
+        "};\n" +
+        "this.boundTick_ = goog.bind(this.tick_, this);\n");
+    
+    // cast similar to vec2.js:
+    assertTypeAnnotations(
+        "x = function() {};" +
+        "y = /** @type {Function} */(x)",
+        "/**\n" +
+        " * @return {undefined}\n" +
+        " */\n" +
+        "x = function() {\n" +
+        "};\n" +
+        "/** @type {(Function|null)} */\n" +
+        "y = (x);\n");
+  }
+
   public void testDeprecatedAnnotationIncludesNewline() {
     String js = LINE_JOINER.join(
         "/**@deprecated See {@link replacementClass} for more details.",

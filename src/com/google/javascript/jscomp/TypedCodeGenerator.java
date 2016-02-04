@@ -118,6 +118,14 @@ class TypedCodeGenerator extends CodeGenerator {
     //     NAME param1
     //     NAME param2
     if (fnNode != null) {
+      if (!fnNode.isFunction()) {
+        // Temporarily ignore failures when using TypedCodeGenerator with ClosureLibrary, e.g.: 
+        // goog.removeHashCode = goog.removeUid;   (base.js)
+        // goog.now = goog.TRUSTED_SITE && Date.now || function() {...   (goog.base)
+        // this.boundTick_ = goog.bind(this.tick_, this);   (timer.js)
+        // goog.math.Vec2.prototype.scale = (goog.math.Coordinate.prototype.scale);   (vec2.js)
+        return ""; // don't annotate
+      }
       Node paramNode = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
 
       // Param types
