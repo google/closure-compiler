@@ -160,13 +160,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   private final Set<String> knownClosureSubclasses = new HashSet<>();
 
-  private final List<UnrecognizedRequire> unrecognizedRequires =
-       new ArrayList<>();
+  private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
   private final Set<String> exportedVariables = new HashSet<>();
   private final CheckLevel requiresLevel;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final List<Node> defineCalls = new ArrayList<>();
   private final boolean preserveGoogRequires;
+
+  private final List<Node> requiresToBeRemoved = new ArrayList<>();
 
   ProcessClosurePrimitives(AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
@@ -213,6 +214,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         compiler.report(JSError.make(
             r.requireNode, requiresLevel, error, r.namespace));
       }
+    }
+
+    for (Node closureRequire : requiresToBeRemoved) {
+      closureRequire.detachFromParent();
+      compiler.reportCodeChange();
     }
   }
 
@@ -423,8 +429,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // allow broken requires to be preserved by the first run to
       // let them be caught in the subsequent run.
       if (!preserveGoogRequires && (provided != null || requiresLevel.isOn())) {
-        parent.detachFromParent();
-        compiler.reportCodeChange();
+        requiresToBeRemoved.add(parent);
       }
     }
   }
