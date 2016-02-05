@@ -112,16 +112,26 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   }
 
   private void checkMissingJsDoc(NodeTraversal t, Node function) {
-    if (t.inGlobalScope()
-        && (NodeUtil.isFunctionDeclaration(function)
-            || NodeUtil.isNameDeclaration(function.getGrandparent())
-            || function.getParent().isAssign())) {
+    if (isFunctionThatShouldHaveJsDoc(t, function)) {
       String name = NodeUtil.getName(function);
       // Don't warn for test functions, setUp, tearDown, etc.
       if (name == null || !ExportTestFunctions.isTestFunction(name)) {
         t.report(function, MISSING_JSDOC);
       }
     }
+  }
+
+  /**
+   * Whether the given function should have JSDoc. True if it's a function declared
+   * in the global scope, or a method on a class which is declared in the global scope.
+   */
+  private boolean isFunctionThatShouldHaveJsDoc(NodeTraversal t, Node function) {
+    return t.inGlobalScope()
+        && (NodeUtil.isFunctionDeclaration(function)
+            || NodeUtil.isNameDeclaration(function.getGrandparent())
+            || function.getParent().isAssign()
+            || (function.getParent().isMemberFunctionDef()
+                && function.getGrandparent().isClassMembers()));
   }
 
   private void checkParams(NodeTraversal t, Node function, JSDocInfo jsDoc) {

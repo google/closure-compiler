@@ -56,6 +56,8 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testWarning("const f = function() {}", MISSING_JSDOC);
     testWarning("foo.bar = function() {}", MISSING_JSDOC);
     testWarning("Foo.prototype.bar = function() {}", MISSING_JSDOC);
+    testWarning("class Foo { bar() {} }", MISSING_JSDOC);
+    testWarning("var Foo = class { bar() {} };", MISSING_JSDOC);
 
     testSame("/** @return {string} */ function f() {}");
     testSame("/** @return {string} */ var f = function() {}");
@@ -63,6 +65,8 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @return {string} */ const f = function() {}");
     testSame("/** @return {string} */ foo.bar = function() {}");
     testSame("/** @return {string} */ Foo.prototype.bar = function() {}");
+    testSame("class Foo { /** @return {string} */ bar() {} }");
+    testSame("var Foo = class { /** @return {string} */ bar() {} };");
   }
 
   public void testMissingJsDoc_noWarningIfInlineJsDocIsPresent() {
@@ -73,6 +77,8 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("const f = function(/** string */ x) {}");
     testSame("foo.bar = function(/** string */ x) {}");
     testSame("Foo.prototype.bar = function(/** string */ x) {}");
+    testSame("class Foo { bar(/** string */ x) {} }");
+    testSame("var Foo = class { bar(/** string */ x) {} };");
   }
 
   public void testMissingJsDoc_noWarningIfNotTopLevel() {
@@ -81,6 +87,8 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame(inIIFE("let f = function() {}"));
     testSame(inIIFE("const f = function() {}"));
     testSame(inIIFE("foo.bar = function() {}"));
+    testSame(inIIFE("class Foo { bar() {} }"));
+    testSame(inIIFE("var Foo = class { bar() {} };"));
 
     testSame("myArray.forEach(function(elem) { alert(elem); });");
 
