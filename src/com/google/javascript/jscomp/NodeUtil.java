@@ -2417,7 +2417,7 @@ public final class NodeUtil {
   /**
    * see {@link #isClassDeclaration}
    */
-  static boolean isClassDeclaration(Node n) {
+  public static boolean isClassDeclaration(Node n) {
     return n.isClass() && isDeclarationParent(n.getParent());
   }
 
