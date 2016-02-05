@@ -24,7 +24,7 @@
 
 /**
  * @param {string} selectors
- * @return {Element}
+ * @return {?Element}
  * @override
  * @nosideeffects
  */
@@ -32,7 +32,7 @@ Document.prototype.querySelector = function(selectors) {};
 
 /**
  * @param {string} selectors
- * @return {!NodeList}
+ * @return {!NodeList<!Element>}
  * @override
  * @nosideeffects
  */
@@ -40,7 +40,7 @@ Document.prototype.querySelectorAll = function(selectors) {};
 
 /**
  * @param {string} selectors
- * @return {Element}
+ * @return {?Element}
  * @override
  * @nosideeffects
  */
@@ -48,7 +48,7 @@ Element.prototype.querySelector = function(selectors) {};
 
 /**
  * @param {string} selectors
- * @return {!NodeList}
+ * @return {!NodeList<!Element>}
  * @override
  * @nosideeffects
  */
@@ -65,7 +65,7 @@ Element.prototype.matches = function(selectors) {};
 
 /**
  * @param {string} selectors
- * @param {(Node|NodeList)=} refNodes
+ * @param {(Node|NodeList<?>)=} refNodes
  * @return {boolean}
  * @nosideeffects
  */

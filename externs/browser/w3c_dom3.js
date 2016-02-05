@@ -45,6 +45,7 @@ DOMException.TYPE_MISMATCH_ERR = 17;
 
 /**
  * @constructor
+ * @implements {IArrayLike<string>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMStringList
  */
 function DOMStringList() {}
@@ -73,6 +74,7 @@ DOMStringList.prototype.item = function(index) {};
 
 /**
  * @constructor
+ * @implements {IArrayLike<string>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList
  */
 function NameList() {}
@@ -118,6 +120,7 @@ NameList.prototype.getNamespaceURI = function(index) {};
 
 /**
  * @constructor
+ * @implements {IArrayLike<!DOMImplementation>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMImplementationList
  */
 function DOMImplementationList() {}
@@ -416,7 +419,7 @@ Node.prototype.setUserData = function(key, data, handler) {};
 
 /**
  * @param {string} query
- * @return {Node}
+ * @return {?Element}
  * @see http://www.w3.org/TR/selectors-api/#queryselector
  * @nosideeffects
  */
@@ -424,7 +427,7 @@ Node.prototype.querySelector = function(query) {};
 
 /**
  * @param {string} query
- * @return {!NodeList}
+ * @return {!NodeList<!Element>}
  * @see http://www.w3.org/TR/selectors-api/#queryselectorall
  * @nosideeffects
  */
@@ -475,7 +478,7 @@ Element.prototype.getAttributeNS = function(namespaceURI, localName) {};
 /**
  * @param {string} namespaceURI
  * @param {string} localName
- * @return {!NodeList}
+ * @return {!NodeList<!Element>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-A6C90942
  * @nosideeffects
  */

@@ -76,6 +76,7 @@ StyleSheet.prototype.media;
 
 /**
  * @constructor
+ * @implements {IArrayLike<!StyleSheet>}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-StyleSheetList
  */
 function StyleSheetList() {}
@@ -95,6 +96,7 @@ StyleSheetList.prototype.item = function(index) {};
 
 /**
  * @constructor
+ * @implements {IArrayLike<!MediaList>}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-MediaList
  */
 function MediaList() {}
@@ -177,6 +179,7 @@ CSSStyleSheet.prototype.deleteRule = function(index) {};
 
 /**
  * @constructor
+ * @implements {IArrayLike<!CSSRule>}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRuleList
  */
 function CSSRuleList() {}
@@ -799,6 +802,7 @@ CSSPrimitiveValue.prototype.setStringValue = function(stringType, stringValue) {
 /**
  * @constructor
  * @extends {CSSValue}
+ * @implements {IArrayLike<!CSSValue>}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSValueList
  */
 function CSSValueList() {}
@@ -2293,6 +2297,7 @@ MouseEvent.prototype.offsetY;
 /**
  * @constructor
  * @see http://www.w3.org/TR/cssom-view/#the-clientrectlist-interface
+ * @implements {IArrayLike<!ClientRect>}
  */
 function ClientRectList() {}
 

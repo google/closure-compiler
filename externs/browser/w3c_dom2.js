@@ -22,12 +22,13 @@
  *  http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
  *
  * @externs
- * @author stevey@google.com (Steve Yegge)
  */
-// All the provided definitions have been type annotated.
 
 /**
  * @constructor
+ * @implements {IObject<(string|number),T>}
+ * @implements {IArrayLike<T>}
+ * @template T
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-75708506
  */
 function HTMLCollection() {}
@@ -40,7 +41,7 @@ HTMLCollection.prototype.length;
 
 /**
  * @param {number} index
- * @return {Node}
+ * @return {T|null}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-33262535
  * @nosideeffects
  */
@@ -48,7 +49,7 @@ HTMLCollection.prototype.item = function(index) {};
 
 /**
  * @param {string} name
- * @return {?Node}
+ * @return {T|null}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-21069976
  * @nosideeffects
  */
@@ -56,6 +57,8 @@ HTMLCollection.prototype.namedItem = function(name) {};
 
 /**
  * @constructor
+ * @implements {IObject<(string|number),HTMLOptionElement>}
+ * @implements {IArrayLike<!HTMLOptionElement>}
  * @see http://www.w3.org/TR/DOM-Level-2-HTML/html.html#HTMLOptionsCollection
  */
 function HTMLOptionsCollection() {}
@@ -112,31 +115,31 @@ HTMLDocument.prototype.URL;
 HTMLDocument.prototype.body;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLImageElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-90379117
  */
 HTMLDocument.prototype.images;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLAppletElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-85113862
  */
 HTMLDocument.prototype.applets;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<(!HTMLAnchorElement|!HTMLAreaElement)>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-7068919
  */
 HTMLDocument.prototype.links;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLFormElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-1689064
  */
 HTMLDocument.prototype.forms;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLAnchorElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-7577272
  */
 HTMLDocument.prototype.anchors;
@@ -179,7 +182,7 @@ HTMLDocument.prototype.writeln = function(text) {};
 
 /**
  * @param {string} elementName
- * @return {!NodeList}
+ * @return {!NodeList<!Element>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-71555259
  * @override
  * @nosideeffects
@@ -651,7 +654,7 @@ HTMLBodyElement.prototype.vLink;
 function HTMLFormElement() {}
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-76728479
  */
 HTMLFormElement.prototype.elements;
@@ -1926,7 +1929,7 @@ HTMLAppletElement.prototype.width;
 function HTMLMapElement() {}
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLAreaElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-71838730
  */
 HTMLMapElement.prototype.areas;
@@ -2091,7 +2094,7 @@ HTMLTableElement.prototype.cellSpacing;
 HTMLTableElement.prototype.frame;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLTableRowElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-6156016
  */
 HTMLTableElement.prototype.rows;
@@ -2109,7 +2112,7 @@ HTMLTableElement.prototype.rules;
 HTMLTableElement.prototype.summary;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLTableSectionElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-63206416
  */
 HTMLTableElement.prototype.tBodies;
@@ -2264,7 +2267,7 @@ HTMLTableSectionElement.prototype.ch;
 HTMLTableSectionElement.prototype.chOff;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLTableRowElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-52092650
  */
 HTMLTableSectionElement.prototype.rows;
@@ -2309,7 +2312,7 @@ HTMLTableRowElement.prototype.align;
 HTMLTableRowElement.prototype.bgColor;
 
 /**
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLTableCellElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-67349879
  */
 HTMLTableRowElement.prototype.cells;

@@ -142,6 +142,7 @@ Document.prototype.createTouch = function(view, target, identifier, pageX,
  * The TouchList class is used to represent a collection of Touch objects.
  * @see http://www.w3.org/TR/touch-events/#touchlist-interface
  * @constructor
+ * @implements {IArrayLike<!Touch>}
  */
 function TouchList() {}
 

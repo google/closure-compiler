@@ -227,7 +227,7 @@ Node.prototype.xml;
 
 /**
  * @param {string} expression An XPath expression.
- * @return {NodeList}
+ * @return {!NodeList<!Node>}
  * @see http://msdn.microsoft.com/en-us/library/ms754523(VS.85).aspx
  * @nosideeffects
  */

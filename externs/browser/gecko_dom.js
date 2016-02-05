@@ -313,13 +313,13 @@ Document.prototype.alinkColor;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.anchors
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLAnchorElement>}
  */
 Document.prototype.anchors;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.applets
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLAppletElement>}
  */
 Document.prototype.applets;
 /** @type {boolean} */ Document.prototype.async;
@@ -360,7 +360,7 @@ Document.prototype.domain;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.embeds
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLEmbedElement>}
  */
 Document.prototype.embeds;
 
@@ -374,12 +374,15 @@ Document.prototype.fgColor;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.forms
- * @type {HTMLCollection}
+ * @type {HTMLCollection<!HTMLFormElement>}
  */
 Document.prototype.forms;
 
-/** @type {number} */ Document.prototype.height;
-/** @type {HTMLCollection} */ Document.prototype.images;
+/** @type {number} */
+Document.prototype.height;
+
+/** @type {HTMLCollection<!HTMLImageElement>} */
+Document.prototype.images;
 
 /**
  * @type {string}
@@ -395,7 +398,7 @@ Document.prototype.linkColor;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.links
- * @type {HTMLCollection}
+ * @type {HTMLCollection<(!HTMLAreaElement|!HTMLAnchorElement)>}
  */
 Document.prototype.links;
 
@@ -485,7 +488,7 @@ Document.prototype.getElementById = function(s) {};
 
 /**
  * @param {string} name
- * @return {!NodeList}
+ * @return {!NodeList<!Element>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/DOM/document.getElementsByClassName
  */
@@ -493,7 +496,7 @@ Document.prototype.getElementsByClassName = function(name) {};
 
 /**
  * @param {string} name
- * @return {!NodeList}
+ * @return {!NodeList<!Element>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/DOM/document.getElementsByName
  */
@@ -502,7 +505,7 @@ Document.prototype.getElementsByName = function(name) {};
 /**
  * @param {string} namespace
  * @param {string} name
- * @return {!NodeList}
+ * @return {!NodeList<!Element>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/DOM/document.getElementsByTagNameNS
  */
@@ -737,7 +740,7 @@ Selection.prototype.selectAllChildren;
 Selection.prototype.selectionLanguageChange;
 
 /**
- * @type {!NodeList}
+ * @type {!NodeList<!Element>}
  * @see https://developer.mozilla.org/en/DOM/element.children
  */
 Element.prototype.children;
@@ -954,6 +957,8 @@ Navigator.prototype.javaEnabled = function() {};
 
 /**
  * @constructor
+ * @implements {IObject<(string|number),!Plugin>}
+ * @implements {IArrayLike<!Plugin>}
  * @see https://developer.mozilla.org/en/DOM/PluginArray
  */
 function PluginArray() {}
