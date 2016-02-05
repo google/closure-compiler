@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 
 import java.util.List;
 
@@ -107,7 +108,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckArguments(compiler),
                   new CheckEnums(compiler),
                   new CheckInterfaces(compiler),
-                  new CheckPrototypeProperties(compiler)));
+                  new CheckPrototypeProperties(compiler),
+                  new CheckUselessBlocks(compiler)));
         }
       };
 
