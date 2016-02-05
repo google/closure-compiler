@@ -209,6 +209,7 @@
         <configuration>
           <!-- <parallel>classes</parallel>
           <threadCount>4</threadCount> -->
+          <argLine>-Xmx1G</argLine>
         </configuration>
       </plugin>
 
