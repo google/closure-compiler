@@ -44,6 +44,9 @@ public final class DependencyOptions implements Serializable {
   private boolean sortDependencies = false;
   private boolean pruneDependencies = false;
   private boolean dropMoochers = false;
+
+  // TODO(tbreisacher): Set this to true unconditionally, and get rid of the flag,
+  // once we check to make sure this won't break anyone.
   private boolean es6ModuleOrder = false;
   private final Set<ModuleIdentifier> entryPoints = new HashSet<>();
 

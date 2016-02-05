@@ -1549,7 +1549,7 @@ public class CompilerOptions {
    * This supersedes manageClosureDependencies.
    */
   public void setDependencyOptions(DependencyOptions options) {
-    Preconditions.checkNotNull(options);
+    options.setEs6ModuleOrder(this.languageIn.isEs6OrHigher());
     this.dependencyOptions = options;
   }
 
