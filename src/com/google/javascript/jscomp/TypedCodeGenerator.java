@@ -130,10 +130,8 @@ class TypedCodeGenerator extends CodeGenerator {
     //   LP
     //     NAME param1
     //     NAME param2
-    if (fnNode != null) {
-      if (fnNode.isFunction()) {
-        paramNode = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
-      }
+    if (fnNode != null && fnNode.isFunction()) {
+      paramNode = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
     }
 
     // Param types
