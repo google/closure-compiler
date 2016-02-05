@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
@@ -310,7 +312,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {i: undefined};",
+            "var $jscomp$loop$0 = {};",
             "$jscomp$loop$0.i = 0;",
             "for (; $jscomp$loop$0.i < 10;",
             "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
@@ -328,7 +330,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {y: undefined};",
+            "var $jscomp$loop$0 = {};",
             "var i = 0;",
             "for (; i < 10; $jscomp$loop$0 = {y: $jscomp$loop$0.y}, i++) {",
             "  $jscomp$loop$0.y = i;",
@@ -346,7 +348,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {i: undefined}",
+            "var $jscomp$loop$0 = {}",
             "while (true) {",
             "  $jscomp$loop$0.i = 0;",
             "  arr.push((function($jscomp$loop$0) {",
@@ -364,7 +366,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {y: undefined, i: undefined};",
+            "var $jscomp$loop$0 = {};",
             "$jscomp$loop$0.i = 0;",
             "for (; $jscomp$loop$0.i < 10;",
             "    $jscomp$loop$0 = {y: $jscomp$loop$0.y, i: $jscomp$loop$0.i},",
@@ -390,7 +392,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
             "var x = 0",
-            "var $jscomp$loop$1 = {i$0: undefined};",
+            "var $jscomp$loop$1 = {};",
             "var i = 0;",
             "for (; i < 10; $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0}, i++) {",
             "  $jscomp$loop$1.i$0 = x + 1;",
@@ -416,7 +418,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
             "var x = 0",
-            "var $jscomp$loop$1 = {i$0: undefined};",
+            "var $jscomp$loop$1 = {};",
             "var i = 0;",
             "for (; i < 10; $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0}, i++) {",
             "  arr.push((function($jscomp$loop$1) {",
@@ -446,7 +448,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  x++;",
             "}"),
         LINE_JOINER.join(
-            "var $jscomp$loop$2 = {i$0 : undefined, i$1: undefined};",
+            "var $jscomp$loop$2 = {};",
             "var i = 0;",
             "for (; i < 10;",
             "    $jscomp$loop$2 = {i$0: $jscomp$loop$2.i$0, i$1: $jscomp$loop$2.i$1}, i++) {",
@@ -464,9 +466,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
 
     // Preserve type annotation
-    test("for (;;) { /** @type {number} */ let x = 3; var f = function() { return x; } }",
+    test(
+        "for (;;) { /** @type {number} */ let x = 3; var f = function() { return x; } }",
         LINE_JOINER.join(
-            "var $jscomp$loop$0 = {x: undefined};",
+            "var $jscomp$loop$0 = {};",
             "for (;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
             "  /** @type {number} */ $jscomp$loop$0.x = 3;",
             "  var f = function($jscomp$loop$0) {",
@@ -475,9 +478,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
 
     // Preserve inline type annotation and constancy
-    test("for (;;) { const /** number */ x = 3; var f = function() { return x; } }",
+    test(
+        "for (;;) { const /** number */ x = 3; var f = function() { return x; } }",
         LINE_JOINER.join(
-            "var $jscomp$loop$0 = {x: undefined};",
+            "var $jscomp$loop$0 = {};",
             "for (;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
             "  /** @const @type {number} */ $jscomp$loop$0.x = 3;",
             "  var f = function($jscomp$loop$0) {",
@@ -497,7 +501,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "var i;",
-            "var $jscomp$loop$0={x: undefined};",
+            "var $jscomp$loop$0={};",
             "i = 0;",
             "for(;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
             "  $jscomp$loop$0.x = 0;",
@@ -507,13 +511,12 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
 
     test(
-        LINE_JOINER.join(
-            "for (foo();;) {",
+        LINE_JOINER.join("for (foo();;) {",
             "  let x = 0;",
             "  var f = function() { x; };",
             "}"),
         LINE_JOINER.join(
-            "var $jscomp$loop$0={x: undefined};",
+            "var $jscomp$loop$0={};",
             "foo();",
             "for(;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
             "  $jscomp$loop$0.x = 0;",
@@ -529,13 +532,32 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  var f = function() { x; };",
             "}"),
         LINE_JOINER.join(
-            "var $jscomp$loop$0={x: undefined};",
+            "var $jscomp$loop$0={};",
             "(function foo() {});",
             "for(;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
             "  $jscomp$loop$0.x = 0;",
             "  var f = (function($jscomp$loop$0) {",
             "    return function() { $jscomp$loop$0.x; };",
             "  })($jscomp$loop$0);",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "for (;;) {",
+            "  let x;",
+            "  foo(function() { return x; });",
+            "  x = 5;",
+            "}"),
+        LINE_JOINER.join(
+            "var $jscomp$loop$0 = {};",
+            "for(;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
+            "  $jscomp$loop$0.x = undefined;",
+            "  foo(function($jscomp$loop$0) {",
+            "    return function() {",
+            "      return $jscomp$loop$0.x;",
+            "    };",
+            "  }($jscomp$loop$0));",
+            "  $jscomp$loop$0.x=5;",
             "}"));
   }
 
@@ -551,7 +573,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
             "var j = 0;",
-            "var $jscomp$loop$1 = {i$0: undefined, j: undefined};",
+            "var $jscomp$loop$1 = {};",
             "var i = 0;",
             "for (; i < 10; $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0,",
             "    j: $jscomp$loop$1.j}, i++) {",
@@ -574,7 +596,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
             "var j = 0;",
-            "var $jscomp$loop$0 = {i: undefined};",
+            "var $jscomp$loop$0 = {};",
             "$jscomp$loop$0.i = 0;",
             "for (; $jscomp$loop$0.i < 10;",
             "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, ($jscomp$loop$0.i++, j++)) {",
@@ -593,7 +615,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {i: undefined, j: undefined};",
+            "var $jscomp$loop$0 = {};",
             "$jscomp$loop$0.i = 0;",
             "$jscomp$loop$0.j = 0;",
             "for (; $jscomp$loop$0.i < 10;",
@@ -612,7 +634,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {j: undefined};",
+            "var $jscomp$loop$0 = {};",
             "var i = 0;",
             "$jscomp$loop$0.j = 0;",
             "for (; i < 10; $jscomp$loop$0 = {j : $jscomp$loop$0.j},",
@@ -632,7 +654,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {i: undefined};",
+            "var $jscomp$loop$0 = {};",
             "$jscomp$loop$0.i = 0;",
             "for (; $jscomp$loop$0.i < 10;",
             "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
@@ -652,7 +674,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {i: undefined};",
+            "var $jscomp$loop$0 = {};",
             "$jscomp$loop$0.i = 0;",
             "for (; $jscomp$loop$0.i < 10;",
             "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
@@ -680,11 +702,11 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         LINE_JOINER.join(
             "function f() {",
             "  var arr = [];",
-            "  var $jscomp$loop$1 = {i : undefined};",
+            "  var $jscomp$loop$1 = {};",
             "  $jscomp$loop$1.i = 0;",
             "  for (; $jscomp$loop$1.i < 10;",
             "      $jscomp$loop$1 = {i: $jscomp$loop$1.i}, $jscomp$loop$1.i++) {",
-            "    var $jscomp$loop$0 = {j : undefined};",
+            "    var $jscomp$loop$0 = {};",
             "    $jscomp$loop$0.j = 0;",
             "    for (; $jscomp$loop$0.j < 10;",
             "        $jscomp$loop$0 = {j: $jscomp$loop$0.j}, $jscomp$loop$0.j++) {",
@@ -717,7 +739,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         LINE_JOINER.join(
             "function f() {",
             "  var arr = [];",
-            "  var $jscomp$loop$1 = {i : undefined};",
+            "  var $jscomp$loop$1 = {};",
             "  $jscomp$loop$1.i = 0;",
             "  for (; $jscomp$loop$1.i < 10;",
             "      $jscomp$loop$1 = {i: $jscomp$loop$1.i}, $jscomp$loop$1.i++) {",
@@ -726,7 +748,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "            return $jscomp$loop$1.i++ + $jscomp$loop$1.i++;",
             "        };",
             "    }($jscomp$loop$1)));",
-            "    var $jscomp$loop$2 = {i$0 : undefined};",
+            "    var $jscomp$loop$2 = {};",
             "    $jscomp$loop$2.i$0 = 0;",
             "    for (; $jscomp$loop$2.i$0 < 10;",
             "        $jscomp$loop$2 = {i$0: $jscomp$loop$2.i$0}, $jscomp$loop$2.i$0++) {",
@@ -749,7 +771,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {i: undefined};",
+            "var $jscomp$loop$0 = {};",
             "for (var i in [0, 1]) {",
             "  $jscomp$loop$0.i = i;",
             "  arr.push((function($jscomp$loop$0) {",
@@ -767,7 +789,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$1 = {i$0: undefined};",
+            "var $jscomp$loop$1 = {};",
             "for (var i of [0, 1]) {",
             "  $jscomp$loop$1.i$0 = 0;",
             "  arr.push((function($jscomp$loop$1) {",
@@ -789,7 +811,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  }",
             "}"),
         LINE_JOINER.join(
-            "var $jscomp$loop$0 = {a: undefined};",
+            "var $jscomp$loop$0 = {};",
             "for (;; $jscomp$loop$0 = {a: $jscomp$loop$0.a}) {",
             "  $jscomp$loop$0.a = getArray();",
             "  f = (function($jscomp$loop$0) {",
@@ -818,10 +840,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "} while (false);"),
         LINE_JOINER.join(
             "/** @const */ var arr = [];",
-            "var $jscomp$loop$1 = {special: undefined};",
+            "var $jscomp$loop$1 = {};",
             "do {",
             "  $jscomp$loop$1.special = 99;",
-            "  var $jscomp$loop$0 = {i: undefined};",
+            "  var $jscomp$loop$0 = {};",
             "  for (var i of [0, 1, $jscomp$loop$1.special, 3, 4, 5]) {",
             "    $jscomp$loop$0.i = i",
             "    $jscomp$loop$0.i = Number($jscomp$loop$0.i);",
@@ -839,78 +861,82 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
   // https://github.com/google/closure-compiler/issues/1124
   public void testGithubIssue1124() {
-    test(LINE_JOINER.join(
-        "while (true) {",
-        "  let x = null;",
-        "  var f = function() {",
-        "    x();",
-        "  }",
-        "}"),
+    test(
         LINE_JOINER.join(
-        "var $jscomp$loop$0 = {x:undefined};",
-        "while (true) {",
-        "  $jscomp$loop$0.x = null;",
-        "  var f = function($jscomp$loop$0) {",
-        "    return function() {",
-        "      ($jscomp$loop$0.x)();",
-        "    };",
-        "  }($jscomp$loop$0);",
-        "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
-        "}"));
+            "while (true) {",
+            "  let x = null;",
+            "  var f = function() {",
+            "    x();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "var $jscomp$loop$0 = {};",
+            "while (true) {",
+            "  $jscomp$loop$0.x = null;",
+            "  var f = function($jscomp$loop$0) {",
+            "    return function() {",
+            "      ($jscomp$loop$0.x)();",
+            "    };",
+            "  }($jscomp$loop$0);",
+            "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
+            "}"));
 
-    test(LINE_JOINER.join(
-        "while (true) {",
-        "  let x = null;",
-        "  function f() {",
-        "    x();",
-        "  }",
-        "}"),
+    test(
         LINE_JOINER.join(
-        "var $jscomp$loop$0 = {x:undefined};",
-        "while (true) {",
-        "  $jscomp$loop$0.x = null;",
-        "  var f = function($jscomp$loop$0) {",
-        "    return function f() {",
-        "      ($jscomp$loop$0.x)();",
-        "    };",
-        "  }($jscomp$loop$0);",
-        "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
-        "}"));
+            "while (true) {",
+            "  let x = null;",
+            "  function f() {",
+            "    x();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "var $jscomp$loop$0 = {};",
+            "while (true) {",
+            "  $jscomp$loop$0.x = null;",
+            "  var f = function($jscomp$loop$0) {",
+            "    return function f() {",
+            "      ($jscomp$loop$0.x)();",
+            "    };",
+            "  }($jscomp$loop$0);",
+            "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
+            "}"));
 
-    test(LINE_JOINER.join(
-        "while (true) {",
-        "  let x = null;",
-        "  (function() {",
-        "    x();",
-        "  })();",
-        "}"),
+    test(
         LINE_JOINER.join(
-        "var $jscomp$loop$0 = {x:undefined};",
-        "while (true) {",
-        "  $jscomp$loop$0.x = null;",
-        "  (function($jscomp$loop$0) {",
-        "    return function () {",
-        "      ($jscomp$loop$0.x)();",
-        "    };",
-        "  })($jscomp$loop$0)();",
-        "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
-        "}"));
+            "while (true) {",
+            "  let x = null;",
+            "  (function() {",
+            "    x();",
+            "  })();",
+            "}"),
+        LINE_JOINER.join(
+            "var $jscomp$loop$0 = {};",
+            "while (true) {",
+            "  $jscomp$loop$0.x = null;",
+            "  (function($jscomp$loop$0) {",
+            "    return function () {",
+            "      ($jscomp$loop$0.x)();",
+            "    };",
+            "  })($jscomp$loop$0)();",
+            "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
+            "}"));
   }
 
   public void testTypeAnnotationsOnLetConst() {
     enableTypeCheck();
 
-    testWarning("/** @type {number} */ let x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
-    testWarning("let /** number */ x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
-    testWarning("let /** @type {number} */ x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("/** @type {number} */ let x = 5; x = 'str';", TYPE_MISMATCH_WARNING);
+    testWarning("let /** number */ x = 5; x = 'str';", TYPE_MISMATCH_WARNING);
+    testWarning("let /** @type {number} */ x = 5; x = 'str';", TYPE_MISMATCH_WARNING);
 
-    testWarning("/** @type {number} */ const x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
-    testWarning("const /** number */ x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
-    testWarning("const /** @type {number} */ x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
-    testWarning("const /** @type {string} */ x = 3, /** @type {number} */ y = 3;",
-        TypeValidator.TYPE_MISMATCH_WARNING);
-    testWarning("const /** @type {string} */ x = 'str', /** @type {string} */ y = 3;",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("/** @type {number} */ const x = 'str';", TYPE_MISMATCH_WARNING);
+    testWarning("const /** number */ x = 'str';", TYPE_MISMATCH_WARNING);
+    testWarning("const /** @type {number} */ x = 'str';", TYPE_MISMATCH_WARNING);
+    testWarning(
+        "const /** @type {string} */ x = 3, /** @type {number} */ y = 3;", TYPE_MISMATCH_WARNING);
+    testWarning(
+        "const /** @type {string} */ x = 'str', /** @type {string} */ y = 3;",
+        TYPE_MISMATCH_WARNING);
   }
 
   public void testDoWhileForOfCapturedLetAnnotated() {
@@ -933,24 +959,22 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"),
         null);
 
-    // Ideally, these final two would give TYPE_MISMATCH_WARNINGS, but since transpilation
-    // changes these identifiers to properties, we lose the type annotations and warnings.
-    test(
+    testWarning(
         LINE_JOINER.join(
             "while (true) {",
             "  /** @type {number} */ let x = 5;",
             "  (function() { x++; })();",
-            "  x = 5;",
+            "  x = 'str';",
             "}"),
-        null);
+        TYPE_MISMATCH_WARNING);
 
-    test(
+    testWarning(
         LINE_JOINER.join(
             "for (/** @type {number} */ let x = 5;;) {",
             "  (function() { x++; })();",
             "  x = 'str';",
             "}"),
-        null);
+        TYPE_MISMATCH_WARNING);
   }
 
   public void testLetForInitializers() {
@@ -966,7 +990,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         LINE_JOINER.join(
             "{",
             "  var l = [];",
-            "  var $jscomp$loop$0 = {lx: undefined, ly: undefined, lz: undefined};",
+            "  var $jscomp$loop$0 = {};",
             "  var vx = 1, vy = 2, vz = 3;",
             "  for (; vx < 10; $jscomp$loop$0 = {lx: $jscomp$loop$0.lx,",
             "      ly: $jscomp$loop$0.ly, lz: $jscomp$loop$0.lz}, vx++){",
