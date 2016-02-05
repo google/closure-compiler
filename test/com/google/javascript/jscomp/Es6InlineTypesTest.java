@@ -28,7 +28,6 @@ public final class Es6InlineTypesTest extends CompilerTestCase {
   @Override
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6_TYPED);
-    enableAstValidation(true);
     compareJsDoc = false;
   }
 

@@ -27,7 +27,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   @Override
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    enableAstValidation(true);
     runTypeCheckAfterProcessing = true;
     compareJsDoc = true;
   }

@@ -36,7 +36,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   public void setUp() {
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
-    enableAstValidation(true);
     runTypeCheckAfterProcessing = true;
   }
 
