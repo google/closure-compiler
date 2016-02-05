@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 import java.util.HashMap;
@@ -491,6 +492,7 @@ public class DiagnosticGroups {
           CheckRequiresAndProvidesSorted.MULTIPLE_MODULES_IN_FILE,
           CheckRequiresAndProvidesSorted.MODULE_AND_PROVIDES,
           CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY,
+          CheckUselessBlocks.USELESS_BLOCK,
           Es6RewriteArrowFunction.THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT,
           RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
           RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
