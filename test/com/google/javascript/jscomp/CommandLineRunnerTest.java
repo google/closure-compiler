@@ -1944,7 +1944,8 @@ public final class CommandLineRunnerTest extends TestCase {
    * @param expectedOutput string representation of expected output.
    * @param entries entries of flags for zip and js files containing source to compile.
    */
-  private void compileFiles(String expectedOutput, FlagEntry<JsSourceType>... entries)
+  @SafeVarargs
+  private final void compileFiles(String expectedOutput, FlagEntry<JsSourceType>... entries)
       throws FlagUsageException {
     for (FlagEntry<JsSourceType> entry : entries) {
       args.add("--" + entry.flag.flagName + "=" + entry.value);
@@ -1957,7 +1958,8 @@ public final class CommandLineRunnerTest extends TestCase {
    * @param expectedOutput string representation of expected output.
    * @param entries entries of flags for js files containing source to compile.
    */
-  private void compileJsFiles(String expectedOutput, FlagEntry<JsSourceType>... entries)
+  @SafeVarargs
+  private final void compileJsFiles(String expectedOutput, FlagEntry<JsSourceType>... entries)
       throws FlagUsageException {
     args.add("--js");
     for (FlagEntry<JsSourceType> entry : entries) {
