@@ -1955,8 +1955,8 @@ public class Node implements Serializable {
       putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
-    if (getProp(STATIC_SOURCE_FILE) == null) {
-      putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
+    if (getStaticSourceFile() == null) {
+      setStaticSourceFile(other.getStaticSourceFile());
       sourcePosition = other.sourcePosition;
     }
 
@@ -1985,7 +1985,7 @@ public class Node implements Serializable {
    */
   public Node useSourceInfoFrom(Node other) {
     putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
-    putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
+    setStaticSourceFile(other.getStaticSourceFile());
     sourcePosition = other.sourcePosition;
     setLength(other.getLength());
     return this;
@@ -2022,8 +2022,8 @@ public class Node implements Serializable {
       putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
-    if (getProp(STATIC_SOURCE_FILE) == null) {
-      putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
+    if (getStaticSourceFile() == null) {
+      setStaticSourceFile(other.getStaticSourceFile());
       sourcePosition = other.sourcePosition;
       setLength(other.getLength());
     }
