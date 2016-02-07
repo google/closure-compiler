@@ -49,7 +49,7 @@ public final class PhaseOptimizerTest extends TestCase {
     dummyRoot.setIsSyntheticBlock(true);
     compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
-    tracker = new PerformanceTracker(dummyRoot, TracerMode.TIMING_ONLY);
+    tracker = new PerformanceTracker(dummyRoot, TracerMode.TIMING_ONLY, null);
     optimizer = new PhaseOptimizer(compiler, tracker, null);
   }
 

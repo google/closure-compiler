@@ -38,7 +38,7 @@ public final class PerformanceTrackerTest extends TestCase {
 
   public void testStatsCalculation() {
     PerformanceTracker tracker =
-        new PerformanceTracker(emptyScript, TracerMode.ALL);
+        new PerformanceTracker(emptyScript, TracerMode.ALL, null);
     CodeChangeHandler handler = tracker.getCodeChangeHandler();
 
     // It's sufficient for this test to assume that a single run of any pass
@@ -101,26 +101,27 @@ public final class PerformanceTrackerTest extends TestCase {
   }
 
   public void testOutputFormat() {
-    PerformanceTracker tracker =
-        new PerformanceTracker(emptyScript, TracerMode.ALL);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     PrintStream outstream = new PrintStream(output);
-    tracker.outputTracerReport(outstream);
+    PerformanceTracker tracker =
+        new PerformanceTracker(emptyScript, TracerMode.ALL, outstream);
+    tracker.outputTracerReport();
     outstream.close();
     Pattern p = Pattern.compile(
-        ".*Summary:\npass,runtime,runs,changingRuns,reduction,gzReduction" +
-        ".*TOTAL:" +
-        "\nRuntime\\(ms\\): [0-9]+" +
-        "\n#Runs: [0-9]+" +
-        "\n#Changing runs: [0-9]+" +
-        "\n#Loopable runs: [0-9]+" +
-        "\n#Changing loopable runs: [0-9]+" +
-        "\nEstimated Reduction\\(bytes\\): [0-9]+" +
-        "\nEstimated GzReduction\\(bytes\\): [0-9]+" +
-        "\nEstimated Size\\(bytes\\): -?[0-9]+" +
-        "\nEstimated GzSize\\(bytes\\): -?[0-9]+" +
-        "\n\nLog:\n" +
-        "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize.*",
+        ".*Summary:\npass,runtime,runs,changingRuns,reduction,gzReduction"
+        + ".*TOTAL:"
+        + "\nRuntime\\(ms\\): [0-9]+"
+        + "\nMem usage after each pass\\(MB\\): [0-9]+\\.[0-9]+ \\+/- [0-9]+\\.[0-9]+"
+        + "\n#Runs: [0-9]+"
+        + "\n#Changing runs: [0-9]+"
+        + "\n#Loopable runs: [0-9]+"
+        + "\n#Changing loopable runs: [0-9]+"
+        + "\nEstimated Reduction\\(bytes\\): [0-9]+"
+        + "\nEstimated GzReduction\\(bytes\\): [0-9]+"
+        + "\nEstimated Size\\(bytes\\): -?[0-9]+"
+        + "\nEstimated GzSize\\(bytes\\): -?[0-9]+"
+        + "\n\nLog:\n"
+        + "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize.*",
         Pattern.DOTALL);
     String outputString = output.toString();
     assertTrue("Unexpected output from PerformanceTracker:\n" + outputString,

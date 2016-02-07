@@ -256,7 +256,7 @@ public class Compiler extends AbstractCompiler {
    */
   public Compiler(PrintStream stream) {
     addChangeHandler(recentChange);
-    outStream = stream;
+    this.outStream = stream;
   }
 
   /**
@@ -301,12 +301,12 @@ public class Compiler extends AbstractCompiler {
     this.options = options;
     this.languageMode = options.getLanguageIn();
     if (errorManager == null) {
-      if (outStream == null) {
+      if (this.outStream == null) {
         setErrorManager(
             new LoggerErrorManager(createMessageFormatter(), logger));
       } else {
         PrintStreamErrorManager printer =
-            new PrintStreamErrorManager(createMessageFormatter(), outStream);
+            new PrintStreamErrorManager(createMessageFormatter(), this.outStream);
         printer.setSummaryDetailLevel(options.summaryDetailLevel);
         setErrorManager(printer);
       }
@@ -738,7 +738,7 @@ public class Compiler extends AbstractCompiler {
     setProgress(1.0, "recordFunctionInformation");
 
     if (tracker != null) {
-      tracker.outputTracerReport(outStream == null ? System.out : outStream);
+      tracker.outputTracerReport();
     }
   }
 
@@ -1361,7 +1361,7 @@ public class Compiler extends AbstractCompiler {
     jsRoot.detachChildren();
 
     if (options.tracer.isOn()) {
-      tracker = new PerformanceTracker(jsRoot, options.tracer);
+      tracker = new PerformanceTracker(jsRoot, options.tracer, this.outStream);
       addChangeHandler(tracker.getCodeChangeHandler());
     }
 

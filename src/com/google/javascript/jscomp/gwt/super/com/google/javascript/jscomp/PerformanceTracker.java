@@ -23,7 +23,7 @@ import java.io.PrintStream;
 
 /** GWT compatible no-op replacement for {@code PerformanceTracker} */
 public final class PerformanceTracker {
-  PerformanceTracker(Node jsRoot, TracerMode mode) {}
+  PerformanceTracker(Node jsRoot, TracerMode mode, PrintStream pstr) {}
 
   void recordPassStart(String passName, boolean isOneTime) {}
 
@@ -34,5 +34,5 @@ public final class PerformanceTracker {
         "PerformanceTracker.getCodeChangeHandler not implemented");
   }
 
-  public void outputTracerReport(PrintStream pstr) {}
+  public void outputTracerReport() {}
 }
