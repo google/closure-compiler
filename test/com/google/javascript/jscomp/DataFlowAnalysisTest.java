@@ -139,6 +139,14 @@ public final class DataFlowAnalysisTest extends TestCase {
     }
 
     @Override
+    public boolean equals(Object other) {
+      if (!(other instanceof Number)) {
+        return false;
+      }
+      return ((Number) other).value == value;
+    }
+
+    @Override
     public int hashCode() {
       return value;
     }
@@ -275,6 +283,19 @@ public final class DataFlowAnalysisTest extends TestCase {
       out.append(operation);
       out.append(operand2);
       return out.toString();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      if (!(other instanceof ArithmeticInstruction)) {
+        return false;
+      }
+      ArithmeticInstruction that = (ArithmeticInstruction) other;
+      return that.order == this.order
+          && that.operation.equals(this.operation)
+          && that.operand1.equals(this.operand1)
+          && that.operand2.equals(this.operand2)
+          && that.result.equals(this.result);
     }
 
     @Override
@@ -761,8 +782,8 @@ public final class DataFlowAnalysisTest extends TestCase {
     // MAX_STEP number of steps.
     for (int i = 0; i < MAX_STEP + 1; i++) {
       Instruction inst2 = new ArithmeticInstruction(a, a, Operation.ADD, a);
-      cfg.createNode(inst2);
       inst2.order = i + 1;
+      cfg.createNode(inst2);
       cfg.connect(inst1, ControlFlowGraph.Branch.UNCOND, inst2);
       inst1 = inst2;
     }

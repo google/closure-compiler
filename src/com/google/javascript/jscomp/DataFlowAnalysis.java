@@ -370,6 +370,16 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
 
     @Override
+    public boolean equals(Object o) {
+      if (o instanceof FlowState) {
+        FlowState<?> that = (FlowState<?>) o;
+        return that.in.equals(this.in)
+            && that.out.equals(this.out);
+      }
+      return false;
+    }
+
+    @Override
     public int hashCode() {
       return Objects.hash(in, out);
     }
@@ -513,6 +523,16 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     @Override
     public String toString() {
       return SimpleFormat.format("IN: %s OUT: %s", in, out);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof BranchedFlowState) {
+        BranchedFlowState<?> that = (BranchedFlowState<?>) o;
+        return that.in.equals(this.in)
+            && that.out.equals(this.out);
+      }
+      return false;
     }
 
     @Override
