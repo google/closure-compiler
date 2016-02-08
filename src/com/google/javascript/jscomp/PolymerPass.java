@@ -45,6 +45,7 @@ import java.util.Set;
  *
  * <p>Only works with Polymer version 0.8 and above.
  *
+ *
  * @author jlklein@google.com (Jeremy Klein)
  */
 final class PolymerPass extends AbstractPostOrderCallback implements HotSwapCompilerPass {
