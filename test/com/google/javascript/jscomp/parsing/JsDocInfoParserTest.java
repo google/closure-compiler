@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
-import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -33,7 +32,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateType;
@@ -4387,9 +4385,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Config config = new Config(extraAnnotations, extraSuppressions,
         isIdeMode, parseDocumentation, preserveWhitespace, LanguageMode.ECMASCRIPT3);
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
-    Node associatedNode = new Node(Token.SCRIPT);
-    associatedNode.setInputId(new InputId(file.getName()));
-    associatedNode.setStaticSourceFile(file);
 
     JsDocInfoParser jsdocParser = new JsDocInfoParser(
         stream(comment),
@@ -4418,7 +4413,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     return JsDocInfoParser.parseTypeString(typeComment);
   }
 
-  private JsDocTokenStream stream(String source) {
+  private static JsDocTokenStream stream(String source) {
     return new JsDocTokenStream(source, 0);
   }
 

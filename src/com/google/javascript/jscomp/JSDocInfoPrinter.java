@@ -63,14 +63,13 @@ public final class JSDocInfoPrinter {
     if (info.isConstant() && !info.isDefine()) {
       sb.append("@const ");
     }
-    if (info.isExport()) {
-      sb.append("@export ");
-    }
     if (info.isDeprecated()) {
       sb.append("@deprecated ");
       sb.append(info.getDeprecationReason() + "\n");
     }
-    if (info.getVisibility() != null
+    if (info.isExport()) {
+      sb.append("@export ");
+    } else if (info.getVisibility() != null
         && info.getVisibility() != Visibility.INHERITED) {
       sb.append("@" + info.getVisibility().toString().toLowerCase() + " ");
     }
