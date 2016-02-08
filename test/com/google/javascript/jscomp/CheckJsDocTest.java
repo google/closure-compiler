@@ -283,10 +283,4 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
     testBadTemplate("/** @template T */ var f = function() {};");
     testBadTemplate("/** @template T */ Foo.prototype.f = function() {};");
   }
-
-  public void testNoSideEffectsInSrc() {
-    testSame("/** @nosideeffects */ function foo() {}; foo();", MISPLACED_ANNOTATION);
-
-    testSame("/** @nosideeffects */ function foo() {};", "foo();", null);
-  }
 }
