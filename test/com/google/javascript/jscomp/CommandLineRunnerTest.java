@@ -1149,7 +1149,7 @@ public final class CommandLineRunnerTest extends TestCase {
         new FlagEntry<>(JsSourceType.JS, glob2));
   }
 
-  public void testGlobJs6() throws IOException, FlagUsageException {
+  public void testGlobJs5() throws IOException, FlagUsageException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
     File temp1 = Files.createTempDir();
