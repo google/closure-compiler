@@ -977,21 +977,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testTypeAnnotationsTypeDef() {
+    // TODO(johnlenz): It would be nice if there were some way to preserve
+    // typedefs but currently they are resolved into the basic types in the
+    // type registry.
     assertTypeAnnotations(
-        LINE_JOINER.join(
-            "/** @typedef {Array<number>} */ goog.java.Long;",
-            "/** @param {!goog.java.Long} a*/",
-            "function f(a){};"),
-        LINE_JOINER.join(
-            "/**@typedef {Array<number>} */",
-            "goog.java.Long;",
-            "/**",
-            " * @param {(Array<number>|null)} a",
-            " * @return {undefined}",
-            " */",
-            "function f(a) {",
-            "}",
-            ""));
+        "/** @typedef {Array<number>} */ goog.java.Long;\n"
+        + "/** @param {!goog.java.Long} a*/\n"
+        + "function f(a){};\n",
+        "goog.java.Long;\n"
+        + "/**\n"
+        + " * @param {(Array<number>|null)} a\n"
+        + " * @return {undefined}\n"
+        + " */\n"
+        + "function f(a) {\n}\n");
   }
 
   public void testTypeAnnotationsAssign() {
@@ -1070,22 +1068,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testTypeAnnotationsMemberStub() {
-    assertTypeAnnotations(
-        LINE_JOINER.join(
-            "/** @interface */ function I(){};",
-            "/** @return {undefined} @param {number} x */ I.prototype.method;"),
-        LINE_JOINER.join(
-            "/**",
-            " * @interface",
-            " */",
-            "function I() {",
-            "}",
-            "/**",
-            " * @param {number} p0",
-            " * @return {undefined}",
-            " */",
-            "I.prototype.method;",
-            ""));
+    // TODO(blickly): Investigate why the method's type isn't preserved.
+    assertTypeAnnotations("/** @interface */ function I(){};"
+        + "/** @return {undefined} @param {number} x */ I.prototype.method;",
+        "/**\n"
+        + " * @interface\n"
+        + " */\n"
+        + "function I() {\n"
+        + "}\n"
+        + "I.prototype.method;\n");
   }
 
   public void testTypeAnnotationsImplements() {
@@ -1189,75 +1180,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "var goog = goog || {};\n" +
         "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};\n" +
         "/** @type {(Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n");
-  }
-
-  public void testClosureLibraryTypeAnnotationExamples() {
-    assertTypeAnnotations(
-        LINE_JOINER.join(
-            "/** @param {Object} obj */goog.removeUid = function(obj) {};",
-            "/** @param {Object} obj The object to remove the field from. */",
-            "goog.removeHashCode = goog.removeUid;"),
-        LINE_JOINER.join(
-            "/**",
-            " * @param {(Object|null)} obj",
-            " * @return {undefined}",
-            " */",
-            "goog.removeUid = function(obj) {",
-            "};",
-            "/**",
-            " * @param {(Object|null)} p0",
-            " * @return {undefined}",
-            " */",
-            "goog.removeHashCode = goog.removeUid;",
-            ""));
-
-    // TODO(moz): Preserve @const
-    assertTypeAnnotations(
-        LINE_JOINER.join(
-            "/** @const */",
-            "goog.TRUSTED_SITE = true;",
-            "/** @return {number} */",
-            "goog.now = (goog.TRUSTED_SITE && Date.now) || (function() {})"),
-        LINE_JOINER.join(
-            "/** @type {boolean} */",
-            "goog.TRUSTED_SITE = true;",
-            "/**",
-            "@return {number} */",
-            "goog.now = goog.TRUSTED_SITE && Date.now || function() {",
-            "};",
-            ""));
-
-    // TODO(moz): Preserve @private
-    assertTypeAnnotations(
-        LINE_JOINER.join(
-            "/** @private */",
-            "this.tick_ = function() {};",
-            "/** @private {Function} @const */",
-            "this.boundTick_ = goog.bind(this.tick_, this);"),
-        LINE_JOINER.join(
-            "/**",
-            " * @return {undefined}",
-            " */",
-            "this.tick_ = function() {",
-            "};",
-            "/**@const @private @type {Function} */",
-            "this.boundTick_ = goog.bind(this.tick_, this);",
-            ""));
-
-    // Cast similar to vec2.js:
-    assertTypeAnnotations(
-        LINE_JOINER.join(
-            "x = function() {};",
-            "y = /** @type {Function} */ (x)"),
-        LINE_JOINER.join(
-            "/**",
-            " * @return {undefined}",
-            " */",
-            "x = function() {",
-            "};",
-            "y = /** @type {(Function|null)} */",
-            "(x);",
-            ""));
   }
 
   public void testDeprecatedAnnotationIncludesNewline() {
