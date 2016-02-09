@@ -146,7 +146,9 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticMember.getJSDocInfo());
 
     Node function = staticMember.getLastChild();
+    Node sourceInfoNode = function;
     if (function.isFunction()) {
+      sourceInfoNode = function.getFirstChild();
       Node params = NodeUtil.getFunctionParameters(function);
       Preconditions.checkState(params.isParamList(), params);
       for (Node param : params.children()) {
@@ -163,7 +165,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     info.addSuppression("visibility");
     assign.setJSDocInfo(info.build());
     Node exprResult = IR.exprResult(assign);
-    exprResult.useSourceInfoIfMissingFromForTree(superclassNameNode);
+    exprResult.useSourceInfoIfMissingFromForTree(sourceInfoNode);
     insertionPoint.getParent().addChildAfter(exprResult, insertionPoint);
     subclassMethods.add(assign);
     compiler.reportCodeChange();
