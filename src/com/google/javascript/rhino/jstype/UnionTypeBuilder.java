@@ -43,6 +43,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -68,6 +69,9 @@ public class UnionTypeBuilder implements Serializable {
 
   private final JSTypeRegistry registry;
   private final List<JSType> alternates = new ArrayList<>();
+  // If a union has ? or *, we do not care about any other types, except for undefined (for optional
+  // properties).
+  private boolean containsVoidType = false;
   private boolean isAllType = false;
   private boolean isNativeUnknownType = false;
   private boolean areAllUnknownsChecked = true;
@@ -110,6 +114,11 @@ public class UnionTypeBuilder implements Serializable {
     if (specialCaseType != null) {
       return ImmutableList.of(specialCaseType);
     }
+
+    JSType wildcard = getNativeWildcardType();
+    if (wildcard != null && containsVoidType) {
+      return ImmutableList.of(wildcard, registry.getNativeType(VOID_TYPE));
+    }
     return Collections.unmodifiableList(alternates);
   }
 
@@ -140,6 +149,7 @@ public class UnionTypeBuilder implements Serializable {
     }
 
     isAllType = isAllType || alternate.isAllType();
+    containsVoidType = containsVoidType || alternate.isVoidType();
 
     boolean isAlternateUnknown = alternate instanceof UnknownType;
     isNativeUnknownType = isNativeUnknownType || isAlternateUnknown;
@@ -309,6 +319,24 @@ public class UnionTypeBuilder implements Serializable {
    * type, return null.
    */
   private JSType reduceAlternatesWithoutUnion() {
+    JSType wildcard = getNativeWildcardType();
+    if (wildcard != null) {
+      return containsVoidType ? null : wildcard;
+    }
+    int size = alternates.size();
+    if (size > maxUnionSize) {
+      return registry.getNativeType(UNKNOWN_TYPE);
+    } else if (size > 1) {
+      return null;
+    } else if (size == 1) {
+      return alternates.get(0);
+    } else {
+      return registry.getNativeType(NO_TYPE);
+    }
+  }
+
+  /** Returns ALL_TYPE, UNKNOWN_TYPE, or CHECKED_UNKNOWN_TYPE, as specified by the flags, or null */
+  private JSType getNativeWildcardType() {
     if (isAllType) {
       return registry.getNativeType(ALL_TYPE);
     } else if (isNativeUnknownType) {
@@ -317,18 +345,8 @@ public class UnionTypeBuilder implements Serializable {
       } else {
         return registry.getNativeType(UNKNOWN_TYPE);
       }
-    } else {
-      int size = alternates.size();
-      if (size > maxUnionSize) {
-        return registry.getNativeType(UNKNOWN_TYPE);
-      } else if (size > 1) {
-        return null;
-      } else if (size == 1) {
-        return alternates.get(0);
-      } else {
-        return registry.getNativeType(NO_TYPE);
-      }
     }
+    return null;
   }
 
   /**
@@ -340,13 +358,9 @@ public class UnionTypeBuilder implements Serializable {
     if (result == null) {
       result = reduceAlternatesWithoutUnion();
       if (result == null) {
-        result = new UnionType(registry, getAlternateListCopy());
+        result = new UnionType(registry, ImmutableList.copyOf(getAlternates()));
       }
     }
     return result;
-  }
-
-  private Collection<JSType> getAlternateListCopy() {
-    return ImmutableList.copyOf(alternates);
   }
 }

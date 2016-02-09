@@ -1744,16 +1744,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionArguments17() {
-    testClosureTypesMultipleWarnings(
+    testTypes(
         "/** @param {booool|string} x */" +
         "function f(x) { g(x) }" +
         "/** @param {number} x */" +
         "function g(x) {}",
-        ImmutableList.of(
-            "Bad type annotation. Unknown type booool",
-            "actual parameter 1 of g does not match formal parameter\n" +
-            "found   : (booool|null|string)\n" +
-            "required: number"));
+        "Bad type annotation. Unknown type booool");
   }
 
   public void testFunctionArguments18() {
@@ -15622,6 +15618,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: {str: string, unknown: ?}"));
   }
 
+  public void testRecordWithOptionalUnknownProperty() {
+    testTypes(
+        LINE_JOINER.join(
+            "/**  @constructor */ function Foo() {};",
+            "Foo.prototype.str = 'foo';",
+            "",
+            "var /** {str: string, opt_unknown: (?|undefined)} */ x = new Foo;"));
+  }
+
   public void testRecordWithTopProperty() {
     testTypes(
         LINE_JOINER.join(
@@ -15663,6 +15668,27 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "initializing variable",
             "found   : Foo",
             "required: Rec"));
+  }
+
+  public void testStructuralInterfaceWithOptionalUnknownProperty() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function Rec() {}",
+            "/** @type {string} */ Rec.prototype.str;",
+            "/** @type {?|undefined} */ Rec.prototype.opt_unknown;",
+            "",
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.str = 'foo';",
+            "",
+            "var /** !Rec */ x = new Foo;"));
+  }
+
+  public void testOptionalUnknownIsAssignableToUnknown() {
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** (undefined|?) */ opt_unknown) {",
+            "  var /** ? */ unknown = opt_unknown;",
+            "}"));
   }
 
   public void testStructuralInterfaceWithTopProperty() {

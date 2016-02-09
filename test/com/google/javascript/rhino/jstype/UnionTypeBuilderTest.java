@@ -84,6 +84,11 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
 
     assertUnion("?", UNKNOWN_TYPE);
     assertUnion("?", UNKNOWN_TYPE, UNKNOWN_TYPE);
+    assertUnion("(?|undefined)", UNKNOWN_TYPE, VOID_TYPE);
+    assertUnion("(?|undefined)", VOID_TYPE, UNKNOWN_TYPE);
+    assertUnion("(?|undefined)", VOID_TYPE, NUMBER_TYPE, UNKNOWN_TYPE);
+
+    assertUnion("(*|undefined)", ALL_TYPE, VOID_TYPE, NULL_TYPE);
 
     // NOTE: "(?)" means there are multiple unknown types in the union.
     assertUnion("?", UNKNOWN_TYPE, unresolvedNameA1);

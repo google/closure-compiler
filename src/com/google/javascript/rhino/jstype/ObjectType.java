@@ -544,8 +544,8 @@ public abstract class ObjectType
     for (String property : typeB.getPropertyNames()) {
       JSType propB = typeB.getPropertyType(property);
       if (!typeA.hasProperty(property)) {
-        // Currently, any type including undefined (other than ?) is considered optional.
-        if (propB.isVoidable() && !propB.isUnknownType()) {
+        // Currently, any type that explicitly includes undefined (eg, `?|undefined`) is optional.
+        if (propB.isExplicitlyVoidable()) {
           continue;
         }
         return false;

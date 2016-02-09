@@ -306,6 +306,19 @@ public class UnionType extends JSType {
     return false;
   }
 
+  /**
+   * Tests whether this type explicitly allows undefined.  (as opposed to ? or *)
+   */
+  @Override
+  public boolean isExplicitlyVoidable() {
+    for (JSType t : alternatesWithoutStucturalTyping) {
+      if (t.isExplicitlyVoidable()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public boolean isUnknownType() {
     for (JSType t : alternatesWithoutStucturalTyping) {
@@ -504,7 +517,7 @@ public class UnionType extends JSType {
   protected boolean isSubtype(JSType that,
       ImplCache implicitImplCache) {
     // unknown
-    if (that.isUnknownType()) {
+    if (that.isUnknownType() || this.isUnknownType()) {
       return true;
     }
     // all type
