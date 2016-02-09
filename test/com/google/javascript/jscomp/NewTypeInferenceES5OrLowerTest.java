@@ -6130,8 +6130,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " * @param {!Bar<(!Bar<T>|!Foo)>} x",
         " */",
         "function f(x) {}",
-        "f(/** @type {!Bar<!Bar<number>>} */ (new Bar));"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "f(/** @type {!Bar<!Bar<number>>} */ (new Bar));"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -7507,8 +7506,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor @param {T} x @template T */ function Gen(x){}",
         "/** @constructor */ function Foo() {}",
         "/** @constructor @extends {Foo} */ function Bar() {}",
-        "var /** Gen<Foo> */ a = new Gen(new Bar);"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "var /** Gen<Foo> */ a = new Gen(new Bar);"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor @param {T} x @template T */ function Gen(x){}",
@@ -7516,6 +7514,46 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor @extends {Foo} */ function Bar() {}",
         "var /** Gen<Bar> */ a = new Gen(new Foo);"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Object} x",
+        " * @return {!Promise<?Object>}",
+        " */",
+        "function foo(x) {",
+        "  return Promise.resolve(x);",
+        "}"));
+  }
+
+  public void testCastsOfGenericTypes() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor @struct */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "function g(/** !Array<!Bar> */ x) {",
+        "  return /** @type {!Array<{prop}>} */ (x);",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " * @param {T} x",
+        " */",
+        "function Bar(x) {}",
+        "var x = /** @type {!Bar<(number|null)>} */ (new Bar(null));"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor @struct */",
+        "function Foo() {}",
+        "/** @constructor @struct @extends {Foo} */",
+        "function Bar() {}",
+        "/** @constructor @template T,U */",
+        "function Baz() {}",
+        "function f(/** !Baz<!Bar,?> */ x) {",
+        "  return /** @type {!Baz<!Foo,?>} */ (x);",
+        "}"));
   }
 
   public void testInferredArrayGenerics() {

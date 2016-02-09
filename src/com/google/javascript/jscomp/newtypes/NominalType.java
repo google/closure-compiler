@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -271,12 +270,7 @@ public final class NominalType {
           other, typeVar, this.typeMap.get(typeVar), this);
       JSType thisType = this.typeMap.get(typeVar);
       JSType otherType = other.typeMap.get(typeVar);
-      if (allowCovariantGenerics(this)) {
-        if (!thisType.isSubtypeOf(otherType)) {
-          return false;
-        }
-      } else if (!thisType.equals(otherType)
-          && JSType.unifyUnknowns(thisType, otherType) == null) {
+      if (!thisType.isSubtypeOf(otherType)) {
         return false;
       }
     }
@@ -318,11 +312,6 @@ public final class NominalType {
       }
     }
     return new NominalType(builder.build(), nt1.rawType);
-  }
-
-  private static boolean allowCovariantGenerics(NominalType nt) {
-    // TODO(dimvar): Add Object here when we handle parameterized Object.
-    return nt.rawType.name.equals("Array");
   }
 
   private boolean instantiationIsUnknownOrIdentity() {
@@ -392,8 +381,7 @@ public final class NominalType {
       hasUnified = hasUnified && this.typeMap.get(typeParam)
           .unifyWithSubtype(fromOtherMap, typeParameters, typeMultimap);
     }
-    return hasUnified && (allowCovariantGenerics(this)
-        || isInvariantWith(typeMultimap, other));
+    return hasUnified;
   }
 
   // Returns a type with the same raw type as other, but possibly different type maps.
@@ -416,31 +404,6 @@ public final class NominalType {
         .findMatchingAncestorWith(other);
     }
     return null;
-  }
-
-  private boolean isInvariantWith(Multimap<String, JSType> typeMultimap, NominalType other) {
-    Preconditions.checkState(isGeneric());
-    Preconditions.checkState(this.rawType == other.rawType);
-    Map<String, JSType> newTypeMap = new LinkedHashMap<>();
-    for (String typeVar : typeMultimap.keySet()) {
-      Collection<JSType> c = typeMultimap.get(typeVar);
-      if (c.size() != 1) {
-        return false;
-      }
-      newTypeMap.put(typeVar, Preconditions.checkNotNull(Iterables.getOnlyElement(c)));
-    }
-    NominalType instantiated = instantiateGenerics(newTypeMap);
-    Map<String, JSType> otherMap = other.typeMap;
-    // We can't just compare instantiated.typeMap and otherMap for equality,
-    // because it doesn't take unknown types into account.
-    for (Map.Entry<String, JSType> entry : instantiated.typeMap.entrySet()) {
-      JSType t1 = entry.getValue();
-      JSType t2 = otherMap.get(entry.getKey());
-      if (!t1.isSubtypeOf(t2) || !t2.isSubtypeOf(t1)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   @Override
