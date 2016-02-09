@@ -1276,8 +1276,6 @@ public class CommandLineRunner extends
           .setEntryPoints(entryPoints)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputModuleDependencies(flags.outputModuleDependencies)
-          .setLanguageIn(flags.languageIn)
-          .setLanguageOut(flags.languageOut)
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setModuleRoots(moduleRoots)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
@@ -1299,8 +1297,7 @@ public class CommandLineRunner extends
   }
 
   @Override
-  protected void checkModuleName(String name)
-      throws FlagUsageException {
+  protected void checkModuleName(String name) {
     if (!TokenStream.isJSIdentifier(
         extraModuleNameChars.matcher(name).replaceAll("_"))) {
       throw new FlagUsageException("Invalid module name: '" + name + "'");
@@ -1310,6 +1307,29 @@ public class CommandLineRunner extends
   @Override
   protected CompilerOptions createOptions() {
     CompilerOptions options = new CompilerOptions();
+
+    if (!flags.languageIn.isEmpty()) {
+      CompilerOptions.LanguageMode languageMode =
+          CompilerOptions.LanguageMode.fromString(flags.languageIn);
+      if (languageMode != null) {
+        options.setLanguageIn(languageMode);
+      } else {
+        throw new FlagUsageException("Unknown language `" + flags.languageIn + "' specified.");
+      }
+    }
+
+    if (flags.languageOut.isEmpty()) {
+      options.setLanguageOut(options.getLanguageIn());
+    } else {
+      CompilerOptions.LanguageMode languageMode =
+          CompilerOptions.LanguageMode.fromString(flags.languageOut);
+      if (languageMode != null) {
+        options.setLanguageOut(languageMode);
+      } else {
+        throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
+      }
+    }
+
     if (flags.processJqueryPrimitives) {
       options.setCodingConvention(new JqueryCodingConvention());
     } else {
@@ -1426,8 +1446,7 @@ public class CommandLineRunner extends
   }
 
   @Override
-  protected List<SourceFile> createExterns(CompilerOptions options)
-      throws FlagUsageException, IOException {
+  protected List<SourceFile> createExterns(CompilerOptions options) throws IOException {
     List<SourceFile> externs = super.createExterns(options);
     if (isInTestMode()) {
       return externs;

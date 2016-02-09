@@ -1681,7 +1681,7 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(runner.hasErrors()).isTrue();
   }
 
-  public void testJsonStreamInputFlag() throws FlagUsageException {
+  public void testJsonStreamInputFlag() {
     String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
     args.add("--json_streams=IN");
 
@@ -1702,7 +1702,7 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(output).isEqualTo("alert(\"foo\");");
   }
 
-  public void testJsonStreamOutputFlag() throws FlagUsageException {
+  public void testJsonStreamOutputFlag() {
     String inputString = "alert('foo');";
     args.add("--json_streams=OUT");
 
@@ -1728,7 +1728,7 @@ public final class CommandLineRunnerTest extends TestCase {
         + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
   }
 
-  public void testJsonStreamBothFlag() throws FlagUsageException {
+  public void testJsonStreamBothFlag() {
     String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
     args.add("--json_streams=BOTH");
     args.add("--js_output_file=bar.js");
@@ -1755,7 +1755,7 @@ public final class CommandLineRunnerTest extends TestCase {
         + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
   }
 
-  public void testOutputModuleNaming() throws FlagUsageException {
+  public void testOutputModuleNaming() {
     String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
     args.add("--json_streams=BOTH");
     args.add("--module=foo--bar.baz:1");
@@ -1945,8 +1945,7 @@ public final class CommandLineRunnerTest extends TestCase {
    * @param entries entries of flags for zip and js files containing source to compile.
    */
   @SafeVarargs
-  private final void compileFiles(String expectedOutput, FlagEntry<JsSourceType>... entries)
-      throws FlagUsageException {
+  private final void compileFiles(String expectedOutput, FlagEntry<JsSourceType>... entries) {
     for (FlagEntry<JsSourceType> entry : entries) {
       args.add("--" + entry.flag.flagName + "=" + entry.value);
     }

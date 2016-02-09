@@ -278,8 +278,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   static DependencyOptions createDependencyOptions(
       CompilerOptions.DependencyMode dependencyMode,
-      List<DependencyOptions.ModuleIdentifier> entryPoints)
-      throws FlagUsageException {
+      List<DependencyOptions.ModuleIdentifier> entryPoints) {
     if (dependencyMode == CompilerOptions.DependencyMode.STRICT) {
       if (entryPoints.isEmpty()) {
         throw new FlagUsageException(
@@ -310,8 +309,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * If you want to ignore the flags API, or interpret flags your own way,
    * then you should override this method.
    */
-  protected void setRunOptions(CompilerOptions options)
-      throws FlagUsageException, IOException {
+  protected void setRunOptions(CompilerOptions options) throws IOException {
     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 
     if (config.warningGuards != null) {
@@ -404,30 +402,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (!config.propertyMapInputFile.isEmpty()) {
       options.inputPropertyMap =
           VariableMap.load(config.propertyMapInputFile);
-    }
-
-    if (config.languageIn.length() > 0) {
-      CompilerOptions.LanguageMode languageMode =
-          CompilerOptions.LanguageMode.fromString(config.languageIn);
-      if (languageMode != null) {
-        options.setLanguageIn(languageMode);
-      } else {
-        throw new FlagUsageException("Unknown language `" + config.languageIn
-                                     + "' specified.");
-      }
-    }
-
-    if (config.languageOut.isEmpty()) {
-      options.setLanguageOut(options.getLanguageIn());
-    } else {
-      CompilerOptions.LanguageMode languageMode =
-          CompilerOptions.LanguageMode.fromString(config.languageOut);
-      if (languageMode != null) {
-        options.setLanguageOut(languageMode);
-      } else {
-        throw new FlagUsageException("Unknown language `" + config.languageOut +
-                                     "' specified.");
-      }
     }
 
     if (!config.outputManifests.isEmpty()) {
@@ -569,7 +543,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * An exception thrown when command-line flags are used incorrectly.
    */
-  public static class FlagUsageException extends Exception {
+  public static class FlagUsageException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     public FlagUsageException(String message) {
@@ -602,9 +576,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param jsModuleSpecs A list js module specs.
    * @return An array of inputs
    */
-  protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
-      boolean allowStdIn, List<JsModuleSpec> jsModuleSpecs)
-      throws FlagUsageException, IOException {
+  protected List<SourceFile> createInputs(
+      List<FlagEntry<JsSourceType>> files, boolean allowStdIn, List<JsModuleSpec> jsModuleSpecs)
+      throws IOException {
     return createInputs(files, null /* jsonFiles */, allowStdIn, jsModuleSpecs);
   }
 
@@ -619,9 +593,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param jsModuleSpecs A list js module specs.
    * @return An array of inputs
    */
-  protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
-      List<JsonFileSpec> jsonFiles, List<JsModuleSpec> jsModuleSpecs)
-      throws FlagUsageException, IOException {
+  protected List<SourceFile> createInputs(
+      List<FlagEntry<JsSourceType>> files,
+      List<JsonFileSpec> jsonFiles,
+      List<JsModuleSpec> jsModuleSpecs)
+      throws IOException {
     return createInputs(files, jsonFiles, false, jsModuleSpecs);
   }
 
@@ -638,9 +614,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param jsModuleSpecs A list js module specs.
    * @return An array of inputs
    */
-  protected List<SourceFile> createInputs(List<FlagEntry<JsSourceType>> files,
-      List<JsonFileSpec> jsonFiles, boolean allowStdIn,
-      List<JsModuleSpec> jsModuleSpecs) throws FlagUsageException, IOException {
+  protected List<SourceFile> createInputs(
+      List<FlagEntry<JsSourceType>> files,
+      List<JsonFileSpec> jsonFiles,
+      boolean allowStdIn,
+      List<JsModuleSpec> jsModuleSpecs)
+      throws IOException {
     List<SourceFile> inputs = new ArrayList<>(files.size());
     boolean usingStdin = false;
     int jsModuleIndex = 0;
@@ -705,7 +684,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       List<JsModuleSpec> jsModuleSpecs,
       List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles)
-      throws FlagUsageException, IOException {
+      throws IOException {
     if (isInTestMode()) {
       return inputsSupplierForTesting != null ? inputsSupplierForTesting.get()
           : null;
@@ -729,8 +708,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Creates JS extern inputs from a list of files.
    */
-  private List<SourceFile> createExternInputs(List<String> files)
-      throws FlagUsageException, IOException {
+  private List<SourceFile> createExternInputs(List<String> files) throws IOException {
     if (files.isEmpty()) {
       return ImmutableList.of(SourceFile.fromCode("/dev/null", ""));
     }
@@ -752,9 +730,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param inputs A list of JS file paths, not null
    * @return An array of module objects
    */
-  List<JSModule> createJsModules(
-      List<JsModuleSpec> specs, List<SourceFile> inputs)
-      throws FlagUsageException, IOException {
+  List<JSModule> createJsModules(List<JsModuleSpec> specs, List<SourceFile> inputs)
+      throws IOException {
     if (isInTestMode()) {
       return modulesSupplierForTesting.get();
     }
@@ -846,10 +823,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Validates the module name. Can be overridden by subclasses.
    * @param name The module name
-   * @throws FlagUsageException if the validation fails
    */
-  protected void checkModuleName(String name)
-      throws FlagUsageException {
+  protected void checkModuleName(String name) {
     if (!TokenStream.isJSIdentifier(name)) {
       throw new FlagUsageException("Invalid module name: '" + name + "'");
     }
@@ -864,8 +839,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @return A map from module name to module wrapper. Modules with no wrapper
    *         will have the empty string as their value in this map.
    */
-  static Map<String, String> parseModuleWrappers(List<String> specs,
-      List<JSModule> modules) throws FlagUsageException {
+  static Map<String, String> parseModuleWrappers(List<String> specs, List<JSModule> modules) {
     Preconditions.checkState(specs != null);
 
     Map<String, String> wrappers = Maps.newHashMapWithExpectedSize(modules.size());
@@ -904,8 +878,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   @VisibleForTesting
-  void writeModuleOutput(Appendable out, JSModule m)
-      throws FlagUsageException, IOException {
+  void writeModuleOutput(Appendable out, JSModule m) throws IOException {
     if (parsedModuleWrappers == null) {
       parsedModuleWrappers = parseModuleWrappers(
           config.moduleWrapper,
@@ -998,7 +971,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    *
    * @return system exit status
    */
-  protected int doRun() throws FlagUsageException, IOException {
+  protected int doRun() throws IOException {
     Compiler.setLoggingLevel(Level.parse(config.loggingLevel));
 
     compiler = createCompiler();
@@ -1098,8 +1071,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Processes the results of the compile job, and returns an error code.
    */
-  int processResults(Result result, List<JSModule> modules, B options)
-       throws FlagUsageException, IOException {
+  int processResults(Result result, List<JSModule> modules, B options) throws IOException {
     if (config.printPassGraph) {
       if (compiler.getRoot() == null) {
         return 1;
@@ -1254,9 +1226,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
   }
 
-  private void outputModuleBinaryAndSourceMaps(
-      List<JSModule> modules, B options)
-      throws FlagUsageException, IOException {
+  private void outputModuleBinaryAndSourceMaps(List<JSModule> modules, B options)
+      throws IOException {
     parsedModuleWrappers = parseModuleWrappers(
         config.moduleWrapper, modules);
     maybeCreateDirsForPath(config.moduleOutputPathPrefix);
@@ -1335,7 +1306,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @return Charset to use when reading inputs
    * @throws FlagUsageException if flag is not a valid Charset name.
    */
-  private Charset getInputCharset() throws FlagUsageException {
+  private Charset getInputCharset() {
     if (!config.charset.isEmpty()) {
       if (!Charset.isSupported(config.charset)) {
         throw new FlagUsageException(config.charset +
@@ -1358,7 +1329,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    *    be a supported charset.
    * @throws FlagUsageException if flag is not a valid Charset name.
    */
-  private Charset getLegacyOutputCharset() throws FlagUsageException {
+  private Charset getLegacyOutputCharset() {
     if (!config.charset.isEmpty()) {
       if (!Charset.isSupported(config.charset)) {
         throw new FlagUsageException(config.charset + " is not a valid charset name.");
@@ -1372,7 +1343,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * Query the flag for the output charset. Defaults to UTF-8.
    * @throws FlagUsageException if flag is not a valid Charset name.
    */
-  private Charset getOutputCharset2() throws FlagUsageException {
+  private Charset getOutputCharset2() {
     if (!config.charset.isEmpty()) {
       if (!Charset.isSupported(config.charset)) {
         throw new FlagUsageException(config.charset +
@@ -1383,8 +1354,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return UTF_8;
   }
 
-  protected List<SourceFile> createExterns(CompilerOptions options)
-      throws FlagUsageException, IOException {
+  protected List<SourceFile> createExterns(CompilerOptions options) throws IOException {
     return isInTestMode() ? externsSupplierForTesting.get() :
         createExternInputs(config.externs);
   }
@@ -1591,8 +1561,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * Outputs the variable and property name maps for the specified compiler if
    * the proper FLAGS are set.
    */
-  private void outputNameMaps() throws FlagUsageException,
-      IOException {
+  private void outputNameMaps() throws IOException {
 
     String propertyMapOutputPath = null;
     String variableMapOutputPath = null;
@@ -2353,19 +2322,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private String languageIn = "";
-    private String languageOut = "";
-
-    CommandLineConfig setLanguageIn(String languageIn) {
-      this.languageIn = languageIn;
-      return this;
-    }
-
-    CommandLineConfig setLanguageOut(String languageOut) {
-      this.languageOut = languageOut;
-      return this;
-    }
-
     private boolean skipNormalOutputs = false;
 
     /**
@@ -2584,10 +2540,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      *        not contain the ':' character.
      * @param isFirstModule Whether the spec is for the first module.
      * @return A parsed js module spec.
-     * @throws FlagUsageException
      */
-    static JsModuleSpec create(String specString, boolean isFirstModule)
-        throws FlagUsageException {
+    static JsModuleSpec create(String specString, boolean isFirstModule) {
       // Format is "<name>:<num-js-files>[:[<dep>,...][:]]".
       String[] parts = specString.split(":");
       if (parts.length < 2 || parts.length > 4) {
