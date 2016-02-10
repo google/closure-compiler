@@ -35,7 +35,6 @@ public final class InlinePropertiesTest extends CompilerTestCase {
     enableTypeCheck();
     enableClosurePass();
     enableGatherExternProperties();
-    compareJsDoc = false;
   }
 
   @Override
@@ -57,6 +56,7 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "}",
         "new C().foo;"),
         LINE_JOINER.join(
+        "/** @constructor */",
         "function C() {",
         "  this.foo = 1;",
         "}",
@@ -71,6 +71,7 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "}",
         "new C().foo;"),
         LINE_JOINER.join(
+        "/** @constructor */",
         "function C() {",
         "  {",
         "    this.foo = 1;",
@@ -89,6 +90,7 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "var x = new C();",
         "x.foo;"),
         LINE_JOINER.join(
+        "/** @constructor */",
         "function C() {",
         "  this.foo = 1",
         "}",
@@ -108,9 +110,11 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "var x = new C();",
         "x.foo;"),
         LINE_JOINER.join(
+        "/** @constructor */",
         "function C() {",
         "  this.foo = 1",
         "}",
+        "/** @type {C} */",
         "var x = new C();",
         "1;\n"));
   }
@@ -289,6 +293,7 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "C.prototype.foo = 1;",
         "new C().foo;\n"),
         LINE_JOINER.join(
+        "/** @constructor */",
         "function C() {}",
         "C.prototype.foo = 1;",
         "new C(), 1;\n"));
@@ -302,6 +307,7 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "var x = new C();",
         "x.foo;\n"),
         LINE_JOINER.join(
+        "/** @constructor */",
         "function C() {}",
         "C.prototype.foo = 1;",
         "var x = new C();",
@@ -318,6 +324,7 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "var x = new C();",
         "x.foo;"),
         LINE_JOINER.join(
+        "/** @constructor */",
         "function C() {}",
         "{",
         "  C.prototype.foo = 1;",
