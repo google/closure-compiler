@@ -108,26 +108,26 @@ public class JSDocInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // Function information
-    JSTypeExpression baseType = null;
-    List<JSTypeExpression> extendedInterfaces = null;
-    List<JSTypeExpression> implementedInterfaces = null;
-    Map<String, JSTypeExpression> parameters = null;
-    List<JSTypeExpression> thrownTypes = null;
-    List<String> templateTypeNames = null;
-    Set<String> disposedParameters = null;
-    Map<String, Node> typeTransformations = null;
+    private JSTypeExpression baseType;
+    private List<JSTypeExpression> extendedInterfaces;
+    private List<JSTypeExpression> implementedInterfaces;
+    private Map<String, JSTypeExpression> parameters;
+    private List<JSTypeExpression> thrownTypes;
+    private List<String> templateTypeNames;
+    private Set<String> disposedParameters;
+    private Map<String, Node> typeTransformations;
 
     // Other information
-    String description = null;
-    String meaning = null;
-    String deprecated = null;
-    String license = null;
-    ImmutableSet<String> suppressions = null;
-    ImmutableSet<String> modifies = null;
-    String lendsName = null;
+    private String description;
+    private String meaning;
+    private String deprecated;
+    private String license;
+    private ImmutableSet<String> suppressions;
+    private ImmutableSet<String> modifies;
+    private String lendsName;
 
     // Bit flags for properties.
-    private int propertyBitField = 0;
+    private int propertyBitField;
 
     @Override
     public String toString() {
@@ -204,18 +204,18 @@ public class JSDocInfo implements Serializable {
   }
 
   private static final class LazilyInitializedDocumentation {
-    String sourceComment = null;
-    List<Marker> markers = null;
+    private String sourceComment;
+    private List<Marker> markers;
 
-    LinkedHashMap<String, String> parameters = null;
-    Map<JSTypeExpression, String> throwsDescriptions = null;
-    String blockDescription = null;
-    String fileOverview = null;
-    String returnDescription = null;
-    String version = null;
+    private LinkedHashMap<String, String> parameters;
+    private Map<JSTypeExpression, String> throwsDescriptions;
+    private String blockDescription;
+    private String fileOverview;
+    private String returnDescription;
+    private String version;
 
-    List<String> authors = null;
-    List<String> sees = null;
+    private List<String> authors;
+    private List<String> sees;
   }
 
   /**
@@ -272,11 +272,11 @@ public class JSDocInfo implements Serializable {
    * if documentation collection is turned on.
    */
   public static final class Marker {
-    private TrimmedStringPosition annotation = null;
-    private TrimmedStringPosition name = null;
-    private SourcePosition<Node> nameNode = null;
-    private StringPosition description = null;
-    private TypePosition type = null;
+    private TrimmedStringPosition annotation;
+    private TrimmedStringPosition name;
+    private SourcePosition<Node> nameNode;
+    private StringPosition description;
+    private TypePosition type;
 
     /**
      * Gets the position information for the annotation name. (e.g., "param")
@@ -340,11 +340,11 @@ public class JSDocInfo implements Serializable {
     }
   }
 
-  private LazilyInitializedInfo info = null;
+  private LazilyInitializedInfo info;
 
-  private LazilyInitializedDocumentation documentation = null;
+  private LazilyInitializedDocumentation documentation;
 
-  private Visibility visibility = null;
+  private Visibility visibility;
 
   /**
    * The {@link #isConstant()}, {@link #isConstructor()}, {@link #isInterface},
@@ -357,7 +357,7 @@ public class JSDocInfo implements Serializable {
    * @see #setType(JSTypeExpression, int)
    * @see #getType(int)
    */
-  private int bitset = 0x00;
+  private int bitset;
 
   /**
    * The type for {@link #getType()}, {@link #getReturnType()} or
@@ -367,24 +367,24 @@ public class JSDocInfo implements Serializable {
    * @see #setType(JSTypeExpression, int)
    * @see #getType(int)
    */
-  private JSTypeExpression type = null;
+  private JSTypeExpression type;
 
   /**
    * The type for {@link #getThisType()}.
    */
-  private JSTypeExpression thisType = null;
+  private JSTypeExpression thisType;
 
   /**
    * Whether the type annotation was inlined.
    */
-  private boolean inlineType = false;
+  private boolean inlineType;
 
   /**
    * Whether to include documentation.
    *
    * @see JSDocInfo.LazilyInitializedDocumentation
    */
-  private boolean includeDocumentation = false;
+  private boolean includeDocumentation;
 
   /**
    * Position of the original comment.
