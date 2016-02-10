@@ -1393,9 +1393,9 @@ Array.of = function(var_args) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
- * @param {string|!Array<T>|!IArrayLike<T>|!Iterable<T>} arrayLike
+ * @param {string|!IArrayLike<T>|!Iterable<T>} arrayLike
  * @param {?function(this:S, (string|T), number,
- *     (string|!Array<T>|!IArrayLike<T>|!Iterable<T>)): R} opt_mapFn
+ *     (string|!IArrayLike<T>|!Iterable<T>)): R} opt_mapFn
  * @param {S=} opt_this
  * @return {!Array<R>}
  * @template T,S,R
@@ -1417,7 +1417,7 @@ Array.prototype.entries;
  * @param {!function(this:S, T, number, !Array<T>): boolean} predicate
  * @param {S=} opt_this
  * @return {T|undefined}
- * @this {IArrayLike<T>|Array<T>|string}
+ * @this {IArrayLike<T>|string}
  * @template T,S
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.find
  */
@@ -1428,7 +1428,7 @@ Array.prototype.find = function(predicate, opt_this) {};
  * @param {!function(this:S, T, number, !Array<T>): boolean} predicate
  * @param {S=} opt_this
  * @return {number}
- * @this {IArrayLike<T>|Array<T>|string}
+ * @this {IArrayLike<T>|string}
  * @template T,S
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.findindex
  */
