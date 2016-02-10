@@ -57,11 +57,11 @@ public class FunctionParamBuilderTest extends BaseJSTypeTestCase {
     Node params = builder.build();
     assertTypeEquals(NUMBER_TYPE, params.getFirstChild().getJSType());
     assertTypeEquals(registry.createOptionalType(BOOLEAN_TYPE),
-        params.getFirstChild().getNext().getJSType());
+        params.getSecondChild().getJSType());
     assertTypeEquals(registry.createOptionalType(STRING_TYPE),
         params.getLastChild().getJSType());
 
-    assertTrue(params.getFirstChild().getNext().isOptionalArg());
+    assertTrue(params.getSecondChild().isOptionalArg());
     assertTrue(params.getLastChild().isVarArgs());
   }
 }
