@@ -272,8 +272,7 @@ public final class JSDocInfoBuilder {
           lineno, charno + name.length());
       currentMarker.setName(position);
 
-      SourcePosition<Node> nodePos =
-          new JSDocInfo.NamePosition();
+      JSDocInfo.NamePosition nodePos = new JSDocInfo.NamePosition();
       Node node = Node.newString(Token.NAME, name, lineno, charno);
       node.setLength(name.length());
       node.setStaticSourceFile(file);
