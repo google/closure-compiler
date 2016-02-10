@@ -512,9 +512,11 @@ Array.prototype.push = function(var_args) {};
 
 /**
  * Transposes the elements of an array in place: the first array element becomes the
- * last and the last becomes the first.
+ * last and the last becomes the first. The mutated array is also returned.
  *
- * @this {IArrayLike<?>}
+ * @return {THIS} A reference to the original modified array.
+ * @this {THIS}
+ * @template THIS
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse
  */
