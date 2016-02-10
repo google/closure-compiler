@@ -16,7 +16,7 @@
 
 // GENERATED FILE. DO NOT EDIT. REBUILD WITH build_runtime.sh.
 
-/**@suppress {undefinedVars}
+'use strict';/**@suppress {undefinedVars}
 @param {!Object} maybeGlobal
 @return {!Object} */$jscomp.getGlobal = function(maybeGlobal) {
   return typeof window != "undefined" && window === maybeGlobal ? maybeGlobal : typeof global != "undefined" ? global : maybeGlobal;
@@ -119,7 +119,7 @@
 
 @param {!IArrayLike<INPUT>} array
 @param {function(number,INPUT):OUTPUT} func
-@return {!Iterator<OUTPUT>} */$jscomp.array.arrayIterator_ = function(array, func) {
+@return {!IteratorIterable<OUTPUT>} */$jscomp.array.arrayIterator_ = function(array, func) {
   if (array instanceof String) {
     array = String(array);
   }
@@ -159,7 +159,7 @@
 };
 /**@template INPUT,OUTPUT,THIS
 
-@param {(!IArrayLike<INPUT>|!Iterable<INPUT>)} arrayLike
+@param {(!IArrayLike<INPUT>|!Iterator<INPUT>|!Iterable<INPUT>|!Array<INPUT>)} arrayLike
 @param {function(this:THIS,INPUT):OUTPUT=} opt_mapFn
 @param {THIS=} opt_thisArg
 @return {!Array<OUTPUT>} */$jscomp.array.from = function(arrayLike, opt_mapFn, opt_thisArg) {
@@ -198,7 +198,7 @@
 };
 /**@template VALUE
 
-@return {!Iterator<!Array<(number|VALUE)>>}
+@return {!IteratorIterable<!Array<(number|VALUE)>>}
 @this {!IArrayLike<VALUE>} */$jscomp.array.entries = function() {
   return $jscomp.array.arrayIterator_(this, function(i, v) {
     return [i, v];
@@ -210,7 +210,7 @@
   }
 };
 /**
-@return {!Iterator<number>}
+@return {!IteratorIterable<number>}
 @this {!IArrayLike} */$jscomp.array.keys = function() {
   return $jscomp.array.arrayIterator_(this, function(i) {
     return i;
@@ -223,7 +223,7 @@
 };
 /**@template VALUE
 
-@return {!Iterator<VALUE>}
+@return {!IteratorIterable<VALUE>}
 @this {!IArrayLike<VALUE>} */$jscomp.array.values = function() {
   return $jscomp.array.arrayIterator_(this, function(_, v) {
     return v;
@@ -348,7 +348,7 @@
     if (map.get(key) != "s" || map.size != 1 || map.get({x:4}) || map.set({x:4}, "t") != map || map.size != 2) {
       return false;
     }
-    /**@const */var iter = map.entries();
+    /**@const @type {!Iterator<!Array>} */var iter = map.entries();
     var item = iter.next();
     if (item.done || item.value[0] != key || item.value[1] != "s") {
       return false;
@@ -408,7 +408,7 @@
 };
 /**
 @param {KEY} key
-@return {boolean} */$jscomp.Map.prototype["delete"] = function(key) {
+@return {boolean} */$jscomp.Map.prototype.delete = function(key) {
   /**@const */var $jscomp$destructuring$var1 = this.maybeGetEntry_(key);
   /**@const */var id = $jscomp$destructuring$var1.id;
   /**@const */var list = $jscomp$destructuring$var1.list;
@@ -460,19 +460,19 @@
   return {id:id, list:list, index:-1, entry:void 0};
 };
 /**
-@return {!Iterator<!Array<(KEY|VALUE)>>} */$jscomp.Map.prototype.entries = function() {
+@return {!IteratorIterable<!Array<(KEY|VALUE)>>} */$jscomp.Map.prototype.entries = function() {
   return this.iter_(function(entry) {
     return [entry.key, entry.value];
   });
 };
 /**
-@return {!Iterator<KEY>} */$jscomp.Map.prototype.keys = function() {
+@return {!IteratorIterable<KEY>} */$jscomp.Map.prototype.keys = function() {
   return this.iter_(function(entry) {
     return entry.key;
   });
 };
 /**
-@return {!Iterator<VALUE>} */$jscomp.Map.prototype.values = function() {
+@return {!IteratorIterable<VALUE>} */$jscomp.Map.prototype.values = function() {
   return this.iter_(function(entry) {
     return entry.value;
   });
@@ -489,13 +489,13 @@
 /**@private @template T
 
 @param {function(!$jscomp.Map.Entry_<KEY,VALUE>):T} func
-@return {!Iterator<T>} */$jscomp.Map.prototype.iter_ = function(func) {
+@return {!IteratorIterable<T>} */$jscomp.Map.prototype.iter_ = function(func) {
   /**@const */var map = this;
   var entry = this.head_;
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
   var $jscomp$compprop3 = {};
-  return /**@type {!Iterator} */($jscomp$compprop3.next = function() {
+  return /**@type {!IteratorIterable} */($jscomp$compprop3.next = function() {
     if (entry) {
       while (entry.head != map.head_) {
         entry = entry.previous;
@@ -776,7 +776,7 @@
 /***/$jscomp.object = $jscomp.object || {};
 /**
 @param {!Object} target
-@param {...!Object} sources
+@param {...?Object} sources
 @return {!Object} */$jscomp.object.assign = function(target, sources) {
   var $jscomp$restParams = [];
   for (var $jscomp$restIndex = 1;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
@@ -785,6 +785,9 @@
   var sources$15 = $jscomp$restParams;
   for (var $jscomp$iter$7 = $jscomp.makeIterator(sources$15), $jscomp$key$source = $jscomp$iter$7.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$7.next()) {
     /**@const */var source = $jscomp$key$source.value;
+    if (!source) {
+      continue;
+    }
     for (/**@const */var key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
         target[key] = source[key];
@@ -845,10 +848,10 @@
   this.size = this.map_.size;
   return this;
 };
-/**@suppress {checkTypes}
+/**
 @param {VALUE} value
-@return {boolean} */$jscomp.Set.prototype["delete"] = function(value) {
-  /**@const */var result = this.map_["delete"](value);
+@return {boolean} */$jscomp.Set.prototype.delete = function(value) {
+  /**@const */var result = this.map_.delete(value);
   this.size = this.map_.size;
   return result;
 };
@@ -862,11 +865,11 @@
   return this.map_.has(value);
 };
 /**
-@return {!Iterator<!Array<VALUE>>} */$jscomp.Set.prototype.entries = function() {
+@return {!IteratorIterable<!Array<VALUE>>} */$jscomp.Set.prototype.entries = function() {
   return this.map_.entries();
 };
 /**
-@return {!Iterator<VALUE>} */$jscomp.Set.prototype.values = function() {
+@return {!IteratorIterable<VALUE>} */$jscomp.Set.prototype.values = function() {
   return this.map_.values();
 };
 /**@template THIS

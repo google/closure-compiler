@@ -48,6 +48,8 @@ abstract class IntegrationTestCase extends TestCase {
           "var Iterator;",
           "/** @interface */",
           "var Iterable;",
+          "/** @interface @extends {Iterator} @extends {Iterable} */",
+          "var IteratorIterable;",
           "/** @interface */",
           "var IArrayLike;",
           "/** @constructor */",

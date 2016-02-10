@@ -101,7 +101,6 @@ $jscomp.Set = class {
    * Deletes an element from the set.
    * @param {VALUE} value
    * @return {boolean}
-   * @suppress {checkTypes} .delete -> ['delete'] breaks @struct
    */
   delete(value) {
     const result = this.map_.delete(value);
@@ -129,7 +128,7 @@ $jscomp.Set = class {
 
   /**
    * Returns an iterator of entries.
-   * @return {!Iterator<!Array<VALUE>>}
+   * @return {!IteratorIterable<!Array<VALUE>>}
    */
   entries() {
     return this.map_.entries();
@@ -138,7 +137,7 @@ $jscomp.Set = class {
 
   /**
    * Returns an iterator of values.
-   * @return {!Iterator<VALUE>}
+   * @return {!IteratorIterable<VALUE>}
    */
   values() {
     return this.map_.values();

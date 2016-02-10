@@ -39,7 +39,7 @@ done
        --compilation_level=WHITESPACE_ONLY \
        --preserve_type_annotations \
        --language_in=ES6_STRICT \
-       --language_out=ES3 \
+       --language_out=ES5_STRICT \
        --js="$dir/es6/runtime.js" \
        --js="$dir/es6/object.js" \
       | sed 's/ *$//g'

@@ -52,7 +52,7 @@ $jscomp.Map = class {
           map.set({x: 4}, 't') != map || map.size != 2) {
         return false;
       }
-      const iter = map.entries();
+      const /** !Iterator<!Array> */ iter = map.entries();
       let item = iter.next();
       if (item.done || item.value[0] != key || item.value[1] != 's') {
         return false;
@@ -247,7 +247,7 @@ $jscomp.Map = class {
 
   /**
    * Returns an iterator of entries.
-   * @return {!Iterator<!Array<KEY|VALUE>>}
+   * @return {!IteratorIterable<!Array<KEY|VALUE>>}
    */
   entries() {
     return this.iter_(entry => [entry.key, entry.value]);
@@ -256,7 +256,7 @@ $jscomp.Map = class {
 
   /**
    * Returns an iterator of keys.
-   * @return {!Iterator<KEY>}
+   * @return {!IteratorIterable<KEY>}
    */
   keys() {
     return this.iter_(entry => entry.key);
@@ -265,7 +265,7 @@ $jscomp.Map = class {
 
   /**
    * Returns an iterator of values.
-   * @return {!Iterator<VALUE>}
+   * @return {!IteratorIterable<VALUE>}
    */
   values() {
     return this.iter_(entry => entry.value);
@@ -293,14 +293,14 @@ $jscomp.Map = class {
   /**
    * Maps over the entries with the given function.
    * @param {function(!$jscomp.Map.Entry_<KEY, VALUE>): T} func
-   * @return {!Iterator<T>}
+   * @return {!IteratorIterable<T>}
    * @template T
    * @private
    */
   iter_(func) {
     const map = this;
     let entry = this.head_;
-    return /** @type {!Iterator} */ ({
+    return /** @type {!IteratorIterable} */ ({
       next() {
         if (entry) {
           while (entry.head != map.head_) {

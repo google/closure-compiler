@@ -34,7 +34,7 @@ testSuite({
 
   testAssign_simple() {
     const obj = {a: 2, z: 3};
-    assertEquals(obj, Object.assign(obj, {a: 4, b: 5}, {c: 6, b: 7}));
+    assertEquals(obj, Object.assign(obj, {a: 4, b: 5}, null, {c: 6, b: 7}));
     assertDeepEquals({a: 4, b: 7, c: 6, z: 3}, obj);
   },
 

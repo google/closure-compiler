@@ -28,11 +28,12 @@ $jscomp.object = $jscomp.object || {};
  * Copies values of all enumerable own properties from one or more
  * sources to the given target object, and returns the target.
  * @param {!Object} target The target object onto which to copy.
- * @param {...!Object} sources The source objects.
+ * @param {...?Object} sources The source objects.
  * @return {!Object} The target object is returned.
  */
 $jscomp.object.assign = function(target, ...sources) {
   for (const source of sources) {
+    if (!source) continue;
     for (const key in source) {
       // Note: it's possible that source.hasOwnPropery was overwritten,
       // so call the version on Object.prototype just to be sure.
