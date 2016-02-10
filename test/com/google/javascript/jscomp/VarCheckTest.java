@@ -277,6 +277,18 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     testSame("function fn(a){ var a = 2; }");
     testError("function fn(){ var b = a; }", VarCheck.UNDEFINED_VAR_ERROR);
 
+    // Default parameters
+    testErrorEs6(
+        "function fn(a = b) { function g(a = 3) { var b; } }", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("function f(x=a) { let a; }", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("function f(x=a) { { let a; } }", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("function f(x=b) { function a(x=1) { var b; } }", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("function f(x=a) { var a; }", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("function f(x=a()) { function a() {} }", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("function f(x=[a]) { var a; }", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("function f(x = new foo.bar()) {}", VarCheck.UNDEFINED_VAR_ERROR);
+    testSameEs6("var foo = {}; foo.bar = class {}; function f(x = new foo.bar()) {}");
+
     testSameEs6("function fn(a = 2){ var b = a; }");
     testSameEs6("function fn(a = 2){ var a = 3; }");
     testSameEs6("function fn({a, b}){ var c = a; }");
