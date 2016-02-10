@@ -60,13 +60,13 @@ public final class JSDocInfoBuilder {
   private JSDocInfo currentInfo;
 
   // whether the current JSDocInfo has valuable information
-  private boolean populated = false;
+  private boolean populated;
 
   // whether to include the documentation itself when parsing the JsDoc
-  private boolean parseDocumentation = false;
+  private boolean parseDocumentation;
 
   // the current marker, if any.
-  private JSDocInfo.Marker currentMarker = null;
+  private JSDocInfo.Marker currentMarker;
 
   public JSDocInfoBuilder(boolean parseDocumentation) {
     this(new JSDocInfo(parseDocumentation), parseDocumentation, false);
