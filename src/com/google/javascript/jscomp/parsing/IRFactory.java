@@ -185,8 +185,8 @@ class IRFactory {
   static final String INVALID_ES5_STRICT_OCTAL =
       "Octal integer literals are not supported in Ecmascript 5 strict mode.";
 
-  static final String INVALID_NUMBER_LITERAL =
-      "Invalid number literal.";
+  static final String INVALID_OCTAL_DIGIT =
+      "Invalid octal digit in octal literal.";
 
   static final String STRING_CONTINUATION_ERROR =
       "String continuations are not supported in this language mode.";
@@ -2878,7 +2878,6 @@ class IRFactory {
     if (value.charAt(0) == '.') {
       return Double.valueOf('0' + value);
     } else if (value.charAt(0) == '0' && length > 1) {
-      // TODO(johnlenz): accept octal numbers in es3 etc.
       switch (value.charAt(1)) {
         case '.':
         case 'e':
@@ -2925,22 +2924,35 @@ class IRFactory {
         }
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
-          errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
-              lineno(location.start), charno(location.start));
           if (!inStrictContext()) {
             double v = 0;
             int c = 0;
             while (++c < length) {
-              v = (v * 8) + octaldigit(value.charAt(c));
+              char digit = value.charAt(c);
+              if (isOctalDigit(digit)) {
+                v = (v * 8) + octaldigit(digit);
+              } else {
+                errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
+                    lineno(location.start), charno(location.start));
+                return 0;
+              }
             }
+            errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
+                lineno(location.start), charno(location.start));
             return v;
           } else {
+            // TODO(tbreisacher): Make this an error instead of a warning.
+            errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
+                lineno(location.start), charno(location.start));
             return Double.valueOf(value);
           }
-        default:
-          errorReporter.error(INVALID_NUMBER_LITERAL, sourceName,
-              lineno(location.start), charno(location.start));
+        case '8': case '9':
+          errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
+                    lineno(location.start), charno(location.start));
           return 0;
+        default:
+          throw new IllegalStateException(
+              "Unexpected character in number literal: " + value.charAt(1));
       }
     } else {
       return Double.valueOf(value);

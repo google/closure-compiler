@@ -1957,15 +1957,21 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testInvalidOldStyleOctalLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     parseError("08;",
-        "Invalid number literal.");
+        "Invalid octal digit in octal literal.");
+    parseError("01238;",
+        "Invalid octal digit in octal literal.");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseError("08;",
-        "Invalid number literal.");
+        "Invalid octal digit in octal literal.");
+    parseError("01238;",
+        "Invalid octal digit in octal literal.");
 
     mode = LanguageMode.ECMASCRIPT6;
     parseError("08;",
-        "Invalid number literal.");
+        "Invalid octal digit in octal literal.");
+    parseError("01238;",
+        "Invalid octal digit in octal literal.");
   }
 
   public void testGetter() {
