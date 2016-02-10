@@ -611,6 +611,9 @@ public class Scanner {
         reportError("Octal Integer Literal must contain at least one digit");
       }
       skipOctalDigits();
+      if (peek('8') || peek('9')) {
+        reportError("Invalid octal digit in octal literal.");
+      }
       return new LiteralToken(
           TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
     case 'x':

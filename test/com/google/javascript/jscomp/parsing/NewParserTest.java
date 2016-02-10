@@ -1939,19 +1939,18 @@ public final class NewParserTest extends BaseJSTypeTestCase {
         "Octal integer literals are not supported in Ecmascript 5 strict mode.");
   }
 
-  // TODO(tbreisacher): We need much clearer error messages for this case.
   public void testInvalidOctalLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     parseError("0o08;",
-        "Semi-colon expected");
+        "Invalid octal digit in octal literal.");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseError("0o08;",
-        "Semi-colon expected");
+        "Invalid octal digit in octal literal.");
 
     mode = LanguageMode.ECMASCRIPT6;
     parseError("0o08;",
-        "Semi-colon expected");
+        "Invalid octal digit in octal literal.");
   }
 
   public void testInvalidOldStyleOctalLiterals() {
