@@ -23,23 +23,10 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   private boolean late = true;
 
-  // TODO(user): Remove this when we no longer need to do string comparison.
-  private PeepholeIntegrationTest(boolean compareAsTree) {
-    super("", compareAsTree);
-  }
-
-  public PeepholeIntegrationTest() {
-    super("");
-  }
-
   @Override
   public void setUp() throws Exception {
     super.setUp();
     this.late = false;
-
-    // TODO(nicksantos): Turn this on. There are some normalizations
-    // that cause weirdness here.
-    disableNormalize();
   }
 
   @Override
@@ -67,16 +54,6 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   private void fold(String js, String expected) {
     test(js, expected);
-  }
-
-  // TODO(user): This is same as fold() except it uses string comparison. Any
-  // test that needs tell us where a folding is constructing an invalid AST.
-  private static void assertResultString(String js, String expected) {
-    PeepholeIntegrationTest scTest = new PeepholeIntegrationTest(false);
-
-    scTest.disableNormalize();
-
-    scTest.test(js, expected);
   }
 
   public void testTrueFalse() {
@@ -132,18 +109,14 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testFoldOneChildBlocksStringCompare() {
-    // The expected parse tree has a BLOCK structure around the true branch.
-    assertResultString("if(x){if(y){var x;}}else{var z;}",
-        "if(x){if(y)var x}else var z");
+    fold("if (x) {if (y) { var x; } } else{ var z; }",
+         "if (x) { if (y) var x } else var z");
   }
 
   /** Test a particularly hairy edge case. */
   public void testNecessaryDanglingElse() {
-    // The extra block is added by CodeGenerator. The logic to avoid ambiguous
-    // else clauses used to be in FoldConstants, so the test is here for
-    // legacy reasons.
-    assertResultString(
-        "if(x)if(y){y();z()}else;else x()", "if(x){if(y){y();z()}}else x()");
+    fold("if (x) if (y){ y(); z() } else; else x()",
+         "if (x) { if(y) { y(); z() } } else x()");
   }
 
   /** Try to minimize returns */
@@ -198,7 +171,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testFoldBitwiseOpStringCompareIntegration() {
-    assertResultString("while(-1 | 0){}", "while(1);");
+    fold("while (-1 | 0) {}", "while (1);");
   }
 
   public void testVarLiftingIntegration() {
