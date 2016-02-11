@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.type;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
@@ -743,4 +744,32 @@ public abstract class ChainableReverseAbstractInterpreter
         return null;
     }
   }
+
+  /**
+   * For when {@code goog.isArray} or {@code Array.isArray} returns true.
+   */
+  final Visitor<JSType> restrictToArrayVisitor =
+      new RestrictByTrueTypeOfResultVisitor() {
+        @Override
+        protected JSType caseTopType(JSType topType) {
+          return topType.isAllType() ? getNativeType(ARRAY_TYPE) : topType;
+        }
+
+        @Override
+        public JSType caseObjectType(ObjectType type) {
+          JSType arrayType = getNativeType(ARRAY_TYPE);
+          return arrayType.isSubtype(type) ? arrayType : null;
+        }
+      };
+
+  /**
+   * For when {@code goog.isArray} or {@code Array.isArray} returns false.
+   */
+  final Visitor<JSType> restrictToNotArrayVisitor =
+      new RestrictByFalseTypeOfResultVisitor() {
+        @Override
+        public JSType caseObjectType(ObjectType type) {
+          return type.isSubtype(getNativeType(ARRAY_TYPE)) ? null : type;
+        }
+      };
 }
