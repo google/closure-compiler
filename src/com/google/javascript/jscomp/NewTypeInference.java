@@ -2327,7 +2327,7 @@ final class NewTypeInference implements CompilerPass {
   private void unifyWithSubtypeWarnIfFail(JSType genericType, JSType concreteType,
       List<String> typeParameters, Multimap<String, JSType> typeMultimap,
       Node toWarnOn, boolean isFwd) {
-    if (!genericType.unifyWithSubtype(concreteType, typeParameters, typeMultimap) && isFwd) {
+    if (!genericType.unifyWith(concreteType, typeParameters, typeMultimap) && isFwd) {
       // Unification may fail b/c of types irrelevant to generics, eg,
       // number vs string.
       // In this case, don't warn here; we'll show invalid-arg-type later.

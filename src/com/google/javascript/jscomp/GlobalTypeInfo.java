@@ -999,8 +999,10 @@ class GlobalTypeInfo implements CompilerPass {
         }
         ImmutableList<String> typeParameters = builder.build();
         RawNominalType rawNominalType;
-        if (fnDoc.isInterface()) {
-          rawNominalType = RawNominalType.makeInterface(defSite, qname, typeParameters);
+        if (fnDoc.usesImplicitMatch()) {
+          rawNominalType = RawNominalType.makeStructuralInterface(defSite, qname, typeParameters);
+        } else if (fnDoc.isInterface()) {
+          rawNominalType = RawNominalType.makeNominalInterface(defSite, qname, typeParameters);
         } else if (fnDoc.makesStructs()) {
           rawNominalType = RawNominalType.makeStructClass(defSite, qname, typeParameters);
         } else if (fnDoc.makesDicts()) {

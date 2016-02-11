@@ -271,7 +271,7 @@ final class ObjectType implements TypeWithProperties {
         if (hasConstantProp(qname)) {
           isConstant = true;
         }
-        if (type != null && !type.isSubtypeOf(declType)) {
+        if (type != null && !type.isSubtypeOf(declType, SubtypeCache.create())) {
           // Can happen in inheritance-related type errors.
           // Not sure what the best approach is.
           // For now, just forget the inferred type.
@@ -416,7 +416,7 @@ final class ObjectType implements TypeWithProperties {
       return BOTTOM_MAP;
     }
     if (!newPropType.isUnknown()
-        && newPropType.isSubtypeOf(nomPropType)
+        && newPropType.isSubtypeOf(nomPropType, SubtypeCache.create())
         && !newPropType.equals(nomPropType)) {
       return props.with(pname, newProp);
     }
@@ -485,11 +485,11 @@ final class ObjectType implements TypeWithProperties {
   }
 
   static boolean isUnionSubtype(boolean keepLoosenessOfThis,
-      Set<ObjectType> objs1, Set<ObjectType> objs2) {
+      Set<ObjectType> objs1, Set<ObjectType> objs2, SubtypeCache subSuperMap) {
     for (ObjectType obj1 : objs1) {
       boolean foundSupertype = false;
       for (ObjectType obj2 : objs2) {
-        if (obj1.isSubtypeOf(keepLoosenessOfThis, obj2)) {
+        if (obj1.isSubtypeOfHelper(keepLoosenessOfThis, obj2, subSuperMap)) {
           foundSupertype = true;
           break;
         }
@@ -501,8 +501,8 @@ final class ObjectType implements TypeWithProperties {
     return true;
   }
 
-  boolean isSubtypeOf(ObjectType obj2) {
-    return isSubtypeOf(true, obj2);
+  boolean isSubtypeOf(ObjectType obj2, SubtypeCache subSuperMap) {
+    return isSubtypeOfHelper(true, obj2, subSuperMap);
   }
 
   /**
@@ -511,39 +511,46 @@ final class ObjectType implements TypeWithProperties {
    * Optional properties create cycles in the type lattice, eg,
    * { } \le { p: num= }  and also   { p: num= } \le { }.
    */
-  boolean isSubtypeOf(boolean keepLoosenessOfThis, ObjectType other) {
+  private boolean isSubtypeOfHelper(boolean keepLoosenessOfThis,
+      ObjectType other, SubtypeCache subSuperMap) {
     if (other == TOP_OBJECT) {
       return true;
     }
 
     if ((keepLoosenessOfThis && this.isLoose) || other.isLoose) {
-      return this.isLooseSubtypeOf(other);
+      return this.isLooseSubtypeOf(other, subSuperMap);
     }
 
     NominalType thisNt = this.nominalType;
     NominalType otherNt = other.nominalType;
-    if (thisNt == null && otherNt != null
-        || thisNt != null && otherNt != null && !thisNt.isSubtypeOf(otherNt)) {
+    boolean checkOnlyLocalProps = true;
+    if (otherNt != null && otherNt.isStructuralInterface()) {
+      if (otherNt.equals(subSuperMap.get(thisNt))) {
+        return true;
+      }
+      subSuperMap = subSuperMap.with(thisNt, otherNt);
+      if (thisNt == null || !thisNt.isNominalSubtypeOf(otherNt)) {
+        checkOnlyLocalProps = false;
+      }
+    } else if (otherNt != null && !otherNt.isStructuralInterface()
+        && (thisNt == null || !thisNt.isNominalSubtypeOf(otherNt))) {
       return false;
     }
 
     // If nominalType1 < nominalType2, we only need to check that the
     // properties of other are in (obj1 or nominalType1)
-    for (Map.Entry<String, Property> entry : other.props.entrySet()) {
-      String pname = entry.getKey();
-      Property prop2 = entry.getValue();
-      Property prop1 = this.getLeftmostProp(new QualifiedName(pname));
-
-      if (prop2.isOptional()) {
-        if (prop1 != null && !prop1.getType().isSubtypeOf(prop2.getType())) {
-          return false;
-        }
-      } else {
-        if (prop1 == null || prop1.isOptional() ||
-            !prop1.getType().isSubtypeOf(prop2.getType())) {
-          return false;
-        }
+    Set<String> otherPropNames;
+    if (checkOnlyLocalProps) {
+      otherPropNames = other.props.keySet();
+    } else {
+      otherPropNames = otherNt.getAllPropsOfInterface();
+      if (otherPropNames == null) {
+        // Can't check structural interfaces for subtyping during GlobalTypeInfo
+        return false;
       }
+    }
+    if (!arePropertiesSubtypes(other, otherPropNames, subSuperMap)) {
+      return false;
     }
 
     if (other.fn == null) {
@@ -552,12 +559,33 @@ final class ObjectType implements TypeWithProperties {
       // Can only be executed if we have declared types for callable objects.
       return false;
     }
-    return this.fn.isSubtypeOf(other.fn);
+    return this.fn.isSubtypeOf(other.fn, subSuperMap);
+  }
+
+  private boolean arePropertiesSubtypes(ObjectType other,
+      Set<String> otherPropNames, SubtypeCache subSuperMap) {
+    for (String pname : otherPropNames) {
+      QualifiedName qname = new QualifiedName(pname);
+      Property prop2 = other.getLeftmostProp(qname);
+      Property prop1 = this.getLeftmostProp(qname);
+
+      if (prop2.isOptional()) {
+        if (prop1 != null && !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
+          return false;
+        }
+      } else {
+        if (prop1 == null || prop1.isOptional() ||
+            !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   // We never infer properties as optional on loose objects,
   // and we don't warn about possibly inexistent properties.
-  boolean isLooseSubtypeOf(ObjectType other) {
+  boolean isLooseSubtypeOf(ObjectType other, SubtypeCache subSuperMap) {
     Preconditions.checkState(isLoose || other.isLoose);
     if (other == TOP_OBJECT) {
       return true;
@@ -568,12 +596,12 @@ final class ObjectType implements TypeWithProperties {
         QualifiedName qname = new QualifiedName(pname);
         if (isStruct()) {
           if (!mayHaveProp(qname)
-              || !getProp(qname).isSubtypeOf(other.getProp(qname))) {
+              || !getProp(qname).isSubtypeOf(other.getProp(qname), subSuperMap)) {
             return false;
           }
         } else {
           if (mayHaveProp(qname)
-              && !getProp(qname).isSubtypeOf(other.getProp(qname))) {
+              && !getProp(qname).isSubtypeOf(other.getProp(qname), subSuperMap)) {
             return false;
           }
         }
@@ -582,7 +610,7 @@ final class ObjectType implements TypeWithProperties {
       for (String pname : this.props.keySet()) {
         QualifiedName qname = new QualifiedName(pname);
         if (other.mayHaveProp(qname)
-            && !getProp(qname).isSubtypeOf(other.getProp(qname))) {
+            && !getProp(qname).isSubtypeOf(other.getProp(qname), subSuperMap)) {
           return false;
         }
       }
@@ -593,12 +621,12 @@ final class ObjectType implements TypeWithProperties {
     } else if (this.fn == null) {
       return isLoose;
     }
-    return fn.isLooseSubtypeOf(other.fn);
+    return fn.isLooseSubtypeOf(other.fn, subSuperMap);
   }
 
   ObjectType specialize(ObjectType other) {
     Preconditions.checkState(
-        areRelatedClasses(this.nominalType, other.nominalType));
+        areRelatedNominalTypes(this.nominalType, other.nominalType));
     if (this == TOP_OBJECT && other.objectKind.isUnrestricted()) {
       return other;
     }
@@ -632,7 +660,8 @@ final class ObjectType implements TypeWithProperties {
   }
 
   static ObjectType meet(ObjectType obj1, ObjectType obj2) {
-    Preconditions.checkState(areRelatedClasses(obj1.nominalType, obj2.nominalType));
+    Preconditions.checkState(
+        areRelatedNominalTypes(obj1.nominalType, obj2.nominalType));
     if (obj1 == TOP_OBJECT) {
       return obj2;
     } else if (obj2 == TOP_OBJECT) {
@@ -662,13 +691,13 @@ final class ObjectType implements TypeWithProperties {
     return new ObjectType(resultNomType, props, fn, isLoose, ok);
   }
 
-  static ObjectType join(ObjectType obj1, ObjectType obj2) {
+  private static ObjectType join(ObjectType obj1, ObjectType obj2) {
     if (obj1 == TOP_OBJECT || obj2 == TOP_OBJECT) {
       return TOP_OBJECT;
     }
     NominalType nom1 = obj1.nominalType;
     NominalType nom2 = obj2.nominalType;
-    Preconditions.checkState(areRelatedClasses(nom1, nom2));
+    Preconditions.checkState(areRelatedNominalTypes(nom1, nom2));
 
     if (obj1.equals(obj2)) {
       return obj1;
@@ -711,9 +740,11 @@ final class ObjectType implements TypeWithProperties {
         ObjectType obj1 = objs1Arr[i];
         NominalType nominalType1 = obj1.nominalType;
         NominalType nominalType2 = obj2.nominalType;
-        if (areRelatedClasses(nominalType1, nominalType2)) {
-          if (nominalType2 == null && nominalType1 != null && !obj1.isSubtypeOf(obj2)
-              || nominalType1 == null && nominalType2 != null && !obj2.isSubtypeOf(obj1)) {
+        if (areRelatedNominalTypes(nominalType1, nominalType2)) {
+          if (nominalType2 == null && nominalType1 != null
+              && !obj1.isSubtypeOf(obj2, SubtypeCache.create())
+              || nominalType1 == null && nominalType2 != null
+              && !obj2.isSubtypeOf(obj1, SubtypeCache.create())) {
             // Don't merge other classes with record types
             break;
           }
@@ -722,8 +753,11 @@ final class ObjectType implements TypeWithProperties {
           // obj1 and obj2 may be in a subtype relation.
           // Even then, we want to join them because we don't want to forget
           // any extra properties in the subtype object.
+          // TODO(dimvar): currently, a class and a @record that is a
+          // supertype can be in the same union. We must normalize like we do
+          // for other types, to maintain the invariant that the members of
+          // a union are not subtypes of each other.
           newObjs.add(join(obj1, obj2));
-
           break;
         }
       }
@@ -739,11 +773,11 @@ final class ObjectType implements TypeWithProperties {
     return newObjs.build();
   }
 
-  private static boolean areRelatedClasses(NominalType c1, NominalType c2) {
+  private static boolean areRelatedNominalTypes(NominalType c1, NominalType c2) {
     if (c1 == null || c2 == null) {
       return true;
     }
-    return c1.isSubtypeOf(c2) || c2.isSubtypeOf(c1);
+    return c1.isNominalSubtypeOf(c2) || c2.isNominalSubtypeOf(c1);
   }
 
   // TODO(dimvar): handle greatest lower bound of interface types.
@@ -756,7 +790,7 @@ final class ObjectType implements TypeWithProperties {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj2 : objs2) {
       for (ObjectType obj1 : objs1) {
-        if (areRelatedClasses(obj1.nominalType, obj2.nominalType)) {
+        if (areRelatedNominalTypes(obj1.nominalType, obj2.nominalType)) {
           ObjectType newObj;
           if (specializeObjs1) {
             newObj = obj1.specialize(obj2);
@@ -908,25 +942,55 @@ final class ObjectType implements TypeWithProperties {
    * @return Whether unification succeeded
    */
   boolean unifyWithSubtype(ObjectType other, List<String> typeParameters,
-      Multimap<String, JSType> typeMultimap) {
+      Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
     if (fn != null) {
       if (other.fn == null ||
-          !fn.unifyWithSubtype(other.fn, typeParameters, typeMultimap)) {
+          !fn.unifyWithSubtype(other.fn, typeParameters, typeMultimap, subSuperMap)) {
         return false;
       }
     }
-    if (nominalType != null && other.nominalType != null) {
-      return nominalType.unifyWithSubtype(
-          other.nominalType, typeParameters, typeMultimap);
+    NominalType thisNt = this.nominalType;
+    NominalType otherNt = other.nominalType;
+    if (thisNt != null && otherNt != null) {
+      if (thisNt.unifyWithSubtype(
+          otherNt, typeParameters, typeMultimap, subSuperMap)) {
+        return true;
+      }
+      if (thisNt.isClass()) {
+        return false;
+      }
+      if (thisNt.isStructuralInterface()) {
+        if (thisNt.equals(subSuperMap.get(otherNt))) {
+          return true;
+        }
+        subSuperMap = subSuperMap.with(otherNt, thisNt);
+      }
     }
-    if (nominalType != null && other.nominalType == null) {
+    if (thisNt != null && !thisNt.isStructuralInterface() && otherNt == null) {
       return false;
     }
-    for (String propName : this.props.keySet()) {
-      Property thisProp = props.get(propName);
-      Property otherProp = other.props.get(propName);
-      if (otherProp != null
-          && !thisProp.unifyWithSubtype(otherProp, typeParameters, typeMultimap)) {
+    Set<String> thisProps = thisNt != null && thisNt.isStructuralInterface()
+        ? thisNt.getAllPropsOfInterface() : this.props.keySet();
+    return unifyPropsWithSubtype(
+        other, thisProps, typeParameters, typeMultimap, subSuperMap);
+  }
+
+  private boolean unifyPropsWithSubtype(ObjectType other,
+      Set<String> thisProps, List<String> typeParameters,
+      Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
+    for (String pname : thisProps) {
+      QualifiedName qname = new QualifiedName(pname);
+      Property thisProp = getLeftmostProp(qname);
+      Property otherProp = other.getLeftmostProp(qname);
+      if (thisProp.isOptional()) {
+        if (otherProp != null
+            && !thisProp.getType().unifyWithSubtype(
+                otherProp.getType(), typeParameters, typeMultimap, subSuperMap)) {
+          return false;
+        }
+      } else if (otherProp == null || otherProp.isOptional()
+          || !thisProp.getType().unifyWithSubtype(
+              otherProp.getType(), typeParameters, typeMultimap, subSuperMap)) {
         return false;
       }
     }

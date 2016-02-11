@@ -57,9 +57,9 @@ public final class NominalType {
   }
 
   public JSType getInstanceAsJSType() {
-    return (rawType.isGeneric() && !typeMap.isEmpty())
+    return (this.rawType.isGeneric() && !typeMap.isEmpty())
         ? JSType.fromObjectType(ObjectType.fromNominalType(this))
-        : rawType.getInstanceAsJSType();
+        : this.rawType.getInstanceAsJSType();
   }
 
   ObjectKind getObjectKind() {
@@ -75,27 +75,27 @@ public final class NominalType {
   }
 
   boolean isFunction() {
-    return "Function".equals(rawType.name);
+    return "Function".equals(this.rawType.name);
   }
 
   public boolean isBuiltinObject() {
-    return "Object".equals(rawType.name);
+    return "Object".equals(this.rawType.name);
   }
 
   public boolean isStruct() {
-    return rawType.isStruct();
+    return this.rawType.isStruct();
   }
 
   public boolean isDict() {
-    return rawType.isDict();
+    return this.rawType.isDict();
   }
 
   public boolean isGeneric() {
-    return rawType.isGeneric();
+    return this.rawType.isGeneric();
   }
 
   public boolean isUninstantiatedGenericType() {
-    return rawType.isGeneric() && typeMap.isEmpty();
+    return this.rawType.isGeneric() && typeMap.isEmpty();
   }
 
   NominalType instantiateGenerics(List<JSType> types) {
@@ -145,20 +145,24 @@ public final class NominalType {
   }
 
   public String getName() {
-    return rawType.name;
+    return this.rawType.name;
   }
 
   // Only used for keys in GlobalTypeInfo
   public RawNominalType getId() {
-    return rawType;
+    return this.rawType;
   }
 
   public boolean isClass() {
-    return rawType.isClass();
+    return this.rawType.isClass();
   }
 
   public boolean isInterface() {
-    return rawType.isInterface();
+    return this.rawType.isInterface();
+  }
+
+  boolean isStructuralInterface() {
+    return this.rawType.isStructuralInterface();
   }
 
   public boolean isFinalized() {
@@ -182,7 +186,7 @@ public final class NominalType {
   }
 
   public NominalType getInstantiatedSuperclass() {
-    Preconditions.checkState(rawType.isFinalized());
+    Preconditions.checkState(this.rawType.isFinalized());
     if (this.rawType.getSuperClass() == null) {
       return null;
     }
@@ -190,13 +194,13 @@ public final class NominalType {
   }
 
   public JSType getPrototype() {
-    Preconditions.checkState(rawType.isFinalized());
-    return rawType.getCtorPropDeclaredType("prototype")
+    Preconditions.checkState(this.rawType.isFinalized());
+    return this.rawType.getCtorPropDeclaredType("prototype")
         .substituteGenerics(typeMap);
   }
 
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
-    Preconditions.checkState(rawType.isFinalized());
+    Preconditions.checkState(this.rawType.isFinalized());
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
       result.add(interf.instantiateGenerics(typeMap));
@@ -219,7 +223,7 @@ public final class NominalType {
   }
 
   public JSType getPropDeclaredType(String pname) {
-    JSType type = rawType.getInstancePropDeclaredType(pname);
+    JSType type = this.rawType.getInstancePropDeclaredType(pname);
     if (type == null) {
       return null;
     }
@@ -235,7 +239,30 @@ public final class NominalType {
     return this.rawType.getConstructorObject(ctorFn);
   }
 
-  boolean isSubtypeOf(NominalType other) {
+  boolean isSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
+    return isNominalSubtypeOf(other)
+        || other.isStructuralInterface() && isStructuralSubtypeOf(other, subSuperMap);
+  }
+
+  private boolean isStructuralSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
+    Preconditions.checkArgument(other.isStructuralInterface());
+    for (String pname : other.getAllPropsOfInterface()) {
+      Property prop2 = other.getProp(pname);
+      Property prop1 = this.getProp(pname);
+      if (prop2.isOptional()) {
+        if (prop1 != null
+            && !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
+          return false;
+        }
+      } else if (prop1 == null || prop1.isOptional()
+          || !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  boolean isNominalSubtypeOf(NominalType other) {
     RawNominalType thisRaw = this.rawType;
     if (thisRaw == other.rawType) {
       return areTypeMapsCompatible(other);
@@ -243,25 +270,25 @@ public final class NominalType {
     if (other.isInterface()) {
       // If thisRaw is not finalized, thisRaw.interfaces may be null.
       for (NominalType i : thisRaw.getInterfaces()) {
-        if (i.instantiateGenerics(this.typeMap).isSubtypeOf(other)) {
+        if (i.instantiateGenerics(this.typeMap).isNominalSubtypeOf(other)) {
           return true;
         }
       }
     }
     // Note that other can still be an interface here (implemented by a superclass)
     return isClass() && thisRaw.getSuperClass() != null
-        && thisRaw.getSuperClass().instantiateGenerics(this.typeMap).isSubtypeOf(other);
+      && thisRaw.getSuperClass().instantiateGenerics(this.typeMap).isNominalSubtypeOf(other);
   }
 
   private boolean areTypeMapsCompatible(NominalType other) {
-    Preconditions.checkState(rawType.equals(other.rawType));
+    Preconditions.checkState(this.rawType.equals(other.rawType));
     if (this.typeMap.isEmpty()) {
       return other.instantiationIsUnknownOrIdentity();
     }
     if (other.typeMap.isEmpty()) {
       return instantiationIsUnknownOrIdentity();
     }
-    for (String typeVar : rawType.getTypeParameters()) {
+    for (String typeVar : this.rawType.getTypeParameters()) {
       Preconditions.checkState(this.typeMap.containsKey(typeVar),
           "Type variable %s not in the domain: %s",
           typeVar, this.typeMap.keySet());
@@ -335,10 +362,10 @@ public final class NominalType {
     if (c1 == null || c2 == null) {
       return null;
     }
-    if (c1.isSubtypeOf(c2)) {
+    if (c1.isNominalSubtypeOf(c2)) {
       return c2;
     }
-    return c2.isSubtypeOf(c1) ? c1 : null;
+    return c2.isNominalSubtypeOf(c1) ? c1 : null;
   }
 
   // A special-case of meet
@@ -349,14 +376,14 @@ public final class NominalType {
     if (c2 == null) {
       return c1;
     }
-    if (c1.isSubtypeOf(c2)) {
+    if (c1.isNominalSubtypeOf(c2)) {
       return c1;
     }
-    return c2.isSubtypeOf(c1) ? c2 : null;
+    return c2.isNominalSubtypeOf(c1) ? c2 : null;
   }
 
   boolean unifyWithSubtype(NominalType other, List<String> typeParameters,
-      Multimap<String, JSType> typeMultimap) {
+      Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
     other = other.findMatchingAncestorWith(this);
     if (other == null) {
       return false;
@@ -367,8 +394,8 @@ public final class NominalType {
     }
     // Most of the time, both nominal types are already instantiated when
     // unifyWith is called. Rarely, when we call a polymorphic function from the
-    // body of a method of a polymorphic class, then other.typeMap is empty.
-    // For now, don't do anything fancy in that case.
+    // body of a method of a polymorphic class, then other.typeMap is
+    // empty. For now, don't do anything fancy in that case.
     Preconditions.checkState(!typeMap.isEmpty());
     if (other.typeMap.isEmpty()) {
       return true;
@@ -377,9 +404,10 @@ public final class NominalType {
     for (String typeParam : this.rawType.getTypeParameters()) {
       JSType fromOtherMap = other.typeMap.get(typeParam);
       Preconditions.checkNotNull(fromOtherMap,
-          "Type variable %s not found in map %s", typeParam, other.typeMap);
+          "Type variable %s not found in map %s",
+          typeParam, other.typeMap);
       hasUnified = hasUnified && this.typeMap.get(typeParam)
-          .unifyWithSubtype(fromOtherMap, typeParameters, typeMultimap);
+          .unifyWithSubtype(fromOtherMap, typeParameters, typeMultimap, subSuperMap);
     }
     return hasUnified;
   }
@@ -435,7 +463,7 @@ public final class NominalType {
 
   @Override
   public int hashCode() {
-    return Objects.hash(typeMap, rawType);
+    return Objects.hash(typeMap, this.rawType);
   }
 
   @Override
@@ -445,6 +473,6 @@ public final class NominalType {
     }
     Preconditions.checkState(other instanceof NominalType);
     NominalType o = (NominalType) other;
-    return Objects.equals(typeMap, o.typeMap) && rawType.equals(o.rawType);
+    return Objects.equals(typeMap, o.typeMap) && this.rawType.equals(o.rawType);
   }
 }

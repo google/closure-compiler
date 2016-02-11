@@ -13907,11 +13907,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "/** @record @template T */",
             "function WithPropT() {}",
-            "/** @type {T} */ WithPropT.prototype.prop",
-            "function f(/** !WithPropT<number> */ x){};",
+            "/** @type {T} */ WithPropT.prototype.prop;",
+            "function f(/** !WithPropT<number> */ x){}",
             "/** @constructor */ function Foo() {}",
-            "/** @type {number} */ Foo.prototype.prop",
-            "f(new Foo)"));
+            "/** @type {number} */ Foo.prototype.prop;",
+            "f(new Foo);"));
   }
 
   public void testTemplatizedStructuralMatch2() {
@@ -13997,7 +13997,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "/** @record @template T */",
             "function WithProp() {}",
-            "/** @type {T} */ WithProp.prototype.prop",
+            "/** @type {T} */ WithProp.prototype.prop;",
             "/** @constructor */",
             "function Foo() {",
             "  /** @type {number} */ this.prop = 4;",
@@ -14022,7 +14022,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "/** @record @template T */",
             "function WithProp() {}",
-            "/** @type {T} */ WithProp.prototype.prop",
+            "/** @type {T} */ WithProp.prototype.prop;",
             "/** @constructor */",
             "function Foo() {",
             "  /** @type {number} */ this.prop = 4;",
@@ -15305,42 +15305,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   /**
    * test structural interface matching for object literals
    */
-  public void testStructuralInterfaceMatching42_1() {
-    testTypesWithExtraExterns(
-        LINE_JOINER.join(
-            "/** @record */",
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;"),
-        LINE_JOINER.join(
-            "/** @type {{length: number}} */",
-            "var o1 = {length : 123};",
-            "/** @type {I2} */",
-            "var i;",
-            "i = o1;"));
-  }
-
-  /**
-   * test structural interface matching for object literals
-   */
   public void testStructuralInterfaceMatching43() {
-    testTypesWithExtraExterns(
-        LINE_JOINER.join(
-            "/** @record */",
-            "function I2() {}",
-            "/** @type {number} */",
-            "I2.prototype.length;"),
-        LINE_JOINER.join(
-            "var o1 = {length : 123};",
-            "/** @type {I2} */",
-            "var i;",
-            "i = o1;"));
-  }
-
-  /**
-   * test structural interface matching for object literals
-   */
-  public void testStructuralInterfaceMatching43_1() {
     testTypesWithExtraExterns(
         LINE_JOINER.join(
             "/** @record */",
@@ -15383,12 +15348,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "function I() {}",
             "/** @constructor */",
             "function C() {}",
-            "var i /** !I */ = new C;"));
+            "var /** !I */ i = new C;"));
   }
 
   public void testStructuralInterfaceMatching46() {
-    testTypesWithExtraExterns(
-        "",
+    testTypes(
         LINE_JOINER.join(
             "/** @interface */",
             "function I2() {}",
@@ -15504,10 +15468,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "i3 = r;"));
   }
 
-  /**
-   * here we temporarily disable structural interface
-   * matching for interfaces that is declared with @interface tag
-   */
   public void testStructuralInterfaceMatching1_1() {
     testTypesWithExtraExterns(
         LINE_JOINER.join(

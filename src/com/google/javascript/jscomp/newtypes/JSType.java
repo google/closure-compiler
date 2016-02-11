@@ -589,9 +589,9 @@ public abstract class JSType implements TypeI {
         // Can't remove elms while iterating over the collection, so do it later
         typesToRemove.add(other);
         type = unified;
-      } else if (other.isSubtypeOf(type)) {
+      } else if (other.isSubtypeOf(type, SubtypeCache.create())) {
         typesToRemove.add(other);
-      } else if (type.isSubtypeOf(other)) {
+      } else if (type.isSubtypeOf(other, SubtypeCache.create())) {
         type = null;
       }
     }
@@ -678,9 +678,18 @@ public abstract class JSType implements TypeI {
    * Note that if {@code this} is a union type, some of the union members may
    * be ignored if they are not present in {@code other}.
    * @return Whether unification succeeded
+   *
+   * This method should only be called outside the newtypes package;
+   * classes inside the package should use unifyWithSubtype.
    */
-  public boolean unifyWithSubtype(JSType other, List<String> typeParameters,
+  public boolean unifyWith(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
+    return unifyWithSubtype(
+        other, typeParameters, typeMultimap, SubtypeCache.create());
+  }
+
+  boolean unifyWithSubtype(JSType other, List<String> typeParameters,
+      Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
     Preconditions.checkNotNull(other);
     if (this.isUnknown() || this.isTop()) {
       return true;
@@ -699,7 +708,7 @@ public abstract class JSType implements TypeI {
     if (!other.getEnums().isEmpty()) {
       ununifiedEnums = new LinkedHashSet<>();
       for (EnumType e : other.getEnums()) {
-        if (!fromEnum(e).isSubtypeOf(this)) {
+        if (!fromEnum(e).isSubtypeOf(this, SubtypeCache.create())) {
           ununifiedEnums.add(e);
         }
       }
@@ -712,7 +721,8 @@ public abstract class JSType implements TypeI {
     // Foo<number>|Foo<string> may or may not unify with Foo<T>|Foo<string>
     for (ObjectType targetObj : getObjs()) {
       for (ObjectType sourceObj : other.getObjs()) {
-        if (targetObj.unifyWithSubtype(sourceObj, typeParameters, typeMultimap)) {
+        if (targetObj.unifyWithSubtype(
+              sourceObj, typeParameters, typeMultimap, subSuperMap)) {
           ununifiedObjs.remove(sourceObj);
         }
       }
@@ -890,13 +900,13 @@ public abstract class JSType implements TypeI {
         Set<ObjectType> objsToRemove = new LinkedHashSet<>();
         ObjectType enumObj = Iterables.getOnlyElement(enumeratedType.getObjs());
         for (ObjectType obj1 : objs1) {
-          if (enumObj.isSubtypeOf(obj1)) {
+          if (enumObj.isSubtypeOf(obj1, SubtypeCache.create())) {
             enumBuilder.add(e);
             objsToRemove.add(obj1);
           }
         }
         for (ObjectType obj2 : objs2) {
-          if (enumObj.isSubtypeOf(obj2)) {
+          if (enumObj.isSubtypeOf(obj2, SubtypeCache.create())) {
             enumBuilder.add(e);
             objsToRemove.add(obj2);
           }
@@ -970,23 +980,28 @@ public abstract class JSType implements TypeI {
   }
 
   public boolean isNonLooseSubtypeOf(JSType other) {
-    return isSubtypeOfHelper(false, other);
+    return isSubtypeOfHelper(false, other, SubtypeCache.create());
   }
 
   @Override
   public boolean isSubtypeOf(TypeI other) {
+    return isSubtypeOf(other, SubtypeCache.create());
+  }
+
+  boolean isSubtypeOf(TypeI other, SubtypeCache subSuperMap) {
     if (this == other) {
       return true;
     }
     JSType type2 = (JSType) other;
     if (isLoose() || type2.isLoose()) {
-      return autobox().isSubtypeOfHelper(true, type2.autobox());
+      return autobox().isSubtypeOfHelper(true, type2.autobox(), subSuperMap);
     } else {
-      return isSubtypeOfHelper(true, type2);
+      return isSubtypeOfHelper(true, type2, subSuperMap);
     }
   }
 
-  private boolean isSubtypeOfHelper(boolean keepLoosenessOfThis, JSType other) {
+  private boolean isSubtypeOfHelper(
+      boolean keepLoosenessOfThis, JSType other, SubtypeCache subSuperMap) {
     if (isUnknown() || other.isUnknown() || other.isTop()) {
       return true;
     }
@@ -996,7 +1011,7 @@ public abstract class JSType implements TypeI {
     if (hasFalsyMask()) {
       return !other.makeFalsy().isBottom();
     }
-    if (!EnumType.areSubtypes(this, other)) {
+    if (!EnumType.areSubtypes(this, other, subSuperMap)) {
       return false;
     }
     int mask = getMask() & ~ENUM_MASK;
@@ -1012,7 +1027,7 @@ public abstract class JSType implements TypeI {
     // Because of optional properties,
     //   x \le y \iff x \join y = y does not hold.
     return ObjectType.isUnionSubtype(
-        keepLoosenessOfThis, getObjs(), other.getObjs());
+        keepLoosenessOfThis, getObjs(), other.getObjs(), subSuperMap);
   }
 
   public JSType removeType(JSType other) {
@@ -1038,13 +1053,13 @@ public abstract class JSType implements TypeI {
     ObjectType otherObj = Iterables.getOnlyElement(other.getObjs());
     ImmutableSet.Builder<ObjectType> objsBuilder = ImmutableSet.builder();
     for (ObjectType obj : getObjs()) {
-      if (!obj.isSubtypeOf(otherObj)) {
+      if (!obj.isSubtypeOf(otherObj, SubtypeCache.create())) {
         objsBuilder.add(obj);
       }
     }
     ImmutableSet.Builder<EnumType> enumBuilder = ImmutableSet.builder();
     for (EnumType e : getEnums()) {
-      if (!e.getEnumeratedType().isSubtypeOf(other)) {
+      if (!e.getEnumeratedType().isSubtypeOf(other, SubtypeCache.create())) {
         enumBuilder.add(e);
       }
     }

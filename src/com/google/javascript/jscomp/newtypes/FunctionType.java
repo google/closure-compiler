@@ -420,11 +420,11 @@ public final class FunctionType {
   }
 
   public boolean isValidOverride(FunctionType other) {
-    return isSubtypeOfHelper(other, false);
+    return isSubtypeOfHelper(other, false, SubtypeCache.create());
   }
 
-  public boolean isSubtypeOf(FunctionType other) {
-    return isSubtypeOfHelper(other, true);
+  boolean isSubtypeOf(FunctionType other, SubtypeCache subSuperMap) {
+    return isSubtypeOfHelper(other, true, subSuperMap);
   }
 
   // When we write ...?, it has a special meaning, it is NOT a variable-arity
@@ -436,7 +436,8 @@ public final class FunctionType {
         && this.restFormals != null && this.restFormals.isUnknown();
   }
 
-  private boolean isSubtypeOfHelper(FunctionType other, boolean checkThisType) {
+  private boolean isSubtypeOfHelper(
+      FunctionType other, boolean checkThisType, SubtypeCache subSuperMap) {
     if (other.isTopFunction() ||
         other.isQmarkFunction() || this.isQmarkFunction()) {
       return true;
@@ -456,7 +457,7 @@ public final class FunctionType {
       // and the fix is not trivial, so for now we decided to not fix.
       // See unit tests in NewTypeInferenceES5OrLowerTest#testGenericsSubtyping
       return instantiateGenericsWithUnknown(this)
-          .isSubtypeOfHelper(other, checkThisType);
+          .isSubtypeOfHelper(other, checkThisType, subSuperMap);
     }
 
     if (!other.acceptsAnyArguments()) {
@@ -472,7 +473,7 @@ public final class FunctionType {
         JSType otherFormal = other.getFormalType(i);
         if (thisFormal != null
             && !thisFormal.isUnknown() && !otherFormal.isUnknown()
-            && !otherFormal.isSubtypeOf(thisFormal)) {
+            && !otherFormal.isSubtypeOf(thisFormal, subSuperMap)) {
           return false;
         }
       }
@@ -488,7 +489,7 @@ public final class FunctionType {
           JSType otherFormal = other.getFormalType(i);
           if (thisFormal != null
               && !thisFormal.isUnknown() && !otherFormal.isUnknown()
-              && !otherFormal.isSubtypeOf(thisFormal)) {
+              && !otherFormal.isSubtypeOf(thisFormal, subSuperMap)) {
             return false;
           }
         }
@@ -508,18 +509,18 @@ public final class FunctionType {
       if (this.receiverType != null && other.receiverType == null
           || this.receiverType != null && other.receiverType != null
           // Contravariance for the receiver type
-          && !other.receiverType.isSubtypeOf(this.receiverType)
+          && !other.receiverType.isSubtypeOf(this.receiverType, subSuperMap)
           // NOTE(dimvar): Covariance for the receiver type.
           // Not correct, but allowed to make migration easier.
           // After bounded generics, we could probably drop support for this.
-          && !this.receiverType.isSubtypeOf(other.receiverType)) {
+          && !this.receiverType.isSubtypeOf(other.receiverType, subSuperMap)) {
         return false;
       }
     }
 
     // covariance in the return type
     return returnType.isUnknown() || other.returnType.isUnknown()
-        || returnType.isSubtypeOf(other.returnType);
+        || returnType.isSubtypeOf(other.returnType, subSuperMap);
   }
 
   // Avoid using JSType#join if possible, to avoid creating new types
@@ -572,9 +573,9 @@ public final class FunctionType {
       return looseJoin(f1, f2);
     }
 
-    if (f1.isGeneric() && f2.isSubtypeOf(f1)) {
+    if (f1.isGeneric() && f2.isSubtypeOf(f1, SubtypeCache.create())) {
       return f1;
-    } else if (f2.isGeneric() && f1.isSubtypeOf(f2)) {
+    } else if (f2.isGeneric() && f1.isSubtypeOf(f2, SubtypeCache.create())) {
       return f2;
     }
 
@@ -672,9 +673,9 @@ public final class FunctionType {
       return looseJoin(f1, f2);
     }
 
-    if (f1.isGeneric() && f1.isSubtypeOf(f2)) {
+    if (f1.isGeneric() && f1.isSubtypeOf(f2, SubtypeCache.create())) {
       return f1;
-    } else if (f2.isGeneric() && f2.isSubtypeOf(f1)) {
+    } else if (f2.isGeneric() && f2.isSubtypeOf(f1, SubtypeCache.create())) {
       return f2;
     }
 
@@ -729,7 +730,7 @@ public final class FunctionType {
 
   // We may consider true subtyping for deferred checks when the formal
   // parameter has a loose function type.
-  boolean isLooseSubtypeOf(FunctionType f2) {
+  boolean isLooseSubtypeOf(FunctionType f2, SubtypeCache subSuperMap) {
     Preconditions.checkState(this.isLoose() || f2.isLoose());
     if (this.isTopFunction() || f2.isTopFunction()) {
       return true;
@@ -753,7 +754,7 @@ public final class FunctionType {
   }
 
   boolean unifyWithSubtype(FunctionType other, List<String> typeParameters,
-      Multimap<String, JSType> typeMultimap) {
+      Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
     Preconditions.checkState(this.typeParameters.isEmpty());
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
     Preconditions.checkState(this != TOP_FUNCTION);
@@ -778,16 +779,19 @@ public final class FunctionType {
         // and supertype, and we'd catch type errors as invalid-argument-type
         // after unification. (Not sure this is correct, I'd have to try it.)
         if (otherFormal != null
-            && !thisFormal.unifyWithSubtype(otherFormal, typeParameters, typeMultimap)
-            && !thisFormal.isSubtypeOf(otherFormal)) {
+            && !thisFormal.unifyWithSubtype(
+                otherFormal, typeParameters, typeMultimap, subSuperMap)
+            && !thisFormal.isSubtypeOf(otherFormal, SubtypeCache.create())) {
           return false;
         }
       }
       if (this.restFormals != null) {
         JSType otherRestFormals = other.getFormalType(maxNonInfiniteArity);
         if (otherRestFormals != null
-            && !this.restFormals.unifyWithSubtype(otherRestFormals, typeParameters, typeMultimap)
-            && !this.restFormals.isSubtypeOf(otherRestFormals)) {
+            && !this.restFormals.unifyWithSubtype(
+                otherRestFormals, typeParameters, typeMultimap, subSuperMap)
+            && !this.restFormals.isSubtypeOf(
+                otherRestFormals, SubtypeCache.create())) {
           return false;
         }
       }
@@ -798,7 +802,7 @@ public final class FunctionType {
       return false;
     }
     if (nominalType != null && !nominalType.unifyWithSubtype(
-        other.nominalType, typeParameters, typeMultimap)) {
+        other.nominalType, typeParameters, typeMultimap, subSuperMap)) {
       return false;
     }
 
@@ -806,12 +810,14 @@ public final class FunctionType {
     // unify.
     if (this.receiverType != null && other.receiverType != null
         && !this.receiverType.unifyWithSubtype(
-            other.receiverType, typeParameters, typeMultimap)
-        && !this.receiverType.isSubtypeOf(other.receiverType)) {
+            other.receiverType, typeParameters, typeMultimap, subSuperMap)
+        && !this.receiverType.isSubtypeOf(
+            other.receiverType, SubtypeCache.create())) {
       return false;
     }
 
-    return this.returnType.unifyWithSubtype(other.returnType, typeParameters, typeMultimap);
+    return this.returnType.unifyWithSubtype(
+        other.returnType, typeParameters, typeMultimap, subSuperMap);
   }
 
   private static FunctionType instantiateGenericsWithUnknown(FunctionType f) {
@@ -1047,7 +1053,8 @@ public final class FunctionType {
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
     for (int i = 0, size = argTypes.size(); i < size; i++) {
       if (!this.getFormalType(i)
-          .unifyWithSubtype(argTypes.get(i), typeParameters, typeMultimap)) {
+          .unifyWithSubtype(argTypes.get(i), typeParameters, typeMultimap,
+              SubtypeCache.create())) {
         return null;
       }
     }
