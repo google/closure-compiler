@@ -3440,3 +3440,53 @@ HTMLTemplateElement.prototype.content;
  * @see http://www.w3.org/TR/html-imports/#interface-import
  */
 HTMLLinkElement.prototype.import;
+
+
+/**
+ * @return {boolean}
+ * @see https://www.w3.org/TR/html5/forms.html#dom-fieldset-elements
+ */
+HTMLFieldSetElement.prototype.checkValidity = function() {};
+
+/**
+ * @type {HTMLCollection}
+ * @see https://www.w3.org/TR/html5/forms.html#dom-fieldset-elements
+ */
+HTMLFieldSetElement.prototype.elements;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/forms.html#the-fieldset-element
+ */
+HTMLFieldSetElement.prototype.name;
+
+/**
+ * @param {string} message
+ * @see https://www.w3.org/TR/html5/forms.html#dom-fieldset-elements
+ */
+HTMLFieldSetElement.prototype.setCustomValidity = function(message) {};
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/forms.html#dom-fieldset-type
+ */
+HTMLFieldSetElement.prototype.type;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/forms.html#the-fieldset-element
+ */
+HTMLFieldSetElement.prototype.validationMessage;
+
+/**
+ * @type {ValidityState}
+ * @see https://www.w3.org/TR/html5/forms.html#the-fieldset-element
+ */
+HTMLFieldSetElement.prototype.validity;
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/html5/forms.html#the-fieldset-element
+ */
+HTMLFieldSetElement.prototype.willValidate;
+
