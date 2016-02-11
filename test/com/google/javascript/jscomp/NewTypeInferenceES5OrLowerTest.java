@@ -8787,14 +8787,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "};"));
   }
 
-  // public void testVarargs() {
-  //   // TODO(blickly): Investigate why this doesn't pass
-  //   typeCheck(LINE_JOINER.join(
-  //       "function foo(baz, /** ...number */ es6_rest_args) {",
-  //       "  var bar = [].slice.call(arguments, 0);",
-  //       "}",
-  //       "foo(); foo(3); foo(3, 4);"));
-  // }
+   public void testVarargs() {
+     typeCheck(LINE_JOINER.join(
+         "function foo(baz, /** ...number */ es6_rest_args) {",
+         "  var bar = [].slice.call(arguments, 0);",
+         "}",
+         "foo(); foo(3); foo(3, 4);"));
+   }
 
   public void testUninhabitableObjectTypeDoesntCrash() {
     typeCheck(LINE_JOINER.join(
