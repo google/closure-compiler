@@ -45,6 +45,7 @@ import java.util.Set;
  *
  * <p>Only works with Polymer version 0.8 and above.
  *
+ * <p>Design and examples: https://github.com/google/closure-compiler/wiki/Polymer-Pass
  *
  * @author jlklein@google.com (Jeremy Klein)
  */
