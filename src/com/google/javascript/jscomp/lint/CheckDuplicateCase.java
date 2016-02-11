@@ -66,10 +66,8 @@ public final class CheckDuplicateCase extends AbstractPostOrderCallback
       Set<String> cases = new HashSet<>();
       for (Node curr = n.getSecondChild(); curr != null; curr = curr.getNext()) {
         String source = compiler.toSource(curr.getFirstChild());
-        if (cases.contains(source)) {
+        if (!cases.add(source)) {
           t.report(curr, DUPLICATE_CASE);
-        } else {
-          cases.add(source);
         }
       }
     }
