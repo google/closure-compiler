@@ -96,7 +96,7 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
  * relies on the compiler to check the validity of inputs rather
  * than producing spec-compliant TypeErrors.
  *
- * @param {!IArrayLike<INPUT>|!Iterator<INPUT>|!Iterable<INPUT>|!Array<INPUT>}
+ * @param {!IArrayLike<INPUT>|!Iterator<INPUT>|!Iterable<INPUT>}
  *     arrayLike An array-like or iterable.
  * @param {(function(this: THIS, INPUT): OUTPUT)=} opt_mapFn
  *     Function to call on each argument.
