@@ -274,7 +274,7 @@ $jscomp.Map = class {
 
   /**
    * Iterates over the map, running the given function on each element.
-   * @param {function(this: THIS, KEY, VALUE, !$jscomp.Map<KEY, VALUE>)}
+   * @param {function(this: THIS, VALUE, KEY, !$jscomp.Map<KEY, VALUE>)}
    *     callback
    * @param {THIS=} opt_thisArg
    * @template THIS

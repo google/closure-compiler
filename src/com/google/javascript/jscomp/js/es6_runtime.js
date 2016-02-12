@@ -479,7 +479,7 @@
 };
 /**@template THIS
 
-@param {function(this:THIS,KEY,VALUE,!$jscomp.Map<KEY,VALUE>)} callback
+@param {function(this:THIS,VALUE,KEY,!$jscomp.Map<KEY,VALUE>)} callback
 @param {THIS=} opt_thisArg */$jscomp.Map.prototype.forEach = function(callback, opt_thisArg) {
   for (var $jscomp$iter$2 = $jscomp.makeIterator(this.entries()), $jscomp$key$entry = $jscomp$iter$2.next();!$jscomp$key$entry.done;$jscomp$key$entry = $jscomp$iter$2.next()) {
     /**@const */var entry = $jscomp$key$entry.value;
