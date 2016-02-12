@@ -3489,4 +3489,3 @@ HTMLFieldSetElement.prototype.validity;
  * @see https://www.w3.org/TR/html5/forms.html#the-fieldset-element
  */
 HTMLFieldSetElement.prototype.willValidate;
-
