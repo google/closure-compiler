@@ -71,10 +71,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         && inLoop(n)) {
       Node undefined = IR.name("undefined");
       if (nameNode.getJSDocInfo() != null || n.getJSDocInfo() != null) {
-        undefined = IR.cast(undefined);
         JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
         jsDoc.recordType(new JSTypeExpression(new Node(Token.QMARK), n.getSourceFileName()));
-        undefined.setJSDocInfo(jsDoc.build());
+        undefined = IR.cast(undefined, jsDoc.build());
       }
       undefined.useSourceInfoFromForTree(nameNode);
       nameNode.addChildToFront(undefined);

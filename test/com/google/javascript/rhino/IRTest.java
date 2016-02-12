@@ -204,7 +204,7 @@ public class IRTest extends TestCase {
   public void testAdd() {
     testIR(
         IR.add(
-            IR.cast(IR.number(1)),
+            IR.cast(IR.number(1), null),
             IR.number(2)),
         "ADD\n" +
         "    CAST\n" +

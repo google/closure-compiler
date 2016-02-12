@@ -468,8 +468,10 @@ public class IR {
     return unaryOp(Token.POS, expr1);
   }
 
-  public static Node cast(Node expr1) {
-    return unaryOp(Token.CAST, expr1);
+  public static Node cast(Node expr1, JSDocInfo jsdoc) {
+    Node op = unaryOp(Token.CAST, expr1);
+    op.setJSDocInfo(jsdoc);
+    return op;
   }
 
   public static Node inc(Node exp, boolean isPost) {
