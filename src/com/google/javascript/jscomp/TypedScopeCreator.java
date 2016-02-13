@@ -213,7 +213,7 @@ final class TypedScopeCreator implements ScopeCreator {
   }
 
   private void report(JSError error) {
-    if (!this.runsAfterNTI) {
+    if (!this.runsAfterNTI || compiler.getOptions().reportOldTypeInferenceErrorsUnderNTI) {
       compiler.report(error);
     }
   }
