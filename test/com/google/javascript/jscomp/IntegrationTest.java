@@ -2470,8 +2470,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "  a = a + 'y';\n"
         + "  return a;\n"
         + "}",
-        // This should eventually get inlined completely.
-        "function f(a) { a += 'x'; return a += 'y'; }");
+        "function f(a) { return a + 'xy'; }");
   }
 
   public void testIssue1168() {
@@ -3336,6 +3335,21 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setSkipTranspilationAndCrash(true);
     test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
+  }
+
+  // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
+  public void testInlineStringConcat() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(options, LINE_JOINER.join(
+        "function f() {",
+        "  var x = '';",
+        "  x += '1';",
+        "  x += '2';",
+        "  return x;",
+        "}",
+        "window.f = f;"),
+        "window.a = function() { return '12'; }");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
