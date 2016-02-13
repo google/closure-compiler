@@ -1613,6 +1613,22 @@ public final class IntegrationTest extends IntegrationTestCase {
         "}");
   }
 
+  // Github issue #1540: https://github.com/google/closure-compiler/issues/1540
+  public void testFlowSensitiveInlineVariablesUnderAdvanced() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    test(options,
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  var a = x + 1;",
+            "  var b = x + 1;",
+            "  window.c = x > 5 ? a : b;",
+            "}",
+            "f(g);"),
+            "window.a = g + 1;");
+  }
+
   public void testCollapseAnonymousFunctions() {
     CompilerOptions options = createCompilerOptions();
     String code = "var f = function() {};";
@@ -2470,8 +2486,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "  a = a + 'y';\n"
         + "  return a;\n"
         + "}",
-        // This should eventually get inlined completely.
-        "function f(a) { a += 'x'; return a += 'y'; }");
+        "function f(a) { return a += 'xy'; }");
   }
 
   public void testIssue1168() {

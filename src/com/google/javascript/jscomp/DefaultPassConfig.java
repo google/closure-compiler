@@ -612,6 +612,13 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(createEmptyPass("beforeMainOptimizations"));
 
+    // Because FlowSensitiveInlineVariables does not operate on the global scope due to compilation
+    // time, we need to run it once before InlineFunctions so that we don't miss inlining
+    // opportunities when a function will be inlined into the global scope.
+    if (options.flowSensitiveInlineVariables) {
+      passes.add(flowSensitiveInlineVariables);
+    }
+
     passes.addAll(getMainOptimizationLoop());
 
     passes.add(createEmptyPass("beforeModuleMotion"));
