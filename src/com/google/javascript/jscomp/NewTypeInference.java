@@ -2548,12 +2548,12 @@ final class NewTypeInference implements CompilerPass {
       case "boolean":
       case "isBoolean":
         return booleanContext.isTrueOrTruthy()
-          ? JSType.BOOLEAN : beforeType.removeType(JSType.BOOLEAN);
+            ? JSType.BOOLEAN : beforeType.removeType(JSType.BOOLEAN);
       case "function":
       case "isFunction":
         return booleanContext.isTrueOrTruthy()
-          ? commonTypes.looseTopFunction()
-          : beforeType.removeType(commonTypes.topFunction());
+            ? commonTypes.looseTopFunction()
+            : beforeType.removeType(commonTypes.topFunction());
       case "null":
       case "isNull":
         return booleanContext.isTrueOrTruthy()
@@ -2561,11 +2561,16 @@ final class NewTypeInference implements CompilerPass {
       case "number":
       case "isNumber":
         return booleanContext.isTrueOrTruthy()
-          ? JSType.NUMBER : beforeType.removeType(JSType.NUMBER);
+            ? JSType.NUMBER : beforeType.removeType(JSType.NUMBER);
+      case "isFinite":
+      case "isInteger":
+      case "isNaN":
+      case "isSafeInteger":
+        return booleanContext.isTrueOrTruthy() ? JSType.NUMBER : beforeType;
       case "string":
       case "isString":
         return booleanContext.isTrueOrTruthy()
-          ? JSType.STRING : beforeType.removeType(JSType.STRING);
+            ? JSType.STRING : beforeType.removeType(JSType.STRING);
       case "isDef":
         return booleanContext.isTrueOrTruthy()
             ? beforeType.removeType(JSType.UNDEFINED) : JSType.UNDEFINED;

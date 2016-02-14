@@ -11064,6 +11064,48 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testNumberPredicates() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** Array<number>|number */ x) {",
+        "  var /** number */ a;",
+        "  if (Number.isFinite(x)) {",
+        "    a = x;",
+        "  }",
+        "  a = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** Array<number>|number */ x) {",
+        "  var /** number */ a;",
+        "  if (Number.isInteger(x)) {",
+        "    a = x;",
+        "  }",
+        "  a = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** Array<number>|number */ x) {",
+        "  var /** number */ a;",
+        "  if (Number.isNaN(x)) {",
+        "    a = x;",
+        "  }",
+        "  a = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** Array<number>|number */ x) {",
+        "  var /** number */ a;",
+        "  if (Number.isSafeInteger(x)) {",
+        "    a = x;",
+        "  }",
+        "  a = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testGoogIsPredicatesTrue() {
     typeCheck(CLOSURE_BASE
         + "function f(x) { if (goog.isNull(x)) { var /** undefined */ y = x; } }",

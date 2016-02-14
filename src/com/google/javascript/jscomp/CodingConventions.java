@@ -29,8 +29,10 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Helper classes for dealing with coding conventions.
@@ -304,6 +306,17 @@ public final class CodingConventions {
 
     private static final long serialVersionUID = 1L;
 
+    private static final Set<String> propertyTestFunctions;
+    static {
+      Set<String> set = new HashSet<>();
+      set.add("Array.isArray");
+      set.add("Number.isFinite");
+      set.add("Number.isInteger");
+      set.add("Number.isNaN");
+      set.add("Number.isSafeInteger");
+      propertyTestFunctions = Collections.unmodifiableSet(set);
+    }
+
     @Override
     public boolean isConstant(String variableName) {
       return false;
@@ -493,7 +506,7 @@ public final class CodingConventions {
 
     @Override
     public boolean isPropertyTestFunction(Node call) {
-      return "Array.isArray".equals(call.getFirstChild().getQualifiedName());
+      return propertyTestFunctions.contains(call.getFirstChild().getQualifiedName());
     }
 
     @Override
