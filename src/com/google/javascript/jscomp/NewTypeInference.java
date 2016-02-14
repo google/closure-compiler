@@ -2562,6 +2562,11 @@ final class NewTypeInference implements CompilerPass {
       case "isNumber":
         return booleanContext.isTrueOrTruthy()
           ? JSType.NUMBER : beforeType.removeType(JSType.NUMBER);
+      case "isFinite":
+      case "isInteger":
+      case "isNaN":
+      case "isSafeInteger":
+        return JSType.NUMBER;
       case "string":
       case "isString":
         return booleanContext.isTrueOrTruthy()

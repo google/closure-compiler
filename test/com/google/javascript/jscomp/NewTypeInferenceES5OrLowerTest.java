@@ -11047,7 +11047,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "function f(x) { var /** boolean */ b = goog.isNull(x); }");
   }
 
-  public void testIsArrayPredicate() {
+  public void testPropertyTestFunctions() {
     typeCheck(LINE_JOINER.join(
         "function f(/** (Array<number>|number) */ x) {",
         "  var /** Array<number> */ a;",
@@ -11055,6 +11055,38 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    a = x;",
         "  }",
         "  a = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (Number.isFinite(x)) {",
+        "    var /** string */ a = x;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (Number.isInteger(x)) {",
+        "    var /** string */ a = x;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (Number.isNaN(x)) {",
+        "    var /** string */ a = x;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (Number.isSafeInteger(x)) {",
+        "    var /** string */ a = x;",
+        "  }",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
