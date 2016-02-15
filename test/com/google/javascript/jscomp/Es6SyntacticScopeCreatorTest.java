@@ -332,11 +332,26 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
     Node firstLevelBlock = root.getFirstChild().getLastChild();
     Scope firstLevelBlockScope = scopeCreator.createScope(firstLevelBlock, globalScope);
-    assertFalse(globalScope.isDeclared("x", false));
+    assertFalse(firstLevelBlockScope.isDeclared("x", false));
 
     Node secondLevelBlock = firstLevelBlock.getFirstChild().getLastChild();
     Scope secondLevelBLockScope = scopeCreator.createScope(secondLevelBlock, firstLevelBlockScope);
     assertTrue(secondLevelBLockScope.isDeclared("x", false));
+  }
+
+  public void testBlockScopeWithClass() {
+    String js = "if (true) { if (true) { class X {} } }";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("X", false));
+
+    Node firstLevelBlock = root.getFirstChild().getLastChild();
+    Scope firstLevelBlockScope = scopeCreator.createScope(firstLevelBlock, globalScope);
+    assertFalse(firstLevelBlockScope.isDeclared("X", false));
+
+    Node secondLevelBlock = firstLevelBlock.getFirstChild().getLastChild();
+    Scope secondLevelBLockScope = scopeCreator.createScope(secondLevelBlock, firstLevelBlockScope);
+    assertTrue(secondLevelBLockScope.isDeclared("X", false));
   }
 
   public void testForLoopScope() {
@@ -509,5 +524,59 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node catchBlock = tryBlock.getNext();
     Scope catchScope = scopeCreator.createScope(catchBlock, tryScope);
     assertTrue(catchScope.isDeclared("e", false));
+  }
+
+  public void testFunctionName() {
+    String js = "var f = function foo() {}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertTrue(globalScope.isDeclared("f", false));
+    assertFalse(globalScope.isDeclared("foo", false));
+
+    Node fNode = root.getFirstChild().getFirstChild().getFirstChild();
+    Scope fScope = scopeCreator.createScope(fNode, globalScope);
+    assertFalse(fScope.isDeclared("f", false));
+    assertTrue(fScope.isDeclared("foo", false));
+  }
+
+  public void testClassName() {
+    String js = "var Clazz = class Foo {}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertTrue(globalScope.isDeclared("Clazz", false));
+    assertFalse(globalScope.isDeclared("Foo", false));
+
+    Node classNode = root.getFirstChild().getFirstChild().getFirstChild();
+    Scope classScope = scopeCreator.createScope(classNode, globalScope);
+    assertFalse(classScope.isDeclared("Clazz", false));
+    assertTrue(classScope.isDeclared("Foo", false));
+  }
+
+  public void testFunctionExpressionInForLoopInitializer() {
+    Node root = getRoot("for (function foo() {};;) {}");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("foo", false));
+
+    Node forNode = root.getFirstChild();
+    Scope forScope = scopeCreator.createScope(forNode, globalScope);
+    assertFalse(forScope.isDeclared("foo", false));
+
+    Node fNode = forNode.getFirstChild();
+    Scope fScope = scopeCreator.createScope(fNode, forScope);
+    assertTrue(fScope.isDeclared("foo", false));
+  }
+
+  public void testClassExpressionInForLoopInitializer() {
+    Node root = getRoot("for (class Clazz {};;) {}");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("Clazz", false));
+
+    Node forNode = root.getFirstChild();
+    Scope forScope = scopeCreator.createScope(forNode, globalScope);
+    assertFalse(forScope.isDeclared("Clazz", false));
+
+    Node classNode = forNode.getFirstChild();
+    Scope classScope = scopeCreator.createScope(classNode, forScope);
+    assertTrue(classScope.isDeclared("Clazz", false));
   }
 }

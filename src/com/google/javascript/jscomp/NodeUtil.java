@@ -2274,6 +2274,7 @@ public final class NodeUtil {
       case Token.FOR:
       case Token.FOR_OF:
       case Token.SWITCH:
+      case Token.CLASS:
         return true;
     }
     return false;
