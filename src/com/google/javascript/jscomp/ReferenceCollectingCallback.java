@@ -300,6 +300,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
         case Token.TRY:
         case Token.WHILE:
         case Token.WITH:
+        case Token.CLASS:
           // NOTE: TRY has up to 3 child blocks:
           // TRY
           //   BLOCK

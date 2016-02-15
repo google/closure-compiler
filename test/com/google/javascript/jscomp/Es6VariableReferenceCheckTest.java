@@ -277,6 +277,10 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("class A { f() { return 1729; } }");
   }
 
+  public void testRedeclareClassName() {
+    assertNoWarning("var Clazz = class Foo {}; var Foo = 3;");
+  }
+
   public void testClassExtend() {
     assertNoWarning("class A {} class C extends A {} C = class extends A {}");
   }
