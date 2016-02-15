@@ -169,6 +169,7 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     testSameEs6("class x {}");
     testSameEs6("var x = class x {};");
     testSameEs6("var y = class x {};");
+    testSameEs6("var y = class x { foo() { return new x; } };");
   }
 
   public void testVarReferenceInExterns() {

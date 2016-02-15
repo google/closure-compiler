@@ -100,13 +100,27 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
       }
 
       // Since we create a separate scope for body, stop scanning here
+    } else if (n.isClass()) {
+      if (scope.getParent() != null) {
+        inputId = NodeUtil.getInputId(n);
+      }
+
+      final Node classNameNode = n.getFirstChild();
+      // Bleed the class name into the scope, if it hasn't
+      // been declared in the outer scope.
+      if (!classNameNode.isEmpty()) {
+        String className = classNameNode.getString();
+        if (!className.isEmpty() && NodeUtil.isClassExpression(n)) {
+          declareVar(classNameNode);
+        }
+      }
     } else if (n.isBlock() || n.isFor() || n.isForOf()) {
       if (scope.getParent() != null) {
         inputId = NodeUtil.getInputId(n);
       }
       scanVars(n);
     } else {
-      // It's the global block
+      // n is the global SCRIPT node
       Preconditions.checkState(scope.getParent() == null);
       scanVars(n);
     }
@@ -261,8 +275,8 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
    */
   private boolean isNodeAtCurrentLexicalScope(Node n) {
     Node parent = n.getParent();
-    Preconditions.checkState(parent.isBlock() || parent.isFor()
-        || parent.isForOf() || parent.isScript() || parent.isLabel());
+    Preconditions.checkState(parent.isBlock() || parent.isFor() || parent.isForOf()
+        || parent.isScript() || parent.isLabel(), parent);
 
     if (parent == scope.getRootNode() || parent.isScript()
         || (parent.getParent().isCatch()
