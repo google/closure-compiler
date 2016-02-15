@@ -458,6 +458,24 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  */
 angular.Directive;
 
+
+/**
+ * @typedef {{
+ *   bindings: (Object.<string, string>|undefined),
+ *   controller: (angular.Injectable|string|undefined),
+ *   controllerAs: (string|undefined),
+ *   template: (string|
+ *       function(!angular.JQLite=,!angular.Attributes=): string|
+ *       undefined),
+ *   templateUrl: (string|
+ *       function(!angular.JQLite=,!angular.Attributes=)|
+ *       undefined),
+ *   transclude: (boolean|undefined)
+ *   }}
+ */
+angular.Component;
+
+
 /**
  * @typedef {(Function|Array.<string|Function>)}
  */
@@ -715,6 +733,15 @@ angular.Module = function() {};
  * @param {angular.Injectable} animationFactory
  */
 angular.Module.prototype.animation = function(name, animationFactory) {};
+
+/**
+ * Intended to be called with a name string and a component definition.
+ *
+ * @param {string} name
+ * @param {!angular.Component} componentDefinition
+ * @return {!angular.Module}
+ */
+angular.Module.prototype.component = function(name, componentDefinition) {};
 
 /**
  * @param {angular.Injectable} configFn
