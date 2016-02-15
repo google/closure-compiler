@@ -65,14 +65,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private final boolean late;
 
+  private final boolean shouldUseTypes;
+
   /**
    * @param late When late is false, this mean we are currently running before
    * most of the other optimizations. In this case we would avoid optimizations
    * that would make the code harder to analyze. When this is true, we would
    * do anything to minimize for size.
    */
-  PeepholeFoldConstants(boolean late) {
+  PeepholeFoldConstants(boolean late, boolean shouldUseTypes) {
     this.late = late;
+    this.shouldUseTypes = shouldUseTypes;
   }
 
   @Override
@@ -198,7 +201,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.ADD:
         Node left = n.getFirstChild();
         Node right = n.getLastChild();
-        if (!NodeUtil.mayBeString(left) && !NodeUtil.mayBeString(right)) {
+        if (!NodeUtil.mayBeString(left, shouldUseTypes)
+            && !NodeUtil.mayBeString(right, shouldUseTypes)) {
           tryConvertOperandsToNumber(n);
         }
         break;
@@ -262,7 +266,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         break;
     }
 
-    Double result = NodeUtil.getNumberValue(n);
+    Double result = NodeUtil.getNumberValue(n, shouldUseTypes);
     if (result == null) {
       return;
     }
@@ -712,8 +716,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // Unlike other operations, ADD operands are not always converted
     // to Number.
     if (opType == Token.ADD
-        && (NodeUtil.mayBeString(left)
-            || NodeUtil.mayBeString(right))) {
+        && (NodeUtil.mayBeString(left, shouldUseTypes)
+            || NodeUtil.mayBeString(right, shouldUseTypes))) {
       return null;
     }
 
@@ -722,11 +726,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // TODO(johnlenz): Handle NaN with unknown value. BIT ops convert NaN
     // to zero so this is a little awkward here.
 
-    Double lValObj = NodeUtil.getNumberValue(left);
+    Double lValObj = NodeUtil.getNumberValue(left, shouldUseTypes);
     if (lValObj == null) {
       return null;
     }
-    Double rValObj = NodeUtil.getNumberValue(right);
+    Double rValObj = NodeUtil.getNumberValue(right, shouldUseTypes);
     if (rValObj == null) {
       return null;
     }
@@ -800,11 +804,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         (NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType))
         || n.isAdd());
 
-    Preconditions.checkState(!n.isAdd() || !NodeUtil.mayBeString(n));
+    Preconditions.checkState(!n.isAdd() || !NodeUtil.mayBeString(n, shouldUseTypes));
 
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.
-    Double rightValObj = NodeUtil.getNumberValue(right);
+    Double rightValObj = NodeUtil.getNumberValue(right, shouldUseTypes);
     if (rightValObj != null && left.getType() == opType) {
       Preconditions.checkState(left.getChildCount() == 2);
 
@@ -836,7 +840,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldAdd(Node node, Node left, Node right) {
     Preconditions.checkArgument(node.isAdd());
 
-    if (NodeUtil.mayBeString(node)) {
+    if (NodeUtil.mayBeString(node, shouldUseTypes)) {
       if (NodeUtil.isLiteralValue(left, false) &&
           NodeUtil.isLiteralValue(right, false)) {
         // '6' + 7
@@ -940,7 +944,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   @SuppressWarnings("fallthrough")
   private Node tryFoldComparison(Node n, Node left, Node right) {
-    TernaryValue result = evaluateComparison(n.getType(), left, right);
+    TernaryValue result = evaluateComparison(n.getType(), left, right, shouldUseTypes);
     if (result == TernaryValue.UNKNOWN) {
       return n;
     }
@@ -952,7 +956,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return newNode;
   }
 
-  static TernaryValue evaluateComparison(int op, Node left, Node right) {
+  static TernaryValue evaluateComparison(int op, Node left, Node right, boolean useTypes) {
     // Don't try to minimize side-effects here.
     if (NodeUtil.mayHaveSideEffects(left) || NodeUtil.mayHaveSideEffects(right)) {
       return TernaryValue.UNKNOWN;
@@ -1018,23 +1022,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         // handle null <,>,<=,>=
       case Token.TRUE:
       case Token.FALSE:
-        if (rhType != Token.TRUE && rhType != Token.FALSE && rhType != Token.NULL) {
-          return TernaryValue.UNKNOWN;
-        }
+        boolean rhIsBooleanLike =
+            rhType == Token.TRUE || rhType == Token.FALSE || rhType == Token.NULL;
         switch (op) {
           case Token.SHEQ:
           case Token.EQ:
-            return TernaryValue.forBoolean(lhType == rhType);
+            return rhIsBooleanLike
+                ? TernaryValue.forBoolean(lhType == rhType) : TernaryValue.UNKNOWN;
 
           case Token.SHNE:
           case Token.NE:
-            return TernaryValue.forBoolean(lhType != rhType);
+            return rhIsBooleanLike
+                ? TernaryValue.forBoolean(lhType != rhType) : TernaryValue.UNKNOWN;
 
           case Token.GE:
           case Token.LE:
           case Token.GT:
           case Token.LT:
-            return compareAsNumbers(op, left, right);
+            return compareAsNumbers(op, left, right, useTypes);
         }
         return TernaryValue.UNKNOWN;
 
@@ -1074,7 +1079,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       case Token.NUMBER:
         if (right.isNumber()) {
-          return compareAsNumbers(op, left, right);
+          return compareAsNumbers(op, left, right, useTypes);
         }
         return TernaryValue.UNKNOWN; // Only eval if they are the same type
 
@@ -1132,12 +1137,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * The result of the comparison, or UNKNOWN if the
    * result could not be determined.
    */
-  private static TernaryValue compareAsNumbers(int op, Node left, Node right) {
-    Double leftValue = NodeUtil.getNumberValue(left);
+  private static TernaryValue compareAsNumbers(int op, Node left, Node right, boolean useTypes) {
+    Double leftValue = NodeUtil.getNumberValue(left, useTypes);
     if (leftValue == null) {
       return TernaryValue.UNKNOWN;
     }
-    Double rightValue = NodeUtil.getNumberValue(right);
+    Double rightValue = NodeUtil.getNumberValue(right, useTypes);
     if (rightValue == null) {
       return TernaryValue.UNKNOWN;
     }

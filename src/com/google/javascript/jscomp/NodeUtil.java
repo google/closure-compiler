@@ -31,6 +31,7 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.Collection;
@@ -277,12 +278,20 @@ public final class NodeUtil {
     return result.toString();
   }
 
+  static Double getNumberValue(Node n) {
+    return getNumberValue(n, false);
+  }
+
   /**
    * Gets the value of a node as a Number, or null if it cannot be converted.
    * When it returns a non-null Double, this method effectively emulates the
    * <code>Number()</code> JavaScript cast function.
+   *
+   * @param n The node.
+   * @param useType If true, return 0.0 if the type is null, and NaN if the type is undefined.
+   * @return The value of a node as a Number, or null if it cannot be converted.
    */
-  static Double getNumberValue(Node n) {
+  static Double getNumberValue(Node n, boolean useType) {
     switch (n.getType()) {
       case Token.TRUE:
         return 1.0;
@@ -312,6 +321,16 @@ public final class NodeUtil {
         }
         if (name.equals("Infinity")) {
           return Double.POSITIVE_INFINITY;
+        }
+        if (useType) {
+          JSType type = n.getJSType();
+          if (type != null) {
+            if (type.isVoidType()) {
+              return Double.NaN;
+            } else if (type.isNullType()) {
+              return 0.0;
+            }
+          }
         }
         return null;
 
@@ -1687,10 +1706,30 @@ public final class NodeUtil {
     return getKnownValueType(n) == ValueType.OBJECT;
   }
 
+  static boolean mayBeString(Node n) {
+    return mayBeString(n, false);
+  }
+
   /**
+   * Return if the node is possibly a string.
+   *
+   * @param n The node.
+   * @param useType If true and the node has a primitive type, return true if that type is string
+   *     and false otherwise.
    * @return Whether the results is possibly a string.
    */
-  static boolean mayBeString(Node n) {
+  static boolean mayBeString(Node n, boolean useType) {
+    if (useType) {
+      JSType type = n.getJSType();
+      if (type != null) {
+        if (type.isStringValueType()) {
+          return true;
+        } else if (type.isNumberValueType() || type.isBooleanValueType() || type.isNullType()
+            || type.isVoidType()) {
+          return false;
+        }
+      }
+    }
     return mayBeString(getKnownValueType(n));
   }
 
