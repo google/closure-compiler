@@ -1516,6 +1516,40 @@ public final class TypeInferenceTest extends TestCase {
     verify("x", NUMBER_TYPE);
   }
 
+  public void testIsNumber() {
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(Number.isFinite(x));");
+    verify("x", NUMBER_TYPE);
+
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(Number.isInteger(x));");
+    verify("x", NUMBER_TYPE);
+
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(Number.isNaN(x));");
+    verify("x", NUMBER_TYPE);
+
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(Number.isSafeInteger(x));");
+    verify("x", NUMBER_TYPE);
+
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(!Number.isFinite(x));");
+    verify("x", NUMBER_TYPE);
+
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(!Number.isInteger(x));");
+    verify("x", NUMBER_TYPE);
+
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(!Number.isNaN(x));");
+    verify("x", NUMBER_TYPE);
+
+    assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
+    inFunction("goog.asserts.assert(!Number.isSafeInteger(x));");
+    verify("x", NUMBER_TYPE);
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }
