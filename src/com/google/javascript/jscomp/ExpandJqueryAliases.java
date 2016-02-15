@@ -85,7 +85,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         new PeepholeSubstituteAlternateSyntax(late),
         new PeepholeReplaceKnownMethods(late),
         new PeepholeRemoveDeadCode(),
-        new PeepholeFoldConstants(late),
+        new PeepholeFoldConstants(late, compiler.getOptions().useTypesForOptimization),
         new PeepholeCollectPropertyAssignments());
   }
 

@@ -482,6 +482,9 @@ public class CompilerOptions {
   /** Chains calls to functions that return this. */
   boolean chainCalls;
 
+  /** Use type information to enable additional optimization opportunities. */
+  boolean useTypesForOptimization;
+
   //--------------------------------
   // Renaming
   //--------------------------------

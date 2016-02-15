@@ -1332,7 +1332,7 @@ public final class DefaultPassConfig extends PassConfig {
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(late),
             new PeepholeRemoveDeadCode(),
-            new PeepholeFoldConstants(late),
+            new PeepholeFoldConstants(late, options.useTypesForOptimization),
             new PeepholeCollectPropertyAssignments());
     }
   };
@@ -1349,7 +1349,7 @@ public final class DefaultPassConfig extends PassConfig {
             new PeepholeMinimizeConditions(late),
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(late),
-            new PeepholeFoldConstants(late),
+            new PeepholeFoldConstants(late, options.useTypesForOptimization),
             new ReorderConstantExpression());
     }
   };

@@ -45,8 +45,14 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass = new PeepholeOptimizationsPass(compiler,
-          new PeepholeFoldConstants(late));
+          new PeepholeFoldConstants(late, compiler.getOptions().useTypesForOptimization));
     return peepholePass;
+  }
+
+  @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    options.useTypesForOptimization = true;
+    return super.getOptions(options);
   }
 
   @Override
@@ -1168,6 +1174,24 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public void testIssue522() {
     testSame("[][1] = 1;");
+  }
+
+  public void testTypeBasedFoldConstant() {
+    enableTypeCheck();
+    test("var /** number */ x; x + 1 + 1 + x",
+         "var /** number */ x; x + 2 + x");
+
+    test("var /** boolean */ x; x + 1 + 1 + x",
+         "var /** boolean */ x; x + 2 + x");
+
+    test("var /** null */ x; x + 1 + 1 + x",
+         "var /** null */ x; 2");
+
+    test("var /** undefined */ x; x + 1 + 1 + x",
+         "var /** undefined */ x; NaN");
+
+    testSame("var /** string */ x; x + 1 + 1 + x");
+    disableTypeCheck();
   }
 
   public void foldDefineProperties1() {

@@ -48,7 +48,7 @@ public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
         new PeepholeOptimizationsPass(compiler,
             new PeepholeRemoveDeadCode(),
             new PeepholeMinimizeConditions(true),
-            new PeepholeFoldConstants(true))
+            new PeepholeFoldConstants(true, false))
             .process(externs, js);
         new MinimizeExitPoints(compiler).process(externs, js);
 
