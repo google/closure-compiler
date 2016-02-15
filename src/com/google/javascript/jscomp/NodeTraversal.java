@@ -605,6 +605,8 @@ public class NodeTraversal {
 
     if (type == Token.FUNCTION) {
       traverseFunction(n, parent);
+    } else if (type == Token.CLASS) {
+      traverseClass(n, parent);
     } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
       traverseBlockScope(n);
     } else {
@@ -631,7 +633,7 @@ public class NodeTraversal {
         && NodeUtil.isFunctionExpression(n);
 
     if (!isFunctionExpression) {
-      // Functions declarations are in the scope containing the declaration.
+      // Function declarations are in the scope containing the declaration.
       traverseBranch(fnName, n);
     }
 
@@ -652,6 +654,40 @@ public class NodeTraversal {
 
     // Body
     // ES6 "arrow" function may not have a block as a body.
+    traverseBranch(body, n);
+
+    popScope();
+  }
+
+  /** Traverses a class. */
+  private void traverseClass(Node n, Node parent) {
+    Preconditions.checkState(n.getChildCount() == 3, n);
+    Preconditions.checkState(n.isClass());
+
+    final Node className = n.getFirstChild();
+    boolean isClassExpression = NodeUtil.isClassExpression(n);
+
+    if (!isClassExpression) {
+      // Class declarations are in the scope containing the declaration.
+      traverseBranch(className, n);
+    }
+
+    curNode = n;
+    pushScope(n);
+
+    if (isClassExpression) {
+      // Class expression names are only accessible within the function
+      // scope.
+      traverseBranch(className, n);
+    }
+
+    final Node extendsClause = className.getNext();
+    final Node body = extendsClause.getNext();
+
+    // Extends
+    traverseBranch(extendsClause, n);
+
+    // Body
     traverseBranch(body, n);
 
     popScope();
@@ -805,7 +841,7 @@ public class NodeTraversal {
   /**
    * Determines whether the hoist scope of the current traversal is global.
    */
-  boolean inGlobalHoistScope() {
+  public boolean inGlobalHoistScope() {
     return !getCfgRoot().isFunction();
   }
 
