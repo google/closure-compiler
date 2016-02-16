@@ -265,7 +265,6 @@ public class DiagnosticGroups {
           GlobalTypeInfo.CTOR_IN_DIFFERENT_SCOPE,
           GlobalTypeInfo.DUPLICATE_JSDOC,
           GlobalTypeInfo.DUPLICATE_PROP_IN_ENUM,
-          GlobalTypeInfo.ENUM_PROP_NOT_CONSTANT,
           GlobalTypeInfo.EXPECTED_CONSTRUCTOR,
           GlobalTypeInfo.EXPECTED_INTERFACE,
           GlobalTypeInfo.INEXISTENT_PARAM,
@@ -473,8 +472,9 @@ public class DiagnosticGroups {
           CheckArguments.BAD_ARGUMENTS_USAGE,
           CheckDuplicateCase.DUPLICATE_CASE,
           CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
-          CheckEnums.DUPLICATE_ENUM_VALUE,
           CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
+          CheckEnums.DUPLICATE_ENUM_VALUE,
+          CheckEnums.ENUM_PROP_NOT_CONSTANT,
           CheckEnums.SHORTHAND_ASSIGNMENT_IN_ENUM,
           // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
           // checkTypes DiagnosticGroup

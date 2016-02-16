@@ -190,10 +190,6 @@ class GlobalTypeInfo implements CompilerPass {
           "A typedef should only be used in type annotations, not as a value."
           + " Adding properties to typedefs is not allowed.");
 
-  static final DiagnosticType ENUM_PROP_NOT_CONSTANT =
-      DiagnosticType.warning("JSC_NTI_ENUM_PROP_NOT_CONSTANT",
-          "enum key {0} must be in ALL_CAPS");
-
   static final DiagnosticType SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES =
       DiagnosticType.warning(
           "JSC_NTI_SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES",
@@ -229,7 +225,6 @@ class GlobalTypeInfo implements CompilerPass {
       CTOR_IN_DIFFERENT_SCOPE,
       DUPLICATE_JSDOC,
       DUPLICATE_PROP_IN_ENUM,
-      ENUM_PROP_NOT_CONSTANT,
       EXPECTED_CONSTRUCTOR,
       EXPECTED_INTERFACE,
       FUNCTION_CONSTRUCTOR_NOT_DEFINED,
@@ -897,9 +892,6 @@ class GlobalTypeInfo implements CompilerPass {
         String pname = NodeUtil.getObjectLitKeyName(prop);
         if (propNames.contains(pname)) {
           warnings.add(JSError.make(qnameNode, DUPLICATE_PROP_IN_ENUM, pname));
-        }
-        if (!convention.isValidEnumKey(pname)) {
-          warnings.add(JSError.make(prop, ENUM_PROP_NOT_CONSTANT, pname));
         }
         propNames.add(pname);
       }

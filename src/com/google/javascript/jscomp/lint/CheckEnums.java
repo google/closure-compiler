@@ -40,6 +40,9 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
   public static final DiagnosticType SHORTHAND_ASSIGNMENT_IN_ENUM = DiagnosticType.warning(
       "JSC_SHORTHAND_ASSIGNMENT_IN_ENUM",
       "Shorthand assignment used in enum.");
+  public static final DiagnosticType ENUM_PROP_NOT_CONSTANT = DiagnosticType.warning(
+      "JSC_ENUM_PROP_NOT_CONSTANT",
+      "enum key {0} must be in ALL_CAPS.");
 
   private final AbstractCompiler compiler;
 
@@ -57,28 +60,30 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
     if (n.isObjectLit()) {
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
       if (jsdoc != null && jsdoc.hasEnumParameterType()) {
-        checkSpecialNamingAndAssignmentUsage(t, n);
+        checkNamingAndAssignmentUsage(t, n);
         checkDuplicateEnumValues(t, n);
       }
     }
   }
 
-  private void checkSpecialNamingAndAssignmentUsage(NodeTraversal t, Node n) {
+  private void checkNamingAndAssignmentUsage(NodeTraversal t, Node n) {
     for (Node child : n.children()) {
-      checkComputedPropName(t, child);
-      checkShorthandAssignment(t, child);
+      checkName(t, child);
     }
   }
 
-  private void checkComputedPropName(NodeTraversal t, Node node) {
+  private void checkName(NodeTraversal t, Node node) {
     if (node.isComputedProp()) {
       t.report(node, COMPUTED_PROP_NAME_IN_ENUM);
+      return;
     }
-  }
 
-  private void checkShorthandAssignment(NodeTraversal t, Node node) {
     if (node.isStringKey() && !node.hasChildren()) {
       t.report(node, SHORTHAND_ASSIGNMENT_IN_ENUM);
+    }
+
+    if (!compiler.getCodingConvention().isValidEnumKey(node.getString())) {
+      t.report(node, ENUM_PROP_NOT_CONSTANT);
     }
   }
 

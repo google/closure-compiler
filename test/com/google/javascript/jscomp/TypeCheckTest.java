@@ -2953,11 +2953,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/**@type {a}*/var d;d=a.BB;");
   }
 
-  public void testEnum2() {
-    testTypes("/**@enum*/var a={b:1}",
-        "enum key b must be in ALL_CAPS");
-  }
-
   public void testEnum3() {
     testTypes("/**@enum*/var a={BB:1,BB:2}",
         "variable a.BB redefined, original definition at [testcode]:1");

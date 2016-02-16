@@ -10618,11 +10618,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(LINE_JOINER.join(
         "/** @enum {number} */",
-        "var E = { a: 1 };"),
-        GlobalTypeInfo.ENUM_PROP_NOT_CONSTANT);
-
-    typeCheck(LINE_JOINER.join(
-        "/** @enum {number} */",
         "var E = { A: 1, A: 2 };"),
         GlobalTypeInfo.DUPLICATE_PROP_IN_ENUM);
   }

@@ -545,14 +545,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(false);
     options.setClosurePass(true);
 
-    test(options, CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
-        TypeCheck.ENUM_NOT_CONSTANT);
-    assertEquals(0.0, lastCompiler.getErrorManager().getTypedPercent());
+    test(options,
+        CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
+        "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
+    assertThat(lastCompiler.getErrorManager().getTypedPercent()).isEqualTo(0.0);
 
     // This does not generate a warning.
     test(options, "/** @type {number} */ var n = window.name;",
         "var n = window.name;");
-    assertEquals(0.0, lastCompiler.getErrorManager().getTypedPercent());
+    assertThat(lastCompiler.getErrorManager().getTypedPercent()).isEqualTo(0.0);
   }
 
   public void testTypeCheckAndInference() {
@@ -1104,9 +1105,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var COMPILED=true;var goog={};goog.exportSymbol=function(){};"
         + "var Foo=function(){};var x=new Foo");
     test(options,
-         CLOSURE_BOILERPLATE +
-         "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
-         TypeCheck.ENUM_NOT_CONSTANT);
+        CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
+        "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
   }
 
   public void testProvidedNamespaceIsConst() {

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.TypeCheck.ENUM_NOT_CONSTANT;
 import static com.google.javascript.jscomp.TypeCheck.MULTIPLE_VAR_DEF;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
@@ -1097,15 +1096,9 @@ final class TypedScopeCreator implements ScopeCreator {
           // collect enum elements
           Node key = rValue.getFirstChild();
           while (key != null) {
-            String keyName = NodeUtil.getStringValue(key);
-            if (keyName == null) {
-              // GET and SET don't have a String value;
-              report(JSError.make(key, ENUM_NOT_CONSTANT, keyName));
-            } else if (!codingConvention.isValidEnumKey(keyName)) {
-              report(JSError.make(key, ENUM_NOT_CONSTANT, keyName));
-            } else {
-              enumType.defineElement(keyName, key);
-            }
+            String keyName = key.getString();
+            Preconditions.checkNotNull(keyName, "Invalid enum key: %s", key);
+            enumType.defineElement(keyName, key);
             key = key.getNext();
           }
         }

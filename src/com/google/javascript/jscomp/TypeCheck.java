@@ -141,10 +141,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType ENUM_DUP = DiagnosticType.error("JSC_ENUM_DUP",
       "enum element {0} already defined");
 
-  static final DiagnosticType ENUM_NOT_CONSTANT =
-      DiagnosticType.warning("JSC_ENUM_NOT_CONSTANT",
-          "enum key {0} must be in ALL_CAPS");
-
   static final DiagnosticType INVALID_INTERFACE_MEMBER_DECLARATION =
       DiagnosticType.warning(
           "JSC_INVALID_INTERFACE_MEMBER_DECLARATION",
@@ -273,7 +269,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       FUNCTION_MASKS_VARIABLE,
       MULTIPLE_VAR_DEF,
       ENUM_DUP,
-      ENUM_NOT_CONSTANT,
       INVALID_INTERFACE_MEMBER_DECLARATION,
       INTERFACE_METHOD_NOT_EMPTY,
       CONFLICTING_EXTENDED_TYPE,
