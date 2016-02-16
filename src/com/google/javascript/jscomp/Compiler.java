@@ -348,7 +348,9 @@ public class Compiler extends AbstractCompiler {
     // But we do not want to see the warnings from OTI.
     if (options.getNewTypeInference()) {
       options.checkTypes = true;
-      options.setWarningLevel(DiagnosticGroups.OLD_CHECK_TYPES, CheckLevel.OFF);
+      if (!options.reportOTIErrorsUnderNTI) {
+        options.setWarningLevel(DiagnosticGroups.OLD_CHECK_TYPES, CheckLevel.OFF);
+      }
       options.setWarningLevel(
           DiagnosticGroup.forType(RhinoErrorReporter.TYPE_PARSE_ERROR),
           CheckLevel.WARNING);

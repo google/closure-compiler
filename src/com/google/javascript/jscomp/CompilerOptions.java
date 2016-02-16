@@ -134,6 +134,15 @@ public class CompilerOptions {
   boolean inferTypes;
 
   private boolean useNewTypeInference;
+  
+  /**
+   * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
+   * If you want both NTI and OTI errors in this case, set to true.
+   * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
+   * respectively.
+   * This will be removed when NTI entirely replaces OTI.
+   */
+  boolean reportOTIErrorsUnderNTI = false;
 
   /**
    * Configures the compiler to skip as many passes as possible.
@@ -1760,7 +1769,12 @@ public class CompilerOptions {
     this.useNewTypeInference = enable;
   }
 
-  /**
+  public void setReportOTIErrorsUnderNTI(boolean enable) {
+	// Not dead code; used by the open-source users of the compiler.
+	this.reportOTIErrorsUnderNTI = enable;
+  }
+
+/**
    * @return Whether assumeStrictThis is set.
    */
   public boolean assumeStrictThis() {
