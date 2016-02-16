@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -757,7 +758,7 @@ public class CommandLineRunner extends
             mixedSources.remove(new FlagEntry<>(JsSourceType.JS, filename));
           }
         } else {
-          for (String filename : findJsFiles(Collections.singletonList(source.value))) {
+          for (String filename : findJsFiles(Collections.singletonList(source.value), true)) {
             if (!excludes.contains(filename)) {
               mixedSources.add(new FlagEntry<>(JsSourceType.JS, filename));
             }
@@ -1503,7 +1504,20 @@ public class CommandLineRunner extends
    * within the directory and sub-directories.
    */
   public static List<String> findJsFiles(Collection<String> patterns) throws IOException {
-    Set<String> allJsInputs = new TreeSet<>();
+    return findJsFiles(patterns, false);
+  }
+
+  /**
+   * Returns all the JavaScript files from the set of patterns.
+   *
+   * @param patterns A collection of filename patterns.
+   * @param sortAlphabetically Whether the output filenames should be in alphabetical order.
+   * @return The list of JS filenames found by expanding the patterns.
+   */
+  private static List<String> findJsFiles(Collection<String> patterns, boolean sortAlphabetically)
+      throws IOException {
+    Set<String> allJsInputs = sortAlphabetically
+        ? new TreeSet<String>() : new LinkedHashSet<String>();
     Set<String> excludes = new HashSet<>();
     for (String pattern : patterns) {
       if (!pattern.contains("*") && !pattern.startsWith("!")) {

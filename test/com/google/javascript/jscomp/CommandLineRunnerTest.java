@@ -1094,9 +1094,11 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testInputMultipleJsFilesWithOneJsFlag() throws IOException, FlagUsageException {
+    // Test that file order is preserved with --js test3.js test2.js test1.js
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    compileJsFiles("var a;var b;", jsFile1, jsFile2);
+    FlagEntry<JsSourceType> jsFile3 = createJsFile("test3", "var c;");
+    compileJsFiles("var c;var b;var a;", jsFile3, jsFile2, jsFile1);
   }
 
   public void testGlobJs1() throws IOException, FlagUsageException {
