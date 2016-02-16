@@ -181,9 +181,11 @@ abstract class IntegrationTestCase extends TestCase {
     Node root = compiler.getRoot().getLastChild();
     Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
     String explanation = expectedRoot.checkTreeEquals(root);
-    assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-        "\nResult: " + compiler.toSource(root) +
-        "\n" + explanation, explanation);
+    assertNull("\n"
+        + "Expected: " + compiler.toSource(expectedRoot) + "\n"
+        + "Result:   " + compiler.toSource(root) + "\n"
+        + explanation,
+        explanation);
   }
 
   /**
