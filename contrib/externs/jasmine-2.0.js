@@ -461,26 +461,3 @@ function xit(description, handler) {}
  * @type {jasmine.Spec}
  */
 var currentSpec;
-
-
-/**
- * Provided by angular-mocks.js.
- * @type {angular.$injector}
- */
-jasmine.Spec.prototype.$injector;
-
-
-/**
- * Provided by angular-mocks.js.
- * @param {...(Function|Array<string|Function>)} var_args
- */
-function inject(var_args) {}
-
-
-/**
- * Provided by angular-mocks.js.
- * @param {...(string|Function|Array<string|Function>)} var_args
- * @suppress {checkTypes}
- */
-function module(var_args) {}
-
