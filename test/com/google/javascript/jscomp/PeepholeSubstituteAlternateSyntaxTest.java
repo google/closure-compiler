@@ -35,19 +35,14 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   private boolean late = true;
 
-  // TODO(user): Remove this when we no longer need to do string comparison.
-  private PeepholeSubstituteAlternateSyntaxTest(boolean compareAsTree) {
-    super(FOLD_CONSTANTS_TEST_EXTERNS, compareAsTree);
-  }
-
   public PeepholeSubstituteAlternateSyntaxTest() {
     super(FOLD_CONSTANTS_TEST_EXTERNS);
   }
 
   @Override
   public void setUp() throws Exception {
-    late = true;
     super.setUp();
+    late = true;
     disableNormalize();
   }
 
@@ -70,25 +65,6 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   private void fold(String js, String expected) {
     test(js, expected);
-  }
-
-  void assertResultString(String js, String expected) {
-    assertResultString(js, expected, false);
-  }
-
-  // TODO(user): This is same as fold() except it uses string comparison. Any
-  // test that needs tell us where a folding is constructing an invalid AST.
-  void assertResultString(String js, String expected, boolean normalize) {
-    PeepholeSubstituteAlternateSyntaxTest scTest
-        = new PeepholeSubstituteAlternateSyntaxTest(false);
-
-    if (normalize) {
-      scTest.enableNormalize();
-    } else {
-      scTest.disableNormalize();
-    }
-
-    scTest.test(js, expected);
   }
 
   public void testFoldRegExpConstructor() {
@@ -150,9 +126,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   }
 
   public void testFoldRegExpConstructorStringCompare() {
-    // Might have something to do with the internal representation of \n and how
-    // it is used in node comparison.
-    assertResultString("x=new RegExp(\"\\n\", \"i\")", "x=/\\n/i", true);
+    enableNormalize();
+    test("x = new RegExp(\"\\n\", \"i\")", "x = /\\n/i");
   }
 
   public void testContainsUnicodeEscape() throws Exception {

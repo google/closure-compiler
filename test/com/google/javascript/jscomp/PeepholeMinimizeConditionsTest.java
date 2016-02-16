@@ -25,20 +25,10 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   private boolean late = true;
 
-  // TODO(user): Remove this when we no longer need to do string comparison.
-  private PeepholeMinimizeConditionsTest(boolean compareAsTree) {
-    super("", compareAsTree);
-  }
-
-  public PeepholeMinimizeConditionsTest() {
-    super("");
-  }
-
   @Override
   public void setUp() throws Exception {
-    late = true;
     super.setUp();
-    disableNormalize();
+    late = true;
   }
 
   @Override
@@ -60,26 +50,6 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   private void fold(String js, String expected) {
     test(js, expected);
-  }
-
-  private static void assertResultString(String js, String expected) {
-    assertResultString(js, expected, false);
-  }
-
-  // TODO(user): This is same as fold() except it uses string comparison. Any
-  // test that needs tell us where a folding is constructing an invalid AST.
-  private static void assertResultString(String js, String expected,
-      boolean normalize) {
-    PeepholeMinimizeConditionsTest scTest
-        = new PeepholeMinimizeConditionsTest(false);
-
-    if (normalize) {
-      scTest.enableNormalize();
-    } else {
-      scTest.disableNormalize();
-    }
-
-    scTest.test(js, expected);
   }
 
   /** Check that removing blocks with 1 child works */
@@ -275,7 +245,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   public void testFoldLogicalOpStringCompare() {
     // side-effects
     // There is two way to parse two &&'s and both are correct.
-    assertResultString("if(foo() && false) z()", "(foo(),0)&&z()");
+    fold("if (foo() && false) z()", "(foo(), 0) && z()");
   }
 
   public void testFoldNot() {

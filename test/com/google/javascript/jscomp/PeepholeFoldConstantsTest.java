@@ -36,17 +36,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   private boolean late;
 
-  // TODO(user): Remove this when we no longer need to do string comparison.
-  private PeepholeFoldConstantsTest(boolean compareAsTree) {
-    super("", compareAsTree);
-  }
-
-  public PeepholeFoldConstantsTest() {
-    super("");
-  }
-
   @Override
-  public void setUp() {
+  public void setUp() throws Exception {
+    super.setUp();
     late = false;
   }
 
@@ -73,14 +65,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   private void fold(String js, String expected, DiagnosticType warning) {
     test(js, expected, null, warning);
-  }
-
-  // TODO(user): This is same as fold() except it uses string comparison. Any
-  // test that needs tell us where a folding is constructing an invalid AST.
-  private void assertResultString(String js, String expected) {
-    PeepholeFoldConstantsTest scTest = new PeepholeFoldConstantsTest(false);
-
-    scTest.test(js, expected);
   }
 
   public void testUndefinedComparison1() {
@@ -355,11 +339,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testUnaryOpsStringCompare() {
-    // Negatives are folded into a single number node.
-    assertResultString("a=-1", "a=-1");
-    assertResultString("a=~0", "a=-1");
-    assertResultString("a=~1", "a=-2");
-    assertResultString("a=~101", "a=-102");
+    fold("a = -1", "a = -1");
+    fold("a = ~0", "a = -1");
+    fold("a = ~1", "a = -2");
+    fold("a = ~101", "a = -102");
   }
 
   public void testFoldLogicalOp() {
@@ -524,8 +507,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testFoldBitwiseOpStringCompare() {
-    assertResultString("x = -1 | 0", "x=-1");
-    // EXPR_RESULT case is in in PeepholeIntegrationTest
+    fold("x = -1 | 0", "x = -1");
   }
 
   public void testFoldBitShifts() {
@@ -582,12 +564,11 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testFoldBitShiftsStringCompare() {
-    // Negative numbers.
-    assertResultString("x = -1 << 1", "x=-2");
-    assertResultString("x = -1 << 8", "x=-256");
-    assertResultString("x = -1 >> 1", "x=-1");
-    assertResultString("x = -2 >> 1", "x=-1");
-    assertResultString("x = -1 >> 0", "x=-1");
+    fold("x = -1 << 1", "x = -2");
+    fold("x = -1 << 8", "x = -256");
+    fold("x = -1 >> 1", "x = -1");
+    fold("x = -2 >> 1", "x = -1");
+    fold("x = -1 >> 0", "x = -1");
   }
 
   public void testStringAdd() {
@@ -661,8 +642,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testFoldArithmeticStringComp() {
-    // Negative Numbers.
-    assertResultString("x = 10 - 20", "x=-10");
+    fold("x = 10 - 20", "x = -10");
   }
 
   public void testFoldComparison() {
