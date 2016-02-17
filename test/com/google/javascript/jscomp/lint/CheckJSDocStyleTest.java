@@ -57,6 +57,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testWarning("foo.bar = function() {}", MISSING_JSDOC);
     testWarning("Foo.prototype.bar = function() {}", MISSING_JSDOC);
     testWarning("class Foo { bar() {} }", MISSING_JSDOC);
+    testWarning("class Foo { constructor(x) {} }", MISSING_JSDOC);
     testWarning("var Foo = class { bar() {} };", MISSING_JSDOC);
 
     testSame("/** @return {string} */ function f() {}");
@@ -66,6 +67,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @return {string} */ foo.bar = function() {}");
     testSame("/** @return {string} */ Foo.prototype.bar = function() {}");
     testSame("class Foo { /** @return {string} */ bar() {} }");
+    testSame("class Foo { constructor(/** string */ x) {} }");
     testSame("var Foo = class { /** @return {string} */ bar() {} };");
   }
 
@@ -123,6 +125,10 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("function tearDown() {}");
     testSame("var setUp = function() {};");
     testSame("var tearDown = function() {};");
+  }
+
+  public void testMissingJsDoc_noWarningOnEmptyConstructor() {
+    testSame("class Foo { constructor() {} }");
   }
 
   private String inIIFE(String js) {

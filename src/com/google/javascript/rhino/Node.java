@@ -1766,6 +1766,7 @@ public class Node implements Serializable {
 
     switch (getType()) {
       case Token.NAME:
+      case Token.MEMBER_FUNCTION_DEF:
         String name = getString();
         return start == 0 && !name.isEmpty() &&
            name.length() == endIndex && qname.startsWith(name);
