@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.graph.Graph;
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
 import com.google.javascript.jscomp.graph.GraphColoring;
@@ -165,14 +166,8 @@ public final class GraphColoringTest extends TestCase {
     graph.connect("D", "-->", "E");
     graph.connect("E", "-->", "A");
 
-    Comparator<String> lexicographic = new Comparator<String>() {
-      @Override
-      public int compare(String o1, String o2) {
-        return o1.toString().compareTo(o2.toString());
-      }
-    };
     GraphColoring<String, String> coloring =
-        new GreedyGraphColoring<>(graph, lexicographic);
+        new GreedyGraphColoring<>(graph, Ordering.<String>natural());
     assertThat(coloring.color()).isEqualTo(3);
     validateColoring(graph);
     assertThat(coloring.getPartitionSuperNode("A")).isEqualTo("A");
