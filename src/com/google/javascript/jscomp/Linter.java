@@ -65,6 +65,11 @@ public class Linter {
 
     options.setIdeMode(fix);
     options.setCodingConvention(new GoogleCodingConvention());
+
+    // Even though we're not running the typechecker, enable the checkTypes DiagnosticGroup, since
+    // it contains some warnings we do want to report, such as JSDoc parse warnings.
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
+
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
     compiler.setPassConfig(new LintPassConfig(options));
