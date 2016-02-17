@@ -110,7 +110,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     helperMutate(
         "function foo(a){return a;}; " +
         "function x() { foo(x++); }",
-        "{var a$$inline_0 = x++; a$$inline_0}",
+        "{x++;}",
         "foo", null);
   }
 

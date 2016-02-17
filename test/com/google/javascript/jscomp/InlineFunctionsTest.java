@@ -214,15 +214,23 @@ public final class InlineFunctionsTest extends CompilerTestCase {
     test("function f(x){return x}" +
           "var y=f(i)",
           "var y=i");
-    testSame("function f(x){return x}" +
-         "var y=f(i++)");
+    test(
+        "function f(x){return x} var y=f(i++)",
+        "var y = i++");
   }
 
   public void testInlineFunctions13() {
     // inline as block if the input parameter has side-effects.
     test("function f(x){return x}" +
          "var y=f(i++)",
-         "var y;{var x$$inline_0=i++;y=x$$inline_0}");
+         "var y=i++");
+  }
+
+  public void testInlineFunctions13a() {
+    // inline as block if the input parameter has side-effects.
+    test("function f(x){return random() || x}" +
+         "var y=f(i++)",
+         "var y;{var x$$inline_0=i++;y=random() || x$$inline_0}");
   }
 
   public void testInlineFunctions14() {
@@ -634,11 +642,9 @@ public final class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testInlineMutableArgsReferencedOnce() {
-    test("function foo(x){return x;}foo([])",
-        "{" +
-        "  var x$$inline_0=[];" +
-        "  x$$inline_0; " +
-        "}");
+    test(
+        "function foo(x){return x;}foo([])",
+        "[]");
   }
 
   public void testInlineMutableArgsReferencedOnce2() {
@@ -1047,6 +1053,19 @@ public final class InlineFunctionsTest extends CompilerTestCase {
          "var a = f(1) + f(2);",
 
          "var a=1+1+1+(1+2+2)");
+  }
+
+  public void testCostBasedInlineForSimpleFunction() {
+    int calls = 100;
+    String src = "function f(a){return a;}\n";
+    for (int i = 0; i < calls; i++) {
+      src += "f(chg());\n";
+    }
+    String expected = "";
+    for (int i = 0; i < calls; i++) {
+      expected += "chg();\n";
+    }
+    test(src, expected);
   }
 
   public void testCostBasedInliningComplex1() {

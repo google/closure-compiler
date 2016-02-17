@@ -250,6 +250,14 @@ class FunctionArgumentInjector {
     Preconditions.checkArgument(fnNode.isFunction());
     Node block = fnNode.getLastChild();
 
+    int argCount = argMap.size();
+    // We limit the "trivial" bodies to those where there is a single expression or
+    // return, the expression is
+    boolean isTrivialBody = (!block.hasChildren()
+        || (block.hasOneChild() && !bodyMayHaveConditionalCode(block.getLastChild())));
+    boolean hasMinimalParameters = NodeUtil.isUndefined(argMap.get(THIS_MARKER))
+        && argCount <= 2; // this + one parameter
+
     Set<String> parameters = argMap.keySet();
 
     // Get the list of parameters that may need temporaries due to
@@ -267,7 +275,19 @@ class FunctionArgumentInjector {
       boolean safe = true;
       int references = NodeUtil.getNameReferenceCount(block, argName);
 
-      if (NodeUtil.mayEffectMutableState(cArg) && references > 0) {
+      boolean argSideEffects = NodeUtil.mayHaveSideEffects(cArg);
+      if (!argSideEffects && references == 0) {
+        safe = true;
+      } else if (isTrivialBody && hasMinimalParameters
+          && references == 1
+          && !(NodeUtil.canBeSideEffected(cArg) && namesAfterSideEffects.contains(argName))) {
+        // For functions with a trivial body, and where the parameter evaluation order
+        // can't change, and there aren't any side-effect before the parameter, we can
+        // avoid creating a temporary.
+        //
+        // This is done to help inline common trivial functions
+        safe = true;
+      } else  if (NodeUtil.mayEffectMutableState(cArg) && references > 0) {
         // Note: Mutable arguments should be assigned to temps, as the
         // may be within in a loop:
         //   function x(a) {
@@ -278,7 +298,7 @@ class FunctionArgumentInjector {
         //
         //   The parameter in the call to foo should not become "[]".
         safe = false;
-      } else if (NodeUtil.mayHaveSideEffects(cArg)) {
+      } else if (argSideEffects) {
         // Even if there are no references, we still need to evaluate the
         // expression if it has side-effects.
         safe = false;
@@ -308,6 +328,37 @@ class FunctionArgumentInjector {
         namesNeedingTemps.add(argName);
       }
     }
+  }
+
+  /**
+   * We consider a return or expression trivial if it doesn't contain a conditional expression or
+   * a function.
+   */
+  static boolean bodyMayHaveConditionalCode(Node n) {
+    if (!n.isReturn() && !n.isExprResult()) {
+      return true;
+    }
+    return mayHaveConditionalCode(n);
+  }
+
+  /**
+   * We consider an expression trivial if it doesn't contain a conditional expression or
+   * a function.
+   */
+  static boolean mayHaveConditionalCode(Node n) {
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      switch (c.getType()) {
+        case Token.FUNCTION:
+        case Token.AND:
+        case Token.OR:
+        case Token.HOOK:
+          return true;
+      }
+      if (mayHaveConditionalCode(c)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

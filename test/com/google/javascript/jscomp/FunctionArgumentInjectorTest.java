@@ -42,6 +42,12 @@ public final class FunctionArgumentInjectorTest extends TestCase {
 
   private static final Set<String> EMPTY_STRING_SET = Collections.emptySet();
 
+  public void testFindModifiedParameters0() {
+    assertThat(
+        FunctionArgumentInjector.findModifiedParameters(
+            parseFunction("function f(a){ return a; }"))).isEmpty();
+  }
+
   public void testFindModifiedParameters1() {
     assertThat(
         FunctionArgumentInjector.findModifiedParameters(
@@ -257,16 +263,29 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         "function foo(a){}; foo({x:1});",
         "foo",
         EMPTY_STRING_SET);
-    // A object literal referenced, should have a temp.
+    // A object literal referenced after side-effect, should have a temp.
     testNeededTemps(
-        "function foo(a){a;}; foo({x:1});",
+        "function foo(a){alert('foo');a;}; foo({x:1});",
         "foo",
         ImmutableSet.of("a"));
+    // A object literal referenced after side-effect, should have a temp.
+    testNeededTemps(
+        "function foo(a,b){b;a;}; foo({x:1},alert('foo'));",
+        "foo",
+        ImmutableSet.of("a", "b"));
     // A object literal, referenced more than once, should have a temp.
     testNeededTemps(
         "function foo(a){a;a;}; foo({x:1});",
         "foo",
         ImmutableSet.of("a"));
+  }
+
+  public void testMaybeAddTempsForCallArguments22b() {
+    // A object literal not referenced.
+    testNeededTemps(
+        "function foo(a){a(this)}; foo.call(f(),g());",
+        "foo",
+        ImmutableSet.of("a", "this"));
   }
 
   public void testMaybeAddTempsForCallArguments23() {
@@ -275,9 +294,9 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         "function foo(a){}; foo([1,2]);",
         "foo",
         EMPTY_STRING_SET);
-    // A array literal, referenced once, should have a temp.
+    // A array literal, referenced once after side-effect, should have a temp.
     testNeededTemps(
-        "function foo(a){a;}; foo([1,2]);",
+        "function foo(a){alert('foo');a;}; foo([1,2]);",
         "foo",
         ImmutableSet.of("a"));
     // A array literal, referenced more than once, should have a temp.
@@ -293,9 +312,9 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         "function foo(a){}; foo(/mac/);",
         "foo",
         EMPTY_STRING_SET);
-    // A regex literal, referenced once, should have a temp.
+    // A regex literal, referenced once after side-effect, should have a temp.
     testNeededTemps(
-        "function foo(a){a;}; foo(/mac/);",
+        "function foo(a){alert('foo');a;}; foo(/mac/);",
         "foo",
         ImmutableSet.of("a"));
     // A regex literal, referenced more than once, should have a temp.
@@ -311,9 +330,9 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         "function foo(a){}; foo(new Date());",
         "foo",
         EMPTY_STRING_SET);
-    // A side-effect-less constructor, referenced once, should have a temp.
+    // A side-effect-less constructor, referenced once after sideeffect, should have a temp.
     testNeededTemps(
-        "function foo(a){a;}; foo(new Date());",
+        "function foo(a){alert('foo');a;}; foo(new Date());",
         "foo",
         ImmutableSet.of("a"));
     // A side-effect-less constructor, referenced more than once, should have
@@ -330,9 +349,9 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         "function foo(a){}; foo(new Bar());",
         "foo",
         ImmutableSet.of("a"));
-    // A constructor, referenced once, should have a temp.
+    // A constructor, referenced once after a sideeffect, should have a temp.
     testNeededTemps(
-        "function foo(a){a;}; foo(new Bar());",
+        "function foo(a){alert('foo');a;}; foo(new Bar());",
         "foo",
         ImmutableSet.of("a"));
     // A constructor, referenced more than once, should have a temp.
@@ -387,6 +406,14 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     // void 0 doesn't need a temp
     testNeededTemps(
         "function foo(a){a;a;}; foo(void 0);",
+        "foo",
+        EMPTY_STRING_SET);
+  }
+
+  public void testMaybeAddTempsForCallArguments33() {
+    // doesn't need a temp
+    testNeededTemps(
+        "function foo(a){return a;}; foo(new X);",
         "foo",
         EMPTY_STRING_SET);
   }

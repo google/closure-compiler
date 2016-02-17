@@ -207,8 +207,14 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunction18() {
     // Parameter has side-effects.
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
+    helperCanInlineReferenceToFunction(CanInlineResult.YES,
         "function foo(a){return a;} foo(x++);", "foo", INLINE_DIRECT);
+  }
+
+  public void testCanInlineReferenceToFunction18b() {
+    // Parameter has side-effects.
+    helperCanInlineReferenceToFunction(CanInlineResult.NO,
+        "function foo(a,b){return b,a;} foo(x++,use(x));", "foo", INLINE_DIRECT);
   }
 
   public void testCanInlineReferenceToFunction19() {
@@ -878,8 +884,7 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return a;}; " +
         "function x() { foo(x++); }",
         "function foo(a){return a;}; " +
-        "function x() {{var a$$inline_0=x++;" +
-            "a$$inline_0}}",
+        "function x() {{x++;}}",
         "foo", INLINE_BLOCK);
   }
 
