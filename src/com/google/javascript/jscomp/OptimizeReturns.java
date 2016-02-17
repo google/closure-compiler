@@ -112,8 +112,6 @@ class OptimizeReturns
           return true;
         }
       }
-
-      // TODO(johnlenz): Add specialization support.
     }
 
     // No possible use of the definition result
