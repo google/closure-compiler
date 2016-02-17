@@ -844,9 +844,8 @@ class FunctionInjector {
       return blockInlines <= 0 || costDeltaBlock <= 0;
     }
 
-    int costDelta = (directInlines * costDeltaDirect) +
-        (blockInlines * costDeltaBlock);
-    int threshold = (callCost - costDelta) / fnInstanceCount;
+    int costDelta = (directInlines * -costDeltaDirect) + (blockInlines * -costDeltaBlock);
+    int threshold = (callCost + costDelta) / fnInstanceCount;
 
     return InlineCostEstimator.getCost(fnNode, threshold + 1) <= threshold;
   }
