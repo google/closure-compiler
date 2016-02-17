@@ -585,6 +585,14 @@ md.$mdIconProvider.prototype.defaultIconSize = function(iconSize) {};
  */
 md.$mdIconProvider.prototype.defaultFontSet = function(name) {};
 
+/******************************************************************************
+ * $mdMedia Service
+ *****************************************************************************/
+
+/**
+ * @typedef {function(string): boolean}
+ */
+md.$mdMedia;
 
 /******************************************************************************
  * $mdDateLocaleProvider
