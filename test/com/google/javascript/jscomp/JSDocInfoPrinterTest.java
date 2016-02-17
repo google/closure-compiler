@@ -50,7 +50,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/**@constructor */", JSDocInfoPrinter.print(info));
     builder.recordSuppressions(ImmutableSet.of("globalThis", "uselessCode"));
     info = builder.buildAndReset();
-    assertEquals("/**@suppress {globalThis,uselessCode} */",
+    assertEquals("/**@suppress {globalThis,uselessCode}\n*/",
         JSDocInfoPrinter.print(info));
   }
 

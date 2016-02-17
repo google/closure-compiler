@@ -83,7 +83,7 @@ public final class JSDocInfoPrinter {
           sb.append(",");
         }
       }
-      sb.append("} ");
+      sb.append("}\n");
     }
 
     ImmutableList<String> names = info.getTemplateTypeNames();
