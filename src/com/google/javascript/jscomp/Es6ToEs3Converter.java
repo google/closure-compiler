@@ -817,7 +817,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   private void visitClassMember(
       Node member, ClassDeclarationMetadata metadata) {
     Node qualifiedMemberAccess = getQualifiedMemberAccess(
-        compiler, member,
+        member,
         NodeUtil.newQName(compiler, metadata.fullClassName),
         NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"));
     Node method = member.getLastChild().detachFromParent();
@@ -890,7 +890,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * <p><b>WARNING:</b> {@code member} may be modified/destroyed by this method, do not use it
    * afterwards.
    */
-  private static Node getQualifiedMemberAccess(AbstractCompiler compiler, Node member,
+  private static Node getQualifiedMemberAccess(Node member,
       Node staticAccess, Node instanceAccess) {
     Node context = member.isStaticMember() ? staticAccess : instanceAccess;
     context = context.cloneTree();
