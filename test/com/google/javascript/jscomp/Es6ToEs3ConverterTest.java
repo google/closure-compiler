@@ -1414,9 +1414,40 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
          "function f(/** ...number */ zero) {}");
 
     // Make sure we get type checking inside the function for the rest parameters.
-    test("/** @param {...number} two */ function f(zero, one, ...two) { return two; }",
+    test(
+        "/** @param {...number} two */ function f(zero, one, ...two) { return two; }",
         LINE_JOINER.join(
             "/** @param {...number} two */ function f(zero, one, two) {",
+            "  var $jscomp$restParams = [];",
+            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
+            "      ++$jscomp$restIndex) {",
+            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
+            "  }",
+            "  {",
+            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
+            "    return two$0;",
+            "  }",
+            "}"));
+
+    test(
+        "/** @param {...number} two */ var f = function(zero, one, ...two) { return two; }",
+        LINE_JOINER.join(
+            "/** @param {...number} two */ var f = function(zero, one, two) {",
+            "  var $jscomp$restParams = [];",
+            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
+            "      ++$jscomp$restIndex) {",
+            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
+            "  }",
+            "  {",
+            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
+            "    return two$0;",
+            "  }",
+            "}"));
+
+    test(
+        "/** @param {...number} two */ ns.f = function(zero, one, ...two) { return two; }",
+        LINE_JOINER.join(
+            "/** @param {...number} two */ ns.f = function(zero, one, two) {",
             "  var $jscomp$restParams = [];",
             "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
             "      ++$jscomp$restIndex) {",

@@ -130,13 +130,11 @@ $jscomp.array.from = function(
  * <p>Polyfills the static function Array.of().  Does not support
  * constructor inheritance (i.e. (subclass of Array).of).
  *
- * @param {...VALUE} elements Elements to include in the array.
- * @return {!Array<VALUE>}
- * @template VALUE
- * @suppress {checkTypes}
+ * @param {...*} elements Elements to include in the array.
+ * @return {!Array<*>}
+ * TODO(tbreisacher): Put back the at-template type after b/26884264 is fixed.
  */
 $jscomp.array.of = function(...elements) {
-  // TODO(sdh): Remove suppression when IArrayLike migration is done.
   return $jscomp.array.from(elements);
 };
 

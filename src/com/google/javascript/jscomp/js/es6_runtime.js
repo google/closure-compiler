@@ -191,16 +191,14 @@
   }
   return result;
 };
-/**@suppress {checkTypes}
-@template VALUE
-
-@param {...VALUE} elements
-@return {!Array<VALUE>} */$jscomp.array.of = function(elements) {
+/**
+@param {...*} elements
+@return {!Array<*>} */$jscomp.array.of = function(elements) {
   var $jscomp$restParams = [];
   for (var $jscomp$restIndex = 0;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
   }
-  var elements$10 = $jscomp$restParams;
+  var /**@type {!Array<*>} */elements$10 = $jscomp$restParams;
   return $jscomp.array.from(elements$10);
 };
 /**@template VALUE
@@ -711,7 +709,7 @@
   for (var $jscomp$restIndex = 2;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];
   }
-  var rest$11 = $jscomp$restParams;
+  var /**@type {!Array<*>} */rest$11 = $jscomp$restParams;
   x = Number(x);
   y = Number(y);
   var max = Math.max(Math.abs(x), Math.abs(y));
@@ -797,7 +795,7 @@
   for (var $jscomp$restIndex = 1;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 1] = arguments[$jscomp$restIndex];
   }
-  var sources$15 = $jscomp$restParams;
+  var /**@type {!Array<?Object>} */sources$15 = $jscomp$restParams;
   for (var $jscomp$iter$7 = $jscomp.makeIterator(sources$15), $jscomp$key$source = $jscomp$iter$7.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$7.next()) {
     /**@const */var source = $jscomp$key$source.value;
     if (!source) {
@@ -924,7 +922,7 @@
   for (var $jscomp$restIndex = 0;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
     $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
   }
-  var codepoints$16 = $jscomp$restParams;
+  var /**@type {!Array<number>} */codepoints$16 = $jscomp$restParams;
   var result = "";
   for (var $jscomp$iter$9 = $jscomp.makeIterator(codepoints$16), $jscomp$key$code = $jscomp$iter$9.next();!$jscomp$key$code.done;$jscomp$key$code = $jscomp$iter$9.next()) {
     var code = $jscomp$key$code.value;
