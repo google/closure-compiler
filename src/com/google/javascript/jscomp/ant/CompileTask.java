@@ -275,8 +275,8 @@ public final class CompileTask
   /**
    * Set output file encoding
    */
-  public void setOutputEncoding(Charset outputEncoding) {
-    this.outputEncoding = outputEncoding;
+  public void setOutputEncoding(String outputEncoding) {
+    this.outputEncoding = Charset.forName(outputEncoding);
   }
 
   /**
