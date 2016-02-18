@@ -1275,6 +1275,12 @@ HTMLInputElement.prototype.dirname;
 /** @type {FileList} */
 HTMLInputElement.prototype.files;
 
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/html5/forms.html#dom-input-indeterminate
+ */
+HTMLInputElement.prototype.indeterminate;
+
 /** @type {string} */
 HTMLInputElement.prototype.list;
 
