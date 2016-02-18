@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.rhino.Node;
@@ -31,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Helper classes for dealing with coding conventions.
@@ -304,6 +306,10 @@ public final class CodingConventions {
 
     private static final long serialVersionUID = 1L;
 
+    private static final Set<String> propertyTestFunctions = ImmutableSet.of(
+        "Array.isArray", "Number.isFinite", "Number.isInteger", "Number.isNaN",
+        "Number.isSafeInteger");
+
     @Override
     public boolean isConstant(String variableName) {
       return false;
@@ -493,7 +499,7 @@ public final class CodingConventions {
 
     @Override
     public boolean isPropertyTestFunction(Node call) {
-      return "Array.isArray".equals(call.getFirstChild().getQualifiedName());
+      return propertyTestFunctions.contains(call.getFirstChild().getQualifiedName());
     }
 
     @Override
