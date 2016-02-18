@@ -771,8 +771,7 @@ Element.prototype.innerHTML;
  * Note: According to the spec, name is defined on specific types of
  * HTMLElements, rather than on Node, Element, or HTMLElement directly.
  * Ignore this.
- * @type {?}
- * TODO(rdcronin): This should be of type string, but that breaks some things.
+ * @type {string}
  */
 Element.prototype.name;
 
