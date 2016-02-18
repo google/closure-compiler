@@ -293,6 +293,19 @@ public final class GenerateExportsTest extends Es6CompilerTestCase {
     testExternChanges(code, "Object.prototype.foo;");
   }
 
+  public void testMemberExportDoesntConflict() {
+    allowExternsChanges(true);
+    String code = LINE_JOINER.join(
+        "var foo = function() { /** @export */ this.foo = 1; };",
+        "/** @export */ foo.method = function(){};");
+    String result = LINE_JOINER.join(
+        "var foo = function() { /** @export */ this.foo = 1; };",
+        "/** @export */ foo.method = function(){};",
+        "google_exportSymbol('foo.method', foo.method);");
+    test(code, result);
+    testExternChanges(code, "Object.prototype.foo;");
+  }
+
   public void testExportClassMemberStub() {
     allowExternsChanges(true);
     String code = "var E = function() { /** @export */ this.foo; };";

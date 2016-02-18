@@ -59,6 +59,12 @@ class FindExportableNodes extends AbstractPostOrderCallback {
    */
   private final LinkedHashMap<String, GenerateNodeContext> exports =
        new LinkedHashMap<>();
+  /**
+   * It's convenient to be able to iterate over exports in the order in which
+   * they are encountered.
+   */
+  private final LinkedHashMap<String, GenerateNodeContext> localExports =
+       new LinkedHashMap<>();
 
   private final boolean allowLocalExports;
 
@@ -119,8 +125,7 @@ class FindExportableNodes extends AbstractPostOrderCallback {
         case Token.LET:
         case Token.CONST:
           if (parent.isScript()) {
-            if (n.getFirstChild().hasChildren() &&
-                !n.getFirstFirstChild().isAssign()) {
+            if (n.getFirstChild().hasChildren() && !n.getFirstFirstChild().isAssign()) {
               export = n.getFirstChild().getString();
               context = new GenerateNodeContext(n, Mode.EXPORT);
             }
@@ -145,7 +150,11 @@ class FindExportableNodes extends AbstractPostOrderCallback {
       }
 
       if (export != null) {
-        exports.put(export, context);
+        if (context.getMode() == Mode.EXPORT) {
+          exports.put(export, context);
+        } else {
+          localExports.put(export, context);
+        }
       } else {
         // Don't produce extra warnings for functions values of object literals
         if (!n.isFunction() || !NodeUtil.isObjectLitKey(parent)) {
@@ -161,6 +170,10 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
   LinkedHashMap<String, GenerateNodeContext> getExports() {
     return exports;
+  }
+
+  LinkedHashMap<String, GenerateNodeContext> getLocalExports() {
+    return localExports;
   }
 
   static enum Mode {

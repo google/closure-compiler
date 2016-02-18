@@ -74,18 +74,21 @@ class GenerateExports implements CompilerPass {
     FindExportableNodes findExportableNodes = new FindExportableNodes(
         compiler, allowNonGlobalExports);
     NodeTraversal.traverseEs6(compiler, root, findExportableNodes);
-    Map<String, GenerateNodeContext> exports = findExportableNodes
-        .getExports();
+    Map<String, GenerateNodeContext> exports = findExportableNodes.getExports();
+    Map<String, GenerateNodeContext> localExports = findExportableNodes.getLocalExports();
 
     for (Map.Entry<String, GenerateNodeContext> entry : exports.entrySet()) {
       String export = entry.getKey();
       GenerateNodeContext context = entry.getValue();
+      Preconditions.checkState(context.getMode() == Mode.EXPORT);
+      addExportMethod(exports, export, context);
+    }
 
-      if (context.getMode() == Mode.EXPORT) {
-        addExportMethod(exports, export, context);
-      } else if (context.getMode() == Mode.EXTERN) {
-        addExtern(export);
-      }
+    for (Map.Entry<String, GenerateNodeContext> entry : localExports.entrySet()) {
+      String export = entry.getKey();
+      GenerateNodeContext context = entry.getValue();
+      Preconditions.checkState(context.getMode() == Mode.EXTERN);
+      addExtern(export);
     }
   }
 
