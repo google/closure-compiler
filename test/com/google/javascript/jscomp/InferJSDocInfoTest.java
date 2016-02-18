@@ -49,16 +49,6 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   private TypedScope globalScope;
 
   @Override
-  public void setUp() {
-    compareJsDoc = false;
-  }
-
-  @Override
-  public int getNumRepetitions() {
-    return 1;
-  }
-
-  @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setIdeMode(true);
