@@ -134,6 +134,12 @@ Event.prototype.timeStamp;
 Event.prototype.path;
 
 /**
+ * Present for events spawned in browsers that support shadow dom.
+ * @type {function():Array<!EventTarget>|undefined}
+ */
+Event.prototype.deepPath;
+
+/**
  * @return {undefined}
  */
 Event.prototype.stopPropagation = function() {};
