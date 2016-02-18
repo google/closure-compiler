@@ -34,7 +34,7 @@ FB.api = function(path, method, params, callback) {};
 
 /**
  * @see https://developers.facebook.com/docs/reference/javascript/FB.getAuthResponse/
- * @return {?Object<string.*>}
+ * @return {?Object<string, *>}
  */
 FB.getAuthResponse = function() {};
 
