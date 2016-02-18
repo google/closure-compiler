@@ -369,10 +369,10 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                       declaration);
                 }
 
+                declaration = reference.getParent(); // Might have changed after normalization.
                 // Change declaration to assignment, or just drop it if there's
                 // no initial value.
                 if (reference.hasChildren()) {
-                  declaration = reference.getParent(); // Might have changed now
                   JSDocInfo existingInfo = declaration.getJSDocInfo();
                   if (existingInfo == null) {
                     existingInfo = reference.getJSDocInfo();
