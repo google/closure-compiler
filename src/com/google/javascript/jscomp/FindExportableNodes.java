@@ -16,12 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 /**
  * Records all of the symbols and properties that should be exported.
@@ -44,8 +46,8 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
   static final DiagnosticType NON_GLOBAL_ERROR =
       DiagnosticType.error("JSC_NON_GLOBAL_ERROR",
-          "@export only applies to symbols/properties defined in the " +
-          "global scope.");
+          "@export only applies to symbols/properties defined in the "
+          + "global scope.");
 
   static final DiagnosticType EXPORT_ANNOTATION_NOT_ALLOWED =
       DiagnosticType.error("JSC_EXPORT_ANNOTATION_NOT_ALLOWED",
@@ -54,17 +56,15 @@ class FindExportableNodes extends AbstractPostOrderCallback {
   private final AbstractCompiler compiler;
 
   /**
-   * It's convenient to be able to iterate over exports in the order in which
-   * they are encountered.
+   * The set of node with @export annotations and their associated fully qualified names
    */
-  private final LinkedHashMap<String, GenerateNodeContext> exports =
-       new LinkedHashMap<>();
+  private final LinkedHashMap<String, Node> exports = new LinkedHashMap<>();
+
   /**
-   * It's convenient to be able to iterate over exports in the order in which
-   * they are encountered.
+   * The set of property names associated with @export annotations that do not have
+   * an associated fully qualified name.
    */
-  private final LinkedHashMap<String, GenerateNodeContext> localExports =
-       new LinkedHashMap<>();
+  private final LinkedHashSet<String> localExports = new LinkedHashSet<>();
 
   private final boolean allowLocalExports;
 
@@ -88,21 +88,24 @@ class FindExportableNodes extends AbstractPostOrderCallback {
         }
       }
 
+      Mode mode = null;
       String export = null;
-      GenerateNodeContext context = null;
+      Node context = null;
 
       switch (n.getType()) {
         case Token.FUNCTION:
         case Token.CLASS:
           if (parent.isScript()) {
             export = NodeUtil.getName(n);
-            context = new GenerateNodeContext(n, Mode.EXPORT);
+            context = n;
+            mode = Mode.EXPORT;
           }
           break;
 
         case Token.MEMBER_FUNCTION_DEF:
           export = n.getString();
-          context = new GenerateNodeContext(n, Mode.EXPORT);
+          context = n;
+          mode = Mode.EXPORT;
           break;
 
         case Token.ASSIGN:
@@ -112,11 +115,12 @@ class FindExportableNodes extends AbstractPostOrderCallback {
                 && grandparent.isScript()
                 && n.getFirstChild().isQualifiedName()) {
               export = n.getFirstChild().getQualifiedName();
-              context = new GenerateNodeContext(n, Mode.EXPORT);
+              context = n;
+              mode = Mode.EXPORT;
             } else if (allowLocalExports && n.getFirstChild().isGetProp()) {
               Node target = n.getFirstChild();
               export = target.getLastChild().getString();
-              context = new GenerateNodeContext(n, Mode.EXTERN);
+              mode = Mode.EXTERN;
             }
           }
           break;
@@ -127,15 +131,17 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           if (parent.isScript()) {
             if (n.getFirstChild().hasChildren() && !n.getFirstFirstChild().isAssign()) {
               export = n.getFirstChild().getString();
-              context = new GenerateNodeContext(n, Mode.EXPORT);
+              context = n;
+              mode = Mode.EXPORT;
             }
           }
           break;
 
         case Token.GETPROP:
           if (allowLocalExports && parent.isExprResult()) {
+            mode = Mode.EXTERN;
             export = n.getLastChild().getString();
-            context = new GenerateNodeContext(n, Mode.EXTERN);
+            mode = Mode.EXTERN;
           }
           break;
 
@@ -144,16 +150,20 @@ class FindExportableNodes extends AbstractPostOrderCallback {
         case Token.SETTER_DEF:
           if (allowLocalExports) {
             export = n.getString();
-            context = new GenerateNodeContext(n, Mode.EXTERN);
+            mode = Mode.EXTERN;
           }
           break;
       }
 
       if (export != null) {
-        if (context.getMode() == Mode.EXPORT) {
+        if (mode == Mode.EXPORT) {
+          Preconditions.checkNotNull(context);
           exports.put(export, context);
         } else {
-          localExports.put(export, context);
+          Preconditions.checkState(context == null);
+          Preconditions.checkState(mode == Mode.EXTERN);
+          Preconditions.checkState(!export.isEmpty());
+          localExports.add(export);
         }
       } else {
         // Don't produce extra warnings for functions values of object literals
@@ -168,39 +178,16 @@ class FindExportableNodes extends AbstractPostOrderCallback {
     }
   }
 
-  LinkedHashMap<String, GenerateNodeContext> getExports() {
+  LinkedHashMap<String, Node> getExports() {
     return exports;
   }
 
-  LinkedHashMap<String, GenerateNodeContext> getLocalExports() {
+  LinkedHashSet<String> getLocalExports() {
     return localExports;
   }
 
   static enum Mode {
     EXPORT,
     EXTERN
-  }
-
-  /**
-   * Context holding the node references required for generating the export
-   * calls.
-   */
-  static class GenerateNodeContext {
-    private final Node node;
-    private final Mode mode;
-
-    GenerateNodeContext(
-        Node node, Mode mode) {
-      this.node = node;
-      this.mode = mode;
-    }
-
-    Node getNode() {
-      return node;
-    }
-
-    public Mode getMode() {
-      return mode;
-    }
   }
 }

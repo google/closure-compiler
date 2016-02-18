@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.FindExportableNodes.GenerateNodeContext;
-import com.google.javascript.jscomp.FindExportableNodes.Mode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -74,20 +72,16 @@ class GenerateExports implements CompilerPass {
     FindExportableNodes findExportableNodes = new FindExportableNodes(
         compiler, allowNonGlobalExports);
     NodeTraversal.traverseEs6(compiler, root, findExportableNodes);
-    Map<String, GenerateNodeContext> exports = findExportableNodes.getExports();
-    Map<String, GenerateNodeContext> localExports = findExportableNodes.getLocalExports();
+    Map<String, Node> exports = findExportableNodes.getExports();
+    Set<String> localExports = findExportableNodes.getLocalExports();
 
-    for (Map.Entry<String, GenerateNodeContext> entry : exports.entrySet()) {
+    for (Map.Entry<String, Node> entry : exports.entrySet()) {
       String export = entry.getKey();
-      GenerateNodeContext context = entry.getValue();
-      Preconditions.checkState(context.getMode() == Mode.EXPORT);
+      Node context = entry.getValue();
       addExportMethod(exports, export, context);
     }
 
-    for (Map.Entry<String, GenerateNodeContext> entry : localExports.entrySet()) {
-      String export = entry.getKey();
-      GenerateNodeContext context = entry.getValue();
-      Preconditions.checkState(context.getMode() == Mode.EXTERN);
+    for (String export : localExports) {
       addExtern(export);
     }
   }
@@ -109,8 +103,7 @@ class GenerateExports implements CompilerPass {
     }
   }
 
-  private void addExportMethod(Map<String, GenerateNodeContext> exports,
-      String export, GenerateNodeContext context) {
+  private void addExportMethod(Map<String, Node> exports, String export, Node context) {
     // Emit the proper CALL expression.
     // This is an optimization to avoid exporting everything as a symbol
     // because exporting a property is significantly simpler/faster.
@@ -119,7 +112,7 @@ class GenerateExports implements CompilerPass {
     String parent = null;
     String grandparent = null;
 
-    Node node = context.getNode().getFirstChild();
+    Node node = context.getFirstChild();
     if (node.isGetProp()) {
       Node parentNode = node.getFirstChild();
       parent = parentNode.getQualifiedName();
@@ -152,25 +145,25 @@ class GenerateExports implements CompilerPass {
       call = IR.call(
           NodeUtil.newQName(
               compiler, exportSymbolFunction,
-              context.getNode(), export),
+              context, export),
           IR.string(export),
           NodeUtil.newQName(
               compiler, export,
-              context.getNode(), export));
+              context, export));
     } else {
       // exportProperty(object, publicName, symbol);
       String property = getPropertyName(node);
       call = IR.call(
           NodeUtil.newQName(
               compiler, exportPropertyFunction,
-              context.getNode(), exportPropertyFunction),
+              context, exportPropertyFunction),
           NodeUtil.newQName(
               compiler, parent,
-              context.getNode(), exportPropertyFunction),
+              context, exportPropertyFunction),
           IR.string(property),
           NodeUtil.newQName(
               compiler, export,
-              context.getNode(), exportPropertyFunction));
+              context, exportPropertyFunction));
     }
 
     Node expression = IR.exprResult(call).useSourceInfoIfMissingFromForTree(node);
@@ -181,10 +174,10 @@ class GenerateExports implements CompilerPass {
     compiler.reportCodeChange();
   }
 
-  private void addStatement(GenerateNodeContext context, Node stmt) {
+  private void addStatement(Node context, Node stmt) {
     CodingConvention convention = compiler.getCodingConvention();
 
-    Node n = context.getNode();
+    Node n = context;
     Node exprRoot = n;
     while (!NodeUtil.isStatementBlock(exprRoot.getParent())) {
       exprRoot = exprRoot.getParent();
