@@ -16,7 +16,7 @@
 
 /**
  * @fileoverview Externs for Facebook Javascript SDK
- * @see http://developers.facebook.com/docs/reference/javascript/
+ * @see https://developers.facebook.com/docs/javascript/reference/
  * @externs
  */
 
@@ -24,65 +24,65 @@
 var FB = {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.getsession/
- * @return {Object<string,*>}
- */
-FB.getSession = function() { };
-
-/**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.api/
+ * @see https://developers.facebook.com/docs/javascript/reference/FB.api/
  * @param {string} path
  * @param {(string|Object<string, *>|function(Object<string,*>))=} method
  * @param {(Object<string, *>|function(Object<string,*>))=} params
  * @param {function(Object<string,*>)=} callback
  */
-FB.api = function(path, method, params, callback) { };
+FB.api = function(path, method, params, callback) {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.getloginstatus/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.getAuthResponse/
+ * @return {?Object<string.*>}
+ */
+FB.getAuthResponse = function() {};
+
+/**
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.getLoginStatus/
  * @param {function(Object<string,*>)} callback
  * @param {boolean=} force
  */
 FB.getLoginStatus = function(callback, force) {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.init/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.init/
  * @param {Object<string,*>=} opt_opts
  */
 FB.init = function(opt_opts) {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.login/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.login/
  * @param {function(Object<string,*>)} callback
  * @param {Object<string,*>=} opt_opts
  */
 FB.login = function(callback, opt_opts) {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.logout/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.logout/
  * @param {function(Object<string,*>)=} callback
  */
 FB.logout = function(callback) {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.ui/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.ui/
  * @param {Object<string, *>} params
  * @param {function(Object<string,*>)=} callback
  */
-FB.ui = function(params, callback) { };
+FB.ui = function(params, callback) {};
 
 /** @const */
 FB.Event = {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.Event.subscribe/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.Event.subscribe/
  * @param {string} eventName
  * @param {function(Object<string,*>)} callback
  */
 FB.Event.subscribe = function(eventName, callback) {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.Event.unsubscribe/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.Event.unsubscribe/
  * @param {string} eventName
  * @param {function(Object<string,*>)} callback
  */
@@ -92,51 +92,24 @@ FB.Event.unsubscribe = function(eventName, callback) {};
 FB.XFBML = {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.XFBML.parse/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.XFBML.parse/
  * @param {Element=} node
  * @param {function(Object<string,*>)=} callback
  */
 FB.XFBML.parse = function(node, callback) {};
 
 /** @const */
-FB.Data = {};
-
-/**
- * This object is not constructed directly. It is returned by calls to
- * FB.Data.Query.
- * @constructor
- * @private
- */
-FB.Data.queryObject = function() {};
-
-/**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.data.query/
- * @param {string} template
- * @param {...(string|number|FB.Data.queryObject)} var_data
- * @return {FB.Data.queryObject}
- */
-FB.Data.query = function(template, var_data) {};
-
-/**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.data.waiton/
- * @param {Array<*>} dependencies
- * @param {function(Object<string,*>)} callback
- * @return {Object<string,*>}
- */
-FB.Data.waitOn = function(dependencies, callback) {};
-
-/** @const */
 FB.Canvas = {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.Canvas.setAutoResize/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.Canvas.setAutoGrow/
  * @param {(boolean|number)=} onOrOff
  * @param {number=} interval
  */
-FB.Canvas.setAutoResize = function(onOrOff, interval) {};
+FB.Canvas.setAutoGrow = function(onOrOff, interval) {};
 
 /**
- * @see http://developers.facebook.com/docs/reference/javascript/fb.Canvas.setSize/
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.Canvas.setSize/
  * @param {Object<string, number>} params
  */
 FB.Canvas.setSize = function(params) {};
