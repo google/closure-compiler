@@ -134,15 +134,6 @@ public class CompilerOptions {
   boolean inferTypes;
 
   private boolean useNewTypeInference;
-  
-  /**
-   * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
-   * If you want both NTI and OTI errors in this case, set to true.
-   * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
-   * respectively.
-   * This will be removed when NTI entirely replaces OTI.
-   */
-  boolean reportOTIErrorsUnderNTI = false;
 
   /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.

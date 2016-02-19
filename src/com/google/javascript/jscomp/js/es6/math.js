@@ -302,6 +302,7 @@ $jscomp.math.hypot = function(x, y, ...rest) {
   } else {
     let sum = x * x + y * y;
     for (let z of rest) {
+      z = Number(z);
       sum += z * z;
     }
     return Math.sqrt(sum);

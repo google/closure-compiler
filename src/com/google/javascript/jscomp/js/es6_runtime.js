@@ -731,6 +731,7 @@
     var sum$13 = x * x + y * y;
     for (var $jscomp$iter$6 = $jscomp.makeIterator(rest$11), $jscomp$key$z = $jscomp$iter$6.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$6.next()) {
       var z$14 = $jscomp$key$z.value;
+      z$14 = Number(z$14);
       sum$13 += z$14 * z$14;
     }
     return Math.sqrt(sum$13);
