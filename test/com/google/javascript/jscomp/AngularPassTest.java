@@ -21,11 +21,6 @@ package com.google.javascript.jscomp;
  */
 public final class AngularPassTest extends Es6CompilerTestCase {
 
-  public AngularPassTest() {
-    super();
-    compareJsDoc = false;
-  }
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new AngularPass(compiler);
@@ -486,7 +481,7 @@ public final class AngularPassTest extends Es6CompilerTestCase {
             "goog.module('my.module');",
             "/** @ngInject */",
             "function fn(a, b) {}",
-            "fn['$inject'] = ['a', 'b'];"));
+            "/** @public */ fn['$inject'] = ['a', 'b'];"));
   }
 
   public void testInGoogScope() {
@@ -501,7 +496,7 @@ public final class AngularPassTest extends Es6CompilerTestCase {
             "goog.scope(function() {",
             "/** @ngInject */",
             "function fn(a, b) {}",
-            "fn['$inject'] = ['a', 'b'];",
+            "/** @public */ fn['$inject'] = ['a', 'b'];",
             "});"));
   }
 }
