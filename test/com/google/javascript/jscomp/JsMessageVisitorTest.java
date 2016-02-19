@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -43,16 +44,29 @@ import java.util.List;
  */
 public final class JsMessageVisitorTest extends TestCase {
 
+  private static class RenameMessagesVisitor extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName() && n.getString() != null && n.getString().startsWith("MSG_")) {
+        String originalName = n.getString();
+        n.putProp(Node.ORIGINALNAME_PROP, originalName);
+        n.setString("some_prefix_" + originalName);
+      }
+    }
+  }
+
   private CompilerOptions compilerOptions;
   private Compiler compiler;
   private List<JsMessage> messages;
   private JsMessage.Style mode;
+  private boolean renameMessages = false;
 
   @Override
   protected void setUp() throws Exception {
     messages = new LinkedList<>();
     mode = JsMessage.Style.LEGACY;
     compilerOptions = null;
+    renameMessages = false;
   }
 
   public void testJsMessageOnVar() {
@@ -626,6 +640,20 @@ public final class JsMessageVisitorTest extends TestCase {
     assertOneError(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
+  public void testRenamedMessages() {
+    renameMessages = true;
+
+    extractMessagesSafely(
+        "/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')");
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertEquals("MSG_HELLO", msg.getKey());
+    assertEquals("Hello", msg.getDesc());
+    assertEquals("[testcode]", msg.getSourceName());
+  }
+
   private void assertNoErrors() {
     String errors = Joiner.on("\n").join(compiler.getErrors());
     assertEquals("There should be no errors. " + errors,
@@ -654,6 +682,10 @@ public final class JsMessageVisitorTest extends TestCase {
     }
     Node root = compiler.parseTestCode(input);
     JsMessageVisitor visitor = new CollectMessages(compiler);
+    if (renameMessages) {
+      RenameMessagesVisitor renameMessagesVisitor = new RenameMessagesVisitor();
+      NodeTraversal.traverseEs6(compiler, root, renameMessagesVisitor);
+    }
     visitor.process(null, root);
   }
 
