@@ -465,15 +465,23 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       def.value.setJSDocInfo(null);
 
       // example: ctr.prototype.prop = value
-      block.addChildToBack(
-          fixupSrcref(IR.exprResult(
-          fixupSrcref(IR.assign(
-              IR.getprop(
-                  fixupSrcref(IR.getprop(cls.name.cloneTree(),
-                      IR.string("prototype").srcref(def.name))),
-                  IR.string(def.name.getString()).srcref(def.name))
-                  .srcref(def.name),
-              def.value)).setJSDocInfo(def.info))));
+      Node exprResult =
+          IR.exprResult(
+              IR.assign(
+                      NodeUtil.newQName(
+                          compiler,
+                          cls.name.getQualifiedName() + ".prototype." + def.name.getString()),
+                      def.value)
+                  .setJSDocInfo(def.info));
+      exprResult.useSourceInfoIfMissingFromForTree(def.name);
+      
+      // The length needs to be set explicitly to include the string key node and the function node.
+      // If we just used the length of def.name or def.value alone, then refactorings which try to
+      // delete the method would not work correctly.
+      exprResult.setLength(
+          def.value.getSourceOffset() + def.value.getLength() - def.name.getSourceOffset());
+      block.addChildToBack(exprResult);
+
       // Handle inner class definitions.
       maybeRewriteClassDefinition(block.getLastChild());
     }
