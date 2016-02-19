@@ -1403,6 +1403,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     char c = 0;
     // Note: For now skip the strings with unicode
+    // characters as I don't understand the differences
     // between Java and JavaScript.
     for (int i = 0; i <= intIndex; i++) {
       c = value.charAt(i);

@@ -819,7 +819,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(behaviorFunction.info);
 
         // Behaviors whose declarations are not in the global scope may contain references to
-        // symbols which do not exist in the element's scope. Only copy a function stub. See
+        // symbols which do not exist in the element's scope. Only copy a function stub.
         if (!behavior.isGlobalDeclaration) {
           NodeUtil.getFunctionBody(fnValue).removeChildren();
         }

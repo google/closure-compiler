@@ -179,10 +179,28 @@ public final class Matchers {
     };
   }
 
+  /**
+   * Returns a Matcher that matches any function call that has the given
+   * number of arguments and the given name.
+   * @param name The name of the function to match. For non-static functions,
+   *     this must be the fully qualified name that includes the type of the
+   *     object. For instance: {@code ns.AppContext.prototype.get} will match
+   *     {@code appContext.get} and {@code this.get} when called from the
+   *     AppContext class.
+   */
   public static Matcher functionCallWithNumArgs(final String name, final int numArgs) {
     return allOf(functionCallWithNumArgs(numArgs), functionCall(name));
   }
 
+  /**
+   * Returns a Matcher that matches all nodes that are function calls that match
+   * the provided name.
+   * @param name The name of the function to match. For non-static functions,
+   *     this must be the fully qualified name that includes the type of the
+   *     object. For instance: {@code ns.AppContext.prototype.get} will match
+   *     {@code appContext.get} and {@code this.get} when called from the
+   *     AppContext class.
+   */
   public static Matcher functionCall(final String name) {
     return new Matcher() {
       @Override public boolean matches(Node node, NodeMetadata metadata) {
@@ -199,6 +217,15 @@ public final class Matchers {
     return propertyAccess(null);
   }
 
+  /**
+   * Returns a Matcher that matches nodes representing a GETPROP access of
+   * an object property.
+   * @param name The name of the property to match. For non-static properties,
+   *     this must be the fully qualified name that includes the type of the
+   *     object. For instance: {@code ns.AppContext.prototype.root}
+   *     will match {@code appContext.root} and {@code this.root} when accessed
+   *     from the AppContext.
+   */
   public static Matcher propertyAccess(final String name) {
     return new Matcher() {
       @Override public boolean matches(Node node, NodeMetadata metadata) {
@@ -364,6 +391,12 @@ public final class Matchers {
     return false;
   }
 
+  /**
+   * Checks to see if the node represents an access of an instance variable
+   * on an object given a prototype declaration of an object. For instance,
+   * {@code ns.AppContext.prototype.get} will match {@code appContext.get}
+   * or {@code this.get} when accessed from within the AppContext object.
+   */
   private static boolean matchesPrototypeInstanceVar(Node node, NodeMetadata metadata,
       String name) {
     String[] parts = name.split(".prototype.");
