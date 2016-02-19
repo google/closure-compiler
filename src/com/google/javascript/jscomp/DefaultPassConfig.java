@@ -199,6 +199,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // goog.module rewrite must happen even if options.skipNonTranspilationPasses is set.
     if (options.closurePass) {
+      checks.add(closureCheckModule);
       checks.add(closureRewriteModule);
     }
 
@@ -1232,6 +1233,15 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new ClosureRewriteClass(compiler);
+    }
+  };
+
+  /** Checks of correct usage of goog.module */
+  private final HotSwapPassFactory closureCheckModule =
+      new HotSwapPassFactory("closureCheckModule", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return new ClosureCheckModule(compiler);
     }
   };
 

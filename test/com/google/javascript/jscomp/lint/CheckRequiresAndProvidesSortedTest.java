@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.MODULE_AND_PROVIDES;
-import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.MULTIPLE_MODULES_IN_FILE;
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES;
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED;
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED;
@@ -80,10 +78,6 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "}"));
   }
 
-  public void testGoogModuleAndProvide() {
-    testWarning("goog.module('xyz');\ngoog.provide('abc');", MODULE_AND_PROVIDES);
-  }
-
   /**
    * If a goog.module uses the "var x = goog.require('x')" form, don't warn.
    */
@@ -119,15 +113,5 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "var {A_CONST, ANOTHER_CONST} = goog.require('example.constants');",
             "",
             "alert(1);"));
-  }
-
-  public void testMultipleGoogModules() {
-    testWarning(
-        LINE_JOINER.join(
-            "goog.module('xyz');",
-            "goog.module('abc');",
-            "",
-            "var x = goog.require('other.x');"),
-        MULTIPLE_MODULES_IN_FILE);
   }
 }

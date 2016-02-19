@@ -48,19 +48,8 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           "JSC_PROVIDES_AFTER_REQUIRES",
           "goog.provide() statements should be before goog.require() statements.");
 
-  public static final DiagnosticType MULTIPLE_MODULES_IN_FILE =
-      DiagnosticType.warning(
-          "JSC_MULTIPLE_MODULES_IN_FILE",
-          "There should only be a single goog.module() statement per file.");
-
-  public static final DiagnosticType MODULE_AND_PROVIDES =
-      DiagnosticType.warning(
-          "JSC_MODULE_AND_PROVIDES",
-          "A file using goog.module() may not also use goog.provide() statements.");
-
   private List<Node> requires;
   private List<Node> provides;
-  private List<Node> modules;
   private boolean containsShorthandRequire = false;
 
   private final AbstractCompiler compiler;
@@ -69,7 +58,6 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
     this.compiler = compiler;
     this.requires = new ArrayList<>();
     this.provides = new ArrayList<>();
-    this.modules = new ArrayList<>();
   }
 
   @Override
@@ -84,6 +72,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
 
   private final Function<Node, String> getNamespace =
       new Function<Node, String>() {
+        @Override
         public String apply(Node n) {
           Preconditions.checkState(n.isCall(), n);
           return n.getLastChild().getString();
@@ -106,16 +95,8 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
             t.report(provides.get(0), PROVIDES_NOT_SORTED);
           }
         }
-        if (!modules.isEmpty() && !provides.isEmpty()) {
-          t.report(provides.get(0), MODULE_AND_PROVIDES);
-        }
-        if (modules.size() > 1) {
-          t.report(modules.get(1), MULTIPLE_MODULES_IN_FILE);
-        }
-
         requires.clear();
         provides.clear();
-        modules.clear();
         containsShorthandRequire = false;
         break;
       case Token.CALL:
@@ -137,9 +118,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
             if (!requires.isEmpty()) {
               t.report(n, PROVIDES_AFTER_REQUIRES);
             }
-            if (callee.matchesQualifiedName("goog.module")) {
-              modules.add(n);
-            } else {
+            if (callee.matchesQualifiedName("goog.provide")) {
               provides.add(n);
             }
           }
