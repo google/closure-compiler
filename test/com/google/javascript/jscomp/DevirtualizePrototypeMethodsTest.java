@@ -49,9 +49,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableLineNumberCheck(true);
     disableTypeCheck();
-    compareJsDoc = false;
   }
 
   /**
@@ -68,11 +66,11 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     static final String INPUT =
         LINE_JOINER.join(
             "/** @constructor */",
-            "function a(){ this.x = 3; }",
+            "function a() { this.x = 3; }",
             "/** @return {number} */",
-            "a.prototype.foo = function() {return this.x};",
+            "a.prototype.foo = function() { return this.x; };",
             "/** @param {number} p\n@return {number} */",
-            "a.prototype.bar = function(p) {return this.x};",
+            "a.prototype.bar = function(p) { return this.x; };",
             "a.prototype.baz = function() {};",
             "var o = new a;",
             "o.foo();",
@@ -81,6 +79,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
     static final String EXPECTED =
         LINE_JOINER.join(
+            "/** @constructor */",
             "function a(){ this.x = 3; }",
             "var JSCompiler_StaticMethods_foo = ",
             "function(JSCompiler_StaticMethods_foo$self) {",
