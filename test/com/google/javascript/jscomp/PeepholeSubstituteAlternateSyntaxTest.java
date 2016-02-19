@@ -29,9 +29,11 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   // Needed for testFoldLiteralObjectConstructors(),
   // testFoldLiteralArrayConstructors() and testFoldRegExp...()
   private static final String FOLD_CONSTANTS_TEST_EXTERNS =
+      "var window = {};\n" +
       "var Object = function f(){};\n" +
       "var RegExp = function f(a){};\n" +
-      "var Array = function f(a){};\n";
+      "var Array = function f(a){};\n" +
+      "window.foo = null;\n";
 
   private boolean late = true;
 
@@ -166,6 +168,27 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
          "(function f(){function Object(){this.x=4};return new Object();})();");
   }
 
+  public void testFoldLiteralObjectConstructors_onWindow() {
+    enableNormalize();
+
+    // Can fold when normalized
+    fold("x = new window.Object", "x = ({})");
+    fold("x = new window.Object()", "x = ({})");
+    fold("x = window.Object()", "x = ({})");
+
+    disableNormalize();
+    // Cannot fold above when not normalized
+    foldSame("x = new window.Object");
+    foldSame("x = new window.Object()");
+    foldSame("x = window.Object()");
+
+    enableNormalize();
+
+    // Can fold, the window namespace ensures it's not a conflict with the local Object.
+    fold("x = (function f(){function Object(){this.x=4};return new window.Object;})();",
+        "x = (function f(){function Object(){this.x=4};return {};})();");
+  }
+
   public void testFoldLiteralArrayConstructors() {
     enableNormalize();
 
@@ -227,6 +250,30 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
         "Object(), Array(\"abc\", Object(), Array(Array())))");
     foldSame("x = new Array(" +
         "Object(), Array(\"abc\", Object(), Array(Array())))");
+  }
+
+  public void testRemoveWindowRefs() {
+    enableNormalize();
+    fold("x = window.Object", "x = Object");
+    fold("x = window.Object.keys", "x = Object.keys");
+    fold("if (window.Object) {}", "if (Object) {}");
+    fold("x = window.Object", "x = Object");
+    fold("x = window.Array", "x = Array");
+    fold("x = window.Error", "x = Error");
+
+    // Not currently handled by the pass but should be folded in the future.
+    foldSame("x = window.String");
+
+    // Don't fold properties on the window.
+    foldSame("x = window.foo");
+
+    disableNormalize();
+    foldSame("x = window.Object");
+    foldSame("x = window.Object.keys");
+
+    enableNormalize();
+    foldSame("var x = "
+        + "(function f(){var window = {Object: function() {}};return new window.Object;})();");
   }
 
   public void testFoldStandardConstructors() {

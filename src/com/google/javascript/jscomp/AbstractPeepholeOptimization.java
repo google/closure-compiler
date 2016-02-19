@@ -144,4 +144,8 @@ abstract class AbstractPeepholeOptimization {
     return compiler.getCodingConvention();
   }
 
+  final boolean areDeclaredGlobalExternsOnWindow() {
+    return compiler != null && compiler.getOptions().declaredGlobalExternsOnWindow;
+  }
+
 }

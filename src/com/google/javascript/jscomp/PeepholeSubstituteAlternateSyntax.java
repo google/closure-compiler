@@ -102,6 +102,9 @@ class PeepholeSubstituteAlternateSyntax
       case Token.ARRAYLIT:
         return tryMinimizeArrayLiteral(node);
 
+      case Token.GETPROP:
+        return tryMinimizeWindowRefs(node);
+
       case Token.MUL:
       case Token.AND:
       case Token.OR:
@@ -113,6 +116,40 @@ class PeepholeSubstituteAlternateSyntax
       default:
         return node; //Nothing changed
     }
+  }
+
+  private Node tryMinimizeWindowRefs(Node node) {
+    // Normalization needs to be done to ensure there's no shadowing. The window prefix is also
+    // required if the global externs are not on the window.
+    if (!isASTNormalized() || !areDeclaredGlobalExternsOnWindow()) {
+      return node;
+    }
+
+    Preconditions.checkArgument(node.isGetProp());
+
+    if (node.getFirstChild().isName()) {
+      Node nameNode = node.getFirstChild();
+      Node stringNode = node.getLastChild();
+
+      // Since normalization has run we know we're referring to the global window.
+      // TODO(kevinoconnor): Improve the set of standard types that can be folded.
+      if ("window".equals(nameNode.getString())
+          && STANDARD_OBJECT_CONSTRUCTORS.contains(stringNode.getString())) {
+        Node newNameNode = IR.name(stringNode.getString());
+        Node parentNode = node.getParent();
+
+        newNameNode.useSourceInfoFrom(stringNode);
+        parentNode.replaceChild(node, newNameNode);
+
+        if (parentNode.isCall()) {
+          parentNode.putBooleanProp(Node.FREE_CALL, true);
+        }
+        reportCodeChange();
+        return newNameNode;
+      }
+    }
+
+    return node;
   }
 
   private Node tryRotateAssociativeOperator(Node n) {
