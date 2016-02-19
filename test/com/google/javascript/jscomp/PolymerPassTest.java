@@ -1758,6 +1758,10 @@ public class PolymerPassTest extends Es6CompilerTestCase {
     testExternChanges(EXTERNS, js, BEHAVIOR_READONLY_EXTERNS);
   }
 
+  /**
+   * Behaviors whose declarations are not in the global scope may contain references to
+   * symbols which do not exist in the element's scope. Only copy a function stub.
+   */
   public void testBehaviorInIIFE() {
     test(
         LINE_JOINER.join(

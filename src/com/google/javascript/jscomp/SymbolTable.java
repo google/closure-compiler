@@ -1062,6 +1062,10 @@ public final class SymbolTable {
 
     private JSDocInfo docInfo = null;
 
+    /**
+     * Stored separately from {@link #docInfo}, because the visibility stored
+     * in JSDocInfo is not necessarily authoritative.
+     */
     @Nullable private Visibility visibility = null;
 
     // A scope for symbols that are only documented in JSDoc.
