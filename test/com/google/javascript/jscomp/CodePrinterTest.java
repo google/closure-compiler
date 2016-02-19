@@ -1182,6 +1182,27 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "/** @type {(Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n");
   }
 
+  public void testClosureLibraryTypeAnnotationExamples() {
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @param {Object} obj */goog.removeUid = function(obj) {};",
+            "/** @param {Object} obj The object to remove the field from. */",
+            "goog.removeHashCode = goog.removeUid;"),
+        LINE_JOINER.join(
+            "/**",
+            " * @param {(Object|null)} obj",
+            " * @return {undefined}",
+            " */",
+            "goog.removeUid = function(obj) {",
+            "};",
+            "/**",
+            " * @param {(Object|null)} p0",
+            " * @return {undefined}",
+            " */",
+            "goog.removeHashCode = goog.removeUid;",
+            ""));
+  }
+
   public void testDeprecatedAnnotationIncludesNewline() {
     String js = LINE_JOINER.join(
         "/**@deprecated See {@link replacementClass} for more details.",

@@ -110,6 +110,7 @@ class TypedCodeGenerator extends CodeGenerator {
     StringBuilder sb = new StringBuilder("/**\n");
 
 
+    Node paramNode = null;
     // We need to use the child nodes of the function as the nodes for the
     // parameters of the function type do not have the real parameter names.
     // FUNCTION
@@ -117,21 +118,22 @@ class TypedCodeGenerator extends CodeGenerator {
     //   LP
     //     NAME param1
     //     NAME param2
-    if (fnNode != null) {
-      Node paramNode = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+    if (fnNode != null && fnNode.isFunction()) {
+      paramNode = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+    }
 
-      // Param types
-      for (Node n : funType.getParameters()) {
-        // Bail out if the paramNode is not there.
-        if (paramNode == null) {
-          break;
-        }
-        sb.append(" * ");
-        appendAnnotation(sb, "param", getParameterNodeJSDocType(n));
-        sb.append(" ")
-            .append(paramNode.getString())
-            .append("\n");
+    // Param types
+    int i = 0;
+    for (Node n : funType.getParameters()) {
+      sb.append(" * ");
+      appendAnnotation(sb, "param", getParameterNodeJSDocType(n));
+      sb.append(" ")
+          .append(paramNode == null ? "p" + i : paramNode.getString())
+          .append("\n");
+      if (paramNode != null) {
         paramNode = paramNode.getNext();
+      } else {
+        i++;
       }
     }
 
