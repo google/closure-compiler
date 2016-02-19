@@ -3680,30 +3680,32 @@ final class NewTypeInference implements CompilerPass {
             varType.hasNonScalar() ? new QualifiedName(varName) : null);
         break;
       }
-      case Token.GETPROP: {
-        Node obj = expr.getFirstChild();
-        QualifiedName pname = new QualifiedName(expr.getLastChild().getString());
-        lvalResult = analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
-        break;
-      }
+      case Token.GETPROP:
       case Token.GETELEM: {
         Node obj = expr.getFirstChild();
         Node prop = expr.getLastChild();
-        // (1) A getelem where the prop is a string literal is like a getprop
-        if (prop.isString()) {
-          QualifiedName pname = new QualifiedName(prop.getString());
-          lvalResult = analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
+        QualifiedName pname = expr.isGetProp() || prop.isString()
+            ? new QualifiedName(prop.getString()) : null;
+        LValueResultFwd recvLvalue = analyzeReceiverLvalFwd(obj, pname, inEnv, type);
+        if (!recvLvalue.type.isSubtypeOf(JSType.TOP_OBJECT)) {
+          EnvTypePair pair = analyzeExprFwd(prop, recvLvalue.env, type);
+          lvalResult = new LValueResultFwd(pair.env, type, null, null);
           break;
         }
-        // (2) A getelem where the receiver is an array
-        LValueResultFwd lvalue =
-            analyzeLValueFwd(obj, inEnv, JSType.UNKNOWN, true);
-        if (isArrayType(lvalue.type)) {
-          lvalResult = analyzeArrayElmLvalFwd(prop, lvalue);
+        // (1) A getelem where the receiver is an array
+        if (isArrayType(recvLvalue.type)) {
+          lvalResult = analyzeArrayElmLvalFwd(prop, recvLvalue);
+          break;
+        }
+        // (2) A getelem where the prop is a string literal is like a getprop
+        if (expr.isGetProp() || prop.isString()) {
+          lvalResult = analyzePropLValFwd(obj, pname, recvLvalue, type, insideQualifiedName);
           break;
         }
         // (3) All other getelems
-        EnvTypePair pair = analyzeExprFwd(expr, inEnv, type);
+        // TODO(dimvar): there is some recomputation here; the receiver will be
+        // analyzed again. Some more refactoring can fix this.
+        EnvTypePair pair = analyzeExprFwd(expr, recvLvalue.env, type);
         lvalResult = new LValueResultFwd(pair.env, pair.type, null, null);
         break;
       }
@@ -3771,76 +3773,84 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private LValueResultFwd analyzePropLValFwd(Node obj, QualifiedName pname,
-      TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
+      LValueResultFwd recvLvalue, JSType requiredType, boolean insideQualifiedName) {
     Preconditions.checkArgument(pname.isIdentifier());
-    String pnameAsString = pname.getLeftmostName();
-    JSType reqObjType =
-        pickReqObjType(obj.getParent()).withProperty(pname, type);
-    LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
-    EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
-        obj, lvalue.type, null, lvalue.env);
-    TypeEnv lvalueEnv = pair.env;
-    JSType lvalueType = pair.type.autobox();
-    if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
-      warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
-          pnameAsString, lvalueType.toString()));
-      return new LValueResultFwd(lvalueEnv, type, null, null);
-    }
-    if (!lvalueType.isUnion() && !lvalueType.isSingletonObj()) {
+    TypeEnv inEnv = recvLvalue.env;
+    JSType recvType = recvLvalue.type;
+    if (!recvType.isUnion() && !recvType.isSingletonObj()) {
       // The lvalue is a subtype of TOP_OBJECT, but does not contain an object
       // yet, eg, it is ?, truthy, or bottom.
-      lvalueType = JSType.TOP_OBJECT.withLoose();
+      recvType = JSType.TOP_OBJECT.withLoose();
     }
     Node propAccessNode = obj.getParent();
     if (propAccessNode.isGetProp() &&
         propAccessNode.getParent().isAssign() &&
-        mayWarnAboutPropCreation(pname, propAccessNode, lvalueType)) {
-      return new LValueResultFwd(lvalueEnv, type, null, null);
+        mayWarnAboutPropCreation(pname, propAccessNode, recvType)) {
+      return new LValueResultFwd(inEnv, requiredType, null, null);
     }
     if (!insideQualifiedName
-        && mayWarnAboutConstProp(propAccessNode, lvalueType, pname)) {
-      return new LValueResultFwd(lvalueEnv, type, null, null);
+        && mayWarnAboutConstProp(propAccessNode, recvType, pname)) {
+      return new LValueResultFwd(inEnv, requiredType, null, null);
     }
-    if (!lvalueType.hasProp(pname)) {
-      if (lvalueType.isLoose()) {
+    if (!recvType.hasProp(pname)) {
+      if (recvType.isLoose()) {
         // For loose objects, create the inner property if it doesn't exist.
-        lvalueType = lvalueType.withProperty(pname, JSType.TOP_OBJECT.withLoose());
-        lvalueEnv = updateLvalueTypeInEnv(lvalueEnv, obj, lvalue.ptr, lvalueType);
+        recvType = recvType.withProperty(pname, JSType.TOP_OBJECT.withLoose());
+        inEnv = updateLvalueTypeInEnv(inEnv, obj, recvLvalue.ptr, recvType);
       } else {
         // Warn for inexistent prop either on the non-top-level of a qualified
         // name, or for assignment ops that won't create a new property.
         boolean warnForInexistentProp = insideQualifiedName ||
             propAccessNode.getParent().getType() != Token.ASSIGN;
         if (warnForInexistentProp
-            && !lvalueType.isUnknown()
-            && !lvalueType.mayBeDict()) {
-          mayWarnAboutInexistentProp(propAccessNode, lvalueType, pname, lvalueEnv);
-          return new LValueResultFwd(lvalueEnv, type, null, null);
+            && !recvType.isUnknown()
+            && !recvType.mayBeDict()) {
+          mayWarnAboutInexistentProp(propAccessNode, recvType, pname, inEnv);
+          return new LValueResultFwd(inEnv, requiredType, null, null);
         }
       }
     }
     if (propAccessNode.isGetElem()) {
-      mayWarnAboutStructPropAccess(obj, lvalueType);
+      mayWarnAboutStructPropAccess(obj, recvType);
     } else if (propAccessNode.isGetProp()) {
-      mayWarnAboutDictPropAccess(obj, lvalueType);
+      mayWarnAboutDictPropAccess(obj, recvType);
     }
     QualifiedName setterPname =
-        new QualifiedName(SETTER_PREFIX + pnameAsString);
-    if (lvalueType.hasProp(setterPname)) {
-      FunctionType funType = lvalueType.getProp(setterPname).getFunType();
+        new QualifiedName(SETTER_PREFIX + pname.getLeftmostName());
+    if (recvType.hasProp(setterPname)) {
+      FunctionType funType = recvType.getProp(setterPname).getFunType();
       Preconditions.checkNotNull(funType);
       JSType formalType = funType.getFormalType(0);
       Preconditions.checkState(!formalType.isBottom());
-      return new LValueResultFwd(lvalueEnv, formalType, formalType, null);
+      return new LValueResultFwd(inEnv, formalType, formalType, null);
     }
-    return new LValueResultFwd(
-        lvalueEnv,
-        lvalueType.mayHaveProp(pname) ?
-            lvalueType.getProp(pname) : JSType.UNKNOWN,
-        lvalueType.mayHaveProp(pname) ?
-            lvalueType.getDeclaredProp(pname) : null,
-        lvalue.ptr == null ? null : QualifiedName.join(lvalue.ptr, pname)
-    );
+    QualifiedName ptr = recvLvalue.ptr == null
+        ? null : QualifiedName.join(recvLvalue.ptr, pname);
+    return recvType.mayHaveProp(pname)
+        ? new LValueResultFwd(
+            inEnv, recvType.getProp(pname), recvType.getDeclaredProp(pname), ptr)
+        : new LValueResultFwd(inEnv, JSType.UNKNOWN, null, ptr);
+  }
+
+  private LValueResultFwd analyzeReceiverLvalFwd(
+      Node obj, QualifiedName pname, TypeEnv inEnv, JSType propType) {
+    // pname is null when the property name is not known.
+    Preconditions.checkArgument(pname == null || pname.isIdentifier());
+    JSType reqObjType = pickReqObjType(obj.getParent());
+    if (pname != null) {
+      reqObjType = reqObjType.withProperty(pname, propType);
+    }
+    LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
+    EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
+        obj, lvalue.type, null, lvalue.env);
+    JSType lvalueType = pair.type.autobox();
+    if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
+      warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
+              getPropNameForErrorMsg(obj.getParent()), lvalueType.toString()));
+    }
+    lvalue.type = lvalueType;
+    lvalue.env = pair.env;
+    return lvalue;
   }
 
   private static class LValueResultBwd {

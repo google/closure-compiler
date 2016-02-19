@@ -7688,7 +7688,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** Array<number> */ arr) {",
         "  arr[0] = 'str';",
         "}"),
-        NewTypeInference.NULLABLE_DEREFERENCE);
+        NewTypeInference.NULLABLE_DEREFERENCE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(LINE_JOINER.join(
         "/** @const */",
