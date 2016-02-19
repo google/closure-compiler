@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
+import com.google.javascript.jscomp.lint.CheckRedundantBooleanCast;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
@@ -490,6 +491,7 @@ public class DiagnosticGroups {
           CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
           CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS,
           CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
+          CheckRedundantBooleanCast.REDUNDANT_BOOLEAN_CAST,
           CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
           CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
           CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,
