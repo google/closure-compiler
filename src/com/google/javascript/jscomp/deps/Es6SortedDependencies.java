@@ -20,6 +20,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.CompilerInput;
+import com.google.javascript.jscomp.DependencyOptions;
+import com.google.javascript.jscomp.DependencyOptions.ModuleIdentifier;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -53,7 +56,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   private final List<INPUT> userOrderedInputs = new ArrayList<>();
   private final List<INPUT> importOrderedInputs = new ArrayList<>();
   private final Set<INPUT> completedInputs = new HashSet<>();
-  private final List<INPUT> nonExportingInputs = new ArrayList<>();
+  private final Map<String, INPUT> nonExportingInputs = new LinkedHashMap<>();
   private final Map<String, INPUT> exportingInputBySymbolName = new HashMap<>();
   // Maps an input A to the inputs it depends on, ie, inputs that provide stuff that A requires.
   private final Multimap<INPUT, INPUT> importedInputByImportingInput = LinkedHashMultimap.create();
@@ -92,15 +95,17 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
 
   @Override
   public INPUT getInputProviding(String symbolName) throws MissingProvideException {
-    if (exportingInputBySymbolName.containsKey(symbolName)) {
-      return exportingInputBySymbolName.get(symbolName);
+    INPUT input = maybeGetInputProviding(symbolName);
+    if (input != null) {
+      return input;
     }
+
     throw new MissingProvideException(symbolName);
   }
 
   @Override
   public List<INPUT> getInputsWithoutProvides() {
-    return Collections.unmodifiableList(nonExportingInputs);
+    return ImmutableList.copyOf(nonExportingInputs.values());
   }
 
   @Override
@@ -115,7 +120,14 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
 
   @Override
   public INPUT maybeGetInputProviding(String symbol) {
-    return exportingInputBySymbolName.get(symbol);
+    if (exportingInputBySymbolName.containsKey(symbol)) {
+      return exportingInputBySymbolName.get(symbol);
+    }
+
+    DependencyOptions.ModuleIdentifier symbolModule =
+        DependencyOptions.ModuleIdentifier.forFile(symbol);
+
+    return nonExportingInputs.get(symbolModule.getName());
   }
 
   private void orderInput(INPUT input) {
@@ -136,7 +148,12 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
     // Index.
     for (INPUT userOrderedInput : userOrderedInputs) {
       if (userOrderedInput.getProvides().isEmpty()) {
-        nonExportingInputs.add(userOrderedInput);
+        String inputName = userOrderedInput.getName();
+        if (inputName.endsWith(".js")) {
+          inputName = inputName.substring(0, inputName.length() - 3);
+        }
+        ModuleIdentifier module = ModuleIdentifier.forFile(inputName);
+        nonExportingInputs.put(module.getName(), userOrderedInput);
       }
       for (String providedSymbolName : userOrderedInput.getProvides()) {
         exportingInputBySymbolName.put(providedSymbolName, userOrderedInput);
