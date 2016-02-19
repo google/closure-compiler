@@ -1188,13 +1188,22 @@ public final class NodeUtil {
         if (nameNode.getFirstChild().isRegExp()
             && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
           return false;
-        } else if (nameNode.getFirstChild().isString()
-            && STRING_REGEXP_METHODS.contains(
-                nameNode.getLastChild().getString())) {
+        } else if (nameNode.getFirstChild().isString()) {
+          String method = nameNode.getLastChild().getString();
           Node param = nameNode.getNext();
-          if (param != null &&
-              (param.isString() || param.isRegExp())) {
-            return false;
+          if (param != null) {
+            if (param.isString()) {
+              if (STRING_REGEXP_METHODS.contains(method)) {
+                return false;
+              }
+            } else if (param.isRegExp()) {
+              if ("replace".equals(method)) {
+                // Assume anything but a string constant has a side-effects
+                return !param.getNext().isString();
+              } else if (STRING_REGEXP_METHODS.contains(method)) {
+                return false;
+              }
+            }
           }
         }
       }

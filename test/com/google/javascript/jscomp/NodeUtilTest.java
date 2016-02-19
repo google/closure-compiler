@@ -524,6 +524,11 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, "''.match(a)", false);
   }
 
+  public void testRegExpSideEffect2() {
+    assertSideEffect(true, "'a'.replace(/a/, function (s) {alert(s)})", false);
+    assertSideEffect(false, "'a'.replace(/a/, 'x')", false);
+  }
+
   private void assertMutableState(boolean se, String js) {
     Node n = parse(js);
     assertEquals(se, NodeUtil.mayEffectMutableState(n.getFirstChild()));
