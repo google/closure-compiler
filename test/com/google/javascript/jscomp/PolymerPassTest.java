@@ -180,11 +180,19 @@ public class PolymerPassTest extends Es6CompilerTestCase {
 
   public void testLetTarget() {
     disableTypeCheck();
-    testErrorEs6(
+    testEs6(
         LINE_JOINER.join(
             "let X = Polymer({",
             "  is: 'x-element',",
-            "});"), PolymerPass.POLYMER_INVALID_DECLARATION);
+            "});"),
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @implements {PolymerXInterface}",
+            " * @extends {PolymerElement}",
+            " */",
+            "var X = function() {};",
+            "X = Polymer(/** @lends {X.prototype} */ {is:'x-element'});"));
   }
 
   public void testConstTarget() {

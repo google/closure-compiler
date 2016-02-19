@@ -57,8 +57,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       "The argument to Polymer() is not an obj lit (perhaps because this is a pre-Polymer-1.0 "
       + "call). Ignoring this call.");
 
+  // Disallow 'const Foo = Polymer(...)' because the code the PolymerPass outputs will reassign
+  // Foo which is not allowed for 'const' variables.
   static final DiagnosticType POLYMER_INVALID_DECLARATION = DiagnosticType.error(
-      "JSC_POLYMER_INVALID_DECLARAION", "A Polymer() declaration cannot use 'let' or 'const'.");
+      "JSC_POLYMER_INVALID_DECLARAION", "A Polymer() declaration cannot use 'const'.");
 
   // Errors
   static final DiagnosticType POLYMER_MISSING_IS = DiagnosticType.error("JSC_POLYMER_MISSING_IS",
@@ -188,7 +190,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (isBehavior(n)) {
-        if (!n.isVar() && !n.isAssign()) {
+        if (!NodeUtil.isNameDeclaration(n) && !n.isAssign()) {
           compiler.report(JSError.make(n, POLYMER_UNQUALIFIED_BEHAVIOR));
           return;
         }
@@ -199,7 +201,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         n.setJSDocInfo(newDocs.build());
 
         Node behaviorValue = n.getSecondChild();
-        if (n.isVar()) {
+        if (NodeUtil.isNameDeclaration(n)) {
           behaviorValue = n.getFirstFirstChild();
         }
         suppressBehavior(behaviorValue);
@@ -287,14 +289,15 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   private void rewriteClassDefinition(Node n, Node parent, NodeTraversal t) {
-    if (parent.getParent().isConst() || parent.getParent().isLet()) {
+    Node grandparent = parent.getParent();
+    if (grandparent.isConst()) {
       compiler.report(JSError.make(n, POLYMER_INVALID_DECLARATION));
       return;
     }
     ClassDefinition def = extractClassDefinition(n);
     if (def != null) {
-      if (NodeUtil.isNameDeclaration(parent.getParent()) || parent.isAssign()) {
-        rewritePolymerClass(parent.getParent(), def, t);
+      if (NodeUtil.isNameDeclaration(grandparent) || parent.isAssign()) {
+        rewritePolymerClass(grandparent, def, t);
       } else {
         rewritePolymerClass(parent, def, t);
       }
@@ -674,7 +677,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       }
     }
 
-    if (exprRoot.isVar()) {
+    if (NodeUtil.isNameDeclaration(exprRoot)) {
       Node assignExpr = varToAssign(exprRoot);
       parent.replaceChild(exprRoot, assignExpr);
     }
@@ -1047,7 +1050,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   /**
-   * @return An assign replacing the equivalent var declaration.
+   * @return An assign replacing the equivalent var or let declaration.
    */
   private static Node varToAssign(Node var) {
     Node assign = IR.assign(
