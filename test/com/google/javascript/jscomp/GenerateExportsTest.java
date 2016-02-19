@@ -299,4 +299,21 @@ public final class GenerateExportsTest extends Es6CompilerTestCase {
     testSame(code);
     testExternChanges(code, "Object.prototype.foo;");
   }
+
+  public void testExportSymbolsArray() {
+    allowExternsChanges(true);
+    String code = "/** @export */ ['a', 'b'];";
+    testSame(code);
+    testExternChanges(code, "Object.prototype.a; Object.prototype.b;");
+  }
+
+  public void testExportSymbolsArray_onlyStringLiterals() {
+    String code = "/** @export */ ['a', 'b' + 'c'];";
+    testError(code, FindExportableNodes.EXPORT_NOT_STRING_LITERAL);
+  }
+
+  public void testExportSymbolsArray_pureExpression() {
+    String code = "(/** @export */ ['a', 'c']).length;";
+    testError(code, FindExportableNodes.EXPORT_ARRAY_LITERAL_NOT_EXPRESSION);
+  }
 }
