@@ -35,7 +35,6 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public NormalizeTest() {
     super(EXTERNS);
-    compareJsDoc = false;
   }
 
   @Override
@@ -95,7 +94,8 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public void testDuplicateVarInExterns() {
     test("var extern;",
-         "/** @suppress {duplicate} */ var extern = 3;", "var extern = 3;",
+         "/** @suppress {duplicate} */ var extern = 3;",
+         "/** @suppress {duplicate} */ var extern = 3;",
          null, null);
   }
 
@@ -267,11 +267,11 @@ public final class NormalizeTest extends CompilerTestCase {
          "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
 
     // Verify the 1st global redefinition of extern definition is not removed.
-    test("/** @suppress {duplicate} */\nvar window;", "var window;");
+    testSame("/** @suppress {duplicate} */ var window;");
 
     // Verify the 2nd global redefinition of extern definition is removed.
-    test("/** @suppress {duplicate} */\nvar window;" +
-         "/** @suppress {duplicate} */\nvar window;", "var window;");
+    test("/** @suppress {duplicate} */ var window; /** @suppress {duplicate} */ var window;",
+         "/** @suppress {duplicate} */ var window;");
 
     // Verify local masking extern made unique.
     test("function f() {var window}",
@@ -335,7 +335,7 @@ public final class NormalizeTest extends CompilerTestCase {
     test("var ACONST = new Foo(); var b = ACONST;",
          "var ACONST = new Foo(); var b = ACONST;");
 
-    test("/** @const */var aa; aa=1;", "var aa;aa=1");
+    test("/** @const */ var aa; aa = 1;", "/** @const */ var aa; aa = 1");
   }
 
   public void testSkipRenamingExterns() {
@@ -461,15 +461,12 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public void testExposeSimple() {
     test("var x = {}; /** @expose */ x.y = 3; x.y = 5;",
-         "var x = {}; x['y'] = 3; x['y'] = 5;");
+         "var x = {}; /** @expose */ x['y'] = 3; x['y'] = 5;");
   }
 
   public void testExposeComplex() {
-    test(
-        "var x = {/** @expose */ a: 1, b: 2};"
-        + "x.a = 3; /** @expose */ x.b = 5;",
-        "var x = {'a': 1, 'b': 2};"
-        + "x['a'] = 3; x['b'] = 5;");
+    test("var x = {/** @expose */ a: 1, b: 2}; x.a = 3; /** @expose */ x.b = 5;",
+         "var x = {/** @expose */ 'a': 1, 'b': 2}; x['a'] = 3; /** @expose */ x['b'] = 5;");
   }
 
   private Set<Node> findNodesWithProperty(Node root, final int prop) {
