@@ -2153,9 +2153,14 @@ public final class JsDocInfoParser {
           if (match(JsDocToken.COLON)) {
             next();
             skipEOLs();
+            Node type = parseContextTypeExpression(next());
+            if (match(JsDocToken.EQUALS)) {
+              next();
+              skipEOLs();
+              type = wrapNode(Token.EQUALS, type);
+            }
             Node contextType = wrapNode(
-                isThis ? Token.THIS : Token.NEW,
-                parseContextTypeExpression(next()));
+                isThis ? Token.THIS : Token.NEW, type);
             if (contextType == null) {
               return null;
             }
