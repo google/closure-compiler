@@ -463,6 +463,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("function()", "function (): ?");
   }
 
+  public void testParseFunctionalType8() throws Exception {
+    // "undefined" is ignored by JSTypeRegistry
+    testParseType("function(this:(Foo|undefined))", "function (this:Foo): ?");
+  }
+
   public void testParseFunctionalType9() throws Exception {
     testParseType(
         "function(this:Array,!Date,...(boolean?))",
@@ -511,6 +516,21 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType(
         "function(...?): void",
         "function (...?): undefined");
+  }
+
+  public void testParseFunctionalType20() throws Exception {
+    // "=" is ignored by JSTypeRegistry
+    testParseType("function(this:Foo=)", "function (this:Foo): ?");
+  }
+
+  public void testParseFunctionalTypeError21() throws Exception {
+    // "undefined" is ignored by JSTypeRegistry
+    testParseType("function (new:(Foo|undefined))}", "function (new:Foo): ?");
+  }
+
+  public void testParseFunctionalTypeError22() throws Exception {
+    // "=" is ignored by JSTypeRegistry
+    testParseType("function (new:Foo=)}", "function (new:Foo): ?");
   }
 
   public void testStructuralConstructor() throws Exception {
@@ -625,7 +645,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. type not recognized due to syntax error");
   }
 
-  public void testParseFunctionalType8() throws Exception {
+  public void testParseFunctionalTypeError15() throws Exception {
     parse("@type {function(this:Array,...[boolean])} */",
         "Bad type annotation. type not recognized due to syntax error");
   }
