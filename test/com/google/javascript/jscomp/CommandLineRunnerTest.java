@@ -1646,6 +1646,51 @@ public final class CommandLineRunnerTest extends TestCase {
         });
   }
 
+  public void testES6ImportOfFileWithoutImportsOrExports() {
+    args.add("--dependency_mode=NONE");
+    args.add("--language_in=ECMASCRIPT6");
+    setFilename(0, "foo.js");
+    setFilename(1, "app.js");
+    test(
+        new String[] {
+            CompilerTestCase.LINE_JOINER.join(
+                "function foo() { alert('foo'); }",
+                "foo();"),
+            "import './foo';"
+        },
+        new String[] {
+            CompilerTestCase.LINE_JOINER.join(
+                "/** @const */ var module$foo={};",
+                "function foo$$module$foo(){ alert('foo'); }",
+                "foo$$module$foo();"),
+            "'use strict';"
+        });
+  }
+
+  public void testCommonJSRequireOfFileWithoutExports() {
+    args.add("--process_common_js_modules");
+    args.add("--dependency_mode=NONE");
+    args.add("--language_in=ECMASCRIPT6");
+    setFilename(0, "foo.js");
+    setFilename(1, "app.js");
+    test(
+        new String[] {
+            CompilerTestCase.LINE_JOINER.join(
+                "function foo() { alert('foo'); }",
+                "foo();"),
+            "require('./foo');"
+        },
+        new String[] {
+            CompilerTestCase.LINE_JOINER.join(
+                "/** @const */ var module$foo={};",
+                "function foo$$module$foo(){ alert('foo'); }",
+                "foo$$module$foo();"),
+            CompilerTestCase.LINE_JOINER.join(
+                "'use strict';",
+                "/** @const */ var module$app={};")
+        });
+  }
+
   public void testFormattingSingleQuote() {
     testSame("var x = '';");
     assertThat(lastCompiler.toSource()).isEqualTo("var x=\"\";");
