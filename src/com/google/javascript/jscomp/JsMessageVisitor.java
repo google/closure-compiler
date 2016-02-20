@@ -184,7 +184,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
     String messageKey;
-    String originalMessageKey;
     boolean isVar;
     Node msgNode;
 
@@ -193,7 +192,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         // var MSG_HELLO = 'Message'
         if ((parent != null) && (NodeUtil.isNameDeclaration(parent))) {
           messageKey = node.getString();
-          originalMessageKey = (String) node.getProp(Node.ORIGINALNAME_PROP);
           isVar = true;
         } else {
           return;
@@ -213,7 +211,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         Node propNode = getProp.getLastChild();
 
         messageKey = propNode.getString();
-        originalMessageKey = (String) propNode.getProp(Node.ORIGINALNAME_PROP);
         msgNode = node.getLastChild();
         break;
 
@@ -223,7 +220,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         }
         isVar = false;
         messageKey = node.getString();
-        originalMessageKey = (String) node.getProp(Node.ORIGINALNAME_PROP);
         msgNode = node.getFirstChild();
         break;
 
@@ -238,10 +234,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         return;
       default:
         return;
-    }
-
-    if (originalMessageKey != null) {
-      messageKey = originalMessageKey;
     }
 
     // Is this a message name?
