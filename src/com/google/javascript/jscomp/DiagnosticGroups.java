@@ -450,6 +450,7 @@ public class DiagnosticGroups {
           CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN,
           CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR,
           CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND,
+          CheckSuspiciousCode.SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR,
           TypeCheck.DETERMINISTIC_TEST);
 
   public static final DiagnosticGroup DEPRECATED_ANNOTATIONS =
