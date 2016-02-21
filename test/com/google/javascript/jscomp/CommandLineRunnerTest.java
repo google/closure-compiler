@@ -1877,7 +1877,6 @@ public final class CommandLineRunnerTest extends TestCase {
   private void test(String[] original, String[] compiled, DiagnosticType warning) {
     exitCodes.clear();
     Compiler compiler = compile(original);
-    assertThat(exitCodes).containsExactly(0);
 
     if (warning == null) {
       assertEquals("Expected no warnings or errors\n" +
@@ -1899,6 +1898,8 @@ public final class CommandLineRunnerTest extends TestCase {
           "\nResult: " + compiler.toSource(root) +
           "\n" + explanation, explanation);
     }
+
+    assertThat(exitCodes).containsExactly(0);
   }
 
   /**
