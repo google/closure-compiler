@@ -277,14 +277,4 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  }",
             "};"));
   }
-
-  public void testRequireResultUnused() {
-    setFilename("test");
-    testModules(
-        "require('./other');",
-        LINE_JOINER.join(
-            "goog.provide('module$test');",
-            "goog.require('module$other');")
-    );
-  }
 }

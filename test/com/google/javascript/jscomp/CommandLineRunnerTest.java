@@ -984,13 +984,6 @@ public final class CommandLineRunnerTest extends TestCase {
         .isEqualTo("foo_m0.js.map");
   }
 
-  public void testInvalidSourceMapPattern() {
-    useModules = ModulePattern.CHAIN;
-    args.add("--create_source_map=out.map");
-    args.add("--module_output_path_prefix=foo_");
-    test(new String[] {"var x = 3;", "var y = 5;"}, AbstractCommandLineRunner.INVALID_MODULE_SOURCEMAP_PATTERN);
-  }
-
   public void testSourceMapFormat1() {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
@@ -1646,51 +1639,6 @@ public final class CommandLineRunnerTest extends TestCase {
         });
   }
 
-  public void testES6ImportOfFileWithoutImportsOrExports() {
-    args.add("--dependency_mode=NONE");
-    args.add("--language_in=ECMASCRIPT6");
-    setFilename(0, "foo.js");
-    setFilename(1, "app.js");
-    test(
-        new String[] {
-            CompilerTestCase.LINE_JOINER.join(
-                "function foo() { alert('foo'); }",
-                "foo();"),
-            "import './foo';"
-        },
-        new String[] {
-            CompilerTestCase.LINE_JOINER.join(
-                "/** @const */ var module$foo={};",
-                "function foo$$module$foo(){ alert('foo'); }",
-                "foo$$module$foo();"),
-            "'use strict';"
-        });
-  }
-
-  public void testCommonJSRequireOfFileWithoutExports() {
-    args.add("--process_common_js_modules");
-    args.add("--dependency_mode=NONE");
-    args.add("--language_in=ECMASCRIPT6");
-    setFilename(0, "foo.js");
-    setFilename(1, "app.js");
-    test(
-        new String[] {
-            CompilerTestCase.LINE_JOINER.join(
-                "function foo() { alert('foo'); }",
-                "foo();"),
-            "require('./foo');"
-        },
-        new String[] {
-            CompilerTestCase.LINE_JOINER.join(
-                "/** @const */ var module$foo={};",
-                "function foo$$module$foo(){ alert('foo'); }",
-                "foo$$module$foo();"),
-            CompilerTestCase.LINE_JOINER.join(
-                "'use strict';",
-                "/** @const */ var module$app={};")
-        });
-  }
-
   public void testFormattingSingleQuote() {
     testSame("var x = '';");
     assertThat(lastCompiler.toSource()).isEqualTo("var x=\"\";");
@@ -1884,6 +1832,7 @@ public final class CommandLineRunnerTest extends TestCase {
   private void test(String[] original, String[] compiled, DiagnosticType warning) {
     exitCodes.clear();
     Compiler compiler = compile(original);
+    assertThat(exitCodes).containsExactly(0);
 
     if (warning == null) {
       assertEquals("Expected no warnings or errors\n" +
@@ -1905,8 +1854,6 @@ public final class CommandLineRunnerTest extends TestCase {
           "\nResult: " + compiler.toSource(root) +
           "\n" + explanation, explanation);
     }
-
-    assertThat(exitCodes).containsExactly(0);
   }
 
   /**
