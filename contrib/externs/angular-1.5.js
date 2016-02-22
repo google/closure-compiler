@@ -1930,6 +1930,11 @@ angular.NgModelController.prototype.$validate = function() {};
  */
 angular.NgModelController.prototype.$commitViewValue = function() {};
 
+/**
+ * @type {!Object.<string, boolean>|undefined}
+ */
+angular.NgModelController.prototype.$pending;
+
 /******************************************************************************
  * FormController
  *****************************************************************************/
