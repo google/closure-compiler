@@ -175,22 +175,25 @@ class InstrumentFunctions implements CompilerPass {
    * Output:
    * function f() {
    *   if (pred) {
-   *     return onExitFn(0, a);
+   *     return onExitFn(0, "f", a);
    *   }
-   *   onExitFn(0);
+   *   onExitFn(0, "f");
    * }
    *
    **/
   private class InstrumentReturns implements NodeTraversal.Callback {
     private final int functionId;
+    private final String functionName;
     /**
      * @param functionId Function identifier computed by FunctionNames;
      *     used as first argument to {@code reportFunctionExitName}
-     *     {@code reportFunctionExitName} must be a 2 argument function that
-     *     returns it's second argument.
+     *     {@code reportFunctionExitName} must be a 3 argument function that
+     *     returns it's third argument.
+     * @param functionName Function name.
      */
-    InstrumentReturns(int functionId) {
+    InstrumentReturns(int functionId, String functionName) {
       this.functionId = functionId;
+      this.functionName = functionName;
     }
 
     /**
@@ -231,7 +234,8 @@ class InstrumentFunctions implements CompilerPass {
     private Node newReportFunctionExitNode(Node infoNode) {
       Node call = IR.call(
           IR.name(reportFunctionExitName),
-          IR.number(functionId));
+          IR.number(functionId),
+          IR.string(functionName));
       call.putBooleanProp(Node.FREE_CALL, true);
       call.useSourceInfoFromForTree(infoNode);
       return call;
@@ -272,11 +276,15 @@ class InstrumentFunctions implements CompilerPass {
         return;
       }
 
+      String name = functionNames.getFunctionName(n);
+
       if (!reportFunctionName.isEmpty()) {
         Node body = n.getLastChild();
         Node call = IR.call(
             IR.name(reportFunctionName),
-            IR.number(id));
+            IR.number(id),
+            IR.string(name),
+            IR.name("arguments"));
         call.putBooleanProp(Node.FREE_CALL, true);
         Node expr = IR.exprResult(call);
         expr.useSourceInfoFromForTree(n);
@@ -285,13 +293,14 @@ class InstrumentFunctions implements CompilerPass {
       }
 
       if (!reportFunctionExitName.isEmpty()) {
-        (new InstrumentReturns(id)).process(n);
+        (new InstrumentReturns(id, name)).process(n);
       }
 
       if (!definedFunctionName.isEmpty()) {
         Node call = IR.call(
             IR.name(definedFunctionName),
-            IR.number(id));
+            IR.number(id),
+            IR.string(name));
         call.putBooleanProp(Node.FREE_CALL, true);
         call.useSourceInfoFromForTree(n);
         Node expr = NodeUtil.newExpr(call);
