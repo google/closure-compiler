@@ -49,7 +49,12 @@ public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
   }
 
   public void testReferenceToQualifiedName() {
-    testErrorEs6("new bar.Foo();", MISSING_REQUIRE_WARNING);
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.require('x.y.z');",
+            "new x.y.z();",
+            "new bar.Foo();"),
+        MISSING_REQUIRE_WARNING);
   }
 
   public void testExtraRequire() {

@@ -188,6 +188,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       return;
     }
 
+    if (mode == Mode.SINGLE_FILE && requires.isEmpty()) {
+      // Likely a file that isn't using Closure at all.
+      return;
+    }
+
     Set<String> classNames = new HashSet<>();
 
     // For every usage, check that there is a goog.require, and warn if not.
