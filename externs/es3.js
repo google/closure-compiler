@@ -45,7 +45,8 @@ IArrayLike.prototype.length;
 
 /**
  * @constructor
- * @implements {IArrayLike<?>}
+ * @implements {IArrayLike<T>}
+ * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/arguments
  */
 function Arguments() {}
