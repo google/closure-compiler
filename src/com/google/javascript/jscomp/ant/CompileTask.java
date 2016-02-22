@@ -101,7 +101,8 @@ public final class CompileTask
   private String sourceMapLocationMapping;
 
   public CompileTask() {
-    this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT3;
+    this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT6;
+    this.languageOut = CompilerOptions.LanguageMode.ECMASCRIPT3;
     this.warningLevel = WarningLevel.DEFAULT;
     this.debugOptions = false;
     this.compilationLevel = CompilationLevel.SIMPLE_OPTIMIZATIONS;
