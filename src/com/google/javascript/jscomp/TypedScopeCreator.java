@@ -139,11 +139,6 @@ final class TypedScopeCreator implements ScopeCreator {
           "JSC_LENDS_ON_NON_OBJECT",
           "May only lend properties to object types. {0} has type {1}.");
 
-  static final DiagnosticType CANNOT_INFER_CONST_TYPE =
-      DiagnosticType.disabled(
-          "JSC_CANNOT_INFER_CONST_TYPE",
-          "Unable to infer type of constant.");
-
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DELEGATE_PROXY_SUFFIX,
       MALFORMED_TYPEDEF,
@@ -152,8 +147,7 @@ final class TypedScopeCreator implements ScopeCreator {
       IFACE_INITIALIZER,
       CONSTRUCTOR_EXPECTED,
       UNKNOWN_LENDS,
-      LENDS_ON_NON_OBJECT,
-      CANNOT_INFER_CONST_TYPE);
+      LENDS_ON_NON_OBJECT);
 
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
@@ -1367,16 +1361,7 @@ final class TypedScopeCreator implements ScopeCreator {
               compiler.getCodingConvention(), info, lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
-          if (rValueType == null) {
-            // Only warn if the user has explicitly declared a value as
-            // const and they have explicitly not provided a type.
-            boolean isTypelessConstDecl = info != null
-                && info.isConstant()
-                && !info.hasType();
-            if (isTypelessConstDecl) {
-              report(JSError.make(lValue, CANNOT_INFER_CONST_TYPE));
-            }
-          } else {
+          if (rValueType != null) {
             return rValueType;
           }
         }

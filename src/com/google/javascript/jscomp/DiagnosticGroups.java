@@ -150,12 +150,9 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("unnecessaryCasts",
           TypeValidator.UNNECESSARY_CAST);
 
-  // TODO(tbreisacher): Remove the CANNOT_INFER_CONST_TYPE check after the next
-  // release, and switch this to registerDeprecatedGroup.
   @Deprecated
   public static final DiagnosticGroup INFERRED_CONST_CHECKS =
-      DiagnosticGroups.registerGroup("inferredConstCheck",  // undocumented
-          TypedScopeCreator.CANNOT_INFER_CONST_TYPE);
+      DiagnosticGroups.registerDeprecatedGroup("inferredConstCheck");
 
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
