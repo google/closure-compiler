@@ -73,8 +73,7 @@ class DeclaredGlobalExternsOnWindow
       JSDocInfoBuilder builder;
 
       if (oldJSDocInfo.isConstructorOrInterface()
-          || oldJSDocInfo.hasEnumParameterType()
-          || NodeUtil.isNamespaceDecl(node)) {
+          || oldJSDocInfo.hasEnumParameterType()) {
         Node nameNode = IR.name(name);
         newNode = IR.assign(getprop, nameNode);
 
@@ -91,10 +90,10 @@ class DeclaredGlobalExternsOnWindow
         if (oldJSDocInfo.hasEnumParameterType()) {
           builder.recordEnumParameterType(oldJSDocInfo.getEnumParameterType());
         }
-        if (NodeUtil.isNamespaceDecl(node)) {
-          // builder.recordConstancy();
-        }
       } else {
+        if (NodeUtil.isNamespaceDecl(node)) {
+          newNode = IR.assign(getprop, IR.name(name));
+        }
         builder = JSDocInfoBuilder.copyFrom(oldJSDocInfo);
       }
 

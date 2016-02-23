@@ -95,7 +95,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
         LINE_JOINER.join(
             "var window;",
             "/** @const */ var ns = {};",
-            "/** @suppress {duplicate} */ window.ns = ns;"));
+            "/** @suppress {duplicate} @const */ window.ns = ns;"));
   }
 
   public void testWindowProperty8() {
