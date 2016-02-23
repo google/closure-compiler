@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.javascript.jscomp.JsMessage.IdGenerator;
 import com.google.javascript.jscomp.JsMessage.PlaceholderReference;
 
@@ -71,7 +72,7 @@ public final class GoogleJsMessageIdGenerator implements IdGenerator {
     String tcValue = sb.toString();
 
     String projectScopedMeaning =
-        (projectId != null ? (projectId + ": ") : "") + meaning;
+        (Strings.isNullOrEmpty(projectId) ? "" : (projectId + ": ")) + meaning;
     return String.valueOf(
         MessageId.generateId(tcValue, projectScopedMeaning));
   }
