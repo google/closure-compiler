@@ -1202,7 +1202,7 @@ public final class NodeUtil {
               }
             } else if (param.isRegExp()) {
               if ("replace".equals(method)) {
-                // Assume anything but a string constant has a side-effects
+                // Assume anything but a string constant has side-effects
                 return !param.getNext().isString();
               } else if (STRING_REGEXP_METHODS.contains(method)) {
                 return false;

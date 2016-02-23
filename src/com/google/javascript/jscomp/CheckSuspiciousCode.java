@@ -55,12 +55,18 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
           "JSC_SUSPICIOUS_INSTANCEOF_LEFT",
           "\"instanceof\" with left non-object operand is always false.");
 
+  static final DiagnosticType SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR =
+      DiagnosticType.warning(
+          "JSC_SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR",
+          "Suspicious negated left operand of 'in' operator.");
+
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     checkMissingSemicolon(t, n);
     checkNaN(t, n);
     checkInvalidIn(t, n);
     checkNonObjectInstanceOf(t, n);
+    checkNegatedLeftOperandOfInOperator(t, n);
   }
 
   private void checkMissingSemicolon(NodeTraversal t, Node n) {
@@ -136,5 +142,11 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
       return true;
     }
     return false;
+  }
+
+  private void checkNegatedLeftOperandOfInOperator(NodeTraversal t, Node n) {
+    if (n.isIn() && n.getFirstChild().isNot()) {
+      t.report(n.getFirstChild(), SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR);
+    }
   }
 }
