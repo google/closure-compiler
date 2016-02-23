@@ -1380,6 +1380,9 @@ final class NewTypeInference implements CompilerPass {
     // See if the passes that use types only need types on a small subset of the
     // nodes, and only store these types to save mem.
     maybeSetTypeI(expr, resultPair.type);
+    println("AnalyzeExprFWD: ", expr,
+        " ::reqtype: ", requiredType, " ::spectype: ", specializedType,
+        " ::resulttype: ", resultPair.type);
     return resultPair;
   }
 
@@ -2180,8 +2183,10 @@ final class NewTypeInference implements CompilerPass {
       pair = analyzeExprFwd(typeofRand, inEnv, JSType.UNKNOWN, comparedType);
     } else {
       pair = analyzeExprFwd(typeofRand, inEnv);
-      pair = analyzeExprFwd(typeofRand, inEnv, JSType.UNKNOWN,
-          pair.type.removeType(comparedType));
+      JSType rmType = pair.type.removeType(comparedType);
+      if (!rmType.isBottom()) {
+        pair = analyzeExprFwd(typeofRand, inEnv, JSType.UNKNOWN, rmType);
+      }
     }
     pair.type = specializedType.toBoolean();
     return pair;

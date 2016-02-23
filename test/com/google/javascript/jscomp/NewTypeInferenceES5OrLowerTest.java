@@ -2858,6 +2858,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    var /** number */ n = x;",
         "  }",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** {prop: {prop2: (string|number)}} */ x) {",
+        "  if (typeof x.prop.prop2 === 'string') {",
+        "  } else if (typeof x.prop.prop2 === 'number') {",
+        "  }",
+        "}"));
   }
 
   public void testAssignWithOp() {
