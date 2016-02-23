@@ -543,8 +543,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** (number|string|null) */ x) {",
         "  typeof x === 'string' && x;",
         "  x < 'asdf';",
-        "}"),
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        "}"));
 
     typeCheck(LINE_JOINER.join(
         "function f(/** (null|number) */ x, /** (null|number) */ y) {",
@@ -735,8 +734,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck("function f(x, y) { x < y; }");
 
     typeCheck(
-        "var x = 1; var y = true ? 1 : 'str'; x < y;",
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        "var x = 1; var y = true ? 1 : 'str'; x < y;");
 
     typeCheck(
         "var x = 'str'; var y = 1; x < y;",
@@ -757,6 +755,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var y = x, z = 7;",
         "  y < z;",
         "}"));
+
+    typeCheck("new Date(1) > new Date(0);");
   }
 
   public void testFunctionJsdoc() {

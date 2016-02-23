@@ -1735,23 +1735,13 @@ final class NewTypeInference implements CompilerPass {
     }
     JSType lhsType = lhsPair.type;
     JSType rhsType = rhsPair.type;
-    if (!lhsType.isSubtypeOf(JSType.TOP_SCALAR)
-        || !rhsType.isSubtypeOf(JSType.TOP_SCALAR)
-        || !areCompatibleScalarTypes(lhsType, rhsType)) {
-      warnInvalidOperand(expr, expr.getType(), "matching scalar types",
+    if (!lhsType.isSubtypeOf(rhsType) && !rhsType.isSubtypeOf(lhsType)
+        && !(lhsType.isBoolean() && rhsType.isBoolean())) {
+      warnInvalidOperand(expr, expr.getType(), "matching types",
           lhsType + ", " + rhsType);
     }
     rhsPair.type = JSType.BOOLEAN;
     return rhsPair;
-  }
-
-  private boolean areCompatibleScalarTypes(JSType lhs, JSType rhs) {
-    return lhs.isBottom() || rhs.isBottom()
-        || lhs.isUnknown() || rhs.isUnknown()
-        || lhs.isBoolean() && rhs.isBoolean()
-        || lhs.isSubtypeOf(JSType.NUMBER) && rhs.isSubtypeOf(JSType.NUMBER)
-        || lhs.isSubtypeOf(JSType.STRING) && rhs.isSubtypeOf(JSType.STRING)
-        || lhs.equals(rhs);
   }
 
   private EnvTypePair analyzeHookFwd(
