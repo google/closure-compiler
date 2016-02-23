@@ -5873,8 +5873,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  function f(x, y) {}",
         "  f(x, 5);",
         "}",
-        "g('asdf');"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "g('asdf');"));
 
     typeCheck(LINE_JOINER.join(
         "function g(/** ? */ x) {",
@@ -6061,6 +6060,30 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "} else {",
         "  f(y)",
         "}"));
+
+    // Instantiating with ? causes the other types to be forgotten
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " * @param {T} z",
+        " * @return {T}",
+        " */",
+        "function f(x, y, z) { return x; }",
+        "var /** null */ n = f(/** @type {?} */ (null), 1, 'asdf');"));
+
+    // Instantiating with ? causes the other types to be forgotten
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " * @param {T} z",
+        " * @return {T}",
+        " */",
+        "function f(x, y, z) { return x; }",
+        "var /** null */ n = f(1, 'asdf', /** @type {?} */ (null));"));
   }
 
   public void testGenericReturnType() {
@@ -6272,8 +6295,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var /** boolean */ y = true;",
         "  f(x, y);",
         "}",
-        "g('str');"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "g('str');"));
 
     typeCheck(LINE_JOINER.join(
         "/**",

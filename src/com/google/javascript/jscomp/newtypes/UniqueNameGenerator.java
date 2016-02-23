@@ -44,10 +44,14 @@ public class UniqueNameGenerator {
       return names.contains(name) ? name : null;
     }
     for (String name2 : names) {
-      if (name.equals(name2.substring(0, name2.indexOf('#')))) {
+      if (name.equals(getOriginalName(name2))) {
         return name2;
       }
     }
     return null;
+  }
+
+  public static String getOriginalName(String name) {
+    return name.substring(0, name.indexOf('#'));
   }
 }

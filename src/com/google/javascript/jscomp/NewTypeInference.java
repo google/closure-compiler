@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.TypeEnv;
+import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -2312,8 +2313,10 @@ final class NewTypeInference implements CompilerPass {
       Collection<JSType> types = typeMultimap.get(typeParam);
       if (types.size() > 1) {
         if (isFwd) {
-          warnings.add(JSError.make(callNode, NOT_UNIQUE_INSTANTIATION,
-                  funType.toString(), typeParam, types.toString()));
+          warnings.add(JSError.make(
+              callNode, NOT_UNIQUE_INSTANTIATION, funType.toString(),
+              UniqueNameGenerator.getOriginalName(typeParam),
+              types.toString()));
         }
         builder.put(typeParam, JSType.UNKNOWN);
       } else if (types.size() == 1) {

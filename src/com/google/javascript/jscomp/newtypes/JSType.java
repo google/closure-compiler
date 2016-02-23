@@ -609,7 +609,12 @@ public abstract class JSType implements TypeI {
     Preconditions.checkNotNull(type);
     Set<JSType> typesToRemove = new LinkedHashSet<>();
     for (JSType other : typeMultimap.get(typeParam)) {
-      if (type == null) {
+      if (type.isUnknown()) {
+        typesToRemove.add(other);
+        continue;
+      }
+      if (other.isUnknown()) {
+        type = null;
         break;
       }
       // The only way to instantiate with a loose type is if there are no
@@ -631,6 +636,7 @@ public abstract class JSType implements TypeI {
         typesToRemove.add(other);
       } else if (type.isSubtypeOf(other, SubtypeCache.create())) {
         type = null;
+        break;
       }
     }
     for (JSType typeToRemove : typesToRemove) {
@@ -1302,7 +1308,7 @@ public abstract class JSType implements TypeI {
                 tags &= ~UNDEFINED_MASK;
                 continue;
               case TYPEVAR_MASK:
-                builder.append(getTypeVar().substring(0, getTypeVar().indexOf('#')));
+                builder.append(UniqueNameGenerator.getOriginalName(getTypeVar()));
                 tags &= ~TYPEVAR_MASK;
                 continue;
               case NON_SCALAR_MASK: {
