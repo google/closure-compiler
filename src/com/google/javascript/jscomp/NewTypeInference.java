@@ -2037,7 +2037,7 @@ final class NewTypeInference implements CompilerPass {
       }
     }
     pair = analyzeExprFwd(index, pair.env);
-    pair.type = requiredType;
+    pair.type = JSType.UNKNOWN;
     return pair;
   }
 

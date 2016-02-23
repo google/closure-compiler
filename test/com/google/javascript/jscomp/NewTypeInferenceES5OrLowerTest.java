@@ -4700,6 +4700,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  return x['prop'] - 5;",
         "}",
         "f({});"));
+
+    // Used to spuriously warn b/c we can't specialize the receiver of a
+    // computed access to a useful type.
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x, id) {",
+        "  var serviceHolder = x[id];",
+        "  if (typeof serviceHolder[0].dispose != 'undefined') {}",
+        "}"));
   }
 
   public void testNamespaces() {
