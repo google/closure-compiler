@@ -524,13 +524,15 @@ final class NewTypeInference implements CompilerPass {
       }
       // In the rare case when there is a local variable named "arguments",
       // this entry will be overwritten in the foreach loop below.
-      env = envPutType(env, "arguments", commonTypes.getArgumentsArrayType());
-      // TODO(dimvar): when the function has var_args with a declared type, we
-      // could do better here. We used to do this by special-casing the
-      // arguments array, which is ugly.
-      // Maybe we can change the externs so that Arguments is IArrayLike<T>
-      // instead of IArrayLike<?>, and then we can just instantiate it to the
-      // precise type here.
+      JSType argumentsType;
+      DeclaredFunctionType dft = currentScope.getDeclaredFunctionType();
+      if (dft.getOptionalArity() == 0 && dft.hasRestFormals()) {
+        argumentsType = dft.getRestFormalsType();
+      } else {
+        argumentsType = JSType.UNKNOWN;
+      }
+      env = envPutType(env, "arguments",
+          commonTypes.getArgumentsArrayType(argumentsType));
     }
     for (String varName : varNames) {
       if (!locals.contains(varName) || !currentScope.isFunctionNamespace(varName)) {

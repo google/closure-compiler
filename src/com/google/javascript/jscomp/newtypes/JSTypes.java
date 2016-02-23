@@ -112,6 +112,20 @@ public final class JSTypes {
     return result;
   }
 
+  public JSType getArgumentsArrayType(JSType t) {
+    if (this.arguments == null) {
+      return JSType.UNKNOWN;
+    }
+    ImmutableList<String> typeParams = this.arguments.getTypeParameters();
+    JSType result = this.arguments.getInstanceAsJSType();
+    // typeParams can be != 1 in old externs files :-S
+    if (typeParams.size() == 1) {
+      String typeParam = Iterables.getOnlyElement(typeParams);
+      result = result.substituteGenerics(ImmutableMap.of(typeParam, t));
+    }
+    return result;
+  }
+
   public JSType getRegexpType() {
     return regexpInstance != null ? regexpInstance : JSType.UNKNOWN;
   }
@@ -144,7 +158,7 @@ public final class JSTypes {
   }
 
   public JSType getArgumentsArrayType() {
-    return this.arguments.getInstanceAsJSType();
+    return getArgumentsArrayType(JSType.UNKNOWN);
   }
 
   public void setArgumentsType(RawNominalType arguments) {

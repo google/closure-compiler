@@ -12913,24 +12913,22 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  return arguments - 1;",
         "}"));
 
-    // TODO(dimvar): uncomment these when we handle typed varargs more precisely
+    typeCheck(LINE_JOINER.join(
+        "/** @param {string} var_args */",
+        "function f(var_args) {",
+        "  return arguments[0];",
+        "}",
+        "f('asdf') - 5;"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
-    // typeCheck(LINE_JOINER.join(
-    //     "/** @param {string} var_args */",
-    //     "function f(var_args) {",
-    //     "  return arguments[0];",
-    //     "}",
-    //     "f('asdf') - 5;"),
-    //     NewTypeInference.INVALID_OPERAND_TYPE);
-
-    // typeCheck(LINE_JOINER.join(
-    //     "/** @param {string} var_args */",
-    //     "function f(var_args) {",
-    //     "  var x = arguments;",
-    //     "  return x[0];",
-    //     "}",
-    //     "f('asdf') - 5;"),
-    //     NewTypeInference.INVALID_OPERAND_TYPE);
+    typeCheck(LINE_JOINER.join(
+        "/** @param {string} var_args */",
+        "function f(var_args) {",
+        "  var x = arguments;",
+        "  return x[0];",
+        "}",
+        "f('asdf') - 5;"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(LINE_JOINER.join(
         "function f(x, i) {",
