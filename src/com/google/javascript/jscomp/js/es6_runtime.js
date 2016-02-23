@@ -165,7 +165,7 @@
 };
 /**@template INPUT,OUTPUT,THIS
 
-@param {(!IArrayLike<INPUT>|!Iterator<INPUT>|!Iterable<INPUT>|!Array<INPUT>)} arrayLike
+@param {(!IArrayLike<INPUT>|!Iterator<INPUT>|!Iterable<INPUT>)} arrayLike
 @param {function(this:THIS,INPUT):OUTPUT=} opt_mapFn
 @param {THIS=} opt_thisArg
 @return {!Array<OUTPUT>} */$jscomp.array.from = function(arrayLike, opt_mapFn, opt_thisArg) {

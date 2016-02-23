@@ -429,7 +429,7 @@ class DisambiguateProperties implements CompilerPass {
         String field = n.getLastChild().getString();
         JSType type = getType(n.getFirstChild());
         Property prop = getProperty(field);
-        if (isInvalidatingType(type)) {
+        if (isInvalidatingType(type) || isStructuralInterfacePrototype(type)) {
           prop.invalidate();
         } else if (!prop.skipRenaming) {
           prop.addTypeToSkip(type);
@@ -442,6 +442,11 @@ class DisambiguateProperties implements CompilerPass {
           }
         }
       }
+    }
+
+    private boolean isStructuralInterfacePrototype(JSType type) {
+      return type.isFunctionPrototypeType()
+          && type.toObjectType().getOwnerFunction().isStructuralInterface();
     }
   }
 

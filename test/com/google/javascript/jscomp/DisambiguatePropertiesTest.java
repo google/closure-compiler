@@ -1630,6 +1630,27 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(js, output, "{}");
   }
 
+  public void testStructuralInterfacesInExterns() {
+    String externs =
+        LINE_JOINER.join(
+            "/** @record */",
+            "var I = function() {};",
+            "/** @return {string} */",
+            "I.prototype.baz = function() {};");
+
+    String js =
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Bar() {}",
+            "Bar.prototype.baz = function() { return ''; };",
+            "",
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.baz = function() { return ''; };");
+
+    testSets(externs, js, js, "{}");
+  }
+
   public void testErrorOnProtectedProperty() {
     testError("function addSingletonGetter(foo) { foo.foobar = 'a'; };",
          DisambiguateProperties.Warnings.INVALIDATION);

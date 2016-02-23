@@ -9143,3 +9143,24 @@ chrome.inlineInstallPrivate = {};
  *     (2) an error code in case of error
  */
 chrome.inlineInstallPrivate.install = function(id, opt_callback) {};
+
+/**
+ * @const
+ * @see https://goo.gl/7dvJFW
+ */
+chrome.wallpaper = {};
+
+/**
+ * Sets wallpaper to the image at url or wallpaperData with the specified
+ * layout.
+ * @param {{
+ *    data: (ArrayBuffer|undefined),
+ *    url: (string|undefined),
+ *    layout: string,
+ *    filename: string,
+ *    thumbnail: (boolean|undefined)
+ *  }} details
+ * @param {function(ArrayBuffer=)} callback
+ *
+ */
+ chrome.wallpaper.setWallpaper = function(details, callback) {};
