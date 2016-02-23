@@ -70,16 +70,57 @@ public final class NominalType {
     return typeMap;
   }
 
+  JSType getIndexType() {
+    if (isIObject()) {
+      return this.typeMap.get(this.rawType.getTypeParameters().get(0));
+    }
+    // This type is a subtype of all indexed types it inherits from,
+    // and we use contravariance for the key of the index operation,
+    // so we join here.
+    JSType result = JSType.BOTTOM;
+    for (NominalType interf : getInstantiatedInterfaces()) {
+      JSType tmp = interf.getIndexType();
+      if (tmp != null) {
+        result = JSType.join(result, tmp);
+      }
+    }
+    return result.isBottom() ? null : result;
+  }
+
+  JSType getIndexedType() {
+    if (isIObject()) {
+      return this.typeMap.get(this.rawType.getTypeParameters().get(1));
+    }
+    // This type is a subtype of all indexed types it inherits from,
+    // and we use covariance for the value of the index operation,
+    // so we meet here.
+    JSType result = JSType.TOP;
+    // We need this because the index type may explicitly be TOP.
+    boolean foundIObject = false;
+    for (NominalType interf : getInstantiatedInterfaces()) {
+      JSType tmp = interf.getIndexedType();
+      if (tmp != null) {
+        foundIObject = true;
+        result = JSType.meet(result, tmp);
+      }
+    }
+    return foundIObject ? result : null;
+  }
+
   boolean isClassy() {
     return !isFunction() && !isBuiltinObject();
   }
 
   boolean isFunction() {
-    return "Function".equals(this.rawType.name);
+    return this.rawType.isBuiltinWithName("Function");
   }
 
   public boolean isBuiltinObject() {
-    return "Object".equals(this.rawType.name);
+    return this.rawType.isBuiltinWithName("Object");
+  }
+
+  private boolean isIObject() {
+    return this.rawType.isBuiltinWithName("IObject");
   }
 
   public boolean isStruct() {

@@ -54,6 +54,7 @@ public final class JSTypes {
   private RawNominalType builtinObject;
   private RawNominalType builtinFunction;
   private RawNominalType arguments;
+  private RawNominalType iObject;
 
   private JSTypes() {}
 
@@ -90,10 +91,11 @@ public final class JSTypes {
   }
 
   public NominalType getObjectType() {
-    if (builtinObject == null) {
-      return null;
-    }
-    return builtinObject.getAsNominalType();
+    return this.builtinObject == null ? null : this.builtinObject.getAsNominalType();
+  }
+
+  public NominalType getIObjectType() {
+    return this.iObject == null ? null : this.iObject.getAsNominalType();
   }
 
   public JSType getArrayInstance(JSType t) {
@@ -102,6 +104,7 @@ public final class JSTypes {
     }
     ImmutableList<String> typeParams = arrayType.getTypeParameters();
     JSType result = arrayType.getInstanceAsJSType();
+    // typeParams can be != 1 in old externs files :-S
     if (typeParams.size() == 1) {
       String typeParam = Iterables.getOnlyElement(typeParams);
       result = result.substituteGenerics(ImmutableMap.of(typeParam, t));
@@ -159,6 +162,10 @@ public final class JSTypes {
 
   public void setArrayType(RawNominalType arrayType) {
     this.arrayType = arrayType;
+  }
+
+  public void setIObjectType(RawNominalType iObject) {
+    this.iObject = iObject;
   }
 
   public void setRegexpInstance(JSType regexpInstance) {

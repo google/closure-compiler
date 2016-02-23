@@ -73,9 +73,9 @@ final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticType INVALID_OPERAND_TYPE = DiagnosticType.warning(
       "JSC_NTI_INVALID_OPERAND_TYPE",
-      "Invalid type(s) for operator {0}.\n" +
-      "expected : {1}\n" +
-      "found    : {2}\n");
+      "Invalid type(s) for operator {0}.\n"
+      + "expected : {1}\n"
+      + "found    : {2}\n");
 
   static final DiagnosticType RETURN_NONDECLARED_TYPE = DiagnosticType.warning(
       "JSC_NTI_RETURN_NONDECLARED_TYPE",
@@ -130,10 +130,18 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_FAILED_TO_UNIFY",
           "Could not instantiate type {0} with {1}.");
 
-  static final DiagnosticType NON_NUMERIC_ARRAY_INDEX =
+  static final DiagnosticType INVALID_INDEX_TYPE =
       DiagnosticType.warning(
-          "JSC_NTI_NON_NUMERIC_ARRAY_INDEX",
-          "Expected numeric array index but found {0}.");
+          "JSC_NTI_INVALID_INDEX_TYPE",
+          "Invalid type for index.\n"
+          + "expected : {0}\n"
+          + "found    : {1}\n");
+
+  static final DiagnosticType BOTTOM_INDEX_TYPE =
+      DiagnosticType.warning(
+          "JSC_NTI_BOTTOM_INDEX_TYPE",
+          "This IObject {0} cannot be accessed with a valid type.\n"
+          + " Usually the result of a bad union type.\n");
 
   static final DiagnosticType INVALID_OBJLIT_PROPERTY_TYPE =
       DiagnosticType.warning(
@@ -261,6 +269,7 @@ final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
+      BOTTOM_INDEX_TYPE,
       BOTTOM_PROP,
       CANNOT_BIND_CTOR,
       CONST_PROPERTY_REASSIGNED,
@@ -285,7 +294,7 @@ final class NewTypeInference implements CompilerPass {
       INVALID_THIS_TYPE_IN_BIND,
       MISSING_RETURN_STATEMENT,
       MISTYPED_ASSIGN_RHS,
-      NON_NUMERIC_ARRAY_INDEX,
+      INVALID_INDEX_TYPE,
       NOT_A_CONSTRUCTOR,
       NOT_CALLABLE,
       NOT_UNIQUE_INSTANTIATION,
@@ -326,14 +335,11 @@ final class NewTypeInference implements CompilerPass {
   private JSTypes commonTypes;
   // RETVAL_ID is used when we calculate the summary type of a function
   private static final String RETVAL_ID = "%return";
-  // Used for typing the elements of the arguments array
-  private static final String ARGSARRAYELM_ID = "%arguments_elm";
   private static final String THIS_ID = "this";
   private static final String GETTER_PREFIX = "%getter_fun";
   private static final String SETTER_PREFIX = "%setter_fun";
   private final String ABSTRACT_METHOD_NAME;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
-  private static final QualifiedName NUMERIC_INDEX = new QualifiedName("0");
 
   // Used only for development
   private static boolean showDebuggingPrints = false;
@@ -393,15 +399,6 @@ final class NewTypeInference implements CompilerPass {
     if (currentUsedMem > peakMem) {
       peakMem = currentUsedMem;
     }
-  }
-
-  private boolean isArrayType(JSType t) {
-    if (commonTypes.getArrayInstance().isUnknown() // no externs
-        || t.isUnknown() || t.isLoose()
-        || t.isEnumElement() && t.getEnumeratedType().isUnknown()) {
-      return false;
-    }
-    return t.isSubtypeOf(commonTypes.getArrayInstance());
   }
 
   private static void println(Object ... objs) {
@@ -528,11 +525,12 @@ final class NewTypeInference implements CompilerPass {
       // In the rare case when there is a local variable named "arguments",
       // this entry will be overwritten in the foreach loop below.
       env = envPutType(env, "arguments", commonTypes.getArgumentsArrayType());
-      JSType argsArrayElmType = JSType.UNKNOWN;
-      if (currentScope.getDeclaredFunctionType().hasRestFormals()) {
-        argsArrayElmType = currentScope.getDeclaredFunctionType().getRestFormalsType();
-      }
-      env = envPutType(env, ARGSARRAYELM_ID, argsArrayElmType);
+      // TODO(dimvar): when the function has var_args with a declared type, we
+      // could do better here. We used to do this by special-casing the
+      // arguments array, which is ugly.
+      // Maybe we can change the externs so that Arguments is IArrayLike<T>
+      // instead of IArrayLike<?>, and then we can just instantiate it to the
+      // precise type here.
     }
     for (String varName : varNames) {
       if (!locals.contains(varName) || !currentScope.isFunctionNamespace(varName)) {
@@ -2020,20 +2018,12 @@ final class NewTypeInference implements CompilerPass {
     JSType recvType = pair.type.autobox();
     if (!mayWarnAboutNonObject(receiver, recvType, specializedType)
         && !mayWarnAboutStructPropAccess(receiver, recvType)) {
-      if (isArrayType(recvType) || recvType.equals(commonTypes.getArgumentsArrayType())) {
-        pair = analyzeExprFwd(index, pair.env, JSType.NUMBER);
-        if (!commonTypes.isNumberScalarOrObj(pair.type)) {
-          warnings.add(JSError.make(
-              index, NewTypeInference.NON_NUMERIC_ARRAY_INDEX,
-              pair.type.toString()));
-        }
-        if (isArrayType(recvType)) {
-          pair.type = getArrayElementType(recvType);
-          Preconditions.checkState(pair.type != null,
-              "Array type %s has no element type at node: %s", recvType, expr);
-        } else {
-          pair.type = envGetType(pair.env, ARGSARRAYELM_ID);
-        }
+      JSType indexType = recvType.getIndexType();
+      if (indexType != null) {
+        pair = analyzeExprFwd(
+            index, pair.env, indexType.isBottom() ? JSType.UNKNOWN : indexType);
+        mayWarnAboutBadIObjectIndex(index, recvType, pair.type, indexType);
+        pair.type = recvType.getIndexedType();
         return pair;
       } else if (index.isString()) {
         return analyzePropAccessFwd(receiver, index.getString(), inEnv,
@@ -2759,6 +2749,22 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
+  private boolean mayWarnAboutBadIObjectIndex(Node n, JSType iobjectType,
+      JSType foundIndexType, JSType requiredIndexType) {
+    if (requiredIndexType.isBottom()) {
+      warnings.add(JSError.make(
+          n, NewTypeInference.BOTTOM_INDEX_TYPE, iobjectType.toString()));
+      return true;
+    }
+    if (!foundIndexType.isSubtypeOf(requiredIndexType)) {
+      warnings.add(JSError.make(
+          n, NewTypeInference.INVALID_INDEX_TYPE,
+          requiredIndexType.toString(), foundIndexType.toString()));
+      return true;
+    }
+    return false;
+  }
+
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
       TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     QualifiedName propQname = new QualifiedName(pname);
@@ -3333,12 +3339,6 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(tmpEnv, retType);
   }
 
-  private JSType getArrayElementType(JSType arrayType) {
-    Preconditions.checkState(
-        isArrayType(arrayType), "Expected array but found %s", arrayType);
-    return arrayType.getProp(NUMERIC_INDEX);
-  }
-
   private EnvTypePair analyzeGetElemBwd(
       Node expr, TypeEnv outEnv, JSType requiredType) {
     Node receiver = expr.getFirstChild();
@@ -3346,18 +3346,14 @@ final class NewTypeInference implements CompilerPass {
     JSType reqObjType = pickReqObjType(expr);
     EnvTypePair pair = analyzeExprBwd(receiver, outEnv, reqObjType);
     JSType recvType = pair.type;
-    if (isArrayType(recvType) || recvType.equals(commonTypes.getArgumentsArrayType())) {
-      pair = analyzeExprBwd(index, pair.env, JSType.NUMBER);
-      if (isArrayType(recvType)) {
-        pair.type = getArrayElementType(recvType);
-      } else {
-        pair.type = envGetType(pair.env, ARGSARRAYELM_ID);
-      }
+    JSType indexType = recvType.getIndexType();
+    if (indexType != null) {
+      pair = analyzeExprBwd(index, pair.env, indexType);
+      pair.type = recvType.getIndexedType();
       return pair;
     }
     if (index.isString()) {
-      return analyzePropAccessBwd(
-          receiver, index.getString(), outEnv, requiredType);
+      return analyzePropAccessBwd(receiver, index.getString(), outEnv, requiredType);
     }
     pair = analyzeExprBwd(index, outEnv);
     pair = analyzeExprBwd(receiver, pair.env, reqObjType);
@@ -3692,9 +3688,10 @@ final class NewTypeInference implements CompilerPass {
           lvalResult = new LValueResultFwd(pair.env, type, null, null);
           break;
         }
-        // (1) A getelem where the receiver is an array
-        if (isArrayType(recvLvalue.type)) {
-          lvalResult = analyzeArrayElmLvalFwd(prop, recvLvalue);
+        JSType indexType = recvLvalue.type.getIndexType();
+        // (1) A getelem where the receiver is an IObject
+        if (expr.isGetElem() && indexType != null) {
+          lvalResult = analyzeIObjectElmLvalFwd(prop, recvLvalue, indexType);
           break;
         }
         // (2) A getelem where the prop is a string literal is like a getprop
@@ -3730,21 +3727,19 @@ final class NewTypeInference implements CompilerPass {
     return lvalResult;
   }
 
-  private LValueResultFwd analyzeArrayElmLvalFwd(
-      Node prop, LValueResultFwd lvalue) {
-    EnvTypePair pair = analyzeExprFwd(prop, lvalue.env, JSType.NUMBER);
-    if (!pair.type.isNumber()) {
-      // Some unknown computed property; don't treat as element access.
+  private LValueResultFwd analyzeIObjectElmLvalFwd(
+      Node prop, LValueResultFwd recvLvalue, JSType indexType) {
+    EnvTypePair pair = analyzeExprFwd(
+        prop, recvLvalue.env, indexType.isBottom() ? JSType.UNKNOWN : indexType);
+    if (mayWarnAboutBadIObjectIndex(prop, recvLvalue.type, pair.type, indexType)) {
       return new LValueResultFwd(pair.env, JSType.UNKNOWN, null, null);
     }
-    JSType inferred = getArrayElementType(lvalue.type);
+    JSType inferred = recvLvalue.type.getIndexedType();
     JSType declared = null;
-    if (lvalue.declType != null) {
+    if (recvLvalue.declType != null) {
       JSType receiverAdjustedDeclType =
-          lvalue.declType.removeType(JSType.NULL_OR_UNDEF);
-      if (isArrayType(receiverAdjustedDeclType)) {
-        declared = getArrayElementType(receiverAdjustedDeclType);
-      }
+          recvLvalue.declType.removeType(JSType.NULL_OR_UNDEF);
+      declared = receiverAdjustedDeclType.getIndexedType();
     }
     return new LValueResultFwd(pair.env, inferred, declared, null);
   }

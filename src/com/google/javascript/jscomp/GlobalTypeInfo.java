@@ -980,11 +980,11 @@ class GlobalTypeInfo implements CompilerPass {
         Node defSite, Node nameNode, JSDocInfo fnDoc, boolean isRedeclaration) {
       Preconditions.checkState(nameNode == null || nameNode.isQualifiedName());
       if (fnDoc != null && fnDoc.isConstructorOrInterface()) {
-        QualifiedName qname = QualifiedName.fromNode(nameNode);
-        if (qname == null) {
+        if (nameNode == null) {
           warnings.add(JSError.make(defSite, ANONYMOUS_NOMINAL_TYPE));
           return;
         }
+        String qname = nameNode.getQualifiedName();
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String typeParam : fnDoc.getTemplateTypeNames()) {
           builder.add(varNameGen.getNextName(typeParam));
@@ -1014,7 +1014,7 @@ class GlobalTypeInfo implements CompilerPass {
           if (nameNode.isGetProp()) {
             defSite.getParent().getFirstChild().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
           } else if (currentScope.isTopLevel()) {
-            maybeRecordBuiltinType(nameNode.getString(), rawNominalType);
+            maybeRecordBuiltinType(qname, rawNominalType);
           }
           currentScope.addNominalType(nameNode, rawNominalType);
         }
@@ -1053,6 +1053,9 @@ class GlobalTypeInfo implements CompilerPass {
           break;
         case "Array":
           commonTypes.setArrayType(rawNominalType);
+          break;
+        case "IObject":
+          commonTypes.setIObjectType(rawNominalType);
           break;
       }
     }

@@ -416,6 +416,44 @@ public abstract class JSType implements TypeI {
     return true;
   }
 
+  // Returns null if this type doesn't inherit from IObject
+  public JSType getIndexType() {
+    if (getMask() != NON_SCALAR_MASK) {
+      return null;
+    }
+    // This (union) type is a supertype of all indexed types in the union.
+    // Different from NominalType#getIndexType, which uses join.
+    JSType result = TOP;
+    // We need this because the index type may explicitly be TOP.
+    boolean foundIObject = false;
+    for (ObjectType objType : getObjs()) {
+      JSType tmp = objType.getNominalType().getIndexType();
+      if (tmp == null) {
+        return null;
+      }
+      foundIObject = true;
+      result = meet(result, tmp);
+    }
+    return foundIObject ? result : null;
+  }
+
+  // May be called for types that include non-objects, and we ignore the
+  // non-object parts in those cases.
+  public JSType getIndexedType() {
+    if ((getMask() & NON_SCALAR_MASK) == 0) {
+      return null;
+    }
+    JSType result = BOTTOM;
+    for (ObjectType objType : getObjs()) {
+      JSType tmp = objType.getNominalType().getIndexedType();
+      if (tmp == null) {
+        return null;
+      }
+      result = join(result, tmp);
+    }
+    return result.isBottom() ? null : result;
+  }
+
   public boolean mayBeDict() {
     for (ObjectType objType : getObjs()) {
       if (objType.isDict()) {
@@ -835,7 +873,7 @@ public abstract class JSType implements TypeI {
     return t;
   }
 
-  public static JSType meetHelper(JSType lhs, JSType rhs) {
+  private static JSType meetHelper(JSType lhs, JSType rhs) {
     if (lhs.isTop()) {
       return rhs;
     } else if (rhs.isTop()) {
@@ -844,6 +882,8 @@ public abstract class JSType implements TypeI {
       return rhs;
     } else if (rhs.isUnknown()) {
       return lhs;
+    } else if (lhs.isBottom() || rhs.isBottom()) {
+      return BOTTOM;
     }
     int newMask = lhs.getMask() & rhs.getMask();
     String newTypevar;
