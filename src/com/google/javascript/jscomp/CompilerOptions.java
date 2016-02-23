@@ -1591,10 +1591,10 @@ public class CompilerOptions {
     Preconditions.checkNotNull(entryPoints);
     setManageClosureDependencies(true);
 
-    List<DependencyOptions.ModuleIdentifier> normalizedEntryPoints = new ArrayList<>();
+    List<ModuleIdentifier> normalizedEntryPoints = new ArrayList<>();
 
     for (String entryPoint : entryPoints) {
-      normalizedEntryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
+      normalizedEntryPoints.add(ModuleIdentifier.forClosure(entryPoint));
     }
 
     dependencyOptions.setEntryPoints(normalizedEntryPoints);

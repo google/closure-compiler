@@ -166,7 +166,7 @@ public final class JSModuleGraphTest extends TestCase {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
-    depOptions.setEntryPoints(ImmutableList.<DependencyOptions.ModuleIdentifier>of());
+    depOptions.setEntryPoints(ImmutableList.<ModuleIdentifier>of());
     depOptions.setEs6ModuleOrder(es6ModuleOrder);
     List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
@@ -194,7 +194,7 @@ public final class JSModuleGraphTest extends TestCase {
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
     depOptions.setEntryPoints(
-        ImmutableList.of(DependencyOptions.ModuleIdentifier.forClosure("c2")));
+        ImmutableList.of(ModuleIdentifier.forClosure("c2")));
     depOptions.setEs6ModuleOrder(es6ModuleOrder);
     List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
@@ -223,7 +223,7 @@ public final class JSModuleGraphTest extends TestCase {
     depOptions.setDependencyPruning(true);
     depOptions.setMoocherDropping(true);
     depOptions.setEntryPoints(
-        ImmutableList.of(DependencyOptions.ModuleIdentifier.forClosure("c2")));
+        ImmutableList.of(ModuleIdentifier.forClosure("c2")));
     depOptions.setEs6ModuleOrder(es6ModuleOrder);
     List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
