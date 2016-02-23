@@ -432,6 +432,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(LINE_JOINER.join(
         "var numOrNull = true ? null : 1",
         "if (null === numOrNull) { var /** null */ n = numOrNull; }"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  if (!x.prop) {",
+        "    return;",
+        "  }",
+        "  return x.prop + 123;",
+        "}"));
   }
 
   public void testUnspecializedStrictComparisons() {

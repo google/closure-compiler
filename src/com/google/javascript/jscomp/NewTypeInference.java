@@ -2788,7 +2788,10 @@ final class NewTypeInference implements CompilerPass {
 
     // First, analyze the receiver object.
     if (NodeUtil.isPropertyTest(compiler, propAccessNode)
-        && !specializedType.isFalseOrFalsy()) {
+        && !specializedType.isFalseOrFalsy()
+        // The NodeUtil method doesn't use types, so it can't see that the
+        // else branch of "if (!x.prop)" is a property test.
+        || specializedType.isTrueOrTruthy()) {
       recvReqType = reqObjType;
       if (specializedType.isTrueOrTruthy()) {
         // This handles cases like: if (x.prop1 && x.prop1.prop2) { ... }
