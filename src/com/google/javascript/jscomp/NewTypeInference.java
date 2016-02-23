@@ -1113,7 +1113,13 @@ final class NewTypeInference implements CompilerPass {
   private static boolean hasPathWithNoReturn(ControlFlowGraph<Node> cfg) {
     for (DiGraphNode<Node, ControlFlowGraph.Branch> dn :
              cfg.getDirectedPredNodes(cfg.getImplicitReturn())) {
-      if (!dn.getValue().isReturn()) {
+      Node stm = dn.getValue();
+      if (NodeUtil.isLoopStructure(stm)) {
+        Node cond = NodeUtil.getConditionExpression(stm);
+        if (!(cond != null && NodeUtil.isImpureTrue(cond))) {
+          return true;
+        }
+      } else if (!stm.isReturn()) {
         return true;
       }
     }

@@ -69,6 +69,10 @@ public final class NodeUtil {
   // Utility class; do not instantiate.
   private NodeUtil() {}
 
+  static boolean isImpureTrue(Node n) {
+    return getImpureBooleanValue(n) == TernaryValue.TRUE;
+  }
+
   /**
    * Gets the boolean value of a node that represents a expression. This method
    * effectively emulates the <code>Boolean()</code> JavaScript cast function.

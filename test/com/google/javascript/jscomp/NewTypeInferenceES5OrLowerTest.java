@@ -15937,4 +15937,28 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  x[s];",
         "}"));
   }
+
+  public void testDontWarnForMissingReturnOnInfiniteLoop() {
+    typeCheck(LINE_JOINER.join(
+        "/** @return {number} */",
+        "function f(g, i) {",
+        "  while (true) {",
+        "    if (g(i) == 0) {",
+        "      return i;",
+        "    }",
+        "    i++;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @return {number} */",
+        "function f(g, i) {",
+        "  do {",
+        "    if (g(i) == 0) {",
+        "      return i;",
+        "    }",
+        "    i++;",
+        "  } while (true);",
+        "}"));
+  }
 }

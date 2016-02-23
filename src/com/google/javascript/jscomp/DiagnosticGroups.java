@@ -298,7 +298,7 @@ public class DiagnosticGroups {
           NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE,
 //           NewTypeInference.INVALID_OPERAND_TYPE,
           NewTypeInference.INVALID_THIS_TYPE_IN_BIND,
-//           NewTypeInference.MISSING_RETURN_STATEMENT,
+          NewTypeInference.MISSING_RETURN_STATEMENT,
 //           NewTypeInference.MISTYPED_ASSIGN_RHS,
 //           NewTypeInference.NOT_A_CONSTRUCTOR,
 //           NewTypeInference.NOT_CALLABLE,
