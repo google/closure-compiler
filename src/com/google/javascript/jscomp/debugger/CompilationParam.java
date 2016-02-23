@@ -67,6 +67,19 @@ enum CompilationParam {
   },
 
   /**
+   * If true, the input language is ES6_TYPED. If false, it's ES5.
+   */
+  LANG_IN_IS_ES6_TYPED(false) {
+    @Override
+    void apply(CompilerOptions options, boolean value) {
+      options.setLanguageIn(
+          value
+              ? CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED
+              : CompilerOptions.LanguageMode.ECMASCRIPT5);
+    }
+  },
+
+  /**
    * If true, the output language is ES5. If false, we skip transpilation.
    */
   TRANSPILE(true) {
