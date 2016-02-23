@@ -61,6 +61,20 @@ Symbol.unscopables;
 
 
 /**
+ * @record
+ * @template VALUE
+ */
+function IIterableResult() {};
+
+/** @type {boolean} */
+IIterableResult.prototype.done;
+
+/** @type {VALUE} */
+IIterableResult.prototype.value;
+
+
+
+/**
  * @interface
  * @template VALUE
  */
@@ -85,7 +99,7 @@ function Iterator() {}
 
 /**
  * @param {VALUE=} value
- * @return {{value:VALUE, done:boolean}}
+ * @return {!IIterableResult<VALUE>}
  */
 Iterator.prototype.next;
 
@@ -110,20 +124,20 @@ function Generator() {}
 
 /**
  * @param {?=} opt_value
- * @return {{value:VALUE, done:boolean}}
+ * @return {!IIterableResult<VALUE>}
  * @override
  */
 Generator.prototype.next = function(opt_value) {};
 
 /**
  * @param {VALUE} value
- * @return {{value:VALUE, done:boolean}}
+ * @return {!IIterableResult<VALUE>}
  */
 Generator.prototype.return = function(value) {};
 
 /**
  * @param {?} exception
- * @return {{value:VALUE, done:boolean}}
+ * @return {!IIterableResult<VALUE>}
  */
 Generator.prototype.throw = function(exception) {};
 
