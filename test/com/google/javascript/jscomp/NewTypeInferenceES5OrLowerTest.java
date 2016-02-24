@@ -4830,6 +4830,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  return new ns.Foo('asdf');",
         "}"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // Happens when providing 'a.b.c' and explicitly defining a.b.
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "/** @const */",
+        "var a = {};",
+        "a.b = {};",
+        "/** @const */",
+        "a.b.c = {};",
+        "/** @constructor */",
+        "a.b = function() {};",
+        "}"),
+        NewTypeInference.UNKNOWN_NAMESPACE_PROPERTY);
   }
 
   public void testNamespacesInExterns() {

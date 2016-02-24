@@ -268,6 +268,12 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_UNKNOWN_TYPEOF_VALUE",
           "unknown type: {0}");
 
+  static final DiagnosticType UNKNOWN_NAMESPACE_PROPERTY =
+      DiagnosticType.warning(
+          "JSC_NTI_UNKNOWN_NAMESPACE_PROPERTY",
+          "Cannot determine the type of namespace property {0}. "
+          + "Maybe a prefix of the property name has been redefined?");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
       BOTTOM_INDEX_TYPE,
@@ -303,6 +309,7 @@ final class NewTypeInference implements CompilerPass {
       PROPERTY_ACCESS_ON_NONOBJECT,
       RETURN_NONDECLARED_TYPE,
       UNKNOWN_ASSERTION_TYPE,
+      UNKNOWN_NAMESPACE_PROPERTY,
       UNKNOWN_TYPEOF_VALUE,
       WRONG_ARGUMENT_COUNT);
 
@@ -3629,6 +3636,11 @@ final class NewTypeInference implements CompilerPass {
             && (recvType.isConstructor() || recvType.isInterfaceDefinition())) {
           FunctionType ft = recvType.getFunTypeIfSingletonObj();
           result = ft.getInstanceTypeOfCtor();
+        }
+        if (result == null) {
+          warnings.add(JSError.make(qnameNode, UNKNOWN_NAMESPACE_PROPERTY,
+                  qnameNode.getQualifiedName()));
+          return JSType.UNKNOWN;
         }
 
         Preconditions.checkNotNull(result, "Null declared type@%s", qnameNode);
