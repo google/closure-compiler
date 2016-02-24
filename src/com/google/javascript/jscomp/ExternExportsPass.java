@@ -207,7 +207,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       // Use the original parameter names so that the externs look pretty.
       Node param = paramList.getFirstChild();
       while (param != null && param.isName()) {
-        String originalName = (String) param.getProp(Node.ORIGINALNAME_PROP);
+        String originalName = param.getOriginalName();
         if (originalName != null) {
           param.setString(originalName);
         }

@@ -416,7 +416,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         // moduleName = rhs
         Node ref = moduleExportRefs.get(0);
         Node newName = IR.name(moduleName).srcref(ref);
-        newName.putProp(Node.ORIGINALNAME_PROP, ref.getQualifiedName());
+        newName.setOriginalName(ref.getQualifiedName());
         Node rhsValue = ref.getNext();
 
         if (rhsValue.isObjectLit()) {
@@ -478,7 +478,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
         Node rhsValue = ref.getNext();
         Node newName = IR.name(moduleName).srcref(ref);
-        newName.putProp(Node.ORIGINALNAME_PROP, qName);
+        newName.setOriginalName(qName);
 
         Node parent = ref.getParent();
         parent.replaceChild(ref, newName);
@@ -509,7 +509,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         script.addChildToFront(aliasNode);
 
         for (Node ref : exportRefs) {
-          ref.putProp(Node.ORIGINALNAME_PROP, ref.getString());
+          ref.setOriginalName(ref.getString());
           ref.setString(aliasName);
         }
       }
@@ -610,7 +610,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         Var var = t.getScope().getVar(name);
         if (var != null && var.isGlobal()) {
           n.setString(name + "$$" + suffix);
-          n.putProp(Node.ORIGINALNAME_PROP, name);
+          n.setOriginalName(name);
         }
       }
     }
@@ -650,7 +650,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           Var var = t.getScope().getVar(baseName);
           if (var != null && var.isGlobal()) {
             typeNode.setString(baseName + "$$" + suffix + name.substring(endIndex));
-            typeNode.putProp(Node.ORIGINALNAME_PROP, name);
+            typeNode.setOriginalName(name);
           }
         }
       }

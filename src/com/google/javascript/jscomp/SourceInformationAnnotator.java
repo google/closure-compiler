@@ -89,8 +89,8 @@ class SourceInformationAnnotator extends
   }
 
   static void setOriginalName(Node n, String name) {
-    if (!name.isEmpty() && n.getProp(Node.ORIGINALNAME_PROP) == null) {
-      n.putProp(Node.ORIGINALNAME_PROP, name);
+    if (!name.isEmpty() && n.getOriginalName() == null) {
+      n.setOriginalName(name);
     }
   }
 }

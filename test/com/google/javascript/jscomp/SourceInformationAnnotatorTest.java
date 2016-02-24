@@ -37,11 +37,11 @@ public final class SourceInformationAnnotatorTest extends CompilerTestCase {
   public void testPreserveAnnotatedName() {
     Node root = new Node(Token.SCRIPT);
     Node name = Node.newString("foo");
-    name.putProp(Node.ORIGINALNAME_PROP, "bar");
+    name.setOriginalName("bar");
     root.addChildToBack(name);
 
     NodeTraversal.traverseEs6(new Compiler(), root,
         new SourceInformationAnnotator("", false));
-    assertEquals(name.getProp(Node.ORIGINALNAME_PROP), "bar");
+    assertEquals("bar", name.getOriginalName());
   }
 }

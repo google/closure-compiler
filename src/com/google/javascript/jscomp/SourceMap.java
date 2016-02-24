@@ -128,7 +128,7 @@ public final class SourceMap {
 
     sourceFile = fixupSourceLocation(sourceFile);
 
-    String originalName = (String) node.getProp(Node.ORIGINALNAME_PROP);
+    String originalName = node.getOriginalName();
 
     // Rhino source lines are one based but for v3 source maps, we make
     // them zero based.

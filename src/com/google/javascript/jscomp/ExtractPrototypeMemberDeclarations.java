@@ -229,14 +229,8 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     // declar.lhs = x.prototype.y so first child of the first child
     // is 'x'.
     Node accessNode = declar.lhs.getFirstFirstChild();
-    Object originalName = accessNode.getProp(Node.ORIGINALNAME_PROP);
-
-    String className = "?";
-
-    if (originalName != null) {
-      className = originalName.toString();
-    }
-
+    String originalName = accessNode.getOriginalName();
+    String className = originalName != null ? originalName : "?";
     NodeUtil.setDebugInformation(name.getFirstChild(), lhs,
                                  className + ".prototype");
 

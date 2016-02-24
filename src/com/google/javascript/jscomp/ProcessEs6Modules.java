@@ -501,7 +501,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         if (var != null && var.isGlobal()) {
           // Avoid polluting the global namespace.
           n.setString(name + "$$" + suffix);
-          n.putProp(Node.ORIGINALNAME_PROP, name);
+          n.setOriginalName(name);
         } else if (var == null && importMap.containsKey(name)) {
           // Change to property access on the imported module object.
           if (parent.isCall() && parent.getFirstChild() == n) {
@@ -568,7 +568,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
               typeNode.setString(baseName + "$$" + pair.module + rest);
             }
           }
-          typeNode.putProp(Node.ORIGINALNAME_PROP, name);
+          typeNode.setOriginalName(name);
         }
       }
 

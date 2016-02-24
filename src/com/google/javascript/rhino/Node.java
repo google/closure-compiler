@@ -1216,6 +1216,15 @@ public class Node implements Serializable {
     return ((InputId) this.getProp(INPUT_ID));
   }
 
+  /** The original name of this node, if the node has been renamed. */
+  public String getOriginalName() {
+    return (String) this.getProp(ORIGINALNAME_PROP);
+  }
+
+  public void setOriginalName(String originalName) {
+    this.putProp(ORIGINALNAME_PROP, originalName);
+  }
+
   public boolean isFromExterns() {
     StaticSourceFile file = getStaticSourceFile();
     return file == null ? false : file.isExtern();

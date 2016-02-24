@@ -299,7 +299,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName() && from.equals(n.getString())) {
         n.setString(to);
-        n.putProp(Node.ORIGINALNAME_PROP, from);
+        n.setOriginalName(from);
       }
     }
   }
