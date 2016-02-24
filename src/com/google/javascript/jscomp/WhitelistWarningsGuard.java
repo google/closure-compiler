@@ -277,6 +277,10 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       }
 
       for (DiagnosticType type : warningsByType.keySet()) {
+        if (DiagnosticGroups.DEPRECATED.matches(type)) {
+          // Deprecation warnings are not raisable to error, so we don't need them in whitelists.
+          continue;
+        }
         out.append("\n# Warning ")
             .append(type.key)
             .append(": ")
