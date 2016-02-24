@@ -29,8 +29,9 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    enableNormalize();
-    enableLineNumberCheck(false);
+    super.enableNormalize();
+    super.enableLineNumberCheck(false);
+    compareJsDoc = false;
   }
 
   public void testNoRemoval() {
@@ -274,15 +275,16 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function foo() {var a = 1;}; foo(); foo();");
 
     // A more OO test
-    test(
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Person() {}; Person.prototype.run = function(a, b) {};",
-            "Person.run(1, 'a'); Person.run(2, 'a');"),
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Person() {}; Person.prototype.run = function(a) {var b = 'a'};",
-            "Person.run(1); Person.run(2);"));
+    String src =
+        "/** @constructor */" +
+        "function Person(){}; Person.prototype.run = function(a, b) {};" +
+        "Person.run(1, 'a'); Person.run(2, 'a')";
+    String expected =
+        "function Person(){}; Person.prototype.run = " +
+        "function(a) {var b = 'a'};" +
+        "Person.run(1); Person.run(2)";
+    test(src, expected);
+
   }
 
   public void testCanDeleteArgumentsAtAnyPosition() {
@@ -316,19 +318,20 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testFunctionPassedAsParam() {
-    test(
-        LINE_JOINER.join(
-            "/** @constructor */ function person() {};",
-            "person.prototype.run = function(a, b) {};",
-            "person.prototype.walk = function() {};",
-            "person.prototype.foo = function() { this.run(this.walk, 0.1); };",
-            "person.foo();"),
-        LINE_JOINER.join(
-            "/** @constructor */ function person() {};",
-            "person.prototype.run = function(a) { var b = 0.1; };",
-            "person.prototype.walk = function() {};",
-            "person.prototype.foo = function() { this.run(this.walk); };",
-            "person.foo();"));
+    String src =
+        "/** @constructor */ function person(){}; " +
+        "person.prototype.run = function(a, b) {};" +
+        "person.prototype.walk = function() {};" +
+        "person.prototype.foo = function() { this.run(this.walk, 0.1)};" +
+        "person.foo();";
+    String expected =
+        "function person(){}; person.prototype.run = function(a) {" +
+        "  var b = 0.1;};" +
+        "person.prototype.walk = function() {};" +
+        "person.prototype.foo = function() { this.run(this.walk)};" +
+        "person.foo();";
+
+    test(src, expected);
   }
 
   public void testCallIsIgnore() {
