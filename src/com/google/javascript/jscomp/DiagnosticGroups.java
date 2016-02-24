@@ -532,13 +532,15 @@ public class DiagnosticGroups {
           CheckConformance.CONFORMANCE_VIOLATION,
           CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
+  public static final DiagnosticGroup LATE_PROVIDE =
+      DiagnosticGroups.registerGroup(
+          "lateProvide", // undocumented
+          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+
   static {
     // For internal use only, so there is no constant for it.
     DiagnosticGroups.registerGroup("invalidProvide",
         ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
-
-    DiagnosticGroups.registerGroup("lateProvide",
-        ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
 
     DiagnosticGroups.registerGroup("es6Typed",
         RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);

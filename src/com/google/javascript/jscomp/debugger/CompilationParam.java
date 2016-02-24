@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.debugger;
 import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
@@ -37,8 +38,8 @@ enum CompilationParam {
     @Override
     void apply(CompilerOptions options, boolean value) {
       if (value) {
-        for (String groupName : new DiagnosticGroups().getRegisteredGroups().keySet()) {
-          options.setWarningLevel(groupName, CheckLevel.WARNING);
+        for (DiagnosticGroup group : new DiagnosticGroups().getRegisteredGroups().values()) {
+          options.setWarningLevel(group, CheckLevel.WARNING);
         }
       }
     }
@@ -127,7 +128,8 @@ enum CompilationParam {
   CHECK_MISSING_RETURN {
     @Override
     void apply(CompilerOptions options, boolean value) {
-      options.setWarningLevel("missingReturn", value ? CheckLevel.WARNING : CheckLevel.OFF);
+      options.setWarningLevel(
+          DiagnosticGroups.MISSING_RETURN, value ? CheckLevel.WARNING : CheckLevel.OFF);
     }
   },
 
