@@ -47,7 +47,8 @@ md.$bottomSheet = function() {};
  *   resolve: (!Object|undefined),
  *   controllerAs: (string|undefined),
  *   parent: (!Element|undefined),
- *   disableParentScroll: (boolean|undefined)
+ *   disableParentScroll: (boolean|undefined),
+ *   bindToController: (boolean|undefined),
  * }}
  */
 md.$bottomSheet.options;
