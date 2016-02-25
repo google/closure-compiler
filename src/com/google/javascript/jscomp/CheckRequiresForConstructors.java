@@ -53,7 +53,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   private final CodingConvention codingConvention;
 
   public static enum Mode {
-    // Looking at a single file. Externs are not present.
+    // Looking at a single file. Only a minimal set of externs are present.
     SINGLE_FILE,
     // Used during a normal compilation. The entire program + externs are available.
     FULL_COMPILE
@@ -491,6 +491,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
                 Node getprop = NodeUtil.newQName(compiler, typeString);
                 getprop.useSourceInfoIfMissingFromForTree(typeNode);
                 visitGetProp(getprop);
+              } else {
+                // Even if the root namespace is in externs, add a weak usage because the full
+                // namespace may still be goog.provided.
+                weakUsages.put(typeString, n);
               }
             }
           }
