@@ -595,6 +595,62 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(js, js, "{}");
   }
 
+  // When objects flow to untyped code, it is the programmer's responsibility to
+  // use them in a type-say way, otherwise disambiguation will be wrong.
+  public void testUntypedCodeWrongDisambiguation1() {
+    String js = ""
+        + "/** @constructor */\n"
+        + "function Foo() { this.p1 = 0; }\n"
+        + "/** @constructor */\n"
+        + "function Bar() { this.p1 = 1; }\n"
+        + "var arr = [new Foo, new Bar];\n"
+        + "var /** !Foo */ z = arr[1];\n"
+        + "z.p1;\n";
+    String output = ""
+        + "/** @constructor */ function Foo() { this.Foo$p1 = 0; }\n"
+        + "/** @constructor */ function Bar() { this.Bar$p1 = 1; }\n"
+        + "var arr = [new Foo, new Bar];\n"
+        + "var /** !Foo */z = arr[1];\n"
+        + "z.Foo$p1;\n";
+    testSets(js, output, "{p1=[[Bar], [Foo]]}");
+  }
+
+  // When objects flow to untyped code, it is the programmer's responsibility to
+  // use them in a type-say way, otherwise disambiguation will be wrong.
+  public void testUntypedCodeWrongDisambiguation2() {
+    String js = ""
+        + "/** @constructor */\n"
+        + "function Foo() { this.p1 = 0; }\n"
+        + "/** @constructor */\n"
+        + "function Bar() { this.p1 = 1; }\n"
+        + "function select(cond, x, y) { return cond ? x : y; }\n"
+        + "/**\n"
+        + " * @param {!Foo} x\n"
+        + " * @param {!Bar} y\n"
+        + " * @return {!Foo}\n"
+        + " */\n"
+        + "function f(x, y) {\n"
+        + "  var /** !Foo */ z = select(false, x, y);\n"
+        + "  return z;\n"
+        + "}\n"
+        + "f(new Foo, new Bar).p1;\n";
+    String output = ""
+        + "/** @constructor */ function Foo() { this.Foo$p1 = 0; }\n"
+        + "/** @constructor */ function Bar() { this.Bar$p1 = 1; }\n"
+        + "function select(cond, x, y) { return cond ? x : y; }\n"
+        + "/**\n"
+        + " * @param {!Foo} x\n"
+        + " * @param {!Bar} y\n"
+        + " * @return {!Foo}\n"
+        + " */\n"
+        + "function f(x, y) {\n"
+        + "  var /** !Foo */ z = select(false, x, y);\n"
+        + "  return z;\n"
+        + "}\n"
+        + "f(new Foo, new Bar).Foo$p1;\n";
+    testSets(js, output, "{p1=[[Bar], [Foo]]}");
+  }
+
   public void testEnum() {
     String js = ""
         + "/** @enum {string} */ var En = {\n"
