@@ -442,6 +442,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup SUSPICIOUS_CODE =
       DiagnosticGroups.registerGroup("suspiciousCode",
+          CheckDuplicateCase.DUPLICATE_CASE,
           CheckSuspiciousCode.SUSPICIOUS_SEMICOLON,
           CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN,
           CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR,
@@ -466,7 +467,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup("lintChecks", // undocumented
           CheckArguments.BAD_ARGUMENTS_USAGE,
-          CheckDuplicateCase.DUPLICATE_CASE,
           CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
           CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
           CheckEnums.DUPLICATE_ENUM_VALUE,

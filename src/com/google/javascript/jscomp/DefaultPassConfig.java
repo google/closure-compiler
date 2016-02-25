@@ -904,6 +904,7 @@ public final class DefaultPassConfig extends PassConfig {
       List<Callback> sharedCallbacks = new ArrayList<>();
       if (options.checkSuspiciousCode) {
         sharedCallbacks.add(new CheckSuspiciousCode());
+        sharedCallbacks.add(new CheckDuplicateCase(compiler));
       }
 
       if (options.enables(DiagnosticGroups.GLOBAL_THIS)) {
@@ -1551,7 +1552,6 @@ public final class DefaultPassConfig extends PassConfig {
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder()
           .add(new CheckArguments(compiler))
-          .add(new CheckDuplicateCase(compiler))
           .add(new CheckEmptyStatements(compiler))
           .add(new CheckEnums(compiler))
           .add(new CheckInterfaces(compiler))

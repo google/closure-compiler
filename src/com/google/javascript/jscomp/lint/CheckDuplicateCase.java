@@ -36,8 +36,6 @@ import java.util.Set;
  * This is normally an indication of a programmer error.
  *
  * Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-duplicate-case.js)
- *
- * TODO(moz): Move this into {@link CheckSuspiciousCode}.
  */
 public final class CheckDuplicateCase extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
