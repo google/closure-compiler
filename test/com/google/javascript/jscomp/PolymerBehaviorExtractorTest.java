@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
@@ -27,8 +26,6 @@ import com.google.javascript.rhino.Node;
  * Unit tests for {@link PolymerBehaviorExtractor}.
  */
 public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
-
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private PolymerBehaviorExtractor extractor;
   private Node behaviorArray;

@@ -17,13 +17,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.javascript.rhino.Node;
 
 public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
-
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private Node polymerCall;
 

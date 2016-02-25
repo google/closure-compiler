@@ -43,7 +43,6 @@ import java.util.Set;
 
 public final class TypeCheckTest extends CompilerTypeTestCase {
 
-  private static final Joiner LINE_JOINER = Joiner.on("\n");
   private static final String SUGGESTION_CLASS =
       "/** @constructor\n */\n"
       + "function Suggest() {}\n"
@@ -4043,7 +4042,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDontCrashOnDupPropDefinition() {
-    testTypes(Joiner.on('\n').join(
+    testTypes(LINE_JOINER.join(
         "/** @const */",
         "var ns = {};",
         "/** @interface */",
@@ -6123,7 +6122,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testThisTypeOfFunction5() {
-    testTypes(Joiner.on('\n').join(
+    testTypes(LINE_JOINER.join(
         "/** @type {function(this:number)} */",
         "function f() {",
         "  var /** number */ n = this;",
@@ -8156,7 +8155,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionBind6() {
-    testTypes(Joiner.on('\n').join(
+    testTypes(LINE_JOINER.join(
         "/** @constructor */",
         "function MyType() {",
         "  /** @type {number} */",
@@ -8164,14 +8163,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "  var f = function() {",
         "    this.x = 'str';",
         "  }.bind(this);",
-        "}"), Joiner.on('\n').join(
+        "}"), LINE_JOINER.join(
         "assignment to property x of MyType",
         "found   : string",
         "required: number"));
   }
 
   public void testFunctionBind7() {
-    testTypes(Joiner.on('\n').join(
+    testTypes(LINE_JOINER.join(
         "/** @constructor */",
         "function MyType() {",
         "  /** @type {number} */",
@@ -8179,14 +8178,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "}",
         "var m = new MyType;",
         "(function f() {this.x = 'str';}).bind(m);"),
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
         "assignment to property x of MyType",
         "found   : string",
         "required: number"));
   }
 
   public void testFunctionBind8() {
-    testTypes(Joiner.on('\n').join(
+    testTypes(LINE_JOINER.join(
         "/** @constructor */",
         "function MyType() {}",
         "",
@@ -8201,7 +8200,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionBind9() {
-    testTypes(Joiner.on('\n').join(
+    testTypes(LINE_JOINER.join(
         "/** @constructor */",
         "function MyType() {}",
         "",
@@ -16728,7 +16727,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
           new JSError[errors.length - 1]);
     }
     if (errors.length > 0) {
-      fail("unexpected error(s):\n" + Joiner.on("\n").join(errors));
+      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
     }
 
     JSError[] warnings = compiler.getWarnings();
@@ -16739,7 +16738,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
           new JSError[warnings.length - 1]);
     }
     if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + Joiner.on("\n").join(warnings));
+      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
     }
   }
 
@@ -16772,7 +16771,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
           new JSError[errors.length - 1]);
     }
     if (errors.length > 0) {
-      fail("unexpected error(s):\n" + Joiner.on("\n").join(errors));
+      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
     }
 
     JSError[] warnings = compiler.getWarnings();
@@ -16783,7 +16782,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
           new JSError[warnings.length - 1]);
     }
     if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + Joiner.on("\n").join(warnings));
+      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
     }
   }
 
