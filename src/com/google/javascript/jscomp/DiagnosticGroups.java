@@ -537,13 +537,16 @@ public class DiagnosticGroups {
           "lateProvide", // undocumented
           ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
 
+  // For internal use only, so there are no constants for these groups.
   static {
-    // For internal use only, so there is no constant for it.
     DiagnosticGroups.registerGroup("invalidProvide",
         ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
 
     DiagnosticGroups.registerGroup("es6Typed",
         RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
+
+    DiagnosticGroups.registerGroup("duplicateZipContents",
+        SourceFile.DUPLICATE_ZIP_CONTENTS);
   }
 
   /**

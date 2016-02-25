@@ -61,11 +61,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -110,12 +112,20 @@ import javax.annotation.Nullable;
 @GwtIncompatible("Unnecessary")
 public abstract class AbstractCommandLineRunner<A extends Compiler,
     B extends CompilerOptions> {
+
   static final DiagnosticType OUTPUT_SAME_AS_INPUT_ERROR = DiagnosticType.error(
       "JSC_OUTPUT_SAME_AS_INPUT_ERROR",
       "Bad output file (already listed as input file): {0}");
+
   static final DiagnosticType NO_TREE_GENERATED_ERROR = DiagnosticType.error(
       "JSC_NO_TREE_GENERATED_ERROR",
       "Code contains errors. No tree was generated.");
+
+  static final DiagnosticType CONFLICTING_DUPLICATE_ZIP_CONTENTS = DiagnosticType.error(
+      "JSC_CONFLICTING_DUPLICATE_ZIP_CONTENTS",
+      "Two zip entries containing conflicting contents with the same relative path.\n"
+      + "Entry 1: {0}\n"
+      + "Entry 2: {1}");
 
   static final String WAITING_FOR_INPUT_WARNING =
       "The compiler is waiting for input via stdin.";
@@ -602,6 +612,46 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
+   * Check that relative paths inside zip files are unique, since multiple files
+   * with the same path inside different zips are considered duplicate inputs.
+   * Parameter {@code sourceFiles} may be modified if duplicates are removed.
+   */
+  public static List<JSError> removeDuplicateZipEntries(List<SourceFile> sourceFiles)
+      throws IOException {
+    ImmutableList.Builder<JSError> errors = ImmutableList.builder();
+    Map<String, SourceFile> sourceFilesByName = new HashMap<>();
+    Iterator<SourceFile> fileIterator = sourceFiles.listIterator();
+    while (fileIterator.hasNext()) {
+      SourceFile sourceFile = fileIterator.next();
+      String fullPath = sourceFile.getName();
+      if (!fullPath.contains("!/")) {
+        // Not a zip file
+        continue;
+      }
+      String relativePath = fullPath.split("!")[1];
+      if (!sourceFilesByName.containsKey(relativePath)) {
+        sourceFilesByName.put(relativePath, sourceFile);
+      } else {
+        SourceFile firstSourceFile = sourceFilesByName.get(relativePath);
+        System.err.println("Traversing files: " + firstSourceFile + " and " + sourceFile);
+        if (firstSourceFile.getCode().equals(sourceFile.getCode())) {
+          Logger.getLogger(AbstractCommandLineRunner.class.getName())
+              .warning("Found duplicate zip entries with the same contents.\n"
+                  + "Entry 1: " + firstSourceFile.getName() + "\n"
+                  + "Entry 2: " + sourceFile.getName() + "\n");
+          errors.add(JSError.make(
+              SourceFile.DUPLICATE_ZIP_CONTENTS, firstSourceFile.getName(), sourceFile.getName()));
+          fileIterator.remove();
+        } else {
+          errors.add(JSError.make(
+              CONFLICTING_DUPLICATE_ZIP_CONTENTS, firstSourceFile.getName(), sourceFile.getName()));
+        }
+      }
+    }
+    return errors.build();
+  }
+
+  /**
    * Creates inputs from a list of source files, zips and json files.
    *
    * Can be overridden by subclasses who want to pull files from different
@@ -673,6 +723,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       for (JsonFileSpec jsonFile : jsonFiles) {
         inputs.add(SourceFile.fromCode(jsonFile.getPath(), jsonFile.getSrc()));
       }
+    }
+    for (JSError error : removeDuplicateZipEntries(inputs)) {
+      compiler.report(error);
     }
     return inputs;
   }
