@@ -243,6 +243,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node body = node.removeFirstChild();
 
     Node iterName = IR.name(ITER_BASE + compiler.getUniqueNameIdSupplier().get());
+    iterName.makeNonIndexable();
     Node getNext = IR.call(IR.getprop(iterName.cloneTree(), IR.string("next")));
     String variableName;
     int declType;
@@ -256,6 +257,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       variableName = variable.getFirstChild().getQualifiedName();
     }
     Node iterResult = IR.name(ITER_RESULT + variableName);
+    iterResult.makeNonIndexable();
 
     Node init = IR.var(iterName.cloneTree(), makeIterator(t, compiler, iterable));
     Node initIterResult = iterResult.cloneTree();

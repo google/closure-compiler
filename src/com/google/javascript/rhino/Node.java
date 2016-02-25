@@ -64,6 +64,7 @@ public class Node implements Serializable {
 
   public static final int
       JSDOC_INFO_PROP   = 29,     // contains a TokenStream.JSDocInfo object
+
       VAR_ARGS_NAME     = 30,     // the name node is a variable length
                                   // argument placeholder.
       INCRDECR_PROP      = 32,    // whether incrdecr is pre (false) or post (true)
@@ -136,12 +137,12 @@ public class Node implements Serializable {
       GENERIC_TYPE_LIST = 81,     // Generic type list in ES6 typed syntax.
       IMPLEMENTS = 82,            // "implements" clause in ES6 typed syntax.
       CONSTRUCT_SIGNATURE = 83,   // This node is a TypeScript ConstructSignature
-      ACCESS_MODIFIER = 84;       // TypeScript accessibility modifiers (public, protected, private)
+      ACCESS_MODIFIER = 84,       // TypeScript accessibility modifiers (public, protected, private)
+      NON_INDEXABLE = 85;         // Indicates the node should not be indexed by analysis tools.
 
   private static final String propToString(int propType) {
       switch (propType) {
         case VAR_ARGS_NAME:      return "var_args_name";
-
         case JSDOC_INFO_PROP:    return "jsdoc_info";
 
         case INCRDECR_PROP:      return "incrdecr";
@@ -188,6 +189,7 @@ public class Node implements Serializable {
         case IMPLEMENTS:       return "implements";
         case CONSTRUCT_SIGNATURE: return "construct_signature";
         case ACCESS_MODIFIER: return "access_modifier";
+        case NON_INDEXABLE:      return "non_indexable";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -1078,13 +1080,7 @@ public class Node implements Serializable {
         sb.append(" [");
         sb.append(propToString(type));
         sb.append(": ");
-        String value;
-        switch (type) {
-          default:
-            value = x.toString();
-            break;
-        }
-        sb.append(value);
+        sb.append(x);
         sb.append(']');
       }
     }
@@ -1223,6 +1219,17 @@ public class Node implements Serializable {
 
   public void setOriginalName(String originalName) {
     this.putProp(ORIGINALNAME_PROP, originalName);
+  }
+
+  /**
+   * Whether this node should be indexed by static analysis / code indexing tools.
+   */
+  public boolean isIndexable() {
+    return !this.getBooleanProp(NON_INDEXABLE);
+  }
+
+  public void makeNonIndexable() {
+    this.putBooleanProp(NON_INDEXABLE, true);
   }
 
   public boolean isFromExterns() {
