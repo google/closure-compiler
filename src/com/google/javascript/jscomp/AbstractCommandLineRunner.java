@@ -633,7 +633,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         sourceFilesByName.put(relativePath, sourceFile);
       } else {
         SourceFile firstSourceFile = sourceFilesByName.get(relativePath);
-        System.err.println("Traversing files: " + firstSourceFile + " and " + sourceFile);
         if (firstSourceFile.getCode().equals(sourceFile.getCode())) {
           Logger.getLogger(AbstractCommandLineRunner.class.getName())
               .warning("Found duplicate zip entries with the same contents.\n"
