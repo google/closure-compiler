@@ -667,6 +667,11 @@ public class CommandLineRunner extends
     )
     private List<String> entryPoints = new ArrayList<>();
 
+    @Option(name = "--rewrite_polyfills",
+        handler = BooleanOptionHandler.class,
+        usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
+    private boolean rewritePolyfills = false;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
@@ -1390,6 +1395,8 @@ public class CommandLineRunner extends
     options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
 
     options.setPreventLibraryInjection(flags.noinjectLibrary);
+
+    options.rewritePolyfills = flags.rewritePolyfills;
 
     if (!flags.translationsFile.isEmpty()) {
       try {
