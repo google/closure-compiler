@@ -596,7 +596,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   // When objects flow to untyped code, it is the programmer's responsibility to
-  // use them in a type-say way, otherwise disambiguation will be wrong.
+  // use them in a type-safe way, otherwise disambiguation will be wrong.
   public void testUntypedCodeWrongDisambiguation1() {
     String js = ""
         + "/** @constructor */\n"
@@ -616,7 +616,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   // When objects flow to untyped code, it is the programmer's responsibility to
-  // use them in a type-say way, otherwise disambiguation will be wrong.
+  // use them in a type-safe way, otherwise disambiguation will be wrong.
   public void testUntypedCodeWrongDisambiguation2() {
     String js = ""
         + "/** @constructor */\n"
