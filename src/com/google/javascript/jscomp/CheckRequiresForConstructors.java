@@ -274,6 +274,14 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     Node callee = call.getFirstChild();
     if (callee.isName()) {
       weakUsages.put(callee.getString(), callee);
+
+      if (codingConvention.isClassFactoryCall(call)) {
+        if (parent.isName()) {
+          constructors.add(parent.getString());
+        } else if (parent.isAssign()) {
+          constructors.add(parent.getFirstChild().getQualifiedName());
+        }
+      }
     }
   }
 

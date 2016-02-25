@@ -148,6 +148,12 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
         (!local && name.startsWith("_"));
   }
 
+  @Override
+  public boolean isClassFactoryCall(Node callNode) {
+    return super.isClassFactoryCall(callNode)
+        || callNode.getFirstChild().matchesQualifiedName("Polymer");
+  }
+
   /**
    * {@inheritDoc}
    *

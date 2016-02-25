@@ -136,6 +136,28 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testSameEs6(js);
   }
 
+  public void testPassPolymer() {
+    testSame(
+        LINE_JOINER.join(
+            "var Example = Polymer({});",
+            "new Example();"));
+    testSame(
+        LINE_JOINER.join(
+            "foo.bar.Example = Polymer({});",
+            "new foo.bar.Example();"));
+  }
+
+  public void testPassGoogDefineClass() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "var Example = goog.defineClass(null, {constructor() {}});",
+            "new Example();"));
+    testSameEs6(
+        LINE_JOINER.join(
+            "foo.bar.Example = goog.defineClass(null, {constructor() {}});",
+            "new foo.bar.Example();"));
+  }
+
   public void testFailEs6ClassExtends() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     String js = "var goog = {}; class SubClass extends goog.foo.Bar.Inner {}";
