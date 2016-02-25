@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
@@ -65,12 +64,9 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "goog.asserts = {};" +
       "/** @return {*} */ goog.asserts.assert = function(x) { return x; };";
 
-  /** A default set of externs for testing structural interface matching*/
-  private static final Joiner lineJoiner = Joiner.on("\n");
-
   /** A default set of externs for testing. */
   static final String DEFAULT_EXTERNS =
-      lineJoiner.join(
+      LINE_JOINER.join(
           "/**",
           " * @interface",
           " * @template KEY1, VALUE1",
@@ -169,7 +165,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       }
     }
     if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + Joiner.on("\n").join(warnings));
+      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
     }
   }
 

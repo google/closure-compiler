@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NodeSubject;
@@ -23,7 +22,6 @@ import com.google.javascript.rhino.Node;
 
 public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
   private static final String EXTERNS =
       LINE_JOINER.join(
           "/** @constructor */",
