@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -43,16 +44,33 @@ import java.util.List;
  */
 public final class JsMessageVisitorTest extends TestCase {
 
+  private static class RenameMessagesVisitor extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName() && n.getString() != null && n.getString().startsWith("MSG_")) {
+        String originalName = n.getString();
+        n.setOriginalName(originalName);
+        n.setString("some_prefix_" + originalName);
+      } else if (n.isGetProp() && parent.isAssign() && n.getQualifiedName().contains(".MSG_")) {
+        String originalName = n.getLastChild().getString();
+        n.setOriginalName(originalName);
+        n.getLastChild().setString("some_prefix_" + originalName);
+      }
+    }
+  }
+
   private CompilerOptions compilerOptions;
   private Compiler compiler;
   private List<JsMessage> messages;
   private JsMessage.Style mode;
+  private boolean renameMessages = false;
 
   @Override
   protected void setUp() throws Exception {
     messages = new LinkedList<>();
     mode = JsMessage.Style.LEGACY;
     compilerOptions = null;
+    renameMessages = false;
   }
 
   public void testJsMessageOnVar() {
@@ -433,6 +451,26 @@ public final class JsMessageVisitorTest extends TestCase {
     assertTrue(msg.isHidden());
   }
 
+  public void testExtractPropertyMessageInFunction() {
+    extractMessagesSafely(""
+        + "function f() {\n"
+        + "  /**\n"
+        + "   * @desc A message that demonstrates placeholders\n"
+        + "   * @hidden\n"
+        + "   */\n"
+        + "  a.b.MSG_SILLY = goog.getMsg(\n"
+        + "      '{$adjective} ' + '{$someNoun}',\n"
+        + "      {'adjective': adj, 'someNoun': noun});\n"
+        + "}");
+
+    assertThat(messages).hasSize(1);
+    JsMessage msg = messages.get(0);
+    assertEquals("MSG_SILLY", msg.getKey());
+    assertEquals("{$adjective} {$someNoun}", msg.toString());
+    assertEquals("A message that demonstrates placeholders", msg.getDesc());
+    assertTrue(msg.isHidden());
+  }
+
   public void testAlmostButNotExternalMessage() {
     extractMessagesSafely(
         "/** @desc External */ var MSG_EXTERNAL = goog.getMsg('External');");
@@ -623,6 +661,32 @@ public final class JsMessageVisitorTest extends TestCase {
     assertOneError(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
+  public void testRenamedMessages_var() {
+    renameMessages = true;
+
+    extractMessagesSafely(
+        "/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')");
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertEquals("MSG_HELLO", msg.getKey());
+    assertEquals("Hello", msg.getDesc());
+    assertEquals("[testcode]", msg.getSourceName());
+  }
+
+  public void testRenamedMessages_getprop() {
+    renameMessages = true;
+
+    extractMessagesSafely("/** @desc a */ pint.sub.MSG_MENU_MARK_AS_UNREAD = goog.getMsg('a')");
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertEquals("MSG_MENU_MARK_AS_UNREAD", msg.getKey());
+    assertEquals("a", msg.getDesc());
+  }
+
   private void assertNoErrors() {
     assertThat(compiler.getErrors()).isEmpty();
   }
@@ -644,6 +708,10 @@ public final class JsMessageVisitorTest extends TestCase {
     }
     Node root = compiler.parseTestCode(input);
     JsMessageVisitor visitor = new CollectMessages(compiler);
+    if (renameMessages) {
+      RenameMessagesVisitor renameMessagesVisitor = new RenameMessagesVisitor();
+      NodeTraversal.traverseEs6(compiler, root, renameMessagesVisitor);
+    }
     visitor.process(null, root);
   }
 
