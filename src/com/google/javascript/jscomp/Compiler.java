@@ -1448,7 +1448,7 @@ public class Compiler extends AbstractCompiler {
   /**
    * Hoists inputs with the @nocompile annotation out of the inputs.
    */
-  private void hoistNoCompileFiles() {
+  void hoistNoCompileFiles() {
     boolean staleInputs = false;
     for (CompilerInput input : inputs) {
       Node n = input.getAstRoot(this);

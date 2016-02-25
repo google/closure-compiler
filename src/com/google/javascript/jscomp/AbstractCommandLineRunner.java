@@ -1044,6 +1044,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       if (config.skipNormalOutputs) {
         compiler.init(externs, inputs, options);
         compiler.hoistExterns();
+        compiler.hoistNoCompileFiles();
       } else {
         result = compiler.compile(externs, inputs, options);
       }
