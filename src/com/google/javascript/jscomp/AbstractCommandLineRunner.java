@@ -278,7 +278,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   static DependencyOptions createDependencyOptions(
       CompilerOptions.DependencyMode dependencyMode,
-      List<DependencyOptions.ModuleIdentifier> entryPoints) {
+      List<ModuleIdentifier> entryPoints) {
     if (dependencyMode == CompilerOptions.DependencyMode.STRICT) {
       if (entryPoints.isEmpty()) {
         throw new FlagUsageException(
@@ -2244,13 +2244,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private List<DependencyOptions.ModuleIdentifier> entryPoints = ImmutableList.of();
+    private List<ModuleIdentifier> entryPoints = ImmutableList.of();
 
     /**
      * Set module entry points, which makes the compiler only include
      * those files and sort them in dependency order.
      */
-    CommandLineConfig setEntryPoints(List<DependencyOptions.ModuleIdentifier> entryPoints) {
+    CommandLineConfig setEntryPoints(List<ModuleIdentifier> entryPoints) {
       Preconditions.checkNotNull(entryPoints);
       this.entryPoints = entryPoints;
       return this;
@@ -2275,11 +2275,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      * Helper method to convert a list of closure entry points a list of the new
      * ModuleIdentifier values
      */
-    static List<DependencyOptions.ModuleIdentifier> entryPointsFromClosureEntryPoints(
+    static List<ModuleIdentifier> entryPointsFromClosureEntryPoints(
         List<String> closureEntryPoints) {
-      List<DependencyOptions.ModuleIdentifier> entryPoints = new ArrayList<>();
+      List<ModuleIdentifier> entryPoints = new ArrayList<>();
       for (String closureEntryPoint : closureEntryPoints) {
-        entryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(closureEntryPoint));
+        entryPoints.add(ModuleIdentifier.forClosure(closureEntryPoint));
       }
       return entryPoints;
     }
