@@ -16017,4 +16017,75 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  } while (true);",
         "}"));
   }
+
+  public void testMethodsOnClassProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "  this.m = function() {",
+        "    var /** string */ s = this.prop;",
+        "  };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.m = function(/** number */ x) {};",
+        "}",
+        "(new Foo).m(123);",
+        "(new Foo).m('asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.m = function(/** number */ x) {};",
+        "}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "(new Bar).m(123);",
+        "(new Bar).m('asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Bar() {}",
+        "/** @param {number} x */",
+        "Bar.prototype.m = function(x) {};",
+        "/** @constructor @implements {Bar} */",
+        "function Foo() {",
+        "  this.m = function(/** number */ x) {};",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Bar() {}",
+        "/** @param {number} x */",
+        "Bar.prototype.m = function(x) {};",
+        "/** @constructor @implements {Bar} */",
+        "function Foo() {",
+        "  this.m = function(/** string */ x) {};",
+        "}"),
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {function(number)} */",
+        "  this.m = function(x) {};",
+        "}",
+        "(new Foo).m('asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {null|function(number)} */",
+        "  this.m = function(x) {};",
+        "}",
+        "(new Foo).m = null;"));
+  }
 }

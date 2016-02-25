@@ -990,19 +990,19 @@ class GlobalTypeInfo implements CompilerPass {
           builder.add(varNameGen.getNextName(typeParam));
         }
         ImmutableList<String> typeParameters = builder.build();
-        RawNominalType rawNominalType;
+        RawNominalType rawType;
         if (fnDoc.usesImplicitMatch()) {
-          rawNominalType = RawNominalType.makeStructuralInterface(defSite, qname, typeParameters);
+          rawType = RawNominalType.makeStructuralInterface(defSite, qname, typeParameters);
         } else if (fnDoc.isInterface()) {
-          rawNominalType = RawNominalType.makeNominalInterface(defSite, qname, typeParameters);
+          rawType = RawNominalType.makeNominalInterface(defSite, qname, typeParameters);
         } else if (fnDoc.makesStructs()) {
-          rawNominalType = RawNominalType.makeStructClass(defSite, qname, typeParameters);
+          rawType = RawNominalType.makeStructClass(defSite, qname, typeParameters);
         } else if (fnDoc.makesDicts()) {
-          rawNominalType = RawNominalType.makeDictClass(defSite, qname, typeParameters);
+          rawType = RawNominalType.makeDictClass(defSite, qname, typeParameters);
         } else {
-          rawNominalType = RawNominalType.makeUnrestrictedClass(defSite, qname, typeParameters);
+          rawType = RawNominalType.makeUnrestrictedClass(defSite, qname, typeParameters);
         }
-        nominaltypesByNode.put(defSite, rawNominalType);
+        nominaltypesByNode.put(defSite, rawType);
         if (isRedeclaration) {
           return;
         }
@@ -1014,9 +1014,9 @@ class GlobalTypeInfo implements CompilerPass {
           if (nameNode.isGetProp()) {
             defSite.getParent().getFirstChild().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
           } else if (currentScope.isTopLevel()) {
-            maybeRecordBuiltinType(qname, rawNominalType);
+            maybeRecordBuiltinType(qname, rawType);
           }
-          currentScope.addNominalType(nameNode, rawNominalType);
+          currentScope.addNominalType(nameNode, rawType);
         }
       } else if (fnDoc != null) {
         if (fnDoc.makesStructs()) {
@@ -1028,34 +1028,34 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void maybeRecordBuiltinType(
-        String name, RawNominalType rawNominalType) {
+        String name, RawNominalType rawType) {
       switch (name) {
         case "Arguments":
-          commonTypes.setArgumentsType(rawNominalType);
+          commonTypes.setArgumentsType(rawType);
           break;
         case "Function":
-          commonTypes.setFunctionType(rawNominalType);
+          commonTypes.setFunctionType(rawType);
           break;
         case "Object":
-          commonTypes.setObjectType(rawNominalType);
+          commonTypes.setObjectType(rawType);
           break;
         case "Number":
-          commonTypes.setNumberInstance(rawNominalType.getInstanceAsJSType());
+          commonTypes.setNumberInstance(rawType.getInstanceAsJSType());
           break;
         case "String":
-          commonTypes.setStringInstance(rawNominalType.getInstanceAsJSType());
+          commonTypes.setStringInstance(rawType.getInstanceAsJSType());
           break;
         case "Boolean":
-          commonTypes.setBooleanInstance(rawNominalType.getInstanceAsJSType());
+          commonTypes.setBooleanInstance(rawType.getInstanceAsJSType());
           break;
         case "RegExp":
-          commonTypes.setRegexpInstance(rawNominalType.getInstanceAsJSType());
+          commonTypes.setRegexpInstance(rawType.getInstanceAsJSType());
           break;
         case "Array":
-          commonTypes.setArrayType(rawNominalType);
+          commonTypes.setArrayType(rawType);
           break;
         case "IObject":
-          commonTypes.setIObjectType(rawNominalType);
+          commonTypes.setIObjectType(rawType);
           break;
       }
     }
@@ -1190,7 +1190,9 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.FUNCTION:
           Node grandparent = parent.getParent();
           if (grandparent == null
-              || !isPrototypePropertyDeclaration(grandparent)) {
+              || (!isPrototypePropertyDeclaration(grandparent)
+                  && !isClassPropertyDeclaration(
+                      parent.getFirstChild(), currentScope))) {
             RawNominalType ownerType = maybeGetOwnerType(n, parent);
             visitFunctionLate(n, ownerType);
           }
@@ -1319,7 +1321,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitPropertyDeclaration(Node getProp) {
       // Class property
-      if (isClassPropAccess(getProp, currentScope)) {
+      if (isClassPropertyDeclaration(getProp, currentScope)) {
         visitClassPropertyDeclaration(getProp);
       }
       // Prototype property
@@ -1547,32 +1549,42 @@ class GlobalTypeInfo implements CompilerPass {
         // This will get caught in NewTypeInference
         return;
       }
-      RawNominalType rawNominalType = thisType.getRawNominalType();
+      RawNominalType rawType = thisType.getRawNominalType();
       String pname = getProp.getLastChild().getString();
-      // TODO(blickly): Support @param, @return style fun declarations here.
-      JSType declType = getDeclaredTypeOfNode(
-          NodeUtil.getBestJSDocInfo(getProp), currentScope);
+      Node parent = getProp.getParent();
+      Node initializer = parent.isAssign() ? parent.getLastChild() : null;
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
+      JSType propDeclType = null;
+      if (initializer != null && initializer.isFunction()) {
+        parent.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+        DeclaredFunctionType dft = visitFunctionLate(initializer, rawType)
+            .getDeclaredFunctionType();
+        propDeclType = commonTypes.fromFunctionType(dft.toFunctionType());
+      }
+      if (jsdoc != null && jsdoc.hasType()) {
+        propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
+      }
       boolean isConst = isConst(getProp);
-      if (declType != null || isConst) {
-        mayWarnAboutExistingProp(rawNominalType, pname, getProp, declType);
+      if (propDeclType != null || isConst) {
+        mayWarnAboutExistingProp(rawType, pname, getProp, propDeclType);
         // Intentionally, we keep going even if we warned for redeclared prop.
         // The reason is that if a prop is defined on a class and on its proto
         // with conflicting types, we prefer the type of the class.
-        if (declType == null) {
-          declType = mayInferFromRhsIfConst(getProp);
+        if (propDeclType == null) {
+          propDeclType = mayInferFromRhsIfConst(getProp);
         }
-        if (mayAddPropToType(getProp, rawNominalType)) {
-          rawNominalType.addClassProperty(pname, getProp, declType, isConst);
+        if (mayAddPropToType(getProp, rawType)) {
+          rawType.addClassProperty(pname, getProp, propDeclType, isConst);
         }
         if (isConst) {
           getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
-      } else if (mayAddPropToType(getProp, rawNominalType)) {
-        rawNominalType.addUndeclaredClassProperty(pname, getProp);
+      } else if (mayAddPropToType(getProp, rawType)) {
+        rawType.addUndeclaredClassProperty(pname, getProp);
       }
       // Only add the definition node if the property is not already defined.
-      if (!propertyDefs.contains(rawNominalType, pname)) {
-        propertyDefs.put(rawNominalType, pname,
+      if (!propertyDefs.contains(rawType, pname)) {
+        propertyDefs.put(rawType, pname,
             new PropertyDef(getProp, null, null));
       }
     }
@@ -2126,8 +2138,11 @@ class GlobalTypeInfo implements CompilerPass {
     return null;
   }
 
-  private static boolean isClassPropAccess(Node n, NTIScope s) {
+  private static boolean isClassPropertyDeclaration(Node n, NTIScope s) {
+    Node parent = n.getParent();
     return n.isGetProp() && n.getFirstChild().isThis()
+        && (parent.isAssign() && parent.getFirstChild().equals(n)
+            || parent.isExprResult())
         && (s.isConstructor() || s.isPrototypeMethod());
   }
 
