@@ -1147,13 +1147,13 @@ public class CommandLineRunner extends
       reportError("ERROR - " + flags.flagFile + " read error.");
     }
 
-    List<DependencyOptions.ModuleIdentifier> entryPoints = new ArrayList<>();
+    List<ModuleIdentifier> entryPoints = new ArrayList<>();
 
     if (flags.processCommonJsModules) {
       flags.processClosurePrimitives = true;
       if (flags.commonJsEntryModule != null) {
         if (flags.entryPoints.isEmpty()) {
-          entryPoints.add(DependencyOptions.ModuleIdentifier.forFile(flags.commonJsEntryModule));
+          entryPoints.add(ModuleIdentifier.forFile(flags.commonJsEntryModule));
         } else {
           reportError("--common_js_entry_module cannot be used with --entry_point.");
         }
@@ -1214,9 +1214,9 @@ public class CommandLineRunner extends
 
       for (String entryPoint : flags.entryPoints) {
         if (entryPoint.startsWith("goog:")) {
-          entryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
+          entryPoints.add(ModuleIdentifier.forClosure(entryPoint));
         } else {
-          entryPoints.add(DependencyOptions.ModuleIdentifier.forFile(entryPoint));
+          entryPoints.add(ModuleIdentifier.forFile(entryPoint));
         }
       }
 
@@ -1245,7 +1245,7 @@ public class CommandLineRunner extends
             reportError("--closure_entry_point cannot be used with --entry_point.");
           } else {
             for (String entryPoint : flags.closureEntryPoint) {
-              entryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(entryPoint));
+              entryPoints.add(ModuleIdentifier.forClosure(entryPoint));
             }
           }
         }
