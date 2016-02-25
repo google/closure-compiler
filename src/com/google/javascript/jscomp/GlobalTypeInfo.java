@@ -696,12 +696,20 @@ class GlobalTypeInfo implements CompilerPass {
           } else if (varName.equals(WINDOW_INSTANCE)
               && nameNode.isFromExterns()) {
             visitWindowVar(nameNode);
-          } else if (this.currentScope.isFunction()
-              && !this.currentScope.isDefinedLocally(varName, false)) {
-            // Add a dummy local to avoid shadowing errors
-            this.currentScope.addLocal(varName, JSType.UNKNOWN, false, false);
           } else if (isCtorDefinedByCall(nameNode)) {
             visitNewCtorDefinedByCall(nameNode);
+          }
+          if (!n.isFromExterns()
+              && !this.currentScope.isDefinedLocally(varName, false)) {
+            // Add a dummy local to avoid shadowing errors, and to calculate
+            // escaped variables.
+            this.currentScope.addLocal(varName, JSType.UNKNOWN, false, false);
+          }
+          break;
+        }
+        case Token.NAME: {
+          if (this.currentScope.isFunction()) {
+            NTIScope.mayRecordEscapedVar(this.currentScope, n.getString());
           }
           break;
         }
@@ -1664,7 +1672,10 @@ class GlobalTypeInfo implements CompilerPass {
       }
       Node rhs = NodeUtil.getRValueOfLValue(constExpr);
       JSType rhsType = simpleInferExprType(rhs);
-      if (rhsType == null || rhsType.isUnknown()) {
+      boolean isUnescapedVar = constExpr.isName()
+          && constExpr.getParent().isVar()
+          && !this.currentScope.isEscapedVar(constExpr.getString());
+      if ((rhsType == null || rhsType.isUnknown()) && !isUnescapedVar) {
         warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
         return null;
       }

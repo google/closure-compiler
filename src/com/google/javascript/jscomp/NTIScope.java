@@ -60,8 +60,10 @@ final class NTIScope implements DeclaredTypeRegistry {
   private final Map<String, JSType> externs;
   private final Set<String> constVars = new LinkedHashSet<>();
   private final List<String> formals;
+  // Variables that are defined in this scope and used in inner scopes.
+  private Set<String> escapedVars = new LinkedHashSet<>();
   // outerVars are the variables that appear free in this scope
-  // and are defined in an enclosing scope.
+  // and are defined in an outer scope.
   private final Set<String> outerVars = new LinkedHashSet<>();
   // When a function is also used as a namespace, we add entries to both
   // localFunDefs and localNamespaces. After removeTmpData (when NTI runs),
@@ -308,6 +310,10 @@ final class NTIScope implements DeclaredTypeRegistry {
     return outerVars.contains(name) && getDeclaredTypeOf(name) == null;
   }
 
+  boolean isEscapedVar(String name) {
+    return this.escapedVars.contains(name);
+  }
+
   boolean hasThis() {
     if (!isFunction()) {
       return false;
@@ -432,6 +438,19 @@ final class NTIScope implements DeclaredTypeRegistry {
       externs.put(name, declType);
     } else {
       locals.put(name, declType);
+    }
+  }
+
+  static void mayRecordEscapedVar(NTIScope s, String name) {
+    if (s.isDefinedLocally(name, false)) {
+      return;
+    }
+    while (s != null) {
+      if (s.isDefinedLocally(name, false)) {
+        s.escapedVars.add(name);
+        return;
+      }
+      s = s.parent;
     }
   }
 
@@ -699,10 +718,11 @@ final class NTIScope implements DeclaredTypeRegistry {
     localClassDefs = ImmutableMap.of();
     localTypedefs = ImmutableMap.of();
     localEnums = ImmutableMap.of();
+    escapedVars = ImmutableSet.of();
     isFinalized = true;
   }
 
-  // A scope must know about the free variables used in enclosing scopes,
+  // A scope must know about the free variables used in outer scopes,
   // otherwise we end up with invalid type envs.
   private static void copyOuterVarsTransitively(NTIScope s) {
     if (s.isTopLevel()) {

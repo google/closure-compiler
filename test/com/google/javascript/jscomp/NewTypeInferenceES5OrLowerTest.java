@@ -4945,13 +4945,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   public void testDontInferUndeclaredFunctionReturn() {
     typeCheck(LINE_JOINER.join(
         "function f() {}",
-        "/** @const */ var x = f();"),
+        "/** @const */ var x = f();"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {}",
+        "/** @const */ var x = f();",
+        "function g() { x; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
     typeCheck(LINE_JOINER.join(
         "/** @const */ var ns = {};",
         "ns.f = function() {}",
-        "/** @const */ var x = f();"),
+        "/** @const */ var x = f();",
+        "function g() { x; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
 
@@ -7617,14 +7623,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   public void testInferredArrayGenerics() {
     typeCheck("/** @const */ var x = [];");
 
-    typeCheck(
+    typeCheck(LINE_JOINER.join(
         "/** @const */ var x = [1, 'str'];",
+        "function g() { x; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */ function Foo() {}",
         "/** @constructor @extends {Foo} */ function Bar() {}",
-        "/** @const */ var x = [new Foo, new Bar];"),
+        "/** @const */ var x = [new Foo, new Bar];",
+        "function g() { x; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
     typeCheck(
@@ -7858,7 +7866,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " * @return {T}",
         " */",
         "function f(x) { return x; }",
-        "/** @const */ var x = f(f ? 'str' : 5);"),
+        "/** @const */ var x = f(f ? 'str' : 5);",
+        "function g() { x; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
     typeCheck(LINE_JOINER.join(
@@ -7882,7 +7891,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function f(x) { return x; }",
         "/** @const */",
-        "var y = f(1, 2);"),
+        "var y = f(1, 2);",
+        "function g() { y; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
         NewTypeInference.WRONG_ARGUMENT_COUNT);
 
@@ -7894,7 +7904,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function f(x) { return x; }",
         "/** @const */",
-        "var y = f();"),
+        "var y = f();",
+        "function g() { y; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
         NewTypeInference.WRONG_ARGUMENT_COUNT);
   }
@@ -10114,6 +10125,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
+        "function Foo(x) {",
+        "  /** @const */",
+        "  this.prop = x;",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
         "function Foo() {}",
         "/** @const */",
         "Foo.prop = 'str';",
@@ -10131,6 +10150,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(s) {",
+        "  /** @constructor */",
+        "  function Foo() {}",
+        "  /** @const */",
+        "  Foo.prototype.prop = s;",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
     typeCheck(LINE_JOINER.join(
         "/** @const */",
@@ -10173,14 +10201,21 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(LINE_JOINER.join(
         "/** @const */",
         "var s = x;",
-        "var /** string */ x;"),
-        // VariableReferenceCheck.EARLY_REFERENCE,
+        "var /** string */ x;",
+        "function f() { s; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
     typeCheck(LINE_JOINER.join(
         "function f(x) {",
         "  /** @const */",
         "  var c = x;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  /** @const */",
+        "  var c = x;",
+        "  function g() { c; }",
         "}"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
@@ -10214,7 +10249,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "var s = f();",
         "/** @return {string} */",
-        "function f() { return ''; }"),
+        "function f() { return ''; }",
+        "function g() { s; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
     typeCheck(LINE_JOINER.join(
@@ -10268,7 +10304,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(LINE_JOINER.join(
         "/** @const */",
-        "var x = whatever.prop;"),
+        "var x = whatever.prop;",
+        "function g() { x; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
     typeCheckCustomExterns(
