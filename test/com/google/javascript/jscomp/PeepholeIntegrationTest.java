@@ -36,7 +36,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         new PeepholeMinimizeConditions(late),
         new PeepholeSubstituteAlternateSyntax(late),
         new PeepholeRemoveDeadCode(),
-        new PeepholeFoldConstants(late)
+        new PeepholeFoldConstants(late, false)
       );
 
     return peepholePass;
