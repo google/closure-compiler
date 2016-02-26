@@ -1607,7 +1607,14 @@ final class NewTypeInference implements CompilerPass {
       objPair = analyzeExprFwd(obj, inEnv, JSType.UNKNOWN, instanceSpecType);
       ctorPair = analyzeExprFwd(ctor, objPair.env, commonTypes.topFunction());
     }
-    ctorPair.type = JSType.BOOLEAN;
+    if (instanceSpecType.isBottom()
+        || (specializedType.isFalseOrFalsy() && objType.equals(instanceSpecType))) {
+      ctorPair.type = JSType.FALSE_TYPE;
+    } else if (specializedType.isTrueOrTruthy() && objType.equals(instanceSpecType)) {
+      ctorPair.type = JSType.TRUE_TYPE;
+    } else {
+      ctorPair.type = JSType.BOOLEAN;
+    }
     return ctorPair;
   }
 

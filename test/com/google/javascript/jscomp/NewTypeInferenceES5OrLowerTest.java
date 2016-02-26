@@ -3359,6 +3359,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x, y) {",
         "  if (y instanceof x) {}",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */ function Foo() {}",
+        "/** @constructor */ function Bar() {}",
+        "function f(/** Foo|Bar */ x, /** Foo|Bar */ y) {",
+        "  if (!(x instanceof Foo) && ((x instanceof Foo) || (y instanceof Foo))) {",
+        "    var /** Foo */ foo = y;",
+        "  }",
+        "}"));
   }
 
   public void testFunctionsExtendFunction() {
