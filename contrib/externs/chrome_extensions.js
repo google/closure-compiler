@@ -9151,16 +9151,26 @@ chrome.inlineInstallPrivate.install = function(id, opt_callback) {};
 chrome.wallpaper = {};
 
 /**
+ * @enum {string}
+ * @see https://goo.gl/7dvJFW#type-WallpaperLayout
+ */
+chrome.wallpaper.WallpaperLayout = {
+  STRETCH: '',
+  CENTER: '',
+  CENTER_CROPPED: '',
+};
+
+/**
  * Sets wallpaper to the image at url or wallpaperData with the specified
  * layout.
  * @param {{
  *    data: (ArrayBuffer|undefined),
  *    url: (string|undefined),
- *    layout: string,
+ *    layout: (chrome.wallpaper.WallpaperLayout|string),
  *    filename: string,
  *    thumbnail: (boolean|undefined)
  *  }} details
  * @param {function(ArrayBuffer=)} callback
- *
+ * @see https://goo.gl/7dvJFW#method-setWallpaper
  */
  chrome.wallpaper.setWallpaper = function(details, callback) {};
