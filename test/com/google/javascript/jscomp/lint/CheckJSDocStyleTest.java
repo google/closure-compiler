@@ -17,6 +17,7 @@ package com.google.javascript.jscomp.lint;
 
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INVALID_SUPPRESS;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES;
@@ -47,6 +48,56 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckJSDocStyle(compiler);
+  }
+
+  public void testInvalidSuppress() {
+    testWarning("/** @suppress {missingRequire} */ var x = new y.Z();", INVALID_SUPPRESS);
+    testSame("/** @suppress {missingRequire} */ function f() { var x = new y.Z(); }");
+    testSame("/** @suppress {missingRequire} */ var f = function() { var x = new y.Z(); }");
+    testSame(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  /** @suppress {uselessCode} */",
+            "  f: function() {},",
+            "}"));
+    testSame(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  /** @suppress {uselessCode} */",
+            "  f() {},",
+            "}"));
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /** @suppress {uselessCode} */",
+            "  f() {}",
+            "}"));
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /** @suppress {uselessCode} */",
+            "  static f() {}",
+            "}"));
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /** @suppress {uselessCode} */",
+            "  get f() {}",
+            "}"));
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /**",
+            "   * @param {string} val",
+            "   * @suppress {uselessCode}",
+            "   */",
+            "  set f(val) {}",
+            "}"));
+
+    testWarning("/** @suppress {uselessCode} */ goog.require('unused.Class');", INVALID_SUPPRESS);
+    testSame("/** @suppress {extraRequire} */ goog.require('unused.Class');");
+    testSame("/** @const @suppress {duplicate} */ var google = {};");
+    testSame("/** @suppress {const} */ var google = {};");
   }
 
   public void testMissingJsDoc() {

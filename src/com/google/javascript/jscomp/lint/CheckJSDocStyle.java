@@ -17,6 +17,8 @@ package com.google.javascript.jscomp.lint;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -28,8 +30,10 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -38,6 +42,11 @@ import javax.annotation.Nullable;
  * with no corresponding {@code @param} annotation, coding conventions not being respected, etc.
  */
 public final class CheckJSDocStyle extends AbstractPostOrderCallback implements CompilerPass {
+  // TODO(tbreisacher): This error message should link to a page on the Github wiki explaining
+  // where @suppress annotations are allowed and where they are not.
+  public static final DiagnosticType INVALID_SUPPRESS =
+      DiagnosticType.warning("JSC_INVALID_SUPPRESS", "@suppress annotation not allowed here.");
+
   public static final DiagnosticType MISSING_JSDOC =
       DiagnosticType.warning("JSC_MISSING_JSDOC", "Function must have JSDoc.");
 
@@ -85,8 +94,60 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isFunction()) {
-      visitFunction(t, n);
+    switch (n.getType()) {
+      case Token.FUNCTION:
+        visitFunction(t, n);
+        break;
+      case Token.ASSIGN:
+        // If the right side is a function it will be handled when the function is visited.
+        if (!n.getLastChild().isFunction()) {
+          visitNonFunction(t, n);
+        }
+        break;
+      case Token.VAR:
+      case Token.LET:
+      case Token.CONST:
+        for (Node decl : n.children()) {
+          // If the right side is a function it will be handled when the function is visited.
+          if (decl.getFirstChild() == null || !decl.getFirstChild().isFunction()) {
+            visitNonFunction(t, n);
+          }
+        }
+        break;
+      case Token.STRING_KEY:
+        // If the value is a function it will be handled when the function is visited.
+        if (n.getFirstChild() == null || !n.getFirstChild().isFunction()) {
+          visitNonFunction(t, n);
+        }
+        break;
+      case Token.MEMBER_FUNCTION_DEF:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
+        // This JSDoc will be visited when the function is visited.
+        break;
+      default:
+        visitNonFunction(t, n);
+    }
+  }
+
+  private void visitNonFunction(NodeTraversal t, Node n) {
+    JSDocInfo jsDoc = n.getJSDocInfo();
+    if (jsDoc == null) {
+      return;
+    }
+
+    if (!n.isScript()) {
+      checkSuppressionsOnNonFunction(t, n, jsDoc);
+    }
+  }
+
+  private void checkSuppressionsOnNonFunction(NodeTraversal t, Node n, JSDocInfo jsDoc) {
+    // Suppressions that are allowed to be in places other than functions and @fileoverview blocks.
+    Set<String> specialSuppressions = ImmutableSet.of("const", "duplicate", "extraRequire");
+
+    Set<String> suppressions = Sets.difference(jsDoc.getSuppressions(), specialSuppressions);
+    if (!suppressions.isEmpty()) {
+      t.report(n, INVALID_SUPPRESS);
     }
   }
 
