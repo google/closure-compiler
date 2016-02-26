@@ -480,6 +480,7 @@ public class DiagnosticGroups {
           CheckJSDocStyle.MISSING_JSDOC,
           CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED,
           CheckJSDocStyle.INCORRECT_PARAM_NAME,
+          CheckJSDocStyle.INVALID_SUPPRESS,
           CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES,
           CheckJSDocStyle.MUST_BE_PRIVATE,
           CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
