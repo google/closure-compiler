@@ -187,9 +187,10 @@ public enum CompilationLevel {
         options.disambiguateProperties = true;
         options.ambiguateProperties = true;
         options.inlineProperties = true;
+        options.useTypesForOptimization = true;
         break;
       case SIMPLE_OPTIMIZATIONS:
-        // TODO(johnlenz): enable peephole type based optimization.
+        options.useTypesForOptimization = true;
         break;
       case WHITESPACE_ONLY:
         break;

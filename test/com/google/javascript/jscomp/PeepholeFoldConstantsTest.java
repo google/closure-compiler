@@ -45,8 +45,14 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass = new PeepholeOptimizationsPass(compiler,
-          new PeepholeFoldConstants(late));
+          new PeepholeFoldConstants(late, compiler.getOptions().useTypesForOptimization));
     return peepholePass;
+  }
+
+  @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    options.useTypesForOptimization = true;
+    return super.getOptions(options);
   }
 
   @Override
@@ -232,9 +238,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("'hi' >= null"); // foldable
     fold("null <= null", "true");
 
-    foldSame("null < 0");  // foldable
+    fold("null < 0", "false");
     fold("null > true", "false");
-    foldSame("null >= 'hi'"); // foldable
+    fold("null < 'hi'", "false");
+    fold("null >= 'hi'", "false");
     fold("null <= null", "true");
 
     fold("null == null", "true");
@@ -1170,6 +1177,28 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("[][1] = 1;");
   }
 
+  public void testTypeBasedFoldConstant() {
+    enableTypeCheck();
+    test("var /** number */ x; x + 1 + 1 + x",
+         "var /** number */ x; x + 2 + x");
+
+    test("var /** boolean */ x; x + 1 + 1 + x",
+         "var /** boolean */ x; x + 2 + x");
+
+    test("var /** null */ x; x + 1 + 1 + x",
+         "var /** null */ x; 2");
+
+    test("var /** undefined */ x; x + 1 + 1 + x",
+         "var /** undefined */ x; NaN");
+
+    test("var /** null */ x; var y = true > x;", "var /** null */ x; var y = true;");
+
+    test("var /** null */ x; var y = null > x;", "var /** null */ x; var y = false;");
+
+    testSame("var /** string */ x; x + 1 + 1 + x");
+    disableTypeCheck();
+  }
+
   public void foldDefineProperties1() {
     test("Object.defineProperties({}, {})", "{}");
     test("Object.defineProperties(a, {})", "a");
@@ -1228,10 +1257,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
           String inverse = inverses.get(op);
 
           // Test invertability.
-          if (comparators.contains(op) &&
-              (uncomparables.contains(a) || uncomparables.contains(b))) {
-            assertSameResults(join(a, op, b), "false");
-            assertSameResults(join(a, inverse, b), "false");
+          if (comparators.contains(op)) {
+              if (uncomparables.contains(a) || uncomparables.contains(b)
+                  || (a.equals("null") && NodeUtil.getStringNumberValue(b) == null)) {
+                assertSameResults(join(a, op, b), "false");
+                assertSameResults(join(a, inverse, b), "false");
+              }
           } else if (a.equals(b) && equalitors.contains(op)) {
             if (a.equals("NaN") ||
                 a.equals("Infinity") ||

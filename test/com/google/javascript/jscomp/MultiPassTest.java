@@ -185,7 +185,7 @@ public final class MultiPassTest extends CompilerTestCase {
                 new PeepholeSubstituteAlternateSyntax(late),
                 new PeepholeReplaceKnownMethods(late),
                 new PeepholeRemoveDeadCode(),
-                new PeepholeFoldConstants(late),
+                new PeepholeFoldConstants(late, false),
                 new PeepholeCollectPropertyAssignments());
           }
         });
