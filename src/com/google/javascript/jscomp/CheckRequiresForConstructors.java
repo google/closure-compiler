@@ -320,7 +320,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
     String name = root.getString();
     Var var = t.getScope().getVar(name);
-    if (var != null && (var.isLocal() || var.isExtern())) {
+    if (var != null
+        && (var.isLocal()
+            || var.isExtern()
+            || qNameNode.isName() && var.getSourceFile() == newNode.getStaticSourceFile())) {
       return;
     }
     usages.put(qNameNode.getQualifiedName(), newNode);

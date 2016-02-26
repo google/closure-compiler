@@ -678,6 +678,15 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     test(js, null);
   }
 
+  public void testNoMissingGoogRequireFromSameFile() {
+    String js = LINE_JOINER.join(
+        "var Atom = constructorFactory();",
+        "function someFn() {",
+        "  var baz = new Atom();",
+        "}");
+    test(js, null);
+  }
+
   public void testReferenceInDestructuringParam() {
     testSameEs6(LINE_JOINER.join(
         "goog.require('Bar');",
