@@ -43,6 +43,9 @@ import java.util.TreeMap;
  */
 public class CompilerInput implements SourceAst, DependencyInfo {
 
+  static final DiagnosticType MODULE_CONFLICT = DiagnosticType.warning(
+      "JSC_MODULE_CONFLICT", "File has both goog.module and ES6 modules: {0}");
+
   private static final long serialVersionUID = 1L;
 
   // Info about where the file lives.
@@ -250,17 +253,22 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   /**
-   * Parses the file to determine the load flags if necessary.  This includes
-   * a call to {@link #regenerateDependencyInfoIfNecessary} since non-{@link
-   * JsAst} inputs don't need any additional parsing, and either case may add
-   * some pre-parse load flags, anyway.
+   * Parses the file to determine the {@linkplain DependencyInfo#getLoadFlags
+   * load flags} if necessary, which includes the module type and the language
+   * version.  This calls {@link #regenerateDependencyInfoIfNecessary} since
+   * non-{@link JsAst} inputs don't need any additional parsing, and either
+   * case may add some pre-parse load flags, anyway.
    */
   private void determineLoadFlagsIfNecessary() throws IOException {
     regenerateDependencyInfoIfNecessary();
     if (!generatedLoadFlags) {
       FeatureSet features = ((JsAst) ast).getFeatures(compiler);
       if (features.hasEs6Modules()) {
-        loadFlags.put("module", "es6"); // NOTE: may be overridden by goog.module
+        if (loadFlags.containsKey("module")) {
+          compiler.getErrorManager().report(CheckLevel.WARNING,
+              JSError.make(MODULE_CONFLICT, getName()));
+        }
+        loadFlags.put("module", "es6");
       }
       loadFlags.put("lang", features.version());
       generatedLoadFlags = true;
