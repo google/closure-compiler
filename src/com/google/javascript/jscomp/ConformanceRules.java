@@ -1338,7 +1338,7 @@ public final class ConformanceRules {
           if (info != null && info.hasType()) {
             JSTypeExpression expr = info.getType();
             Node typeExprNode = expr.getRoot();
-            if (typeExprNode.getType() == Token.QMARK) {
+            if (typeExprNode.getType() == Token.QMARK && !typeExprNode.hasChildren()) {
               return true;
             }
           }

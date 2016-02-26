@@ -1194,6 +1194,32 @@ public final class CheckConformanceTest extends CompilerTestCase {
         null);
   }
 
+  public void testCustomBanUnknownProp4() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testSame(
+        EXTERNS,
+        LINE_JOINER.join(
+            "/** @constructor */ function f() { /** @type {?} */ this.prop = null; };",
+            "f.prototype.method = function() { alert(this.prop); }"),
+        null);
+  }
+
+  public void testCustomBanUnknownProp5() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testSame(
+        EXTERNS,
+        LINE_JOINER.join(
+            "/** @typedef {?} */ var Unk;",
+            "/** @constructor */ function f() { /** @type {?Unk} */ this.prop = null; };",
+            "f.prototype.method = function() { alert(this.prop); }"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message\nThe property \"prop\" on type \"f\"");
+  }
+
   public void testCustomBanUnknownInterfaceProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
