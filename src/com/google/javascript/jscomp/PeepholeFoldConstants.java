@@ -1075,11 +1075,25 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
               return areStringsEqual(left.getString(), right.getString()).not();
           }
         }
+        switch (op) {
+          case Token.GE:
+          case Token.LE:
+          case Token.GT:
+          case Token.LT:
+            return compareAsNumbers(op, left, right, useTypes);
+        }
         return TernaryValue.UNKNOWN;
 
       case Token.NUMBER:
         if (right.isNumber()) {
           return compareAsNumbers(op, left, right, useTypes);
+        }
+        switch (op) {
+          case Token.GE:
+          case Token.LE:
+          case Token.GT:
+          case Token.LT:
+            return compareAsNumbers(op, left, right, useTypes);
         }
         return TernaryValue.UNKNOWN; // Only eval if they are the same type
 

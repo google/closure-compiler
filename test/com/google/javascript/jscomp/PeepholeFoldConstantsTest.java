@@ -233,9 +233,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("null >= null", "true");
     fold("null <= null", "true");
 
-    foldSame("0 < null"); // foldable
+    fold("0 < null", "false");
+    fold("0 > null", "false");
+    fold("0 >= null", "true");
     fold("true > null", "true");
-    foldSame("'hi' >= null"); // foldable
+    fold("'hi' < null", "false");
+    fold("'hi' >= null", "false");
     fold("null <= null", "true");
 
     fold("null < 0", "false");
