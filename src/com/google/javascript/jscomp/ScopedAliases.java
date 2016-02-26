@@ -465,7 +465,7 @@ class ScopedAliases implements HotSwapCompilerPass {
           int nameCount = scopedAliasNames.count(name);
           scopedAliasNames.add(name);
           String globalName =
-              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
+              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$jscomp$" + nameCount));
 
           compiler.ensureLibraryInjected("base", true);
 

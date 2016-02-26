@@ -935,7 +935,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testMultipleLocals() {
     test("goog.scope(function () { var x = 3; });" +
          "goog.scope(function () { var x = 4; });",
-         SCOPE_NAMESPACE + "$jscomp.scope.x = 3; $jscomp.scope.x$1 = 4");
+         SCOPE_NAMESPACE + "$jscomp.scope.x = 3; $jscomp.scope.x$jscomp$1 = 4");
   }
 
   public void testIssue1103a() {
