@@ -233,9 +233,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("null >= null", "true");
     fold("null <= null", "true");
 
-    foldSame("0 < null"); // foldable
+    fold("0 < null", "false");
+    fold("0 > null", "false");
+    fold("0 >= null", "true");
     fold("true > null", "true");
-    foldSame("'hi' >= null"); // foldable
+    fold("'hi' < null", "false");
+    fold("'hi' >= null", "false");
     fold("null <= null", "true");
 
     fold("null < 0", "false");
@@ -290,6 +293,25 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     foldSame("this == null");
     foldSame("x == null");
+  }
+
+  public void testStringComparison() {
+    fold("'a' < 'b'", "true");
+    fold("'a' <= 'b'", "true");
+    fold("'a' > 'b'", "false");
+    fold("'a' >= 'b'", "false");
+    fold("+'a' < +'b'", "false");
+  }
+
+  public void testStringNumberComparison() {
+    fold("1 < '2'", "true");
+    fold("'1' < 2", "true");
+    fold("'123' > 34", "true");
+    fold("1 == '2'", "false");
+    fold("'1' == 2", "false");
+    fold("'NaN' < NaN", "false");
+    foldSame("NaN >= 'NaN'"); // foldable
+    foldSame("'NaN' == NaN"); // foldable
   }
 
   public void testObjectComparison1() {
