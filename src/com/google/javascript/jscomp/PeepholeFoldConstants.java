@@ -1064,15 +1064,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       case Token.STRING:
         if (right.isString()) {
-          // Only eval if they are the same type
+          return compareStrings(op, left, right);
+        } else if (right.isNumber()) {
+          // See http://www.ecma-international.org/ecma-262/6.0/#sec-strict-equality-comparison
           switch (op) {
             case Token.SHEQ:
-            case Token.EQ:
-              return areStringsEqual(left.getString(), right.getString());
-
+              return TernaryValue.FALSE;
             case Token.SHNE:
-            case Token.NE:
-              return areStringsEqual(left.getString(), right.getString()).not();
+              return TernaryValue.TRUE;
+          }
+          return compareAsNumbers(op, IR.number(NodeUtil.getNumberValue(left)), right, useTypes);
+        } else {
+          // See http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison
+          switch (op) {
+            case Token.GE:
+            case Token.LE:
+            case Token.GT:
+            case Token.LT:
+              return compareAsNumbers(op, left, right, useTypes);
           }
         }
         return TernaryValue.UNKNOWN;
@@ -1080,6 +1089,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.NUMBER:
         if (right.isNumber()) {
           return compareAsNumbers(op, left, right, useTypes);
+        } else if (right.isString()) {
+          switch (op) {
+            // See http://www.ecma-international.org/ecma-262/6.0/#sec-strict-equality-comparison
+            case Token.SHEQ:
+              return TernaryValue.TRUE;
+            case Token.SHNE:
+              return TernaryValue.FALSE;
+          }
+          return compareAsNumbers(op, left, IR.number(NodeUtil.getNumberValue(right)), useTypes);
+        } else {
+          // See http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison
+          switch (op) {
+            case Token.GE:
+            case Token.LE:
+            case Token.GT:
+            case Token.LT:
+              return compareAsNumbers(op, left, right, useTypes);
+          }
         }
         return TernaryValue.UNKNOWN; // Only eval if they are the same type
 
@@ -1171,6 +1198,29 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return TernaryValue.forBoolean(lv >  rv);
       default:
         return TernaryValue.UNKNOWN;  // don't handle that op
+    }
+  }
+
+  private static TernaryValue compareStrings(int op, Node left, Node right) {
+    String lv = left.getString();
+    String rv = right.getString();
+    switch (op) {
+      case Token.SHEQ:
+      case Token.EQ:
+        return areStringsEqual(lv, rv);
+      case Token.SHNE:
+      case Token.NE:
+        return areStringsEqual(lv, rv).not();
+      case Token.LE:
+        return TernaryValue.forBoolean(lv.compareTo(rv) <= 0);
+      case Token.LT:
+        return TernaryValue.forBoolean(lv.compareTo(rv) < 0);
+      case Token.GE:
+        return TernaryValue.forBoolean(lv.compareTo(rv) >= 0);
+      case Token.GT:
+        return TernaryValue.forBoolean(lv.compareTo(rv) > 0);
+      default:
+        return TernaryValue.UNKNOWN;
     }
   }
 
