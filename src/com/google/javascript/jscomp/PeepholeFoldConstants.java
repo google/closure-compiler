@@ -1064,15 +1064,22 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       case Token.STRING:
         if (right.isString()) {
-          // Only eval if they are the same type
+          return compareStrings(op, left, right);
+        } else {
+          // See http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison
           switch (op) {
-            case Token.SHEQ:
+            case Token.GE:
+            case Token.LE:
+            case Token.GT:
+            case Token.LT:
+              return compareAsNumbers(op, left, right, useTypes);
             case Token.EQ:
-              return areStringsEqual(left.getString(), right.getString());
-
-            case Token.SHNE:
             case Token.NE:
-              return areStringsEqual(left.getString(), right.getString()).not();
+              // TODO(moz): We can fold more cases, but testCommutativeOperators() will fail
+              // because other types of left hand side are not handled yet. Fix those later.
+              if (right.isNumber()) {
+                return compareAsNumbers(op, left, right, useTypes);
+              }
           }
         }
         return TernaryValue.UNKNOWN;
@@ -1080,6 +1087,22 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.NUMBER:
         if (right.isNumber()) {
           return compareAsNumbers(op, left, right, useTypes);
+        } else {
+          // See http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison
+          switch (op) {
+            case Token.GE:
+            case Token.LE:
+            case Token.GT:
+            case Token.LT:
+              return compareAsNumbers(op, left, right, useTypes);
+            case Token.EQ:
+            case Token.NE:
+              // TODO(moz): We can fold more cases, but testCommutativeOperators() will fail
+              // because other types of left hand side are not handled yet. Fix those later.
+              if (right.isString()) {
+                return compareAsNumbers(op, left, right, useTypes);
+              }
+          }
         }
         return TernaryValue.UNKNOWN; // Only eval if they are the same type
 
@@ -1151,16 +1174,21 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     double rv = rightValue;
 
     switch (op) {
+      // See http://www.ecma-international.org/ecma-262/6.0/#sec-strict-equality-comparison
       case Token.SHEQ:
-      case Token.EQ:
         Preconditions.checkState(
             left.isNumber() && right.isNumber());
         return TernaryValue.forBoolean(lv == rv);
       case Token.SHNE:
-      case Token.NE:
         Preconditions.checkState(
             left.isNumber() && right.isNumber());
         return TernaryValue.forBoolean(lv != rv);
+      // See http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-equality-comparison
+      case Token.EQ:
+        return TernaryValue.forBoolean(lv == rv);
+      case Token.NE:
+        return TernaryValue.forBoolean(lv != rv);
+      // See http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison
       case Token.LE:
         return TernaryValue.forBoolean(lv <= rv);
       case Token.LT:
@@ -1171,6 +1199,29 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return TernaryValue.forBoolean(lv >  rv);
       default:
         return TernaryValue.UNKNOWN;  // don't handle that op
+    }
+  }
+
+  private static TernaryValue compareStrings(int op, Node left, Node right) {
+    String lv = left.getString();
+    String rv = right.getString();
+    switch (op) {
+      case Token.SHEQ:
+      case Token.EQ:
+        return areStringsEqual(lv, rv);
+      case Token.SHNE:
+      case Token.NE:
+        return areStringsEqual(lv, rv).not();
+      case Token.LE:
+        return TernaryValue.forBoolean(lv.compareTo(rv) <= 0);
+      case Token.LT:
+        return TernaryValue.forBoolean(lv.compareTo(rv) < 0);
+      case Token.GE:
+        return TernaryValue.forBoolean(lv.compareTo(rv) >= 0);
+      case Token.GT:
+        return TernaryValue.forBoolean(lv.compareTo(rv) > 0);
+      default:
+        return TernaryValue.UNKNOWN;
     }
   }
 
