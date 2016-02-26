@@ -1574,8 +1574,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
                 ImmutableList.builder();
 
             // Special case for Object, where Object.<X> implies Object.<?,X>.
-            if (n.getString().equals("Object") &&
-                typeList.getFirstChild() == typeList.getLastChild()) {
+            if ((n.getString().equals("Object") || n.getString().equals("window.Object"))
+                && typeList.getFirstChild() == typeList.getLastChild()) {
               templateTypes.add(getNativeType(UNKNOWN_TYPE));
             }
 

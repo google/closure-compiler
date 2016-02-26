@@ -363,6 +363,19 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testTemplatizedObjectOnWindow() {
+    testTypesWithExtraExterns(
+        "/** @constructor */ window.Object = Object;",
+        LINE_JOINER.join(
+            "/** @param {!window.Object<number>} a",
+            " *  @return {string}",
+            " */ var f = function(a) { return a[0]; };"),
+        LINE_JOINER.join(
+            "inconsistent return type",
+            "found   : number",
+            "required: string"));
+  }
+
   public void testTemplatizedObject2() {
     testTypes("/** @param {!Object<string,number>} a\n" +
         "* @return {string}\n" +
