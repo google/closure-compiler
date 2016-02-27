@@ -32,6 +32,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateType;
@@ -1179,6 +1180,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         STRING_TYPE,
         parse("@enum string*/", "Bad type annotation. Type annotations should have curly braces.")
             .getEnumParameterType());
+  }
+
+  public void testParseEnum4() throws Exception {
+    JSDocInfo jsdoc = parse(" @enum {Foo} */");
+    Node enumTypeNode = jsdoc.getEnumParameterType().getRoot();
+    assertThat(enumTypeNode.getType()).isEqualTo(Token.BANG);
   }
 
   public void testParseJsDocAfterEnum() throws Exception {

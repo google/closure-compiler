@@ -8716,26 +8716,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
-  public void testInvalidEnumDoesntCrash() {
-    typeCheck(LINE_JOINER.join(
-        "/** @enum {Array<number>} */",
-        "var FooEnum = {",
-        "  BAR: [5]",
-        "};",
-        "/** @param {FooEnum} x */",
-        "function f(x) {",
-        "    var y = x[0];",
-        "};"),
-        JSTypeCreatorFromJSDoc.ENUM_IS_UNION);
-
-    typeCheck(LINE_JOINER.join(
-        "var ns = {};",
-        "function f() {",
-        "  /** @enum {number} */ var EnumType = ns;",
-        "}"),
-        GlobalTypeInfo.MALFORMED_ENUM);
-  }
-
   public void testRemoveNonexistentPropDoesntCrash() {
     // TODO(blickly): Would be nice not to warn here,
     // even if it means missing the warning below
@@ -10649,6 +10629,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @enum {string} */",
         "var E = { A: 'asdf', B: 'adf' };",
         "function f() { var /** string */ y = E.A + E.B; }"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {Array<number>} */",
+        "var FooEnum = {",
+        "  BAR: [5]",
+        "};",
+        "/** @param {FooEnum} x */",
+        "function f(x) {",
+        "    var y = x[0];",
+        "};"));
   }
 
   public void testEnumsWithNonScalarDeclaredType() {
@@ -10717,6 +10707,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @enum {number} */",
         "var E = { A: 1, A: 2 };"),
         GlobalTypeInfo.DUPLICATE_PROP_IN_ENUM);
+
+    typeCheck(LINE_JOINER.join(
+        "var ns = {};",
+        "function f() {",
+        "  /** @enum {number} */ var EnumType = ns;",
+        "}"),
+        GlobalTypeInfo.MALFORMED_ENUM);
   }
 
   public void testEnumPropertiesConstant() {
@@ -10834,7 +10831,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
-        "/** @enum {Foo} */",
+        "/** @enum {?Foo} */",
         "var E = { ONE: new Foo, TWO: null };"),
         JSTypeCreatorFromJSDoc.ENUM_IS_UNION);
 

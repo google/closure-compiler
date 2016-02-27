@@ -2978,7 +2978,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEnum5() {
-    testTypes("/**@enum {String}*/var a={BB:'string'}",
+    testTypes("/**@enum {?String}*/var a={BB:'string'}",
         "assignment to property BB of enum{a}\n" +
         "found   : string\n" +
         "required: (String|null)");
@@ -3116,7 +3116,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEnum24() {
-    testTypes("/**@enum {Object} */ var E = {A: {}};" +
+    testTypes("/**@enum {?Object} */ var E = {A: {}};" +
         "/** @param {E} x \n* @return {!Object} */ function f(x) {return x}",
         "inconsistent return type\n" +
         "found   : E<(Object|null)>\n" +
