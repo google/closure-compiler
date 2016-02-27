@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
@@ -40,8 +40,7 @@ import java.util.Set;
  *
  */
 @GwtIncompatible("com.google.protobuf")
-public final class CheckConformance extends AbstractPostOrderCallback
-    implements CompilerPass {
+public final class CheckConformance implements Callback, CompilerPass {
 
   static final DiagnosticType CONFORMANCE_VIOLATION =
       DiagnosticType.warning(
@@ -80,8 +79,14 @@ public final class CheckConformance extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     if (!rules.isEmpty()) {
-      NodeTraversal.traverseEs6(compiler, root, this);
+      NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
     }
+  }
+
+  @Override
+  public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    // Don't inspect extern files
+    return !n.isScript() || !t.getInput().getSourceFile().isExtern();
   }
 
   @Override
