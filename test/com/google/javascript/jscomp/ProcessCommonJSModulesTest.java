@@ -257,7 +257,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "function foo$$module$test() {}",
             "/** @const */ module$test = {",
             "  /** @const */ prop: 'value',",
-            "  /** @const */ foo",
+            "  /** @const */ foo: foo$$module$test",
             "};"));
 
     testModules(
@@ -276,5 +276,25 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "    console.log('bar');",
             "  }",
             "};"));
+
+    testModules(
+        LINE_JOINER.join(
+            "var a = require('other');",
+            "module.exports = {a: a};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "goog.require('module$other');",
+            "var a$$module$test = module$other;",
+            "/** @const */ module$test = { /** @const */ a: a$$module$test };"));
+
+    testModules(
+        LINE_JOINER.join(
+            "var a = require('other');",
+            "module.exports = {a};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "goog.require('module$other');",
+            "var a$$module$test = module$other;",
+            "/** @const */ module$test = { /** @const */ a: a$$module$test };"));
   }
 }
