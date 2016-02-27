@@ -80,20 +80,20 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   private static final long serialVersionUID = 1L;
 
   /**
-   * The template variable corresponding to the KEY type in IObject<KEY, VALUE>
-   * (plus the builtin Javascript Object).
+   * The template variable corresponding to the KEY type in
+   * {@code IObject<KEY, VALUE>} (plus the builtin Javascript Object).
    */
   private TemplateType iObjectIndexTemplateKey;
 
   /**
-   * The template variable corresponding to the VALUE type in IObject<KEY, VALUE>
-   * (plus the builtin Javascript Object).
+   * The template variable corresponding to the VALUE type in
+   * {@code IObject<KEY, VALUE>} (plus the builtin Javascript Object).
    */
   private TemplateType iObjectElementTemplateKey;
   private static final String I_OBJECT_ELEMENT_TEMPLATE = "IObject#VALUE";
 
   /**
-   * The template variable in Array<T>
+   * The template variable in {@code Array<T>}.
    */
   private TemplateType arrayElementTemplateKey;
 
