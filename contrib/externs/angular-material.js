@@ -596,6 +596,20 @@ md.$mdIconProvider.prototype.defaultFontSet = function(name) {};
 md.$mdMedia;
 
 /******************************************************************************
+ * $mdMenu Service
+ *****************************************************************************/
+
+/** @constructor */
+md.$mdMenu = function() {};
+
+/**
+ * @param {*=} opt_reason Data to resolve the promise with.
+ * @param {*=} opt_options
+ * @return {!angular.$q.Promise}
+ */
+md.$mdMenu.hide = function(opt_reason, opt_options) {};
+
+/******************************************************************************
  * $mdDateLocaleProvider
  *****************************************************************************/
 
