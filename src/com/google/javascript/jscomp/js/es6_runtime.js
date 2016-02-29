@@ -109,7 +109,9 @@
   for (/**@const */var p in parentCtor) {
     if ($jscomp.global.Object.defineProperties) {
       var descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(parentCtor, p);
-      $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
+      if (descriptor) {
+        $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
+      }
     } else {
       childCtor[p] = parentCtor[p];
     }

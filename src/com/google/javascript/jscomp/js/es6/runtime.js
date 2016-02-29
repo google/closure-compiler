@@ -211,7 +211,9 @@ $jscomp.inherits = function(childCtor, parentCtor) {
     if ($jscomp.global.Object.defineProperties) {
       let descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(
           parentCtor, p);
-      $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
+      if (descriptor) {
+        $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
+      }
     } else {
       // Pre-ES5 browser. Just copy with an assignment.
       childCtor[p] = parentCtor[p];
