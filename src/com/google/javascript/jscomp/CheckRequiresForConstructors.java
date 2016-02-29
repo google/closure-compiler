@@ -71,9 +71,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   // in weakUsages, don't give a missingRequire warning, nor an extraRequire warning.
   private final Map<String, Node> weakUsages = new HashMap<>();
 
-  // Whether the current file is an ES6 module.
-  private boolean isModule = false;
-
   // Warnings
   static final DiagnosticType MISSING_REQUIRE_WARNING =
       DiagnosticType.disabled(
@@ -169,8 +166,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         visitClassNode(t, n);
         break;
       case Token.IMPORT:
-      case Token.EXPORT:
-        isModule = true;
+        visitImportNode(n);
         break;
     }
   }
@@ -180,14 +176,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     this.weakUsages.clear();
     this.requires.clear();
     this.constructors.clear();
-    this.isModule = false;
   }
 
   private void visitScriptNode(NodeTraversal t) {
-    if (isModule) {
-      return;
-    }
-
     if (mode == Mode.SINGLE_FILE && requires.isEmpty()) {
       // Likely a file that isn't using Closure at all.
       return;
@@ -261,14 +252,31 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     compiler.report(JSError.make(call, DUPLICATE_REQUIRE_WARNING, require));
   }
 
+  private void visitRequire(String requiredName, Node node) {
+    if (requires.containsKey(requiredName)) {
+      reportDuplicateRequireWarning(node, requiredName);
+    } else {
+      requires.put(requiredName, node);
+    }
+  }
+
+  private void visitImportNode(Node importNode) {
+    Node defaultImport = importNode.getFirstChild();
+    if (defaultImport.isName()) {
+      visitRequire(defaultImport.getString(), importNode);
+    }
+    Node namedImports = defaultImport.getNext();
+    if (namedImports.getType() == Token.IMPORT_SPECS) {
+      for (Node importSpec : namedImports.children()) {
+        visitRequire(importSpec.getLastChild().getString(), importNode);
+      }
+    }
+  }
+
   private void visitCallNode(Node call, Node parent) {
     String required = codingConvention.extractClassNameIfRequire(call, parent);
     if (required != null) {
-      if (requires.containsKey(required)) {
-        reportDuplicateRequireWarning(call, required);
-      } else {
-        requires.put(required, call);
-      }
+      visitRequire(required, call);
     }
 
     Node callee = call.getFirstChild();
