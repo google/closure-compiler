@@ -154,6 +154,26 @@ public final class CommandLineRunnerTest extends TestCase {
     testSame("/** @unknownTag */ function f() {}");
   }
 
+  // See b/26884264
+  public void testForOfTypecheck() throws IOException {
+    args.add("--jscomp_error=checkTypes");
+    args.add("--language_in=ES6_STRICT");
+    args.add("--language_out=ES3");
+    externs = AbstractCommandLineRunner.getBuiltinExterns(CompilerOptions.Environment.BROWSER);
+    test(
+        Joiner.on('\n').join(
+            "class Cat {meow() {}}",
+            "class Dog {}",
+            "",
+            "/** @type {!Array<!Dog>} */",
+            "var dogs = [];",
+            "",
+            "for (var dog of dogs) {",
+            "  dog.meow();",  // type error
+            "}"),
+        TypeCheck.INEXISTENT_PROPERTY);
+  }
+
   public void testWarningGuardOrdering1() {
     args.add("--jscomp_error=globalThis");
     args.add("--jscomp_off=globalThis");

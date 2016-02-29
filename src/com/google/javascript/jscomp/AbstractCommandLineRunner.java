@@ -451,7 +451,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @return a mutable list
    * @throws IOException
    */
-  public static List<SourceFile> getBuiltinExterns(CompilerOptions options)
+  public static List<SourceFile> getBuiltinExterns(CompilerOptions.Environment env)
       throws IOException {
     InputStream input = AbstractCommandLineRunner.class.getResourceAsStream(
         "/externs.zip");
@@ -462,7 +462,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     Preconditions.checkNotNull(input);
 
     ZipInputStream zip = new ZipInputStream(input);
-    CompilerOptions.Environment env = options.getEnvironment();
     String envPrefix = env.toString().toLowerCase() + "/";
     String browserEnv = CompilerOptions.Environment.BROWSER.toString().toLowerCase();
     boolean flatExternStructure = true;

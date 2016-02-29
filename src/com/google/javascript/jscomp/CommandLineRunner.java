@@ -1429,7 +1429,7 @@ public class CommandLineRunner extends
     if (isInTestMode()) {
       return externs;
     } else {
-      List<SourceFile> builtinExterns = getBuiltinExterns(options);
+      List<SourceFile> builtinExterns = getBuiltinExterns(options.getEnvironment());
       builtinExterns.addAll(externs);
       return builtinExterns;
     }
@@ -1472,7 +1472,7 @@ public class CommandLineRunner extends
 
   @Deprecated
   public static List<SourceFile> getDefaultExterns() throws IOException {
-    return getBuiltinExterns(new CompilerOptions());
+    return getBuiltinExterns(CompilerOptions.Environment.BROWSER);
   }
 
   /**

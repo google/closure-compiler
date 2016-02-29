@@ -111,7 +111,7 @@ final class RefasterJs {
     CompilerOptions options = new CompilerOptions();
     options.setEnvironment(environment);
     RefactoringDriver driver = new RefactoringDriver.Builder(scanner)
-        .addExterns(CommandLineRunner.getBuiltinExterns(options))
+        .addExterns(CommandLineRunner.getBuiltinExterns(environment))
         .addExternsFromFile(getExterns())
         .addInputsFromFile(fileInputs)
         .build();

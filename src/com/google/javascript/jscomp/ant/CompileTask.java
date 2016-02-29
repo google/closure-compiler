@@ -673,7 +673,7 @@ public final class CompileTask
    */
   private List<SourceFile> getBuiltinExterns(CompilerOptions options) {
     try {
-      return CommandLineRunner.getBuiltinExterns(options);
+      return CommandLineRunner.getBuiltinExterns(options.getEnvironment());
     } catch (IOException e) {
       throw new BuildException(e);
     }
