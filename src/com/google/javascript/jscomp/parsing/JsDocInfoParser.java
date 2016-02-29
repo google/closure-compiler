@@ -533,7 +533,7 @@ public final class JsDocInfoParser {
           type = null;
           if (token != JsDocToken.EOL && token != JsDocToken.EOC) {
             Node typeNode = parseAndRecordTypeNode(token);
-            if (typeNode.getType() == Token.STRING) {
+            if (typeNode != null && typeNode.getType() == Token.STRING) {
               String typeName = typeNode.getString();
               if (!typeName.equals("number") && !typeName.equals("string")
                   && !typeName.equals("boolean")) {
@@ -541,7 +541,6 @@ public final class JsDocInfoParser {
               }
             }
             type = createJSTypeExpression(typeNode);
-
           } else {
             restoreLookAhead(token);
           }

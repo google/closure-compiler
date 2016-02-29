@@ -1188,6 +1188,15 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(enumTypeNode.getType()).isEqualTo(Token.BANG);
   }
 
+  public void testParseBadEnumNoCrash() throws Exception {
+    assertTypeEquals(
+        NUMBER_TYPE,
+        parse("@enum {@enum {string}}*/",
+            "Bad type annotation. type not recognized due to syntax error",
+            "Bad type annotation. type annotation incompatible with other annotations")
+        .getEnumParameterType());
+  }
+
   public void testParseJsDocAfterEnum() throws Exception {
     JSDocInfo info = parse("@enum {string} @suppress {x} */");
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
