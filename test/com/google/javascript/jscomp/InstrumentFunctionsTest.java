@@ -52,8 +52,8 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
 
   public void testInstrument() {
     final String kPreamble =
-        "var $$toRemoveDefinition1, $$notToRemove;\n" +
-        "var $$toRemoveDefinition2, $$toRemoveDefinition3;\n";
+        "var $$toRemoveDefinition1, $$notToRemove;\n"
+        + "var $$toRemoveDefinition2, $$toRemoveDefinition3;\n";
 
     // build instrumentation template and init code strings for use in
     // tests below.
@@ -83,42 +83,45 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
 
     // Test basic instrumentation
     test("function a(){b}",
-         initCode + "$$testDefine(0);" +
-         "function a(){$$testInstrument(0);b}");
+         initCode + "$$testDefine(0,\"a\");"
+         + "function a(){$$testInstrument(0,\"a\",arguments);b}");
 
     // Test declaration_to_remove
     test(kPreamble + "function a(){b}",
-         initCode +
-         "$$testDefine(0);" +
-         "var $$notToRemove;" +
-         "function a(){$$testInstrument(0);b}");
+         initCode
+         + "$$testDefine(0,\"a\");"
+         + "var $$notToRemove;"
+         + "function a(){$$testInstrument(0,\"a\",arguments);b}");
 
     // Test object literal declarations
     test(kPreamble + "var a = { b: function(){c} }",
-         initCode +
-         "var $$notToRemove;" +
-         "$$testDefine(0);" +
-         "var a = { b: function(){$$testInstrument(0);c} }");
+         initCode
+         + "var $$notToRemove;"
+         + "$$testDefine(0,\"<anonymous>\");"
+         + "var a = { b: function(){"
+         + "$$testInstrument(0,\"<anonymous>\",arguments);c} }");
 
     // Test multiple object literal declarations
-    test(kPreamble +
-         "var a = { b: function(){c}, d: function(){e} }",
-         initCode +
-         "var $$notToRemove;" +
-         "$$testDefine(0);" +
-         "$$testDefine(1);" +
-         "var a={b:function(){$$testInstrument(0);c}," +
-         "d:function(){$$testInstrument(1);e}}");
+    test(kPreamble
+         + "var a = { b: function(){c}, d: function(){e} }",
+         initCode
+         + "var $$notToRemove;"
+         + "$$testDefine(0,\"<anonymous>\");"
+         + "$$testDefine(1,\"<anonymous>\");"
+         + "var a={b:function(){"
+         + "$$testInstrument(0,\"<anonymous>\",arguments);c},"
+         + "d:function(){$$testInstrument(1,\"<anonymous>\",arguments);e}}");
 
     // Test recursive object literal declarations
-    test(kPreamble +
-         "var a = { b: { f: function(){c} }, d: function(){e} }",
-         initCode +
-         "var $$notToRemove;" +
-         "$$testDefine(0);" +
-         "$$testDefine(1);" +
-         "var a={b:{f:function(){$$testInstrument(0);c}}," +
-         "d:function(){$$testInstrument(1);e}}");
+    test(kPreamble
+         + "var a = { b: { f: function(){c} }, d: function(){e} }",
+         initCode
+         + "var $$notToRemove;"
+         + "$$testDefine(0,\"<anonymous>\");"
+         + "$$testDefine(1,\"<anonymous>\");"
+         + "var a={b:{f:function(){"
+         + "$$testInstrument(0,\"<anonymous>\",arguments);c}},"
+         + "d:function(){$$testInstrument(1,\"<anonymous>\",arguments);e}}");
   }
 
   public void testEmpty() {
@@ -132,104 +135,113 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
   }
 
   public void testInit() {
-    this.instrumentationPb = "init: \"var foo = 0;\"\n" +
-        "init: \"function f(){g();}\"\n";
+    this.instrumentationPb = "init: \"var foo = 0;\"\n"
+        + "init: \"function f(){g();}\"\n";
     test("function a(){b}",
          "var foo = 0;function f(){g()}function a(){b}");
   }
 
   public void testDeclare() {
     this.instrumentationPb = "report_defined: \"$$testDefine\"";
-    test("function a(){b}", "$$testDefine(0);function a(){b}");
+    test("function a(){b}", "$$testDefine(0,\"a\");function a(){b}");
   }
 
   public void testCall() {
     this.instrumentationPb = "report_call: \"$$testCall\"";
-    test("function a(){b}", "function a(){$$testCall(0);b}");
+    test("function a(){b}", "function a(){$$testCall(0,\"a\",arguments);b}");
   }
 
   public void testNested() {
-    this.instrumentationPb = "report_call: \"$$testCall\"\n" +
-        "report_defined: \"$$testDefine\"";
+    this.instrumentationPb = "report_call: \"$$testCall\"\n"
+        + "report_defined: \"$$testDefine\"";
     test("function a(){ function b(){}}",
-         "$$testDefine(1);$$testDefine(0);" +
-         "function a(){$$testCall(1);function b(){$$testCall(0)}}");
+         "$$testDefine(1,\"a\");$$testDefine(0,\"a::b\");"
+         + "function a(){$$testCall(1,\"a\",arguments);"
+         + "function b(){$$testCall(0,\"a::b\",arguments)}}");
   }
 
   public void testExitPaths() {
     this.instrumentationPb = "report_exit: \"$$testExit\"";
     test("function a(){return}",
-         "function a(){return $$testExit(0)}");
+         "function a(){return $$testExit(0,undefined,\"a\")}");
 
     test("function b(){return 5}",
-         "function b(){return $$testExit(0, 5)}");
+         "function b(){return $$testExit(0,5,\"b\")}");
 
     test("function a(){if(2 != 3){return}else{return 5}}",
-         "function a(){if(2!=3){return $$testExit(0)}" +
-         "else{return $$testExit(0,5)}}");
+         "function a(){if(2!=3){return $$testExit(0,undefined,\"a\")}"
+         + "else{return $$testExit(0,5,\"a\")}}");
 
     test("function a(){if(2 != 3){return}else{return 5}}b()",
-         "function a(){if(2!=3){return $$testExit(0)}" +
-         "else{return $$testExit(0,5)}}b()");
+         "function a(){if(2!=3){return $$testExit(0,undefined,\"a\")}"
+         + "else{return $$testExit(0,5,\"a\")}}b()");
 
     test("function a(){if(2 != 3){return}else{return 5}}",
-         "function a(){if(2!=3){return $$testExit(0)}" +
-         "else{return $$testExit(0,5)}}");
+         "function a(){if(2!=3){return $$testExit(0,undefined,\"a\")}"
+         + "else{return $$testExit(0,5,\"a\")}}");
   }
 
   public void testExitNoReturn() {
     this.instrumentationPb = "report_exit: \"$$testExit\"";
     test("function a(){}",
-         "function a(){$$testExit(0);}");
+         "function a(){$$testExit(0,undefined,\"a\");}");
 
     test("function a(){b()}",
-         "function a(){b();$$testExit(0);}");
+         "function a(){b();$$testExit(0,undefined,\"a\");}");
   }
 
   public void testPartialExitPaths() {
     this.instrumentationPb = "report_exit: \"$$testExit\"";
     test("function a(){if (2 != 3) {return}}",
-         "function a(){if (2 != 3){return $$testExit(0)}$$testExit(0)}");
+         "function a(){if (2 != 3){return $$testExit(0,undefined,\"a\")}"
+         + "$$testExit(0,undefined,\"a\")}");
   }
 
   public void testExitTry() {
     this.instrumentationPb = "report_exit: \"$$testExit\"";
     test("function a(){try{return}catch(err){}}",
-         "function a(){try{return $$testExit(0)}catch(err){}$$testExit(0)}");
+         "function a(){try{return $$testExit(0,undefined,\"a\")}catch(err){}"
+         + "$$testExit(0,undefined,\"a\")}");
 
     test("function a(){try{}catch(err){return}}",
-         "function a(){try{}catch(err){return $$testExit(0)}$$testExit(0)}");
+         "function a(){try{}catch(err){return $$testExit(0,undefined,\"a\")}"
+         + "$$testExit(0,undefined,\"a\")}");
 
     test("function a(){try{return}finally{}}",
-         "function a(){try{return $$testExit(0)}finally{}$$testExit(0)}");
+         "function a(){try{return $$testExit(0,undefined,\"a\")}finally{}"
+         + "$$testExit(0,undefined,\"a\")}");
 
     test("function a(){try{return}catch(err){}finally{}}",
-         "function a(){try{return $$testExit(0)}catch(err){}finally{}" +
-         "$$testExit(0)}");
+         "function a(){try{return $$testExit(0,undefined,\"a\")}catch(err){}"
+         + "finally{}$$testExit(0,undefined,\"a\")}");
 
     test("function a(){try{return 1}catch(err){return 2}}",
-         "function a(){try{return $$testExit(0, 1)}" +
-         "catch(err){return $$testExit(0,2)}}");
+         "function a(){try{return $$testExit(0,1,\"a\")}"
+         + "catch(err){return $$testExit(0,2,\"a\")}}");
 
     test("function a(){try{return 1}catch(err){return 2}finally{}}",
-         "function a(){try{return $$testExit(0, 1)}" +
-         "catch(err){return $$testExit(0,2)}" +
-         "finally{}$$testExit(0)}");
+         "function a(){try{return $$testExit(0,1,\"a\")}"
+         + "catch(err){return $$testExit(0,2,\"a\")}"
+         + "finally{}$$testExit(0,undefined,\"a\")}");
 
     test("function a(){try{return 1}catch(err){return 2}finally{return}}",
-         "function a(){try{return $$testExit(0, 1)}" +
-         "catch(err){return $$testExit(0,2)}finally{return $$testExit(0)}}");
+         "function a(){try{return $$testExit(0,1,\"a\")}"
+         + "catch(err){return $$testExit(0,2,\"a\")}finally{"
+         + "return $$testExit(0,undefined,\"a\")}}");
 
     test("function a(){try{}catch(err){}finally{return}}",
-         "function a(){try{}catch(err){}finally{return $$testExit(0)}}");
+         "function a(){try{}catch(err){}finally{"
+         + "return $$testExit(0,undefined,\"a\")}}");
   }
 
   public void testNestedExit() {
-    this.instrumentationPb = "report_exit: \"$$testExit\"\n" +
-        "report_defined: \"$$testDefine\"";
+    this.instrumentationPb = "report_exit: \"$$testExit\"\n"
+        + "report_defined: \"$$testDefine\"";
     test("function a(){ return function(){ return c;}}",
-         "$$testDefine(1);function a(){$$testDefine(0);" +
-         "return $$testExit(1, function(){return $$testExit(0, c);});}");
+         "$$testDefine(1,\"a\");"
+         + "function a(){$$testDefine(0,\"a::<anonymous>\");"
+         + "return $$testExit(1,function(){"
+         + "return $$testExit(0,c,\"a::<anonymous>\");},\"a\");}");
   }
 
   private class NameAndInstrumentFunctions implements CompilerPass {

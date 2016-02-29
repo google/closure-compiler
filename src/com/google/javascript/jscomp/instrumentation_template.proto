@@ -11,15 +11,17 @@ option java_package = "com.google.javascript.jscomp";
 option java_multiple_files = true;
 
 message Instrumentation {
-  // name of function(ID = <numeric function id>);
+  // name of function(ID = <numeric function id>, NAME = <function name>);
   // used to inform the harness about the contents of a module
   optional string report_defined = 1;
 
-  // name of function(ID = <numeric function id>);
+  // name of function(ID = <numeric function id>, NAME = <function name>,
+  //     ARGUMENTS = <arguments object for this call>);
   // used to inform the harness about a function call
   optional string report_call = 2;
 
-  // name of function(ID = <numeric function id>, VAL = <return value>);
+  // name of function(ID = <numeric function id>, VAL = <return value>,
+  //     NAME = <function name>);
   // used to inform the harness about a function exit.  Must return
   // its second argument.
   //

@@ -175,22 +175,26 @@ class InstrumentFunctions implements CompilerPass {
    * Output:
    * function f() {
    *   if (pred) {
-   *     return onExitFn(0, a);
+   *     return onExitFn(0, a, "f");
    *   }
-   *   onExitFn(0);
+   *   onExitFn(0, undefined, "f");
    * }
    *
    **/
   private class InstrumentReturns implements NodeTraversal.Callback {
     private final int functionId;
+    private final String functionName;
+
     /**
      * @param functionId Function identifier computed by FunctionNames;
      *     used as first argument to {@code reportFunctionExitName}
-     *     {@code reportFunctionExitName} must be a 2 argument function that
+     *     {@code reportFunctionExitName} must be a 3 argument function that
      *     returns it's second argument.
+     * @param functionName Function name.
      */
-    InstrumentReturns(int functionId) {
+    InstrumentReturns(int functionId, String functionName) {
       this.functionId = functionId;
+      this.functionName = functionName;
     }
 
     /**
@@ -201,7 +205,7 @@ class InstrumentFunctions implements CompilerPass {
       NodeTraversal.traverseEs6(compiler, body, this);
 
       if (!allPathsReturn(function)) {
-        Node call = newReportFunctionExitNode(function);
+        Node call = newReportFunctionExitNode(function, null);
         Node expr = IR.exprResult(call).useSourceInfoIfMissingFromForTree(function);
         body.addChildToBack(expr);
         compiler.reportCodeChange();
@@ -219,19 +223,18 @@ class InstrumentFunctions implements CompilerPass {
         return;
       }
 
-      Node call = newReportFunctionExitNode(n);
       Node returnRhs = n.removeFirstChild();
-      if (returnRhs != null) {
-        call.addChildToBack(returnRhs);
-      }
+      Node call = newReportFunctionExitNode(n, returnRhs);
       n.addChildToFront(call);
       compiler.reportCodeChange();
     }
 
-    private Node newReportFunctionExitNode(Node infoNode) {
+    private Node newReportFunctionExitNode(Node infoNode, Node returnRhs) {
       Node call = IR.call(
           IR.name(reportFunctionExitName),
-          IR.number(functionId));
+          IR.number(functionId),
+          (returnRhs != null) ? returnRhs : IR.name("undefined"),
+          IR.string(functionName));
       call.putBooleanProp(Node.FREE_CALL, true);
       call.useSourceInfoFromForTree(infoNode);
       return call;
@@ -272,11 +275,15 @@ class InstrumentFunctions implements CompilerPass {
         return;
       }
 
+      String name = functionNames.getFunctionName(n);
+
       if (!reportFunctionName.isEmpty()) {
         Node body = n.getLastChild();
         Node call = IR.call(
             IR.name(reportFunctionName),
-            IR.number(id));
+            IR.number(id),
+            IR.string(name),
+            IR.name("arguments"));
         call.putBooleanProp(Node.FREE_CALL, true);
         Node expr = IR.exprResult(call);
         expr.useSourceInfoFromForTree(n);
@@ -285,13 +292,14 @@ class InstrumentFunctions implements CompilerPass {
       }
 
       if (!reportFunctionExitName.isEmpty()) {
-        (new InstrumentReturns(id)).process(n);
+        (new InstrumentReturns(id, name)).process(n);
       }
 
       if (!definedFunctionName.isEmpty()) {
         Node call = IR.call(
             IR.name(definedFunctionName),
-            IR.number(id));
+            IR.number(id),
+            IR.string(name));
         call.putBooleanProp(Node.FREE_CALL, true);
         call.useSourceInfoFromForTree(n);
         Node expr = NodeUtil.newExpr(call);
