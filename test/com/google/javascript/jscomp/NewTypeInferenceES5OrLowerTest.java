@@ -3024,6 +3024,54 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  /** @type {?} */ this.x = 1;",
         "}"),
         GlobalTypeInfo.REDECLARED_PROPERTY);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "ns.prop = function() {};",
+        "function f() {",
+        "  ns.prop = function() {};",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "ns.prop = function() {};",
+        "function f() {",
+        "  ns.prop = 234;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.prop = function(x, y) {};",
+        "}",
+        "(new Foo).prop = 123;"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?function(number)}  */",
+        "  this.prop = function(x) {};",
+        "}",
+        "(new Foo).prop = null;"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.prop = function(/** number */ x) {};",
+        "}",
+        "(new Foo).prop = null;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?function(number)}  */",
+        "  this.prop = function(x) {};",
+        "}",
+        "(new Foo).prop = 5;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testPrototypePropertyAssignments() {

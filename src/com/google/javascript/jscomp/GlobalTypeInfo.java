@@ -1382,6 +1382,30 @@ class GlobalTypeInfo implements CompilerPass {
       return fnScope;
     }
 
+    // Used when declaring constructor and namespace properties. Prototype property
+    // declarations are similar, but different enough that they didn't neatly fit
+    // in this method (eg, redeclaration warnings are stricter).
+    PropertyType getPropTypeHelper(
+        JSDocInfo jsdoc, Node initializer, RawNominalType thisType) {
+      PropertyType result = new PropertyType();
+      DeclaredFunctionType dft = null;
+      if (initializer != null && initializer.isFunction()) {
+        dft = visitFunctionLate(initializer, thisType).getDeclaredFunctionType();
+      }
+      if (jsdoc != null && jsdoc.hasType()) {
+        result.declType = getDeclaredTypeOfNode(jsdoc, currentScope);
+      } else if (initializer != null && initializer.isFunction()) {
+        JSType funType = commonTypes.fromFunctionType(dft.toFunctionType());
+        if ((jsdoc != null && jsdoc.containsFunctionDeclaration())
+            || NodeUtil.functionHasInlineJsdocs(initializer)) {
+          result.declType = funType;
+        } else {
+          result.inferredFunType = funType;
+        }
+      }
+      return result;
+    }
+
     private void visitPrototypePropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
       Node parent = getProp.getParent();
@@ -1511,15 +1535,9 @@ class GlobalTypeInfo implements CompilerPass {
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
       Node initializer = NodeUtil.getRValueOfLValue(declNode);
-      JSType propDeclType = null;
-      if (jsdoc != null && jsdoc.hasType()) {
-        propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
-      } else if (initializer != null && initializer.isFunction()) {
-        DeclaredFunctionType declType = visitFunctionLate(initializer, null)
-            .getDeclaredFunctionType();
-        propDeclType = commonTypes.fromFunctionType(declType.toFunctionType());
-      }
-
+      PropertyType pt = getPropTypeHelper(jsdoc, initializer, null);
+      JSType propDeclType = pt.declType;
+      JSType propInferredFunType = pt.inferredFunType;
       boolean isConst = isConst(declNode);
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
@@ -1538,6 +1556,8 @@ class GlobalTypeInfo implements CompilerPass {
         if (declNode.isGetProp() && isConst) {
           declNode.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
+      } else if (propInferredFunType != null) {
+        ns.addUndeclaredProperty(pname, declNode, propInferredFunType, false);
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
         JSType t = initializer == null
@@ -1562,17 +1582,13 @@ class GlobalTypeInfo implements CompilerPass {
       Node parent = getProp.getParent();
       Node initializer = parent.isAssign() ? parent.getLastChild() : null;
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
-      JSType propDeclType = null;
+      PropertyType pt = getPropTypeHelper(jsdoc, initializer, rawType);
+      JSType propDeclType = pt.declType;
+      JSType propInferredFunType = pt.inferredFunType;
+      boolean isConst = isConst(getProp);
       if (initializer != null && initializer.isFunction()) {
         parent.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
-        DeclaredFunctionType dft = visitFunctionLate(initializer, rawType)
-            .getDeclaredFunctionType();
-        propDeclType = commonTypes.fromFunctionType(dft.toFunctionType());
       }
-      if (jsdoc != null && jsdoc.hasType()) {
-        propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
-      }
-      boolean isConst = isConst(getProp);
       if (propDeclType != null || isConst) {
         mayWarnAboutExistingProp(rawType, pname, getProp, propDeclType);
         // Intentionally, we keep going even if we warned for redeclared prop.
@@ -1588,7 +1604,12 @@ class GlobalTypeInfo implements CompilerPass {
           getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
       } else if (mayAddPropToType(getProp, rawType)) {
-        rawType.addUndeclaredClassProperty(pname, getProp);
+        if (propInferredFunType != null) {
+          rawType.addUndeclaredClassProperty(pname, propInferredFunType, getProp);
+        } else {
+          rawType.addUndeclaredClassProperty(pname, JSType.UNKNOWN, getProp);
+        }
+
       }
       // Only add the definition node if the property is not already defined.
       if (!propertyDefs.contains(rawType, pname)) {
@@ -2216,6 +2237,15 @@ class GlobalTypeInfo implements CompilerPass {
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
     Node rhs = NodeUtil.getRValueOfLValue(qnameNode);
     return jsdoc != null && jsdoc.isConstructor() && rhs != null && rhs.isCall();
+  }
+
+  // Utility class when analyzing property declarations
+  private static class PropertyType {
+    // The declared type of the property, from the jsdoc.
+    JSType declType = null;
+    // When the property doesn't have a jsdoc, and is initialized to a function,
+    // this field stores a "bare-bones" function type.
+    JSType inferredFunType = null;
   }
 
   private static class PropertyDef {

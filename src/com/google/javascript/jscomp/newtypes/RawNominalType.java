@@ -435,13 +435,13 @@ public final class RawNominalType extends Namespace {
   }
 
   /** Add a new undeclared property to instances of this class */
-  public void addUndeclaredClassProperty(String pname, Node defSite) {
+  public void addUndeclaredClassProperty(String pname, JSType type, Node defSite) {
     Preconditions.checkState(!this.isFinalized);
     // Only do so if there isn't a declared prop already.
     if (mayHaveProp(pname)) {
       return;
     }
-    classProps = classProps.with(pname, Property.makeWithDefsite(defSite, JSType.UNKNOWN, null));
+    classProps = classProps.with(pname, Property.makeWithDefsite(defSite, type, null));
   }
 
   //////////// Prototype Properties
