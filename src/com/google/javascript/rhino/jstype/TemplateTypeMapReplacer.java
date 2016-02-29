@@ -75,6 +75,13 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
       } else {
         JSType replacement = replacements.getUnresolvedOriginalTemplateType(type);
 
+        JSType restrictedReplacement = replacement.restrictByNotNullOrUndefined();
+        if (restrictedReplacement.isTemplatizedType()
+            && restrictedReplacement.toMaybeTemplatizedType().getTemplateTypes().contains(type)) {
+          // Recursive templated type definition (e.g. T resolved to Foo<T>).
+          return type;
+        }
+
         visitedTypes.push(type);
         JSType visitedReplacement = replacement.visit(this);
         visitedTypes.pop();

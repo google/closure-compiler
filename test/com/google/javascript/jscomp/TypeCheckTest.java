@@ -11928,6 +11928,58 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "var x = new Foo();\n");
   }
 
+  public void testTemplateType24() {
+    // Recursive templated type definition.
+    testTypes(LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " * @param {T} x",
+            " */",
+            "function Foo(x) {",
+            "  /** @type {T} */",
+            "  this.p = x;",
+            "}",
+            "/** @return {Foo<Foo<T>>} */",
+            "Foo.prototype.m = function() {",
+            "  return null;",
+            "};",
+            "/** @return {T} */",
+            "Foo.prototype.get = function() {",
+            "  return this.p;",
+            "};",
+            "var /** null */ n = new Foo(new Object).m().get();"),
+        "initializing variable\n"
+            + "found   : (Foo<Object>|null)\n"
+            + "required: null");
+  }
+
+  public void testTemplateType25() {
+    // Non-nullable recursive templated type definition.
+    testTypes(LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " * @param {T} x",
+            " */",
+            "function Foo(x) {",
+            "  /** @type {T} */",
+            "  this.p = x;",
+            "}",
+            "/** @return {!Foo<!Foo<T>>} */",
+            "Foo.prototype.m = function() {",
+            "  return new Foo(new Foo(new Object));",
+            "};",
+            "/** @return {T} */",
+            "Foo.prototype.get = function() {",
+            "  return this.p;",
+            "};",
+            "var /** null */ n = new Foo(new Object).m().get();"),
+        "initializing variable\n"
+            + "found   : Foo<Object>\n"
+            + "required: null");
+  }
+
   public void testSubtypeNotTemplated1() {
     testTypes(
         LINE_JOINER.join(
