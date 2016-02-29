@@ -207,4 +207,11 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
     testWarning(left + " instanceof " + right,
         CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
   }
+
+  public void testCheckNegatedLeftOperandOfInOperator() {
+    testSame("if (!(x in y)) {}");
+    testSame("if (('' + !x) in y) {}");
+    testWarning(
+        "if (!x in y) {}", CheckSuspiciousCode.SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR);
+  }
 }
