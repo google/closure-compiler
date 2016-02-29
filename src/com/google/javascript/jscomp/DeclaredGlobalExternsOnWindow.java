@@ -97,7 +97,8 @@ class DeclaredGlobalExternsOnWindow
         builder = JSDocInfoBuilder.copyFrom(oldJSDocInfo);
       }
 
-      builder.recordSuppressions(ImmutableSet.of("duplicate"));
+      // TODO(blickly): Remove these suppressions when all externs declarations on window are gone.
+      builder.recordSuppressions(ImmutableSet.of("const", "duplicate"));
       JSDocInfo jsDocInfo = builder.build();
       newNode.setJSDocInfo(jsDocInfo);
     }

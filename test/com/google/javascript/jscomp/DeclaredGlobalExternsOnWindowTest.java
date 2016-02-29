@@ -87,7 +87,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
         LINE_JOINER.join(
             "var window;",
             "/** @const {number} */ var n;",
-            "/** @const {number} @suppress {duplicate} */ window.n;"));
+            "/** @const {number} @suppress {const,duplicate} */ window.n;"));
   }
 
   public void testWindowProperty7() {
@@ -95,7 +95,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
         LINE_JOINER.join(
             "var window;",
             "/** @const */ var ns = {};",
-            "/** @suppress {duplicate} @const */ window.ns = ns;"));
+            "/** @suppress {const,duplicate} @const */ window.ns = ns;"));
   }
 
   public void testWindowProperty8() {
@@ -103,7 +103,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
         LINE_JOINER.join(
             "var window;",
             "/** @constructor */ function Foo(){}",
-            "/** @constructor @suppress {duplicate} */ window.Foo = Foo;"));
+            "/** @constructor @suppress {const,duplicate} */ window.Foo = Foo;"));
   }
 
   public void testEnumWindowProperty() {
@@ -111,7 +111,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
         LINE_JOINER.join(
             "var window;",
             "/** @enum {string} */ var Enum = { A: 'str' };",
-            "/** @enum {string} @suppress {duplicate} */ window.Enum = Enum;"));
+            "/** @enum {string} @suppress {const,duplicate} */ window.Enum = Enum;"));
   }
 
   /**
