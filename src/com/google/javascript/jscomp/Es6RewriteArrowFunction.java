@@ -26,14 +26,6 @@ import com.google.javascript.rhino.Token;
  */
 public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallback
     implements HotSwapCompilerPass {
-
-  // TODO(tbreisacher): Move this to a separate pass as the warning is still valid when not
-  // transpiling.
-  static final DiagnosticType THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT = DiagnosticType.warning(
-      "JSC_THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT",
-      "You have 'this' reference in an arrow function inside an object literal. "
-      + "The reference may refer to an unintended target after rewrite.");
-
   private final AbstractCompiler compiler;
 
   // The name of the vars that capture 'this' and 'arguments'
@@ -69,10 +61,6 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
   }
 
   private void visitArrowFunction(NodeTraversal t, Node n) {
-    if (n.getParent().isStringKey() && NodeUtil.referencesThis(n)) {
-      compiler.report(JSError.make(n, THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT));
-    }
-
     n.setIsArrowFunction(false);
     Node body = n.getLastChild();
     if (!body.isBlock()) {

@@ -492,7 +492,6 @@ public class DiagnosticGroups {
           CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,
           CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY,
           CheckUselessBlocks.USELESS_BLOCK,
-          Es6RewriteArrowFunction.THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT,
           RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
           RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
           RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS,
