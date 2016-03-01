@@ -357,6 +357,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       return;
     }
 
+    // Single names are likely external, but if this is running in single-file mode, they
+    // will not be in the externs, so add a weak usage.
+    if (mode == Mode.SINGLE_FILE && extendClass.isName()) {
+      weakUsages.put(extendClass.getString(), extendClass);
+      return;
+    }
+
     Node root = NodeUtil.getRootOfQualifiedName(extendClass);
 
     // It should always be a name. Extending this.something or
