@@ -91,7 +91,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testFailWithOneNew() {
     String[] js = new String[] {"var foo = {}; var bar = new foo.bar();"};
-    String warning = "'foo.bar' used but not goog.require'd";
+    String warning = "'foo.bar' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -161,14 +161,14 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testFailEs6ClassExtends() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     String js = "var goog = {}; class SubClass extends goog.foo.Bar.Inner {}";
-    String warning = "'goog.foo.Bar.Inner' used but not goog.require'd";
+    String warning = "'goog.foo.Bar.Inner' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
   public void testFailEs6ClassExtendsSomethingWithoutNS() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     String js = "var goog = {}; class SubClass extends SomethingWithoutNS {}";
-    String warning = "'SomethingWithoutNS' used but not goog.require'd";
+    String warning = "'SomethingWithoutNS' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -193,7 +193,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     String[] js =
         new String[] {"var goog = {}; goog.require('goog.foo.Bar'); "
             + "var str = new goog.foo.Bar(new goog.foo.Baz('5')); "};
-    String warning = "'goog.foo.Baz' used but not goog.require'd";
+    String warning = "'goog.foo.Baz' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -204,7 +204,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
       "/** @constructor @implements {example.Foo} */ var Ctor = function() {};"
     };
-    String warning = "'example.Foo' used but not goog.require'd";
+    String warning = "'example.Foo' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -217,7 +217,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             " */",
             "function AnInterface() {}");
 
-    String warning = "'some.other.Interface' used but not goog.require'd";
+    String warning = "'some.other.Interface' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -236,7 +236,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
       "/** @constructor @extends {example.Foo} */ var Ctor = function() {};"
     };
-    String warning = "'example.Foo' used but not goog.require'd";
+    String warning = "'example.Foo' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -248,7 +248,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
       "/** @constructor @extends {Foo} */ var Ctor = function() {};"
     };
-    String warning = "'Foo' used but not goog.require'd";
+    String warning = "'Foo' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -289,7 +289,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "  var foo = new tempCtor();",
             "}");
     String[] js = new String[] {localVar, " var foo = new tempCtor();"};
-    String warning = "'tempCtor' used but not goog.require'd";
+    String warning = "'tempCtor' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -323,7 +323,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             + "Bar.prototype.bar = function(){return new Bar();};";
     String bad = "/** @constructor */ function Foo(){ var bar = new Bar();}";
     String[] js = new String[] {good, bad};
-    String warning = "'Bar' used but not goog.require'd";
+    String warning = "'Bar' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -335,7 +335,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
           + "Baz.prototype.bar = function(){return new Baz();};";
     String bad = "var baz = new Baz()";
     String[] js = new String[] {good, bad};
-    String warning = "'Baz' used but not goog.require'd";
+    String warning = "'Baz' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -364,7 +364,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
           "var bar = new Bar();"
         };
-    String warning = "'Bar' used but not goog.require'd";
+    String warning = "'Bar' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -391,7 +391,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
           "var bar = new Bar();"
         };
-    String warning = "'Bar' used but not goog.require'd";
+    String warning = "'Bar' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -416,7 +416,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     assertNotNull(warnings);
     assertThat(warnings).isNotEmpty();
 
-    String expectation = "'foo.bar.goo' used but not goog.require'd";
+    String expectation = "'foo.bar.goo' used but not required";
 
     for (JSError warning : warnings) {
       if (expectation.equals(warning.description)) {
@@ -463,7 +463,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
               "  var second = new goog.Forgot();",
               "};")
         };
-    String warning = "'goog.Forgot' used but not goog.require'd";
+    String warning = "'goog.Forgot' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -524,7 +524,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         + "  var bar = new foo.Bar();\n"
         + "}\n";
     String[] js = new String[] {good, bad};
-    String warning = "'foo.Bar' used but not goog.require'd";
+    String warning = "'foo.Bar' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -539,7 +539,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         + "  var bar = new foo.Bar();\n"
         + "}\n";
     String[] js = new String[] {good, bad};
-    String warning = "'foo.Bar' used but not goog.require'd";
+    String warning = "'foo.Bar' used but not required";
     test(js, null, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -596,7 +596,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         + "  }\n"
         + "});\n";
     String[] js = new String[] {good, bad};
-    String warning = "'foo.bar.Baz' used but not goog.require'd";
+    String warning = "'foo.bar.Baz' used but not required";
     test(js, null, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -644,7 +644,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         + "  var bar = new foo.Atom();\n"
         + "}\n";
     String[] js = new String[] {good, bad};
-    String warning = "'foo.Atom' used but not goog.require'd";
+    String warning = "'foo.Atom' used but not required";
     test(js, null, null, MISSING_REQUIRE_WARNING, warning);
   }
 
@@ -726,7 +726,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     String module = "import {Foo} from 'bar';";
     String script = "var x = new example.X()";
     String[] js = new String[] {module, script};
-    String warning = "'example.X' used but not goog.require'd";
+    String warning = "'example.X' used but not required";
     test(js, null, null, MISSING_REQUIRE_WARNING, warning);
   }
 }

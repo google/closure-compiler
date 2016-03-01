@@ -74,15 +74,15 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   // Warnings
   static final DiagnosticType MISSING_REQUIRE_WARNING =
       DiagnosticType.disabled(
-          "JSC_MISSING_REQUIRE_WARNING", "''{0}'' used but not goog.require''d");
+          "JSC_MISSING_REQUIRE_WARNING", "''{0}'' used but not required");
 
   static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_EXTRA_REQUIRE_WARNING",
-      "''{0}'' goog.require''d but not used");
+      "''{0}'' required but not used");
 
   static final DiagnosticType DUPLICATE_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_DUPLICATE_REQUIRE_WARNING",
-      "''{0}'' goog.require''d more than once.");
+      "''{0}'' required more than once.");
 
   private static final Set<String> DEFAULT_EXTRA_NAMESPACES = ImmutableSet.of(
     "goog.testing.asserts", "goog.testing.jsunit");
