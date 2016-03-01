@@ -90,7 +90,7 @@ $jscomp.initSymbolIterator = function() {
 /**
  * Creates an iterator for the given iterable.
  *
- * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>} iterable
+ * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable
  * @return {!Iterator<T>}
  * @template T
  * @suppress {reportUnknownTypes}
@@ -101,10 +101,7 @@ $jscomp.makeIterator = function(iterable) {
   if (iterable[$jscomp.global.Symbol.iterator]) {
     return iterable[$jscomp.global.Symbol.iterator]();
   }
-  if (!(iterable instanceof Array) && typeof iterable != 'string' &&
-      !(iterable instanceof String)) {
-    throw new TypeError(iterable + ' is not iterable');
-  }
+
   let index = 0;
   return /** @type {!Iterator} */ ({
     next() {
@@ -142,7 +139,7 @@ $jscomp.arrayFromIterator = function(iterator) {
 
 /**
  * Copies the values from an Iterable into an Array.
- * @param {string|!Array<T>|!Iterable<T>} iterable
+ * @param {string|!Array<T>|!Iterable<T>|!Arguments<T>} iterable
  * @return {!Array<T>}
  * @template T
  */
@@ -152,20 +149,6 @@ $jscomp.arrayFromIterable = function(iterable) {
   } else {
     return $jscomp.arrayFromIterator($jscomp.makeIterator(iterable));
   }
-};
-
-
-/**
- * Copies the values from an Arguments object into an Array.
- * @param {!Arguments} args
- * @return {!Array}
- */
-$jscomp.arrayFromArguments = function(args) {
-  const result = [];
-  for (let i = 0; i < args.length; i++) {
-    result.push(args[i]);
-  }
-  return result;
 };
 
 

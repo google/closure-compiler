@@ -362,8 +362,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     "function f() { var [x, y] = arguments; }",
     LINE_JOINER.join(
         "function f() {",
-        "  var $jscomp$destructuring$var0 = $jscomp.makeIterator(",
-        "      $jscomp.arrayFromArguments(arguments));",
+        "  var $jscomp$destructuring$var0 = $jscomp.makeIterator(arguments);",
         "  var x = $jscomp$destructuring$var0.next().value;",
         "  var y = $jscomp$destructuring$var0.next().value;",
         "}"));

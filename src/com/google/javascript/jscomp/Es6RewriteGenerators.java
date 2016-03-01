@@ -179,7 +179,7 @@ public final class Es6RewriteGenerators
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
     Node generator = IR.var(
         IR.name(GENERATOR_YIELD_ALL_NAME),
-        makeIterator(t, compiler, n.removeFirstChild()));
+        makeIterator(compiler, n.removeFirstChild()));
     Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
     Node assignIterResult =
         IR.assign(

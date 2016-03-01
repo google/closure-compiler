@@ -142,7 +142,7 @@ Generator.prototype.return = function(value) {};
 Generator.prototype.throw = function(exception) {};
 
 
-// TODO(johnlenz): Array should be Iterable.
+// TODO(johnlenz): Array and Arguments should be Iterable.
 
 
 
