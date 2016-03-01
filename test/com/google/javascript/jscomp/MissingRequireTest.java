@@ -55,7 +55,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassWithOneNew() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "goog.require('foo.bar.goo');",
             "var bar = new foo.bar.goo();");
     testSame(js);
@@ -74,7 +73,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassWithOneNewOuterClass() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "goog.require('goog.foo.Bar');",
             "var bar = new goog.foo.Bar.Baz();");
     testSame(js);
@@ -83,14 +81,13 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassWithOneNewOuterClassWithUpperPrefix() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "goog.require('goog.foo.IDBar');",
             "var bar = new goog.foo.IDBar.Baz();");
     testSame(js);
   }
 
   public void testFailWithOneNew() {
-    String[] js = new String[] {"var foo = {}; var bar = new foo.bar();"};
+    String[] js = new String[] {"goog.provide('foo'); var bar = new foo.bar();"};
     String warning = "'foo.bar' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
@@ -98,7 +95,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassWithTwoNewNodes() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "goog.require('goog.foo.Bar');",
             "goog.require('goog.foo.Baz');",
             "var str = new goog.foo.Bar('g4'),",
@@ -109,7 +105,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassWithNestedNewNodes() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "goog.require('goog.foo.Bar');",
             "var str = new goog.foo.Bar(new goog.foo.Bar('5'));");
     testSame(js);
@@ -118,7 +113,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassWithInnerClassInExtends() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "goog.require('goog.foo.Bar');",
             "",
             "/** @constructor @extends {goog.foo.Bar.Inner} */",
@@ -129,7 +123,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassEs6ClassExtends() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "goog.require('goog.foo.Bar');",
             "",
             "class SubClass extends goog.foo.Bar.Inner {}");
@@ -191,8 +184,9 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testFailWithNestedNewNodes() {
     String[] js =
-        new String[] {"var goog = {}; goog.require('goog.foo.Bar'); "
-            + "var str = new goog.foo.Bar(new goog.foo.Baz('5')); "};
+        new String[] {
+          "goog.require('goog.foo.Bar'); var str = new goog.foo.Bar(new goog.foo.Baz('5'));"
+        };
     String warning = "'goog.foo.Baz' used but not required";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
@@ -306,7 +300,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testNewNodesMeta() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "/** @constructor */",
             "goog.ui.Option = function() {};",
             "goog.ui.Option.optionDecorator = function() {",
@@ -356,7 +349,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     String[] js =
         new String[] {
           LINE_JOINER.join(
-              "var goog = {};",
               "/** @constructor */",
               "function Bar() {}",
               "/** @suppress {extraRequire} */",
@@ -371,7 +363,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassWithoutWarningsAndMultipleFiles() {
     String[] js =
         new String[] {
-          LINE_JOINER.join("var goog = {};", "goog.require('Foo');", "var foo = new Foo();"),
+          LINE_JOINER.join("goog.require('Foo');", "var foo = new Foo();"),
 
           "goog.require('Bar'); var bar = new Bar();"
         };
@@ -383,7 +375,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     String[] js =
         new String[] {
           LINE_JOINER.join(
-              "var goog = {};",
+
               "/** @constructor */",
               "function Bar() {}",
               "/** @suppress {extraRequire} */",
@@ -404,7 +396,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testRequiresAreCaughtBeforeProcessed() {
-    String js = "var foo = {}; var bar = new foo.bar.goo();";
+    String js = "goog.provide('foo'); var bar = new foo.bar.goo();";
     SourceFile input = SourceFile.fromCode("foo.js", js);
     Compiler compiler = new Compiler();
     CompilerOptions opts = new CompilerOptions();
@@ -430,7 +422,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testNoWarningsForThisConstructor() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};",
             "/** @constructor */goog.Foo = function() {};",
             "goog.Foo.bar = function() {",
             "  return new this.constructor;",
@@ -441,7 +432,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testBug2062487() {
     testSame(
         LINE_JOINER.join(
-            "var goog = {};",
             "/** @constructor */",
             "goog.Foo = function() {",
             "  /** @constructor */",
@@ -455,7 +445,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     String[] js =
         new String[] {
           LINE_JOINER.join(
-              "var goog = {};",
               "/** @constructor */",
               "goog.Foo = function() {};",
               "goog.Foo.bar = function(){",
@@ -685,6 +674,14 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         "  var baz = new Atom();",
         "}");
     test(js, null);
+  }
+
+  public void testReferenceToLocalNamespace() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ function FooBar() {};",
+            "FooBar.Subclass = constructorFactory();",
+            "new FooBar.Subclass();"));
   }
 
   public void testReferenceInDestructuringParam() {
