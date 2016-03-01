@@ -501,6 +501,11 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
 
         Var var = t.getScope().getVar(name);
         if (var != null && var.isGlobal()) {
+          JSDocInfo varInfo = NodeUtil.getBestJSDocInfo(var.getNameNode());
+          // Assume @define's are truly global and don't mangle them.
+          if (varInfo != null && varInfo.isDefine()) {
+            return;
+          }
           // Avoid polluting the global namespace.
           String newName = name + "$$" + suffix;
           if (isShorthandObjLitKey) {
