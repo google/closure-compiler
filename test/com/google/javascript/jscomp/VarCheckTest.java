@@ -83,6 +83,11 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     return 1;
   }
 
+  public void testShorthandObjLit() {
+    testErrorEs6("var x = {y};", VarCheck.UNDEFINED_VAR_ERROR);
+    testSameEs6("var {x} = {x: 5}; let y = x;");
+  }
+
   public void testBreak() {
     testSame("a: while(1) break a;");
   }
@@ -128,8 +133,7 @@ public final class VarCheckTest extends Es6CompilerTestCase {
   }
 
   public void testMultiplyDeclaredVars2() {
-    testSame("var y; try { y=1 } catch (x) {}" +
-         "try { y=1 } catch (x) {}");
+    testSame("var y; try { y=1 } catch (x) {} try { y=1 } catch (x) {}");
   }
 
   public void testMultiplyDeclaredVars3() {

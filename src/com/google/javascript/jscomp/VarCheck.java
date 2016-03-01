@@ -159,86 +159,83 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!n.isName()) {
-      return;
-    }
+    if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
+      String varName = n.getString();
 
-    String varName = n.getString();
-
-    // Only a function can have an empty name.
-    if (varName.isEmpty()) {
-      Preconditions.checkState(parent.isFunction());
-      Preconditions.checkState(NodeUtil.isFunctionExpression(parent));
-      return;
-    }
-
-    // Check if this is a declaration for a var that has been declared
-    // elsewhere. If so, mark it as a duplicate.
-    if ((parent.isVar() ||
-         NodeUtil.isFunctionDeclaration(parent)) &&
-        varsToDeclareInExterns.contains(varName)) {
-      createSynthesizedExternVar(varName);
-
-      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
-      builder.addSuppression("duplicate");
-      n.setJSDocInfo(builder.build());
-    }
-
-    // Check that the var has been declared.
-    Scope scope = t.getScope();
-    Var var = scope.getVar(varName);
-    if (var == null) {
-      if (NodeUtil.isFunctionExpression(parent) || NodeUtil.isClassExpression(parent)) {
-        // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
-        // current scope.
-      } else {
-        boolean isArguments = scope.isLocal() && ARGUMENTS.equals(varName);
-        // The extern checks are stricter, don't report a second error.
-        if (!isArguments && !(strictExternCheck && t.getInput().isExtern())) {
-          t.report(n, UNDEFINED_VAR_ERROR, varName);
-        }
-
-        if (sanityCheck) {
-          throw new IllegalStateException("Unexpected variable " + varName);
-        } else {
-          createSynthesizedExternVar(varName);
-          scope.getGlobalScope().declare(varName, n, compiler.getSynthesizedExternsInput());
-        }
+      // Only a function can have an empty name.
+      if (varName.isEmpty()) {
+        Preconditions.checkState(parent.isFunction());
+        Preconditions.checkState(NodeUtil.isFunctionExpression(parent));
+        return;
       }
-      return;
-    }
 
-    CompilerInput currInput = t.getInput();
-    CompilerInput varInput = var.input;
-    if (currInput == varInput || currInput == null || varInput == null) {
-      // The variable was defined in the same file. This is fine.
-      return;
-    }
+      // Check if this is a declaration for a var that has been declared
+      // elsewhere. If so, mark it as a duplicate.
+      if ((parent.isVar()
+           || NodeUtil.isFunctionDeclaration(parent))
+          && varsToDeclareInExterns.contains(varName)) {
+        createSynthesizedExternVar(varName);
 
-    // Check module dependencies.
-    JSModule currModule = currInput.getModule();
-    JSModule varModule = varInput.getModule();
-    JSModuleGraph moduleGraph = compiler.getModuleGraph();
-    if (!sanityCheck &&
-        varModule != currModule && varModule != null && currModule != null) {
-      if (moduleGraph.dependsOn(currModule, varModule)) {
-        // The module dependency was properly declared.
-      } else {
-        if (scope.isGlobal()) {
-          if (moduleGraph.dependsOn(varModule, currModule)) {
-            // The variable reference violates a declared module dependency.
-            t.report(n, VIOLATED_MODULE_DEP_ERROR,
-                     currModule.getName(), varModule.getName(), varName);
+        JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+        builder.addSuppression("duplicate");
+        n.setJSDocInfo(builder.build());
+      }
+
+      // Check that the var has been declared.
+      Scope scope = t.getScope();
+      Var var = scope.getVar(varName);
+      if (var == null) {
+        if (NodeUtil.isFunctionExpression(parent) || NodeUtil.isClassExpression(parent)) {
+          // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
+          // current scope.
+        } else {
+          boolean isArguments = scope.isLocal() && ARGUMENTS.equals(varName);
+          // The extern checks are stricter, don't report a second error.
+          if (!isArguments && !(strictExternCheck && t.getInput().isExtern())) {
+            t.report(n, UNDEFINED_VAR_ERROR, varName);
+          }
+
+          if (sanityCheck) {
+            throw new IllegalStateException("Unexpected variable " + varName);
           } else {
-            // The variable reference is between two modules that have no
-            // dependency relationship. This should probably be considered an
-            // error, but just issue a warning for now.
-            t.report(n, MISSING_MODULE_DEP_ERROR,
+            createSynthesizedExternVar(varName);
+            scope.getGlobalScope().declare(varName, n, compiler.getSynthesizedExternsInput());
+          }
+        }
+        return;
+      }
+
+      CompilerInput currInput = t.getInput();
+      CompilerInput varInput = var.input;
+      if (currInput == varInput || currInput == null || varInput == null) {
+        // The variable was defined in the same file. This is fine.
+        return;
+      }
+
+      // Check module dependencies.
+      JSModule currModule = currInput.getModule();
+      JSModule varModule = varInput.getModule();
+      JSModuleGraph moduleGraph = compiler.getModuleGraph();
+      if (!sanityCheck && varModule != currModule && varModule != null && currModule != null) {
+        if (moduleGraph.dependsOn(currModule, varModule)) {
+          // The module dependency was properly declared.
+        } else {
+          if (scope.isGlobal()) {
+            if (moduleGraph.dependsOn(varModule, currModule)) {
+              // The variable reference violates a declared module dependency.
+              t.report(n, VIOLATED_MODULE_DEP_ERROR,
+                       currModule.getName(), varModule.getName(), varName);
+            } else {
+              // The variable reference is between two modules that have no
+              // dependency relationship. This should probably be considered an
+              // error, but just issue a warning for now.
+              t.report(n, MISSING_MODULE_DEP_ERROR,
+                       currModule.getName(), varModule.getName(), varName);
+            }
+          } else {
+            t.report(n, STRICT_MODULE_DEP_ERROR,
                      currModule.getName(), varModule.getName(), varName);
           }
-        } else {
-          t.report(n, STRICT_MODULE_DEP_ERROR,
-                   currModule.getName(), varModule.getName(), varName);
         }
       }
     }
