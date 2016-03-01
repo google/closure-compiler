@@ -3190,16 +3190,6 @@ google.maps.MapOptions.prototype.noClear;
 /**
  * @type {boolean}
  */
-google.maps.MapOptions.prototype.overviewMapControl;
-
-/**
- * @type {google.maps.OverviewMapControlOptions|Object.<string>}
- */
-google.maps.MapOptions.prototype.overviewMapControlOptions;
-
-/**
- * @type {boolean}
- */
 google.maps.MapOptions.prototype.panControl;
 
 /**
@@ -3942,16 +3932,6 @@ google.maps.OverlayView.prototype.onRemove = function() {};
  * @return {undefined}
  */
 google.maps.OverlayView.prototype.setMap = function(map) {};
-
-/**
- * @interface
- */
-google.maps.OverviewMapControlOptions = function() {};
-
-/**
- * @type {boolean}
- */
-google.maps.OverviewMapControlOptions.prototype.opened;
 
 /**
  * @interface
