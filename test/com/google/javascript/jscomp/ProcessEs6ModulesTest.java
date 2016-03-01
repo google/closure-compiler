@@ -606,4 +606,14 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     testModules("import * as Foo from 'goog:other.Foo';",
         ProcessEs6Modules.NAMESPACE_IMPORT_CANNOT_USE_STAR);
   }
+
+  public void testDefine() {
+    testModules(
+        LINE_JOINER.join(
+            "import name from 'other';",
+            "/** @define {boolean} */ var FOO = true; use(FOO);"),
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "/** @define {boolean} */ var FOO = true; use(FOO);"));
+  }
 }
