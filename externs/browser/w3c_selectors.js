@@ -55,6 +55,15 @@ Element.prototype.querySelector = function(selectors) {};
 Element.prototype.querySelectorAll = function(selectors) {};
 
 /**
+ * https://dom.spec.whatwg.org/#dom-element-closest
+ * https://developer.mozilla.org/en-US/docs/Web/API/Element.closest
+ * @param {string} selectors
+ * @return {?Element}
+ * @nosideeffects
+ */
+Element.prototype.closest = function(selectors) {};
+
+/**
  * https://dom.spec.whatwg.org/#dom-element-matches
  * https://developer.mozilla.org/en-US/docs/Web/API/Element.matches
  * @param {string} selectors
