@@ -41,9 +41,9 @@ public final class ErrorToFixMapper {
 
   private static final Pattern DID_YOU_MEAN = Pattern.compile(".*Did you mean (.*)\\?");
   private static final Pattern MISSING_REQUIRE =
-      Pattern.compile("'([^']+)' used but not goog\\.require'd");
+      Pattern.compile("'([^']+)' used but not required");
   private static final Pattern EXTRA_REQUIRE =
-      Pattern.compile("'([^']+)' goog\\.require'd but not used");
+      Pattern.compile("'([^']+)' required but not used");
 
   public static List<SuggestedFix> getFixesForJsError(JSError error, AbstractCompiler compiler) {
     SuggestedFix fix = getFixForJsError(error, compiler);
