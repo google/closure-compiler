@@ -47,6 +47,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public static final DiagnosticType INVALID_SUPPRESS =
       DiagnosticType.warning("JSC_INVALID_SUPPRESS", "@suppress annotation not allowed here.");
 
+  public static final DiagnosticType CONSTRUCTOR_DISALLOWED_JSDOC =
+      DiagnosticType.warning("JSC_CONSTRUCTOR_DISALLOWED_JSDOC",
+          "Visibility annotations on constructors are not supported.\n"
+          + "Please mark the visibility on the class instead.");
+
   public static final DiagnosticType MISSING_JSDOC =
       DiagnosticType.warning("JSC_MISSING_JSDOC", "Function must have JSDoc.");
 
@@ -96,7 +101,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.FUNCTION:
-        visitFunction(t, n);
+        visitFunction(t, n, parent);
         break;
       case Token.ASSIGN:
         // If the right side is a function it will be handled when the function is visited.
@@ -151,7 +156,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     }
   }
 
-  private void visitFunction(NodeTraversal t, Node function) {
+  private void visitFunction(NodeTraversal t, Node function, Node parent) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(function);
 
     if (jsDoc == null && !hasAnyInlineJsDoc(function)) {
@@ -169,6 +174,13 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         && compiler.getCodingConvention().isPrivate(name)
         && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
       t.report(function, MUST_BE_PRIVATE, name);
+    }
+
+    if (parent.isMemberFunctionDef()
+        && "constructor".equals(parent.getString())
+        && jsDoc != null
+        && !jsDoc.getVisibility().equals(Visibility.INHERITED)) {
+      t.report(function, CONSTRUCTOR_DISALLOWED_JSDOC);
     }
   }
 

@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.CONSTRUCTOR_DISALLOWED_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INVALID_SUPPRESS;
@@ -236,7 +237,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("class Foo { constructor(/** string */ inlineArg) {} }");
     testSame("class Foo { method(/** string */ inlineArg) {} }");
 
-    testSame("class Foo { /** @export */ constructor(/** string */ inlineArg) {} }");
+    testSame("/** @export */ class Foo { constructor(/** string */ inlineArg) {} }");
     testSame("class Foo { /** @export */ method(/** string */ inlineArg) {} }");
   }
 
@@ -451,5 +452,12 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         },
         new String[] {},
         null);
+  }
+
+  public void testConstructorsDontHaveVisibility() {
+    testSame(inIIFE("/** @private */ class Foo { constructor() {} }"));
+
+    testWarning(
+        inIIFE("class Foo { /** @private */ constructor() {} }"), CONSTRUCTOR_DISALLOWED_JSDOC);
   }
 }
