@@ -5867,6 +5867,48 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         JSTypeCreatorFromJSDoc.CANNOT_MAKE_TYPEVAR_NON_NULL);
   }
 
+  public void testInvalidGenericsInstantiation() {
+    typeCheck(LINE_JOINER.join(
+        "/** @type {number<string>} */",
+        "var x;"),
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @type {!Function<string>} */",
+        "var x;"),
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T<number>} x",
+        " */",
+        "function f(x) {}"),
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef{{prop:number}} */",
+        "var MyType;",
+        "/** @type {MyType<string>} */",
+        "var x;"),
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @enum */",
+        "var MyType = { A: 1 };",
+        "/** @type {MyType<string>} */",
+        "var x;"),
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
+
+    // Don't warn for a forward-declared type; the same file can be included
+    // in compilations that define the type as a generic type.
+    typeCheck(LINE_JOINER.join(
+        FORWARD_DECLARATION_DEFINITIONS,
+        "goog.forwardDeclare('Bar');",
+        "/** @type {Bar<string>} */",
+        "var x;"));
+  }
+
   public void testPolymorphicFunctionInstantiation() {
     typeCheck(LINE_JOINER.join(
         "/**",

@@ -44,7 +44,7 @@ public final class JSTypeCreatorFromJSDoc {
   public static final DiagnosticType INVALID_GENERICS_INSTANTIATION =
       DiagnosticType.warning(
         "JSC_NTI_INVALID_GENERICS_INSTANTIATION",
-        "Invalid generics instantiation for {0}.\n"
+        "Invalid generics instantiation{0}.\n"
         + "Expected {1} type argument(s), but found {2}");
 
   public static final DiagnosticType EXTENDS_NON_OBJECT =
@@ -366,8 +366,7 @@ public final class JSTypeCreatorFromJSDoc {
   }
 
   private JSType getRecordTypeHelper(Node n, DeclaredTypeRegistry registry,
-      ImmutableList<String> typeParameters)
-      throws UnknownTypeException {
+      ImmutableList<String> typeParameters) throws UnknownTypeException {
     Map<String, Property> props = new LinkedHashMap<>();
     for (Node propNode = n.getFirstFirstChild();
          propNode != null;
@@ -399,17 +398,23 @@ public final class JSTypeCreatorFromJSDoc {
     String typeName = n.getString();
     switch (typeName) {
       case "boolean":
+        checkInvalidGenericsInstantiation(n);
         return JSType.BOOLEAN;
       case "null":
+        checkInvalidGenericsInstantiation(n);
         return JSType.NULL;
       case "number":
+        checkInvalidGenericsInstantiation(n);
         return JSType.NUMBER;
       case "string":
+        checkInvalidGenericsInstantiation(n);
         return JSType.STRING;
       case "undefined":
       case "void":
+        checkInvalidGenericsInstantiation(n);
         return JSType.UNDEFINED;
       case "Function":
+        checkInvalidGenericsInstantiation(n);
         return maybeMakeNullable(registry.getCommonTypes().qmarkFunction());
       case "Object":
         // We don't generally handle parameterized Object<...>, but we want to
@@ -426,6 +431,7 @@ public final class JSTypeCreatorFromJSDoc {
       throws UnknownTypeException {
     String tvar = UniqueNameGenerator.findGeneratedName(name, outerTypeParameters);
     if (tvar != null) {
+      checkInvalidGenericsInstantiation(n);
       return JSType.fromTypeVar(tvar);
     }
     Declaration decl = registry.getDeclaration(QualifiedName.fromQualifiedString(name), true);
@@ -433,20 +439,25 @@ public final class JSTypeCreatorFromJSDoc {
       unknownTypeNames.put(n, name);
       throw new UnknownTypeException("Unhandled type: " + name);
     }
-    // It's either a typedef, an enum, a type variable or a nominal type
+    // It's either a typedef, an enum, a type variable, a nominal type, or a
+    // forward-declared type.
     if (decl.getTypedef() != null) {
+      checkInvalidGenericsInstantiation(n);
       return getTypedefType(decl.getTypedef(), registry);
     }
     if (decl.getEnum() != null) {
+      checkInvalidGenericsInstantiation(n);
       return getEnumPropType(decl.getEnum(), registry);
     }
     if (decl.isTypeVar()) {
+      checkInvalidGenericsInstantiation(n);
       howmanyTypeVars++;
       return decl.getTypeOfSimpleDecl();
     }
     if (decl.getNominal() != null) {
       return getNominalTypeHelper(decl.getNominal(), n, registry, outerTypeParameters);
     }
+    // Forward-declared type
     return JSType.UNKNOWN;
   }
 
@@ -508,6 +519,14 @@ public final class JSTypeCreatorFromJSDoc {
     e.resolveEnum(enumeratedType);
   }
 
+  private void checkInvalidGenericsInstantiation(Node n) {
+    if (n.hasChildren()) {
+      Preconditions.checkState(n.getFirstChild().isBlock(), n);
+      warnings.add(JSError.make(n, INVALID_GENERICS_INSTANTIATION,
+              "", "0", String.valueOf(n.getFirstChild().getChildCount())));
+    }
+  }
+
   private JSType getNominalTypeHelper(RawNominalType rawType, Node n,
       DeclaredTypeRegistry registry, ImmutableList<String> outerTypeParameters)
       throws UnknownTypeException {
@@ -535,7 +554,8 @@ public final class JSTypeCreatorFromJSDoc {
       if (typeArgsSize > typeParamsSize) {
         warnings.add(JSError.make(
             n, INVALID_GENERICS_INSTANTIATION,
-            uninstantiated.getName(), String.valueOf(typeParamsSize),
+            " for type " + uninstantiated.getName(),
+            String.valueOf(typeParamsSize),
             String.valueOf(typeArgsSize)));
       }
       return maybeMakeNullable(JSType.fromObjectType(ObjectType.fromNominalType(
