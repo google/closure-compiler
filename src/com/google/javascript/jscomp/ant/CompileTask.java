@@ -482,7 +482,7 @@ public final class CompileTask
     }
 
     if (!Strings.isNullOrEmpty(sourceMapLocationMapping)) {
-      String tokens[] = sourceMapLocationMapping.split("\\|", -1);
+      String[] tokens = sourceMapLocationMapping.split("\\|", -1);
       LocationMapping lm = new LocationMapping(tokens[0], tokens[1]);
       options.setSourceMapLocationMappings(Arrays.asList(lm));
     }
