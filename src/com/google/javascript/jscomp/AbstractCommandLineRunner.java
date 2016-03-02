@@ -448,14 +448,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * @deprecated Use getBuiltinExterns(CompilerOptions.Environment) instead.
-   */
-  @Deprecated
-  public static List<SourceFile> getBuiltinExterns(CompilerOptions options) throws IOException {
-    return getBuiltinExterns(options.getEnvironment());
-  }
-
-  /**
    * @return a mutable list
    * @throws IOException
    */
