@@ -192,6 +192,28 @@ public final class ProcessCommonJSModules implements CompilerPass {
         visitRequireCall(t, n, parent);
       }
 
+      // Finds calls to require.ensure which is a method to allow async loading of
+      // CommonJS modules:
+      //
+      // require.ensure(['/path/to/module1', '/path/to/module2'], function(require) {
+      //    var module1 = require('/path/to/module1');
+      //    var module2 = require('/path/to/module2');
+      // });
+      //
+      // will be rewritten as an IIFE
+      //
+      // (function() {
+      //   var module1 = require('/path/to/module1');
+      //   var module2 = require('/path/to/module2');
+      // })()
+      //
+      // See http://wiki.commonjs.org/wiki/Modules/Async/A
+      //     http://www.injectjs.com/docs/0.7.x/cjs/require.ensure.html
+      if (n.isCall() && n.getChildCount() == 3 && n.getFirstChild().isGetProp()
+          && n.getFirstChild().matchesQualifiedName("require.ensure")
+          && n.getSecondChild().isArrayLit() && n.getChildAtIndex(2).isFunction()) {
+        visitRequireEnsureCall(t, n, parent);
+      }
 
       // Detects UMD pattern, by checking for CommonJS exports and AMD define
       // statements in if-conditions and rewrites the if-then-else block as
@@ -316,6 +338,29 @@ public final class ProcessCommonJSModules implements CompilerPass {
           IR.call(IR.getprop(IR.name("goog"), IR.string("require")),
               IR.string(moduleName))).useSourceInfoIfMissingFromForTree(require));
       compiler.reportCodeChange();
+    }
+
+    /**
+     * Visit require.ensure calls. Replace the call with an IIFE.
+     */
+    private void visitRequireEnsureCall(NodeTraversal t, Node n, Node parent) {
+      Node callbackFunction = n.getChildAtIndex(2);
+
+      // We only support forms where the callback function has a single argument
+      // and the argument name is "require".
+      if (callbackFunction.getChildCount() != 3 || callbackFunction.getSecondChild().getChildCount() != 1
+          || !callbackFunction.getSecondChild().getFirstChild().isName()
+          || !"require".equals(callbackFunction.getSecondChild().getFirstChild().getString())) {
+        return;
+      }
+
+      callbackFunction.detachFromParent();
+
+      // Remove the "require" argument from the parameter list.
+      callbackFunction.getSecondChild().removeChildren();
+      n.removeChildren();
+      n.putBooleanProp(Node.FREE_CALL, true);
+      n.addChildrenToFront(callbackFunction);
     }
 
     /**
