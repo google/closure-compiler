@@ -2681,7 +2681,14 @@ public final class NodeUtil {
         || parent.isInc()
         || parent.isParamList()
         || parent.isCatch()
+        || isImportedName(n)
         || isLhsByDestructuring(n);
+  }
+
+  public static boolean isImportedName(Node n) {
+    Node parent = n.getParent();
+    return parent.isImport()
+        || parent.isImportSpec() && parent.getLastChild() == n;
   }
 
   public static boolean isLhsByDestructuring(Node n) {

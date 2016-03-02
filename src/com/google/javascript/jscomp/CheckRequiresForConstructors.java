@@ -149,8 +149,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
           maybeAddConstructor(n);
         }
         break;
+      case Token.NAME:
+        if (!NodeUtil.isLValue(n)) {
+          visitQualifiedName(n);
+        }
+        break;
       case Token.GETPROP:
-        visitGetProp(n);
+        visitQualifiedName(n);
         break;
       case Token.CALL:
         visitCallNode(n, parent);
@@ -293,7 +298,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     }
   }
 
-  private void visitGetProp(Node getprop) {
+  private void visitQualifiedName(Node getprop) {
     // For "foo.bar.baz.qux" add weak usages for "foo.bar.baz.qux", foo.bar.baz",
     // "foo.bar", and "foo" because those might all be goog.provide'd in different files,
     // so it doesn't make sense to require the user to goog.require all of them.
@@ -507,7 +512,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
                 //     var MyHandler = function() {};
                 Node getprop = NodeUtil.newQName(compiler, typeString);
                 getprop.useSourceInfoIfMissingFromForTree(typeNode);
-                visitGetProp(getprop);
+                visitQualifiedName(getprop);
               } else {
                 // Even if the root namespace is in externs, add a weak usage because the full
                 // namespace may still be goog.provided.
