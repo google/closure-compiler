@@ -1018,7 +1018,7 @@ public final class ConformanceRules {
     private Constructor<?> getRuleConstructor(Class<Rule> cls)
         throws InvalidRequirementSpec {
       for (Constructor<?> ctor : cls.getConstructors()) {
-        Class<?> paramClasses[] = ctor.getParameterTypes();
+        Class<?>[] paramClasses = ctor.getParameterTypes();
         if (paramClasses.length == 2) {
           TypeToken<?> param1 = TypeToken.of(paramClasses[0]);
           TypeToken<?> param2 = TypeToken.of(paramClasses[1]);

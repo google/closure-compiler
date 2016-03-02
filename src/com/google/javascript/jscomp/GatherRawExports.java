@@ -39,7 +39,7 @@ class GatherRawExports extends AbstractPostOrderCallback
   // collapse properties, so the two entries here protect goog.global in the
   // two common cases "collapse properties and renaming on" or both off
   // but not the case where only property renaming is on.
-  private static final String GLOBAL_THIS_NAMES[] = {
+  private static final String[] GLOBAL_THIS_NAMES = {
     "window", "top", "goog$global", "goog.global" };
 
   private final Set<String> exportedVariables = new HashSet<>();
