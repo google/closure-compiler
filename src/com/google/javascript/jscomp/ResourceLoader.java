@@ -29,8 +29,8 @@ import java.io.InputStreamReader;
  *
  */
 @GwtIncompatible("getResource, java.io.InputStreamReader")
-final class ResourceLoader {
-  static String loadTextResource(Class<?> clazz, String path) {
+public final class ResourceLoader {
+  public static String loadTextResource(Class<?> clazz, String path) {
     try {
       return CharStreams.toString(new InputStreamReader(clazz.getResourceAsStream(path), UTF_8));
     } catch (NullPointerException e) {

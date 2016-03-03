@@ -209,8 +209,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
 
-        <!-- Move Messages.properties where ScriptRuntime.java expects it. -->
         <executions>
+          <!-- Move Messages.properties where ScriptRuntime.java expects it. -->
           <execution>
             <id>rhino_ast-custom</id>
             <phase>process-resources</phase>
@@ -225,6 +225,26 @@
                   <directory>src</directory>
                   <includes>
                     <include>com/google/javascript/rhino/Messages.properties</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <!-- Move the default externs to where the GWT ResourceLoader expects it. -->
+          <execution>
+            <id>externs</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/com/google/javascript/jscomp/externs/</outputDirectory>
+              <resources>
+                <resource>
+                  <targetPath>${basedir}/target/classes/com/google/javascript/jscomp/externs/</targetPath>
+                  <directory>externs/</directory>
+                  <includes>
+                    <include>**/*</include>
                   </includes>
                 </resource>
               </resources>
