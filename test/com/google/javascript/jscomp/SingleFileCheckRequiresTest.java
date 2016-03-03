@@ -95,6 +95,14 @@ public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
     testErrorEs6("goog.require('foo.Bar');", EXTRA_REQUIRE_WARNING);
   }
 
+  public void testUnqualifiedRequireUsedInJSDoc() {
+    testSameEs6("goog.require('Bar'); /** @type {Bar} */ var x;");
+  }
+
+  public void testUnqualifiedImportUsedInJSDoc() {
+    testSameEs6("import { Something } from 'somewhere'; /** @type {Something} */ var x;");
+  }
+
   public void testReferenceToSingleNameWithRequire() {
     testSameEs6("goog.require('Foo'); new Foo();");
   }

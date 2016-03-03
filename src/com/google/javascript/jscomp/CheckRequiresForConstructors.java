@@ -495,6 +495,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
               if (mode == Mode.SINGLE_FILE && !typeString.contains(".")) {
                 // If using a single-name type, it's probably something like Error, which we
                 // don't have externs for.
+                weakUsages.put(typeString, n);
                 return;
               }
               String rootName = Splitter.on('.').split(typeString).iterator().next();
