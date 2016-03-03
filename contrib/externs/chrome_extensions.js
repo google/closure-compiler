@@ -164,9 +164,24 @@
  * bottom of this file.
  *
  * G. Enums
- * The Chrome extension APIs define many enums that define a set of acceptable
- * strings, however, they do not reify those enum types, therefore, enum
- * parameters should be defined as {@code string}.
+ * An enum's type name and the name of its members must be included in an
+ * externs file, but the values of its members are ignored by the compiler.
+ * To make it clear enums are not being *defined* in this file, we set
+ * string enum values to the empty string (at this time, there are no
+ * known enums of other types).
+ *
+ * As of Mar 2016, the chrome extension docs are incomplete wrt to enums
+ * as they don't list the member names, only their string values. This means
+ * extension authors will tend to use string literals. Therefore, whereever
+ * an enum type should be used, we support either the enum or a string. Once
+ * the docs are complete, new uses of enums will no longer need the "or string"
+ * portion of the type.
+ *
+ * Finally, most places in this file where enums should be used are using only
+ * string. This is historical and is no longer the recommended practice.
+ *
+ * See enum chrome.wallpaper.WallpaperLayout and chrome.wallpaper.setWallpaper's
+ * param for examples.
  *
  * @externs
  *
@@ -9144,11 +9159,13 @@ chrome.inlineInstallPrivate = {};
  */
 chrome.inlineInstallPrivate.install = function(id, opt_callback) {};
 
+
 /**
  * @const
  * @see https://goo.gl/7dvJFW
  */
 chrome.wallpaper = {};
+
 
 /**
  * @enum {string}
@@ -9159,6 +9176,7 @@ chrome.wallpaper.WallpaperLayout = {
   CENTER: '',
   CENTER_CROPPED: '',
 };
+
 
 /**
  * Sets wallpaper to the image at url or wallpaperData with the specified
