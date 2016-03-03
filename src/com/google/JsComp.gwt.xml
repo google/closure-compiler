@@ -1,13 +1,13 @@
 <module rename-to="jscomp">
-  <inherits name="com.google.gwt.user.User" />
   <inherits name="com.google.common.base.Base"/>
   <inherits name="com.google.common.collect.Collect"/>
-  <source path="debugging/sourcemap" />
-  <source path="javascript/jscomp" excludes=".svn,.git,**/ant/**,**/refactoring/**,**/webservice/**,**/testing/**" />
-  <source path="javascript/rhino" excludes=".svn,.git,**/testing/**" />
-  <super-source path="javascript/jscomp/gwt/super" />
-  <set-property name="user.agent" value="safari" />
+  <source path="debugging/sourcemap"/>
+  <source path="javascript/jscomp" excludes=".svn,.git,**/ant/**,**/refactoring/**,**/webservice/**,**/testing/**"/>
+  <source path="javascript/rhino" excludes=".svn,.git,**/testing/**"/>
+  <super-source path="javascript/jscomp/gwt/super"/>
+  <set-property name="user.agent" value="safari"/>
   <set-property name="gwt.logging.enabled" value="TRUE"/>
-  <entry-point class="com.google.javascript.jscomp.gwt.client.JsCompGwtMain" />
-  <public path="javascript/jscomp/gwt/public" />
+  <entry-point class="com.google.javascript.jscomp.gwt.client.GwtRunner"/>
+  <public path="javascript/jscomp/gwt/public"/>
+  <add-linker name="sso"/>
 </module>
