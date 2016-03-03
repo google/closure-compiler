@@ -249,13 +249,16 @@
       <plugin>
         <groupId>net.ltgt.gwt.maven</groupId>
         <artifactId>gwt-maven-plugin</artifactId>
-        <version>1.0-rc-4</version>
+        <version>1.0-rc-6</version>
         <extensions>true</extensions>
         <configuration>
           <moduleName>com.google.JsComp</moduleName>
           <moduleShortName>jscomp</moduleShortName>
           <skipModule>true</skipModule>
           <failOnError>true</failOnError>
+          <compilerArgs>
+            <compilerArg>-generateJsInteropExports</compilerArg>
+          </compilerArgs>
         </configuration>
        </plugin>
     </plugins>
