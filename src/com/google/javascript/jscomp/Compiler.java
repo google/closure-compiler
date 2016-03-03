@@ -137,6 +137,9 @@ public class Compiler extends AbstractCompiler {
   Node jsRoot;
   Node externAndJsRoot;
 
+  // Used for debugging; to see the compiled code between passes
+  private String lastJsSource = null;
+
   /** @see #getLanguageMode() */
   private CompilerOptions.LanguageMode languageMode =
       CompilerOptions.LanguageMode.ECMASCRIPT3;
@@ -879,6 +882,25 @@ public class Compiler extends AbstractCompiler {
     currentTracer = null;
 
     maybeSanityCheck();
+  }
+
+  @Override
+  final void beforePass(String passName) {
+    // does nothing for now
+  }
+
+  @Override
+  final void afterPass(String passName) {
+    if (options.printSourceAfterEachPass) {
+      String currentJsSource = toSource();
+      if (!currentJsSource.equals(this.lastJsSource)) {
+        System.out.println();
+        System.out.println("// " + passName + " yields:");
+        System.out.println("// ************************************");
+        System.out.println(currentJsSource);
+        lastJsSource = currentJsSource;
+      }
+    }
   }
 
   /**

@@ -844,6 +844,10 @@ public class CompilerOptions {
   // Should only be used when debugging compiler bugs using small JS inputs.
   boolean printSourceAfterEachPass;
 
+  public void setPrintSourceAfterEachPass(boolean printSource) {
+    this.printSourceAfterEachPass = printSource;
+  }
+
   /** Where to save a report of global name usage */
   public void setReportPath(String reportPath) {
     this.reportPath = reportPath;

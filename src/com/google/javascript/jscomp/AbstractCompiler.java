@@ -53,12 +53,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Will be called before each pass runs.
    */
-  void beforePass(String passName) {}
+  abstract void beforePass(String passName);
 
   /**
    * Will be called after each pass finishes.
    */
-  void afterPass(String passName) {}
+  abstract void afterPass(String passName);
 
   private LifeCycleStage stage = LifeCycleStage.RAW;
 

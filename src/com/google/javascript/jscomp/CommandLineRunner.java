@@ -639,6 +639,11 @@ public class CommandLineRunner extends
         usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
     private boolean rewritePolyfills = false;
 
+    @Option(name = "--print_source_after_each_pass",
+        hidden = true,
+        usage = "Whether to iteratively print resulting JS source per pass.")
+        private boolean printSourceAfterEachPass = false;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
@@ -1261,7 +1266,8 @@ public class CommandLineRunner extends
           .setTracerMode(flags.tracerMode)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
           .setNewTypeInference(flags.useNewTypeInference)
-          .setJsonStreamMode(flags.jsonStreamMode);
+          .setJsonStreamMode(flags.jsonStreamMode)
+          .setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
     }
     errorStream = null;
   }
