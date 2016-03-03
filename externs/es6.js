@@ -1449,13 +1449,20 @@ Array.prototype.find = function(predicate, opt_this) {};
 Array.prototype.findIndex = function(predicate, opt_this) {};
 
 
-/** @return {!Array<symbol>} */
-Object.getOwnPropertySymbols;
+/**
+ * @param {!Object} obj
+ * @return {!Array<symbol>}
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-object.getownpropertysymbols
+ */
+Object.getOwnPropertySymbols = function(obj) {};
 
 
-/** @return {void} */
-Object.setPrototypeOf;
-
+/**
+ * @param {!Object} obj
+ * @return {!Object}
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-object.setprototypeof
+ */
+Object.setPrototypeOf = function(obj) {};
 
 
 /**
