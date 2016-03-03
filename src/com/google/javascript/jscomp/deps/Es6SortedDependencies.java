@@ -20,8 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.CompilerInput;
-import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DependencyOptions.ModuleIdentifier;
 
 import java.util.ArrayDeque;
@@ -125,8 +123,11 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
       return exportingInputBySymbolName.get(symbol);
     }
 
-    DependencyOptions.ModuleIdentifier symbolModule =
-        DependencyOptions.ModuleIdentifier.forFile(symbol);
+    String symbolWithoutExt = symbol;
+    if (symbolWithoutExt.endsWith(".js")) {
+      symbolWithoutExt = symbolWithoutExt.substring(0, symbolWithoutExt.length() - 3);
+    }
+    ModuleIdentifier symbolModule = ModuleIdentifier.forFile(symbolWithoutExt);
 
     return nonExportingInputs.get(symbolModule.getName());
   }
