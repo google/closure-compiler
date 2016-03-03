@@ -142,28 +142,29 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Subclass.staticField = Example.staticField;"));
   }
 
-  public void testGetterSetter() {
+  public void testGetterSetterSimple() {
+    // This is what the Es6ToEs3Converter produces for:
+    //
+    //   class Example {
+    //     static get property() {}
+    //   }
+    //
+    // or
+    //
+    //   class Example {
+    //     static set property(x) {}
+    //   }
     test(
-        // This is what the Es6ToEs3Converter produces for:
-        //
-        //   class Example {
-        //     static get property() {}
-        //   }
-        //
-        // or
-        //
-        //   class Example {
-        //     static set property(x) {}
-        //   }
-        //
-        // (It also outputs a call to Object.defineProperties() but the ClassSideInheritance pass
-        // doesn't care about that, so it's omitted from this test.)
         LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "",
             "/** @type {string} */",
             "Example.property;",
+            "Object.defineProperties(Example, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
@@ -174,6 +175,10 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @type {string} */",
             "Example.property;",
+            "Object.defineProperties(Example, {property:{configurable:true, enumerable:true,",
+            "  get:function() { return 1; },",
+            "  set:function(a) {}",
+            "}});",
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
@@ -183,6 +188,165 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "$jscomp.inherits(Subclass, Example);"));
   }
 
+  public void testGetterSetterQualifiedClassName() {
+    test(
+        LINE_JOINER.join(
+            "var TestCase = {};",
+            "TestCase.A = /** @constructor */function() {};",
+            "",
+            "/** @type {string} */",
+            "TestCase.A.property;",
+            "Object.defineProperties(TestCase.A, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
+            "",
+            "/** @constructor @extends {TestCase.A} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, TestCase.A);"),
+        LINE_JOINER.join(
+            "var TestCase = {};",
+            "TestCase.A = /** @constructor */function() {};",
+            "",
+            "/** @type {string} */",
+            "TestCase.A.property;",
+            "Object.defineProperties(TestCase.A, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
+            "",
+            "/** @constructor @extends {TestCase.A} */",
+            "function Subclass() {}",
+            "/** @type {string} @suppress {visibility} */",
+            "Subclass.property;",
+            "$jscomp.inherits(Subclass, TestCase.A);"));
+  }
+
+  /**
+   * In this case the stub is not really a stub.  It's just a no-op getter, we would be able to
+   * detect this and not copy the stub since there is a member with this name.
+   */
+  public void testGetterSetterFakeStub() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "",
+            "/** @type {string} */",
+            "A.property;",
+            "A.property = 'string'",
+            "",
+            "/** @constructor @extends {A} */",
+            "function B() {}",
+            "$jscomp.inherits(B, A);"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "",
+            "/** @type {string} */",
+            "A.property;",
+            "A.property = 'string'",
+            "",
+            "/** @constructor @extends {A} */",
+            "function B() {}",
+            "$jscomp.inherits(B, A);",
+            "/** @suppress {visibility} */",
+            "B.property = A.property;"));
+  }
+
+  public void testGetterSetterSubclassSubclass() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "",
+            "/** @type {string} */",
+            "A.property;",
+            "Object.defineProperties(A, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
+            "",
+            "/** @constructor @extends {A} */",
+            "function B() {}",
+            "$jscomp.inherits(B, A);",
+            "",
+            "/** @constructor @extends {B} */",
+            "function C() {}",
+            "$jscomp.inherits(C, B);",
+            ""),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "",
+            "/** @type {string} */",
+            "A.property;",
+            "Object.defineProperties(A, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
+            "",
+            "/** @constructor @extends {A} */",
+            "function B() {}",
+            "/** @type {string} @suppress {visibility} */",
+            "B.property;",
+            "$jscomp.inherits(B, A);",
+            "",
+            "/** @constructor @extends {B} */",
+            "function C() {}",
+            "/** @type {string} @suppress {visibility} */",
+            "C.property;",
+            "$jscomp.inherits(C, B);",
+            ""));
+  }
+
+  /**
+   * If the subclass overrides the property we don't want to redeclare the stub.
+   */
+  public void testGetterSetterSubclassOverride() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "",
+            "/** @type {string} */",
+            "A.property;",
+            "Object.defineProperties(A, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
+            "",
+            "/** @constructor @extends {A} */",
+            "function B() {}",
+            "/** @type {string} */",
+            "B.property;",
+            "Object.defineProperties(B, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 2; },",
+            "    set:function(a) {}",
+            "}});",
+            "$jscomp.inherits(B, A);",
+            ""));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "",
+            "/** @type {string} */",
+            "A.property;",
+            "Object.defineProperties(A, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
+            "",
+            "/** @constructor @extends {A} */",
+            "function B() {}",
+            "/** @type {string} */",
+            "$jscomp.inherits(B, A);",
+            "B.property = 'asdf';",
+            ""));
+  }
+
   public void testGetterSetter_noType() {
     test(
         LINE_JOINER.join(
@@ -190,6 +354,10 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Example() {}",
             "",
             "Example.property;",
+            "Object.defineProperties(Example, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
@@ -199,6 +367,10 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Example() {}",
             "",
             "Example.property;",
+            "Object.defineProperties(Example, {property: { configurable:true, enumerable:true,",
+            "    get:function() { return 1; },",
+            "    set:function(a) {}",
+            "}});",
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",

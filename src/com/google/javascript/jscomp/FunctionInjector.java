@@ -483,8 +483,6 @@ class FunctionInjector {
     CallSiteType callSiteType = classifyCallSite(ref);
     Preconditions.checkArgument(callSiteType != CallSiteType.UNSUPPORTED);
 
-    boolean isCallInLoop = NodeUtil.isWithinLoop(callNode);
-
     // Store the name for the result. This will be used to
     // replace "return expr" statements with "resultName = expr"
     // to replace
@@ -521,6 +519,7 @@ class FunctionInjector {
     FunctionToBlockMutator mutator = new FunctionToBlockMutator(
         compiler, this.safeNameIdSupplier);
 
+    boolean isCallInLoop = NodeUtil.isWithinLoop(callNode);
     Node newBlock = mutator.mutate(
         fnName, fnNode, callNode, resultName,
         needsDefaultReturnResult, isCallInLoop);

@@ -34,6 +34,7 @@ import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -3232,6 +3233,22 @@ public final class NodeUtil {
     return n.isCall()
         && n.getChildCount() == 3
         && n.getFirstChild().matchesQualifiedName("Object.defineProperties");
+  }
+
+  /**
+   * @return A list of STRING_KEY properties defined by a Object.defineProperties(o, {...}) call
+   */
+  static Iterable<Node> getObjectDefinedPropertiesKeys(Node definePropertiesCall) {
+    Preconditions.checkArgument(NodeUtil.isObjectDefinePropertiesDefinition(definePropertiesCall));
+    List<Node> properties = new ArrayList<>();
+    Node objectLiteral = definePropertiesCall.getLastChild();
+    for (Node key : objectLiteral.children()) {
+      if (!key.isStringKey()) {
+        continue;
+      }
+      properties.add(key);
+    }
+    return properties;
   }
 
   /**

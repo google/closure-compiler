@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -47,7 +48,7 @@ import java.util.Set;
  *   function Foo() {}
  *   Foo.f = function() {};
  *   function Bar() {}
- *   $jscomp.inherits(Foo, Bar);
+ *   $jscomp.inherits(Bar, Foo);
  * </pre>
  *
  * and then this class will convert that to
@@ -56,42 +57,68 @@ import java.util.Set;
  *   function Foo() {}
  *   Foo.f = function() {};
  *   function Bar() {}
- *   $jscomp.inherits(Foo, Bar);
+ *   $jscomp.inherits(Bar, Foo);
  *   Bar.f = Foo.f;
  * </pre>
  *
+ * Additionally, there are getter and setter fields which are transpiled from:
+ * <pre>
+ *   class Foo { static get prop() { return 1; } }
+ *   class Bar extends Foo {}
+ * </pre>
+ * to:
+ * <pre>
+ *   var Foo = function() {};
+ *   Foo.prop; // stub declaration so that the type checker knows about prop
+ *   Object.defineProperties(Foo, {prop:{get:function() { return 1; }}});
+ *
+ *   var Bar = function() {};
+ *   $jscomp.inherits(Bar, Foo);
+ * </pre>
+ *
+ * The stub declaration of Foo.prop needs to be duplicated for Bar so that the type checker knows
+ * that Bar also has this property.  (ES5 clases don't have class-side inheritance).
+ * <pre>
+ *   var Bar = function() {};
+ *   Bar.prop;
+ *   $jscomp.inherits(Bar, Foo);
+ * </pre>
+ *
+ * <p>In order to gather the type checker declarations, this path gathers all GETPROPs on
+ * a class.  In order to determine which of these are the stub declarations it filters them based
+ * on names discovered in Object.defineProperties.  Unfortunately, we cannot simply gather the
+ * defined properties because they dont have the type information (jsdoc).  The type information is
+ * stored on the stub declarations so we must gather both to transpile correctly.
+ * <p>
+ * TODO(tdeegan): In the future the type information for getter/setter properties could be stored
+ * in the defineProperies functions.  It would reduce the complexity of this pass significantly.
+ *
  * @author mattloring@google.com (Matthew Loring)
+ * @author tdeegan@google.com (Thomas Deegan)
  */
 public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
-
-  private final AbstractCompiler compiler;
-
-  // Map from class names to the static members in each class. This is not a SetMultiMap because
-  // when we find an alias A for a class C, we copy the *set* of C's static methods
-  // so that adding a method to C automatically causes it to be added to A, and vice versa.
-  private final LinkedHashMap<String, LinkedHashSet<Node>> staticMethods = new LinkedHashMap<>();
-
-  // Map from class names to static properties (getters/setters) in each class. This could be a
-  // SetMultimap but it is not, to be consistent with {@code staticMethods}.
-  private final LinkedHashMap<String, LinkedHashSet<Node>> staticProperties = new LinkedHashMap<>();
 
   static final DiagnosticType DUPLICATE_CLASS = DiagnosticType.error(
       "DUPLICATE_CLASS",
       "Multiple classes cannot share the same name.");
 
-  private final Set<String> multiplyDefinedClasses = new HashSet<>();
+  private final Set<String> duplicateClassNames = new HashSet<>();
+
+  private static class JavascriptClass {
+    // All static members to the class including get set properties.
+    private Set<Node> staticMembers = new LinkedHashSet<>();
+    // Collect all the static field accesses to the class.
+    private Set<Node> staticFieldAccess = new LinkedHashSet<>();
+    // Collect all get set properties as defined by Object.defineProperties(...)
+    private Set<String> definedProperties = new LinkedHashSet<>();
+  }
+
+  private final AbstractCompiler compiler;
+
+  private final LinkedHashMap<String, JavascriptClass> classByAlias = new LinkedHashMap<>();
 
   public Es6ToEs3ClassSideInheritance(AbstractCompiler compiler) {
     this.compiler = compiler;
-  }
-
-  private LinkedHashSet<Node> getSet(LinkedHashMap<String, LinkedHashSet<Node>> map, String key) {
-    LinkedHashSet<Node> s = map.get(key);
-    if (s == null) {
-      s = new LinkedHashSet<>();
-      map.put(key, s);
-    }
-    return s;
   }
 
   @Override
@@ -110,97 +137,142 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   }
 
   private void processInherits(List<Node> inheritsCalls) {
-    for (Node n : inheritsCalls) {
-      Node parent = n.getParent();
-      Node superclassNameNode = n.getLastChild();
+    for (Node inheritsCall : inheritsCalls) {
+      Node superclassNameNode = inheritsCall.getLastChild();
       String superclassQname = superclassNameNode.getQualifiedName();
-      Node subclassNameNode = n.getChildBefore(superclassNameNode);
+      Node subclassNameNode = inheritsCall.getChildBefore(superclassNameNode);
       String subclassQname = subclassNameNode.getQualifiedName();
-      if (multiplyDefinedClasses.contains(superclassQname)) {
-        compiler.report(JSError.make(n, DUPLICATE_CLASS));
+      JavascriptClass superClass = classByAlias.get(superclassQname);
+      JavascriptClass subClass = classByAlias.get(subclassQname);
+      if (duplicateClassNames.contains(superclassQname)) {
+        compiler.report(JSError.make(inheritsCall, DUPLICATE_CLASS));
         return;
       }
-      for (Node staticMethod : getSet(staticMethods, superclassQname)) {
-        copyStaticMethod(staticMethod, superclassNameNode, subclassNameNode, subclassQname, parent);
+      if (superClass == null || subClass == null) {
+        continue;
       }
-      for (Node staticProperty : getSet(staticProperties, superclassQname)) {
-        copyStaticProperty(staticProperty, subclassNameNode, subclassQname, n);
+      copyStaticMembers(superClass, subClass, inheritsCall);
+      copyDeclarations(superClass, subClass, inheritsCall);
+    }
+  }
+
+  /**
+   * When static get/set properties are transpiled, in addition to the Object.defineProperties, they
+   * are declared with stub GETPROP declarations so that the type checker understands that these
+   * properties exist on the class.
+   * When subclassing, we also need to declare these properties on the subclass so that the type
+   * checker knows they exist.
+   */
+  private void copyDeclarations(
+      JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall) {
+    for (Node staticGetProp : superClass.staticFieldAccess) {
+      Preconditions.checkState(staticGetProp.isGetProp());
+      String memberName = staticGetProp.getLastChild().getString();
+      // We only copy declarations that have corresponding Object.defineProperties
+      if (!superClass.definedProperties.contains(memberName)) {
+        continue;
+      }
+      // If the subclass already declares the property no need to redeclare it.
+      if (isOverriden(subClass, memberName)) {
+        continue;
+      }
+      Node subclassNameNode = inheritsCall.getSecondChild();
+      Node getprop = IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName));
+      JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticGetProp.getJSDocInfo());
+      JSTypeExpression unknown = new JSTypeExpression(new Node(Token.QMARK), "<synthetic>");
+      info.recordType(unknown); // In case there wasn't a type specified on the base class.
+      info.addSuppression("visibility");
+      getprop.setJSDocInfo(info.build());
+
+      Node declaration = IR.exprResult(getprop);
+      declaration.useSourceInfoIfMissingFromForTree(inheritsCall);
+      Node parent = inheritsCall.getParent();
+      parent.getParent().addChildBefore(declaration, parent);
+      compiler.reportCodeChange();
+
+      // Copy over field access so that subclasses of this subclass can also make the declarations
+      if (!subClass.definedProperties.contains(memberName)) {
+        subClass.staticFieldAccess.add(getprop);
+        subClass.definedProperties.add(memberName);
       }
     }
   }
 
-  private void copyStaticMethod(Node staticMember, Node superclassNameNode,
-      Node subclassNameNode, String subclassQname, Node insertionPoint) {
-    Preconditions.checkState(staticMember.isAssign(), staticMember);
-    String memberName = staticMember.getFirstChild().getLastChild().getString();
-    LinkedHashSet<Node>  subclassMethods = getSet(staticMethods, subclassQname);
-    for (Node subclassMember : subclassMethods) {
+  private void copyStaticMembers(
+      JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall) {
+    for (Node staticMember : superClass.staticMembers) {
+      Preconditions.checkState(staticMember.isAssign(), staticMember);
+      String memberName = staticMember.getFirstChild().getLastChild().getString();
+      if (superClass.definedProperties.contains(memberName)) {
+        continue;
+      }
+      if (isOverriden(subClass, memberName)) {
+        continue;
+      }
+      JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticMember.getJSDocInfo());
+      Node function = staticMember.getLastChild();
+      Node sourceInfoNode = function;
+      if (function.isFunction()) {
+        sourceInfoNode = function.getFirstChild();
+        Node params = NodeUtil.getFunctionParameters(function);
+        Preconditions.checkState(params.isParamList(), params);
+        for (Node param : params.children()) {
+          if (param.getJSDocInfo() != null) {
+            String name = param.getString();
+            info.recordParameter(name, param.getJSDocInfo().getType());
+          }
+        }
+      }
+
+      Node subclassNameNode = inheritsCall.getSecondChild();
+      Node superclassNameNode = subclassNameNode.getNext();
+      Node assign =
+          IR.assign(
+              IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName)),
+              IR.getprop(superclassNameNode.cloneTree(), IR.string(memberName)));
+      info.addSuppression("visibility");
+      assign.setJSDocInfo(info.build());
+      Node exprResult = IR.exprResult(assign);
+      exprResult.useSourceInfoIfMissingFromForTree(sourceInfoNode);
+      Node inheritsExpressionResult = inheritsCall.getParent();
+      inheritsExpressionResult.getParent().addChildAfter(exprResult, inheritsExpressionResult);
+      compiler.reportCodeChange();
+
+      // Add the static member to the subclass so that subclasses also copy this member.
+      subClass.staticMembers.add(assign);
+    }
+  }
+
+  private boolean isOverriden(JavascriptClass subClass, String memberName) {
+    for (Node subclassMember : subClass.staticMembers) {
       Preconditions.checkState(subclassMember.isAssign(), subclassMember);
       if (subclassMember.getFirstChild().getLastChild().getString().equals(memberName)) {
         // This subclass overrides the static method, so there is no need to copy the
         // method from the base class.
-        return;
+        return true;
       }
     }
-
-    JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticMember.getJSDocInfo());
-
-    Node function = staticMember.getLastChild();
-    Node sourceInfoNode = function;
-    if (function.isFunction()) {
-      sourceInfoNode = function.getFirstChild();
-      Node params = NodeUtil.getFunctionParameters(function);
-      Preconditions.checkState(params.isParamList(), params);
-      for (Node param : params.children()) {
-        if (param.getJSDocInfo() != null) {
-          String name = param.getString();
-          info.recordParameter(name, param.getJSDocInfo().getType());
-        }
-      }
+    if (subClass.definedProperties.contains(memberName)) {
+      return true;
     }
-
-    Node assign = IR.assign(
-        IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName)),
-        IR.getprop(superclassNameNode.cloneTree(), IR.string(memberName)));
-    info.addSuppression("visibility");
-    assign.setJSDocInfo(info.build());
-    Node exprResult = IR.exprResult(assign);
-    exprResult.useSourceInfoIfMissingFromForTree(sourceInfoNode);
-    insertionPoint.getParent().addChildAfter(exprResult, insertionPoint);
-    subclassMethods.add(assign);
-    compiler.reportCodeChange();
+    return false;
   }
 
-  private void copyStaticProperty(Node staticProperty, Node subclassNameNode,
-      String subclassQname, Node inheritsCall) {
-    Preconditions.checkState(staticProperty.isGetProp(), staticProperty);
-    String memberName = staticProperty.getLastChild().getString();
-    LinkedHashSet<Node>  subclassProps = getSet(staticProperties, subclassQname);
-    for (Node subclassMember : getSet(staticProperties, subclassQname)) {
-      Preconditions.checkState(subclassMember.isGetProp());
-      if (subclassMember.getLastChild().getString().equals(memberName)) {
-        return;
-      }
+  private boolean isReferenceToClass(NodeTraversal t, Node n) {
+    String className = n.getQualifiedName();
+    if (!classByAlias.containsKey(className)) {
+      return false;
     }
-    // Add a declaration. Assuming getters are side-effect free,
-    // this is a no-op statement, but it lets the typechecker know about the property.
-    Node getprop = IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName));
-    JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticProperty.getJSDocInfo());
-    JSTypeExpression unknown = new JSTypeExpression(new Node(Token.QMARK), "<synthetic>");
-    info.recordType(unknown); // In case there wasn't a type specified on the base class.
-    info.addSuppression("visibility");
-    getprop.setJSDocInfo(info.build());
 
-    Node declaration = IR.exprResult(getprop);
-    declaration.useSourceInfoIfMissingFromForTree(inheritsCall);
-    Node parent = inheritsCall.getParent();
-    parent.getParent().addChildBefore(declaration, parent);
-    subclassProps.add(staticProperty);
-    compiler.reportCodeChange();
+    if (!n.isName()) {
+      return true;
+    }
+
+    Var var = t.getScope().getVar(className);
+    return var == null || !var.isLocal();
   }
 
-  private class FindStaticMembers extends NodeTraversal.AbstractPostOrderCallback {
-    private final Set<String> classNames = new HashSet<>();
+  private class FindStaticMembers extends AbstractPostOrderCallback {
     private final List<Node> inheritsCalls = new LinkedList<>();
 
     @Override
@@ -209,6 +281,9 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
         case Token.CALL:
           if (n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.INHERITS)) {
             inheritsCalls.add(n);
+          }
+          if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
+            visitDefinedPropertiesCall(t, n);
           }
           break;
         case Token.VAR:
@@ -228,56 +303,56 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       }
     }
 
+    private void visitDefinedPropertiesCall(NodeTraversal t, Node definePropertiesCall) {
+      Node object = definePropertiesCall.getSecondChild();
+      if (isReferenceToClass(t, object)) {
+        String className = object.getQualifiedName();
+        JavascriptClass c = classByAlias.get(className);
+        for (Node prop : NodeUtil.getObjectDefinedPropertiesKeys(definePropertiesCall)) {
+          c.definedProperties.add(prop.getString());
+        }
+      }
+    }
+
     private void visitFunctionClassDef(Node n) {
       JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(n);
       if (classInfo != null && classInfo.isConstructor()) {
         String name = NodeUtil.getName(n);
-        if (classNames.contains(name)) {
-          multiplyDefinedClasses.add(name);
-        } else if (name != null) {
-          classNames.add(name);
+        if (classByAlias.containsKey(name)) {
+          duplicateClassNames.add(name);
+        } else {
+          classByAlias.put(name, new JavascriptClass());
         }
       }
+    }
+
+    private void setAlias(String original, String alias) {
+      Preconditions.checkArgument(classByAlias.containsKey(original));
+      classByAlias.put(alias, classByAlias.get(original));
     }
 
     private void visitGetProp(NodeTraversal t, Node n) {
       Node classNode = n.getFirstChild();
       if (isReferenceToClass(t, classNode)) {
-        getSet(staticProperties, classNode.getQualifiedName()).add(n);
+        classByAlias.get(classNode.getQualifiedName()).staticFieldAccess.add(n);
       }
     }
 
     private void visitAssign(NodeTraversal t, Node n) {
-      // Alias for classes. We assume that the alias appears after the class
-      // declaration.
+      // Alias for classes. We assume that the alias appears after the class declaration.
       String existingClassQname = n.getLastChild().getQualifiedName();
-      if (classNames.contains(existingClassQname)) {
-        String maybeAlias = n.getFirstChild().getQualifiedName();
-        if (maybeAlias != null) {
-          classNames.add(maybeAlias);
-          staticMethods.put(maybeAlias, getSet(staticMethods, existingClassQname));
+      if (existingClassQname != null && classByAlias.containsKey(existingClassQname)) {
+        String alias = n.getFirstChild().getQualifiedName();
+        if (alias != null) {
+          setAlias(existingClassQname, alias);
         }
       } else if (n.getFirstChild().isGetProp()) {
         Node getProp = n.getFirstChild();
         Node classNode = getProp.getFirstChild();
         if (isReferenceToClass(t, classNode)) {
-          getSet(staticMethods, classNode.getQualifiedName()).add(n);
+          classByAlias.get(classNode.getQualifiedName()).staticMembers.add(n);
         }
       }
-    }
-
-    private boolean isReferenceToClass(NodeTraversal t, Node n) {
-      String className = n.getQualifiedName();
-      if (!classNames.contains(className)) {
-        return false;
-      }
-
-      if (!n.isName()) {
-        return true;
-      }
-
-      Var var = t.getScope().getVar(className);
-      return var == null || !var.isLocal();
     }
 
     private void visitVar(Node n) {
@@ -286,11 +361,10 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
         return;
       }
       String maybeOriginalName = child.getFirstChild().getQualifiedName();
-      if (classNames.contains(maybeOriginalName)) {
+      if (classByAlias.containsKey(maybeOriginalName)) {
         String maybeAlias = child.getQualifiedName();
         if (maybeAlias != null) {
-          classNames.add(maybeAlias);
-          staticMethods.put(maybeAlias, getSet(staticMethods, maybeOriginalName));
+          setAlias(maybeOriginalName, maybeAlias);
         }
       }
     }
