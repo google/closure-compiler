@@ -2045,7 +2045,7 @@ angular.$route.prototype.updateParams = function(object) {};
 /** @type {!angular.$route.Route} */
 angular.$route.prototype.current;
 
-/** @type {Object.<string, !angular.$route.Route>} */
+/** @type {Array.<!angular.$route.Route>} */
 angular.$route.prototype.routes;
 
 /** @constructor */
