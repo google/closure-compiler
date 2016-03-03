@@ -20,10 +20,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.javascript</groupId>
-  <artifactId>closure-compiler</artifactId>
-  <packaging>jar</packaging>
+  <artifactId>closure-compiler-main</artifactId>
+  <packaging>pom</packaging>
 
-  <name>Closure Compiler</name>
+  <name>Closure Compiler Main</name>
   <version>1.0-SNAPSHOT</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
@@ -53,6 +53,11 @@
     <version>1.0-SNAPSHOT</version>
     <relativePath>pom.xml</relativePath>
   </parent>
+
+  <modules>
+    <module>pom-main-unshaded.xml</module>
+    <module>pom-main-shaded.xml</module>
+  </modules>
 
   <dependencies>
     <dependency>
@@ -240,26 +245,6 @@
             <goals>
               <goal>jar-no-fork</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-     <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.1</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.google.javascript.jscomp.CommandLineRunner</mainClass>
-                </transformer>
-              </transformers>
-            </configuration>
           </execution>
         </executions>
       </plugin>
