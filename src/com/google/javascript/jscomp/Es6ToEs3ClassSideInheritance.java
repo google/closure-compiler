@@ -84,11 +84,11 @@ import java.util.Set;
  *   $jscomp.inherits(Bar, Foo);
  * </pre>
  *
- * <p>In order to gather the type checker declarations, this path gathers all GETPROPs on
+ * <p>In order to gather the type checker declarations, this pass gathers all GETPROPs on
  * a class.  In order to determine which of these are the stub declarations it filters them based
  * on names discovered in Object.defineProperties.  Unfortunately, we cannot simply gather the
- * defined properties because they dont have the type information (jsdoc).  The type information is
- * stored on the stub declarations so we must gather both to transpile correctly.
+ * defined properties because they don't have the type information (JSDoc).  The type information
+ * is stored on the stub declarations so we must gather both to transpile correctly.
  * <p>
  * TODO(tdeegan): In the future the type information for getter/setter properties could be stored
  * in the defineProperies functions.  It would reduce the complexity of this pass significantly.
