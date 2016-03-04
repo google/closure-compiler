@@ -62,6 +62,7 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
 
   private void visitArrowFunction(NodeTraversal t, Node n) {
     n.setIsArrowFunction(false);
+    n.makeNonIndexable();
     Node body = n.getLastChild();
     if (!body.isBlock()) {
       body.detachFromParent();
