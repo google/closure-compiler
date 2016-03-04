@@ -39,12 +39,6 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ModificationVisitor;
-import com.google.javascript.rhino.jstype.TemplateType;
-import com.google.javascript.rhino.jstype.TemplateTypeMap;
-
 import java.util.ArrayDeque;
 
 /**
@@ -76,10 +70,15 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
         JSType replacement = replacements.getUnresolvedOriginalTemplateType(type);
 
         JSType restrictedReplacement = replacement.restrictByNotNullOrUndefined();
-        if (restrictedReplacement.isTemplatizedType()
-            && restrictedReplacement.toMaybeTemplatizedType().getTemplateTypes().contains(type)) {
-          // Recursive templated type definition (e.g. T resolved to Foo<T>).
-          return type;
+        if (restrictedReplacement.isTemplatizedType()) {
+          Iterable<JSType> replacementTemplateTypes =
+              restrictedReplacement.toMaybeTemplatizedType().getTemplateTypes();
+          for (JSType replacementTemplateType : replacementTemplateTypes) {
+            if (!replacementTemplateType.differsFrom(type)) {
+              // Recursive templated type definition (e.g. T resolved to Foo<T>).
+              return type;
+            }
+          }
         }
 
         visitedTypes.push(type);
