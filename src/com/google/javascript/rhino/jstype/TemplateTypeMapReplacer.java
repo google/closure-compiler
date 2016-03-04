@@ -68,17 +68,9 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
         return type;
       } else {
         JSType replacement = replacements.getUnresolvedOriginalTemplateType(type);
-
-        JSType restrictedReplacement = replacement.restrictByNotNullOrUndefined();
-        if (restrictedReplacement.isTemplatizedType()) {
-          Iterable<JSType> replacementTemplateTypes =
-              restrictedReplacement.toMaybeTemplatizedType().getTemplateTypes();
-          for (JSType replacementTemplateType : replacementTemplateTypes) {
-            if (!replacementTemplateType.differsFrom(type)) {
-              // Recursive templated type definition (e.g. T resolved to Foo<T>).
-              return type;
-            }
-          }
+        if (isRecursive(type, replacement)) {
+          // Recursive templated type definition (e.g. T resolved to Foo<T>).
+          return type;
         }
 
         visitedTypes.push(type);
@@ -90,6 +82,33 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
     } else {
       return type;
     }
+  }
+
+  /**
+   * Returns whether the replacement type is a templatized type which contains the current type.
+   * e.g. current type T is being replaced with Foo<T>
+   */
+  private boolean isRecursive(TemplateType currentType, JSType replacementType) {
+    TemplatizedType replacementTemplatizedType =
+        replacementType.restrictByNotNullOrUndefined().toMaybeTemplatizedType();
+    if (replacementTemplatizedType == null) {
+      return false;
+    }
+
+    Iterable<JSType> replacementTemplateTypes = replacementTemplatizedType.getTemplateTypes();
+    for (JSType replacementTemplateType : replacementTemplateTypes) {
+      if (replacementTemplateType.isTemplateType()
+          && isSameType(currentType, replacementTemplateType.toMaybeTemplateType())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean isSameType(TemplateType currentType, TemplateType replacementType) {
+    return currentType == replacementType
+        || currentType == replacements.getUnresolvedOriginalTemplateType(replacementType);
   }
 
   /**

@@ -11980,6 +11980,38 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             + "required: null");
   }
 
+  public void testTemplateType26() {
+    // Class hierarchies which use the same template parameter name should not be treated as
+    // infinite recursion.
+    testTypes(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {T} bar",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Bar(bar) {",
+            "  /** @type {T} */",
+            "  this.bar = bar;",
+            "}",
+            "/** @return {T} */",
+            "Bar.prototype.getBar = function() {",
+            "  return this.bar;",
+            "};",
+            "/**",
+            " * @param {T} foo",
+            " * @constructor",
+            " * @template T",
+            " * @extends {Bar<!Array<T>>}",
+            " */",
+            "function Foo(foo) {",
+            "  /** @type {T} */",
+            "  this.foo = foo;",
+            "}",
+            "var /** null */ n = new Foo(new Object).getBar();"),
+        "initializing variable\n" + "found   : Array<Object>\n" + "required: null");
+  }
+
   public void testSubtypeNotTemplated1() {
     testTypes(
         LINE_JOINER.join(
