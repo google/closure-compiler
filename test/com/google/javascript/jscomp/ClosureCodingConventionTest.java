@@ -229,6 +229,17 @@ public final class ClosureCodingConventionTest extends TestCase {
     assertEquals(nodeB, ctorB.getPropertyNode("superClass_"));
   }
 
+  public void testDescribeCachingCall() {
+    assertCachingCall("goog.reflect.cache(obj, 10, function() {})");
+    assertCachingCall("goog.reflect.cache(obj, 10, function() {}, function() {})");
+    assertCachingCall("goog$reflect$cache(obj, 10, function() {})");
+    assertCachingCall("goog$reflect$cache(obj, 10, function() {}, function() {})");
+    assertNotCachingCall("goog.reflect.cache()");
+    assertNotCachingCall("goog.reflect.cache(obj)");
+    assertNotCachingCall("goog.reflect.cache(obj, 10)");
+    assertNotCachingCall("foo.cache(obj, 10, function() {}, function() {})");
+  }
+
   private void assertFunctionBind(String code) {
     Node n = parseTestCode(code);
     assertNotNull(conv.describeFunctionBind(n.getFirstChild()));
@@ -272,6 +283,16 @@ public final class ClosureCodingConventionTest extends TestCase {
     assertNotNull(classes);
     assertEquals(subclassName, classes.subclassName);
     assertEquals(superclassName, classes.superclassName);
+  }
+
+  private void assertCachingCall(String code) {
+    Node node = parseTestCode(code);
+    assertNotNull(conv.describeCachingCall(node.getFirstChild()));
+  }
+
+  private void assertNotCachingCall(String code) {
+    Node node = parseTestCode(code);
+    assertNull(conv.describeCachingCall(node.getFirstChild()));
   }
 
   private Node parseTestCode(String code) {

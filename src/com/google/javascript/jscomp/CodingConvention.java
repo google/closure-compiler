@@ -333,6 +333,32 @@ public interface CodingConvention extends Serializable {
   }
 
   /**
+   * Builds a {@link Cache} instance from the given call node and returns that instance, or null
+   * if the {@link Node} does not resemble a cache utility call.
+   *
+   * <p>This should match calls to a cache utility method. This type of node is specially considered
+   * for side-effects since conventionally storing something on a cache object would be seen as a
+   * side-effect.
+   *
+   */
+  public Cache describeCachingCall(Node node);
+
+  /** Cache class */
+  public static class Cache {
+    final Node cacheObj;
+    final Node key;
+    final Node valueFn;
+    final Node keyFn;
+
+    public Cache(Node cacheObj, Node key, Node valueFn, Node keyFn) {
+      this.cacheObj = cacheObj;
+      this.key = key;
+      this.valueFn = valueFn;
+      this.keyFn = keyFn;
+    }
+  }
+
+  /**
    * Whether this CALL function is testing for the existence of a property.
    */
   public boolean isPropertyTestFunction(Node call);

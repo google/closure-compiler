@@ -275,6 +275,11 @@ public final class CodingConventions {
     }
 
     @Override
+    public Cache describeCachingCall(Node node) {
+      return nextConvention.describeCachingCall(node);
+    }
+
+    @Override
     public boolean isPropertyTestFunction(Node call) {
       return nextConvention.isPropertyTestFunction(call);
     }
@@ -556,6 +561,11 @@ public final class CodingConventions {
         }
       }
 
+      return null;
+    }
+
+    @Override
+    public Cache describeCachingCall(Node node) {
       return null;
     }
 

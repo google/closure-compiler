@@ -1628,7 +1628,12 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /** Finds the first matching qualified name node in post-traversal order. */
-  protected final Node findQualifiedNameNode(final String name, Node root) {
+  public final Node findQualifiedNameNode(final String name, Node root) {
+    return findQualifiedNameNodes(name, root).get(0);
+  }
+
+  /** Finds all the matching qualified name nodes in post-traversal order. */
+  public final List<Node> findQualifiedNameNodes(final String name, Node root) {
     final List<Node> matches = new ArrayList<>();
     NodeUtil.visitPostOrder(
         root,
@@ -1641,6 +1646,6 @@ public abstract class CompilerTestCase extends TestCase {
           }
         },
         Predicates.<Node>alwaysTrue());
-    return matches.get(0);
+    return matches;
   }
 }

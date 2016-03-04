@@ -447,6 +447,30 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
+  public Cache describeCachingCall(Node node) {
+    if (!node.isCall()) {
+      return null;
+    }
+
+    Node callTarget = node.getFirstChild();
+    if (callTarget.isQualifiedName()
+        && (callTarget.matchesQualifiedName("goog.reflect.cache")
+            || callTarget.matchesQualifiedName("goog$reflect$cache"))) {
+      int paramCount = node.getChildCount() - 1;
+      if (3 <= paramCount && paramCount <= 4) {
+        Node cacheObj = callTarget.getNext();
+        Node keyNode = cacheObj.getNext();
+        Node valueFn = keyNode.getNext();
+        Node keyFn = valueFn.getNext();
+
+        return new Cache(cacheObj, keyNode, valueFn, keyFn);
+      }
+    }
+
+    return super.describeCachingCall(node);
+  }
+
+  @Override
   public Collection<String> getIndirectlyDeclaredProperties() {
     return indirectlyDeclaredProperties;
   }

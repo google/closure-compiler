@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -168,7 +169,9 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
       "/**\n" +
       " * @see {foo}\n" +
       " */\n" +
-      "externObj4.prototype.propWithStubAfterWithJSDoc;";
+      "externObj4.prototype.propWithStubAfterWithJSDoc;" +
+      "var goog = {reflect: {}};" +
+      "goog.reflect.cache = function(a, b, c, opt_d) {};";
 
   public PureFunctionIdentifierTest() {
     super(kExterns);
@@ -1273,6 +1276,83 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     testError("var f = function() {};" +
          "f.x = /** @nosideeffects */ function() {}",
          INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  }
+
+  public void testCallCache() throws Exception {
+    String source = "var valueFn = function() {};"
+        + "goog.reflect.cache(externObj, \"foo\", valueFn)";
+    checkMarkedCalls(source, ImmutableList.of("goog.reflect.cache"));
+    Node lastRoot = getLastCompiler().getRoot().getLastChild();
+    Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+    assertThat(call.isNoSideEffectsCall()).isTrue();
+    assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
+  }
+
+  public void testCallCache_withKeyFn() throws Exception {
+    String source = "var valueFn = function(v) { return v }, keyFn = function(v) { return v };"
+        + "goog.reflect.cache(externObj, \"foo\", valueFn, keyFn)";
+    checkMarkedCalls(source, ImmutableList.of("goog.reflect.cache"));
+    Node lastRoot = getLastCompiler().getRoot().getLastChild();
+    Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+    assertThat(call.isNoSideEffectsCall()).isTrue();
+    assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
+  }
+
+  public void testCallCache_anonymousFn() throws Exception {
+    String source = "goog.reflect.cache(externObj, \"foo\", function(v) { return v })";
+    checkMarkedCalls(source, ImmutableList.of("goog.reflect.cache"));
+    Node lastRoot = getLastCompiler().getRoot().getLastChild();
+    Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+    assertThat(call.isNoSideEffectsCall()).isTrue();
+    assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
+  }
+
+  public void testCallCache_anonymousFn_hasSideEffects() throws Exception {
+    String source = "var x = 0;"
+        + "goog.reflect.cache(externObj, \"foo\", function(v) { return (x+=1) })";
+    checkMarkedCalls(source, ImmutableList.<String>of());
+    Node lastRoot = getLastCompiler().getRoot().getLastChild();
+    Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+    assertThat(call.isNoSideEffectsCall()).isFalse();
+    assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
+  }
+
+  public void testCallCache_hasSideEffects() throws Exception {
+    String source = "var x = 0;"
+        + "var valueFn = function() { return (x+=1); };"
+        + "goog.reflect.cache(externObj, \"foo\", valueFn)";
+    checkMarkedCalls(source, ImmutableList.<String>of());
+    Node lastRoot = getLastCompiler().getRoot().getLastChild();
+    Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+    assertThat(call.isNoSideEffectsCall()).isFalse();
+    assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
+  }
+
+  public void testCallCache_withKeyFn_hasSideEffects() throws Exception {
+    String source = "var x = 0;"
+        + "var keyFn = function(v) { return (x+=1) };"
+        + "var valueFn = function(v) { return v };"
+        + "goog.reflect.cache(externObj, \"foo\", valueFn, keyFn)";
+    checkMarkedCalls(source, ImmutableList.<String>of());
+    Node lastRoot = getLastCompiler().getRoot().getLastChild();
+    Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+    assertThat(call.isNoSideEffectsCall()).isFalse();
+    assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
+  }
+
+  public void testCallCache_propagatesSideEffects() throws Exception {
+    String source = "var valueFn = function(x) { return x * 2; };"
+        + "var helper = function(x) { return goog.reflect.cache(externObj, x, valueFn); };"
+        + "helper(10);";
+    checkMarkedCalls(source, ImmutableList.of("goog.reflect.cache", "helper"));
+    Node lastRoot = getLastCompiler().getRoot().getLastChild();
+    Node cacheCall = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+    assertThat(cacheCall.isNoSideEffectsCall()).isTrue();
+    assertThat(cacheCall.mayMutateGlobalStateOrThrow()).isFalse();
+
+    Node helperCall = Iterables.getLast(findQualifiedNameNodes("helper", lastRoot)).getParent();
+    assertThat(helperCall.isNoSideEffectsCall()).isTrue();
+    assertThat(helperCall.mayMutateGlobalStateOrThrow()).isFalse();
   }
 
   void checkMarkedCalls(String source, List<String> expected) {
