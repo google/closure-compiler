@@ -1380,20 +1380,20 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testChecksOnlySkipsOptimizations() {
-    args.add("--checks-only");
+    args.add("--checks_only");
     test("var foo = 1 + 1;",
       "var foo = 1 + 1;");
   }
 
   public void testChecksOnlyWithParseError() {
     args.add("--compilation_level=WHITESPACE_ONLY");
-    args.add("--checks-only");
+    args.add("--checks_only");
     test("val foo = 1;",
       RhinoErrorReporter.PARSE_ERROR);
   }
 
   public void testChecksOnlyWithWarning() {
-    args.add("--checks-only");
+    args.add("--checks_only");
     args.add("--warning_level=VERBOSE");
     test("/** @deprecated */function foo() {}; foo();",
       CheckAccessControls.DEPRECATED_NAME);

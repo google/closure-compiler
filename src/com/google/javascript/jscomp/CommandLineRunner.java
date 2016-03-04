@@ -348,9 +348,10 @@ public class CommandLineRunner extends
     private String compilationLevel = "SIMPLE";
     private CompilationLevel compilationLevelParsed = null;
 
-    @Option(name = "--checks-only",
+    @Option(name = "--checks_only",
+        aliases = {"--checks-only"},
         handler = BooleanOptionHandler.class,
-        usage = "Don't generate output. Run checks, but no compiler passes.")
+        usage = "Don't generate output. Run checks, but no optimization passes.")
     private boolean checksOnly = false;
 
     @Option(name = "--use_types_for_optimization",
