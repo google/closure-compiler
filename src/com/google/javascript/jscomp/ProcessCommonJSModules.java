@@ -591,9 +591,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      if (n.isName()) {
+      boolean isShorthandObjLitKey = n.isStringKey() && !n.hasChildren();
+      if (n.isName() || isShorthandObjLitKey) {
         String name = n.getString();
         if (suffix.equals(name)) {
+          // TODO(moz): Investigate whether we need to return early in this unlikely situation.
           return;
         }
 
@@ -609,8 +611,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
         Var var = t.getScope().getVar(name);
         if (var != null && var.isGlobal()) {
-          n.setString(name + "$$" + suffix);
-          n.setOriginalName(name);
+          String newName = name + "$$" + suffix;
+          if (isShorthandObjLitKey) {
+            // Change {a} to {a: a$$module$foo}
+            n.addChildToBack(IR.name(newName).useSourceInfoIfMissingFrom(n));
+          } else {
+            n.setString(newName);
+            n.setOriginalName(name);
+          }
         }
       }
     }
