@@ -1373,36 +1373,3 @@ Polymer.telemetry.instanceCount;
  * @type {!Array<!PolymerElement>}
  */
 Polymer.telemetry.registrations;
-
-Polymer.AppLayout;
-
-/** @constructor */
-Polymer.AppLayout.LocalDomWithBackground = function(){};
-/** @type {!HTMLElement} */
-Polymer.AppLayout.LocalDomWithBackground.prototype.backgroundFrontLayer;
-/** @type {!HTMLElement} */
-Polymer.AppLayout.LocalDomWithBackground.prototype.backgroundRearLayer;
-/** @type {!HTMLElement} */
-Polymer.AppLayout.LocalDomWithBackground.prototype.background;
-
-/**
- * @constructor
- * @extends {PolymerElement}
- */
-Polymer.AppLayout.ElementWithBackground = function(){};
-
-// TODO(ajo): Follow up with app-layout team and remove private api from this prototype
-Polymer.AppLayout.ElementWithBackground.prototype = {
-  /** @type {!Polymer.AppLayout.LocalDomWithBackground} */
-  $: null,
-  /** @return {boolean} True if there's content below the current element */
-  isContentBelow: function(){},
-  /** Updates the elements scroll state */
-  _updateScrollState: function(){},
-  /** @return {boolean} true if the element is on screen */
-  isOnScreen: function(){},
-  /** @type {number} Internal bookkeeping to track screen position */
-  _deltaHeight: 0,
-  /** @return {?Element} Element in local dom by id. */
-  _getDOMRef: function(title){},
-}
