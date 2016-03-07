@@ -42,10 +42,11 @@ import javax.annotation.Nullable;
  * with no corresponding {@code @param} annotation, coding conventions not being respected, etc.
  */
 public final class CheckJSDocStyle extends AbstractPostOrderCallback implements CompilerPass {
-  // TODO(tbreisacher): This error message should link to a page on the Github wiki explaining
-  // where @suppress annotations are allowed and where they are not.
   public static final DiagnosticType INVALID_SUPPRESS =
-      DiagnosticType.warning("JSC_INVALID_SUPPRESS", "@suppress annotation not allowed here.");
+      DiagnosticType.warning(
+          "JSC_INVALID_SUPPRESS",
+          "@suppress annotation not allowed here. See"
+              + " https://github.com/google/closure-compiler/wiki/@suppress-annotations");
 
   public static final DiagnosticType CONSTRUCTOR_DISALLOWED_JSDOC =
       DiagnosticType.warning("JSC_CONSTRUCTOR_DISALLOWED_JSDOC",
