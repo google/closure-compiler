@@ -147,6 +147,6 @@ public final class JsFunctionParser extends JsFileLineParser {
     }
 
     return !shortcutMode || hasFunctions ||
-        CharMatcher.WHITESPACE.matchesAllOf(line);
+        CharMatcher.whitespace().matchesAllOf(line);
   }
 }

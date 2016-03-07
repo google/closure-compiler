@@ -272,7 +272,7 @@ public abstract class JsFileLineParser {
    * @throws ParseException Thrown if there is a syntax error with the input.
    */
   Map<String, String> parseJsStringMap(String input) throws ParseException {
-    input = CharMatcher.WHITESPACE.trimFrom(input);
+    input = CharMatcher.whitespace().trimFrom(input);
     check(
         !input.isEmpty() && input.charAt(0) == '{' && input.charAt(input.length() - 1) == '}',
         "Syntax error when parsing JS object");

@@ -182,7 +182,7 @@ public final class DepsFileParser extends JsFileLineParser {
     }
 
     return !shortcutMode || hasDependencies ||
-        CharMatcher.WHITESPACE.matchesAllOf(line);
+        CharMatcher.whitespace().matchesAllOf(line);
   }
 
   private Map<String, String> parseLoadFlags(String loadFlags) throws ParseException {

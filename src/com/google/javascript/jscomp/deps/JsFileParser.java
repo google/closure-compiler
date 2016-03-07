@@ -176,6 +176,6 @@ public final class JsFileParser extends JsFileLineParser {
     }
 
     return !shortcutMode || lineHasProvidesOrRequires ||
-        CharMatcher.WHITESPACE.matchesAllOf(line);
+        CharMatcher.whitespace().matchesAllOf(line);
   }
 }
