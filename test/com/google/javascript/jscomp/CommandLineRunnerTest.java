@@ -1089,6 +1089,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testInputMultipleDuplicateZips() throws IOException, FlagUsageException {
+    args.add("--jscomp_error=duplicateZipContents");
     FlagEntry<JsSourceType> zipFile1 =
         createZipFile(ImmutableMap.of("run.js", "console.log(\"Hello World\");"));
 

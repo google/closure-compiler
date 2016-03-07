@@ -67,7 +67,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -634,10 +633,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         SourceFile firstSourceFile = sourceFilesByName.get(relativePath);
         if (firstSourceFile.getCode().equals(sourceFile.getCode())) {
-          Logger.getLogger(AbstractCommandLineRunner.class.getName())
-              .warning("Found duplicate zip entries with the same contents.\n"
-                  + "Entry 1: " + firstSourceFile.getName() + "\n"
-                  + "Entry 2: " + sourceFile.getName() + "\n");
           errors.add(JSError.make(
               SourceFile.DUPLICATE_ZIP_CONTENTS, firstSourceFile.getName(), sourceFile.getName()));
           fileIterator.remove();
@@ -1079,6 +1074,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
+    compiler.initWarningsGuard(options.getWarningsGuard());
     List<SourceFile> inputs =
         createSourceInputs(jsModuleSpecs, config.mixedJsSources, jsonFiles);
     if (!jsModuleSpecs.isEmpty()) {

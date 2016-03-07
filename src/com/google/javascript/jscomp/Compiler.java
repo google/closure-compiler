@@ -320,11 +320,12 @@ public class Compiler extends AbstractCompiler {
       options.useNonStrictWarningsGuard();
     }
 
-    // Initialize the warnings guard.
-    this.warningsGuard =
-        new ComposeWarningsGuard(
-            new SuppressDocWarningsGuard(getDiagnosticGroups().getRegisteredGroups()),
-            options.getWarningsGuard());
+    initWarningsGuard(options.getWarningsGuard());
+  }
+
+  void initWarningsGuard(WarningsGuard warningsGuard) {
+    this.warningsGuard = new ComposeWarningsGuard(
+        new SuppressDocWarningsGuard(getDiagnosticGroups().getRegisteredGroups()), warningsGuard);
   }
 
   /**

@@ -83,7 +83,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   private String code = null;
 
-  static final DiagnosticType DUPLICATE_ZIP_CONTENTS = DiagnosticType.error(
+  static final DiagnosticType DUPLICATE_ZIP_CONTENTS = DiagnosticType.warning(
       "JSC_DUPLICATE_ZIP_CONTENTS",
       "Two zip entries containing the same relative path.\n"
       + "Entry 1: {0}\n"
