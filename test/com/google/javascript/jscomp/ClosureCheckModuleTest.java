@@ -19,6 +19,8 @@ import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERE
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
 import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_AND_PROVIDES;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
+import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
+import static com.google.javascript.jscomp.ClosureCheckModule.REQUIRE_NOT_AT_TOP_LEVEL;
 
 public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
   @Override
@@ -80,5 +82,40 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "",
             "var x = goog.require('other.x');"),
         MULTIPLE_MODULES_IN_FILE);
+  }
+
+  public void testIllegalGoogRequires() {
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var x = goog.require('other.x').foo.toString();"),
+        REQUIRE_NOT_AT_TOP_LEVEL);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var moduleNames = [goog.require('other.x').name];"),
+        REQUIRE_NOT_AT_TOP_LEVEL);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var a = goog.require('foo.a'), b = goog.require('foo.b');"),
+        ONE_REQUIRE_PER_DECLARATION);
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var {assert} = goog.require('goog.asserts');"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const {assert} = goog.require('goog.asserts');"));
   }
 }

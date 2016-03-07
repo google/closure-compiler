@@ -44,6 +44,16 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       "JSC_GOOG_MODULE_USES_THROW",
       "The body of a goog.module cannot use 'throw'.");
 
+  static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
+      DiagnosticType.error(
+          "JSC_REQUIRE_NOT_AT_TOP_LEVEL",
+          "goog.require() must be called at file scope.");
+
+  static final DiagnosticType ONE_REQUIRE_PER_DECLARATION =
+      DiagnosticType.error(
+          "JSC_ONE_REQUIRE_PER_DECLARATION",
+          "There may only be one goog.require() per var/let/const declaration.");
+
   private final AbstractCompiler compiler;
 
   private Node currentModule = null;
@@ -83,6 +93,8 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           }
         } else if (callee.matchesQualifiedName("goog.provide")) {
           t.report(n, MODULE_AND_PROVIDES);
+        } else if (callee.matchesQualifiedName("goog.require")) {
+          checkRequire(t, n);
         }
         break;
       case Token.THIS:
@@ -99,5 +111,27 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
         currentModule = null;
         break;
     }
+  }
+
+  private void checkRequire(NodeTraversal t, Node n) {
+    Node statement = NodeUtil.getEnclosingStatement(n);
+    if (statement.isExprResult()) {
+      return;
+    }
+    if (NodeUtil.isNameDeclaration(statement)) {
+      if (statement.getChildCount() != 1) {
+        t.report(statement, ONE_REQUIRE_PER_DECLARATION);
+        return;
+      }
+      Node rhs = statement.getFirstChild().getLastChild();
+      if (n == rhs) {
+        // var foo = goog.require('ns.foo'); no error.
+        return;
+      } else if (rhs.isGetProp() && n == rhs.getFirstChild()) {
+        // var bar = goog.require('ns.foo').bar; no error
+        return;
+      }
+    }
+    t.report(n, REQUIRE_NOT_AT_TOP_LEVEL);
   }
 }
