@@ -26,7 +26,7 @@ public final class NamespaceLit extends Namespace {
     this.name = name;
   }
 
-  // For function namespaces and when window is used as a namespace
+  // For when window is used as a namespace
   public JSType toJSTypeIncludingObject(JSTypes commonTypes, JSType obj) {
     if (obj == null) {
       return toJSType(commonTypes);
@@ -52,6 +52,7 @@ public final class NamespaceLit extends Namespace {
     return computeJSType(commonTypes, null, null);
   }
 
+  @Override
   public String toString() {
     return this.name;
   }

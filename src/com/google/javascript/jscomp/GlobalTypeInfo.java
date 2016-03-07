@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.newtypes.Declaration;
 import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.EnumType;
+import com.google.javascript.jscomp.newtypes.FunctionNamespace;
 import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
@@ -777,7 +778,7 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (isAliasedNamespaceDefinition(qnameNode)) {
         visitAliasedNamespace(qnameNode);
       } else if (isQualifiedFunctionDefinition(qnameNode)) {
-        maybeAddFunctionScopeToNamespace(qnameNode);
+        maybeAddFunctionToNamespace(qnameNode);
       }
     }
 
@@ -802,9 +803,11 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkArgument(qnameNode.isGetProp());
       Preconditions.checkArgument(qnameNode.isQualifiedName());
       Node parent = qnameNode.getParent();
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
       return parent.isAssign()
           && parent.getParent().isExprResult()
-          && parent.getLastChild().isFunction();
+          && parent.getLastChild().isFunction()
+          && (jsdoc == null || jsdoc.containsFunctionDeclaration());
     }
 
     // Returns true iff it creates a new function namespace
@@ -827,7 +830,7 @@ class GlobalTypeInfo implements CompilerPass {
       } else {
         s = currentScope;
       }
-      s.addNamespaceLit(qnameNode);
+      s.addFunNamespace(qnameNode);
       return true;
     }
 
@@ -884,7 +887,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (init != null && init.isQualifiedName()) {
         EnumType et = currentScope.getEnum(QualifiedName.fromNode(init));
         if (et != null) {
-          currentScope.addEnum(qnameNode, et);
+          currentScope.addNamespace(qnameNode, et);
           return;
         }
       }
@@ -903,7 +906,7 @@ class GlobalTypeInfo implements CompilerPass {
         }
         propNames.add(pname);
       }
-      currentScope.addEnum(qnameNode,
+      currentScope.addNamespace(qnameNode,
           EnumType.make(
               qnameNode.getQualifiedName(),
               jsdoc.getEnumParameterType(),
@@ -987,7 +990,10 @@ class GlobalTypeInfo implements CompilerPass {
     private void maybeRecordNominalType(
         Node defSite, Node nameNode, JSDocInfo fnDoc, boolean isRedeclaration) {
       Preconditions.checkState(nameNode == null || nameNode.isQualifiedName());
-      if (fnDoc != null && fnDoc.isConstructorOrInterface()) {
+      if (fnDoc == null) {
+        return;
+      }
+      if (fnDoc.isConstructorOrInterface()) {
         if (nameNode == null) {
           warnings.add(JSError.make(defSite, ANONYMOUS_NOMINAL_TYPE));
           return;
@@ -1024,14 +1030,12 @@ class GlobalTypeInfo implements CompilerPass {
           } else if (currentScope.isTopLevel()) {
             maybeRecordBuiltinType(qname, rawType);
           }
-          currentScope.addNominalType(nameNode, rawType);
+          currentScope.addNamespace(nameNode, rawType);
         }
-      } else if (fnDoc != null) {
-        if (fnDoc.makesStructs()) {
-          warnings.add(JSError.make(defSite, STRUCTDICT_WITHOUT_CTOR, "@struct"));
-        } else if (fnDoc.makesDicts()) {
-          warnings.add(JSError.make(defSite, STRUCTDICT_WITHOUT_CTOR, "@dict"));
-        }
+      } else if (fnDoc.makesStructs()) {
+        warnings.add(JSError.make(defSite, STRUCTDICT_WITHOUT_CTOR, "@struct"));
+      } else if (fnDoc.makesDicts()) {
+        warnings.add(JSError.make(defSite, STRUCTDICT_WITHOUT_CTOR, "@dict"));
       }
     }
 
@@ -1095,13 +1099,13 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-    private void maybeAddFunctionScopeToNamespace(Node funQname) {
+    private void maybeAddFunctionToNamespace(Node funQname) {
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(funQname.getFirstChild()));
       String internalName = getFunInternalName(funQname.getParent().getLastChild());
       NTIScope s = currentScope.getScope(internalName);
       QualifiedName pname = new QualifiedName(funQname.getLastChild().getString());
       if (!ns.isDefined(pname)) {
-        ns.addScope(pname, s);
+        ns.addNamespace(pname, new FunctionNamespace(funQname.toString(), s));
       }
     }
 

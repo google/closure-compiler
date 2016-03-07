@@ -13909,7 +13909,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Foo() {}",
         "/** @const */",
         "Foo.alias = Foo;",
-        "var x = new Foo.alias.alias.alias();"),
+        "var x = new Foo.alias.alias.alias.alias();"),
         NewTypeInference.INEXISTENT_PROPERTY);
   }
 

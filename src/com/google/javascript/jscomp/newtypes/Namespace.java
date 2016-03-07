@@ -31,29 +31,24 @@ import java.util.Map;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public abstract class Namespace {
-  // These properties can themselves be namespaces
-  protected Map<String, RawNominalType> nominals = ImmutableMap.of();
-  protected Map<String, EnumType> enums = ImmutableMap.of();
-  protected Map<String, NamespaceLit> namespaces = ImmutableMap.of();
-  // Non-namespace properties
-  protected Map<String, Typedef> typedefs = ImmutableMap.of();
-  protected Map<String, DeclaredTypeRegistry> scopes = ImmutableMap.of();
-  // "Simple type" properties (i.e. represented as JSTypes rather than something more specific).
+  private Map<String, Namespace> namespaces = ImmutableMap.of();
+  private Map<String, Typedef> typedefs = ImmutableMap.of();
+  // "Simple type" properties (i.e. represented as JSTypes rather than something
+  // more specific).
   protected PersistentMap<String, Property> otherProps = PersistentMap.create();
-
   protected String name;
-  // Represents the namespace as an object that includes all namespace properties.
-  // For NamespaceLit and EnumType, it is an object literal.
+  // Represents the namespace as an object that includes all namespace
+  // properties. For NamespaceLit and EnumType, it is an object literal.
   // For RawNominalType, it is the constructor.
   protected JSType namespaceType;
-  // A hack to cut-off the recursion when computing the type of circular namespaces.
-  // Handling the circularity properly would require that either ObjectType be
-  // mutable (so that we can create cycles), or that we retain NamespaceLit during
-  // NewTypeInference.
-  // Another hack that avoids true circularity but is more precise than the
-  // current one is to cut-off the recursion after two unrollings instead of one.
+  // A hack to cut-off the recursion when computing the type of circular
+  // namespaces. Handling the circularity properly would require that either
+  // ObjectType be mutable (so that we can create cycles), or that we retain
+  // NamespaceLit during NewTypeInference. Another hack that avoids true
+  // circularity but is more precise than the current one is to cut-off the
+  // recursion after two unrollings instead of one.
   // TODO(dimvar): handle circular namespaces correctly.
-  protected boolean duringComputeJSType = false;
+  private boolean duringComputeJSType = false;
 
   protected abstract JSType computeJSType(JSTypes commonTypes);
 
@@ -62,11 +57,8 @@ public abstract class Namespace {
   }
 
   private boolean isDefined(String name) {
-    return nominals.containsKey(name)
-        || enums.containsKey(name)
-        || namespaces.containsKey(name)
+    return namespaces.containsKey(name)
         || typedefs.containsKey(name)
-        || scopes.containsKey(name)
         || otherProps.containsKey(name);
   }
 
@@ -86,27 +78,15 @@ public abstract class Namespace {
     return ns.isDefined(name);
   }
 
-  public final void addSubnamespace(QualifiedName qname, NamespaceLit nslit) {
-    Declaration d = getDeclaration(qname);
-    // If qname is defined, it must be a function (which will now also become a namespace).
-    Preconditions.checkState(d == null
-        || d.getNamespace() == null && d.getFunctionScope() != null);
-    Namespace ns = getReceiverNamespace(qname);
-    if (ns.namespaces.isEmpty()) {
-      ns.namespaces = new LinkedHashMap<>();
+  public void addNamespace(QualifiedName qname, Namespace ns) {
+    Preconditions.checkState(!isDefined(qname));
+    Namespace subns = getReceiverNamespace(qname);
+    if (subns.namespaces.isEmpty()) {
+      subns.namespaces = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
-    ns.namespaces.put(name, nslit);
-  }
-
-  public final void addScope(QualifiedName qname, DeclaredTypeRegistry scope) {
-    Namespace ns = getReceiverNamespace(qname);
-    if (ns.scopes.isEmpty()) {
-      ns.scopes = new LinkedHashMap<>();
-    }
-    String name = qname.getRightmostName();
-    Preconditions.checkState(!ns.scopes.containsKey(name));
-    ns.scopes.put(name, scope);
+    Preconditions.checkState(!subns.namespaces.containsKey(name));
+    subns.namespaces.put(name, ns);
   }
 
   public final Declaration getDeclaration(QualifiedName qname) {
@@ -118,24 +98,13 @@ public abstract class Namespace {
     if (!recv.isDefined(name)) {
       return null;
     }
-    JSType simpleType = recv.getPropDeclaredType(name);
-    Typedef typedef = recv.typedefs.get(name);
-    EnumType enumType = recv.enums.get(name);
-    RawNominalType rawType = recv.nominals.get(name);
-    DeclaredTypeRegistry scope = recv.scopes.get(name);
-    NamespaceLit ns = recv.namespaces.get(name);
+    Namespace ns = recv.namespaces.get(name);
+    DeclaredTypeRegistry scope = ns instanceof FunctionNamespace
+        ? ((FunctionNamespace) ns).getScope() : null;
     return new Declaration(
-        simpleType, typedef, ns, enumType, scope, rawType, false, false, false);
-  }
-
-  public final void addNominalType(QualifiedName qname, RawNominalType rawNominalType) {
-    Preconditions.checkState(!isDefined(qname));
-    Namespace ns = getReceiverNamespace(qname);
-    if (ns.nominals.isEmpty()) {
-      ns.nominals = new LinkedHashMap<>();
-    }
-    String name = qname.getRightmostName();
-    ns.nominals.put(name, rawNominalType);
+        recv.getPropDeclaredType(name),
+        recv.typedefs.get(name),
+        ns, scope, false, false);
   }
 
   public final void addTypedef(QualifiedName qname, Typedef td) {
@@ -148,28 +117,6 @@ public abstract class Namespace {
     ns.typedefs.put(name, td);
   }
 
-  public final void addEnum(QualifiedName qname, EnumType e) {
-    Preconditions.checkState(!isDefined(qname));
-    Namespace ns = getReceiverNamespace(qname);
-    if (ns.enums.isEmpty()) {
-      ns.enums = new LinkedHashMap<>();
-    }
-    String name = qname.getRightmostName();
-    ns.enums.put(name, e);
-  }
-
-  private Namespace getLocalSubnamespace(String name) {
-    if (nominals != null && nominals.containsKey(name)) {
-      return nominals.get(name);
-    } else if (namespaces != null && namespaces.containsKey(name)) {
-      return namespaces.get(name);
-    } else if (enums != null && enums.containsKey(name)) {
-      return enums.get(name);
-    } else {
-      return null;
-    }
-  }
-
   private Namespace getReceiverNamespace(QualifiedName qname) {
     if (qname.isIdentifier()) {
       return this;
@@ -180,7 +127,7 @@ public abstract class Namespace {
 
   public final Namespace getSubnamespace(QualifiedName qname) {
     String leftmost = qname.getLeftmostName();
-    Namespace firstNamespace = getLocalSubnamespace(leftmost);
+    Namespace firstNamespace = this.namespaces.get(leftmost);
     if (firstNamespace == null || qname.isIdentifier()) {
       return firstNamespace;
     } else {
@@ -247,34 +194,13 @@ public abstract class Namespace {
       return this.namespaceType;
     }
     this.duringComputeJSType = true;
-    if (nominals != null) {
-      for (Map.Entry<String, RawNominalType> entry : nominals.entrySet()) {
-        obj = obj.withProperty(
-            new QualifiedName(entry.getKey()),
-            entry.getValue().toJSType(commonTypes));
-      }
+
+    for (Map.Entry<String, Namespace> entry : this.namespaces.entrySet()) {
+      obj = obj.withProperty(
+          new QualifiedName(entry.getKey()),
+          entry.getValue().toJSType(commonTypes));
     }
-    if (enums != null) {
-      for (Map.Entry<String, EnumType> entry : enums.entrySet()) {
-        obj = obj.withProperty(
-            new QualifiedName(entry.getKey()),
-            entry.getValue().toJSType(commonTypes));
-      }
-    }
-    if (namespaces != null) {
-      for (Map.Entry<String, NamespaceLit> entry : namespaces.entrySet()) {
-        String name = entry.getKey();
-        JSType objToInclude = null;
-        // If it's a function namespace, add the function type to the result
-        if (scopes.containsKey(name)) {
-          objToInclude = commonTypes.fromFunctionType(
-              scopes.get(name).getDeclaredFunctionType().toFunctionType());
-        }
-        obj = obj.withProperty(
-            new QualifiedName(name),
-            entry.getValue().toJSTypeIncludingObject(commonTypes, objToInclude));
-      }
-    }
+
     this.duringComputeJSType = false;
     return JSType.fromObjectType(obj);
   }
@@ -283,39 +209,22 @@ public abstract class Namespace {
   // RawNominalType instead of an ObjectType.
   public final void copyWindowProperties(JSTypes commonTypes, RawNominalType win) {
     Preconditions.checkArgument(win.getName().equals("Window"));
-    Preconditions.checkNotNull(this.nominals,
+    Preconditions.checkNotNull(this.namespaces,
         "The built-in types are missing from window. "
         + "Perhaps you forgot to run DeclaredGlobalExternsOnWindow?");
-    for (Map.Entry<String, RawNominalType> entry : this.nominals.entrySet()) {
-      RawNominalType rawType = entry.getValue();
-      // Hack: circular namespace here, skip adding Window.
-      if (!rawType.isFinalized()) {
-        Preconditions.checkState(rawType.getName().equals("Window"),
-            "Unexpected unfinalized type %s", rawType.getName());
-        continue;
-      }
-      win.addProtoProperty(
-          entry.getKey(), null, rawType.toJSType(commonTypes), true);
-    }
-    if (this.enums != null) {
-      for (Map.Entry<String, EnumType> entry : enums.entrySet()) {
-        win.addProtoProperty(
-            entry.getKey(), null, entry.getValue().toJSType(commonTypes), true);
-      }
-    }
-    if (this.namespaces != null) {
-      for (Map.Entry<String, NamespaceLit> entry : this.namespaces.entrySet()) {
-        String pname = entry.getKey();
-        JSType fun = null;
-        // If it's a function namespace, add the function type to the result
-        if (this.scopes.containsKey(pname)) {
-          DeclaredFunctionType dft =
-              this.scopes.get(pname).getDeclaredFunctionType();
-          fun = commonTypes.fromFunctionType(dft.toFunctionType());
+
+    for (Map.Entry<String, Namespace> entry : this.namespaces.entrySet()) {
+      Namespace ns = entry.getValue();
+      if (ns instanceof RawNominalType) {
+        RawNominalType rawType = (RawNominalType) ns;
+        // Hack: circular namespace here, skip adding Window.
+        if (!rawType.isFinalized()) {
+          Preconditions.checkState(rawType.getName().equals("Window"),
+              "Unexpected unfinalized type %s", rawType.getName());
+          continue;
         }
-        JSType nsType = entry.getValue().toJSTypeIncludingObject(commonTypes, fun);
-        win.addProtoProperty(pname, null, nsType, true);
       }
+      win.addProtoProperty(entry.getKey(), null, ns.toJSType(commonTypes), true);
     }
     for (Map.Entry<String, Property> entry : this.otherProps.entrySet()) {
       win.addProtoProperty(
