@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -1211,6 +1212,55 @@ public final class CommandLineRunnerTest extends TestCase {
     String glob = jscompTempDir + File.separator + "**" + File.separator + "*.js";
     compileFiles(
         "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
+  }
+
+  // NOTE(moz): This might not work on Google's internal build system.
+  public void testGlobJs6() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    File ignoreJs = new File("./ignore.js");
+    if (ignoreJs.isDirectory()) {
+      for (File f : ignoreJs.listFiles()) {
+        f.delete();
+      }
+    }
+    ignoreJs.delete();
+    new File(jsFile2.value).renameTo(ignoreJs);
+    // Make sure patterns like "!**\./ignore**.js" work
+    String glob1 = "!**\\." + File.separator + "ignore**.js";
+    String glob2 = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    compileFiles(
+        "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
+        new FlagEntry<>(JsSourceType.JS, glob2));
+    ignoreJs.delete();
+  }
+
+  // NOTE(moz): This might not work on Google's internal build system.
+  public void testGlobJs7() throws IOException, FlagUsageException {
+    FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
+    FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
+    File globTestDir = new File("./globTestDir");
+    if (globTestDir.isDirectory()) {
+      for (File f : globTestDir.listFiles()) {
+        f.delete();
+      }
+    } else {
+      globTestDir.delete();
+      globTestDir = java.nio.file.Files.createDirectory(Paths.get("./globTestDir")).toFile();
+    }
+    File takenFile = new File(globTestDir + File.separator + "test.js");
+    File ignoredFile = new File(globTestDir + File.separator + "ignore.js");
+    new File(jsFile1.value).renameTo(takenFile);
+    new File(jsFile2.value).renameTo(ignoredFile);
+    // Make sure mixing relative paths like "!**ignore.js" and absolute paths work
+    String glob1 = "!**ignore.js";
+    String glob2 = takenFile.getParentFile().getAbsolutePath() + File.separator +  "**.js";
+    compileFiles(
+        "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
+        new FlagEntry<>(JsSourceType.JS, glob2));
+    takenFile.delete();
+    ignoredFile.delete();
+    globTestDir.delete();
   }
 
   public void testSourceMapInputs() throws Exception {
