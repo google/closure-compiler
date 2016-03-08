@@ -207,13 +207,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         parentNamespace = nonNullClassName.substring(0, separatorIndex);
       }
       boolean notProvidedByConstructors =
-          (constructors == null
-              || (!constructors.contains(className) && !constructors.contains(outermostClassName)));
+          !constructors.contains(className) && !constructors.contains(outermostClassName);
       boolean notProvidedByRequires =
-          (requires == null
-              || (!requires.containsKey(className)
-                  && !requires.containsKey(outermostClassName)
-                  && !requires.containsKey(parentNamespace)));
+          !requires.containsKey(className)
+              && !requires.containsKey(outermostClassName)
+              && !requires.containsKey(parentNamespace);
       if (notProvidedByConstructors && notProvidedByRequires && !classNames.contains(className)) {
         // TODO(mknichel): If the symbol is not explicitly provided, find the next best
         // symbol from the provides in the same file.
@@ -299,7 +297,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   }
 
   private void visitQualifiedName(Node getprop) {
-    // For "foo.bar.baz.qux" add weak usages for "foo.bar.baz.qux", foo.bar.baz",
+    // For "foo.bar.baz.qux" add weak usages for "foo.bar.baz.qux", "foo.bar.baz",
     // "foo.bar", and "foo" because those might all be goog.provide'd in different files,
     // so it doesn't make sense to require the user to goog.require all of them.
     for (; getprop != null; getprop = getprop.getFirstChild()) {
