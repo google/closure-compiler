@@ -2366,6 +2366,10 @@ public class Compiler extends AbstractCompiler {
     return getPassConfig().getIntermediateState().propertyMap;
   }
 
+  VariableMap getStringMap() {
+    return getPassConfig().getIntermediateState().stringMap;
+  }
+
   @Override
   CompilerOptions getOptions() {
     return options;
