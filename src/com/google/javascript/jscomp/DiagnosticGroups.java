@@ -483,6 +483,7 @@ public class DiagnosticGroups {
           CheckJSDocStyle.INVALID_SUPPRESS,
           CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES,
           CheckJSDocStyle.MUST_BE_PRIVATE,
+          CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE,
           CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
           CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
           CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS,

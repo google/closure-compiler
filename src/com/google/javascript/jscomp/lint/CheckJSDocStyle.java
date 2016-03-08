@@ -64,7 +64,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       "Functions may not use both @param annotations and inline JSDoc");
 
   public static final DiagnosticType MUST_BE_PRIVATE =
-      DiagnosticType.warning("JSC_MUST_BE_PRIVATE", "Function {0} must be marked @private");
+      DiagnosticType.warning("JSC_MUST_BE_PRIVATE", "Property {0} must be marked @private");
+
+  public static final DiagnosticType MUST_HAVE_TRAILING_UNDERSCORE =
+      DiagnosticType.warning(
+          "JSC_MUST_HAVE_TRAILING_UNDERSCORE", "Private property {0} should end with ''_''");
 
   public static final DiagnosticType OPTIONAL_PARAM_NOT_MARKED_OPTIONAL =
       DiagnosticType.warning("JSC_OPTIONAL_PARAM_NOT_MARKED_OPTIONAL",
@@ -109,6 +113,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         if (!n.getLastChild().isFunction()) {
           visitNonFunction(t, n);
         }
+        checkStyleForPrivateProperties(t, n);
         break;
       case Token.VAR:
       case Token.LET:
@@ -129,7 +134,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       case Token.MEMBER_FUNCTION_DEF:
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
-        // This JSDoc will be visited when the function is visited.
+        // Don't need to call visitFunction because this JSDoc will be visited when the function is
+        // visited.
+        checkStyleForPrivateProperties(t, n);
         break;
       default:
         visitNonFunction(t, n);
@@ -147,6 +154,33 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     }
   }
 
+  private void checkStyleForPrivateProperties(NodeTraversal t, Node n) {
+    JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
+    String name;
+    if (n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef()) {
+      name = n.getString();
+    } else {
+      Preconditions.checkState(n.isAssign());
+      Node lhs = n.getFirstChild();
+      if (!lhs.isGetProp()) {
+        return;
+      }
+      name = lhs.getLastChild().getString();
+    }
+    if (name.equals("constructor")) {
+      return;
+    }
+
+    if (jsDoc != null && name != null) {
+      if (compiler.getCodingConvention().isPrivate(name)
+          && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
+        t.report(n, MUST_BE_PRIVATE, name);
+      } else if (!compiler.getCodingConvention().isPrivate(name)
+          && jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
+        t.report(n, MUST_HAVE_TRAILING_UNDERSCORE, name);
+      }
+    }
+  }
   private void checkSuppressionsOnNonFunction(NodeTraversal t, Node n, JSDocInfo jsDoc) {
     // Suppressions that are allowed to be in places other than functions and @fileoverview blocks.
     Set<String> specialSuppressions = ImmutableSet.of("const", "duplicate", "extraRequire");
@@ -167,14 +201,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         || !jsDoc.getParameterNames().isEmpty()
         || jsDoc.hasReturnType()) {
       checkParams(t, function, jsDoc);
-    }
-
-    String name = NodeUtil.getName(function);
-    if (jsDoc != null
-        && name != null
-        && compiler.getCodingConvention().isPrivate(name)
-        && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
-      t.report(function, MUST_BE_PRIVATE, name);
     }
 
     if (parent.isMemberFunctionDef()

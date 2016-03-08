@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS;
@@ -352,13 +353,35 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   public void testMissingPrivate() {
-    testSame(
+    testWarning(
+        LINE_JOINER.join(
+            "/** @return {number} */",
+            "X.prototype.foo_ = function() { return 0; }"),
+        MUST_BE_PRIVATE);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/** @type {?number} */",
+            "X.prototype.foo_ = null;"),
+        MUST_BE_PRIVATE);
+
+    testWarning(
         LINE_JOINER.join(
             "/**",
             " * @return {number}",
+            " * @private",
             " */",
-            "X.prototype.foo_ = function() { return 0; }"),
-        MUST_BE_PRIVATE);
+            "X.prototype.foo = function() { return 0; }"),
+        MUST_HAVE_TRAILING_UNDERSCORE);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @type {number}",
+            " * @private",
+            " */",
+            "X.prototype.foo = 0;"),
+        MUST_HAVE_TRAILING_UNDERSCORE);
 
     testSame(
         LINE_JOINER.join(
@@ -367,6 +390,78 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             " * @private",
             " */",
             "X.prototype.foo_ = function() { return 0; }"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @type {number}",
+            " * @private",
+            " */",
+            "X.prototype.foo_ = 0;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @type {number} */",
+            "X.prototype['@some_special_property'] = 0;"));
+  }
+
+  public void testMissingPrivate_class() {
+    testWarning(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /** @return {number} */",
+            "  foo_() { return 0; }",
+            "}"),
+        MUST_BE_PRIVATE);
+
+    testWarning(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /** @return {number} */",
+            "  get foo_() { return 0; }",
+            "}"),
+        MUST_BE_PRIVATE);
+
+    testWarning(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /** @param {number} val */",
+            "  set foo_(val) {}",
+            "}"),
+        MUST_BE_PRIVATE);
+
+    testWarning(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /**",
+            "   * @return {number}",
+            "   * @private",
+            "   */",
+            "  foo() { return 0; }",
+            "}"),
+        MUST_HAVE_TRAILING_UNDERSCORE);
+
+    testWarning(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /**",
+            "   * @return {number}",
+            "   * @private",
+            "   */",
+            "  get foo() { return 0; }",
+            "}"),
+        MUST_HAVE_TRAILING_UNDERSCORE);
+
+    testWarning(
+        LINE_JOINER.join(
+            "class Example {",
+            "  /**",
+            "   * @param {number} val",
+            "   * @private",
+            "   */",
+            "  set foo(val) { }",
+            "}"),
+        MUST_HAVE_TRAILING_UNDERSCORE);
   }
 
   public void testOptionalArgs() {
