@@ -453,7 +453,12 @@ public final class JSModuleGraph {
         CompilerInput entryPointInput = null;
         try {
           if (entryPoint.getClosureNamespace().equals(entryPoint.getModuleName())) {
-            entryPointInput = sorter.getInputProviding(entryPoint.getClosureNamespace());
+            entryPointInput = sorter.maybeGetInputProviding(entryPoint.getClosureNamespace());
+            // Check to see if we can find the entry point as an ES6 and CommonJS module
+            // ES6 and CommonJS entry points may not provide any symbols
+            if (entryPointInput == null) {
+              entryPointInput = sorter.getInputProviding(entryPoint.getName());
+            }
           } else {
             JSModule module = modulesByName.get(entryPoint.getModuleName());
             if (module == null) {
