@@ -1509,7 +1509,7 @@ public class CommandLineRunner extends
         if (matchedFile.isDirectory()) {
           matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs, excludes);
         } else {
-          String pathString = Paths.get(pattern).normalize().toString();
+          String pathString = Paths.get(pattern).normalize().toAbsolutePath().toString();
           if (!excludes.contains(pathString)) {
             allJsInputs.add(pathString);
           }
@@ -1550,10 +1550,10 @@ public class CommandLineRunner extends
     final PathMatcher matcher = fs.getPathMatcher("glob:" + prefix + separator + pattern);
     java.nio.file.Files.walkFileTree(
         fs.getPath(prefix), new SimpleFileVisitor<Path>() {
-          @Override public FileVisitResult visitFile(
-              Path p, BasicFileAttributes attrs) {
+          @Override
+          public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) {
             if (matcher.matches(p) || matcher.matches(p.normalize())) {
-              String pathString = p.normalize().toString();
+              String pathString = p.normalize().toAbsolutePath().toString();
               if (remove) {
                 excludes.add(pathString);
                 allJsInputs.remove(pathString);
@@ -1562,6 +1562,11 @@ public class CommandLineRunner extends
               }
             }
             return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult visitFileFailed(Path file, IOException e) {
+            return FileVisitResult.SKIP_SUBTREE;
           }
         });
   }
