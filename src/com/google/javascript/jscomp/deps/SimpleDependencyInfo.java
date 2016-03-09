@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
@@ -136,4 +137,12 @@ public final class SimpleDependencyInfo implements DependencyInfo {
     return Objects.hash(provides, requires,
         srcPathRelativeToClosure, pathOfDefiningFile, loadFlags);
   }
+
+  public static final SimpleDependencyInfo EMPTY =
+      new SimpleDependencyInfo(
+          "",
+          "",
+          ImmutableList.<String>of(),
+          ImmutableList.<String>of(),
+          ImmutableMap.<String, String>of());
 }
