@@ -294,17 +294,18 @@ class VarCheck extends AbstractPostOrderCallback implements
             break;
          case Token.ASSIGN:
             // Don't warn for the "window.foo = foo;" nodes added by
-            // DeclaredGlobalExternsOnWindow.
-            if (n == parent.getLastChild() && parent.getFirstChild().isGetProp()
-                && parent.getFirstChild().getLastChild().getString().equals(n.getString())) {
+            // DeclaredGlobalExternsOnWindow, nor for alias declarations
+            // of the form "/** @const */ ns.Foo = Bar;"
+            if (n == parent.getLastChild() && n.isQualifiedName()
+                && parent.getFirstChild().isQualifiedName()) {
               break;
             }
             // fall through
           default:
             // Don't warn for simple var assignments "/** @const */ var foo = bar;"
             // They are used to infer the types of namespace aliases.
-            if (parent.getType() != Token.NAME || parent.getParent() == null ||
-                !NodeUtil.isNameDeclaration(parent.getParent())) {
+            if (!parent.isName() || parent.getParent() == null
+                || !NodeUtil.isNameDeclaration(parent.getParent())) {
               t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
             }
 

@@ -194,6 +194,19 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     testSame("/** @type{{foo:string}} */ var foo; var asdf = foo;", "asdf.foo;", null);
   }
 
+  public void testAliasesInExterns() {
+    externValidationErrorLevel = CheckLevel.ERROR;
+
+    testSame("var foo; /** @const */ var asdf = foo;", "", null);
+    testSame(
+        "var Foo; var ns = {}; /** @const */ ns.FooAlias = Foo;", "", null);
+    testSame(
+        LINE_JOINER.join(
+            "var ns = {}; /** @constructor */ ns.Foo = function() {};",
+            "var ns2 = {}; /** @const */ ns2.Bar = ns.Foo;"),
+        "", null);
+  }
+
   public void testDuplicateNamespaceInExterns() {
     testExternChanges(
         "/** @const */ var ns = {}; /** @const */ var ns = {};",
