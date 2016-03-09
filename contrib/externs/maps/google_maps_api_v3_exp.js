@@ -5210,10 +5210,11 @@ google.maps.Time.prototype.time_zone;
 google.maps.Time.prototype.value;
 
 /**
+ * @param {(google.maps.TrafficLayerOptions|Object.<string>)=} opt_opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
-google.maps.TrafficLayer = function() {};
+google.maps.TrafficLayer = function(opt_opts) {};
 
 /**
  * @nosideeffects
@@ -5226,6 +5227,22 @@ google.maps.TrafficLayer.prototype.getMap = function() {};
  * @return {undefined}
  */
 google.maps.TrafficLayer.prototype.setMap = function(map) {};
+
+/**
+ * @param {google.maps.TrafficLayerOptions|Object.<string>} options
+ * @return {undefined}
+ */
+google.maps.TrafficLayer.prototype.setOptions = function(options) {};
+
+/**
+ * @interface
+ */
+google.maps.TrafficLayerOptions = function() {};
+
+/**
+ * @type {google.maps.Map}
+ */
+google.maps.TrafficLayerOptions.prototype.map;
 
 /**
  * @enum {string}
@@ -5480,20 +5497,6 @@ google.maps.ZoomControlOptions = function() {};
  * @type {google.maps.ControlPosition}
  */
 google.maps.ZoomControlOptions.prototype.position;
-
-/**
- * @type {google.maps.ZoomControlStyle}
- */
-google.maps.ZoomControlOptions.prototype.style;
-
-/**
- * @enum {number}
- */
-google.maps.ZoomControlStyle = {
-  DEFAULT: 0,
-  LARGE: 1,
-  SMALL: 2
-};
 
 /** @const */
 google.maps.drawing = {};
