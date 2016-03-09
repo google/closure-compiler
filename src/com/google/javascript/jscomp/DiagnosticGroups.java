@@ -105,7 +105,7 @@ public class DiagnosticGroups {
       + "suspiciousCode, strictModuleDepCheck, typeInvalidation, "
       + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, "
       + "unusedLocalVariables, unusedPrivateMembers, uselessCode, "
-      + "useOfGoogBase, visibility";
+      + "useOfGoogBase, underscore, visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
@@ -119,6 +119,11 @@ public class DiagnosticGroups {
           CheckAccessControls.DEPRECATED_PROP_REASON,
           CheckAccessControls.DEPRECATED_CLASS,
           CheckAccessControls.DEPRECATED_CLASS_REASON);
+
+  public static final DiagnosticGroup UNDERSCORE =
+      DiagnosticGroups.registerGroup("underscore",  // undocumented
+          CheckJSDocStyle.MUST_BE_PRIVATE,
+          CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE);
 
   public static final DiagnosticGroup VISIBILITY =
       DiagnosticGroups.registerGroup("visibility",
