@@ -2260,14 +2260,16 @@ public final class NodeUtil {
   static boolean createsBlockScope(Node n) {
     switch (n.getType()) {
       case Token.BLOCK:
-        // Don't create block scope for top-level synthetic block or the one contained in a CATCH.
-        if (n.getParent() == null || n.getGrandparent() == null
+        // Don't create block scope for synthetic blocks, or the one contained in a CATCH.
+        if (n.isSyntheticBlock()
+            || n.getParent() == null || n.getGrandparent() == null
             || n.getParent().isCatch()) {
           return false;
         }
         return true;
       case Token.FOR:
       case Token.FOR_OF:
+      case Token.SWITCH:
         return true;
     }
     return false;

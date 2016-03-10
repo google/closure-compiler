@@ -100,7 +100,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
       }
 
       // Since we create a separate scope for body, stop scanning here
-    } else if (n.isBlock() || n.isFor() || n.isForOf()) {
+    } else if (n.isBlock() || n.isFor() || n.isForOf() || n.isSwitch()) {
       if (scope.getParent() != null) {
         inputId = NodeUtil.getInputId(n);
       }
@@ -261,11 +261,18 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
    */
   private boolean isNodeAtCurrentLexicalScope(Node n) {
     Node parent = n.getParent();
+    Node grandparent = parent.getParent();
     Preconditions.checkState(parent.isBlock() || parent.isFor()
         || parent.isForOf() || parent.isScript() || parent.isLabel());
 
+    if (parent.isSyntheticBlock()
+        && grandparent != null && (grandparent.isCase() || grandparent.isDefaultCase())) {
+      Node switchNode = grandparent.getParent();
+      return scope.getRootNode() == switchNode;
+    }
+
     if (parent == scope.getRootNode() || parent.isScript()
-        || (parent.getParent().isCatch()
+        || (grandparent.isCatch()
             && parent.getGrandparent() == scope.getRootNode())) {
       return true;
     }
