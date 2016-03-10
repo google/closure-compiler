@@ -1343,45 +1343,11 @@ public class Compiler extends AbstractCompiler {
         processAMDAndCommonJSModules();
       }
 
-      hoistExterns();
+      orderInputs();
 
-      // Check if the sources need to be re-ordered.
-      boolean staleInputs = false;
-      if (options.dependencyOptions.needsManagement()) {
-        for (CompilerInput input : inputs) {
-          // Forward-declare all the provided types, so that they
-          // are not flagged even if they are dropped from the process.
-          for (String provide : input.getProvides()) {
-            getTypeRegistry().forwardDeclareType(provide);
-          }
-        }
-
-        try {
-          inputs =
-              (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
-              .manageDependencies(options.dependencyOptions, inputs);
-          staleInputs = true;
-        } catch (CircularDependencyException e) {
-          report(JSError.make(
-              JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
-        } catch (MissingProvideException e) {
-          report(JSError.make(
-              MISSING_ENTRY_ERROR, e.getMessage()));
-        } catch (JSModuleGraph.MissingModuleException e) {
-          report(JSError.make(
-              MISSING_MODULE_ERROR, e.getMessage()));
-        }
-
-        // If in IDE mode, we ignore the error and keep going.
-        if (hasErrors()) {
-          return null;
-        }
-      }
-
-      hoistNoCompileFiles();
-
-      if (staleInputs) {
-        repartitionInputs();
+      // If in IDE mode, we ignore the error and keep going.
+      if (hasErrors()) {
+        return null;
       }
 
       // Build the AST.
@@ -1424,6 +1390,44 @@ public class Compiler extends AbstractCompiler {
     } finally {
       afterPass(PARSING_PASS_NAME);
       stopTracer(tracer, PARSING_PASS_NAME);
+    }
+  }
+
+  void orderInputs() {
+    hoistExterns();
+
+    // Check if the sources need to be re-ordered.
+    boolean staleInputs = false;
+    if (options.dependencyOptions.needsManagement()) {
+      for (CompilerInput input : inputs) {
+        // Forward-declare all the provided types, so that they
+        // are not flagged even if they are dropped from the process.
+        for (String provide : input.getProvides()) {
+          getTypeRegistry().forwardDeclareType(provide);
+        }
+      }
+
+      try {
+        inputs =
+            (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
+            .manageDependencies(options.dependencyOptions, inputs);
+        staleInputs = true;
+      } catch (CircularDependencyException e) {
+        report(JSError.make(
+            JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
+      } catch (MissingProvideException e) {
+        report(JSError.make(
+            MISSING_ENTRY_ERROR, e.getMessage()));
+      } catch (JSModuleGraph.MissingModuleException e) {
+        report(JSError.make(
+            MISSING_MODULE_ERROR, e.getMessage()));
+      }
+    }
+
+    hoistNoCompileFiles();
+
+    if (staleInputs) {
+      repartitionInputs();
     }
   }
 
