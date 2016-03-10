@@ -102,6 +102,16 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @suppress {const} */ var google = {};");
   }
 
+  public void testNestedArrowFunctions() {
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {Object} a",
+            " * @return {function(Object): boolean}",
+            " */",
+            "var haskellStyleEquals = a => b => a == b;"));
+  }
+
   public void testMissingJsDoc() {
     testWarning("function f() {}", MISSING_JSDOC);
     testWarning("var f = function() {}", MISSING_JSDOC);
