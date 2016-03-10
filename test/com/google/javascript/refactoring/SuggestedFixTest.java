@@ -718,6 +718,15 @@ public class SuggestedFixTest {
     assertEquals(0, replacementMap.size());
   }
 
+  @Test
+  public void testGenerateCode_doesNotJsEscapeStrings() {
+    String code = "someFunc('foo<>=%&\"bar');\n";
+    Compiler compiler = getCompiler(code);
+    Node node = compileToScriptRoot(compiler);
+    String generated = new SuggestedFix.Builder().generateCode(compiler, node);
+    assertEquals(code, generated);
+  }
+  
   /**
    * Returns the root script node produced from the compiled JS input.
    */

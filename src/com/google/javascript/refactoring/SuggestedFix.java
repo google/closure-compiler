@@ -637,6 +637,8 @@ public final class SuggestedFix {
       CompilerOptions compilerOptions = new CompilerOptions();
       compilerOptions.setPreferSingleQuotes(true);
       compilerOptions.setLineLengthThreshold(80);
+      // We're refactoring existing code, so no need to escape values inside strings.
+      compilerOptions.setTrustedStrings(true);
       return new CodePrinter.Builder(node)
           .setCompilerOptions(compilerOptions)
           .setTypeRegistry(compiler.getTypeRegistry())
