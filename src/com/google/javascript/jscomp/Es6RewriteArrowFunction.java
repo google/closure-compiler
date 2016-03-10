@@ -78,7 +78,7 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
   }
 
   private void addVarDecls(NodeTraversal t, boolean addThis, boolean addArguments) {
-    Scope scope = t.getScope();
+    Scope scope = t.getScope().getClosestHoistScope();
     if (scope.isDeclared(THIS_VAR, false)) {
       addThis = false;
     }
@@ -86,35 +86,31 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
       addArguments = false;
     }
 
-    Node parent = t.getScopeRoot();
-    if (parent.isFunction()) {
-      // Add the new node at the beginning of the function body.
-      parent = parent.getLastChild();
-    }
-    if (parent.isSyntheticBlock() && parent.getFirstChild().isScript()) {
+    Node scopeRoot = scope.getRootNode();
+    if (scopeRoot.isSyntheticBlock() && scopeRoot.getFirstChild().isScript()) {
       // Add the new node inside the SCRIPT node instead of the
       // synthetic block that contains it.
-      parent = parent.getFirstChild();
+      scopeRoot = scopeRoot.getFirstChild();
     }
 
-    CompilerInput input = compiler.getInput(parent.getInputId());
+    CompilerInput input = compiler.getInput(scopeRoot.getInputId());
     if (addArguments) {
       Node name = IR.name(ARGUMENTS_VAR);
-      Node argumentsVar = IR.declaration(name, IR.name("arguments"), Token.CONST);
+      Node argumentsVar = IR.constNode(name, IR.name("arguments"));
       JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
       jsdoc.recordType(
           new JSTypeExpression(
               new Node(Token.BANG, IR.string("Arguments")), "<Es6RewriteArrowFunction>"));
       argumentsVar.setJSDocInfo(jsdoc.build());
-      argumentsVar.useSourceInfoIfMissingFromForTree(parent);
-      parent.addChildToFront(argumentsVar);
+      argumentsVar.useSourceInfoIfMissingFromForTree(scopeRoot);
+      scopeRoot.addChildToFront(argumentsVar);
       scope.declare(ARGUMENTS_VAR, name, input);
     }
     if (addThis) {
       Node name = IR.name(THIS_VAR);
-      Node thisVar = IR.declaration(name, IR.thisNode(), Token.CONST);
-      thisVar.useSourceInfoIfMissingFromForTree(parent);
-      parent.addChildToFront(thisVar);
+      Node thisVar = IR.constNode(name, IR.thisNode());
+      thisVar.useSourceInfoIfMissingFromForTree(scopeRoot);
+      scopeRoot.addChildToFront(thisVar);
       scope.declare(THIS_VAR, name, input);
     }
   }
