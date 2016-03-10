@@ -62,7 +62,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
   static final DiagnosticType INVALID_MODULE_IDENTIFIER =
       DiagnosticType.error(
           "JSC_GOOG_MODULE_INVALID_MODULE_IDENTIFIER",
-          "Module idenifiers must be string literals");
+          "Module identifiers must be string literals");
 
   static final DiagnosticType INVALID_REQUIRE_IDENTIFIER =
       DiagnosticType.error(
