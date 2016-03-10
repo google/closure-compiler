@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INVALID_SUPPRESS;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_RETURN_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE;
@@ -519,6 +520,31 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "function getDistanceFromZero({x, y}) {}"));
 
     testSame("function getDistanceFromZero(/** {x: number, y: number} */ {x, y}) {}");
+  }
+
+  public void testMissingReturn_noWarning() {
+    testSame("/** @param {number} x */ function f(x) {}");
+    testSame("/** @param {number} x */ function f(x) { function bar() { return x; } }");
+    testSame("/** @param {number} x */ function f(x) { return; }");
+    testSame("/** @param {number} x @return {number} */ function f(x) { return x; }");
+    testSame("/** @param {number} x */ function /** number */ f(x) { return x; }");
+    testSame("/** @param {number} x @constructor */ function f(x) { return x; }");
+    testSame("/** @inheritDoc */ function f(x) { return x; }");
+    testSame("/** @override */ function f(x) { return x; }");
+  }
+
+  public void testMissingReturn() {
+    testWarning("/** @param {number} x */ function f(x) { return x; }", MISSING_RETURN_JSDOC);
+    testWarning(LINE_JOINER.join(
+        "/** @param {number} x */",
+        "function f(x) {",
+        "  /** @param {number} x */",
+        "  function bar(x) {",
+        "    return x;",
+        "  }",
+        "}"), MISSING_RETURN_JSDOC);
+    testWarning(
+        "/** @param {number} x */ function f(x) { if (true) { return x; } }", MISSING_RETURN_JSDOC);
   }
 
   public void testExternsAnnotation() {

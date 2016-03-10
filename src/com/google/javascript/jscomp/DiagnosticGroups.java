@@ -483,6 +483,7 @@ public class DiagnosticGroups {
           CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
           CheckJSDocStyle.MISSING_PARAMETER_JSDOC,
           CheckJSDocStyle.MISSING_JSDOC,
+          CheckJSDocStyle.MISSING_RETURN_JSDOC,
           CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED,
           CheckJSDocStyle.INCORRECT_PARAM_NAME,
           CheckJSDocStyle.INVALID_SUPPRESS,
