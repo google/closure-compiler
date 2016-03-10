@@ -161,8 +161,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
    */
   private static URI createUri(String input) {
     // Colons might cause URI.create() to fail
-    String forwardSlashes =
-        input.replace(':', '-').replace("\\", "/").replace(" ", "%20");
+    String forwardSlashes = input.replace(':', '-').replace('\\', '/').replace(" ", "%20");
     return URI.create(forwardSlashes).normalize();
   }
 
