@@ -102,10 +102,10 @@ public class DiagnosticGroups {
       + "misplacedTypeAnnotation, missingGetCssName, missingProperties, "
       + "missingProvide, missingRequire, missingReturn, msgDescriptions, "
       + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, "
-      + "suspiciousCode, strictModuleDepCheck, typeInvalidation, "
+      + "suspiciousCode, strictModuleDepCheck, trailingUnderscore, typeInvalidation, "
       + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, "
       + "unusedLocalVariables, unusedPrivateMembers, uselessCode, "
-      + "useOfGoogBase, underscore, visibility";
+      + "useOfGoogBase, visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
@@ -120,8 +120,8 @@ public class DiagnosticGroups {
           CheckAccessControls.DEPRECATED_CLASS,
           CheckAccessControls.DEPRECATED_CLASS_REASON);
 
-  public static final DiagnosticGroup UNDERSCORE =
-      DiagnosticGroups.registerGroup("underscore",  // undocumented
+  public static final DiagnosticGroup TRAILING_UNDERSCORE =
+      DiagnosticGroups.registerGroup("trailingUnderscore",  // undocumented
           CheckJSDocStyle.MUST_BE_PRIVATE,
           CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE);
 
