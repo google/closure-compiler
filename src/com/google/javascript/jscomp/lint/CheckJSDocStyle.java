@@ -183,7 +183,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   }
   private void checkSuppressionsOnNonFunction(NodeTraversal t, Node n, JSDocInfo jsDoc) {
     // Suppressions that are allowed to be in places other than functions and @fileoverview blocks.
-    Set<String> specialSuppressions = ImmutableSet.of("const", "duplicate", "extraRequire");
+    Set<String> specialSuppressions =
+        ImmutableSet.of("const", "duplicate", "extraProvide", "extraRequire");
 
     Set<String> suppressions = Sets.difference(jsDoc.getSuppressions(), specialSuppressions);
     if (!suppressions.isEmpty()) {
