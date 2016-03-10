@@ -1997,12 +1997,14 @@ public final class CommandLineRunnerTest extends TestCase {
     compileArgs(expectedOutput, null);
   }
 
+  @SafeVarargs
   private final void compileFilesError(
       DiagnosticType expectedError, FlagEntry<JsSourceType>... entries) {
     setupFlags(entries);
     compileArgs("", expectedError);
   }
 
+  @SafeVarargs
   private final void setupFlags(FlagEntry<JsSourceType>... entries) {
     for (FlagEntry<JsSourceType> entry : entries) {
       args.add("--" + entry.flag.flagName + "=" + entry.value);
