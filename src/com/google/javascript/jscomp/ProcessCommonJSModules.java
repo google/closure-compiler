@@ -16,8 +16,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
@@ -97,7 +97,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
    *
    * TODO(moz): Let ES6, CommonJS and goog.provide live happily together.
    */
-  static class FindGoogProvideOrGoogModule extends AbstractPreOrderCallback {
+  static class FindGoogProvideOrGoogModule extends NodeTraversal.AbstractShallowStatementCallback {
 
     private boolean found;
 
@@ -106,22 +106,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
 
     @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      // Shallow traversal, since we don't need to inspect within function declarations.
-      if (parent == null || !parent.isFunction()
-          || n == parent.getFirstChild()) {
-        if (n.isExprResult()) {
-          Node maybeGetProp = n.getFirstFirstChild();
-          if (maybeGetProp != null
-              && (maybeGetProp.matchesQualifiedName("goog.provide")
-                  || maybeGetProp.matchesQualifiedName("goog.module"))) {
-            found = true;
-            return false;
-          }
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isExprResult()) {
+        Node maybeGetProp = n.getFirstFirstChild();
+        if (maybeGetProp != null
+            && (maybeGetProp.matchesQualifiedName("goog.provide")
+            || maybeGetProp.matchesQualifiedName("goog.module"))) {
+          found = true;
+          t.terminate();
         }
-        return true;
       }
-      return false;
     }
   }
 

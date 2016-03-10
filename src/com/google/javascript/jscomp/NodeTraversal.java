@@ -85,6 +85,8 @@ public class NodeTraversal {
   /** Possible callback for scope entry and exist **/
   private ScopedCallback scopeCallback;
 
+  private boolean terminated;
+
   /** Callback for passes that iterate over a list of functions */
   public interface FunctionCallback {
     void enterFunction(AbstractCompiler compiler, Node fnRoot);
@@ -592,6 +594,9 @@ public class NodeTraversal {
    * Traverses a branch.
    */
   private void traverseBranch(Node n, Node parent) {
+    if (terminated) {
+      return;
+    }
     int type = n.getType();
     if (type == Token.SCRIPT) {
       inputId = n.getInputId();
@@ -599,13 +604,13 @@ public class NodeTraversal {
     }
 
     curNode = n;
-    if (!callback.shouldTraverse(this, n, parent)) {
+    if (terminated || !callback.shouldTraverse(this, n, parent)) {
       return;
     }
 
-    if (type == Token.FUNCTION) {
+    if (!terminated && type == Token.FUNCTION) {
       traverseFunction(n, parent);
-    } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
+    } else if (!terminated && useBlockScope && NodeUtil.createsBlockScope(n)) {
       traverseBlockScope(n);
     } else {
       for (Node child = n.getFirstChild(); child != null; ) {
@@ -618,7 +623,9 @@ public class NodeTraversal {
     }
 
     curNode = n;
-    callback.visit(this, n, parent);
+    if (!terminated) {
+      callback.visit(this, n, parent);
+    }
   }
 
   /** Traverses a function. */
@@ -860,5 +867,13 @@ public class NodeTraversal {
 
   private String getBestSourceFileName(Node n) {
     return n == null ? sourceName : n.getSourceFileName();
+  }
+
+  /**
+   * Terminates the NodeTraversal and prevents any further callbacks from firing.
+   * Note that this call is irreversible.
+   */
+  public void terminate() {
+    terminated = true;
   }
 }

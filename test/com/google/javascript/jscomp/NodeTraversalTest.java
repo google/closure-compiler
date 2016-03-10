@@ -124,6 +124,27 @@ public final class NodeTraversalTest extends TestCase {
     }
   }
 
+  public void testTerminate() {
+    final StringBuilder builder = new StringBuilder();
+
+    NodeTraversal.Callback cb = new NodeTraversal.AbstractPostOrderCallback() {
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        builder.append(Token.name(n.getType()) + " ");
+        if (n.isParamList()) {
+          t.terminate();
+        }
+      }
+    };
+
+    Compiler compiler = new Compiler();
+    String code = "function foo() {}";
+    Node tree = parse(compiler, code);
+    NodeTraversal.traverseEs6(compiler, tree, cb);
+    assertEquals(
+        Token.name(Token.NAME) + " " + Token.name(Token.PARAM_LIST), builder.toString().trim());
+  }
+
 
   public void testGetScopeRoot() {
     Compiler compiler = new Compiler();
