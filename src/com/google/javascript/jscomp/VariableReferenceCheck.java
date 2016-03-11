@@ -227,11 +227,14 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
                 referenceNode, v);
         boolean letConstShadowsVar = v.getParentNode().isVar()
             && (reference.isLetDeclaration() || reference.isConstDeclaration());
+        boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();
         // We disallow redeclaration of caught exception in ES6
         boolean shadowCatchVar = isDeclaration && compiler.getLanguageMode().isEs6OrHigher()
-            && v.getParentNode().isCatch() && reference.getNode() != v.getNode();
-        boolean shadowParam = isDeclaration && NodeUtil.isBlockScopedDeclaration(referenceNode)
-            && v.isParam() && v.getScope() == reference.getScope().getParentScope();
+            && v.getParentNode().isCatch() && !isVarNodeSameAsReferenceNode;
+        boolean shadowParam = isDeclaration
+            && v.isParam()
+            && NodeUtil.isBlockScopedDeclaration(referenceNode)
+            && v.getScope() == reference.getScope().getParent();
         boolean shadowDetected = false;
         if (isDeclaration && !allowDupe) {
           // Look through all the declarations we've found so far, and
@@ -254,7 +257,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
                     ? VarCheck.VAR_MULTIPLY_DECLARED_ERROR : REDECLARED_VARIABLE;
                 // Since we skip hoisted functions, we would have the wrong warning node in cases
                 // where the redeclaration is a function declaration. Check for that case.
-                if (referenceNode == v.getNode()
+                if (isVarNodeSameAsReferenceNode
                     && hoistedFn != null
                     && v.name.equals(hoistedFn.getNode().getString())) {
                   warningNode = hoistedFn.getNode();
