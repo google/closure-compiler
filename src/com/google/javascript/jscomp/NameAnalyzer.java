@@ -330,6 +330,10 @@ final class NameAnalyzer implements CompilerPass {
           // If we remove object lit keys, then we will need to also
           // create dependency scopes for them.
           break;
+        case Token.EXPR_RESULT:
+          Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(parent.getFirstChild()));
+          replaceWithRhs(containingNode, parent);
+          break;
         default:
           throw new IllegalArgumentException(
               "Unsupported parent node type in JsNameRefNode.remove: "
@@ -402,8 +406,6 @@ final class NameAnalyzer implements CompilerPass {
       return node.getParent() == null ? null : node.getGrandparent();
     }
   }
-
-
 
   /**
    * Class for nodes that are function calls that may change a function's
@@ -523,6 +525,10 @@ final class NameAnalyzer implements CompilerPass {
         if (ns != null && ns.onlyAffectsClassDef) {
           recordDepScope(n, ns);
         }
+      } else if (isAnalyzableObjectDefinePropertiesDefinition(n)) {
+        Node targetObject = n.getSecondChild();
+        NameInformation ns = createNameInformation(t, targetObject);
+        recordDepScope(n, ns);
       }
     }
 
@@ -654,8 +660,8 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       // Record assignments and call sites
-      if (n.isAssign()) {
-        Node nameNode = n.getFirstChild();
+      if (n.isAssign() || isAnalyzableObjectDefinePropertiesDefinition(n)) {
+        Node nameNode = n.isAssign() ? n.getFirstChild() : n;
 
         NameInformation ns = createNameInformation(t, nameNode);
         if (ns != null) {
@@ -679,8 +685,8 @@ final class NameAnalyzer implements CompilerPass {
      * Records the assignment of a value to a global name.
      *
      * @param name Fully qualified name
-     * @param node The top node representing the name (GETPROP, NAME, or STRING
-     * [objlit key])
+     * @param node The top node representing the name (GETPROP, NAME, STRING [objlit key],
+     *     or CALL [Object.defineProperties])
      */
     private void recordSet(String name, Node node) {
       JsName jsn = getName(name, true);
@@ -690,7 +696,7 @@ final class NameAnalyzer implements CompilerPass {
 
       // Now, look at all parent names and record that their properties have
       // been written to.
-      if (node.isGetElem()) {
+      if (node.isGetElem() || isAnalyzableObjectDefinePropertiesDefinition(node)) {
         recordWriteOnProperties(name);
       } else if (name.indexOf('.') != -1) {
         recordWriteOnProperties(name.substring(0, name.lastIndexOf('.')));
@@ -790,6 +796,8 @@ final class NameAnalyzer implements CompilerPass {
         for (Node child : n.children()) {
           addSimplifiedChildren(child);
         }
+      } else if (isAnalyzableObjectDefinePropertiesDefinition(n)) {
+        addSimplifiedChildren(n.getLastChild());
       } else if (n.isCall() && parent.isExprResult()) {
         addSimplifiedChildren(n);
       } else {
@@ -1506,6 +1514,12 @@ final class NameAnalyzer implements CompilerPass {
         } else {
           return null;
         }
+      } else if (isAnalyzableObjectDefinePropertiesDefinition(rootNameNode)) {
+        Node target = rootNameNode.getSecondChild();
+        if (!target.isQualifiedName()) {
+          return null;
+        }
+        rootNameNode = target;
       } else {
         break;
       }
@@ -1944,6 +1958,13 @@ final class NameAnalyzer implements CompilerPass {
       case Token.FUNCTION:
         // function nodes have no RHS
         return ImmutableList.of();
+      case Token.CALL:
+        {
+          // In our analyzable case, only the last argument to Object.defineProperties
+          // (the object literal) can have side-effects
+          Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
+          return ImmutableList.of(n.getLastChild());
+        }
       case Token.NAME:
         {
           // parent is a var node.  RHS is the first child
@@ -1973,5 +1994,18 @@ final class NameAnalyzer implements CompilerPass {
       default:
         throw new IllegalArgumentException("AstChangeProxy::getRhs " + n);
     }
+  }
+
+  /**
+   * Check if {@code n} is an Object.defineProperties definition
+   * that is static enough for this pass to understand and remove.
+   */
+  private static boolean isAnalyzableObjectDefinePropertiesDefinition(Node n) {
+    // TODO(blickly): Move this code to CodingConvention so that
+    // it's possible to define alternate ways of defining properties.
+    return NodeUtil.isObjectDefinePropertiesDefinition(n)
+        && n.getParent().isExprResult()
+        && n.getFirstChild().getNext().isQualifiedName()
+        && n.getLastChild().isObjectLit();
   }
 }

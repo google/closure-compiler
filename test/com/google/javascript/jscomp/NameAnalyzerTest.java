@@ -125,6 +125,10 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     test("var a = {}; a.b = {}; a.b.c = function() {};", "");
   }
 
+  public void testDontRemoveFunctionOnNamespaceThatEscapes() {
+    testSame("var a = foo(); a.b = {}; a.b.c = function() {};");
+  }
+
   public void testReferredToByWindow() {
     testSame("var foo = {}; foo.bar = function() {}; window['fooz'] = foo.bar");
   }
@@ -1590,6 +1594,127 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testObjectDefinePropertiesOnNamespaceThatEscapes() {
     testSame("var a = foo(); Object.defineProperties(a, {prop: {value: 5}});");
+  }
+
+  public void testObjectDefinePropertiesOnConstructorThatEscapes() {
+    testSame("var Foo = fooFactory(); Object.defineProperties(Foo.prototype, {prop: {value: 5}});");
+  }
+
+  public void testRegularAssignPropOnNamespaceThatEscapes() {
+    testSame("var a = foo(); a.prop = 5;");
+  }
+
+  public void testRegularAssignPropOnPropFromAVar() {
+    testSame("var b = 5; var a = {}; a.prop = b; use(a.prop);");
+  }
+
+  public void testUnanalyzableObjectDefineProperties() {
+    testSame("var a = {}; Object.defineProperties(a, props);");
+    testSame("Object.defineProperties(foo(), {prop: {value: 5}});");
+  }
+
+  public void testObjectDefinePropertiesOnNamespace1() {
+    testSame("var a = {}; Object.defineProperties(a, {prop: {value: 5}}); use(a.prop);");
+    test("var a = {}; Object.defineProperties(a, {prop: {value: 5}});", "");
+  }
+
+  public void testObjectDefinePropertiesOnNamespace2() {
+    // Note that since we try to remove the entire Object.defineProperties call whole hog,
+    // we can't remove a single property from the object literal.
+    testSame(
+        "var a = {};"
+        + "Object.defineProperties(a, {p1: {value: 5}, p2: {value: 3} });"
+        + "use(a.p1);");
+
+    test(
+        "var a = {};"
+        + "Object.defineProperties(a, {p1: {value: 5}, p2: {value: 3} });",
+        "");
+  }
+
+  public void testNonAnalyzableObjectDefinePropertiesCall() {
+    testSame(
+        "var a = {};"
+        + "var z = Object.defineProperties(a, {prop: {value: 5}});"
+        + "use(z);");
+  }
+
+  public void testObjectDefinePropertiesOnNamespace3() {
+    testSame(
+        "var b = 5;"
+        + "var a = {};"
+        + "Object.defineProperties(a, {prop: {value: b}});"
+        + "use(a.prop);");
+
+    test(
+        "var b = 5;"
+        + "var a = {};"
+        + "Object.defineProperties(a, {prop: {value: b}});"
+        + "use(b);",
+        "var b = 5; use(b);");
+  }
+
+  public void testObjectDefinePropertiesOnNamespace4() {
+    test(
+        "function b() { alert('hello'); };"
+        + "var a = {};"
+        + "Object.defineProperties(a, {prop: {value: b()}});",
+        "function b() { alert('hello'); }; b()");
+  }
+
+  public void testObjectDefinePropertiesOnNamespace5() {
+    test(
+        "function b() { alert('hello'); };"
+        + "function c() { alert('world'); };"
+        + "var a = {};"
+        + "Object.defineProperties(a, {p1: {value: b()}, p2: {value: c()}});",
+        "function b() { alert('hello'); };"
+        + "function c() { alert('world'); };"
+        + "b(); c();");
+  }
+
+  public void testObjectDefinePropertiesOnConstructor() {
+    testSame("function Foo() {} Object.defineProperties(Foo, {prop: {value: 5}}); use(Foo.prop);");
+    test("function Foo() {} Object.defineProperties(Foo, {prop: {value: 5}});", "");
+  }
+
+  public void testObjectDefinePropertiesOnPrototype1() {
+    testSame(
+        "function Foo() {}"
+        + "Object.defineProperties(Foo.prototype, {prop: {value: 5}});"
+        + "use((new Foo).prop);");
+
+    test("function Foo() {} Object.defineProperties(Foo.prototype, {prop: {value: 5}});", "");
+  }
+
+  public void testObjectDefinePropertiesOnPrototype2() {
+    test("var b = 5;"
+        + "function Foo() {}"
+        + "Object.defineProperties(Foo.prototype, {prop: {value: b}});"
+        + "use(b)", "var b = 5; use(b);");
+  }
+
+  public void testObjectDefinePropertiesOnPrototype3() {
+    test("var b = function() {};"
+        + "function Foo() {}"
+        + "Object.defineProperties(Foo.prototype, {prop: {value: b()}});",
+        "var b = function() {}; b();");
+  }
+
+  public void testObjectDefineGetters() {
+    test("function Foo() {} Object.defineProperties(Foo, {prop: {get: function() {}}});", "");
+
+    test(
+        "function Foo() {} Object.defineProperties(Foo.prototype, {prop: {get: function() {}}});",
+        "");
+  }
+
+  public void testObjectDefineSetters() {
+    test("function Foo() {} Object.defineProperties(Foo, {prop: {set: function() {}}});", "");
+
+    test(
+        "function Foo() {} Object.defineProperties(Foo.prototype, {prop: {set: function() {}}});",
+        "");
   }
 
   public void testNoRemoveWindowPropertyAlias1() {
