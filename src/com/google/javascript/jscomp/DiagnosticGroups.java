@@ -471,7 +471,8 @@ public class DiagnosticGroups {
   // recommended that you think of them as "linter" warnings that
   // provide optional suggestions.
   public static final DiagnosticGroup LINT_CHECKS =
-      DiagnosticGroups.registerGroup("lintChecks", // undocumented
+      DiagnosticGroups.registerGroup(
+          "lintChecks", // undocumented
           CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
           CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
           CheckEnums.DUPLICATE_ENUM_VALUE,
@@ -483,6 +484,7 @@ public class DiagnosticGroups {
           CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
           CheckJSDocStyle.MISSING_PARAMETER_JSDOC,
           CheckJSDocStyle.MISSING_JSDOC,
+          CheckJSDocStyle.MISSING_RETURN_JSDOC,
           CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED,
           CheckJSDocStyle.INCORRECT_PARAM_NAME,
           CheckJSDocStyle.INVALID_SUPPRESS,

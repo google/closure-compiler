@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ExportTestFunctions;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -62,6 +63,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public static final DiagnosticType MIXED_PARAM_JSDOC_STYLES =
       DiagnosticType.warning("JSC_MIXED_PARAM_JSDOC_STYLES",
       "Functions may not use both @param annotations and inline JSDoc");
+
+  public static final DiagnosticType MISSING_RETURN_JSDOC =
+      DiagnosticType.warning(
+          "JSC_MISSING_RETURN_JSDOC",
+          "Function with non-trivial return must have @return JSDoc or inline return JSDoc.");
 
   public static final DiagnosticType MUST_BE_PRIVATE =
       DiagnosticType.warning("JSC_MUST_BE_PRIVATE", "Property {0} must be marked @private");
@@ -197,11 +203,14 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
     if (jsDoc == null && !hasAnyInlineJsDoc(function)) {
       checkMissingJsDoc(t, function);
-    } else if (t.inGlobalScope()
-        || hasAnyInlineJsDoc(function)
-        || !jsDoc.getParameterNames().isEmpty()
-        || jsDoc.hasReturnType()) {
-      checkParams(t, function, jsDoc);
+    } else {
+      if (t.inGlobalScope()
+          || hasAnyInlineJsDoc(function)
+          || !jsDoc.getParameterNames().isEmpty()
+          || jsDoc.hasReturnType()) {
+        checkParams(t, function, jsDoc);
+      }
+      checkReturn(t, function, jsDoc);
     }
 
     if (parent.isMemberFunctionDef()
@@ -356,6 +365,44 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       }
     }
     return false;
+  }
+
+  private void checkReturn(NodeTraversal t, Node function, JSDocInfo jsDoc) {
+    if (jsDoc != null && (jsDoc.hasReturnType() || jsDoc.isOverride() || jsDoc.isConstructor())) {
+      return;
+    }
+    if (function.getFirstChild().getJSDocInfo() != null) {
+      return;
+    }
+
+    FindNonTrivialReturn finder = new FindNonTrivialReturn();
+    NodeTraversal.traverseEs6(compiler, function.getLastChild(), finder);
+    if (finder.found) {
+      t.report(function, MISSING_RETURN_JSDOC);
+    }
+  }
+
+  private static class FindNonTrivialReturn extends AbstractPreOrderCallback {
+    private boolean found;
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (found) {
+        return false;
+      }
+
+      // Shallow traversal, since we don't need to inspect within functions or expressions.
+      if (parent == null
+          || NodeUtil.isControlStructure(parent)
+          || NodeUtil.isStatementBlock(parent)) {
+        if (n.isReturn() && n.hasChildren()) {
+          found = true;
+          return false;
+        }
+        return true;
+      }
+      return false;
+    }
   }
 
   private static class ExternsCallback implements NodeTraversal.Callback {

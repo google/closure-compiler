@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INVALID_SUPPRESS;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_RETURN_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE;
@@ -529,6 +530,87 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "function getDistanceFromZero({x, y}) {}"));
 
     testSame("function getDistanceFromZero(/** {x: number, y: number} */ {x, y}) {}");
+  }
+
+  public void testMissingReturn_functionStatement_noWarning() {
+    testSame("/** @param {number} x */ function f(x) {}");
+    testSame("/** @param {number} x */ function f(x) { function bar() { return x; } }");
+    testSame("/** @param {number} x */ function f(x) { return; }");
+    testSame("/** @param {number} x @return {number} */ function f(x) { return x; }");
+    testSame("/** @param {number} x */ function /** number */ f(x) { return x; }");
+    testSame("/** @param {number} x @constructor */ function f(x) { return x; }");
+    testSame("/** @inheritDoc */ function f(x) { return x; }");
+    testSame("/** @override */ function f(x) { return x; }");
+  }
+
+  public void testMissingReturn_assign_noWarning() {
+    testSame("/** @param {number} x */ f = function(x) {}");
+    testSame("/** @param {number} x */ f = function(x) { function bar() { return x; } }");
+    testSame("/** @param {number} x */ f = function(x) { return; }");
+    testSame("/** @param {number} x @return {number} */ f = function(x) { return x; }");
+    testSame("/** @param {number} x @constructor */ f = function(x) { return x; }");
+    testSame("/** @inheritDoc */ f = function(x) { return x; }");
+    testSame("/** @override */ f = function(x) { return x; }");
+  }
+
+  public void testMissingReturn_var_noWarning() {
+    testSame("/** @param {number} x */ var f = function(x) {}");
+    testSame("/** @param {number} x */ var f = function(x) { function bar() { return x; } }");
+    testSame("/** @param {number} x */ var f = function(x) { return; }");
+    testSame("/** @param {number} x @return {number} */ var f = function(x) { return x; }");
+    testSame("/** @param {number} x @constructor */ var f = function(x) { return x; }");
+    testSame("/** @inheritDoc */ var f = function(x) { return x; }");
+    testSame("/** @override */ var f = function(x) { return x; }");
+  }
+
+  public void testMissingReturn_functionStatement() {
+    testWarning("/** @param {number} x */ function f(x) { return x; }", MISSING_RETURN_JSDOC);
+    testWarning(
+        LINE_JOINER.join(
+            "/** @param {number} x */",
+            "function f(x) {",
+            "  /** @param {number} x */",
+            "  function bar(x) {",
+            "    return x;",
+            "  }",
+            "}"),
+        MISSING_RETURN_JSDOC);
+    testWarning(
+        "/** @param {number} x */ function f(x) { if (true) { return x; } }", MISSING_RETURN_JSDOC);
+  }
+
+  public void testMissingReturn_assign() {
+    testWarning("/** @param {number} x */ f = function(x) { return x; }", MISSING_RETURN_JSDOC);
+    testWarning(
+        LINE_JOINER.join(
+            "/** @param {number} x */",
+            "function f(x) {",
+            "  /** @param {number} x */",
+            "  bar = function(x) {",
+            "    return x;",
+            "  }",
+            "}"),
+        MISSING_RETURN_JSDOC);
+    testWarning(
+        "/** @param {number} x */ f = function(x) { if (true) { return x; } }",
+        MISSING_RETURN_JSDOC);
+  }
+
+  public void testMissingReturn_var() {
+    testWarning("/** @param {number} x */ var f = function(x) { return x; }", MISSING_RETURN_JSDOC);
+    testWarning(
+        LINE_JOINER.join(
+            "/** @param {number} x */",
+            "function f(x) {",
+            "  /** @param {number} x */",
+            "  var bar = function(x) {",
+            "    return x;",
+            "  }",
+            "}"),
+        MISSING_RETURN_JSDOC);
+    testWarning(
+        "/** @param {number} x */ var f = function(x) { if (true) { return x; } }",
+        MISSING_RETURN_JSDOC);
   }
 
   public void testExternsAnnotation() {
