@@ -115,14 +115,15 @@ public final class EnumType extends Namespace implements TypeWithProperties {
    */
   @Override
   protected JSType computeJSType(JSTypes commonTypes) {
-    Preconditions.checkState(enumPropType != null);
-    PersistentMap<String, Property> propMap = otherProps;
-    for (String s : props) {
+    Preconditions.checkNotNull(enumPropType);
+    Preconditions.checkState(this.namespaceType == null);
+    PersistentMap<String, Property> propMap = PersistentMap.create();
+    for (String s : this.props) {
       propMap = propMap.with(s,
           Property.makeConstant(null, enumPropType, enumPropType));
     }
-    ObjectType obj = ObjectType.makeObjectType(null, propMap, null, false, ObjectKind.UNRESTRICTED);
-    return withNamedTypes(commonTypes, obj);
+    return JSType.fromObjectType(ObjectType.makeObjectType(
+        null, propMap, null, this, false, ObjectKind.UNRESTRICTED));
   }
 
   @Override

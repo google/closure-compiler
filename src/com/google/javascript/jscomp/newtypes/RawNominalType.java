@@ -70,7 +70,6 @@ public final class RawNominalType extends Namespace {
   // Not final b/c interfaces that inherit from IObject mutate this during GTI
   private ObjectKind objectKind;
   private FunctionType ctorFn;
-  private JSTypes commonTypes;
 
   private enum Kind {
     CLASS,
@@ -198,11 +197,9 @@ public final class RawNominalType extends Namespace {
     return this.ctorFn;
   }
 
-  public void setCtorFunction(
-      FunctionType ctorFn, JSTypes commonTypes) {
+  public void setCtorFunction(FunctionType ctorFn) {
     Preconditions.checkState(!this.isFinalized);
     this.ctorFn = ctorFn;
-    this.commonTypes = commonTypes;
   }
 
   boolean hasAncestorClass(RawNominalType ancestor) {
@@ -486,13 +483,6 @@ public final class RawNominalType extends Namespace {
     }
   }
 
-  // Returns the object referred to by the prototype property of the
-  // constructor of this class.
-  private JSType createProtoObject() {
-    return JSType.fromObjectType(ObjectType.makeObjectType(
-        this.superClass, this.protoProps, null, false, ObjectKind.UNRESTRICTED));
-  }
-
   //////////// Constructor Properties
 
   public boolean hasCtorProp(String pname) {
@@ -515,24 +505,6 @@ public final class RawNominalType extends Namespace {
     return super.getPropDeclaredType(pname);
   }
 
-  // Returns the (function) object referred to by the constructor of this class.
-  // TODO(dimvar): this function shouldn't take any arguments; it should
-  // construct and cache the result based on the fields.
-  // But currently a couple of unit tests break because of "structural"
-  // constructors with a different number of arguments.
-  // For those, we should just be creating a basic function type, not be
-  // adding all the static properties.
-  JSType getConstructorObject(FunctionType ctorFn) {
-    Preconditions.checkState(this.isFinalized);
-    if (this.ctorFn != ctorFn || this.namespaceType == null) {
-      ObjectType ctorFnAsObj = ObjectType.makeObjectType(
-          this.commonTypes.getFunctionType(), this.otherProps, ctorFn,
-          ctorFn.isLoose(), ObjectKind.UNRESTRICTED);
-      return withNamedTypes(this.commonTypes, ctorFnAsObj);
-    }
-    return this.namespaceType;
-  }
-
   @Override
   public void finalize() {
     Preconditions.checkState(!this.isFinalized);
@@ -540,7 +512,10 @@ public final class RawNominalType extends Namespace {
     if (this.interfaces == null) {
       this.interfaces = ImmutableSet.of();
     }
-    addCtorProperty("prototype", null, createProtoObject(), false);
+    JSType protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
+        this.superClass, this.protoProps,
+        null, null, false, ObjectKind.UNRESTRICTED));
+    addCtorProperty("prototype", null, protoObject, false);
     this.isFinalized = true;
   }
 
@@ -559,7 +534,11 @@ public final class RawNominalType extends Namespace {
 
   @Override
   protected JSType computeJSType(JSTypes commonTypes) {
-    return getConstructorObject(this.ctorFn);
+    Preconditions.checkState(this.isFinalized);
+    Preconditions.checkState(this.namespaceType == null);
+    return JSType.fromObjectType(ObjectType.makeObjectType(
+        commonTypes.getFunctionType(), null, ctorFn,
+        this, ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
   }
 
   public NominalType getAsNominalType() {

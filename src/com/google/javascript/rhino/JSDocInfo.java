@@ -935,7 +935,7 @@ public class JSDocInfo implements Serializable {
         || hasThisType()
         || getParameterCount() > 0
         || getFlag(MASK_CONSTRUCTOR)
-        || (getFlag(MASK_NOSIDEEFFECTS) && (!hasType() || hasFunctionType));
+        || (getFlag(MASK_NOSIDEEFFECTS) && !hasType());
   }
 
   private boolean getFlag(int mask) {

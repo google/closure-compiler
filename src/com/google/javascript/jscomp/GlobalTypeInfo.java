@@ -620,10 +620,6 @@ class GlobalTypeInfo implements CompilerPass {
           localPropDef.defSite, CANNOT_OVERRIDE_FINAL_METHOD, pname));
       return;
     }
-    // System.out.println("nominalType: " + current + "'s " + pname +
-    //     " localPropType: " + localPropType +
-    //     " with super: " + superType +
-    //     " inheritedPropType: " + inheritedPropType);
     if (localPropType == null) {
       // Add property from interface to class
       propTypesToProcess.put(pname, inheritedPropType);
@@ -844,11 +840,17 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void visitObjlitNamespace(Node qnameNode) {
-      if (currentScope.isDefined(qnameNode)) {
-        return;
-      }
       if (qnameNode.isGetProp()) {
         markAssignNodeAsAnalyzed(qnameNode.getParent());
+      }
+      if (currentScope.isDefined(qnameNode)) {
+        if (qnameNode.isGetProp()
+            && !NodeUtil.getRValueOfLValue(qnameNode).isOr()) {
+          warnings.add(JSError.make(qnameNode, REDECLARED_PROPERTY,
+                  qnameNode.getLastChild().getString(),
+                  qnameNode.getFirstChild().getQualifiedName()));
+        }
+        return;
       }
       currentScope.addNamespaceLit(qnameNode);
     }
@@ -923,7 +925,15 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (nameNode.isName()) {
         isRedeclaration = currentScope.isDefinedLocally(nameNode.getString(), false);
       } else {
+        Preconditions.checkState(nameNode.isGetProp(),
+            "Expected getprop, found %s", Token.name(nameNode.getType()));
         isRedeclaration = currentScope.isDefined(nameNode);
+        if (isRedeclaration && fnDoc != null) {
+          nameNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+          warnings.add(JSError.make(nameNode, REDECLARED_PROPERTY,
+                  nameNode.getLastChild().getString(),
+                  nameNode.getFirstChild().getQualifiedName()));
+        }
       }
       NTIScope fnScope = new NTIScope(fn, this.currentScope, collectFormals(fn, fnDoc), null);
       if (!fn.isFromExterns()) {
@@ -1105,7 +1115,8 @@ class GlobalTypeInfo implements CompilerPass {
       NTIScope s = currentScope.getScope(internalName);
       QualifiedName pname = new QualifiedName(funQname.getLastChild().getString());
       if (!ns.isDefined(pname)) {
-        ns.addNamespace(pname, new FunctionNamespace(funQname.toString(), s));
+        ns.addNamespace(pname,
+            new FunctionNamespace(funQname.getQualifiedName(), s));
       }
     }
 
@@ -1545,11 +1556,13 @@ class GlobalTypeInfo implements CompilerPass {
       boolean isConst = isConst(declNode);
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
-        if (ns.hasProp(pname)
+        if (ns.hasSubnamespace(new QualifiedName(pname))
+            || ns.hasProp(pname)
             && previousPropType != null
             && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType)) {
           warnings.add(JSError.make(
               declNode, REDECLARED_PROPERTY, pname, "namespace " + ns));
+          declNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
           return;
         }
         if (propDeclType == null) {
@@ -1957,7 +1970,7 @@ class GlobalTypeInfo implements CompilerPass {
             result.slotType, false, qnameNode.isFromExterns());
       }
       if (ctorType != null) {
-        ctorType.setCtorFunction(result.functionType.toFunctionType(), commonTypes);
+        ctorType.setCtorFunction(result.functionType.toFunctionType());
       }
       if (declNode.isFunction()) {
         maybeWarnFunctionDeclaration(declNode, result.functionType);
@@ -2118,6 +2131,11 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private boolean isNamedType(Node getProp) {
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
+      if (jsdoc != null
+          && jsdoc.hasType() && !jsdoc.containsFunctionDeclaration()) {
+        return false;
+      }
       return this.currentScope.isNamespace(getProp)
           || NodeUtil.isTypedefDecl(getProp);
     }

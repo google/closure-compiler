@@ -183,7 +183,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     if (d == null || d.getFunctionScope() == null || d.getTypeOfSimpleDecl() == null) {
       return false;
     }
-    return d.getTypeOfSimpleDecl().isSingletonObj();
+    return d.getTypeOfSimpleDecl().isNamespace();
   }
 
   // In other languages, type names and variable names are in distinct
@@ -647,10 +647,11 @@ final class NTIScope implements DeclaredTypeRegistry {
       if (ns instanceof NamespaceLit) {
         constVars.add(name);
         NamespaceLit nslit = (NamespaceLit) ns;
-        // objToInclude should only be non-null for window, but we don't check
-        // here to avoid hard-coding the name. Enforced in GlobalTypeInfo.
-        JSType objToInclude = externs.get(name);
-        t = nslit.toJSTypeIncludingObject(commonTypes, objToInclude);
+        // The argument to maybeSetWindowInstance should only be non-null for
+        // window, but we don't check here to avoid hard-coding the name.
+        // Enforced in GlobalTypeInfo.
+        nslit.maybeSetWindowInstance(externs.get(name));
+        t = nslit.toJSType(commonTypes);
       } else {
         t = ns.toJSType(commonTypes);
       }

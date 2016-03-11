@@ -276,10 +276,6 @@ public final class NominalType {
     return p != null && p.isConstant();
   }
 
-  JSType getConstructorObject(FunctionType ctorFn) {
-    return this.rawType.getConstructorObject(ctorFn);
-  }
-
   boolean isSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
     return isNominalSubtypeOf(other)
         || other.isStructuralInterface() && isStructuralSubtypeOf(other, subSuperMap);

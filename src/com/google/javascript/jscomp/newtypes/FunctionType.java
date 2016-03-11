@@ -302,11 +302,6 @@ public final class FunctionType {
     return this.receiverType != null ? this.receiverType : this.nominalType;
   }
 
-  public JSType getConstructorObject() {
-    NominalType nt = getNominalTypeIfSingletonObj(this.nominalType);
-    return Preconditions.checkNotNull(nt).getConstructorObject(this);
-  }
-
   public FunctionType transformByCallProperty() {
     if (isTopFunction() || isQmarkFunction() || isLoose) {
       return QMARK_FUNCTION;

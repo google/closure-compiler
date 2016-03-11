@@ -481,6 +481,11 @@ public abstract class JSType implements TypeI {
     return obj != null && obj.isFunctionWithProperties();
   }
 
+  public boolean isNamespace() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    return obj != null && obj.isNamespace();
+  }
+
   // Only makes sense for a JSType that represents a single enum
   public JSType getEnumeratedType() {
     return isEnumElement() ?

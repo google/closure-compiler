@@ -21,7 +21,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An object whose properties can be types (nominal types, enums, typedefs).
@@ -32,22 +34,19 @@ import java.util.Map;
  */
 public abstract class Namespace {
   private Map<String, Namespace> namespaces = ImmutableMap.of();
+  // Finalize the namespace after GTI and null-out the typedefs.
   private Map<String, Typedef> typedefs = ImmutableMap.of();
   // "Simple type" properties (i.e. represented as JSTypes rather than something
   // more specific).
   protected PersistentMap<String, Property> otherProps = PersistentMap.create();
   protected String name;
-  // Represents the namespace as an object that includes all namespace
-  // properties. For NamespaceLit and EnumType, it is an object literal.
-  // For RawNominalType, it is the constructor.
+  // Represents the namespace as an ObjectType wrapped in a JSType.
+  // The namespace field of the ObjectType contains the namespace instance.
+  // In addition,
+  // For a function/constructor namespace, the fn field is the function type.
+  // For window as namespace, the nominalType field is Window.
   protected JSType namespaceType;
-  // A hack to cut-off the recursion when computing the type of circular
-  // namespaces. Handling the circularity properly would require that either
-  // ObjectType be mutable (so that we can create cycles), or that we retain
-  // NamespaceLit during NewTypeInference. Another hack that avoids true
-  // circularity but is more precise than the current one is to cut-off the
-  // recursion after two unrollings instead of one.
-  // TODO(dimvar): handle circular namespaces correctly.
+  // Used to detect recursion when computing the type of circular namespaces.
   private boolean duringComputeJSType = false;
 
   protected abstract JSType computeJSType(JSTypes commonTypes);
@@ -177,36 +176,43 @@ public abstract class Namespace {
     return p == null ? null : p.getDeclaredType();
   }
 
+  final Property getNsProp(String pname) {
+    if (this.namespaces.containsKey(pname)) {
+      Namespace subns = this.namespaces.get(pname);
+      Preconditions.checkState(subns.namespaceType != null);
+      return Property.make(subns.namespaceType, subns.namespaceType);
+    }
+    if (this.otherProps.containsKey(pname)) {
+      return this.otherProps.get(pname);
+    }
+    return null;
+  }
+
+  final Set<String> getAllPropsOfNamespace() {
+    Set<String> s = new LinkedHashSet<>();
+    s.addAll(this.namespaces.keySet());
+    s.addAll(this.otherProps.keySet());
+    return s;
+  }
+
   public final JSType toJSType(JSTypes commonTypes) {
     if (this.namespaceType == null) {
-      this.namespaceType = computeJSType(commonTypes);
+      Preconditions.checkNotNull(commonTypes);
+      for (Namespace ns : this.namespaces.values()) {
+        if (this.duringComputeJSType) {
+          return null;
+        }
+        this.duringComputeJSType = true;
+        ns.toJSType(commonTypes);
+        this.duringComputeJSType = false;
+      }
+      this.namespaceType = Preconditions.checkNotNull(computeJSType(commonTypes));
     }
     return this.namespaceType;
   }
 
-  // TODO(dimvar): namespaces can have many properties, and here we create a new
-  // object type every time we add a property, and we discard them all except
-  // the last one. Is it a perf win to have a method in ObjectType that adds all
-  // properties to obj at once?
-  protected final JSType withNamedTypes(JSTypes commonTypes, ObjectType obj) {
-    if (this.duringComputeJSType) {
-      this.namespaceType = JSType.fromObjectType(obj);
-      return this.namespaceType;
-    }
-    this.duringComputeJSType = true;
-
-    for (Map.Entry<String, Namespace> entry : this.namespaces.entrySet()) {
-      obj = obj.withProperty(
-          new QualifiedName(entry.getKey()),
-          entry.getValue().toJSType(commonTypes));
-    }
-
-    this.duringComputeJSType = false;
-    return JSType.fromObjectType(obj);
-  }
-
-  // Very similar to withNamedTypes, but copies the properties to Window's
-  // RawNominalType instead of an ObjectType.
+  // Copy properties from window to Window.prototype, because in rare cases
+  // people pass window around rather than using it directly.
   public final void copyWindowProperties(JSTypes commonTypes, RawNominalType win) {
     Preconditions.checkArgument(win.getName().equals("Window"));
     Preconditions.checkNotNull(this.namespaces,
@@ -230,5 +236,10 @@ public abstract class Namespace {
       win.addProtoProperty(
           entry.getKey(), null, entry.getValue().getType(), true);
     }
+  }
+
+  @Override
+  public String toString() {
+    return this.name;
   }
 }
