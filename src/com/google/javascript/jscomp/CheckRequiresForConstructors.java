@@ -195,6 +195,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     for (Map.Entry<String, Node> entry : usages.entrySet()) {
       String className = entry.getKey();
       Node node = entry.getValue();
+      JSDocInfo info = NodeUtil.getEnclosingStatement(node).getJSDocInfo();
+      if (info != null && info.getSuppressions().contains("missingRequire")) {
+        continue;
+      }
 
       String outermostClassName = getOutermostClassName(className);
       // The parent namespace is also checked as part of the requires so that classes

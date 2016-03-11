@@ -464,6 +464,7 @@ public final class DefaultPassConfig extends PassConfig {
     // into a fully qualified access and in so doing enables better dead code stripping.
     if (options.j2clPass) {
       passes.add(j2clPass);
+      passes.add(j2clPropertyInlinerPass);
     }
 
     passes.add(createEmptyPass("beforeStandardOptimizations"));
@@ -2582,6 +2583,15 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new J2clPass(compiler);
+        }
+      };
+
+  /** Rewrites J2CL constructs to be more optimizable. */
+  private final PassFactory j2clPropertyInlinerPass =
+      new PassFactory("j2clES6Pass", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new J2clPropertyInlinerPass(compiler);
         }
       };
 

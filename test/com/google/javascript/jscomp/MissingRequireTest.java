@@ -86,6 +86,11 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testSame(js);
   }
 
+  public void testSuppression() {
+    testSame("/** @suppress {missingRequire} */ var x = new foo.Bar();");
+    testSame("/** @suppress {missingRequire} */ function f() { var x = new foo.Bar(); }");
+  }
+
   public void testFailWithOneNew() {
     String[] js = new String[] {"goog.provide('foo'); var bar = new foo.bar();"};
     String warning = "'foo.bar' used but not required";

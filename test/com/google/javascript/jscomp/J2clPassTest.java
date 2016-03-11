@@ -268,18 +268,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "var to = function() { return 1; }", "", "alert(to());"))));
 
     // Interface $markImplementor() functions.
-    test(
-        Lists.newArrayList(
-            SourceFile.fromCode(
-                "name/doesnt/matter/Foo.impl.js",
-                LINE_JOINER.join(
-                    // Function definitions and calls are qualified globals.
-                    "var $markImplementor = function(classDef) {",
-                    "  classDef.$implements__FooInterface = true;",
-                    "}",
-                    "",
-                    "var Foo = function() {};",
-                    "$markImplementor(Foo);"))),
+    testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.js",
