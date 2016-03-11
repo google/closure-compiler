@@ -263,7 +263,7 @@ public final class NodeUtil {
         ? "" : getStringValue(n);
   }
 
-  public static String arrayToString(Node literal) {
+  static String arrayToString(Node literal) {
     Node first = literal.getFirstChild();
     StringBuilder result = new StringBuilder();
     for (Node n = first; n != null; n = n.getNext()) {
@@ -361,7 +361,7 @@ public final class NodeUtil {
     return null;
   }
 
-  public static Double getStringNumberValue(String rawJsString) {
+  static Double getStringNumberValue(String rawJsString) {
     if (rawJsString.contains("\u000b")) {
       // vertical tab is not always whitespace
       return null;
@@ -407,7 +407,7 @@ public final class NodeUtil {
     }
   }
 
-  public static String trimJsWhiteSpace(String s) {
+  static String trimJsWhiteSpace(String s) {
     int start = 0;
     int end = s.length();
     while (end > 0
@@ -761,7 +761,7 @@ public final class NodeUtil {
    * has no direct side-effects (unlike '+='), and has no
    * conditional aspects (unlike '||').
    */
-  public static boolean isSimpleOperatorType(int type) {
+  static boolean isSimpleOperatorType(int type) {
     switch (type) {
       case Token.ADD:
       case Token.BITAND:
@@ -878,7 +878,7 @@ public final class NodeUtil {
    * @param child The expression itself.
    * @return Newly created EXPR node with the child as subexpression.
    */
-  public static Node newExpr(Node child) {
+  static Node newExpr(Node child) {
     return IR.exprResult(child).srcref(child);
   }
 
@@ -888,11 +888,11 @@ public final class NodeUtil {
    *
    * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
    */
-  public static boolean mayEffectMutableState(Node n) {
+  static boolean mayEffectMutableState(Node n) {
     return mayEffectMutableState(n, null);
   }
 
-  public static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
+  static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
     return checkForStateChangeHelper(n, true, compiler);
   }
 
@@ -1301,7 +1301,7 @@ public final class NodeUtil {
    * @return Whether the tree can be affected by side-effects or
    * has side-effects.
    */
-  public static boolean canBeSideEffected(Node n) {
+  static boolean canBeSideEffected(Node n) {
     Set<String> emptySet = Collections.emptySet();
     return canBeSideEffected(n, emptySet, null);
   }
@@ -1314,7 +1314,7 @@ public final class NodeUtil {
    */
   // TODO(nick): Get rid of the knownConstants argument in favor of using
   // scope with InferConsts.
-  public static boolean canBeSideEffected(
+  static boolean canBeSideEffected(
       Node n, Set<String> knownConstants, Scope scope) {
     switch (n.getType()) {
       case Token.YIELD:
@@ -1675,7 +1675,7 @@ public final class NodeUtil {
     }
   }
 
-  public static ValueType and(ValueType a, ValueType b) {
+  static ValueType and(ValueType a, ValueType b) {
     return (a == b) ? a : ValueType.UNDETERMINED;
   }
 
@@ -1787,7 +1787,7 @@ public final class NodeUtil {
    * Note: "+" is not associative because it is also the concatenation
    * for strings. e.g. "a" + (1 + 2) is not "a" + 1 + 2
    */
-  public static boolean isAssociative(int type) {
+  static boolean isAssociative(int type) {
     switch (type) {
       case Token.MUL:
       case Token.AND:
@@ -1808,7 +1808,7 @@ public final class NodeUtil {
    * for strings. e.g. "a" + (1 + 2) is not "a" + 1 + 2
    * Note 2: only operations on literals and pure functions are commutative.
    */
-  public static boolean isCommutative(int type) {
+  static boolean isCommutative(int type) {
     switch (type) {
       case Token.MUL:
       case Token.BITOR:
@@ -2414,7 +2414,7 @@ public final class NodeUtil {
   /**
    * Add a finally block if one does not exist.
    */
-  public static void maybeAddFinally(Node tryNode) {
+  static void maybeAddFinally(Node tryNode) {
     Preconditions.checkState(tryNode.isTry());
     if (!NodeUtil.hasFinally(tryNode)) {
       tryNode.addChildrenToBack(IR.block().srcref(tryNode));
@@ -3076,13 +3076,13 @@ public final class NodeUtil {
    * @param basisNode The basis node from which to copy the source file info.
    * @param originalName The original name of the node.
    */
-  public static void setDebugInformation(Node node, Node basisNode,
+  static void setDebugInformation(Node node, Node basisNode,
                                   String originalName) {
     node.copyInformationFromForTree(basisNode);
     node.setOriginalName(originalName);
   }
 
-  private static Node newName(AbstractCompiler compiler, String name) {
+  static Node newName(AbstractCompiler compiler, String name) {
     Node nameNode = IR.name(name);
     if (compiler.getCodingConvention().isConstant(name)) {
       nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
@@ -3100,7 +3100,7 @@ public final class NodeUtil {
    *
    * @return The node created.
    */
-  public static Node newName(AbstractCompiler compiler, String name, Node srcref) {
+  static Node newName(AbstractCompiler compiler, String name, Node srcref) {
     return newName(compiler, name).srcref(srcref);
   }
 
@@ -3117,7 +3117,7 @@ public final class NodeUtil {
    *
    * @return The node created.
    */
-  public static Node newName(
+  static Node newName(
       AbstractCompiler compiler, String name,
       Node basisNode, String originalName) {
     Node nameNode = newName(compiler, name, basisNode);
@@ -3138,7 +3138,7 @@ public final class NodeUtil {
    *
    * @return True if all characters in the string are in Basic Latin set.
    */
-  public static boolean isLatin(String s) {
+  static boolean isLatin(String s) {
     int len = s.length();
     for (int index = 0; index < len; index++) {
       char c = s.charAt(index);
@@ -3768,7 +3768,7 @@ public final class NodeUtil {
   /**
    * A new CALL node with the "FREE_CALL" set based on call target.
    */
-  public static Node newCallNode(Node callTarget, Node... parameters) {
+  static Node newCallNode(Node callTarget, Node... parameters) {
     boolean isFreeCall = !isGet(callTarget);
     Node call = IR.call(callTarget);
     call.putBooleanProp(Node.FREE_CALL, isFreeCall);
@@ -3946,7 +3946,7 @@ public final class NodeUtil {
   }
 
   /** Find the l-value that the given r-value is being assigned to. */
-  public static Node getBestLValue(Node n) {
+  static Node getBestLValue(Node n) {
     Node parent = n.getParent();
     boolean isFunctionDeclaration = isFunctionDeclaration(n);
     if (isFunctionDeclaration) {
@@ -3970,7 +3970,7 @@ public final class NodeUtil {
   }
 
   /** Gets the r-value (or intializer) of a node returned by getBestLValue. */
-  public static Node getRValueOfLValue(Node n) {
+  static Node getRValueOfLValue(Node n) {
     Node parent = n.getParent();
     switch (parent.getType()) {
       case Token.ASSIGN:
@@ -3988,7 +3988,7 @@ public final class NodeUtil {
   }
 
   /** Get the owner of the given l-value node. */
-  public static Node getBestLValueOwner(@Nullable Node lValue) {
+  static Node getBestLValueOwner(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
@@ -4002,7 +4002,7 @@ public final class NodeUtil {
   }
 
   /** Get the name of the given l-value node. */
-  public static String getBestLValueName(@Nullable Node lValue) {
+  static String getBestLValueName(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
@@ -4118,14 +4118,14 @@ public final class NodeUtil {
   /**
    * @return An appropriate AST node for the boolean value.
    */
-  public static Node booleanNode(boolean value) {
+  static Node booleanNode(boolean value) {
     return value ? IR.trueNode() : IR.falseNode();
   }
 
   /**
    * @return An appropriate AST node for the double value.
    */
-  public static Node numberNode(double value, Node srcref) {
+  static Node numberNode(double value, Node srcref) {
     Node result;
     if (Double.isNaN(value)) {
       result = IR.name("NaN");
@@ -4211,7 +4211,7 @@ public final class NodeUtil {
         Predicates.<Node>alwaysTrue());
   }
 
-  public static int countAstSizeUpToLimit(Node n, final int limit) {
+  static int countAstSizeUpToLimit(Node n, final int limit) {
     // Java doesn't allow accessing mutable local variables from another class.
     final int[] wrappedSize = {0};
     visitPreOrder(
