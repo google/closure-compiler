@@ -16,8 +16,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
@@ -107,9 +107,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      // Shallow traversal, since we don't need to inspect within function declarations.
-      if (parent == null || !parent.isFunction()
-          || n == parent.getFirstChild()) {
+      if (found) {
+        return false;
+      }
+      // Shallow traversal, since we don't need to inspect within functions or expressions.
+      if (parent == null
+          || NodeUtil.isControlStructure(parent)
+          || NodeUtil.isStatementBlock(parent)) {
         if (n.isExprResult()) {
           Node maybeGetProp = n.getFirstFirstChild();
           if (maybeGetProp != null
