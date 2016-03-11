@@ -53,7 +53,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   public void testInvalidSuppress() {
-    testWarning("/** @suppress {missingRequire} */ var x = new y.Z();", INVALID_SUPPRESS);
+    testSame("/** @suppress {missingRequire} */ var x = new y.Z();");
     testSame("/** @suppress {missingRequire} */ function f() { var x = new y.Z(); }");
     testSame("/** @suppress {missingRequire} */ var f = function() { var x = new y.Z(); }");
     testSame(
