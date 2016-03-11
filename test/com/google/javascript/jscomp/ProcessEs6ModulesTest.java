@@ -606,4 +606,21 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     testModules("import * as Foo from 'goog:other.Foo';",
         ProcessEs6Modules.NAMESPACE_IMPORT_CANNOT_USE_STAR);
   }
+
+  public void testObjectDestructuringAndObjLitShorthand() {
+    testModules(
+        LINE_JOINER.join(
+            "import {f} from 'other';",
+            "const foo = 1;",
+            "const {a, b} = f({foo});",
+            "use(a, b);"),
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "const foo$$module$testcode = 1;",
+            "const {",
+            "  a: a$$module$testcode,",
+            "  b: b$$module$testcode,",
+            "} = module$other.f({foo: foo$$module$testcode});",
+            "use(a$$module$testcode, b$$module$testcode);"));
+  }
 }
