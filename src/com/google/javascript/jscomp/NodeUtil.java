@@ -1839,6 +1839,10 @@ public final class NodeUtil {
     return false;
   }
 
+  public static boolean isCompoundAssignementOp(Node n) {
+    return isAssignmentOp(n) && !n.isAssign();
+  }
+
   static int getOpFromAssignmentOp(Node n) {
     switch (n.getType()){
       case Token.ASSIGN_BITOR:

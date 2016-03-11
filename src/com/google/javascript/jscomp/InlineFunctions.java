@@ -676,7 +676,7 @@ class InlineFunctions implements CompilerPass {
       FunctionState fs = i.next().getValue();
       if (fs.hasReferences()) {
         // Only inline function if it decreases the code size.
-        boolean lowersCost = mimimizeCost(fs);
+        boolean lowersCost = minimizeCost(fs);
         if (!lowersCost) {
           // It shouldn't be inlined; remove it from the list.
           i.remove();
@@ -694,7 +694,7 @@ class InlineFunctions implements CompilerPass {
    * trims references that increase the cost.
    * @return Whether inlining the references lowers the overall cost.
    */
-  private boolean mimimizeCost(FunctionState fs) {
+  private boolean minimizeCost(FunctionState fs) {
     if (!inliningLowersCost(fs)) {
       // Try again without Block inlining references
       if (fs.hasBlockInliningReferences()) {
@@ -765,7 +765,7 @@ class InlineFunctions implements CompilerPass {
           fsCalled.setRemove(false);
           // For functions that can no longer be removed, check if they should
           // still be inlined.
-          if (!mimimizeCost(fsCalled)) {
+          if (!minimizeCost(fsCalled)) {
             // It can't be inlined remove it from the list.
             fsCalled.setInline(false);
           }
