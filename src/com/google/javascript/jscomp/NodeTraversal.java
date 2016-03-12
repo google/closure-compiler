@@ -805,7 +805,7 @@ public class NodeTraversal {
   /**
    * Determines whether the hoist scope of the current traversal is global.
    */
-  boolean inGlobalHoistScope() {
+  public boolean inGlobalHoistScope() {
     return !getCfgRoot().isFunction();
   }
 

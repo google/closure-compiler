@@ -123,6 +123,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testWarning("class Foo { bar() {} }", MISSING_JSDOC);
     testWarning("class Foo { constructor(x) {} }", MISSING_JSDOC);
     testWarning("var Foo = class { bar() {} };", MISSING_JSDOC);
+    testWarning("if (COMPILED) { var f = function() {}; }", MISSING_JSDOC);
 
     testSame("/** @return {string} */ function f() {}");
     testSame("/** @return {string} */ var f = function() {}");
