@@ -24,10 +24,10 @@
 var showdown = {};
 
 /**
- * @param {*} opts
+ * @param {Object=} opt_options
  * @constructor
  */
-showdown.Converter = function(opts) {};
+showdown.Converter = function(opt_options) {};
 
 /**
  * @param {string} txt
