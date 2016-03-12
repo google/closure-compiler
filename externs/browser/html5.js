@@ -3495,3 +3495,31 @@ HTMLFieldSetElement.prototype.validity;
  * @see https://www.w3.org/TR/html5/forms.html#the-fieldset-element
  */
 HTMLFieldSetElement.prototype.willValidate;
+
+/**
+ * @constructor
+ * @extends {HTMLCollection<T>}
+ * @implements {IObject<string, (T|RadioNodeList<T>)>}
+ * @implements {IArrayLike<T>}
+ * @template T
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#the-htmlformcontrolscollection-interface
+ */
+function HTMLFormControlsCollection() {}
+
+/**
+ * @param {string} name
+ * @return {T|RadioNodeList<T>|null}
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#dom-htmlformcontrolscollection-nameditem
+ * @nosideeffects
+ * @suppress {newCheckTypes}
+ */
+HTMLFormControlsCollection.prototype.namedItem = function(name) {};
+
+/**
+ * @constructor
+ * @extends {NodeList<T>}
+ * @template T
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#radionodelist
+ */
+function RadioNodeList() {}
+
