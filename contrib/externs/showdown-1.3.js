@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Closure Compiler Authors.
+ * Copyright 2016 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-// This file intentionally left blank. It's only used for testing externs
-// compilation.
-// This is not an @externs file but the annotation_test requires this line.
-
-
 /**
- * @const
+ * @fileoverview Externs for Showdown Javascript Markdown to HTML converter
+ * @see https://github.com/showdownjs/showdown
+ * @externs
  */
+
+/** @const */
 var showdown = {};
 
 /**
