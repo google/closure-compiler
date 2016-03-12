@@ -455,7 +455,7 @@ NodeList.prototype.item = function(index) {};
 
 /**
  * @constructor
- * @implements {IObject<(string|number), T>}
+ * @implements {IObject<string, T>}
  * @implements {IArrayLike<T>}
  * @template T
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1780488922

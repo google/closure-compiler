@@ -956,7 +956,7 @@ Navigator.prototype.javaEnabled = function() {};
 
 /**
  * @constructor
- * @implements {IObject<(string|number),!Plugin>}
+ * @implements {IObject<string, !Plugin>}
  * @implements {IArrayLike<!Plugin>}
  * @see https://developer.mozilla.org/en/DOM/PluginArray
  */

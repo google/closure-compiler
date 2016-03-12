@@ -26,7 +26,7 @@
 
 /**
  * @constructor
- * @implements {IObject<(string|number),T>}
+ * @implements {IObject<string, T>}
  * @implements {IArrayLike<T>}
  * @template T
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-75708506
@@ -57,7 +57,7 @@ HTMLCollection.prototype.namedItem = function(name) {};
 
 /**
  * @constructor
- * @implements {IObject<(string|number),HTMLOptionElement>}
+ * @implements {IObject<string, HTMLOptionElement>}
  * @implements {IArrayLike<!HTMLOptionElement>}
  * @see http://www.w3.org/TR/DOM-Level-2-HTML/html.html#HTMLOptionsCollection
  */
