@@ -38,11 +38,6 @@ import java.util.Set;
  *
  */
 class MarkNoSideEffectCalls implements CompilerPass {
-  static final DiagnosticType INVALID_NO_SIDE_EFFECT_ANNOTATION =
-      DiagnosticType.error(
-          "JSC_INVALID_NO_SIDE_EFFECT_ANNOTATION",
-          "@nosideeffects may only appear in externs files.");
-
   private final AbstractCompiler compiler;
 
   // Left hand side expression associated with a function node that
@@ -119,7 +114,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
       if (!inExterns && hasNoSideEffectsAnnotation(node)) {
-        traversal.report(node, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+        traversal.report(node, PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION);
       }
 
       if (node.isGetProp()) {
