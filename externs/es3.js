@@ -384,7 +384,6 @@ Object.prototype.watch = function(prop, handler) {};
 /**
  * @constructor
  * @param {...*} var_args
- * @nosideeffects
  * @throws {Error}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
  */
