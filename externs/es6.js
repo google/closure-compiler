@@ -387,7 +387,6 @@ function Transferable() {}
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
  * @implements {Transferable}
  */
 function ArrayBuffer(length) {}
@@ -1157,7 +1156,6 @@ Float64Array.prototype.copyWithin = function(target, start, opt_end) {};
  * @extends {ArrayBufferView}
  * @noalias
  * @throws {Error}
- * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays/DataView
  */
 function DataView(buffer, opt_byteOffset, opt_byteLength) {}
@@ -1166,7 +1164,6 @@ function DataView(buffer, opt_byteOffset, opt_byteLength) {}
  * @param {number} byteOffset
  * @return {number}
  * @throws {Error}
- * @nosideeffects
  */
 DataView.prototype.getInt8 = function(byteOffset) {};
 
@@ -1174,7 +1171,6 @@ DataView.prototype.getInt8 = function(byteOffset) {};
  * @param {number} byteOffset
  * @return {number}
  * @throws {Error}
- * @nosideeffects
  */
 DataView.prototype.getUint8 = function(byteOffset) {};
 
@@ -1183,7 +1179,6 @@ DataView.prototype.getUint8 = function(byteOffset) {};
  * @param {boolean=} opt_littleEndian
  * @return {number}
  * @throws {Error}
- * @nosideeffects
  */
 DataView.prototype.getInt16 = function(byteOffset, opt_littleEndian) {};
 
@@ -1192,7 +1187,6 @@ DataView.prototype.getInt16 = function(byteOffset, opt_littleEndian) {};
  * @param {boolean=} opt_littleEndian
  * @return {number}
  * @throws {Error}
- * @nosideeffects
  */
 DataView.prototype.getUint16 = function(byteOffset, opt_littleEndian) {};
 
@@ -1201,7 +1195,6 @@ DataView.prototype.getUint16 = function(byteOffset, opt_littleEndian) {};
  * @param {boolean=} opt_littleEndian
  * @return {number}
  * @throws {Error}
- * @nosideeffects
  */
 DataView.prototype.getInt32 = function(byteOffset, opt_littleEndian) {};
 
@@ -1210,7 +1203,6 @@ DataView.prototype.getInt32 = function(byteOffset, opt_littleEndian) {};
  * @param {boolean=} opt_littleEndian
  * @return {number}
  * @throws {Error}
- * @nosideeffects
  */
 DataView.prototype.getUint32 = function(byteOffset, opt_littleEndian) {};
 
@@ -1219,7 +1211,6 @@ DataView.prototype.getUint32 = function(byteOffset, opt_littleEndian) {};
  * @param {boolean=} opt_littleEndian
  * @return {number}
  * @throws {Error}
- * @nosideeffects
  */
 DataView.prototype.getFloat32 = function(byteOffset, opt_littleEndian) {};
 
@@ -1228,7 +1219,6 @@ DataView.prototype.getFloat32 = function(byteOffset, opt_littleEndian) {};
  * @param {boolean=} opt_littleEndian
  * @return {number}
  * @throws {Error}
- * @nosideeffects
  */
 DataView.prototype.getFloat64 = function(byteOffset, opt_littleEndian) {};
 

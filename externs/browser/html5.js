@@ -62,7 +62,6 @@ HTMLCanvasElement.prototype.height;
  * @param {...*} var_args
  * @return {string}
  * @throws {Error}
- * @nosideeffects
  */
 HTMLCanvasElement.prototype.toDataURL = function(opt_type, var_args) {};
 
@@ -143,7 +142,6 @@ CanvasRenderingContext2D.prototype.setTransform = function(
  * @param {number} y1
  * @return {CanvasGradient}
  * @throws {Error}
- * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createLinearGradient = function(
     x0, y0, x1, y1) {};
@@ -157,7 +155,6 @@ CanvasRenderingContext2D.prototype.createLinearGradient = function(
  * @param {number} r1
  * @return {CanvasGradient}
  * @throws {Error}
- * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createRadialGradient = function(
     x0, y0, r0, x1, y1, r1) {};
@@ -167,7 +164,6 @@ CanvasRenderingContext2D.prototype.createRadialGradient = function(
  * @param {string} repetition
  * @return {CanvasPattern}
  * @throws {Error}
- * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createPattern = function(
     image, repetition) {};
@@ -374,7 +370,6 @@ CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
  * @param {number} sh
  * @return {ImageData}
  * @throws {Error}
- * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
 
