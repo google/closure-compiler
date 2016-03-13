@@ -95,6 +95,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testUnreferencedBleedingFunction() {
     assertNoWarning("var x = function y() {}");
+    assertNoWarning("var x = function y() {}; var y = 1;");
   }
 
   public void testReferencedBleedingFunction() {

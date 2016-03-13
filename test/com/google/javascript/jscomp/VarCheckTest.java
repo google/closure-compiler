@@ -173,6 +173,8 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     testSameEs6("class x {}");
     testSameEs6("var x = class x {};");
     testSameEs6("var y = class x {};");
+    testSameEs6("var y = class x { foo() { return new x; } };");
+    testSameEs6("var y = class x extends class { constructor() { x; } } {};");
     testErrorEs6("var Foo = class extends Bar {};", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
