@@ -242,7 +242,7 @@ class PhaseOptimizer implements CompilerPass {
       if (inLoop &&
           !currentPass.name.equals(Compiler.CROSS_MODULE_CODE_MOTION_NAME) &&
           !currentPass.name.equals(Compiler.CROSS_MODULE_METHOD_MOTION_NAME)) {
-        NodeUtil.verifyScopeChanges(mtoc, jsRoot, true, compiler);
+        NodeUtil.verifyScopeChanges(mtoc, jsRoot, true);
       }
     }
   }
