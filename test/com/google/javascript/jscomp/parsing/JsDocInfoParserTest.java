@@ -963,6 +963,19 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(STRING_TYPE, info.getParameterType("baz"));
   }
 
+  public void testParseParam26() throws Exception {
+    JSDocInfo info = parse(
+        "@param {{a: number, b: number}} {a, b}\n*/",
+        "Bad type annotation. expecting a variable name in a @param tag");
+    assertThat(info).isNull();
+  }
+
+  public void testParseParam27() throws Exception {
+    JSDocInfo info = parse(
+        "@param {{a: number, b: number}} '{a, b}'\n*/", "invalid param name \"'\"");
+    assertThat(info).isNull();
+  }
+
   public void testParseThrows1() throws Exception {
     JSDocInfo info = parse("@throws {number} Some number */");
     assertThat(info.getThrownTypes()).hasSize(1);

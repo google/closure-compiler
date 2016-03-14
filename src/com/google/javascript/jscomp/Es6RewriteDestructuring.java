@@ -23,6 +23,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TokenStream;
 
 /**
  * Rewrites ES6 destructuring patterns and default parameters to valid ES3 code.
@@ -134,6 +135,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         } else {
           tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
         }
+        Preconditions.checkState(TokenStream.isJSIdentifier(tempVarName));
 
         Node newParam = IR.name(tempVarName);
         newParam.setJSDocInfo(param.getJSDocInfo());
