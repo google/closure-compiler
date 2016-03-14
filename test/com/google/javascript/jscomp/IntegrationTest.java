@@ -3430,6 +3430,26 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
   }
 
+  // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
+  public void testInlineStringConcat() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(options, LINE_JOINER.join(
+        "function f() {",
+        "  var x = '';",
+        "  x += '1';",
+        "  x += '2';",
+        "  x += '3';",
+        "  x += '4';",
+        "  x += '5';",
+        "  x += '6';",
+        "  x += '7';",
+        "  return x;",
+        "}",
+        "window.f = f;"),
+        "window.a = function() { return '1234567'; }");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
