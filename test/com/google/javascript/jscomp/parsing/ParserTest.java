@@ -34,7 +34,7 @@ import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import java.util.List;
 
-public final class NewParserTest extends BaseJSTypeTestCase {
+public final class ParserTest extends BaseJSTypeTestCase {
   private static final String SUSPICIOUS_COMMENT_WARNING =
       IRFactory.SUSPICIOUS_COMMENT_WARNING;
 
