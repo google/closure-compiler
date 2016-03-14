@@ -559,6 +559,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @param {number} x */ var f = function(x) { function bar() { return x; } }");
     testSame("/** @param {number} x */ var f = function(x) { return; }");
     testSame("/** @param {number} x @return {number} */ var f = function(x) { return x; }");
+    testSame("/** @const {function(number): number} */ var f = function(x) { return x; }");
     testSame("/** @param {number} x @constructor */ var f = function(x) { return x; }");
     testSame("/** @inheritDoc */ var f = function(x) { return x; }");
     testSame("/** @override */ var f = function(x) { return x; }");
