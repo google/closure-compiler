@@ -585,6 +585,23 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var i = 0; return (1 ? (i = 5) : 0) * i;");
   }
 
+  // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
+  public void testInlineStringConcat() {
+    test(LINE_JOINER.join(
+        "function f() {",
+        "  var x = '';",
+        "  x = x + '1';",
+        "  x = x + '2';",
+        "  x = x + '3';",
+        "  x = x + '4';",
+        "  x = x + '5';",
+        "  x = x + '6';",
+        "  x = x + '7';",
+        "  return x;",
+        "}"),
+        "function f() { var x; return '' + '1' + '2' + '3' + '4' + '5' + '6' + '7'; }");
+  }
+
   private void noInline(String input) {
     inline(input, input);
   }

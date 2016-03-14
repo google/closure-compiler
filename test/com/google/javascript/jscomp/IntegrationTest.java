@@ -3447,7 +3447,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "  return x;",
         "}",
         "window.f = f;"),
-        "window.a = function() { var b; b = '1234'; b += '5'; b += '6'; return b += '7'; }");
+        "window.a = function() { return '1234567'; }");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
