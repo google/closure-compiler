@@ -527,6 +527,10 @@ class Normalize implements CompilerPass {
       if (n.isFunction()) {
         moveNamedFunctions(n.getLastChild());
       }
+
+      if (NodeUtil.isCompoundAssignementOp(n)) {
+        normalizeAssignShorthand(n);
+      }
     }
 
     // TODO(johnlenz): Move this to NodeTypeNormalizer once the unit tests are
@@ -680,6 +684,22 @@ class Normalize implements CompilerPass {
           previous = current;
         }
         current = next;
+      }
+    }
+
+    private void normalizeAssignShorthand(Node shorthand) {
+      if (shorthand.getFirstChild().isName()) {
+        Node name = shorthand.getFirstChild();
+        shorthand.setType(NodeUtil.getOpFromAssignmentOp(shorthand));
+        Node parent = shorthand.getParent();
+        Node insertPoint = IR.empty();
+        parent.replaceChild(shorthand, insertPoint);
+        Node assign = IR.assign(name.cloneNode().useSourceInfoFrom(name), shorthand)
+            .useSourceInfoFrom(shorthand);
+        assign.setJSDocInfo(shorthand.getJSDocInfo());
+        shorthand.setJSDocInfo(null);
+        parent.replaceChild(insertPoint, assign);
+        compiler.reportCodeChange();
       }
     }
 
