@@ -53,6 +53,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   public void testSimple() {
     test("let x = 3;", "var x = 3;");
     test("const x = 3;", "/** @const */ var x = 3;");
+    test("const x = 1, y = 2;", "/** @const */ var x = 1; /** @const */ var y = 2;");
     test("const a = 0; a;", "/** @const */ var a = 0; a;");
     test("if (a) { let x; }", "if (a) { var x; }");
     test("function f() { const x = 3; }",

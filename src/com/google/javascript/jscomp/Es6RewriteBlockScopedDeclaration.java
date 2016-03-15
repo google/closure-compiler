@@ -162,6 +162,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         if (n.isConst()) {
           // Normalize declarations like "const x = 1, y = 2;" so that inline
           // type annotations are preserved.
+          Node insertPoint = n;
           for (Node child : n.children()) {
             Node declaration = IR.var(child.detachFromParent());
             declaration.useSourceInfoFrom(n);
@@ -174,7 +175,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
             builder.recordConstancy();
             JSDocInfo info = builder.build();
             declaration.setJSDocInfo(info);
-            n.getParent().addChildAfter(declaration, n);
+            n.getParent().addChildAfter(declaration, insertPoint);
+            insertPoint = declaration;
           }
           n.detachFromParent();
         } else {
