@@ -154,7 +154,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         visitStringKey(n);
         break;
       case Token.CLASS:
-        visitClass(n, parent);
+        visitClass(t, n, parent);
         break;
       case Token.ARRAYLIT:
       case Token.NEW:
@@ -527,7 +527,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    *   <li>The constructor is built.
    * </ol>
    */
-  private void visitClass(final Node classNode, final Node parent) {
+  private void visitClass(NodeTraversal t, final Node classNode, final Node parent) {
     checkClassReassignment(classNode);
     // Collect Metadata
     ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(classNode, parent);
@@ -550,6 +550,8 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     // Process all members of the class
     Node classMembers = classNode.getLastChild();
     for (Node member : classMembers.children()) {
+      maybeCopyClassNameAliasIntoMember(t, classNode, member, metadata);
+
       if ((member.isComputedProp()
               && (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
                   || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)))
@@ -564,9 +566,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           constructor.replaceChild(
               constructor.getFirstChild(), metadata.classNameNode.cloneNode());
         }
-      } else if (member.isEmpty()) {
-        // Do nothing.
-      } else {
+      } else if (!member.isEmpty()) {
         Preconditions.checkState(member.isMemberFunctionDef() || member.isComputedProp(),
             "Unexpected class member:", member);
         Preconditions.checkState(!member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE),
@@ -809,6 +809,34 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         jsDoc.recordNoCollapse();
       }
       membersToDeclare.put(memberName, jsDoc.build());
+    }
+  }
+
+  /**
+   * For "var X = class Y { bar() {} };", copy "var Y = X;" into the body of bar() unless "Y" is
+   * already shadowed in the member function.
+   */
+  private void maybeCopyClassNameAliasIntoMember(NodeTraversal t, Node classNode, Node member,
+      ClassDeclarationMetadata metadata) {
+    if (!member.isEmpty() && metadata.anonymous && metadata.classNameNode.isName()) {
+      String alias = metadata.classNameNode.getString();
+      if (!alias.equals(metadata.fullClassName)) {
+        Node memberFunc = member.getFirstChild();
+        Node memberFuncBody = memberFunc.getLastChild();
+        Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+        Scope memberFuncBodyScope =
+            scopeCreator.createScope(memberFuncBody,
+            scopeCreator.createScope(memberFunc,
+            scopeCreator.createScope(classNode, t.getScope())));
+        Var var = memberFuncBodyScope.getVar(alias);
+        if (var.getNameNode() == metadata.classNameNode) {
+          Node declaration = IR.var(IR.name(alias),
+              NodeUtil.newQName(compiler, metadata.fullClassName))
+              .useSourceInfoIfMissingFromForTree(memberFuncBody);
+          memberFuncBody.addChildToFront(declaration);
+          compiler.reportCodeChange();
+        }
+      }
     }
   }
 
