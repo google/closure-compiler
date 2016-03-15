@@ -60,6 +60,7 @@ import java.util.zip.ZipOutputStream;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class CommandLineRunnerTest extends TestCase {
+  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private Compiler lastCompiler = null;
   private CommandLineRunner lastCommandLineRunner = null;
@@ -1547,43 +1548,48 @@ public final class CommandLineRunnerTest extends TestCase {
     setFilename(3, "app.js");
     test(
         new String[] {
-          "/** @provideGoog */\n"
-              + "/** @const */ var goog = goog || {};\n"
-              + "var COMPILED = false;\n"
-              + "goog.provide = function (arg) {};\n"
-              + "goog.require = function (arg) {};",
+          LINE_JOINER.join(
+              "/** @provideGoog */",
+              "/** @const */ var goog = goog || {};",
+              "var COMPILED = false;",
+              "goog.provide = function (arg) {};",
+              "goog.require = function (arg) {};"),
           "goog.provide('goog.array');",
-          "goog.require('goog.array');"
-              + "function Baz() {}"
-              + "Baz.prototype = {"
-              + "  baz: function() {"
-              + "    return goog.array.last(['asdf','asd','baz']);"
-              + "  },"
-              + "  bar: function () {"
-              + "    return 4 + 4;"
-              + "  }"
-              + "};"
-              + "module.exports = Baz;",
-          "var Baz = require('./Baz');"
-              + "var baz = new Baz();"
-              + "console.log(baz.baz());"
-              + "console.log(baz.bar());"
+          LINE_JOINER.join(
+              "goog.require('goog.array');",
+              "function Baz() {}",
+              "Baz.prototype = {",
+              "  baz: function() {",
+              "    return goog.array.last(['asdf','asd','baz']);",
+              "  },",
+              "  bar: function () {",
+              "    return 4 + 4;",
+              "  }",
+              "};",
+              "module.exports = Baz;"),
+          LINE_JOINER.join(
+              "var Baz = require('./Baz');",
+              "var baz = new Baz();",
+              "console.log(baz.baz());",
+              "console.log(baz.bar());")
         },
         new String[] {
-          "var goog=goog||{},COMPILED=!1;"
-              + "goog.provide=function(a){};goog.require=function(a){};",
+          LINE_JOINER.join(
+              "var goog=goog||{},COMPILED=!1;",
+              "goog.provide=function(a){};goog.require=function(a){};"),
           "goog.array={};",
-          "function Baz$$module$Baz(){}"
-              + "Baz$$module$Baz.prototype={"
-              + "  baz:function(){return goog.array.last(['asdf','asd','baz'])},"
-              + "  bar:function(){return 8}"
-              + "};"
-              + "var module$Baz=Baz$$module$Baz;",
-          "var module$app={},"
-              + "    Baz$$module$app=Baz$$module$Baz,"
-              + "    baz$$module$app=new Baz$$module$app;"
-              + "console.log(baz$$module$app.baz());"
-              + "console.log(baz$$module$app.bar())"
+          LINE_JOINER.join(
+              "function Baz$$module$Baz(){}",
+              "Baz$$module$Baz.prototype={",
+              "  baz:function(){return goog.array.last(['asdf','asd','baz'])},",
+              "  bar:function(){return 8}",
+              "};",
+              "var module$Baz=Baz$$module$Baz;"),
+          LINE_JOINER.join(
+              "var Baz = Baz$$module$Baz,",
+              "    baz = new Baz();",
+              "console.log(baz.baz());",
+              "console.log(baz.bar());")
         });
   }
 
@@ -1603,43 +1609,48 @@ public final class CommandLineRunnerTest extends TestCase {
 
     test(
         new String[] {
-          "/** @provideGoog */"
-              + "/** @const */ var goog = goog || {};"
-              + "var COMPILED = false;"
-              + "goog.provide = function (arg) {};"
-              + "goog.require = function (arg) {};",
+          LINE_JOINER.join(
+              "/** @provideGoog */",
+              "/** @const */ var goog = goog || {};",
+              "var COMPILED = false;",
+              "goog.provide = function (arg) {};",
+              "goog.require = function (arg) {};"),
           "goog.provide('goog.array');",
-          "goog.require('goog.array');"
-              + "function Baz() {}"
-              + "Baz.prototype = {"
-              + "  baz: function() {"
-              + "    return goog.array.last(['asdf','asd','baz']);"
-              + "  },"
-              + "  bar: function () {"
-              + "    return 4 + 4;"
-              + "  }"
-              + "};"
-              + "module.exports = Baz;",
-          "var Baz = require('./Baz');"
-              + "var baz = new Baz();"
-              + "console.log(baz.baz());"
-              + "console.log(baz.bar());"
+          LINE_JOINER.join(
+              "goog.require('goog.array');",
+              "function Baz() {}",
+              "Baz.prototype = {",
+              "  baz: function() {",
+              "    return goog.array.last(['asdf','asd','baz']);",
+              "  },",
+              "  bar: function () {",
+              "    return 4 + 4;",
+              "  }",
+              "};",
+              "module.exports = Baz;"),
+          LINE_JOINER.join(
+              "var Baz = require('./Baz');",
+              "var baz = new Baz();",
+              "console.log(baz.baz());",
+              "console.log(baz.bar());")
         },
         new String[] {
-          "var goog=goog||{},COMPILED=!1;"
-              + "goog.provide=function(a){};goog.require=function(a){};",
+          LINE_JOINER.join(
+          "var goog=goog||{},COMPILED=!1;",
+              "goog.provide=function(a){};goog.require=function(a){};"),
           "goog.array={};",
-          "function Baz$$module$Baz(){}"
-              + "Baz$$module$Baz.prototype={"
-              + "baz:function(){return goog.array.last([\"asdf\",\"asd\",\"baz\"])},"
-              + "bar:function(){return 8}"
-              + "};"
-              + "var module$Baz=Baz$$module$Baz;",
-          "var module$app={},"
-              + "Baz$$module$app=Baz$$module$Baz,"
-              + "baz$$module$app=new Baz$$module$app;"
-              + "console.log(baz$$module$app.baz());"
-              + "console.log(baz$$module$app.bar());"
+          LINE_JOINER.join(
+              "function Baz$$module$Baz(){}",
+              "Baz$$module$Baz.prototype={",
+              "baz:function(){return goog.array.last([\"asdf\",\"asd\",\"baz\"])},",
+              "bar:function(){return 8}",
+              "};",
+              "var module$Baz=Baz$$module$Baz;"),
+          LINE_JOINER.join(
+              "var Baz = Baz$$module$Baz,",
+              "    baz = new Baz();",
+              "console.log(baz.baz());",
+              "console.log(baz.bar());")
         });
   }
 
@@ -1652,20 +1663,25 @@ public final class CommandLineRunnerTest extends TestCase {
     setFilename(1, "app.js");
     test(
         new String[] {
-          "export default class Foo {" + "  bar() { console.log('bar'); }" + "}",
-          "var FooBar = require('./foo');"
-              + "var baz = new FooBar.default();"
-              + "console.log(baz.bar());"
+          LINE_JOINER.join(
+              "export default class Foo {",
+              "  bar() { console.log('bar'); }",
+              "}"),
+          LINE_JOINER.join(
+             "var FooBar = require('./foo');",
+             "var baz = new FooBar.default();",
+             "console.log(baz.bar());")
         },
         new String[] {
-          "var module$foo={},"
-              + "Foo$$module$foo=function(){};"
-              + "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};"
-              + "module$foo.default=Foo$$module$foo;",
-          "var module$app={},"
-              + "FooBar$$module$app=module$foo,"
-              + "baz$$module$app=new FooBar$$module$app.default();"
-              + "console.log(baz$$module$app.bar());"
+          LINE_JOINER.join(
+              "var module$foo={},",
+              "Foo$$module$foo=function(){};",
+              "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};",
+              "module$foo.default=Foo$$module$foo;"),
+          LINE_JOINER.join(
+              "var FooBar = module$foo,",
+              "    baz = new FooBar.default();",
+              "console.log(baz.bar());")
         });
   }
 
@@ -1678,18 +1694,23 @@ public final class CommandLineRunnerTest extends TestCase {
     setFilename(1, "app.js");
     test(
         new String[] {
-          "/** @constructor */ function Foo () {}"
-              + "Foo.prototype.bar = function() { console.log('bar'); };"
-              + "module.exports = Foo;",
-          "import * as FooBar from './foo';" + "var baz = new FooBar();" + "console.log(baz.bar());"
+          LINE_JOINER.join(
+              "/** @constructor */ function Foo () {}",
+              "Foo.prototype.bar = function() { console.log('bar'); };",
+              "module.exports = Foo;"),
+          LINE_JOINER.join(
+              "import * as FooBar from './foo';",
+              "var baz = new FooBar();",
+              "console.log(baz.bar());")
         },
         new String[] {
-          "function Foo$$module$foo(){}"
-              + "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};"
-              + "var module$foo=Foo$$module$foo;",
-          "var module$app={},"
-              + "baz$$module$app$$module$app=new Foo$$module$foo();"
-              + "console.log(baz$$module$app$$module$app.bar());"
+          LINE_JOINER.join(
+              "function Foo$$module$foo(){}",
+              "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};",
+              "var module$foo=Foo$$module$foo;"),
+          LINE_JOINER.join(
+              "var baz$$module$app = new Foo$$module$foo();",
+              "console.log(baz$$module$app.bar());")
         });
   }
 

@@ -81,11 +81,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
   public void process(Node externs, Node root) {
     FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
     NodeTraversal.traverseEs6(compiler, root, finder);
-    if (finder.found) {
-      return;
-    }
     NodeTraversal
-        .traverseEs6(compiler, root, new ProcessCommonJsModulesCallback());
+        .traverseEs6(compiler, root, new ProcessCommonJsModulesCallback(!finder.found));
   }
 
   String inputToModuleName(CompilerInput input) {
@@ -187,6 +184,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private List<Node> moduleExportRefs = new ArrayList<>();
     private List<Node> exportRefs = new ArrayList<>();
     Multiset<String> propertyExportRefCount = HashMultiset.create();
+    private final boolean allowFullRewrite;
+
+    public ProcessCommonJsModulesCallback(boolean allowFullRewrite) {
+      this.allowFullRewrite = allowFullRewrite;
+    }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -221,7 +223,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       // will be rewritten to:
       //
       // if (typeof module == "object" && module.exports) {...}
-      if (n.isIf()) {
+      if (allowFullRewrite && n.isIf()) {
         FindModuleExportStatements commonjsFinder = new FindModuleExportStatements();
         Node condition = n.getFirstChild();
         NodeTraversal.traverseEs6(compiler, condition, commonjsFinder);
@@ -243,7 +245,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         visitScript(t, n);
       }
 
-      if (n.isGetProp() &&
+      if (allowFullRewrite &&  n.isGetProp() &&
           "module.exports".equals(n.getQualifiedName())) {
         Var v = t.getScope().getVar(MODULE);
         // only rewrite "module.exports" if "module" is a free variable,
@@ -255,7 +257,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      if (n.isName() && EXPORTS.equals(n.getString())) {
+      if (allowFullRewrite && n.isName() && EXPORTS.equals(n.getString())) {
         Var v = t.getScope().getVar(n.getString());
         if (v == null || v.isGlobal()) {
           exportRefs.add(n);
@@ -333,9 +335,18 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       String moduleName = inputToModuleName(t.getInput());
 
-      // Rename vars to not conflict in global scope.
-      NodeTraversal.traverseEs6(compiler, script, new SuffixVarsCallback(
-          moduleName));
+      boolean hasExports = !(moduleExportRefs.isEmpty() && exportRefs.isEmpty());
+
+      // Rename vars to not conflict in global scope - but only if the script exports something.
+      // If there are no exports, we still need to rewrite type annotations which
+      // are module paths
+      NodeTraversal.traverseEs6(compiler, script,
+          new SuffixVarsCallback(moduleName, hasExports));
+
+      // If the script has no exports, we don't want to output a goog.provide statement
+      if (!hasExports) {
+        return;
+      }
 
       // Replace all refs to module.exports and exports
       processExports(script, moduleName);
@@ -581,9 +592,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   private class SuffixVarsCallback extends AbstractPostOrderCallback {
     private final String suffix;
+    private final boolean fullRewrite;
 
-    SuffixVarsCallback(String suffix) {
+    SuffixVarsCallback(String suffix, boolean fullRewrite) {
       this.suffix = suffix;
+      this.fullRewrite = fullRewrite;
     }
 
     @Override
@@ -596,7 +609,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       boolean isShorthandObjLitKey = n.isStringKey() && !n.hasChildren();
-      if (n.isName() || isShorthandObjLitKey) {
+      if (fullRewrite && n.isName() || isShorthandObjLitKey) {
         String name = n.getString();
         if (suffix.equals(name)) {
           // TODO(moz): Investigate whether we need to return early in this unlikely situation.
@@ -653,7 +666,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress);
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
-        } else {
+        } else if (fullRewrite) {
           int endIndex = name.indexOf('.');
           if (endIndex == -1) {
             endIndex = name.length();
