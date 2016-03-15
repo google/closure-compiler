@@ -192,7 +192,7 @@ public final class NodeUtil {
    * When it returns a non-null String, this method effectively emulates the
    * <code>String()</code> JavaScript cast function.
    */
-  static String getStringValue(Node n) {
+  public static String getStringValue(Node n) {
     // TODO(user): regex literals as well.
     switch (n.getType()) {
       case Token.STRING:
@@ -279,7 +279,7 @@ public final class NodeUtil {
     return result.toString();
   }
 
-  static Double getNumberValue(Node n) {
+  public static Double getNumberValue(Node n) {
     return getNumberValue(n, false);
   }
 
@@ -445,7 +445,7 @@ public final class NodeUtil {
    * @param n A function or class node
    * @return the node best representing the class's name
    */
-  static Node getNameNode(Node n) {
+  public static Node getNameNode(Node n) {
     Preconditions.checkState(n.isFunction() || n.isClass());
     Node parent = n.getParent();
     switch (parent.getType()) {
@@ -636,7 +636,7 @@ public final class NodeUtil {
    * @param includeFunctions If true, all function expressions will be
    *     treated as literals.
    */
-  static boolean isLiteralValue(Node n, boolean includeFunctions) {
+  public static boolean isLiteralValue(Node n, boolean includeFunctions) {
     switch (n.getType()) {
       case Token.CAST:
         return isLiteralValue(n.getFirstChild(), includeFunctions);
@@ -1469,7 +1469,7 @@ public final class NodeUtil {
     }
   }
 
-  static boolean isUndefined(Node n) {
+  public static boolean isUndefined(Node n) {
     switch (n.getType()) {
       case Token.VOID:
         return true;
@@ -1479,7 +1479,7 @@ public final class NodeUtil {
     return false;
   }
 
-  static boolean isNullOrUndefined(Node n) {
+  public static boolean isNullOrUndefined(Node n) {
     return n.isNull() || isUndefined(n);
   }
 
@@ -1677,28 +1677,28 @@ public final class NodeUtil {
   /**
    * Returns true if the result of node evaluation is always a number
    */
-  static boolean isNumericResult(Node n) {
+  public static boolean isNumericResult(Node n) {
     return getKnownValueType(n) == ValueType.NUMBER;
   }
 
   /**
    * @return Whether the result of node evaluation is always a boolean
    */
-  static boolean isBooleanResult(Node n) {
+  public static boolean isBooleanResult(Node n) {
     return getKnownValueType(n) == ValueType.BOOLEAN;
   }
 
   /**
    * @return Whether the result of node evaluation is always a string
    */
-  static boolean isStringResult(Node n) {
+  public static boolean isStringResult(Node n) {
     return getKnownValueType(n) == ValueType.STRING;
   }
 
   /**
    * @return Whether the result of node evaluation is always an object
    */
-  static boolean isObjectResult(Node n) {
+  public static boolean isObjectResult(Node n) {
     return getKnownValueType(n) == ValueType.OBJECT;
   }
 
@@ -1992,7 +1992,7 @@ public final class NodeUtil {
   /**
    * Is this a GETPROP or GETELEM node?
    */
-  static boolean isGet(Node n) {
+  public static boolean isGet(Node n) {
     return n.isGetProp() || n.isGetElem();
   }
 
@@ -2357,7 +2357,7 @@ public final class NodeUtil {
   }
 
   /** Safely remove children while maintaining a valid node structure. */
-  static void removeChild(Node parent, Node node) {
+  public static void removeChild(Node parent, Node node) {
     if (isTryFinallyNode(parent, node)) {
       if (NodeUtil.hasCatchHandler(getCatchBlock(parent))) {
         // A finally can only be removed if there is a catch.
@@ -2425,7 +2425,7 @@ public final class NodeUtil {
    * Merge a block with its parent block.
    * @return Whether the block was removed.
    */
-  static boolean tryMergeBlock(Node block) {
+  public static boolean tryMergeBlock(Node block) {
     Preconditions.checkState(block.isBlock());
     Node parent = block.getParent();
     // Try to remove the block if its parent is a block/script or if its
@@ -2448,7 +2448,7 @@ public final class NodeUtil {
    * @param node A node
    * @return Whether the call is a NEW or CALL node.
    */
-  static boolean isCallOrNew(Node node) {
+  public static boolean isCallOrNew(Node node) {
     return node.isCall() || node.isNew();
   }
 
@@ -2901,7 +2901,7 @@ public final class NodeUtil {
   /**
    * @return true if n or any of its children are of the specified type
    */
-  static boolean containsType(Node node, int type) {
+  public static boolean containsType(Node node, int type) {
     return containsType(node, type, Predicates.<Node>alwaysTrue());
   }
 
@@ -3523,7 +3523,7 @@ public final class NodeUtil {
   /**
    * @return Whether the predicate is true for the node or any of its children.
    */
-  static boolean has(Node node,
+  public static boolean has(Node node,
                      Predicate<Node> pred,
                      Predicate<Node> traverseChildrenPred) {
     if (pred.apply(node)) {
@@ -3547,7 +3547,7 @@ public final class NodeUtil {
    * @return The number of times the the predicate is true for the node
    * or any of its children.
    */
-  static int getCount(
+  public static int getCount(
       Node n, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     int total = 0;
 
@@ -3592,7 +3592,7 @@ public final class NodeUtil {
    * A post-order traversal, calling Visitor.visit for each child matching
    * the predicate.
    */
-  static void visitPostOrder(Node node,
+  public static void visitPostOrder(Node node,
                      Visitor visitor,
                      Predicate<Node> traverseChildrenPred) {
     if (traverseChildrenPred.apply(node)) {
