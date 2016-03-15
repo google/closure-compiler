@@ -26,11 +26,14 @@ import com.google.javascript.rhino.Token;
  * normalization pass that are not handled by other passes (such as
  * CollapseVariableDeclarations) to avoid making the resulting code larger.
  *
- * Currently this pass only does one thing pushing statements into for-loop
- * initializer. This:
+ * Currently this pass only does two things:
+ *
+ * 1. Push statements into for-loop initializer. This:
  *   var a = 0; for(;a<0;a++) {}
  * becomes:
  *   for(var a = 0;a<0;a++) {}
+ *
+ * 2. Fold assignments like x = x + 1 into x += 1
  *
  * @author johnlenz@google.com (johnlenz)
  */
@@ -55,6 +58,7 @@ class Denormalize implements CompilerPass, Callback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     maybeCollapseIntoForStatements(n, parent);
+    maybeCollapseAssignShorthand(n, parent);
   }
 
   /**
@@ -122,6 +126,69 @@ class Denormalize implements CompilerPass, Callback {
       forNode.replaceChild(oldInitializer, newInitializer);
 
       compiler.reportCodeChange();
+    }
+  }
+
+  private static int getAssignOpFromOp(Node n) {
+    switch (n.getType()) {
+      case Token.BITOR:
+        return Token.ASSIGN_BITOR;
+      case Token.BITXOR:
+        return Token.ASSIGN_BITXOR;
+      case Token.BITAND:
+        return Token.ASSIGN_BITAND;
+      case Token.LSH:
+        return Token.ASSIGN_LSH;
+      case Token.RSH:
+        return Token.ASSIGN_RSH;
+      case Token.URSH:
+        return Token.ASSIGN_URSH;
+      case Token.ADD:
+        return Token.ASSIGN_ADD;
+      case Token.SUB:
+        return Token.ASSIGN_SUB;
+      case Token.MUL:
+        return Token.ASSIGN_MUL;
+      case Token.DIV:
+        return Token.ASSIGN_DIV;
+      case Token.MOD:
+        return Token.ASSIGN_MOD;
+      default:
+        throw new IllegalStateException("Unexpected operator");
+    }
+  }
+
+  private static boolean hasCorrespondingAssignmentOp(Node n) {
+    switch (n.getType()) {
+      case Token.BITOR:
+      case Token.BITXOR:
+      case Token.BITAND:
+      case Token.LSH:
+      case Token.RSH:
+      case Token.URSH:
+      case Token.ADD:
+      case Token.SUB:
+      case Token.MUL:
+      case Token.DIV:
+      case Token.MOD:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  private void maybeCollapseAssignShorthand(Node n, Node parent) {
+    if (n.isAssign() && n.getFirstChild().isName() && hasCorrespondingAssignmentOp(n.getLastChild())
+        && n.getLastChild().getFirstChild().isName()) {
+      Node op = n.getLastChild();
+      int assignOp = getAssignOpFromOp(op);
+      if (n.getFirstChild().getString().equals(op.getFirstChild().getString())) {
+        op.setType(assignOp);
+        Node opDetached = op.detachFromParent();
+        opDetached.setJSDocInfo(n.getJSDocInfo());
+        parent.replaceChild(n, opDetached);
+        compiler.reportCodeChange();
+      }
     }
   }
 }

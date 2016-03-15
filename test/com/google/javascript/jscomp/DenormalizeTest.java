@@ -101,6 +101,22 @@ public final class DenormalizeTest extends CompilerTestCase {
          "for (;a<2;a++) foo()}");
   }
 
+  public void testAssignShorthand() {
+    test("x = x | 1;", "x |= 1;");
+    test("x = x ^ 1;", "x ^= 1;");
+    test("x = x & 1;", "x &= 1;");
+    test("x = x << 1;", "x <<= 1;");
+    test("x = x >> 1;", "x >>= 1;");
+    test("x = x >>> 1;", "x >>>= 1;");
+    test("x = x + 1;", "x += 1;");
+    test("x = x - 1;", "x -= 1;");
+    test("x = x * 1;", "x *= 1;");
+    test("x = x / 1;", "x /= 1;");
+    test("x = x % 1;", "x %= 1;");
+
+    test("/** @suppress {const} */ x = x + 1;", "/** @suppress {const} */ x += 1;");
+  }
+
   /**
    * Create a class to combine the Normalize and Denormalize passes.
    * This is needed because the enableNormalize() call on CompilerTestCase
