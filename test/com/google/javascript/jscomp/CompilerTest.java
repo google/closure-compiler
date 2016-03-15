@@ -125,15 +125,18 @@ public final class CompilerTest extends TestCase {
 
   public void testCommonJSMissingRequire() throws Exception {
     List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("gin.js", "require('missing')"));
+        SourceFile.fromCode("/gin.js", "require('missing')"));
     Compiler compiler = initCompilerForCommonJS(
-        inputs, ImmutableList.of("module$gin"));
+        inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
 
-    assertEquals(1, compiler.getErrorManager().getErrorCount());
-    String error = compiler.getErrorManager().getErrors()[0].toString();
-    assertTrue(
-        "Unexpected error: " + error,
-        error.contains("Failed to load module \"missing\" at gin.js"));
+    ErrorManager manager = compiler.getErrorManager();
+    if (manager.getErrorCount() > 0) {
+      String error = manager.getErrors()[0].toString();
+      assertTrue(
+          "Unexpected error: " + error,
+          error.contains("Failed to load module \"missing\" at /gin.js"));
+    }
+    assertEquals(1, manager.getErrorCount());
   }
 
   private static String normalize(String path) {
@@ -198,12 +201,14 @@ public final class CompilerTest extends TestCase {
   }
 
   private Compiler initCompilerForCommonJS(
-      List<SourceFile> inputs, List<String> entryPoints)
+      List<SourceFile> inputs, List<ModuleIdentifier> entryPoints)
       throws Exception {
     CompilerOptions options = new CompilerOptions();
     options.setIdeMode(true);
-    options.setManageClosureDependencies(entryPoints);
-    options.setClosurePass(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(true);
+    options.dependencyOptions.setEntryPoints(entryPoints);
+    options.dependencyOptions.setEs6ModuleOrder(true);
     options.setProcessCommonJSModules(true);
     Compiler compiler = new Compiler();
     compiler.init(new ArrayList<SourceFile>(), inputs, options);
