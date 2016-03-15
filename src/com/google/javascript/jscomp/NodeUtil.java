@@ -1121,7 +1121,7 @@ public final class NodeUtil {
    *
    * @param callNode - function call node
    */
-  public static boolean functionCallHasSideEffects(Node callNode) {
+  static boolean functionCallHasSideEffects(Node callNode) {
     return functionCallHasSideEffects(callNode, null);
   }
 
@@ -2117,7 +2117,7 @@ public final class NodeUtil {
   /**
    * @return Whether the node represents a FOR-IN loop.
    */
-  static boolean isForIn(Node n) {
+  public static boolean isForIn(Node n) {
     return n.isFor() && n.getChildCount() == 3;
   }
 
@@ -2975,7 +2975,7 @@ public final class NodeUtil {
    * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
    * @return A NAME or GETPROP node
    */
-  static Node newQName(AbstractCompiler compiler, String name) {
+  public static Node newQName(AbstractCompiler compiler, String name) {
     int endPos = name.indexOf('.');
     if (endPos == -1) {
       return newName(compiler, name);
@@ -3051,7 +3051,7 @@ public final class NodeUtil {
    *
    * @return A NAME or GETPROP node
    */
-  public static Node newQName(
+  static Node newQName(
       AbstractCompiler compiler, String name, Node basisNode,
       String originalName) {
     Node node = newQName(compiler, name);
@@ -4026,7 +4026,7 @@ public final class NodeUtil {
   /**
    * @return false iff the result of the expression is not consumed.
    */
-  public static boolean isExpressionResultUsed(Node expr) {
+  static boolean isExpressionResultUsed(Node expr) {
     // TODO(johnlenz): consider sharing some code with trySimpleUnusedResult.
     Node parent = expr.getParent();
     switch (parent.getType()) {
@@ -4297,7 +4297,7 @@ public final class NodeUtil {
     return (int) l;
   }
 
-  static boolean isGoogModuleCall(Node n) {
+  private static boolean isGoogModuleCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
       return (target.matchesQualifiedName("goog.module"));
