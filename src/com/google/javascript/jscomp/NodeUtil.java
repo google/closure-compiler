@@ -1866,6 +1866,54 @@ public final class NodeUtil {
     throw new IllegalArgumentException("Not an assignment op:" + n);
   }
 
+  static int getAssignOpFromOp(Node n) {
+    switch (n.getType()) {
+      case Token.BITOR:
+        return Token.ASSIGN_BITOR;
+      case Token.BITXOR:
+        return Token.ASSIGN_BITXOR;
+      case Token.BITAND:
+        return Token.ASSIGN_BITAND;
+      case Token.LSH:
+        return Token.ASSIGN_LSH;
+      case Token.RSH:
+        return Token.ASSIGN_RSH;
+      case Token.URSH:
+        return Token.ASSIGN_URSH;
+      case Token.ADD:
+        return Token.ASSIGN_ADD;
+      case Token.SUB:
+        return Token.ASSIGN_SUB;
+      case Token.MUL:
+        return Token.ASSIGN_MUL;
+      case Token.DIV:
+        return Token.ASSIGN_DIV;
+      case Token.MOD:
+        return Token.ASSIGN_MOD;
+      default:
+        throw new IllegalStateException("Unexpected operator: " + n);
+    }
+  }
+
+  static boolean hasCorrespondingAssignmentOp(Node n) {
+    switch (n.getType()) {
+      case Token.BITOR:
+      case Token.BITXOR:
+      case Token.BITAND:
+      case Token.LSH:
+      case Token.RSH:
+      case Token.URSH:
+      case Token.ADD:
+      case Token.SUB:
+      case Token.MUL:
+      case Token.DIV:
+      case Token.MOD:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   /**
    * Determines if the given node contains a function statement or function
    * expression.

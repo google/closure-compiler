@@ -92,6 +92,22 @@ public final class NormalizeTest extends CompilerTestCase {
          "if (true)a:{ var a; var b; }");
   }
 
+  public void testAssignShorthand() {
+    test("x |= 1;", "x = x | 1;");
+    test("x ^= 1;", "x = x ^ 1;");
+    test("x &= 1;", "x = x & 1;");
+    test("x <<= 1;", "x = x << 1;");
+    test("x >>= 1;", "x = x >> 1;");
+    test("x >>>= 1;", "x = x >>> 1;");
+    test("x += 1;", "x = x + 1;");
+    test("x -= 1;", "x = x - 1;");
+    test("x *= 1;", "x = x * 1;");
+    test("x /= 1;", "x = x / 1;");
+    test("x %= 1;", "x = x % 1;");
+
+    test("/** @suppress {const} */ x += 1;", "/** @suppress {const} */ x = x + 1;");
+  }
+
   public void testDuplicateVarInExterns() {
     test("var extern;",
          "/** @suppress {duplicate} */ var extern = 3;",
