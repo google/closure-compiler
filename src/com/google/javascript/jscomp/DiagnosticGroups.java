@@ -510,6 +510,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup ANALYZER_CHECKS =
       DiagnosticGroups.registerGroup("analyzerChecks", // undocumented
           CheckForInOverArray.FOR_IN_OVER_ARRAY,
+          CheckForInOverArray.ARRAY_PASSED_TO_GOOG_OBJECT,
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
           ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
