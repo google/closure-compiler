@@ -1309,7 +1309,7 @@ public abstract class CompilerTestCase extends TestCase {
       }
 
       // Check correctness of the changed-scopes-only traversal
-      NodeUtil.verifyScopeChanges(mtoc, mainRoot, false, compiler);
+      NodeUtil.verifyScopeChanges(mtoc, mainRoot, false);
 
       if (expected != null) {
         if (compareAsTree) {

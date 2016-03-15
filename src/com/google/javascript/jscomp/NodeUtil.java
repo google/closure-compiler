@@ -1080,11 +1080,6 @@ public final class NodeUtil {
    * @param callNode - constructor call node
    */
   static boolean constructorCallHasSideEffects(Node callNode) {
-    return constructorCallHasSideEffects(callNode, null);
-  }
-
-  static boolean constructorCallHasSideEffects(
-      Node callNode, AbstractCompiler compiler) {
     if (!callNode.isNew()) {
       throw new IllegalStateException(
           "Expected NEW node, got " + Token.name(callNode.getType()));
@@ -1278,7 +1273,7 @@ public final class NodeUtil {
       case Token.CALL:
         return NodeUtil.functionCallHasSideEffects(n, compiler);
       case Token.NEW:
-        return NodeUtil.constructorCallHasSideEffects(n, compiler);
+        return NodeUtil.constructorCallHasSideEffects(n);
       case Token.NAME:
         // A variable definition.
         return n.hasChildren();
@@ -4178,9 +4173,8 @@ public final class NodeUtil {
   }
 
   /** Checks that the scope roots marked as changed have indeed changed */
-  public static void verifyScopeChanges(Map<Node, Node> map,
-      Node main, boolean verifyUnchangedNodes,
-      AbstractCompiler compiler) {
+  public static void verifyScopeChanges(Map<Node, Node> map, Node main,
+      boolean verifyUnchangedNodes) {
     // compiler is passed only to call compiler.toSource during debugging to see
     // mismatches in scopes
 
