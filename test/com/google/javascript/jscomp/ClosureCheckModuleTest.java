@@ -103,6 +103,13 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
         LINE_JOINER.join(
             "goog.module('xyz');",
             "",
+            "exports = [goog.require('other.x').name];"),
+        REQUIRE_NOT_AT_TOP_LEVEL);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
             "var a = goog.require('foo.a'), b = goog.require('foo.b');"),
         ONE_REQUIRE_PER_DECLARATION);
 

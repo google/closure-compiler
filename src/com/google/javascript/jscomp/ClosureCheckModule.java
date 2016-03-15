@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -94,7 +95,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
         } else if (callee.matchesQualifiedName("goog.provide")) {
           t.report(n, MODULE_AND_PROVIDES);
         } else if (callee.matchesQualifiedName("goog.require")) {
-          checkRequire(t, n);
+          checkRequireCall(t, n, parent);
         }
         break;
       case Token.THIS:
@@ -113,25 +114,26 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
     }
   }
 
-  private void checkRequire(NodeTraversal t, Node n) {
-    Node statement = NodeUtil.getEnclosingStatement(n);
-    if (statement.isExprResult()) {
-      return;
-    }
-    if (NodeUtil.isNameDeclaration(statement)) {
-      if (statement.getChildCount() != 1) {
-        t.report(statement, ONE_REQUIRE_PER_DECLARATION);
+  private void checkRequireCall(NodeTraversal t, Node callNode, Node parent) {
+    Preconditions.checkState(callNode.isCall());
+    switch (parent.getType()) {
+      case Token.EXPR_RESULT:
+        return;
+      case Token.GETPROP:
+        if (parent.getParent().isName()) {
+          checkRequireCall(t, callNode, parent.getParent());
+          return;
+        }
+        break;
+      case Token.NAME:
+      case Token.OBJECT_PATTERN: {
+        Node declaration = parent.getParent();
+        if (declaration.getChildCount() != 1) {
+          t.report(declaration, ONE_REQUIRE_PER_DECLARATION);
+        }
         return;
       }
-      Node rhs = statement.getFirstChild().getLastChild();
-      if (n == rhs) {
-        // var foo = goog.require('ns.foo'); no error.
-        return;
-      } else if (rhs.isGetProp() && n == rhs.getFirstChild()) {
-        // var bar = goog.require('ns.foo').bar; no error
-        return;
-      }
     }
-    t.report(n, REQUIRE_NOT_AT_TOP_LEVEL);
+    t.report(callNode, REQUIRE_NOT_AT_TOP_LEVEL);
   }
 }
