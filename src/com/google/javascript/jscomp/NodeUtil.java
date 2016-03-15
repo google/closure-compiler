@@ -1707,7 +1707,7 @@ public final class NodeUtil {
     return getKnownValueType(n) == ValueType.OBJECT;
   }
 
-  public static boolean mayBeString(Node n) {
+  static boolean mayBeString(Node n) {
     return mayBeString(n, false);
   }
 
