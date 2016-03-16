@@ -1697,10 +1697,10 @@ HTMLVideoElement.prototype.webkitExitFullscreen = function() {};
  */
 HTMLVideoElement.prototype.webkitExitFullScreen = function() {};
 
-/** @type {string} */
+/** @type {number} */
 HTMLVideoElement.prototype.width;
 
-/** @type {string} */
+/** @type {number} */
 HTMLVideoElement.prototype.height;
 
 /** @type {number} */
