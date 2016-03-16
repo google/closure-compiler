@@ -55,7 +55,7 @@ public class Linter {
       externs = SourceFile.fromCode("<Linter externs>", "");
     }
     SourceFile file = SourceFile.fromFile(path.toString());
-    Compiler compiler = new Compiler();
+    Compiler compiler = new Compiler(System.out);
     CompilerOptions options = new CompilerOptions();
     options.setLanguage(LanguageMode.ECMASCRIPT6_STRICT);
 
