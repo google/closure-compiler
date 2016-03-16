@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -83,8 +84,20 @@ public class JsAst implements SourceAst {
     return features;
   }
 
+  /** Simple class to share parse results between compilation jobs */
+  public static class ParseResult {
+    public final ImmutableList<JSError> errors;
+    public final ImmutableList<JSError> warnings;
+    ParseResult(ImmutableList<JSError> errors, ImmutableList<JSError> warnings) {
+      this.errors = errors;
+      this.warnings = warnings;
+    }
+  }
+
   private void parse(AbstractCompiler compiler) {
-    int startErrorCount = compiler.getErrorManager().getErrorCount();
+    ErrorManager errorManager = compiler.getErrorManager();
+    int startErrorCount = errorManager.getErrorCount();
+    int startWarningCount = errorManager.getWarningCount();
     try {
       ParserRunner.ParseResult result = ParserRunner.parse(
           sourceFile,
@@ -104,20 +117,43 @@ public class JsAst implements SourceAst {
           JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
     }
 
-
-    if (root == null ||
+    if (root == null
         // Most passes try to report as many errors as possible,
         // so there may already be errors. We only care if there were
         // errors in the code we just parsed.
-        (compiler.getErrorManager().getErrorCount() > startErrorCount && !compiler.isIdeMode())) {
+        || (errorManager.getErrorCount() > startErrorCount && !compiler.isIdeMode())) {
       // There was a parse error or IOException, so use a dummy block.
+
+
       root = IR.script();
     } else {
       compiler.prepareAst(root);
     }
 
+    if (errorManager.getErrorCount() > startErrorCount
+        || errorManager.getWarningCount() > startWarningCount) {
+      ParseResult result = new ParseResult(
+          slice(errorManager.getErrors(), startErrorCount),
+          slice(errorManager.getWarnings(), startWarningCount));
+      root.putProp(Node.PARSE_RESULTS, result);
+    }
+
     // Set the source name so that the compiler passes can track
     // the source file and module.
     root.setStaticSourceFile(sourceFile);
+  }
+
+  ImmutableList<JSError> slice(JSError[] errors, int startErrorCount) {
+    if (errors.length > startErrorCount) {
+      ImmutableList.Builder<JSError> builder = ImmutableList.<JSError>builder();
+      for (int i = startErrorCount; i < errors.length; i++) {
+        JSError error = errors[i];
+        Preconditions.checkState(error.node == null);
+        builder.add(errors[i]);
+      }
+      return builder.build();
+    } else {
+      return ImmutableList.of();
+    }
   }
 }

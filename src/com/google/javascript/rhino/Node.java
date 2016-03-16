@@ -138,7 +138,9 @@ public class Node implements Serializable {
       IMPLEMENTS = 82,            // "implements" clause in ES6 typed syntax.
       CONSTRUCT_SIGNATURE = 83,   // This node is a TypeScript ConstructSignature
       ACCESS_MODIFIER = 84,       // TypeScript accessibility modifiers (public, protected, private)
-      NON_INDEXABLE = 85;         // Indicates the node should not be indexed by analysis tools.
+      NON_INDEXABLE = 85,         // Indicates the node should not be indexed by analysis tools.
+      PARSE_RESULTS = 86;         // Parse results stored on SCRIPT nodes to allow replaying
+                                  // parse warnings/errors when cloning cached ASTs.
 
   private static final String propToString(int propType) {
       switch (propType) {
@@ -190,6 +192,7 @@ public class Node implements Serializable {
         case CONSTRUCT_SIGNATURE: return "construct_signature";
         case ACCESS_MODIFIER: return "access_modifier";
         case NON_INDEXABLE:      return "non_indexable";
+        case PARSE_RESULTS:      return "parse_results";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
