@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
@@ -499,6 +500,7 @@ public class DiagnosticGroups {
           CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
           CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,
           CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY,
+          CheckUnusedLabels.UNUSED_LABEL,
           CheckUselessBlocks.USELESS_BLOCK,
           RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
           RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
