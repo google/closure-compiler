@@ -29,10 +29,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -57,8 +55,8 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   // Provided and required symbols.
   private final Map<String, String> loadFlags = new TreeMap<>();
-  private final Set<String> provides = new HashSet<>();
-  private final Set<String> requires = new HashSet<>();
+  private final List<String> provides = new ArrayList<>();
+  private final List<String> requires = new ArrayList<>();
   private boolean generatedDependencyInfoFromSource = false;
   private boolean generatedLoadFlags = false;
 
@@ -159,7 +157,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     checkErrorManager();
     try {
       regenerateDependencyInfoIfNecessary();
-      return Collections.unmodifiableSet(requires);
+      return Collections.unmodifiableList(requires);
     } catch (IOException e) {
       compiler.getErrorManager().report(CheckLevel.ERROR,
           JSError.make(AbstractCompiler.READ_ERROR, getName()));
@@ -173,7 +171,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     checkErrorManager();
     try {
       regenerateDependencyInfoIfNecessary();
-      return Collections.unmodifiableSet(provides);
+      return Collections.unmodifiableList(provides);
     } catch (IOException e) {
       compiler.getErrorManager().report(CheckLevel.ERROR,
           JSError.make(AbstractCompiler.READ_ERROR, getName()));
@@ -306,9 +304,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
           provides.add(provide);
         }
         return;
-      } else if (parent != null &&
-          !parent.isExprResult() &&
-          !parent.isScript()) {
+      } else if (parent != null && !parent.isExprResult() && !parent.isScript()) {
         return;
       }
 
