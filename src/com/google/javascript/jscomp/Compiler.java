@@ -1350,7 +1350,7 @@ public class Compiler extends AbstractCompiler {
         // These files could be imported modules which have no exports, but do have side effects.
         Map<String, CompilerInput> inputModuleIdentifiers = new HashMap<>();
         for (CompilerInput input : inputs) {
-          if (!input.getProvides().isEmpty())  {
+          if (!input.getKnownProvides().isEmpty())  {
             continue;
           }
 
@@ -1364,7 +1364,7 @@ public class Compiler extends AbstractCompiler {
         // In this case we must force module rewriting to occur on the imported file
         Map<String, CompilerInput> inputsToRewrite = new HashMap<>();
         for (CompilerInput input : inputs) {
-          for (String require : input.getRequires()) {
+          for (String require : input.getKnownRequires()) {
             if (inputModuleIdentifiers.containsKey(require)
                 && !inputsToRewrite.containsKey(require)) {
               inputsToRewrite.put(require, inputModuleIdentifiers.get(require));

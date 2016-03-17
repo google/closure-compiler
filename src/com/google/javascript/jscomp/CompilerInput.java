@@ -167,6 +167,15 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     }
   }
 
+  /**
+   * Gets a list of types depended on by this input,
+   * but does not attempt to regenerate the dependency information.
+   * Typically this occurs from module rewriting.
+   */
+  Collection<String> getKnownRequires() {
+    return Collections.unmodifiableSet(requires);
+  }
+
   /** Gets a list of types provided by this input. */
   @Override
   public Collection<String> getProvides() {
@@ -179,6 +188,15 @@ public class CompilerInput implements SourceAst, DependencyInfo {
           JSError.make(AbstractCompiler.READ_ERROR, getName()));
       return ImmutableList.of();
     }
+  }
+
+  /**
+   * Gets a list of types provided, but does not attempt to
+   * regenerate the dependency information. Typically this occurs
+   * from module rewriting.
+   */
+  Collection<String> getKnownProvides() {
+    return Collections.unmodifiableSet(provides);
   }
 
   // TODO(nicksantos): Remove addProvide/addRequire/removeRequire once
