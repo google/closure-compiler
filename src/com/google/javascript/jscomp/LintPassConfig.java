@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
+import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
@@ -42,12 +43,11 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
-        checkRequiresAndProvidesSorted,
-        jsdocChecks,
+        earlyLintChecks,
         closureRewriteModule,
         closureGoogScopeAliases,
         closureRewriteClass,
-        lintChecks,
+        lateLintChecks,
         checkRequires);
   }
 
@@ -55,11 +55,21 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
     return ImmutableList.of();
   }
 
-  private final PassFactory checkRequiresAndProvidesSorted =
-      new PassFactory("checkRequiresAndProvidesSorted", true) {
+  private final PassFactory earlyLintChecks =
+      new PassFactory("earlyLintChecks", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new CheckRequiresAndProvidesSorted(compiler);
+          return new CombinedCompilerPass(
+              compiler,
+              ImmutableList.<Callback>of(
+                  new CheckDuplicateCase(compiler),
+                  new CheckEmptyStatements(compiler),
+                  new CheckEnums(compiler),
+                  new CheckJSDocStyle(compiler),
+                  new CheckJSDoc(compiler),
+                  new CheckMissingSemicolon(compiler),
+                  new CheckRequiresAndProvidesSorted(compiler),
+                  new CheckUselessBlocks(compiler)));
         }
       };
 
@@ -87,31 +97,15 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         }
       };
 
-    private final PassFactory jsdocChecks =
-      new PassFactory("jsdocChecks", true) {
+  private final PassFactory lateLintChecks =
+      new PassFactory("lateLintChecks", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CombinedCompilerPass(
               compiler,
               ImmutableList.<Callback>of(
-                  new CheckJSDocStyle(compiler),
-                  new CheckJSDoc(compiler)));
-        }
-      };
-
-  private final PassFactory lintChecks =
-      new PassFactory("lintChecks", true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new CombinedCompilerPass(
-              compiler,
-              ImmutableList.<Callback>of(
-                  new CheckDuplicateCase(compiler),
-                  new CheckEmptyStatements(compiler),
-                  new CheckEnums(compiler),
                   new CheckInterfaces(compiler),
-                  new CheckPrototypeProperties(compiler),
-                  new CheckUselessBlocks(compiler)));
+                  new CheckPrototypeProperties(compiler)));
         }
       };
 

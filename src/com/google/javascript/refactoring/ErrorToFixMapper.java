@@ -64,6 +64,8 @@ public final class ErrorToFixMapper {
    */
   public static SuggestedFix getFixForJsError(JSError error, AbstractCompiler compiler) {
     switch (error.getType().key) {
+      case "JSC_MISSING_SEMICOLON":
+        return getFixForMissingSemicolon(error);
       case "JSC_REQUIRES_NOT_SORTED":
         return getFixForUnsortedRequiresOrProvides("goog.require", error, compiler);
       case "JSC_PROVIDES_NOT_SORTED":
@@ -103,6 +105,13 @@ public final class ErrorToFixMapper {
     return new SuggestedFix.Builder()
         .setOriginalMatchedNode(error.node)
         .delete(error.node).build();
+  }
+
+  private static SuggestedFix getFixForMissingSemicolon(JSError error) {
+    return new SuggestedFix.Builder()
+        .setOriginalMatchedNode(error.node)
+        .insertAfter(error.node, ";")
+        .build();
   }
 
   private static SuggestedFix getFixForInexistentProperty(JSError error) {

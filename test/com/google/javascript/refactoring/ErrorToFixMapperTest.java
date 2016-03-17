@@ -78,6 +78,20 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testInsertSemicolon1() {
+    String code = "var x = 3";
+    String expectedCode = "var x = 3;";
+    assertChanges(code, expectedCode);
+  }
+
+  @Test
+  public void testInsertSemicolon2() {
+    String code = "function f() { return 'it' }";
+    String expectedCode = "function f() { return 'it'; }";
+    assertChanges(code, expectedCode);
+  }
+
+  @Test
   public void testRequiresSorted1() {
     assertChanges(
         LINE_JOINER.join(

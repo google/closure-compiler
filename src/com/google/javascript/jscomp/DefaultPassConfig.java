@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckForInOverArray;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
+import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
@@ -1572,6 +1573,7 @@ public final class DefaultPassConfig extends PassConfig {
           .add(new CheckEnums(compiler))
           .add(new CheckInterfaces(compiler))
           .add(new CheckJSDocStyle(compiler))
+          .add(new CheckMissingSemicolon(compiler))
           .add(new CheckPrototypeProperties(compiler))
           .add(new CheckUnusedPrivateProperties(compiler))
           .add(new CheckUselessBlocks(compiler));

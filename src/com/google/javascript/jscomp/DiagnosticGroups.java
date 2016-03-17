@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckForInOverArray;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
+import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
@@ -494,6 +495,7 @@ public class DiagnosticGroups {
           CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
           CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
           CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS,
+          CheckMissingSemicolon.MISSING_SEMICOLON,
           CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
           CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
           CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,

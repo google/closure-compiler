@@ -127,6 +127,17 @@ public final class SuggestedFix {
     }
 
     /**
+     * Inserts the text after the given node
+     */
+    public Builder insertAfter(Node node, String text) {
+      int position = node.getSourceOffset() + node.getLength();
+      replacements.put(
+          node.getSourceFileName(),
+          new CodeReplacement(position, 0, text));
+      return this;
+    }
+
+    /**
      * Inserts a new node before the provided node.
      */
     public Builder insertBefore(Node nodeToInsertBefore, Node n, AbstractCompiler compiler) {
