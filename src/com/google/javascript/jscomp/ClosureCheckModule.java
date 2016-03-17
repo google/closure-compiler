@@ -55,6 +55,12 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           "JSC_ONE_REQUIRE_PER_DECLARATION",
           "There may only be one goog.require() per var/let/const declaration.");
 
+  // Temporary error, until b/27675195 is fixed.
+  static final DiagnosticType SHORTHAND_OBJLIT_NOT_ALLOWED =
+      DiagnosticType.error(
+          "JSC_SHORTHAND_OBJLIT_NOT_ALLOWED",
+          "Shorthand object literal keys are not allowed in the exports object.");
+
   private final AbstractCompiler compiler;
 
   private Node currentModule = null;
@@ -98,6 +104,11 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           checkRequireCall(t, n, parent);
         }
         break;
+      case Token.ASSIGN:
+        if (n.getFirstChild().matchesQualifiedName("exports")) {
+          checkExportsAssignment(t, n);
+        }
+        break;
       case Token.THIS:
         if (t.inGlobalHoistScope()) {
           t.report(n, GOOG_MODULE_REFERENCES_THIS);
@@ -135,5 +146,17 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       }
     }
     t.report(callNode, REQUIRE_NOT_AT_TOP_LEVEL);
+  }
+
+  private void checkExportsAssignment(NodeTraversal t, Node assign) {
+    Node rhs = assign.getLastChild();
+    if (!rhs.isObjectLit()) {
+      return;
+    }
+    for (Node child = rhs.getFirstChild(); child != null; child = child.getNext()) {
+      if (child.isStringKey() && !child.hasChildren()) {
+        t.report(child, SHORTHAND_OBJLIT_NOT_ALLOWED);
+      }
+    }
   }
 }
