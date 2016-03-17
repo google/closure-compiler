@@ -610,8 +610,10 @@ public final class NodeUtil {
         return Token.LE;
       case Token.LE:
         return Token.GE;
+      default:
+        throw new IllegalArgumentException(
+            "Unexpected token: " + Token.name(type));
     }
-    return Token.ERROR;
   }
 
   /**
