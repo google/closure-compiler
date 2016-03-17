@@ -63,7 +63,7 @@ public class Node implements Serializable {
   private static final long serialVersionUID = 1L;
 
   public static final int
-      JSDOC_INFO_PROP   = 29,     // contains a TokenStream.JSDocInfo object
+      JSDOC_INFO_PROP   = 29,     // contains a JSDocInfo object
 
       VAR_ARGS_NAME     = 30,     // the name node is a variable length
                                   // argument placeholder.
@@ -237,8 +237,8 @@ public class Node implements Serializable {
     }
 
     @Override
-    public TypeDeclarationNode cloneNode() {
-      return copyNodeFields(new TypeDeclarationNode(type, str));
+    public TypeDeclarationNode cloneNode(boolean cloneTypeExprs) {
+      return copyNodeFields(new TypeDeclarationNode(type, str), cloneTypeExprs);
     }
   }
 
@@ -284,8 +284,8 @@ public class Node implements Serializable {
     private double number;
 
     @Override
-    public NumberNode cloneNode() {
-      return copyNodeFields(new NumberNode(number));
+    public NumberNode cloneNode(boolean cloneTypeExprs) {
+      return copyNodeFields(new NumberNode(number), cloneTypeExprs);
     }
   }
 
@@ -359,8 +359,8 @@ public class Node implements Serializable {
     private String str;
 
     @Override
-    public StringNode cloneNode() {
-      return copyNodeFields(new StringNode(type, str));
+    public StringNode cloneNode(boolean cloneTypeExprs) {
+      return copyNodeFields(new StringNode(type, str), cloneTypeExprs);
     }
   }
 
@@ -1934,13 +1934,28 @@ public class Node implements Serializable {
    * @return A detached clone of the Node, specifically excluding its children.
    */
   public Node cloneNode() {
-    return copyNodeFields(new Node(type));
+    return cloneNode(false);
   }
 
-  <T extends Node> T copyNodeFields(T dst) {
+  /**
+   * @return A detached clone of the Node, specifically excluding its children.
+   */
+  protected Node cloneNode(boolean cloneTypeExprs) {
+    return copyNodeFields(new Node(type), cloneTypeExprs);
+  }
+
+  <T extends Node> T copyNodeFields(T dst, boolean cloneTypeExprs) {
     dst.setSourceEncodedPosition(this.sourcePosition);
     dst.setTypeI(this.typei);
     dst.setPropListHead(this.propListHead);
+
+    // TODO(johnlenz): Remove this once JSTypeExpression are immutable
+    if (cloneTypeExprs) {
+      JSDocInfo info = this.getJSDocInfo();
+      if (info != null) {
+        this.setJSDocInfo(info.clone(true));
+      }
+    }
     return dst;
   }
 
@@ -1948,9 +1963,13 @@ public class Node implements Serializable {
    * @return A detached clone of the Node and all its children.
    */
   public Node cloneTree() {
-    Node result = cloneNode();
+    return cloneTree(false);
+  }
+
+  public Node cloneTree(boolean cloneTypeExprs) {
+    Node result = cloneNode(cloneTypeExprs);
     for (Node n2 = getFirstChild(); n2 != null; n2 = n2.getNext()) {
-      Node n2clone = n2.cloneTree();
+      Node n2clone = n2.cloneTree(cloneTypeExprs);
       n2clone.parent = result;
       if (result.last != null) {
         result.last.next = n2clone;
