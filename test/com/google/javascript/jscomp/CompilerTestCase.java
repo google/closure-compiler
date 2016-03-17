@@ -98,11 +98,11 @@ public abstract class CompilerTestCase extends TestCase {
   /** Whether to scan externs for property names. */
   private boolean gatherExternPropertiesEnabled = false;
 
-  /** Whether the Normalize pass runs before pass being tested. */
+  /**
+   * Whether the Normalize pass runs before pass being tested and
+   * whether the expected JS strings should be normalized.
+   */
   private boolean normalizeEnabled = false;
-
-  /** Whether the expected JS strings should be normalized. */
-  private boolean normalizeExpected = false;
 
   /** Whether the tranpilation passes runs before pass being tested. */
   private boolean transpileEnabled = false;
@@ -378,22 +378,8 @@ public abstract class CompilerTestCase extends TestCase {
    * @see Normalize
    */
   protected void enableNormalize() {
-    enableNormalize(true);
+    this.normalizeEnabled = true;
   }
-
-  /**
-   * Perform AST normalization before running the test pass, and anti-normalize
-   * after running it.
-   *
-   * @param normalizeExpected Whether to perform normalization on the
-   * expected JS result.
-   * @see Normalize
-   */
-  protected void enableNormalize(boolean normalizeExpected) {
-    normalizeEnabled = true;
-    this.normalizeExpected = normalizeExpected;
-  }
-
 
   /**
    * Perform AST transpilation before running the test pass.
@@ -1452,7 +1438,7 @@ public abstract class CompilerTestCase extends TestCase {
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     // Only run the normalize pass, if asked.
-    if (normalizeEnabled && normalizeExpected && !compiler.hasErrors()) {
+    if (normalizeEnabled && !compiler.hasErrors()) {
       Normalize normalize = new Normalize(compiler, false);
       normalize.process(externsRoot, mainRoot);
     }

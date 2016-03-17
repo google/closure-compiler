@@ -270,9 +270,10 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testNoNormalizeLabeledExpr() {
-    enableNormalize(true);
+    enableNormalize();
     foldSame("var x; foo:{x = 3;}");
     foldSame("var x; foo:x = 3;");
+    disableNormalize();
   }
 
   public void testShortCircuit1() {

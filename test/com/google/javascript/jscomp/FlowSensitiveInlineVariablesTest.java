@@ -32,7 +32,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   @Override
   public void setUp() {
-    enableNormalize(true);
+    enableNormalize();
   }
 
   @Override

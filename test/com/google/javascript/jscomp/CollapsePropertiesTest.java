@@ -44,7 +44,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    enableNormalize(true);
+    enableNormalize();
     compareJsDoc = false;
   }
 
