@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,6 +99,15 @@ public abstract class PassConfig {
    */
   TypedScope getTopScope() {
     return topScope;
+  }
+
+  /**
+   * Gets additional checking passes that are run always, even in "whitespace only" mode.
+   * For very specific cases where processing is required even in a mode which is intended
+   * not to have any processing - specifically introduced to support goog.module() usage.
+   */
+  protected List<PassFactory> getWhitespaceOnlyPasses() {
+    return Collections.emptyList();
   }
 
   /**
@@ -242,6 +252,11 @@ public abstract class PassConfig {
     PassConfigDelegate(PassConfig delegate) {
       super(delegate.options);
       this.delegate = delegate;
+    }
+
+    @Override
+    protected List<PassFactory> getWhitespaceOnlyPasses() {
+      return delegate.getWhitespaceOnlyPasses();
     }
 
     @Override protected List<PassFactory> getChecks() {

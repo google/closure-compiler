@@ -689,6 +689,11 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
+    if (options.skipNonTranspilationPasses) {
+      // i.e. whitespace-only mode, which will not work with goog.module without:
+      whitespaceOnlyPasses();
+    }
+
     if (!options.skipNonTranspilationPasses || options.lowerFromEs6()) {
       check();
       if (hasErrors()) {
@@ -758,6 +763,17 @@ public class Compiler extends AbstractCompiler {
    */
   boolean precheck() {
     return true;
+  }
+
+  public void whitespaceOnlyPasses() {
+    Tracer t = newTracer("runWhitespaceOnlyPasses");
+    try {
+      for (PassFactory pf : getPassConfig().getWhitespaceOnlyPasses()) {
+        pf.create(this).process(externsRoot, jsRoot);
+      }
+    } finally {
+      stopTracer(t, "runWhitespaceOnlyPasses");
+    }
   }
 
   public void check() {

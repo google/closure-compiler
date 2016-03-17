@@ -967,6 +967,15 @@ public class CompilerOptions {
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
   /**
+   * For use in {@value CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module.
+   */
+  boolean wrapGoogModulesForWhitespaceOnly = true;
+
+  public void setWrapGoogModulesForWhitespaceOnly(boolean enable) {
+    this.wrapGoogModulesForWhitespaceOnly = enable;
+  }
+
+  /**
    * Initializes compiler options. All options are disabled by default.
    *
    * Command-line frontends to the compiler should set these properties

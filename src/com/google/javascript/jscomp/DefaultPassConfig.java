@@ -179,6 +179,15 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   @Override
+  protected List<PassFactory> getWhitespaceOnlyPasses() {
+    List<PassFactory> passes = new ArrayList<>();
+    if (options.wrapGoogModulesForWhitespaceOnly) {
+      passes.add(whitespaceWrapGoogModules);
+    }
+    return passes;
+  }
+
+  @Override
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
 
@@ -196,8 +205,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequiresAndProvidesSorted);
     }
 
-    // goog.module rewrite must happen even if options.skipNonTranspilationPasses is set.
-    if (options.closurePass) {
+    if (!options.skipNonTranspilationPasses && options.closurePass) {
       checks.add(closureCheckModule);
       checks.add(closureRewriteModule);
     }
@@ -223,7 +231,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequires);
     }
 
-    checks.add(checkSideEffects);
+    if (!options.skipNonTranspilationPasses) {
+      checks.add(checkSideEffects);
+    }
 
     if (options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
       checks.add(checkProvides);
@@ -2627,4 +2637,14 @@ public final class DefaultPassConfig extends PassConfig {
       return new RewriteBindThis(compiler);
     }
   };
+
+  /** Rewrites goog.module in whitespace only mode */
+  private final HotSwapPassFactory whitespaceWrapGoogModules =
+      new HotSwapPassFactory("whitespaceWrapGoogModules", true) {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new WhitespaceWrapGoogModules(compiler);
+        }
+      };
+
 }
