@@ -30,7 +30,8 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
       "/** @nosideeffects */ function noSFX() {} \n" +
       "                      function hasSFX() {} \n";
 
-  public FlowSensitiveInlineVariablesTest() {
+  @Override
+  public void setUp() {
     enableNormalize(true);
   }
 
@@ -83,11 +84,13 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   }
 
   public void testDoNotInlineAssignmentOp() {
+    disableNormalize();
     noInline("var x = 1; x += 1;");
     noInline("var x = 1; x -= 1;");
   }
 
   public void testDoNotInlineIntoLhsOfAssign() {
+    disableNormalize();
     noInline("var x = 1; x += 3;");
   }
 
