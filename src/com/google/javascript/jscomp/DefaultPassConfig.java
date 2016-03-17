@@ -40,6 +40,7 @@ import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
@@ -1573,6 +1574,7 @@ public final class DefaultPassConfig extends PassConfig {
           .add(new CheckInterfaces(compiler))
           .add(new CheckJSDocStyle(compiler))
           .add(new CheckPrototypeProperties(compiler))
+          .add(new CheckUnusedLabels(compiler))
           .add(new CheckUnusedPrivateProperties(compiler))
           .add(new CheckUselessBlocks(compiler));
       return combineChecks(compiler, callbacks.build());
