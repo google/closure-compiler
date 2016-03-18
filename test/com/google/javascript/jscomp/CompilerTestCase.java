@@ -224,6 +224,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected CompilerOptions getOptions(CompilerOptions options) {
     options.setLanguageIn(acceptedLanguage);
+    options.setLanguageOut(languageOut);
 
     // This doesn't affect whether checkSymbols is run--it just affects
     // whether variable warnings are filtered.
@@ -630,9 +631,6 @@ public abstract class CompilerTestCase extends TestCase {
     lastCompiler = compiler;
 
     CompilerOptions options = getOptions();
-
-    options.setLanguageIn(acceptedLanguage);
-    options.setLanguageOut(languageOut);
 
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.
