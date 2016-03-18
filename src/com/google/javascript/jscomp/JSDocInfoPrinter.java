@@ -24,7 +24,9 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Prints a JSDocInfo, used for preserving type annotations in ES6 transpilation.
@@ -32,151 +34,173 @@ import java.util.Iterator;
  */
 public final class JSDocInfoPrinter {
   public static String print(JSDocInfo info) {
-    StringBuilder sb = new StringBuilder("/**");
+    boolean multiline = false;
+
+    List<String> parts = new ArrayList<>();
+
+    // TODO(johnlenz): reorder these parts:
+    //  @implements, @extends immediately after @constructor/@record/@interface
+    //  deprecation and suppressions last, etc
+    parts.add("/**");
     if (info.isConstructor()) {
-      sb.append("@constructor ");
+      parts.add("@constructor");
     }
+
     if (info.isInterface() && !info.usesImplicitMatch()) {
-      sb.append("@interface ");
+      parts.add("@interface");
     }
+
     if (info.isInterface() && info.usesImplicitMatch()) {
-      sb.append("@record ");
+      parts.add("@record");
     }
+
     if (info.makesDicts()) {
-      sb.append("@dict ");
+      parts.add("@dict");
     }
+
     if (info.makesStructs()) {
-      sb.append("@struct ");
+      parts.add("@struct");
     }
+
     if (info.makesUnrestricted()) {
-      sb.append("@unrestricted ");
+      parts.add("@unrestricted ");
     }
+
     if (info.isDefine()) {
-      sb.append("@define {");
-      appendTypeNode(sb, info.getType().getRoot());
-      sb.append("} ");
+      parts.add(buildAnnotationWithType("define", info.getType()));
     }
 
     if (info.isOverride()) {
-      sb.append("@override ");
-    }
-    if (info.isConstant() && !info.isDefine()) {
-      sb.append("@const ");
-    }
-    if (info.isDeprecated()) {
-      sb.append("@deprecated ");
-      sb.append(info.getDeprecationReason() + "\n");
-    }
-    if (info.isExport()) {
-      sb.append("@export ");
-    } else if (info.getVisibility() != null
-        && info.getVisibility() != Visibility.INHERITED) {
-      sb.append("@" + info.getVisibility().toString().toLowerCase() + " ");
+      parts.add("@override");
     }
 
-    Iterator<String> suppressions = info.getSuppressions().iterator();
-    if (suppressions.hasNext()) {
-      sb.append("@suppress {");
-      while (suppressions.hasNext()) {
-        sb.append(suppressions.next());
-        if (suppressions.hasNext()) {
-          sb.append(",");
-        }
-      }
-      sb.append("}\n");
+    if (info.isConstant() && !info.isDefine()) {
+      parts.add("@const");
+    }
+
+    if (info.isDeprecated()) {
+      parts.add("@deprecated " + info.getDeprecationReason());
+      multiline = true;
+    }
+
+    if (info.isExport()) {
+      parts.add("@export");
+    } else if (info.getVisibility() != null
+        && info.getVisibility() != Visibility.INHERITED) {
+      parts.add("@" + info.getVisibility().toString().toLowerCase());
+    }
+
+    Set<String> suppressions = info.getSuppressions();
+    if (!suppressions.isEmpty()) {
+      parts.add("@suppress {" + Joiner.on(',').join(suppressions) + "}");
+      multiline = true;
     }
 
     ImmutableList<String> names = info.getTemplateTypeNames();
     if (!names.isEmpty()) {
-      sb.append("@template ");
-      Joiner.on(',').appendTo(sb, names);
-      sb.append("\n"); // @template needs a newline afterwards
+      parts.add("@template " + Joiner.on(',').join(names));
+      multiline = true;
     }
 
     if (info.getParameterCount() > 0) {
+      multiline = true;
       for (String name : info.getParameterNames()) {
-        sb.append("\n@param ");
-        if (info.getParameterType(name) != null) {
-          sb.append("{");
-          appendTypeNode(sb, info.getParameterType(name).getRoot());
-          sb.append("} ");
-        }
-        sb.append(name);
-        sb.append(' ');
+        parts.add("@param " + buildParamType(name, info.getParameterType(name)));
       }
     }
+
     if (info.hasReturnType()) {
-      sb.append("\n@return {");
-      appendTypeNode(sb, info.getReturnType().getRoot());
-      sb.append("} ");
+      multiline = true;
+      parts.add(buildAnnotationWithType("return", info.getReturnType()));
     }
+
     if (info.hasThisType()) {
-      sb.append("\n@this {");
-      Node typeNode = info.getThisType().getRoot();
-      if (typeNode.getType() == Token.BANG) {
-        appendTypeNode(sb, typeNode.getFirstChild());
-      } else {
-        appendTypeNode(sb, typeNode);
-      }
-      sb.append("} ");
+      multiline = true;
+      Node typeNode = stripBang(info.getThisType().getRoot());
+      parts.add(buildAnnotationWithType("this", typeNode));
     }
+
     if (info.hasBaseType()) {
-      sb.append("\n@extends {");
-      Node typeNode = info.getBaseType().getRoot();
-      if (typeNode.getType() == Token.BANG) {
-        appendTypeNode(sb, typeNode.getFirstChild());
-      } else {
-        appendTypeNode(sb, typeNode);
-      }
-      sb.append("} ");
+      multiline = true;
+      Node typeNode = stripBang(info.getBaseType().getRoot());
+      parts.add(buildAnnotationWithType("extends", typeNode));
     }
+
     for (JSTypeExpression type : info.getExtendedInterfaces()) {
-      sb.append("\n@extends {");
-      Node typeNode = type.getRoot();
-      if (typeNode.getType() == Token.BANG) {
-        appendTypeNode(sb, typeNode.getFirstChild());
-      } else {
-        appendTypeNode(sb, typeNode);
-      }
-      sb.append("} ");
+      multiline = true;
+      Node typeNode = stripBang(type.getRoot());
+      parts.add(buildAnnotationWithType("extends", typeNode));
     }
+
     for (JSTypeExpression type : info.getImplementedInterfaces()) {
-      sb.append("\n@implements {");
-      Node typeNode = type.getRoot();
-      if (typeNode.getType() == Token.BANG) {
-        appendTypeNode(sb, typeNode.getFirstChild());
-      } else {
-        appendTypeNode(sb, typeNode);
-      }
-      sb.append("} ");
+      multiline = true;
+      Node typeNode = stripBang(type.getRoot());
+      parts.add(buildAnnotationWithType("implements", typeNode));
     }
+
     if (info.hasTypedefType()) {
-      sb.append("@typedef {");
-      appendTypeNode(sb, info.getTypedefType().getRoot());
-      sb.append("} ");
+      parts.add(buildAnnotationWithType("typedef", info.getTypedefType()));
     }
+
     if (info.hasType() && !info.isDefine()) {
       if (info.isInlineType()) {
-        sb.append(" ");
-        appendTypeNode(sb, info.getType().getRoot());
-        sb.append(" ");
+        parts.add(typeNode(info.getType().getRoot()));
       } else {
-        sb.append("@type {");
-        appendTypeNode(sb, info.getType().getRoot());
-        sb.append("} ");
+        parts.add(buildAnnotationWithType("type", info.getType()));
       }
     }
+
     if (!info.getThrownTypes().isEmpty()) {
-      sb.append("@throws {");
-      appendTypeNode(sb, info.getThrownTypes().get(0).getRoot());
-      sb.append("} ");
+      parts.add(buildAnnotationWithType("throws", info.getThrownTypes().get(0)));
     }
+
     if (info.hasEnumParameterType()) {
-      sb.append("@enum {");
-      appendTypeNode(sb, info.getEnumParameterType().getRoot());
-      sb.append("} ");
+      parts.add(buildAnnotationWithType("enum", info.getEnumParameterType()));
     }
-    sb.append("*/");
+    parts.add("*/");
+
+    StringBuilder sb = new StringBuilder();
+    if (multiline) {
+      Joiner.on("\n ").appendTo(sb, parts);
+    } else {
+      Joiner.on(" ").appendTo(sb, parts);
+    }
+    sb.append((multiline) ? "\n" : " ");
+    return sb.toString();
+  }
+
+  private static Node stripBang(Node typeNode) {
+    if (typeNode.getType() == Token.BANG) {
+      typeNode = typeNode.getFirstChild();
+    }
+    return typeNode;
+  }
+
+  private static String buildAnnotationWithType(String annotation, JSTypeExpression type) {
+    return buildAnnotationWithType(annotation, type.getRoot());
+  }
+
+  private static String buildAnnotationWithType(String annotation, Node type) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("@");
+    sb.append(annotation);
+    sb.append(" {");
+    appendTypeNode(sb, type);
+    sb.append("}");
+    return sb.toString();
+  }
+
+  private static String buildParamType(String name, JSTypeExpression type) {
+    if (type != null) {
+      return "{" + typeNode(type.getRoot()) + "} " + name;
+    } else {
+      return name;
+    }
+  }
+
+  private static String typeNode(Node typeNode) {
+    StringBuilder sb = new StringBuilder();
+    appendTypeNode(sb, typeNode);
     return sb.toString();
   }
 

@@ -1205,8 +1205,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testDeprecatedAnnotationIncludesNewline() {
     String js = LINE_JOINER.join(
-        "/**@deprecated See {@link replacementClass} for more details.",
-        "@type {number} */var x;",
+        "/**",
+        " @deprecated See {@link replacementClass} for more details.",
+        " @type {number}",
+        " */",
+        "var x;",
         "");
 
     assertPrettyPrint(js, js);
@@ -1933,11 +1936,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testPreserveTypeAnnotations() {
     preserveTypeAnnotations = true;
-    assertPrintSame("/**@type {foo} */var bar");
-    assertPrintSame("function/** void */f(/** string */s,/** number */n){}");
+    assertPrintSame("/** @type {foo} */ var bar");
+    assertPrintSame("function/** void */ f(/** string */ s,/** number */ n){}");
 
     preserveTypeAnnotations = false;
-    assertPrint("/** @type {foo} */var bar;", "var bar");
+    assertPrint("/** @type {foo} */ var bar;", "var bar");
   }
 
   public void testDefaultParameters() {

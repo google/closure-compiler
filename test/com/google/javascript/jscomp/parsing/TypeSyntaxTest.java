@@ -184,7 +184,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   public void testFunctionReturn_typeInJsdocOnly() {
     parse("function /** string */ foo() { return 'hello'; }",
-        "function/** string */foo() {\n  return 'hello';\n}");
+        "function/** string */ foo() {\n  return 'hello';\n}");
   }
 
   public void testCompositeType() {
