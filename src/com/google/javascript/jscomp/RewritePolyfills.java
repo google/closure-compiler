@@ -452,7 +452,8 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
     private void addInstaller(Node sourceNode, String function) {
       // Find the module
-      InputId inputId = sourceNode.getInputId();
+      Node enclosingScript = NodeUtil.getEnclosingScript(sourceNode);
+      InputId inputId = enclosingScript.getInputId();
       CompilerInput input = inputId != null ? compiler.getInput(inputId) : null;
       JSModule module = input != null ? input.getModule() : null;
       InjectedInstaller injected = new InjectedInstaller(module, function);
@@ -460,7 +461,6 @@ public class RewritePolyfills implements HotSwapCompilerPass {
         changed = true;
         Node installer = compiler.parseSyntheticCode(function).removeChildren();
         installer.useSourceInfoIfMissingFromForTree(sourceNode);
-        Node enclosingScript = NodeUtil.getEnclosingScript(sourceNode);
         enclosingScript.addChildrenToFront(installer);
       }
     }

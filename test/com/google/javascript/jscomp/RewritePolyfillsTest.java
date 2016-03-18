@@ -211,6 +211,38 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     assertTrue(getLastCompiler().needsEs6Runtime);
   }
 
+  public void testPrototypeMethodsInstalled_JSModule() {
+    setLanguage(ES6, ES5);
+
+    JSModule[] jsModules = createModules("x.endsWith(y);");
+
+    test(
+        jsModules,
+        new String[] {
+          "$jscomp.string.endsWith$install(); x.endsWith(y);"
+        });
+  }
+
+  /**
+   * If multiple modules use the same method, the install() method is
+   * called in both, so that code works regardless of which module is
+   * loaded first.
+   */
+  public void testPrototypeMethodsInstalled_JSModules() {
+    setLanguage(ES6, ES5);
+
+    JSModule[] jsModules = createModules(
+        "x.endsWith(y);",
+        "w.endsWith(z);");
+
+    test(
+        jsModules,
+        new String[] {
+          "$jscomp.string.endsWith$install(); x.endsWith(y);",
+          "$jscomp.string.endsWith$install(); w.endsWith(z);",
+        });
+  }
+  
   public void testPrototypeMethodsNotInstalledIfSufficientLanguageOut() {
     setLanguage(ES6, ES6);
     testSame("x.normalize();");
