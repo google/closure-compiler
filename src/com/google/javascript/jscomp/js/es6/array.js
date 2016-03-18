@@ -52,11 +52,9 @@ $jscomp.array.arrayIterator_ = function(array, func) {
         return {value: func(index, array[index]), done: false};
       }
       iter.next = $jscomp.array.done_;
-      return $jscomp.array.done_(); // Note: fresh instance every time
+      return $jscomp.array.done_();  // Note: fresh instance every time
     },
-    [Symbol.iterator]() {
-      return iter;
-    },
+    [Symbol.iterator]() { return iter; },
   };
   return iter;
 };
@@ -115,7 +113,7 @@ $jscomp.array.from = function(
       result.push(opt_mapFn.call(opt_thisArg, next.value));
     }
   } else {
-    const len = arrayLike.length; // need to support non-iterables
+    const len = arrayLike.length;  // need to support non-iterables
     for (let i = 0; i < len; i++) {
       result.push(opt_mapFn.call(opt_thisArg, arrayLike[i]));
     }
@@ -153,13 +151,30 @@ $jscomp.array.entries = function() {
 
 
 /**
+ * Installs non-enumberable methods
+ * @param {string} method
+ * @param {!Function} fn
+ * @private
+ */
+$jscomp.array.installHelper_ = function(method, fn) {
+  // Don't set Array.prototype values in IE8.
+  // NOTE: Object.defineProperties doesn't exist on IE8, and while
+  // Object.defineProperty does it works for DOM objects.
+  if (!Array.prototype[method] && Object.defineProperties &&
+      Object.defineProperty) {
+    Object.defineProperty(
+        Array.prototype, method,
+        {configurable: true, enumerable: false, writable: true, value: fn});
+  }
+};
+
+
+/**
  * Installs the Array.prototype.entries polyfill.
  * @suppress {const,checkTypes}
  */
 $jscomp.array.entries$install = function() {
-  if (!Array.prototype.entries) {
-    Array.prototype.entries = $jscomp.array.entries;
-  }
+  $jscomp.array.installHelper_('entries', $jscomp.array.entries);
 };
 
 
@@ -179,9 +194,7 @@ $jscomp.array.keys = function() {
  * @suppress {const,checkTypes}
  */
 $jscomp.array.keys$install = function() {
-  if (!Array.prototype.keys) {
-    Array.prototype.keys = $jscomp.array.keys;
-  }
+  $jscomp.array.installHelper_('keys', $jscomp.array.keys);
 };
 
 
@@ -202,9 +215,7 @@ $jscomp.array.values = function() {
  * @suppress {const,checkTypes}
  */
 $jscomp.array.values$install = function() {
-  if (!Array.prototype.values) {
-    Array.prototype.values = $jscomp.array.values;
-  }
+  $jscomp.array.installHelper_('values', $jscomp.array.values);
 };
 
 
@@ -253,9 +264,7 @@ $jscomp.array.copyWithin = function(target, start, opt_end = void 0) {
  * @suppress {const,checkTypes}
  */
 $jscomp.array.copyWithin$install = function() {
-  if (!Array.prototype.copyWithin) {
-    Array.prototype.copyWithin = $jscomp.array.copyWithin;
-  }
+  $jscomp.array.installHelper_('copyWithin', $jscomp.array.copyWithin);
 };
 
 
@@ -284,9 +293,7 @@ $jscomp.array.fill = function(value, opt_start = 0, opt_end = void 0) {
  * @suppress {const,checkTypes}
  */
 $jscomp.array.fill$install = function() {
-  if (!Array.prototype.fill) {
-    Array.prototype.fill = $jscomp.array.fill;
-  }
+  $jscomp.array.installHelper_('fill', $jscomp.array.fill);
 };
 
 
@@ -309,9 +316,7 @@ $jscomp.array.find = function(callback, opt_thisArg = void 0) {
  * @suppress {const,checkTypes}
  */
 $jscomp.array.find$install = function() {
-  if (!Array.prototype.find) {
-    Array.prototype.find = $jscomp.array.find;
-  }
+  $jscomp.array.installHelper_('find', $jscomp.array.find);
 };
 
 
@@ -334,7 +339,5 @@ $jscomp.array.findIndex = function(callback, opt_thisArg = void 0) {
  * @suppress {const,checkTypes}
  */
 $jscomp.array.findIndex$install = function() {
-  if (!Array.prototype.findIndex) {
-    Array.prototype.findIndex = $jscomp.array.findIndex;
-  }
+  $jscomp.array.installHelper_('findIndex', $jscomp.array.findIndex);
 };

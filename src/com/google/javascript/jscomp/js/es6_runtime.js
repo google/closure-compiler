@@ -231,12 +231,20 @@ $jscomp.array.entries = function() {
   });
 };
 /**
+ @private
+ @param {string} method
+ @param {!Function} fn
+ */
+$jscomp.array.installHelper_ = function(method, fn) {
+  if (!Array.prototype[method] && Object.defineProperties && Object.defineProperty) {
+    Object.defineProperty(Array.prototype, method, {configurable:true, enumerable:false, writable:true, value:fn});
+  }
+};
+/**
  @suppress {checkTypes,const}
  */
 $jscomp.array.entries$install = function() {
-  if (!Array.prototype.entries) {
-    Array.prototype.entries = $jscomp.array.entries;
-  }
+  $jscomp.array.installHelper_("entries", $jscomp.array.entries);
 };
 /**
  @return {!IteratorIterable<number>}
@@ -251,9 +259,7 @@ $jscomp.array.keys = function() {
  @suppress {checkTypes,const}
  */
 $jscomp.array.keys$install = function() {
-  if (!Array.prototype.keys) {
-    Array.prototype.keys = $jscomp.array.keys;
-  }
+  $jscomp.array.installHelper_("keys", $jscomp.array.keys);
 };
 /**
  @template VALUE
@@ -269,9 +275,7 @@ $jscomp.array.values = function() {
  @suppress {checkTypes,const}
  */
 $jscomp.array.values$install = function() {
-  if (!Array.prototype.values) {
-    Array.prototype.values = $jscomp.array.values;
-  }
+  $jscomp.array.installHelper_("values", $jscomp.array.values);
 };
 /**
  @template VALUE
@@ -313,9 +317,7 @@ $jscomp.array.copyWithin = function(target, start, opt_end) {
  @suppress {checkTypes,const}
  */
 $jscomp.array.copyWithin$install = function() {
-  if (!Array.prototype.copyWithin) {
-    Array.prototype.copyWithin = $jscomp.array.copyWithin;
-  }
+  $jscomp.array.installHelper_("copyWithin", $jscomp.array.copyWithin);
 };
 /**
  @template VALUE
@@ -340,9 +342,7 @@ $jscomp.array.fill = function(value, opt_start, opt_end) {
  @suppress {checkTypes,const}
  */
 $jscomp.array.fill$install = function() {
-  if (!Array.prototype.fill) {
-    Array.prototype.fill = $jscomp.array.fill;
-  }
+  $jscomp.array.installHelper_("fill", $jscomp.array.fill);
 };
 /**
  @template VALUE,THIS
@@ -358,9 +358,7 @@ $jscomp.array.find = function(callback, opt_thisArg) {
  @suppress {checkTypes,const}
  */
 $jscomp.array.find$install = function() {
-  if (!Array.prototype.find) {
-    Array.prototype.find = $jscomp.array.find;
-  }
+  $jscomp.array.installHelper_("find", $jscomp.array.find);
 };
 /**
  @template VALUE,THIS
@@ -376,9 +374,7 @@ $jscomp.array.findIndex = function(callback, opt_thisArg) {
  @suppress {checkTypes,const}
  */
 $jscomp.array.findIndex$install = function() {
-  if (!Array.prototype.findIndex) {
-    Array.prototype.findIndex = $jscomp.array.findIndex;
-  }
+  $jscomp.array.installHelper_("findIndex", $jscomp.array.findIndex);
 };
 /** */ /**
  @constructor

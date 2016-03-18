@@ -20,6 +20,7 @@ goog.setTestOnly();
 const jsunit = goog.require('goog.testing.jsunit');
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('testing');
+const userAgent = goog.require('goog.userAgent');
 
 const assertDeepEquals = testing.assertDeepEquals;
 
@@ -73,6 +74,11 @@ function *iterator(...args) {
 }
 
 testSuite({
+  shouldRunTests() {
+    // Disable tests for IE8 and below.
+    return !userAgent.IE || userAgent.isVersionOrHigher(9);
+  },
+
   testFrom() {
     const arr = ['a', 2, 'c'];
     assertNotEquals(arr, Array.from(arr));
