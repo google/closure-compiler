@@ -69,7 +69,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckJSDoc(compiler),
                   new CheckMissingSemicolon(compiler),
                   new CheckRequiresAndProvidesSorted(compiler),
-                  new CheckUselessBlocks(compiler)));
+                  new CheckUselessBlocks(compiler),
+                  new ClosureCheckModule(compiler)));
         }
       };
 
