@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -27,7 +26,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.javascript.jscomp.deps.ClosureSortedDependencies;
 import com.google.javascript.jscomp.deps.Es6SortedDependencies;
@@ -164,7 +162,6 @@ public final class JSModuleGraph {
     JsonArray modules = new JsonArray();
     for (JSModule module : getAllModules()) {
       JsonObject node = new JsonObject();
-      try {
         node.add("name", new JsonPrimitive(module.getName()));
         JsonArray deps = new JsonArray();
         node.add("dependencies", deps);
@@ -183,9 +180,6 @@ public final class JSModuleGraph {
               input.getSourceFile().getOriginalPath()));
         }
         modules.add(node);
-      } catch (JsonParseException e) {
-        Throwables.propagate(e);
-      }
     }
     return modules;
   }
