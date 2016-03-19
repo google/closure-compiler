@@ -1206,8 +1206,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testDeprecatedAnnotationIncludesNewline() {
     String js = LINE_JOINER.join(
         "/**",
-        " @deprecated See {@link replacementClass} for more details.",
         " @type {number}",
+        " @deprecated See {@link replacementClass} for more details.",
         " */",
         "var x;",
         "");

@@ -38,20 +38,33 @@ public final class JSDocInfoPrinter {
 
     List<String> parts = new ArrayList<>();
 
-    // TODO(johnlenz): reorder these parts:
-    //  @implements, @extends immediately after @constructor/@record/@interface
-    //  deprecation and suppressions last, etc
+    // order:
+    //   export|public|private|package|protected
+    //   const
+    //   dict|struct|unrestricted
+    //   constructor|interface|record
+    //   extends
+    //   implements
+    //   this
+    //   param
+    //   return
+    //   throws
+    //   template
+    //   override
+    //   type|define|typedef|enum
+    //   suppress
+    //   deprecated
     parts.add("/**");
-    if (info.isConstructor()) {
-      parts.add("@constructor");
+
+    if (info.isExport()) {
+      parts.add("@export");
+    } else if (info.getVisibility() != null
+        && info.getVisibility() != Visibility.INHERITED) {
+      parts.add("@" + info.getVisibility().toString().toLowerCase());
     }
 
-    if (info.isInterface() && !info.usesImplicitMatch()) {
-      parts.add("@interface");
-    }
-
-    if (info.isInterface() && info.usesImplicitMatch()) {
-      parts.add("@record");
+    if (info.isConstant() && !info.isDefine()) {
+      parts.add("@const");
     }
 
     if (info.makesDicts()) {
@@ -66,58 +79,16 @@ public final class JSDocInfoPrinter {
       parts.add("@unrestricted ");
     }
 
-    if (info.isDefine()) {
-      parts.add(buildAnnotationWithType("define", info.getType()));
+    if (info.isConstructor()) {
+      parts.add("@constructor");
     }
 
-    if (info.isOverride()) {
-      parts.add("@override");
+    if (info.isInterface() && !info.usesImplicitMatch()) {
+      parts.add("@interface");
     }
 
-    if (info.isConstant() && !info.isDefine()) {
-      parts.add("@const");
-    }
-
-    if (info.isDeprecated()) {
-      parts.add("@deprecated " + info.getDeprecationReason());
-      multiline = true;
-    }
-
-    if (info.isExport()) {
-      parts.add("@export");
-    } else if (info.getVisibility() != null
-        && info.getVisibility() != Visibility.INHERITED) {
-      parts.add("@" + info.getVisibility().toString().toLowerCase());
-    }
-
-    Set<String> suppressions = info.getSuppressions();
-    if (!suppressions.isEmpty()) {
-      parts.add("@suppress {" + Joiner.on(',').join(suppressions) + "}");
-      multiline = true;
-    }
-
-    ImmutableList<String> names = info.getTemplateTypeNames();
-    if (!names.isEmpty()) {
-      parts.add("@template " + Joiner.on(',').join(names));
-      multiline = true;
-    }
-
-    if (info.getParameterCount() > 0) {
-      multiline = true;
-      for (String name : info.getParameterNames()) {
-        parts.add("@param " + buildParamType(name, info.getParameterType(name)));
-      }
-    }
-
-    if (info.hasReturnType()) {
-      multiline = true;
-      parts.add(buildAnnotationWithType("return", info.getReturnType()));
-    }
-
-    if (info.hasThisType()) {
-      multiline = true;
-      Node typeNode = stripBang(info.getThisType().getRoot());
-      parts.add(buildAnnotationWithType("this", typeNode));
+    if (info.isInterface() && info.usesImplicitMatch()) {
+      parts.add("@record");
     }
 
     if (info.hasBaseType()) {
@@ -138,11 +109,39 @@ public final class JSDocInfoPrinter {
       parts.add(buildAnnotationWithType("implements", typeNode));
     }
 
-    if (info.hasTypedefType()) {
-      parts.add(buildAnnotationWithType("typedef", info.getTypedefType()));
+    if (info.hasThisType()) {
+      multiline = true;
+      Node typeNode = stripBang(info.getThisType().getRoot());
+      parts.add(buildAnnotationWithType("this", typeNode));
     }
 
-    if (info.hasType() && !info.isDefine()) {
+    if (info.getParameterCount() > 0) {
+      multiline = true;
+      for (String name : info.getParameterNames()) {
+        parts.add("@param " + buildParamType(name, info.getParameterType(name)));
+      }
+    }
+
+    if (info.hasReturnType()) {
+      multiline = true;
+      parts.add(buildAnnotationWithType("return", info.getReturnType()));
+    }
+
+    if (!info.getThrownTypes().isEmpty()) {
+      parts.add(buildAnnotationWithType("throws", info.getThrownTypes().get(0)));
+    }
+
+    ImmutableList<String> names = info.getTemplateTypeNames();
+    if (!names.isEmpty()) {
+      parts.add("@template " + Joiner.on(',').join(names));
+      multiline = true;
+    }
+
+    if (info.isOverride()) {
+      parts.add("@override");
+    }
+
+   if (info.hasType() && !info.isDefine()) {
       if (info.isInlineType()) {
         parts.add(typeNode(info.getType().getRoot()));
       } else {
@@ -150,13 +149,29 @@ public final class JSDocInfoPrinter {
       }
     }
 
-    if (!info.getThrownTypes().isEmpty()) {
-      parts.add(buildAnnotationWithType("throws", info.getThrownTypes().get(0)));
+    if (info.isDefine()) {
+      parts.add(buildAnnotationWithType("define", info.getType()));
+    }
+
+    if (info.hasTypedefType()) {
+      parts.add(buildAnnotationWithType("typedef", info.getTypedefType()));
     }
 
     if (info.hasEnumParameterType()) {
       parts.add(buildAnnotationWithType("enum", info.getEnumParameterType()));
     }
+
+    Set<String> suppressions = info.getSuppressions();
+    if (!suppressions.isEmpty()) {
+      parts.add("@suppress {" + Joiner.on(',').join(suppressions) + "}");
+      multiline = true;
+    }
+
+    if (info.isDeprecated()) {
+      parts.add("@deprecated " + info.getDeprecationReason());
+      multiline = true;
+    }
+
     parts.add("*/");
 
     StringBuilder sb = new StringBuilder();

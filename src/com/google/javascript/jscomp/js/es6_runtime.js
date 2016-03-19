@@ -17,9 +17,9 @@
 // GENERATED FILE. DO NOT EDIT. REBUILD WITH build_runtime.sh.
 
 'use strict';/**
- @suppress {undefinedVars}
  @param {!Object} maybeGlobal
  @return {!Object}
+ @suppress {undefinedVars}
  */
 $jscomp.getGlobal = function(maybeGlobal) {
   return typeof window != "undefined" && window === maybeGlobal ? maybeGlobal : typeof global != "undefined" ? global : maybeGlobal;
@@ -37,9 +37,9 @@ $jscomp.initSymbol = function() {
 };
 /** @private @type {number} */ $jscomp.symbolCounter_ = 0;
 /**
- @suppress {reportUnknownTypes}
  @param {string} description
  @return {symbol}
+ @suppress {reportUnknownTypes}
  */
 $jscomp.Symbol = function(description) {
   return /** @type {symbol} */ ("jscomp_symbol_" + description + $jscomp.symbolCounter_++);
@@ -56,10 +56,10 @@ $jscomp.initSymbolIterator = function() {
   };
 };
 /**
- @suppress {reportUnknownTypes}
- @template T
  @param {(string|!Array<T>|!Iterable<T>|!Iterator<T>|!Arguments<T>)} iterable
  @return {!Iterator<T>}
+ @template T
+ @suppress {reportUnknownTypes}
  */
 $jscomp.makeIterator = function(iterable) {
   $jscomp.initSymbolIterator();
@@ -76,9 +76,9 @@ $jscomp.makeIterator = function(iterable) {
   }});
 };
 /**
- @template T
  @param {!Iterator<T>} iterator
  @return {!Array<T>}
+ @template T
  */
 $jscomp.arrayFromIterator = function(iterator) {
   var i;
@@ -89,9 +89,9 @@ $jscomp.arrayFromIterator = function(iterator) {
   return arr;
 };
 /**
- @template T
  @param {(string|!Array<T>|!Iterable<T>|!Arguments<T>)} iterable
  @return {!Array<T>}
+ @template T
  */
 $jscomp.arrayFromIterable = function(iterable) {
   if (iterable instanceof Array) {
@@ -131,11 +131,11 @@ $jscomp.array.done_ = function() {
 };
 /**
  @private
- @suppress {checkTypes}
- @template INPUT,OUTPUT
  @param {!IArrayLike<INPUT>} array
  @param {function(number,INPUT):OUTPUT} func
  @return {!IteratorIterable<OUTPUT>}
+ @template INPUT,OUTPUT
+ @suppress {checkTypes}
  */
 $jscomp.array.arrayIterator_ = function(array, func) {
   if (array instanceof String) {
@@ -159,11 +159,11 @@ $jscomp.array.arrayIterator_ = function(array, func) {
 };
 /**
  @private
- @template THIS,VALUE
  @param {!IArrayLike<VALUE>} array
  @param {function(this:THIS,VALUE,number,!IArrayLike<VALUE>):*} callback
  @param {THIS} thisArg
  @return {{i:number,v:(VALUE|undefined)}}
+ @template THIS,VALUE
  */
 $jscomp.array.findInternal_ = function(array, callback, thisArg) {
   if (array instanceof String) {
@@ -179,11 +179,11 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
   return {i:-1, v:void 0};
 };
 /**
- @template INPUT,OUTPUT,THIS
  @param {(!IArrayLike<INPUT>|!Iterator<INPUT>|!Iterable<INPUT>)} arrayLike
  @param {function(this:THIS,INPUT):OUTPUT=} opt_mapFn
  @param {THIS=} opt_thisArg
  @return {!Array<OUTPUT>}
+ @template INPUT,OUTPUT,THIS
  */
 $jscomp.array.from = function(arrayLike, opt_mapFn, opt_thisArg) {
   opt_mapFn = opt_mapFn === undefined ? function(x) {
@@ -221,9 +221,9 @@ $jscomp.array.of = function(elements) {
   return $jscomp.array.from(elements$10);
 };
 /**
- @template VALUE
- @return {!IteratorIterable<!Array<(number|VALUE)>>}
  @this {!IArrayLike<VALUE>}
+ @return {!IteratorIterable<!Array<(number|VALUE)>>}
+ @template VALUE
  */
 $jscomp.array.entries = function() {
   return $jscomp.array.arrayIterator_(this, function(i, v) {
@@ -247,8 +247,8 @@ $jscomp.array.entries$install = function() {
   $jscomp.array.installHelper_("entries", $jscomp.array.entries);
 };
 /**
- @return {!IteratorIterable<number>}
  @this {!IArrayLike}
+ @return {!IteratorIterable<number>}
  */
 $jscomp.array.keys = function() {
   return $jscomp.array.arrayIterator_(this, function(i) {
@@ -262,9 +262,9 @@ $jscomp.array.keys$install = function() {
   $jscomp.array.installHelper_("keys", $jscomp.array.keys);
 };
 /**
- @template VALUE
- @return {!IteratorIterable<VALUE>}
  @this {!IArrayLike<VALUE>}
+ @return {!IteratorIterable<VALUE>}
+ @template VALUE
  */
 $jscomp.array.values = function() {
   return $jscomp.array.arrayIterator_(this, function(_, v) {
@@ -278,12 +278,12 @@ $jscomp.array.values$install = function() {
   $jscomp.array.installHelper_("values", $jscomp.array.values);
 };
 /**
- @template VALUE
+ @this {!IArrayLike<VALUE>}
  @param {number} target
  @param {number} start
  @param {number=} opt_end
  @return {!IArrayLike<VALUE>}
- @this {!IArrayLike<VALUE>}
+ @template VALUE
  */
 $jscomp.array.copyWithin = function(target, start, opt_end) {
   /** @const */ var len = this.length;
@@ -320,12 +320,12 @@ $jscomp.array.copyWithin$install = function() {
   $jscomp.array.installHelper_("copyWithin", $jscomp.array.copyWithin);
 };
 /**
- @template VALUE
+ @this {!IArrayLike<VALUE>}
  @param {VALUE} value
  @param {number=} opt_start
  @param {number=} opt_end
  @return {!IArrayLike<VALUE>}
- @this {!IArrayLike<VALUE>}
+ @template VALUE
  */
 $jscomp.array.fill = function(value, opt_start, opt_end) {
   opt_start = opt_start === undefined ? 0 : opt_start;
@@ -345,11 +345,11 @@ $jscomp.array.fill$install = function() {
   $jscomp.array.installHelper_("fill", $jscomp.array.fill);
 };
 /**
- @template VALUE,THIS
+ @this {!IArrayLike<VALUE>}
  @param {function(this:THIS,VALUE,number,!IArrayLike<VALUE>):*} callback
  @param {THIS=} opt_thisArg
  @return {(VALUE|undefined)}
- @this {!IArrayLike<VALUE>}
+ @template VALUE,THIS
  */
 $jscomp.array.find = function(callback, opt_thisArg) {
   return $jscomp.array.findInternal_(this, callback, opt_thisArg).v;
@@ -361,11 +361,11 @@ $jscomp.array.find$install = function() {
   $jscomp.array.installHelper_("find", $jscomp.array.find);
 };
 /**
- @template VALUE,THIS
+ @this {!IArrayLike<VALUE>}
  @param {function(this:THIS,VALUE,number,!IArrayLike<VALUE>):*} callback
  @param {THIS=} opt_thisArg
  @return {(VALUE|undefined)}
- @this {!IArrayLike<VALUE>}
+ @template VALUE,THIS
  */
 $jscomp.array.findIndex = function(callback, opt_thisArg) {
   return $jscomp.array.findInternal_(this, callback, opt_thisArg).i;
@@ -377,11 +377,11 @@ $jscomp.array.findIndex$install = function() {
   $jscomp.array.installHelper_("findIndex", $jscomp.array.findIndex);
 };
 /** */ /**
- @constructor
  @struct
- @template KEY,VALUE
- @param {(!Iterable<!Array<(KEY|VALUE)>>|!Array<!Array<(KEY|VALUE)>>)=} opt_iterable
+ @constructor
  @implements {Iterable<!Array<(KEY|VALUE)>>}
+ @param {(!Iterable<!Array<(KEY|VALUE)>>|!Array<!Array<(KEY|VALUE)>>)=} opt_iterable
+ @template KEY,VALUE
  */
 $jscomp.Map = function(opt_iterable) {
   opt_iterable = opt_iterable === undefined ? [] : opt_iterable;
@@ -426,9 +426,9 @@ $jscomp.Map.checkBrowserConformance_ = function() {
 };
 /**
  @private
- @suppress {checkTypes}
- @template KEY,VALUE
  @return {!$jscomp.Map.Entry_<KEY,VALUE>}
+ @template KEY,VALUE
+ @suppress {checkTypes}
  */
 $jscomp.Map.createHead_ = function() {
   /** @const */ var head = /** */ {};
@@ -564,9 +564,9 @@ $jscomp.Map.prototype.values = function() {
   });
 };
 /**
- @template THIS
  @param {function(this:THIS,VALUE,KEY,!$jscomp.Map<KEY,VALUE>)} callback
  @param {THIS=} opt_thisArg
+ @template THIS
  */
 $jscomp.Map.prototype.forEach = function(callback, opt_thisArg) {
   for (var $jscomp$iter$2 = $jscomp.makeIterator(this.entries()), $jscomp$key$entry = $jscomp$iter$2.next();!$jscomp$key$entry.done;$jscomp$key$entry = $jscomp$iter$2.next()) {
@@ -576,9 +576,9 @@ $jscomp.Map.prototype.forEach = function(callback, opt_thisArg) {
 };
 /**
  @private
- @template T
  @param {function(!$jscomp.Map.Entry_<KEY,VALUE>):T} func
  @return {!IteratorIterable<T>}
+ @template T
  */
 $jscomp.Map.prototype.iter_ = function(func) {
   /** @const */ var map = this;
@@ -615,8 +615,8 @@ $jscomp.Map.defineProperty_ = Object.defineProperty ? function(obj, key, value) 
   obj[key] = String(value);
 };
 /**
- @record
  @private
+ @record
  @template KEY,VALUE
  */
 $jscomp.Map.Entry_ = function() {
@@ -637,7 +637,7 @@ $jscomp.Map.Entry_ = function() {
     $jscomp.initSymbolIterator();
     $jscomp.Map.prototype[Symbol.iterator] = $jscomp.Map.prototype.entries;
     $jscomp.initSymbol();
-    /** @const @private @type {symbol} */ $jscomp.Map.key_ = Symbol("map-id-key");
+    /** @private @const @type {symbol} */ $jscomp.Map.key_ = Symbol("map-id-key");
   }
   $jscomp.Map$install = function() {
   };
@@ -950,15 +950,15 @@ $jscomp.object.is = function(left, right) {
   }
 };
 /** */ /**
- @constructor
  @struct
- @template VALUE
- @param {(!Iterable<VALUE>|!Array<VALUE>)=} opt_iterable
+ @constructor
  @implements {Iterable<VALUE>}
+ @param {(!Iterable<VALUE>|!Array<VALUE>)=} opt_iterable
+ @template VALUE
  */
 $jscomp.Set = function(opt_iterable) {
   opt_iterable = opt_iterable === undefined ? [] : opt_iterable;
-  /** @const @private @type {!$jscomp.Map<VALUE,VALUE>} */ this.map_ = new $jscomp.Map;
+  /** @private @const @type {!$jscomp.Map<VALUE,VALUE>} */ this.map_ = new $jscomp.Map;
   if (opt_iterable) {
     for (var $jscomp$iter$8 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$8.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$8.next()) {
       /** @const */ var item = $jscomp$key$item.value;
@@ -1033,9 +1033,9 @@ $jscomp.Set.prototype.values = function() {
   return this.map_.values();
 };
 /**
- @template THIS
  @param {function(this:THIS,VALUE,VALUE,!$jscomp.Set<VALUE>)} callback
  @param {THIS=} opt_thisArg
+ @template THIS
  */
 $jscomp.Set.prototype.forEach = function(callback, opt_thisArg) {
   /** @const */ var $jscomp$this = this;
@@ -1095,9 +1095,9 @@ $jscomp.string.fromCodePoint = function(codepoints) {
   return result;
 };
 /**
+ @this {*}
  @param {number} copies
  @return {string}
- @this {*}
  */
 $jscomp.string.repeat = function(copies) {
   var /** string */ string = this.toString();
@@ -1126,9 +1126,9 @@ $jscomp.string.repeat$install = function() {
   }
 };
 /**
+ @this {*}
  @param {number} position
  @return {(number|undefined)}
- @this {*}
  */
 $jscomp.string.codePointAt = function(position) {
   /** @const */ var string = this.toString();
@@ -1157,10 +1157,10 @@ $jscomp.string.codePointAt$install = function() {
   }
 };
 /**
+ @this {*}
  @param {string} searchString
  @param {number=} opt_position
  @return {boolean}
- @this {*}
  */
 $jscomp.string.includes = function(searchString, opt_position) {
   opt_position = opt_position === undefined ? 0 : opt_position;
@@ -1177,10 +1177,10 @@ $jscomp.string.includes$install = function() {
   }
 };
 /**
+ @this {*}
  @param {string} searchString
  @param {number=} opt_position
  @return {boolean}
- @this {*}
  */
 $jscomp.string.startsWith = function(searchString, opt_position) {
   opt_position = opt_position === undefined ? 0 : opt_position;
@@ -1207,10 +1207,10 @@ $jscomp.string.startsWith$install = function() {
   }
 };
 /**
+ @this {*}
  @param {string} searchString
  @param {number=} opt_position
  @return {boolean}
- @this {*}
  */
 $jscomp.string.endsWith = function(searchString, opt_position) {
   $jscomp.string.noRegExp_(searchString, "endsWith");

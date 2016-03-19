@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
@@ -33,6 +34,7 @@ import junit.framework.TestCase;
  * @author moz@google.com (Michael Zhou)
  */
 public final class JSDocInfoPrinterTest extends TestCase {
+  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private JSDocInfoBuilder builder;
 
@@ -309,8 +311,12 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("string"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals(
-        "/**\n @deprecated See {@link otherClass} for more info.\n @type {string}\n */\n",
+    assertEquals(LINE_JOINER.join(
+        "/**",
+        " @type {string}",
+        " @deprecated See {@link otherClass} for more info.",
+        " */",
+        ""),
         JSDocInfoPrinter.print(info));
   }
 
