@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 
 import java.util.List;
@@ -69,6 +70,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckJSDoc(compiler),
                   new CheckMissingSemicolon(compiler),
                   new CheckRequiresAndProvidesSorted(compiler),
+                  new CheckUnusedLabels(compiler),
                   new CheckUselessBlocks(compiler),
                   new ClosureCheckModule(compiler)));
         }
