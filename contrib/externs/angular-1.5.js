@@ -987,7 +987,7 @@ angular.version.codeName = '';
  *****************************************************************************/
 
 /**
- * @typedef {function()}
+ * @typedef {function(string=)}
  */
 angular.$anchorScroll;
 
