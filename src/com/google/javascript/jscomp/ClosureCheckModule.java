@@ -45,6 +45,11 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       "JSC_GOOG_MODULE_USES_THROW",
       "The body of a goog.module cannot use 'throw'.");
 
+  static final DiagnosticType REFERENCE_TO_MODULE_GLOBAL_NAME =
+      DiagnosticType.error(
+          "JSC_REFERENCE_TO_MODULE_GLOBAL_NAME",
+          "References to the global name of a module are not allowed. Perhaps you meant exports?");
+
   static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
       DiagnosticType.error(
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL",
@@ -63,7 +68,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
 
-  private Node currentModule = null;
+  private String currentModuleName = null;
 
   public ClosureCheckModule(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -95,8 +100,9 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       case Token.CALL:
         Node callee = n.getFirstChild();
         if (callee.matchesQualifiedName("goog.module")) {
-          if (currentModule == null) {
-            currentModule = n;
+          if (currentModuleName == null) {
+            Node moduleNameNode = n.getSecondChild();
+            currentModuleName = moduleNameNode.isString() ? moduleNameNode.getString() : "";
           } else {
             t.report(n, MULTIPLE_MODULES_IN_FILE);
           }
@@ -121,8 +127,13 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           t.report(n, GOOG_MODULE_USES_THROW);
         }
         break;
+      case Token.GETPROP:
+        if (currentModuleName != null && n.matchesQualifiedName(currentModuleName)) {
+          t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
+        }
+        break;
       case Token.SCRIPT:
-        currentModule = null;
+        currentModuleName = null;
         break;
     }
   }

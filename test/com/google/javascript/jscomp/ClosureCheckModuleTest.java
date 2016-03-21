@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_T
 import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_AND_PROVIDES;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
 import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
+import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_MODULE_GLOBAL_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REQUIRE_NOT_AT_TOP_LEVEL;
 import static com.google.javascript.jscomp.ClosureCheckModule.SHORTHAND_OBJLIT_NOT_ALLOWED;
 
@@ -83,6 +84,10 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "",
             "var x = goog.require('other.x');"),
         MULTIPLE_MODULES_IN_FILE);
+  }
+
+  public void testGoogModuleReferencesGlobalName() {
+    testError("goog.module('x.y.z');\nx.y.z = function() {};", REFERENCE_TO_MODULE_GLOBAL_NAME);
   }
 
   public void testIllegalExports() {
