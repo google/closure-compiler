@@ -121,7 +121,7 @@ $jscomp.inherits = function(childCtor, parentCtor) {
     }
   }
 };
-/** */ $jscomp.array = $jscomp.array || {};
+/** */ /** @const */ $jscomp.array = $jscomp.array || {};
 /**
  @private
  @return {{done:boolean}}
@@ -642,7 +642,7 @@ $jscomp.Map.Entry_ = function() {
   $jscomp.Map$install = function() {
   };
 };
-/** */ $jscomp.math = $jscomp.math || {};
+/** */ /** @const */ $jscomp.math = $jscomp.math || {};
 /**
  @param {*} x
  @return {number}
@@ -874,7 +874,7 @@ $jscomp.math.cbrt = function(x) {
   /** @const */ var y = Math.pow(Math.abs(x), 1 / 3);
   return x < 0 ? -y : y;
 };
-/** */ $jscomp.number = $jscomp.number || {};
+/** */ /** @const */ $jscomp.number = $jscomp.number || {};
 /**
  @param {*} x
  @return {boolean}
@@ -912,7 +912,7 @@ $jscomp.number.isSafeInteger = function(x) {
 /** @const @type {number} */ $jscomp.number.EPSILON = Math.pow(2, -52);
 /** @const @type {number} */ $jscomp.number.MAX_SAFE_INTEGER = 9007199254740991;
 /** @const @type {number} */ $jscomp.number.MIN_SAFE_INTEGER = -9007199254740991;
-/** */ $jscomp.object = $jscomp.object || {};
+/** */ /** @const */ $jscomp.object = $jscomp.object || {};
 /**
  @param {!Object} target
  @param {...?Object} sources
@@ -1056,7 +1056,7 @@ $jscomp.Set.prototype.forEach = function(callback, opt_thisArg) {
   $jscomp.Set$install = function() {
   };
 };
-/** */ $jscomp.string = $jscomp.string || {};
+/** */ /** @const */ $jscomp.string = $jscomp.string || {};
 /**
  @private
  @param {*} str

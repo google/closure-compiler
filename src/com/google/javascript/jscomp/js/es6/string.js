@@ -18,6 +18,7 @@
  * @fileoverview Polyfills for ES6 String functions.
  */
 
+/** @const */
 $jscomp.string = $jscomp.string || {};
 
 
