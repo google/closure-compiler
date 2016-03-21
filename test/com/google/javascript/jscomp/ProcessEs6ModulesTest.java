@@ -427,6 +427,20 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "  useBaz(baz) {}",
             "}",
             "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
+
+    testModules(
+        LINE_JOINER.join(
+            "export class Foo {",
+            "  /** @param {/other.Baz} baz */",
+            "  useBaz(baz) {}",
+            "}"),
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "class Foo$$module$testcode {",
+            "  /** @param {module$other.Baz} baz */",
+            "  useBaz(baz) {}",
+            "}",
+            "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
   }
 
   public void testRenameTypedef() {
