@@ -110,7 +110,7 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   tempCtor.prototype = parentCtor.prototype;
   childCtor.prototype = new tempCtor;
   /** @override */ childCtor.prototype.constructor = childCtor;
-  for (/** @const */ var p in parentCtor) {
+  for (var p in parentCtor) {
     if ($jscomp.global.Object.defineProperties) {
       var descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(parentCtor, p);
       if (descriptor) {
@@ -929,7 +929,7 @@ $jscomp.object.assign = function(target, sources) {
     if (!source) {
       continue;
     }
-    for (/** @const */ var key in source) {
+    for (var key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
         target[key] = source[key];
       }
