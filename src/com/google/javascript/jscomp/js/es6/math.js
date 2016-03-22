@@ -18,7 +18,6 @@
  * @fileoverview Polyfills for ES6 Math functions.
  */
 
-/** @const */
 $jscomp.math = $jscomp.math || {};
 
 

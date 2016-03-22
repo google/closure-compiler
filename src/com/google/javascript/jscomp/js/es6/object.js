@@ -18,7 +18,6 @@
  * @fileoverview Polyfills for ES6 Object functions.
  */
 
-/** @const */
 $jscomp.object = $jscomp.object || {};
 
 

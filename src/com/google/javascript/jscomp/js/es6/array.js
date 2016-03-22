@@ -18,7 +18,6 @@
  * @fileoverview Polyfills for ES6 Array functions.
  */
 
-/** @const */
 $jscomp.array = $jscomp.array || {};
 
 

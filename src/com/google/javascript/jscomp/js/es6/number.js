@@ -18,7 +18,6 @@
  * @fileoverview Polyfills for ES6 Number functions.
  */
 
-/** @const */
 $jscomp.number = $jscomp.number || {};
 
 
