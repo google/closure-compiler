@@ -77,11 +77,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   // Warnings
   static final DiagnosticType MISSING_REQUIRE_WARNING =
       DiagnosticType.disabled(
-          "JSC_MISSING_REQUIRE_WARNING", "''{0}'' used but not required");
+          "JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
 
   static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
-      "JSC_EXTRA_REQUIRE_WARNING",
-      "''{0}'' required but not used");
+      "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");
 
   static final DiagnosticType DUPLICATE_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_DUPLICATE_REQUIRE_WARNING",
