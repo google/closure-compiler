@@ -336,7 +336,7 @@ class IRFactory {
         config, errorReporter, tree.sourceComments);
 
     // don't call transform as we don't want standard jsdoc handling.
-    Node n = irFactory.justTransform(tree);
+    Node n = irFactory.transformDispatcher.process(tree);
     irFactory.setSourceInfo(n, tree);
 
     if (tree.sourceComments != null) {
@@ -362,7 +362,7 @@ class IRFactory {
       ProgramTree tree, StaticSourceFile sourceFile, String sourceString) {
     IRFactory irFactory =
         new IRFactory(sourceString, sourceFile, NULL_CONFIG, NULL_REPORTER, tree.sourceComments);
-    Node n = irFactory.justTransform(tree);
+    Node n = irFactory.transformDispatcher.process(tree);
     irFactory.validateAll(n);
 
     return irFactory.features;
@@ -501,6 +501,22 @@ class IRFactory {
     return label.getFirstChild().getString().equals(labelName.getString());
   }
 
+  private void validateLabel(Node n) {
+    if (n.isLabel()) {
+      Node labelName = n.getFirstChild();
+      for (Node parent = n.getParent();
+           parent != null && !parent.isFunction(); parent = parent.getParent()) {
+        if (parent.isLabel() && labelsMatch(parent, labelName)) {
+          errorReporter.error(
+              SimpleFormat.format(DUPLICATE_LABEL, labelName.getString()),
+              sourceName,
+              n.getLineno(), n.getCharno());
+          break;
+        }
+      }
+    }
+  }
+
   private void validateParameters(Node n) {
     if (n.isParamList()) {
       Node c = n.getFirstChild();
@@ -521,7 +537,7 @@ class IRFactory {
     }
   }
 
-  private JSDocInfo recordJsDoc(SourceRange location, JSDocInfo info) {
+  JSDocInfo recordJsDoc(SourceRange location, JSDocInfo info) {
     if (info != null && info.hasTypeInformation()) {
       hasJsDocTypeAnnotations = true;
       if (features.isTypeScript()) {
@@ -532,26 +548,10 @@ class IRFactory {
     return info;
   }
 
-  private void recordTypeSyntax(SourceRange location) {
+  void recordTypeSyntax(SourceRange location) {
     if (hasJsDocTypeAnnotations) {
       errorReporter.error("Can only have JSDoc or inline type annotations, not both",
           sourceName, lineno(location.start), charno(location.start));
-    }
-  }
-
-  private void validateLabel(Node n) {
-    if (n.isLabel()) {
-      Node labelName = n.getFirstChild();
-      for (Node parent = n.getParent();
-           parent != null && !parent.isFunction(); parent = parent.getParent()) {
-        if (parent.isLabel() && labelsMatch(parent, labelName)) {
-          errorReporter.error(
-              SimpleFormat.format(DUPLICATE_LABEL, labelName.getString()),
-              sourceName,
-              n.getLineno(), n.getCharno());
-          break;
-        }
-      }
     }
   }
 
@@ -575,7 +575,7 @@ class IRFactory {
     }
   }
 
-  private Node transformBlock(ParseTree node) {
+  Node transformBlock(ParseTree node) {
     Node irNode = transform(node);
     if (!irNode.isBlock()) {
       if (irNode.isEmpty()) {
@@ -722,16 +722,14 @@ class IRFactory {
     }
   }
 
-  private JSDocInfo handleJsDoc(
+  JSDocInfo handleJsDoc(
       com.google.javascript.jscomp.parsing.parser.Token token) {
     return handleJsDoc(getJsDoc(token));
   }
 
-
-
-  private Node transform(ParseTree tree) {
+  Node transform(ParseTree tree) {
     JSDocInfo info = handleJsDoc(tree);
-    Node node = justTransform(tree);
+    Node node = transformDispatcher.process(tree);
     if (info != null) {
       node = maybeInjectCastNode(tree, info, node);
       node.setJSDocInfo(info);
@@ -757,9 +755,9 @@ class IRFactory {
    * @see <a href="http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs">
    *   Using Inline Doc Comments</a>
    */
-  private Node transformNodeWithInlineJsDoc(ParseTree node) {
+  Node transformNodeWithInlineJsDoc(ParseTree node) {
     JSDocInfo info = handleInlineJsDoc(node);
-    Node irNode = justTransform(node);
+    Node irNode = transformDispatcher.process(node);
     if (info != null) {
       irNode.setJSDocInfo(info);
     }
@@ -767,16 +765,16 @@ class IRFactory {
     return irNode;
   }
 
-  private JSDocInfo handleInlineJsDoc(ParseTree node) {
+  JSDocInfo handleInlineJsDoc(ParseTree node) {
     return handleInlineJsDoc(node.location);
   }
 
-  private JSDocInfo handleInlineJsDoc(
+  JSDocInfo handleInlineJsDoc(
       com.google.javascript.jscomp.parsing.parser.Token token) {
     return handleInlineJsDoc(token.location);
   }
 
-  private JSDocInfo handleInlineJsDoc(SourceRange location) {
+  JSDocInfo handleInlineJsDoc(SourceRange location) {
     Comment comment = getJsDoc(location);
     if (comment != null && !comment.value.contains("@")) {
       return recordJsDoc(location, parseInlineTypeDoc(comment));
@@ -785,7 +783,7 @@ class IRFactory {
     }
   }
 
-  private Node transformNumberAsString(LiteralToken token) {
+  Node transformNumberAsString(LiteralToken token) {
     double value = normalizeNumber(token);
     Node irNode = newStringNode(getStringValue(value));
     JSDocInfo jsDocInfo = handleJsDoc(token);
@@ -807,42 +805,42 @@ class IRFactory {
     }
   }
 
-  private static int lineno(ParseTree node) {
+  static int lineno(ParseTree node) {
     // location lines start at zero, our AST starts at 1.
     return lineno(node.location.start);
   }
 
-  private static int charno(ParseTree node) {
+  static int charno(ParseTree node) {
     return charno(node.location.start);
   }
 
-  private static int lineno(SourcePosition location) {
+  static int lineno(SourcePosition location) {
     // location lines start at zero, our AST starts at 1.
     return location.line + 1;
   }
 
-  private static int charno(SourcePosition location) {
+  static int charno(SourcePosition location) {
     return location.column;
   }
 
-  private void setSourceInfo(Node node, Node ref) {
+  void setSourceInfo(Node node, Node ref) {
     node.setLineno(ref.getLineno());
     node.setCharno(ref.getCharno());
     maybeSetLengthFrom(node, ref);
   }
 
-  private void setSourceInfo(Node irNode, ParseTree node) {
+  void setSourceInfo(Node irNode, ParseTree node) {
     if (irNode.getLineno() == -1) {
       setSourceInfo(irNode, node.location.start, node.location.end);
     }
   }
 
-  private void setSourceInfo(
+  void setSourceInfo(
       Node irNode, com.google.javascript.jscomp.parsing.parser.Token token) {
     setSourceInfo(irNode, token.location.start, token.location.end);
   }
 
-  private void setSourceInfo(
+  void setSourceInfo(
       Node node, SourcePosition start, SourcePosition end) {
     if (node.getLineno() == -1) {
       // If we didn't already set the line, then set it now. This avoids
@@ -914,21 +912,17 @@ class IRFactory {
   }
 
   // Set the length on the node if we're in IDE mode.
-  private void maybeSetLength(
+  void maybeSetLength(
       Node node, SourcePosition start, SourcePosition end) {
     if (config.isIdeMode) {
       node.setLength(end.offset - start.offset);
     }
   }
 
-  private void maybeSetLengthFrom(Node node, Node ref) {
+  void maybeSetLengthFrom(Node node, Node ref) {
     if (config.isIdeMode) {
       node.setLength(ref.getLength());
     }
-  }
-
-  private Node justTransform(ParseTree node) {
-    return transformDispatcher.process(node);
   }
 
   private class TransformDispatcher {
@@ -1855,7 +1849,7 @@ class IRFactory {
 
     Node processVariableStatement(VariableStatementTree stmt) {
       // TODO(moz): Figure out why we still need the special handling
-      return justTransform(stmt.declarations);
+      return transformDispatcher.process(stmt.declarations);
     }
 
     Node processVariableDeclarationList(VariableDeclarationListTree decl) {
@@ -2718,14 +2712,14 @@ class IRFactory {
     }
   }
 
-  private String normalizeRegex(LiteralToken token) {
+  String normalizeRegex(LiteralToken token) {
     String value = token.value;
     int lastSlash = value.lastIndexOf('/');
     return value.substring(1, lastSlash);
   }
 
 
-  private String normalizeString(LiteralToken token, boolean templateLiteral) {
+  String normalizeString(LiteralToken token, boolean templateLiteral) {
     String value = token.value;
     if (templateLiteral) {
       // <CR><LF> and <CR> are normalized as <LF> for raw string value
@@ -2999,7 +2993,7 @@ class IRFactory {
     throw new IllegalStateException("unexpected: " + c);
   }
 
-  private static int transformBooleanTokenType(TokenType token) {
+  static int transformBooleanTokenType(TokenType token) {
     switch (token) {
       case TRUE:
         return Token.TRUE;
@@ -3011,7 +3005,7 @@ class IRFactory {
     }
   }
 
-  private static int transformPostfixTokenType(TokenType token) {
+  static int transformPostfixTokenType(TokenType token) {
     switch (token) {
       case PLUS_PLUS:
         return Token.INC;
@@ -3023,7 +3017,7 @@ class IRFactory {
     }
   }
 
-  private static int transformUnaryTokenType(TokenType token) {
+  static int transformUnaryTokenType(TokenType token) {
     switch (token) {
       case BANG:
         return Token.NOT;
@@ -3051,7 +3045,7 @@ class IRFactory {
     }
   }
 
-  private static int transformBinaryTokenType(TokenType token) {
+  static int transformBinaryTokenType(TokenType token) {
     switch (token) {
       case BAR:
         return Token.BITOR;
@@ -3136,31 +3130,31 @@ class IRFactory {
   }
 
   // Simple helper to create nodes and set the initial node properties.
-  private Node newNode(int type) {
+  Node newNode(int type) {
     return new Node(type).clonePropsFrom(templateNode);
   }
 
-  private Node newNode(int type, Node child1) {
+  Node newNode(int type, Node child1) {
     return new Node(type, child1).clonePropsFrom(templateNode);
   }
 
-  private Node newNode(int type, Node child1, Node child2) {
+  Node newNode(int type, Node child1, Node child2) {
     return new Node(type, child1, child2).clonePropsFrom(templateNode);
   }
 
-  private Node newNode(int type, Node child1, Node child2, Node child3) {
+  Node newNode(int type, Node child1, Node child2, Node child3) {
     return new Node(type, child1, child2, child3).clonePropsFrom(templateNode);
   }
 
-  private Node newStringNode(String value) {
+  Node newStringNode(String value) {
     return IR.string(value).clonePropsFrom(templateNode);
   }
 
-  private Node newStringNode(int type, String value) {
+  Node newStringNode(int type, String value) {
     return Node.newString(type, value).clonePropsFrom(templateNode);
   }
 
-  private Node newNumberNode(Double value) {
+  Node newNumberNode(Double value) {
     return IR.number(value).clonePropsFrom(templateNode);
   }
 
@@ -3168,7 +3162,7 @@ class IRFactory {
    * Clone the properties from the template node recursively, skips nodes that
    * have properties already.
    */
-  private Node cloneProps(Node n) {
+  Node cloneProps(Node n) {
     if (!n.hasProps()) {
       n.clonePropsFrom(templateNode);
     }
