@@ -63,6 +63,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   private final Set<String> constructors = new HashSet<>();
   private final Map<String, Node> requires = new HashMap<>();
 
+  // Only used in single-file mode.
+  private final Set<String> closurizedNamespaces = new HashSet<>();
+
   // Adding an entry to usages indicates that the name is used and should be required.
   private final Map<String, Node> usages = new HashMap<>();
 
@@ -180,6 +183,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     this.usages.clear();
     this.weakUsages.clear();
     this.requires.clear();
+    this.closurizedNamespaces.clear();
     this.constructors.clear();
   }
 
@@ -219,8 +223,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       if (notProvidedByConstructors && notProvidedByRequires && !classNames.contains(className)) {
         // TODO(mknichel): If the symbol is not explicitly provided, find the next best
         // symbol from the provides in the same file.
-        compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, className));
-        classNames.add(className);
+        String rootName = Splitter.on('.').split(className).iterator().next();
+        if (mode != Mode.SINGLE_FILE || closurizedNamespaces.contains(rootName)) {
+          compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, className));
+          classNames.add(className);
+        }
       }
     }
 
@@ -264,6 +271,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       reportDuplicateRequireWarning(node, requiredName);
     } else {
       requires.put(requiredName, node);
+      if (mode == Mode.SINGLE_FILE) {
+        String rootName = Splitter.on('.').split(requiredName).iterator().next();
+        closurizedNamespaces.add(rootName);
+      }
     }
   }
 

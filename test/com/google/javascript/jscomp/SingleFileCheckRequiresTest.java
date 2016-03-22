@@ -55,12 +55,24 @@ public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
   }
 
   public void testReferenceToQualifiedName() {
-    testErrorEs6(
+    testError(
+        LINE_JOINER.join(
+            "goog.require('x.y.z');",
+            "goog.require('bar.Abc');",
+            "new x.y.z();",
+            "new bar.Abc();",
+            "new bar.Foo();"),
+        MISSING_REQUIRE_WARNING);
+  }
+
+  // Since there are no goog.require()s for any bar.* names, assume that bar
+  // is a "non-Closurized" namespace, i.e. that all bar.* names come from the externs.
+  public void testReferenceToQualifiedName_nonClosurizedNamespace() {
+    testSame(
         LINE_JOINER.join(
             "goog.require('x.y.z');",
             "new x.y.z();",
-            "new bar.Foo();"),
-        MISSING_REQUIRE_WARNING);
+            "new bar.Foo();"));
   }
 
   public void testReferenceToUnqualifiedName() {

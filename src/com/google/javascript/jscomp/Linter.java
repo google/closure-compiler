@@ -37,23 +37,20 @@ public class Linter {
     for (String filename : args) {
       // TODO(tbreisacher): Add a command line flag that causes this
       // to call fix() instead of lint().
-      lint(null, filename);
+      lint(filename);
     }
   }
 
 
-  static void lint(SourceFile externs, String filename) throws IOException {
-    lint(externs, Paths.get(filename), false);
+  static void lint(String filename) throws IOException {
+    lint(Paths.get(filename), false);
   }
 
-  static void fix(SourceFile externs, String filename) throws IOException {
-    lint(externs, Paths.get(filename), true);
+  static void fix(String filename) throws IOException {
+    lint(Paths.get(filename), true);
   }
 
-  private static void lint(SourceFile externs, Path path, boolean fix) throws IOException {
-    if (externs == null) {
-      externs = SourceFile.fromCode("<Linter externs>", "");
-    }
+  private static void lint(Path path, boolean fix) throws IOException {
     SourceFile file = SourceFile.fromFile(path.toString());
     Compiler compiler = new Compiler(System.out);
     CompilerOptions options = new CompilerOptions();
@@ -75,6 +72,7 @@ public class Linter {
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
     compiler.setPassConfig(new LintPassConfig(options));
     compiler.disableThreads();
+    SourceFile externs = SourceFile.fromCode("<Linter externs>", "");
     compiler.compile(ImmutableList.<SourceFile>of(externs), ImmutableList.of(file), options);
     if (fix) {
       List<SuggestedFix> fixes = new ArrayList<>();
