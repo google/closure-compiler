@@ -62,11 +62,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1500,8 +1500,10 @@ public class CommandLineRunner extends
    */
   private static List<String> findJsFiles(Collection<String> patterns, boolean sortAlphabetically)
       throws IOException {
-    Set<String> allJsInputs = sortAlphabetically
-        ? new TreeSet<String>() : new LinkedHashSet<String>();
+    // A map from normalized absolute paths to original paths. We need to return original paths to
+    // support whitelist files that depend on them.
+    Map<String, String> allJsInputs = sortAlphabetically
+        ? new TreeMap<String, String>() : new LinkedHashMap<String, String>();
     Set<String> excludes = new HashSet<>();
     for (String pattern : patterns) {
       if (!pattern.contains("*") && !pattern.startsWith("!")) {
@@ -1509,9 +1511,10 @@ public class CommandLineRunner extends
         if (matchedFile.isDirectory()) {
           matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs, excludes);
         } else {
-          String pathString = Paths.get(pattern).normalize().toString();
-          if (!excludes.contains(pathString)) {
-            allJsInputs.add(pathString);
+          Path original = Paths.get(pattern);
+          String pathStringAbsolute = original.normalize().toAbsolutePath().toString();
+          if (!excludes.contains(pathStringAbsolute)) {
+            allJsInputs.put(pathStringAbsolute, original.toString());
           }
         }
       } else {
@@ -1519,12 +1522,11 @@ public class CommandLineRunner extends
       }
     }
 
-    return new ArrayList<>(allJsInputs);
+    return new ArrayList<>(allJsInputs.values());
   }
 
-  private static void matchPaths(String pattern, final Set<String> allJsInputs,
-      final Set<String> excludes)
-      throws IOException {
+  private static void matchPaths(String pattern, final Map<String, String> allJsInputs,
+      final Set<String> excludes) throws IOException {
     FileSystem fs = FileSystems.getDefault();
     final boolean remove = pattern.indexOf('!') == 0;
     if (remove) {
@@ -1550,18 +1552,23 @@ public class CommandLineRunner extends
     final PathMatcher matcher = fs.getPathMatcher("glob:" + prefix + separator + pattern);
     java.nio.file.Files.walkFileTree(
         fs.getPath(prefix), new SimpleFileVisitor<Path>() {
-          @Override public FileVisitResult visitFile(
-              Path p, BasicFileAttributes attrs) {
+          @Override
+          public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) {
             if (matcher.matches(p) || matcher.matches(p.normalize())) {
-              String pathString = p.normalize().toString();
+              String pathStringAbsolute = p.normalize().toAbsolutePath().toString();
               if (remove) {
-                excludes.add(pathString);
-                allJsInputs.remove(pathString);
-              } else if (!excludes.contains(pathString)) {
-                allJsInputs.add(pathString);
+                excludes.add(pathStringAbsolute);
+                allJsInputs.remove(pathStringAbsolute);
+              } else if (!excludes.contains(pathStringAbsolute)) {
+                allJsInputs.put(pathStringAbsolute, p.toString());
               }
             }
             return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult visitFileFailed(Path file, IOException e) {
+            return FileVisitResult.SKIP_SUBTREE;
           }
         });
   }
