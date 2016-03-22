@@ -466,7 +466,9 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testCheckProvidesOn() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckProvides(CheckLevel.ERROR);
-    test(options, new String[] {"/** @constructor */ function Foo() {}", "new Foo();"},
+    test(
+        options,
+        new String[] {"goog.require('x'); /** @constructor */ function Foo() {}", "new Foo();"},
         CheckProvides.MISSING_PROVIDE_WARNING);
   }
 
@@ -2731,10 +2733,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         CheckLevel.WARNING);
     options.setCheckProvides(CheckLevel.WARNING);
     test(options,
-        "/** @constructor */\n" +
-        "function f() { var arguments; }",
-        DiagnosticType
-        .warning("JSC_MISSING_PROVIDE", "missing goog.provide(''{0}'')"));
+        "goog.require('x'); /** @constructor */ function f() { var arguments; }",
+        CheckProvides.MISSING_PROVIDE_WARNING);
   }
 
   public void testSuppressCheckProvidesWarning() {
