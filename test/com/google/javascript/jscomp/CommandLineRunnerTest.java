@@ -1161,8 +1161,8 @@ public final class CommandLineRunnerTest extends TestCase {
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
     // Move test2 to the same directory as test1, also make the filename of test2
     // lexicographically larger than test1
-    new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
+    assertTrue(new File(jsFile2.value).renameTo(new File(
+        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js")));
     String glob = new File(jsFile1.value).getParent() + File.separator + "**.js";
     compileFiles(
         "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
@@ -1171,8 +1171,8 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs2() throws IOException, FlagUsageException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js"));
+    assertTrue(new File(jsFile2.value).renameTo(new File(
+        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js")));
     String glob = new File(jsFile1.value).getParent() + File.separator + "*test*.js";
     compileFiles(
         "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
@@ -1181,8 +1181,8 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs3() throws IOException, FlagUsageException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "test2.js"));
+    assertTrue(new File(jsFile2.value).renameTo(new File(
+        new File(jsFile1.value).getParentFile() + File.separator + "test2.js")));
     // Make sure test2.js is excluded from the inputs when the exclusion
     // comes after the inclusion
     String glob1 = new File(jsFile1.value).getParent() + File.separator + "**.js";
@@ -1195,8 +1195,8 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs4() throws IOException, FlagUsageException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "test2.js"));
+    assertTrue(new File(jsFile2.value).renameTo(new File(
+        new File(jsFile1.value).getParentFile() + File.separator + "test2.js")));
     // Make sure test2.js is excluded from the inputs when the exclusion
     // comes before the inclusion
     String glob1 = "!" + new File(jsFile1.value).getParent() + File.separator + "**test2.js";
@@ -1214,8 +1214,8 @@ public final class CommandLineRunnerTest extends TestCase {
     File jscompTempDir = new File(jsFile1.value).getParentFile();
     File newTemp1 = new File(jscompTempDir + File.separator + "temp1");
     File newTemp2 = new File(jscompTempDir + File.separator + "temp2");
-    temp1.renameTo(newTemp1);
-    temp2.renameTo(newTemp2);
+    assertTrue(temp1.renameTo(newTemp1));
+    assertTrue(temp2.renameTo(newTemp2));
     new File(jsFile1.value).renameTo(new File(newTemp1 + File.separator + "test1.js"));
     new File(jsFile2.value).renameTo(new File(newTemp2 + File.separator + "test2.js"));
     // Test multiple segments with glob patterns, like /foo/bar/**/*.js
