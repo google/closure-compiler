@@ -94,7 +94,10 @@ md.$dialog = function() {};
  *   locals: (Object|undefined),
  *   resolve: (Object|undefined),
  *   controllerAs: (string|undefined),
- *   parent: (angular.JQLite|Element|undefined)
+ *   parent: (angular.JQLite|Element|undefined),
+ *   onShowing: (Function|undefined),
+ *   onComplete: (Function|undefined),
+ *   onRemoving: (Function|undefined)
  * }}
  */
 md.$dialog.options;
