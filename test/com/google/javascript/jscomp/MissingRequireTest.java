@@ -30,8 +30,9 @@ import java.util.List;
  */
 
 public final class MissingRequireTest extends Es6CompilerTestCase {
-  public MissingRequireTest() {
-    super();
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
     enableRewriteClosureCode();
   }
 
@@ -146,6 +147,18 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testPassGoogDefineClass() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "var Example = goog.defineClass(null, {constructor() {}});",
+            "new Example();"));
+    testSameEs6(
+        LINE_JOINER.join(
+            "foo.bar.Example = goog.defineClass(null, {constructor() {}});",
+            "new foo.bar.Example();"));
+  }
+
+  public void testPassGoogDefineClass_noRewriting() {
+    disableRewriteClosureCode();
     testSameEs6(
         LINE_JOINER.join(
             "var Example = goog.defineClass(null, {constructor() {}});",

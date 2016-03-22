@@ -373,6 +373,13 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
+   * Don't rewrite Closure code before the test is run.
+   */
+  void disableRewriteClosureCode() {
+    rewriteClosureCode = false;
+  }
+
+  /**
    * Perform AST normalization before running the test pass, and anti-normalize
    * after running it.
    *
