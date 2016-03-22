@@ -947,8 +947,8 @@ public final class ConformanceRules {
               "invalid conformance template: " + value);
         }
         Node templateRoot = parseRoot.getFirstChild();
-        TemplateAstMatcher astMatcher = new TemplateAstMatcher(
-            compiler, templateRoot);
+        TemplateAstMatcher astMatcher =
+            new TemplateAstMatcher(compiler, templateRoot, TypeMatchingStrategy.LOOSE);
         builder.add(astMatcher);
       }
 

@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.TypeMatchingStrategy.DEFAULT;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.EXACT;
+import static com.google.javascript.jscomp.TypeMatchingStrategy.LOOSE;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.STRICT_NULLABILITY;
 
 import com.google.common.base.Joiner;
@@ -39,18 +39,18 @@ public final class TypeMatchingStrategyTest extends TestCase {
       "var SubType = function() {};");
 
   public void testMatch_default() {
-    assertMatch(DEFAULT, "!SuperType", "!SuperType", true, false);
-    assertMatch(DEFAULT, "!SuperType", "?SuperType", true, false);
-    assertMatch(DEFAULT, "!SuperType", "SuperType|undefined", true, false);
-    assertMatch(DEFAULT, "!SuperType", "SuperType|void", true, false);
-    assertMatch(DEFAULT, "!SuperType", "!SubType", true, false);
-    assertMatch(DEFAULT, "!SuperType", "?SubType", true, false);
-    assertMatch(DEFAULT, "!SuperType", "SubType|undefined", true, false);
-    assertMatch(DEFAULT, "!SuperType", "SubType|void", true, false);
-    assertMatch(DEFAULT, "!SuperType", "number", false, false);
-    assertMatch(DEFAULT, "!SuperType", "*", true, true);
-    assertMatch(DEFAULT, "!SuperType", "?", true, true);
-    assertMatch(DEFAULT, "?", "string", true, false);
+    assertMatch(LOOSE, "!SuperType", "!SuperType", true, false);
+    assertMatch(LOOSE, "!SuperType", "?SuperType", true, false);
+    assertMatch(LOOSE, "!SuperType", "SuperType|undefined", true, false);
+    assertMatch(LOOSE, "!SuperType", "SuperType|void", true, false);
+    assertMatch(LOOSE, "!SuperType", "!SubType", true, false);
+    assertMatch(LOOSE, "!SuperType", "?SubType", true, false);
+    assertMatch(LOOSE, "!SuperType", "SubType|undefined", true, false);
+    assertMatch(LOOSE, "!SuperType", "SubType|void", true, false);
+    assertMatch(LOOSE, "!SuperType", "number", false, false);
+    assertMatch(LOOSE, "!SuperType", "*", true, true);
+    assertMatch(LOOSE, "!SuperType", "?", true, true);
+    assertMatch(LOOSE, "?", "string", true, false);
   }
 
   public void testMatch_respectNullability() {

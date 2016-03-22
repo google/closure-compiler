@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.TypeMatchingStrategy;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
@@ -51,6 +52,13 @@ public final class RefasterJsScanner extends Scanner {
   /** The JS code that contains the RefasterJs templates. */
   private String templateJs;
 
+  /**
+   * The type matching strategy to use when matching templates.
+   *
+   * <p>Defaults to {@link TypeMatchingStrategy#LOOSE}.
+   */
+  private TypeMatchingStrategy typeMatchingStrategy = TypeMatchingStrategy.LOOSE;
+
   /** All templates that were found in the template file. */
   private ImmutableList<RefasterJsTemplate> templates;
 
@@ -71,6 +79,15 @@ public final class RefasterJsScanner extends Scanner {
         Thread.currentThread().getContextClassLoader().getResource(refasterjsTemplate) != null
         ? Resources.toString(Resources.getResource(refasterjsTemplate), UTF_8)
         : Files.toString(new File(refasterjsTemplate), UTF_8);
+  }
+
+  /**
+   * Sets the type matching strategy to use when matching templates.
+   *
+   * <p>Defaults to {@link TypeMatchingStrategy#LOOSE}.
+   */
+  public void setTypeMatchingStrategy(TypeMatchingStrategy typeMatchingStrategy) {
+    this.typeMatchingStrategy = typeMatchingStrategy;
   }
 
   /**
@@ -213,8 +230,12 @@ public final class RefasterJsScanner extends Scanner {
           afterTemplates.containsKey(templateName),
           "Found before template without a corresponding after template. Make sure there is an "
           + "after_%s function defined.", templateName);
-      builder.add(new RefasterJsTemplate(compiler,
-          beforeTemplates.get(templateName), afterTemplates.get(templateName)));
+      builder.add(
+          new RefasterJsTemplate(
+              compiler,
+              typeMatchingStrategy,
+              beforeTemplates.get(templateName),
+              afterTemplates.get(templateName)));
     }
     this.templates = builder.build();
   }
@@ -231,8 +252,11 @@ public final class RefasterJsScanner extends Scanner {
     final Node afterTemplate;
 
     RefasterJsTemplate(
-        AbstractCompiler compiler, Node beforeTemplate, Node afterTemplate) {
-      this.matcher = new JsSourceMatcher(compiler, beforeTemplate);
+        AbstractCompiler compiler,
+        TypeMatchingStrategy typeMatchingStrategy,
+        Node beforeTemplate,
+        Node afterTemplate) {
+      this.matcher = new JsSourceMatcher(compiler, beforeTemplate, typeMatchingStrategy);
       this.beforeTemplate = beforeTemplate;
       this.afterTemplate = afterTemplate;
     }

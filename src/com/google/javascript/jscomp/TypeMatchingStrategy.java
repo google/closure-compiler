@@ -27,7 +27,7 @@ public enum TypeMatchingStrategy {
    * Matches type or any subtype. Matches types with different nullability/voidability. Allows loose
    * matches.
    */
-  DEFAULT(true, true, true),
+  LOOSE(true, true, true),
 
   /**
    * Matches type or any subtype. Does not match types with different nullability/voidability.
