@@ -2139,6 +2139,37 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, optimized);
   }
 
+  public void testFoldJ2clClinits() {
+    CompilerOptions options = createCompilerOptions();
+
+    options.setJ2clPass(true);
+
+    String code =
+        LINE_JOINER.join(
+            "function InternalWidget(){}",
+            "InternalWidget.$clinit = function () {",
+            "  InternalWidget.$clinit = function() {};",
+            "  InternalWidget.$clinit();",
+            "};",
+            "InternalWidget.$clinit();");
+
+    String optimized =
+        LINE_JOINER.join(
+            "function InternalWidget(){}",
+            "InternalWidget.$clinit = function () {};",
+            "InternalWidget.$clinit();");
+
+    test(options, code, optimized);
+
+    options.setFoldConstants(true);
+    options.setComputeFunctionSideEffects(true);
+    options.setCollapseProperties(true);
+    options.setRemoveUnusedVars(true);
+    options.setInlineFunctions(true);
+
+    test(options, code, "");
+  }
+
   public void testVarDeclarationsIntoFor() {
     CompilerOptions options = createCompilerOptions();
 
