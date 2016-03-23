@@ -203,6 +203,21 @@ public final class TypeValidatorTest extends CompilerTestCase {
     assertMismatches(Collections.<TypeMismatch>emptyList());
   }
 
+  public void testExtendInterfaceNoExtraWarning() {
+    testSame(LINE_JOINER.join(
+        "/** @interface */",
+        "function SuperInterface() {}",
+        "/**",
+        " * @constructor",
+        " * @extends {SuperInterface}",
+        " */",
+        "function Sub() {}",
+        "/** @param {!Function} x */ function f(x) {}",
+        "f(SuperInterface);"),
+        TypeCheck.CONFLICTING_EXTENDED_TYPE);
+    assertMismatches(Collections.<TypeMismatch>emptyList());
+  }
+
   private TypeMismatch fromNatives(JSTypeNative a, JSTypeNative b) {
     JSTypeRegistry registry = compiler.getTypeRegistry();
     return new TypeMismatch(

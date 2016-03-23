@@ -1069,15 +1069,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
     if (that.isFunctionType()) {
       FunctionType other = that.toMaybeFunctionType();
-      if (other.isInterface()) {
-        // Any function can be assigned to an interface function.
-        return true;
-      }
-      if (isInterface()) {
-        // An interface function cannot be assigned to anything.
-        return false;
-      }
-
       return treatThisTypesAsCovariant(other, implicitImplCache)
           && this.call.isSubtype(other.call, implicitImplCache);
     }
