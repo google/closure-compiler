@@ -88,7 +88,7 @@ public final class SuggestedFix {
   @Override public String toString() {
     StringBuilder sb = new StringBuilder();
     for (Map.Entry<String, Collection<CodeReplacement>> entry : replacements.asMap().entrySet()) {
-      sb.append("Replacements for file: " + entry.getKey() + "\n");
+      sb.append("Replacements for file: ").append(entry.getKey()).append("\n");
       Joiner.on("\n\n").appendTo(sb, entry.getValue());
     }
     return sb.toString();

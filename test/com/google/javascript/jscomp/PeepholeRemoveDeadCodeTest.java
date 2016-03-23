@@ -433,7 +433,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "  break;\n" +
         "}",
         "");
-    foldSame("switch (0) {\n" +
+    fold("switch (0) {\n" +
         "case NaN:\n" +
         "  foobar();\n" +
         "  break;\n" +
@@ -443,7 +443,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "case 2:\n" +
         "  bar();\n" +
         "  break;\n" +
-        "}");
+        "}",
+        "foo();");
     foldSame("switch ('\\v') {\n" +
         "case '\\u000B':\n" +
         "  foo();\n" +
