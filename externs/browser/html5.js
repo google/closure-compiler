@@ -79,7 +79,7 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
  */
 function CanvasRenderingContext2D() {}
 
-/** @type {HTMLCanvasElement} */
+/** @type {!HTMLCanvasElement} */
 CanvasRenderingContext2D.prototype.canvas;
 
 /**
