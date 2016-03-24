@@ -60,7 +60,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   };
   private final Mode mode;
 
-  private final Set<String> constructors = new HashSet<>();
+  private final Set<String> providedNames = new HashSet<>();
   private final Map<String, Node> requires = new HashMap<>();
 
   // Only used in single-file mode.
@@ -74,10 +74,16 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   // in weakUsages, don't give a missingRequire warning, nor an extraRequire warning.
   private final Map<String, Node> weakUsages = new HashMap<>();
 
-  // Warnings
   static final DiagnosticType MISSING_REQUIRE_WARNING =
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
+
+  // Essentially the same as MISSING_REQUIRE_WARNING except that if the user calls foo.bar.baz()
+  // then we don't know whether they should require it as goog.require('foo.bar.baz') or as
+  // goog.require('foo.bar'). So, warn but don't provide a suggested fix.
+  static final DiagnosticType MISSING_REQUIRE_CALL_WARNING =
+      DiagnosticType.disabled(
+          "JSC_MISSING_REQUIRE_CALL_WARNING", "No matching require found for ''{0}''");
 
   static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");
@@ -110,11 +116,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   }
 
   // Return true if the name is a class name (starts with an uppercase
-  // character, but is not in all caps).
+  // character). This also matches for all-caps constants, which eliminates
+  // some false positives (e.g. goog.LOCALE.replace()).
   private static boolean isClassName(String name) {
-    return (name != null && name.length() > 1
-            && Character.isUpperCase(name.charAt(0))
-            && !name.equals(name.toUpperCase()));
+    return name != null && name.length() > 1
+            && Character.isUpperCase(name.charAt(0));
   }
 
   // Return the shortest prefix of the className that refers to a class,
@@ -143,12 +149,12 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       case Token.VAR:
       case Token.LET:
       case Token.CONST:
-        maybeAddConstructor(n);
+        maybeAddProvidedName(n);
         break;
       case Token.FUNCTION:
         // Exclude function expressions.
         if (NodeUtil.isStatement(n)) {
-          maybeAddConstructor(n);
+          maybeAddProvidedName(n);
         }
         break;
       case Token.NAME:
@@ -160,7 +166,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         visitQualifiedName(n);
         break;
       case Token.CALL:
-        visitCallNode(n, parent);
+        visitCallNode(t, n, parent);
         break;
       case Token.SCRIPT:
         visitScriptNode(t);
@@ -183,7 +189,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     this.weakUsages.clear();
     this.requires.clear();
     this.closurizedNamespaces.clear();
-    this.constructors.clear();
+    this.providedNames.clear();
   }
 
   private void visitScriptNode(NodeTraversal t) {
@@ -192,40 +198,56 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       return;
     }
 
-    Set<String> classNames = new HashSet<>();
+    Set<String> namespaces = new HashSet<>();
 
     // For every usage, check that there is a goog.require, and warn if not.
     for (Map.Entry<String, Node> entry : usages.entrySet()) {
-      String className = entry.getKey();
+      String namespace = entry.getKey();
+      if (namespace.endsWith(".call") || namespace.endsWith(".apply")) {
+        namespace = namespace.substring(0, namespace.lastIndexOf('.'));
+      }
+      if (namespace.startsWith("goog.global.")) {
+        continue;
+      }
+
       Node node = entry.getValue();
-      JSDocInfo info = NodeUtil.getEnclosingStatement(node).getJSDocInfo();
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(NodeUtil.getEnclosingStatement(node));
       if (info != null && info.getSuppressions().contains("missingRequire")) {
         continue;
       }
 
-      String outermostClassName = getOutermostClassName(className);
+      String outermostClassName = getOutermostClassName(namespace);
       // The parent namespace is also checked as part of the requires so that classes
       // used by goog.module are still checked properly. This may cause missing requires
       // to be missed but in practice that should happen rarely.
-      String nonNullClassName = outermostClassName != null ? outermostClassName : className;
+      String nonNullClassName = outermostClassName != null ? outermostClassName : namespace;
       String parentNamespace = null;
       int separatorIndex = nonNullClassName.lastIndexOf('.');
       if (separatorIndex > 0) {
         parentNamespace = nonNullClassName.substring(0, separatorIndex);
       }
       boolean notProvidedByConstructors =
-          !constructors.contains(className) && !constructors.contains(outermostClassName);
+          !providedNames.contains(namespace)
+              && !providedNames.contains(outermostClassName)
+              && !providedNames.contains(parentNamespace);
       boolean notProvidedByRequires =
-          !requires.containsKey(className)
+          !requires.containsKey(namespace)
               && !requires.containsKey(outermostClassName)
               && !requires.containsKey(parentNamespace);
-      if (notProvidedByConstructors && notProvidedByRequires && !classNames.contains(className)) {
+      if (notProvidedByConstructors
+          && notProvidedByRequires
+          && !namespaces.contains(namespace)
+          && !"goog".equals(parentNamespace)) {
         // TODO(mknichel): If the symbol is not explicitly provided, find the next best
         // symbol from the provides in the same file.
-        String rootName = Splitter.on('.').split(className).iterator().next();
+        String rootName = Splitter.on('.').split(namespace).iterator().next();
         if (mode != Mode.SINGLE_FILE || closurizedNamespaces.contains(rootName)) {
-          compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, className));
-          classNames.add(className);
+          if (node.isCall()) {
+            compiler.report(t.makeError(node, MISSING_REQUIRE_CALL_WARNING, namespace));
+          } else {
+            compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, namespace));
+          }
+          namespaces.add(namespace);
         }
       }
     }
@@ -290,23 +312,41 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     }
   }
 
-  private void visitCallNode(Node call, Node parent) {
+  private void visitCallNode(NodeTraversal t, Node call, Node parent) {
     String required = codingConvention.extractClassNameIfRequire(call, parent);
     if (required != null) {
       visitRequire(required, call);
+      return;
+    }
+    String provided = codingConvention.extractClassNameIfProvide(call, parent);
+    if (provided != null) {
+      providedNames.add(provided);
+      return;
     }
 
     if (codingConvention.isClassFactoryCall(call)) {
       if (parent.isName()) {
-        constructors.add(parent.getString());
+        providedNames.add(parent.getString());
       } else if (parent.isAssign()) {
-        constructors.add(parent.getFirstChild().getQualifiedName());
+        providedNames.add(parent.getFirstChild().getQualifiedName());
       }
     }
 
     Node callee = call.getFirstChild();
     if (callee.isName()) {
       weakUsages.put(callee.getString(), callee);
+    } else if (callee.isQualifiedName()) {
+      Node root = NodeUtil.getRootOfQualifiedName(callee);
+      if (root.isName()) {
+        Var var = t.getScope().getVar(root.getString());
+        if (var == null || (!var.isExtern() && !var.isLocal())) {
+          String name = getOutermostClassName(callee.getQualifiedName());
+          if (name == null) {
+            name = callee.getQualifiedName();
+          }
+          usages.put(name, call);
+        }
+      }
     }
   }
 
@@ -363,7 +403,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   private void visitClassNode(NodeTraversal t, Node classNode) {
     String name = NodeUtil.getName(classNode);
     if (name != null) {
-      constructors.add(name);
+      providedNames.add(name);
     }
 
     Node extendClass = classNode.getSecondChild();
@@ -397,21 +437,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     }
   }
 
-  private void maybeAddConstructor(Node n) {
-    JSDocInfo info = n.getJSDocInfo();
-    if (info != null) {
-      String ctorName = n.getFirstChild().getQualifiedName();
-      if (info.isConstructorOrInterface()) {
-        constructors.add(ctorName);
-      } else {
-        JSTypeExpression typeExpr = info.getType();
-        if (typeExpr != null) {
-          Node typeExprRoot = typeExpr.getRoot();
-          if (typeExprRoot.isFunction() && typeExprRoot.getFirstChild().isNew()) {
-            constructors.add(ctorName);
-          }
-        }
-      }
+  private void maybeAddProvidedName(Node n) {
+    Node name = n.getFirstChild();
+    if (name.isQualifiedName()) {
+      providedNames.add(name.getQualifiedName());
     }
   }
 

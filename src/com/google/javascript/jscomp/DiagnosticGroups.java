@@ -501,6 +501,9 @@ public class DiagnosticGroups {
           CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
           CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
           CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,
+          // TODO(tbreisacher): Move MISSING_REQUIRE_CALL_WARNING to missingRequire group
+          // as soon as projects that enable that group are fixed.
+          CheckRequiresForConstructors.MISSING_REQUIRE_CALL_WARNING,
           CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY,
           CheckUnusedLabels.UNUSED_LABEL,
           CheckUselessBlocks.USELESS_BLOCK,
