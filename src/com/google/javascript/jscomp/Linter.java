@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.ObjectArrays.concat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.refactoring.ApplySuggestedFixes;
@@ -76,7 +78,7 @@ public class Linter {
     compiler.compile(ImmutableList.<SourceFile>of(externs), ImmutableList.of(file), options);
     if (fix) {
       List<SuggestedFix> fixes = new ArrayList<>();
-      for (JSError warning : compiler.getWarnings()) {
+      for (JSError warning : concat(compiler.getErrors(), compiler.getWarnings(), JSError.class)) {
         SuggestedFix suggestedFix = ErrorToFixMapper.getFixForJsError(warning, compiler);
         if (suggestedFix != null) {
           fixes.add(suggestedFix);
