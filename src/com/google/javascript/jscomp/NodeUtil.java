@@ -515,6 +515,10 @@ public final class NodeUtil {
     return null;
   }
 
+  public static Node getClassMembers(Node n) {
+    Preconditions.checkArgument(n.isClass());
+    return n.getLastChild();
+  }
 
   /**
    * Returns true if this is an immutable value.
@@ -1988,11 +1992,12 @@ public final class NodeUtil {
   }
 
   /**
-   * @return The first property in the objlit that matches the key.
+   * @return The first property in the objlit or class members, that matches the key.
    */
-  @Nullable static Node getFirstPropMatchingKey(Node objlit, String keyName) {
-    Preconditions.checkState(objlit.isObjectLit());
-    for (Node keyNode : objlit.children()) {
+  @Nullable
+  static Node getFirstPropMatchingKey(Node n, String keyName) {
+    Preconditions.checkState(n.isObjectLit() || n.isClassMembers());
+    for (Node keyNode : n.children()) {
       if ((keyNode.isStringKey() || keyNode.isMemberFunctionDef())
           && keyNode.getString().equals(keyName)) {
         return keyNode.getFirstChild();
@@ -2505,8 +2510,8 @@ public final class NodeUtil {
   /**
    * Return a BLOCK node for the given FUNCTION node.
    */
-  static Node getFunctionBody(Node fn) {
-    Preconditions.checkArgument(fn.isFunction());
+  public static Node getFunctionBody(Node fn) {
+    Preconditions.checkArgument(fn.isFunction(), fn);
     return fn.getLastChild();
   }
 

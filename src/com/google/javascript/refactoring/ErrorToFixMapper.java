@@ -75,6 +75,8 @@ public final class ErrorToFixMapper {
         return removeNode(error);
       case "JSC_INEXISTENT_PROPERTY":
         return getFixForInexistentProperty(error);
+      case "JSC_MISSING_CALL_TO_SUPER":
+        return getFixForMissingSuper(error);
       case "JSC_MISSING_REQUIRE_WARNING":
         return getFixForMissingRequire(error, compiler);
       case "JSC_DUPLICATE_REQUIRE_WARNING":
@@ -111,6 +113,14 @@ public final class ErrorToFixMapper {
     return new SuggestedFix.Builder()
         .setOriginalMatchedNode(error.node)
         .insertAfter(error.node, ";")
+        .build();
+  }
+
+  private static SuggestedFix getFixForMissingSuper(JSError error) {
+    Node body = NodeUtil.getFunctionBody(error.node);
+    return new SuggestedFix.Builder()
+        .setOriginalMatchedNode(error.node)
+        .addChildToFront(body, "super();")
         .build();
   }
 

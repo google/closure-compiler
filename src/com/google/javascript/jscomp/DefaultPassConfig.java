@@ -221,6 +221,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertEs6TypedToEs6);
     }
 
+    checks.add(checkMissingSuper);
     checks.add(checkVariableReferences);
 
     if (!options.skipNonTranspilationPasses && options.closurePass) {
@@ -1431,6 +1432,15 @@ public final class DefaultPassConfig extends PassConfig {
       return new VariableReferenceCheck(compiler);
     }
   };
+
+  /** Checks that references to variables look reasonable. */
+  private final HotSwapPassFactory checkMissingSuper =
+      new HotSwapPassFactory("checkMissingSuper", true) {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new CheckMissingSuper(compiler);
+        }
+      };
 
   /** Pre-process goog.testing.ObjectPropertyString. */
   private final PassFactory objectPropertyStringPreprocess =
