@@ -623,4 +623,14 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "} = module$other.f({foo: foo$$module$testcode});",
             "use(a$$module$testcode, b$$module$testcode);"));
   }
+
+  public void testDefine() {
+    testModules(
+        LINE_JOINER.join(
+            "import name from 'other';",
+            "/** @define {boolean} */ var FOO = true; use(FOO);"),
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "/** @define {boolean} */ var FOO = true; use(FOO);"));
+  }
 }
