@@ -16265,4 +16265,87 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "f(ns, ns2);"),
         NewTypeInference.NOT_UNIQUE_INSTANTIATION);
   }
+
+  public void testSpecializeNamespaceProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @type {?number} */",
+        "ns.prop = null;",
+        "function f() {",
+        "  if (ns.prop !== null) {",
+        "    return ns.prop - 5;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @type {?number} */",
+        "ns.prop = null;",
+        "/** @return {number} */",
+        "function f() {",
+        "  if (ns.prop === null) {",
+        "    return 123;",
+        "  }",
+        "  return ns.prop;",
+        "}"));
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @type {?number} */",
+            "window.prop;"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  if (window.prop !== null) {",
+            "    return window.prop - 5;",
+            "  }",
+            "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {};",
+        "/** @type {?number} */",
+        "Foo.prop = null;",
+        "function f() {",
+        "  if (Foo.prop !== null) {",
+        "    return Foo.prop - 5;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "/** @type {?number} */",
+        "ns.Foo.prop = null;",
+        "function f() {",
+        "  if (ns.Foo.prop !== null) {",
+        "    return ns.Foo.prop - 5;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {};",
+        "/** @type {?number} */",
+        "f.prop = null;",
+        "function f() {",
+        "  if (f.prop !== null) {",
+        "    return f.prop - 5;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @type {?Object|undefined} */",
+        "ns.mutableProp = null;",
+        "function f() {",
+        "  if (ns.mutableProp != null) {",
+        "    var /** !Object */ x = ns.mutableProp;",
+        "  }",
+        "}"));
+  }
 }

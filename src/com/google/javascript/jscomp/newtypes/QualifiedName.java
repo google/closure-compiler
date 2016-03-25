@@ -30,7 +30,7 @@ import com.google.javascript.rhino.Node;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class QualifiedName {
-  ImmutableList<String> parts;
+  private ImmutableList<String> parts;
 
   private QualifiedName(ImmutableList<String> parts) {
     this.parts = parts;
@@ -83,6 +83,7 @@ public final class QualifiedName {
     return parts.get(parts.size() - 1);
   }
 
+  @Override
   public String toString() {
     return Joiner.on(".").join(parts);
   }

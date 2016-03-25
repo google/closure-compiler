@@ -249,7 +249,12 @@ final class NTIScope implements DeclaredTypeRegistry {
   boolean isNamespace(String name) {
     Preconditions.checkArgument(!name.contains("."));
     Declaration decl = getDeclaration(name, false);
-    return decl != null && decl.getNamespace() != null;
+    if (decl == null) {
+      return false;
+    }
+    JSType simpleType = decl.getTypeOfSimpleDecl();
+    return decl.getNamespace() != null
+        || simpleType != null && simpleType.isNamespace();
   }
 
   boolean isVisibleInScope(String name) {

@@ -89,6 +89,14 @@ public abstract class Namespace {
     subns.namespaces.put(name, ns);
   }
 
+  // For a function namespace, when we compute the function summary during NTI,
+  // we update the type here for more precision.
+  void updateNamespaceType(JSType t) {
+    Preconditions.checkNotNull(t);
+    Preconditions.checkNotNull(this.namespaceType);
+    this.namespaceType = t;
+  }
+
   public final Declaration getDeclaration(QualifiedName qname) {
     Namespace recv = getReceiverNamespace(qname);
     if (recv == null) {
