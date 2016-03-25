@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.JsMessageVisitor.isLowerCamelCaseWith
 import static com.google.javascript.jscomp.JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
@@ -43,6 +44,7 @@ import java.util.List;
  * @author anatol@google.com (Anatol Pomazau)
  */
 public final class JsMessageVisitorTest extends TestCase {
+  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private static class RenameMessagesVisitor extends AbstractPostOrderCallback {
     @Override
@@ -152,6 +154,24 @@ public final class JsMessageVisitorTest extends TestCase {
 
     JsMessage msg = messages.get(0);
     assertEquals("MSG_MENU_MARK_AS_UNREAD", msg.getKey());
+    assertEquals("a", msg.getDesc());
+  }
+
+  public void testStaticInheritance() {
+    extractMessagesSafely(
+        LINE_JOINER.join(
+            "/** @desc a */",
+            "foo.bar.BaseClass.MSG_MENU = goog.getMsg('hi');",
+            "/**",
+            " * @desc a",
+            " * @suppress {visibility}",
+            " */",
+            "foo.bar.Subclass.MSG_MENU = foo.bar.BaseClass.MSG_MENU;"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertEquals("MSG_MENU", msg.getKey());
     assertEquals("a", msg.getDesc());
   }
 
