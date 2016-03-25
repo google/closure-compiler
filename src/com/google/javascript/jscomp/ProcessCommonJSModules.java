@@ -311,9 +311,19 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
-      Node moduleRef = IR.name(moduleName).srcref(require);
-      parent.replaceChild(require, moduleRef);
       Node script = getCurrentScriptNode(parent);
+
+      // When require("name") is used as a standalone statement (the result isn't used)
+      // it indicates that a module is being loaded for the side effects it produces.
+      // In this case the require statement should just be removed as the goog.require
+      // call inserted will import the module.
+      if (!NodeUtil.isExpressionResultUsed(require) && parent.isExprResult()
+          && NodeUtil.isStatementBlock(parent.getParent())) {
+        parent.getParent().removeChild(parent);
+      } else {
+        Node moduleRef = IR.name(moduleName).srcref(require);
+        parent.replaceChild(require, moduleRef);
+      }
       if (reportDependencies) {
         t.getInput().addRequire(moduleName);
       }
