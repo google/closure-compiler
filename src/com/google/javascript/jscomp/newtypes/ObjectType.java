@@ -254,7 +254,7 @@ final class ObjectType implements TypeWithProperties {
   }
 
   ObjectType withFunction(FunctionType ft, NominalType fnNominal) {
-    Preconditions.checkState(!this.isLoose);
+    Preconditions.checkState(this.isNamespace());
     Preconditions.checkState(!ft.isLoose() || ft.isQmarkFunction());
     return makeObjectType(fnNominal, this.props, ft, this.ns, false, this.objectKind);
   }
@@ -275,7 +275,8 @@ final class ObjectType implements TypeWithProperties {
   // to not un-const it.
   private ObjectType withPropertyHelper(QualifiedName qname, JSType type,
       boolean isDeclared, boolean isConstant) {
-    // TODO(blickly): If the prop exists with right type, short circuit here.
+    // TODO(dimvar): We do some short-circuiting based on the declared type,
+    // but maybe we can do more based also on the existing inferred type (?)
     PersistentMap<String, Property> newProps = this.props;
     if (qname.isIdentifier()) {
       String pname = qname.getLeftmostName();
@@ -294,13 +295,14 @@ final class ObjectType implements TypeWithProperties {
           // For now, just forget the inferred type.
           type = declType;
         }
-      } else if (isDeclared) {
-        declType = type;
       }
 
       if (type == null && declType == null) {
         newProps = newProps.without(pname);
-      } else {
+      } else if (!type.equals(declType)) {
+        if (isDeclared && declType == null) {
+          declType = type;
+        }
         newProps = newProps.with(pname,
             isConstant ?
             Property.makeConstant(null, type, declType) :
@@ -321,9 +323,15 @@ final class ObjectType implements TypeWithProperties {
           objProp.getType().withoutProperty(innerProps) :
           objProp.getType().withProperty(innerProps, type);
       JSType declared = objProp.getDeclaredType();
-      newProps = newProps.with(objName, objProp.isOptional() ?
-          Property.makeOptional(null, inferred, declared) :
-          Property.make(inferred, declared));
+      if (!inferred.equals(declared)) {
+        newProps = newProps.with(objName, objProp.isOptional() ?
+            Property.makeOptional(null, inferred, declared) :
+            Property.make(inferred, declared));
+      }
+    }
+    // check for ref equality to avoid creating a new type
+    if (newProps == this.props) {
+      return this;
     }
     return makeObjectType(this.nominalType, newProps,
         this.fn, this.ns, this.isLoose, this.objectKind);

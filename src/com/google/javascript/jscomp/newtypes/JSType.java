@@ -1119,12 +1119,11 @@ public abstract class JSType implements TypeI {
 
   // Adds ft to this type, replacing the current function, if any.
   public JSType withFunction(FunctionType ft, NominalType fnNominal) {
-    Preconditions.checkNotNull(ft);
-    ObjectType ot = getObjTypeIfSingletonObj();
     // This method is used for a very narrow purpose, hence these checks.
-    Preconditions.checkNotNull(ot);
-    Preconditions.checkState(getMask() == NON_SCALAR_MASK);
-    return fromObjectType(ot.withFunction(ft, fnNominal));
+    Preconditions.checkNotNull(ft);
+    Preconditions.checkState(this.isNamespace());
+    return fromObjectType(
+        getObjTypeIfSingletonObj().withFunction(ft, fnNominal));
   }
 
   public boolean isSingletonObj() {

@@ -1115,7 +1115,10 @@ final class NewTypeInference implements CompilerPass {
     if (currentScope.isLocalFunDef(varName)) {
       return inEnv;
     }
-    if (NodeUtil.isNamespaceDecl(nameNode)) {
+    if (NodeUtil.isNamespaceDecl(nameNode)
+        || nameNode.getParent().getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+      Preconditions.checkNotNull(declType,
+          "Can't skip var declaration with undeclared type at: %s", nameNode);
       maybeSetTypeI(nameNode, declType);
       return envPutType(inEnv, varName, declType);
     }
@@ -1557,10 +1560,11 @@ final class NewTypeInference implements CompilerPass {
     ctorPair = analyzeExprFwd(ctor, objPair.env, commonTypes.topFunction());
     JSType ctorType = ctorPair.type;
     FunctionType ctorFunType = ctorType.getFunType();
-    if (!ctorType.isUnknown()
-        && (!ctorType.isSubtypeOf(commonTypes.topFunction())
-            || (!ctorFunType.isQmarkFunction()
-                && !ctorFunType.isSomeConstructorOrInterface()))) {
+    boolean mayBeConstructorFunction = ctorFunType != null
+        && (ctorFunType.isLoose()
+            || ctorFunType.isQmarkFunction()
+            || ctorFunType.isSomeConstructorOrInterface());
+    if (!(ctorType.isUnknown() || mayBeConstructorFunction)) {
       warnInvalidOperand(
           ctor, Token.INSTANCEOF, "a constructor function", ctorType);
     }

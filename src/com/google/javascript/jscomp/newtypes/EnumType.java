@@ -224,9 +224,4 @@ public final class EnumType extends Namespace implements TypeWithProperties {
     }
     return true;
   }
-
-  @Override
-  public String toString() {
-    return name;
-  }
 }

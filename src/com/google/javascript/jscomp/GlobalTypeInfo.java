@@ -1105,6 +1105,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       Namespace ns = this.currentScope.getNamespace(rhsQname);
       if (ns != null) {
+        lhs.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         this.currentScope.addNamespace(lhs, ns);
       }
     }

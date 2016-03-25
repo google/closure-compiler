@@ -3409,6 +3409,29 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x, y) {",
         "  if (y instanceof x) {}",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {*} value",
+        " * @param {function(new: T, ...)} type",
+        " * @template T",
+        " */",
+        "function assertInstanceof(value, type) {}",
+        "/** @const */ var ctor = unresolvedGlobalVar;",
+        "function f(obj) {",
+        "  if (obj instanceof ctor) {",
+        "    return assertInstanceof(obj, ctor);",
+        "  }",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x, y) {",
+        "  x(123);",
+        "  if (y instanceof x) {",
+        "    return y;",
+        "  }",
+        "}"));
   }
 
   public void testFunctionsExtendFunction() {
@@ -9001,23 +9024,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    reqGenFun(member, str);",
         "  }",
         "};"));
-  }
-
-  public void testUnificationWithTopFunctionDoesntCrash() {
-    typeCheck(LINE_JOINER.join(
-        "/**",
-        " * @param {*} value",
-        " * @param {function(new: T, ...)} type",
-        " * @template T",
-        " */",
-        "function assertInstanceof(value, type) {}",
-        "/** @const */ var ctor = unresolvedGlobalVar;",
-        "function f(obj) {",
-        "  if (obj instanceof ctor) {",
-        "    return assertInstanceof(obj, ctor);",
-        "  }",
-        "}"),
-        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
 
   public void testGetpropOnPossiblyInexistentPropertyDoesntCrash() {

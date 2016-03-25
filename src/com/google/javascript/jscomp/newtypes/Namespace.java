@@ -79,6 +79,7 @@ public abstract class Namespace {
 
   public void addNamespace(QualifiedName qname, Namespace ns) {
     Preconditions.checkState(!isDefined(qname));
+    Preconditions.checkState(this.namespaceType == null);
     Namespace subns = getReceiverNamespace(qname);
     if (subns.namespaces.isEmpty()) {
       subns.namespaces = new LinkedHashMap<>();
@@ -108,6 +109,7 @@ public abstract class Namespace {
 
   public final void addTypedef(QualifiedName qname, Typedef td) {
     Preconditions.checkState(!isDefined(qname));
+    Preconditions.checkState(this.namespaceType == null);
     Namespace ns = getReceiverNamespace(qname);
     if (ns.typedefs.isEmpty()) {
       ns.typedefs = new LinkedHashMap<>();
@@ -150,7 +152,9 @@ public abstract class Namespace {
   }
 
   /** Add a new non-optional declared property to this namespace */
-  public final void addProperty(String pname, Node defSite, JSType type, boolean isConstant) {
+  public final void addProperty(
+      String pname, Node defSite, JSType type, boolean isConstant) {
+    Preconditions.checkState(this.namespaceType == null);
     if (type == null && isConstant) {
       type = JSType.UNKNOWN;
     }
@@ -162,6 +166,7 @@ public abstract class Namespace {
   /** Add a new undeclared property to this namespace */
   public final void addUndeclaredProperty(
       String pname, Node defSite, JSType t, boolean isConstant) {
+    Preconditions.checkState(this.namespaceType == null);
     if (otherProps.containsKey(pname)
         && !otherProps.get(pname).getType().isUnknown()) {
       return;
@@ -184,6 +189,14 @@ public abstract class Namespace {
     }
     if (this.otherProps.containsKey(pname)) {
       return this.otherProps.get(pname);
+    }
+    // Do instanceof check instead of making the method non-final, because it
+    // should only be overriden by NamespaceLit, not by the other subclasses.
+    if (this instanceof NamespaceLit) {
+      NominalType maybeWin = ((NamespaceLit) this).getWindowType();
+      if (maybeWin != null) {
+        return maybeWin.getProp(pname);
+      }
     }
     return null;
   }
