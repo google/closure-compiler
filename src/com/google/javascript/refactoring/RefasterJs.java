@@ -73,8 +73,8 @@ final class RefasterJs {
       CompilerOptions.Environment.BROWSER;
 
   @Option(name = "--type_matching",
-    usage = "Which type matching strategy to use. Defaults to LOOSE.")
-  private TypeMatchingStrategy typeMatchingStrategy = TypeMatchingStrategy.LOOSE;
+    usage = "Which type matching strategy to use. Defaults to SUBTYPES.")
+  private TypeMatchingStrategy typeMatchingStrategy = TypeMatchingStrategy.SUBTYPES;
 
   @Option(name = "--dry_run",
       usage = "Use this to display what changes would be made without applying the changes.")

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.EXACT;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.LOOSE;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.STRICT_NULLABILITY;
+import static com.google.javascript.jscomp.TypeMatchingStrategy.SUBTYPES;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -68,6 +69,37 @@ public final class TypeMatchingStrategyTest extends TestCase {
     assertMatch(STRICT_NULLABILITY, "?", "string", true, false);
   }
 
+  public void testMatch_subtypes() {
+    assertMatch(SUBTYPES, "!SuperType", "!SuperType", true, false);
+    assertMatch(SUBTYPES, "!SuperType", "?SuperType", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "!OtherType", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "SuperType|undefined", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "SuperType|void", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "!SubType", true, false);
+    assertMatch(SUBTYPES, "!SuperType", "?SubType", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "SubType|undefined", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "SubType|void", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "number", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "*", false, false);
+    assertMatch(SUBTYPES, "!SuperType", "?", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "!SuperType", true, false);
+    assertMatch(SUBTYPES, "?SuperType", "?SuperType", true, false);
+    assertMatch(SUBTYPES, "?SuperType", "?OtherType", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "SuperType|undefined", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "SuperType|void", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "SuperType|OtherType", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "!SubType", true, false);
+    assertMatch(SUBTYPES, "?SuperType", "?SubType", true, false);
+    assertMatch(SUBTYPES, "?SuperType", "SubType|undefined", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "SubType|void", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "number", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "*", false, false);
+    assertMatch(SUBTYPES, "?SuperType", "?", false, false);
+    assertMatch(SUBTYPES, "?", "string", true, false);
+    assertMatch(SUBTYPES, "?", "?", true, false);
+    assertMatch(SUBTYPES, "?", "*", true, false);
+  }
+
   public void testMatch_exact() {
     assertMatch(EXACT, "!SuperType", "!SuperType", true, false);
     assertMatch(EXACT, "!SuperType", "?SuperType", false, false);
@@ -89,10 +121,32 @@ public final class TypeMatchingStrategyTest extends TestCase {
       String type,
       boolean isMatch,
       boolean isLooseMatch) {
-    MatchResult matchResult = typeMatchingStrategy.match(getJsType(templateType), getJsType(type));
+
+    // It's important that the test uses the same compiler to compile the template type and the
+    // type to be matched. Otherwise, equal types won't be considered equal.
+    Compiler compiler = new Compiler();
+    compiler.disableThreads();
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+
+    compiler.compile(
+        ImmutableList.of(SourceFile.fromCode("externs", EXTERNS)),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "test",
+                String.format(
+                    "/** @type {%s} */ var x; /** @type {%s} */ var y;", templateType, type))),
+        options);
+    Node script = compiler.getRoot().getLastChild().getFirstChild();
+    Node xNode = script.getFirstChild();
+    Node yNode = script.getLastChild();
+    JSType templateJsType = xNode.getFirstChild().getJSType();
+    JSType jsType = yNode.getFirstChild().getJSType();
+
+    MatchResult matchResult = typeMatchingStrategy.match(templateJsType, jsType);
     assertEquals(
         isMatch
-            ? "'" + getJsType(templateType) + "' should match '" + getJsType(type) + "'"
+            ? "'" + templateJsType + "' should match '" + jsType + "'"
             : "'" + templateType + "' should not match '" + type + "'",
         isMatch,
         matchResult.isMatch());
@@ -102,20 +156,5 @@ public final class TypeMatchingStrategyTest extends TestCase {
             : "'" + templateType + "' should not loosely match '" + type + "'",
         isLooseMatch,
         matchResult.isLooseMatch());
-  }
-
-  private static JSType getJsType(String jsType) {
-    Compiler compiler = new Compiler();
-    compiler.disableThreads();
-    CompilerOptions options = new CompilerOptions();
-    options.setCheckTypes(true);
-
-    compiler.compile(
-        ImmutableList.of(SourceFile.fromCode("externs", EXTERNS)),
-        ImmutableList.of(
-            SourceFile.fromCode("test", String.format("/** @type {%s} */ var x;", jsType))),
-        options);
-    Node node = compiler.getRoot().getLastChild();
-    return node.getFirstFirstChild().getFirstChild().getJSType();
   }
 }

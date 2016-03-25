@@ -36,6 +36,12 @@ public enum TypeMatchingStrategy {
   STRICT_NULLABILITY(true, false, true),
 
   /**
+   * Matches type or any subtype. Does not match types with different nullability/voidability.
+   * Does not allow loose matches.
+   */
+  SUBTYPES(true, false, false),
+
+  /**
    * Does not match subtypes. Does not match types with different nullability/voidability. Does not
    * allow loose matches.
    */
@@ -63,14 +69,19 @@ public enum TypeMatchingStrategy {
       return new MatchResult(allowLooseMatches, allowLooseMatches);
     }
 
+    if (allowSubtypes) {
+      if (ignoreNullability) {
+        type = type.restrictByNotNullOrUndefined();
+      }
+      if (type.isSubtype(templateType)) {
+        return new MatchResult(true, false);
+      }
+    }
+
     boolean nullableMismatch = templateType.isNullable() != type.isNullable();
     boolean voidableMismatch = templateType.isVoidable() != type.isVoidable();
     if (!ignoreNullability && (nullableMismatch || voidableMismatch)) {
       return new MatchResult(false, false);
-    }
-
-    if (allowSubtypes) {
-      return new MatchResult(type.restrictByNotNullOrUndefined().isSubtype(templateType), false);
     }
 
     return new MatchResult(type.isEquivalentTo(templateType), false);

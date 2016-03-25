@@ -35,6 +35,7 @@ import com.google.javascript.rhino.Node;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -55,9 +56,9 @@ public final class RefasterJsScanner extends Scanner {
   /**
    * The type matching strategy to use when matching templates.
    *
-   * <p>Defaults to {@link TypeMatchingStrategy#LOOSE}.
+   * <p>Defaults to {@link TypeMatchingStrategy#SUBTYPES}.
    */
-  private TypeMatchingStrategy typeMatchingStrategy = TypeMatchingStrategy.LOOSE;
+  private TypeMatchingStrategy typeMatchingStrategy = TypeMatchingStrategy.SUBTYPES;
 
   /** All templates that were found in the template file. */
   private ImmutableList<RefasterJsTemplate> templates;
@@ -84,7 +85,7 @@ public final class RefasterJsScanner extends Scanner {
   /**
    * Sets the type matching strategy to use when matching templates.
    *
-   * <p>Defaults to {@link TypeMatchingStrategy#LOOSE}.
+   * <p>Defaults to {@link TypeMatchingStrategy#SUBTYPES}.
    */
   public void setTypeMatchingStrategy(TypeMatchingStrategy typeMatchingStrategy) {
     this.typeMatchingStrategy = typeMatchingStrategy;
@@ -195,7 +196,9 @@ public final class RefasterJsScanner extends Scanner {
     Node scriptRoot = new JsAst(SourceFile.fromCode(
         "template", templateJs)).getAstRoot(compiler);
 
-    Map<String, Node> beforeTemplates = new HashMap<>();
+    // The before-templates are kept in a LinkedHashMap, to ensure that they are later iterated
+    // over in the order in which they appear in the template JS file.
+    Map<String, Node> beforeTemplates = new LinkedHashMap<>();
     Map<String, Node> afterTemplates = new HashMap<>();
     for (Node templateNode : scriptRoot.children()) {
       if (templateNode.isFunction()) {
