@@ -324,7 +324,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       return;
     }
 
-    setStrictModeDirective(t, script);
+    setStrictModeDirective(script);
 
     Preconditions.checkArgument(scriptNodeCount == 1,
         "ProcessEs6Modules supports only one invocation per "
@@ -402,7 +402,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     compiler.reportCodeChange();
   }
 
-  private static void setStrictModeDirective(NodeTraversal t, Node n) {
+  private static void setStrictModeDirective(Node n) {
     Preconditions.checkState(n.isScript(), n);
     Set<String> directives = n.getDirectives();
     if (directives != null && directives.contains("use strict")) {
