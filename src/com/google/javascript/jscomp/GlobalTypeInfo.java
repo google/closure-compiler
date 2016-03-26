@@ -583,6 +583,8 @@ class GlobalTypeInfo implements CompilerPass {
     rawType.finalize();
   }
 
+  // TODO(dimvar): the finalization method and this one should be cleaned up;
+  // they are very hard to understand.
   private void checkSuperProperty(
       RawNominalType current, NominalType superType, String pname,
       Multimap<String, DeclaredFunctionType> propMethodTypesToProcess,
@@ -620,15 +622,16 @@ class GlobalTypeInfo implements CompilerPass {
           localPropDef.defSite, CANNOT_OVERRIDE_FINAL_METHOD, pname));
       return;
     }
-    if (localPropType == null) {
+    if (localPropType == null && superType.isInterface()) {
       // Add property from interface to class
       propTypesToProcess.put(pname, inheritedPropType);
-    } else if (!getsTypeInfoFromParentMethod(localPropDef)
+    } else if (localPropType != null
+        && !getsTypeInfoFromParentMethod(localPropDef)
         && !isValidOverride(localPropType, inheritedPropType)) {
       warnings.add(JSError.make(
           localPropDef.defSite, INVALID_PROP_OVERRIDE, pname,
           inheritedPropType.toString(), localPropType.toString()));
-    } else if (localPropDef.methodType != null) {
+    } else if (localPropType != null && localPropDef.methodType != null) {
       // If we are looking at a method definition, munging may be needed
       for (PropertyDef inheritedPropDef : inheritedPropDefs) {
         if (inheritedPropDef.methodType != null) {
