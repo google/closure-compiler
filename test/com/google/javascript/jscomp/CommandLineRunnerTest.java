@@ -417,6 +417,20 @@ public final class CommandLineRunnerTest extends TestCase {
         TypeCheck.INEXISTENT_PROPERTY);
   }
 
+  public void testCheckPossibleUndefinedProperties1() {
+    args.add("--warning_level=VERBOSE");
+    args.add("--jscomp_error=possibleMissingProperties");
+    test("/** @type {?} */ var x = {}; var y = x.bar;",
+        TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+  }
+
+  public void testCheckPossibleUndefinedProperties2() {
+    args.add("--warning_level=VERBOSE");
+    args.add("--jscomp_off=possibleMissingProperties");
+    test("/** @type {?} */ var x = {}; var y = x.bar();",
+        CheckGlobalNames.UNDEFINED_NAME_WARNING);
+  }
+
   public void testDuplicateParams() {
     test("function f(a, a) {}", RhinoErrorReporter.DUPLICATE_PARAM);
     assertThat(lastCompiler.hasHaltingErrors()).isTrue();
