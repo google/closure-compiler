@@ -45,6 +45,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -1399,7 +1400,7 @@ public class JSDocInfo implements Serializable {
     if (info == null || info.parameters == null) {
       return null;
     }
-    return ImmutableList.copyOf(info.parameters.keySet()).get(index);
+    return Iterables.get(info.parameters.keySet(), index);
   }
 
   /**
