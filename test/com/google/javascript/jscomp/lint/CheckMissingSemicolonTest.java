@@ -37,6 +37,10 @@ public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
     testWarning(js, CheckMissingSemicolon.MISSING_SEMICOLON);
   }
 
+  private void testWarningEs6(String js) {
+    testWarningEs6(js, CheckMissingSemicolon.MISSING_SEMICOLON);
+  }
+
   public void testWarning() {
     testWarning("var x");
     testWarning("alert(1)");
@@ -64,5 +68,15 @@ public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
     testSame("function f() {}");
     testSameEs6("function* f() {}");
     testSameEs6("class Example {}");
+  }
+
+  public void testWarning_export() {
+    testWarningEs6("export var x = 3");
+    testWarningEs6("export * from 'other'");
+  }
+
+  public void testNoWarning_export() {
+    testSameEs6("export function f() {}");
+    testSameEs6("export class C {}");
   }
 }

@@ -53,11 +53,17 @@ public final class CheckMissingSemicolon extends AbstractPostOrderCallback imple
   }
 
   private boolean shouldHaveSemicolon(Node statement) {
-    return !(statement.isFunction()
+    if (statement.isFunction()
         || statement.isClass()
         || statement.isBlock()
         || statement.isLabelName()
-        || (NodeUtil.isControlStructure(statement) && !statement.isDo()));
+        || (NodeUtil.isControlStructure(statement) && !statement.isDo())) {
+      return false;
+    }
+    if (statement.isExport()) {
+      return shouldHaveSemicolon(statement.getFirstChild());
+    }
+    return true;
   }
 
   private void checkSemicolon(NodeTraversal t, Node n) {
