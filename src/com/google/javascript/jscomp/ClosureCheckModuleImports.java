@@ -34,14 +34,13 @@ public final class ClosureCheckModuleImports extends AbstractPostOrderCallback
   static final DiagnosticType QUALIFIED_REFERENCE_TO_GOOG_MODULE =
       DiagnosticType.error(
           "JSC_QUALIFIED_REFERENCE_TO_GOOG_MODULE",
-          "Fully qualified reference to name provided by a goog.module.\n"
+          "Fully qualified reference to name '{0}' provided by a goog.module.\n"
               + "Either use short import syntax or"
               + " convert module to use goog.module.declareLegacyNamespace.");
 
   private final AbstractCompiler compiler;
 
   private Set<String> globalModules = new HashSet<>();
-  private Set<String> localRequiresOfModules = new HashSet<>();
 
   public ClosureCheckModuleImports(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -56,20 +55,14 @@ public final class ClosureCheckModuleImports extends AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.CALL:
-        Node callee = n.getFirstChild();
-        if (callee.matchesQualifiedName("goog.module")) {
+        if (n.getFirstChild().matchesQualifiedName("goog.module")) {
           recordModuleCall(n, parent);
-        } else if (callee.matchesQualifiedName("goog.require")) {
-          recordRequireCall(n);
         }
         break;
       case Token.GETPROP:
         if (n.isQualifiedName()) {
           checkQualifiedName(t, n);
         }
-        break;
-      case Token.SCRIPT:
-        localRequiresOfModules.clear();
         break;
     }
   }
@@ -93,21 +86,10 @@ public final class ClosureCheckModuleImports extends AbstractPostOrderCallback
     }
   }
 
-  private void recordRequireCall(Node callNode) {
-    Preconditions.checkState(callNode.isCall());
-    Node requiredNameNode = callNode.getSecondChild();
-    if (requiredNameNode.isString()) {
-      String requiredName = requiredNameNode.getString();
-      if (globalModules.contains(requiredName)) {
-        localRequiresOfModules.add(requiredName);
-      }
-    }
-  }
-
   private void checkQualifiedName(NodeTraversal t, Node qnameNode) {
     String qname = qnameNode.getQualifiedName();
-    if (localRequiresOfModules.contains(qname)) {
-      t.report(qnameNode, QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+    if (globalModules.contains(qname)) {
+      t.report(qnameNode, QUALIFIED_REFERENCE_TO_GOOG_MODULE, qname);
     }
   }
 }

@@ -38,6 +38,10 @@ public final class ClosureCheckModuleImportsTest extends Es6CompilerTestCase {
           "goog.module('x.y.z'); var c = goog.require('a.b.c'); use(a.b.c);"
         },
         QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+
+    testError(
+        new String[] {"goog.module('a.b.c');", "use(a.b.c);"},
+        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
   }
 
   public void testGoogModuleValidReferences() {

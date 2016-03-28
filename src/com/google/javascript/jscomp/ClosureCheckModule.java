@@ -78,7 +78,9 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, root, this);
     // TODO(blickly): Move this behavior into ClosureRewriteModule
-    (new ClosureCheckModuleImports(compiler)).process(externs, root);
+    if (!compiler.hasHaltingErrors()) {
+      (new ClosureCheckModuleImports(compiler)).process(externs, root);
+    }
   }
 
   @Override
