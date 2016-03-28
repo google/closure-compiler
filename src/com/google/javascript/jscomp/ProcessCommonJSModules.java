@@ -657,7 +657,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
       if (typeNode.isString()) {
         String name = typeNode.getString();
-        if (ES6ModuleLoader.isRelativeIdentifier(name)) {
+        if (ES6ModuleLoader.isRelativeIdentifier(name) || ES6ModuleLoader.isAbsoluteIdentifier(name)) {
           int lastSlash = name.lastIndexOf('/');
           int endIndex = name.indexOf('.', lastSlash);
           String localTypeName = null;

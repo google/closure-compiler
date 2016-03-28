@@ -392,7 +392,9 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   public void testFixTypeNode() {
     testModules(
         LINE_JOINER.join(
-            "export class Child {", "  /** @param {Child} child */", "  useChild(child) {}", "}"),
+            "export class Child {",
+            "  /** @param {Child} child */",
+            "  useChild(child) {}", "}"),
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "class Child$$module$testcode {",
@@ -419,7 +421,22 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   public void testReferenceToTypeFromOtherModule() {
     testModules(
         LINE_JOINER.join(
-            "export class Foo {", "  /** @param {./other.Baz} baz */", "  useBaz(baz) {}", "}"),
+            "export class Foo {",
+            "  /** @param {./other.Baz} baz */",
+            "  useBaz(baz) {}", "}"),
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "class Foo$$module$testcode {",
+            "  /** @param {module$other.Baz} baz */",
+            "  useBaz(baz) {}",
+            "}",
+            "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
+
+    testModules(
+        LINE_JOINER.join(
+            "export class Foo {",
+            "  /** @param {/other.Baz} baz */",
+            "  useBaz(baz) {}", "}"),
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "class Foo$$module$testcode {",

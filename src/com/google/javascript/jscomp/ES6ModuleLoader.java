@@ -153,6 +153,11 @@ public final class ES6ModuleLoader {
     return name.startsWith("." + MODULE_SLASH) || name.startsWith(".." + MODULE_SLASH);
   }
 
+  /** Whether this is absolute to the compilation. */
+  static boolean isAbsoluteIdentifier(String name) {
+    return name.startsWith(MODULE_SLASH);
+  }
+
   /**
    * Turns a filename into a JS identifier that is used for moduleNames in
    * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
