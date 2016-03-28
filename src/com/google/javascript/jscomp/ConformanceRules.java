@@ -1447,6 +1447,14 @@ public final class ConformanceRules {
           || isWizDeclaration(n)) {
         return ConformanceResult.CONFORMANCE;
       }
+      // TODO(tbreisacher): Instead of skipping goog.modules entirely, run
+      // this check before goog.modules are rewritten, so that we can catch
+      // implicitly public prototype methods.
+      Node enclosingScript = NodeUtil.getEnclosingScript(n);
+      if (enclosingScript != null && enclosingScript.getBooleanProp(Node.GOOG_MODULE)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
       JSDocInfo ownJsDoc = n.getFirstChild().getJSDocInfo();
       if (ownJsDoc != null && ownJsDoc.isConstructor()) {
         FunctionType functionType = n.getFirstChild()
