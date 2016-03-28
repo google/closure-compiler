@@ -91,7 +91,11 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
-      return NodeUtil.isModuleFile(n);
+      if (NodeUtil.isModuleFile(n)) {
+        n.putBooleanProp(Node.GOOG_MODULE, true);
+        return true;
+      }
+      return false;
     }
     return true;
   }
