@@ -2419,11 +2419,10 @@ public final class IntegrationTest extends IntegrationTestCase {
         "function g(y) { y.bar = function() { alert(3); }; }" +
         "g(x);" +
         "x.bar();";
-    String expected =
-        "var x = new function() {};" +
-        "/** @this {F} */" +
-        "(function (y) { y.bar = function() { alert(3); }; })(x);" +
-        "x.bar();";
+    String expected = LINE_JOINER.join(
+        "var x = new function(){};",
+        "x.bar = function(){ alert(3); };",
+        "x.bar();");
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS

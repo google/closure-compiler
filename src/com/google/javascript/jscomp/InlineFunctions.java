@@ -325,7 +325,9 @@ class InlineFunctions implements CompilerPass {
           // TODO(johnlenz): this can be improved by looking at the possible
           // values for locals.  If there are simple values, or constants
           // we could still inline.
-          if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
+          if (!assumeMinimumCapture
+              && hasLocalNames(fnNode)
+              && !NodeUtil.isIIFE(fnNode)) {
             fs.setInline(false);
           }
         }
