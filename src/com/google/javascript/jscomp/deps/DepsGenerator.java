@@ -20,12 +20,17 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.JsAst;
+import com.google.javascript.jscomp.LazyParsedDependencyInfo;
 import com.google.javascript.jscomp.SourceFile;
 
 import java.io.ByteArrayOutputStream;
@@ -320,6 +325,9 @@ public class DepsGenerator {
       Set<String> preparsedFiles) throws IOException {
     Map<String, DependencyInfo> parsedFiles = new HashMap<>();
     JsFileParser jsParser = new JsFileParser(errorManager);
+    Compiler compiler = new Compiler();
+    compiler.init(
+        ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), new CompilerOptions());
 
     for (SourceFile file : srcs) {
       String closureRelativePath =
@@ -333,6 +341,7 @@ public class DepsGenerator {
             jsParser.parseFile(
                 file.getName(), closureRelativePath,
                 file.getCode());
+        depInfo = new LazyParsedDependencyInfo(depInfo, new JsAst(file), compiler);
 
         // Kick the source out of memory.
         file.clearCachedSource();
@@ -400,17 +409,25 @@ public class DepsGenerator {
       writeJsArray(out, provides);
       out.print(", ");
       writeJsArray(out, requires);
-      // While transitioning, only write "module" for goog.module 
-      if (depInfo.isModule()) {
+      Map<String, String> loadFlags = depInfo.getLoadFlags();
+      if (!loadFlags.isEmpty()) {
         out.print(", ");
-        writeJsBoolean(out, depInfo.isModule());
+        writeJsObject(out, loadFlags);
       }
       out.println(");");
     }
   }
 
-  private void writeJsBoolean(PrintStream out, boolean value) {
-    out.print(value ? "true" : "false");
+  private static void writeJsObject(PrintStream out, Map<String, String> map) {
+    List<String> entries = new ArrayList<>();
+    for (Map.Entry<String, String> entry : map.entrySet()) {
+      String key = entry.getKey().replace("'", "\\'");
+      String value = entry.getValue().replace("'", "\\'");
+      entries.add("'" + key + "': '" + value + "'");
+    }
+    out.print("{");
+    out.print(Joiner.on(", ").join(entries));
+    out.print("}");
   }
 
   /**

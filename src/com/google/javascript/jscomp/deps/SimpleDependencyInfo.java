@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,10 +33,10 @@ import java.util.Objects;
 public final class SimpleDependencyInfo implements DependencyInfo {
 
   /** A list of provided symbols. */
-  private final List<String> provides;
+  private final ImmutableList<String> provides;
 
   /** A list of required symbols. */
-  private final List<String> requires;
+  private final ImmutableList<String> requires;
 
   /** A map of flags required to load this file. */
   private final ImmutableMap<String, String> loadFlags;
@@ -69,11 +68,11 @@ public final class SimpleDependencyInfo implements DependencyInfo {
    */
   public SimpleDependencyInfo(
       String srcPathRelativeToClosure, String pathOfDefiningFile,
-      List<String> provides, List<String> requires, Map<String, String> loadFlags) {
+      Collection<String> provides, Collection<String> requires, Map<String, String> loadFlags) {
     this.srcPathRelativeToClosure = srcPathRelativeToClosure;
     this.pathOfDefiningFile = pathOfDefiningFile;
-    this.provides = provides;
-    this.requires = requires;
+    this.provides = provides != null ? ImmutableList.copyOf(provides) : ImmutableList.<String>of();
+    this.requires = requires != null ? ImmutableList.copyOf(requires) : ImmutableList.<String>of();
     this.loadFlags = ImmutableMap.copyOf(loadFlags);
   }
 
@@ -102,13 +101,13 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   }
 
   @Override
-  public Collection<String> getProvides() {
-    return Collections.unmodifiableList(provides);
+  public ImmutableList<String> getProvides() {
+    return provides;
   }
 
   @Override
-  public Collection<String> getRequires() {
-    return Collections.unmodifiableList(requires);
+  public ImmutableList<String> getRequires() {
+    return requires;
   }
 
   @Override
@@ -138,11 +137,10 @@ public final class SimpleDependencyInfo implements DependencyInfo {
         srcPathRelativeToClosure, pathOfDefiningFile, loadFlags);
   }
 
-  public static final SimpleDependencyInfo EMPTY =
-      new SimpleDependencyInfo(
-          "",
-          "",
-          ImmutableList.<String>of(),
-          ImmutableList.<String>of(),
-          ImmutableMap.<String, String>of());
+  public static final SimpleDependencyInfo EMPTY = new SimpleDependencyInfo(
+      "",
+      "",
+      ImmutableList.<String>of(),
+      ImmutableList.<String>of(),
+      ImmutableMap.<String, String>of());
 }
