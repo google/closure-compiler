@@ -34,7 +34,7 @@ public final class ClosureCheckModuleImports extends AbstractPostOrderCallback
   static final DiagnosticType QUALIFIED_REFERENCE_TO_GOOG_MODULE =
       DiagnosticType.error(
           "JSC_QUALIFIED_REFERENCE_TO_GOOG_MODULE",
-          "Fully qualified reference to name '{0}' provided by a goog.module.\n"
+          "Fully qualified reference to name ''{0}'' provided by a goog.module.\n"
               + "Either use short import syntax or"
               + " convert module to use goog.module.declareLegacyNamespace.");
 

@@ -466,7 +466,7 @@ public class Compiler extends AbstractCompiler {
 
   private static final DiagnosticType EMPTY_ROOT_MODULE_ERROR =
       DiagnosticType.error("JSC_EMPTY_ROOT_MODULE_ERROR",
-          "Root module '{0}' must contain at least one source code input");
+          "Root module ''{0}'' must contain at least one source code input");
 
   /**
    * Verifies that at least one module has been provided and that the first one

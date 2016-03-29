@@ -123,7 +123,7 @@ class RenameProperties implements CompilerPass {
   static final DiagnosticType BAD_ARG = DiagnosticType.error(
       "JSC_BAD_RENAME_PROPERTY_FUNCTION_NAME_ARG",
       "Bad " + RENAME_PROPERTY_FUNCTION_NAME + " argument - " +
-      "'{0}' is not a valid JavaScript identifier");
+      "''{0}'' is not a valid JavaScript identifier");
 
   /**
    * Creates an instance.

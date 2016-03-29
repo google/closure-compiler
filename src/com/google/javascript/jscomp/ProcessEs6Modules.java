@@ -54,7 +54,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       DiagnosticType.error(
           "JSC_NAMESPACE_IMPORT_CANNOT_USE_STAR",
           "Namespace imports ('goog:some.Namespace') cannot use import * as. "
-              + "Did you mean to import {0} from '{1}';?");
+              + "Did you mean to import {0} from ''{1}'';?");
 
   private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
 
