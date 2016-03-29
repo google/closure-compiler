@@ -2419,6 +2419,11 @@ public final class NodeUtil {
         && parent.getSecondChild() == n;
   }
 
+  // TODO(tbreisacher): Add a method for detecting nodes under es6_runtime.js
+  static boolean isInSyntheticScript(Node n) {
+    return n.getSourceFileName() != null && n.getSourceFileName().startsWith(" [synthetic:");
+  }
+
   /** Safely remove children while maintaining a valid node structure. */
   public static void removeChild(Node parent, Node node) {
     if (isTryFinallyNode(parent, node)) {

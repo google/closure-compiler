@@ -406,6 +406,10 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (NodeUtil.isInSyntheticScript(n)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
       if (n.isGetProp() || n.isName()) {
         // TODO(johnlenz): restrict to global names
         if (n.isQualifiedName()) {
@@ -1255,7 +1259,7 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       // TODO(tbreisacher): Figure out how to remove this restriction after b/26884264 is fixed.
-      if (n.getSourceFileName() != null && n.getSourceFileName().startsWith(" [synthetic:")) {
+      if (NodeUtil.isInSyntheticScript(n)) {
         return ConformanceResult.CONFORMANCE;
       }
 
