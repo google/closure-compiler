@@ -29,10 +29,13 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_N
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS;
 
+import com.google.javascript.jscomp.ClosureCodingConvention;
+import com.google.javascript.jscomp.CodingConvention;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.GoogleCodingConvention;
 
 /**
  * Test case for {@link CheckJSDocStyle}.
@@ -42,15 +45,22 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     super("/** @fileoverview\n * @externs\n */");
   }
 
+  private CodingConvention codingConvention;
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    codingConvention = new GoogleCodingConvention();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
   }
 
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckJSDocStyle(compiler);
+  }
+
+  protected CodingConvention getCodingConvention() {
+    return codingConvention;
   }
 
   public void testInvalidSuppress() {
@@ -362,6 +372,17 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             " */",
             "function f(x) { }"));
 
+  }
+
+  public void testMissingPrivate_noWarningWithClosureConvention() {
+    codingConvention = new ClosureCodingConvention();
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @return {number}",
+            " * @private",
+            " */",
+            "X.prototype.foo = function() { return 0; }"));
   }
 
   public void testMissingPrivate() {

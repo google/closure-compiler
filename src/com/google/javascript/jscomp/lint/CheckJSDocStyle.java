@@ -181,7 +181,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       if (compiler.getCodingConvention().isPrivate(name)
           && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
         t.report(n, MUST_BE_PRIVATE, name);
-      } else if (!compiler.getCodingConvention().isPrivate(name)
+      } else if (compiler.getCodingConvention().hasPrivacyConvention()
+          && !compiler.getCodingConvention().isPrivate(name)
           && jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
         t.report(n, MUST_HAVE_TRAILING_UNDERSCORE, name);
       }
