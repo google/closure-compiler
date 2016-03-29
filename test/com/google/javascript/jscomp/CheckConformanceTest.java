@@ -352,6 +352,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "  /** @const {?} */ this.FOO = unknown;",
             "};",
             "var x = new f();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @const */",
+            "var ns = {};",
+            "/** @const */",
+            "ns.subns = ns.subns || {};"));
   }
 
   public void testBannedCodePattern1() {
