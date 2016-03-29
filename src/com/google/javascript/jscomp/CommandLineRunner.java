@@ -24,7 +24,9 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.TokenStream;
@@ -33,6 +35,7 @@ import com.google.protobuf.TextFormat;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionDef;
 import org.kohsuke.args4j.OptionHandlerFilter;
@@ -133,9 +136,12 @@ public class CommandLineRunner extends
     private static List<FlagEntry<JsSourceType>> mixedJsSources =
         Collections.synchronizedList(new ArrayList<FlagEntry<JsSourceType>>());
 
-    @Option(name = "--help",
-        handler = BooleanOptionHandler.class,
-        usage = "Displays this message on stdout and exit")
+    @Option(
+      name = "--help",
+      handler = BooleanOptionHandler.class,
+      hidden = true,
+      usage = "Displays this message on stdout and exit"
+    )
     private boolean displayHelp = false;
 
     @Option(name = "--print_tree",
@@ -160,11 +166,13 @@ public class CommandLineRunner extends
 
     // Turn on (very slow) extra sanity checks for use when modifying the
     // compiler.
-    @Option(name = "--jscomp_dev_mode",
-        // hidden, no usage
-        aliases = {"--dev_mode"})
-    private CompilerOptions.DevMode jscompDevMode =
-        CompilerOptions.DevMode.OFF;
+    @Option(
+      name = "--jscomp_dev_mode",
+      hidden = true,
+      //no usage
+      aliases = {"--dev_mode"}
+    )
+    private CompilerOptions.DevMode jscompDevMode = CompilerOptions.DevMode.OFF;
 
     @Option(name = "--logging_level",
         hidden = true,
@@ -212,7 +220,6 @@ public class CommandLineRunner extends
     private List<String> module = new ArrayList<>();
 
     @Option(name = "--variable_renaming_report",
-        hidden = true,
         usage = "File where the serialized version of the variable "
         + "renaming map produced should be saved")
     private String variableMapOutputFile = "";
@@ -228,7 +235,6 @@ public class CommandLineRunner extends
     private boolean createNameMapFiles = false;
 
     @Option(name = "--property_renaming_report",
-        hidden = true,
         usage = "File where the serialized version of the property "
         + "renaming map produced should be saved")
     private String propertyMapOutputFile = "";
@@ -301,31 +307,38 @@ public class CommandLineRunner extends
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
-    @Option(name = "--jscomp_error",
-        handler = WarningGuardErrorOptionHandler.class,
-        usage = "Make the named class of warnings an error. Options:" +
-        DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES + ". '*' adds all supported.")
+    @Option(
+      name = "--jscomp_error",
+      handler = WarningGuardErrorOptionHandler.class,
+      usage =
+          "Make the named class of warnings an error. Must be one "
+              + "of the error group items. '*' adds all supported."
+    )
     private List<String> jscompError = new ArrayList<>();
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
-    @Option(name = "--jscomp_warning",
-        handler = WarningGuardWarningOptionHandler.class,
-        usage = "Make the named class of warnings a normal warning. " +
-        "Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES +
-        ". '*' adds all supported.")
+    @Option(
+      name = "--jscomp_warning",
+      handler = WarningGuardWarningOptionHandler.class,
+      usage =
+          "Make the named class of warnings a normal warning. Must be one "
+              + "of the error group items. '*' adds all supported."
+    )
     private List<String> jscompWarning = new ArrayList<>();
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
-    @Option(name = "--jscomp_off",
-        handler = WarningGuardOffOptionHandler.class,
-        usage = "Turn off the named class of warnings. Options:" +
-        DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES + ". '*' adds all supported.")
+    @Option(
+      name = "--jscomp_off",
+      handler = WarningGuardOffOptionHandler.class,
+      usage =
+          "Turn off the named class of warnings. Must be one "
+              + "of the error group items. '*' adds all supported."
+    )
     private List<String> jscompOff = new ArrayList<>();
 
     @Option(name = "--define",
-        hidden = true,
         aliases = {"--D", "-D"},
         usage = "Override the value of a variable annotated @define. " +
         "The format is <name>[=<val>], where <name> is the name of a @define " +
@@ -387,7 +400,6 @@ public class CommandLineRunner extends
     private boolean generateExports = false;
 
     @Option(name = "--export_local_property_definitions",
-        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Generates export code for local properties marked with @export")
     private boolean exportLocalPropertyDefinitions = false;
@@ -477,7 +489,6 @@ public class CommandLineRunner extends
     private boolean polymerPass = false;
 
     @Option(name = "--dart_pass",
-        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Rewrite Dart Dev Compiler output to be compiler-friendly.")
     private boolean dartPass = false;
@@ -553,7 +564,6 @@ public class CommandLineRunner extends
     private List<String> hideWarningsFor = new ArrayList<>();
 
     @Option(name = "--extra_annotation_name",
-        hidden = true,
         usage = "A whitelist of tag names in JSDoc. You may specify multiple")
     private List<String> extraAnnotationName = new ArrayList<>();
 
@@ -590,14 +600,17 @@ public class CommandLineRunner extends
             usage = "A file containing an instrumentation template.")
     private String instrumentationFile = "";
 
-    @Option(name = "--json_streams",
-        usage = "Specifies whether standard input and output streams will be "
-            + "a JSON array of sources. Each source will be an object of the "
-            + "form {path: filename, src: file_contents, srcmap: srcmap_contents }. "
-            + "Intended for use by stream-based build systems such as gulpjs. "
-            + "Options: NONE, IN, OUT, BOTH. Defaults to NONE.")
-    private CompilerOptions.JsonStreamMode jsonStreamMode =
-        CompilerOptions.JsonStreamMode.NONE;
+    @Option(
+      name = "--json_streams",
+      hidden = true,
+      usage =
+          "Specifies whether standard input and output streams will be "
+              + "a JSON array of sources. Each source will be an object of the "
+              + "form {path: filename, src: file_contents, srcmap: srcmap_contents }. "
+              + "Intended for use by stream-based build systems such as gulpjs. "
+              + "Options: NONE, IN, OUT, BOTH. Defaults to NONE."
+    )
+    private CompilerOptions.JsonStreamMode jsonStreamMode = CompilerOptions.JsonStreamMode.NONE;
 
     @Option(name = "--preserve_type_annotations",
         hidden = true,
@@ -606,13 +619,11 @@ public class CommandLineRunner extends
     private boolean preserveTypeAnnotations = false;
 
     @Option(name = "--noinject_library",
-        hidden = true,
         usage = "Prevent injecting the named runtime libraries.")
     private List<String> noinjectLibrary = new ArrayList<>();
 
     @Option(
       name = "--dependency_mode",
-      hidden = true,
       usage = "Specifies how the compiler should determine the set and order "
       + "of files for a compilation. Options: NONE the compiler will include "
       + "all src files in the order listed, STRICT files will be included and "
@@ -680,10 +691,165 @@ public class CommandLineRunner extends
       }
     }
 
+    private static final Multimap<String, String> categories =
+        new ImmutableMultimap.Builder<String, String>()
+            .putAll(
+                "Basic Usage",
+                ImmutableList.of(
+                    "compilation_level",
+                    "env",
+                    "externs",
+                    "js",
+                    "js_output_file",
+                    "language_in",
+                    "language_out",
+                    "warning_level"))
+            .putAll(
+                "Warning and Error Management",
+                ImmutableList.of(
+                    "conformance_configs",
+                    "extra_annotation_name",
+                    "hide_warnings_for",
+                    "jscomp_error",
+                    "jscomp_off",
+                    "jscomp_warning",
+                    "new_type_inf",
+                    "warnings_whitelist_file"))
+            .putAll(
+                "Output",
+                ImmutableList.of(
+                    "assume_function_wrapper",
+                    "debug",
+                    "export_local_property_definitions",
+                    "formatting",
+                    "generate_exports",
+                    "output_wrapper"))
+            .putAll("Dependency Management", ImmutableList.of("dependency_mode", "entry_point"))
+            .putAll(
+                "JS Modules",
+                ImmutableList.of(
+                    "js_module_root", "process_common_js_modules", "transform_amd_modules"))
+            .putAll(
+                "Library and Framework Specific",
+                ImmutableList.of(
+                    "angular_pass",
+                    "dart_pass",
+                    "noinject_library",
+                    "polymer_pass",
+                    "process_closure_primitives",
+                    "rewrite_polyfills"))
+            .putAll(
+                "Code Splitting",
+                ImmutableList.of("module", "module_output_path_prefix", "module_wrapper"))
+            .putAll(
+                "Reports",
+                ImmutableList.of(
+                    "create_source_map",
+                    "output_manifest",
+                    "output_module_dependencies",
+                    "property_renaming_report",
+                    "source_map_location_mapping",
+                    "variable_renaming_report"))
+            .putAll(
+                "Miscellaneous",
+                ImmutableList.of(
+                    "charset",
+                    "checks_only",
+                    "define",
+                    "flagfile",
+                    "third_party",
+                    "use_types_for_optimization",
+                    "version"))
+            .build();
+
     private void printUsage(PrintStream ps) {
-      parser.printUsage(
-          new OutputStreamWriter(ps, UTF_8), null, OptionHandlerFilter.PUBLIC);
+      OutputStreamWriter outputStream = new OutputStreamWriter(ps, UTF_8);
+
+      boolean isFirst = true;
+      for (Map.Entry<String, Collection<String>> entry : categories.asMap().entrySet()) {
+        String prefix = "\n\n";
+        String suffix = "";
+        if (isFirst) {
+          isFirst = false;
+          prefix = "";
+        }
+
+        if (entry.getKey().equals("Warning and Error Management")) {
+          suffix =
+              "\n"
+                  + boldPrefix
+                  + "Available Error Groups: "
+                  + normalPrefix
+                  + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES;
+        }
+
+        printCategoryUsage(entry.getKey(), entry.getValue(), outputStream, prefix, suffix);
+      }
+
       ps.flush();
+    }
+
+    private final String boldPrefix = "\033[1m";
+    private final String normalPrefix = "\033[0m";
+
+    private void printCategoryUsage(
+        String categoryName,
+        final Collection<String> options,
+        OutputStreamWriter outputStream,
+        String prefix,
+        String suffix) {
+
+      try {
+        if (prefix != null) {
+          printStringLineWrapped(prefix, outputStream);
+        }
+
+        outputStream.write(boldPrefix + categoryName + ":\n" + normalPrefix);
+
+        parser.printUsage(
+            outputStream,
+            null,
+            new OptionHandlerFilter() {
+              @Override
+              public boolean select(OptionHandler optionHandler) {
+                if (optionHandler.option instanceof NamedOptionDef) {
+                  return !optionHandler.option.hidden()
+                      && options.contains(
+                          ((NamedOptionDef) optionHandler.option).name().replaceFirst("^--", ""));
+                }
+                return false;
+              }
+            });
+
+        if (suffix != null) {
+          printStringLineWrapped(suffix, outputStream);
+        }
+      } catch (IOException e) {
+        // Ignore.
+      }
+    }
+
+    private final int maxLineLength = 80;
+    private final Pattern whitespacePattern = Pattern.compile("\\s");
+
+    private void printStringLineWrapped(String input, OutputStreamWriter outputStream)
+        throws IOException {
+      if (input.length() < maxLineLength) {
+        outputStream.write(input);
+        return;
+      }
+
+      int endIndex = maxLineLength;
+      String subString = input.substring(0, maxLineLength);
+      Matcher whitespaceMatcher = whitespacePattern.matcher(subString);
+      boolean foundMatch = false;
+      while (whitespaceMatcher.find()) {
+        endIndex = whitespaceMatcher.start();
+        foundMatch = true;
+      }
+      outputStream.write(input.substring(0, endIndex) + "\n");
+      printStringLineWrapped(
+          "    " + input.substring(foundMatch ? endIndex + 1 : endIndex), outputStream);
     }
 
     private void printShortUsageAfterErrors(PrintStream ps) {
@@ -1052,7 +1218,7 @@ public class CommandLineRunner extends
       } else if (c == 34) {
         if (escaped) {
           if (quoted) {
-            builder.setCharAt(builder.length()-1, (char) c);
+            builder.setCharAt(builder.length() - 1, (char) c);
           } else {
             builder.append((char) c);
           }
