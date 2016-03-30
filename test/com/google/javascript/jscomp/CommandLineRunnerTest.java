@@ -665,7 +665,6 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(runner.shouldRunCompiler()).isFalse();
     assertThat(runner.hasErrors()).isFalse();
     String output = new String(outReader.toByteArray(), UTF_8);
-    assertThat(output).contains(" --help ");
     assertThat(output).contains(" --version ");
   }
 
