@@ -143,7 +143,8 @@ public class Node implements Serializable {
                                   // parse warnings/errors when cloning cached ASTs.
       GOOG_MODULE = 87,           // Indicates that a SCRIPT node is a goog.module. Remains set
                                   // after the goog.module is desugared.
-      FEATURE_SET = 88;           // Attaches a FeatureSet to SCRIPT nodes.
+      GOOG_MODULE_REQUIRE = 88,   // Node is a goog.require() as desugared by goog.module()
+      FEATURE_SET = 89;           // Attaches a FeatureSet to SCRIPT nodes.
 
   private static final String propToString(int propType) {
       switch (propType) {
@@ -197,6 +198,7 @@ public class Node implements Serializable {
         case NON_INDEXABLE:      return "non_indexable";
         case PARSE_RESULTS:      return "parse_results";
         case GOOG_MODULE:        return "goog_module";
+        case GOOG_MODULE_REQUIRE: return "goog_module_require";
         case FEATURE_SET:        return "feature_set";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
