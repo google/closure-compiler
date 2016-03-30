@@ -828,11 +828,7 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true iff this node defines a namespace, e.g.,
-   *
-   * /** @const * / var goog = {};
-   * /** @const * / var goog = goog || {};
-   * /** @const * / goog.math = goog.math || {};
+   * Returns true iff this node defines a namespace, such as goog or goog.math.
    */
   static boolean isNamespaceDecl(Node n) {
     JSDocInfo jsdoc = getBestJSDocInfo(n);
