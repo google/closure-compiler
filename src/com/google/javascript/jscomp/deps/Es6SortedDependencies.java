@@ -36,7 +36,7 @@ import java.util.Set;
 /**
  * A sorted list of inputs following the ES6 module ordering spec.
  * <p>
- * Orders such than for each input always comes after its dependencies.
+ * Orders such that each input always comes after its dependencies.
  * Circular references are allowed by emitting the current input in the moment
  * before a loop would complete.
  * <p>
