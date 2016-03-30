@@ -71,6 +71,19 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   }
 
   /**
+   * Verifies that the compiler pass's JS outputs match the expected outputs, under
+   * a specific language mode.
+   *
+   * @param js Inputs
+   * @param expected Expected JS outputs
+   */
+  public void test(String[] js, String[] expected, LanguageMode mode) {
+    setAcceptedLanguage(mode);
+    super.test(js, expected);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+  }
+
+  /**
    * Verifies that the compiler pass's JS output matches the expected output, under
    * just ES6. Usually this implies that the input contains ES6 features.
    *
@@ -78,6 +91,18 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param expected Expected JS output
    */
   public void testEs6(String js, String expected) {
+    test(js, expected, LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS outputs match the expected outputs, under
+   * just ES6. Usually this implies that the inputs contain ES6 features.
+   *
+   * @param js Inputs
+   * @param expected Expected JS outputs
+   */
+  public void testEs6(String[] js, String[] expected) {
     test(js, expected, LanguageMode.ECMASCRIPT6);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
@@ -210,6 +235,21 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   @Override
   public void testError(String js, DiagnosticType error) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    super.testError(js, error);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    super.testError(js, error);
+  }
+
+  /**
+   * Verifies that the compiler generates the given error for the given inputs,
+   * under both ES5 and ES6 modes.
+   *
+   * @param js Inputs
+   * @param error Expected error
+   */
+  @Override
+  public void testError(String[] js, DiagnosticType error) {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     super.testError(js, error);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);

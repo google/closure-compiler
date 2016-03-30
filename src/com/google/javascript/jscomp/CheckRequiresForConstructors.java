@@ -361,12 +361,35 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     }
   }
 
-  private void visitQualifiedName(Node getprop) {
+  private void visitQualifiedName(Node getpropOrName) {
+    if (getpropOrName.isName() && getpropOrName.getString() != null) {
+      // If the referenced thing is a goog.require as desugared from goog.module().
+      if (getpropOrName.getBooleanProp(Node.GOOG_MODULE_REQUIRE)) {
+        Node declStatement = NodeUtil.getEnclosingStatement(getpropOrName);
+        if (NodeUtil.isNameDeclaration(declStatement)) {
+          for (Node varChild : declStatement.children()) {
+            // Normal declaration.
+            if (varChild.isName()) {
+              requires.put(varChild.getString(), getpropOrName);
+            }
+            // Object destructuring declaration.
+            if (varChild.isObjectPattern()) {
+              for (Node objectChild : varChild.children()) {
+                if (objectChild.isStringKey()) {
+                  requires.put(objectChild.getString(), getpropOrName);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     // For "foo.bar.baz.qux" add weak usages for "foo.bar.baz.qux", "foo.bar.baz",
     // "foo.bar", and "foo" because those might all be goog.provide'd in different files,
     // so it doesn't make sense to require the user to goog.require all of them.
-    for (; getprop != null; getprop = getprop.getFirstChild()) {
-      weakUsages.put(getprop.getQualifiedName(), getprop);
+    for (; getpropOrName != null; getpropOrName = getpropOrName.getFirstChild()) {
+      weakUsages.put(getpropOrName.getQualifiedName(), getpropOrName);
     }
   }
 
@@ -398,7 +421,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     Var var = t.getScope().getVar(name);
     if (var != null
         && (var.isExtern()
-            || var.getSourceFile() == newNode.getStaticSourceFile())) {
+            || var.getSourceFile() == newNode.getStaticSourceFile()
+            || ClosureRewriteModule.isModuleExport(name))) {
       return;
     }
     usages.put(qNameNode.getQualifiedName(), newNode);
@@ -440,7 +464,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     if (root.isName()) {
       String rootName = root.getString();
       Var var = t.getScope().getVar(rootName);
-      if (var != null && (var.isLocal() || var.isExtern())) {
+      if (var != null
+          && (var.isLocal() || var.isExtern() || ClosureRewriteModule.isModuleExport(rootName))) {
         // "require" not needed for these
       } else {
         usages.put(extendClass.getQualifiedName(), extendClass);
@@ -552,7 +577,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
               }
               String rootName = Splitter.on('.').split(typeString).iterator().next();
               Var var = t.getScope().getVar(rootName);
-              if (var == null || !var.isExtern()) {
+              if ((var == null || !var.isExtern())
+                  && !ClosureRewriteModule.isModuleExport(rootName)) {
                 usagesMap.put(typeString, n);
 
                 // Regardless of whether we're adding a weak or strong usage here, add weak usages

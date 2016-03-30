@@ -34,6 +34,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -497,6 +498,17 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
+   * Verifies that the compiler generates the given error for the given input.
+   *
+   * @param js Input
+   * @param error Expected error
+   */
+  public void testError(String[] js, DiagnosticType error) {
+    assertNotNull(error);
+    test(js, null, error, null);
+  }
+
+  /**
    * Verifies that the compiler generates the given warning for the given input.
    *
    * @param js Input
@@ -505,6 +517,26 @@ public abstract class CompilerTestCase extends TestCase {
   public void testWarning(String js, DiagnosticType warning) {
     assertNotNull(warning);
     test(js, null, null, warning);
+  }
+
+  /**
+   * Verifies that the compiler generates the given warning and description for the given input.
+   *
+   * @param js Input
+   * @param warning Expected warning
+   */
+  public void testWarning(String js, DiagnosticType warning, String description) {
+    assertNotNull(warning);
+    test(js, null, null, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler generates no warnings for the given input.
+   *
+   * @param js Input
+   */
+  public void testNoWarning(String js) {
+    test(js, null, null, null);
   }
 
   /**
@@ -1373,7 +1405,10 @@ public abstract class CompilerTestCase extends TestCase {
       }
     } else {
       assertNull("expected must be null if error != null", expected);
-      assertEquals("There should be one error. " + errorMsg, 1, compiler.getErrorCount());
+      assertEquals(
+          "There should be one error of '" + errorMsg + "' but there were: "
+          + Arrays.toString(compiler.getErrors()),
+          1, compiler.getErrorCount());
       JSError actualError = compiler.getErrors()[0];
       assertEquals(errorMsg, error, actualError.getType());
       validateSourceLocation(actualError);

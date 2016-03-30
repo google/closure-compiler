@@ -131,17 +131,19 @@ class CheckProvides implements HotSwapCompilerPass {
 
     private void visitScriptNode() {
       for (Map.Entry<String, Node> ctorEntry : ctors.entrySet()) {
-        String ctor = ctorEntry.getKey();
+        String ctorName = ctorEntry.getKey();
         int index = -1;
         boolean found = false;
 
-        if (ctor.startsWith("$jscomp.")) {
+        if (ctorName.startsWith("$jscomp.")
+            || ClosureRewriteModule.isModuleContent(ctorName)
+            || ClosureRewriteModule.isModuleExport(ctorName)) {
           continue;
         }
 
         do {
-          index = ctor.indexOf('.', index + 1);
-          String provideKey = index == -1 ? ctor : ctor.substring(0, index);
+          index = ctorName.indexOf('.', index + 1);
+          String provideKey = index == -1 ? ctorName : ctorName.substring(0, index);
           if (provides.containsKey(provideKey)) {
             found = true;
             break;

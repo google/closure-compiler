@@ -34,8 +34,8 @@ import com.google.javascript.rhino.Token;
 
 public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_BOILERPLATE =
-      "/** @define {boolean} */ var COMPILED = false; var goog = {};" +
-      "goog.exportSymbol = function() {};";
+      "/** @define {boolean} */ var COMPILED = false; var goog = {};"
+      + "goog.exportSymbol = function() {};";
 
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
@@ -129,8 +129,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
     options.setClosurePass(true);
-    test(options, CLOSURE_BOILERPLATE + "goog.provide('FOO.BAR'); FOO.BAR = 3;",
-        CLOSURE_COMPILED + "var FOO$BAR = 3;");
+    test(
+        options,
+        LINE_JOINER.join(
+            CLOSURE_BOILERPLATE,
+            "goog.provide('FOO.BAR');",
+            "FOO.BAR = 3;"),
+        LINE_JOINER.join(
+            CLOSURE_COMPILED,
+            "var FOO$BAR = 3;"));
   }
 
   public void testUnresolvedDefine() {
@@ -144,7 +151,7 @@ public final class IntegrationTest extends IntegrationTestCase {
                        "/** @define{foo.bar} */ foo.bar = {};" };
     String[] output = { "var goog = {};" +
                         "var foo = {};" +
-                        "/** @define{foo.bar} */ foo.bar = {};" };
+                        "/** @define{foo.bar} */ foo.bar = {};"};
     test(options, input, output, warnings);
   }
 
@@ -400,11 +407,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     test(
         options,
-        "goog.provide('foo.Bar.Type');\n"
-        + "goog.provide('foo.Bar');\n"
-        + "/** @typedef {number} */ foo.Bar.Type;\n"
-        + "foo.Bar = function() {};",
-        "var foo = {}; foo.Bar.Type; foo.Bar = function() {};");
+        LINE_JOINER.join(
+            "goog.provide('foo.Bar.Type');",
+            "goog.provide('foo.Bar');",
+            "/** @typedef {number} */ foo.Bar.Type;",
+            "foo.Bar = function() {};"),
+        LINE_JOINER.join(
+            "var foo = {};",
+            "foo.Bar.Type;",
+            "foo.Bar = function() {};"));
   }
 
   public void testTypedefBeforeOwner2() {
@@ -413,11 +424,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCollapseProperties(true);
     test(
         options,
-        "goog.provide('foo.Bar.Type');\n"
-        + "goog.provide('foo.Bar');\n"
-        + "/** @typedef {number} */ foo.Bar.Type;\n"
-        + "foo.Bar = function() {};",
-        "var foo$Bar$Type; var foo$Bar = function() {};");
+        LINE_JOINER.join(
+            "goog.provide('foo.Bar.Type');",
+            "goog.provide('foo.Bar');",
+            "/** @typedef {number} */ foo.Bar.Type;",
+            "foo.Bar = function() {};"),
+        LINE_JOINER.join(
+            "var foo$Bar$Type;",
+            "var foo$Bar = function() {};"));
   }
 
   public void testExportedNames() {
@@ -494,17 +508,18 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCollapseProperties(true);
     test(options,
         new String[] {
-          "var goog = {};",
-          "goog.provide('goog.testing.testSuite');\n"
-          + "goog.testing.testSuite = function(a) {};\n",
-          " goog.module('testing');\n"
-          + "var testSuite = goog.require('goog.testing.testSuite');\n"
-          + "testSuite({testMethod:function(){}});\n"
+            LINE_JOINER.join(
+                "var goog = {};",
+                "goog.provide('goog.testing.testSuite');",
+                "goog.testing.testSuite = function(a) {};"),
+            LINE_JOINER.join(
+                "goog.module('testing');",
+                "var testSuite = goog.require('goog.testing.testSuite');",
+                "testSuite({testMethod:function(){}});")
         },
         new String[] {
-          "",
-          "var $goog$testing$testSuite$$=function($a$$){};",
-          "$goog$testing$testSuite$$({\"testMethod\":function(){}})"
+            "var $goog$testing$testSuite$$ = function($a$$) {};",
+            "$goog$testing$testSuite$$({'testMethod':function(){}})"
         });
   }
 
@@ -1167,10 +1182,17 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @constructor */ Foo = function() {};"
-        + "var x = new Foo();",
-        "var COMPILED=true;var goog={};goog.exportSymbol=function(){};"
-        + "var Foo=function(){};var x=new Foo");
+        LINE_JOINER.join(
+            CLOSURE_BOILERPLATE,
+            "goog.provide('Foo');",
+            "/** @constructor */ Foo = function() {};",
+            "var x = new Foo();"),
+        LINE_JOINER.join(
+            "var COMPILED=true;",
+            "var goog = {};",
+            "goog.exportSymbol=function() {};",
+            "var Foo = function() {};",
+            "var x = new Foo;"));
     test(options,
         CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
         "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
@@ -1181,10 +1203,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
     options.setCollapseProperties(true);
-    test(options,
-        "var goog = {}; goog.provide('foo'); "
-        + "function f() { foo = {};}",
-        "var foo = {}; function f() { foo = {}; }", ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+    test(
+        options,
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.provide('foo');",
+            "function f() { foo = {};}"),
+        LINE_JOINER.join(
+            "var foo = {};",
+            "function f() { foo = {}; }"),
+        ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
   public void testProvidedNamespaceIsConst2() {
@@ -1194,10 +1222,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCollapseProperties(true);
     test(
         options,
-        "var goog = {}; goog.provide('foo.bar'); "
-        + "function f() { foo.bar = {};}",
-        "var foo$bar = {};"
-        + "function f() { foo$bar = {}; }",
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.provide('foo.bar');",
+            "function f() { foo.bar = {};}"),
+        LINE_JOINER.join(
+            "var foo$bar = {};",
+            "function f() { foo$bar = {}; }"),
         ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
@@ -2977,6 +3008,39 @@ public final class IntegrationTest extends IntegrationTestCase {
          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
   }
 
+  public void testGoogModuleOuterLegacyInner() {
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+    options.setCodingConvention(new ClosureCodingConvention());
+
+    test(
+        options,
+        new String[] {
+          // googModuleOuter
+          LINE_JOINER.join(
+              "goog.module('foo.Outer');",
+              "/** @constructor */ function Outer() {}",
+              "exports = Outer;"),
+          // legacyInner
+          LINE_JOINER.join(
+              "goog.module('foo.Outer.Inner');",
+              "goog.module.declareLegacyNamespace();",
+              "/** @constructor */ function Inner() {}",
+              "exports = Inner;"),
+          // legacyUse
+          LINE_JOINER.join(
+              "goog.provide('legacy.Use');",
+              "goog.require('foo.Outer');",
+              "goog.require('foo.Outer.Inner');",
+              "goog.scope(function() {",
+              "var Outer = goog.module.get('foo.Outer');",
+              "new Outer;",
+              "new foo.Outer.Inner;",
+              "});")
+        },
+        ClosureCheckModuleImports.QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+  }
+
   public void testUnboundedArrayLiteralInfiniteLoop() {
     CompilerOptions options = createCompilerOptions();
     options.setIdeMode(true);
@@ -2989,7 +3053,10 @@ public final class IntegrationTest extends IntegrationTestCase {
         new DependencyOptions()
         .setDependencySorting(true));
     options.setClosurePass(true);
-    test(options, "goog.provide('x');\ngoog.require('x');", "var x = {};");
+    test(
+        options,
+        "goog.provide('x'); goog.require('x');",
+        "var x = {};");
   }
 
   public void testDependencySorting() throws Exception {
@@ -3218,8 +3285,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = compile(options, js);
-
-    assertThat(compiler.getErrors()).isEmpty();
     String result = compiler.toSource(compiler.getJsRoot());
     assertThat(result).isNotEmpty();
     assertThat(result).doesNotContain("No one ever calls me");

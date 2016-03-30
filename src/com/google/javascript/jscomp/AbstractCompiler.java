@@ -210,6 +210,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Prints a node to source code.
    */
+  public abstract String toSource();
+
+  /**
+   * Prints a node to source code.
+   */
   public abstract String toSource(Node root);
 
   /**

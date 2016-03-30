@@ -399,7 +399,9 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup MISSING_PROVIDE =
       DiagnosticGroups.registerGroup("missingProvide",
-          CheckProvides.MISSING_PROVIDE_WARNING);
+          CheckProvides.MISSING_PROVIDE_WARNING,
+          ClosureRewriteModule.MISSING_MODULE,
+          ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE);
 
   public static final DiagnosticGroup MISSING_REQUIRE =
       DiagnosticGroups.registerGroup("missingRequire",
@@ -551,7 +553,8 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup LATE_PROVIDE =
       DiagnosticGroups.registerGroup(
           "lateProvide", // undocumented
-          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+          ProcessClosurePrimitives.LATE_PROVIDE_ERROR,
+          ClosureRewriteModule.LATE_PROVIDE_ERROR);
 
   // For internal use only, so there are no constants for these groups.
   static {

@@ -67,8 +67,4 @@ public final class ClosureCheckModuleImportsTest extends Es6CompilerTestCase {
           "goog.require('a.b.c'); use(a.b.c);"
         });
   }
-
-  private void testError(String[] js, DiagnosticType error) {
-    test(js, null, error);
-  }
 }

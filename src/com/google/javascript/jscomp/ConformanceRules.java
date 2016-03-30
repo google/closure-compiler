@@ -1383,11 +1383,14 @@ public final class ConformanceRules {
     }
 
     private boolean isWhitelisted(Node n) {
-      return n.isVar() && isWhitelistedName(n.getFirstChild().getString());
+      return (n.isVar() || n.isFunction()) && isWhitelistedName(n.getFirstChild().getString());
     }
 
     private boolean isWhitelistedName(String name) {
-      return name.equals("$jscomp") || name.startsWith("$jscomp$compprop");
+      return name.equals("$jscomp")
+          || name.startsWith("$jscomp$compprop")
+          || ClosureRewriteModule.isModuleContent(name)
+          || ClosureRewriteModule.isModuleExport(name);
     }
   }
 
