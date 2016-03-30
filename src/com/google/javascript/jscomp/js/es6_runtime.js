@@ -1062,6 +1062,16 @@ $jscomp.Set.prototype.forEach = function(callback, opt_thisArg) {
  @param {*} str
  @param {string} func
  */
+$jscomp.string.noNullOrUndefined_ = function(str, func) {
+  if (str == null) {
+    throw new TypeError("The 'this' value for String.prototype." + func + " " + "must not be null or undefined");
+  }
+};
+/**
+ @private
+ @param {*} str
+ @param {string} func
+ */
 $jscomp.string.noRegExp_ = function(str, func) {
   if (str instanceof RegExp) {
     throw new TypeError("First argument to String.prototype." + func + " " + "must not be a regular expression");
@@ -1100,7 +1110,8 @@ $jscomp.string.fromCodePoint = function(codepoints) {
  @return {string}
  */
 $jscomp.string.repeat = function(copies) {
-  var /** string */ string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, "repeat");
+  var /** string */ string = String(this);
   if (copies < 0 || copies > 1342177279) {
     throw new RangeError("Invalid count value");
   }
@@ -1131,7 +1142,8 @@ $jscomp.string.repeat$install = function() {
  @return {(number|undefined)}
  */
 $jscomp.string.codePointAt = function(position) {
-  /** @const */ var string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, "codePointAt");
+  /** @const */ var string = String(this);
   /** @const */ var size = string.length;
   position = Number(position) || 0;
   if (!(position >= 0 && position < size)) {
@@ -1165,7 +1177,8 @@ $jscomp.string.codePointAt$install = function() {
 $jscomp.string.includes = function(searchString, opt_position) {
   opt_position = opt_position === undefined ? 0 : opt_position;
   $jscomp.string.noRegExp_(searchString, "includes");
-  /** @const */ var string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, "includes");
+  /** @const */ var string = String(this);
   return string.indexOf(searchString, opt_position) !== -1;
 };
 /**
@@ -1185,7 +1198,8 @@ $jscomp.string.includes$install = function() {
 $jscomp.string.startsWith = function(searchString, opt_position) {
   opt_position = opt_position === undefined ? 0 : opt_position;
   $jscomp.string.noRegExp_(searchString, "startsWith");
-  /** @const */ var string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, "startsWith");
+  /** @const */ var string = String(this);
   searchString = searchString + "";
   /** @const */ var strLen = string.length;
   /** @const */ var searchLen = searchString.length;
@@ -1214,7 +1228,8 @@ $jscomp.string.startsWith$install = function() {
  */
 $jscomp.string.endsWith = function(searchString, opt_position) {
   $jscomp.string.noRegExp_(searchString, "endsWith");
-  /** @const */ var string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, "endsWith");
+  /** @const */ var string = String(this);
   searchString = searchString + "";
   if (opt_position === void 0) {
     opt_position = string.length;
