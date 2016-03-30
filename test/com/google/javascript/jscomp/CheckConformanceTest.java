@@ -276,23 +276,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
   }
 
-  public void testSpecifyingWhitelistAndOnlyApplyToIsRuntimeError() {
-    configuration =
-        "requirement: {\n" +
-        "  type: BANNED_NAME\n" +
-        "  value: 'eval'\n" +
-        "  error_message: 'eval is not allowed'\n" +
-        "  whitelist: 'blah'\n" +
-        "  only_apply_to_regexp: 'test.js$'\n " +
-        "}";
-    try {
-      testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
-      fail("expected IllegalArgumentException");
-    } catch (Exception e) {
-      assertThat(e).isInstanceOf(IllegalArgumentException.class);
-    }
-  }
-
   public void testInferredConstCheck() {
     configuration =
         LINE_JOINER.join(

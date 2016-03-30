@@ -135,16 +135,6 @@ public final class ConformanceRules {
       onlyApplyTo = ImmutableList.copyOf(requirement.getOnlyApplyToList());
       onlyApplyToRegexp = buildPattern(
           requirement.getOnlyApplyToRegexpList());
-
-      boolean hasWhitelist = !whitelist.isEmpty()
-          || whitelistRegexp != null;
-      boolean hasOnlyApplyTo = !onlyApplyTo.isEmpty()
-          || onlyApplyToRegexp != null;
-
-      if (hasWhitelist && hasOnlyApplyTo) {
-        throw new IllegalArgumentException(
-            "It is an error to specify both whitelist and only_apply_to");
-      }
     }
 
     @Nullable
@@ -189,7 +179,8 @@ public final class ConformanceRules {
       if (srcfile == null) {
         return true;
       } else if (!onlyApplyTo.isEmpty() || onlyApplyToRegexp != null) {
-        return pathIsInListOrRegexp(srcfile, onlyApplyTo, onlyApplyToRegexp);
+        return pathIsInListOrRegexp(srcfile, onlyApplyTo, onlyApplyToRegexp)
+            && !pathIsInListOrRegexp(srcfile, whitelist, whitelistRegexp);
       } else {
         return !pathIsInListOrRegexp(srcfile, whitelist, whitelistRegexp);
       }
