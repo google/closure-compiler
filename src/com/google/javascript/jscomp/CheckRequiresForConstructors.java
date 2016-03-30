@@ -116,18 +116,23 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   }
 
   // Return true if the name is a class name (starts with an uppercase
-  // character). This also matches for all-caps constants, which eliminates
-  // some false positives (e.g. goog.LOCALE.replace()).
+  // character, but is not in all-caps).
   private static boolean isClassName(String name) {
+    return isClassOrConstantName(name)
+        && !name.equals(name.toUpperCase());
+  }
+
+  // Return true if the name looks like a class name or a constant name.
+  private static boolean isClassOrConstantName(String name) {
     return name != null && name.length() > 1
-            && Character.isUpperCase(name.charAt(0));
+        && Character.isUpperCase(name.charAt(0));
   }
 
   // Return the shortest prefix of the className that refers to a class,
   // or null if no part refers to a class.
   private static String getOutermostClassName(String className) {
     for (String part : Splitter.on('.').split(className)) {
-      if (isClassName(part)) {
+      if (isClassOrConstantName(part)) {
         return className.substring(0,
             className.indexOf(part) + part.length());
       }
@@ -226,6 +231,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       if (separatorIndex > 0) {
         parentNamespace = nonNullClassName.substring(0, separatorIndex);
       }
+      if ("goog".equals(parentNamespace)
+          && !isClassName(nonNullClassName.substring(separatorIndex + 1))) {
+        // This is probably something provided in Closure's base.js so it doesn't need
+        // to be required.
+        continue;
+      }
+
       boolean notProvidedByConstructors =
           !providedNames.contains(namespace)
               && !providedNames.contains(outermostClassName)
@@ -236,8 +248,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
               && !requires.containsKey(parentNamespace);
       if (notProvidedByConstructors
           && notProvidedByRequires
-          && !namespaces.contains(namespace)
-          && !"goog".equals(parentNamespace)) {
+          && !namespaces.contains(namespace)) {
         // TODO(mknichel): If the symbol is not explicitly provided, find the next best
         // symbol from the provides in the same file.
         String rootName = Splitter.on('.').split(namespace).iterator().next();

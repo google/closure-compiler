@@ -231,6 +231,30 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testSame("var locale = goog.LOCALE.replace('_', '-');");
   }
 
+  public void testGoogArray() {
+    testMissingRequireCall(
+        "goog.array.forEach(arr, fn);",
+        "No matching require found for 'goog.array.forEach'");
+  }
+
+  public void testGoogDom() {
+    testMissingRequireCall(
+        "goog.dom.getElement('x');",
+        "No matching require found for 'goog.dom.getElement'");
+  }
+
+  public void testGoogTimerCallOnce() {
+    testMissingRequireCall(
+        "goog.Timer.callOnce(goog.nullFunction, 0);",
+        "No matching require found for 'goog.Timer'");
+  }
+
+  public void testGoogTimer() {
+    testMissingRequire(
+        "var t = new goog.Timer();",
+        "missing require: 'goog.Timer'");
+  }
+
   public void testFailEs6ClassExtends() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     String js = "var goog = {}; class SubClass extends goog.foo.Bar.Inner {}";
