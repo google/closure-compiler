@@ -139,7 +139,6 @@ public class CommandLineRunner extends
     @Option(
       name = "--help",
       handler = BooleanOptionHandler.class,
-      hidden = true,
       usage = "Displays this message on stdout and exit"
     )
     private boolean displayHelp = false;
@@ -757,6 +756,7 @@ public class CommandLineRunner extends
                     "checks_only",
                     "define",
                     "flagfile",
+                    "help",
                     "third_party",
                     "use_types_for_optimization",
                     "version"))
