@@ -315,6 +315,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
         case Token.HOOK:
         case Token.IF:
         case Token.OR:
+        case Token.SWITCH:
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();
