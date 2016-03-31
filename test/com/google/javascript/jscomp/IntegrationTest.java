@@ -288,6 +288,21 @@ public final class IntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testConstPolymerNotAllowed() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerPass(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    externs = ImmutableList.of(SourceFile.fromCode("<externs>",
+        "var Polymer = function() {}; var PolymerElement = function() {};"));
+
+    test(
+        options,
+        "const Foo = Polymer({ is: 'x-foo' });",
+        PolymerPassErrors.POLYMER_INVALID_DECLARATION);
+  }
+
   public void testForwardDeclaredTypeInTemplate() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);

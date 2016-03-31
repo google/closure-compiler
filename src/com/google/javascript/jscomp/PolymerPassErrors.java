@@ -28,7 +28,7 @@ final class PolymerPassErrors {
   // Disallow 'const Foo = Polymer(...)' because the code the PolymerPass outputs will reassign
   // Foo which is not allowed for 'const' variables.
   static final DiagnosticType POLYMER_INVALID_DECLARATION = DiagnosticType.error(
-      "JSC_POLYMER_INVALID_DECLARAION", "A Polymer() declaration cannot use 'const'.");
+      "JSC_POLYMER_INVALID_DECLARATION", "A Polymer() declaration cannot use 'const'.");
 
   static final DiagnosticType POLYMER_MISSING_IS = DiagnosticType.error("JSC_POLYMER_MISSING_IS",
       "The class descriptor must include an 'is' property.");
