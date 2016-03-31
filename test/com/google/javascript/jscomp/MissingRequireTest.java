@@ -183,6 +183,108 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "new foo.bar.Example();"));
   }
 
+  public void testWarnGoogModule_noRewriting() {
+    disableRewriteClosureCode();
+    testMissingRequireCall(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(function(id) { return goog.dom.getElement(id); });",
+            "}",
+            "",
+            "exports = getElems;"),
+        "No matching require found for 'goog.dom.getElement'");
+  }
+
+  public void testPassGoogModule_noRewriting() {
+    disableRewriteClosureCode();
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var dom = goog.require('goog.dom');",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(id => dom.getElement(id));",
+            "}",
+            "",
+            "exports = getElems;"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "goog.module.declareLegacyNamespace();",
+            "",
+            "var dom = goog.require('goog.dom');",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(id => dom.getElement(id));",
+            "}",
+            "",
+            "exports = getElems;"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var {getElement} = goog.require('goog.dom');",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(id => getElement(id));",
+            "}",
+            "",
+            "exports = getElems;"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var {getElement: getEl} = goog.require('goog.dom');",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(id => getEl(id));",
+            "}",
+            "",
+            "exports = getElems;"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "goog.require('goog.dom');",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(id => goog.dom.getElement(id));",
+            "}",
+            "",
+            "exports = getElems;"));
+  }
+
   public void testDirectCall() {
     String js = "foo.bar.baz();";
     testMissingRequireCall(js, "No matching require found for 'foo.bar.baz'");

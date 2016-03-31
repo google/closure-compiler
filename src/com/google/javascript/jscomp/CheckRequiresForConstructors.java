@@ -141,6 +141,26 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     return null;
   }
 
+  // TODO(tbreisacher): Update CodingConvention.extractClassNameIf{Require,Provide} to match this.
+  private String extractNamespace(Node call, String functionName) {
+    Node callee = call.getFirstChild();
+    if (callee.isGetProp() && callee.matchesQualifiedName(functionName)) {
+      Node target = callee.getNext();
+      if (target != null && target.isString()) {
+        return target.getString();
+      }
+    }
+    return null;
+  }
+
+  private String extractNamespaceIfRequire(Node call) {
+    return extractNamespace(call, "goog.require");
+  }
+
+  private String extractNamespaceIfProvide(Node call) {
+    return extractNamespace(call, "goog.provide");
+  }
+
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     return parent == null || !parent.isScript() || !t.getInput().isExtern();
@@ -198,7 +218,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   }
 
   private void visitScriptNode(NodeTraversal t) {
-    if (mode == Mode.SINGLE_FILE && requires.isEmpty()) {
+    if (mode == Mode.SINGLE_FILE && requires.isEmpty() && closurizedNamespaces.isEmpty()) {
       // Likely a file that isn't using Closure at all.
       return;
     }
@@ -211,7 +231,12 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       if (namespace.endsWith(".call") || namespace.endsWith(".apply")) {
         namespace = namespace.substring(0, namespace.lastIndexOf('.'));
       }
-      if (namespace.startsWith("goog.global.") || namespace.equals("goog.module.get")) {
+      if (namespace.startsWith("goog.global.")
+          // Most functions in base.js are goog.someName, but
+          // goog.module.{get,declareLegacyNamespace} are the exceptions, so just check for them
+          // explicitly.
+          || namespace.equals("goog.module.get")
+          || namespace.equals("goog.module.declareLegacyNamespace")) {
         continue;
       }
 
@@ -268,12 +293,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     for (Map.Entry<String, Node> entry : requires.entrySet()) {
       String require = entry.getKey();
       Node call = entry.getValue();
-      Node parent = call.getParent();
-      if (parent.isAssign()) {
-        // var baz = goog.require('foo.bar.baz');
-        // Assume that the var 'baz' is used somewhere, and don't warn.
-        continue;
-      }
       if (!usages.containsKey(require) && !weakUsages.containsKey(require)) {
         reportExtraRequireWarning(call, require);
       }
@@ -284,11 +303,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     if (DEFAULT_EXTRA_NAMESPACES.contains(require)) {
       return;
     }
-    JSDocInfo jsDoc = call.getJSDocInfo();
+    JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(call);
     if (jsDoc != null && jsDoc.getSuppressions().contains("extraRequire")) {
-      // There is a @suppress {extraRequire} on the call node. Even though the compiler generally
-      // doesn't understand @suppress in that position, respect it in this case,
-      // since lots of people put it there to suppress the closure-linter's extraRequire check.
+      // There is a @suppress {extraRequire} on the call node or its enclosing statement.
+      // This is one of the acceptable places for a @suppress, per
+      // https://github.com/google/closure-compiler/wiki/@suppress-annotations
       return;
     }
     compiler.report(JSError.make(call, EXTRA_REQUIRE_WARNING, require));
@@ -298,15 +317,23 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     compiler.report(JSError.make(call, DUPLICATE_REQUIRE_WARNING, require));
   }
 
-  private void visitRequire(String requiredName, Node node) {
-    if (requires.containsKey(requiredName)) {
-      reportDuplicateRequireWarning(node, requiredName);
+  /**
+   * @param localName The name that should be used in this file.
+   *
+   * <pre>
+   * Require style                        | localName
+   * -------------------------------------|----------
+   * goog.require('foo.bar');             | foo.bar
+   * var bar = goog.require('foo.bar');   | bar
+   * var {qux} = goog.require('foo.bar'); | qux
+   * import {qux} from 'foo.bar';         | qux
+   * </pre>
+   */
+  private void visitRequire(String localName, Node node) {
+    if (requires.containsKey(localName)) {
+      reportDuplicateRequireWarning(node, localName);
     } else {
-      requires.put(requiredName, node);
-      if (mode == Mode.SINGLE_FILE) {
-        String rootName = Splitter.on('.').split(requiredName).iterator().next();
-        closurizedNamespaces.add(rootName);
-      }
+      requires.put(localName, node);
     }
   }
 
@@ -323,13 +350,34 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     }
   }
 
+  private void maybeAddClosurizedNamespace(String requiredName) {
+    if (mode == Mode.SINGLE_FILE) {
+      String rootName = Splitter.on('.').split(requiredName).iterator().next();
+      closurizedNamespaces.add(rootName);
+    }
+  }
+
   private void visitCallNode(NodeTraversal t, Node call, Node parent) {
-    String required = codingConvention.extractClassNameIfRequire(call, parent);
+    String required = extractNamespaceIfRequire(call);
     if (required != null) {
-      visitRequire(required, call);
+      maybeAddClosurizedNamespace(required);
+      if (call.getParent().isName()) {
+        visitRequire(call.getParent().getString(), call);
+      } else if (call.getParent().isObjectPattern()) {
+        for (int i = 0; i < call.getParent().getChildCount() - 1; i++) {
+          Node stringKey = call.getParent().getChildAtIndex(i);
+          if (stringKey.hasChildren()) {
+            visitRequire(stringKey.getFirstChild().getString(), call);
+          } else {
+            visitRequire(stringKey.getString(), call);
+          }
+        }
+      } else {
+        visitRequire(required, call);
+      }
       return;
     }
-    String provided = codingConvention.extractClassNameIfProvide(call, parent);
+    String provided = extractNamespaceIfProvide(call);
     if (provided != null) {
       providedNames.add(provided);
       return;

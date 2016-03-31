@@ -167,4 +167,68 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
             "new Foo;"),
             EXTRA_REQUIRE_WARNING);
   }
+
+  public void testGoogModuleWithDestructuringRequire() {
+    disableRewriteClosureCode();
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var dom = goog.require('goog.dom');",
+            "var {assert} = goog.require('goog.asserts');",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(id => dom.getElement(id));",
+            "}",
+            "",
+            "exports = getElems;"),
+        EXTRA_REQUIRE_WARNING);
+
+     testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var {assert : googAssert} = goog.require('goog.asserts');",
+            "",
+            "exports = function() {",
+            "  googAssert(true);",
+            "};"));
+
+     testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var {assert, fail} = goog.require('goog.asserts');",
+            "",
+            "exports = function() {",
+            "  assert(true);",
+            "};"),
+        EXTRA_REQUIRE_WARNING);
+
+     testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var {assert : googAssert} = goog.require('goog.asserts');",
+            "",
+            "exports = function() {",
+            "  goog.asserts(true);",
+            "};"),
+        EXTRA_REQUIRE_WARNING);
+
+     testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var {assert : googAssert} = goog.require('goog.asserts');",
+            "",
+            "exports = function() {",
+            "  assert(true);",
+            "};"),
+        EXTRA_REQUIRE_WARNING);
+  }
 }
