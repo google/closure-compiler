@@ -211,7 +211,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       if (namespace.endsWith(".call") || namespace.endsWith(".apply")) {
         namespace = namespace.substring(0, namespace.lastIndexOf('.'));
       }
-      if (namespace.startsWith("goog.global.")) {
+      if (namespace.startsWith("goog.global.") || namespace.equals("goog.module.get")) {
         continue;
       }
 

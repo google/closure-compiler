@@ -45,7 +45,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
         earlyLintChecks,
-        closureRewriteModule,
         closureGoogScopeAliases,
         closureRewriteClass,
         lateLintChecks,
@@ -74,14 +73,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckUnusedLabels(compiler),
                   new CheckUselessBlocks(compiler),
                   new ClosureCheckModule(compiler)));
-        }
-      };
-
-  private final PassFactory closureRewriteModule =
-      new PassFactory("closureRewriteModule", true) {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new ClosureRewriteModule(compiler);
         }
       };
 
