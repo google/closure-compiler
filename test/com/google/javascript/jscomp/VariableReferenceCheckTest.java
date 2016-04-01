@@ -256,6 +256,8 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   public void testForIn() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("for (var prop in obj) {}");
+    assertNoWarning("for (prop in obj) {}");
+    assertNoWarning("var prop; for (prop in obj) {}");
   }
   /**
    * Expects the JS to generate one bad-read error.
