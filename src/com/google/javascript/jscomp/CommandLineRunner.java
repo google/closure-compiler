@@ -405,7 +405,6 @@ public class CommandLineRunner extends
     private boolean exportLocalPropertyDefinitions = false;
 
     @Option(name = "--formatting",
-        hidden = true,
         usage = "Specifies which formatting options, if any, should be "
         + "applied to the output JS. Options: "
         + "PRETTY_PRINT, PRINT_INPUT_DELIMITER, SINGLE_QUOTES")
