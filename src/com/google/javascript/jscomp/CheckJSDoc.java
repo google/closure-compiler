@@ -82,11 +82,18 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     validateClassLevelJsDoc(n, info);
     validateArrowFunction(n);
     validateDefaultValue(n, info);
-    validateTempates(n, info);
+    validateTemplates(n, info);
+    validateTypedefs(n, info);
     validateNoSideEffects(n, info);
   }
 
-  private void validateTempates(Node n, JSDocInfo info) {
+  private void validateTypedefs(Node n, JSDocInfo info) {
+    if (info != null && info.getTypedefType() != null && isClassDecl(n)) {
+      reportMisplaced(n, "typedef", "@typedef does not make sense on a class declaration.");
+    }
+  }
+
+  private void validateTemplates(Node n, JSDocInfo info) {
     if (info != null
         && !info.getTemplateTypeNames().isEmpty()
         && !info.isConstructorOrInterface()
