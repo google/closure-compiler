@@ -20,6 +20,9 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Checks that goog.module() is used correctly.
  *
@@ -27,6 +30,19 @@ import com.google.javascript.rhino.Token;
  * checks happen during goog.module rewriting, in {@link ClosureRewriteModule}.
  */
 public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
+  static final DiagnosticType GOOG_MODULE_REFERENCES_THIS = DiagnosticType.error(
+      "JSC_GOOG_MODULE_REFERENCES_THIS",
+      "The body of a goog.module cannot reference 'this'.");
+
+  static final DiagnosticType GOOG_MODULE_USES_THROW = DiagnosticType.error(
+      "JSC_GOOG_MODULE_USES_THROW",
+      "The body of a goog.module cannot use 'throw'.");
+
+  static final DiagnosticType LET_GOOG_REQUIRE =
+      DiagnosticType.disabled(
+          "JSC_LET_GOOG_REQUIRE",
+          "Module imports must be constant. Please use 'const' instead of 'let'.");
+
   static final DiagnosticType MULTIPLE_MODULES_IN_FILE =
       DiagnosticType.error(
           "JSC_MULTIPLE_MODULES_IN_FILE",
@@ -37,32 +53,30 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           "JSC_MODULE_AND_PROVIDES",
           "A file using goog.module() may not also use goog.provide() statements.");
 
-  static final DiagnosticType GOOG_MODULE_REFERENCES_THIS = DiagnosticType.error(
-      "JSC_GOOG_MODULE_REFERENCES_THIS",
-      "The body of a goog.module cannot reference 'this'.");
-
-  static final DiagnosticType GOOG_MODULE_USES_THROW = DiagnosticType.error(
-      "JSC_GOOG_MODULE_USES_THROW",
-      "The body of a goog.module cannot use 'throw'.");
+  static final DiagnosticType ONE_REQUIRE_PER_DECLARATION =
+      DiagnosticType.error(
+          "JSC_ONE_REQUIRE_PER_DECLARATION",
+          "There may only be one goog.require() per var/let/const declaration.");
 
   static final DiagnosticType REFERENCE_TO_MODULE_GLOBAL_NAME =
       DiagnosticType.error(
           "JSC_REFERENCE_TO_MODULE_GLOBAL_NAME",
           "References to the global name of a module are not allowed. Perhaps you meant exports?");
 
+  static final DiagnosticType REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME =
+      DiagnosticType.disabled(
+          "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME",
+          "Reference fully qualified import name ''{0}''. Please use the short name instead.");
+
   static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
       DiagnosticType.error(
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL",
           "goog.require() must be called at file scope.");
 
-  static final DiagnosticType ONE_REQUIRE_PER_DECLARATION =
-      DiagnosticType.error(
-          "JSC_ONE_REQUIRE_PER_DECLARATION",
-          "There may only be one goog.require() per var/let/const declaration.");
-
   private final AbstractCompiler compiler;
 
   private String currentModuleName = null;
+  private Set<String> shortRequiredNamespaces = new HashSet<>();
 
   public ClosureCheckModule(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -101,8 +115,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
         Node callee = n.getFirstChild();
         if (callee.matchesQualifiedName("goog.module")) {
           if (currentModuleName == null) {
-            Node moduleNameNode = n.getSecondChild();
-            currentModuleName = moduleNameNode.isString() ? moduleNameNode.getString() : "";
+            currentModuleName = extractFirstArgumentName(n);
           } else {
             t.report(n, MULTIPLE_MODULES_IN_FILE);
           }
@@ -125,12 +138,23 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       case Token.GETPROP:
         if (currentModuleName != null && n.matchesQualifiedName(currentModuleName)) {
           t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
+        } else if (shortRequiredNamespaces.contains(n.getQualifiedName())) {
+          t.report(n, REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
         }
         break;
       case Token.SCRIPT:
         currentModuleName = null;
+        shortRequiredNamespaces.clear();
         break;
     }
+  }
+
+  private String extractFirstArgumentName(Node callNode) {
+    Node firstArg = callNode.getSecondChild();
+    if (firstArg != null && firstArg.isString()) {
+      return firstArg.getString();
+    }
+    return null;
   }
 
   private void checkRequireCall(NodeTraversal t, Node callNode, Node parent) {
@@ -139,20 +163,27 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       case Token.EXPR_RESULT:
         return;
       case Token.GETPROP:
+        // TODO(blickly): Disallow this pattern once destructuring assignment works in the release.
         if (parent.getParent().isName()) {
           checkRequireCall(t, callNode, parent.getParent());
           return;
         }
         break;
       case Token.NAME:
-      case Token.OBJECT_PATTERN: {
-        Node declaration = parent.getParent();
-        if (declaration.getChildCount() != 1) {
-          t.report(declaration, ONE_REQUIRE_PER_DECLARATION);
-        }
+      case Token.OBJECT_PATTERN:
+        checkShortGoogRequireCall(t, callNode, parent.getParent());
         return;
-      }
     }
     t.report(callNode, REQUIRE_NOT_AT_TOP_LEVEL);
+  }
+
+  private void checkShortGoogRequireCall(NodeTraversal t, Node callNode, Node declaration) {
+    if (declaration.isLet()) {
+      t.report(declaration, LET_GOOG_REQUIRE);
+    }
+    if (declaration.getChildCount() != 1) {
+      t.report(declaration, ONE_REQUIRE_PER_DECLARATION);
+    }
+    shortRequiredNamespaces.add(extractFirstArgumentName(callNode));
   }
 }
