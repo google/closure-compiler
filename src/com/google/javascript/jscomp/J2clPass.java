@@ -157,6 +157,15 @@ public class J2clPass implements CompilerPass {
         ImmutableSet.of("to"),
         InliningMode.DIRECT);
     inlineFunctionsInFile(
+        root,
+        "j2cl/transpiler/nativebootstrap/Util.impl.js",
+        ImmutableSet.of(
+            "$setClassMetadata",
+            "$setClassMetadataForInterface",
+            "$setClassMetadataForEnum",
+            "$setClassMetadataForPrimitive"),
+        InliningMode.BLOCK);
+    inlineFunctionsInFile(
         root, ALL_CLASS_FILE_NAMES, ImmutableSet.of("$markImplementor"), InliningMode.BLOCK);
   }
 
