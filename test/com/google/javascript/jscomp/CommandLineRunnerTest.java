@@ -761,7 +761,7 @@ public final class CommandLineRunnerTest extends TestCase {
           "goog.provide('tonic'); goog.require('gin'); var tonic = {};",
           "goog.require('gin'); goog.require('tonic');"
          },
-         JSModule.CIRCULAR_DEPENDENCY_ERROR);
+         ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
   }
 
   public void testSourceSortingCircularDeps2() {
@@ -774,7 +774,7 @@ public final class CommandLineRunnerTest extends TestCase {
           "goog.require('gin'); goog.require('tonic');",
           "goog.provide('gimlet'); goog.require('gin'); goog.require('roses.lime.juice');"
          },
-         JSModule.CIRCULAR_DEPENDENCY_ERROR);
+         ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
   }
 
   public void testSourcePruningOn1() {

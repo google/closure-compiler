@@ -1556,7 +1556,6 @@ public class CompilerOptions {
    * This supersedes manageClosureDependencies.
    */
   public void setDependencyOptions(DependencyOptions options) {
-    options.setEs6ModuleOrder(this.languageIn.isEs6OrHigher());
     this.dependencyOptions = options;
   }
 
@@ -1665,9 +1664,7 @@ public class CompilerOptions {
    */
   public void setLanguageIn(LanguageMode languageIn) {
     Preconditions.checkState(languageIn != LanguageMode.NO_TRANSPILE);
-    Preconditions.checkNotNull(dependencyOptions);
     this.languageIn = languageIn;
-    dependencyOptions.setEs6ModuleOrder(languageIn.isEs6OrHigher());
   }
 
   public LanguageMode getLanguageIn() {

@@ -27,7 +27,6 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_N
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_PROVIDE_CALL;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
-import static com.google.javascript.jscomp.deps.JsFileLineParser.PARSE_ERROR;
 
 /**
  * Unit tests for ClosureRewriteModule
@@ -351,15 +350,11 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
   }
 
   public void testInvalidModule() {
-    // The ES6 path turns on DependencyOptions.needsManagement() which leads to JsFileLineParser
-    // execution that throws a different exception on some invalid goog.provide()s.
-    testError("goog.module(a);", INVALID_MODULE_NAMESPACE, PARSE_ERROR);
+    testError("goog.module(a);", INVALID_MODULE_NAMESPACE);
   }
 
   public void testInvalidRequire() {
-    // The ES6 path turns on DependencyOptions.needsManagement() which leads to JsFileLineParser
-    // execution that throws a different exception on some invalid goog.provide()s.
-    testError("goog.module('ns.a');" + "goog.require(a);", INVALID_REQUIRE_NAMESPACE, PARSE_ERROR);
+    testError("goog.module('ns.a');" + "goog.require(a);", INVALID_REQUIRE_NAMESPACE);
   }
 
   public void testInvalidProvide() {

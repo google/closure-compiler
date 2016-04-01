@@ -147,7 +147,6 @@ public final class GwtRunner implements EntryPoint {
 
   private static void disableUnsupportedOptions(CompilerOptions options) {
     options.getDependencyOptions().setDependencySorting(false);
-    options.getDependencyOptions().setEs6ModuleOrder(false);
   }
 
   public String compile(String js, Flags flags) {

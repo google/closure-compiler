@@ -19,10 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.deps.ClosureSortedDependencies;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.Es6SortedDependencies;
-import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
@@ -264,17 +262,9 @@ public final class JSModule implements DependencyInfo, Serializable {
     }
 
     // Sort the JSModule in this order.
-    try {
-      List<CompilerInput> sortedList =
-          (compiler.getOptions().getDependencyOptions().isEs6ModuleOrder()
-                  ? new Es6SortedDependencies<>(inputs)
-                  : new ClosureSortedDependencies<>(inputs)).getSortedList();
-      inputs.clear();
-      inputs.addAll(sortedList);
-    } catch (CircularDependencyException e) {
-      compiler.report(
-          JSError.make(CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
-    }
+    List<CompilerInput> sortedList = new Es6SortedDependencies<>(inputs).getSortedList();
+    inputs.clear();
+    inputs.addAll(sortedList);
   }
 
   /**

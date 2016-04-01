@@ -27,10 +27,8 @@ import com.google.common.collect.Multimap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.google.javascript.jscomp.deps.ClosureSortedDependencies;
 import com.google.javascript.jscomp.deps.Es6SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies;
-import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -332,15 +330,13 @@ public final class JSModuleGraph {
    *     Expressed as JS symbols.
    * @param inputs The original list of sources. Used to ensure that the sort
    *     is stable.
-   * @throws CircularDependencyException if there is a circular dependency
-   *     between the provides and requires.
    * @throws MissingProvideException if an entry point was not provided
    *     by any of the inputs.
    * @see DependencyOptions for more info on how this works.
    */
   public List<CompilerInput> manageDependencies(
       List<ModuleIdentifier> entryPoints, List<CompilerInput> inputs)
-      throws CircularDependencyException, MissingModuleException, MissingProvideException {
+      throws MissingModuleException, MissingProvideException {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
@@ -355,21 +351,15 @@ public final class JSModuleGraph {
    *
    * @param inputs The original list of sources. Used to ensure that the sort
    *     is stable.
-   * @throws CircularDependencyException if there is a circular dependency
-   *     between the provides and requires.
    * @throws MissingProvideException if an entry point was not provided
    *     by any of the inputs.
    * @see DependencyOptions for more info on how this works.
    */
   public List<CompilerInput> manageDependencies(
       DependencyOptions depOptions,
-      List<CompilerInput> inputs)
-      throws CircularDependencyException, MissingProvideException,
-          MissingModuleException {
+      List<CompilerInput> inputs) throws MissingProvideException, MissingModuleException {
 
-    SortedDependencies<CompilerInput> sorter =
-        depOptions.isEs6ModuleOrder()
-            ? new Es6SortedDependencies<>(inputs) : new ClosureSortedDependencies<>(inputs);
+    SortedDependencies<CompilerInput> sorter = new Es6SortedDependencies<>(inputs);
 
     Iterable<CompilerInput> entryPointInputs = createEntryPointInputs(
         depOptions, inputs, sorter);

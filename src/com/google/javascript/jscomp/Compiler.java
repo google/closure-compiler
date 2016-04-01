@@ -28,7 +28,6 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
-import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -1461,9 +1460,6 @@ public class Compiler extends AbstractCompiler {
             (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
             .manageDependencies(options.dependencyOptions, inputs);
         staleInputs = true;
-      } catch (CircularDependencyException e) {
-        report(JSError.make(
-            JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
       } catch (MissingProvideException e) {
         report(JSError.make(
             MISSING_ENTRY_ERROR, e.getMessage()));
@@ -1651,6 +1647,7 @@ public class Compiler extends AbstractCompiler {
   /**
    * Converts the main parse tree back to JS code.
    */
+  @Override
   public String toSource() {
     return runInCompilerThread(new Callable<String>() {
       @Override

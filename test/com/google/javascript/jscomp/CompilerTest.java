@@ -208,7 +208,6 @@ public final class CompilerTest extends TestCase {
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setMoocherDropping(true);
     options.dependencyOptions.setEntryPoints(entryPoints);
-    options.dependencyOptions.setEs6ModuleOrder(true);
     options.setProcessCommonJSModules(true);
     Compiler compiler = new Compiler();
     compiler.init(new ArrayList<SourceFile>(), inputs, options);
