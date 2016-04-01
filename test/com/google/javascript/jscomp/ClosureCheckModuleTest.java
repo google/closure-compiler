@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_I
 import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_MODULE_GLOBAL_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REQUIRE_NOT_AT_TOP_LEVEL;
-import static com.google.javascript.jscomp.ClosureCheckModule.SHORTHAND_OBJLIT_NOT_ALLOWED;
 
 public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
   @Override
@@ -88,14 +87,6 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
 
   public void testGoogModuleReferencesGlobalName() {
     testError("goog.module('x.y.z');\nx.y.z = function() {};", REFERENCE_TO_MODULE_GLOBAL_NAME);
-  }
-
-  public void testIllegalExports() {
-    testErrorEs6("goog.module('example'); exports = {Foo};", SHORTHAND_OBJLIT_NOT_ALLOWED);
-    testErrorEs6(
-        "goog.module('example'); exports = {Foo: Foo, Bar};", SHORTHAND_OBJLIT_NOT_ALLOWED);
-    testErrorEs6(
-        "goog.module('example'); exports = {Foo, Bar: Bar};", SHORTHAND_OBJLIT_NOT_ALLOWED);
   }
 
   public void testIllegalGoogRequires() {

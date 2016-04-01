@@ -802,9 +802,15 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
     testEs6(
         LINE_JOINER.join(
             "goog.module('ns.a');",
-            "exports = { something };"),
+            "class Something {}",
+            "exports = { Something };"),
 
-        "/** @const */ var module$exports$ns$a = { /** @const */ something };");
+        LINE_JOINER.join(
+            "class module$contents$ns$a_Something {}",
+            "/** @const */ var module$exports$ns$a = {",
+            "  /** @const */",
+            "  Something: module$contents$ns$a_Something",
+            "};"));
 
     testErrorEs6(
         LINE_JOINER.join(

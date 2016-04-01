@@ -930,7 +930,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         if (c.isComputedProp()) {
           t.report(c, INVALID_EXPORT_COMPUTED_PROPERTY);
         } else if (c.isStringKey()) {
-          Node value = c.hasChildren() ? c.getFirstChild() : IR.name(c.getString());
+          if (!c.hasChildren()) {
+            c.addChildToBack(IR.name(c.getString()).useSourceInfoFrom(c));
+          }
+          Node value = c.getFirstChild();
           maybeUpdateExportDeclToNode(t, c, value);
         }
       }
