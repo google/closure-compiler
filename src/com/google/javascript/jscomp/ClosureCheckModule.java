@@ -20,8 +20,8 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Checks that goog.module() is used correctly.
@@ -68,6 +68,12 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME",
           "Reference to fully qualified import name ''{0}''. Please use the short name instead.");
 
+  static final DiagnosticType REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
+      DiagnosticType.disabled(
+          "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME",
+          "Reference to fully qualified import name ''{0}''."
+              + " Please use the short name ''{1}'' instead.");
+
   static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
       DiagnosticType.error(
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL",
@@ -76,7 +82,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
   private String currentModuleName = null;
-  private Set<String> shortRequiredNamespaces = new HashSet<>();
+  private Map<String, String> shortRequiredNamespaces = new HashMap<>();
 
   public ClosureCheckModule(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -138,8 +144,14 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       case Token.GETPROP:
         if (currentModuleName != null && n.matchesQualifiedName(currentModuleName)) {
           t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
-        } else if (shortRequiredNamespaces.contains(n.getQualifiedName())) {
-          t.report(n, REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME, n.getQualifiedName());
+        } else if (shortRequiredNamespaces.containsKey(n.getQualifiedName())) {
+          String shortName = shortRequiredNamespaces.get(n.getQualifiedName());
+          if (shortName == null) {
+            t.report(n, REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME, n.getQualifiedName());
+          } else {
+            t.report(n, REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+                n.getQualifiedName(), shortName);
+          }
         }
         break;
       case Token.SCRIPT:
@@ -184,6 +196,8 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
     if (declaration.getChildCount() != 1) {
       t.report(declaration, ONE_REQUIRE_PER_DECLARATION);
     }
-    shortRequiredNamespaces.add(extractFirstArgumentName(callNode));
+    Node lhs = declaration.getFirstChild();
+    String shortName = lhs.isName() ? lhs.getString() : null;
+    shortRequiredNamespaces.put(extractFirstArgumentName(callNode), shortName);
   }
 }

@@ -511,6 +511,7 @@ public class DiagnosticGroups {
           CheckUselessBlocks.USELESS_BLOCK,
           ClosureCheckModule.LET_GOOG_REQUIRE,
           ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME,
+          ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
           RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
           RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
           RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS,

@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_I
 import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_MODULE_GLOBAL_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME;
+import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REQUIRE_NOT_AT_TOP_LEVEL;
 
 public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
@@ -136,6 +137,17 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "var A = goog.require('foo.A');",
             "",
             "exports = function() { return new foo.A; };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+  }
+
+  public void testIllegalShortImportDestructuring() {
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var {doThing} = goog.require('foo.utils');",
+            "",
+            "exports = function() { return foo.utils.doThing(''); };"),
         REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
   }
 
