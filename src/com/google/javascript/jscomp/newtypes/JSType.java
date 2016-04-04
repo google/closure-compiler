@@ -817,6 +817,12 @@ public abstract class JSType implements TypeI {
         return this;
       }
     }
+    if (t.isLoose()) {
+      JSType maybeScalar = ObjectType.mayTurnLooseObjectToScalar(t, JSType.commonTypes);
+      if (t != maybeScalar) { // ref equality on purpose
+        return maybeScalar;
+      }
+    }
     return t;
   }
 

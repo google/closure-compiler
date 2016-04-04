@@ -218,6 +218,38 @@ final class ObjectType implements TypeWithProperties {
     return newObjs.build();
   }
 
+  private static boolean hasOnlyBuiltinProps(ObjectType obj, ObjectType someBuiltinObj) {
+    for (String pname : obj.props.keySet()) {
+      if (!someBuiltinObj.mayHaveProp(new QualifiedName(pname))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Crude heuristic to decide whether a loose object is actually a scalar type
+  // and methods have been called on it.
+  // Does not apply to too-common properties such as toString (and for this
+  // reason it doesn't apply to booleans).
+  // Only uses property names; change it to use types if precision isn't
+  // satisfactory.
+  static JSType mayTurnLooseObjectToScalar(JSType t, JSTypes commonTypes) {
+    ObjectType obj = t.getObjTypeIfSingletonObj();
+    if (obj == null || !obj.isLoose() || obj.props.isEmpty() || obj.fn != null
+        || hasOnlyBuiltinProps(obj, TOP_OBJECT)
+        || hasOnlyBuiltinProps(
+            obj, commonTypes.getArrayInstance().getObjTypeIfSingletonObj())) {
+      return t;
+    }
+    if (hasOnlyBuiltinProps(obj, commonTypes.getNumberInstanceObjType())) {
+      return JSType.NUMBER;
+    }
+    if (hasOnlyBuiltinProps(obj, commonTypes.getStringInstanceObjType())) {
+      return JSType.STRING;
+    }
+    return t;
+  }
+
   // Trade-offs about property behavior on loose object types:
   // We never mark properties as optional on loose objects. The reason is that
   // we cannot know for sure when a property is optional or not.

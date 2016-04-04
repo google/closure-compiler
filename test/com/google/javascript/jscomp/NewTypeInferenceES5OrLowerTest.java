@@ -15137,7 +15137,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x) { x - 5; }",
         "function g(x) { x.match(/asdf/); return x.match; }",
         "var /** function(number) */ tmp = g({match: f});"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE,
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
@@ -16357,5 +16356,60 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    var /** !Object */ x = ns.mutableProp;",
         "  }",
         "}"));
+  }
+
+  public void testInferScalarInsteadOfLooseObject() {
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.name.toLowerCase().startsWith('a');",
+        "}",
+        "h({name: 'asdf'});"));
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.name.toLowerCase().startsWith('a');",
+        "}",
+        "h({name: {}});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.name.toString();",
+        "}",
+        "h({name: 'asdf'});",
+        "h({name: {}});"));
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.name.length;",
+        "}",
+        "h({name: 'asdf'});",
+        "h({name: {}});"));
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.num.toExponential();",
+        "}",
+        "h({num: 123});"));
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.num.toExponential();",
+        "}",
+        "h({num: {}});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */ function Foo() {}",
+        "Foo.prototype.toLowerCase = function() {};",
+        "Foo.prototype.getProp = function() {};",
+        "var foo = new Foo;",
+        "foo.f = function() {",
+        "  if (foo.toLowerCase() > 'asdf') { throw new Error; }",
+        "  foo.getProp();",
+        "};"),
+        NewTypeInference.INEXISTENT_PROPERTY,
+        // spurious b/c foo is inferred as string in the inner scope
+        NewTypeInference.CROSS_SCOPE_GOTCHA);
   }
 }
