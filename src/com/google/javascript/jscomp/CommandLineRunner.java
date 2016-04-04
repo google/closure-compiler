@@ -1432,8 +1432,7 @@ public class CommandLineRunner extends
           .setTracerMode(flags.tracerMode)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
           .setNewTypeInference(flags.useNewTypeInference)
-          .setJsonStreamMode(flags.jsonStreamMode)
-          .setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
+          .setJsonStreamMode(flags.jsonStreamMode);
     }
     errorStream = null;
   }
@@ -1586,6 +1585,8 @@ public class CommandLineRunner extends
         throw new RuntimeException("Error reading instrumentation template", e);
       }
     }
+
+    options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
 
     return options;
   }

@@ -445,7 +445,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.tracer = config.tracerMode;
     options.setNewTypeInference(config.useNewTypeInference);
     options.instrumentationTemplateFile = config.instrumentationTemplateFile;
-    options.setPrintSourceAfterEachPass(config.printSourceAfterEachPass);
   }
 
   protected final A getCompiler() {
@@ -2480,13 +2479,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     CommandLineConfig setNewTypeInference(boolean useNewTypeInference) {
       this.useNewTypeInference = useNewTypeInference;
-      return this;
-    }
-
-    private boolean printSourceAfterEachPass = false;
-
-    CommandLineConfig setPrintSourceAfterEachPass(boolean printSource) {
-      this.printSourceAfterEachPass = printSource;
       return this;
     }
 
