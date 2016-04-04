@@ -93,7 +93,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       "''{0}'' required more than once.");
 
   private static final Set<String> DEFAULT_EXTRA_NAMESPACES = ImmutableSet.of(
-    "goog.testing.asserts", "goog.testing.jsunit");
+      "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");
 
   CheckRequiresForConstructors(AbstractCompiler compiler, Mode mode) {
     this.compiler = compiler;
