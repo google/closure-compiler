@@ -2648,6 +2648,10 @@ public class Node implements Serializable {
     return this.getType() == Token.DELPROP;
   }
 
+  public boolean isDestructuringLhs() {
+    return this.getType() == Token.DESTRUCTURING_LHS;
+  }
+
   public boolean isDestructuringPattern() {
     return isObjectPattern() || isArrayPattern();
   }

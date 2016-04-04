@@ -753,7 +753,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         currentScript.googModuleGettedNamespaces.contains(legacyNamespaceNode.getString());
     boolean importHasAlias =
         currentScript.legacyNamespacesByAlias.values().contains(legacyNamespace);
-    boolean isDestructuring = statementNode.getFirstChild().isObjectPattern();
+    boolean isDestructuring = statementNode.getFirstChild().isDestructuringLhs();
     // Is "(.*)goog.require("bar.Foo").Foo;" style?.
     boolean immediatePropertyAccess =
         call.getParent().isGetProp()

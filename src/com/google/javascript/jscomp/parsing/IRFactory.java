@@ -1879,13 +1879,14 @@ class IRFactory {
 
     Node processVariableDeclaration(VariableDeclarationTree decl) {
       Node node = transformNodeWithInlineJsDoc(decl.lvalue);
+      Node lhs = node.isDestructuringPattern() ? newNode(Token.DESTRUCTURING_LHS, node) : node;
       if (decl.initializer != null) {
         Node initializer = transform(decl.initializer);
-        node.addChildToBack(initializer);
-        maybeSetLength(node, decl.location.start, decl.location.end);
+        lhs.addChildToBack(initializer);
+        maybeSetLength(lhs, decl.location.start, decl.location.end);
       }
-      maybeProcessType(node, decl.declaredType);
-      return node;
+      maybeProcessType(lhs, decl.declaredType);
+      return lhs;
     }
 
     Node processWhileLoop(WhileStatementTree stmt) {

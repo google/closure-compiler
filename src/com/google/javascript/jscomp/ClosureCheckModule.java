@@ -182,7 +182,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
         }
         break;
       case Token.NAME:
-      case Token.OBJECT_PATTERN:
+      case Token.DESTRUCTURING_LHS:
         checkShortGoogRequireCall(t, callNode, parent.getParent());
         return;
     }

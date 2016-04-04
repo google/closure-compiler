@@ -384,6 +384,12 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
         "}"));
   }
 
+  public void testDestructuringInLoop() {
+    testSame("for (let {length: x} in obj) {}");
+
+    testSame("for (let [{length: z}, w] in obj) {}");
+  }
+
   private void assertReassign(String js) {
     testError(js, VariableReferenceCheck.REASSIGNED_CONSTANT);
   }

@@ -221,6 +221,15 @@ class CodeGenerator {
         addIdentifier(n.getString());
         break;
 
+      case Token.DESTRUCTURING_LHS:
+        add(first);
+        if (first != last) {
+          Preconditions.checkState(childCount == 2);
+          cc.addOp("=", true);
+          add(last);
+        }
+        break;
+
       case Token.NAME:
         addIdentifier(n.getString());
         maybeAddOptional(n);
@@ -246,7 +255,9 @@ class CodeGenerator {
         break;
 
       case Token.ARRAY_PATTERN:
-        addArrayPattern(n);
+        add("[");
+        addArrayList(first);
+        add("]");
         maybeAddTypeDecl(n);
         break;
 
@@ -1506,84 +1517,16 @@ class CodeGenerator {
     }
   }
 
-  /**
-   * Determines whether the given child of a destructuring pattern is the initializer for
-   * that pattern. If the pattern is in a var/let/const statement, then the last child of the
-   * pattern is the initializer, e.g. the tree for
-   * {@code var {x:y} = z} looks like:
-   * <pre>
-   * VAR
-   *   OBJECT_PATTERN
-   *     STRING_KEY x
-   *       NAME y
-   *     NAME z
-   * </pre>
-   * The exception is when the var/let/const is the first child of a for-in or for-of loop, in
-   * which case all the children belong to the pattern itself, e.g. the VAR node in
-   * {@code for (var {x: y, z} of []);} looks like
-   * <pre>
-   * VAR
-   *   OBJECT_PATTERN
-   *     STRING_KEY x
-   *       NAME y
-   *     STRING_KEY z
-   * </pre>
-   * and the "z" node is *not* an initializer.
-   */
-  private boolean isPatternInitializer(Node n) {
-    Node parent = n.getParent();
-    Preconditions.checkState(parent.isDestructuringPattern());
-    if (n != parent.getLastChild()) {
-      return false;
-    }
-    Node decl = parent.getParent();
-
-    if (!NodeUtil.isNameDeclaration(decl)) {
-      return false;
-    }
-    if (NodeUtil.isEnhancedFor(decl.getParent()) && decl == decl.getParent().getFirstChild()) {
-      return false;
-    }
-    return true;
-  }
-
-  void addArrayPattern(Node n) {
-    boolean hasInitializer = false;
-    add("[");
-    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (isPatternInitializer(child)) {
-        hasInitializer = true;
-        add("]");
-        add("=");
-      } else if (child != n.getFirstChild()) {
-        add(",");
-      }
-
-      add(child);
-    }
-    if (!hasInitializer) {
-      add("]");
-    }
-  }
-
   void addObjectPattern(Node n) {
-    boolean hasInitializer = false;
-
     add("{");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (isPatternInitializer(child)) {
-        hasInitializer = true;
-        add("}");
-        add("=");
-      } else if (child != n.getFirstChild()) {
+      if (child != n.getFirstChild()) {
         add(",");
       }
 
       add(child);
     }
-    if (!hasInitializer) {
-      add("}");
-    }
+    add("}");
   }
 
   /**

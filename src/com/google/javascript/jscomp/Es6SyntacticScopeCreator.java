@@ -138,16 +138,10 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
       declareVar(declarationScope, lhs);
     } else if (lhs.isDefaultValue() || lhs.isRest()) {
       declareLHS(declarationScope, lhs.getFirstChild());
-    } else if (lhs.isArrayPattern() || lhs.isObjectPattern()) {
+    } else if (lhs.isDestructuringLhs()) {
+      declareLHS(declarationScope, lhs.getFirstChild());
+    } else if (lhs.isDestructuringPattern()) {
       for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {
-        if (NodeUtil.isNameDeclaration(lhs.getParent()) && child.getNext() == null
-            && !lhs.getGrandparent().isForOf()) {
-          // If the pattern is a direct child of the var/let/const node,
-          // then its last child is the RHS of the assignment, not a variable to
-          // be declared.
-          return;
-        }
-
         declareLHS(declarationScope, child);
       }
     } else {

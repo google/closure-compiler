@@ -392,7 +392,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         "for ({x} of y) { console.log(x); }",
         LINE_JOINER.join(
-            "for (let $jscomp$destructuring$var0 of y) {",
+            "for (var $jscomp$destructuring$var0 of y) {",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
             "   x = $jscomp$destructuring$var1.x;",
             "   console.log(x);",

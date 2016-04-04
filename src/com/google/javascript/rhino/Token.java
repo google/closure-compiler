@@ -157,37 +157,38 @@ public class Token {
       // ES6
       ARRAY_PATTERN = 156, // destructuring patterns
       OBJECT_PATTERN = 157,
+      DESTRUCTURING_LHS = 158, // The node inside a var/let/const with a destructuring LHS
 
-      CLASS = 158, // classes
-      CLASS_MEMBERS = 159, // class member container
-      MEMBER_FUNCTION_DEF = 160,
-      SUPER = 161,
+      CLASS = 159, // classes
+      CLASS_MEMBERS = 160, // class member container
+      MEMBER_FUNCTION_DEF = 161,
+      SUPER = 162,
 
-      LET = 162, // block scoped vars
+      LET = 163, // block scoped vars
 
-      FOR_OF = 163, // for-of
+      FOR_OF = 164, // for-of
 
-      YIELD = 164, // generators
+      YIELD = 165, // generators
 
-      IMPORT = 165, // modules
-      IMPORT_SPECS = 166,
-      IMPORT_SPEC = 167,
-      IMPORT_STAR = 168, // "* as name", called NameSpaceImport in the spec.
-      EXPORT = 169,
-      EXPORT_SPECS = 170,
-      EXPORT_SPEC = 171,
-      NAMESPACE = 172,
+      IMPORT = 166, // modules
+      IMPORT_SPECS = 167,
+      IMPORT_SPEC = 168,
+      IMPORT_STAR = 169, // "* as name", called NameSpaceImport in the spec.
+      EXPORT = 170,
+      EXPORT_SPECS = 171,
+      EXPORT_SPEC = 172,
+      NAMESPACE = 173,
 
-      REST = 173, // "..." in formal parameters, or an array pattern.
-      SPREAD = 174, // "..." in a call expression, or an array literal.
+      REST = 174, // "..." in formal parameters, or an array pattern.
+      SPREAD = 175, // "..." in a call expression, or an array literal.
 
-      COMPUTED_PROP = 175,
+      COMPUTED_PROP = 176,
 
-      TAGGED_TEMPLATELIT = 176, // tagged template literal, e.g. foo`bar`
-      TEMPLATELIT = 177, // template literal
-      TEMPLATELIT_SUB = 178, // template literal substitution
+      TAGGED_TEMPLATELIT = 177, // tagged template literal, e.g. foo`bar`
+      TEMPLATELIT = 178, // template literal
+      TEMPLATELIT_SUB = 179, // template literal substitution
 
-      DEFAULT_VALUE = 179, // Formal parameter or destructuring element with a default value
+      DEFAULT_VALUE = 180, // Formal parameter or destructuring element with a default value
 
       // Used by type declaration ASTs
       STRING_TYPE = 200,
@@ -487,6 +488,8 @@ public class Token {
         return "ARRAY_PATTERN";
       case OBJECT_PATTERN:
         return "OBJECT_PATTERN";
+      case DESTRUCTURING_LHS:
+        return "DESTRUCTURING_LHS";
       case CLASS:
         return "CLASS";
       case CLASS_MEMBERS:

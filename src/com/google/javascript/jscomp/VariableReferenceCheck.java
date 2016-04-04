@@ -40,33 +40,31 @@ import java.util.Set;
  */
 class VariableReferenceCheck implements HotSwapCompilerPass {
 
-  static final DiagnosticType EARLY_REFERENCE = DiagnosticType.warning(
-      "JSC_REFERENCE_BEFORE_DECLARE",
-      "Variable referenced before declaration: {0}");
+  static final DiagnosticType EARLY_REFERENCE =
+      DiagnosticType.warning(
+          "JSC_REFERENCE_BEFORE_DECLARE", "Variable referenced before declaration: {0}");
 
-  static final DiagnosticType REDECLARED_VARIABLE = DiagnosticType.warning(
-      "JSC_REDECLARED_VARIABLE",
-      "Redeclared variable: {0}");
+  static final DiagnosticType REDECLARED_VARIABLE =
+      DiagnosticType.warning("JSC_REDECLARED_VARIABLE", "Redeclared variable: {0}");
 
   static final DiagnosticType AMBIGUOUS_FUNCTION_DECL =
-    DiagnosticType.error("AMBIGUOUS_FUNCTION_DECL",
-        "Ambiguous use of a named function: {0}.");
+      DiagnosticType.error("AMBIGUOUS_FUNCTION_DECL", "Ambiguous use of a named function: {0}.");
 
-  static final DiagnosticType EARLY_REFERENCE_ERROR = DiagnosticType.error(
-      "JSC_REFERENCE_BEFORE_DECLARE_ERROR",
-      "Illegal variable reference before declaration: {0}");
+  static final DiagnosticType EARLY_REFERENCE_ERROR =
+      DiagnosticType.error(
+          "JSC_REFERENCE_BEFORE_DECLARE_ERROR",
+          "Illegal variable reference before declaration: {0}");
 
-  static final DiagnosticType REASSIGNED_CONSTANT = DiagnosticType.error(
-      "JSC_REASSIGNED_CONSTANT",
-      "Constant reassigned: {0}");
+  static final DiagnosticType REASSIGNED_CONSTANT =
+      DiagnosticType.error("JSC_REASSIGNED_CONSTANT", "Constant reassigned: {0}");
 
-  static final DiagnosticType REDECLARED_VARIABLE_ERROR = DiagnosticType.error(
-      "JSC_REDECLARED_VARIABLE_ERROR",
-      "Illegal redeclared variable: {0}");
+  static final DiagnosticType REDECLARED_VARIABLE_ERROR =
+      DiagnosticType.error("JSC_REDECLARED_VARIABLE_ERROR", "Illegal redeclared variable: {0}");
 
-  static final DiagnosticType DECLARATION_NOT_DIRECTLY_IN_BLOCK = DiagnosticType.error(
-      "JSC_DECLARATION_NOT_DIRECTLY_IN_BLOCK",
-      "Block-scoped declaration not directly within block: {0}");
+  static final DiagnosticType DECLARATION_NOT_DIRECTLY_IN_BLOCK =
+      DiagnosticType.error(
+          "JSC_DECLARATION_NOT_DIRECTLY_IN_BLOCK",
+          "Block-scoped declaration not directly within block: {0}");
 
   static final DiagnosticType UNUSED_LOCAL_ASSIGNMENT =
       DiagnosticType.disabled(
@@ -84,15 +82,15 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
-        compiler, new ReferenceCheckingBehavior());
+    ReferenceCollectingCallback callback =
+        new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior());
     callback.process(externs, root);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
-        compiler, new ReferenceCheckingBehavior());
+    ReferenceCollectingCallback callback =
+        new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior());
     callback.hotSwapScript(scriptRoot, originalRoot);
   }
 
@@ -118,11 +116,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       Scope scope = t.getScope();
       if (scope.isFunctionBlockScope()) {
         varsInFunctionBody.clear();
-        for (Iterator<Var> it = scope.getVars(); it.hasNext();) {
+        for (Iterator<Var> it = scope.getVars(); it.hasNext(); ) {
           varsInFunctionBody.add(it.next().name);
         }
       }
-      for (Iterator<Var> it = scope.getVars(); it.hasNext();) {
+      for (Iterator<Var> it = scope.getVars(); it.hasNext(); ) {
         Var v = it.next();
         ReferenceCollection referenceCollection = referenceMap.getReferences(v);
         // TODO(moz): Figure out why this could be null
@@ -170,16 +168,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
     private void checkShadowParam(Var v, Scope functionScope, List<Reference> references) {
       Var maybeParam = functionScope.getVar(v.getName());
-      if (maybeParam != null && maybeParam.isParam()
-          && maybeParam.getScope() == functionScope) {
+      if (maybeParam != null && maybeParam.isParam() && maybeParam.getScope() == functionScope) {
         for (Reference r : references) {
           if ((r.isVarDeclaration() || r.isHoistedFunction())
               && !r.getNode().equals(v.getNameNode())) {
-            compiler.report(
-                JSError.make(
-                    r.getNode(),
-                    REDECLARED_VARIABLE,
-                    v.name));
+            compiler.report(JSError.make(r.getNode(), REDECLARED_VARIABLE, v.name));
           }
         }
       }
@@ -207,8 +200,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           isDeclaredInScope = true;
           hoistedFn = reference;
           break;
-        } else if (NodeUtil.isFunctionDeclaration(
-            reference.getNode().getParent())) {
+        } else if (NodeUtil.isFunctionDeclaration(reference.getNode().getParent())) {
           isUnhoistedNamedFunction = true;
         }
       }
@@ -222,19 +214,22 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         Node referenceNode = reference.getNode();
         boolean isAssignment = isDeclaration || reference.isLvalue();
 
-        boolean allowDupe =
-            VarCheck.hasDuplicateDeclarationSuppression(
-                referenceNode, v);
-        boolean letConstShadowsVar = v.getParentNode().isVar()
-            && (reference.isLetDeclaration() || reference.isConstDeclaration());
+        boolean allowDupe = VarCheck.hasDuplicateDeclarationSuppression(referenceNode, v);
+        boolean letConstShadowsVar =
+            v.getParentNode().isVar()
+                && (reference.isLetDeclaration() || reference.isConstDeclaration());
         boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();
         // We disallow redeclaration of caught exception in ES6
-        boolean shadowCatchVar = isDeclaration && compiler.getLanguageMode().isEs6OrHigher()
-            && v.getParentNode().isCatch() && !isVarNodeSameAsReferenceNode;
-        boolean shadowParam = isDeclaration
-            && v.isParam()
-            && NodeUtil.isBlockScopedDeclaration(referenceNode)
-            && v.getScope() == reference.getScope().getParent();
+        boolean shadowCatchVar =
+            isDeclaration
+                && compiler.getLanguageMode().isEs6OrHigher()
+                && v.getParentNode().isCatch()
+                && !isVarNodeSameAsReferenceNode;
+        boolean shadowParam =
+            isDeclaration
+                && v.isParam()
+                && NodeUtil.isBlockScopedDeclaration(referenceNode)
+                && v.getScope() == reference.getScope().getParent();
         boolean shadowDetected = false;
         if (isDeclaration && !allowDupe) {
           // Look through all the declarations we've found so far, and
@@ -244,8 +239,12 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               shadowDetected = true;
               DiagnosticType diagnosticType;
               Node warningNode = referenceNode;
-              if (v.isLet() || v.isConst() || v.isClass()
-                  || letConstShadowsVar || shadowCatchVar || shadowParam) {
+              if (v.isLet()
+                  || v.isConst()
+                  || v.isClass()
+                  || letConstShadowsVar
+                  || shadowCatchVar
+                  || shadowParam) {
                 // These cases are all hard errors that violate ES6 semantics
                 diagnosticType = REDECLARED_VARIABLE_ERROR;
               } else if (reference.getNode().getParent().isCatch() || allowDupe) {
@@ -253,8 +252,10 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               } else {
                 // These diagnostics are for valid, but suspicious, code, and are suppressible.
                 // For vars defined in the global scope, give the same error as VarCheck
-                diagnosticType = v.getScope().isGlobal()
-                    ? VarCheck.VAR_MULTIPLY_DECLARED_ERROR : REDECLARED_VARIABLE;
+                diagnosticType =
+                    v.getScope().isGlobal()
+                        ? VarCheck.VAR_MULTIPLY_DECLARED_ERROR
+                        : REDECLARED_VARIABLE;
                 // Since we skip hoisted functions, we would have the wrong warning node in cases
                 // where the redeclaration is a function declaration. Check for that case.
                 if (isVarNodeSameAsReferenceNode
@@ -275,10 +276,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           }
         }
 
-        if (!shadowDetected && isDeclaration && (letConstShadowsVar || shadowCatchVar)
+        if (!shadowDetected
+            && isDeclaration
+            && (letConstShadowsVar || shadowCatchVar)
             && v.getScope() == reference.getScope()) {
-          compiler.report(
-              JSError.make(referenceNode, REDECLARED_VARIABLE_ERROR, v.name));
+          compiler.report(JSError.make(referenceNode, REDECLARED_VARIABLE_ERROR, v.name));
         }
 
         if (isAssignment) {
@@ -306,10 +308,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           // block it is declared.
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (!declaredBlock.provablyExecutesBefore(basicBlock)) {
-              compiler.report(
-                  JSError.make(
-                      referenceNode,
-                      AMBIGUOUS_FUNCTION_DECL, v.name));
+              compiler.report(JSError.make(referenceNode, AMBIGUOUS_FUNCTION_DECL, v.name));
               hasErrors = true;
               break;
             }
@@ -323,8 +322,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             // Special case to deal with var goog = goog || {}. Note that
             // let x = x || {} is illegal, just like var y = x || {}; let x = y;
             Node grandparent = reference.getGrandparent();
-            if ((v.isVar() && grandparent.isName()
-                && grandparent.getString().equals(v.name))) {
+            if ((v.isVar() && grandparent.isName() && grandparent.getString().equals(v.name))) {
               continue;
             }
 
@@ -335,21 +333,23 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             if (reference.getScope() == v.scope && !v.getName().equals("goog")) {
               isUndeclaredReference = true;
               compiler.report(
-                  JSError.make(reference.getNode(),
-                               (v.isLet() || v.isConst() || v.isClass() || v.isParam())
-                                   ? EARLY_REFERENCE_ERROR
-                                   : EARLY_REFERENCE, v.name));
+                  JSError.make(
+                      reference.getNode(),
+                      (v.isLet() || v.isConst() || v.isClass() || v.isParam())
+                          ? EARLY_REFERENCE_ERROR
+                          : EARLY_REFERENCE,
+                      v.name));
               hasErrors = true;
             }
           }
         }
 
-        if (!isDeclaration && !isUndeclaredReference
-            && v.isConst() && reference.isLvalue()) {
+        if (!isDeclaration && !isUndeclaredReference && v.isConst() && reference.isLvalue()) {
           compiler.report(JSError.make(referenceNode, REASSIGNED_CONSTANT, v.name));
         }
 
-        if (isDeclaration && !reference.isVarDeclaration()
+        if (isDeclaration
+            && !reference.isVarDeclaration()
             && reference.getGrandparent().isAddedBlock()) {
           compiler.report(JSError.make(referenceNode, DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.name));
         }

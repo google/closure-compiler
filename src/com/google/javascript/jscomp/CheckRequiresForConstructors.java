@@ -361,11 +361,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     String required = extractNamespaceIfRequire(call);
     if (required != null) {
       maybeAddClosurizedNamespace(required);
-      if (call.getParent().isName()) {
-        visitRequire(call.getParent().getString(), call);
-      } else if (call.getParent().isObjectPattern()) {
-        for (int i = 0; i < call.getParent().getChildCount() - 1; i++) {
-          Node stringKey = call.getParent().getChildAtIndex(i);
+      if (parent.isName()) {
+        visitRequire(parent.getString(), call);
+      } else if (parent.isDestructuringLhs() && parent.getFirstChild().isObjectPattern()) {
+        for (Node stringKey : parent.getFirstChild().children()) {
           if (stringKey.hasChildren()) {
             visitRequire(stringKey.getFirstChild().getString(), call);
           } else {

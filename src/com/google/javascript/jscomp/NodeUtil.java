@@ -1430,6 +1430,7 @@ public final class NodeUtil {
       case Token.ARRAYLIT:
       case Token.ARRAY_PATTERN:
       case Token.DEFAULT_VALUE:
+      case Token.DESTRUCTURING_LHS:
       case Token.EMPTY:  // TODO(johnlenz): remove this.
       case Token.FALSE:
       case Token.FUNCTION:
@@ -2108,7 +2109,7 @@ public final class NodeUtil {
   static boolean isDestructuringDeclaration(Node n) {
     if (isNameDeclaration(n)) {
       for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-        if (c.isArrayPattern() || c.isObjectPattern()) {
+        if (c.isDestructuringLhs()) {
           return true;
         }
       }
@@ -2774,29 +2775,7 @@ public final class NodeUtil {
       if (n.isStringKey() && n.hasChildren()) {
         return false;
       }
-      Node childNode = n;
-      boolean isLastChildOfHighestPattern = false;
-
-      // The AST structure for destructuring patterns are a little bit complicated.
-      // The last child of a destructuring pattern is NOT the left hand side UNLESS
-      // the destructuring pattern is:
-      //   1) the variable for for-of loop;
-      //   2) within the first child of ASSIGN
-      //   3) within the first child of DEFAULT_VALUE (default parameter)
-      // Also, in nested destructuring only the last child of the highest pattern
-      // and its descendants are NOT lhs.
-      for (Node currAncestor : n.getAncestors()) {
-        if (currAncestor.isForOf() || currAncestor.isFor()
-            || currAncestor.isAssign()
-            || currAncestor.isDefaultValue()) {
-          return currAncestor.getFirstChild() == childNode;
-        }
-        if (currAncestor.isDestructuringPattern()) {
-          isLastChildOfHighestPattern = currAncestor.getLastChild() == childNode;
-        }
-        childNode = currAncestor;
-      }
-      return !isLastChildOfHighestPattern;
+      return true;
     }
     return false;
   }
