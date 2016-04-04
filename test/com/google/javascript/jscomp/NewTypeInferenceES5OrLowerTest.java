@@ -11829,6 +11829,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  innerFun(function(str) { str - 5; });",
         "});"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {function(T)} x",
+        " */",
+        "function f(x) {}",
+        "/** @const */",
+        "var g = f;",
+        "g(function(x) { return x - 1; });"));
   }
 
   public void testNamespacesWithNonEmptyObjectLiteral() {

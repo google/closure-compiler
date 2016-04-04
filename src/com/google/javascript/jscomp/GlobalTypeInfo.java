@@ -2189,7 +2189,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
     if (decl.getTypeOfSimpleDecl() != null) {
       FunctionType funType = decl.getTypeOfSimpleDecl().getFunType();
-      if (funType != null) {
+      if (funType != null && !funType.isGeneric()) {
         return funType.toDeclaredFunctionType();
       }
     }
