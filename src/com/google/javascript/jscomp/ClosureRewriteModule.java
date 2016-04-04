@@ -525,10 +525,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // If some other script is advertising itself as a goog.module() with this same namespace.
     if (filePathByGoogModuleNamespace.containsKey(legacyNamespace)
         && !filePathByGoogModuleNamespace.get(legacyNamespace).equals(call.getSourceFileName())) {
-      t.report(call, DUPLICATE_MODULE);
+      t.report(call, DUPLICATE_MODULE, legacyNamespace);
     }
     if (legacyScriptNamespaces.contains(legacyNamespace)) {
-      t.report(call, DUPLICATE_NAMESPACE);
+      t.report(call, DUPLICATE_NAMESPACE, legacyNamespace);
     }
 
     filePathByGoogModuleNamespace.put(legacyNamespace, call.getSourceFileName());
@@ -550,7 +550,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       t.report(legacyNamespaceNode, INVALID_PROVIDE_CALL);
     }
     if (filePathByGoogModuleNamespace.containsKey(legacyNamespace)) {
-      t.report(call, DUPLICATE_NAMESPACE);
+      t.report(call, DUPLICATE_NAMESPACE, legacyNamespace);
     }
 
     // Log legacy namespaces and prefixes.

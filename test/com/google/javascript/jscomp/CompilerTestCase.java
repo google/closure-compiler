@@ -1415,11 +1415,19 @@ public abstract class CompilerTestCase extends TestCase {
       if (description != null) {
         assertThat(actualError.description).isEqualTo(description);
       }
+      assert_()
+          .withFailureMessage("Some placeholders in the error message were not replaced")
+          .that(actualError.description)
+          .doesNotContainMatch("\\{\\d\\}");
 
       if (warning != null) {
         String warnings = "";
         for (JSError actualWarning : compiler.getWarnings()) {
           warnings += actualWarning.description + "\n";
+          assert_()
+              .withFailureMessage("Some placeholders in the warning message were not replaced")
+              .that(actualWarning.description)
+              .doesNotContainMatch("\\{\\d\\}");
         }
         assertEquals("There should be one warning. " + warnings, 1, compiler.getWarningCount());
         assertEquals(warnings, warning, compiler.getWarnings()[0].getType());
