@@ -387,7 +387,7 @@ public class RefasterJsScannerTest {
   public void test_caseStatement() throws Exception {
     String externs = ""
         + "var str = 'foo';\n"
-        + "var CONSTANT = 'bar';n";
+        + "var CONSTANT = 'bar';\n";
     String originalCode = ""
         + "switch(str) {\n"
         + "  case CONSTANT:\n"
