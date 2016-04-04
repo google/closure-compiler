@@ -285,6 +285,15 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "exports = getElems;"));
   }
 
+  public void testGoogModuleGet() {
+    disableRewriteClosureCode();
+    testSame(
+        LINE_JOINER.join(
+            "goog.provide('x.y');",
+            "",
+            "x.y = function() { var bar = goog.module.get('foo.bar'); }"));
+  }
+
   public void testDirectCall() {
     String js = "foo.bar.baz();";
     testMissingRequireCall(js, "No matching require found for 'foo.bar.baz'");

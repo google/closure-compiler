@@ -168,6 +168,19 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
             EXTRA_REQUIRE_WARNING);
   }
 
+  public void testGoogModuleGet() {
+    disableRewriteClosureCode();
+    testSame(
+        LINE_JOINER.join(
+            "goog.provide('x.y');",
+            "goog.require('foo.bar');",
+            "",
+            "goog.scope(function() {",
+            "var bar = goog.module.get('foo.bar');",
+            "x.y = function() {};",
+            "});"));
+  }
+
   public void testGoogModuleWithDestructuringRequire() {
     disableRewriteClosureCode();
     testErrorEs6(

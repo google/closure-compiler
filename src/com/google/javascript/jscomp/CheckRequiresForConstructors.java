@@ -382,6 +382,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       return;
     }
 
+    Node callee = call.getFirstChild();
+    if (callee.matchesQualifiedName("goog.module.get") && call.getSecondChild().isString()) {
+      weakUsages.put(call.getSecondChild().getString(), call);
+    }
+
     if (codingConvention.isClassFactoryCall(call)) {
       if (parent.isName()) {
         providedNames.add(parent.getString());
@@ -390,7 +395,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       }
     }
 
-    Node callee = call.getFirstChild();
     if (callee.isName()) {
       weakUsages.put(callee.getString(), callee);
     } else if (callee.isQualifiedName()) {
