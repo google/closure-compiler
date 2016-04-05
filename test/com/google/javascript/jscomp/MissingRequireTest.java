@@ -338,6 +338,18 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testSame("goog.require('foo.bar'); foo.bar.baz();");
   }
 
+  public void testCallOnInnerClass_namespaceRequire() {
+    testSame("goog.require('foo.bar'); foo.bar.Outer.Inner.hello();");
+  }
+
+  public void testCallOnInnerClass_outerRequired() {
+    testSame("goog.require('foo.bar.Outer'); foo.bar.Outer.Inner.hello();");
+  }
+
+  public void testCallOnInnerClass_innerRequired() {
+    testSame("goog.require('foo.bar.Outer.Inner'); foo.bar.Outer.Inner.hello();");
+  }
+
   public void testGoogLocale() {
     testSame("var locale = goog.LOCALE.replace('_', '-');");
   }

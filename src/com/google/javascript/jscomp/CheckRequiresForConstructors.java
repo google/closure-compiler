@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.JSDocInfo;
@@ -28,6 +29,7 @@ import com.google.javascript.rhino.Token;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -130,15 +132,14 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
   // Return the shortest prefix of the className that refers to a class,
   // or null if no part refers to a class.
-  private static String getOutermostClassName(String className) {
-    for (String part : Splitter.on('.').split(className)) {
+  private static List<String> getClassNames(String qualifiedName) {
+    ImmutableList.Builder<String> classNames = ImmutableList.builder();
+    for (String part : Splitter.on('.').split(qualifiedName)) {
       if (isClassOrConstantName(part)) {
-        return className.substring(0,
-            className.indexOf(part) + part.length());
+        classNames.add(qualifiedName.substring(0, qualifiedName.indexOf(part) + part.length()));
       }
     }
-
-    return null;
+    return classNames.build();
   }
 
   // TODO(tbreisacher): Update CodingConvention.extractClassNameIf{Require,Provide} to match this.
@@ -246,11 +247,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         continue;
       }
 
-      String outermostClassName = getOutermostClassName(namespace);
-      // The parent namespace is also checked as part of the requires so that classes
+      List<String> classNames = getClassNames(namespace);
+      // The parent namespace of the outermost class is also checked, so that classes
       // used by goog.module are still checked properly. This may cause missing requires
       // to be missed but in practice that should happen rarely.
-      String nonNullClassName = outermostClassName != null ? outermostClassName : namespace;
+      String nonNullClassName = classNames.isEmpty() ? namespace : classNames.get(0);
       String parentNamespace = null;
       int separatorIndex = nonNullClassName.lastIndexOf('.');
       if (separatorIndex > 0) {
@@ -263,23 +264,28 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         continue;
       }
 
-      boolean notProvidedByConstructors =
-          !providedNames.contains(namespace)
-              && !providedNames.contains(outermostClassName)
-              && !providedNames.contains(parentNamespace);
-      boolean notProvidedByRequires =
-          !requires.containsKey(namespace)
-              && !requires.containsKey(outermostClassName)
-              && !requires.containsKey(parentNamespace);
-      if (notProvidedByConstructors
-          && notProvidedByRequires
-          && !namespaces.contains(namespace)) {
+      boolean providedByConstructors =
+          providedNames.contains(namespace) || providedNames.contains(parentNamespace);
+      boolean providedByRequires =
+          requires.containsKey(namespace) || requires.containsKey(parentNamespace);
+
+      for (String className : classNames) {
+        if (providedNames.contains(className)) {
+          providedByConstructors = true;
+        }
+        if (requires.containsKey(className)) {
+          providedByRequires = true;
+        }
+      }
+
+      if (!providedByConstructors && !providedByRequires && !namespaces.contains(namespace)) {
         // TODO(mknichel): If the symbol is not explicitly provided, find the next best
         // symbol from the provides in the same file.
         String rootName = Splitter.on('.').split(namespace).iterator().next();
         if (mode != Mode.SINGLE_FILE || closurizedNamespaces.contains(rootName)) {
           if (node.isCall()) {
-            compiler.report(t.makeError(node, MISSING_REQUIRE_CALL_WARNING, namespace));
+            String nameToReport = classNames.isEmpty() ? namespace : classNames.get(0);
+            compiler.report(t.makeError(node, MISSING_REQUIRE_CALL_WARNING, nameToReport));
           } else {
             compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, namespace));
           }
@@ -402,11 +408,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       if (root.isName()) {
         Var var = t.getScope().getVar(root.getString());
         if (var == null || (!var.isExtern() && !var.isLocal())) {
-          String name = getOutermostClassName(callee.getQualifiedName());
-          if (name == null) {
-            name = callee.getQualifiedName();
-          }
-          usages.put(name, call);
+          usages.put(callee.getQualifiedName(), call);
         }
       }
     }
