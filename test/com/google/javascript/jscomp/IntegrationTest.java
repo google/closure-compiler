@@ -494,7 +494,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckProvidesOn() {
     CompilerOptions options = createCompilerOptions();
-    options.setCheckProvides(CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);
     test(
         options,
         new String[] {"goog.require('x'); /** @constructor */ function Foo() {}", "new Foo();"},
@@ -1124,7 +1124,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testAllChecksOn() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSuspiciousCode(true);
-    options.setCheckProvides(CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);
     options.setGenerateExports(true);
     options.exportTestFunctions = true;
     options.setClosurePass(true);
@@ -2807,7 +2807,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE,
         CheckLevel.WARNING);
-    options.setCheckProvides(CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     test(options,
         "goog.require('x'); /** @constructor */ function f() { var arguments; }",
         CheckProvides.MISSING_PROVIDE_WARNING);
@@ -2817,7 +2817,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE,
         CheckLevel.WARNING);
-    options.setCheckProvides(CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     testSame(options,
         "/** @constructor\n" +
         " *  @suppress{missingProvide} */\n" +
