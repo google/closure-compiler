@@ -959,38 +959,50 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   /**
+   * Checks that {@code pass1} comes before {@code pass2} in {@code passList}, if both are present.
+   */
+  private void assertPassOrder(
+      List<PassFactory> passList, PassFactory pass1, PassFactory pass2, String msg) {
+    int pass1Index = passList.indexOf(pass1);
+    int pass2Index = passList.indexOf(pass2);
+    if (pass1Index != -1 && pass2Index != -1) {
+      Preconditions.checkState(pass1Index < pass2Index, msg);
+    }
+  }
+
+  /**
    * Certain checks need to run in a particular order. For example, the PolymerPass
    * will not work correctly unless it runs after the goog.provide() processing.
    * This enforces those constraints.
    * @param checks The list of check passes
    */
   private void assertValidOrder(List<PassFactory> checks) {
-    int polymerIndex = checks.indexOf(polymerPass);
-    int dartSuperAccessorsIndex = checks.indexOf(dartSuperAccessorsPass);
-    int es6ConvertSuperIndex = checks.indexOf(TranspilationPasses.es6ConvertSuper);
-    int closureIndex = checks.indexOf(closurePrimitives);
-    int suspiciousCodeIndex = checks.indexOf(suspiciousCode);
-    int checkVarsIndex = checks.indexOf(checkVariableReferences);
-    int googScopeIndex = checks.indexOf(closureGoogScopeAliases);
+    assertPassOrder(
+        checks,
+        closurePrimitives,
+        polymerPass,
+        "The Polymer pass must run after goog.provide processing.");
+    assertPassOrder(
+        checks,
+        polymerPass,
+        suspiciousCode,
+        "The Polymer pass must run before suspiciousCode processing.");
+    assertPassOrder(
+        checks,
+        dartSuperAccessorsPass,
+        TranspilationPasses.es6ConvertSuper,
+        "The Dart super accessors pass must run before ES6->ES3 super lowering.");
 
-    if (polymerIndex != -1 && closureIndex != -1) {
-      Preconditions.checkState(polymerIndex > closureIndex,
-          "The Polymer pass must run after goog.provide processing.");
-    }
-    if (polymerIndex != -1 && suspiciousCodeIndex != -1) {
-      Preconditions.checkState(polymerIndex < suspiciousCodeIndex,
-          "The Polymer pass must run before suspiciousCode processing.");
-    }
-    if (dartSuperAccessorsIndex != -1 && es6ConvertSuperIndex != -1) {
-      Preconditions.checkState(dartSuperAccessorsIndex < es6ConvertSuperIndex,
-          "The Dart super accessors pass must run before ES6->ES3 super lowering.");
-    }
-    if (googScopeIndex != -1) {
-      Preconditions.checkState(checkVarsIndex != -1,
+    if (checks.indexOf(closureGoogScopeAliases) != -1) {
+      Preconditions.checkState(
+          checks.indexOf(checkVariableReferences) != -1,
           "goog.scope processing requires variable checking");
-      Preconditions.checkState(checkVarsIndex < googScopeIndex,
-          "Variable checking must happen before goog.scope processing.");
     }
+    assertPassOrder(
+        checks,
+        checkVariableReferences,
+        closureGoogScopeAliases,
+        "Variable checking must happen before goog.scope processing.");
   }
 
   /** Checks that all constructed classes are goog.require()d. */
