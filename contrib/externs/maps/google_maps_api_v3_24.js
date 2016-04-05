@@ -2953,6 +2953,12 @@ google.maps.Map.prototype.getCenter = function() {};
 
 /**
  * @nosideeffects
+ * @return {boolean}
+ */
+google.maps.Map.prototype.getClickableIcons = function() {};
+
+/**
+ * @nosideeffects
  * @return {Element}
  */
 google.maps.Map.prototype.getDiv = function() {};
@@ -3017,6 +3023,12 @@ google.maps.Map.prototype.panToBounds = function(latLngBounds) {};
  * @return {undefined}
  */
 google.maps.Map.prototype.setCenter = function(latlng) {};
+
+/**
+ * @param {boolean} value
+ * @return {undefined}
+ */
+google.maps.Map.prototype.setClickableIcons = function(value) {};
 
 /**
  * @param {number} heading
@@ -3106,6 +3118,11 @@ google.maps.MapOptions.prototype.backgroundColor;
  * @type {google.maps.LatLng}
  */
 google.maps.MapOptions.prototype.center;
+
+/**
+ * @type {boolean}
+ */
+google.maps.MapOptions.prototype.clickableIcons;
 
 /**
  * @type {boolean}
