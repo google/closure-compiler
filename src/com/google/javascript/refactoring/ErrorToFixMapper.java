@@ -82,8 +82,6 @@ public final class ErrorToFixMapper {
       case "JSC_DUPLICATE_REQUIRE_WARNING":
       case "JSC_EXTRA_REQUIRE_WARNING":
         return getFixForExtraRequire(error, compiler);
-      case "JSC_UNNECESSARY_CAST":
-        return getFixForUnnecessaryCast(error, compiler);
       default:
         return null;
     }
@@ -159,12 +157,6 @@ public final class ErrorToFixMapper {
         .setOriginalMatchedNode(error.node)
         .removeGoogRequire(match, namespace)
         .build();
-  }
-
-  private static SuggestedFix getFixForUnnecessaryCast(JSError error, AbstractCompiler compiler) {
-    return new SuggestedFix.Builder()
-        .setOriginalMatchedNode(error.node)
-        .removeCast(error.node, compiler).build();
   }
 
   private static SuggestedFix getFixForUnsortedRequiresOrProvides(

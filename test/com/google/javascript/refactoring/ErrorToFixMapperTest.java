@@ -54,7 +54,6 @@ public class ErrorToFixMapperTest {
     options = RefactoringDriver.getCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT, ERROR);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, ERROR);
-    options.setWarningLevel(DiagnosticGroups.UNNECESSARY_CASTS, ERROR);
   }
 
   @Test
@@ -67,13 +66,6 @@ public class ErrorToFixMapperTest {
         "function f() {",
         "  ",
         "}");
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRemoveCast() {
-    String code = "var x = /** @type {string} */ ('foo');";
-    String expectedCode = "var x = 'foo';";
     assertChanges(code, expectedCode);
   }
 

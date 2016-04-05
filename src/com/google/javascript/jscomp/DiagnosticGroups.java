@@ -105,7 +105,7 @@ public class DiagnosticGroups {
       + "missingProvide, missingRequire, missingReturn, msgDescriptions, "
       + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, "
       + "suspiciousCode, strictModuleDepCheck, typeInvalidation, "
-      + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, "
+      + "undefinedNames, undefinedVars, unknownDefines, "
       + "unusedLocalVariables, unusedPrivateMembers, uselessCode, "
       + "useOfGoogBase, underscore, visibility";
 
@@ -151,10 +151,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup INVALID_CASTS =
       DiagnosticGroups.registerGroup("invalidCasts",
           TypeValidator.INVALID_CAST);
-
-  public static final DiagnosticGroup UNNECESSARY_CASTS =
-      DiagnosticGroups.registerGroup("unnecessaryCasts",
-          TypeValidator.UNNECESSARY_CAST);
 
   @Deprecated
   public static final DiagnosticGroup INFERRED_CONST_CHECKS =
@@ -569,6 +565,8 @@ public class DiagnosticGroups {
 
     DiagnosticGroups.registerGroup("duplicateZipContents",
         SourceFile.DUPLICATE_ZIP_CONTENTS);
+
+    DiagnosticGroups.registerDeprecatedGroup("unnecessaryCasts");
   }
 
   /**

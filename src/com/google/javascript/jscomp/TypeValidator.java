@@ -66,7 +66,6 @@ class TypeValidator {
   private final JSTypeRegistry typeRegistry;
   private final JSType allValueTypes;
   private final JSType nullOrUndefined;
-  private final boolean reportUnnecessaryCasts;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -159,8 +158,6 @@ class TypeValidator {
         STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
     this.nullOrUndefined = typeRegistry.createUnionType(
         NULL_TYPE, VOID_TYPE);
-    this.reportUnnecessaryCasts = ((Compiler) compiler).getOptions().enables(
-        DiagnosticGroups.UNNECESSARY_CASTS);
   }
 
   /**
@@ -544,33 +541,6 @@ class TypeValidator {
           type.toString(), castType.toString())));
     } else if (!type.isSubtypeWithoutStructuralTyping(castType)){
       recordStructuralInterfaceUses(type, castType);
-    }
-  }
-
-  /**
-   * Expect that casting type to castType is necessary. A cast is considered
-   * unnecessary if type is a subtype of castType, or identical to castType.
-   *
-   * @param t The node traversal.
-   * @param n The node where warnings should point.
-   * @param castType The type being cast to.
-   * @param type The type being cast from.
-   */
-  void expectCastIsNecessary(NodeTraversal t, Node n, JSType castType, JSType type) {
-    if (!reportUnnecessaryCasts) {
-      return;
-    }
-
-    // If either type is "no resolved type" don't report an error, because we can't
-    // know if the cast is necessary or not.
-    if (type.isNoResolvedType() || castType.isNoResolvedType()) {
-      return;
-    }
-
-    if (type.isEquivalentTo(castType) ||
-        (type.isSubtype(castType) && !castType.isSubtype(type))) {
-      report(t.makeError(n, UNNECESSARY_CAST,
-          type.toString(), castType.toString()));
     }
   }
 

@@ -484,7 +484,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // way.
         if (!expr.isObjectLit()) {
           validator.expectCanCast(t, n, castType, exprType);
-          validator.expectCastIsNecessary(t, n, castType, exprType);
         }
         ensureTyped(t, n, castType);
 
