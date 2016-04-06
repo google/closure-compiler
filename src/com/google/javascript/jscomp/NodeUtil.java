@@ -3279,6 +3279,27 @@ public final class NodeUtil {
     return collector.vars.values();
   }
 
+  private static class LhsCollector implements Visitor {
+    final List<Node> lhsNodes = new ArrayList<>();
+
+    @Override
+    public void visit(Node n) {
+      if ((n.isName() || n.isStringKey()) && isLValue(n)) {
+        lhsNodes.add(n);
+      }
+    }
+  }
+
+  /**
+   * Retrieves lhs nodes declared in the current declaration.
+   */
+  static Iterable<Node> getLhsNodesOfDeclaration(Node declNode) {
+    Preconditions.checkArgument(isNameDeclaration(declNode));
+    LhsCollector collector = new LhsCollector();
+    visitPreOrder(declNode, collector, Predicates.<Node>alwaysTrue());
+    return collector.lhsNodes;
+  }
+
   /**
    * @return {@code true} if the node is a definition with Object.defineProperties
    */
