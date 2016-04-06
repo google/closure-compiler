@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -53,6 +54,9 @@ import java.util.Set;
 class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;
   private final CodingConvention codingConvention;
+
+  private static final Splitter DOT_SPLITTER = Splitter.on('.');
+  private static final Joiner DOT_JOINER = Joiner.on('.');
 
   public static enum Mode {
     // Looking at a single file. Only a minimal set of externs are present.
@@ -132,9 +136,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   // or null if no part refers to a class.
   private static List<String> getClassNames(String qualifiedName) {
     ImmutableList.Builder<String> classNames = ImmutableList.builder();
-    for (String part : Splitter.on('.').split(qualifiedName)) {
+    List<String> parts = DOT_SPLITTER.splitToList(qualifiedName);
+    for (int i = 0; i < parts.size(); i++) {
+      String part = parts.get(i);
       if (isClassOrConstantName(part)) {
-        classNames.add(qualifiedName.substring(0, qualifiedName.indexOf(part) + part.length()));
+        classNames.add(DOT_JOINER.on('.').join(parts.subList(0, i + 1)));
       }
     }
     return classNames.build();
