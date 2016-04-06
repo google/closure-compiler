@@ -228,7 +228,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     // Look at the Ast for dependency info.
     if (!(ast instanceof JsAst)) {
 
-      DepsFinder finder = new DepsFinder(compiler.getCodingConvention());
+      DepsFinder finder = new DepsFinder();
       Node root = getAstRoot(compiler);
       if (root == null) {
         return SimpleDependencyInfo.EMPTY;
@@ -271,11 +271,8 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     private final Map<String, String> loadFlags = new TreeMap<>();
     private final List<String> provides = new ArrayList<>();
     private final List<String> requires = new ArrayList<>();
-    private final CodingConvention codingConvention;
-
-    DepsFinder(CodingConvention codingConvention) {
-      this.codingConvention = codingConvention;
-    }
+    private final CodingConvention codingConvention =
+        new ClosureCodingConvention();
 
     void visitTree(Node n) {
       visitSubtree(n, null);

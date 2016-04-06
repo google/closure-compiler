@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.common.collect.ImmutableList;
@@ -368,7 +367,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckEventfulDisposalWarningLevels() {
     CompilerOptions options = createCompilerOptions();
-    options.setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy.ON);
+    options.setCheckEventfulObjectDisposalPolicy(
+        CheckEventfulObjectDisposal.DisposalCheckingPolicy.ON);
     String js = "var goog = {};" + "goog.inherits = function(x, y) {};"
       + "goog.dispose = function(x) {};"
       + "goog.disposeAll = function(var_args) {};"

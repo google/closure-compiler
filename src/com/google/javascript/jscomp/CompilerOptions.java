@@ -270,40 +270,21 @@ public class CompilerOptions {
   Set<String> extraAnnotationNames;
 
   /**
-   * Policies to determine the disposal checking level.
-   */
-  enum DisposalCheckingPolicy {
-    /**
-     * Don't check any disposal.
-     */
-    OFF,
-
-    /**
-     * Default/conservative disposal checking.
-     */
-    ON,
-
-    /**
-     * Aggressive disposal checking.
-     */
-    AGGRESSIVE,
-  }
-
-  /**
    * Check for patterns that are known to cause memory leaks.
    */
-  DisposalCheckingPolicy checkEventfulObjectDisposalPolicy;
+  CheckEventfulObjectDisposal.DisposalCheckingPolicy checkEventfulObjectDisposalPolicy;
 
-  public void setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy policy) {
+  public void setCheckEventfulObjectDisposalPolicy(
+      CheckEventfulObjectDisposal.DisposalCheckingPolicy policy) {
     this.checkEventfulObjectDisposalPolicy = policy;
 
     // The CheckEventfulObjectDisposal pass requires types so enable inferring types if
     // this pass is enabled.
-    if (policy != DisposalCheckingPolicy.OFF) {
+    if (policy != CheckEventfulObjectDisposal.DisposalCheckingPolicy.OFF) {
       this.inferTypes = true;
     }
   }
-  public DisposalCheckingPolicy getCheckEventfulObjectDisposalPolicy() {
+  public CheckEventfulObjectDisposal.DisposalCheckingPolicy getCheckEventfulObjectDisposalPolicy() {
     return checkEventfulObjectDisposalPolicy;
   }
 
@@ -1025,7 +1006,7 @@ public class CompilerOptions {
     computeFunctionSideEffects = false;
     chainCalls = false;
     extraAnnotationNames = null;
-    checkEventfulObjectDisposalPolicy = DisposalCheckingPolicy.OFF;
+    checkEventfulObjectDisposalPolicy = CheckEventfulObjectDisposal.DisposalCheckingPolicy.OFF;
 
     // Optimizations
     foldConstants = false;
