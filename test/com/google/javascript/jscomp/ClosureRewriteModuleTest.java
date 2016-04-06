@@ -85,39 +85,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "/** @const */ var module$exports$ns$a = {};"});
   }
 
-  public void testDestructuringInsideModule() {
-    // Array destrucuturing
-    testEs6(
-        LINE_JOINER.join(
-          "goog.module('a');",
-          "var [x, y, z] = foo();"),
-        LINE_JOINER.join(
-          "/** @const */ var module$exports$a = {};",
-          "var [module$contents$a_x, module$contents$a_y, module$contents$a_z] = foo();"));
-
-    // Object destructuring with explicit names
-    testEs6(
-        LINE_JOINER.join(
-          "goog.module('a');",
-          "var {p1: x, p2: y} = foo();"),
-        LINE_JOINER.join(
-          "/** @const */ var module$exports$a = {};",
-          "var {p1: module$contents$a_x, p2: module$contents$a_y} = foo();"));
-
-    // Object destructuring with short names
-    testEs6(
-        LINE_JOINER.join(
-          "goog.module('a');",
-          "var {x, y} = foo();"),
-        LINE_JOINER.join(
-          "/** @const */ var module$exports$a = {};",
-          "var {x: module$contents$a_x, y: module$contents$a_y} = foo();"));
-  }
-
-  public void testDestructuringImports() {
-    // TODO(blickly): Inline destructuring-based imports so that they can be used
-    // for importing type names like other imports.
-
+  public void testDestructuring() {
     // Var destructuring of both module and script goog.require() targets.
     testEs6(
         new String[] {
@@ -133,10 +101,8 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "goog.provide('ns.c');",
             LINE_JOINER.join(
                 "/** @const */ var module$exports$ns$a = {}",
-                "/** @const */ var {foo: module$contents$ns$a_foo,",
-                "                   bar: module$contents$ns$a_bar} = module$exports$ns$b;",
-                "/** @const */ var {baz: module$contents$ns$a_baz,",
-                "                   qux: module$contents$ns$a_qux} = ns.c;")});
+                "/** @const */ var {foo, bar} = module$exports$ns$b;",
+                "/** @const */ var {baz, qux} = ns.c;")});
 
     // Const destructuring of both module and script goog.require() targets.
     testEs6(
@@ -153,10 +119,8 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "goog.provide('ns.c');",
             LINE_JOINER.join(
                 "/** @const */ var module$exports$ns$a = {}",
-                "/** @const */ const {foo: module$contents$ns$a_foo,",
-                "                     bar: module$contents$ns$a_bar} = module$exports$ns$b;",
-                "/** @const */ const {baz: module$contents$ns$a_baz,",
-                "                     qux: module$contents$ns$a_qux} = ns.c;")});
+                "/** @const */ const {foo, bar} = module$exports$ns$b;",
+                "/** @const */ const {baz, qux} = ns.c;")});
   }
 
   public void testDeclareLegacyNamespace() {
