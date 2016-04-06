@@ -978,6 +978,17 @@ public final class DefaultPassConfig extends PassConfig {
   private void assertValidOrder(List<PassFactory> checks) {
     assertPassOrder(
         checks,
+        closureRewriteModule,
+        checkVariableReferences,
+        "If checkVariableReferences runs before closureRewriteModule, it will produce invalid"
+            + " warnings because it will think of module-scoped variables as global variables.");
+    assertPassOrder(
+        checks,
+        closureRewriteModule,
+        processDefines,
+        "Must rewrite goog.module before processing @define's, so that @defines in modules work.");
+    assertPassOrder(
+        checks,
         closurePrimitives,
         polymerPass,
         "The Polymer pass must run after goog.provide processing.");
