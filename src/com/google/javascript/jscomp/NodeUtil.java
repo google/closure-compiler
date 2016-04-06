@@ -3965,8 +3965,14 @@ public final class NodeUtil {
   /** Find the best JSDoc for the given node. */
   @Nullable
   public static JSDocInfo getBestJSDocInfo(Node n) {
+    Node jsdocNode = getBestJSDocInfoNode(n);
+    return jsdocNode == null ? null : jsdocNode.getJSDocInfo();
+  }
+
+  @Nullable
+  static Node getBestJSDocInfoNode(Node n) {
     if (n.isExprResult()) {
-      return getBestJSDocInfo(n.getFirstChild());
+      return getBestJSDocInfoNode(n.getFirstChild());
     }
     JSDocInfo info = n.getJSDocInfo();
     if (info == null) {
@@ -3976,24 +3982,24 @@ public final class NodeUtil {
       }
 
       if (parent.isName()) {
-        return getBestJSDocInfo(parent);
+        return getBestJSDocInfoNode(parent);
       } else if (parent.isAssign()) {
-        return getBestJSDocInfo(parent);
+        return getBestJSDocInfoNode(parent);
       } else if (isObjectLitKey(parent)) {
-        return parent.getJSDocInfo();
+        return parent;
       } else if ((parent.isFunction() || parent.isClass()) && n == parent.getFirstChild()) {
         // n is the NAME node of the function/class.
-        return getBestJSDocInfo(parent);
+        return getBestJSDocInfoNode(parent);
       } else if (NodeUtil.isNameDeclaration(parent) && parent.hasOneChild()) {
-        return parent.getJSDocInfo();
+        return parent;
       } else if ((parent.isHook() && parent.getFirstChild() != n)
                  || parent.isOr()
                  || parent.isAnd()
                  || (parent.isComma() && parent.getFirstChild() != n)) {
-        return getBestJSDocInfo(parent);
+        return getBestJSDocInfoNode(parent);
       }
     }
-    return info;
+    return n;
   }
 
   /** Find the l-value that the given r-value is being assigned to. */
