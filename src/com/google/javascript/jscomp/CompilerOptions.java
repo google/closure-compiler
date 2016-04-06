@@ -188,17 +188,6 @@ public class CompilerOptions {
     reportMissingOverride = level;
   }
 
-  /**
-   * Deprecated. Use
-   * {@code setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.WARNING);}
-   * or
-   * {@code setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);}
-   */
-  @Deprecated
-  public void setCheckRequires(CheckLevel level) {
-    setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, level);
-  }
-
   @Deprecated
   public CheckLevel checkProvides;
 
