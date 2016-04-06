@@ -254,7 +254,7 @@ public final class JSModule implements DependencyInfo, Serializable {
   /**
    * Puts the JS files into a topologically sorted order by their dependencies.
    */
-  public void sortInputsByDeps(Compiler compiler) {
+  public void sortInputsByDeps(AbstractCompiler compiler) {
     // Set the compiler, so that we can parse requires/provides and report
     // errors properly.
     for (CompilerInput input : inputs) {

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -59,6 +61,7 @@ import java.util.Stack;
  *
  *
  */
+ // TODO(tbreisacher): Find out if anyone is still using this pass. Delete if not.
  // TODO(user): Pass needs to be updated for listenable interfaces.
 public final class CheckEventfulObjectDisposal implements CompilerPass {
 
@@ -82,26 +85,6 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
         "JSC_UNLISTEN_WITH_ANONBOUND",
         "an unlisten call with an anonymous or bound function does not result "
         + "in the event being unlisted to");
-
-  /**
-   * Policies to determine the disposal checking level.
-   */
-  public enum DisposalCheckingPolicy {
-    /**
-     * Don't check any disposal.
-     */
-    OFF,
-
-    /**
-     * Default/conservative disposal checking.
-     */
-    ON,
-
-    /**
-     * Aggressive disposal checking.
-     */
-    AGGRESSIVE,
-  }
 
   // Seed types
   private static final String DISPOSABLE_INTERFACE_TYPE_NAME =

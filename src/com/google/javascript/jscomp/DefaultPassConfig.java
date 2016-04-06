@@ -383,8 +383,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(analyzerChecks);
     }
 
-    if (options.checkEventfulObjectDisposalPolicy !=
-        CheckEventfulObjectDisposal.DisposalCheckingPolicy.OFF) {
+    if (options.checkEventfulObjectDisposalPolicy != CompilerOptions.DisposalCheckingPolicy.OFF) {
       checks.add(checkEventfulObjectDisposal);
     }
 
