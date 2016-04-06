@@ -16412,4 +16412,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         // spurious b/c foo is inferred as string in the inner scope
         NewTypeInference.CROSS_SCOPE_GOTCHA);
   }
+
+  public void testFixCrashWhenUnannotatedPrototypeMethod() {
+    typeCheck(LINE_JOINER.join(
+        "var a = {};",
+        "a.prototype.b = function() {",
+        "  this.c = function() {};",
+        "};"),
+        NewTypeInference.INEXISTENT_PROPERTY,
+        NewTypeInference.GLOBAL_THIS);
+  }
 }

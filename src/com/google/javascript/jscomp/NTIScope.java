@@ -120,6 +120,7 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   void setDeclaredType(DeclaredFunctionType declaredType) {
+    Preconditions.checkNotNull(declaredType);
     this.declaredType = declaredType;
     // In NTI, we set the type of a function node after we create the summary.
     // NTI doesn't analyze externs, so we set the type for extern functions here.
@@ -641,6 +642,8 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   void finalizeScope() {
+    Preconditions.checkState(isTopLevel() || this.declaredType != null,
+        "No declared type for function-scope: %s", this.root);
     unknownTypeNames = ImmutableSet.of();
     JSTypes commonTypes = getCommonTypes();
     // For now, we put types of namespaces directly into the locals.

@@ -1594,14 +1594,17 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkArgument(getProp.isGetProp());
       JSType t = currentScope.getDeclaredFunctionType().getThisType();
       NominalType thisType = t == null ? null : t.getNominalTypeIfSingletonObj();
+      Node parent = getProp.getParent();
+      Node initializer = parent.isAssign() ? parent.getLastChild() : null;
       if (thisType == null) {
+        if (initializer != null && initializer.isFunction()) {
+          visitFunctionLate(initializer, null);
+        }
         // This will get caught in NewTypeInference
         return;
       }
       RawNominalType rawType = thisType.getRawNominalType();
       String pname = getProp.getLastChild().getString();
-      Node parent = getProp.getParent();
-      Node initializer = parent.isAssign() ? parent.getLastChild() : null;
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       PropertyType pt = getPropTypeHelper(jsdoc, initializer, rawType);
       JSType propDeclType = pt.declType;
