@@ -198,7 +198,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "}",
             "",
             "exports = getElems;"),
-        "No matching require found for 'goog.dom.getElement'");
+        "missing require: 'goog.dom.getElement'");
   }
 
   public void testPassGoogModule_noRewriting() {
@@ -296,7 +296,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testDirectCall() {
     String js = "foo.bar.baz();";
-    testMissingRequireCall(js, "No matching require found for 'foo.bar.baz'");
+    testMissingRequireCall(js, "missing require: 'foo.bar.baz'");
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
@@ -308,7 +308,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testDotCall() {
     String js = "foo.bar.baz.call();";
-    testMissingRequireCall(js, "No matching require found for 'foo.bar.baz'");
+    testMissingRequireCall(js, "missing require: 'foo.bar.baz'");
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
@@ -320,7 +320,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testDotApply() {
     String js = "foo.bar.baz.call();";
-    testMissingRequireCall(js, "No matching require found for 'foo.bar.baz'");
+    testMissingRequireCall(js, "missing require: 'foo.bar.baz'");
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
@@ -357,19 +357,19 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testGoogArray() {
     testMissingRequireCall(
         "goog.array.forEach(arr, fn);",
-        "No matching require found for 'goog.array.forEach'");
+        "missing require: 'goog.array.forEach'");
   }
 
   public void testGoogDom() {
     testMissingRequireCall(
         "goog.dom.getElement('x');",
-        "No matching require found for 'goog.dom.getElement'");
+        "missing require: 'goog.dom.getElement'");
   }
 
   public void testGoogTimerCallOnce() {
     testMissingRequireCall(
         "goog.Timer.callOnce(goog.nullFunction, 0);",
-        "No matching require found for 'goog.Timer'");
+        "missing require: 'goog.Timer'");
   }
 
   public void testGoogTimer() {

@@ -80,12 +80,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
 
-  // Essentially the same as MISSING_REQUIRE_WARNING except that if the user calls foo.bar.baz()
-  // then we don't know whether they should require it as goog.require('foo.bar.baz') or as
-  // goog.require('foo.bar'). So, warn but don't provide a suggested fix.
+  // TODO(tbreisacher): Move this into the missingRequire group (b/27856452).
   static final DiagnosticType MISSING_REQUIRE_CALL_WARNING =
       DiagnosticType.disabled(
-          "JSC_MISSING_REQUIRE_CALL_WARNING", "No matching require found for ''{0}''");
+          "JSC_MISSING_REQUIRE_CALL_WARNING", "missing require: ''{0}''");
 
   static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");

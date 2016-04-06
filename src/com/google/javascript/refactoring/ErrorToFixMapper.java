@@ -78,6 +78,7 @@ public final class ErrorToFixMapper {
       case "JSC_MISSING_CALL_TO_SUPER":
         return getFixForMissingSuper(error);
       case "JSC_MISSING_REQUIRE_WARNING":
+      case "JSC_MISSING_REQUIRE_CALL_WARNING":
         return getFixForMissingRequire(error, compiler);
       case "JSC_DUPLICATE_REQUIRE_WARNING":
       case "JSC_EXTRA_REQUIRE_WARNING":
