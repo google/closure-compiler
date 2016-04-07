@@ -29,7 +29,6 @@ import java.util.List;
 public final class ExtraRequireTest extends Es6CompilerTestCase {
   public ExtraRequireTest() {
     super();
-    enableRewriteClosureCode();
   }
 
   @Override
@@ -56,8 +55,7 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
     testSame("goog.require('foo.bar'); function f(/** foo.bar */ x) {}");
     testSame("goog.require('foo.bar'); alert(foo.bar.baz);");
     testSame("/** @suppress {extraRequire} */ goog.require('foo.bar');");
-    test("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; alert(bar); });",
-        "goog.require('foo.bar'); alert(foo.bar);");
+    testSame("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; alert(bar); });");
     testSame("goog.require('foo'); foo();");
     testSame("goog.require('foo'); new foo();");
     testSame("/** @suppress {extraRequire} */ var bar = goog.require('foo.bar');");
@@ -90,9 +88,6 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
 
   public void testWarning() {
     testError("goog.require('foo.bar');", EXTRA_REQUIRE_WARNING);
-    // The local var "bar" is unused so after goog.scope rewriting, foo.bar is unused.
-    testError("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; });",
-        EXTRA_REQUIRE_WARNING);
 
     testErrorEs6(LINE_JOINER.join(
         "goog.require('Bar');",
@@ -169,7 +164,6 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
   }
 
   public void testGoogModuleGet() {
-    disableRewriteClosureCode();
     testSame(
         LINE_JOINER.join(
             "goog.provide('x.y');",
@@ -182,7 +176,6 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
   }
 
   public void testGoogModuleWithDestructuringRequire() {
-    disableRewriteClosureCode();
     testErrorEs6(
         LINE_JOINER.join(
             "goog.module('example');",

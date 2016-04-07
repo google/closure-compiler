@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -33,6 +34,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * This pass walks the AST to create a Collection of 'new' nodes and
@@ -79,6 +82,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   // require a goog.require, such as in a @type annotation. If the only usages of a name are
   // in weakUsages, don't give a missingRequire warning, nor an extraRequire warning.
   private final Map<String, Node> weakUsages = new HashMap<>();
+
+  // The body of the goog.scope function, if any.
+  @Nullable
+  private Node googScopeBlock;
 
   static final DiagnosticType MISSING_REQUIRE_WARNING =
       DiagnosticType.disabled(
@@ -140,7 +147,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     for (int i = 0; i < parts.size(); i++) {
       String part = parts.get(i);
       if (isClassOrConstantName(part)) {
-        classNames.add(DOT_JOINER.on('.').join(parts.subList(0, i + 1)));
+        classNames.add(DOT_JOINER.join(parts.subList(0, i + 1)));
       }
     }
     return classNames.build();
@@ -168,6 +175,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isCall() && n.getFirstChild().matchesQualifiedName("goog.scope")) {
+      Node function = n.getSecondChild();
+      if (function.isFunction()) {
+        googScopeBlock = NodeUtil.getFunctionBody(function);
+      }
+    }
+
     return parent == null || !parent.isScript() || !t.getInput().isExtern();
   }
 
@@ -176,10 +190,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     maybeAddJsDocUsages(t, n);
     switch (n.getType()) {
       case Token.ASSIGN:
+        maybeAddProvidedName(n);
+        break;
       case Token.VAR:
       case Token.LET:
       case Token.CONST:
         maybeAddProvidedName(n);
+        maybeAddGoogScopeUsage(n, parent);
         break;
       case Token.FUNCTION:
         // Exclude function expressions.
@@ -220,6 +237,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     this.requires.clear();
     this.closurizedNamespaces.clear();
     this.providedNames.clear();
+    this.googScopeBlock = null;
   }
 
   private void visitScriptNode(NodeTraversal t) {
@@ -534,6 +552,20 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     Node name = n.getFirstChild();
     if (name.isQualifiedName()) {
       providedNames.add(name.getQualifiedName());
+    }
+  }
+
+  /**
+   * "var Dog = some.cute.Dog;" counts as a usage of some.cute.Dog, if it's immediately
+   * inside a goog.scope function.
+   */
+  private void maybeAddGoogScopeUsage(Node n, Node parent) {
+    Preconditions.checkState(NodeUtil.isNameDeclaration(n));
+    if (n.getChildCount() == 1 && parent == googScopeBlock) {
+      Node rhs = n.getFirstFirstChild();
+      if (rhs.isQualifiedName()) {
+        usages.put(rhs.getQualifiedName(), rhs);
+      }
     }
   }
 

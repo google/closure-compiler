@@ -34,7 +34,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    enableRewriteClosureCode();
   }
 
   @Override
@@ -172,7 +171,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testPassGoogDefineClass_noRewriting() {
-    disableRewriteClosureCode();
     testSameEs6(
         LINE_JOINER.join(
             "var Example = goog.defineClass(null, {constructor() {}});",
@@ -184,7 +182,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testWarnGoogModule_noRewriting() {
-    disableRewriteClosureCode();
     testMissingRequireCall(
         LINE_JOINER.join(
             "goog.module('example');",
@@ -202,7 +199,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testPassGoogModule_noRewriting() {
-    disableRewriteClosureCode();
     testSameEs6(
         LINE_JOINER.join(
             "goog.module('example');",
@@ -286,7 +282,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testGoogModuleGet() {
-    disableRewriteClosureCode();
     testSame(
         LINE_JOINER.join(
             "goog.provide('x.y');",
@@ -812,9 +807,9 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         + "foo.bar.Baz = function() {}\n";
     String bad = ""
         + "goog.scope(function() {\n"
-        + "  var bar = foo.bar;\n"
+        + "  var Baz = foo.bar.Baz;\n"
         + "  function someFn() {\n"
-        + "    var qux = new bar.Baz();\n"
+        + "    var qux = new Baz();\n"
         + "  }\n"
         + "});\n";
     String[] js = new String[] {good, bad};
@@ -830,9 +825,9 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     String alsoGood = ""
         + "goog.require('foo.bar.Baz');\n"
         + "goog.scope(function() {\n"
-        + "  var bar = foo.bar;\n"
+        + "  var Baz = foo.bar.Baz;\n"
         + "  function someFn() {\n"
-        + "    var qux = new bar.Baz();\n"
+        + "    var qux = new Baz();\n"
         + "  }\n"
         + "});\n";
     String[] js = new String[] {good, alsoGood};
@@ -845,9 +840,9 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         + "/** @constructor */\n"
         + "foo.bar.Baz = function() {}\n"
         + "goog.scope(function() {\n"
-        + "  var bar = foo.bar;\n"
+        + "  var Baz = foo.bar.Baz;\n"
         + "  function someFn() {\n"
-        + "    var qux = new bar.Baz();\n"
+        + "    var qux = new Baz();\n"
         + "  }\n"
         + "});\n";
     testSame(js);
