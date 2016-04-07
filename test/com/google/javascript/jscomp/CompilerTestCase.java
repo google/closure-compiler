@@ -1406,7 +1406,7 @@ public abstract class CompilerTestCase extends TestCase {
     } else {
       assertNull("expected must be null if error != null", expected);
       assertEquals(
-          "There should be one error of '" + errorMsg + "' but there were: "
+          "There should be one error of type '" + error.key + "' but there were: "
           + Arrays.toString(compiler.getErrors()),
           1, compiler.getErrorCount());
       JSError actualError = compiler.getErrors()[0];
