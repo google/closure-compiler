@@ -96,12 +96,6 @@ class ReplaceIdGenerators implements CompilerPass {
 
   private final boolean generatePseudoNames;
 
-  public static final RenamingMap UNIQUE = new UniqueRenamingToken();
-
-  private static class UniqueRenamingToken implements RenamingMap {
-    @Override public String get(String value) { return null; }
-  }
-
   public ReplaceIdGenerators(
       AbstractCompiler compiler, Map<String, RenamingMap> idGens,
       boolean generatePseudoNames,

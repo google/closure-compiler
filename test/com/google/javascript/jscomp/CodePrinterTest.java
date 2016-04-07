@@ -626,7 +626,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
           void setOptions(CompilerOptions options) {
             options.setPrettyPrint(false);
             options.setLineBreak(true);
-            options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+            options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
           }
         })));
   }
@@ -1230,7 +1230,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             options.setPrettyPrint(true);
             options.setPreserveTypeAnnotations(true);
             options.setLineBreak(false);
-            options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+            options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
             optionBuilder.setOptions(options);
           }
         })));
@@ -1244,7 +1244,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
               void setOptions(CompilerOptions options) {
                 options.setPrettyPrint(true);
                 options.setLineBreak(false);
-                options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+                options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
               }
             }))
             .setOutputTypes(true)

@@ -587,7 +587,7 @@ class InlineFunctions implements CompilerPass {
       if (parent.isNew()) {
         Node target = parent.getFirstChild();
         if (target.isName() && target.getString().equals(
-            ObjectPropertyStringPreprocess.EXTERN_OBJECT_PROPERTY_STRING)) {
+            SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING)) {
           // This method is going to be replaced so don't inline it anywhere.
           fs.setInline(false);
         }

@@ -44,7 +44,10 @@ import java.util.Map;
  * complex definitions are treated as unknowns.
  *
  */
-class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
+public class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
+  public static final String EXTERN_OBJECT_PROPERTY_STRING =
+      "JSCompiler_ObjectPropertyString";
+
   private final AbstractCompiler compiler;
   private final Map<Node, DefinitionSite> definitionSiteMap;
   private final Multimap<String, Definition> nameDefinitionMultimap;
@@ -404,9 +407,8 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     if (nameNode != null
         && nameNode.isName()) {
       String name = nameNode.getString();
-      if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN) ||
-             name.equals(
-                ObjectPropertyStringPreprocess.EXTERN_OBJECT_PROPERTY_STRING)) {
+      if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN)
+          || name.equals(EXTERN_OBJECT_PROPERTY_STRING)) {
         return false;
       }
     }

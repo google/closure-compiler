@@ -40,6 +40,8 @@ import java.util.Set;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class CompilerOptions {
+  // The number of characters after which we insert a line break in the code
+  static final int DEFAULT_LINE_LENGTH_THRESHOLD = 500;
 
   /**
    * A common enum for compiler passes that can run either globally or locally.
@@ -876,7 +878,7 @@ public class CompilerOptions {
 
   int summaryDetailLevel = 1;
 
-  int lineLengthThreshold = CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD;
+  int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
 
   //--------------------------------
   // Special Output Options
@@ -1363,19 +1365,13 @@ public class CompilerOptions {
    * Sets the id generators to replace.
    */
   public void setIdGenerators(Set<String> idGenerators) {
+    RenamingMap gen = new UniqueRenamingToken();
     ImmutableMap.Builder<String, RenamingMap> builder = ImmutableMap.builder();
     for (String name : idGenerators) {
-       builder.put(name, UNIQUE_ID_GENERATOR);
+       builder.put(name, gen);
     }
     this.idGenerators = builder.build();
   }
-
-  /**
-   * A renaming map instance to use to signal the use of the "inconsistent"
-   * id generator type.
-   */
-  public static final RenamingMap UNIQUE_ID_GENERATOR =
-      ReplaceIdGenerators.UNIQUE;
 
   /**
    * Sets the id generators to replace.

@@ -42,12 +42,12 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
         return replacement != null ? replacement : "unknown:" + value;
       }
     };
-
+    RenamingMap gen = new UniqueRenamingToken();
     lastPass = new ReplaceIdGenerators(
         compiler,
         new ImmutableMap.Builder<String, RenamingMap>()
-            .put("goog.events.getUniqueId", ReplaceIdGenerators.UNIQUE)
-            .put("goog.place.getUniqueId", ReplaceIdGenerators.UNIQUE)
+            .put("goog.events.getUniqueId", gen)
+            .put("goog.place.getUniqueId", gen)
             .put("xid", xidTestMap)
             .build(),
         generatePseudoNames,

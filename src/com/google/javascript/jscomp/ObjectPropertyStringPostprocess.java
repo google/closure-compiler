@@ -59,7 +59,7 @@ class ObjectPropertyStringPostprocess implements CompilerPass {
       Node objectName = n.getFirstChild();
 
       if (!objectName.matchesQualifiedName(
-          ObjectPropertyStringPreprocess.EXTERN_OBJECT_PROPERTY_STRING)) {
+          SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING)) {
         return;
       }
 

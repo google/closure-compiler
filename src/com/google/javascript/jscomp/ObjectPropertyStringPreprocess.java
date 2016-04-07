@@ -35,12 +35,9 @@ import com.google.javascript.rhino.Token;
  * @see ObjectPropertyStringPostprocess
  *
  */
-public final class ObjectPropertyStringPreprocess implements CompilerPass {
+final class ObjectPropertyStringPreprocess implements CompilerPass {
   static final String OBJECT_PROPERTY_STRING =
       "goog.testing.ObjectPropertyString";
-
-  public static final String EXTERN_OBJECT_PROPERTY_STRING =
-      "JSCompiler_ObjectPropertyString";
 
   static final DiagnosticType INVALID_NUM_ARGUMENTS_ERROR =
       DiagnosticType.error("JSC_OBJECT_PROPERTY_STRING_NUM_ARGS",
@@ -67,7 +64,7 @@ public final class ObjectPropertyStringPreprocess implements CompilerPass {
   public void process(Node externs, Node root) {
     addExternDeclaration(externs,
         IR.var(
-            IR.name(EXTERN_OBJECT_PROPERTY_STRING)));
+            IR.name(SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING)));
     NodeTraversal.traverseEs6(compiler, root, new Callback());
   }
 
@@ -84,7 +81,7 @@ public final class ObjectPropertyStringPreprocess implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.matchesQualifiedName(OBJECT_PROPERTY_STRING)) {
-        Node newName = IR.name(EXTERN_OBJECT_PROPERTY_STRING);
+        Node newName = IR.name(SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING);
         newName.useSourceInfoIfMissingFrom(n);
         parent.replaceChild(n, newName);
         compiler.reportCodeChange();
@@ -100,7 +97,7 @@ public final class ObjectPropertyStringPreprocess implements CompilerPass {
 
       Node objectName = n.getFirstChild();
 
-      if (!objectName.matchesQualifiedName(EXTERN_OBJECT_PROPERTY_STRING)) {
+      if (!objectName.matchesQualifiedName(SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING)) {
         return;
       }
 
