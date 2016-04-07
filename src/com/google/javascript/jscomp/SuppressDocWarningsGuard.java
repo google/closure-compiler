@@ -44,14 +44,21 @@ class SuppressDocWarningsGuard extends WarningsGuard {
    * The suppressible groups, indexed by name.
    */
   SuppressDocWarningsGuard(Map<String, DiagnosticGroup> suppressibleGroups) {
-    for (Map.Entry<String, DiagnosticGroup> entry :
-             suppressibleGroups.entrySet()) {
+    for (Map.Entry<String, DiagnosticGroup> entry : suppressibleGroups.entrySet()) {
       suppressors.put(
           entry.getKey(),
           new DiagnosticGroupWarningsGuard(
               entry.getValue(),
               CheckLevel.OFF));
     }
+
+    // Hack: Allow "@suppress {missingRequire}" to mean
+    // "@suppress {strictMissingRequire}".
+    // TODO(tbreisacher): Delete this hack when strictMissingRequire is
+    // renamed to missingRequire.
+    suppressors.put(
+        "missingRequire",
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.OFF));
   }
 
   @Override
