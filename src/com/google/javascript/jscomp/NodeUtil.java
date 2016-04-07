@@ -3279,6 +3279,51 @@ public final class NodeUtil {
     return collector.vars.values();
   }
 
+  private static void getLhsNodesHelper(Node n, List<Node> lhsNodes) {
+    switch (n.getType()) {
+      case Token.VAR:
+      case Token.CONST:
+      case Token.LET:
+      case Token.OBJECT_PATTERN:
+      case Token.ARRAY_PATTERN:
+        for (Node child : n.children()) {
+          getLhsNodesHelper(child, lhsNodes);
+        }
+        return;
+      case Token.DESTRUCTURING_LHS:
+      case Token.DEFAULT_VALUE:
+      case Token.REST:
+        getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+        return;
+      case Token.COMPUTED_PROP:
+        getLhsNodesHelper(n.getLastChild(), lhsNodes);
+        return;
+      case Token.STRING_KEY:
+        if (n.hasChildren()) {
+          getLhsNodesHelper(n.getLastChild(), lhsNodes);
+        } else {
+          Preconditions.checkState(isLValue(n));
+          lhsNodes.add(n);
+        }
+        break;
+      case Token.NAME:
+        lhsNodes.add(n);
+        break;
+      default:
+        Preconditions.checkState(n.isEmpty(), "Invalid node in lhs of declaration: %s", n);
+    }
+  }
+
+  /**
+   * Retrieves lhs nodes declared in the current declaration.
+   */
+  static Iterable<Node> getLhsNodesOfDeclaration(Node declNode) {
+    Preconditions.checkArgument(isNameDeclaration(declNode));
+    ArrayList<Node> lhsNodes = new ArrayList<>();
+    getLhsNodesHelper(declNode, lhsNodes);
+    return lhsNodes;
+  }
+
   /**
    * @return {@code true} if the node is a definition with Object.defineProperties
    */

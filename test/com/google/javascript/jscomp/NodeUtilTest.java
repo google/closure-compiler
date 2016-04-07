@@ -2266,6 +2266,20 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.getBestJSDocInfo(function).isConstructor());
   }
 
+  public void testGetLhsNodesOfDeclaration() {
+    assertThat(getLhsNodesOfDeclaration("var x;")).hasSize(1);
+    assertThat(getLhsNodesOfDeclaration("var x, y;")).hasSize(2);
+    assertThat(getLhsNodesOfDeclaration("var f = function(x, y, z) {};")).hasSize(1);
+    assertThat(getLhsNodesOfDeclaration("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
+    assertThat(getLhsNodesOfDeclaration("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
+    assertThat(getLhsNodesOfDeclaration("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
+    assertThat(getLhsNodesOfDeclaration("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
+    assertThat(getLhsNodesOfDeclaration("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
+    assertThat(getLhsNodesOfDeclaration("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
+    assertThat(getLhsNodesOfDeclaration("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
+        .hasSize(3);
+  }
+
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, "x");
@@ -2290,8 +2304,13 @@ public final class NodeUtilTest extends TestCase {
   }
 
   static Node getClassNode(String js) {
-   Node root = parse(js);
+    Node root = parse(js);
     return getClassNode(root);
+  }
+
+  static Iterable<Node> getLhsNodesOfDeclaration(String js) {
+    Node root = parse(js);
+    return NodeUtil.getLhsNodesOfDeclaration(root.getFirstChild());
   }
 
   static Node getClassNode(Node n) {

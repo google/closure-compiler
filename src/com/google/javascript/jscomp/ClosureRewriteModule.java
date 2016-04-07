@@ -77,7 +77,6 @@ import java.util.Set;
  */
 final class ClosureRewriteModule implements HotSwapCompilerPass {
 
-  // TODO(blickly): add pass for invalid this/return statements in goog.module
   // TODO(johnlenz): handle non-namespace module identifiers aka 'foo/bar'
 
   static final DiagnosticType INVALID_MODULE_NAMESPACE =
@@ -683,12 +682,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordTopLevelVarNames(Node varNode) {
-    for (Node nameNode : varNode.children()) {
-      if (!nameNode.isName() || Strings.isNullOrEmpty(nameNode.getString())) {
-        continue;
-      }
-      String name = nameNode.getString();
+    for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(varNode)) {
+      String name = lhs.getString();
       currentScript.topLevelNames.add(name);
+      // Rewrite `const {x, y} = ...` syntax to `const {x: x, y: y} = ...` for easier processing
+      if (lhs.isStringKey()) {
+        lhs.addChildToFront(IR.name(name).srcref(lhs));
+      }
     }
   }
 
