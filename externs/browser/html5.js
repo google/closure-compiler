@@ -2945,7 +2945,7 @@ MutationRecord.prototype.addedNodes;
 MutationRecord.prototype.removedNodes;
 
 /** @type {Node} */
-MutationRecord.prototype.previouSibling;
+MutationRecord.prototype.previousSibling;
 
 /** @type {Node} */
 MutationRecord.prototype.nextSibling;
