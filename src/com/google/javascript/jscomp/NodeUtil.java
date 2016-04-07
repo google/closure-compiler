@@ -3286,12 +3286,14 @@ public final class NodeUtil {
       case Token.LET:
       case Token.OBJECT_PATTERN:
       case Token.ARRAY_PATTERN:
-        for (Node child : n.children()) {
+      case Token.PARAM_LIST:
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           getLhsNodesHelper(child, lhsNodes);
         }
         return;
       case Token.DESTRUCTURING_LHS:
       case Token.DEFAULT_VALUE:
+      case Token.CATCH:
       case Token.REST:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
@@ -3318,7 +3320,8 @@ public final class NodeUtil {
    * Retrieves lhs nodes declared in the current declaration.
    */
   static Iterable<Node> getLhsNodesOfDeclaration(Node declNode) {
-    Preconditions.checkArgument(isNameDeclaration(declNode));
+    Preconditions.checkArgument(
+        isNameDeclaration(declNode) || declNode.isParamList() || declNode.isCatch(), declNode);
     ArrayList<Node> lhsNodes = new ArrayList<>();
     getLhsNodesHelper(declNode, lhsNodes);
     return lhsNodes;
