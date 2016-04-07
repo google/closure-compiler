@@ -346,6 +346,10 @@ md.$toast.prototype.hide = function(opt_response) {};
 md.$toast.prototype.cancel = function(opt_response) {};
 
 
+/** @param {string} content */
+md.$toast.prototype.updateTextContent = function(content) {};
+
+
 /** @record */
 md.$toast.preset = function() {};
 
