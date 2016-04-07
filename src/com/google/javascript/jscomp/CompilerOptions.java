@@ -1401,14 +1401,17 @@ public class CompilerOptions {
       case ALL:
         this.inlineFunctions = true;
         this.inlineLocalFunctions = true;
+        this.inlineGetters = true;
         break;
       case LOCAL_ONLY:
         this.inlineFunctions = false;
         this.inlineLocalFunctions = true;
+        this.inlineGetters = false;
         break;
       case NONE:
         this.inlineFunctions = false;
         this.inlineLocalFunctions = false;
+        this.inlineGetters = false;
         break;
       default:
         throw new IllegalStateException("unexpected");
@@ -1944,9 +1947,8 @@ public class CompilerOptions {
     this.crossModuleMethodMotion = crossModuleMethodMotion;
   }
 
-  public void setInlineGetters(boolean inlineGetters) {
-    this.inlineGetters = inlineGetters;
-  }
+  // No-op: will delete in a follow-up CL.
+  public void setInlineGetters(boolean inlineGetters) {}
 
   public void setInlineVariables(boolean inlineVariables) {
     this.inlineVariables = inlineVariables;

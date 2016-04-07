@@ -1323,7 +1323,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var x = new Foo(); x.bar();";
 
     testSame(options, code);
-    options.setInlineGetters(true);
+    options.inlineGetters = true;
 
     test(options, code,
         "function Foo() {} Foo.prototype.bar = function() { return 3 };"
@@ -1347,7 +1347,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     testSame(options, code);
 
-    options.setInlineGetters(true);
+    options.inlineGetters = true;
 
     test(options, code,
         "function Foo() {}"
