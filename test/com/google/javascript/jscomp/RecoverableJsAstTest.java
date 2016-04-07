@@ -169,7 +169,7 @@ public class RecoverableJsAstTest {
     }
 
     JSError[] errors = compiler.getResult().errors;
-    if (expectedErrors.size() > 0) {
+    if (!expectedErrors.isEmpty()) {
       for (int i = 0; i < expectedErrors.size(); i++) {
         if (i < errors.length) {
           assertThat(errors[i].toString()).contains(expectedErrors.get(i));
@@ -178,7 +178,7 @@ public class RecoverableJsAstTest {
         }
       }
     } else {
-      assertTrue(errors.length == 0);
+      assertThat(errors).isEmpty();
     }
 
     assertThat(ast.getAstRoot(compiler)).isNotSameAs(realAst.getAstRoot(compiler));

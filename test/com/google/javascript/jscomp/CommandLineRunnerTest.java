@@ -29,6 +29,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
@@ -2044,7 +2045,7 @@ public final class CommandLineRunnerTest extends TestCase {
         1, compiler.getErrors().length + compiler.getWarnings().length);
 
     assertThat(exitCodes).isNotEmpty();
-    int lastExitCode = exitCodes.get(exitCodes.size() - 1);
+    int lastExitCode = Iterables.getLast(exitCodes);
 
     if (compiler.getErrors().length > 0) {
       assertThat(compiler.getErrors()).hasLength(1);

@@ -31,6 +31,7 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.voidType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
@@ -1586,7 +1587,7 @@ class IRFactory {
     private void checkParenthesizedExpression(ParenExpressionTree exprNode) {
       if (exprNode.expression.type == ParseTreeType.COMMA_EXPRESSION) {
         List<ParseTree> commaNodes = exprNode.expression.asCommaExpression().expressions;
-        ParseTree lastChild = commaNodes.get(commaNodes.size() - 1);
+        ParseTree lastChild = Iterables.getLast(commaNodes);
         if (lastChild.type == ParseTreeType.REST_PARAMETER) {
           errorReporter.error(
               "A rest parameter must be in a parameter list.",

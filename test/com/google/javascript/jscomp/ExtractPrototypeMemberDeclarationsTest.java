@@ -270,7 +270,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
     StringBuilder builder = new StringBuilder();
 
     if (pattern == Pattern.USE_IIFE) {
-      builder.append("(function(" + TMP + "){");
+      builder.append("(function(").append(TMP).append("){");
     }
 
     for (int i = 0; i < num; i++) {

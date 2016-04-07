@@ -17,6 +17,7 @@ package com.google.javascript.refactoring;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -168,7 +169,7 @@ public final class ErrorToFixMapper {
     RequireProvideSorter cb = new RequireProvideSorter(closureFunction);
     NodeTraversal.traverseEs6(compiler, script, cb);
     Node first = cb.calls.get(0);
-    Node last = cb.calls.get(cb.calls.size() - 1);
+    Node last = Iterables.getLast(cb.calls);
 
     cb.sortCallsAlphabetically();
     StringBuilder sb = new StringBuilder();
