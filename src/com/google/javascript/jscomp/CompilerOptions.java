@@ -188,9 +188,6 @@ public class CompilerOptions {
     reportMissingOverride = level;
   }
 
-  @Deprecated
-  public CheckLevel checkProvides;
-
   /**
    * Checks for missing goog.provides() calls.
    * @deprecated Use setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, level)
@@ -1005,7 +1002,6 @@ public class CompilerOptions {
     checkSuspiciousCode = false;
     checkTypes = false;
     reportMissingOverride = CheckLevel.OFF;
-    checkProvides = CheckLevel.OFF;
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
     checkGlobalThisLevel = CheckLevel.OFF;
