@@ -56,8 +56,6 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           "Namespace imports ('goog:some.Namespace') cannot use import * as. "
               + "Did you mean to import {0} from ''{1}'';?");
 
-  private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
-
   private final ES6ModuleLoader loader;
 
   private final Compiler compiler;
@@ -324,7 +322,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       return;
     }
 
-    setStrictModeDirective(script);
+    ClosureRewriteModule.checkAndSetStrictModeDirective(t, script);
 
     Preconditions.checkArgument(scriptNodeCount == 1,
         "ProcessEs6Modules supports only one invocation per "
@@ -400,22 +398,6 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
 
     exportMap.clear();
     compiler.reportCodeChange();
-  }
-
-  private static void setStrictModeDirective(Node n) {
-    Preconditions.checkState(n.isScript(), n);
-    Set<String> directives = n.getDirectives();
-    if (directives != null && directives.contains("use strict")) {
-      return;
-    } else {
-      if (directives == null) {
-        n.setDirectives(USE_STRICT_ONLY);
-      } else {
-        ImmutableSet.Builder<String> builder = new ImmutableSet.Builder<String>().add("use strict");
-        builder.addAll(directives);
-        n.setDirectives(builder.build());
-      }
-    }
   }
 
   private void rewriteRequires(Node script) {

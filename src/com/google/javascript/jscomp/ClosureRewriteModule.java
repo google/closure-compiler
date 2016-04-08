@@ -235,7 +235,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isModuleFile(n)) {
-        checkStrictModeDirective(t, n);
+        checkAndSetStrictModeDirective(t, n);
       }
 
       switch (n.getType()) {
@@ -1148,7 +1148,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     loadModuleStatements.clear();
   }
 
-  private static void checkStrictModeDirective(NodeTraversal t, Node n) {
+  static void checkAndSetStrictModeDirective(NodeTraversal t, Node n) {
     Preconditions.checkState(n.isScript(), n);
 
     Set<String> directives = n.getDirectives();
