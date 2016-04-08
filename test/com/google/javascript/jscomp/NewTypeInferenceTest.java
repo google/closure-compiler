@@ -18452,4 +18452,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "(0, abstractMethod).call(new B);"),
         NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
   }
+
+  public void testDontRemoveLooseObjects() {
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (Object(x) === x && !Array.isArray(x)) {",
+        "    for (var p in x) {}",
+        "  }",
+        "}"));
+  }
 }
