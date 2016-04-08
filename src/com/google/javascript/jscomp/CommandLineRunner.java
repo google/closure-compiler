@@ -260,9 +260,9 @@ public class CommandLineRunner extends
     private String outputWrapper = "";
 
     @Option(name = "--output_wrapper_file",
-        hidden = true,
-        usage = "Loads the specified file and passes the file contents to the "
-        + "--output_wrapper flag, replacing the value if it exists.")
+        usage = "Loads the specified file and passes the file contents to the --output_wrapper"
+        + " flag, replacing the value if it exists. This is useful if you want special characters"
+        + " like newline in the wrapper.")
     private String outputWrapperFile = "";
 
     @Option(name = "--module_wrapper",
@@ -721,7 +721,8 @@ public class CommandLineRunner extends
                     "export_local_property_definitions",
                     "formatting",
                     "generate_exports",
-                    "output_wrapper"))
+                    "output_wrapper",
+                    "output_wrapper_file"))
             .putAll("Dependency Management", ImmutableList.of("dependency_mode", "entry_point"))
             .putAll(
                 "JS Modules",
