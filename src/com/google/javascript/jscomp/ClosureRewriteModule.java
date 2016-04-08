@@ -125,7 +125,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "Computed properties are not yet supported in goog.module exports.");
 
   static final DiagnosticType USELESS_USE_STRICT_DIRECTIVE =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_USELESS_USE_STRICT_DIRECTIVE",
           "'use strict' is unnecessary in goog.module files.");
 
