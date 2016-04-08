@@ -470,7 +470,7 @@ angular.Directive;
  *   templateUrl: (string|
  *       function(!angular.JQLite=,!angular.Attributes=)|
  *       undefined),
- *   transclude: (boolean|undefined)
+ *   transclude: (boolean|!Object.<string, string>|undefined)
  *   }}
  */
 angular.Component;
