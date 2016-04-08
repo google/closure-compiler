@@ -1131,6 +1131,8 @@ public abstract class CompilerTestCase extends TestCase {
           "Unexpected parse warnings(s): " + LINE_JOINER.join(compiler.getWarnings()),
           0,
           compiler.getWarnings().length);
+    } else {
+      assertThat(compiler.getWarningCount()).isGreaterThan(0);
     }
 
     if (astValidationEnabled) {

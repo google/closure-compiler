@@ -1022,7 +1022,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "  error_message: 'BanExpose Message'\n" +
         "}";
 
-    setExpectParseWarningsThisTest();
     testSame(
         EXTERNS,
         "/** @expose */ var x;",

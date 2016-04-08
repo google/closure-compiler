@@ -44,6 +44,13 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
     return 1;
   }
 
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    return options;
+  }
+
   public void testBasic0() {
     testSame("");
     testSame("goog.provide('a');");
@@ -1200,5 +1207,11 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "goog.provide('a.b.c');",
             "/** @const @public */ var module$exports$a$b$c = 5;",
             "/** @const @public */ a.b.c = module$exports$a$b$c;"));
+  }
+
+  public void testUselessUseStrict() {
+    testWarning(LINE_JOINER.join(
+        "'use strict';",
+        "goog.module('b.c.c');"), ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE);
   }
 }

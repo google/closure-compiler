@@ -44,6 +44,7 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     // ECMASCRIPT5 to Trigger module processing after parsing.
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     return options;
   }
 
@@ -642,5 +643,21 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
 
   public void testImportWithoutReferences() {
     testModules("import 'other';", "goog.require('module$other');");
+  }
+
+  public void testUselessUseStrict() {
+    setExpectParseWarningsThisTest();
+    testModules(LINE_JOINER.join(
+        "'use strict';",
+        "export default undefined;"),
+        LINE_JOINER.join(
+        "'use strict';",
+        "export default undefined;"));
+  }
+
+  public void testUselessUseStrict_noWarning() {
+    testSame(LINE_JOINER.join(
+        "'use strict';",
+        "var x;"));
   }
 }
