@@ -404,6 +404,19 @@ class IRFactory {
     validateLabel(n);
   }
 
+  private void validateReturn(Node n) {
+    if (n.isReturn()) {
+      Node parent = n;
+      while ((parent = parent.getParent()) != null) {
+        if (parent.isFunction()) {
+          return;
+        }
+      }
+      errorReporter.error(UNEXPECTED_RETURN,
+          sourceName, n.getLineno(), n.getCharno());
+    }
+  }
+
   private void validateBreakContinue(Node n) {
     if (n.isBreak() || n.isContinue()) {
       Node labelName = n.getFirstChild();
@@ -458,19 +471,6 @@ class IRFactory {
           }
         }
       }
-    }
-  }
-
-  private void validateReturn(Node n) {
-    if (n.isReturn()) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        if (parent.isFunction()) {
-          return;
-        }
-      }
-      errorReporter.error(UNEXPECTED_RETURN,
-          sourceName, n.getLineno(), n.getCharno());
     }
   }
 
@@ -723,8 +723,7 @@ class IRFactory {
     }
   }
 
-  JSDocInfo handleJsDoc(
-      com.google.javascript.jscomp.parsing.parser.Token token) {
+  JSDocInfo handleJsDoc(com.google.javascript.jscomp.parsing.parser.Token token) {
     return handleJsDoc(getJsDoc(token));
   }
 
@@ -740,8 +739,7 @@ class IRFactory {
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {
-    if (node.type == ParseTreeType.PAREN_EXPRESSION
-        && info.hasType()) {
+    if (node.type == ParseTreeType.PAREN_EXPRESSION && info.hasType()) {
       irNode = newNode(Token.CAST, irNode);
     }
     return irNode;
@@ -1105,6 +1103,9 @@ class IRFactory {
           transform(getNode.memberExpression));
     }
 
+    /**
+     * @param exprNode unused
+     */
     Node processEmptyStatement(EmptyStatementTree exprNode) {
       return newNode(Token.EMPTY);
     }
@@ -1255,7 +1256,7 @@ class IRFactory {
         Node member = newStringNode(Token.MEMBER_FUNCTION_DEF, name.value);
         member.addChildToBack(node);
         member.setStaticMember(functionTree.isStatic);
-        maybeProcessAccessibilityModifier(member, functionTree, functionTree.access);
+        maybeProcessAccessibilityModifier(member, functionTree.access);
         node.setDeclaredTypeExpression(node.getDeclaredTypeExpression());
         result = member;
       } else {
@@ -1318,10 +1319,16 @@ class IRFactory {
           transform(exprNode.right));
     }
 
+    /**
+     * @param node unused.
+     */
     Node processDebuggerStatement(DebuggerStatementTree node) {
       return newNode(Token.DEBUGGER);
     }
 
+    /**
+     * @param node unused.
+     */
     Node processThisExpression(ThisExpressionTree node) {
       return newNode(Token.THIS);
     }
@@ -1487,7 +1494,7 @@ class IRFactory {
       n.putBooleanProp(Node.COMPUTED_PROP_VARIABLE, true);
       n.putProp(Node.ACCESS_MODIFIER, tree.access);
       n.setStaticMember(tree.isStatic);
-      maybeProcessAccessibilityModifier(n, tree, tree.access);
+      maybeProcessAccessibilityModifier(n, tree.access);
       return n;
     }
 
@@ -1500,7 +1507,7 @@ class IRFactory {
       if (tree.method.asFunctionDeclaration().isStatic) {
         n.setStaticMember(true);
       }
-      maybeProcessAccessibilityModifier(n, tree, tree.access);
+      maybeProcessAccessibilityModifier(n, tree.access);
       return n;
     }
 
@@ -1904,6 +1911,9 @@ class IRFactory {
           transformBlock(stmt.body));
     }
 
+    /**
+     * @param tree unused
+     */
     Node processMissingExpression(MissingPrimaryExpressionTree tree) {
       // This will already have been reported as an error by the parser.
       // Try to create something valid that ide mode might be able to
@@ -1956,10 +1966,16 @@ class IRFactory {
           literal.literalToken.type));
     }
 
+    /**
+     * @param literal unused
+     */
     Node processNullLiteral(LiteralExpressionTree literal) {
       return newNode(Token.NULL);
     }
 
+    /**
+     * @param literal unused
+     */
     Node processNull(NullTree literal) {
       // NOTE: This is not a NULL literal but a placeholder node such as in
       // an array with "holes".
@@ -2051,7 +2067,7 @@ class IRFactory {
       maybeProcessType(member, tree.declaredType);
       member.setStaticMember(tree.isStatic);
       member.putBooleanProp(Node.OPT_ES6_TYPED, tree.isOptional);
-      maybeProcessAccessibilityModifier(member, tree, tree.access);
+      maybeProcessAccessibilityModifier(member, tree.access);
       return member;
     }
 
@@ -2447,7 +2463,7 @@ class IRFactory {
       }
     }
 
-    void maybeProcessAccessibilityModifier(Node n, ParseTree tree, TokenType type) {
+    void maybeProcessAccessibilityModifier(Node n, TokenType type) {
       if (type != null) {
         Visibility access;
         switch (type) {
