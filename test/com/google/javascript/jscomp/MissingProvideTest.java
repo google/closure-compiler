@@ -90,8 +90,7 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
     String legacyScript =
         LINE_JOINER.join(
             "goog.provide('legacy.script.B');",
-            "goog.require('normal.goog.module.A');",
-            "new normal.goog.module.A;");
+            "goog.require('normal.goog.module.A');");
 
     String warning = "required \"normal.goog.module.A\" namespace never provided";
     test(new String[] {googModule, legacyScript}, null, MISSING_PROVIDE_ERROR, null, warning);

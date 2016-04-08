@@ -27,6 +27,7 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_N
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_PROVIDE_CALL;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
+import static com.google.javascript.jscomp.ClosureRewriteModule.QUALIFIED_REFERENCE_TO_GOOG_MODULE;
 
 /**
  * Unit tests for ClosureRewriteModule
@@ -1200,5 +1201,65 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "goog.provide('a.b.c');",
             "/** @const @public */ var module$exports$a$b$c = 5;",
             "/** @const @public */ a.b.c = module$exports$a$b$c;"));
+  }
+
+  public void testGoogModuleReferencedWithGlobalName() {
+    testError(
+        new String[] {"goog.module('a.b.c');", "goog.require('a.b.c'); use(a.b.c);"},
+        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+
+    testError(
+        new String[] {"goog.module('a.b.c');", "goog.require('a.b.c'); use(a.b.c.d);"},
+        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+
+    testError(
+        new String[] {
+          "goog.module('a.b.c');",
+          "goog.module('x.y.z'); var c = goog.require('a.b.c'); use(a.b.c);"
+        },
+        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+
+    testError(
+        new String[] {"goog.module('a.b.c');", "use(a.b.c);"},
+        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+  }
+
+  public void testGoogModuleValidReferences() {
+    test(
+        new String[] {
+          "goog.module('a.b.c');", "goog.module('x.y.z'); var c = goog.require('a.b.c'); use(c);"
+        },
+        new String[] {
+          "/** @const */ var module$exports$a$b$c={};",
+          "/** @const */ var module$exports$x$y$z={}; use(module$exports$a$b$c);"
+        });
+
+    test(
+        new String[] {
+          "goog.module('a.b.c');",
+          LINE_JOINER.join(
+              "goog.require('a.b.c');",
+              "goog.scope(function() {",
+              "  var c = goog.module.get('a.b.c');",
+              "  use(c);",
+              "});")
+        },
+        new String[] {
+          "/** @const */ var module$exports$a$b$c={};",
+          "goog.scope(function() { var c = module$exports$a$b$c; use(c); });"
+        });
+
+    test(
+        new String[] {
+          "goog.module('a.b.c'); goog.module.declareLegacyNamespace();",
+          "goog.require('a.b.c'); use(a.b.c);"
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "goog.provide('a.b.c');",
+              "/** @const */ var module$exports$a$b$c={};",
+              "/** @const */ a.b.c = module$exports$a$b$c"),
+          "goog.require('a.b.c'); use(a.b.c);"
+        });
   }
 }

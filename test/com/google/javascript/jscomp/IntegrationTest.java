@@ -3053,7 +3053,7 @@ public final class IntegrationTest extends IntegrationTestCase {
               "new foo.Outer.Inner;",
               "});")
         },
-        ClosureCheckModuleImports.QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+        ClosureRewriteModule.QUALIFIED_REFERENCE_TO_GOOG_MODULE);
   }
 
   public void testUnboundedArrayLiteralInfiniteLoop() {
