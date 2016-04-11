@@ -3573,31 +3573,22 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testOptimizeSwitchGithubIssue1234() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    test(options, LINE_JOINER.join(
-        "var exit;",
-        "switch ('a') {",
-        "  case 'a':",
-        "    break;",
-        "  default:",
-        "    exit = 21;",
-        "    break;",
-        "}",
-        "switch(exit) {",
-        "  case 21: throw 'x';",
-        "  default : console.log('good');",
-        "}"), LINE_JOINER.join(
-        // TODO(moz): Seems like we can fold a bit more here. Investigate later.
-        "var a;",
-        "switch ('a') {",
-        "  case 'a':",
-        "    break;",
-        "  default:",
-        "    a = 21;",
-        "}",
-        "switch(a) {",
-        "  case 21: throw 'x';",
-        "  default : console.a('good');",
-        "}"));
+    test(
+        options,
+        LINE_JOINER.join(
+            "var exit;",
+            "switch ('a') {",
+            "  case 'a':",
+            "    break;",
+            "  default:",
+            "    exit = 21;",
+            "    break;",
+            "}",
+            "switch(exit) {",
+            "  case 21: throw 'x';",
+            "  default : console.log('good');",
+            "}"),
+        "console.a('good');");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
