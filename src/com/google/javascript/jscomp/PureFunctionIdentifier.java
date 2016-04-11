@@ -476,7 +476,7 @@ class PureFunctionIdentifier implements CompilerPass {
               // Variable definition are not side effects.
               // Just check that the name appears in the context of a
               // variable declaration.
-              Preconditions.checkArgument(NodeUtil.isVarDeclaration(node));
+              Preconditions.checkArgument(NodeUtil.isNameDeclaration(parent));
               Node value = node.getFirstChild();
               // Assignment to local, if the value isn't a safe local value,
               // new object creation or literal or known primitive result
