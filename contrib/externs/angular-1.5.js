@@ -475,6 +475,10 @@ angular.Directive;
  */
 angular.Component;
 
+/** @record */
+angular.ComponentController = function() {};
+
+angular.ComponentController.prototype.$onInit = function() {};
 
 /**
  * @typedef {(Function|Array.<string|Function>)}
