@@ -172,6 +172,80 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "/** @const */ ns.a = module$exports$ns$a;"));
   }
 
+  public void testSideEffectOnlyModuleImport() {
+    test(
+        new String[] {
+            LINE_JOINER.join(
+                "goog.module('ns.b');",
+                "alert('hello world');"),
+            LINE_JOINER.join(
+                "goog.module('ns.a');",
+                "goog.require('ns.b');")},
+
+        new String[] {
+            "/** @const */ var module$exports$ns$b = {}; alert('hello world');",
+            "/** @const */ var module$exports$ns$a = {};"});
+  }
+
+  public void testTypeOnlyModuleImport() {
+    test(
+        new String[] {
+            LINE_JOINER.join(
+                "goog.module('ns.B');",
+                "/** @constructor */ exports = function() {};"),
+            LINE_JOINER.join(
+                "goog.module('ns.a');",
+                "",
+                "goog.require('ns.B');",
+                "",
+                "/** @type {ns.B} */ var c;")},
+
+        new String[] {
+            "/** @constructor */ var module$exports$ns$B = function() {};",
+            LINE_JOINER.join(
+                "/** @const */ var module$exports$ns$a = {};",
+                "/** @type {module$exports$ns$B} */ var module$contents$ns$a_c;")});
+  }
+
+  public void testSideEffectOnlyImportOfGoogProvide() {
+    test(
+        new String[] {
+            LINE_JOINER.join(
+                "goog.provide('ns.b');",
+                "",
+                "alert('hello world');"),
+            LINE_JOINER.join(
+                "goog.module('ns.a');",
+                "",
+                "goog.require('ns.b');")},
+
+        new String[] {
+            "goog.provide('ns.b'); alert('hello world');",
+            "/** @const */ var module$exports$ns$a = {}; goog.require('ns.b');"});
+  }
+
+  public void testSideEffectOnlyImportOfLegacyGoogModule() {
+    test(
+        new String[] {
+            LINE_JOINER.join(
+                "goog.module('ns.b');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "alert('hello world');"),
+            LINE_JOINER.join(
+                "goog.module('ns.a');",
+                "",
+                "goog.require('ns.b');")},
+
+        new String[] {
+            LINE_JOINER.join(
+                "goog.provide('ns.b');",
+                "/** @const */ var module$exports$ns$b = {};",
+                "/** @const */ ns.b = module$exports$ns$b;",
+                "alert('hello world');"),
+            "/** @const */ var module$exports$ns$a = {}; goog.require('ns.b');"});
+  }
+
   public void testBundle1() {
     test(
         new String[] {

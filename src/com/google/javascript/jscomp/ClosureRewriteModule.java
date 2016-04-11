@@ -807,7 +807,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           Node binaryNamespaceName = IR.name(toBinaryNamespace(legacyNamespace));
           binaryNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
           call.getParent().replaceChild(call, binaryNamespaceName);
-        } else if (!currentScript.isModule || currentScript.isModule && importHasAlias) {
+        } else if (importHasAlias || !isLegacyByGoogModuleNamespace.get(legacyNamespace)) {
           // Delete the goog.require() because we're going to inline its alias later.
           statementNode.detachFromParent();
         }
