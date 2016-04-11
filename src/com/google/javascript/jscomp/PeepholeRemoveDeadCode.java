@@ -304,8 +304,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     Node defaultCase = tryOptimizeDefaultCase(n);
 
-    // Removing cases when there exists a default case is not safe.
-    if (defaultCase == null) {
+    // It is unsafe to remove other cases when the default case is not the last one.
+    if (defaultCase == null || n.getLastChild().getType() == Token.DEFAULT_CASE) {
       Node cond = n.getFirstChild(), prev = null, next = null, cur;
 
       for (cur = cond.getNext(); cur != null; cur = next) {
@@ -344,12 +344,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
             block = cur.getLastChild();
             lastStm = block.getLastChild();
             cur = cur.getNext();
-            if (lastStm != null
-                && lastStm.isBreak()
-                && !lastStm.hasChildren()) {
-              block.removeChild(lastStm);
-              reportCodeChange();
-              break;
+            if (lastStm != null) {
+              if (lastStm.isBreak() && !lastStm.hasChildren()) {
+                block.removeChild(lastStm);
+                reportCodeChange();
+                break;
+              } else if (lastStm.isReturn() || lastStm.isThrow()) {
+                break;
+              }
             }
           }
           // Remove any remaining cases

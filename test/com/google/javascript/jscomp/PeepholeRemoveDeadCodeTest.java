@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  * of multiple peephole passes are in PeepholeIntegrationTest.
  */
 
-public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
+public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
 
   private static final String MATH =
       "/** @const */ var Math = {};" +
@@ -476,6 +476,53 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "    break outer;\n" +
         "}",
         "outer: {f(); break outer;}");
+  }
+
+  public void testOptimizeSwitchWithReturn() {
+    test(LINE_JOINER.join(
+        "function f() {",
+        "  switch('x') {",
+        "    case 'x': return 1;",
+        "    case 'y': return 2;",
+        "  };",
+        "}"),
+        "function f() { return 1; }");
+
+    // TODO(moz): This is to show that the current optimization might break if the input has block
+    // scoped declarations. We will need to fix the logic for removing blocks to account for this.
+    testEs6(LINE_JOINER.join(
+        "function f() {",
+        "  let x = 1;",
+        "  switch('x') {",
+        "    case 'x': { let x = 2; return 3; }",
+        "    case 'y': return 4;",
+        "  };",
+        "}"),
+        "function f() { let x = 1; let x = 2; return 3; }");
+  }
+
+  public void testOptimizeSwitchWithThrow() {
+    test(LINE_JOINER.join(
+        "function f() {",
+        "  switch('x') {",
+        "    case 'x': throw f;",
+        "    case 'y': throw f;",
+        "  };",
+        "}"),
+        "function f() { throw f; }");
+  }
+
+  // GitHub issue #1722: https://github.com/google/closure-compiler/issues/1722
+  public void testOptimizeSwitchWithDefaultCase() {
+    test(LINE_JOINER.join(
+        "function f() {",
+        "  switch('x') {",
+        "    case 'x': return 1;",
+        "    case 'y': return 2;",
+        "    default: return 3",
+        " }",
+        "}"),
+        "function f() { return 1; }");
   }
 
   public void testRemoveNumber() {
