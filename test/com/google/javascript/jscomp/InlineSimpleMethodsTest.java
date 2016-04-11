@@ -295,4 +295,26 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     testSame("({set a(b){},b:alert}).a(\"a\")");
     testSame("({set a(b){},b:alert}).a");
   }
+
+  public void testInlinesEvenIfClassEscapes() {
+    // The purpose of this test is to record an unsafe assumption made by the
+    // pass. In practice, it's usually safe to inline even if the class
+    // escapes, because method definitions aren't commonly mutated.
+    test(
+        "var esc;",
+        "/** @constructor */"
+        + "function Foo() {"
+        + "  this.prop = 123;"
+        + "}"
+        + "Foo.prototype.m = function() {"
+        + "  return this.prop;"
+        + "}"
+        + "(new Foo).m();"
+        + "esc(Foo);",
+        "function Foo(){this.prop=123}"
+        + "Foo.prototype.m=function(){return this.prop}"
+        + "(new Foo).m();"
+        + "esc(Foo)",
+        null, null);
+  }
 }

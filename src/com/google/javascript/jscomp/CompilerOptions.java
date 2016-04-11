@@ -1388,17 +1388,14 @@ public class CompilerOptions {
       case ALL:
         this.inlineFunctions = true;
         this.inlineLocalFunctions = true;
-        this.inlineGetters = true;
         break;
       case LOCAL_ONLY:
         this.inlineFunctions = false;
         this.inlineLocalFunctions = true;
-        this.inlineGetters = false;
         break;
       case NONE:
         this.inlineFunctions = false;
         this.inlineLocalFunctions = false;
-        this.inlineGetters = false;
         break;
       default:
         throw new IllegalStateException("unexpected");
@@ -1975,6 +1972,9 @@ public class CompilerOptions {
 
   public void setRemoveUnusedPrototypeProperties(boolean enabled) {
     this.removeUnusedPrototypeProperties = enabled;
+    // InlineSimpleMethods makes similar assumptions to
+    // RemoveUnusedPrototypeProperties, so they are enabled together.
+    this.inlineGetters = enabled;
   }
 
   public void setRemoveUnusedPrototypePropertiesInExterns(boolean enabled) {
