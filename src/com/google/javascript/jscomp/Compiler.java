@@ -669,6 +669,10 @@ public class Compiler extends AbstractCompiler {
     compilerExecutor.setTimeout(timeout);
   }
 
+  /**
+   * The primary purpose of this method is to run the provided code with a larger than standard
+   * stack.
+   */
   <T> T runInCompilerThread(Callable<T> callable) {
     return compilerExecutor.runInCompilerThread(callable, options != null && options.tracer.isOn());
   }
@@ -1439,6 +1443,21 @@ public class Compiler extends AbstractCompiler {
       afterPass(PARSING_PASS_NAME);
       stopTracer(tracer, PARSING_PASS_NAME);
     }
+  }
+
+  void orderInputsWithLargeStack() {
+    runInCompilerThread(new Callable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        Tracer tracer = newTracer("orderInputsWithLargeStack");
+        try {
+          orderInputs();
+        } finally {
+          stopTracer(tracer, "orderInputsWithLargeStack");
+        }
+        return null;
+      }
+    });
   }
 
   void orderInputs() {

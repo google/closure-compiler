@@ -1089,14 +1089,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
       if (config.skipNormalOutputs) {
         compiler.initModules(externs, modules, options);
-        compiler.orderInputs();
+        compiler.orderInputsWithLargeStack();
       } else {
         result = compiler.compileModules(externs, modules, options);
       }
     } else {
       if (config.skipNormalOutputs) {
         compiler.init(externs, inputs, options);
-        compiler.orderInputs();
+        compiler.orderInputsWithLargeStack();
       } else {
         result = compiler.compile(externs, inputs, options);
       }
