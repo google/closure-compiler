@@ -480,6 +480,8 @@ angular.ComponentController = function() {};
 
 angular.ComponentController.prototype.$onInit = function() {};
 
+angular.ComponentController.prototype.$onDestroy = function() {};
+
 /**
  * @typedef {(Function|Array.<string|Function>)}
  */
