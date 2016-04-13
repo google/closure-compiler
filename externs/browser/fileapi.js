@@ -454,19 +454,13 @@ FileError.prototype.code;
  */
 function FileReader() {}
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- */
-FileReader.prototype.addEventListener = function(type, listener, opt_useCapture)
-    {};
+/** @override */
+FileReader.prototype.addEventListener =
+    function(type, listener, opt_useCaptureOrEventListenerOptions) {};
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- */
-FileReader.prototype.removeEventListener = function(type, listener,
-    opt_useCapture) {};
+/** @override */
+FileReader.prototype.removeEventListener =
+    function(type, listener, opt_useCaptureOrEventListenerOptions) {};
 
 /** @override */
 FileReader.prototype.dispatchEvent = function(evt) {};
