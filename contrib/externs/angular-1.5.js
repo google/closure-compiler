@@ -464,14 +464,14 @@ angular.Directive;
  *   bindings: (Object.<string, string>|undefined),
  *   controller: (angular.Injectable|string|undefined),
  *   controllerAs: (string|undefined),
+ *   require: (!Object<string, string>|undefined),
  *   template: (string|
  *       function(!angular.JQLite=,!angular.Attributes=): string|
  *       undefined),
  *   templateUrl: (string|
  *       function(!angular.JQLite=,!angular.Attributes=)|
  *       undefined),
- *   transclude: (boolean|!Object.<string, string>|undefined),
- *   require: (!Object<string, string>|undefined)
+ *   transclude: (boolean|!Object.<string, string>|undefined)
  *   }}
  */
 angular.Component;
