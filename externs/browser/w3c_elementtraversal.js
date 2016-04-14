@@ -26,6 +26,18 @@
  */
 
 /**
+ * @typedef {?(Document|DocumentFragment|Element)}
+ * @see https://dom.spec.whatwg.org/#parentnode
+ */
+var ParentNode;
+
+/**
+ * @typedef {?(Element|CharacterData)}
+ * @see https://dom.spec.whatwg.org/#nondocumenttypechildnode
+ */
+var NonDocumentTypeChildNode;
+
+/**
  * @type {Element}
  * @see https://developer.mozilla.org/En/DOM/Element.firstElementChild
  */
@@ -54,3 +66,51 @@ Element.prototype.nextElementSibling;
  * @see https://developer.mozilla.org/En/DOM/Element.childElementCount
  */
 Element.prototype.childElementCount;
+
+/**
+ * @type {?Element}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-firstelementchild
+ */
+Document.prototype.firstElementChild;
+
+/**
+ * @type {?Element}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-lastelementchild
+ */
+Document.prototype.lastElementChild;
+
+/**
+ * @type {number}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-childelementcount
+ */
+Document.prototype.childElementCount;
+
+/**
+ * @type {?Element}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-firstelementchild
+ */
+DocumentFragment.prototype.firstElementChild;
+
+/**
+ * @type {?Element}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-lastelementchild
+ */
+DocumentFragment.prototype.lastElementChild;
+
+/**
+ * @type {number}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-childelementcount
+ */
+DocumentFragment.prototype.childElementCount;
+
+/**
+ * @type {?Element}
+ * @see https://dom.spec.whatwg.org/#dom-nondocumenttypechildnode-previouselementsibling
+ */
+CharacterData.prototype.previousElementSibling;
+
+/**
+ * @type {?Element}
+ * @see https://dom.spec.whatwg.org/#dom-nondocumenttypechildnode-nextelementsibling
+ */
+CharacterData.prototype.nextElementSibling;
