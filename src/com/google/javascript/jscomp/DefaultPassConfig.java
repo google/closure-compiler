@@ -632,6 +632,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.addAll(getMainOptimizationLoop());
+    passes.add(createEmptyPass("afterMainOptimizations"));
 
     passes.add(createEmptyPass("beforeModuleMotion"));
 
