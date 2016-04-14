@@ -23,6 +23,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.Files;
@@ -1280,7 +1281,7 @@ final class NameAnalyzer implements CompilerPass {
 
     sb.append("ALL NAMES<ul>\n");
     for (JsName node : allNames.values()) {
-      sb.append("<li>" + nameAnchor(node.name) + "<ul>");
+      sb.append("<li>").append(nameAnchor(node.name)).append("<ul>");
       if (!node.prototypeNames.isEmpty()) {
         sb.append("<li>PROTOTYPES: ");
         Iterator<String> protoIter = node.prototypeNames.iterator();
@@ -1330,7 +1331,7 @@ final class NameAnalyzer implements CompilerPass {
   }
 
   private static void appendListItem(StringBuilder sb, String text) {
-    sb.append("<li>" + text + "</li>\n");
+    sb.append("<li>").append(text).append("</li>\n");
   }
 
   private static String nameLink(String name) {
@@ -1809,7 +1810,7 @@ final class NameAnalyzer implements CompilerPass {
       for (int i = 0; i < replacements.size() - 1; i++) {
         newReplacements.addAll(getSideEffectNodes(replacements.get(i)));
       }
-      Node valueExpr = replacements.get(replacements.size() - 1);
+      Node valueExpr = Iterables.getLast(replacements);
       valueExpr.detachFromParent();
       newReplacements.add(valueExpr);
       changeProxy.replaceWith(

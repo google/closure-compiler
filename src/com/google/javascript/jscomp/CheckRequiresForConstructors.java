@@ -23,6 +23,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -273,7 +274,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       // The parent namespace of the outermost class is also checked, so that classes
       // used by goog.module are still checked properly. This may cause missing requires
       // to be missed but in practice that should happen rarely.
-      String nonNullClassName = classNames.isEmpty() ? namespace : classNames.get(0);
+      String nonNullClassName = Iterables.getFirst(classNames, namespace);
       String parentNamespace = null;
       int separatorIndex = nonNullClassName.lastIndexOf('.');
       if (separatorIndex > 0) {
@@ -306,7 +307,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         String rootName = Splitter.on('.').split(namespace).iterator().next();
         if (mode != Mode.SINGLE_FILE || closurizedNamespaces.contains(rootName)) {
           if (node.isCall()) {
-            String nameToReport = classNames.isEmpty() ? namespace : classNames.get(0);
+            String nameToReport = Iterables.getFirst(classNames, namespace);
             compiler.report(t.makeError(node, MISSING_REQUIRE_CALL_WARNING, nameToReport));
           } else {
             compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, namespace));

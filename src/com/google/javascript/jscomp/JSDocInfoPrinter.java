@@ -254,7 +254,7 @@ public final class JSDocInfoPrinter {
       for (int i = 0; i < lb.getChildCount() - 1; i++) {
         Node colon = lb.getChildAtIndex(i);
         if (colon.hasChildren()) {
-          sb.append(colon.getFirstChild().getString() + ":");
+          sb.append(colon.getFirstChild().getString()).append(":");
           appendTypeNode(sb, colon.getLastChild());
         } else {
           sb.append(colon.getString());
@@ -263,7 +263,7 @@ public final class JSDocInfoPrinter {
       }
       Node lastColon = lb.getLastChild();
       if (lastColon.hasChildren()) {
-        sb.append(lastColon.getFirstChild().getString() + ":");
+        sb.append(lastColon.getFirstChild().getString()).append(":");
         appendTypeNode(sb, lastColon.getLastChild());
       } else {
         sb.append(lastColon.getString());

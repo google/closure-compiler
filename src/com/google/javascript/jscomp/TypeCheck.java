@@ -30,6 +30,7 @@ import static java.lang.Integer.MAX_VALUE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -1688,7 +1689,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         for (int i = 0; i < loopPath.size() - 1; i++) {
           strPath += loopPath.get(i).getDisplayName() + " -> ";
         }
-        strPath += loopPath.get(loopPath.size() - 1).getDisplayName();
+        strPath += Iterables.getLast(loopPath).getDisplayName();
         compiler.report(t.makeError(n, INTERFACE_EXTENDS_LOOP,
             loopPath.get(0).getDisplayName(), strPath));
       }

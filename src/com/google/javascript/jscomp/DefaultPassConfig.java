@@ -1003,9 +1003,9 @@ public final class DefaultPassConfig extends PassConfig {
         TranspilationPasses.es6ConvertSuper,
         "The Dart super accessors pass must run before ES6->ES3 super lowering.");
 
-    if (checks.indexOf(closureGoogScopeAliases) != -1) {
+    if (checks.contains(closureGoogScopeAliases)) {
       Preconditions.checkState(
-          checks.indexOf(checkVariableReferences) != -1,
+          checks.contains(checkVariableReferences),
           "goog.scope processing requires variable checking");
     }
     assertPassOrder(

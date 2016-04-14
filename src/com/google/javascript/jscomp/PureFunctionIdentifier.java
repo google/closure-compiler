@@ -143,7 +143,7 @@ class PureFunctionIdentifier implements CompilerPass {
       boolean isPure =
           functionInfo.mayBePure() && !functionInfo.mayHaveSideEffects();
       if (isPure) {
-        sb.append("  " + functionNames.getFunctionName(function) + "\n");
+        sb.append("  ").append(functionNames.getFunctionName(function)).append("\n");
       }
     }
     sb.append("\n");
@@ -170,8 +170,12 @@ class PureFunctionIdentifier implements CompilerPass {
         }
       }
 
-      sb.append(functionNames.getFunctionName(function) + " " + functionInfo + " Calls: "
-          + depFunctionNames + "\n");
+      sb.append(functionNames.getFunctionName(function))
+          .append(" ")
+          .append(functionInfo)
+          .append(" Calls: ")
+          .append(depFunctionNames)
+          .append("\n");
     }
 
     return sb.toString();
