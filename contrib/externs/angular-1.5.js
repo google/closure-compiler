@@ -472,14 +472,33 @@ angular.Directive;
  *       undefined),
  *   transclude: (boolean|!Object.<string, string>|undefined),
  *   require: (!Object<string, string>|undefined)
- *   }}
+ * }}
  */
 angular.Component;
+
+
+/** @interface */
+angular.Change;
+
+/** @type {*} */
+angular.Change.prototype.currentValue;
+
+/** @type {*} */
+angular.Change.prototype.previousValue;
+
+/** @return {boolean} */
+angular.Change.prototype.isFirstChange = function() {};
+
 
 /** @record */
 angular.ComponentController = function() {};
 
 angular.ComponentController.prototype.$onInit = function() {};
+
+angular.ComponentController.prototype.$postLink = function() {};
+
+/** @param {!Object<!angular.Change>} changesObj */
+angular.ComponentController.prototype.$onChanges = function(changesObj) {};
 
 angular.ComponentController.prototype.$onDestroy = function() {};
 
