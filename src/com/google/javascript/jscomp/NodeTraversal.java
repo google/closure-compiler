@@ -304,7 +304,7 @@ public class NodeTraversal {
   void traverseRoots(Node externs, Node root) {
     try {
       Node scopeRoot = externs.getParent();
-      Preconditions.checkState(scopeRoot != null);
+      Preconditions.checkNotNull(scopeRoot);
 
       inputId = NodeUtil.getInputId(scopeRoot);
       sourceName = "";
@@ -625,9 +625,6 @@ public class NodeTraversal {
 
   /** Traverses a function. */
   private void traverseFunction(Node n, Node parent) {
-    Preconditions.checkState(n.getChildCount() == 3, n);
-    Preconditions.checkState(n.isFunction());
-
     final Node fnName = n.getFirstChild();
     boolean isFunctionExpression = (parent != null)
         && NodeUtil.isFunctionExpression(n);
@@ -661,9 +658,6 @@ public class NodeTraversal {
 
   /** Traverses a class. */
   private void traverseClass(Node n, Node parent) {
-    Preconditions.checkState(n.getChildCount() == 3, n);
-    Preconditions.checkState(n.isClass());
-
     final Node className = n.getFirstChild();
     boolean isClassExpression = NodeUtil.isClassExpression(n);
 
