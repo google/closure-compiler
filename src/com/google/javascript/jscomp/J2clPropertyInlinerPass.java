@@ -108,7 +108,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       }
       Node getBlock = getFunction.getLastChild();
       if (!getBlock.hasChildren()
-          || !(getBlock.getChildCount() == 1)
+          || getBlock.getChildCount() != 1
           || !getBlock.getFirstChild().isReturn()) {
         return false;
       }
