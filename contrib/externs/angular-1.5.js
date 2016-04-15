@@ -25,7 +25,6 @@
  *     $locale
  *     $rootElement
  *     $rootScope
- *     $rootScopeProvider
  *
  * TODO: Resolve two issues with angular.$http
  *         1) angular.$http isn't declared as a
@@ -2139,6 +2138,18 @@ angular.$provide.prototype.service = function(name, constructor) {};
  * @return {Object}
  */
 angular.$provide.prototype.value = function(name, object) {};
+
+/******************************************************************************
+ * $rootScopeProvider
+ *****************************************************************************/
+
+/** @constructor */
+angular.$rootScopeProvider = function() {};
+
+/**
+ * @param {number} limit
+ */
+angular.$rootScopeProvider.prototype.digestTtl = function(limit) {};
 
 /******************************************************************************
  * $route Service
