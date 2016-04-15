@@ -48,7 +48,7 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
   // Leaf    Import type       Root    File status  Result
   // -----------------------------------------------------
   // legacy  goog.require      module  decl leg     pass
-  // legacy  goog.require      module  normal       fail
+  // legacy  goog.require      module  normal       pass
   // legacy  goog.require      module  missing      fail
   // legacy  goog.module.get   module  normal       pass
   // legacy  goog.module.get   module  missing      fail
@@ -81,7 +81,7 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
     test(new String[] {googModule, legacyScript}, null, null, null, null);
   }
 
-  public void test_Legacy_Require_Module_Normal_Fail() {
+  public void test_Legacy_Require_Module_Normal_Pass() {
     String googModule =
         LINE_JOINER.join(
             "goog.module('normal.goog.module.A');",
@@ -92,8 +92,7 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
             "goog.provide('legacy.script.B');",
             "goog.require('normal.goog.module.A');");
 
-    String warning = "required \"normal.goog.module.A\" namespace never provided";
-    test(new String[] {googModule, legacyScript}, null, MISSING_PROVIDE_ERROR, null, warning);
+    test(new String[] {googModule, legacyScript}, null, null, null, null);
   }
 
   public void test_Legacy_Require_Module_Missing_Fail() {
