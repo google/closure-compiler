@@ -125,10 +125,10 @@ final class InlineAliases implements CompilerPass {
               return;
             }
 
-            parent.replaceChild(
-                n,
-                NodeUtil.newQName(compiler, resolveAlias(n.getQualifiedName(), n))
-                    .copyInformationFromForTree(n));
+            Node newNode = NodeUtil.newQName(compiler, resolveAlias(n.getQualifiedName(), n))
+                .copyInformationFromForTree(n);
+            newNode.setLength(n.getLength());
+            parent.replaceChild(n, newNode);
             compiler.reportCodeChange();
           }
           break;
