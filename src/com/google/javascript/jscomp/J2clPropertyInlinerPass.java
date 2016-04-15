@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
@@ -26,22 +25,18 @@ import com.google.javascript.rhino.Node;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * This pass targets j2cl output. It looks for static get and set methods defined within a class
- * that follow the naming convention of j2cl static fields and inlines them at their
+ * that match the signature of j2cl static fields and inlines them at their
  * call sites.  This is done for performance reasons since getter and setter accesses are slower
  * than regular field accesses.
  *
  * <p>This will be done by looking at all property accesses and determining if they have a
  * corresponding get or set method on the property qualifiers definition.  Some caveats:
  * <ul>
- * <li>- We make the assumption that all names that match the j2cl static field naming convention:
- *     they are unique to their declared class.</li>
- * <li>- Avoid inlining if the property is set using compound assignments.</li>
- * <li>- Avoid inlining if the property is incremented using ++ or --</li>
+ * <li> Avoid inlining if the property is set using compound assignments.</li>
+ * <li> Avoid inlining if the property is incremented using ++ or --</li>
  * </ul>
  *
  * Since the FunctionInliner class really only works after the CollapseProperties pass has run, we
@@ -63,31 +58,9 @@ public class J2clPropertyInlinerPass implements CompilerPass {
 
   class StaticFieldGetterSetterInliner {
     Node root;
-    private Pattern matchJ2CLStaticFieldName;
-
     StaticFieldGetterSetterInliner(Node root) {
       this.root = root;
-      // \\A Marks start of input
-      // \\z Marks end of input
-      // [A-Za-z0-9$_]+ matches a sequence of upper or lower case character, number, $, or
-      // underscore. This is essentially any valid java class or field name.
-      String pattern = "\\Af_[A-Za-z0-9$_]+__([A-Za-z0-9$]+_)*[A-Za-z0-9$]+\\z";
-      matchJ2CLStaticFieldName = Pattern.compile(pattern);
     }
-
-    /**
-     * Determines if the field name is a j2cl pattern which is:
-     * f_<original field name>__<underscore delimited qualified class name>
-     */
-    @VisibleForTesting
-    boolean matchesJ2clStaticFieldName(String fieldName) {
-      Matcher m = matchJ2CLStaticFieldName.matcher(fieldName);
-      while (m.find()) {
-        return true;
-      }
-      return false;
-    }
-
     private void run() {
       GatherJ2CLClassGetterSetters gatherer = new GatherJ2CLClassGetterSetters();
       NodeTraversal.traverseEs6(compiler, root, gatherer);
@@ -120,14 +93,91 @@ public class J2clPropertyInlinerPass implements CompilerPass {
     }
 
     /**
+     * <li> We match j2cl property getters  by looking for the following signature:
+     * <pre>{@code
+     * get: function() { return (ClassName.$clinit(), ClassName.$fieldName)};
+     * </pre>
+     */
+    private boolean matchesJ2clGetKeySignature(String className, Node getKey) {
+      if (!getKey.hasChildren() || !getKey.getFirstChild().isFunction()) {
+        return false;
+      }
+      Node getFunction = getKey.getFirstChild();
+      if (!getFunction.hasChildren() || !getFunction.getLastChild().isBlock()) {
+        return false;
+      }
+      Node getBlock = getFunction.getLastChild();
+      if (!getBlock.hasChildren()
+          || !(getBlock.getChildCount() == 1)
+          || !getBlock.getFirstChild().isReturn()) {
+        return false;
+      }
+      Node returnStatement = getBlock.getFirstChild();
+      if (!returnStatement.getFirstChild().isComma()) {
+        return false;
+      }
+      Node multiExpression = returnStatement.getFirstChild();
+      if (!multiExpression.getFirstChild().isCall()
+          || !multiExpression.getSecondChild().isGetProp()) {
+        return false;
+      }
+      Node clinitFunction = multiExpression.getFirstChild().getFirstChild();
+      Node internalProp = multiExpression.getSecondChild();
+      if (!clinitFunction.matchesQualifiedName(className + ".$clinit")) {
+        return false;
+      }
+      if (!internalProp.getQualifiedName().startsWith(className + ".$")) {
+        return false;
+      }
+      return true;
+    }
+
+    /**
+     * <li> We match j2cl property getters  by looking for the following signature:
+     * <pre>{@code
+     * set: function(value) { (ClassName.$clinit(), ClassName.$fieldName = value)};
+     * </pre>
+     */
+    private boolean matchesJ2clSetKeySignature(String className, Node setKey) {
+      if (!setKey.hasChildren() || !setKey.getFirstChild().isFunction()) {
+        return false;
+      }
+      Node setFunction = setKey.getFirstChild();
+      if (!setFunction.hasChildren()
+          || !setFunction.getLastChild().isBlock()
+          || !setFunction.getSecondChild().isParamList()) {
+        return false;
+      }
+      if (setFunction.getSecondChild().getChildCount() != 1) {
+        // There is a single parameter "value".
+        return false;
+      }
+      Node setBlock = setFunction.getLastChild();
+      if (!setBlock.hasChildren()
+          || !setBlock.getFirstChild().isExprResult()
+          || !setBlock.getFirstChild().getFirstChild().isComma()) {
+        return false;
+      }
+      Node multiExpression = setBlock.getFirstChild().getFirstChild();
+      if (multiExpression.getChildCount() != 2 || !multiExpression.getSecondChild().isAssign()) {
+        return false;
+      }
+      Node clinitFunction = multiExpression.getFirstChild().getFirstChild();
+      if (!clinitFunction.matchesQualifiedName(className + ".$clinit")) {
+        return false;
+      }
+      return true;
+    }
+
+    /**
      * This class traverses the ast and gathers get and set methods contained in
      * Object.defineProperties nodes.
      */
     private class GatherJ2CLClassGetterSetters extends AbstractPostOrderCallback {
-      private Map<String, J2clProperty> propertiesByName = new HashMap<>();
+      private Map<String, J2clProperty> j2clPropertiesByName = new HashMap<>();
 
       private Map<String, J2clProperty> getResults() {
-        return propertiesByName;
+        return j2clPropertiesByName;
       }
 
       @Override
@@ -135,11 +185,13 @@ public class J2clPropertyInlinerPass implements CompilerPass {
         if (!NodeUtil.isObjectDefinePropertiesDefinition(n)) {
           return;
         }
+        Node className = n.getSecondChild();
+        if (!className.isName()) {
+          return;
+        }
+        String classNameString = className.getQualifiedName();
         for (Node p : NodeUtil.getObjectDefinedPropertiesKeys(n)) {
           String name = p.getString();
-          if (!matchesJ2clStaticFieldName(name)) {
-            continue;
-          }
           // J2cl static fields are always synthesized with both a getter and setter.
           Node propertyLiteral = p.getFirstChild();
           Node getKey = null;
@@ -150,17 +202,21 @@ public class J2clPropertyInlinerPass implements CompilerPass {
             }
             switch (innerKey.getString()) {
               case "get":
-                getKey = innerKey;
+                if (matchesJ2clGetKeySignature(classNameString, innerKey)) {
+                  getKey = innerKey;
+                }
                 break;
               case "set":
-                setKey = innerKey;
+                if (matchesJ2clSetKeySignature(classNameString, innerKey)) {
+                  setKey = innerKey;
+                }
                 break;
             }
           }
-          Preconditions.checkArgument(
-              getKey != null && setKey != null,
-              "J2cl Properties should have both a getter and setter");
-          propertiesByName.put(name, new J2clProperty(getKey, setKey));
+          if (getKey != null && setKey != null) {
+            j2clPropertiesByName.put(
+                classNameString + "." + name, new J2clProperty(getKey, setKey));
+          }
         }
       }
     }
@@ -177,7 +233,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
         if (NodeUtil.isCompoundAssignementOp(n) || n.isInc() || n.isDec()) {
           Node assignmentTarget = n.getFirstChild();
           if (assignmentTarget.isGetProp()) {
-            String accessName = assignmentTarget.getLastChild().getString();
+            String accessName = assignmentTarget.getQualifiedName();
             J2clProperty prop = propertiesByName.get(accessName);
             if (prop != null) {
               prop.isSafeToInline = false;
@@ -218,7 +274,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
             // This case should be handled below.  It needs to be inlined differently.
             return;
           }
-          String accessName = n.getLastChild().getString();
+          String accessName = n.getQualifiedName();
           J2clProperty prop = propertiesByName.get(accessName);
           if (prop != null && prop.isSafeToInline) {
             FunctionInjector injector =
@@ -237,7 +293,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
           Node assignmentTarget = n.getFirstChild();
           Node assignmentValue = n.getLastChild();
           if (assignmentTarget.isGetProp()) {
-            String accessName = assignmentTarget.getLastChild().getString();
+            String accessName = assignmentTarget.getQualifiedName();
             J2clProperty prop = propertiesByName.get(accessName);
             if (prop != null && prop.isSafeToInline) {
               FunctionInjector injector =
