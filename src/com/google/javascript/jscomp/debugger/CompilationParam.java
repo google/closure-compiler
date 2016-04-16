@@ -304,14 +304,6 @@ enum CompilationParam {
     }
   },
 
-  /** Inlines trivial getters */
-  INLINE_GETTERS {
-    @Override
-    void apply(CompilerOptions options, boolean value) {
-      options.setInlineGetters(value);
-    }
-  },
-
   /** Inlines variables */
   INLINE_VARIABLES {
     @Override

@@ -362,6 +362,7 @@ public class CompilerOptions {
   /** Move methods to a deeper module */
   public boolean crossModuleMethodMotion;
 
+  // TODO(dimvar): make package private
   /** Inlines trivial getters */
   public boolean inlineGetters;
 
@@ -1931,7 +1932,7 @@ public class CompilerOptions {
     this.crossModuleMethodMotion = crossModuleMethodMotion;
   }
 
-  // No-op: will delete in a follow-up CL.
+  // TODO(dimvar): No-op; will delete in a follow-up CL.
   public void setInlineGetters(boolean inlineGetters) {}
 
   public void setInlineVariables(boolean inlineVariables) {
