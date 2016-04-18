@@ -896,16 +896,16 @@ public class CommandLineRunner extends
       List<FlagEntry<JsSourceType>> mixedSources = new ArrayList<>();
       Set<String> excludes = new HashSet<>();
       for (FlagEntry<JsSourceType> source : Flags.mixedJsSources) {
-        if (source.value.endsWith(".zip")) {
+        if (source.getValue().endsWith(".zip")) {
           mixedSources.add(source);
-        } else if (source.value.startsWith("!")) {
+        } else if (source.getValue().startsWith("!")) {
           for (String filename : findJsFiles(
-              Collections.singletonList(source.value.substring(1)))) {
+              Collections.singletonList(source.getValue().substring(1)))) {
             excludes.add(filename);
             mixedSources.remove(new FlagEntry<>(JsSourceType.JS, filename));
           }
         } else {
-          for (String filename : findJsFiles(Collections.singletonList(source.value), true)) {
+          for (String filename : findJsFiles(Collections.singletonList(source.getValue()), true)) {
             if (!excludes.contains(filename)) {
               mixedSources.add(new FlagEntry<>(JsSourceType.JS, filename));
             }

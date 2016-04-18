@@ -1162,9 +1162,9 @@ public final class CommandLineRunnerTest extends TestCase {
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
     // Move test2 to the same directory as test1, also make the filename of test2
     // lexicographically larger than test1
-    assertTrue(new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js")));
-    String glob = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    assertTrue(new File(jsFile2.getValue()).renameTo(new File(
+        new File(jsFile1.getValue()).getParentFile() + File.separator + "utest2.js")));
+    String glob = new File(jsFile1.getValue()).getParent() + File.separator + "**.js";
     compileFiles(
         "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
   }
@@ -1172,9 +1172,9 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs2() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    assertTrue(new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "utest2.js")));
-    String glob = new File(jsFile1.value).getParent() + File.separator + "*test*.js";
+    assertTrue(new File(jsFile2.getValue()).renameTo(new File(
+        new File(jsFile1.getValue()).getParentFile() + File.separator + "utest2.js")));
+    String glob = new File(jsFile1.getValue()).getParent() + File.separator + "*test*.js";
     compileFiles(
         "var a;var b;", new FlagEntry<>(JsSourceType.JS, glob));
   }
@@ -1182,12 +1182,12 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs3() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    assertTrue(new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "test2.js")));
+    assertTrue(new File(jsFile2.getValue()).renameTo(new File(
+        new File(jsFile1.getValue()).getParentFile() + File.separator + "test2.js")));
     // Make sure test2.js is excluded from the inputs when the exclusion
     // comes after the inclusion
-    String glob1 = new File(jsFile1.value).getParent() + File.separator + "**.js";
-    String glob2 = "!" + new File(jsFile1.value).getParent() + File.separator + "**test2.js";
+    String glob1 = new File(jsFile1.getValue()).getParent() + File.separator + "**.js";
+    String glob2 = "!" + new File(jsFile1.getValue()).getParent() + File.separator + "**test2.js";
     compileFiles(
         "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
         new FlagEntry<>(JsSourceType.JS, glob2));
@@ -1196,12 +1196,12 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testGlobJs4() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
-    assertTrue(new File(jsFile2.value).renameTo(new File(
-        new File(jsFile1.value).getParentFile() + File.separator + "test2.js")));
+    assertTrue(new File(jsFile2.getValue()).renameTo(new File(
+        new File(jsFile1.getValue()).getParentFile() + File.separator + "test2.js")));
     // Make sure test2.js is excluded from the inputs when the exclusion
     // comes before the inclusion
-    String glob1 = "!" + new File(jsFile1.value).getParent() + File.separator + "**test2.js";
-    String glob2 = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    String glob1 = "!" + new File(jsFile1.getValue()).getParent() + File.separator + "**test2.js";
+    String glob2 = new File(jsFile1.getValue()).getParent() + File.separator + "**.js";
     compileFiles(
         "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
         new FlagEntry<>(JsSourceType.JS, glob2));
@@ -1212,13 +1212,13 @@ public final class CommandLineRunnerTest extends TestCase {
     FlagEntry<JsSourceType> jsFile2 = createJsFile("test2", "var b;");
     File temp1 = Files.createTempDir();
     File temp2 = Files.createTempDir();
-    File jscompTempDir = new File(jsFile1.value).getParentFile();
+    File jscompTempDir = new File(jsFile1.getValue()).getParentFile();
     File newTemp1 = new File(jscompTempDir + File.separator + "temp1");
     File newTemp2 = new File(jscompTempDir + File.separator + "temp2");
     assertTrue(temp1.renameTo(newTemp1));
     assertTrue(temp2.renameTo(newTemp2));
-    new File(jsFile1.value).renameTo(new File(newTemp1 + File.separator + "test1.js"));
-    new File(jsFile2.value).renameTo(new File(newTemp2 + File.separator + "test2.js"));
+    new File(jsFile1.getValue()).renameTo(new File(newTemp1 + File.separator + "test1.js"));
+    new File(jsFile2.getValue()).renameTo(new File(newTemp2 + File.separator + "test2.js"));
     // Test multiple segments with glob patterns, like /foo/bar/**/*.js
     String glob = jscompTempDir + File.separator + "**" + File.separator + "*.js";
     compileFiles(
@@ -1236,10 +1236,10 @@ public final class CommandLineRunnerTest extends TestCase {
       }
     }
     ignoredJs.delete();
-    assertTrue(new File(jsFile2.value).renameTo(ignoredJs));
+    assertTrue(new File(jsFile2.getValue()).renameTo(ignoredJs));
     // Make sure patterns like "!**\./ignored**.js" work
     String glob1 = "!**\\." + File.separator + "ignored**.js";
-    String glob2 = new File(jsFile1.value).getParent() + File.separator + "**.js";
+    String glob2 = new File(jsFile1.getValue()).getParent() + File.separator + "**.js";
     compileFiles(
         "var a;", new FlagEntry<>(JsSourceType.JS, glob1),
         new FlagEntry<>(JsSourceType.JS, glob2));
@@ -1264,8 +1264,8 @@ public final class CommandLineRunnerTest extends TestCase {
       }
     }
     ignoredJs.delete();
-    assertTrue(new File(jsFile1.value).renameTo(takenJs));
-    assertTrue(new File(jsFile2.value).renameTo(ignoredJs));
+    assertTrue(new File(jsFile1.getValue()).renameTo(takenJs));
+    assertTrue(new File(jsFile2.getValue()).renameTo(ignoredJs));
     // Make sure that relative paths like "!**ignored.js" work with absolute paths.
     String glob1 = takenJs.getParentFile().getAbsolutePath() + File.separator + "**Taken.js";
     String glob2 = "!**Ignored.js";
@@ -2129,7 +2129,7 @@ public final class CommandLineRunnerTest extends TestCase {
   @SafeVarargs
   private final void setupFlags(FlagEntry<JsSourceType>... entries) {
     for (FlagEntry<JsSourceType> entry : entries) {
-      args.add("--" + entry.flag.flagName + "=" + entry.value);
+      args.add("--" + entry.getFlag().flagName + "=" + entry.getValue());
     }
   }
 
@@ -2143,7 +2143,7 @@ public final class CommandLineRunnerTest extends TestCase {
       throws FlagUsageException {
     args.add("--js");
     for (FlagEntry<JsSourceType> entry : entries) {
-      args.add(entry.value);
+      args.add(entry.getValue());
     }
     compileArgs(expectedOutput, null);
   }
