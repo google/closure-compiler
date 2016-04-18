@@ -1211,8 +1211,8 @@ CSSProperties.prototype.borderImageRepeat;
 CSSProperties.prototype.borderImage;
 
 /**
- * @type {string|number}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-bottom
+ * @type {string}
+ * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-bottom
  */
 CSSProperties.prototype.bottom;
 
@@ -1375,8 +1375,8 @@ CSSProperties.prototype.fontWeight;
 CSSProperties.prototype.height;
 
 /**
- * @type {string|number}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-left
+ * @type {string}
+ * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-left
  */
 CSSProperties.prototype.left;
 
@@ -1633,8 +1633,8 @@ CSSProperties.prototype.resize;
 CSSProperties.prototype.richness;
 
 /**
- * @type {string|number}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-right
+ * @type {string}
+ * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-right
  */
 CSSProperties.prototype.right;
 
@@ -1717,8 +1717,8 @@ CSSProperties.prototype.textShadow;
 CSSProperties.prototype.textTransform;
 
 /**
- * @type {string|number}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-top
+ * @type {string}
+ * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-top
  */
 CSSProperties.prototype.top;
 
