@@ -1770,6 +1770,19 @@ public final class NodeUtilTest extends TestCase {
     assertEquals("x", getFunctionLValue("var x = (y, function() {});"));
   }
 
+  public void testGetRValueOfLValue() {
+    assertTrue(functionIsRValueOfAssign("x = function() {};"));
+    assertTrue(functionIsRValueOfAssign("x += function() {};"));
+    assertTrue(functionIsRValueOfAssign("x -= function() {};"));
+    assertTrue(functionIsRValueOfAssign("x *= function() {};"));
+    assertTrue(functionIsRValueOfAssign("x /= function() {};"));
+    assertTrue(functionIsRValueOfAssign("x <<= function() {};"));
+    assertTrue(functionIsRValueOfAssign("x >>= function() {};"));
+    assertTrue(functionIsRValueOfAssign("x >>= function() {};"));
+    assertTrue(functionIsRValueOfAssign("x >>>= function() {};"));
+    assertFalse(functionIsRValueOfAssign("x = y ? x : function() {};"));
+  }
+
   public void testIsNaN() {
     assertTrue(NodeUtil.isNaN(getNode("NaN")));
     assertFalse(NodeUtil.isNaN(getNode("Infinity")));
@@ -2289,6 +2302,14 @@ public final class NodeUtilTest extends TestCase {
   private String getFunctionLValue(String js) {
     Node lVal = NodeUtil.getBestLValue(getFunctionNode(js));
     return lVal == null ? null : lVal.getString();
+  }
+
+  private boolean functionIsRValueOfAssign(String js) {
+    Node ast = parse(js);
+    Node nameNode = getNameNode(ast, "x");
+    Node funcNode = getFunctionNode(ast);
+    assertNotNull("No function node to test", funcNode);
+    return funcNode == NodeUtil.getRValueOfLValue(nameNode);
   }
 
   private void assertNodeTreesEqual(
