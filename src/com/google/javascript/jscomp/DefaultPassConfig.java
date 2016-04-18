@@ -888,7 +888,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.j2clPass) {
-      passes.add(j2clEmptyClinitPrunerPass);
+      passes.add(j2clClinitPrunerPass);
     }
 
     assertAllLoopablePasses(passes);
@@ -2629,11 +2629,11 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /** Rewrites J2CL constructs to be more optimizable. */
-  private final PassFactory j2clEmptyClinitPrunerPass =
-      new PassFactory("j2clEmptyClinitPrunerPass", false) {
+  private final PassFactory j2clClinitPrunerPass =
+      new PassFactory("j2clClinitPrunerPass", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new J2clEmptyClinitPrunerPass(compiler);
+          return new J2clClinitPrunerPass(compiler);
         }
       };
 

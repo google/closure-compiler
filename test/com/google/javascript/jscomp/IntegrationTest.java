@@ -2188,8 +2188,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testFoldJ2clClinits() {
     CompilerOptions options = createCompilerOptions();
 
-    options.setJ2clPass(true);
-
     String code =
         LINE_JOINER.join(
             "function InternalWidget(){}",
@@ -2199,14 +2197,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "};",
             "InternalWidget.$clinit();");
 
-    String optimized =
-        LINE_JOINER.join(
-            "function InternalWidget(){}",
-            "InternalWidget.$clinit = function () {};",
-            "InternalWidget.$clinit();");
-
-    test(options, code, optimized);
-
+    options.setJ2clPass(true);
     options.setFoldConstants(true);
     options.setComputeFunctionSideEffects(true);
     options.setCollapseProperties(true);
