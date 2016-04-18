@@ -362,9 +362,8 @@ public class CompilerOptions {
   /** Move methods to a deeper module */
   public boolean crossModuleMethodMotion;
 
-  // TODO(dimvar): make package private
   /** Inlines trivial getters */
-  public boolean inlineGetters;
+  boolean inlineGetters;
 
   /** Inlines variables */
   public boolean inlineVariables;
