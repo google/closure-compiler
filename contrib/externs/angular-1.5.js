@@ -2532,6 +2532,35 @@ angular.$timeout_;
 angular.$timeout_.cancel = function(promise) {};
 
 /******************************************************************************
+ * $transclude Service
+ *****************************************************************************/
+
+/**
+ * @typedef {function(
+ *    angular.Scope=,
+ *    function(!angular.Scope, !Element)=,
+ *    Element=,
+ *    string=)}
+ */
+angular.$transclude;
+
+/**
+ * Augment the angular.$transclude type definition by reopening the type via an
+ * artificial angular.$transclude instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$transclude}
+ */
+angular.$transclude_;
+
+/**
+ * @type {function(string):boolean}
+ */
+angular.$transclude_.isSlotFilled = function(slotName) {};
+
+/******************************************************************************
  * $window Service
  *****************************************************************************/
 
