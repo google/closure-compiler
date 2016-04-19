@@ -95,7 +95,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberVariableTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NamespaceDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NamespaceNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
@@ -2143,14 +2142,6 @@ class IRFactory {
       return importSpec;
     }
 
-    Node processModuleImport(ModuleImportTree tree) {
-      maybeWarnEs6Feature(tree, Feature.MODULES);
-      Node module = newNode(Token.NAMESPACE,
-          processName(tree.name),
-          processString(tree.from));
-      return module;
-    }
-
     Node processTypeName(TypeNameTree tree) {
       Node typeNode;
       if (tree.segments.size() == 1) {
@@ -2656,8 +2647,6 @@ class IRFactory {
           return processImportDecl(node.asImportDeclaration());
         case IMPORT_SPECIFIER:
           return processImportSpec(node.asImportSpecifier());
-        case MODULE_IMPORT:
-          return processModuleImport(node.asModuleImport());
 
         case ARRAY_PATTERN:
           return processArrayPattern(node.asArrayPattern());
