@@ -177,7 +177,6 @@ public class Token {
       EXPORT = 170,
       EXPORT_SPECS = 171,
       EXPORT_SPEC = 172,
-      NAMESPACE = 173,
 
       REST = 174, // "..." in formal parameters, or an array pattern.
       SPREAD = 175, // "..." in a call expression, or an array literal.
@@ -234,7 +233,8 @@ public class Token {
       MEMBER_VARIABLE_DEF = 319,
       INDEX_SIGNATURE = 320,
       CALL_SIGNATURE = 321,
-      NAMESPACE_ELEMENTS = 322,
+      NAMESPACE = 322,
+      NAMESPACE_ELEMENTS = 323,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.
