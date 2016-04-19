@@ -41,15 +41,16 @@ class VarCheck extends AbstractPostOrderCallback implements
       "JSC_UNDEFINED_VARIABLE",
       "variable {0} is undeclared");
 
-  static final DiagnosticType VIOLATED_MODULE_DEP_ERROR = DiagnosticType.error(
-      "JSC_VIOLATED_MODULE_DEPENDENCY",
-      "module {0} cannot reference {2}, defined in " +
-      "module {1}, since {1} loads after {0}");
+  static final DiagnosticType VIOLATED_MODULE_DEP_ERROR =
+      DiagnosticType.error(
+          "JSC_VIOLATED_MODULE_DEPENDENCY",
+          "module {0} cannot reference {2}, defined in module {1}, since {1} loads after {0}");
 
-  static final DiagnosticType MISSING_MODULE_DEP_ERROR = DiagnosticType.warning(
-      "JSC_MISSING_MODULE_DEPENDENCY",
-      "missing module dependency; module {0} should depend " +
-      "on module {1} because it references {2}");
+  static final DiagnosticType MISSING_MODULE_DEP_ERROR =
+      DiagnosticType.warning(
+          "JSC_MISSING_MODULE_DEPENDENCY",
+          "missing module dependency; module {0} should depend"
+              + " on module {1} because it references {2}");
 
   static final DiagnosticType STRICT_MODULE_DEP_ERROR = DiagnosticType.disabled(
       "JSC_STRICT_MODULE_DEPENDENCY",
@@ -60,10 +61,10 @@ class VarCheck extends AbstractPostOrderCallback implements
       + "defined in module {1}, referenced from module {0}");
 
   static final DiagnosticType NAME_REFERENCE_IN_EXTERNS_ERROR =
-    DiagnosticType.warning(
-      "JSC_NAME_REFERENCE_IN_EXTERNS",
-      "accessing name {0} in externs has no effect. " +
-      "Perhaps you forgot to add a var keyword?");
+      DiagnosticType.warning(
+          "JSC_NAME_REFERENCE_IN_EXTERNS",
+          "accessing name {0} in externs has no effect."
+              + " Perhaps you forgot to add a var keyword?");
 
   static final DiagnosticType UNDEFINED_EXTERN_VAR_ERROR =
     DiagnosticType.warning(
@@ -80,10 +81,10 @@ class VarCheck extends AbstractPostOrderCallback implements
         "JSC_VAR_ARGUMENTS_SHADOWED_ERROR",
         "Shadowing \"arguments\" is not allowed");
 
-  static final DiagnosticType LET_CONST_MULTIPLY_DECLARED_ERROR =
+  static final DiagnosticType LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR =
       DiagnosticType.error(
-          "JSC_LET_CONST_MULTIPLY_DECLARED_ERROR",
-          "Duplicate let / const declaration in the same scope is not allowed.");
+          "JSC_LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR",
+          "Duplicate let / const / class declaration in the same scope is not allowed.");
 
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
@@ -358,20 +359,21 @@ class VarCheck extends AbstractPostOrderCallback implements
         Scope s, String name, Node n, CompilerInput input) {
       Node parent = n.getParent();
 
+      Var origVar = s.getVar(name);
+      Node origParent = origVar.getParentNode();
+      if (parent.isLet()
+          || parent.isConst()
+          || parent.isClass()
+          || (origParent != null
+              && (origParent.isLet() || origParent.isConst() || origParent.isClass()))) {
+        compiler.report(JSError.make(n, LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR));
+        return;
+      }
+
       // Don't allow multiple variables to be declared at the top-level scope
       if (s.isGlobal()) {
-        Var origVar = s.getVar(name);
-        Node origParent = origVar.getParentNode();
-        if (origParent.isCatch() &&
-            parent.isCatch()) {
+        if (origParent.isCatch() && parent.isCatch()) {
           // Okay, both are 'catch(x)' variables.
-          return;
-        }
-
-        if (parent.isLet() || parent.isConst() ||
-            origParent.isLet() || origParent.isConst()) {
-          compiler.report(
-              JSError.make(n, LET_CONST_MULTIPLY_DECLARED_ERROR));
           return;
         }
 
