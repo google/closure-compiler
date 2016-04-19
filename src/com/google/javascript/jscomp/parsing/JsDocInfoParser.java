@@ -346,7 +346,7 @@ public final class JsDocInfoParser {
 
     String annotationName = stream.getString();
     Annotation annotation = annotationNames.get(annotationName);
-    if (annotation == null) {
+    if (annotation == null || annotationName.isEmpty()) {
       addParserWarning("msg.bad.jsdoc.tag", annotationName);
     } else {
       // Mark the beginning of the annotation.

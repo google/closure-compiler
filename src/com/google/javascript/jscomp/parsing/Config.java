@@ -96,7 +96,8 @@ public final class Config {
         ImmutableMap.builder();
     annotationBuilder.putAll(Annotation.recognizedAnnotations);
     for (String unrecognizedAnnotation : annotationWhitelist) {
-      if (!Annotation.recognizedAnnotations.containsKey(
+      if (!unrecognizedAnnotation.isEmpty()
+          && !Annotation.recognizedAnnotations.containsKey(
               unrecognizedAnnotation)) {
         annotationBuilder.put(
             unrecognizedAnnotation, Annotation.NOT_IMPLEMENTED);
