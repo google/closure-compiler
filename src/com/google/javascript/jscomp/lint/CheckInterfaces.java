@@ -31,12 +31,12 @@ import com.google.javascript.rhino.Node;
 public final class CheckInterfaces extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
   public static final DiagnosticType INTERFACE_FUNCTION_NOT_EMPTY =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_INTERFACE_FUNCTION_NOT_EMPTY",
           "interface functions must have an empty body");
 
   public static final DiagnosticType INTERFACE_SHOULD_NOT_TAKE_ARGS =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_INTERFACE_SHOULD_NOT_TAKE_ARGS",
           "Interface functions should not take any arguments");
 

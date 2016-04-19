@@ -32,7 +32,7 @@ import java.io.IOException;
  */
 public final class CheckMissingSemicolon extends AbstractPostOrderCallback implements CompilerPass {
   public static final DiagnosticType MISSING_SEMICOLON =
-      DiagnosticType.warning("JSC_MISSING_SEMICOLON", "Missing semicolon");
+      DiagnosticType.disabled("JSC_MISSING_SEMICOLON", "Missing semicolon");
 
   private final AbstractCompiler compiler;
 

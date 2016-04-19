@@ -40,7 +40,7 @@ import com.google.javascript.rhino.Node;
  */
 public final class CheckPrototypeProperties implements HotSwapCompilerPass, NodeTraversal.Callback {
   public static final DiagnosticType ILLEGAL_PROTOTYPE_MEMBER =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_ILLEGAL_PROTOTYPE_MEMBER",
           "Prototype property {0} should be a primitive, not an Array or Object.");
 

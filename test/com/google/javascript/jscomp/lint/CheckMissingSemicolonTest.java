@@ -15,9 +15,11 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.Es6CompilerTestCase;
 
 public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
@@ -29,6 +31,7 @@ public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     super.getOptions(options);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     options.setIdeMode(true);
     return options;
   }

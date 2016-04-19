@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ExportTestFunctions;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -44,57 +45,72 @@ import javax.annotation.Nullable;
  */
 public final class CheckJSDocStyle extends AbstractPostOrderCallback implements CompilerPass {
   public static final DiagnosticType INVALID_SUPPRESS =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_INVALID_SUPPRESS",
           "@suppress annotation not allowed here. See"
               + " https://github.com/google/closure-compiler/wiki/@suppress-annotations");
 
   public static final DiagnosticType CONSTRUCTOR_DISALLOWED_JSDOC =
-      DiagnosticType.warning("JSC_CONSTRUCTOR_DISALLOWED_JSDOC",
+      DiagnosticType.disabled("JSC_CONSTRUCTOR_DISALLOWED_JSDOC",
           "Visibility annotations on constructors are not supported.\n"
           + "Please mark the visibility on the class instead.");
 
   public static final DiagnosticType MISSING_JSDOC =
-      DiagnosticType.warning("JSC_MISSING_JSDOC", "Function must have JSDoc.");
+      DiagnosticType.disabled("JSC_MISSING_JSDOC", "Function must have JSDoc.");
 
   public static final DiagnosticType MISSING_PARAMETER_JSDOC =
-      DiagnosticType.warning("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.");
+      DiagnosticType.disabled("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.");
 
   public static final DiagnosticType MIXED_PARAM_JSDOC_STYLES =
-      DiagnosticType.warning("JSC_MIXED_PARAM_JSDOC_STYLES",
+      DiagnosticType.disabled("JSC_MIXED_PARAM_JSDOC_STYLES",
       "Functions may not use both @param annotations and inline JSDoc");
 
   public static final DiagnosticType MISSING_RETURN_JSDOC =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_MISSING_RETURN_JSDOC",
           "Function with non-trivial return must have @return JSDoc or inline return JSDoc.");
 
   public static final DiagnosticType MUST_BE_PRIVATE =
-      DiagnosticType.warning("JSC_MUST_BE_PRIVATE", "Property {0} must be marked @private");
+      DiagnosticType.disabled("JSC_MUST_BE_PRIVATE", "Property {0} must be marked @private");
 
   public static final DiagnosticType MUST_HAVE_TRAILING_UNDERSCORE =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_MUST_HAVE_TRAILING_UNDERSCORE", "Private property {0} should end with ''_''");
 
   public static final DiagnosticType OPTIONAL_PARAM_NOT_MARKED_OPTIONAL =
-      DiagnosticType.warning("JSC_OPTIONAL_PARAM_NOT_MARKED_OPTIONAL",
+      DiagnosticType.disabled("JSC_OPTIONAL_PARAM_NOT_MARKED_OPTIONAL",
           "Parameter {0} is optional so its type must end with =");
 
   public static final DiagnosticType OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME =
-      DiagnosticType.warning("JSC_OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME",
+      DiagnosticType.disabled("JSC_OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME",
           "Optional parameter name {0} must be prefixed with opt_");
 
   public static final DiagnosticType WRONG_NUMBER_OF_PARAMS =
-      DiagnosticType.warning("JSC_WRONG_NUMBER_OF_PARAMS",
-          "Wrong number of @param annotations");
+      DiagnosticType.disabled("JSC_WRONG_NUMBER_OF_PARAMS", "Wrong number of @param annotations");
 
   public static final DiagnosticType INCORRECT_PARAM_NAME =
-      DiagnosticType.warning("JSC_INCORRECT_PARAM_NAME",
+      DiagnosticType.disabled("JSC_INCORRECT_PARAM_NAME",
           "Incorrect param name. Are your @param annotations in the wrong order?");
 
   public static final DiagnosticType EXTERNS_FILES_SHOULD_BE_ANNOTATED =
-      DiagnosticType.warning("JSC_EXTERNS_FILES_SHOULD_BE_ANNOTATED",
+      DiagnosticType.disabled("JSC_EXTERNS_FILES_SHOULD_BE_ANNOTATED",
           "Externs files should be annotated with @externs in the @fileoverview block.");
+
+  public static final DiagnosticGroup ALL_DIAGNOSTICS =
+      new DiagnosticGroup(
+          INVALID_SUPPRESS,
+          CONSTRUCTOR_DISALLOWED_JSDOC,
+          MISSING_JSDOC,
+          MISSING_PARAMETER_JSDOC,
+          MIXED_PARAM_JSDOC_STYLES,
+          MISSING_RETURN_JSDOC,
+          MUST_BE_PRIVATE,
+          MUST_HAVE_TRAILING_UNDERSCORE,
+          OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
+          OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
+          WRONG_NUMBER_OF_PARAMS,
+          INCORRECT_PARAM_NAME,
+          EXTERNS_FILES_SHOULD_BE_ANNOTATED);
 
   private final AbstractCompiler compiler;
 

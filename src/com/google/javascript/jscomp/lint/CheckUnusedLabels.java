@@ -30,7 +30,7 @@ import com.google.javascript.rhino.Token;
  * Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-unused-labels.js)
  */
 public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
-  public static final DiagnosticType UNUSED_LABEL = DiagnosticType.warning(
+  public static final DiagnosticType UNUSED_LABEL = DiagnosticType.disabled(
       "JSC_UNUSED_LABEL", "Unused label {0}.");
 
   private class LabelContext {
