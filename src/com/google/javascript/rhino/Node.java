@@ -1184,7 +1184,7 @@ public class Node implements Serializable {
 
   private TypeI typei;
 
-  private Node parent;
+  protected Node parent;
 
   //==========================================================================
   // Source position management
