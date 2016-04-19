@@ -1931,9 +1931,6 @@ public class CompilerOptions {
     this.crossModuleMethodMotion = crossModuleMethodMotion;
   }
 
-  // TODO(dimvar): No-op; will delete in a follow-up CL.
-  public void setInlineGetters(boolean inlineGetters) {}
-
   public void setInlineVariables(boolean inlineVariables) {
     this.inlineVariables = inlineVariables;
   }
