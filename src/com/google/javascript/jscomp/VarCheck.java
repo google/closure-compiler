@@ -80,10 +80,10 @@ class VarCheck extends AbstractPostOrderCallback implements
         "JSC_VAR_ARGUMENTS_SHADOWED_ERROR",
         "Shadowing \"arguments\" is not allowed");
 
-  static final DiagnosticType LET_CONST_MULTIPLY_DECLARED_ERROR =
+  static final DiagnosticType LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR =
       DiagnosticType.error(
-          "JSC_LET_CONST_MULTIPLY_DECLARED_ERROR",
-          "Duplicate let / const declaration in the same scope is not allowed.");
+          "JSC_LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR",
+          "Duplicate let / const / class declaration in the same scope is not allowed.");
 
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
@@ -358,20 +358,21 @@ class VarCheck extends AbstractPostOrderCallback implements
         Scope s, String name, Node n, CompilerInput input) {
       Node parent = n.getParent();
 
+      Var origVar = s.getVar(name);
+      Node origParent = origVar.getParentNode();
+      if (parent.isLet() || parent.isConst() || parent.isClass()
+          || (origParent != null
+              && (origParent.isLet() || origParent.isConst() || origParent.isClass()))) {
+        compiler.report(
+            JSError.make(n, LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR));
+        return;
+      }
+
       // Don't allow multiple variables to be declared at the top-level scope
       if (s.isGlobal()) {
-        Var origVar = s.getVar(name);
-        Node origParent = origVar.getParentNode();
         if (origParent.isCatch() &&
             parent.isCatch()) {
           // Okay, both are 'catch(x)' variables.
-          return;
-        }
-
-        if (parent.isLet() || parent.isConst() ||
-            origParent.isLet() || origParent.isConst()) {
-          compiler.report(
-              JSError.make(n, LET_CONST_MULTIPLY_DECLARED_ERROR));
           return;
         }
 
