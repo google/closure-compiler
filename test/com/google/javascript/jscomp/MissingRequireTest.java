@@ -195,7 +195,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "}",
             "",
             "exports = getElems;"),
-        "missing require: 'goog.dom.getElement'");
+        "missing require: 'goog.dom'");
   }
 
   public void testPassGoogModule_noRewriting() {
@@ -291,7 +291,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testDirectCall() {
     String js = "foo.bar.baz();";
-    testMissingRequireCall(js, "missing require: 'foo.bar.baz'");
+    testMissingRequireCall(js, "missing require: 'foo.bar'");
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
@@ -303,7 +303,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testDotCall() {
     String js = "foo.bar.baz.call();";
-    testMissingRequireCall(js, "missing require: 'foo.bar.baz'");
+    testMissingRequireCall(js, "missing require: 'foo.bar'");
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
@@ -315,7 +315,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testDotApply() {
     String js = "foo.bar.baz.call();";
-    testMissingRequireCall(js, "missing require: 'foo.bar.baz'");
+    testMissingRequireCall(js, "missing require: 'foo.bar'");
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
@@ -361,13 +361,27 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testGoogArray() {
     testMissingRequireCall(
         "goog.array.forEach(arr, fn);",
-        "missing require: 'goog.array.forEach'");
+        "missing require: 'goog.array'");
   }
 
   public void testGoogDom() {
     testMissingRequireCall(
         "goog.dom.getElement('x');",
-        "missing require: 'goog.dom.getElement'");
+        "missing require: 'goog.dom'");
+  }
+
+  public void testLongNameNoClasses() {
+    testMissingRequireCall(
+        "example.of.a.long.qualified.name(arr, fn);",
+        "missing require: 'example.of.a.long.qualified'");
+  }
+
+  // Occasionally people use namespaces that start with a capital letter, so this
+  // check thinks it's a class name. Predictably, we don't handle this well.
+  public void testClassNameAtStart() {
+    testMissingRequireCall(
+        "Example.of.a.namespace.that.looks.like.a.class.name(arr, fn);",
+        "missing require: 'Example'");
   }
 
   public void testGoogTimerCallOnce() {

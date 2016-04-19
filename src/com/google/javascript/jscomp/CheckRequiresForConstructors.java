@@ -307,7 +307,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         String rootName = Splitter.on('.').split(namespace).iterator().next();
         if (mode != Mode.SINGLE_FILE || closurizedNamespaces.contains(rootName)) {
           if (node.isCall()) {
-            String nameToReport = Iterables.getFirst(classNames, namespace);
+            String defaultName = parentNamespace != null ? parentNamespace : namespace;
+            String nameToReport = Iterables.getFirst(classNames, defaultName);
             compiler.report(t.makeError(node, MISSING_REQUIRE_CALL_WARNING, nameToReport));
           } else {
             compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, namespace));
