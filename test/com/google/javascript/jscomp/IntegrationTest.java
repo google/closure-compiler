@@ -1630,7 +1630,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setRemoveUnusedVars(true);
-    test(options, code, "function f() { var x = 3; 4; x = 5; return x; } f();");
+    test(options, code, "function f() { var x; 3; 4; x = 5; return x; } f();");
   }
 
   public void testInlineFunctions() {

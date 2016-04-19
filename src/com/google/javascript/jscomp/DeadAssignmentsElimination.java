@@ -184,18 +184,31 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       FlowState<LiveVariableLattice> state) {
 
     Node parent = n.getParent();
+    boolean isDeclarationNode = NodeUtil.isNameDeclaration(parent);
 
-    if (NodeUtil.isAssignmentOp(n) ||
-        n.isInc() || n.isDec()) {
+    if (NodeUtil.isAssignmentOp(n) || n.isInc() || n.isDec() || isDeclarationNode) {
 
-      Node lhs = n.getFirstChild();
-      Node rhs = lhs.getNext();
+      Node lhs = isDeclarationNode ? n : n.getFirstChild();
+      Node rhs = NodeUtil.getRValueOfLValue(lhs);
 
       // Recurse first. Example: dead_x = dead_y = 1; We try to clean up dead_y
       // first.
       if (rhs != null) {
         tryRemoveAssignment(t, rhs, exprRoot, state);
-        rhs = lhs.getNext();
+        rhs = NodeUtil.getRValueOfLValue(lhs);
+      }
+
+      // Multiple declarations should be processed from right-to-left to ensure side-effects
+      // are run in the correct order.
+      if (isDeclarationNode && lhs.getNext() != null) {
+        tryRemoveAssignment(t, lhs.getNext(), exprRoot, state);
+      }
+
+      // Ignore declarations that don't initialize a value. Dead code removal will kill those nodes.
+      // Also ignore the var declaration if it's in a for-loop instantiation since there's not a
+      // safe place to move the side-effects.
+      if (isDeclarationNode && (rhs == null || parent.getParent().isFor())) {
+        return;
       }
 
       Scope scope = t.getScope();
@@ -266,6 +279,10 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
           // when a is not a number.
           return;
         }
+      } else if (isDeclarationNode) {
+        lhs.removeChild(rhs);
+        parent.getParent().addChildAfter(IR.exprResult(rhs), parent);
+        rhs.getParent().useSourceInfoFrom(rhs);
       } else {
         // Not reachable.
         throw new IllegalStateException("Unknown statement");
@@ -273,7 +290,6 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
 
       compiler.reportCodeChange();
       return;
-
     } else {
       for (Node c = n.getFirstChild(); c != null;) {
         Node next = c.getNext();
