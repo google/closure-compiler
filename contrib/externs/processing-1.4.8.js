@@ -119,7 +119,7 @@ PImage.prototype.mask = function(mask){};
 Processing.prototype.createImage = function(w, h, mode){};
 
 var pixels = {};
-pixels.prototype.getLenght = function(){};
+pixels.prototype.getLength = function(){};
 pixels.prototype.getPixel = function(i){};
 pixels.prototype.setPixel = function(i, c){};
 pixels.prototype.toArray = function(){};
