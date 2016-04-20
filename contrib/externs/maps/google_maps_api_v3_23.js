@@ -5078,7 +5078,6 @@ google.maps.StrokePosition = {
 /**
  * @param {Array<google.maps.MapTypeStyle>} styles
  * @param {(google.maps.StyledMapTypeOptions|Object.<string>)=} opt_options
- * @implements {google.maps.MapType}
  * @extends {google.maps.MVCObject}
  * @constructor
  */
