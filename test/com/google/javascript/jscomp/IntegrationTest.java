@@ -2124,25 +2124,20 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testFoldLocals5() {
     CompilerOptions options = createCompilerOptions();
-
     options.setFoldConstants(true);
 
-    String code =
-        ""
-        + "function fn(){var a={};a.x={};return a}"
-        + "fn().x.y = 1;";
+    String code = LINE_JOINER.join(
+        "function fn() { var a = {}; a.x = {}; return a; }",
+        "fn().x.y = 1;");
 
-    // "fn" returns a unescaped local object, we should be able to fold it,
-    // but we don't currently.
-    String result = ""
-        + "function fn(){var a={x:{}};return a}"
-        + "fn().x.y = 1;";
-
-    test(options, code, result);
+    // "fn" returns a unescaped local object. we should be able to fold it, but we don't currently.
+    test(options, code, LINE_JOINER.join(
+        "function fn() { var a = {x: {}}; return a }",
+        "fn().x.y = 1;"));
 
     options.setComputeFunctionSideEffects(true);
 
-    test(options, code, result);
+    test(options, code, "function fn() { var a = {x: {}}; return a }");
   }
 
   public void testFoldLocals6() {
@@ -2150,16 +2145,15 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setFoldConstants(true);
 
-    String code =
-        ""
-        + "function fn(){return {}}"
-        + "fn().x.y = 1;";
+    String code = LINE_JOINER.join(
+        "function fn() { return {}; }",
+        "fn().x.y = 1;");
 
     testSame(options, code);
 
     options.setComputeFunctionSideEffects(true);
 
-    testSame(options, code);
+    test(options, code, "function fn() { return {}; }");
   }
 
   public void testFoldLocals7() {
