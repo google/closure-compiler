@@ -1849,14 +1849,29 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
+    private JSType simpleInferPrototypeProperty(Node recv, String pname) {
+      QualifiedName recvQname = QualifiedName.fromNode(recv);
+      Declaration decl = this.currentScope.getDeclaration(recvQname, false);
+      if (decl != null) {
+        Namespace ns = decl.getNamespace();
+        if (ns instanceof RawNominalType) {
+          return ((RawNominalType) ns).getProtoPropDeclaredType(pname);
+        }
+      }
+      return null;
+    }
+
     private JSType simpleInferGetpropType(Node n) {
       Preconditions.checkArgument(n.isGetProp());
       Node recv = n.getFirstChild();
+      String pname = n.getLastChild().getString();
+      if (recv.isGetProp() && recv.getLastChild().getString().equals("prototype")) {
+        return simpleInferPrototypeProperty(recv.getFirstChild(), pname);
+      }
       if (!recv.isQualifiedName()) {
         return null;
       }
       QualifiedName recvQname = QualifiedName.fromNode(recv);
-      String pname = n.getLastChild().getString();
       Declaration decl = this.currentScope.getDeclaration(recvQname, false);
       QualifiedName propQname = new QualifiedName(pname);
       if (decl != null) {

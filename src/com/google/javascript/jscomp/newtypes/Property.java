@@ -92,6 +92,10 @@ class Property {
     return inferredType;
   }
 
+  Node getDefSite() {
+    return this.defSite;
+  }
+
   JSType getDeclaredType() {
     return declaredType;
   }

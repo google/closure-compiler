@@ -16422,4 +16422,25 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INEXISTENT_PROPERTY,
         NewTypeInference.GLOBAL_THIS);
   }
+
+  public void testSimpleInferPrototypeProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */ var ns = {};",
+        "/** @const */ ns.prop = Object.prototype.hasOwnProperty;"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */ var ns = {};",
+        "/** @const */ ns.prop = Foobar.prototype.randomProp;"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.method = function(x, y) { return x + y + 1 };",
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "ns.prop = Foo.prototype.method;"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+  }
 }

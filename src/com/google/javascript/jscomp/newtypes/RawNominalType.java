@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -297,6 +299,24 @@ public final class RawNominalType extends Namespace {
       return p;
     }
     return protoProps.get(pname);
+  }
+
+  public JSType getProtoPropDeclaredType(String pname) {
+    if (this.protoProps.containsKey(pname)) {
+      Property p = this.protoProps.get(pname);
+      Node defSite = p.getDefSite();
+      if (defSite != null && defSite.isGetProp()) {
+        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
+        JSType declType = p.getDeclaredType();
+        if (declType != null
+            // Methods have a "declared" type which represents their arity,
+            // even when they don't have a jsdoc. Don't include that here.
+            && (!declType.isFunctionType() || jsdoc != null)) {
+          return declType;
+        }
+      }
+    }
+    return null;
   }
 
   private Property getPropFromClass(String pname) {
