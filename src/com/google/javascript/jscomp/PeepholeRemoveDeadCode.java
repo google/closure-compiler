@@ -117,21 +117,35 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     return n;
   }
 
+  private Node foldAssignment(Node subtree, Node right) {
+    subtree.getParent().replaceChild(subtree, right.detachFromParent());
+    reportCodeChange();
+    return right;
+  }
+
   /**
-   * Try removing identity assignments
+   * Try removing dead assignments like identity assignments, or assignments to properties of
+   * objects created by calls that have no side effects, like "Object.create({}).prop = 1"
+   *
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldAssignment(Node subtree) {
     Preconditions.checkState(subtree.isAssign());
     Node left = subtree.getFirstChild();
     Node right = subtree.getLastChild();
-    // Only names
+    // Identity assignments on NAMEs only, like "a = a". Cases like "a.b = a.b" are not handled yet.
     if (left.isName()
         && right.isName()
         && left.getString().equals(right.getString())) {
-      subtree.getParent().replaceChild(subtree, right.detachFromParent());
-      reportCodeChange();
-      return right;
+      return foldAssignment(subtree, right);
+    }
+
+    // Handle cases like "Object.create({}).prop = 1".
+    while (left.isGetProp()) {
+      left = left.getFirstChild();
+    }
+    if (left.isCall() && left.isNoSideEffectsCall()) {
+      return foldAssignment(subtree, right);
     }
     return subtree;
   }

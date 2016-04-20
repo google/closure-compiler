@@ -30,8 +30,11 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
       "/** @nosideeffects */ Math.random = function(){};" +
       "/** @nosideeffects */ Math.sin = function(){};";
 
+  private static final String OBJECT =
+      "/** @nosideeffects */ Object.create = function(proto, opt_properties) {};";
+
   public PeepholeRemoveDeadCodeTest() {
-    super(MATH);
+    super(MATH + OBJECT);
   }
 
   @Override
@@ -732,6 +735,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     testSame("x.a=x.a");
     test("var y=(x=x)", "var y=x");
     test("y=1 + (x=x)", "y=1 + x");
+
+    // GitHub issue #1745: https://github.com/google/closure-compiler/issues/1745
+    test("Object.create({}).prop = 1", "");
+    test("Object.create(proto).foo.bar.baz = 1", "");
   }
 
   public void testTryCatchFinally() {
