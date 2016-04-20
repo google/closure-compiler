@@ -137,7 +137,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private static boolean reportIfNonObject(
       NodeTraversal t, Node n, DiagnosticType diagnosticType) {
-    if (n.isAdd() || !NodeUtil.mayBeObect(n)) {
+    if (n.isAdd() || !NodeUtil.mayBeObject(n)) {
       t.report(n.getParent(), diagnosticType);
       return true;
     }

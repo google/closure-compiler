@@ -1760,18 +1760,11 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * @return Whether the results is possibly a string.
-   */
-  static boolean mayBeObect(Node n) {
-    return mayBeObect(getKnownValueType(n));
+  static boolean mayBeObject(Node n) {
+    return mayBeObject(getKnownValueType(n));
   }
 
-  /**
-   * @return Whether the results is possibly a string, this includes Objects which may implicitly
-   * be converted to a string.
-   */
-  static boolean mayBeObect(ValueType type) {
+  static boolean mayBeObject(ValueType type) {
     switch (type) {
       case BOOLEAN:
       case NULL:
