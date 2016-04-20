@@ -56,7 +56,7 @@ Map.prototype.forEach;
 
 /**
  * @param {KEY} key
- * @return {VALUE|undefined}
+ * @return {VALUE}
  * @nosideeffects
  */
 Map.prototype.get;
@@ -119,7 +119,7 @@ WeakMap.prototype.delete;
 
 /**
  * @param {KEY} key
- * @return {VALUE|undefined}
+ * @return {VALUE}
  * @nosideeffects
  */
 WeakMap.prototype.get;
@@ -249,5 +249,3 @@ WeakSet.prototype.delete;
  * @nosideeffects
  */
 WeakSet.prototype.has;
-
-
