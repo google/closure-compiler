@@ -506,6 +506,15 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         MUST_HAVE_TRAILING_UNDERSCORE);
   }
 
+  public void testMissingPrivate_dontWarnOnObjectLiteral() {
+    testSame(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  /** @return {number} */",
+            "  foo_() { return 0; }",
+            "}"));
+  }
+
   public void testOptionalArgs() {
     testSame(
         LINE_JOINER.join(

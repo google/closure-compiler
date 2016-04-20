@@ -1948,7 +1948,7 @@ public final class NodeUtil {
   /**
    * Finds the class containing the given node.
    */
-  static Node getEnclosingClass(Node n) {
+  public static Node getEnclosingClass(Node n) {
     return getEnclosingType(n, Token.CLASS);
   }
 

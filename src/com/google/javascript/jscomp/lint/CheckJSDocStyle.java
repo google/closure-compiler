@@ -158,7 +158,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       case Token.SETTER_DEF:
         // Don't need to call visitFunction because this JSDoc will be visited when the function is
         // visited.
-        checkStyleForPrivateProperties(t, n);
+        if (NodeUtil.getEnclosingClass(n) != null) {
+          checkStyleForPrivateProperties(t, n);
+        }
         break;
       default:
         visitNonFunction(t, n);
