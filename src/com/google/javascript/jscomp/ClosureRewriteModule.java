@@ -173,6 +173,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private static final String MODULE_CONTENTS_PREFIX = "module$contents$";
 
   private final AbstractCompiler compiler;
+  private final PreprocessorSymbolTable preprocessorSymbolTable;
 
   /**
    * Indicates where new nodes should be added in relation to some other node.
@@ -464,8 +465,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
   private List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
 
-  ClosureRewriteModule(AbstractCompiler compiler) {
+  ClosureRewriteModule(AbstractCompiler compiler, PreprocessorSymbolTable preprocessorSymbolTable) {
     this.compiler = compiler;
+    this.preprocessorSymbolTable = preprocessorSymbolTable;
   }
 
   @Override
@@ -756,6 +758,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       // Otherwise it's a regular module and the goog.module() line can be removed.
       NodeUtil.getEnclosingStatement(call).detachFromParent();
     }
+    Node callee = call.getFirstChild();
+    Node arg = callee.getNext();
+    maybeAddToSymbolTable(callee);
+    maybeAddToSymbolTable(createNamespaceNode(arg));
 
     compiler.reportCodeChange();
   }
@@ -832,6 +838,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           call.detachFromParent();
           statementNode.getParent().replaceChild(statementNode, IR.exprResult(call));
         }
+      }
+      if (targetIsGoogModule) {
+        // Add goog.require() and namespace name to preprocessor table because they're removed
+        // by current pass. If target is not a module then goog.require() is retained for
+        // ProcessClosurePrimitives pass and symbols will be added there instead.
+        Node callee = call.getFirstChild();
+        Node arg = callee.getNext();
+        maybeAddToSymbolTable(callee);
+        maybeAddToSymbolTable(createNamespaceNode(arg));
       }
       compiler.reportCodeChange();
     }
@@ -1323,5 +1338,24 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private static boolean isTypedefTarget(Node n) {
     Node parent = n.getParent();
     return parent.isExprResult() && parent.getFirstChild() == n;
+  }
+
+  /**
+   * Add the given qualified name node to the symbol table.
+   */
+  private void maybeAddToSymbolTable(Node n) {
+    if (preprocessorSymbolTable != null) {
+      preprocessorSymbolTable.addReference(n);
+    }
+  }
+
+  /**
+   * @param n String node containing goog.module namespace.
+   * @return A NAMESPACE node with the same name and source info as provided node.
+   */
+  private static Node createNamespaceNode(Node n) {
+    Node node = Node.newString(n.getString()).useSourceInfoFrom(n);
+    node.putBooleanProp(Node.IS_MODULE_NAME, true);
+    return node;
   }
 }

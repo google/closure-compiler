@@ -144,7 +144,9 @@ public class Node implements Serializable {
       GOOG_MODULE = 87,           // Indicates that a SCRIPT node is a goog.module. Remains set
                                   // after the goog.module is desugared.
       GOOG_MODULE_REQUIRE = 88,   // Node is a goog.require() as desugared by goog.module()
-      FEATURE_SET = 89;           // Attaches a FeatureSet to SCRIPT nodes.
+      FEATURE_SET = 89,           // Attaches a FeatureSet to SCRIPT nodes.
+      IS_MODULE_NAME = 90;        // Indicates that a STRING node represents a namespace from
+                                  // goog.module() or goog.require() call.
 
   private static final String propToString(int propType) {
       switch (propType) {
@@ -200,6 +202,7 @@ public class Node implements Serializable {
         case GOOG_MODULE:        return "goog_module";
         case GOOG_MODULE_REQUIRE: return "goog_module_require";
         case FEATURE_SET:        return "feature_set";
+        case IS_MODULE_NAME:     return "is_module_name";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -1740,7 +1743,7 @@ public class Node implements Serializable {
    *         of the name and properties.
    */
   public String getQualifiedName() {
-    if (type == Token.NAME) {
+    if (type == Token.NAME || getBooleanProp(IS_MODULE_NAME)) {
       String name = getString();
       return name.isEmpty() ? null : name;
     } else if (type == Token.GETPROP) {

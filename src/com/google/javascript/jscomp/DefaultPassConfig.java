@@ -1298,7 +1298,8 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("closureRewriteModule", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return new ClosureRewriteModule(compiler);
+      maybeInitializePreprocessorSymbolTable(compiler);
+      return new ClosureRewriteModule(compiler, preprocessorSymbolTable);
     }
   };
 
