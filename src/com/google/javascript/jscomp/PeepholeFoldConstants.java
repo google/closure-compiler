@@ -44,7 +44,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   static final DiagnosticType NEGATING_A_NON_NUMBER_ERROR =
       DiagnosticType.warning(
           "JSC_NEGATING_A_NON_NUMBER_ERROR",
-          "Can't negate non-numeric value: {0}");
+          "Can''t negate non-numeric value: {0}");
 
   static final DiagnosticType BITWISE_OPERAND_OUT_OF_RANGE =
       DiagnosticType.warning(
