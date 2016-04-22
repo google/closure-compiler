@@ -101,6 +101,10 @@ class DisambiguateProperties implements CompilerPass {
         "JSC_INVALIDATION_TYPE",
         "Property disambiguator skipping instances of property {0} "
         + "on type {1}. {2}");
+
+    static final DiagnosticType INVALID_RENAME_FUNCTION = DiagnosticType.error(
+        "JSC_INVALID_RENAME_FUNCTION",
+        "{0} call is invalid: {1}");
   }
 
   private final AbstractCompiler compiler;
@@ -461,6 +465,8 @@ class DisambiguateProperties implements CompilerPass {
         handleGetProp(t, n);
       } else if (n.isObjectLit()) {
         handleObjectLit(t, n);
+      } else if (n.isCall()) {
+        handleCall(t, n);
       }
     }
 
@@ -522,6 +528,77 @@ class DisambiguateProperties implements CompilerPass {
                 Warnings.INVALIDATION, name, String.valueOf(type), n.toString(), ""));
           }
         }
+      }
+    }
+
+    private void handleCall(NodeTraversal t, Node n) {
+      String renameFunctionName = n.getFirstChild().getQualifiedName(true);
+      if (!t.getCompiler().getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
+        return;
+      }
+
+      if (n.getChildCount() != 3) {
+        compiler.report(JSError.make(
+            n,
+            Warnings.INVALID_RENAME_FUNCTION,
+            renameFunctionName,
+            " Must be called with exactly 2 arguments."));
+
+        return;
+      }
+
+      if (!n.getSecondChild().isString()) {
+        compiler.report(JSError.make(
+            n,
+            Warnings.INVALID_RENAME_FUNCTION,
+            renameFunctionName,
+            " The first argument must be a string literal."));
+
+        return;
+      }
+
+      String name = n.getSecondChild().getString();
+
+      if (name.split("\\.").length > 1) {
+        compiler.report(JSError.make(
+            n,
+            Warnings.INVALID_RENAME_FUNCTION,
+            renameFunctionName,
+            " The first argument must not be a property path."));
+
+        return;
+      }
+
+      Node obj = n.getChildAtIndex(2);
+      JSType type = getType(obj);
+      Property prop = getProperty(name);
+      if (!prop.scheduleRenaming(
+          n.getSecondChild(),
+          processProperty(t, prop, type, null))
+          && propertiesToErrorFor.containsKey(name)) {
+        String suggestion = "";
+        if (type instanceof JSType) {
+          JSType jsType = (JSType) type;
+          if (jsType.isAllType() || jsType.isUnknownType()) {
+            if (obj.isThis()) {
+              suggestion = "The \"this\" object is unknown in the function," +
+                  "consider using @this";
+            } else {
+              String qName = obj.getQualifiedName();
+              suggestion = "Consider casting " + qName + " if you know its type.";
+            }
+          } else {
+            List<String> errors = new ArrayList<>();
+            printErrorLocations(errors, jsType);
+            if (!errors.isEmpty()) {
+              suggestion = "Consider fixing errors for the following types:\n";
+              suggestion += Joiner.on("\n").join(errors);
+            }
+          }
+        }
+        compiler.report(JSError.make(n, propertiesToErrorFor.get(name),
+            Warnings.INVALIDATION, name, String.valueOf(type), renameFunctionName,
+            suggestion));
       }
     }
 

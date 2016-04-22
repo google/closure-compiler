@@ -168,6 +168,9 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
    *
    * <p>Should only be called in phases running before {@link RenameProperties},
    * if such a pass is even used (see {@link #renameProperties}).
+   *
+   * TODO(ChadKillingsworth): Change this function to use goog.reflect.objectProperty
+   * to support the type based renaming passes.
    */
   private Node renameProperty(Node propertyName) {
     Preconditions.checkArgument(propertyName.isString());

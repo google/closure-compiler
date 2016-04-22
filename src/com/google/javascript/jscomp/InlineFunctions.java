@@ -370,8 +370,9 @@ class InlineFunctions implements CompilerPass {
       return false;
     }
 
-    // Don't inline this special function
-    if (RenameProperties.RENAME_PROPERTY_FUNCTION_NAME.equals(fnName)) {
+    // Don't inline property rename functions. They get completely removed
+    // from the AST by later passes.
+    if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
       return false;
     }
 

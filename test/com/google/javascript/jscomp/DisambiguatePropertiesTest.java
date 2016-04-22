@@ -38,6 +38,9 @@ import java.util.TreeSet;
 
 public final class DisambiguatePropertiesTest extends CompilerTestCase {
   private DisambiguateProperties lastPass;
+  private static String renameFunctionDefinition = "/** @const */ var goog = {};\n"
+      + "/** @const */ goog.reflect = {};\n"
+      + "/** @return {string} */ goog.reflect.objectProperty = function(prop, obj) {};\n";
 
   public DisambiguatePropertiesTest() {
     parseTypeInfo = true;
@@ -81,6 +84,14 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var F = new Foo;\n"
         + "F.a = 0;";
     testSets(js, js, "{a=[[Foo.prototype]]}");
+
+    js = renameFunctionDefinition
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype.a = 0;\n"
+        + "/** @type {Foo} */\n"
+        + "var F = new Foo;\n"
+        + "F[goog.reflect.objectProperty('a', F)] = 0;";
+    testSets(js, js, "{a=[[Foo.prototype]]}");
   }
 
   public void testOneType2() {
@@ -91,6 +102,14 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var F = new Foo;\n"
         + "F.a = 0;";
     String expected = "{a=[[Foo.prototype]]}";
+    testSets(js, js, expected);
+
+    js = renameFunctionDefinition
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype = {a: 0};\n"
+        + "/** @type {Foo} */\n"
+        + "var F = new Foo;\n"
+        + "F[goog.reflect.objectProperty('a', F)] = 0;";
     testSets(js, js, expected);
   }
 
@@ -103,6 +122,15 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var F = new Foo;\n"
         + "F.a = 0;";
     String expected = "{a=[[Foo.prototype]]}";
+    testSets(js, js, expected);
+
+    js = renameFunctionDefinition
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype = { get a() {return  0},"
+        + "                  set a(b) {} };\n"
+        + "/** @type {Foo} */\n"
+        + "var F = new Foo;\n"
+        + "F[goog.reflect.objectProperty('a', F)] = 0;";
     testSets(js, js, expected);
   }
 
@@ -119,6 +147,14 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   public void testPrototypeAndInstance1() {
     String js = ""
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype.a = 0;\n"
+        + "/** @type {Foo} */\n"
+        + "var F = new Foo;\n"
+        + "F.a = 0;";
+    testSets(js, js, "{a=[[Foo.prototype]]}");
+
+    js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;\n"
         + "/** @type {Foo} */\n"

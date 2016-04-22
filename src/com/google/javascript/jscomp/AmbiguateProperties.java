@@ -455,6 +455,49 @@ class AmbiguateProperties implements CompilerPass {
           maybeMarkCandidate(propNode, jstype);
           break;
         }
+        case Token.CALL: {
+          String renameFunctionName = n.getFirstChild().getQualifiedName(true);
+          if (renameFunctionName == null ||
+              !t.getCompiler().getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
+            break;
+          }
+
+          if (n.getChildCount() != 3) {
+            compiler.report(JSError.make(
+                n,
+                DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
+                renameFunctionName,
+                " Must be called with exactly 2 arguments."));
+
+            break;
+          }
+
+          Node propName = n.getSecondChild();
+          if (!propName.isString()) {
+            compiler.report(JSError.make(
+                n,
+                DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
+                renameFunctionName,
+                " The first argument must be a string literal."));
+
+            break;
+          }
+
+          if (propName.getString().split("\\.").length > 1) {
+            compiler.report(JSError.make(
+                n,
+                DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
+                renameFunctionName,
+                " The first argument must not be a property path."));
+
+            break;
+          }
+
+          JSType jstype = getJSType(n.getChildAtIndex(2));
+
+          maybeMarkCandidate(propName, jstype);
+          break;
+        }
         case Token.OBJECTLIT:
           // The children of an OBJECTLIT node are keys, where the values
           // are the children of the keys.

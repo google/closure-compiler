@@ -1739,19 +1739,35 @@ public class Node implements Serializable {
    * each property separated by dots. If the node ultimately under the left
    * sub-tree is not a simple name, this is not a valid qualified name.
    *
+   * @param useOriginalName specifies whether the original name should be used
+   *        over the potentially renamed version
    * @return a null if this is not a qualified name, or a dot-separated string
    *         of the name and properties.
    */
-  public String getQualifiedName() {
+  public String getQualifiedName(Boolean useOriginalName) {
     if (type == Token.NAME || getBooleanProp(IS_MODULE_NAME)) {
-      String name = getString();
-      return name.isEmpty() ? null : name;
+      String name = null;
+      if (useOriginalName) {
+        name = getOriginalName();
+      }
+      if (name == null) {
+        name = getString();
+      }
+      return name == null || name.isEmpty() ? null : name;
     } else if (type == Token.GETPROP) {
-      String left = getFirstChild().getQualifiedName();
+      String left = getFirstChild().getQualifiedName(useOriginalName);
       if (left == null) {
         return null;
       }
-      return left + "." + getLastChild().getString();
+      String right = null;
+      if (useOriginalName) {
+        right = getLastChild().getOriginalName();
+      }
+      if (right == null) {
+        right = getLastChild().getString();
+      }
+
+      return left + "." + right;
     } else if (type == Token.THIS) {
       return "this";
     } else if (type == Token.SUPER) {
@@ -1760,6 +1776,11 @@ public class Node implements Serializable {
       return null;
     }
   }
+
+  public String getQualifiedName() {
+    return getQualifiedName(false);
+  }
+
 
   /**
    * Returns whether a node corresponds to a simple or a qualified name, such as

@@ -179,6 +179,9 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   public void testRenamePropertiesFunctionCall1() {
     test("var foo = {myProp: 0}; f(foo[JSCompiler_renameProperty('myProp')]);",
          "var foo = {a: 0}; f(foo['a']);");
+
+    test("var foo = {myProp: 0}; f(foo[goog.reflect.objectProperty('myProp', foo)]);",
+        "var foo = {a: 0}; f(foo['a']);");
   }
 
   public void testRenamePropertiesFunctionCall2() {
@@ -187,6 +190,12 @@ public final class RenamePropertiesTest extends CompilerTestCase {
          "foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;",
          "var foo = {a: 0}; f('b.a.c'); " +
          "foo.a = 1; foo.d = 2; foo.e = 3;");
+
+    test("var foo = {myProp: 0}; " +
+            "f(goog.reflect.objectProperty('otherProp.myProp.someProp', foo)); " +
+            "foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;",
+        "var foo = {a: 0}; f('c.a.e'); " +
+            "foo.a = 1; foo.f = 2; foo.g = 3;");
   }
 
   public void testRemoveRenameFunctionStubs1() {
@@ -361,6 +370,18 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         "foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;",
         "var bar = {f: 0}; var foo = {a: 0}; f('b.a.c'); " +
         "foo.a = 1; foo.d = 2; foo.e = 3;");
+
+    testStableRenaming(
+        "var foo = {myProp: 0}; " +
+            "f(goog.reflect.objectProperty('otherProp.myProp.someProp', foo)); " +
+            "foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;",
+        "var foo = {a: 0}; f('b.a.c'); " +
+            "foo.a = 1; foo.d = 2; foo.e = 3;",
+        "var bar = {newProp: 0}; var foo = {myProp: 0}; " +
+            "f(goog.reflect.objectProperty('otherProp.myProp.someProp', foo)); " +
+            "foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;",
+        "var bar = {h: 0}; var foo = {a: 0}; f('b.a.c'); " +
+            "foo.a = 1; foo.d = 2; foo.e = 3;");
   }
 
   private void testStableRenaming(String input1, String expected1,
