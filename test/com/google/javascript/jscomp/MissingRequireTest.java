@@ -862,6 +862,15 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testSame(js);
   }
 
+  public void testTypedefInGoogScope() {
+    String js = LINE_JOINER.join(
+        "goog.scope(function() {",
+        "  /** @typedef {string} */",
+        "  var Baz_;",
+        "});");
+    testSame(js);
+  }
+
   public void testMissingGoogRequireFromGoogModule() {
     String good = ""
         + "goog.module('foo');\n"
