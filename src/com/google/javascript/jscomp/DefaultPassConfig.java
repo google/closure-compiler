@@ -324,9 +324,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertToTypedES6);
     }
 
-    if ((options.getLanguageIn().isEs6OrHigher() && !options.skipNonTranspilationPasses)
-        || !options.forceLibraryInjection.isEmpty()) {
-      checks.add(es6RuntimeLibrary);
+    if (!options.forceLibraryInjection.isEmpty()) {
+      checks.add(injectRuntimeLibraries);
     }
 
     if (options.skipNonTranspilationPasses) {
@@ -1202,11 +1201,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  private final PassFactory es6RuntimeLibrary =
-      new PassFactory("Es6RuntimeLibrary", true) {
+  private final PassFactory injectRuntimeLibraries =
+      new PassFactory("InjectRuntimeLibraries", true) {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
-      return new InjectEs6RuntimeLibrary(compiler);
+      return new InjectRuntimeLibraries(compiler);
     }
   };
 

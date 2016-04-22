@@ -16,7 +16,9 @@
 
 // GENERATED FILE. DO NOT EDIT. REBUILD WITH build_runtime.sh.
 
-'use strict';/**
+'use strict';/** */ "require base";
+"declare window global";
+/**
  @param {!Object} maybeGlobal
  @return {!Object}
  @suppress {undefinedVars}

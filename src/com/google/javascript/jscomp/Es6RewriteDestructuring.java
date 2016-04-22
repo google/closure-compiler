@@ -299,6 +299,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         makeIterator(compiler, rhs.detachFromParent()));
     tempDecl.useSourceInfoIfMissingFromForTree(arrayPattern);
     nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
+    boolean needsRuntime = false;
 
     for (Node child = arrayPattern.getFirstChild(), next; child != null; child = next) {
       next = child.getNext();
@@ -338,6 +339,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
             IR.call(
                 NodeUtil.newQName(compiler, "$jscomp.arrayFromIterator"),
                 IR.name(tempVarName));
+        needsRuntime = true;
       } else {
         // LHS is just a name (or a nested pattern).
         //   var [x] = rhs;
@@ -364,6 +366,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       visit(t, newLHS, newLHS.getParent());
     }
     nodeToDetach.detachFromParent();
+
+    if (needsRuntime) {
+      compiler.ensureLibraryInjected("es6_runtime", false);
+    }
     compiler.reportCodeChange();
   }
 

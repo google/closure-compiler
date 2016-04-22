@@ -192,7 +192,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * Inserts a call to $jscomp.initSymbol() before {@code n}.
    */
   private void initSymbolBefore(Node n) {
-    compiler.needsEs6Runtime = true;
+    compiler.ensureLibraryInjected("es6_runtime", false);
     Node statement = NodeUtil.getEnclosingStatement(n);
     Node initSymbol = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbol")));
     statement.getParent().addChildBefore(initSymbol.useSourceInfoFromForTree(statement), statement);
@@ -205,7 +205,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       return;
     }
     if (isGlobalSymbol(t, n.getFirstChild())) {
-      compiler.needsEs6Runtime = true;
+      compiler.ensureLibraryInjected("es6_runtime", false);
       Node statement = NodeUtil.getEnclosingStatement(n);
       Node init = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")));
       statement.getParent().addChildBefore(init.useSourceInfoFromForTree(statement), statement);
@@ -396,7 +396,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           groups.add(currGroup);
           currGroup = null;
         }
-        compiler.needsEs6Runtime = true;
         groups.add(arrayFromIterable(compiler, currElement.removeFirstChild()));
       } else {
         if (currGroup == null) {
@@ -623,7 +622,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
               NodeUtil.newQName(compiler, metadata.fullClassName),
               NodeUtil.newQName(compiler, superClassString));
           Node inheritsCall = IR.exprResult(inherits);
-          compiler.needsEs6Runtime = true;
+          compiler.ensureLibraryInjected("es6_runtime", false);
 
           inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
           enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
@@ -952,7 +951,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
   private static Node callEs6RuntimeFunction(
       AbstractCompiler compiler, Node iterable, String function) {
-    compiler.needsEs6Runtime = true;
+    compiler.ensureLibraryInjected("es6_runtime", false);
     return IR.call(
         NodeUtil.newQName(compiler, "$jscomp." + function),
         iterable);

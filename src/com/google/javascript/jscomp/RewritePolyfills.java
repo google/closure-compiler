@@ -25,15 +25,11 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Rewrites calls to ES6 library functions to use compiler-provided polyfills,
@@ -295,7 +291,6 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     Traverser traverser = new Traverser();
     NodeTraversal.traverseEs6(compiler, scriptRoot, traverser);
     if (traverser.changed) {
-      compiler.needsEs6Runtime = true;
       compiler.reportCodeChange();
     }
   }
@@ -309,26 +304,10 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     hotSwapScript(root, null);
   }
 
-  private static class InjectedInstaller {
-    final JSModule module;
-    final String installer;
-    InjectedInstaller(JSModule module, String installer) {
-      this.module = module;
-      this.installer = installer;
-    }
-    @Override public int hashCode() {
-      return Objects.hash(module, installer);
-    }
-    @Override public boolean equals(@Nullable Object other) {
-      return other instanceof InjectedInstaller
-          && ((InjectedInstaller) other).installer.equals(installer)
-          && Objects.equals(((InjectedInstaller) other).module, module);
-    }
-  }
-
   private class Traverser extends AbstractPostOrderCallback {
 
-    Set<InjectedInstaller> installers = new HashSet<>();
+    Node injectedLibraryNode = null;
+    Set<String> installers = new HashSet<>();
     boolean changed = false;
 
     @Override
@@ -367,11 +346,12 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
             if (!polyfill.installer.isEmpty()) {
               // Note: add the installer *before* replacing the node!
-              addInstaller(node, polyfill.installer);
+              addInstaller(polyfill.installer);
             }
 
             if (!polyfill.rewrite.isEmpty()) {
               changed = true;
+              injectRuntime();
               Node replacement = NodeUtil.newQName(compiler, polyfill.rewrite);
               replacement.useSourceInfoIfMissingFromForTree(node);
               parent.replaceChild(node, replacement);
@@ -392,7 +372,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
           if (!languageOutIsAtLeast(polyfill.nativeVersion) && !polyfill.installer.isEmpty()) {
             // Check if this is a global function.
             if (!isStaticFunction(node, traversal)) {
-              addInstaller(node, polyfill.installer);
+              addInstaller(polyfill.installer);
             }
           }
         }
@@ -450,18 +430,24 @@ public class RewritePolyfills implements HotSwapCompilerPass {
       }
     }
 
-    private void addInstaller(Node sourceNode, String function) {
-      // Find the module
-      Node enclosingScript = NodeUtil.getEnclosingScript(sourceNode);
-      InputId inputId = enclosingScript.getInputId();
-      CompilerInput input = inputId != null ? compiler.getInput(inputId) : null;
-      JSModule module = input != null ? input.getModule() : null;
-      InjectedInstaller injected = new InjectedInstaller(module, function);
-      if (installers.add(injected)) {
+    private void addInstaller(String function) {
+      if (installers.add(function)) {
         changed = true;
         Node installer = compiler.parseSyntheticCode(function).removeChildren();
-        installer.useSourceInfoIfMissingFromForTree(sourceNode);
-        enclosingScript.addChildrenToFront(installer);
+
+        injectRuntime();
+
+        if (injectedLibraryNode != null) {
+          injectedLibraryNode.getParent().addChildrenAfter(installer, injectedLibraryNode);
+        } else {
+          compiler.getNodeForCodeInsertion(null).addChildrenToFront(installer);
+        }
+      }
+    }
+
+    private void injectRuntime() {
+      if (injectedLibraryNode == null) {
+        injectedLibraryNode = compiler.ensureLibraryInjected("es6_runtime", false);
       }
     }
   }

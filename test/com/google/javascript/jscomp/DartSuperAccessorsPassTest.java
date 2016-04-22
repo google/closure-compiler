@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
@@ -38,6 +40,11 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     runTypeCheckAfterProcessing = true;
     propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
+  }
+
+  @Override
+  protected Compiler createCompiler() {
+    return new NoninjectingCompiler();
   }
 
   @Override
@@ -78,6 +85,8 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     checkConversionWithinMembers(
         "return super['prop']",
         "return $jscomp.superGet(this, 'prop')");
+    assertThat(((NoninjectingCompiler) getLastCompiler()).injected)
+        .containsExactly("es6_dart_runtime");
   }
 
   public void testSuperGetProp_renameOff() {

@@ -789,7 +789,7 @@ public class CompilerOptions {
   List<String> forceLibraryInjection = ImmutableList.of();
 
   /** Runtime libraries to never inject. */
-  Set<String> preventLibraryInjection = ImmutableSet.of();
+  boolean preventLibraryInjection = false;
 
 
   //--------------------------------
@@ -2369,8 +2369,8 @@ public class CompilerOptions {
   /**
    * Sets the set of libraries to never inject, even if required.
    */
-  public void setPreventLibraryInjection(Iterable<String> libraries) {
-    this.preventLibraryInjection = ImmutableSet.copyOf(libraries);
+  public void setPreventLibraryInjection(boolean preventLibraryInjection) {
+    this.preventLibraryInjection = preventLibraryInjection;
   }
 
   /**

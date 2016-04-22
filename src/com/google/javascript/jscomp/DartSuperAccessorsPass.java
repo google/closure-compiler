@@ -154,8 +154,7 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
   }
 
   private void reportEs6Change() {
-    compiler.needsEs6Runtime = true;
-    compiler.needsEs6DartRuntime = true;
+    compiler.ensureLibraryInjected("es6_dart_runtime", false);
     compiler.reportCodeChange();
   }
 

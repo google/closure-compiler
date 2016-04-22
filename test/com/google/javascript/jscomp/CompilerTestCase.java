@@ -36,8 +36,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>Base class for testing JS compiler classes that change
@@ -1683,5 +1685,14 @@ public abstract class CompilerTestCase extends TestCase {
         },
         Predicates.<Node>alwaysTrue());
     return matches;
+  }
+
+  /** A Compiler that records requested runtime libraries, rather than injecting. */
+  protected static class NoninjectingCompiler extends Compiler {
+    protected final Set<String> injected = new HashSet<>();
+    @Override Node ensureLibraryInjected(String library, boolean force) {
+      injected.add(library);
+      return null;
+    }
   }
 }

@@ -219,8 +219,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
               new Es6RewriteBlockScopedDeclaration(compiler)));
       passes.add(makePassFactory("rewriteGenerators",
               new Es6RewriteGenerators(compiler)));
-      passes.add(makePassFactory("Es6RuntimeLibrary",
-              new InjectEs6RuntimeLibrary(compiler)));
+      passes.add(makePassFactory("injectRuntimeLibraries",
+              new InjectRuntimeLibraries(compiler)));
       passes.add(makePassFactory("Es6StaticInheritance",
               new Es6ToEs3ClassSideInheritance(compiler)));
     }

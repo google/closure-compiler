@@ -1536,7 +1536,7 @@ public class CommandLineRunner extends
 
     options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
 
-    options.setPreventLibraryInjection(flags.noinjectLibrary);
+    options.setPreventLibraryInjection(!flags.noinjectLibrary.isEmpty());
 
     options.rewritePolyfills = flags.rewritePolyfills;
 

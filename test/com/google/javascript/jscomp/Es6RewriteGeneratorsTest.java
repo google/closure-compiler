@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /** Unit tests for {@link Es6RewriteGenerators}. */
@@ -80,6 +82,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         LINE_JOINER.join(
             "case 0:",
             "  $jscomp$generator$state = -1;"));
+    assertThat(((NoninjectingCompiler) getLastCompiler()).injected).containsExactly("es6_runtime");
 
     rewriteGeneratorBody(
         "yield 1;",
@@ -763,6 +766,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  break;",
             "case 2:",
             "  $jscomp$generator$state = -1;"));
+    assertThat(((NoninjectingCompiler) getLastCompiler()).injected).containsExactly("es6_runtime");
 
     rewriteGeneratorBodyWithVars(
         "var i = yield * n;",
@@ -1145,5 +1149,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  break;",
             "case 3:",
             "  $jscomp$generator$state = -1;"));
+  }
+
+  @Override
+  protected Compiler createCompiler() {
+    return new NoninjectingCompiler();
   }
 }

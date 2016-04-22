@@ -15,9 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.RewritePolyfills.Polyfills;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+
+import java.util.Set;
 
 /** Unit tests for the RewritePolyfills compiler pass. */
 public final class RewritePolyfillsTest extends CompilerTestCase {
@@ -57,6 +61,15 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   }
 
   @Override
+  protected Compiler createCompiler() {
+    return new NoninjectingCompiler();
+  }
+
+  protected Set<String> getInjectedLibraries() {
+    return ((NoninjectingCompiler) getLastCompiler()).injected;
+  }
+
+  @Override
   protected int getNumRepetitions() {
     return 1;
   }
@@ -71,13 +84,13 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     test(
         "var m = new Map();",
         "$jscomp.Map$install(); var m = new $jscomp.Map();");
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
 
     setLanguage(ES6, ES3);
     test(
         "var s = new Set();",
         "$jscomp.Set$install(); var s = new $jscomp.Set();");
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
   }
 
   public void testClassesRewrittenInstallerNotDuplicated() {
@@ -90,25 +103,25 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   public void testClassesNotRewrittenIfSufficientLanguageOut() {
     setLanguage(ES6, ES6);
     testSame("new Proxy();");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     testSame("var m = new Map();");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     testSame("new Set();");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
   }
 
   public void testClassesNotRewrittenIfDeclaredInScope() {
     setLanguage(ES6, ES5);
     testSame("/** @constructor */ var Map = function() {}; new Map();");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
   }
 
   public void testClassesWarnIfInsufficientLanguageOut() {
     setLanguage(ES6, ES5);
     testSame("new Proxy();", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     setLanguage(ES6, ES3);
     test(
@@ -116,7 +129,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "$jscomp.Map$install(); new $jscomp.Map();",
         null,
         RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
   }
 
   public void testJsdocTypesRewritten() {
@@ -141,47 +154,47 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     test(
         "Math.clz32(x);",
         "$jscomp.math.clz32(x);");
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
 
     setLanguage(ES6, ES3);
     test(
         "Array.of(x);",
         "$jscomp.array.of(x);");
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
 
     setLanguage(ES6, ES3);
     test(
         "Object.keys(x);",
         "$jscomp.object.keys(x);");
-    assertTrue(getLastCompiler().needsEs6Runtime); // No point separating out separate ES5 runtime
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
   }
 
   public void testStaticMethodsNotRewrittenIfSufficientLanguageOut() {
     setLanguage(ES6, ES6);
     testSame("Array.from(x);");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     testSame("Math.clz32(x);");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     testSame("Array.of(x);");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     setLanguage(ES5, ES5);
     testSame("Object.keys(x);");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
   }
 
   public void testStaticMethodsNotRewrittenIfDeclaredInScope() {
     setLanguage(ES6, ES5);
     testSame("var Math = {clz32: function() {}}; Math.clz32(x);");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
   }
 
   public void testStaticMethodsWarnIfInsufficientLanguageOut() {
     setLanguage(ES6, ES5);
     testSame("Array.from(x);", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     setLanguage(ES6, ES3);
     test(
@@ -189,7 +202,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "$jscomp.math.clz32(x);",
         null,
         RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
   }
 
   public void testPrototypeMethodsInstalled() {
@@ -197,18 +210,18 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     test(
         "x.endsWith(y);",
         "$jscomp.string.endsWith$install(); x.endsWith(y);");
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
 
     test(
         "x.fill();",
         "$jscomp.array.fill$install(); x.fill();");
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
 
     setLanguage(ES5, ES3);
     test(
         "x.forEach(y);",
         "$jscomp.array.forEach$install(); x.forEach(y);");
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
   }
 
   public void testPrototypeMethodsInstalled_JSModule() {
@@ -223,40 +236,38 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         });
   }
 
-  /**
-   * If multiple modules use the same method, the install() method is
-   * called in both, so that code works regardless of which module is
-   * loaded first.
-   */
+  /** Install methods are only added to the base module. */
   public void testPrototypeMethodsInstalled_JSModules() {
     setLanguage(ES6, ES5);
 
     JSModule[] jsModules = createModules(
+        "z();",
         "x.endsWith(y);",
         "w.endsWith(z);");
 
     test(
         jsModules,
         new String[] {
-          "$jscomp.string.endsWith$install(); x.endsWith(y);",
-          "$jscomp.string.endsWith$install(); w.endsWith(z);",
+          "$jscomp.string.endsWith$install(); z();",
+          "x.endsWith(y);",
+          "w.endsWith(z);",
         });
   }
-  
+
   public void testPrototypeMethodsNotInstalledIfSufficientLanguageOut() {
     setLanguage(ES6, ES6);
     testSame("x.normalize();");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     testSame("x.endsWith();");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     testSame("x.fill(y);");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     setLanguage(ES5, ES5);
     testSame("x.forEach();");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
   }
 
   public void testPrototypeMethodsInstalledIfStaticMethodShadowed() {
@@ -268,20 +279,20 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "$jscomp.string.endsWith$install(); "
         + "var string = {}; string.endsWith = function() {}; "
         + "string.foo = function(string) { return string.endsWith('x'); };");
-    assertTrue(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
   }
 
   public void testPrototypeMethodsNotInstalledIfActuallyStatic() {
     setLanguage(ES6, ES5);
     testSame("var string = {}; string.endsWith = function() {}; string.endsWith('x');");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     testSame("var string = {endsWith: function() {}}; string.endsWith('x');");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
 
     testSame(
         "var string = {}; string.endsWith = function() {}; "
         + "string.foo = function() { return string.endsWith('x'); };");
-    assertFalse(getLastCompiler().needsEs6Runtime);
+    assertThat(getInjectedLibraries()).isEmpty();
   }
 }
