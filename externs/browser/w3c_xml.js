@@ -358,10 +358,22 @@ XMLHttpRequest.prototype.getAllResponseHeaders = function() {};
 XMLHttpRequest.prototype.getResponseHeader = function(header) {};
 
 /**
+ * @type {?(ArrayBuffer|Blob|Document|Object|string)}
+ * @see http://www.w3.org/TR/XMLHttpRequest/#the-response-attribute
+ */
+XMLHttpRequest.prototype.response;
+
+/**
  * @type {string}
  * @see http://www.w3.org/TR/XMLHttpRequest/#the-responsetext-attribute
  */
 XMLHttpRequest.prototype.responseText;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/XMLHttpRequest/#the-responsetype-attribute
+ */
+XMLHttpRequest.prototype.responseType;
 
 /**
  * @type {Document}
