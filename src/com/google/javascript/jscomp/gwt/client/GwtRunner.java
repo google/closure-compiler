@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.ResourceLoader;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.WarningLevel;
 
@@ -30,6 +31,8 @@ import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,6 +42,43 @@ import java.util.Map;
  */
 @JsType(namespace = JsPackage.GLOBAL, name = "JSCompiler")
 public final class GwtRunner implements EntryPoint {
+
+  // The core language externs in sorted order.
+  private static final List<String> BUILTIN_EXTERNS_LANG = ImmutableList.of(
+      "es3.js",
+      "es5.js",
+      "es6.js",
+      "es6_collections.js");
+
+  // The browser externs in sorted order.
+  private static final List<String> BUILTIN_EXTERNS_BROWSER_DEP_ORDER = ImmutableList.of(
+      "browser/intl.js",
+      "browser/w3c_event.js",
+      "browser/w3c_event3.js",
+      "browser/gecko_event.js",
+      "browser/ie_event.js",
+      "browser/webkit_event.js",
+      "browser/w3c_device_sensor_event.js",
+      "browser/w3c_dom1.js",
+      "browser/w3c_dom2.js",
+      "browser/w3c_dom3.js",
+      "browser/gecko_dom.js",
+      "browser/ie_dom.js",
+      "browser/webkit_dom.js",
+      "browser/w3c_css.js",
+      "browser/gecko_css.js",
+      "browser/ie_css.js",
+      "browser/webkit_css.js",
+      "browser/w3c_touch_event.js");
+
+  // Extra browser externs.
+  private static final List<String> BUILTIN_EXTERNS_BROWSER_EXTRA = ImmutableList.of(
+      "browser/fileapi.js",
+      "browser/html5.js",
+      "browser/page_visibility.js",
+      "browser/w3c_batterystatus.js",
+      "browser/w3c_range.js",
+      "browser/w3c_xml.js");
 
   private static final Map<String, CompilationLevel> COMPILATION_LEVEL_MAP =
       ImmutableMap.of(
@@ -63,6 +103,7 @@ public final class GwtRunner implements EntryPoint {
           WarningLevel.VERBOSE);
 
   private final Compiler compiler;
+  private List<SourceFile> builtInExterns;
 
   public GwtRunner() {
     compiler = new Compiler();
@@ -99,7 +140,7 @@ public final class GwtRunner implements EntryPoint {
   private static void applyDefaultOptions(CompilerOptions options) {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setPrettyPrint(true);
   }
@@ -149,14 +190,40 @@ public final class GwtRunner implements EntryPoint {
     options.getDependencyOptions().setDependencySorting(false);
   }
 
+  // TODO(moz): Handle custom environment with CompilerOptions.Environment.
+  private static List<SourceFile> loadBuiltInExterns() {
+    List<SourceFile> externs = new ArrayList<>();
+    String pathPrefix = "externs/";
+    for (String key : BUILTIN_EXTERNS_LANG) {
+      String path = pathPrefix + key;
+      externs.add(
+          SourceFile.fromCode(path, ResourceLoader.loadTextResource(GwtRunner.class, path)));
+    }
+
+    for (String key : BUILTIN_EXTERNS_BROWSER_DEP_ORDER) {
+      String path = pathPrefix + key;
+      externs.add(
+          SourceFile.fromCode(path, ResourceLoader.loadTextResource(GwtRunner.class, path)));
+    }
+
+    for (String key : BUILTIN_EXTERNS_BROWSER_EXTRA) {
+      String path = pathPrefix + key;
+      externs.add(
+          SourceFile.fromCode(path, ResourceLoader.loadTextResource(GwtRunner.class, path)));
+    }
+    return externs;
+  }
+
   public String compile(String js, Flags flags) {
     CompilerOptions options = new CompilerOptions();
     applyDefaultOptions(options);
     applyOptionsFromFlags(options, flags);
     disableUnsupportedOptions(options);
+    if (builtInExterns == null) {
+      builtInExterns = loadBuiltInExterns();
+    }
     SourceFile src = SourceFile.fromCode("src.js", js);
-    SourceFile externs = SourceFile.fromCode("externs.js", "var window;");
-    compiler.compile(ImmutableList.of(externs), ImmutableList.of(src), options);
+    compiler.compile(builtInExterns, ImmutableList.of(src), options);
     return compiler.toSource();
   }
 
