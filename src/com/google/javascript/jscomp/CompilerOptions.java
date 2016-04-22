@@ -814,6 +814,9 @@ public class CompilerOptions {
   /** The string to use as the separator for printInputDelimiter */
   public String inputDelimiter = "// Input %num%";
 
+  /** Whether to write keyword properties as foo['class'] instead of foo.class; needed for IE8. */
+  boolean quoteKeywordProperties;
+
   boolean preferSingleQuotes;
 
   /**
@@ -1668,6 +1671,9 @@ public class CompilerOptions {
    */
   public void setLanguageOut(LanguageMode languageOut) {
     this.languageOut = languageOut;
+    if (languageOut == LanguageMode.ECMASCRIPT3) {
+      this.quoteKeywordProperties = true;
+    }
   }
 
   public LanguageMode getLanguageOut() {
@@ -2273,6 +2279,10 @@ public class CompilerOptions {
 
   public void setInputDelimiter(String inputDelimiter) {
     this.inputDelimiter = inputDelimiter;
+  }
+
+  public void setQuoteKeywordProperties(boolean quoteKeywordProperties) {
+    this.quoteKeywordProperties = quoteKeywordProperties;
   }
 
   public void setErrorFormat(ErrorFormat errorFormat) {

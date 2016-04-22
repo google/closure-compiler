@@ -47,6 +47,7 @@ class CodeGenerator {
   private final boolean preserveTypeAnnotations;
   private final boolean trustedStrings;
   private final LanguageMode languageMode;
+  private final boolean quoteKeywordProperties;
 
   private CodeGenerator(CodeConsumer consumer) {
     cc = consumer;
@@ -55,6 +56,7 @@ class CodeGenerator {
     trustedStrings = true;
     languageMode = LanguageMode.ECMASCRIPT5;
     preserveTypeAnnotations = false;
+    quoteKeywordProperties = false;
   }
 
   static CodeGenerator forCostEstimation(CodeConsumer consumer) {
@@ -71,6 +73,7 @@ class CodeGenerator {
     this.trustedStrings = options.trustedStrings;
     this.languageMode = options.getLanguageOut();
     this.preserveTypeAnnotations = options.preserveTypeAnnotations;
+    this.quoteKeywordProperties = options.quoteKeywordProperties;
   }
 
   /**
@@ -705,9 +708,7 @@ class CodeGenerator {
           if (needsParens) {
             add(")");
           }
-          if (this.languageMode == LanguageMode.ECMASCRIPT3
-              && TokenStream.isKeyword(last.getString())) {
-            // Check for ECMASCRIPT3 keywords.
+          if (quoteKeywordProperties && TokenStream.isKeyword(last.getString())) {
             add("[");
             add(last);
             add("]");
