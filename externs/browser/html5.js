@@ -2423,8 +2423,8 @@ XMLHttpRequest.prototype.overrideMimeType = function(mimeType) {};
 XMLHttpRequest.prototype.responseType;
 
 /**
- * @type {*}
- * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-responsetype-attribute
+ * @type {?(ArrayBuffer|Blob|Document|Object|string)}
+ * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-response-attribute
  */
 XMLHttpRequest.prototype.response;
 
