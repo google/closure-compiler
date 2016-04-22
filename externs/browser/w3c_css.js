@@ -1890,6 +1890,83 @@ CSSProperties.prototype.transitionTimingFunction;
  */
 CSSProperties.prototype.pointerEvents;
 
+
+// CSS Flexbox 1
+
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#align-content-property
+ */
+CSSProperties.prototype.alignContent;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#align-items-property
+ */
+CSSProperties.prototype.alignItems;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#align-items-property
+ */
+CSSProperties.prototype.alignSelf;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-property
+ */
+CSSProperties.prototype.flex;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-basis-property
+ */
+CSSProperties.prototype.flexBasis;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-direction-property
+ */
+CSSProperties.prototype.flexDirection;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-flow-property
+ */
+CSSProperties.prototype.flexFlow;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-grow-property
+ */
+CSSProperties.prototype.flexGrow;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-shrink-property
+ */
+CSSProperties.prototype.flexShrink;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-wrap-property
+ */
+CSSProperties.prototype.flexWrap;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#justify-content-property
+ */
+CSSProperties.prototype.justifyContent;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-flexbox-1/#order-property
+ */
+CSSProperties.prototype.order;
+
+
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
  * Externs for the CSSOM View Module.
