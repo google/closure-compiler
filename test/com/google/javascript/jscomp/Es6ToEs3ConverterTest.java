@@ -628,12 +628,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  return D.prototype.foo.call(this, bar);",
             "}"));
 
-    testError("class C { constructor() { super(); } }", Es6ConvertSuper.NO_SUPERTYPE);
-
-    testError("class C { f() { super(); } }", Es6ConvertSuper.NO_SUPERTYPE);
-
-    testError("class C { static f() { super(); } }", Es6ConvertSuper.NO_SUPERTYPE);
-
     test(
         "class C { method() { class D extends C { constructor() { super(); }}}}",
         LINE_JOINER.join(
@@ -646,8 +640,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  }",
             "  $jscomp.inherits(D, C);",
             "};"));
-
-    testError("var i = super();", Es6ConvertSuper.NO_SUPERTYPE);
 
     test(
         "class D {} class C extends D { constructor() {}; f() {super();} }",

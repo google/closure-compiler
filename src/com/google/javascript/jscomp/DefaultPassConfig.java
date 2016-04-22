@@ -306,6 +306,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       checks.add(es6ExternsCheck);
+      checks.add(es6SuperCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
     }
 
@@ -1214,6 +1215,14 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new Es6ExternsCheck(compiler);
+        }
+      };
+
+  private final PassFactory es6SuperCheck =
+      new PassFactory("es6SuperCheck", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new Es6SuperCheck(compiler);
         }
       };
 
