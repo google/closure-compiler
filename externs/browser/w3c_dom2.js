@@ -803,11 +803,12 @@ HTMLSelectElement.prototype.blur = function() {};
 HTMLSelectElement.prototype.focus = function() {};
 
 /**
- * @param {number} index
+ * @param {number=} opt_index
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-33404570
+ * @override
  */
-HTMLSelectElement.prototype.remove = function(index) {};
+HTMLSelectElement.prototype.remove = function(opt_index) {};
 
 /**
  * @constructor
