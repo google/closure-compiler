@@ -806,6 +806,8 @@ HTMLSelectElement.prototype.focus = function() {};
  * @param {number} index
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-33404570
+ * @override
+ * @suppress {newCheckTypes}
  */
 HTMLSelectElement.prototype.remove = function(index) {};
 
