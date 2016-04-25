@@ -977,6 +977,13 @@ public class JSDocInfo implements Serializable {
         || (getFlag(MASK_NOSIDEEFFECTS) && !hasType());
   }
 
+  // For jsdocs that create new types. Not to be confused with jsdocs that
+  // declare the type of a variable or property.
+  public boolean containsTypeDefinition() {
+    return isConstructor() || isInterface()
+        || hasEnumParameterType() || hasTypedefType();
+  }
+
   private boolean getFlag(int mask) {
     return (bitset & mask) != 0x00;
   }

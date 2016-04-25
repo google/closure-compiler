@@ -101,7 +101,11 @@ class CodeGenerator {
     }
 
     if (preserveTypeAnnotations && n.getJSDocInfo() != null) {
-      add(JSDocInfoPrinter.print(n.getJSDocInfo()));
+      String jsdocAsString = JSDocInfoPrinter.print(n.getJSDocInfo());
+      // Don't print an empty jsdoc
+      if (!jsdocAsString.equals("/** */ ")) {
+        add(jsdocAsString);
+      }
     }
 
     int type = n.getType();

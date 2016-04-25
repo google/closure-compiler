@@ -647,6 +647,35 @@ public final class ExternExportsPassTest extends TestCase {
                     "var externalName = function(param1) {\n};\n");
   }
 
+  public void testNamespaceDefinitionInExterns() throws Exception {
+    compileAndCheck(
+        Joiner.on("\n").join(
+            "/** @const */",
+            "var ns = {};",
+            "/** @const */",
+            "ns.subns = {};",
+            "/** @constructor */",
+            "ns.subns.Foo = function() {};",
+            "goog.exportSymbol('ns.subns.Foo', ns.subns.Foo);"),
+        Joiner.on("\n").join(
+            "/**",
+            " @const",
+            " @suppress {const,duplicate}",
+            " */",
+            "var ns = {};",
+            "/**",
+            " @const",
+            " @suppress {const,duplicate}",
+            " */",
+            "ns.subns = {};",
+            "/**",
+            " * @constructor",
+            " */",
+            "ns.subns.Foo = function() {",
+            "};",
+            ""));
+  }
+
   private void compileAndCheck(String js, String expected) {
     Result result = compileAndExportExterns(js);
 

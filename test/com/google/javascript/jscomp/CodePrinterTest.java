@@ -1943,6 +1943,20 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("/** @type {foo} */ var bar;", "var bar");
   }
 
+  public void testPreserveTypeAnnotations2() {
+    preserveTypeAnnotations = true;
+
+    assertPrintSame("/** @const */ var ns={}");
+
+    assertPrintSame(
+        LINE_JOINER.join(
+            "/**",
+            " @const",
+            " @suppress {const,duplicate}",
+            " */",
+            "var ns={}"));
+  }
+
   public void testDefaultParameters() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("function f(a=0){}");
