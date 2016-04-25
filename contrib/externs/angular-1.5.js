@@ -452,7 +452,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *       function(!angular.JQLite=,!angular.Attributes=)|
  *       undefined),
  *   terminal: (boolean|undefined),
- *   transclude: (boolean|string|undefined)
+ *   transclude: (boolean|string|!Object.<string, string>|undefined)
  *   }}
  */
 angular.Directive;
