@@ -345,11 +345,10 @@ class InlineVariables implements CompilerPass {
       // 2) A reference to the variable has been inlined. We're downstream
       //    of the mechanism that creates variable references, so we don't
       //    have a good way to update the reference. Just punt on it.
-      // 3) Don't inline the property rename functions - they get removed by
-      //    later passes.
+      // 3) Don't inline the special JSC_PROPERTY_NAME_FN
       return var.isExtern()
           || compiler.getCodingConvention().isExported(var.name)
-          || compiler.getCodingConvention().isPropertyRenameFunction(var.name)
+          || NodeUtil.JSC_PROPERTY_NAME_FN.equals(var.name)
           || staleVars.contains(var);
     }
 

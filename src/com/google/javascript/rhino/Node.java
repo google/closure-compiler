@@ -1739,30 +1739,51 @@ public class Node implements Serializable {
    * each property separated by dots. If the node ultimately under the left
    * sub-tree is not a simple name, this is not a valid qualified name.
    *
-   * @param useOriginalName specifies whether the original name should be used
-   *        over the potentially renamed version
    * @return a null if this is not a qualified name, or a dot-separated string
    *         of the name and properties.
    */
-  public String getQualifiedName(Boolean useOriginalName) {
+  public String getQualifiedName() {
     if (type == Token.NAME || getBooleanProp(IS_MODULE_NAME)) {
-      String name = null;
-      if (useOriginalName) {
-        name = getOriginalName();
+      String name = getString();
+      return name.isEmpty() ? null : name;
+    } else if (type == Token.GETPROP) {
+      String left = getFirstChild().getQualifiedName();
+      if (left == null) {
+        return null;
       }
+      return left + "." + getLastChild().getString();
+    } else if (type == Token.THIS) {
+      return "this";
+    } else if (type == Token.SUPER) {
+      return "super";
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * This function takes a set of GETPROP nodes and produces a string that is
+   * each property separated by dots. If the node ultimately under the left
+   * sub-tree is not a simple name, this is not a valid qualified name. This
+   * method returns the original name of each segment rather than the renamed
+   * version.
+   *
+   * @return a null if this is not a qualified name, or a dot-separated string
+   *         of the name and properties.
+   */
+  public String getOriginalQualifiedName() {
+    if (type == Token.NAME || getBooleanProp(IS_MODULE_NAME)) {
+      String name = getOriginalName();
       if (name == null) {
         name = getString();
       }
       return name == null || name.isEmpty() ? null : name;
     } else if (type == Token.GETPROP) {
-      String left = getFirstChild().getQualifiedName(useOriginalName);
+      String left = getFirstChild().getOriginalQualifiedName();
       if (left == null) {
         return null;
       }
-      String right = null;
-      if (useOriginalName) {
-        right = getLastChild().getOriginalName();
-      }
+      String right = getLastChild().getOriginalName();
       if (right == null) {
         right = getLastChild().getString();
       }
@@ -1775,10 +1796,6 @@ public class Node implements Serializable {
     } else {
       return null;
     }
-  }
-
-  public String getQualifiedName() {
-    return getQualifiedName(false);
   }
 
 
