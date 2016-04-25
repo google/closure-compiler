@@ -789,6 +789,9 @@ PolymerEventApi.prototype.localTarget;
 /** @type {?Array<!Element>|undefined} */
 PolymerEventApi.prototype.path;
 
+/** @type {Event} */
+PolymerEventApi.prototype.event;
+
 
 Polymer.Async;
 
