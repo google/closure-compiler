@@ -72,7 +72,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckRequiresAndProvidesSorted(compiler),
                   new CheckUnusedLabels(compiler),
                   new CheckUselessBlocks(compiler),
-                  new ClosureCheckModule(compiler)));
+                  new ClosureCheckModule(compiler),
+                  new Es6SuperCheck(compiler)));
         }
       };
 

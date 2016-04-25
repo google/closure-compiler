@@ -500,6 +500,14 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
+   * Verifies that the compiler generates the given error and description for the given input.
+   */
+  public void testError(String js, DiagnosticType error, String description) {
+    assertNotNull(error);
+    test(js, null, error, null, description);
+  }
+
+  /**
    * Verifies that the compiler generates the given error for the given input.
    *
    * @param js Input

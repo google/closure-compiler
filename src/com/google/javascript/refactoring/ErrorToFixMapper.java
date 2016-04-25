@@ -78,6 +78,8 @@ public final class ErrorToFixMapper {
         return getFixForInexistentProperty(error);
       case "JSC_MISSING_CALL_TO_SUPER":
         return getFixForMissingSuper(error);
+      case "JSC_INVALID_SUPER_CALL_WITH_SUGGESTION":
+        return getFixForInvalidSuper(error, compiler);
       case "JSC_MISSING_REQUIRE_WARNING":
       case "JSC_MISSING_REQUIRE_CALL_WARNING":
         return getFixForMissingRequire(error, compiler);
@@ -122,6 +124,17 @@ public final class ErrorToFixMapper {
         .setOriginalMatchedNode(error.node)
         .addChildToFront(body, "super();")
         .build();
+  }
+
+  private static SuggestedFix getFixForInvalidSuper(JSError error, AbstractCompiler compiler) {
+    Matcher m = DID_YOU_MEAN.matcher(error.description);
+    if (m.matches()) {
+      return new SuggestedFix.Builder()
+          .setOriginalMatchedNode(error.node)
+          .replace(error.node, NodeUtil.newQName(compiler, m.group(1)), compiler)
+          .build();
+    }
+    return null;
   }
 
   private static SuggestedFix getFixForInexistentProperty(JSError error) {
