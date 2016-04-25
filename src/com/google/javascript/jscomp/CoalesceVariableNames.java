@@ -113,7 +113,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     // If the function has exactly 2 params, mark them as escaped. This is
     // a work-around for an IE bug where it throws an exception if you
     // write to the parameters of the callback in a sort(). See:
-    // http://code.google.com/p/closure-compiler/issues/detail?id=58
+    // http://blickly.github.io/closure-compiler-issues/#58
     if (scope.getRootNode().getSecondChild().getChildCount() == 2) {
       liveness.markAllParametersEscaped();
     }
