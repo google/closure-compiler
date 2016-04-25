@@ -1434,7 +1434,7 @@ public class Compiler extends AbstractCompiler {
           SourceInformationAnnotator sia =
               new SourceInformationAnnotator(
                   input.getName(), options.devMode != DevMode.OFF);
-          NodeTraversal.traverse(this, n, sia);
+          NodeTraversal.traverseEs6(this, n, sia);
         }
 
         jsRoot.addChildToBack(n);
