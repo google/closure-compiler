@@ -383,7 +383,7 @@ class RenameProperties implements CompilerPass {
             }
           } else if (NodeUtil.isFunctionExpression(n) && parent.isAssign()
               && parent.getFirstChild().isGetProp()
-              && t.getCompiler().getCodingConvention().isPropertyRenameFunction(
+              && compiler.getCodingConvention().isPropertyRenameFunction(
                   parent.getFirstChild().getOriginalQualifiedName())) {
             Node exprResult = parent.getParent();
             if (exprResult.isExprResult() && NodeUtil.isStatementBlock(exprResult.getParent())

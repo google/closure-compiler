@@ -466,7 +466,7 @@ class AmbiguateProperties implements CompilerPass {
             renameFunctionName = target.getString();
           }
           if (renameFunctionName == null ||
-              !t.getCompiler().getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
+              !compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
             break;
           }
 
@@ -476,7 +476,6 @@ class AmbiguateProperties implements CompilerPass {
                 DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
                 renameFunctionName,
                 " Must be called with exactly 2 arguments."));
-
             break;
           }
 
@@ -487,7 +486,6 @@ class AmbiguateProperties implements CompilerPass {
                 DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
                 renameFunctionName,
                 " The first argument must be a string literal."));
-
             break;
           }
 
@@ -497,7 +495,6 @@ class AmbiguateProperties implements CompilerPass {
                 DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
                 renameFunctionName,
                 " The first argument must not be a property path."));
-
             break;
           }
 

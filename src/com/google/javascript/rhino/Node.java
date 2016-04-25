@@ -1777,7 +1777,7 @@ public class Node implements Serializable {
       if (name == null) {
         name = getString();
       }
-      return name == null || name.isEmpty() ? null : name;
+      return name.isEmpty() ? null : name;
     } else if (type == Token.GETPROP) {
       String left = getFirstChild().getOriginalQualifiedName();
       if (left == null) {
