@@ -53,10 +53,35 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     return subtree;
   }
 
+  /**
+   * Replace coding convention specified property renaming functions with
+   * a JSCompiler_renameProperty call as the optimization passes already
+   * special case that function.
+   */
+  private Node tryReplacePropertyRenameFunction(Node subtree) {
+    Node callTarget = subtree.getFirstChild();
+    String callName = callTarget.getOriginalQualifiedName();
+
+    if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(callName)) {
+      return subtree;
+    }
+
+    Node newTarget = IR.name(NodeUtil.JSC_PROPERTY_NAME_FN).copyInformationFrom(callTarget);
+    newTarget.setOriginalName(callName);
+
+    subtree.replaceChild(callTarget, newTarget);
+    return subtree;
+  }
+
   private Node tryFoldKnownMethods(Node subtree) {
     // For now we only support string methods .join(),
     // .indexOf(), .substring() and .substr()
     // and numeric methods parseInt() and parseFloat().
+    //
+    // We also replace coding convention specified property
+    // renaming functions with the special JSCompiler_renameProperty
+    // method since multiple optimization passes already special-case
+    // that function.
 
     subtree = tryFoldArrayJoin(subtree);
 
@@ -66,7 +91,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         return subtree;
       }
 
-      if (NodeUtil.isGet(callTarget)) {
+      if (getCodingConvention().isPropertyRenameFunction(callTarget.getOriginalQualifiedName())) {
+        subtree = tryReplacePropertyRenameFunction(subtree);
+      } else if (NodeUtil.isGet(callTarget)) {
         subtree = tryFoldKnownStringMethods(subtree);
       } else {
         subtree = tryFoldKnownNumericMethods(subtree);

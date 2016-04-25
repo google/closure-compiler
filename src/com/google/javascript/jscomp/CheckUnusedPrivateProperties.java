@@ -135,12 +135,11 @@ class CheckUnusedPrivateProperties
        }
 
        case Token.CALL:
-         // Look for properties referenced through property renaming functions such as
-         // JSCompiler_renameProperty and goog.reflect.objectProperty.
+         // Look for properties referenced through "JSCompiler_renameProperty".
          Node target = n.getFirstChild();
          if (n.hasMoreThanOneChild()
-             && target.isQualifiedName()
-             && compiler.getCodingConvention().isPropertyRenameFunction(target.getQualifiedName(true))) {
+             && target.isName()
+             && target.getString().equals(NodeUtil.JSC_PROPERTY_NAME_FN)) {
            Node propName = target.getNext();
            if (propName.isString()) {
              used.add(propName.getString());

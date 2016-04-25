@@ -370,9 +370,8 @@ class InlineFunctions implements CompilerPass {
       return false;
     }
 
-    // Don't inline property rename functions. They get completely removed
-    // from the AST by later passes.
-    if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
+    // Don't inline this special function
+    if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(fnName)) {
       return false;
     }
 

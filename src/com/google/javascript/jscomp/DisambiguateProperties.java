@@ -92,15 +92,15 @@ class DisambiguateProperties implements CompilerPass {
 
   static class Warnings {
     // TODO(user): {1} and {2} are not exactly useful for most people.
-    static final DiagnosticType INVALIDATION = DiagnosticType.disabled(
+    static final DiagnosticType INVALIDATION = DiagnosticType.warning(
         "JSC_INVALIDATION",
         "Property disambiguator skipping all instances of property {0} "
-        + "because of type {1} node {2}. {3}");
+            + "because of type {1} node {2}. {3}");
 
-    static final DiagnosticType INVALIDATION_ON_TYPE = DiagnosticType.disabled(
+    static final DiagnosticType INVALIDATION_ON_TYPE = DiagnosticType.warning(
         "JSC_INVALIDATION_TYPE",
         "Property disambiguator skipping instances of property {0} "
-        + "on type {1}. {2}");
+            + "on type {1}. {2}");
 
     static final DiagnosticType INVALID_RENAME_FUNCTION = DiagnosticType.error(
         "JSC_INVALID_RENAME_FUNCTION",
@@ -532,8 +532,17 @@ class DisambiguateProperties implements CompilerPass {
     }
 
     private void handleCall(NodeTraversal t, Node n) {
-      String renameFunctionName = n.getFirstChild().getQualifiedName(true);
-      if (!t.getCompiler().getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
+      Node target = n.getFirstChild();
+      if (target == null || !target.isName()) {
+        return;
+      }
+
+      String renameFunctionName = target.getOriginalName();
+      if (renameFunctionName == null) {
+        renameFunctionName = target.getString();
+      }
+      if (renameFunctionName == null ||
+          !t.getCompiler().getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
         return;
       }
 
@@ -542,7 +551,7 @@ class DisambiguateProperties implements CompilerPass {
             n,
             Warnings.INVALID_RENAME_FUNCTION,
             renameFunctionName,
-            " Must be called with exactly 2 arguments."));
+            " Must be called with exactly 2 arguments"));
 
         return;
       }
@@ -557,9 +566,9 @@ class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      String name = n.getSecondChild().getString();
+      String propName = n.getSecondChild().getString();
 
-      if (name.split("\\.").length > 1) {
+      if (propName.split("\\.").length > 1) {
         compiler.report(JSError.make(
             n,
             Warnings.INVALID_RENAME_FUNCTION,
@@ -571,11 +580,11 @@ class DisambiguateProperties implements CompilerPass {
 
       Node obj = n.getChildAtIndex(2);
       JSType type = getType(obj);
-      Property prop = getProperty(name);
+      Property prop = getProperty(propName);
       if (!prop.scheduleRenaming(
           n.getSecondChild(),
           processProperty(t, prop, type, null))
-          && propertiesToErrorFor.containsKey(name)) {
+          && propertiesToErrorFor.containsKey(propName)) {
         String suggestion = "";
         if (type instanceof JSType) {
           JSType jsType = (JSType) type;
@@ -596,8 +605,8 @@ class DisambiguateProperties implements CompilerPass {
             }
           }
         }
-        compiler.report(JSError.make(n, propertiesToErrorFor.get(name),
-            Warnings.INVALIDATION, name, String.valueOf(type), renameFunctionName,
+        compiler.report(JSError.make(n, propertiesToErrorFor.get(propName),
+            Warnings.INVALIDATION, propName, String.valueOf(type), renameFunctionName,
             suggestion));
       }
     }

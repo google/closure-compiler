@@ -456,7 +456,15 @@ class AmbiguateProperties implements CompilerPass {
           break;
         }
         case Token.CALL: {
-          String renameFunctionName = n.getFirstChild().getQualifiedName(true);
+          Node target = n.getFirstChild();
+          if (target == null || !target.isName()) {
+            break;
+          }
+
+          String renameFunctionName = target.getOriginalName();
+          if (renameFunctionName == null) {
+            renameFunctionName = target.getString();
+          }
           if (renameFunctionName == null ||
               !t.getCompiler().getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
             break;

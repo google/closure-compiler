@@ -350,8 +350,9 @@ class RenameProperties implements CompilerPass {
         case Token.CALL: {
           // We replace property renaming function calls with a string
           // containing the renamed property.
-          String renameFunctionName = n.getFirstChild().getQualifiedName(true);
-          if (t.getCompiler().getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
+          Node fnName = n.getFirstChild();
+          if (fnName.isName() &&
+              NodeUtil.JSC_PROPERTY_NAME_FN.equals(fnName.getString())) {
             callNodeToParentMap.put(n, parent);
             countCallCandidates(t, n);
           }
@@ -360,10 +361,9 @@ class RenameProperties implements CompilerPass {
         case Token.FUNCTION: {
           // We eliminate any stub implementations of JSCompiler_renameProperty
           // that we encounter.
-          String renameFunctionName;
           if (NodeUtil.isFunctionDeclaration(n)) {
-            renameFunctionName = n.getFirstChild().getQualifiedName(true);
-            if (t.getCompiler().getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
+            String name = n.getFirstChild().getString();
+            if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)) {
               if (parent.isExprResult()) {
                 parent.detachFromParent();
               } else {
@@ -371,14 +371,24 @@ class RenameProperties implements CompilerPass {
               }
               compiler.reportCodeChange();
             }
-          } else if (parent.isQualifiedName() &&
-              t.getCompiler().getCodingConvention().isPropertyRenameFunction(parent.getQualifiedName(true))) {
+          } else if (parent.isName() &&
+              NodeUtil.JSC_PROPERTY_NAME_FN.equals(parent.getString())) {
             Node varNode = parent.getParent();
             if (varNode.isVar()) {
               varNode.removeChild(parent);
               if (!varNode.hasChildren()) {
                 varNode.detachFromParent();
               }
+              compiler.reportCodeChange();
+            }
+          } else if (NodeUtil.isFunctionExpression(n) && parent.isAssign()
+              && parent.getFirstChild().isGetProp()
+              && t.getCompiler().getCodingConvention().isPropertyRenameFunction(
+                  parent.getFirstChild().getOriginalQualifiedName())) {
+            Node exprResult = parent.getParent();
+            if (exprResult.isExprResult() && NodeUtil.isStatementBlock(exprResult.getParent())
+                && exprResult.getFirstChild().isAssign()) {
+              exprResult.detachFromParent();
               compiler.reportCodeChange();
             }
           }
@@ -409,7 +419,10 @@ class RenameProperties implements CompilerPass {
      * @param t The traversal
      */
     private void countCallCandidates(NodeTraversal t, Node callNode) {
-      String fnName = callNode.getFirstChild().getQualifiedName();
+      String fnName = callNode.getFirstChild().getOriginalName();
+      if (fnName == null) {
+        fnName = callNode.getFirstChild().getString();
+      }
       Node firstArg = callNode.getSecondChild();
       if (!firstArg.isString()) {
         t.report(callNode, BAD_CALL, fnName);
