@@ -31,7 +31,8 @@ opera.version = function() {};
 function XSLTProcessor() {}
 
 /**
- * @constructor @extends {Element}
+ * @constructor
+ * @extends {HTMLOptionElement}
  * @param {*=} opt_text
  * @param {*=} opt_value
  * @param {*=} opt_defaultSelected
