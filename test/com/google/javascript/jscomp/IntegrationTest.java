@@ -1877,15 +1877,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, expected);
   }
 
-  public void testCoalesceVariableNames() {
-    CompilerOptions options = createCompilerOptions();
-    String code = "function f() {var x = 3; var y = x; var z = y; return z;}";
-    testSame(options, code);
-
-    options.setCoalesceVariableNames(true);
-    test(options, code, "function f() {var x = 3; x = x; x = x; return x;}");
-  }
-
   public void testPropertyRenaming() {
     CompilerOptions options = createCompilerOptions();
     String code =
@@ -2492,7 +2483,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, source, expected);
   }
 
-  public void testCoaleseVariables() {
+  public void testCoalesceVariableNames() {
+    CompilerOptions options = createCompilerOptions();
+    String code = "function f() {var x = 3; var y = x; var z = y; return z;}";
+    testSame(options, code);
+
+    options.setCoalesceVariableNames(true);
+    test(options, code, "function f() {var x = 3; x = x; x = x; return x;}");
+  }
+
+  public void testCoalesceVariables() {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
     options.setFoldConstants(false);
