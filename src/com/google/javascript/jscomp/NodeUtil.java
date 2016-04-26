@@ -657,7 +657,7 @@ public final class NodeUtil {
         return true;
 
       case Token.REGEXP:
-        // Return true only if all children are const.
+        // Return true only if all descendants are const.
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
           if (!isLiteralValue(child, includeFunctions)) {
@@ -2934,7 +2934,7 @@ public final class NodeUtil {
   }
 
   /**
-   * @return true if n or any of its children are of the specified type
+   * @return true if n or any of its descendants are of the specified type.
    */
   static boolean containsType(Node node,
                               int type,
@@ -2943,7 +2943,7 @@ public final class NodeUtil {
   }
 
   /**
-   * @return true if n or any of its children are of the specified type
+   * @return true if n or any of its descendants are of the specified type.
    */
   public static boolean containsType(Node node, int type) {
     return containsType(node, type, Predicates.<Node>alwaysTrue());
@@ -3613,7 +3613,7 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the predicate is true for the node or any of its children.
+   * @return Whether the predicate is true for the node or any of its descendants.
    */
   public static boolean has(Node node,
                      Predicate<Node> pred,
@@ -3637,7 +3637,7 @@ public final class NodeUtil {
 
   /**
    * @return The number of times the the predicate is true for the node
-   * or any of its children.
+   * or any of its descendants.
    */
   public static int getCount(
       Node n, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
@@ -3681,7 +3681,7 @@ public final class NodeUtil {
   }
 
   /**
-   * A post-order traversal, calling Visitor.visit for each child matching
+   * A post-order traversal, calling Visitor.visit for each descendant matching
    * the predicate.
    */
   public static void visitPostOrder(Node node,
