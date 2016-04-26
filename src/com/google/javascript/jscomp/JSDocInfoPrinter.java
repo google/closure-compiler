@@ -168,7 +168,7 @@ public final class JSDocInfoPrinter {
       // Print suppressions in sorted order to avoid non-deterministic output.
       String[] arr = suppressions.toArray(new String[0]);
       Arrays.sort(arr, Ordering.<String>natural());
-      parts.add("@suppress {" + Joiner.on(',').join(Arrays.asList(arr)) + "}");
+      parts.add("@suppress {" + Joiner.on(',').join(arr) + "}");
       multiline = true;
     }
 
