@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
+import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
@@ -1613,21 +1614,23 @@ public final class DefaultPassConfig extends PassConfig {
 
   private final HotSwapPassFactory lintChecks =
       new HotSwapPassFactory("lintChecks", true) {
-    @Override
-    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder()
-          .add(new CheckEmptyStatements(compiler))
-          .add(new CheckEnums(compiler))
-          .add(new CheckInterfaces(compiler))
-          .add(new CheckJSDocStyle(compiler))
-          .add(new CheckMissingSemicolon(compiler))
-          .add(new CheckPrototypeProperties(compiler))
-          .add(new CheckUnusedLabels(compiler))
-          .add(new CheckUnusedPrivateProperties(compiler))
-          .add(new CheckUselessBlocks(compiler));
-      return combineChecks(compiler, callbacks.build());
-    }
-  };
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          ImmutableList.Builder<Callback> callbacks =
+              ImmutableList.<Callback>builder()
+                  .add(new CheckEmptyStatements(compiler))
+                  .add(new CheckEnums(compiler))
+                  .add(new CheckInterfaces(compiler))
+                  .add(new CheckJSDocStyle(compiler))
+                  .add(new CheckMissingSemicolon(compiler))
+                  .add(new CheckPrimitiveAsObject(compiler))
+                  .add(new CheckPrototypeProperties(compiler))
+                  .add(new CheckUnusedLabels(compiler))
+                  .add(new CheckUnusedPrivateProperties(compiler))
+                  .add(new CheckUselessBlocks(compiler));
+          return combineChecks(compiler, callbacks.build());
+        }
+      };
 
   private final HotSwapPassFactory analyzerChecks =
       new HotSwapPassFactory("analyzerChecks", true) {

@@ -23,13 +23,13 @@ import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
+import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 
 import java.util.List;
-
 
 /**
  * A PassConfig for the standalone linter, which runs on a single file at a time. This runs a
@@ -69,6 +69,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckJSDoc(compiler),
                   new CheckMissingSemicolon(compiler),
                   new CheckMissingSuper(compiler),
+                  new CheckPrimitiveAsObject(compiler),
                   new CheckRequiresAndProvidesSorted(compiler),
                   new CheckUnusedLabels(compiler),
                   new CheckUselessBlocks(compiler),
