@@ -92,12 +92,12 @@ class DisambiguateProperties implements CompilerPass {
 
   static class Warnings {
     // TODO(user): {1} and {2} are not exactly useful for most people.
-    static final DiagnosticType INVALIDATION = DiagnosticType.disabled(
+    static final DiagnosticType INVALIDATION = DiagnosticType.warning(
         "JSC_INVALIDATION",
         "Property disambiguator skipping all instances of property {0} "
             + "because of type {1} node {2}. {3}");
 
-    static final DiagnosticType INVALIDATION_ON_TYPE = DiagnosticType.disabled(
+    static final DiagnosticType INVALIDATION_ON_TYPE = DiagnosticType.warning(
         "JSC_INVALIDATION_TYPE",
         "Property disambiguator skipping instances of property {0} "
             + "on type {1}. {2}");
@@ -537,10 +537,7 @@ class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      String renameFunctionName = target.getOriginalName();
-      if (renameFunctionName == null) {
-        renameFunctionName = target.getString();
-      }
+      String renameFunctionName = target.getOriginalQualifiedName();
       if (renameFunctionName == null ||
           !compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
         return;

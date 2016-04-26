@@ -308,15 +308,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt(021, 8)", "x = 15");
   }
 
-  public void testReplacePropertyRenamingFunctions() {
-    fold("/** @const */ var goog = {}; /** @const */ goog.reflect = {};"
-            + "goog.reflect.objectProperty = function(a, b) { return a; };"
-            + "var foo = {a: 'a'}; goog.reflect.objectProperty('a', foo);",
-        "/** @const */ var goog = {}; /** @const */ goog.reflect = {};"
-            + "goog.reflect.objectProperty = function(a, b) { return a; };"
-            + "var foo = {a: 'a'}; JSCompiler_renameProperty('a', foo);");
-  }
-
   @Override
   protected int getNumRepetitions() {
     // Reduce this to 2 if we get better expression evaluators.

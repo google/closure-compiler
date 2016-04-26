@@ -140,7 +140,7 @@ class InlineObjectLiterals implements CompilerPass {
       return var.isGlobal()
           || var.isExtern()
           || compiler.getCodingConvention().isExported(var.name)
-          || NodeUtil.JSC_PROPERTY_NAME_FN.equals(var.name)
+          || compiler.getCodingConvention().isPropertyRenameFunction(var.nameNode.getQualifiedName())
           || staleVars.contains(var);
     }
 
