@@ -151,8 +151,7 @@ class RemoveUnusedClassProperties
          // Look for properties referenced through "JSCompiler_renameProperty".
          Node target = n.getFirstChild();
          if (n.hasMoreThanOneChild()
-             && target.isName()
-             && target.getString().equals(NodeUtil.JSC_PROPERTY_NAME_FN)) {
+             && compiler.getCodingConvention().isPropertyRenameFunction(target.getOriginalQualifiedName())) {
            Node propName = target.getNext();
            if (propName.isString()) {
              used.add(propName.getString());

@@ -537,10 +537,7 @@ class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      String renameFunctionName = target.getOriginalName();
-      if (renameFunctionName == null) {
-        renameFunctionName = target.getString();
-      }
+      String renameFunctionName = target.getOriginalQualifiedName();
       if (renameFunctionName == null ||
           !compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
         return;
@@ -601,10 +598,11 @@ class DisambiguateProperties implements CompilerPass {
               suggestion += Joiner.on("\n").join(errors);
             }
           }
+
+          compiler.report(JSError.make(n, propertiesToErrorFor.get(propName),
+              Warnings.INVALIDATION, propName, String.valueOf(type), renameFunctionName,
+              suggestion));
         }
-        compiler.report(JSError.make(n, propertiesToErrorFor.get(propName),
-            Warnings.INVALIDATION, propName, String.valueOf(type), renameFunctionName,
-            suggestion));
       }
     }
 

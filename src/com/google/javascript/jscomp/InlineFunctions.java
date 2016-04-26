@@ -371,7 +371,7 @@ class InlineFunctions implements CompilerPass {
     }
 
     // Don't inline this special function
-    if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(fnName)) {
+    if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
       return false;
     }
 

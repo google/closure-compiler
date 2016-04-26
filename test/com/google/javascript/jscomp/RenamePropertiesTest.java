@@ -29,12 +29,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
       "var window;" +
       "prop.toString;" +
       "var google = { gears: { factory: {}, workerPool: {} } };";
-
-  private static final String GOOG_REFLECT_OBJECTPROPERTY =
-      "/** @const */ var goog = {};"
-      + "/** @const */ goog.reflect = {};"
-      + "goog.reflect.objectProperty = function(a, b) { return a; };";
-
+  
   private RenameProperties renameProperties;
 
   private static boolean generatePseudoNames = false;

@@ -348,7 +348,7 @@ class InlineVariables implements CompilerPass {
       // 3) Don't inline the special JSC_PROPERTY_NAME_FN
       return var.isExtern()
           || compiler.getCodingConvention().isExported(var.name)
-          || NodeUtil.JSC_PROPERTY_NAME_FN.equals(var.name)
+          || compiler.getCodingConvention().isPropertyRenameFunction(var.nameNode.getOriginalQualifiedName())
           || staleVars.contains(var);
     }
 
