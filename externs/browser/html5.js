@@ -2095,13 +2095,37 @@ DataTransferItemList.prototype.clear = function() {};
 /** @type {!DataTransferItemList} */
 DataTransfer.prototype.items;
 
+/**
+ * @typedef {{
+ *   bubbles: (boolean|undefined),
+ *   cancelable: (boolean|undefined),
+ *   view: (Window|undefined),
+ *   detail: (number|undefined),
+ *   screenX: (number|undefined),
+ *   screenY: (number|undefined),
+ *   clientX: (number|undefined),
+ *   clientY: (number|undefined),
+ *   ctrlKey: (boolean|undefined),
+ *   shiftKey: (boolean|undefined),
+ *   altKey: (boolean|undefined),
+ *   metaKey: (boolean|undefined),
+ *   button: (number|undefined),
+ *   buttons: (number|undefined),
+ *   relatedTarget: (EventTarget|undefined),
+ *   dataTransfer: (DataTransfer|undefined)
+ * }}
+ */
+var DragEventInit;
+
 
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#the-dragevent-interface
  * @constructor
  * @extends {MouseEvent}
+ * @param {string} type
+ * @param {DragEventInit=} opt_eventInitDict
  */
-function DragEvent() {}
+function DragEvent(type, opt_eventInitDict) {}
 
 /** @type {DataTransfer} */
 DragEvent.prototype.dataTransfer;
