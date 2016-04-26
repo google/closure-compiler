@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.deps;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -395,52 +394,14 @@ public class DepsGenerator {
   /**
    * Writes goog.addDependency() lines for each DependencyInfo in depInfos.
    */
-  private void writeDepInfos(PrintStream out, Collection<DependencyInfo> depInfos) {
+  private void writeDepInfos(PrintStream out, Collection<DependencyInfo> depInfos)
+      throws IOException {
     // Print dependencies.
     // Lines look like this:
     // goog.addDependency('../../path/to/file.js', ['goog.Delay'],
     //     ['goog.Disposable', 'goog.Timer']);
     for (DependencyInfo depInfo : depInfos) {
-      Collection<String> provides = depInfo.getProvides();
-      Collection<String> requires = depInfo.getRequires();
-
-      out.print("goog.addDependency('" +
-          depInfo.getPathRelativeToClosureBase() + "', ");
-      writeJsArray(out, provides);
-      out.print(", ");
-      writeJsArray(out, requires);
-      Map<String, String> loadFlags = depInfo.getLoadFlags();
-      if (!loadFlags.isEmpty()) {
-        out.print(", ");
-        writeJsObject(out, loadFlags);
-      }
-      out.println(");");
-    }
-  }
-
-  private static void writeJsObject(PrintStream out, Map<String, String> map) {
-    List<String> entries = new ArrayList<>();
-    for (Map.Entry<String, String> entry : map.entrySet()) {
-      String key = entry.getKey().replace("'", "\\'");
-      String value = entry.getValue().replace("'", "\\'");
-      entries.add("'" + key + "': '" + value + "'");
-    }
-    out.print("{");
-    out.print(Joiner.on(", ").join(entries));
-    out.print("}");
-  }
-
-  /**
-   * Prints a list of strings formatted as a JavaScript array of string
-   * literals.
-   */
-  private static void writeJsArray(PrintStream out, Collection<String> values) {
-    if (values.isEmpty()) {
-      out.print("[]");
-    } else {
-      out.print("['");
-      out.print(Joiner.on("', '").join(values));
-      out.print("']");
+      DependencyInfo.Util.writeAddDependency(out, depInfo);
     }
   }
 
