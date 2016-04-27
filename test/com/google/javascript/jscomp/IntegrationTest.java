@@ -712,16 +712,31 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        "/** @return {number} */\n"
-        + "function f() {\n"
-        + "  return 'asdf';\n"
-        + "}",
+        LINE_JOINER.join(
+            "/** @return {number} */",
+            "function f() {",
+            "  return 'asdf';",
+            "}"),
         NewTypeInference.RETURN_NONDECLARED_TYPE);
 
     test(
         options,
         "/** @type {ASDF} */ var x;",
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    options.setWarningLevel(
+        DiagnosticGroups.OLD_REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
+    testSame(options, "function f(/** ? */ x) { x; }");
+    options.setWarningLevel(
+        DiagnosticGroups.OLD_REPORT_UNKNOWN_TYPES, CheckLevel.OFF);
+
+    testSame(
+        options,
+        LINE_JOINER.join(
+            "(function() {",
+            "  /** @constructor */",
+            "  var Boolean = function() {};",
+            "})();"));
   }
 
   public void testNTInoMaskTypeParseError() {

@@ -47,8 +47,8 @@ public class DiagnosticGroups {
   static final DiagnosticType UNUSED =
       DiagnosticType.warning("JSC_UNUSED", "{0}");
 
-  public static final Set<String> wildcardExcludedGroups =
-      ImmutableSet.of("reportUnknownTypes", "analyzerChecks");
+  public static final Set<String> wildcardExcludedGroups = ImmutableSet.of(
+      "reportUnknownTypes", "analyzerChecks", "oldReportUnknownTypes");
 
   public DiagnosticGroups() {}
 
@@ -321,6 +321,11 @@ public class DiagnosticGroups {
           CheckEventfulObjectDisposal.OVERWRITE_PRIVATE_EVENTFUL_OBJECT,
           CheckEventfulObjectDisposal.UNLISTEN_WITH_ANONBOUND);
 
+  public static final DiagnosticGroup OLD_REPORT_UNKNOWN_TYPES =
+      DiagnosticGroups.registerGroup("oldReportUnknownTypes", // undocumented
+          TypeCheck.UNKNOWN_EXPR_TYPE);
+
+  // TODO(dimvar): Will add the diagnostic type for NTI here in future CL.
   public static final DiagnosticGroup REPORT_UNKNOWN_TYPES =
       DiagnosticGroups.registerGroup("reportUnknownTypes",
           TypeCheck.UNKNOWN_EXPR_TYPE);

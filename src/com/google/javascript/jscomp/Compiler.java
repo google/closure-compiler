@@ -357,7 +357,15 @@ public class Compiler extends AbstractCompiler {
     if (options.getNewTypeInference()) {
       options.checkTypes = true;
       if (!options.reportOTIErrorsUnderNTI) {
-        options.setWarningLevel(DiagnosticGroups.OLD_CHECK_TYPES, CheckLevel.OFF);
+        options.setWarningLevel(
+            DiagnosticGroups.OLD_CHECK_TYPES,
+            CheckLevel.OFF);
+        options.setWarningLevel(
+            DiagnosticGroups.OLD_REPORT_UNKNOWN_TYPES,
+            CheckLevel.OFF);
+        options.setWarningLevel(
+            FunctionTypeBuilder.ALL_DIAGNOSTICS,
+            CheckLevel.OFF);
       }
       options.setWarningLevel(
           DiagnosticGroup.forType(RhinoErrorReporter.TYPE_PARSE_ERROR),
