@@ -218,6 +218,11 @@ public final class NodeUtilTest extends TestCase {
     assertEquals("true", NodeUtil.getStringValue(getNode("true")));
     assertEquals("10", NodeUtil.getStringValue(getNode("10")));
     assertEquals("1", NodeUtil.getStringValue(getNode("1.0")));
+
+    /* See https://github.com/google/closure-compiler/issues/1262 */
+    assertEquals(
+        "1.2323919403474454e+21", NodeUtil.getStringValue(getNode("1.2323919403474454e+21")));
+
     assertEquals("0", NodeUtil.getStringValue(getNode("'0'")));
     assertEquals(null, NodeUtil.getStringValue(getNode("/a/")));
     assertEquals("[object Object]", NodeUtil.getStringValue(getNode("{}")));
