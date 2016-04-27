@@ -325,10 +325,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("oldReportUnknownTypes", // undocumented
           TypeCheck.UNKNOWN_EXPR_TYPE);
 
-  // TODO(dimvar): Will add the diagnostic type for NTI here in future CL.
   public static final DiagnosticGroup REPORT_UNKNOWN_TYPES =
       DiagnosticGroups.registerGroup("reportUnknownTypes",
-          TypeCheck.UNKNOWN_EXPR_TYPE);
+          TypeCheck.UNKNOWN_EXPR_TYPE,
+          NewTypeInference.UNKNOWN_EXPR_TYPE);
 
   public static final DiagnosticGroup CHECK_VARIABLES =
       DiagnosticGroups.registerGroup("checkVars",

@@ -16443,4 +16443,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "ns.prop = Foo.prototype.method;"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
+
+  public void testReportUknownTypes() {
+    reportUnknownTypes = true;
+
+    typeCheck(
+        "globalvar;",
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+
+    typeCheck(
+        "function f(/** ? */ x) { return x; }",
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+
+    typeCheck(
+        "({})['asdf' + 'qwer'];",
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+  }
 }

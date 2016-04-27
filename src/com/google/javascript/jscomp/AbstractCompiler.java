@@ -176,9 +176,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Used only by the new type inference
    */
-  abstract GlobalTypeInfo getSymbolTable();
+  abstract CompilerPass getSymbolTable();
 
-  abstract void setSymbolTable(GlobalTypeInfo symbolTable);
+  abstract void setSymbolTable(CompilerPass symbolTable);
 
   /**
    * Used by three passes that run in sequence (optimize-returns,

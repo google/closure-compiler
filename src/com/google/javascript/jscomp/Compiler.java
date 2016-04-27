@@ -1316,8 +1316,10 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  void setSymbolTable(GlobalTypeInfo symbolTable) {
-    this.symbolTable = symbolTable;
+  void setSymbolTable(CompilerPass symbolTable) {
+    Preconditions.checkArgument(
+        symbolTable == null || symbolTable instanceof GlobalTypeInfo);
+    this.symbolTable = (GlobalTypeInfo) symbolTable;
   }
 
   @Override

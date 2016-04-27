@@ -725,10 +725,13 @@ public final class IntegrationTest extends IntegrationTestCase {
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
 
     options.setWarningLevel(
-        DiagnosticGroups.OLD_REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
-    testSame(options, "function f(/** ? */ x) { x; }");
+        DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
+    test(
+        options,
+        "function f(/** ? */ x) { x; }",
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
     options.setWarningLevel(
-        DiagnosticGroups.OLD_REPORT_UNKNOWN_TYPES, CheckLevel.OFF);
+        DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.OFF);
 
     testSame(
         options,

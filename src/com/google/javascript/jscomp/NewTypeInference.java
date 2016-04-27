@@ -108,13 +108,6 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_POSSIBLY_INEXISTENT_PROPERTY",
           "Property {0} may not be present on {1}.");
 
-  // Not part of ALL_DIAGNOSTICS because it should not be enabled with
-  // --jscomp_error=newCheckTypes. It should only be enabled explicitly.
-  static final DiagnosticType NULLABLE_DEREFERENCE =
-      DiagnosticType.disabled(
-          "JSC_NTI_NULLABLE_DEREFERENCE",
-          "Attempt to use nullable type {0}.");
-
   static final DiagnosticType PROPERTY_ACCESS_ON_NONOBJECT =
       DiagnosticType.warning(
           "JSC_NTI_PROPERTY_ACCESS_ON_NONOBJECT",
@@ -276,6 +269,19 @@ final class NewTypeInference implements CompilerPass {
           "Cannot determine the type of namespace property {0}. "
           + "Maybe a prefix of the property name has been redefined?");
 
+  // Not part of ALL_DIAGNOSTICS because it should not be enabled with
+  // --jscomp_error=newCheckTypes. It should only be enabled explicitly.
+
+  static final DiagnosticType NULLABLE_DEREFERENCE =
+      DiagnosticType.disabled(
+          "JSC_NTI_NULLABLE_DEREFERENCE",
+          "Attempt to use nullable type {0}.");
+
+  static final DiagnosticType UNKNOWN_EXPR_TYPE =
+      DiagnosticType.disabled(
+          "JSC_NTI_UNKNOWN_EXPR_TYPE",
+          "This expression has the unknown type.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
       BOTTOM_INDEX_TYPE,
@@ -350,6 +356,9 @@ final class NewTypeInference implements CompilerPass {
   private static final String SETTER_PREFIX = "%setter_fun";
   private final String ABSTRACT_METHOD_NAME;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
+  // To avoid creating warning objects for disabled warnings
+  private final boolean reportUnknownTypes;
+  private final boolean reportNullDeref;
 
   // Used only for development
   private static boolean showDebuggingPrints = false;
@@ -364,6 +373,10 @@ final class NewTypeInference implements CompilerPass {
     this.summaries = new LinkedHashMap<>();
     this.deferredChecks = new LinkedHashMap<>();
     this.ABSTRACT_METHOD_NAME = convention.getAbstractMethodName();
+    this.reportUnknownTypes =
+        compiler.getOptions().enables(DiagnosticGroups.REPORT_UNKNOWN_TYPES);
+    this.reportNullDeref = compiler.getOptions()
+        .enables(DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS);
     assertionFunctionsMap = new LinkedHashMap<>();
     for (AssertionFunctionSpec assertionFunction : convention.getAssertionFunctions()) {
       assertionFunctionsMap.put(
@@ -381,7 +394,7 @@ final class NewTypeInference implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     try {
-      this.symbolTable = compiler.getSymbolTable();
+      this.symbolTable = (GlobalTypeInfo) compiler.getSymbolTable();
       this.commonTypes = symbolTable.getTypesUtilObject();
       for (NTIScope scope : symbolTable.getScopes()) {
         analyzeFunction(scope);
@@ -1359,6 +1372,9 @@ final class NewTypeInference implements CompilerPass {
       default:
         throw new RuntimeException("Unhandled expression type: " +
               Token.name(expr.getType()));
+    }
+    if (resultPair.type.isUnknown() && this.reportUnknownTypes) {
+      warnings.add(JSError.make(expr, UNKNOWN_EXPR_TYPE));
     }
     // TODO(dimvar): We attach the type to every expression because that's also
     // what the old type inference does.
@@ -3733,7 +3749,10 @@ final class NewTypeInference implements CompilerPass {
             || JSType.UNDEFINED.isSubtypeOf(recvType))) {
       JSType minusNull = recvType.removeType(JSType.NULL_OR_UNDEF);
       if (!minusNull.isBottom()) {
-        warnings.add(JSError.make(obj, NULLABLE_DEREFERENCE, recvType.toString()));
+        if (this.reportNullDeref) {
+          warnings.add(JSError.make(
+              obj, NULLABLE_DEREFERENCE, recvType.toString()));
+        }
         TypeEnv outEnv = inEnv;
         if (obj.isQualifiedName()) {
           QualifiedName qname = QualifiedName.fromNode(obj);

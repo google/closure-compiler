@@ -32,7 +32,8 @@ import java.util.List;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
-  protected List<PassFactory> passes;
+  private List<PassFactory> passes;
+  protected boolean reportUnknownTypes;
 
   protected static final String CLOSURE_BASE =
       LINE_JOINER.join(
@@ -150,7 +151,12 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   @Override
   protected void setUp() {
     super.setUp();
-    passes = new ArrayList<>();
+    this.passes = new ArrayList<>();
+  }
+
+  @Override
+  protected void tearDown() {
+    this.reportUnknownTypes = false;
   }
 
   protected final PassFactory makePassFactory(
@@ -164,11 +170,19 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   }
 
   private final void parseAndTypeCheck(String externs, String js) {
+    // NOTE(dimvar): it's unusual that we run setUp for each test in a test
+    // method rather than once per test method. But the parent class creates a
+    // new compiler object at every setUp call, and we need that.
     setUp();
     final CompilerOptions options = compiler.getOptions();
     options.setClosurePass(true);
     options.setNewTypeInference(true);
-    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
+    if (this.reportUnknownTypes) {
+      options.setWarningLevel(
+          DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
+    }
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
