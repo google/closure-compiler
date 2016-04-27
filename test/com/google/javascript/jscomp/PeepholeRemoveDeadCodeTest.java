@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  * of multiple peephole passes are in PeepholeIntegrationTest.
  */
 
-public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
+public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
 
   private static final String MATH =
       "/** @const */ var Math = {};" +
