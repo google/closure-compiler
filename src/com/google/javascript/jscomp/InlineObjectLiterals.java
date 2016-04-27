@@ -222,8 +222,7 @@ class InlineObjectLiterals implements CompilerPass {
         // Also, ES5 getters/setters aren't handled by this pass.
         for (Node child = val.getFirstChild(); child != null;
              child = child.getNext()) {
-          if (child.isGetterDef() ||
-              child.isSetterDef()) {
+          if (child.isGetterDef() || child.isSetterDef()) {
             // ES5 get/set not supported.
             return false;
           }
@@ -257,8 +256,8 @@ class InlineObjectLiterals implements CompilerPass {
 
     private boolean isVarOrAssignExprLhs(Node n) {
       Node parent = n.getParent();
-      return parent.isVar() ||
-          (parent.isAssign()
+      return parent.isVar()
+          || (parent.isAssign()
               && parent.getFirstChild() == n
               && parent.getParent().isExprResult());
     }
@@ -284,8 +283,7 @@ class InlineObjectLiterals implements CompilerPass {
                 continue;
               }
 
-              String var = VAR_PREFIX + varname + "_" +
-                safeNameIdSupplier.get();
+              String var = VAR_PREFIX + varname + "_" + safeNameIdSupplier.get();
               varmap.put(varname, var);
             }
           }
@@ -407,15 +405,14 @@ class InlineObjectLiterals implements CompilerPass {
       // ASSIGN, then there's an EXPR_STATEMENT above it, if it's a
       // VAR then it should be directly replaced.
       Node vnode;
-      boolean defined = referenceInfo.isWellDefined() &&
-          init.getParent().isVar();
+      boolean defined = referenceInfo.isWellDefined() && init.getParent().isVar();
       if (defined) {
         vnode = init.getParent();
         fillInitialValues(init, initvals);
       } else {
         // TODO(user): More test / rewrite this part.
         // Find the beginning of the function / script.
-        vnode = v.getScope().getRootNode().getLastChild().getFirstChild();
+        vnode = v.getScope().getClosestHoistScope().getRootNode().getLastChild().getFirstChild();
       }
 
       for (Map.Entry<String, String> entry : varmap.entrySet()) {
