@@ -265,13 +265,23 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       return true;
     }
 
-    if (function.getParent().isMemberFunctionDef()
-        && function.getGrandparent().isClassMembers()) {
-      return !(function.getParent().matchesQualifiedName("constructor")
-          && !NodeUtil.getFunctionParameters(function).hasChildren());
+    if (function.getGrandparent().isClassMembers()) {
+      Node memberNode = function.getParent();
+      if (memberNode.isMemberFunctionDef()) {
+        // A constructor with no parameters doesn't need JSDoc,
+        // but all other member functions do.
+        return !isConstructorWithoutParameters(function);
+      } else if (memberNode.isGetterDef() || memberNode.isSetterDef()) {
+        return true;
+      }
     }
 
     return false;
+  }
+
+  private boolean isConstructorWithoutParameters(Node function) {
+    return function.getParent().matchesQualifiedName("constructor")
+        && !NodeUtil.getFunctionParameters(function).hasChildren();
   }
 
   private void checkParams(NodeTraversal t, Node function, JSDocInfo jsDoc) {

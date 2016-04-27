@@ -132,6 +132,14 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "var haskellStyleEquals = a => b => a == b;"));
   }
 
+  public void testGetterSetterMissingJsDoc() {
+    testWarning("class Foo { get twentyone() { return 21; } }", MISSING_JSDOC);
+    testWarning("class Foo { set someString(s) { this.someString_ = s; } }", MISSING_JSDOC);
+
+    testSame("class Foo { /** @return {number} */ get twentyone() { return 21; } }");
+    testSame("class Foo { /** @param {string} s */ set someString(s) { this.someString_ = s; } }");
+  }
+
   public void testMissingJsDoc() {
     testWarning("function f() {}", MISSING_JSDOC);
     testWarning("var f = function() {}", MISSING_JSDOC);
