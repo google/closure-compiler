@@ -39,10 +39,6 @@ import java.util.Set;
 public final class JSModule implements DependencyInfo, Serializable {
   private static final long serialVersionUID = 1;
 
-  static final DiagnosticType CIRCULAR_DEPENDENCY_ERROR =
-      DiagnosticType.error("JSC_CIRCULAR_DEP",
-          "Circular dependency detected: {0}");
-
   /** Module name */
   private final String name;
 
