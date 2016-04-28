@@ -35,7 +35,7 @@ done
   echo -e '\n// GENERATED FILE. DO NOT EDIT. REBUILD WITH build_runtime.sh.\n'
   java -jar $compiler "${args[@]}" \
        --formatting=PRETTY_PRINT \
-       --noinject_library=es6_runtime \
+       --noinject_libraries \
        --compilation_level=WHITESPACE_ONLY \
        --preserve_type_annotations \
        --language_in=ES6_STRICT \

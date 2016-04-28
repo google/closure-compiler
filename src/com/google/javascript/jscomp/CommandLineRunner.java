@@ -616,9 +616,9 @@ public class CommandLineRunner extends
         usage = "Preserves type annotations.")
     private boolean preserveTypeAnnotations = false;
 
-    @Option(name = "--noinject_library",
-        usage = "Prevent injecting the named runtime libraries.")
-    private List<String> noinjectLibrary = new ArrayList<>();
+    @Option(name = "--inject_libraries",
+        usage = "Allow injecting runtime libraries.")
+    private boolean injectLibraries = true;
 
     @Option(
       name = "--dependency_mode",
@@ -1536,7 +1536,7 @@ public class CommandLineRunner extends
 
     options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
 
-    options.setPreventLibraryInjection(!flags.noinjectLibrary.isEmpty());
+    options.setPreventLibraryInjection(!flags.injectLibraries);
 
     options.rewritePolyfills = flags.rewritePolyfills;
 
