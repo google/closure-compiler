@@ -728,7 +728,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
     test(
         options,
-        "function f(/** ? */ x) { x; }",
+        "function f(/** ? */ x) { var y = x; }",
         NewTypeInference.UNKNOWN_EXPR_TYPE);
     options.setWarningLevel(
         DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.OFF);

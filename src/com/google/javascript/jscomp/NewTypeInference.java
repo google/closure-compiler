@@ -280,7 +280,7 @@ final class NewTypeInference implements CompilerPass {
   static final DiagnosticType UNKNOWN_EXPR_TYPE =
       DiagnosticType.disabled(
           "JSC_NTI_UNKNOWN_EXPR_TYPE",
-          "This expression has the unknown type.");
+          "This {0} expression has the unknown type.");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
@@ -1024,8 +1024,9 @@ final class NewTypeInference implements CompilerPass {
       // If someone uses the result of a function that doesn't return, they get a warning.
       builder.addRetType(actualRetType.isBottom() ? JSType.TOP : actualRetType);
     } else {
-      // Don't infer a return type for constructors
-      builder.addRetType(JSType.UNKNOWN);
+      // Don't infer a return type for constructors. We want to warn for
+      // constructors called without new who don't explicitly declare @return.
+      builder.addRetType(JSType.UNDEFINED);
     }
     JSType summary = commonTypes.fromFunctionType(builder.buildFunction());
     println("Function summary for ", fn.getReadableName());
@@ -1373,9 +1374,7 @@ final class NewTypeInference implements CompilerPass {
         throw new RuntimeException("Unhandled expression type: " +
               Token.name(expr.getType()));
     }
-    if (resultPair.type.isUnknown() && this.reportUnknownTypes) {
-      warnings.add(JSError.make(expr, UNKNOWN_EXPR_TYPE));
-    }
+    mayWarnAboutUnknownType(expr, resultPair.type);
     // TODO(dimvar): We attach the type to every expression because that's also
     // what the old type inference does.
     // But maybe most of these types are never looked at.
@@ -1389,6 +1388,21 @@ final class NewTypeInference implements CompilerPass {
           " ::resulttype: ", resultPair.type);
     }
     return resultPair;
+  }
+
+  private void mayWarnAboutUnknownType(Node expr, JSType t) {
+    boolean isKnownGetElem = expr.isGetElem() && expr.getLastChild().isString();
+    if (t.isUnknown()
+        && this.reportUnknownTypes
+        // Don't warn for expressions whose value isn't used
+        && !expr.getParent().isExprResult()
+        // The old type checker doesn't warn about unknown getelems.
+        // Maybe because we can't do anything about them, so why warn?
+        // We mimic that behavior here.
+        && (!expr.isGetElem() || isKnownGetElem)) {
+      warnings.add(JSError.make(expr, UNKNOWN_EXPR_TYPE,
+              Token.name(expr.getType())));
+    }
   }
 
   private EnvTypePair analyzeNameFwd(
@@ -1772,7 +1786,8 @@ final class NewTypeInference implements CompilerPass {
       return analyzeLooseCallNodeFwd(expr, envAfterCallee, requiredType);
     } else if (expr.isCall()
         && funType.isSomeConstructorOrInterface()
-        && funType.getReturnType().isUnknown()) {
+        && (funType.getReturnType().isUnknown()
+            || funType.getReturnType().isUndefined())) {
       warnings.add(JSError.make(expr, CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
       return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
     } else if (expr.isNew()
@@ -3721,6 +3736,7 @@ final class NewTypeInference implements CompilerPass {
       }
     }
     maybeSetTypeI(expr, lvalResult.type);
+    mayWarnAboutUnknownType(expr, lvalResult.type);
     return lvalResult;
   }
 

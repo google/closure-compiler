@@ -16448,7 +16448,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     reportUnknownTypes = true;
 
     typeCheck(
-        "globalvar;",
+        "var x = globalvar;",
         NewTypeInference.UNKNOWN_EXPR_TYPE);
 
     typeCheck(
@@ -16456,7 +16456,30 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.UNKNOWN_EXPR_TYPE);
 
     typeCheck(
-        "({})['asdf' + 'qwer'];",
+        "var x = ({})['asdf'];",
         NewTypeInference.UNKNOWN_EXPR_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  x['prop' + 'asdf'] = 123;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  x['asdf'] = 123;",
+        "}"),
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @struct @constructor */",
+        "var Foo = function() {};",
+        "/**",
+        " * @struct",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "var Bar = function() {",
+        "  Foo.call(this);",
+        "};"));
   }
 }
