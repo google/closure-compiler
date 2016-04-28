@@ -153,8 +153,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       Node injectionPoint = compiler.getNodeForCodeInsertion(null);
 
-      Node var = NodeUtil.newVarNode(prototypeAlias, null)
-          .useSourceInfoIfMissingFromForTree(injectionPoint);
+      Node var = IR.var(prototypeAlias).useSourceInfoFromForTree(injectionPoint);
 
       injectionPoint.addChildrenToFront(var);
     }

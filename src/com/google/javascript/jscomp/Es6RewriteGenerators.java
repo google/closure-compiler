@@ -180,7 +180,7 @@ public final class Es6RewriteGenerators
     Node generator = IR.var(
         IR.name(GENERATOR_YIELD_ALL_NAME),
         makeIterator(compiler, n.removeFirstChild()));
-    Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
+    Node entryDecl = IR.var(GENERATOR_YIELD_ALL_ENTRY);
     Node assignIterResult =
         IR.assign(
             IR.name(GENERATOR_YIELD_ALL_ENTRY),
@@ -274,12 +274,12 @@ public final class Es6RewriteGenerators
     if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_ARGUMENTS)) {
       hoistRoot
           .getParent()
-          .addChildAfter(IR.var(IR.name(GENERATOR_ARGUMENTS), IR.name("arguments")), hoistRoot);
+          .addChildAfter(IR.var(GENERATOR_ARGUMENTS, IR.name("arguments")), hoistRoot);
     }
     if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_THIS)) {
       hoistRoot
           .getParent()
-          .addChildAfter(IR.var(IR.name(GENERATOR_THIS), IR.thisNode()), hoistRoot);
+          .addChildAfter(IR.var(GENERATOR_THIS, IR.thisNode()), hoistRoot);
     }
 
     while (originalGeneratorBody.hasChildren()) {
@@ -468,7 +468,7 @@ public final class Es6RewriteGenerators
     enclosingBlock = enclosingBlock.getLastChild().getFirstChild();
     if (!hasTranslatedTry) {
       hasTranslatedTry = true;
-      hoistRoot.getParent().addChildAfter(IR.var(IR.name(GENERATOR_ERROR)), hoistRoot);
+      hoistRoot.getParent().addChildAfter(IR.var(GENERATOR_ERROR), hoistRoot);
     }
   }
 

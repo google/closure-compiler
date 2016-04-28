@@ -233,7 +233,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         parent.replaceChild(export, decl);
         exportMap.put("default", new NameNodePair(name, child));
       } else {
-        Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), export.removeFirstChild());
+        Node var = IR.var(DEFAULT_EXPORT_NAME, export.removeFirstChild());
         var.setJSDocInfo(child.getJSDocInfo());
         child.setJSDocInfo(null);
         var.useSourceInfoIfMissingFromForTree(export);

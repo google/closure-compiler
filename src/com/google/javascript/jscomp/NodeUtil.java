@@ -3478,21 +3478,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Create a VAR node containing the given name and initial value expression.
-   */
-  static Node newVarNode(String name, Node value) {
-    Node nodeName = IR.name(name);
-    if (value != null) {
-      Preconditions.checkState(value.getNext() == null);
-      nodeName.addChildToBack(value);
-      nodeName.srcref(value);
-    }
-    Node var = IR.var(nodeName).srcref(nodeName);
-
-    return var;
-  }
-
-  /**
    * A predicate for matching name nodes with the specified node.
    */
   private static class MatchNameNode implements Predicate<Node>{

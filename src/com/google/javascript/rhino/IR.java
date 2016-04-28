@@ -145,6 +145,10 @@ public class IR {
     return paramList;
   }
 
+  public static Node var(String lhs, Node value) {
+    return var(name(lhs), value);
+  }
+
   public static Node var(Node lhs, Node value) {
     return declaration(lhs, value, Token.VAR);
   }
@@ -155,6 +159,10 @@ public class IR {
 
   public static Node constNode(Node lhs, Node value) {
     return declaration(lhs, value, Token.CONST);
+  }
+
+  public static Node var(String lhs) {
+    return var(IR.name(lhs));
   }
 
   public static Node var(Node lhs) {

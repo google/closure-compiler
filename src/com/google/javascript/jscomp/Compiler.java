@@ -2626,7 +2626,7 @@ public class Compiler extends AbstractCompiler {
           for (String extern : words.subList(1, words.size())) {
             getSynthesizedExternsInputAtEnd()
                 .getAstRoot(this)
-                .addChildToBack(IR.var(IR.name(extern)));
+                .addChildToBack(IR.var(extern));
           }
           break;
         default:

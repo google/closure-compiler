@@ -184,7 +184,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     // var b = temp.a;
     // var d = temp.c;
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-    Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
+    Node tempDecl = IR.var(tempVarName, rhs.detachFromParent())
             .useSourceInfoIfMissingFromForTree(objectPattern);
     // TODO(tbreisacher): Remove the "if" and add this JSDoc unconditionally.
     if (parent.isConst()) {
@@ -225,7 +225,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           Node getelem = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
 
           String intermediateTempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-          Node intermediateDecl = IR.var(IR.name(intermediateTempVarName), getelem);
+          Node intermediateDecl = IR.var(intermediateTempVarName, getelem);
           intermediateDecl.useSourceInfoIfMissingFromForTree(child);
           nodeToDetach.getParent().addChildBefore(intermediateDecl, nodeToDetach);
 
@@ -379,7 +379,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     if (NodeUtil.isEnhancedFor(pattern.getParent())) {
       Node forNode = pattern.getParent();
       Node block = forNode.getLastChild();
-      Node decl = IR.var(IR.name(tempVarName));
+      Node decl = IR.var(tempVarName);
       decl.useSourceInfoIfMissingFromForTree(pattern);
       forNode.replaceChild(pattern, decl);
       Node exprResult = IR.exprResult(IR.assign(pattern, IR.name(tempVarName)));

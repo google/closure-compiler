@@ -483,7 +483,7 @@ class OptimizeParameters
     Preconditions.checkState(value.getParent() == null);
     Node stmt;
     if (varName != null) {
-      stmt = NodeUtil.newVarNode(varName.getString(), value);
+      stmt = IR.var(varName.getString(), value).useSourceInfoFromForTree(value);
     } else {
       stmt = IR.exprResult(value);
     }

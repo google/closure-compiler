@@ -72,7 +72,7 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
         String name = nameNode.getString();
         nameNode.setString("");
         addingRoot.addChildToFront(
-            IR.var(IR.name(name), n).useSourceInfoIfMissingFromForTree(n));
+            IR.var(name, n).useSourceInfoIfMissingFromForTree(n));
       }
     }
   }
