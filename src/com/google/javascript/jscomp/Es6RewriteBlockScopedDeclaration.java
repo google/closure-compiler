@@ -325,7 +325,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
         Node updateLoopObject = IR.assign(IR.name(object.name), objectLitNextIteration);
         Node objectLit =
-            IR.var(object.name, IR.objectlit()).useSourceInfoFromForTree(loopNode);
+            IR.var(IR.name(object.name), IR.objectlit()).useSourceInfoFromForTree(loopNode);
         loopNode.getParent().addChildBefore(objectLit, loopNode);
         if (NodeUtil.isVanillaFor(loopNode)) { // For
           // The initializer is pulled out and placed prior to the loop.
@@ -434,7 +434,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         call.putBooleanProp(Node.FREE_CALL, true);
         Node replacement;
         if (NodeUtil.isFunctionDeclaration(function)) {
-          replacement = IR.var(function.getFirstChild().getString(), call)
+          replacement = IR.var(IR.name(function.getFirstChild().getString()), call)
               .useSourceInfoIfMissingFromForTree(function);
         } else {
           replacement = call.useSourceInfoIfMissingFromForTree(function);

@@ -122,10 +122,11 @@ class ExpressionDecomposer {
 
     // Replace the expression with a reference to the new name.
     Node expressionParent = expression.getParent();
-    expressionParent.replaceChild(expression, IR.name(resultName));
+    expressionParent.replaceChild(
+        expression, IR.name(resultName));
 
     // Re-add the expression at the appropriate place.
-    Node newExpressionRoot = IR.var(resultName, expression).useSourceInfoFromForTree(expression);
+    Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
     injectionPointParent.addChildBefore(newExpressionRoot, injectionPoint);
     compiler.reportCodeChange();
   }
@@ -387,7 +388,8 @@ class ExpressionDecomposer {
     ifNode.useSourceInfoIfMissingFrom(expr);
 
     if (needResult) {
-      Node tempVarNode = IR.var(tempName).useSourceInfoFromForTree(expr);
+      Node tempVarNode = NodeUtil.newVarNode(tempName, null)
+          .useSourceInfoIfMissingFromForTree(expr);
       Node injectionPointParent = injectionPoint.getParent();
       injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
       injectionPointParent.addChildAfter(ifNode, tempVarNode);
@@ -497,7 +499,7 @@ class ExpressionDecomposer {
     }
 
     // Re-add the expression in the declaration of the temporary name.
-    Node tempVarNode = IR.var(tempName, tempNameValue).useSourceInfoFromForTree(tempNameValue);
+    Node tempVarNode = NodeUtil.newVarNode(tempName, tempNameValue);
 
     Node injectionPointParent = injectionPoint.getParent();
     injectionPointParent.addChildBefore(tempVarNode, injectionPoint);

@@ -535,7 +535,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
             && !declaredModuleExports) {
           // Adds "var moduleName" to front of the current file.
           script.addChildToFront(
-              IR.var(moduleName).useSourceInfoIfMissingFromForTree(ref));
+              IR.var(IR.name(moduleName))
+                  .useSourceInfoIfMissingFromForTree(ref));
           declaredModuleExports = true;
         }
 
@@ -580,7 +581,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       // to module namespace: exports$$moduleName = moduleName;
       if (!exportRefs.isEmpty()) {
         String aliasName = "exports$$" + moduleName;
-        Node aliasNode = IR.var(aliasName, IR.name(moduleName))
+        Node aliasNode = IR.var(IR.name(aliasName), IR.name(moduleName))
             .useSourceInfoIfMissingFromForTree(script);
         script.addChildToFront(aliasNode);
 

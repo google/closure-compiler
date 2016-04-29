@@ -417,14 +417,13 @@ class InlineObjectLiterals implements CompilerPass {
 
       for (Map.Entry<String, String> entry : varmap.entrySet()) {
         Node val = initvals.get(entry.getKey());
-        Node varnode;
+        Node varnode = NodeUtil.newVarNode(entry.getValue(), val);
         if (val == null) {
-          varnode = IR.var(entry.getValue());
+          // is this right?
+          varnode.useSourceInfoIfMissingFromForTree(vnode);
         } else {
-          varnode = IR.var(entry.getValue(), val);
           blacklistVarReferencesInTree(val, v.scope);
         }
-        varnode.useSourceInfoIfMissingFromForTree(vnode);
         vnode.getParent().addChildBefore(varnode, vnode);
         compiler.reportChangeToEnclosingScope(vnode);
       }

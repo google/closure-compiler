@@ -356,9 +356,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       name.setJSDocInfo(builder.build());
     }
 
-    Node newArr = IR.var(REST_PARAMS, IR.arraylit());
+    Node newArr = IR.var(IR.name(REST_PARAMS), IR.arraylit());
     functionBody.addChildToFront(newArr.useSourceInfoIfMissingFromForTree(restParam));
-    Node init = IR.var(REST_INDEX, IR.number(restIndex));
+    Node init = IR.var(IR.name(REST_INDEX), IR.number(restIndex));
     Node cond = IR.lt(IR.name(REST_INDEX), IR.getprop(IR.name("arguments"), IR.string("length")));
     Node incr = IR.inc(IR.name(REST_INDEX), false);
     Node body = IR.block(IR.exprResult(IR.assign(
@@ -512,7 +512,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     result.useSourceInfoIfMissingFromForTree(obj);
     obj.getParent().replaceChild(obj, result);
 
-    Node var = IR.var(objName, obj);
+    Node var = IR.var(IR.name(objName), obj);
     var.useSourceInfoIfMissingFromForTree(statement);
     statement.getParent().addChildBefore(var, statement);
     compiler.reportCodeChange();

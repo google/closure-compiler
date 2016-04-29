@@ -201,7 +201,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         Node call = IR.call(IR.name("require"), IR.string(moduleName));
         call.putBooleanProp(Node.FREE_CALL, true);
         if (aliasName != null) {
-          requireNode = IR.var(aliasName, call)
+          requireNode = IR.var(IR.name(aliasName), call)
               .useSourceInfoIfMissingFromForTree(aliasNode);
         } else {
           requireNode = IR.exprResult(call).
@@ -213,7 +213,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         if (isVirtualModuleName(aliasName)) {
           return;
         }
-        requireNode = IR.var(aliasName, IR.nullNode())
+        requireNode = IR.var(IR.name(aliasName), IR.nullNode())
             .useSourceInfoIfMissingFromForTree(aliasNode);
       }
 
