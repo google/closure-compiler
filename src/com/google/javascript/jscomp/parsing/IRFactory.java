@@ -148,6 +148,7 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -275,7 +276,7 @@ class IRFactory {
                     ImmutableList<Comment> comments) {
     this.sourceString = sourceString;
     this.nextCommentIter = comments.iterator();
-    this.currentComment = nextCommentIter.hasNext() ? nextCommentIter.next() : null;
+    this.currentComment = skipNonJsDoc(nextCommentIter);
     this.newlines = new ArrayList<>();
     this.sourceFile = sourceFile;
     this.fileLevelJsDocBuilder = new JSDocInfoBuilder(
@@ -317,6 +318,16 @@ class IRFactory {
     }
   }
 
+  private static Comment skipNonJsDoc(UnmodifiableIterator<Comment> comments) {
+    while (comments.hasNext()) {
+      Comment comment = comments.next();
+      if (comment.type == Comment.Type.JSDOC) {
+        return comment;
+      }
+    }
+    return null;
+  }
+
   // Create a template node to use as a source of common attributes, this allows
   // the prop structure to be shared among all the node from this source file.
   // This reduces the cost of these properties to O(nodes) to O(files).
@@ -341,8 +352,8 @@ class IRFactory {
 
     if (tree.sourceComments != null) {
       for (Comment comment : tree.sourceComments) {
-        if (comment.type == Comment.Type.JSDOC &&
-            !irFactory.parsedComments.contains(comment)) {
+        if (comment.type == Comment.Type.JSDOC
+            && !irFactory.parsedComments.contains(comment)) {
           irFactory.handlePossibleFileOverviewJsDoc(comment);
         } else if (comment.type == Comment.Type.BLOCK) {
           irFactory.handleBlockComment(comment);
@@ -390,10 +401,26 @@ class IRFactory {
   }
 
   private void validateAll(Node n) {
-    validate(n);
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateAll(c);
+    ArrayDeque<Node> work = new ArrayDeque<>();
+    while (n != null) {
+      validate(n);
+      Node nextSibling = n.getNext();
+      Node firstChild = n.getFirstChild();
+      if (firstChild != null) {
+        if (nextSibling != null) {
+          // handle the siblings later
+          work.push(nextSibling);
+        }
+        n = firstChild;
+      } else if (nextSibling != null) {
+        // no children, handle the next sibling
+        n = nextSibling;
+      } else {
+        // no siblings, continue with work we have saved on the work queue
+        n = work.poll();
+      }
     }
+    Preconditions.checkState(work.isEmpty());
   }
 
   private void validate(Node n) {
@@ -627,16 +654,9 @@ class IRFactory {
 
   private Comment getJsDoc(SourceRange location) {
     Comment closestPreviousComment = null;
-    while (currentComment != null &&
-        currentComment.location.end.offset <= location.start.offset) {
-      if (currentComment.type == Comment.Type.JSDOC) {
-        closestPreviousComment = currentComment;
-      }
-      if (this.nextCommentIter.hasNext()) {
-        currentComment = this.nextCommentIter.next();
-      } else {
-        currentComment = null;
-      }
+    while (hasPendingCommentBefore(location)) {
+      closestPreviousComment = currentComment;
+      currentComment = skipNonJsDoc(nextCommentIter);
     }
 
     return closestPreviousComment;
@@ -649,6 +669,15 @@ class IRFactory {
   private Comment getJsDoc(
       com.google.javascript.jscomp.parsing.parser.Token token) {
     return getJsDoc(token.location);
+  }
+
+  private boolean hasPendingCommentBefore(SourceRange location) {
+    return currentComment != null
+        && currentComment.location.end.offset <= location.start.offset;
+  }
+
+  private boolean hasPendingCommentBefore(ParseTree tree) {
+    return hasPendingCommentBefore(tree.location);
   }
 
   private JSDocInfo handleJsDoc(Comment comment) {
@@ -1312,10 +1341,57 @@ class IRFactory {
     }
 
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
-      return newNode(
-          transformBinaryTokenType(exprNode.operator.type),
-          transform(exprNode.left),
-          transform(exprNode.right));
+      if (hasPendingCommentBefore(exprNode.right)) {
+        return newNode(
+            transformBinaryTokenType(exprNode.operator.type),
+            transform(exprNode.left),
+            transform(exprNode.right));
+      } else {
+        // No JSDoc, we can traverse out of order.
+        return processBinaryExpressionHelper(exprNode);
+      }
+    }
+
+    // Deep binary ops (typical string concatentations) can cause stack overflows,
+    // avoid recursing in this case and loop instead.
+    private Node processBinaryExpressionHelper(BinaryOperatorTree exprTree) {
+      Node root = null;
+      Node current = null;
+      Node previous = null;
+      while (exprTree != null) {
+        previous = current;
+        // Skip the first child but recurse normally into the right operand as typically this isn't
+        // deep and because we have already checked that there isn't any JSDoc we can traverse
+        // out of order.
+        current = newNode(
+            transformBinaryTokenType(exprTree.operator.type),
+            transform(exprTree.right));
+        // We have inlined "transform" here. Normally, we would need to handle the JSDoc here but we
+        // know there is no JSDoc to attach, which simplifies things.
+        setSourceInfo(current, exprTree);
+
+        // As the iteration continues add the left operand.
+        if (previous != null) {
+          previous.addChildToFront(current);
+        }
+
+        if (exprTree.left instanceof BinaryOperatorTree) {
+          // continue with the left hand child
+          exprTree = (BinaryOperatorTree) exprTree.left;
+        } else {
+          // Finish things off, add the left operand to the current node.
+          Node leftNode = transform(exprTree.left);
+          current.addChildToFront(leftNode);
+          // Nothing left to do.
+          exprTree = null;
+        }
+
+        // Save the top binary op, this is the result to return.
+        if (root == null) {
+          root = current;
+        }
+      }
+      return root;
     }
 
     /**

@@ -2947,6 +2947,51 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(fn).hasType(Token.FUNCTION);
   }
 
+  public void testParseDeep1() {
+    String code = "var x; x = \n";
+    for (int i = 1; i < 15000; i++) {
+      code += "  \'" + i + "\' +\n";
+    }
+    code += "\'end\';n";
+    parse(code);
+  }
+
+  public void testParseDeep2() {
+    String code = "var x; x = \n";
+    for (int i = 1; i < 15000; i++) {
+      code += "  \'" + i + "\' +\n";
+    }
+    code += "\'end\'; /** a comment */\n";
+    parse(code);
+  }
+
+  public void testParseDeep3() {
+    String code = "var x; x = \n";
+    for (int i = 1; i < 15000; i++) {
+      code += "  \'" + i + "\' +\n";
+    }
+    code += "  /** @type {string} */ (x);\n";
+    parse(code);
+  }
+
+  public void testParseDeep4() {
+    // Currently, we back off if there is any JSDoc in the tree of binary expressions
+    String code = "var x; x = \n";
+    for (int i = 1; i < 15000; i++) {
+      if (i == 5) {
+        code += "  /** @type {string} */ (x) +\n";
+      }
+      code += "  \'" + i + "\' +\n";
+    }
+    code += "\'end\';n";
+    try {
+      parse(code);
+      fail();
+    } catch (java.lang.StackOverflowError e) {
+      // expected exception
+    }
+  }
+
   private Node script(Node stmt) {
     Node n = new Node(Token.SCRIPT, stmt);
     n.setIsSyntheticBlock(true);
