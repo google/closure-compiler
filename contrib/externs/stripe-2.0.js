@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- /**
+/**
  * @fileoverview Externs for Stripe.js
  *
  * @see https://stripe.com/docs/stripe.js
