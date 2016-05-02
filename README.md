@@ -32,13 +32,13 @@ unit tests too).
 ### Using [Eclipse](http://www.eclipse.org/)
 
 1. Download and open the [Eclipse IDE](http://www.eclipse.org/).
-2. Navigate to ```File > New > Project ...``` and create a Java Project. Give
+2. Navigate to `File > New > Project ...` and create a Java Project. Give
    the project a name.
-3. Select ```Create project from existing source``` and choose the root of the
+3. Select `Create project from existing source` and choose the root of the
    checked-out source tree as the existing directory.
-3. Navigate to the ```build.xml``` file. You will see all the build rules in
-   the Outline pane. Run the ```jar``` rule to build the compiler in
-   ```build/compiler.jar```.
+3. Navigate to the `build.xml` file. You will see all the build rules in
+   the Outline pane. Run the `jar` rule to build the compiler in
+   `build/compiler.jar`.
 
 ## Running
 
