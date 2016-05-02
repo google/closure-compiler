@@ -194,7 +194,7 @@ class IRFactory {
 
   static final String STRING_CONTINUATION_WARNING =
       "String continuations are not recommended. See"
-      + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals";
+      + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals";
 
   static final String BINARY_NUMBER_LITERAL_WARNING =
       "Binary integer literals are not supported in this language mode.";
