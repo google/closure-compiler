@@ -1,0 +1,12 @@
+var JSCompiler_lcov_fileNames = JSCompiler_lcov_fileNames || [];
+var JSCompiler_lcov_instrumentedLines = JSCompiler_lcov_instrumentedLines || [];
+var JSCompiler_lcov_executedLines = JSCompiler_lcov_executedLines || [];
+var JSCompiler_lcov_data_CoverageInstrumentationPassTest_Function_jsdata = [];
+JSCompiler_lcov_executedLines.push(JSCompiler_lcov_data_CoverageInstrumentationPassTest_Function_jsdata);
+JSCompiler_lcov_instrumentedLines.push("01");
+JSCompiler_lcov_fileNames.push("CoverageInstrumentationPassTest/Function.jsdata");
+function f() {
+  JSCompiler_lcov_data_CoverageInstrumentationPassTest_Function_jsdata[0] = true;
+  console.log("hi");
+}
+;

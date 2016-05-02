@@ -15,166 +15,50 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
+import junit.framework.TestCase;
+
 /**
- * Tests for {@link CoverageInstrumentationPass}.
+ * Tests for function transformation in {@link CoverageInstrumentationPass}.
  */
-public final class CoverageInstrumentationPassTest extends Es6CompilerTestCase {
-  @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new CoverageInstrumentationPass(compiler, CoverageInstrumentationPass.CoverageReach.ALL);
+
+public final class CoverageInstrumentationPassTest extends TestCase {
+
+  private CompilerOptions options(LanguageMode inMode) {
+    CompilerOptions options = GoldenFileComparer.options();
+    options.setInstrumentForCoverage(true);
+    options.setLanguageIn(inMode);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    return options;
   }
 
-  @Override
-  public void setUp() {
-    allowExternsChanges(true);
+  private void compareFunctionOneMode(LanguageMode mode) throws Exception {
+    GoldenFileComparer.compileAndCompare(
+        "CoverageInstrumentationPassTest/FunctionGolden.jsdata",
+        options(mode),
+        "CoverageInstrumentationPassTest/Function.jsdata");
   }
 
-  public void testFunction() {
-    test(
-        "function f() { console.log('hi'); }",
-        LINE_JOINER.join(
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_fileNames = JSCompiler_lcov_fileNames || [];",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_instrumentedLines = JSCompiler_lcov_instrumentedLines || [];",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_executedLines = JSCompiler_lcov_executedLines || [];",
-            "{",
-            "  var JSCompiler_lcov_data_testcode = [];",
-            "  JSCompiler_lcov_executedLines.push(JSCompiler_lcov_data_testcode);",
-            "  JSCompiler_lcov_instrumentedLines.push('01');",
-            "  JSCompiler_lcov_fileNames.push('testcode');",
-            "}",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_fileNames = JSCompiler_lcov_fileNames || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_instrumentedLines = JSCompiler_lcov_instrumentedLines || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_executedLines = JSCompiler_lcov_executedLines || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "{",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  var JSCompiler_lcov_data_testcode = [];",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_executedLines.push(JSCompiler_lcov_data_testcode);",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_instrumentedLines.push('01');",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_fileNames.push('testcode');",
-            "}",
-            "function f() {",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  console.log('hi');",
-            "}"));
+  public void testFunction() throws Exception {
+    compareFunctionOneMode(LanguageMode.ECMASCRIPT5);
+    compareFunctionOneMode(LanguageMode.ECMASCRIPT6);
   }
 
+  private void compareArrowOneMode(LanguageMode mode, String prefix) throws Exception {
+    GoldenFileComparer.compileAndCompare(
+        prefix + "Golden.jsdata", options(mode), prefix + ".jsdata");
+  }
 
   // If the body of the arrow function is a block, it is instrumented.
-  public void testArrowFunction_block() {
-    testEs6(
-        "var f = () => { console.log('hi'); };",
-        LINE_JOINER.join(
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_fileNames = JSCompiler_lcov_fileNames || [];",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_instrumentedLines = JSCompiler_lcov_instrumentedLines || [];",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_executedLines = JSCompiler_lcov_executedLines || [];",
-            "{",
-            "  var JSCompiler_lcov_data_testcode = [];",
-            "  JSCompiler_lcov_executedLines.push(JSCompiler_lcov_data_testcode);",
-            "  JSCompiler_lcov_instrumentedLines.push('01');",
-            "  JSCompiler_lcov_fileNames.push('testcode');",
-            "}",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_fileNames = JSCompiler_lcov_fileNames || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_instrumentedLines = JSCompiler_lcov_instrumentedLines || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_executedLines = JSCompiler_lcov_executedLines || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "{",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  var JSCompiler_lcov_data_testcode = [];",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_executedLines.push(JSCompiler_lcov_data_testcode);",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_instrumentedLines.push('01');",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_fileNames.push('testcode');",
-            "}",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "var f = () => {",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  console.log('hi');",
-            "}"));
+  public void testArrowFunction_block() throws Exception {
+    compareArrowOneMode(LanguageMode.ECMASCRIPT6, "CoverageInstrumentationPassTest/ArrowBlock");
   }
 
   // If the body of the arrow function is an expression, it is converted to a block,
   // then instrumented.
-  public void testArrowFunction_expression() {
-    testEs6(
-        "var f = (x => x+1);",
-        LINE_JOINER.join(
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_fileNames = JSCompiler_lcov_fileNames || [];",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_instrumentedLines = JSCompiler_lcov_instrumentedLines || [];",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_executedLines = JSCompiler_lcov_executedLines || [];",
-            "{",
-            "  var JSCompiler_lcov_data_testcode = [];",
-            "  JSCompiler_lcov_executedLines.push(JSCompiler_lcov_data_testcode);",
-            "  JSCompiler_lcov_instrumentedLines.push('01');",
-            "  JSCompiler_lcov_fileNames.push('testcode');",
-            "}",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_fileNames = JSCompiler_lcov_fileNames || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_instrumentedLines = JSCompiler_lcov_instrumentedLines || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "/** @suppress {duplicate} */",
-            "var JSCompiler_lcov_executedLines = JSCompiler_lcov_executedLines || [];",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "{",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  var JSCompiler_lcov_data_testcode = [];",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_executedLines.push(JSCompiler_lcov_data_testcode);",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_instrumentedLines.push('01');",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_fileNames.push('testcode');",
-            "}",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "JSCompiler_lcov_data_testcode[0] = true;",
-            "var f = (x) => {",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  JSCompiler_lcov_data_testcode[0] = true;",
-            "  return x + 1;",
-            "}"));
+  public void testArrowFunction_expression() throws Exception {
+    compareArrowOneMode(
+        LanguageMode.ECMASCRIPT6, "CoverageInstrumentationPassTest/ArrowExpression");
   }
 }
