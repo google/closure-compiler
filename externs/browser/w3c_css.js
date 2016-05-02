@@ -1211,8 +1211,8 @@ CSSProperties.prototype.borderImageRepeat;
 CSSProperties.prototype.borderImage;
 
 /**
- * @type {string|number}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-bottom
+ * @type {string}
+ * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-bottom
  */
 CSSProperties.prototype.bottom;
 
@@ -1375,8 +1375,8 @@ CSSProperties.prototype.fontWeight;
 CSSProperties.prototype.height;
 
 /**
- * @type {string|number}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-left
+ * @type {string}
+ * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-left
  */
 CSSProperties.prototype.left;
 
@@ -1633,8 +1633,8 @@ CSSProperties.prototype.resize;
 CSSProperties.prototype.richness;
 
 /**
- * @type {string|number}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-right
+ * @type {string}
+ * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-right
  */
 CSSProperties.prototype.right;
 
@@ -1717,8 +1717,8 @@ CSSProperties.prototype.textShadow;
 CSSProperties.prototype.textTransform;
 
 /**
- * @type {string|number}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-top
+ * @type {string}
+ * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-top
  */
 CSSProperties.prototype.top;
 
@@ -1889,6 +1889,83 @@ CSSProperties.prototype.transitionTimingFunction;
  * @see http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
  */
 CSSProperties.prototype.pointerEvents;
+
+
+// CSS Flexbox 1
+
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#align-content-property
+ */
+CSSProperties.prototype.alignContent;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#align-items-property
+ */
+CSSProperties.prototype.alignItems;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#align-items-property
+ */
+CSSProperties.prototype.alignSelf;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-property
+ */
+CSSProperties.prototype.flex;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-basis-property
+ */
+CSSProperties.prototype.flexBasis;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-direction-property
+ */
+CSSProperties.prototype.flexDirection;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-flow-property
+ */
+CSSProperties.prototype.flexFlow;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-grow-property
+ */
+CSSProperties.prototype.flexGrow;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-shrink-property
+ */
+CSSProperties.prototype.flexShrink;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#flex-wrap-property
+ */
+CSSProperties.prototype.flexWrap;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-flexbox-1/#justify-content-property
+ */
+CSSProperties.prototype.justifyContent;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-flexbox-1/#order-property
+ */
+CSSProperties.prototype.order;
+
 
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.

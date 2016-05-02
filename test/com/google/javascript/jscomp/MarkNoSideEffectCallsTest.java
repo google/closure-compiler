@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.MarkNoSideEffectCalls.INVALID_NO_SIDE_EFFECT_ANNOTATION;
+import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;

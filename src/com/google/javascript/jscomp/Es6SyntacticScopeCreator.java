@@ -91,54 +91,37 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
       // Args: Declare function variables
       Preconditions.checkState(args.isParamList());
-      for (Node a = args.getFirstChild(); a != null; a = a.getNext()) {
-        if (a.isDefaultValue() || a.isRest()) {
-          declareLHS(scope, a.getFirstChild());
-        } else {
-          declareLHS(scope, a);
-        }
+      declareLHS(scope, args);
+      // Since we create a separate scope for body, stop scanning here
+
+    } else if (n.isClass()) {
+      if (scope.getParent() != null) {
+        inputId = NodeUtil.getInputId(n);
       }
 
-      // Since we create a separate scope for body, stop scanning here
-    } else if (n.isBlock() || n.isFor() || n.isForOf()) {
+      final Node classNameNode = n.getFirstChild();
+      // Bleed the class name into the scope, if it hasn't
+      // been declared in the outer scope.
+      if (!classNameNode.isEmpty()) {
+        if (NodeUtil.isClassExpression(n)) {
+          declareVar(classNameNode);
+        }
+      }
+    } else if (n.isBlock() || n.isFor() || n.isForOf() || n.isSwitch()) {
       if (scope.getParent() != null) {
         inputId = NodeUtil.getInputId(n);
       }
       scanVars(n);
     } else {
-      // It's the global block
+      // n is the global SCRIPT node
       Preconditions.checkState(scope.getParent() == null);
       scanVars(n);
     }
   }
 
-  private void declareLHS(Scope declarationScope, Node lhs) {
-    if (lhs.isStringKey()) {
-      if (lhs.hasChildren()) {
-        declareLHS(declarationScope, lhs.getFirstChild());
-      } else {
-        declareVar(declarationScope, lhs);
-      }
-    } else if (lhs.isComputedProp()) {
-      declareLHS(declarationScope, lhs.getLastChild());
-    } else if (lhs.isName()) {
+  private void declareLHS(Scope declarationScope, Node n) {
+    for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(n)) {
       declareVar(declarationScope, lhs);
-    } else if (lhs.isDefaultValue() || lhs.isRest()) {
-      declareLHS(declarationScope, lhs.getFirstChild());
-    } else if (lhs.isArrayPattern() || lhs.isObjectPattern()) {
-      for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {
-        if (NodeUtil.isNameDeclaration(lhs.getParent()) && child.getNext() == null
-            && !lhs.getGrandparent().isForOf()) {
-          // If the pattern is a direct child of the var/let/const node,
-          // then its last child is the RHS of the assignment, not a variable to
-          // be declared.
-          return;
-        }
-
-        declareLHS(declarationScope, child);
-      }
-    } else {
-      Preconditions.checkState(lhs.isEmpty(), "Invalid left-hand side: %s", lhs);
     }
   }
 
@@ -148,9 +131,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   private void scanVars(Node n) {
     switch (n.getType()) {
       case Token.VAR:
-        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          declareLHS(scope.getClosestHoistScope(), child);
-        }
+        declareLHS(scope.getClosestHoistScope(), n);
         return;
 
       case Token.LET:
@@ -159,9 +140,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         if (!isNodeAtCurrentLexicalScope(n)) {
           return;
         }
-        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          declareLHS(scope, child);
-        }
+        declareLHS(scope, n);
         return;
 
       case Token.FUNCTION:
@@ -193,15 +172,12 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         Preconditions.checkState(n.getChildCount() == 2, n);
         // the first child is the catch var and the second child
         // is the code block
-
-        final Node exception = n.getFirstChild();
-        final Node block = exception.getNext();
-
         if (isNodeAtCurrentLexicalScope(n)) {
-          declareLHS(scope, exception);
+          declareLHS(scope, n);
         }
         // A new scope is not created for this BLOCK because there is a scope
         // created for the BLOCK above the CATCH
+        final Node block = n.getSecondChild();
         scanVars(block);
         return;  // only one child to scan
 
@@ -261,11 +237,18 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
    */
   private boolean isNodeAtCurrentLexicalScope(Node n) {
     Node parent = n.getParent();
-    Preconditions.checkState(parent.isBlock() || parent.isFor()
-        || parent.isForOf() || parent.isScript() || parent.isLabel());
+    Node grandparent = parent.getParent();
+    Preconditions.checkState(parent.isBlock() || parent.isFor() || parent.isForOf()
+        || parent.isScript() || parent.isLabel(), parent);
+
+    if (parent.isSyntheticBlock()
+        && grandparent != null && (grandparent.isCase() || grandparent.isDefaultCase())) {
+      Node switchNode = grandparent.getParent();
+      return scope.getRootNode() == switchNode;
+    }
 
     if (parent == scope.getRootNode() || parent.isScript()
-        || (parent.getParent().isCatch()
+        || (grandparent.isCatch()
             && parent.getGrandparent() == scope.getRootNode())) {
       return true;
     }

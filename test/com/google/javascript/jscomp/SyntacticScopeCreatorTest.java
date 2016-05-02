@@ -95,4 +95,14 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     assertEquals(fooNode, fooScope.getRootNode());
     assertTrue(fooScope.isDeclared("x", false));
   }
+
+  public void testFunctionExpressionInForLoopInitializer() {
+    Node root = getRoot("for (function foo() {};;) {}");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("foo", false));
+
+    Node fNode = root.getFirstChild().getFirstChild();
+    Scope fScope = scopeCreator.createScope(fNode, globalScope);
+    assertTrue(fScope.isDeclared("foo", false));
+  }
 }

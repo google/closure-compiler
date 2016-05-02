@@ -35,6 +35,7 @@ import java.util.TreeSet;
  */
 class TypedCodeGenerator extends CodeGenerator {
   private final TypeIRegistry registry;
+
   TypedCodeGenerator(
       CodeConsumer consumer, CompilerOptions options, TypeIRegistry registry) {
     super(consumer, options);
@@ -52,11 +53,20 @@ class TypedCodeGenerator extends CodeGenerator {
         add(getFunctionAnnotation(n));
       } else if (n.isExprResult()
           && n.getFirstChild().isAssign()) {
-        Node rhs = n.getFirstChild().getLastChild();
-        add(getTypeAnnotation(rhs));
+        Node assign = n.getFirstChild();
+        if (NodeUtil.isNamespaceDecl(assign.getFirstChild())) {
+          add(JSDocInfoPrinter.print(assign.getJSDocInfo()));
+        } else {
+          Node rhs = assign.getLastChild();
+          add(getTypeAnnotation(rhs));
+        }
       } else if (n.isVar()
           && n.getFirstFirstChild() != null) {
-        add(getTypeAnnotation(n.getFirstFirstChild()));
+        if (NodeUtil.isNamespaceDecl(n.getFirstChild())) {
+          add(JSDocInfoPrinter.print(n.getJSDocInfo()));
+        } else {
+          add(getTypeAnnotation(n.getFirstFirstChild()));
+        }
       }
     }
 

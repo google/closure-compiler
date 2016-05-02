@@ -112,7 +112,7 @@ public abstract class CodePrinterTestBase extends TestCase {
 
   String printNode(Node n) {
     CompilerOptions options = new CompilerOptions();
-    options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+    options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
     options.setLanguageOut(languageMode);
     return new CodePrinter.Builder(n).setCompilerOptions(options).build();
   }
@@ -127,7 +127,7 @@ public abstract class CodePrinterTestBase extends TestCase {
         parsePrint(js, newCompilerOptions(new CompilerOptionBuilder() {
           @Override void setOptions(CompilerOptions options) {
             options.setPrettyPrint(false);
-            options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+            options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
           }
         })));
   }

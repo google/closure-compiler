@@ -154,20 +154,11 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   public void testManageDependencies1() throws Exception {
-    testManageDependencies1Impl(false);
-  }
-
-  public void testManageDependencies1Es6ModuleOrder() throws Exception {
-    testManageDependencies1Impl(true);
-  }
-
-  private void testManageDependencies1Impl(boolean es6ModuleOrder) throws Exception {
     List<CompilerInput> inputs = setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
     depOptions.setEntryPoints(ImmutableList.<ModuleIdentifier>of());
-    depOptions.setEs6ModuleOrder(es6ModuleOrder);
     List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
     assertInputs(A, "a1", "a3");
@@ -181,21 +172,12 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   public void testManageDependencies2() throws Exception {
-    testManageDependencies2Impl(false);
-  }
-
-  public void testManageDependencies2Es6ModuleOrder() throws Exception {
-    testManageDependencies2Impl(true);
-  }
-
-  private void testManageDependencies2Impl(boolean es6ModuleOrder) throws Exception {
     List<CompilerInput> inputs = setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
     depOptions.setEntryPoints(
         ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    depOptions.setEs6ModuleOrder(es6ModuleOrder);
     List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
     assertInputs(A, "a1", "a3");
@@ -208,15 +190,7 @@ public final class JSModuleGraphTest extends TestCase {
         sourceNames(results));
   }
 
-  public void testManageDependencies3() throws Exception {
-    testManageDependencies3Impl(false);
-  }
-
-  public void testManageDependencies3Es6ModuleOrder() throws Exception {
-    testManageDependencies3Impl(true);
-  }
-
-  private void testManageDependencies3Impl(boolean es6ModuleOrder) throws Exception {
+  public void testManageDependencies3Impl() throws Exception {
     List<CompilerInput> inputs = setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
@@ -224,7 +198,6 @@ public final class JSModuleGraphTest extends TestCase {
     depOptions.setMoocherDropping(true);
     depOptions.setEntryPoints(
         ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    depOptions.setEs6ModuleOrder(es6ModuleOrder);
     List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
     // Everything gets pushed up into module c, because that's
@@ -238,18 +211,9 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   public void testManageDependencies4() throws Exception {
-    testManageDependencies4Impl(false);
-  }
-
-  public void testManageDependencies4Es6ModuleOrder() throws Exception {
-    testManageDependencies4Impl(true);
-  }
-
-  private void testManageDependencies4Impl(boolean es6ModuleOrder) throws Exception {
     setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
-    depOptions.setEs6ModuleOrder(es6ModuleOrder);
 
     List<CompilerInput> inputs = new ArrayList<>();
 
@@ -277,15 +241,7 @@ public final class JSModuleGraphTest extends TestCase {
       "var COMPILED = false;",
       "var goog = goog || {}");
 
-  public void testManageDependencies5() throws Exception {
-    testManageDependencies5Impl(false);
-  }
-
-  public void testManageDependencies5Es6ModuleOrder() throws Exception {
-    testManageDependencies5Impl(true);
-  }
-
-  private void testManageDependencies5Impl(boolean es6ModuleOrder) throws Exception {
+  public void testManageDependencies5Impl() throws Exception {
     A.add(code("a2", provides("a2"), requires("a1")));
     A.add(code("a1", provides("a1"), requires()));
     A.add(code("base.js", BASEJS, provides(), requires()));
@@ -296,7 +252,6 @@ public final class JSModuleGraphTest extends TestCase {
 
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
-    depOptions.setEs6ModuleOrder(es6ModuleOrder);
 
     List<CompilerInput> inputs = new ArrayList<>();
     inputs.addAll(A.getInputs());
@@ -417,9 +372,10 @@ public final class JSModuleGraphTest extends TestCase {
 
   private void assertDeepestCommonDepOneWay(
       JSModule expected, JSModule m1, JSModule m2, boolean inclusive) {
-    JSModule actual = inclusive ?
-        graph.getDeepestCommonDependencyInclusive(m1, m2) :
-        graph.getDeepestCommonDependency(m1, m2);
+    JSModule actual =
+        inclusive
+            ? graph.getDeepestCommonDependencyInclusive(m1, m2)
+            : graph.getDeepestCommonDependency(m1, m2);
     if (actual != expected) {
       fail(String.format(
           "Deepest common dep of %s and %s should be %s but was %s",

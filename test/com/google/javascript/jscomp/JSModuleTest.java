@@ -116,10 +116,10 @@ public final class JSModuleTest extends TestCase {
         ImmutableList.of(e, f, d, b, c, a),
         ImmutableList.of(e, f, a, b, c, d));
     assertSortedInputs(
-        ImmutableList.of(e, d, b, c, a, f),
+        ImmutableList.of(d, b, c, a, e, f),
         ImmutableList.of(a, b, c, e, d, f));
     assertSortedInputs(
-        ImmutableList.of(e, f, d, b, c, a),
+        ImmutableList.of(e, d, b, c, a, f),
         ImmutableList.of(e, a, f, b, c, d));
   }
 

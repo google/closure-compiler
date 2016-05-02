@@ -103,6 +103,10 @@ class AngularPass extends AbstractPostOrderCallback
       DiagnosticType.error("JSC_INJECTED_FUNCTION_HAS_DEFAULT_VALUE",
           "@ngInject cannot be used on functions containing default value.");
 
+  static final DiagnosticType INJECTED_FUNCTION_ON_NON_QNAME =
+      DiagnosticType.error("JSC_INJECTED_FUNCTION_ON_NON_QNAME",
+          "@ngInject can only be used on qualified names.");
+
   @Override
   public void process(Node externs, Node root) {
     hotSwapScript(root, null);
@@ -222,6 +226,10 @@ class AngularPass extends AbstractPostOrderCallback
       // a = b = c = function() {}
       case Token.ASSIGN:
         name = n.getFirstChild().getQualifiedName();
+        if (name == null) {
+          compiler.report(t.makeError(n, INJECTED_FUNCTION_ON_NON_QNAME));
+          return;
+        }
         // last node of chained assignment.
         fn = n;
         while (fn.isAssign()) {

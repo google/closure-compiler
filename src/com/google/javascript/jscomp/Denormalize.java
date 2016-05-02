@@ -26,11 +26,14 @@ import com.google.javascript.rhino.Token;
  * normalization pass that are not handled by other passes (such as
  * CollapseVariableDeclarations) to avoid making the resulting code larger.
  *
- * Currently this pass only does one thing pushing statements into for-loop
- * initializer. This:
+ * Currently this pass only does two things:
+ *
+ * 1. Push statements into for-loop initializer. This:
  *   var a = 0; for(;a<0;a++) {}
  * becomes:
  *   for(var a = 0;a<0;a++) {}
+ *
+ * 2. Fold assignments like x = x + 1 into x += 1
  *
  * @author johnlenz@google.com (johnlenz)
  */
@@ -55,6 +58,7 @@ class Denormalize implements CompilerPass, Callback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     maybeCollapseIntoForStatements(n, parent);
+    maybeCollapseAssignShorthand(n, parent);
   }
 
   /**
@@ -122,6 +126,22 @@ class Denormalize implements CompilerPass, Callback {
       forNode.replaceChild(oldInitializer, newInitializer);
 
       compiler.reportCodeChange();
+    }
+  }
+
+  private void maybeCollapseAssignShorthand(Node n, Node parent) {
+    if (n.isAssign() && n.getFirstChild().isName()
+        && NodeUtil.hasCorrespondingAssignmentOp(n.getLastChild())
+        && n.getLastChild().getFirstChild().isName()) {
+      Node op = n.getLastChild();
+      int assignOp = NodeUtil.getAssignOpFromOp(op);
+      if (n.getFirstChild().getString().equals(op.getFirstChild().getString())) {
+        op.setType(assignOp);
+        Node opDetached = op.detachFromParent();
+        opDetached.setJSDocInfo(n.getJSDocInfo());
+        parent.replaceChild(n, opDetached);
+        compiler.reportCodeChange();
+      }
     }
   }
 }

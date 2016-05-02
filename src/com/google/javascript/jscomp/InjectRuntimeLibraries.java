@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -23,32 +22,17 @@ import com.google.javascript.rhino.Node;
  * and the Dart pass are added, if needed, as well as any other libraries explicitly
  * requested via the CompilerOptions#forceLibraryInjection field.
  */
-class InjectEs6RuntimeLibrary implements CompilerPass {
+class InjectRuntimeLibraries implements CompilerPass {
   private AbstractCompiler compiler;
 
-  public InjectEs6RuntimeLibrary(AbstractCompiler compiler) {
+  public InjectRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
   @Override
   public void process(Node externs, Node root) {
     for (String forced : compiler.getOptions().forceLibraryInjection) {
-      compiler.ensureLibraryInjected(forced, false);
-    }
-
-    if (compiler.needsEs6Runtime) {
-      compiler.ensureLibraryInjected("es6_runtime", false);
-      // es6_runtime.js refers to 'window' and 'global' which are only defined in the browser
-      // externs and the node externs, respectively. Therefore one or both of them may be
-      // undeclared. Add synthetic externs for them. The VarCheck pass would do this for us but it
-      // runs before this one.
-      for (String name : new String[] {"window", "global"}) {
-        compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler).addChildToBack(
-            IR.var(IR.name(name)));
-      }
-    }
-    if (compiler.needsEs6DartRuntime) {
-      compiler.ensureLibraryInjected("es6_dart_runtime", false);
+      compiler.ensureLibraryInjected(forced, true);
     }
   }
 }

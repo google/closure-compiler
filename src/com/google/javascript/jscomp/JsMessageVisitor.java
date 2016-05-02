@@ -257,6 +257,14 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       return;
     }
 
+    if (msgNode.isQualifiedName()
+        && msgNode.getLastChild().getString().equals(messageKey)) {
+      // foo.Thing.MSG_EXAMPLE = bar.OtherThing.MSG_EXAMPLE;
+      // This kind of construct is created by Es6ToEs3ClassSideInheritance. Just ignore it; the
+      // message will have already been extracted from the base class.
+      return;
+    }
+
     // Report a warning if a qualified messageKey that looks like a message
     // (e.g. "a.b.MSG_X") doesn't use goog.getMsg().
     if (isNewStyleMessage) {

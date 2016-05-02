@@ -36,7 +36,7 @@ class ConstCheck extends AbstractPostOrderCallback
     implements CompilerPass {
 
   static final DiagnosticType CONST_REASSIGNED_VALUE_ERROR =
-      DiagnosticType.error(
+      DiagnosticType.warning(
           "JSC_CONSTANT_REASSIGNED_VALUE_ERROR",
           "constant {0} assigned a value more than once.\n" +
           "Original definition at {1}");

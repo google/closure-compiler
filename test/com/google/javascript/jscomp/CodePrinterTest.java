@@ -626,7 +626,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
           void setOptions(CompilerOptions options) {
             options.setPrettyPrint(false);
             options.setLineBreak(true);
-            options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+            options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
           }
         })));
   }
@@ -1205,8 +1205,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testDeprecatedAnnotationIncludesNewline() {
     String js = LINE_JOINER.join(
-        "/**@deprecated See {@link replacementClass} for more details.",
-        "@type {number} */var x;",
+        "/**",
+        " @type {number}",
+        " @deprecated See {@link replacementClass} for more details.",
+        " */",
+        "var x;",
         "");
 
     assertPrettyPrint(js, js);
@@ -1227,7 +1230,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             options.setPrettyPrint(true);
             options.setPreserveTypeAnnotations(true);
             options.setLineBreak(false);
-            options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+            options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
             optionBuilder.setOptions(options);
           }
         })));
@@ -1241,7 +1244,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
               void setOptions(CompilerOptions options) {
                 options.setPrettyPrint(true);
                 options.setLineBreak(false);
-                options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+                options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
               }
             }))
             .setOutputTypes(true)
@@ -1933,11 +1936,25 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testPreserveTypeAnnotations() {
     preserveTypeAnnotations = true;
-    assertPrintSame("/**@type {foo} */var bar");
-    assertPrintSame("function/** void */f(/** string */s,/** number */n){}");
+    assertPrintSame("/** @type {foo} */ var bar");
+    assertPrintSame("function/** void */ f(/** string */ s,/** number */ n){}");
 
     preserveTypeAnnotations = false;
-    assertPrint("/** @type {foo} */var bar;", "var bar");
+    assertPrint("/** @type {foo} */ var bar;", "var bar");
+  }
+
+  public void testPreserveTypeAnnotations2() {
+    preserveTypeAnnotations = true;
+
+    assertPrintSame("/** @const */ var ns={}");
+
+    assertPrintSame(
+        LINE_JOINER.join(
+            "/**",
+            " @const",
+            " @suppress {const,duplicate}",
+            " */",
+            "var ns={}"));
   }
 
   public void testDefaultParameters() {

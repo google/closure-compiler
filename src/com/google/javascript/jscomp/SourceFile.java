@@ -83,7 +83,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   private String code = null;
 
-  static final DiagnosticType DUPLICATE_ZIP_CONTENTS = DiagnosticType.error(
+  static final DiagnosticType DUPLICATE_ZIP_CONTENTS = DiagnosticType.warning(
       "JSC_DUPLICATE_ZIP_CONTENTS",
       "Two zip entries containing the same relative path.\n"
       + "Entry 1: {0}\n"
@@ -125,7 +125,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return lineOffsets.length;
   }
 
-
   private void findLineOffsets() {
     if (lineOffsets != null) {
       return;
@@ -143,6 +142,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
   }
 
+  private void resetLineOffsets() {
+    lineOffsets = null;
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // Implementation
@@ -176,16 +178,17 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return code;
   }
 
-  private void setCode(String sourceCode) {
+  void setCode(String sourceCode) {
     this.setCode(sourceCode, false);
   }
 
-  private void setCode(String sourceCode, boolean removeUtf8Bom) {
+  void setCode(String sourceCode, boolean removeUtf8Bom) {
     if (removeUtf8Bom && sourceCode != null && sourceCode.startsWith(UTF8_BOM)) {
       code = sourceCode.substring(UTF8_BOM.length());
     } else {
       code = sourceCode;
     }
+    resetLineOffsets();
   }
 
   public String getOriginalPath() {

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.common.collect.ImmutableList;
@@ -34,8 +35,8 @@ import com.google.javascript.rhino.Token;
 
 public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_BOILERPLATE =
-      "/** @define {boolean} */ var COMPILED = false; var goog = {};" +
-      "goog.exportSymbol = function() {};";
+      "/** @define {boolean} */ var COMPILED = false; var goog = {};"
+      + "goog.exportSymbol = function() {};";
 
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
@@ -52,6 +53,71 @@ public final class IntegrationTest extends IntegrationTestCase {
         RhinoErrorReporter.PARSE_ERROR);
   }
 
+  // b/27531865
+  public void testLetInSwitch() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.ERROR);
+    String before = LINE_JOINER.join(
+        "var a = 0;",
+        "switch (a) {",
+        "  case 0:",
+        "    let x = 1;",
+        "  case 1:",
+        "    x = 2;",
+        "}");
+    String after = LINE_JOINER.join(
+        "var a = 0;",
+        "switch (a) {",
+        "  case 0:",
+        "    var x = 1;",
+        "  case 1:",
+        "    x = 2;",
+        "}");
+    test(options, before, after);
+
+    before = LINE_JOINER.join(
+        "var a = 0;",
+        "switch (a) {",
+        "  case 0:",
+        "  default:",
+        "    let x = 1;",
+        "}");
+    after = LINE_JOINER.join(
+        "var a = 0;",
+        "switch (a) {",
+        "  case 0:",
+        "  default:",
+        "    var x = 1;",
+        "}");
+    test(options, before, after);
+  }
+
+  public void testExplicitBlocksInSwitch() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.ERROR);
+    String before = LINE_JOINER.join(
+        "var a = 0;",
+        "switch (a) {",
+        "  case 0:",
+        "    { const x = 3; break; }",
+        "  case 1:",
+        "    { const x = 5; break; }",
+        "}");
+    String after = LINE_JOINER.join(
+        "var a = 0;",
+        "switch (a) {",
+        "  case 0:",
+        "    { var x = 3; break; }",
+        "  case 1:",
+        "    { var x$0 = 5; break; }",
+        "}");
+    test(options, before, after);
+  }
+
   public void testBug1949424() {
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
@@ -64,8 +130,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
     options.setClosurePass(true);
-    test(options, CLOSURE_BOILERPLATE + "goog.provide('FOO.BAR'); FOO.BAR = 3;",
-        CLOSURE_COMPILED + "var FOO$BAR = 3;");
+    test(
+        options,
+        LINE_JOINER.join(
+            CLOSURE_BOILERPLATE,
+            "goog.provide('FOO.BAR');",
+            "FOO.BAR = 3;"),
+        LINE_JOINER.join(
+            CLOSURE_COMPILED,
+            "var FOO$BAR = 3;"));
   }
 
   public void testUnresolvedDefine() {
@@ -79,7 +152,7 @@ public final class IntegrationTest extends IntegrationTestCase {
                        "/** @define{foo.bar} */ foo.bar = {};" };
     String[] output = { "var goog = {};" +
                         "var foo = {};" +
-                        "/** @define{foo.bar} */ foo.bar = {};" };
+                        "/** @define{foo.bar} */ foo.bar = {};"};
     test(options, input, output, warnings);
   }
 
@@ -216,6 +289,21 @@ public final class IntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testConstPolymerNotAllowed() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerPass(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    externs = ImmutableList.of(SourceFile.fromCode("<externs>",
+        "var Polymer = function() {}; var PolymerElement = function() {};"));
+
+    test(
+        options,
+        "const Foo = Polymer({ is: 'x-foo' });",
+        PolymerPassErrors.POLYMER_INVALID_DECLARATION);
+  }
+
   public void testForwardDeclaredTypeInTemplate() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
@@ -280,8 +368,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckEventfulDisposalWarningLevels() {
     CompilerOptions options = createCompilerOptions();
-    options.setCheckEventfulObjectDisposalPolicy(
-        CheckEventfulObjectDisposal.DisposalCheckingPolicy.ON);
+    options.setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy.ON);
     String js = "var goog = {};" + "goog.inherits = function(x, y) {};"
       + "goog.dispose = function(x) {};"
       + "goog.disposeAll = function(var_args) {};"
@@ -335,11 +422,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     test(
         options,
-        "goog.provide('foo.Bar.Type');\n"
-        + "goog.provide('foo.Bar');\n"
-        + "/** @typedef {number} */ foo.Bar.Type;\n"
-        + "foo.Bar = function() {};",
-        "var foo = {}; foo.Bar.Type; foo.Bar = function() {};");
+        LINE_JOINER.join(
+            "goog.provide('foo.Bar.Type');",
+            "goog.provide('foo.Bar');",
+            "/** @typedef {number} */ foo.Bar.Type;",
+            "foo.Bar = function() {};"),
+        LINE_JOINER.join(
+            "var foo = {};",
+            "foo.Bar.Type;",
+            "foo.Bar = function() {};"));
   }
 
   public void testTypedefBeforeOwner2() {
@@ -348,11 +439,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCollapseProperties(true);
     test(
         options,
-        "goog.provide('foo.Bar.Type');\n"
-        + "goog.provide('foo.Bar');\n"
-        + "/** @typedef {number} */ foo.Bar.Type;\n"
-        + "foo.Bar = function() {};",
-        "var foo$Bar$Type; var foo$Bar = function() {};");
+        LINE_JOINER.join(
+            "goog.provide('foo.Bar.Type');",
+            "goog.provide('foo.Bar');",
+            "/** @typedef {number} */ foo.Bar.Type;",
+            "foo.Bar = function() {};"),
+        LINE_JOINER.join(
+            "var foo$Bar$Type;",
+            "var foo$Bar = function() {};"));
   }
 
   public void testExportedNames() {
@@ -400,8 +494,10 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckProvidesOn() {
     CompilerOptions options = createCompilerOptions();
-    options.setCheckProvides(CheckLevel.ERROR);
-    test(options, new String[] {"/** @constructor */ function Foo() {}", "new Foo();"},
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);
+    test(
+        options,
+        new String[] {"goog.require('x'); /** @constructor */ function Foo() {}", "new Foo();"},
         CheckProvides.MISSING_PROVIDE_WARNING);
   }
 
@@ -427,17 +523,18 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCollapseProperties(true);
     test(options,
         new String[] {
-          "var goog = {};",
-          "goog.provide('goog.testing.testSuite');\n"
-          + "goog.testing.testSuite = function(a) {};\n",
-          " goog.module('testing');\n"
-          + "var testSuite = goog.require('goog.testing.testSuite');\n"
-          + "testSuite({testMethod:function(){}});\n"
+            LINE_JOINER.join(
+                "var goog = {};",
+                "goog.provide('goog.testing.testSuite');",
+                "goog.testing.testSuite = function(a) {};"),
+            LINE_JOINER.join(
+                "goog.module('testing');",
+                "var testSuite = goog.require('goog.testing.testSuite');",
+                "testSuite({testMethod:function(){}});")
         },
         new String[] {
-          "",
-          "var $goog$testing$testSuite$$=function($a$$){};",
-          "$goog$testing$testSuite$$({\"testMethod\":function(){}})"
+            "var $goog$testing$testSuite$$ = function($a$$) {};",
+            "$goog$testing$testSuite$$({'testMethod':function(){}})"
         });
   }
 
@@ -615,16 +712,34 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        "/** @return {number} */\n"
-        + "function f() {\n"
-        + "  return 'asdf';\n"
-        + "}",
+        LINE_JOINER.join(
+            "/** @return {number} */",
+            "function f() {",
+            "  return 'asdf';",
+            "}"),
         NewTypeInference.RETURN_NONDECLARED_TYPE);
 
     test(
         options,
         "/** @type {ASDF} */ var x;",
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    options.setWarningLevel(
+        DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
+    test(
+        options,
+        "function f(/** ? */ x) { var y = x; }",
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+    options.setWarningLevel(
+        DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.OFF);
+
+    testSame(
+        options,
+        LINE_JOINER.join(
+            "(function() {",
+            "  /** @constructor */",
+            "  var Boolean = function() {};",
+            "})();"));
   }
 
   public void testNTInoMaskTypeParseError() {
@@ -1027,7 +1142,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testAllChecksOn() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSuspiciousCode(true);
-    options.setCheckProvides(CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);
     options.setGenerateExports(true);
     options.exportTestFunctions = true;
     options.setClosurePass(true);
@@ -1100,10 +1215,17 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @constructor */ Foo = function() {};"
-        + "var x = new Foo();",
-        "var COMPILED=true;var goog={};goog.exportSymbol=function(){};"
-        + "var Foo=function(){};var x=new Foo");
+        LINE_JOINER.join(
+            CLOSURE_BOILERPLATE,
+            "goog.provide('Foo');",
+            "/** @constructor */ Foo = function() {};",
+            "var x = new Foo();"),
+        LINE_JOINER.join(
+            "var COMPILED=true;",
+            "var goog = {};",
+            "goog.exportSymbol=function() {};",
+            "var Foo = function() {};",
+            "var x = new Foo;"));
     test(options,
         CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
         "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
@@ -1114,10 +1236,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
     options.setCollapseProperties(true);
-    test(options,
-        "var goog = {}; goog.provide('foo'); "
-        + "function f() { foo = {};}",
-        "var foo = {}; function f() { foo = {}; }", ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+    test(
+        options,
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.provide('foo');",
+            "function f() { foo = {};}"),
+        LINE_JOINER.join(
+            "var foo = {};",
+            "function f() { foo = {}; }"),
+        ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
   public void testProvidedNamespaceIsConst2() {
@@ -1127,10 +1255,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCollapseProperties(true);
     test(
         options,
-        "var goog = {}; goog.provide('foo.bar'); "
-        + "function f() { foo.bar = {};}",
-        "var foo$bar = {};"
-        + "function f() { foo$bar = {}; }",
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.provide('foo.bar');",
+            "function f() { foo.bar = {};}"),
+        LINE_JOINER.join(
+            "var foo$bar = {};",
+            "function f() { foo$bar = {}; }"),
         ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
@@ -1210,7 +1341,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var x = new Foo(); x.bar();";
 
     testSame(options, code);
-    options.setInlineGetters(true);
+    options.inlineGetters = true;
 
     test(options, code,
         "function Foo() {} Foo.prototype.bar = function() { return 3 };"
@@ -1234,7 +1365,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     testSame(options, code);
 
-    options.setInlineGetters(true);
+    options.inlineGetters = true;
 
     test(options, code,
         "function Foo() {}"
@@ -1338,6 +1469,18 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setSmartNameRemoval(true);
+    test(options, code, "");
+  }
+
+  public void testClassWithGettersIsRemoved() {
+    CompilerOptions options = createCompilerOptions();
+    String code =
+        "class Foo { get x() {}; set y(v) {}; static get init() {}; static set prop(v) {} }";
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setSmartNameRemoval(true);
+    options.setRemoveDeadCode(true);
     test(options, code, "");
   }
 
@@ -1505,7 +1648,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setRemoveUnusedVars(true);
-    test(options, code, "function f() { var x = 3; 4; x = 5; return x; } f();");
+    test(options, code, "function f() { var x; 3; 4; x = 5; return x; } f();");
   }
 
   public void testInlineFunctions() {
@@ -1750,15 +1893,6 @@ public final class IntegrationTest extends IntegrationTestCase {
       expected += letter + "(q);";
     }
     test(options, code, expected);
-  }
-
-  public void testCoalesceVariableNames() {
-    CompilerOptions options = createCompilerOptions();
-    String code = "function f() {var x = 3; var y = x; var z = y; return z;}";
-    testSame(options, code);
-
-    options.setCoalesceVariableNames(true);
-    test(options, code, "function f() {var x = 3; x = x; x = x; return x;}");
   }
 
   public void testPropertyRenaming() {
@@ -2060,6 +2194,28 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, optimized);
   }
 
+  public void testFoldJ2clClinits() {
+    CompilerOptions options = createCompilerOptions();
+
+    String code =
+        LINE_JOINER.join(
+            "function InternalWidget(){}",
+            "InternalWidget.$clinit = function () {",
+            "  InternalWidget.$clinit = function() {};",
+            "  InternalWidget.$clinit();",
+            "};",
+            "InternalWidget.$clinit();");
+
+    options.setJ2clPass(true);
+    options.setFoldConstants(true);
+    options.setComputeFunctionSideEffects(true);
+    options.setCollapseProperties(true);
+    options.setRemoveUnusedVars(true);
+    options.setInlineFunctions(true);
+
+    test(options, code, "");
+  }
+
   public void testVarDeclarationsIntoFor() {
     CompilerOptions options = createCompilerOptions();
 
@@ -2309,11 +2465,10 @@ public final class IntegrationTest extends IntegrationTestCase {
         "function g(y) { y.bar = function() { alert(3); }; }" +
         "g(x);" +
         "x.bar();";
-    String expected =
-        "var x = new function() {};" +
-        "/** @this {F} */" +
-        "(function (y) { y.bar = function() { alert(3); }; })(x);" +
-        "x.bar();";
+    String expected = LINE_JOINER.join(
+        "var x = new function(){};",
+        "x.bar = function(){ alert(3); };",
+        "x.bar();");
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS
@@ -2346,7 +2501,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, source, expected);
   }
 
-  public void testCoaleseVariables() {
+  public void testCoalesceVariableNames() {
+    CompilerOptions options = createCompilerOptions();
+    String code = "function f() {var x = 3; var y = x; var z = y; return z;}";
+    testSame(options, code);
+
+    options.setCoalesceVariableNames(true);
+    test(options, code, "function f() {var x = 3; x = x; x = x; return x;}");
+  }
+
+  public void testCoalesceVariables() {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
     options.setFoldConstants(false);
@@ -2652,19 +2816,17 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE,
         CheckLevel.WARNING);
-    options.setCheckProvides(CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     test(options,
-        "/** @constructor */\n" +
-        "function f() { var arguments; }",
-        DiagnosticType
-        .warning("JSC_MISSING_PROVIDE", "missing goog.provide(''{0}'')"));
+        "goog.require('x'); /** @constructor */ function f() { var arguments; }",
+        CheckProvides.MISSING_PROVIDE_WARNING);
   }
 
   public void testSuppressCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE,
         CheckLevel.WARNING);
-    options.setCheckProvides(CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     testSame(options,
         "/** @constructor\n" +
         " *  @suppress{missingProvide} */\n" +
@@ -2870,6 +3032,39 @@ public final class IntegrationTest extends IntegrationTestCase {
          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
   }
 
+  public void testGoogModuleOuterLegacyInner() {
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+    options.setCodingConvention(new ClosureCodingConvention());
+
+    test(
+        options,
+        new String[] {
+          // googModuleOuter
+          LINE_JOINER.join(
+              "goog.module('foo.Outer');",
+              "/** @constructor */ function Outer() {}",
+              "exports = Outer;"),
+          // legacyInner
+          LINE_JOINER.join(
+              "goog.module('foo.Outer.Inner');",
+              "goog.module.declareLegacyNamespace();",
+              "/** @constructor */ function Inner() {}",
+              "exports = Inner;"),
+          // legacyUse
+          LINE_JOINER.join(
+              "goog.provide('legacy.Use');",
+              "goog.require('foo.Outer');",
+              "goog.require('foo.Outer.Inner');",
+              "goog.scope(function() {",
+              "var Outer = goog.module.get('foo.Outer');",
+              "new Outer;",
+              "new foo.Outer.Inner;",
+              "});")
+        },
+        ClosureRewriteModule.QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+  }
+
   public void testUnboundedArrayLiteralInfiniteLoop() {
     CompilerOptions options = createCompilerOptions();
     options.setIdeMode(true);
@@ -2882,7 +3077,10 @@ public final class IntegrationTest extends IntegrationTestCase {
         new DependencyOptions()
         .setDependencySorting(true));
     options.setClosurePass(true);
-    test(options, "goog.provide('x');\ngoog.require('x');", "var x = {};");
+    test(
+        options,
+        "goog.provide('x'); goog.require('x');",
+        "var x = {};");
   }
 
   public void testDependencySorting() throws Exception {
@@ -3111,8 +3309,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = compile(options, js);
-
-    assertThat(compiler.getErrors()).isEmpty();
     String result = compiler.toSource(compiler.getJsRoot());
     assertThat(result).isNotEmpty();
     assertThat(result).doesNotContain("No one ever calls me");
@@ -3351,6 +3547,48 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setSkipTranspilationAndCrash(true);
     test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
+  }
+
+  // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
+  public void testInlineStringConcat() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(options, LINE_JOINER.join(
+        "function f() {",
+        "  var x = '';",
+        "  x += '1';",
+        "  x += '2';",
+        "  x += '3';",
+        "  x += '4';",
+        "  x += '5';",
+        "  x += '6';",
+        "  x += '7';",
+        "  return x;",
+        "}",
+        "window.f = f;"),
+        "window.a = function() { return '1234567'; }");
+  }
+
+  // GitHub issue #1234: https://github.com/google/closure-compiler/issues/1234
+  public void testOptimizeSwitchGithubIssue1234() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        LINE_JOINER.join(
+            "var exit;",
+            "switch ('a') {",
+            "  case 'a':",
+            "    break;",
+            "  default:",
+            "    exit = 21;",
+            "    break;",
+            "}",
+            "switch(exit) {",
+            "  case 21: throw 'x';",
+            "  default : console.log('good');",
+            "}"),
+        "console.a('good');");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

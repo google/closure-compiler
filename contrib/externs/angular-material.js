@@ -94,7 +94,10 @@ md.$dialog = function() {};
  *   locals: (Object|undefined),
  *   resolve: (Object|undefined),
  *   controllerAs: (string|undefined),
- *   parent: (angular.JQLite|Element|undefined)
+ *   parent: (angular.JQLite|Element|undefined),
+ *   onShowing: (Function|undefined),
+ *   onComplete: (Function|undefined),
+ *   onRemoving: (Function|undefined)
  * }}
  */
 md.$dialog.options;
@@ -341,6 +344,10 @@ md.$toast.prototype.hide = function(opt_response) {};
  * @param {*=} opt_response An argument for the resolved promise.
  */
 md.$toast.prototype.cancel = function(opt_response) {};
+
+
+/** @param {string} content */
+md.$toast.prototype.updateTextContent = function(content) {};
 
 
 /** @record */

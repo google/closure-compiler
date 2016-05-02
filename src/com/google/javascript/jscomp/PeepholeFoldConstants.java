@@ -44,7 +44,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   static final DiagnosticType NEGATING_A_NON_NUMBER_ERROR =
       DiagnosticType.warning(
           "JSC_NEGATING_A_NON_NUMBER_ERROR",
-          "Can't negate non-numeric value: {0}");
+          "Can''t negate non-numeric value: {0}");
 
   static final DiagnosticType BITWISE_OPERAND_OUT_OF_RANGE =
       DiagnosticType.warning(
@@ -54,7 +54,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   static final DiagnosticType SHIFT_AMOUNT_OUT_OF_BOUNDS =
       DiagnosticType.warning(
           "JSC_SHIFT_AMOUNT_OUT_OF_BOUNDS",
-          "Shift amount out of bounds: {0}");
+          "Shift amount out of bounds (see right operand): {0}");
 
   static final DiagnosticType FRACTIONAL_BITWISE_OPERAND =
       DiagnosticType.warning(
@@ -879,7 +879,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // only the lower 5 bits are used when shifting, so don't do anything
       // if the shift amount is outside [0,32)
       if (!(rval >= 0 && rval < 32)) {
-        report(SHIFT_AMOUNT_OUT_OF_BOUNDS, right);
+        report(SHIFT_AMOUNT_OUT_OF_BOUNDS, n);
         return n;
       }
 
@@ -942,7 +942,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   /**
    * Try to fold comparison nodes, e.g ==
    */
-  @SuppressWarnings("fallthrough")
   private Node tryFoldComparison(Node n, Node left, Node right) {
     TernaryValue result = evaluateComparison(n.getType(), left, right, shouldUseTypes);
     if (result == TernaryValue.UNKNOWN) {
@@ -956,222 +955,186 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return newNode;
   }
 
+  /** http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison */
+  private static TernaryValue tryAbstractRelationalComparison(Node left, Node right,
+      boolean useTypes, boolean willNegate) {
+    // First, try to evaluate based on the general type.
+    ValueType leftValueType = NodeUtil.getKnownValueType(left);
+    ValueType rightValueType = NodeUtil.getKnownValueType(right);
+    if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
+      if (leftValueType == ValueType.STRING && rightValueType == ValueType.STRING) {
+        String lv = NodeUtil.getStringValue(left);
+        String rv = NodeUtil.getStringValue(right);
+        if (lv != null && rv != null) {
+          // In JS, browsers parse \v differently. So do not compare strings if one contains \v.
+          if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
+            return TernaryValue.UNKNOWN;
+          } else {
+            return TernaryValue.forBoolean(lv.compareTo(rv) < 0);
+          }
+        } else if (left.isTypeOf() && right.isTypeOf()
+            && left.getFirstChild().isName() && right.getFirstChild().isName()
+            && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
+          // Special case: `typeof a < typeof a` is always false.
+          return TernaryValue.FALSE;
+        }
+      }
+    }
+    // Then, try to evaluate based on the value of the node. Try comparing as numbers.
+    Double lv = NodeUtil.getNumberValue(left, useTypes);
+    Double rv = NodeUtil.getNumberValue(right, useTypes);
+    if (lv == null || rv == null) {
+      // Special case: `x < x` is always false.
+      //
+      // TODO(moz): If we knew the named value wouldn't be NaN, it would be nice to handle
+      // LE and GE. We should use type information if available here.
+      if (!willNegate && left.isName() && right.isName()) {
+        if (left.getString().equals(right.getString())) {
+          return TernaryValue.FALSE;
+        }
+      }
+      return TernaryValue.UNKNOWN;
+    }
+    if (Double.isNaN(lv) || Double.isNaN(rv)) {
+      return TernaryValue.forBoolean(willNegate);
+    } else {
+      return TernaryValue.forBoolean(lv.doubleValue() < rv.doubleValue());
+    }
+  }
+
+  /** http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-equality-comparison */
+  private static TernaryValue tryAbstractEqualityComparison(Node left, Node right,
+      boolean useTypes) {
+    // Evaluate based on the general type.
+    ValueType leftValueType = NodeUtil.getKnownValueType(left);
+    ValueType rightValueType = NodeUtil.getKnownValueType(right);
+    if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
+      // Delegate to strict equality comparison for values of the same type.
+      if (leftValueType == rightValueType) {
+        return tryStrictEqualityComparison(left, right, useTypes);
+      }
+      if ((leftValueType == ValueType.NULL && rightValueType == ValueType.VOID)
+          || (leftValueType == ValueType.VOID && rightValueType == ValueType.NULL)) {
+        return TernaryValue.TRUE;
+      }
+      if ((leftValueType == ValueType.NUMBER && rightValueType == ValueType.STRING)
+          || rightValueType == ValueType.BOOLEAN) {
+        Double rv = NodeUtil.getNumberValue(right, useTypes);
+        return rv == null
+            ? TernaryValue.UNKNOWN
+            : tryAbstractEqualityComparison(left, IR.number(rv), useTypes);
+      }
+      if ((leftValueType == ValueType.STRING && rightValueType == ValueType.NUMBER)
+          || leftValueType == ValueType.BOOLEAN) {
+        Double lv = NodeUtil.getNumberValue(left, useTypes);
+        return lv == null
+            ? TernaryValue.UNKNOWN
+            : tryAbstractEqualityComparison(IR.number(lv), right, useTypes);
+      }
+      if ((leftValueType == ValueType.STRING || leftValueType == ValueType.NUMBER)
+          && rightValueType == ValueType.OBJECT) {
+        return TernaryValue.UNKNOWN;
+      }
+      if (leftValueType == ValueType.OBJECT
+          && (rightValueType == ValueType.STRING || rightValueType == ValueType.NUMBER)) {
+        return TernaryValue.UNKNOWN;
+      }
+      return TernaryValue.FALSE;
+    }
+    // In general, the rest of the cases cannot be folded.
+    return TernaryValue.UNKNOWN;
+  }
+
+  /** http://www.ecma-international.org/ecma-262/6.0/#sec-strict-equality-comparison */
+  private static TernaryValue tryStrictEqualityComparison(Node left, Node right, boolean useTypes) {
+    // First, try to evaluate based on the general type.
+    ValueType leftValueType = NodeUtil.getKnownValueType(left);
+    ValueType rightValueType = NodeUtil.getKnownValueType(right);
+    if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
+      // Strict equality can only be true for values of the same type.
+      if (leftValueType != rightValueType) {
+        return TernaryValue.FALSE;
+      }
+      switch (leftValueType) {
+        case VOID:
+        case NULL:
+          return TernaryValue.TRUE;
+        case NUMBER: {
+          if (NodeUtil.isNaN(left)) {
+            return TernaryValue.FALSE;
+          }
+          if (NodeUtil.isNaN(right)) {
+            return TernaryValue.FALSE;
+          }
+          Double lv = NodeUtil.getNumberValue(left, useTypes);
+          Double rv = NodeUtil.getNumberValue(right, useTypes);
+          if (lv != null && rv != null) {
+            return TernaryValue.forBoolean(lv.doubleValue() == rv.doubleValue());
+          }
+          break;
+        }
+        case STRING: {
+          String lv = NodeUtil.getStringValue(left);
+          String rv = NodeUtil.getStringValue(right);
+          if (lv != null && rv != null) {
+            // In JS, browsers parse \v differently. So do not consider strings
+            // equal if one contains \v.
+            if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
+              return TernaryValue.UNKNOWN;
+            } else {
+              return lv.equals(rv) ? TernaryValue.TRUE : TernaryValue.FALSE;
+            }
+          } else if (left.isTypeOf() && right.isTypeOf()
+              && left.getFirstChild().isName() && right.getFirstChild().isName()
+              && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
+            // Special case, typeof a == typeof a is always true.
+            return TernaryValue.TRUE;
+          }
+          break;
+        }
+        case BOOLEAN: {
+          TernaryValue lv = NodeUtil.getPureBooleanValue(left);
+          TernaryValue rv = NodeUtil.getPureBooleanValue(right);
+          return lv.and(rv).or(lv.not().and(rv.not()));
+        }
+        default: // Symbol and Object cannot be folded in the general case.
+          return TernaryValue.UNKNOWN;
+      }
+    }
+
+    // Then, try to evaluate based on the value of the node. There's only one special case:
+    // Any strict equality comparison against NaN returns false.
+    if (NodeUtil.isNaN(left) || NodeUtil.isNaN(right)) {
+      return TernaryValue.FALSE;
+    }
+    return TernaryValue.UNKNOWN;
+  }
+
   static TernaryValue evaluateComparison(int op, Node left, Node right, boolean useTypes) {
     // Don't try to minimize side-effects here.
     if (NodeUtil.mayHaveSideEffects(left) || NodeUtil.mayHaveSideEffects(right)) {
       return TernaryValue.UNKNOWN;
     }
 
-    // First try to evaluate based on the general type.
-    ValueType leftValueType = NodeUtil.getKnownValueType(left);
-    ValueType rightValueType = NodeUtil.getKnownValueType(right);
-    if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
-      // For strict equality are can only be equal for values of same type.
-      if (op == Token.SHEQ || op == Token.SHNE) {
-        if (leftValueType != rightValueType) {
-          return TernaryValue.forBoolean(op != Token.SHEQ);
-        } else if (rightValueType == ValueType.NULL || rightValueType == ValueType.VOID) {
-          return TernaryValue.forBoolean(op == Token.SHEQ);
-        }
-      }
-
-      // For equality, null and undefined are only equal to themselves
-      if (op == Token.EQ || op == Token.NE) {
-        switch (leftValueType) {
-          case OBJECT:
-          case NUMBER:
-          case BOOLEAN:
-          case STRING:
-            // OBJECT is never equal to NULL or VOID
-            if (rightValueType == ValueType.NULL || rightValueType == ValueType.VOID) {
-              return TernaryValue.forBoolean(op != Token.EQ);
-            }
-            break;
-          case NULL:
-          case VOID:
-            if (rightValueType == ValueType.NULL || rightValueType == ValueType.VOID) {
-              return TernaryValue.forBoolean(op == Token.EQ);
-            } else {
-              return TernaryValue.forBoolean(op != Token.EQ);
-            }
-          default:
-            throw new IllegalStateException("unexpected");
-        }
-      }
-    }
-
-    // Even if we don't know both the left and the right some operations always evaluate the
-    // same way if undefined is on one side.
-    if (leftValueType == ValueType.VOID || rightValueType == ValueType.VOID) {
-      switch (op) {
-        case Token.GE:
-        case Token.LE:
-        case Token.GT:
-        case Token.LT:
-          return TernaryValue.FALSE;
-      }
-    }
-
-    // TODO: fold NaN operations.
-
-    // Evaluate based on the value of the node.
-    int lhType = getNormalizedNodeType(left);
-    int rhType = getNormalizedNodeType(right);
-    switch (lhType) {
-      case Token.NULL:
-        // handle null <,>,<=,>=
-      case Token.TRUE:
-      case Token.FALSE:
-        boolean rhIsBooleanLike =
-            rhType == Token.TRUE || rhType == Token.FALSE || rhType == Token.NULL;
-        switch (op) {
-          case Token.SHEQ:
-          case Token.EQ:
-            return rhIsBooleanLike
-                ? TernaryValue.forBoolean(lhType == rhType) : TernaryValue.UNKNOWN;
-
-          case Token.SHNE:
-          case Token.NE:
-            return rhIsBooleanLike
-                ? TernaryValue.forBoolean(lhType != rhType) : TernaryValue.UNKNOWN;
-
-          case Token.GE:
-          case Token.LE:
-          case Token.GT:
-          case Token.LT:
-            return compareAsNumbers(op, left, right, useTypes);
-        }
-        return TernaryValue.UNKNOWN;
-
-      case Token.THIS:
-        if (right.isThis()) {
-          switch (op) {
-            case Token.SHEQ:
-            case Token.EQ:
-              return TernaryValue.TRUE;
-
-            case Token.SHNE:
-            case Token.NE:
-              return TernaryValue.FALSE;
-          }
-        }
-
-        // We can only handle == and != here.
-        // GT, LT, GE, LE depend on the type of "this" and how it will
-        // be converted to number.  The results are different depending on
-        // whether it is a string, NaN or other number value.
-        return TernaryValue.UNKNOWN;
-
-      case Token.STRING:
-        if (right.isString()) {
-          // Only eval if they are the same type
-          switch (op) {
-            case Token.SHEQ:
-            case Token.EQ:
-              return areStringsEqual(left.getString(), right.getString());
-
-            case Token.SHNE:
-            case Token.NE:
-              return areStringsEqual(left.getString(), right.getString()).not();
-          }
-        }
-        return TernaryValue.UNKNOWN;
-
-      case Token.NUMBER:
-        if (right.isNumber()) {
-          return compareAsNumbers(op, left, right, useTypes);
-        }
-        return TernaryValue.UNKNOWN; // Only eval if they are the same type
-
-      case Token.NAME:
-        if (right.isName()) {
-          if (left.getString().equals(right.getString())) {
-            // Only eval if they are the same type and the same name.
-            switch (op) {
-                // If we knew the named value wouldn't be NaN, it would be nice
-                // to handle EQ,NE,LE,GE,SHEQ, and SHNE.
-              case Token.LT:
-              case Token.GT:
-                return TernaryValue.FALSE;
-            }
-          }
-        }
-        return TernaryValue.UNKNOWN;
-
-      default:
-        return TernaryValue.UNKNOWN;
-    }
-  }
-
-  /** Returns whether two JS strings are equal. */
-  private static TernaryValue areStringsEqual(String a, String b) {
-    // In JS, browsers parse \v differently. So do not consider strings
-    // equal if one contains \v.
-    if (a.indexOf('\u000B') != -1 || b.indexOf('\u000B') != -1) {
-      return TernaryValue.UNKNOWN;
-    } else {
-      return a.equals(b) ? TernaryValue.TRUE : TernaryValue.FALSE;
-    }
-  }
-
-  /**
-   * @return Translate NOT expressions into TRUE or FALSE when possible.
-   */
-  private static int getNormalizedNodeType(Node n) {
-    int type = n.getType();
-    if (type == Token.NOT) {
-      TernaryValue value = NodeUtil.getPureBooleanValue(n);
-      switch (value) {
-        case TRUE:
-          return Token.TRUE;
-        case FALSE:
-          return Token.FALSE;
-        case UNKNOWN:
-          return type;
-      }
-    }
-    return type;
-  }
-
-  /**
-   * The result of the comparison, or UNKNOWN if the
-   * result could not be determined.
-   */
-  private static TernaryValue compareAsNumbers(int op, Node left, Node right, boolean useTypes) {
-    Double leftValue = NodeUtil.getNumberValue(left, useTypes);
-    if (leftValue == null) {
-      return TernaryValue.UNKNOWN;
-    }
-    Double rightValue = NodeUtil.getNumberValue(right, useTypes);
-    if (rightValue == null) {
-      return TernaryValue.UNKNOWN;
-    }
-
-    double lv = leftValue;
-    double rv = rightValue;
-
     switch (op) {
-      case Token.SHEQ:
       case Token.EQ:
-        Preconditions.checkState(
-            left.isNumber() && right.isNumber());
-        return TernaryValue.forBoolean(lv == rv);
-      case Token.SHNE:
+        return tryAbstractEqualityComparison(left, right, useTypes);
       case Token.NE:
-        Preconditions.checkState(
-            left.isNumber() && right.isNumber());
-        return TernaryValue.forBoolean(lv != rv);
-      case Token.LE:
-        return TernaryValue.forBoolean(lv <= rv);
+        return tryAbstractEqualityComparison(left, right, useTypes).not();
+      case Token.SHEQ:
+        return tryStrictEqualityComparison(left, right, useTypes);
+      case Token.SHNE:
+        return tryStrictEqualityComparison(left, right, useTypes).not();
       case Token.LT:
-        return TernaryValue.forBoolean(lv <  rv);
-      case Token.GE:
-        return TernaryValue.forBoolean(lv >= rv);
+        return tryAbstractRelationalComparison(left, right, useTypes, false);
       case Token.GT:
-        return TernaryValue.forBoolean(lv >  rv);
-      default:
-        return TernaryValue.UNKNOWN;  // don't handle that op
+        return tryAbstractRelationalComparison(right, left, useTypes, false);
+      case Token.LE:
+        return tryAbstractRelationalComparison(right, left, useTypes, true).not();
+      case Token.GE:
+        return tryAbstractRelationalComparison(left, right, useTypes, true).not();
     }
+    throw new IllegalStateException("Unexpected operator for comparison");
   }
 
   /**

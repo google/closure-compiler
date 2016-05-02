@@ -40,11 +40,16 @@ public final class JsFileParser extends JsFileLineParser {
   private static Logger logger = Logger.getLogger(JsFileParser.class.getName());
 
   /** Pattern for matching goog.provide(*) and goog.require(*). */
-  private static final Pattern GOOG_PROVIDE_REQUIRE_PATTERN = Pattern.compile(
-      "(?:^|;)\\s*(?:(?:var|let|const)\\s+[a-zA-Z_$][a-zA-Z0-9$_]*\\s*=\\s*)?goog\\.(provide|module|require|addDependency)\\s*\\((.*?)\\)");
+  private static final Pattern GOOG_PROVIDE_REQUIRE_PATTERN =
+      Pattern.compile(
+          "(?:^|;)(?:[a-zA-Z0-9$_,:{}\\s]+=)?\\s*"
+              + "goog\\.(provide|module|require|addDependency)\\s*\\((.*?)\\)");
 
   /** The first non-comment line of base.js */
   private static final String BASE_JS_START = "var COMPILED = false;";
+
+  /** The start of a bundled goog.module, i.e. one that is wrapped in a goog.loadModule call */
+  private static final String BUNDLED_GOOG_MODULE_START = "goog.loadModule(function(";
 
   /** Matchers used in the parsing. */
   private Matcher googMatcher = GOOG_PROVIDE_REQUIRE_PATTERN.matcher("");
@@ -53,7 +58,14 @@ public final class JsFileParser extends JsFileLineParser {
   private List<String> provides;
   private List<String> requires;
   private boolean fileHasProvidesOrRequires;
-  private boolean fileIsModule;
+
+  private enum ModuleType {
+    NON_MODULE,
+    UNWRAPPED_GOOG_MODULE,
+    WRAPPED_GOOG_MODULE,
+  }
+
+  private ModuleType moduleType;
 
   /** Whether to provide/require the root namespace. */
   private boolean includeGoogBase = false;
@@ -106,13 +118,14 @@ public final class JsFileParser extends JsFileLineParser {
     provides = new ArrayList<>();
     requires = new ArrayList<>();
     fileHasProvidesOrRequires = false;
-    fileIsModule = false;
+    moduleType = ModuleType.NON_MODULE;
 
     logger.fine("Parsing Source: " + filePath);
     doParse(filePath, fileContents);
 
     DependencyInfo dependencyInfo = new SimpleDependencyInfo(
-        closureRelativePath, filePath, provides, requires, fileIsModule);
+        closureRelativePath, filePath, provides, requires,
+        moduleType == ModuleType.UNWRAPPED_GOOG_MODULE);
     logger.fine("DepInfo: " + dependencyInfo);
     return dependencyInfo;
   }
@@ -127,10 +140,10 @@ public final class JsFileParser extends JsFileLineParser {
 
     // Quick sanity check that will catch most cases. This is a performance
     // win for people with a lot of JS.
-    if (line.contains("provide") ||
-        line.contains("require") ||
-        line.contains("module") ||
-        line.contains("addDependency")) {
+    if (line.contains("provide")
+        || line.contains("require")
+        || line.contains("module")
+        || line.contains("addDependency")) {
       // Iterate over the provides/requires.
       googMatcher.reset(line);
       while (googMatcher.find()) {
@@ -147,8 +160,8 @@ public final class JsFileParser extends JsFileLineParser {
         boolean isModule =  firstChar == 'm';
         boolean isRequire = firstChar == 'r';
 
-        if (isModule) {
-          this.fileIsModule = true;
+        if (isModule && this.moduleType != ModuleType.WRAPPED_GOOG_MODULE) {
+          this.moduleType = ModuleType.UNWRAPPED_GOOG_MODULE;
         }
 
         if (isProvide || isRequire) {
@@ -173,9 +186,14 @@ public final class JsFileParser extends JsFileLineParser {
 
       // base.js can't provide or require anything else.
       return false;
+    } else if (line.startsWith(BUNDLED_GOOG_MODULE_START)) {
+      this.moduleType = ModuleType.WRAPPED_GOOG_MODULE;
     }
 
-    return !shortcutMode || lineHasProvidesOrRequires ||
-        CharMatcher.whitespace().matchesAllOf(line);
+    return !shortcutMode || lineHasProvidesOrRequires
+        || CharMatcher.whitespace().matchesAllOf(line)
+        || !line.contains(";")
+        || line.contains("goog.setTestOnly")
+        || line.contains("goog.module.declareLegacyNamespace");
   }
 }

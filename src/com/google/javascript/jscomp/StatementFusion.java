@@ -197,14 +197,14 @@ class StatementFusion extends AbstractPeepholeOptimization {
       case Token.SWITCH:
       case Token.EXPR_RESULT:
         before.getParent().removeChild(before);
-        fuseExpresssonIntoFirstChild(before.removeFirstChild(), control);
+        fuseExpressionIntoFirstChild(before.removeFirstChild(), control);
         return;
       case Token.FOR:
         before.getParent().removeChild(before);
         if (NodeUtil.isForIn(control)) {
-          fuseExpresssonIntoSecondChild(before.removeFirstChild(), control);
+          fuseExpressionIntoSecondChild(before.removeFirstChild(), control);
         } else {
-          fuseExpresssonIntoFirstChild(before.removeFirstChild(), control);
+          fuseExpressionIntoFirstChild(before.removeFirstChild(), control);
         }
         return;
       case Token.LABEL:
@@ -219,7 +219,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
   }
 
   // exp1, exp1
-  protected static Node fuseExpressionIntoExpression(Node exp1, Node exp2) {
+  static Node fuseExpressionIntoExpression(Node exp1, Node exp2) {
     if (exp2.isEmpty()) {
       return exp1;
     }
@@ -244,13 +244,13 @@ class StatementFusion extends AbstractPeepholeOptimization {
     }
   }
 
-  protected static void fuseExpresssonIntoFirstChild(Node exp, Node stmt) {
+  protected static void fuseExpressionIntoFirstChild(Node exp, Node stmt) {
     Node val = stmt.removeFirstChild();
     Node comma = fuseExpressionIntoExpression(exp, val);
     stmt.addChildToFront(comma);
   }
 
-  protected static void fuseExpresssonIntoSecondChild(Node exp, Node stmt) {
+  protected static void fuseExpressionIntoSecondChild(Node exp, Node stmt) {
     Node val = stmt.removeChildAfter(stmt.getFirstChild());
     Node comma = fuseExpressionIntoExpression(exp, val);
     stmt.addChildAfter(comma, stmt.getFirstChild());

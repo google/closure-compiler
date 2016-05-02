@@ -15,9 +15,12 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.DiagnosticGroups;
 
 /**
  * Test case for {@link CheckEmptyStatements}.
@@ -26,6 +29,13 @@ public class CheckEmptyStatementsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckEmptyStatements(compiler);
+  }
+
+  @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    super.getOptions(options);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    return options;
   }
 
   private void testWarning(String js) {

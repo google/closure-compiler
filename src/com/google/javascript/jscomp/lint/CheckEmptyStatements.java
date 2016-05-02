@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
  * Check for empty statements (i.e. extraneous semicolons)
  */
 public final class CheckEmptyStatements extends AbstractPostOrderCallback implements CompilerPass {
-  public static final DiagnosticType USELESS_EMPTY_STATEMENT = DiagnosticType.warning(
+  public static final DiagnosticType USELESS_EMPTY_STATEMENT = DiagnosticType.disabled(
       "JSC_USELESS_EMPTY_STATEMENT", "Useless empty statement. Remove semicolon.");
 
   private final AbstractCompiler compiler;

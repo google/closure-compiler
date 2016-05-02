@@ -16,44 +16,35 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.base.Preconditions;
+
 /**
  *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class NamespaceLit extends Namespace {
+  // For when window is used as a namespace
+  private NominalType window = null;
+
   public NamespaceLit(String name) {
     this.name = name;
   }
 
-  // For when window is used as a namespace
-  public JSType toJSTypeIncludingObject(JSTypes commonTypes, JSType obj) {
-    if (obj == null) {
-      return toJSType(commonTypes);
-    }
-    if (this.namespaceType == null) {
-      ObjectType ot = obj.getObjTypeIfSingletonObj();
-      if (ot == null) {
-        ot = ObjectType.TOP_OBJECT;
-      }
-      this.namespaceType = computeJSType(commonTypes, ot.getNominalType(), ot.getFunType());
-    }
-    return this.namespaceType;
+  NominalType getWindowType() {
+    return this.window;
   }
 
-  private JSType computeJSType(JSTypes commonTypes, NominalType nt, FunctionType ft) {
-    ObjectType obj = ObjectType.makeObjectType(
-        nt, otherProps, ft, false, ObjectKind.UNRESTRICTED);
-    return withNamedTypes(commonTypes, obj);
+  public void maybeSetWindowInstance(JSType obj) {
+    if (obj != null) {
+      this.window = obj.getNominalTypeIfSingletonObj();
+    }
   }
 
   @Override
   protected JSType computeJSType(JSTypes commonTypes) {
-    return computeJSType(commonTypes, null, null);
-  }
-
-  @Override
-  public String toString() {
-    return this.name;
+    Preconditions.checkState(this.namespaceType == null);
+    return JSType.fromObjectType(ObjectType.makeObjectType(
+        this.window, null, null, this, false, ObjectKind.UNRESTRICTED));
   }
 }

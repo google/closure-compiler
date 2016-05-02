@@ -134,7 +134,7 @@ public final class ES6ModuleLoader {
     return uri;
   }
 
-  private static URI createUri(String input) {
+  static URI createUri(String input) {
     // Colons might cause URI.create() to fail
     String forwardSlashes =
         input.replace(':', '-').replace("\\", MODULE_SLASH).replace(" ", "%20");
@@ -151,6 +151,11 @@ public final class ES6ModuleLoader {
   /** Whether this is relative to the current file, or a top-level identifier. */
   static boolean isRelativeIdentifier(String name) {
     return name.startsWith("." + MODULE_SLASH) || name.startsWith(".." + MODULE_SLASH);
+  }
+
+  /** Whether this is absolute to the compilation. */
+  static boolean isAbsoluteIdentifier(String name) {
+    return name.startsWith(MODULE_SLASH);
   }
 
   /**

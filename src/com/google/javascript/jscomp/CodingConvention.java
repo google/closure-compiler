@@ -127,6 +127,11 @@ public interface CodingConvention extends Serializable {
   public boolean isPrivate(String name);
 
   /**
+   * Whether this CodingConvention includes a convention for what private names should look like.
+   */
+  public boolean hasPrivacyConvention();
+
+  /**
    * Checks if the given method defines a subclass relationship,
    * and if it does, returns information on that relationship. By default,
    * always returns null. Meant to be overridden by subclasses.
@@ -327,8 +332,7 @@ public interface CodingConvention extends Serializable {
         return 0;
       }
       Node paramParent = parameters.getParent();
-      return paramParent.getChildCount() -
-          paramParent.getIndexOfChild(parameters);
+      return paramParent.getChildCount() - paramParent.getIndexOfChild(parameters);
     }
   }
 

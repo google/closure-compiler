@@ -126,14 +126,14 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
    */
   @Override
   public boolean isOptionalParameter(Node parameter) {
-    return super.isOptionalParameter(parameter) ||
-        parameter.getString().startsWith(OPTIONAL_ARG_PREFIX);
+    return super.isOptionalParameter(parameter)
+        || parameter.getString().startsWith(OPTIONAL_ARG_PREFIX);
   }
 
   @Override
   public boolean isVarArgsParameter(Node parameter) {
-    return super.isVarArgsParameter(parameter) ||
-        VAR_ARGS_NAME.equals(parameter.getString());
+    return super.isVarArgsParameter(parameter)
+        || VAR_ARGS_NAME.equals(parameter.getString());
   }
 
   /**
@@ -144,8 +144,7 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
    */
   @Override
   public boolean isExported(String name, boolean local) {
-    return super.isExported(name, local) ||
-        (!local && name.startsWith("_"));
+    return super.isExported(name, local) || (!local && name.startsWith("_"));
   }
 
   @Override
@@ -188,5 +187,10 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
   @Override
   public boolean isPrivate(String name) {
     return name.endsWith("_") && !name.endsWith("__") && !isExported(name);
+  }
+
+  @Override
+  public boolean hasPrivacyConvention() {
+    return true;
   }
 }

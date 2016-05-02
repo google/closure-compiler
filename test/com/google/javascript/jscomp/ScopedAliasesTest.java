@@ -691,7 +691,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
           ""
           + "/** @type {function() : x} */ types.actual;"
           + "/** @type {function() : wrong.wrong} */ types.expected;");
-      fail("Test types should fail here.");
+      throw new Error("Test types should fail here.");
     } catch (AssertionError expected) {
     }
   }

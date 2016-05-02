@@ -122,7 +122,12 @@ public final class PerformanceTracker {
 
   void recordPassStart(String passName, boolean isOneTime) {
     currentPass.push(new Stats(passName, isOneTime));
-    codeChange.reset();
+    // In Compiler, toSource may be called after every pass X. We don't want it
+    // to reset the handler, because recordPassStop for pass X has not been
+    // called, so we are falsely logging that pass X didn't make changes.
+    if (!passName.equals("toSource")) {
+      codeChange.reset();
+    }
   }
 
   /**
@@ -136,22 +141,24 @@ public final class PerformanceTracker {
     Stats logStats = currentPass.pop();
     Preconditions.checkState(passName.equals(logStats.pass));
 
-    // After parsing, initialize codeSize and gzCodeSize
-    if (passName.equals(Compiler.PARSING_PASS_NAME) && trackSize) {
-      CodeSizeEstimatePrinter estimatePrinter = new CodeSizeEstimatePrinter();
-      CodeGenerator.forCostEstimation(estimatePrinter).add(jsRoot);
-      initCodeSize = codeSize = estimatePrinter.calcSize();
-      if (this.trackGzSize) {
-        initGzCodeSize = gzCodeSize = estimatePrinter.calcZippedSize();
-      }
-    }
-
     // Populate log and summary
     log.add(logStats);
     Stats summaryStats = summary.get(passName);
     if (summaryStats == null) {
       summaryStats = new Stats(passName, logStats.isOneTime);
       summary.put(passName, summaryStats);
+    }
+
+    // After parsing, initialize codeSize and gzCodeSize
+    if (passName.equals(Compiler.PARSING_PASS_NAME) && trackSize) {
+      CodeSizeEstimatePrinter estimatePrinter = new CodeSizeEstimatePrinter();
+      CodeGenerator.forCostEstimation(estimatePrinter).add(jsRoot);
+      initCodeSize = codeSize = estimatePrinter.calcSize();
+      logStats.size = summaryStats.size = initCodeSize;
+      if (this.trackGzSize) {
+        initGzCodeSize = gzCodeSize = estimatePrinter.calcZippedSize();
+        logStats.gzSize = summaryStats.gzSize = initGzCodeSize;
+      }
     }
 
     // Update fields that aren't related to code size

@@ -19,7 +19,8 @@
  *
  * @author mattloring@google.com (Matthew Loring)
  */
-
+'require base';
+'declare window global';
 
 
 /**

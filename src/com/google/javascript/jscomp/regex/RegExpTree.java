@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.regex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -565,8 +566,7 @@ public abstract class RegExpTree {
 
     Concatenation c = (Concatenation) t;
     if (c.elements.isEmpty()) { return false; }
-    RegExpTree first = c.elements.get(0),
-        last = c.elements.get(c.elements.size() - 1);
+    RegExpTree first = c.elements.get(0), last = Iterables.getLast(c.elements);
     if (!(first instanceof Anchor && last instanceof Anchor)) { return false; }
     return ((Anchor) first).type == '^' && ((Anchor) last).type == '$';
   }

@@ -100,6 +100,14 @@ class OptimizeParameters
       return false;
     }
 
+    // We don't want to re-write $jscomp.inherits to not stop recognizing
+    // 'inherits' calls. (b/27244988)
+    Node lValue = definition.getLValue();
+    if (lValue.matchesQualifiedName("$jscomp.inherits")
+        || lValue.matchesQualifiedName("$jscomp$inherits")) {
+      return false;
+    }
+
     // TODO(johnlenz): support rewriting methods defined as part of
     // object literals (they are generally problematic because they may be
     // maps of functions use in for-in expressions, etc).
@@ -475,7 +483,7 @@ class OptimizeParameters
     Preconditions.checkState(value.getParent() == null);
     Node stmt;
     if (varName != null) {
-      stmt = NodeUtil.newVarNode(varName.getString(), value);
+      stmt = IR.var(varName.getString(), value).useSourceInfoFromForTree(value);
     } else {
       stmt = IR.exprResult(value);
     }

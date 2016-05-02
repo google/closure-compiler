@@ -31,6 +31,11 @@ import java.io.IOException;
  */
 public final class CheckForInOverArrayTest extends CompilerTestCase {
 
+  private static final String GOOG_OBJECT = LINE_JOINER.join(
+      "var goog = {};",
+      "goog.object = {};",
+      "goog.object.forEach = function(obj, f, opt_this) {}");
+
   @Override
   public void setUp() throws IOException {
     enableTypeCheck();
@@ -48,8 +53,42 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
     return options;
   }
 
+  public void testGoogObjectForEach1() {
+    testGoogObjectWarning(LINE_JOINER.join(
+        GOOG_OBJECT,
+        "var arr = [1, 2, 3];",
+        "goog.object.forEach(arr, alert);"));
+  }
+
+  public void testGoogObjectForEach2() {
+    testGoogObjectWarning(LINE_JOINER.join(
+        GOOG_OBJECT,
+        "function f(/** Array<number>|number */ n) {",
+        "  if (typeof n == 'number')",
+        "    alert(n);",
+        "  else",
+        "    goog.object.forEach(n, alert);",
+        "}"));
+  }
+
+  public void testGoogObjectForEach3() {
+    testGoogObjectWarning(LINE_JOINER.join(
+        GOOG_OBJECT,
+        "function f(/** !Array<number> */ arr) {",
+        "  goog.object.forEach(arr, alert);",
+        "}"));
+  }
+
+  public void testGoogObjectForEach4() {
+    testSame(LINE_JOINER.join(
+        GOOG_OBJECT,
+        "function f(/** Object<string, number> */ obj) {",
+        "  goog.object.forEach(obj, alert);",
+        "}"));
+  }
+
   public void testForInOverArray1() {
-    testWarning(LINE_JOINER.join(
+    testForInWarning(LINE_JOINER.join(
         "var arr = [1, 2, 3]; var b;",
         "for (var i in arr) {",
         "  b += arr[i];",
@@ -57,7 +96,7 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
   }
 
   public void testForInOverArray2() {
-    testPass(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "var arr = {prop: 1, prop: []}; var b;",
         "for (var i in arr) {",
         "  b += arr[i];",
@@ -69,7 +108,7 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
    * array will a warning be generated.
    */
   public void testForInOverArray3() {
-    testWarning(LINE_JOINER.join(
+    testForInWarning(LINE_JOINER.join(
         "var b;",
         "var arr = {prop: 1, prop: []};",
         "if (true) { arr = []; }",
@@ -79,7 +118,7 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
   }
 
   public void testForInOverArray4() {
-    testWarning(LINE_JOINER.join(
+    testForInWarning(LINE_JOINER.join(
         "var arr = Array(10); var b;",
         "for (var i in arr) {",
         "  b += arr[i];",
@@ -87,7 +126,7 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
   }
 
   public void testForInOverArray5() {
-    testWarning(LINE_JOINER.join(
+    testForInWarning(LINE_JOINER.join(
         "var arr = new Array(10); var b;",
         "for (var i in arr) {",
         "  b += arr[i];",
@@ -95,7 +134,7 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
   }
 
   public void testForInOverArray6() {
-    testWarning(LINE_JOINER.join(
+    testForInWarning(LINE_JOINER.join(
         "var b;",
         "var arr = [];",
         "for (var i in arr) {",
@@ -104,7 +143,7 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
   }
 
   public void testForInOverArray7() {
-    testPass(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "var b;",
         "var arr = {};",
         "for (var i in arr) {",
@@ -113,38 +152,38 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
   }
 
   public void testForInOverArray8() {
-    testPass(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "function f(/** !Object */ o) {",
         "  for (var i in o) {}",
         "}"));
   }
 
   public void testForInOverArray9() {
-    testPass(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "function f(/** ?Object */ o) {",
         "  for (var i in o) {}",
         "}"));
   }
 
   public void testForInOverArray10() {
-    testPass(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "function f(/** (Object|string) */ o) {",
         "  for (var i in o) {}",
         "}"));
   }
 
   public void testForInOverArray11() {
-    testWarning(LINE_JOINER.join(
+    testForInWarning(LINE_JOINER.join(
         "function f(/** Array<string> */ o) {",
         "  for (var i in o) {}",
         "}"));
   }
 
-  private void testPass(String js) {
-    testSame("", js, null);
+  private void testForInWarning(String js) {
+    testSame("", js, CheckForInOverArray.FOR_IN_OVER_ARRAY);
   }
 
-  private void testWarning(String js) {
-    testSame("", js, CheckForInOverArray.FOR_IN_OVER_ARRAY);
+  private void testGoogObjectWarning(String js) {
+    testSame("", js, CheckForInOverArray.ARRAY_PASSED_TO_GOOG_OBJECT);
   }
 }

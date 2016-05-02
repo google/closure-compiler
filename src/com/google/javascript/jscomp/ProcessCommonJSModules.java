@@ -16,8 +16,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
@@ -81,11 +81,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
   public void process(Node externs, Node root) {
     FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
     NodeTraversal.traverseEs6(compiler, root, finder);
-    if (finder.found) {
-      return;
-    }
     NodeTraversal
-        .traverseEs6(compiler, root, new ProcessCommonJsModulesCallback());
+        .traverseEs6(compiler, root, new ProcessCommonJsModulesCallback(!finder.found));
   }
 
   String inputToModuleName(CompilerInput input) {
@@ -107,9 +104,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      // Shallow traversal, since we don't need to inspect within function declarations.
-      if (parent == null || !parent.isFunction()
-          || n == parent.getFirstChild()) {
+      if (found) {
+        return false;
+      }
+      // Shallow traversal, since we don't need to inspect within functions or expressions.
+      if (parent == null
+          || NodeUtil.isControlStructure(parent)
+          || NodeUtil.isStatementBlock(parent)) {
         if (n.isExprResult()) {
           Node maybeGetProp = n.getFirstFirstChild();
           if (maybeGetProp != null
@@ -183,6 +184,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private List<Node> moduleExportRefs = new ArrayList<>();
     private List<Node> exportRefs = new ArrayList<>();
     Multiset<String> propertyExportRefCount = HashMultiset.create();
+    private final boolean allowFullRewrite;
+
+    public ProcessCommonJsModulesCallback(boolean allowFullRewrite) {
+      this.allowFullRewrite = allowFullRewrite;
+    }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -192,6 +198,28 @@ public final class ProcessCommonJSModules implements CompilerPass {
         visitRequireCall(t, n, parent);
       }
 
+      // Finds calls to require.ensure which is a method to allow async loading of
+      // CommonJS modules:
+      //
+      // require.ensure(['/path/to/module1', '/path/to/module2'], function(require) {
+      //    var module1 = require('/path/to/module1');
+      //    var module2 = require('/path/to/module2');
+      // });
+      //
+      // will be rewritten as an IIFE
+      //
+      // (function() {
+      //   var module1 = require('/path/to/module1');
+      //   var module2 = require('/path/to/module2');
+      // })()
+      //
+      // See http://wiki.commonjs.org/wiki/Modules/Async/A
+      //     http://www.injectjs.com/docs/0.7.x/cjs/require.ensure.html
+      if (n.isCall()
+          && n.getChildCount() == 3
+          && n.getFirstChild().matchesQualifiedName("require.ensure")) {
+        visitRequireEnsureCall(n);
+      }
 
       // Detects UMD pattern, by checking for CommonJS exports and AMD define
       // statements in if-conditions and rewrites the if-then-else block as
@@ -217,7 +245,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       // will be rewritten to:
       //
       // if (typeof module == "object" && module.exports) {...}
-      if (n.isIf()) {
+      if (allowFullRewrite && n.isIf()) {
         FindModuleExportStatements commonjsFinder = new FindModuleExportStatements();
         Node condition = n.getFirstChild();
         NodeTraversal.traverseEs6(compiler, condition, commonjsFinder);
@@ -239,7 +267,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         visitScript(t, n);
       }
 
-      if (n.isGetProp() &&
+      if (allowFullRewrite &&  n.isGetProp() &&
           "module.exports".equals(n.getQualifiedName())) {
         Var v = t.getScope().getVar(MODULE);
         // only rewrite "module.exports" if "module" is a free variable,
@@ -251,7 +279,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      if (n.isName() && EXPORTS.equals(n.getString())) {
+      if (allowFullRewrite && n.isName() && EXPORTS.equals(n.getString())) {
         Var v = t.getScope().getVar(n.getString());
         if (v == null || v.isGlobal()) {
           exportRefs.add(n);
@@ -305,9 +333,20 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
-      Node moduleRef = IR.name(moduleName).srcref(require);
-      parent.replaceChild(require, moduleRef);
       Node script = getCurrentScriptNode(parent);
+
+      // When require("name") is used as a standalone statement (the result isn't used)
+      // it indicates that a module is being loaded for the side effects it produces.
+      // In this case the require statement should just be removed as the goog.require
+      // call inserted will import the module.
+      if (!NodeUtil.isExpressionResultUsed(require)
+          && parent.isExprResult()
+          && NodeUtil.isStatementBlock(parent.getParent())) {
+        parent.getParent().removeChild(parent);
+      } else {
+        Node moduleRef = IR.name(moduleName).srcref(require);
+        parent.replaceChild(require, moduleRef);
+      }
       if (reportDependencies) {
         t.getInput().addRequire(moduleName);
       }
@@ -315,6 +354,35 @@ public final class ProcessCommonJSModules implements CompilerPass {
       script.addChildToFront(IR.exprResult(
           IR.call(IR.getprop(IR.name("goog"), IR.string("require")),
               IR.string(moduleName))).useSourceInfoIfMissingFromForTree(require));
+      compiler.reportCodeChange();
+    }
+
+    /**
+     * Visit require.ensure calls. Replace the call with an IIFE.
+     */
+    private void visitRequireEnsureCall(Node n) {
+      Preconditions.checkState(n.getChildCount() == 3);
+      Node callbackFunction = n.getChildAtIndex(2);
+
+      // We only support the form where the first argument is an array literal and
+      // the the second a callback function which has a single argument
+      // with the name "require".
+      if (!(n.getSecondChild().isArrayLit()
+          && callbackFunction.isFunction()
+          && callbackFunction.getChildCount() == 3
+          && callbackFunction.getSecondChild().getChildCount() == 1
+          && callbackFunction.getSecondChild().getFirstChild().matchesQualifiedName("require"))) {
+        return;
+      }
+
+      callbackFunction.detachFromParent();
+
+      // Remove the "require" argument from the parameter list.
+      callbackFunction.getSecondChild().removeChildren();
+      n.removeChildren();
+      n.putBooleanProp(Node.FREE_CALL, true);
+      n.addChildrenToFront(callbackFunction);
+
       compiler.reportCodeChange();
     }
 
@@ -329,9 +397,18 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       String moduleName = inputToModuleName(t.getInput());
 
-      // Rename vars to not conflict in global scope.
-      NodeTraversal.traverseEs6(compiler, script, new SuffixVarsCallback(
-          moduleName));
+      boolean hasExports = !(moduleExportRefs.isEmpty() && exportRefs.isEmpty());
+
+      // Rename vars to not conflict in global scope - but only if the script exports something.
+      // If there are no exports, we still need to rewrite type annotations which
+      // are module paths
+      NodeTraversal.traverseEs6(compiler, script,
+          new SuffixVarsCallback(moduleName, hasExports));
+
+      // If the script has no exports, we don't want to output a goog.provide statement
+      if (!hasExports) {
+        return;
+      }
 
       // Replace all refs to module.exports and exports
       processExports(script, moduleName);
@@ -458,8 +535,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
             && !declaredModuleExports) {
           // Adds "var moduleName" to front of the current file.
           script.addChildToFront(
-              IR.var(IR.name(moduleName))
-                  .useSourceInfoIfMissingFromForTree(ref));
+              IR.var(moduleName).useSourceInfoIfMissingFromForTree(ref));
           declaredModuleExports = true;
         }
 
@@ -504,7 +580,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       // to module namespace: exports$$moduleName = moduleName;
       if (!exportRefs.isEmpty()) {
         String aliasName = "exports$$" + moduleName;
-        Node aliasNode = IR.var(IR.name(aliasName), IR.name(moduleName))
+        Node aliasNode = IR.var(aliasName, IR.name(moduleName))
             .useSourceInfoIfMissingFromForTree(script);
         script.addChildToFront(aliasNode);
 
@@ -577,9 +653,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   private class SuffixVarsCallback extends AbstractPostOrderCallback {
     private final String suffix;
+    private final boolean fullRewrite;
 
-    SuffixVarsCallback(String suffix) {
+    SuffixVarsCallback(String suffix, boolean fullRewrite) {
       this.suffix = suffix;
+      this.fullRewrite = fullRewrite;
     }
 
     @Override
@@ -592,7 +670,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       boolean isShorthandObjLitKey = n.isStringKey() && !n.hasChildren();
-      if (n.isName() || isShorthandObjLitKey) {
+      if (fullRewrite && n.isName() || isShorthandObjLitKey) {
         String name = n.getString();
         if (suffix.equals(name)) {
           // TODO(moz): Investigate whether we need to return early in this unlikely situation.
@@ -629,7 +707,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
       if (typeNode.isString()) {
         String name = typeNode.getString();
-        if (ES6ModuleLoader.isRelativeIdentifier(name)) {
+        if (ES6ModuleLoader.isRelativeIdentifier(name)
+            || ES6ModuleLoader.isAbsoluteIdentifier(name)) {
           int lastSlash = name.lastIndexOf('/');
           int endIndex = name.indexOf('.', lastSlash);
           String localTypeName = null;
@@ -649,7 +728,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress);
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
-        } else {
+        } else if (fullRewrite) {
           int endIndex = name.indexOf('.');
           if (endIndex == -1) {
             endIndex = name.length();

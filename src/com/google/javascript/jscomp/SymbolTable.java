@@ -1500,7 +1500,7 @@ public final class SymbolTable {
         return;
       }
 
-      Symbol symbol = thisStack.get(thisStack.size() - 1);
+      Symbol symbol = Iterables.getLast(thisStack);
       if (symbol != null) {
         Reference ref = symbol.defineReferenceAt(n);
         if (symbol.getDeclaration() == null) {

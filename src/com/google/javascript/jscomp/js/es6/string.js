@@ -22,6 +22,21 @@ $jscomp.string = $jscomp.string || {};
 
 
 /**
+ * Throws if the argument is null or undefined.
+ * @param {*} str The argument to check.
+ * @param {string} func Name of the function, for reporting.
+ * @private
+ */
+$jscomp.string.noNullOrUndefined_ = function(str, func) {
+  if (str == null) {
+    throw new TypeError(
+        `The 'this' value for String.prototype.${func} ` +
+        'must not be null or undefined');
+  }
+};
+
+
+/**
  * Throws if the argument is a RegExp.
  * @param {*} str The argument to check.
  * @param {string} func Name of the function, for reporting.
@@ -74,8 +89,9 @@ $jscomp.string.fromCodePoint = function(...codepoints) {
  * @return {string}
  */
 $jscomp.string.repeat = function(copies) {
-  'use strict'; // Note: calling on null/undefined is TypeError
-  let /** string */ string = this.toString();
+  'use strict';
+  $jscomp.string.noNullOrUndefined_(this, 'repeat');
+  let /** string */ string = String(this);
   if (copies < 0 || copies > 0x4FFFFFFF) { // impose a 1GB limit
     throw new RangeError('Invalid count value');
   }
@@ -112,7 +128,8 @@ $jscomp.string.repeat$install = function() {
 $jscomp.string.codePointAt = function(position) {
   // NOTE: this is taken from v8's harmony-string.js StringCodePointAt
   'use strict';
-  const string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, 'codePointAt');
+  const string = String(this);
   const size = string.length;
   position = Number(position) || 0;
   if (!(position >= 0 && position < size)) {
@@ -155,7 +172,8 @@ $jscomp.string.codePointAt$install = function() {
 $jscomp.string.includes = function(searchString, opt_position = 0) {
   'use strict';
   $jscomp.string.noRegExp_(searchString, 'includes');
-  const string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, 'includes');
+  const string = String(this);
   return string.indexOf(searchString, opt_position) !== -1;
 };
 
@@ -184,7 +202,8 @@ $jscomp.string.includes$install = function() {
 $jscomp.string.startsWith = function(searchString, opt_position = 0) {
   'use strict';
   $jscomp.string.noRegExp_(searchString, 'startsWith');
-  const string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, 'startsWith');
+  const string = String(this);
   searchString = searchString + '';
   const strLen = string.length;
   const searchLen = searchString.length;
@@ -221,7 +240,8 @@ $jscomp.string.startsWith$install = function() {
 $jscomp.string.endsWith = function(searchString, opt_position = void 0) {
   'use strict';
   $jscomp.string.noRegExp_(searchString, 'endsWith');
-  const string = this.toString();
+  $jscomp.string.noNullOrUndefined_(this, 'endsWith');
+  const string = String(this);
   searchString = searchString + '';
   if (opt_position === void 0) opt_position = string.length;
   let i = Math.max(0, Math.min(opt_position | 0, string.length));

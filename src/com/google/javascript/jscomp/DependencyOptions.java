@@ -43,10 +43,6 @@ public final class DependencyOptions implements Serializable {
   private boolean sortDependencies = false;
   private boolean pruneDependencies = false;
   private boolean dropMoochers = false;
-
-  // TODO(tbreisacher): Set this to true unconditionally, and get rid of the flag,
-  // once we check to make sure this won't break anyone.
-  private boolean es6ModuleOrder = false;
   private final Set<ModuleIdentifier> entryPoints = new HashSet<>();
 
   /**
@@ -76,19 +72,6 @@ public final class DependencyOptions implements Serializable {
    */
   public DependencyOptions setDependencyPruning(boolean enabled) {
     this.pruneDependencies = enabled;
-    return this;
-  }
-
-  /**
-   * Enables or disables ES6 module style ordering.
-   *
-   * This ordering differs from classic ordering in that inputs are sorted
-   * using a depth first instead of breadth first graph traversal and circular
-   * references are allowed.
-   * @return this for easy building.
-   */
-  public DependencyOptions setEs6ModuleOrder(boolean es6ModuleOrder) {
-    this.es6ModuleOrder = es6ModuleOrder;
     return this;
   }
 
@@ -135,13 +118,9 @@ public final class DependencyOptions implements Serializable {
     return this;
   }
 
-  public boolean isEs6ModuleOrder() {
-    return es6ModuleOrder;
-  }
-
   /** Returns whether re-ordering of files is needed. */
   boolean needsManagement() {
-    return sortDependencies || pruneDependencies || es6ModuleOrder;
+    return sortDependencies || pruneDependencies;
   }
 
   boolean shouldSortDependencies() {
@@ -166,7 +145,6 @@ public final class DependencyOptions implements Serializable {
         .add("sortDependencies", sortDependencies)
         .add("pruneDependencies", pruneDependencies)
         .add("dropMoochers", dropMoochers)
-        .add("es6ModuleOrder", es6ModuleOrder)
         .add("entryPoints", entryPoints)
         .toString();
   }

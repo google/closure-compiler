@@ -122,12 +122,12 @@ class ProcessTweaks implements CompilerPass {
     final TweakFunction registerFunction;
 
     TweakFunction(String name) {
-      this(name, null, Token.ERROR, Token.ERROR, null);
+      this(name, null, Token.EMPTY, Token.EMPTY, null);
     }
 
     TweakFunction(String name, String expectedTypeName,
         int validNodeTypeA) {
-      this(name, expectedTypeName, validNodeTypeA, Token.ERROR, null);
+      this(name, expectedTypeName, validNodeTypeA, Token.EMPTY, null);
     }
 
     TweakFunction(String name, String expectedTypeName,
@@ -136,7 +136,7 @@ class ProcessTweaks implements CompilerPass {
     }
 
     TweakFunction(String name, TweakFunction registerFunction) {
-      this(name, null, Token.ERROR, Token.ERROR, registerFunction);
+      this(name, null, Token.EMPTY, Token.EMPTY, registerFunction);
     }
 
     TweakFunction(String name, String expectedTypeName,

@@ -776,7 +776,7 @@ angular.Module.prototype.requires;
 /** @constructor */
 angular.Scope = function() {};
 
-/** @type {string} */
+/** @type {?string} */
 angular.Scope.prototype.$$phase;
 
 /**
@@ -926,7 +926,7 @@ angular.version.codeName = '';
  *****************************************************************************/
 
 /**
- * @typedef {function()}
+ * @typedef {function(string=)}
  */
 angular.$anchorScroll;
 
@@ -2038,14 +2038,14 @@ angular.$route = function() {};
 angular.$route.prototype.reload = function() {};
 
 /**
- * @param {!Object<string,string>} object
+ * @param {!Object<string, string>} object
  */
 angular.$route.prototype.updateParams = function(object) {};
 
 /** @type {!angular.$route.Route} */
 angular.$route.prototype.current;
 
-/** @type {Array.<!angular.$route.Route>} */
+/** @type {Object.<?string, !angular.$route.Route>} */
 angular.$route.prototype.routes;
 
 /** @constructor */

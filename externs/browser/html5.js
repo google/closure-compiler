@@ -79,7 +79,7 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
  */
 function CanvasRenderingContext2D() {}
 
-/** @type {HTMLCanvasElement} */
+/** @type {!HTMLCanvasElement} */
 CanvasRenderingContext2D.prototype.canvas;
 
 /**
@@ -1697,10 +1697,10 @@ HTMLVideoElement.prototype.webkitExitFullscreen = function() {};
  */
 HTMLVideoElement.prototype.webkitExitFullScreen = function() {};
 
-/** @type {string} */
+/** @type {number} */
 HTMLVideoElement.prototype.width;
 
-/** @type {string} */
+/** @type {number} */
 HTMLVideoElement.prototype.height;
 
 /** @type {number} */
@@ -2095,13 +2095,37 @@ DataTransferItemList.prototype.clear = function() {};
 /** @type {!DataTransferItemList} */
 DataTransfer.prototype.items;
 
+/**
+ * @typedef {{
+ *   bubbles: (boolean|undefined),
+ *   cancelable: (boolean|undefined),
+ *   view: (Window|undefined),
+ *   detail: (number|undefined),
+ *   screenX: (number|undefined),
+ *   screenY: (number|undefined),
+ *   clientX: (number|undefined),
+ *   clientY: (number|undefined),
+ *   ctrlKey: (boolean|undefined),
+ *   shiftKey: (boolean|undefined),
+ *   altKey: (boolean|undefined),
+ *   metaKey: (boolean|undefined),
+ *   button: (number|undefined),
+ *   buttons: (number|undefined),
+ *   relatedTarget: (EventTarget|undefined),
+ *   dataTransfer: (DataTransfer|undefined)
+ * }}
+ */
+var DragEventInit;
+
 
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#the-dragevent-interface
  * @constructor
  * @extends {MouseEvent}
+ * @param {string} type
+ * @param {DragEventInit=} opt_eventInitDict
  */
-function DragEvent() {}
+function DragEvent(type, opt_eventInitDict) {}
 
 /** @type {DataTransfer} */
 DragEvent.prototype.dataTransfer;
@@ -2423,8 +2447,8 @@ XMLHttpRequest.prototype.overrideMimeType = function(mimeType) {};
 XMLHttpRequest.prototype.responseType;
 
 /**
- * @type {*}
- * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-responsetype-attribute
+ * @type {?(ArrayBuffer|Blob|Document|Object|string)}
+ * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-response-attribute
  */
 XMLHttpRequest.prototype.response;
 
@@ -2945,7 +2969,7 @@ MutationRecord.prototype.addedNodes;
 MutationRecord.prototype.removedNodes;
 
 /** @type {Node} */
-MutationRecord.prototype.previouSibling;
+MutationRecord.prototype.previousSibling;
 
 /** @type {Node} */
 MutationRecord.prototype.nextSibling;
@@ -3495,3 +3519,32 @@ HTMLFieldSetElement.prototype.validity;
  * @see https://www.w3.org/TR/html5/forms.html#the-fieldset-element
  */
 HTMLFieldSetElement.prototype.willValidate;
+
+/**
+ * @constructor
+ * @extends {HTMLCollection<T>}
+ * @implements {IObject<string, (T|RadioNodeList<T>)>}
+ * @implements {IArrayLike<T>}
+ * @template T
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#the-htmlformcontrolscollection-interface
+ */
+function HTMLFormControlsCollection() {}
+
+/**
+ * @param {string} name
+ * @return {T|RadioNodeList<T>|null}
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#dom-htmlformcontrolscollection-nameditem
+ * @nosideeffects
+ * @override
+ * @suppress {newCheckTypes}
+ */
+HTMLFormControlsCollection.prototype.namedItem = function(name) {};
+
+/**
+ * @constructor
+ * @extends {NodeList<T>}
+ * @template T
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#radionodelist
+ */
+function RadioNodeList() {}
+

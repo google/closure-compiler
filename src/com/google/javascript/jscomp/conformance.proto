@@ -40,14 +40,11 @@ message Requirement {
   repeated string whitelist_regexp = 3;
 
   // Optional: A list of source paths that will be checked for the requirement
-  // (the opposite of whitelist). It is an error to specify both
-  // (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+  // (the opposite of whitelist).
   repeated string only_apply_to = 4;
 
   // Optional: A list of source path regexps that will be checked for
   // the requirement (the opposite of whitelist_regexp).
-  // It is an error to specify both
-  // (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
   repeated string only_apply_to_regexp = 5;
 
   // A classification of the requirement and how it is enforced.

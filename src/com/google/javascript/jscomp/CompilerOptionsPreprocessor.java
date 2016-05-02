@@ -43,8 +43,8 @@ final class CompilerOptionsPreprocessor {
     if (options.removeUnusedPrototypePropertiesInExterns
         && !options.removeUnusedPrototypeProperties) {
       throw new InvalidOptionsException(
-          "remove_unused_prototype_properties_in_externs requires "
-          + "remove_unused_prototype_properties to be turned on.");
+          "remove_unused_prototype_props_in_externs requires "
+          + "remove_unused_prototype_props to be turned on.");
     }
 
     if (options.getLanguageOut().isEs6OrHigher()

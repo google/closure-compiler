@@ -98,7 +98,6 @@ public class ParseTree {
   public MemberVariableTree asMemberVariable() { return (MemberVariableTree) this; }
   public MissingPrimaryExpressionTree asMissingPrimaryExpression() {
     return (MissingPrimaryExpressionTree) this; }
-  public ModuleImportTree asModuleImport() { return (ModuleImportTree) this; }
   public NewExpressionTree asNewExpression() { return (NewExpressionTree) this; }
   public NullTree asNull() { return (NullTree) this; }
   public ObjectLiteralExpressionTree asObjectLiteralExpression() {

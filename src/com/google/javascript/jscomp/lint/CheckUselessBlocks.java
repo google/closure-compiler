@@ -48,7 +48,7 @@ import java.util.Deque;
  * Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-lone-blocks.js)
  */
 public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
-  public static final DiagnosticType USELESS_BLOCK = DiagnosticType.warning(
+  public static final DiagnosticType USELESS_BLOCK = DiagnosticType.disabled(
       "JSC_USELESS_BLOCK", "Useless block.");
 
   private final AbstractCompiler compiler;

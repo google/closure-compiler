@@ -49,6 +49,11 @@ import java.util.logging.Logger;
  * call sites. For examples, calls of the form foo["bar"] are not
  * detected.
  *
+ * This pass is not on by default because it is not safe in simple mode.
+ * If the prototype method is mutated and we don't detect that, inlining it is
+ * unsafe.
+ * We enable it whenever function inlining is enabled.
+ *
  */
 class InlineSimpleMethods extends MethodCompilerPass {
 

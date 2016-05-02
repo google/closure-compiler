@@ -115,7 +115,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
   }
 
   private void addExternForGlobalSymbolNamespace() {
-    Node varNode = IR.var(IR.name(globalSymbolNamespace));
+    Node varNode = IR.var(globalSymbolNamespace);
     CompilerInput input = compiler.getSynthesizedExternsInput();
     input.getAstRoot(compiler).addChildrenToBack(varNode);
     compiler.reportCodeChange();
@@ -178,7 +178,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         n.getFirstChild().setString("");
         Node prev = parent.getChildBefore(n);
         n.detachFromParent();
-        Node var = NodeUtil.newVarNode(name, n);
+        Node var = IR.var(name, n).useSourceInfoFromForTree(n);
         if (prev == null) {
           parent.addChildToFront(var);
         } else {

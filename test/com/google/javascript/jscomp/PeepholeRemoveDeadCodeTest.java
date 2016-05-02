@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  * of multiple peephole passes are in PeepholeIntegrationTest.
  */
 
-public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
+public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
 
   private static final String MATH =
       "/** @const */ var Math = {};" +
@@ -314,13 +314,13 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("var x=1; switch(x) { case 1: var y; }",
         "var y; var x=1;");
 
-    // Can't remove cases if a default exists.
+    // Can't remove cases if a default exists and is not the last case.
     foldSame("function f() {switch(a){default: return; case 1: break;}}");
+    foldSame("function f() {switch(1){default: return; case 1: break;}}"); // foldable
     foldSame("function f() {switch(a){case 1: foo();}}");
     foldSame("function f() {switch(a){case 3: case 2: case 1: foo();}}");
 
-    fold("function f() {switch(a){case 2: case 1: default: foo();}}",
-         "function f() {switch(a){default: foo();}}");
+    fold("function f() {switch(a){case 2: case 1: default: foo();}}", "function f() { foo(); }");
     fold("switch(a){case 1: default:break; case 2: foo()}",
          "switch(a){case 2: foo()}");
     foldSame("switch(a){case 1: goo(); default:break; case 2: foo()}");
@@ -379,14 +379,17 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "case 'bar':\n" +
         "  bar();\n" +
         "}");
-    foldSame("switch ('hasDefaultCase') {\n" +
-        "case 'foo':\n" +
-        "  foo();\n" +
-        "  break;\n" +
-        "default:\n" +
-        "  bar();\n" +
-        "  break;\n" +
-        "}");
+    fold(
+        LINE_JOINER.join(
+            "switch ('hasDefaultCase') {",
+            "  case 'foo':",
+            "    foo();",
+            "    break;",
+            "  default:",
+            "    bar();",
+            "    break;",
+            "}"),
+        "bar();");
     fold("switch ('repeated') {\n" +
         "case 'repeated':\n" +
         "  foo();\n" +
@@ -433,7 +436,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "  break;\n" +
         "}",
         "");
-    foldSame("switch (0) {\n" +
+    fold("switch (0) {\n" +
         "case NaN:\n" +
         "  foobar();\n" +
         "  break;\n" +
@@ -443,7 +446,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "case 2:\n" +
         "  bar();\n" +
         "  break;\n" +
-        "}");
+        "}",
+        "foo();");
     foldSame("switch ('\\v') {\n" +
         "case '\\u000B':\n" +
         "  foo();\n" +
@@ -475,6 +479,229 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "    break outer;\n" +
         "}",
         "outer: {f(); break outer;}");
+  }
+
+  public void testOptimizeSwitchWithLabellessBreak() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  switch('x') {",
+            "    case 'x': var x = 1; break;",
+            "    case 'y': break;",
+            "  }",
+            "}"),
+        "function f() { var x = 1; }");
+
+    // TODO(moz): Convert this to an if statement for better optimization
+    testSame(
+        LINE_JOINER.join(
+            "function f() {",
+            "  switch(x) {",
+            "    case 'y': break;",
+            "    default: var x = 1;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "var exit;",
+            "switch ('a') {",
+            "  case 'a':",
+            "    break;",
+            "  default:",
+            "    exit = 21;",
+            "    break;",
+            "}",
+            "switch(exit) {",
+            "  case 21: throw 'x';",
+            "  default : console.log('good');",
+            "}"),
+        LINE_JOINER.join(
+            "var exit;",
+            "switch(exit) {",
+            "  case 21: throw 'x';",
+            "  default : console.log('good');",
+            "}"));
+  }
+
+  public void testOptimizeSwitchWithLabelledBreak() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  label:",
+            "  switch('x') {",
+            "    case 'x': break label;",
+            "    case 'y': throw f;",
+            "  }",
+            "}"),
+        "function f() { label: { break label; } }");
+
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  label:",
+            "  switch('x') {",
+            "    case 'x': break label;",
+            "    default: throw f;",
+            "  }",
+            "}"),
+        "function f() { label: { break label; } }");
+  }
+
+  public void testOptimizeSwitchWithReturn() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  switch('x') {",
+            "    case 'x': return 1;",
+            "    case 'y': return 2;",
+            "  }",
+            "}"),
+        "function f() { return 1; }");
+
+    // TODO(moz): This is to show that the current optimization might break if the input has block
+    // scoped declarations. We will need to fix the logic for removing blocks to account for this.
+    testEs6(
+        LINE_JOINER.join(
+            "function f() {",
+            "  let x = 1;",
+            "  switch('x') {",
+            "    case 'x': { let x = 2; return 3; }",
+            "    case 'y': return 4;",
+            "  }",
+            "}"),
+        "function f() { let x = 1; let x = 2; return 3; }");
+  }
+
+  public void testOptimizeSwitchWithThrow() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  switch('x') {",
+            "    case 'x': throw f;",
+            "    case 'y': throw f;",
+            "  }",
+            "}"),
+        "function f() { throw f; }");
+  }
+
+  public void testOptimizeSwitchWithContinue() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  while (true) {",
+            "    switch('x') {",
+            "      case 'x': continue;",
+            "      case 'y': continue;",
+            "    }",
+            "  }",
+            "}"),
+        "function f() { while (true) { continue; } }");
+  }
+
+  // GitHub issue #1722: https://github.com/google/closure-compiler/issues/1722
+  public void testOptimizeSwitchWithDefaultCase() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  switch('x') {",
+            "    case 'x': return 1;",
+            "    case 'y': return 2;",
+            "    default: return 3",
+            " }",
+            "}"),
+        "function f() { return 1; }");
+
+    test(
+        LINE_JOINER.join(
+            "switch ('hasDefaultCase') {",
+            "  case 'foo':",
+            "    foo();",
+            "    break;",
+            "  default:",
+            "    bar();",
+            "    break;",
+            "}"),
+        "bar();");
+
+    testSame("switch (x) { default: if (a) { break; } bar(); }");
+
+    // Potentially foldable
+    testSame(
+        LINE_JOINER.join(
+            "switch (x) {",
+            "  case x:",
+            "    foo();",
+            "    break;",
+            "  default:",
+            "    if (a) { break; }",
+            "    bar();",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "switch ('hasDefaultCase') {",
+            "  case 'foo':",
+            "    foo();",
+            "    break;",
+            "  default:",
+            "    if (true) { break; }",
+            "    bar();",
+            "}"),
+        "");
+
+    test(
+        LINE_JOINER.join(
+            "switch ('hasDefaultCase') {",
+            "  case 'foo':",
+            "    foo();",
+            "    break;",
+            "  default:",
+            "    if (a) { break; }",
+            "    bar();",
+            "}"),
+        "switch ('hasDefaultCase') { default: if (a) { break; } bar(); }");
+
+    test(
+        LINE_JOINER.join(
+            "l: switch ('hasDefaultCase') {",
+            "  case 'foo':",
+            "    foo();",
+            "    break;",
+            "  default:",
+            "    if (a) { break l; }",
+            "    bar();",
+            "    break;",
+            "}"),
+        "l:{ if (a) { break l; } bar(); }");
+
+    test(
+        LINE_JOINER.join(
+            "switch ('hasDefaultCase') {",
+            "  case 'foo':",
+            "    bar();",
+            "    break;",
+            "  default:",
+            "    foo();",
+            "    break;",
+            "}"),
+        "foo();");
+
+    test("switch (a()) { default: bar(); break;}", "a(); bar();");
+
+    test("switch (a()) { default: break; bar();}", "a();");
+
+    test(
+        LINE_JOINER.join(
+            "loop: ",
+            "while (true) {",
+            "  switch (a()) {",
+            "    default:",
+            "      bar();",
+            "      break loop;",
+            "  }",
+            "}"),
+        "loop: while (true) { a(); bar(); break loop; }");
   }
 
   public void testRemoveNumber() {

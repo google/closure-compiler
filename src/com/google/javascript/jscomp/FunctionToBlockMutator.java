@@ -268,7 +268,7 @@ class FunctionToBlockMutator {
                     || NodeUtil.mayHaveSideEffects(value, compiler))) {
               String newName = getUniqueThisName();
               Node newValue = entry.getValue().cloneTree();
-              Node newNode = NodeUtil.newVarNode(newName, newValue)
+              Node newNode = IR.var(newName, newValue)
                   .useSourceInfoIfMissingFromForTree(newValue);
               newVars.add(0, newNode);
               // Remove the parameter from the list to replace.
@@ -278,7 +278,7 @@ class FunctionToBlockMutator {
             }
           } else {
             Node newValue = entry.getValue().cloneTree();
-            Node newNode = NodeUtil.newVarNode(name, newValue)
+            Node newNode = IR.var(name, newValue)
                 .useSourceInfoIfMissingFromForTree(newValue);
             newVars.add(0, newNode);
             // Remove the parameter from the list to replace.

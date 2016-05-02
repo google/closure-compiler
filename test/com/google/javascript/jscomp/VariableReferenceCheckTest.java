@@ -95,6 +95,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testUnreferencedBleedingFunction() {
     assertNoWarning("var x = function y() {}");
+    assertNoWarning("var x = function y() {}; var y = 1;");
   }
 
   public void testReferencedBleedingFunction() {
@@ -255,6 +256,8 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   public void testForIn() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("for (var prop in obj) {}");
+    assertNoWarning("for (prop in obj) {}");
+    assertNoWarning("var prop; for (prop in obj) {}");
   }
   /**
    * Expects the JS to generate one bad-read error.

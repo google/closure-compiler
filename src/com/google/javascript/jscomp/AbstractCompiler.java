@@ -47,9 +47,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
       "JSC_READ_ERROR", "Cannot read: {0}");
 
-  boolean needsEs6Runtime = false;
-  boolean needsEs6DartRuntime = false;
-
   /**
    * Will be called before each pass runs.
    */
@@ -179,9 +176,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Used only by the new type inference
    */
-  abstract GlobalTypeInfo getSymbolTable();
+  abstract CompilerPass getSymbolTable();
 
-  abstract void setSymbolTable(GlobalTypeInfo symbolTable);
+  abstract void setSymbolTable(CompilerPass symbolTable);
 
   /**
    * Used by three passes that run in sequence (optimize-returns,
@@ -206,6 +203,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Parses code for testing.
    */
   abstract Node parseTestCode(String code);
+
+  /**
+   * Prints a node to source code.
+   */
+  public abstract String toSource();
 
   /**
    * Prints a node to source code.
@@ -442,15 +444,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    *
    * @param resourceName The name of the library. For example, if "base" is
    *     is specified, then we load js/base.js
-   * @param normalizeAndUniquifyNames Whether to normalize the library code and make
-   *     names unique.
-   * @return If new code was injected, returns the last expression node of the
+   * @param force Inject the library even if compiler options say not to.
+   * @return The last node of the most-recently-injected runtime library.
+   *     If new code was injected, this will be the last expression node of the
    *     library. If the caller needs to add additional code, they should add
-   *     it as the next sibling of this node. If new code was not injected,
-   *     returns null.
+   *     it as the next sibling of this node. If no runtime libraries have been
+   *     injected, then null is returned.
    */
-  abstract Node ensureLibraryInjected(String resourceName,
-      boolean normalizeAndUniquifyNames);
+  abstract Node ensureLibraryInjected(String resourceName, boolean force);
 
   /**
    * Sets the names of the properties defined in externs.

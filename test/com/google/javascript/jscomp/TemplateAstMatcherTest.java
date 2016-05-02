@@ -499,7 +499,7 @@ public final class TemplateAstMatcherTest extends TestCase {
   }
 
   private void assertMatch(Node templateRoot, Node testNode, boolean shouldMatch) {
-    assertMatch(templateRoot, testNode, shouldMatch, TypeMatchingStrategy.DEFAULT);
+    assertMatch(templateRoot, testNode, shouldMatch, TypeMatchingStrategy.LOOSE);
   }
 
   private void assertMatch(

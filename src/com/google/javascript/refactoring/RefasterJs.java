@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.ErrorManager;
+import com.google.javascript.jscomp.TypeMatchingStrategy;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineParser;
@@ -71,6 +72,10 @@ final class RefasterJs {
   private CompilerOptions.Environment environment =
       CompilerOptions.Environment.BROWSER;
 
+  @Option(name = "--type_matching",
+    usage = "Which type matching strategy to use. Defaults to SUBTYPES.")
+  private TypeMatchingStrategy typeMatchingStrategy = TypeMatchingStrategy.SUBTYPES;
+
   @Option(name = "--dry_run",
       usage = "Use this to display what changes would be made without applying the changes.")
   private boolean dryRun = false;
@@ -107,6 +112,7 @@ final class RefasterJs {
     }
 
     RefasterJsScanner scanner = new RefasterJsScanner();
+    scanner.setTypeMatchingStrategy(typeMatchingStrategy);
     scanner.loadRefasterJsTemplate(refasterJsTemplate);
     CompilerOptions options = new CompilerOptions();
     options.setEnvironment(environment);

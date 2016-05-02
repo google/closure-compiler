@@ -19,6 +19,7 @@
  * @fileoverview Provides the boilerplate code for run-time type checking.
  *
  */
+'require base';
 
 /** @const */
 $jscomp.typecheck = {};

@@ -152,9 +152,17 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   public void testDeadVarDeclarations() {
-    // Dead assignments in VAR is _NOT_ supported yet.
     inFunction("var x=1;");
-    inFunction("var x=1; x=2; x");
+    inFunction("var x=1; x=2; x", "var x; 1; x=2; x");
+    inFunction("var x=1, y=10; x=2; x", "var x, y; 1; 10; x=2; x");
+    inFunction("var x=1, y=x; y");
+    inFunction("var x=1, y=x; x=2; x", "var x,y; 1; x; x=2; x");
+  }
+
+  public void testDeadVarDeclarations_forLoop() {
+    inFunction("for(var x=1;;);");
+    inFunction("for(var x=1,y=x;;);");
+    inFunction("for(var x=1;10;);");
   }
 
   public void testGlobal() {

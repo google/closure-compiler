@@ -26,7 +26,7 @@
  *
  * @author ochafik@google.com (Olivier Chafik)
  */
-
+'require es6_runtime';
 
 /**
  * Gets a property descriptor for a target instance, skipping its class

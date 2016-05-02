@@ -325,7 +325,9 @@ class InlineFunctions implements CompilerPass {
           // TODO(johnlenz): this can be improved by looking at the possible
           // values for locals.  If there are simple values, or constants
           // we could still inline.
-          if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
+          if (!assumeMinimumCapture
+              && hasLocalNames(fnNode)
+              && !NodeUtil.isIIFE(fnNode)) {
             fs.setInline(false);
           }
         }
@@ -585,7 +587,7 @@ class InlineFunctions implements CompilerPass {
       if (parent.isNew()) {
         Node target = parent.getFirstChild();
         if (target.isName() && target.getString().equals(
-            ObjectPropertyStringPreprocess.EXTERN_OBJECT_PROPERTY_STRING)) {
+            SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING)) {
           // This method is going to be replaced so don't inline it anywhere.
           fs.setInline(false);
         }
@@ -676,7 +678,7 @@ class InlineFunctions implements CompilerPass {
       FunctionState fs = i.next().getValue();
       if (fs.hasReferences()) {
         // Only inline function if it decreases the code size.
-        boolean lowersCost = mimimizeCost(fs);
+        boolean lowersCost = minimizeCost(fs);
         if (!lowersCost) {
           // It shouldn't be inlined; remove it from the list.
           i.remove();
@@ -694,7 +696,7 @@ class InlineFunctions implements CompilerPass {
    * trims references that increase the cost.
    * @return Whether inlining the references lowers the overall cost.
    */
-  private boolean mimimizeCost(FunctionState fs) {
+  private boolean minimizeCost(FunctionState fs) {
     if (!inliningLowersCost(fs)) {
       // Try again without Block inlining references
       if (fs.hasBlockInliningReferences()) {
@@ -765,7 +767,7 @@ class InlineFunctions implements CompilerPass {
           fsCalled.setRemove(false);
           // For functions that can no longer be removed, check if they should
           // still be inlined.
-          if (!mimimizeCost(fsCalled)) {
+          if (!minimizeCost(fsCalled)) {
             // It can't be inlined remove it from the list.
             fsCalled.setInline(false);
           }

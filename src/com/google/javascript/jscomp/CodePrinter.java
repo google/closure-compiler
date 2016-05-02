@@ -36,10 +36,6 @@ import java.util.List;
  * @see CodeGenerator
  */
 public final class CodePrinter {
-  // The number of characters after which we insert a line break in the code
-  static final int DEFAULT_LINE_LENGTH_THRESHOLD = 500;
-
-
   // There are two separate CodeConsumers, one for pretty-printing and
   // another for compact printing.
 

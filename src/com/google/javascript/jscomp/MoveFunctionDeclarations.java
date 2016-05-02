@@ -46,6 +46,12 @@ import java.util.Map.Entry;
  *   function f() {}
  * } catch(e) {}
  *
+ * NOTE(dimvar):
+ * This pass is safe to turn on by default and delete the associated compiler
+ * option. However, we don't do that because the pass is only useful for code
+ * wrapped in a try/catch, and otherwise it makes debugging harder because it
+ * moves code around.
+ *
  */
 class MoveFunctionDeclarations implements Callback, CompilerPass {
   private final AbstractCompiler compiler;
@@ -66,7 +72,7 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
         String name = nameNode.getString();
         nameNode.setString("");
         addingRoot.addChildToFront(
-            IR.var(IR.name(name), n).useSourceInfoIfMissingFromForTree(n));
+            IR.var(name, n).useSourceInfoIfMissingFromForTree(n));
       }
     }
   }

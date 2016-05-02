@@ -148,7 +148,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         }
         break;
       case Token.FOR_OF:
-        visitForOf(t, n, parent);
+        visitForOf(n, parent);
         break;
       case Token.STRING_KEY:
         visitStringKey(n);
@@ -161,7 +161,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       case Token.CALL:
         for (Node child : n.children()) {
           if (child.isSpread()) {
-            visitArrayLitOrCallWithSpread(t, n, parent);
+            visitArrayLitOrCallWithSpread(n, parent);
             break;
           }
         }
@@ -192,7 +192,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * Inserts a call to $jscomp.initSymbol() before {@code n}.
    */
   private void initSymbolBefore(Node n) {
-    compiler.needsEs6Runtime = true;
+    compiler.ensureLibraryInjected("es6_runtime", false);
     Node statement = NodeUtil.getEnclosingStatement(n);
     Node initSymbol = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbol")));
     statement.getParent().addChildBefore(initSymbol.useSourceInfoFromForTree(statement), statement);
@@ -205,7 +205,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       return;
     }
     if (isGlobalSymbol(t, n.getFirstChild())) {
-      compiler.needsEs6Runtime = true;
+      compiler.ensureLibraryInjected("es6_runtime", false);
       Node statement = NodeUtil.getEnclosingStatement(n);
       Node init = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")));
       statement.getParent().addChildBefore(init.useSourceInfoFromForTree(statement), statement);
@@ -237,7 +237,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
   }
 
-  private void visitForOf(NodeTraversal t, Node node, Node parent) {
+  private void visitForOf(Node node, Node parent) {
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
@@ -356,9 +356,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       name.setJSDocInfo(builder.build());
     }
 
-    Node newArr = IR.var(IR.name(REST_PARAMS), IR.arraylit());
+    Node newArr = IR.var(REST_PARAMS, IR.arraylit());
     functionBody.addChildToFront(newArr.useSourceInfoIfMissingFromForTree(restParam));
-    Node init = IR.var(IR.name(REST_INDEX), IR.number(restIndex));
+    Node init = IR.var(REST_INDEX, IR.number(restIndex));
     Node cond = IR.lt(IR.name(REST_INDEX), IR.getprop(IR.name("arguments"), IR.string("length")));
     Node incr = IR.inc(IR.name(REST_INDEX), false);
     Node body = IR.block(IR.exprResult(IR.assign(
@@ -384,7 +384,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * new F(...args) =>
    *     new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)))
    */
-  private void visitArrayLitOrCallWithSpread(NodeTraversal t, Node node, Node parent) {
+  private void visitArrayLitOrCallWithSpread(Node node, Node parent) {
     Preconditions.checkArgument(node.isCall() || node.isArrayLit() || node.isNew());
     List<Node> groups = new ArrayList<>();
     Node currGroup = null;
@@ -396,7 +396,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           groups.add(currGroup);
           currGroup = null;
         }
-        compiler.needsEs6Runtime = true;
         groups.add(arrayFromIterable(compiler, currElement.removeFirstChild()));
       } else {
         if (currGroup == null) {
@@ -513,7 +512,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     result.useSourceInfoIfMissingFromForTree(obj);
     obj.getParent().replaceChild(obj, result);
 
-    Node var = IR.var(IR.name(objName), obj);
+    Node var = IR.var(objName, obj);
     var.useSourceInfoIfMissingFromForTree(statement);
     statement.getParent().addChildBefore(var, statement);
     compiler.reportCodeChange();
@@ -623,7 +622,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
               NodeUtil.newQName(compiler, metadata.fullClassName),
               NodeUtil.newQName(compiler, superClassString));
           Node inheritsCall = IR.exprResult(inherits);
-          compiler.needsEs6Runtime = true;
+          compiler.ensureLibraryInjected("es6_runtime", false);
 
           inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
           enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
@@ -952,7 +951,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
   private static Node callEs6RuntimeFunction(
       AbstractCompiler compiler, Node iterable, String function) {
-    compiler.needsEs6Runtime = true;
+    compiler.ensureLibraryInjected("es6_runtime", false);
     return IR.call(
         NodeUtil.newQName(compiler, "$jscomp." + function),
         iterable);

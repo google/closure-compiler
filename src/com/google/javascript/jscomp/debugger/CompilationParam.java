@@ -179,7 +179,8 @@ enum CompilationParam {
   CHECK_PROVIDES {
     @Override
     void apply(CompilerOptions options, boolean value) {
-      options.setCheckProvides(value ? CheckLevel.WARNING : CheckLevel.OFF);
+      options.setWarningLevel(
+          DiagnosticGroups.MISSING_PROVIDE, value ? CheckLevel.WARNING : CheckLevel.OFF);
     }
   },
 
@@ -300,14 +301,6 @@ enum CompilationParam {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCoalesceVariableNames(value);
-    }
-  },
-
-  /** Inlines trivial getters */
-  INLINE_GETTERS {
-    @Override
-    void apply(CompilerOptions options, boolean value) {
-      options.setInlineGetters(value);
     }
   },
 

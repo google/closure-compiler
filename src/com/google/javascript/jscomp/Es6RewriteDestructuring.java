@@ -23,6 +23,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TokenStream;
 
 /**
  * Rewrites ES6 destructuring patterns and default parameters to valid ES3 code.
@@ -64,6 +65,9 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    if (parent != null && parent.isDestructuringLhs()) {
+      parent = parent.getParent();
+    }
     switch (n.getType()) {
       case Token.ARRAY_PATTERN:
         visitArrayPattern(t, n, parent);
@@ -134,6 +138,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         } else {
           tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
         }
+        Preconditions.checkState(TokenStream.isJSIdentifier(tempVarName));
 
         Node newParam = IR.name(tempVarName);
         newParam.setJSDocInfo(param.getJSDocInfo());
@@ -147,16 +152,16 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   private void visitForOf(Node node) {
-    Node pattern = node.getFirstChild();
-    if (pattern.isDestructuringPattern()) {
-      visitDestructuringPatternInEnhancedFor(pattern);
+    Node lhs = node.getFirstChild();
+    if (lhs.isDestructuringLhs()) {
+      visitDestructuringPatternInEnhancedFor(lhs.getFirstChild());
     }
   }
 
   private void visitObjectPattern(NodeTraversal t, Node objectPattern, Node parent) {
     Node rhs, nodeToDetach;
     if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
-      rhs = objectPattern.getLastChild();
+      rhs = objectPattern.getNext();
       nodeToDetach = parent;
     } else if (parent.isAssign() && parent.getParent().isExprResult()) {
       rhs = parent.getLastChild();
@@ -179,7 +184,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     // var b = temp.a;
     // var d = temp.c;
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-    Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
+    Node tempDecl = IR.var(tempVarName, rhs.detachFromParent())
             .useSourceInfoIfMissingFromForTree(objectPattern);
     // TODO(tbreisacher): Remove the "if" and add this JSDoc unconditionally.
     if (parent.isConst()) {
@@ -220,7 +225,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           Node getelem = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
 
           String intermediateTempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-          Node intermediateDecl = IR.var(IR.name(intermediateTempVarName), getelem);
+          Node intermediateDecl = IR.var(intermediateTempVarName, getelem);
           intermediateDecl.useSourceInfoIfMissingFromForTree(child);
           nodeToDetach.getParent().addChildBefore(intermediateDecl, nodeToDetach);
 
@@ -264,10 +269,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   private void visitArrayPattern(NodeTraversal t, Node arrayPattern, Node parent) {
     Node rhs, nodeToDetach;
     if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
-      // The array pattern is the only child, because Es6SplitVariableDeclarations
-      // has already run.
-      Preconditions.checkState(arrayPattern.getNext() == null);
-      rhs = arrayPattern.getLastChild();
+      rhs = arrayPattern.getNext();
       nodeToDetach = parent;
     } else if (parent.isAssign()) {
       rhs = arrayPattern.getNext();
@@ -297,6 +299,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         makeIterator(compiler, rhs.detachFromParent()));
     tempDecl.useSourceInfoIfMissingFromForTree(arrayPattern);
     nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
+    boolean needsRuntime = false;
 
     for (Node child = arrayPattern.getFirstChild(), next; child != null; child = next) {
       next = child.getNext();
@@ -336,6 +339,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
             IR.call(
                 NodeUtil.newQName(compiler, "$jscomp.arrayFromIterator"),
                 IR.name(tempVarName));
+        needsRuntime = true;
       } else {
         // LHS is just a name (or a nested pattern).
         //   var [x] = rhs;
@@ -362,32 +366,36 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       visit(t, newLHS, newLHS.getParent());
     }
     nodeToDetach.detachFromParent();
+
+    if (needsRuntime) {
+      compiler.ensureLibraryInjected("es6_runtime", false);
+    }
     compiler.reportCodeChange();
   }
 
   private void visitDestructuringPatternInEnhancedFor(Node pattern) {
-    Node forNode;
-    int declarationType;
-    if (NodeUtil.isEnhancedFor(pattern.getParent())) {
-      forNode = pattern.getParent();
-      declarationType = Token.ASSIGN;
-    } else {
-      forNode = pattern.getGrandparent();
-      declarationType = pattern.getParent().getType();
-      Preconditions.checkState(NodeUtil.isEnhancedFor(forNode));
-    }
+    Preconditions.checkArgument(pattern.isDestructuringPattern());
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-    Node block = forNode.getLastChild();
-    if (declarationType == Token.ASSIGN) {
-      Node decl = IR.declaration(IR.name(tempVarName), Token.LET);
+    if (NodeUtil.isEnhancedFor(pattern.getParent())) {
+      Node forNode = pattern.getParent();
+      Node block = forNode.getLastChild();
+      Node decl = IR.var(tempVarName);
       decl.useSourceInfoIfMissingFromForTree(pattern);
-      pattern.getParent().replaceChild(pattern, decl);
+      forNode.replaceChild(pattern, decl);
       Node exprResult = IR.exprResult(IR.assign(pattern, IR.name(tempVarName)));
       exprResult.useSourceInfoIfMissingFromForTree(pattern);
       block.addChildToFront(exprResult);
     } else {
-      pattern.getParent().replaceChild(pattern, IR.name(tempVarName).useSourceInfoFrom(pattern));
-      Node decl = IR.declaration(pattern, IR.name(tempVarName), declarationType);
+      Node destructuringLhs = pattern.getParent();
+      Preconditions.checkState(destructuringLhs.isDestructuringLhs());
+      Node declarationNode = destructuringLhs.getParent();
+      Node forNode = declarationNode.getParent();
+      Preconditions.checkState(NodeUtil.isEnhancedFor(forNode));
+      Node block = forNode.getLastChild();
+      declarationNode.replaceChild(
+          destructuringLhs, IR.name(tempVarName).useSourceInfoFrom(pattern));
+      int declarationType = declarationNode.getType();
+      Node decl = IR.declaration(pattern.detachFromParent(), IR.name(tempVarName), declarationType);
       decl.useSourceInfoIfMissingFromForTree(pattern);
       block.addChildToFront(decl);
     }

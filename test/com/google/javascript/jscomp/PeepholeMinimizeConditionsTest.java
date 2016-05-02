@@ -403,8 +403,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "var x; for(;!foo;) {} x;");
 
     // 'while' is normalized to 'for'
-    enableNormalize(true);
+    enableNormalize();
     fold("while(true) if (a) break", "for(;1&&!a;);");
+    disableNormalize();
   }
 
   public void testFoldLoopBreakEarly() {
@@ -416,8 +417,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     foldSame("for(;a;) { if (b) break; if (c) break; }");
 
     foldSame("while(1) if (a) break");
-    enableNormalize(true);
+    enableNormalize();
     foldSame("while(1) if (a) break");
+    disableNormalize();
   }
 
   public void testFoldConditionalVarDeclaration() {

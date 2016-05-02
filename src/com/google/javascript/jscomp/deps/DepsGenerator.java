@@ -19,13 +19,17 @@ package com.google.javascript.jscomp.deps;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.JsAst;
+import com.google.javascript.jscomp.LazyParsedDependencyInfo;
 import com.google.javascript.jscomp.SourceFile;
 
 import java.io.ByteArrayOutputStream;
@@ -320,6 +324,9 @@ public class DepsGenerator {
       Set<String> preparsedFiles) throws IOException {
     Map<String, DependencyInfo> parsedFiles = new HashMap<>();
     JsFileParser jsParser = new JsFileParser(errorManager);
+    Compiler compiler = new Compiler();
+    compiler.init(
+        ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), new CompilerOptions());
 
     for (SourceFile file : srcs) {
       String closureRelativePath =
@@ -333,6 +340,7 @@ public class DepsGenerator {
             jsParser.parseFile(
                 file.getName(), closureRelativePath,
                 file.getCode());
+        depInfo = new LazyParsedDependencyInfo(depInfo, new JsAst(file), compiler);
 
         // Kick the source out of memory.
         file.clearCachedSource();
@@ -386,44 +394,14 @@ public class DepsGenerator {
   /**
    * Writes goog.addDependency() lines for each DependencyInfo in depInfos.
    */
-  private void writeDepInfos(PrintStream out, Collection<DependencyInfo> depInfos) {
+  private void writeDepInfos(PrintStream out, Collection<DependencyInfo> depInfos)
+      throws IOException {
     // Print dependencies.
     // Lines look like this:
     // goog.addDependency('../../path/to/file.js', ['goog.Delay'],
     //     ['goog.Disposable', 'goog.Timer']);
     for (DependencyInfo depInfo : depInfos) {
-      Collection<String> provides = depInfo.getProvides();
-      Collection<String> requires = depInfo.getRequires();
-
-      out.print("goog.addDependency('" +
-          depInfo.getPathRelativeToClosureBase() + "', ");
-      writeJsArray(out, provides);
-      out.print(", ");
-      writeJsArray(out, requires);
-      // While transitioning, only write "module" for goog.module 
-      if (depInfo.isModule()) {
-        out.print(", ");
-        writeJsBoolean(out, depInfo.isModule());
-      }
-      out.println(");");
-    }
-  }
-
-  private void writeJsBoolean(PrintStream out, boolean value) {
-    out.print(value ? "true" : "false");
-  }
-
-  /**
-   * Prints a list of strings formatted as a JavaScript array of string
-   * literals.
-   */
-  private static void writeJsArray(PrintStream out, Collection<String> values) {
-    if (values.isEmpty()) {
-      out.print("[]");
-    } else {
-      out.print("['");
-      out.print(Joiner.on("', '").join(values));
-      out.print("']");
+      DependencyInfo.Util.writeAddDependency(out, depInfo);
     }
   }
 

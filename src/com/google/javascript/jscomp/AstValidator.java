@@ -831,6 +831,16 @@ public final class AstValidator implements CompilerPass {
 
   private void validateNameDeclarationChild(int type, Node n) {
     if (n.isName()) {
+      validateLHS(type, n);
+    } else if (n.isDestructuringLhs()) {
+      validateLHS(type, n.getFirstChild());
+    } else {
+      violation("Invalid child for " + Token.name(type) + " node", n);
+    }
+  }
+
+  private void validateLHS(int type, Node n) {
+    if (n.isName()) {
       // Don't use validateName here since this NAME node may have
       // a child.
       validateNonEmptyString(n);
@@ -865,7 +875,7 @@ public final class AstValidator implements CompilerPass {
       } else {
         // The members of the array pattern can be simple names,
         // or nested array/object patterns, e.g. "var [a,[b,c]]=[1,[2,3]];"
-        validateNameDeclarationChild(type, c);
+        validateLHS(type, c);
       }
     }
   }
@@ -881,7 +891,7 @@ public final class AstValidator implements CompilerPass {
         validateObjectPatternStringKey(type, c);
       } else {
         // Nested destructuring pattern.
-        validateNameDeclarationChild(type, c);
+        validateLHS(type, c);
       }
     }
   }
@@ -1232,7 +1242,7 @@ public final class AstValidator implements CompilerPass {
     validateChildCountIn(n, 0, 1);
 
     if (n.hasOneChild()) {
-      validateNameDeclarationChild(type, n.getFirstChild());
+      validateLHS(type, n.getFirstChild());
     }
   }
 

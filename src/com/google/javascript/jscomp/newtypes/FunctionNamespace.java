@@ -34,17 +34,14 @@ public final class FunctionNamespace extends Namespace {
 
   @Override
   protected JSType computeJSType(JSTypes commonTypes) {
-    if (this.namespaceType == null) {
-      this.namespaceType = withNamedTypes(
-          commonTypes,
-          ObjectType.makeObjectType(
-              commonTypes.getFunctionType(),
-              otherProps,
-              this.scope.getDeclaredFunctionType().toFunctionType(),
-              false,
-              ObjectKind.UNRESTRICTED));
-    }
-    return this.namespaceType;
+    Preconditions.checkState(this.namespaceType == null);
+    return JSType.fromObjectType(ObjectType.makeObjectType(
+        commonTypes.getFunctionType(),
+        null,
+        this.scope.getDeclaredFunctionType().toFunctionType(),
+        this,
+        false,
+        ObjectKind.UNRESTRICTED));
   }
 
   DeclaredTypeRegistry getScope() {

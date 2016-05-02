@@ -16,9 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.Node;
-
-import java.util.ArrayList;
+import static com.google.common.truth.Truth.assertThat;
 
 /**
  * Tests for {@link RuntimeTypeCheck}.
@@ -241,16 +239,14 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   private void testChecks(String js, String expected) {
-    Compiler compiler = new Compiler();
-    compiler.init(new ArrayList<SourceFile>(),
-                   new ArrayList<SourceFile>(),
-                  new CompilerOptions());
-    Node base = compiler.loadLibraryCode("base", true);
-    Node typeCheck = compiler.loadLibraryCode("runtime_type_check", true);
-    test(js,
-         compiler.toSource(base) + ";"
-         + compiler.toSource(typeCheck) + ";"
-         + expected);
+    test(js, expected);
+    assertThat(((NoninjectingCompiler) getLastCompiler()).injected)
+        .containsExactly("runtime_type_check");
+  }
+
+  @Override
+  protected Compiler createCompiler() {
+    return new NoninjectingCompiler();
   }
 
   @Override

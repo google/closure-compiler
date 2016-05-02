@@ -80,11 +80,12 @@ public final class JsFileParserTest extends TestCase {
     String contents = ""
       + "goog.module('yes1');\n"
       + "var yes2 = goog.require('yes2');\n"
-      + "var C = goog.require(\"a.b.C\");";
+      + "var C = goog.require(\"a.b.C\");\n"
+      + "let {D, E} = goog.require('a.b.d');";
 
     DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1"),
-        ImmutableList.of("yes2", "a.b.C"),
+        ImmutableList.of("yes2", "a.b.C", "a.b.d"),
         true);
 
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
@@ -100,11 +101,35 @@ public final class JsFileParserTest extends TestCase {
     String contents = ""
       + "goog.module('yes1');\n"
       + "var yes2=goog.require('yes2');\n"
-      + "var C=goog.require(\"a.b.C\");";
+      + "var C=goog.require(\"a.b.C\");\n"
+      + "const {\n  D,\n  E\n}=goog.require(\"a.b.d\");";
 
     DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1"),
-        ImmutableList.of("yes2", "a.b.C"),
+        ImmutableList.of("yes2", "a.b.C", "a.b.d"),
+        true);
+
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertDeps(expected, result);
+  }
+
+  /**
+   * Tests:
+   *  -Shortcut mode doesn't stop at setTestOnly() or declareLegacyNamespace().
+   */
+  public void testNoShortcutForCommonModuleModifiers() {
+    String contents = ""
+      + "goog.module('yes1');\n"
+      + "goog.module.declareLegacyNamespace();\n"
+      + "goog.setTestOnly();\n"
+      + "var yes2=goog.require('yes2');\n"
+      + "var C=goog.require(\"a.b.C\");\n"
+      + "const {\n  D,\n  E\n}=goog.require(\"a.b.d\");";
+
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.of("yes1"),
+        ImmutableList.of("yes2", "a.b.C", "a.b.d"),
         true);
 
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
@@ -129,7 +154,7 @@ public final class JsFileParserTest extends TestCase {
     String contents = " // hi ! \n /* this is a comment */ "
         + "goog.provide('yes1');\n /* and another comment */ \n"
         + "goog.provide('yes2'); // include this\n"
-        + "function foo() {}\n"
+        + "foo = function() {};\n"
         + "goog.provide('no1');";
 
     DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,

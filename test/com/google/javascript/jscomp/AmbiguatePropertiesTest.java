@@ -245,10 +245,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
     int vars = 10;
     for (int i = 0; i < vars; i++) {
-      js.append("Foo.prototype.var" + i + " = 0;");
-      js.append("Bar.prototype.var" + (i + 10000) + " = 0;");
-      output.append("Foo.prototype." + (char) ('a' + i) + "=0;");
-      output.append("Bar.prototype." + (char) ('a' + i) + "=0;");
+      js.append("Foo.prototype.var").append(i).append(" = 0;");
+      js.append("Bar.prototype.var").append(i + 10000).append(" = 0;");
+      output.append("Foo.prototype.").append((char) ('a' + i)).append("=0;");
+      output.append("Bar.prototype.").append((char) ('a' + i)).append("=0;");
     }
     test(js.toString(), output.toString());
   }
@@ -258,8 +258,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     int classes = 10;
     for (int i = 0; i < classes; i++) {
       String c = "Foo" + i;
-      b.append("/** @constructor */ var " + c + " = function(){};\n");
-      b.append(c + ".prototype.varness" + i + " = 0;");
+      b.append("/** @constructor */ var ").append(c).append(" = function(){};\n");
+      b.append(c).append(".prototype.varness").append(i).append(" = 0;");
     }
     String js = b.toString();
     test(js, js.replaceAll("varness\\d+", "a"));

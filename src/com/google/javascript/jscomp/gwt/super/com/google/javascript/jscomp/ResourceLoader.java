@@ -20,6 +20,8 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.TextResource;
 
+import jsinterop.annotations.JsMethod;
+
 /**
  * GWT compatible replacement for {@code ResourceLoader}
  *
@@ -28,30 +30,37 @@ final class ResourceLoader {
   static interface Libraries extends ClientBundle {
     Libraries INSTANCE = GWT.create(Libraries.class);
 
-    @Source("js/base.js")
-    TextResource base();
-
-    @Source("js/es6_runtime.js")
-    TextResource es6Runtime();
-
-    @Source("js/runtime_type_check.js")
-    TextResource runtimeTypeCheck();
+    // This is a generated file containing all the text resources we want to package
+    // as a single JSON string mapping (relative) filename to file content strings.
+    @Source("resources.json")
+    TextResource resources();
   }
 
+  private static final JsObject RESOURCES = parse(Libraries.INSTANCE.resources().getText());
+
   static String loadTextResource(Class<?> clazz, String path) {
-    switch (path) {
-      case "js/base.js":
-        return Libraries.INSTANCE.base().getText();
-      case "js/es6_runtime.js":
-        return Libraries.INSTANCE.es6Runtime().getText();
-      case "js/runtime_type_check.js":
-        return Libraries.INSTANCE.runtimeTypeCheck().getText();
-      default:
-        throw new RuntimeException("Resource not found " + path);
+    String content = RESOURCES.get(path);
+    if (content != null) {
+      return content;
     }
+    throw new RuntimeException("Resource not found " + path);
   }
 
   static boolean resourceExists(Class<?> clazz, String path) {
-    return true; // GWT compilation would have failed otherwise
+    // TODO(sdh): this is supposed to be relative to the given class, but
+    // GWT can't handle that - probably better to remove the class argument
+    // and just require that paths be relative to c.g.javascript.jscomp.
+    return RESOURCES.get(path) != null;
   }
+
+  public static class JsObject {
+    public JsObject() {}
+
+    public final native String get(String key) /*-{
+      return this[key];
+    }-*/;
+  }
+
+  @JsMethod(namespace = "JSON")
+  private static native JsObject parse(String json);
 }
