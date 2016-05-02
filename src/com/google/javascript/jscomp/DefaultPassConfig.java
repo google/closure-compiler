@@ -890,6 +890,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.j2clPass) {
       passes.add(j2clClinitPrunerPass);
+      passes.add(j2clEqualitySameRewriterPass);
     }
 
     assertAllLoopablePasses(passes);
@@ -2646,6 +2647,15 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new J2clClinitPrunerPass(compiler);
+        }
+      };
+
+  /** Rewrites J2CL constructs to be more optimizable. */
+  private final PassFactory j2clEqualitySameRewriterPass =
+      new PassFactory("j2clEqualitySameRewriterPass", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new J2clEqualitySameRewriterPass(compiler);
         }
       };
 
