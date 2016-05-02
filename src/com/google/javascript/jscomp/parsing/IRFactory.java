@@ -148,7 +148,9 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -726,15 +728,19 @@ class IRFactory {
     return handleJsDoc(getJsDoc(token));
   }
 
-  Node transform(ParseTree tree) {
-    JSDocInfo info = handleJsDoc(tree);
-    Node node = transformDispatcher.process(tree);
+  private Node handleJsDocAndSourceInfo(ParseTree tree, Node node, JSDocInfo info) {
     if (info != null) {
       node = maybeInjectCastNode(tree, info, node);
       node.setJSDocInfo(info);
     }
     setSourceInfo(node, tree);
     return node;
+  }
+
+  Node transform(ParseTree tree) {
+    JSDocInfo info = handleJsDoc(tree);
+    Node node = transformDispatcher.process(tree);
+    return handleJsDocAndSourceInfo(tree, node, info);
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {
@@ -1311,11 +1317,35 @@ class IRFactory {
       return node;
     }
 
+    private void pushStacksForBinaryExpression(Deque<ParseTree> trees, Deque<Node> parents,
+        BinaryOperatorTree tree, Node node) {
+      trees.push(tree.right);
+      trees.push(tree.left);
+      parents.push(node);
+      parents.push(node);
+    }
+
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
-      return newNode(
-          transformBinaryTokenType(exprNode.operator.type),
-          transform(exprNode.left),
-          transform(exprNode.right));
+      Node root = newNode(transformBinaryTokenType(exprNode.operator.type));
+      Deque<ParseTree> trees = new ArrayDeque<>();
+      Deque<Node> parents = new ArrayDeque<>();
+      pushStacksForBinaryExpression(trees, parents, exprNode, root);
+      while (!trees.isEmpty()) {
+        ParseTree tree = trees.pop();
+        Node parent = parents.pop();
+        if (tree.type == ParseTreeType.BINARY_OPERATOR) {
+          BinaryOperatorTree binaryOperatorTree = tree.asBinaryOperator();
+          Node curr = handleJsDocAndSourceInfo(
+              tree,
+              newNode(transformBinaryTokenType(binaryOperatorTree.operator.type)),
+              handleJsDoc(tree));
+          parent.addChildToBack(curr);
+          pushStacksForBinaryExpression(trees, parents, binaryOperatorTree, curr);
+        } else {
+          parent.addChildToBack(transform(tree));
+        }
+      }
+      return root;
     }
 
     /**
