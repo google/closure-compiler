@@ -6,3 +6,5 @@ target/
 *~
 .checkstyle
 .settings
+externs/.classpath
+externs/.project

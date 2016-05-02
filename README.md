@@ -32,13 +32,12 @@ unit tests too).
 ### Using [Eclipse](http://www.eclipse.org/)
 
 1. Download and open the [Eclipse IDE](http://www.eclipse.org/).
-2. Navigate to ```File > New > Project ...``` and create a Java Project. Give
-   the project a name.
-3. Select ```Create project from existing source``` and choose the root of the
-   checked-out source tree as the existing directory.
-3. Navigate to the ```build.xml``` file. You will see all the build rules in
-   the Outline pane. Run the ```jar``` rule to build the compiler in
-   ```build/compiler.jar```.
+2. **Right click** in the package explorer and choose *Import*.
+3. Select the ```Maven > Existing Maven Projects``` source.
+4. In the Root Directory selection, enter the path to your clone of the closure-compiler repository.
+5. **Right click** on the ```closure-compiler-parent``` project in the package explorer
+and select ```Run As > Maven Install```.
+The compiler will be built to ```target/closure-compiler-1.0-SNAPSHOT.jar```
 
 ## Running
 
