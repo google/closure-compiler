@@ -15,31 +15,19 @@
  */
 
 /**
- * @fileoverview Externs for Mapbox.js
+ * @fileoverview Externs for Mapbox GL JS
  *
  * Currently only selected constructors and functions have been mapped.
  * 
- * @see https://www.mapbox.com/mapbox.js/api
+ * @see https://www.mapbox.com/mapbox-gl-js/api/
  * @externs
  */
 
 /** @const */
-var L = {};
-
-/** @const */
-L.mapbox = {};
+var mapboxgl = {};
 
 /**
- * @param {string} idOrUrl
+ * @constructor
  * @param {Object} options
  */
-L.mapbox.geocoder = function(idOrUrl, options) { };
-
-/**
- * @param {string|Object} queryStringOrOptions
- * @param {Function} callback
- */
-L.mapbox.geocoder.query = function(queryStringOrOptions, callback) { };
-
-
-L.mapbox.map = function() { };
+mapboxgl.Map = function(options) { };
