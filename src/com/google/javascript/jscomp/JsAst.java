@@ -148,7 +148,9 @@ public class JsAst implements SourceAst {
       ImmutableList.Builder<JSError> builder = ImmutableList.<JSError>builder();
       for (int i = startErrorCount; i < errors.length; i++) {
         JSError error = errors[i];
-        Preconditions.checkState(error.node == null);
+        Preconditions.checkState(error.node == null,
+            "Error %s with node %s will cause a memory leak when AST caching is enabled",
+            error, error.node);
         builder.add(errors[i]);
       }
       return builder.build();
