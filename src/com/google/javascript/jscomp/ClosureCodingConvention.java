@@ -391,7 +391,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public boolean isPrivate(String name) {
-    return false;
+    return name.endsWith("_");
   }
 
   @Override
