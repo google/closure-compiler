@@ -180,7 +180,7 @@ abstract class IntegrationTestCase extends TestCase {
       String[] original, String[] compiled) {
     Compiler compiler = compile(options, original);
     assertEquals("Expected no warnings or errors\n" +
-        "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
+        "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) + "\n" +
         "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         0, compiler.getErrors().length + compiler.getWarnings().length);
 
