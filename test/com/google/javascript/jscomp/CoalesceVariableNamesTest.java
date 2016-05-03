@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -188,14 +189,23 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     test("function FUNC(x) {var y; y = 0; x; y}");
   }
 
-  public void testParameter4() {
+  public void testParameter4a() {
     // Make sure that we do not merge two-arg functions because of the
     // IE sort bug (see comments in computeEscaped)
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
     test("function FUNC(x, y) {var a,b; y; a=0; a; x; b=0; b}",
          "function FUNC(x, y) {var a; y; a=0; a; x; a=0; a}");
   }
 
   public void testParameter4b() {
+    // Go ahead and merge, if language-out is ES5, because that means IE8 does
+    // not need to be supported.
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test("function FUNC(x, y) {var a,b; y; a=0; a; x; b=0; b}",
+         "function FUNC(x, y) {         y; y=0; y; x; x=0; x}");
+  }
+
+  public void testParameter5() {
     // Merge parameters
     test("function FUNC(x, y, z) {var a,b; y; a=0; a; x; b=0; b}",
          "function FUNC(x, y, z) {         y; y=0; y; x; x=0; x}");

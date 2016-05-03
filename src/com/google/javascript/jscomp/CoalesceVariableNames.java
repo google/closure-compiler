@@ -111,12 +111,14 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
     LiveVariablesAnalysis liveness = new LiveVariablesAnalysis(cfg, scope, compiler);
-    // If the function has exactly 2 params, mark them as escaped. This is
-    // a work-around for an IE bug where it throws an exception if you
-    // write to the parameters of the callback in a sort(). See:
-    // http://blickly.github.io/closure-compiler-issues/#58
-    if (NodeUtil.getFunctionParameters(scope.getRootNode()).getChildCount() == 2) {
-      liveness.markAllParametersEscaped();
+    if (compiler.getOptions().getLanguageOut() == CompilerOptions.LanguageMode.ECMASCRIPT3) {
+      // If the function has exactly 2 params, mark them as escaped. This is a work-around for a
+      // bug in IE 8 and below, where it throws an exception if you write to the parameters of the
+      // callback in a sort(). See http://blickly.github.io/closure-compiler-issues/#58 and
+      // https://www.zachleat.com/web/array-sort/
+      if (NodeUtil.getFunctionParameters(scope.getRootNode()).getChildCount() == 2) {
+        liveness.markAllParametersEscaped();
+      }
     }
     liveness.analyze();
 
