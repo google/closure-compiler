@@ -25,6 +25,15 @@
 
 
 /**
+ * @typedef {{
+ *   passive: (boolean|undefined),
+ *   capture: (boolean|undefined)
+ * }}
+ * @see https://dom.spec.whatwg.org/#dictdef-eventlisteneroptions
+ */
+var EventListenerOptions;
+
+/**
  * @interface
  */
 function EventTarget() {}
@@ -32,20 +41,20 @@ function EventTarget() {}
 /**
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
- * @param {boolean} useCapture
+ * @param {(boolean|EventListenerOptions)=} opt_useCaptureOrEventListenerOptions
  * @return {undefined}
  */
-EventTarget.prototype.addEventListener = function(type, listener, useCapture)
-    {};
+EventTarget.prototype.addEventListener =
+    function(type, listener, opt_useCaptureOrEventListenerOptions) {};
 
 /**
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
- * @param {boolean} useCapture
+ * @param {(boolean|EventListenerOptions)=} opt_useCaptureOrEventListenerOptions
  * @return {undefined}
  */
-EventTarget.prototype.removeEventListener = function(type, listener, useCapture)
-    {};
+EventTarget.prototype.removeEventListener =
+    function(type, listener, opt_useCaptureOrEventListenerOptions) {};
 
 /**
  * @param {!Event} evt
