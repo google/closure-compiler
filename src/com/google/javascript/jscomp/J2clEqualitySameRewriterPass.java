@@ -69,7 +69,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
   }
 
   private static boolean isEqualitySameMethodName(String fnName) {
-    // The '.$same' case) only happens when collapseProperties is off.
+    // The '.$same' case only happens when collapseProperties is off.
     return fnName != null
         && (fnName.endsWith("Equality$$0same") || fnName.endsWith("Equality.$same"));
   }
