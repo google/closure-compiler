@@ -516,7 +516,7 @@ $jscomp.Map.prototype.has = function(key) {
 };
 /**
  @param {*} key
- @return {(VALUE|undefined)}
+ @return {VALUE}
  */
 $jscomp.Map.prototype.get = function(key) {
   /** @const */ var $jscomp$destructuring$var2 = this.maybeGetEntry_(key);
