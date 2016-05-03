@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.InputId;
@@ -30,10 +28,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -46,120 +41,7 @@ import java.util.logging.Level;
  * @author bashir@google.com (Bashir Sadjad)
  */
 
-public final class ReplaceScriptTest extends TestCase {
-
-  private static final String CLOSURE_BASE =
-      "/** @const */ var goog = goog || {};"
-      + "goog.require = function(x) {};"
-      + "goog.provide = function(x) {};";
-
-  private static final List<SourceFile> EXTERNS =
-      ImmutableList.of(SourceFile.fromCode("externs", "var extVar = 3;"));
-
-  /**
-   * In addition to the passed parameter adds a few options necessary options
-   * for {@code replaceScript} and creates a {@code CompilerOptions}.
-   */
-  private CompilerOptions getOptions(DiagnosticGroup ... typesOfGuard) {
-    CompilerOptions options = new CompilerOptions();
-    options.declaredGlobalExternsOnWindow = false;
-    // These are the options that are always on in JsDev which is the only
-    // use-case for replaceScript currently.
-    options.setInferTypes(true);
-    options.setIdeMode(true);
-    for (DiagnosticGroup group : typesOfGuard) {
-      options.setWarningLevel(group, CheckLevel.ERROR);
-    }
-    return options;
-  }
-
-  private void flushResults(Compiler compiler) {
-    // TODO(bashir) Maybe implement error-flush functionality in Compiler?
-    compiler.setErrorManager(new PrintStreamErrorManager(System.err));
-  }
-
-  /**
-   * For a given set of sources, first runs a full compile, then replaces one
-   * source with a given new version and calls {@code replaceScript}.
-   * @param options Compiler options.
-   * @param sources The list of sources.
-   * @param expectedCompileErrors Expected number of errors after full compile.
-   * @param expectedCompileWarnings Expected number of warnings of full compile.
-   * @param newSource The source version.
-   * @param newSourceInd Index of the source in {@code sources} to be replaced.
-   * @param flushResults Whether to flush results after full-build or not.
-   * @return The compiler which can be reused for further inc-compiles.
-   */
-  private Compiler runReplaceScript(CompilerOptions options, List<String>
-      sources, int expectedCompileErrors, int expectedCompileWarnings,
-      String newSource, int newSourceInd, boolean flushResults) {
-    Preconditions.checkArgument(newSourceInd < sources.size());
-
-    // First do a full compile.
-    Compiler compiler =
-        runFullCompile(options, sources, expectedCompileErrors,
-            expectedCompileWarnings, flushResults);
-
-    // Now replace one of the source files and run replaceScript.
-    doReplaceScript(compiler, newSource, newSourceInd);
-    return compiler;
-  }
-
-  private Compiler runAddScript(CompilerOptions options, List<String> sources,
-      int expectedCompileErrors, int expectedCompileWarnings, String newSource,
-      boolean flushResults) {
-    // First do a full compile.
-    Compiler compiler =
-        runFullCompile(options, sources, expectedCompileErrors,
-            expectedCompileWarnings, flushResults);
-
-    // Now replace one of the source files and run replaceScript.
-    doAddScript(compiler, newSource, sources.size());
-    return compiler;
-  }
-
-  private Compiler runFullCompile(CompilerOptions options,
-      List<String> sources, int expectedCompileErrors,
-      int expectedCompileWarnings, boolean flushResults) {
-    List<SourceFile> inputs = new ArrayList<>();
-    int i = 0;
-    for (String source : sources) {
-      inputs.add(SourceFile.fromCode("in" + i, source));
-      i++;
-    }
-    Compiler compiler = new Compiler();
-    Compiler.setLoggingLevel(Level.INFO);
-    Result result = compiler.compile(EXTERNS, inputs, options);
-    if (expectedCompileErrors == 0) {
-      assertTrue("Expected no errors, found: " + Arrays.toString(result.errors), result.success);
-    } else {
-      assertFalse(result.success);
-      assertEquals(expectedCompileErrors, compiler.getErrorCount());
-    }
-    assertEquals(expectedCompileWarnings, compiler.getWarningCount());
-    if (flushResults) {
-      flushResults(compiler);
-    }
-
-    return compiler;
-  }
-
-  private void doReplaceScript(Compiler compiler, String newSource,
-      int newSourceInd) {
-    SourceFile replacedSource = SourceFile.fromCode("in" + newSourceInd,
-        newSource);
-    JsAst ast = new JsAst(replacedSource);
-    compiler.replaceScript(ast);
-  }
-
-  private void doAddScript(
-      Compiler compiler, String newSource, int newSourceInd) {
-    SourceFile replacedSource =
-        SourceFile.fromCode("in" + newSourceInd, newSource);
-    JsAst ast = new JsAst(replacedSource);
-    compiler.addNewScript(ast);
-  }
-
+public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   public void testInfer() {
     CompilerOptions options = getOptions(DiagnosticGroups.ACCESS_CONTROLS);
     String source = ""
@@ -377,7 +259,6 @@ public final class ReplaceScriptTest extends TestCase {
    * See the usage in test functions below.
    */
   private void checkProvideRequireErrors(CompilerOptions options) {
-    options.setClosurePass(true);
     String source0 =
         "goog.provide('ns.Bar');\n"
         + "/** @constructor */ ns.Bar = function() {};";
@@ -401,7 +282,6 @@ public final class ReplaceScriptTest extends TestCase {
   public void testCheckRequires() {
     CompilerOptions options = getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
-    options.setClosurePass(true);
     // Note it needs declaration of ns to throw the error because closurePass
     // which replaces goog.provide happens afterwards (see checkRequires pass).
     String source0 = "var ns = {};\n goog.provide('ns.Bar');\n"
@@ -418,7 +298,6 @@ public final class ReplaceScriptTest extends TestCase {
   public void testCheckRequiresWithNewVar() {
     CompilerOptions options = getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
-    options.setClosurePass(true);
     String src = "";
     String modifiedSrc = src + "\n(function() { var a = new ns.Bar(); })();";
     Result result = runReplaceScript(options,
@@ -465,7 +344,6 @@ public final class ReplaceScriptTest extends TestCase {
 
   public void testDeclarationMoved() {
     CompilerOptions options = getOptions();
-    options.setClosurePass(true);
 
     String srcPrefix =
         "goog.provide('Bar');\n"
@@ -485,7 +363,6 @@ public final class ReplaceScriptTest extends TestCase {
 
   public void testDeclarationInAnotherFile() {
     CompilerOptions options = getOptions();
-    options.setClosurePass(true);
 
     String src =
         "goog.provide('Bar');\n"
@@ -504,7 +381,6 @@ public final class ReplaceScriptTest extends TestCase {
 
   public void testDeclarationOverride() {
     CompilerOptions options = getOptions();
-    options.setClosurePass(true);
 
     String src1 =
         "goog.provide('ns.Bar');\n"
@@ -540,7 +416,6 @@ public final class ReplaceScriptTest extends TestCase {
 
   public void testDeclarationWithThisMoved() {
     CompilerOptions options = getOptions();
-    options.setClosurePass(true);
 
     String src1 =
         "goog.provide('ns.Bar');\n"
@@ -564,7 +439,6 @@ public final class ReplaceScriptTest extends TestCase {
 
   public void testDeclarationOtherTypeWithField() {
     CompilerOptions options = getOptions();
-    options.setClosurePass(true);
 
     String srcPrefix =
         "goog.provide('Bar');\n"
@@ -591,7 +465,6 @@ public final class ReplaceScriptTest extends TestCase {
 
   public void testDeclarationInGoogScopeMoved() {
     CompilerOptions options = getOptions();
-    options.setClosurePass(true);
 
     String src1 =
         "/** @constructor */\n"
@@ -749,32 +622,12 @@ public final class ReplaceScriptTest extends TestCase {
   public void testGlobalScopeGenerationWithProvide() {
     CompilerOptions options = getOptions();
     options.setCheckSymbols(true);
-    options.setClosurePass(true);
     String src =
         "goog.provide('namespace.Bar');\n"
         + "/** @constructor */ namespace.Bar = function() {};";
     Result result = runReplaceScript(options,
         ImmutableList.of(src), 0, 0, src, 0, false).getResult();
     assertNoWarningsOrErrors(result);
-  }
-
-  private void assertNoWarningsOrErrors(Result result) {
-    assertNumWarningsAndErrors(result, 0, 0);
-  }
-
-  private void assertNumWarningsAndErrors(Result result, int e, int w) {
-    assertEquals(
-        "Unexpected warnings:\n" + Joiner.on("\n").join(result.warnings),
-        w, result.warnings.length);
-    assertEquals(
-        "Unexpected errors:\n" + Joiner.on("\n").join(result.errors),
-        e, result.errors.length);
-    assertEquals(e == 0, result.success);
-  }
-
-  private void assertErrorType(JSError e, DiagnosticType type, int lineNumber){
-    assertEquals(e.getType(), type);
-    assertEquals(e.lineNumber, lineNumber);
   }
 
   public void testAccessControls() {
@@ -864,7 +717,6 @@ public final class ReplaceScriptTest extends TestCase {
     // Checking a type of error to make sure goog.scope is processed.
     CompilerOptions options = getOptions(DiagnosticGroups.ACCESS_CONTROLS);
     options.setCheckTypes(true);
-    options.setClosurePass(true);
 
     String src0 =
         "/** @constructor */\n"
@@ -900,7 +752,6 @@ public final class ReplaceScriptTest extends TestCase {
    */
   public void testPatchGlobalTypedScope() {
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_TYPES);
-    options.setClosurePass(true);
     String externSrc = "/** @type {number} */ var aNum;\n";
     String src1 = "goog.provide('unique.Bar');\n"
         + "/** @constructor */ unique.Bar = function() {};\n"
@@ -995,7 +846,6 @@ public final class ReplaceScriptTest extends TestCase {
   /** Effectively this tests the clean-up of properties on un-named objects. */
   public void testNoErrorOnGoogProvide() {
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_TYPES);
-    options.setClosurePass(true);
     String src0 =
         "goog.provide('ns.Foo')\n"
         + "ns.Foo = function() {};\n";
@@ -1011,6 +861,7 @@ public final class ReplaceScriptTest extends TestCase {
 
   public void testAddSimpleScript() {
     CompilerOptions options = getOptions();
+    options.setClosurePass(false);
 
     String src =
         "goog.provide('Bar');\n" +
