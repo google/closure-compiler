@@ -127,10 +127,10 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
   private void visitSuperGet(Node superGet) {
     Node name = superGet.getLastChild().cloneTree();
     Node callSuperGet = IR.call(
-        NodeUtil.newQName(compiler, CALL_SUPER_GET),
-        IR.thisNode(),
+        NodeUtil.newQName(compiler, CALL_SUPER_GET).srcrefTree(superGet),
+        IR.thisNode().srcref(superGet),
         superGet.isGetProp() ? renameProperty(name) : name);
-    replace(superGet, callSuperGet.srcrefTree(superGet));
+    replace(superGet, callSuperGet);
     reportEs6Change();
   }
 
@@ -145,11 +145,11 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
 
     Node name = superGet.getLastChild().cloneTree();
     Node callSuperSet = IR.call(
-        NodeUtil.newQName(compiler, CALL_SUPER_SET),
-        IR.thisNode(),
+        NodeUtil.newQName(compiler, CALL_SUPER_SET).srcrefTree(superSet),
+        IR.thisNode().srcref(superSet),
         superGet.isGetProp() ? renameProperty(name) : name,
         rhs.cloneTree());
-    replace(superSet, callSuperSet.srcrefTree(superSet));
+    replace(superSet, callSuperSet);
     reportEs6Change();
   }
 
@@ -174,8 +174,10 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
     if (!renameProperties) {
       return propertyName;
     }
-    Node call = IR.call(IR.name(NodeUtil.JSC_PROPERTY_NAME_FN), propertyName);
-    call.srcrefTree(propertyName);
+    Node call = IR.call(
+        IR.name(NodeUtil.JSC_PROPERTY_NAME_FN).srcref(propertyName),
+        propertyName);
+    call.srcref(propertyName);
     call.putBooleanProp(Node.FREE_CALL, true);
     call.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     return call;
