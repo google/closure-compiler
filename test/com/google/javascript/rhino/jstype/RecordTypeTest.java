@@ -50,11 +50,11 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("number", NUMBER_TYPE, null)
         .addProperty("string", STRING_TYPE, null)
         .build();
-    assertEquals("{\n  loop: number, \n  number: number, \n  string: string\n}",
+    assertEquals("{\n  loop: number,\n  number: number,\n  string: string\n}",
         record.toString());
 
     loop.setReferencedType(record);
-    assertEquals("{\n  loop: {...}, \n  number: number, \n  string: string\n}",
+    assertEquals("{\n  loop: {...},\n  number: number,\n  string: string\n}",
         record.toString());
     assertEquals("{loop: ?, number: number, string: string}",
         record.toAnnotationString());
@@ -79,15 +79,15 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     assertEquals(
         LINE_JOINER.join(
             "{",
-            "  a01: number, ",
-            "  a02: number, ",
-            "  a03: number, ",
-            "  a04: number, ",
-            "  a05: number, ",
-            "  a06: number, ",
-            "  a07: number, ",
-            "  a08: number, ",
-            "  a09: number, ",
+            "  a01: number,",
+            "  a02: number,",
+            "  a03: number,",
+            "  a04: number,",
+            "  a05: number,",
+            "  a06: number,",
+            "  a07: number,",
+            "  a08: number,",
+            "  a09: number,",
             "  a10: number, ...",
             "}"),
         record.toString());
