@@ -1762,6 +1762,44 @@ public class Node implements Serializable {
   }
 
   /**
+   * This function takes a set of GETPROP nodes and produces a string that is
+   * each property separated by dots. If the node ultimately under the left
+   * sub-tree is not a simple name, this is not a valid qualified name. This
+   * method returns the original name of each segment rather than the renamed
+   * version.
+   *
+   * @return a null if this is not a qualified name, or a dot-separated string
+   *         of the name and properties.
+   */
+  public String getOriginalQualifiedName() {
+    if (type == Token.NAME || getBooleanProp(IS_MODULE_NAME)) {
+      String name = getOriginalName();
+      if (name == null) {
+        name = getString();
+      }
+      return name.isEmpty() ? null : name;
+    } else if (type == Token.GETPROP) {
+      String left = getFirstChild().getOriginalQualifiedName();
+      if (left == null) {
+        return null;
+      }
+      String right = getLastChild().getOriginalName();
+      if (right == null) {
+        right = getLastChild().getString();
+      }
+
+      return left + "." + right;
+    } else if (type == Token.THIS) {
+      return "this";
+    } else if (type == Token.SUPER) {
+      return "super";
+    } else {
+      return null;
+    }
+  }
+
+
+  /**
    * Returns whether a node corresponds to a simple or a qualified name, such as
    * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
    */
