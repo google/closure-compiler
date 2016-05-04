@@ -103,6 +103,12 @@ public final class DefaultPassConfig extends PassConfig {
    */
   private PreprocessorSymbolTable preprocessorSymbolTable = null;
 
+  /**
+   * Global state necessary for doing hotswap recompilation of files with references to
+   * processed goog.modules.
+   */
+  private ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
+
   /** Names exported by goog.exportSymbol. */
   private Set<String> exportedNames = null;
 
@@ -178,6 +184,12 @@ public final class DefaultPassConfig extends PassConfig {
           preprocessorSymbolTable.getRootNode() != root) {
         preprocessorSymbolTable = new PreprocessorSymbolTable(root);
       }
+    }
+  }
+
+  void maybeInitializeModuleRewriteState() {
+    if (options.ideMode && this.moduleRewriteState == null) {
+      this.moduleRewriteState = new ClosureRewriteModule.GlobalRewriteState();
     }
   }
 
@@ -1306,12 +1318,13 @@ public final class DefaultPassConfig extends PassConfig {
   /** Rewrites goog.module */
   private final HotSwapPassFactory closureRewriteModule =
       new HotSwapPassFactory("closureRewriteModule", true) {
-    @Override
-    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      maybeInitializePreprocessorSymbolTable(compiler);
-      return new ClosureRewriteModule(compiler, preprocessorSymbolTable);
-    }
-  };
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          maybeInitializePreprocessorSymbolTable(compiler);
+          maybeInitializeModuleRewriteState();
+          return new ClosureRewriteModule(compiler, preprocessorSymbolTable, moduleRewriteState);
+        }
+      };
 
   /** Checks that CSS class names are wrapped in goog.getCssName */
   private final PassFactory closureCheckGetCssName =

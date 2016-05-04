@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -362,8 +363,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
    */
   private void checkQualifiedName(NodeTraversal t, Node qnameNode) {
     String qname = qnameNode.getQualifiedName();
-    if (isLegacyByGoogModuleNamespace.containsKey(qname)
-        && !isLegacyByGoogModuleNamespace.get(qname)) {
+    if (rewriteState.containsModule(qname) && !rewriteState.isLegacyModule(qname)) {
       t.report(qnameNode, QUALIFIED_REFERENCE_TO_GOOG_MODULE, qname);
     }
   }
@@ -407,8 +407,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
                 currentScript.legacyNamespacesByAlias.containsKey(prefixTypeName);
             if (nameIsAnAlias) {
               String legacyNamespace = currentScript.legacyNamespacesByAlias.get(prefixTypeName);
-              boolean targetNamespaceIsAGoogModule =
-                  isLegacyByGoogModuleNamespace.containsKey(legacyNamespace);
+              boolean targetNamespaceIsAGoogModule = rewriteState.containsModule(legacyNamespace);
               String aliasedNamespace =
                   targetNamespaceIsAGoogModule
                       ? toBinaryNamespace(legacyNamespace)
@@ -425,7 +424,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
               return;
             }
 
-            boolean targetIsAGoogModule = isLegacyByGoogModuleNamespace.containsKey(prefixTypeName);
+            boolean targetIsAGoogModule = rewriteState.containsModule(prefixTypeName);
             if (legacyScriptNamespacesAndPrefixes.contains(prefixTypeName)
                 && !targetIsAGoogModule) {
               // This thing is definitely coming from a legacy script and so the fully qualified
@@ -460,14 +459,46 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   // the goog.module declares itself as a legacy namespace.
   // Allows for detecting duplicate goog.module()s and for rewriting fully qualified
   // JsDoc type references to goog.module() types in legacy scripts.
-  private Map<String, Boolean> isLegacyByGoogModuleNamespace = new HashMap<>();
+  static class GlobalRewriteState {
+    private Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
+        new HashMap<>();
+    private IdentityHashMap<Node, String> moduleNamesByRootNode = new IdentityHashMap<>();
+
+    boolean containsModule(String legacyNamespace) {
+      return scriptDescriptionsByGoogModuleNamespace.containsKey(legacyNamespace);
+    }
+
+    boolean isLegacyModule(String legacyNamespace) {
+      Preconditions.checkArgument(containsModule(legacyNamespace));
+      return scriptDescriptionsByGoogModuleNamespace.get(legacyNamespace).declareLegacyNamespace;
+    }
+
+    void trackModule(String legacyNamespace, ScriptDescription description) {
+      scriptDescriptionsByGoogModuleNamespace.put(legacyNamespace, description);
+      moduleNamesByRootNode.put(description.rootNode, legacyNamespace);
+    }
+
+    void removeRoot(Node toRemove) {
+      if (moduleNamesByRootNode.containsKey(toRemove)) {
+        String removedModuleName = moduleNamesByRootNode.get(toRemove);
+        moduleNamesByRootNode.remove(toRemove);
+        scriptDescriptionsByGoogModuleNamespace.remove(removedModuleName);
+      }
+    }
+  }
+
+  private GlobalRewriteState rewriteState;
   private Set<String> legacyScriptNamespaces = new HashSet<>();
   private Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
   private List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
 
-  ClosureRewriteModule(AbstractCompiler compiler, PreprocessorSymbolTable preprocessorSymbolTable) {
+  ClosureRewriteModule(
+      AbstractCompiler compiler,
+      PreprocessorSymbolTable preprocessorSymbolTable,
+      GlobalRewriteState moduleRewriteState) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
+    this.rewriteState = moduleRewriteState != null ? moduleRewriteState : new GlobalRewriteState();
   }
 
   @Override
@@ -505,6 +536,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     Preconditions.checkState(scriptRoot.isScript());
+
+    rewriteState.removeRoot(originalRoot);
 
     pushScript(new ScriptDescription());
     currentScript.rootNode = scriptRoot;
@@ -544,20 +577,19 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     currentScript.contentsPrefix = toModuleContentsPrefix(legacyNamespace);
 
     // If some other script is advertising itself as a goog.module() with this same namespace.
-    if (isLegacyByGoogModuleNamespace.containsKey(legacyNamespace)) {
+    if (rewriteState.containsModule(legacyNamespace)) {
       t.report(call, DUPLICATE_MODULE, legacyNamespace);
     }
     if (legacyScriptNamespaces.contains(legacyNamespace)) {
       t.report(call, DUPLICATE_NAMESPACE, legacyNamespace);
     }
 
-    // Assume goog.modules don't declare legacy namespaces until we see otherwise.
-    isLegacyByGoogModuleNamespace.put(legacyNamespace, false);
+    rewriteState.trackModule(legacyNamespace, currentScript);
+
   }
 
   private void recordGoogDeclareLegacyNamespace() {
     currentScript.declareLegacyNamespace = true;
-    isLegacyByGoogModuleNamespace.put(currentScript.legacyNamespace, true);
   }
 
   private void recordGoogProvide(NodeTraversal t, Node call) {
@@ -571,7 +603,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (currentScript.isModule) {
       t.report(legacyNamespaceNode, INVALID_PROVIDE_CALL);
     }
-    if (isLegacyByGoogModuleNamespace.containsKey(legacyNamespace)) {
+    if (rewriteState.containsModule(legacyNamespace)) {
       t.report(call, DUPLICATE_NAMESPACE, legacyNamespace);
     }
 
@@ -611,7 +643,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     // Maybe report an error if there is an attempt to import something that is expected to be a
     // goog.module() but no such goog.module() has been defined.
-    boolean targetIsAModule = isLegacyByGoogModuleNamespace.containsKey(legacyNamespace);
+    boolean targetIsAModule = rewriteState.containsModule(legacyNamespace);
     boolean targetIsALegacyScript = legacyScriptNamespaces.contains(legacyNamespace);
     if (reportBadRequireErrors
         && currentScript.isModule
@@ -650,7 +682,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
     String legacyNamespace = legacyNamespaceNode.getString();
 
-    if (!isLegacyByGoogModuleNamespace.containsKey(legacyNamespace)) {
+    if (!rewriteState.containsModule(legacyNamespace)) {
       if (!currentScript.isModule) {
         // goog.module.get() is only allowed to reference goog.module() files (and not
         // goog.provide() files) when used inside of a goog.provide() file, but for consistency
@@ -775,7 +807,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node statementNode = NodeUtil.getEnclosingStatement(call);
     String legacyNamespace = legacyNamespaceNode.getString();
 
-    boolean targetIsGoogModule = isLegacyByGoogModuleNamespace.containsKey(legacyNamespace);
+    boolean targetIsGoogModule = rewriteState.containsModule(legacyNamespace);
     boolean targetIsAGoogModuleGetted =
         currentScript.googModuleGettedNamespaces.contains(legacyNamespaceNode.getString());
     boolean importHasAlias = currentScript.legacyNamespacesByAlias.containsValue(legacyNamespace);
@@ -812,7 +844,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           Node binaryNamespaceName = IR.name(toBinaryNamespace(legacyNamespace));
           binaryNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
           call.getParent().replaceChild(call, binaryNamespaceName);
-        } else if (importHasAlias || !isLegacyByGoogModuleNamespace.get(legacyNamespace)) {
+        } else if (importHasAlias || !rewriteState.isLegacyModule(legacyNamespace)) {
           // Delete the goog.require() because we're going to inline its alias later.
           statementNode.detachFromParent();
         }
@@ -921,8 +953,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     boolean nameIsAnAlias = currentScript.legacyNamespacesByAlias.containsKey(name);
     if (nameIsAnAlias && var.getNode() != nameNode) {
       String legacyNamespace = currentScript.legacyNamespacesByAlias.get(name);
-      boolean targetNamespaceIsAGoogModule =
-          isLegacyByGoogModuleNamespace.containsKey(legacyNamespace);
+      boolean targetNamespaceIsAGoogModule = rewriteState.containsModule(legacyNamespace);
       String namespaceToInline =
           targetNamespaceIsAGoogModule ? toBinaryNamespace(legacyNamespace) : legacyNamespace;
       safeSetMaybeQualifiedString(nameNode, namespaceToInline);
@@ -1229,7 +1260,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
       Node requireNode = unrecognizedRequire.requireNode;
       boolean targetMustBeGoogModule = unrecognizedRequire.mustBeGoogModule;
-      boolean targetGoogModuleExists = isLegacyByGoogModuleNamespace.containsKey(legacyNamespace);
+      boolean targetGoogModuleExists = rewriteState.containsModule(legacyNamespace);
       boolean targetLegacyScriptExists = legacyScriptNamespaces.contains(legacyNamespace);
 
       if (targetMustBeGoogModule && !targetGoogModuleExists) {

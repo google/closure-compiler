@@ -37,7 +37,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ClosureRewriteModule(compiler, null);
+    return new ClosureRewriteModule(compiler, null, null);
   }
 
   @Override
