@@ -599,7 +599,6 @@ public class Token {
       case LC:
       case COLON:
       case YIELD:
-      case REST:
         return -1;
       case NAME:
       case LABEL_NAME:
@@ -635,6 +634,7 @@ public class Token {
       case TYPE_ALIAS:
       case INDEX_SIGNATURE:
       case CALL_SIGNATURE:
+      case REST:
         return 1;
       case BITOR:
       case BITXOR:
