@@ -44,6 +44,11 @@ import java.util.zip.CRC32;
  * applications. Strings that should be aliased occur many times in the code,
  * or occur on codepaths that get executed frequently.
  *
+ * 2016/05/04 Note: This pass addressed some performance problems in older
+ * browser VMs, which don't happen on modern VMs. Turning on the pass usually
+ * hurts code size after gzip, so we no longer recommend it. At some point we
+ * will probably delete it.
+ *
  */
 @GwtIncompatible("java.util.regex")
 class AliasStrings extends AbstractPostOrderCallback
