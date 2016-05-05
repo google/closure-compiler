@@ -18,9 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
-import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 
 import java.util.LinkedHashMap;
@@ -39,10 +36,7 @@ class CoverageInstrumentationPass implements CompilerPass {
   private Map<String, FileInstrumentationData> instrumentationData;
   private CoverageReach reach;
 
-  private static final String JS_INSTRUMENTATION_EXTERNS_CODE = ""
-      + "var JSCompiler_lcov_executedLines;\n"
-      + "var JSCompiler_lcov_instrumentedLines;\n"
-      + "var JSCompiler_lcov_fileNames;\n";
+  public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
 
   public enum CoverageReach {
     ALL,
@@ -65,24 +59,7 @@ class CoverageInstrumentationPass implements CompilerPass {
    * initializes the variables required for collection of coverage data.
    */
   private void addHeaderCode(Node script) {
-    script.addChildToFront(
-        createConditionalVarDecl("JSCompiler_lcov_executedLines", script));
-    script.addChildToFront(
-        createConditionalVarDecl("JSCompiler_lcov_instrumentedLines", script));
-    script.addChildToFront(
-        createConditionalVarDecl("JSCompiler_lcov_fileNames", script));
-  }
-
-  /**
-   * Creates a node of externs code required for the arrays used for
-   * instrumentation.
-   */
-  private Node getInstrumentationExternsNode() {
-    Node externsNode = compiler.parseSyntheticCode(
-        "ExternsCodeForCoverageInstrumentation",
-        JS_INSTRUMENTATION_EXTERNS_CODE);
-
-    return externsNode;
+    script.addChildToFront(createConditionalObjectDecl(JS_INSTRUMENTATION_OBJECT_NAME, script));
   }
 
   @Override
@@ -96,20 +73,16 @@ class CoverageInstrumentationPass implements CompilerPass {
       Preconditions.checkState(firstScript.isScript());
       addHeaderCode(firstScript);
     }
-
-    externsNode.addChildToBack(getInstrumentationExternsNode());
   }
 
-  private static Node createConditionalVarDecl(String name, Node srcref) {
-    Node var = IR.var(
-        IR.name(name),
-        IR.or(
-            IR.name(name),
-            IR.arraylit()));
-
-    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-    builder.recordSuppressions(ImmutableSet.of("duplicate"));
-    var.setJSDocInfo(builder.build());
+  private Node createConditionalObjectDecl(String name, Node srcref) {
+    String jscovDecl =
+        " var "
+            + name
+            + " = window.top.__jscov || "
+            + "(window.top.__jscov = {fileNames:[], instrumentedLines: [], executedLines: []});";
+    Node script = compiler.parseSyntheticCode(jscovDecl);
+    Node var = script.removeFirstChild();
     return var.useSourceInfoIfMissingFromForTree(srcref);
   }
 }

@@ -36,8 +36,8 @@ public class GoldenFileComparer {
       "test/"
           + "com/google/javascript/jscomp/testdata/";
 
-  private static List<SourceFile> externsByOptions(CompilerOptions options) {
-      SourceFile externs = SourceFile.fromCode("externs", "function Symbol() {}");
+  private static List<SourceFile> coverageExterns() {
+      SourceFile externs = SourceFile.fromCode("externs", "function Symbol() {}; var window;");
       return ImmutableList.of(externs);
   }
 
@@ -47,7 +47,7 @@ public class GoldenFileComparer {
 
     List<SourceFile> allExterns = new ArrayList<>();
     allExterns.addAll(externs);
-    allExterns.addAll(externsByOptions(options));
+    allExterns.addAll(coverageExterns());
 
     compiler.compile(allExterns, inputs, options);
     return compiler.toSource();
