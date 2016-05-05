@@ -26,12 +26,38 @@
 /** @const */
 var L = {};
 
+/**
+ * @param {number} lat
+ * @param {number} lng
+ * @param {number=} alt
+ */
+L.latLng = function(lat, lng, alt) { };
+
+/**
+ * @param latLng
+ * @return {!number}
+ */
+L.latLng.distanceTo = function(latLng) { };
+
+/**
+ * @param {Array|Object} latlng
+ * @param {Object=} options
+ */
+L.marker = function(latlng, options) { };
+
+L.marker.getLatLng = function() { };
+
+/**
+ * @param map
+ */
+L.marker.addTo = function(map) { };
+
 /** @const */
 L.mapbox = {};
 
 /**
  * @param {string} idOrUrl
- * @param {Object} options
+ * @param {Object=} options
  */
 L.mapbox.geocoder = function(idOrUrl, options) { };
 
@@ -41,5 +67,39 @@ L.mapbox.geocoder = function(idOrUrl, options) { };
  */
 L.mapbox.geocoder.query = function(queryStringOrOptions, callback) { };
 
+/**
+ * @param {Array|Object} location
+ * @param {Function} callback
+ */
+L.mapbox.geocoder.reverseQuery = function(location, callback) { };
 
-L.mapbox.map = function() { };
+/**
+ * @param {string|Element} element
+ * @param {string} idOrUrl
+ */
+L.mapbox.map = function(element, idOrUrl) { };
+
+/** @const */
+L.mapbox.scrollWheelZoom = {};
+
+L.mapbox.scrollWheelZoom.disable = { };
+
+/**
+ * @param layer 
+ */
+L.mapbox.map.removeLayer = function(layer) { };
+
+/**
+ * @param center
+ * @param {number=} zoom
+ * @param {Object=} options
+ */
+L.mapbox.map.setView = function(center, zoom, options) { };
+
+/** @const */
+L.mapbox.marker = {};
+
+/**
+ * @param {Object} feature
+ */
+L.mapbox.marker.icon = function(feature) { };
