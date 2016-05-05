@@ -325,10 +325,20 @@ PolymerElement.prototype.getEffectiveChildren = function() {};
 PolymerElement.prototype.getEffectiveTextContent = function() {};
 
 /**
+ * Returns the first effective child that match selector.
+ *
  * @param {string} selector
  * @return {?HTMLElement}
  */
 PolymerElement.prototype.queryEffectiveChildren = function(selector) {};
+
+/**
+ * Returns a list of effective children that match selector.
+ *
+ * @param {string} selector
+ * @return {!Array<!HTMLElement>}
+ */
+PolymerElement.prototype.queryAllEffectiveChildren = function(selector) {};
 
 /**
  * Fire an event.
