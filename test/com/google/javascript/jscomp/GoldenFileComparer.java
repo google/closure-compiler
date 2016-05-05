@@ -45,7 +45,7 @@ public class GoldenFileComparer {
       List<SourceFile> externs, List<SourceFile> inputs, CompilerOptions options) {
     Compiler compiler = new Compiler();
 
-    List<SourceFile> allExterns = new ArrayList<SourceFile>();
+    List<SourceFile> allExterns = new ArrayList<>();
     allExterns.addAll(externs);
     allExterns.addAll(externsByOptions(options));
 
