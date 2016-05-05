@@ -2733,9 +2733,9 @@ public final class NodeUtil {
    * @return True if n is an L-value.
    */
   public static boolean isLValue(Node n) {
-    Preconditions.checkArgument(
-        n.isName() || n.isGetProp() || n.isGetElem() || n.isStringKey(),
-        n);
+    if (!n.isName() && !n.isGetProp() && !n.isGetElem() && !n.isStringKey()) {
+      return false;
+    }
     Node parent = n.getParent();
     if (parent == null) {
       return false;
