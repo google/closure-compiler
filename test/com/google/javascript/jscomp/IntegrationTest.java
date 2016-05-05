@@ -1938,8 +1938,13 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testAliasAllStrings() {
     CompilerOptions options = createCompilerOptions();
-    String code = "function f() { return 'a'; }";
-    String expected = "var $$S_a = 'a'; function f() { return $$S_a; }";
+    String code =
+        "function f() {" + "  return 'aaaaaaaaaaaaaaaaaaaa' + 'aaaaaaaaaaaaaaaaaaaa';" + "}";
+    String expected =
+        "var $$S_aaaaaaaaaaaaaaaaaaaa = 'aaaaaaaaaaaaaaaaaaaa';"
+            + "function f() {"
+            + "  return $$S_aaaaaaaaaaaaaaaaaaaa + $$S_aaaaaaaaaaaaaaaaaaaa;"
+            + "}";
     testSame(options, code);
 
     options.setAliasAllStrings(true);
