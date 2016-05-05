@@ -95,7 +95,11 @@ public final class ES6ModuleLoader {
    * @return The normalized module URI, or {@code null} if not found.
    */
   URI locateEs6Module(String moduleName, CompilerInput context) {
-    return locate(moduleName + ".js", context);
+    // Existing behaviour, to match with stripJsExtension, e.g. import "./MyJsFile":
+    URI loadAddress = locate(moduleName + ".js", context);
+    // But what if it's a .jsx file for example? Support exact match e.g. import "./MyJsxFile.jsx":
+    if (loadAddress==null) loadAddress = locate(moduleName, context);
+    return loadAddress;
   }
 
   private URI locate(String name, CompilerInput referrer) {
@@ -142,6 +146,7 @@ public final class ES6ModuleLoader {
   }
 
   private static String stripJsExtension(String fileName) {
+    // NB. other extensions like ".jsx" are preserved in the module name
     if (fileName.endsWith(".js")) {
       return fileName.substring(0, fileName.length() - ".js".length());
     }
