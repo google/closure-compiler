@@ -211,12 +211,8 @@ public class Compiler extends AbstractCompiler {
   // For use by the new type inference
   private GlobalTypeInfo symbolTable;
 
-  // The oldErrorReporter exists so we can get errors from the JSTypeRegistry.
-  private final com.google.javascript.rhino.ErrorReporter oldErrorReporter =
-      RhinoErrorReporter.forOldRhino(this);
-
-  // This error reporter gets the messages from the current Rhino parser.
-  private final ErrorReporter defaultErrorReporter =
+  // This error reporter gets the messages from the current Rhino parser or TypeRegistry.
+  private final ErrorReporter oldErrorReporter =
       RhinoErrorReporter.forOldRhino(this);
 
   /** Error strings used for reporting JSErrors */
@@ -1671,7 +1667,7 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   ErrorReporter getDefaultErrorReporter() {
-    return defaultErrorReporter;
+    return oldErrorReporter;
   }
 
   //------------------------------------------------------------------------

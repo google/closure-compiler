@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.JsAst.ParseResult;
+import com.google.javascript.jscomp.JsAst.RhinoError;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
@@ -64,17 +66,20 @@ public class RecoverableJsAst implements SourceAst {
         // Maybe replay parse error
         JsAst.ParseResult result = (JsAst.ParseResult) root.getProp(Node.PARSE_RESULTS);
         if (reportParseErrors && result != null) {
-          replay(compiler.getErrorManager(), CheckLevel.ERROR, result.errors);
-          replay(compiler.getErrorManager(), CheckLevel.WARNING, result.warnings);
+          replay(compiler, result);
         }
       }
     }
     return root;
   }
 
-  private void replay(ErrorManager errorManager, CheckLevel level, ImmutableList<JSError> errors) {
-    for (JSError error : errors) {
-      errorManager.report(level, error);
+  private void replay(AbstractCompiler compiler, ParseResult result) {
+    ErrorReporter reporter = compiler.getDefaultErrorReporter();
+    for (RhinoError error : result.errors) {
+      reporter.error(error.message, error.sourceName, error.line, error.lineOffset);
+    }
+    for (RhinoError warning : result.warnings) {
+      reporter.warning(warning.message, warning.sourceName, warning.line, warning.lineOffset);
     }
   }
 
