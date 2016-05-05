@@ -2422,7 +2422,10 @@ public final class NodeUtil {
     return n.getSourceFileName() != null && n.getSourceFileName().startsWith(" [synthetic:");
   }
 
-  /** Safely remove children while maintaining a valid node structure. */
+  /**
+   * Safely remove children while maintaining a valid node structure.
+   * In some cases, this is done by removing the parent from the AST as well.
+   */
   public static void removeChild(Node parent, Node node) {
     if (isTryFinallyNode(parent, node)) {
       if (NodeUtil.hasCatchHandler(getCatchBlock(parent))) {
@@ -2451,7 +2454,7 @@ public final class NodeUtil {
         || isSwitchCase(node)) {
       // A statement in a block can simply be removed.
       parent.removeChild(node);
-    } else if (parent.isVar()) {
+    } else if (parent.isVar() || parent.isExprResult()) {
       if (parent.hasMoreThanOneChild()) {
         parent.removeChild(node);
       } else {

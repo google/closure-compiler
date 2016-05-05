@@ -902,6 +902,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.j2clPass) {
       passes.add(j2clClinitPrunerPass);
+      passes.add(j2clConstantHoisterPass);
       passes.add(j2clEqualitySameRewriterPass);
     }
 
@@ -2660,6 +2661,15 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new J2clClinitPrunerPass(compiler);
+        }
+      };
+
+  /** Rewrites J2CL constructs to be more optimizable. */
+  private final PassFactory j2clConstantHoisterPass =
+      new PassFactory("j2clConstantHoisterPass", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new J2clConstantHoisterPass(compiler);
         }
       };
 
