@@ -1641,13 +1641,13 @@ public final class SymbolTable {
 
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
-        visitName(t, n, parent);
+        visitName(t, n);
       } else if (n.isGetProp()) {
-        visitProperty(t, n, parent);
+        visitProperty(n, parent);
       }
     }
 
-    private void visitName(NodeTraversal t, Node n, Node parent) {
+    private void visitName(NodeTraversal t, Node n) {
       Symbol symbol = symbols.get(n, n.getString());
       if (symbol == null) {
         return;
@@ -1661,14 +1661,14 @@ public final class SymbolTable {
         return;
       }
       Visibility v = AccessControlUtils.getEffectiveNameVisibility(
-          n ,var, fileVisibilityMap);
+          n, var, fileVisibilityMap);
       if (v == null) {
         return;
       }
       symbol.setVisibility(v);
     }
 
-    private void visitProperty(NodeTraversal t, Node getprop, Node parent) {
+    private void visitProperty(Node getprop, Node parent) {
       String propertyName = getprop.getLastChild().getString();
       Symbol symbol = symbols.get(getprop, propertyName);
       if (symbol == null) {
