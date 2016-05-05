@@ -728,7 +728,10 @@ public final class SymbolTable {
 
   void fillPropertyScopes() {
     // Collect all object symbols.
+    // All symbols that came from goog.module are collected separately because they will have to
+    // be processed first. See explanation below.
     List<Symbol> types = new ArrayList<>();
+    List<Symbol> googModuleExportTypes = new ArrayList<>();
 
     // Create a property scope for each named type and each anonymous object,
     // and populate it with that object's properties.
@@ -738,7 +741,11 @@ public final class SymbolTable {
     // where x is just an instance of another type.
     for (Symbol sym : getAllSymbols()) {
       if (needsPropertyScope(sym)) {
-        types.add(sym);
+        if (sym.getName().startsWith("module$exports")) {
+          googModuleExportTypes.add(sym);
+        } else {
+          types.add(sym);
+        }
       }
     }
 
@@ -750,9 +757,29 @@ public final class SymbolTable {
     // {@code instances} will be stale.
     //
     // To prevent this, we sort the list by the reverse of the
-    // default symbol order, which will do the right thing.
+    // default symbol order, which will do the right thing. Essentially going from leaf symbols
+    // to roots.
+    //
+    // Also sorting all symbols is not enough. There is a tricky case with symbols declared in
+    // goog.module that also has declareLegacyNamespace. Example:
+    //
+    // goog.module('x.y');
+    // goog.module.declareLegacyNamespace();
+    // exports.foo = function() {};
+    //
+    // Symbols are following:
+    // x.y
+    // x
+    // module$exports$x$y.foo
+    // module$exports$x$y
+    //
+    // If we order them in reverse lexicographical order symbols x.y and x will be processed before
+    // foo. This is wrong as foo is in fact property of x.y namespace. So we must process all
+    // module$exports$ symbols first. That's why we collected them in separate list.
+    //
     Collections.sort(types, getNaturalSymbolOrdering().reverse());
-    for (Symbol s : types) {
+    Collections.sort(googModuleExportTypes, getNaturalSymbolOrdering().reverse());
+    for (Symbol s : Iterables.concat(googModuleExportTypes, types)) {
       createPropertyScopeFor(s);
     }
 
