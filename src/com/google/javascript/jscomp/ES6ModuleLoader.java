@@ -102,7 +102,10 @@ public final class ES6ModuleLoader {
    * @return The normalized module URI, or {@code null} if not found.
    */
   URI locateEs6Module(String moduleName, CompilerInput context) {
+    // Existing behaviour, to match with stripJsExtension, e.g. import "./MyJsFile":
     URI uri = locateNoCheck(moduleName + ".js", context);
+    // But what if it's a .jsx file for example? Support exact match e.g. import "./MyJsxFile.jsx":
+    if (uri==null) uri = locateNoCheck(moduleName, context);
     if (!moduleUris.contains(uri)) {
       compiler.report(JSError.make(LOAD_WARNING, moduleName));
     }
