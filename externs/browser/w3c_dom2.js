@@ -782,11 +782,11 @@ HTMLSelectElement.prototype.size;
 
 /**
  * @param {HTMLElement} element
- * @param {HTMLElement} before
+ * @param {HTMLElement=} opt_before
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-14493106
  */
-HTMLSelectElement.prototype.add = function(element, before) {};
+HTMLSelectElement.prototype.add = function(element, opt_before) {};
 
 /**
  * @return {undefined}
