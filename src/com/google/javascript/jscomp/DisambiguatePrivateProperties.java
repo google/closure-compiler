@@ -23,18 +23,32 @@ import java.util.Collection;
 
 /**
  * Disambiguate properties by file, when they are private by naming convention.
+ *
+ * This pass is unsafe. When some code doesn't respect the coding convention,
+ * the pass silently breaks the code.
+ * Projects who use this pass must also turn on CheckAccessControls for code
+ * using the coding convention (by default CheckAccessControls looks only at
+ * jsdoc annotations).
+ *
+ * If someone plans to make this pass non-experimental, or turn it on by
+ * default, they should modify CheckAccessControls to store violations, and use
+ * that list here to back-off renaming, like DisambiguateProperties does.
+ *
+ * Another option is that, in CompilerOptionsPreprocessor, if this pass is
+ * enabled, but the access controls are not, to throw an error.
  */
 class DisambiguatePrivateProperties
    implements NodeTraversal.Callback, CompilerPass {
 
   private final AbstractCompiler compiler;
+  private final CodingConvention convention;
   private final ImmutableSet<String> blacklist;
   private String fileid;
   private int id = 0;
 
   DisambiguatePrivateProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
-    CodingConvention convention = this.compiler.getCodingConvention();
+    this.convention = this.compiler.getCodingConvention();
     Collection<String> indirect = convention.getIndirectlyDeclaredProperties();
     blacklist = ImmutableSet.copyOf(indirect);
   }
@@ -68,9 +82,8 @@ class DisambiguatePrivateProperties
   }
 
   private void maybeRename(Node n) {
-    CodingConvention convention = compiler.getCodingConvention();
     String prop = n.getString();
-    if (!n.getBooleanProp(Node.QUOTED_PROP) && convention.isPrivate(prop)
+    if (!n.getBooleanProp(Node.QUOTED_PROP) && this.convention.isPrivate(prop)
         && !blacklist.contains(prop)) {
       n.setString(prop + fileid);
       compiler.reportCodeChange();
