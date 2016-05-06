@@ -405,17 +405,22 @@ public final class ConformanceRules {
       }
 
       if (n.isGetProp() || n.isName()) {
-        // TODO(johnlenz): restrict to global names
         if (n.isQualifiedName()) {
           for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
-            if (n.matchesQualifiedName(name)) {
+            if (n.matchesQualifiedName(name) && isRootOfQualifiedNameGlobal(t, n)) {
               return ConformanceResult.VIOLATION;
             }
           }
         }
       }
       return ConformanceResult.CONFORMANCE;
+    }
+
+    private static boolean isRootOfQualifiedNameGlobal(NodeTraversal t, Node n) {
+      String rootName = NodeUtil.getRootOfQualifiedName(n).getQualifiedName();
+      Var v = t.getScope().getVar(rootName);
+      return v != null && v.isGlobal();
     }
   }
 

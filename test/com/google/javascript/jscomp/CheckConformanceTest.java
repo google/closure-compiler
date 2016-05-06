@@ -55,7 +55,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
           "var Error;",
           "var alert;",
           "var unknown;",
-          "/** @constructor */ var ObjectWithNoProps;");
+          "/** @constructor */ var ObjectWithNoProps;",
+          "function eval() {}");
 
   private static final String DEFAULT_CONFORMANCE =
       LINE_JOINER.join(
@@ -127,6 +128,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testSame(
         "eval()",
         CheckConformance.CONFORMANCE_VIOLATION);
+
+    testSame("eval.name.length", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testViolation2() {
@@ -155,6 +158,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "  }\n" +
         "  var z = x.callee;\n" +
         "}");
+  }
+
+  public void testNotViolation2() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'location'\n"
+            + "  error_message: 'location is not allowed'\n"
+            + "}";
+    testSame("function f() { var location = null; }");
   }
 
   public void testMaybeViolation1() {
