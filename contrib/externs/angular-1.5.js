@@ -22,7 +22,6 @@
  *     $cookieStore
  *     $document
  *     $httpBackend
- *     $locale
  *     $rootElement
  *     $rootScope
  *
@@ -2566,3 +2565,41 @@ angular.$transclude_.isSlotFilled = function(slotName) {};
 
 /** @typedef {!Window} */
 angular.$window;
+
+/******************************************************************************
+ * $locale Service
+ *****************************************************************************/
+
+ /**
+ * @typedef {{
+ *   DATETIME_FORMATS: {
+ *      AMPMS: Array.<string>,
+ *      DAY: Array.<string>,
+ *      ERANAMES: Array.<string>,
+ *      ERAS: Array.<string>,
+ *      FIRSTDAYOFWEEK: number,
+ *      MONTH: Array.<string>,
+ *      SHORTDAY: Array.<string>,
+ *      SHORTMONTH: Array.<string>,
+ *      WEEKENDRANGE: Array.<number>,
+ *      fullDate: string,
+ *      longDate: string,
+ *      medium: string,
+ *      mediumDate: string,
+ *      mediumTime: string,
+ *      short: string,
+ *      shortDate: string,
+ *      shortTime: string
+ *   },
+ *   NUMBER_FORMATS: {
+ *      CURRENCY_SYM: string,
+ *      DECIMAL_SEP: string,
+ *      GROUP_SEP: string,
+ *      PATTERNS: Array.<{gSize: number, lgSize: number, maxFrac: number, minFrac: number, minInt: number, negPre: string, negSuf: string, posPre: string, posSuf: string}>
+ *   },
+ *   id: string,
+ *   pluralCat: function(number, number): string
+ * }}
+ */
+angular.$locale;
+
