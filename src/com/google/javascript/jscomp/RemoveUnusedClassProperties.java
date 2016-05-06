@@ -147,12 +147,13 @@ class RemoveUnusedClassProperties
          break;
        }
 
-       case Token.CALL:
-         // Look for properties referenced through "JSCompiler_propertyRename".
-         Node target = n.getFirstChild();
-         if (n.hasMoreThanOneChild()
-             && target.isName()
-             && target.getString().equals(NodeUtil.JSC_PROPERTY_NAME_FN)) {
+      case Token.CALL:
+        // Look for properties referenced through the property rename functions.
+        Node target = n.getFirstChild();
+        if (n.hasMoreThanOneChild()
+            && compiler
+                .getCodingConvention()
+                .isPropertyRenameFunction(target.getOriginalQualifiedName())) {
            Node propName = target.getNext();
            if (propName.isString()) {
              used.add(propName.getString());
