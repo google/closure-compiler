@@ -1295,12 +1295,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectedFeatures = FeatureSet.ES6;
     parseWarning("var [x,y] = foo();",
         "this language feature is only supported in es6 mode: destructuring");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var [x,y] = foo();");
+    // arbitrary LHS assignment target not allowed
+    parseError(
+        "var [x,y[15]] = foo();", "Only an identifier or destructuring pattern is allowed here.");
+  }
+
+  public void testArrayDestructuringAssign() {
+    mode = LanguageMode.ECMASCRIPT5;
+    expectedFeatures = FeatureSet.ES6;
     parseWarning("[x,y] = foo();",
         "this language feature is only supported in es6 mode: destructuring");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parse("var [x,y] = foo();");
     parse("[x,y] = foo();");
+    // arbitrary LHS assignment target is allowed
+    parse("[x,y[15]] = foo();");
   }
 
   public void testArrayDestructuringInitializer() {
@@ -1311,7 +1323,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var [x,y=2] = foo();");
     parse("[x,y=2] = foo();");
 
+    parse("var [[a] = ['b']] = [];");
     parse("[[a] = ['b']] = [];");
+    // arbitrary LHS target allowed in assignment, but not declaration
+    parse("[[a.x] = ['b']] = [];");
+    parseError(
+        "var [[a.x] = ['b']] = [];",
+        "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testArrayDestructuringTrailingComma() {
@@ -1327,6 +1345,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("let [first, ...rest] = foo();");
     parse("const [first, ...rest] = foo();");
 
+    parseError(
+        "var [first, ...more = 'default'] = foo();",
+        "A default value cannot be specified after '...'");
     parseError("var [first, ...more, last] = foo();", "']' expected");
 
     // TODO(tbreisacher): This should parse without error. This is valid in ES6.
@@ -1342,8 +1363,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectedFeatures = FeatureSet.ES6;
     parse("function f([x, y]) { use(x); use(y); }");
     parse("function f([x, [y, z]]) {}");
+    parse("function f([x, {y, foo: z}]) {}");
     parse("function f([x, y] = [1, 2]) { use(x); use(y); }");
     parse("function f([x, x]) {}");
+    // arbitrary LHS expression not allowed as a formal parameter
+    parseError(
+        "function f([a[0], x]) {}", "Only an identifier or destructuring pattern is allowed here.");
+    // restriction applies to sub-patterns
+    parseError(
+        "function f([a, [x.foo]]) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
+    parseError(
+        "function f([a, {foo: x.foo}]) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testObjectDestructuringVar() {
@@ -1356,6 +1388,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // Useless, but legal.
     parse("var {} = foo();");
+    // Arbitrary LHS target not allowed in declaration
+    parseError("var {x.a, y} = foo();", "'}' expected");
+    parseError(
+        "var {a: x.a, y} = foo();", "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testObjectDestructuringVarWithInitializer() {
@@ -1408,6 +1444,18 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function f({w, x: {y, z}}) {}");
     parse("function f({x, y} = {x:1, y:2}) {}");
     parse("function f({x, x}) {}");
+    // arbitrary LHS expression not allowed as a formal parameter
+    parseError("function f({a[0], x}) {}", "'}' expected");
+    parseError(
+        "function f({foo: a[0], x}) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
+    // restriction applies to sub-patterns
+    parseError(
+        "function f({a, foo: [x.foo]}) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
+    parseError(
+        "function f({a, x: {foo: x.foo}}) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testObjectDestructuringComputedProp() {
@@ -1447,11 +1495,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringComplexTarget() {
     mode = LanguageMode.ECMASCRIPT6;
     expectedFeatures = FeatureSet.ES6;
-    parseError("var {foo: bar.x} = baz();", "'}' expected");
+    parseError(
+        "var {foo: bar.x} = baz();",
+        "Only an identifier or destructuring pattern is allowed here.");
     parse("({foo: bar.x} = baz());");
     parse("for ({foo: bar.x} in baz());");
 
-    parseError("var {foo: bar[x]} = baz();", "'}' expected");
+    parseError(
+        "var {foo: bar[x]} = baz();",
+        "Only an identifier or destructuring pattern is allowed here.");
     parse("({foo: bar[x]} = baz());");
     parse("for ({foo: bar[x]} in baz());");
   }
@@ -1466,8 +1518,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("([x] = y);");
     parse("[(x), y] = z;");
     parse("[x, (y)] = z;");
-    parse("[x, ([y])] = z;");
-    parse("[x, (([y]))] = z;");
+    parseError("[x, ([y])] = z;", "invalid assignment target");
+    parseError("[x, (([y]))] = z;", "invalid assignment target");
   }
 
   public void testObjectLiteralCannotUseDestructuring() {
@@ -2790,13 +2842,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // {x: 5} and {x: 'str'} are valid object literals but not valid patterns.
     parseError("for ({x: 5} in foo()) {}", "invalid assignment target");
     parseError("for ({x: 'str'} in foo()) {}", "invalid assignment target");
-    parseError("var {x: 5} = foo();", "'identifier' expected");
-    parseError("var {x: 'str'} = foo();", "'identifier' expected");
+    parseError("var {x: 5} = foo();", "invalid assignment target");
+    parseError("var {x: 'str'} = foo();", "invalid assignment target");
     parseError("({x: 5} = foo());", "invalid assignment target");
     parseError("({x: 'str'} = foo());", "invalid assignment target");
 
     // {method(){}} is a valid object literal but not a valid object pattern.
-    expectedFeatures = FeatureSet.ES3;
     parseError("function f({method(){}}) {}", "'}' expected");
     parseError("function f({method(){}} = foo()) {}", "'}' expected");
   }

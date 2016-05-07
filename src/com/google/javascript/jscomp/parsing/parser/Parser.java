@@ -1155,12 +1155,11 @@ public class Parser {
         eat(TokenType.QUESTION);
         parameter = new OptionalParameterTree(getTreeLocation(start), parameter);
       }
-    } else if (context != ParamContext.TYPE_EXPRESSION) {
-      if (peek(TokenType.OPEN_SQUARE)) {
-        parameter = parseArrayPattern(PatternKind.INITIALIZER);
-      } else if (peek(TokenType.OPEN_CURLY)) {
-        parameter = parseObjectPattern(PatternKind.INITIALIZER);
-      }
+    } else if (context != ParamContext.TYPE_EXPRESSION && peekPatternStart()) {
+      parameter = parsePattern(PatternKind.INITIALIZER);
+    } else {
+      throw new IllegalStateException(
+          "parseParameterCalled() without confirming a parameter exists.");
     }
 
     ParseTree typeAnnotation = null;
@@ -2995,24 +2994,27 @@ public class Parser {
       // The Call expression productions
       while (peekCallSuffix()) {
         switch (peekType()) {
-        case OPEN_PAREN:
-          ArgumentListTree arguments = parseArguments();
-          operand = new CallExpressionTree(getTreeLocation(start), operand, arguments);
-          break;
-        case OPEN_SQUARE:
-          eat(TokenType.OPEN_SQUARE);
-          ParseTree member = parseExpression();
-          eat(TokenType.CLOSE_SQUARE);
-          operand = new MemberLookupExpressionTree(getTreeLocation(start), operand, member);
-          break;
-        case PERIOD:
-          eat(TokenType.PERIOD);
-          IdentifierToken id = eatIdOrKeywordAsId();
-          operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
-          break;
-        case NO_SUBSTITUTION_TEMPLATE:
-        case TEMPLATE_HEAD:
-          operand = parseTemplateLiteral(operand);
+          case OPEN_PAREN:
+            ArgumentListTree arguments = parseArguments();
+            operand = new CallExpressionTree(getTreeLocation(start), operand, arguments);
+            break;
+          case OPEN_SQUARE:
+            eat(TokenType.OPEN_SQUARE);
+            ParseTree member = parseExpression();
+            eat(TokenType.CLOSE_SQUARE);
+            operand = new MemberLookupExpressionTree(getTreeLocation(start), operand, member);
+            break;
+          case PERIOD:
+            eat(TokenType.PERIOD);
+            IdentifierToken id = eatIdOrKeywordAsId();
+            operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
+            break;
+          case NO_SUBSTITUTION_TEMPLATE:
+          case TEMPLATE_HEAD:
+            operand = parseTemplateLiteral(operand);
+            break;
+          default:
+            throw new AssertionError("unexpected case: " + peekType());
         }
       }
     }
@@ -3154,56 +3156,48 @@ public class Parser {
     }
   }
 
-  private boolean peekPatternElement() {
+  private boolean peekArrayPatternElement() {
     return peekExpression() || peek(TokenType.SPREAD);
   }
 
-  // Element ::= Pattern | LValue | ... LValue
-  private ParseTree parseArrayPatternElement(PatternKind kind) {
-    SourcePosition start = getTreeStartLocation();
-    ParseTree lvalue;
-    boolean rest = false;
+  private ParseTree parseArrayPatternElement(PatternKind patternKind) {
+    ParseTree patternElement;
 
-    // [ or { are preferably the start of a sub-pattern
-    if (peekPatternStart()) {
-      lvalue = parsePattern(kind);
+    if (peek(TokenType.SPREAD)) {
+      patternElement = parseArrayPatternRest(patternKind);
     } else {
-      // An element that's not a sub-pattern
-
-      if (peek(TokenType.SPREAD)) {
-        eat(TokenType.SPREAD);
-        rest = true;
-      }
-
-      lvalue = parseLeftHandSideExpression();
+      patternElement = parsePatternAssignmentTarget(patternKind);
     }
+    return patternElement;
+  }
 
-    if (rest && lvalue.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
+  private ParseTree parseArrayPatternRest(PatternKind patternKind) {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.SPREAD);
+    ParseTree patternAssignmentTarget = parsePatternAssignmentTargetNoDefault(patternKind);
+    IdentifierToken identifierToken;
+    if (patternAssignmentTarget.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
+      // TODO(bradfordcsmith): allow sub-patterns
+      //     https://github.com/google/closure-compiler/issues/1383
       reportError("lvalues in rest elements must be identifiers");
-      return lvalue;
+      // Create a bogus token so compilation can continue to find possible other errors.
+      identifierToken = new IdentifierToken(getTreeLocation(start), "invalid_rest");
+    } else {
+      identifierToken = patternAssignmentTarget.asIdentifierExpression().identifierToken;
     }
-
-    if (rest) {
-      return new AssignmentRestElementTree(
-          getTreeLocation(start),
-          lvalue.asIdentifierExpression().identifierToken);
+    if (peek(TokenType.EQUAL)) {
+      reportError("A default value cannot be specified after '...'");
     }
-
-    Token eq = eatOpt(TokenType.EQUAL);
-    if (eq != null) {
-      ParseTree defaultValue = parseAssignmentExpression();
-      return new DefaultParameterTree(getTreeLocation(start),
-          lvalue, defaultValue);
-    }
-    return lvalue;
+    return new AssignmentRestElementTree(getTreeLocation(start), identifierToken);
   }
 
   // Pattern ::= ... | "[" Element? ("," Element?)* "]"
   private ParseTree parseArrayPattern(PatternKind kind) {
+    features = features.require(Feature.DESTRUCTURING);
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> elements = ImmutableList.builder();
     eat(TokenType.OPEN_SQUARE);
-    while (peek(TokenType.COMMA) || peekPatternElement()) {
+    while (peek(TokenType.COMMA) || peekArrayPatternElement()) {
       if (peek(TokenType.COMMA)) {
         eat(TokenType.COMMA);
         elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
@@ -3233,6 +3227,7 @@ public class Parser {
 
   // Pattern ::= "{" (Field ("," Field)* ","?)? "}" | ...
   private ParseTree parseObjectPattern(PatternKind kind) {
+    features = features.require(Feature.DESTRUCTURING);
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> fields = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
@@ -3259,7 +3254,7 @@ public class Parser {
     if (peekType() == TokenType.OPEN_SQUARE) {
       ParseTree key = parseComputedPropertyName();
       eat(TokenType.COLON);
-      ParseTree value = parseObjectPatternFieldTail(kind);
+      ParseTree value = parsePatternAssignmentTarget(kind);
       return new ComputedPropertyDefinitionTree(getTreeLocation(start), key, value);
     }
 
@@ -3286,32 +3281,67 @@ public class Parser {
     }
 
     eat(TokenType.COLON);
-    ParseTree value = parseObjectPatternFieldTail(kind);
+    ParseTree value = parsePatternAssignmentTarget(kind);
     return new PropertyNameAssignmentTree(getTreeLocation(start), name, value);
   }
 
   /**
-   * Parses the "tail" of an object pattern field, i.e. the part after the ':'
+   * A PatternAssignmentTarget is the location where the assigned value gets stored, including an
+   * optional default value.
+   *
+   * <dl>
+   *   <dt> Spec AssignmentElement === PatternAssignmentTarget(PatternKind.ANY)
+   *   <dd> Valid in an assignment that is not a formal parameter list or variable declaration.
+   *        Sub-patterns and arbitrary left hand side expressions are allowed.
+   *
+   *   <dt> Spec BindingElement === PatternAssignmentElement(PatternKind.INITIALIZER)
+   *   <dd> Valid in a formal parameter list or variable declaration statement.
+   *        Only sub-patterns and identifiers are allowed.
+   * </dl>
+   * Examples:
+   * <pre>
+   *   <code>
+   *     [a, {foo: b = 'default'}] = someArray;          // valid
+   *     [x.a, {foo: x.b = 'default'}] = someArray;      // valid
+   *
+   *     let [a, {foo: b = 'default'}] = someArray;      // valid
+   *     let [x.a, {foo: x.b = 'default'}] = someArray;  // invalid
+   *
+   *     function f([a, {foo: b = 'default'}]) {...}     // valid
+   *     function f([x.a, {foo: x.b = 'default'}]) {...} // invalid
+   *   </code>
+   * </pre>
    */
-  private ParseTree parseObjectPatternFieldTail(PatternKind kind) {
+  private ParseTree parsePatternAssignmentTarget(PatternKind patternKind) {
     SourcePosition start = getTreeStartLocation();
-    ParseTree value;
-    if (peekPatternStart()) {
-      value = parsePattern(kind);
-    } else {
-      value = (kind == PatternKind.ANY)
-          ? parseLeftHandSideExpression()
-          : parseIdentifierExpression();
-      if (!value.isValidAssignmentTarget()) {
-        reportError("invalid assignment target");
-      }
-    }
+    ParseTree assignmentTarget;
+    assignmentTarget = parsePatternAssignmentTargetNoDefault(patternKind);
+
     if (peek(TokenType.EQUAL)) {
       eat(TokenType.EQUAL);
       ParseTree defaultValue = parseAssignmentExpression();
-      return new DefaultParameterTree(getTreeLocation(start), value, defaultValue);
+      assignmentTarget =
+          new DefaultParameterTree(getTreeLocation(start), assignmentTarget, defaultValue);
     }
-    return value;
+    return assignmentTarget;
+  }
+
+  private ParseTree parsePatternAssignmentTargetNoDefault(PatternKind kind) {
+    ParseTree assignmentTarget;
+    if (peekPatternStart()) {
+      assignmentTarget = parsePattern(kind);
+    } else {
+      assignmentTarget = parseLeftHandSideExpression();
+      if (!assignmentTarget.isValidAssignmentTarget()) {
+        reportError("invalid assignment target");
+      }
+      if (kind == PatternKind.INITIALIZER
+          && assignmentTarget.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
+        // We're in the context of a formal parameter list or a variable declaration statement
+        reportError("Only an identifier or destructuring pattern is allowed here.");
+      }
+    }
+    return assignmentTarget;
   }
 
   private ParseTree parseTypeAlias() {
