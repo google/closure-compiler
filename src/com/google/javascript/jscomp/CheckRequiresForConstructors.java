@@ -71,6 +71,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   private Mode mode;
 
   private final Set<String> providedNames = new HashSet<>();
+
+  // Keys are the local name of a required namespace. Values are the goog.require CALL node.
   private final Map<String, Node> requires = new HashMap<>();
 
   // Only used in single-file mode.
@@ -219,6 +221,12 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       case GETPROP:
         // If parent is a GETPROP, they will handle the weak usages.
         if (!parent.isGetProp() && n.isQualifiedName()) {
+          visitQualifiedName(n);
+        }
+        break;
+      case STRING_KEY:
+        if (parent.isObjectLit() && !n.hasChildren()) {
+          // Object literal shorthand. This is a usage of the name.
           visitQualifiedName(n);
         }
         break;
@@ -463,22 +471,24 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     weakUsages.add(qualifiedName);
   }
 
-  private void visitQualifiedName(Node getpropOrName) {
-    if (getpropOrName.isName() && getpropOrName.getString() != null) {
+  private void visitQualifiedName(Node n) {
+    Preconditions.checkState(n.isName() || n.isGetProp() || n.isStringKey(), n);
+
+    if (n.isName() && n.getString() != null) {
       // If the referenced thing is a goog.require as desugared from goog.module().
-      if (getpropOrName.getBooleanProp(Node.GOOG_MODULE_REQUIRE)) {
-        Node declStatement = NodeUtil.getEnclosingStatement(getpropOrName);
+      if (n.getBooleanProp(Node.GOOG_MODULE_REQUIRE)) {
+        Node declStatement = NodeUtil.getEnclosingStatement(n);
         if (NodeUtil.isNameDeclaration(declStatement)) {
           for (Node varChild : declStatement.children()) {
             // Normal declaration.
             if (varChild.isName()) {
-              requires.put(varChild.getString(), getpropOrName);
+              requires.put(varChild.getString(), n);
             }
             // Object destructuring declaration.
             if (varChild.isObjectPattern()) {
               for (Node objectChild : varChild.children()) {
                 if (objectChild.isStringKey()) {
-                  requires.put(objectChild.getString(), getpropOrName);
+                  requires.put(objectChild.getString(), n);
                 }
               }
             }
@@ -487,7 +497,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       }
     }
 
-    addWeakUsagesOfAllPrefixes(getpropOrName.getQualifiedName());
+    String qualifiedName = n.isStringKey() ? n.getString() : n.getQualifiedName();
+    addWeakUsagesOfAllPrefixes(qualifiedName);
   }
 
   private void visitNewNode(NodeTraversal t, Node newNode) {

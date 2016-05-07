@@ -75,6 +75,20 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
     test(externs, js, js, null, null, null);
   }
 
+  public void testNoWarning_objlitShorthand() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('example.module');",
+            "",
+            "const X = goog.require('example.X');",
+            "alert({X});"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.require('X');",
+            "alert({X});"));
+  }
+
   public void testNoWarning_InnerClassInExtends() {
     String js =
         LINE_JOINER.join(
