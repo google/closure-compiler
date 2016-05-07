@@ -19,7 +19,6 @@
  *
  * TODO: Remaining Services:
  *     $cookieStore
- *     $document
  *     $httpBackend
  *     $locale
  *     $rootElement
@@ -2383,3 +2382,10 @@ angular.$timeout_.cancel = function(promise) {};
 
 /** @typedef {!Window} */
 angular.$window;
+
+/******************************************************************************
+ * $document Service
+ *****************************************************************************/
+
+/** @typedef {!Document} */
+angular.$document;

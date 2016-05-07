@@ -20,7 +20,6 @@
  * TODO: Mocks.
  * TODO: Remaining Services:
  *     $cookieStore
- *     $document
  *     $httpBackend
  *     $locale
  *     $rootElement
@@ -2566,3 +2565,10 @@ angular.$transclude_.isSlotFilled = function(slotName) {};
 
 /** @typedef {!Window} */
 angular.$window;
+
+/******************************************************************************
+ * $document Service
+ *****************************************************************************/
+
+/** @typedef {!Document} */
+angular.$document;
