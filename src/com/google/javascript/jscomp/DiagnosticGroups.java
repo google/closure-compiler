@@ -544,15 +544,23 @@ public class DiagnosticGroups {
               RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS,
               VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT));
 
+  // A diagnostic group appears to be enabled if any of the DiagnosticTypes it
+  // contains are enabled. We need this group so we can distinguish whether
+  // ANALYZER_CHECKS was directly enabled or only appears to be, because
+  // UNUSED_PRIVATE_PROPERTY was enabled.
+  static final DiagnosticGroup ANALYZER_CHECKS_INTERNAL =
+      DiagnosticGroups.registerGroup("analyzerChecksInternal", // undocumented
+          CheckArrayWithGoogObject.ARRAY_PASSED_TO_GOOG_OBJECT,
+          CheckNullableReturn.NULLABLE_RETURN,
+          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
+          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
+
   // Similar to the lintChecks group above, but includes things that cannot be done on a single
   // file at a time, for example because they require typechecking.
   public static final DiagnosticGroup ANALYZER_CHECKS =
       DiagnosticGroups.registerGroup("analyzerChecks", // undocumented
-          CheckArrayWithGoogObject.ARRAY_PASSED_TO_GOOG_OBJECT,
-          CheckNullableReturn.NULLABLE_RETURN,
-          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
-          CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY,
-          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
+          ANALYZER_CHECKS_INTERNAL,
+          UNUSED_PRIVATE_PROPERTY);
 
   public static final DiagnosticGroup USE_OF_GOOG_BASE =
       DiagnosticGroups.registerGroup("useOfGoogBase",

@@ -1743,11 +1743,16 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("analyzerChecks", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder()
-          .add(new CheckNullableReturn(compiler))
+      ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder();
+      if (options.enables(DiagnosticGroups.ANALYZER_CHECKS_INTERNAL)) {
+        callbacks.add(new CheckNullableReturn(compiler))
           .add(new CheckArrayWithGoogObject(compiler))
-          .add(new CheckUnusedPrivateProperties(compiler))
           .add(new ImplicitNullabilityCheck(compiler));
+      }
+      // These are grouped together for better execution efficiency.
+      if (options.enables(DiagnosticGroups.UNUSED_PRIVATE_PROPERTY)) {
+        callbacks.add(new CheckUnusedPrivateProperties(compiler));
+      }
       return combineChecks(compiler, callbacks.build());
     }
   };
