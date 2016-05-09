@@ -254,7 +254,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testGenericFunction() {
     test("function foo<T>() {}", "/** @template T */ function foo() {}");
-    test("var x = <K, V>(p) => 3;", "var x = /** @template K, V */ (p) => 3");
+//     test("var x = <K, V>(p) => 3;", "var x = /** @template K, V */ (p) => 3");
     test("class Foo { f<T>() {} }", "class Foo { /** @template T */ f() {} }");
     test("(function<T>() {})();", "(/** @template T */ function() {})();");
     test("function* foo<T>() {}", "/** @template T */ function* foo() {}");
