@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.debugging.sourcemap.Util;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -46,7 +45,6 @@ class CodeGenerator {
   private final boolean preferSingleQuotes;
   private final boolean preserveTypeAnnotations;
   private final boolean trustedStrings;
-  private final LanguageMode languageMode;
   private final boolean quoteKeywordProperties;
 
   private CodeGenerator(CodeConsumer consumer) {
@@ -54,7 +52,6 @@ class CodeGenerator {
     outputCharsetEncoder = null;
     preferSingleQuotes = false;
     trustedStrings = true;
-    languageMode = LanguageMode.ECMASCRIPT5;
     preserveTypeAnnotations = false;
     quoteKeywordProperties = false;
   }
@@ -71,7 +68,6 @@ class CodeGenerator {
     this.outputCharsetEncoder = new OutputCharsetEncoder(options.getOutputCharset());
     this.preferSingleQuotes = options.preferSingleQuotes;
     this.trustedStrings = options.trustedStrings;
-    this.languageMode = options.getLanguageOut();
     this.preserveTypeAnnotations = options.preserveTypeAnnotations;
     this.quoteKeywordProperties = options.quoteKeywordProperties;
   }
