@@ -166,7 +166,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     } else if (parent.isAssign() && parent.getParent().isExprResult()) {
       rhs = parent.getLastChild();
       nodeToDetach = parent.getParent();
-    } else if (parent.isStringKey() || parent.isArrayPattern() || parent.isDefaultValue()) {
+    } else if (parent.isRest()
+        || parent.isStringKey()
+        || parent.isArrayPattern()
+        || parent.isDefaultValue()) {
       // Nested object pattern; do nothing. We will visit it after rewriting the parent.
       return;
     } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
@@ -275,7 +278,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       rhs = arrayPattern.getNext();
       nodeToDetach = parent.getParent();
       Preconditions.checkState(nodeToDetach.isExprResult());
-    } else if (parent.isArrayPattern() || parent.isDefaultValue() || parent.isStringKey()) {
+    } else if (parent.isArrayPattern()
+        || parent.isRest()
+        || parent.isDefaultValue()
+        || parent.isStringKey()) {
       // This is a nested array pattern. Don't do anything now; we'll visit it
       // after visiting the parent.
       return;

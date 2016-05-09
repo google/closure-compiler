@@ -363,6 +363,22 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testArrayDestructuringMixedRest() {
+    test(
+        "let [first, ...[re, st, ...{length: num_left}]] = f();",
+        LINE_JOINER.join(
+            "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
+            "let first = $jscomp$destructuring$var0.next().value;",
+            "var $jscomp$destructuring$var1 = "
+                + "$jscomp.makeIterator("
+                + "$jscomp.arrayFromIterator($jscomp$destructuring$var0));",
+            "let re = $jscomp$destructuring$var1.next().value;",
+            "let st = $jscomp$destructuring$var1.next().value;",
+            "var $jscomp$destructuring$var2 = "
+                + "$jscomp.arrayFromIterator($jscomp$destructuring$var1);",
+            "let num_left = $jscomp$destructuring$var2.length;"));
+  }
+
   public void testArrayDestructuringArguments() {
     test(
     "function f() { var [x, y] = arguments; }",

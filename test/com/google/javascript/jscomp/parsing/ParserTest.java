@@ -1338,20 +1338,44 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var [x,] = ['x',];", "Array pattern may not end with a comma");
   }
 
-  public void testArrayDestructuringRest() {
+  public void testArrayDestructuringDeclarationRest() {
     mode = LanguageMode.ECMASCRIPT6;
     expectedFeatures = FeatureSet.ES6;
     parse("var [first, ...rest] = foo();");
     parse("let [first, ...rest] = foo();");
     parse("const [first, ...rest] = foo();");
+    // nested destructuring in regular parameters and rest parameters
+    parse("var [first, {a, b}, ...[re, st, ...{length}]] = foo();");
 
     parseError(
         "var [first, ...more = 'default'] = foo();",
         "A default value cannot be specified after '...'");
     parseError("var [first, ...more, last] = foo();", "']' expected");
 
-    // TODO(tbreisacher): This should parse without error. This is valid in ES6.
-    parseError("var [first, ...[re, st]] = foo();", "lvalues in rest elements must be identifiers");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "var [first, ...rest] = foo();",
+        "this language feature is only supported in es6 mode: destructuring");
+  }
+
+  public void testArrayDestructuringAssignRest() {
+    mode = LanguageMode.ECMASCRIPT6;
+    expectedFeatures = FeatureSet.ES6;
+    parse("[first, ...rest] = foo();");
+    // nested destructuring in regular parameters and rest parameters
+    parse("[first, {a, b}, ...[re, st, ...{length}]] = foo();");
+    // arbitrary LHS assignment target is allowed
+    parse("[x, ...y[15]] = foo();");
+    // arbitrary LHS assignment target not allowed
+    parseError(
+        "var [x, ...y[15]] = foo();",
+        "Only an identifier or destructuring pattern is allowed here.");
+
+    parseError(
+        "[first, ...more = 'default'] = foo();", "A default value cannot be specified after '...'");
+    parseError("var [first, ...more, last] = foo();", "']' expected");
+
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [first, ...rest] = foo();",

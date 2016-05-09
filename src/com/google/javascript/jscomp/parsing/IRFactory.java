@@ -1023,9 +1023,7 @@ class IRFactory {
     }
 
     Node processAssignmentRestElement(AssignmentRestElementTree tree) {
-      Node name = newStringNode(Token.NAME, tree.identifier.value);
-      setSourceInfo(name, tree.identifier);
-      return newNode(Token.REST, name);
+      return newNode(Token.REST, transformNodeWithInlineJsDoc(tree.assignmentTarget));
     }
 
     Node processAstRoot(ProgramTree rootNode) {

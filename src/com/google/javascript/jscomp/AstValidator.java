@@ -746,7 +746,7 @@ public final class AstValidator implements CompilerPass {
         if (c.getNext() != null) {
           violation("Rest parameters must come after all other parameters.", c);
         }
-        validateRest(c);
+        validateRest(Token.PARAM_LIST, c);
       } else if (c.isDefaultValue()) {
         defaultParams = true;
         validateDefaultValue(Token.PARAM_LIST, c);
@@ -789,10 +789,16 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateRest(Node n) {
+  private void validateRest(int type, Node n) {
     validateNodeType(Token.REST, n);
     validateChildCount(n);
-    validateNonEmptyString(n.getFirstChild());
+    if (type == Token.PARAM_LIST) {
+      // TODO(bradfordcsmith): Make destructuring rest parameters work.
+      //     https://github.com/google/closure-compiler/issues/1383
+      validateNonEmptyString(n.getFirstChild());
+    } else {
+      validateLHS(type, n.getFirstChild());
+    }
   }
 
   private void validateSpread(Node n) {
@@ -869,7 +875,7 @@ public final class AstValidator implements CompilerPass {
       if (c == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
         validateExpression(c);
       } else if (c.isRest()) {
-        validateRest(c);
+        validateRest(type, c);
       } else if (c.isEmpty()) {
         validateChildless(c);
       } else {

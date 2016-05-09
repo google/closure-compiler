@@ -3174,21 +3174,16 @@ public class Parser {
   private ParseTree parseArrayPatternRest(PatternKind patternKind) {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SPREAD);
+    ParseTree patternAssignmentTarget = parseRestAssignmentTarget(patternKind);
+    return new AssignmentRestElementTree(getTreeLocation(start), patternAssignmentTarget);
+  }
+
+  private ParseTree parseRestAssignmentTarget(PatternKind patternKind) {
     ParseTree patternAssignmentTarget = parsePatternAssignmentTargetNoDefault(patternKind);
-    IdentifierToken identifierToken;
-    if (patternAssignmentTarget.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
-      // TODO(bradfordcsmith): allow sub-patterns
-      //     https://github.com/google/closure-compiler/issues/1383
-      reportError("lvalues in rest elements must be identifiers");
-      // Create a bogus token so compilation can continue to find possible other errors.
-      identifierToken = new IdentifierToken(getTreeLocation(start), "invalid_rest");
-    } else {
-      identifierToken = patternAssignmentTarget.asIdentifierExpression().identifierToken;
-    }
     if (peek(TokenType.EQUAL)) {
       reportError("A default value cannot be specified after '...'");
     }
-    return new AssignmentRestElementTree(getTreeLocation(start), identifierToken);
+    return patternAssignmentTarget;
   }
 
   // Pattern ::= ... | "[" Element? ("," Element?)* "]"
