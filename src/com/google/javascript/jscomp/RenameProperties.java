@@ -58,13 +58,6 @@ import javax.annotation.Nullable;
  *   var x = {'myprop': 0}, y = x.myprop;     // incorrect
  * </pre>
  *
- * This pass also recognizes and replaces special renaming functions. They supply
- * a property name as the string literal for the first argument.
- * This pass will replace them as though they were JS property
- * references. Here are two examples:
- *    JSCompiler_renameProperty('propertyName') -> 'jYq'
- *    JSCompiler_renameProperty('myProp.nestedProp.innerProp') -> 'e4.sW.C$'
- *
  */
 class RenameProperties implements CompilerPass {
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
@@ -112,13 +105,26 @@ class RenameProperties implements CompilerPass {
        }
     };
 
+  /**
+   * The name of a special function that this pass replaces. It takes one
+   * argument: a string literal containing one or more dot-separated JS
+   * identifiers. This pass will replace them as though they were JS property
+   * references. Here are two examples:
+   *    JSCompiler_renameProperty('propertyName') -> 'jYq'
+   *    JSCompiler_renameProperty('myProp.nestedProp.innerProp') -> 'e4.sW.C$'
+   */
+  static final String RENAME_PROPERTY_FUNCTION_NAME =
+      "JSCompiler_renameProperty";
+
   static final DiagnosticType BAD_CALL = DiagnosticType.error(
       "JSC_BAD_RENAME_PROPERTY_FUNCTION_NAME_CALL",
-      "Bad {0} call - the first argument must be a string literal");
+      "Bad " + RENAME_PROPERTY_FUNCTION_NAME + " call - " +
+      "argument must be a string literal");
 
   static final DiagnosticType BAD_ARG = DiagnosticType.error(
       "JSC_BAD_RENAME_PROPERTY_FUNCTION_NAME_ARG",
-      "Bad {0} argument - ''{1}'' is not a valid JavaScript identifier");
+      "Bad " + RENAME_PROPERTY_FUNCTION_NAME + " argument - " +
+      "''{0}'' is not a valid JavaScript identifier");
 
   /**
    * Creates an instance.
@@ -348,57 +354,41 @@ class RenameProperties implements CompilerPass {
             quotedNames.add(child.getString());
           }
           break;
-        case Token.CALL: {
-          // We replace property renaming function calls with a string
+        case Token.CALL:
+          // We replace a JSCompiler_renameProperty function call with a string
           // containing the renamed property.
           Node fnName = n.getFirstChild();
-          if (compiler
-              .getCodingConvention()
-              .isPropertyRenameFunction(fnName.getOriginalQualifiedName())) {
+          if (fnName.isName() &&
+              RENAME_PROPERTY_FUNCTION_NAME.equals(fnName.getString())) {
             callNodeToParentMap.put(n, parent);
             countCallCandidates(t, n);
           }
           break;
-        }
-        case Token.FUNCTION: {
+        case Token.FUNCTION:
           // We eliminate any stub implementations of JSCompiler_renameProperty
           // that we encounter.
           if (NodeUtil.isFunctionDeclaration(n)) {
             String name = n.getFirstChild().getString();
-              if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)) {
-                if (parent.isExprResult()) {
-                  parent.detachFromParent();
-                } else {
-                  parent.removeChild(n);
-                }
-                compiler.reportCodeChange();
+            if (RENAME_PROPERTY_FUNCTION_NAME.equals(name)) {
+              if (parent.isExprResult()) {
+                parent.detachFromParent();
+              } else {
+                parent.removeChild(n);
               }
-            } else if (parent.isName()
-                && NodeUtil.JSC_PROPERTY_NAME_FN.equals(parent.getString())) {
-              Node varNode = parent.getParent();
-              if (varNode.isVar()) {
-                varNode.removeChild(parent);
-                if (!varNode.hasChildren()) {
-                  varNode.detachFromParent();
-                }
-                compiler.reportCodeChange();
+              compiler.reportCodeChange();
+            }
+          } else if (parent.isName() &&
+                     RENAME_PROPERTY_FUNCTION_NAME.equals(parent.getString())) {
+            Node varNode = parent.getParent();
+            if (varNode.isVar()) {
+              varNode.removeChild(parent);
+              if (!varNode.hasChildren()) {
+                varNode.detachFromParent();
               }
-            } else if (NodeUtil.isFunctionExpression(n)
-                && parent.isAssign()
-                && parent.getFirstChild().isGetProp()
-                && compiler
-                    .getCodingConvention()
-                    .isPropertyRenameFunction(parent.getFirstChild().getOriginalQualifiedName())) {
-              Node exprResult = parent.getParent();
-              if (exprResult.isExprResult()
-                  && NodeUtil.isStatementBlock(exprResult.getParent())
-                  && exprResult.getFirstChild().isAssign()) {
-                exprResult.detachFromParent();
-                compiler.reportCodeChange();
-              }
+              compiler.reportCodeChange();
+            }
           }
           break;
-        }
       }
     }
 
@@ -424,19 +414,15 @@ class RenameProperties implements CompilerPass {
      * @param t The traversal
      */
     private void countCallCandidates(NodeTraversal t, Node callNode) {
-      String fnName = callNode.getFirstChild().getOriginalName();
-      if (fnName == null) {
-        fnName = callNode.getFirstChild().getString();
-      }
       Node firstArg = callNode.getSecondChild();
       if (!firstArg.isString()) {
-        t.report(callNode, BAD_CALL, fnName);
+        t.report(callNode, BAD_CALL);
         return;
       }
 
       for (String name : DOT_SPLITTER.split(firstArg.getString())) {
         if (!TokenStream.isJSIdentifier(name)) {
-          t.report(callNode, BAD_ARG, fnName);
+          t.report(callNode, BAD_ARG, name);
           continue;
         }
         if (!externedNames.contains(name)) {

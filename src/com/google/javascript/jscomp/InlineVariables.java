@@ -345,12 +345,10 @@ class InlineVariables implements CompilerPass {
       // 2) A reference to the variable has been inlined. We're downstream
       //    of the mechanism that creates variable references, so we don't
       //    have a good way to update the reference. Just punt on it.
-      // 3) Don't inline the special property rename functions.
+      // 3) Don't inline the special RENAME_PROPERTY_FUNCTION_NAME
       return var.isExtern()
           || compiler.getCodingConvention().isExported(var.name)
-          || compiler
-              .getCodingConvention()
-              .isPropertyRenameFunction(var.nameNode.getOriginalQualifiedName())
+          || RenameProperties.RENAME_PROPERTY_FUNCTION_NAME.equals(var.name)
           || staleVars.contains(var);
     }
 

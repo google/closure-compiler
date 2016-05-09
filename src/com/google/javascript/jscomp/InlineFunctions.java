@@ -369,7 +369,7 @@ class InlineFunctions implements CompilerPass {
     }
 
     // Don't inline this special function
-    if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
+    if (RenameProperties.RENAME_PROPERTY_FUNCTION_NAME.equals(fnName)) {
       return false;
     }
 
