@@ -2029,6 +2029,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("class C extends D{member(){super.foo()}}");
   }
 
+  public void testNewTarget() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("new.target");
+    assertPrint("new\n.\ntarget", "new.target");
+  }
+
   public void testGeneratorYield() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("function*f(){yield 1}");

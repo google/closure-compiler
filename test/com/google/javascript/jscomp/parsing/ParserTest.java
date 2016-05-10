@@ -2662,6 +2662,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "this language feature is only supported in es6 mode: super");
   }
 
+  public void testNewTarget() {
+    expectedFeatures = FeatureSet.ES6;
+    mode = LanguageMode.ECMASCRIPT6;
+
+    // TODO(bradfordcsmith): new.target in global scope should be a syntax error
+    parse("new.target;");
+
+    parse("function f() { new.target; };");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("function f() { new.target; }",
+        "this language feature is only supported in es6 mode: new.target");
+
+    mode = LanguageMode.ECMASCRIPT3;
+    parseWarning("function f() { new.target; }",
+        "this language feature is only supported in es6 mode: new.target");
+  }
+
   public void testArrow1() {
     expectedFeatures = FeatureSet.ES6_IMPL;
     mode = LanguageMode.ECMASCRIPT6;

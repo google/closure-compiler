@@ -824,6 +824,11 @@ class CodeGenerator {
         add("super");
         break;
 
+      case Token.NEW_TARGET:
+        Preconditions.checkState(childCount == 0);
+        add("new.target");
+        break;
+
       case Token.YIELD:
         add("yield");
         if (n.isYieldFor()) {

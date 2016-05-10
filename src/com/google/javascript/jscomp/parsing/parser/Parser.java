@@ -77,6 +77,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressio
 import com.google.javascript.jscomp.parsing.parser.trees.NamespaceDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NamespaceNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.NewTargetExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
@@ -3071,7 +3072,9 @@ public class Parser {
 
   // 11.2 New Expression
   private ParseTree parseNewExpression() {
-    if (peek(TokenType.NEW)) {
+    if (peekNewTarget()) {
+      return parseNewTarget();
+    } else if (peek(TokenType.NEW)) {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.NEW);
       ParseTree operand = parseNewExpression();
@@ -3083,6 +3086,25 @@ public class Parser {
     } else {
       return parseMemberExpressionNoNew();
     }
+  }
+
+  private ParseTree parseNewTarget() {
+    features = features.require(Feature.NEW_TARGET);
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.NEW);
+    eat(TokenType.PERIOD);
+    IdentifierToken target = eatId();
+    if (!target.toString().equals("target")) {
+      reportError("Expected new.target, got new.%s", target.toString());
+    }
+    return new NewTargetExpressionTree(getTreeLocation(start));
+  }
+
+  private boolean peekNewTarget() {
+    // new.<identifier>
+    // Here, we'll assume the identifier is 'target'.
+    // The parse method will verify this.
+    return peek(TokenType.NEW) && peek(1, TokenType.PERIOD) && peekId(2);
   }
 
   private ArgumentListTree parseArguments() {

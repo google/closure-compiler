@@ -53,6 +53,8 @@ public class Token {
 
   /**
    * Token types.
+   *
+   * TODO(bradfordcsmith): Add instructions for assigning new values.
    */
   public static final int
       RETURN = 4,
@@ -188,6 +190,8 @@ public class Token {
       TEMPLATELIT_SUB = 179, // template literal substitution
 
       DEFAULT_VALUE = 180, // Formal parameter or destructuring element with a default value
+
+      NEW_TARGET = 181, // new.target
 
       // Used by type declaration ASTs
       STRING_TYPE = 200,
@@ -528,6 +532,8 @@ public class Token {
         return "COMPUTED_PROP";
       case DEFAULT_VALUE:
         return "DEFAULT_VALUE";
+      case NEW_TARGET:
+        return "NEW_TARGET";
       case MEMBER_VARIABLE_DEF:
         return "MEMBER_VARIABLE_DEF";
 
