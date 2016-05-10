@@ -1175,6 +1175,19 @@ var PolymerKeySplice;
 var PolymerSpliceChange;
 
 /**
+ * The type of the object received by an observer function when deep
+ * sub-property observation is enabled. See:
+ * https://www.polymer-project.org/1.0/docs/devguide/properties.html#deep-observation
+ *
+ * @typedef {{
+ *   path: string,
+ *   value: (?Object|undefined),
+ *   base: (?Object|undefined)
+ * }}
+ */
+var PolymerDeepPropertyChange;
+
+/**
  * The interface that iconsets should obey. Iconsets are registered by setting
  * their name in the IronMeta 'iconset' db, and a value of type Polymer.Iconset.
  *
