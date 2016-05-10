@@ -23,8 +23,23 @@ Note: The Closure Compiler requires [Java 7 or higher](http://www.java.com/).
 ### Using [Maven](http://maven.apache.org/)
 
 1. Download [Maven](http://maven.apache.org/download.cgi).
+2. Add sonatype snapshots repository to `~/.m2/settings.xml`:
+   ```
+   <profile>
+     <id>allow-snapshots</id>
+        <activation><activeByDefault>true</activeByDefault></activation>
+     <repositories>
+       <repository>
+         <id>snapshots-repo</id>
+         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+         <releases><enabled>false</enabled></releases>
+         <snapshots><enabled>true</enabled></snapshots>
+       </repository>
+     </repositories>
+   </profile>
+   ```
 
-2. Run `mvn -DskipTests` (omit the `-DskipTests` if you want to run all the
+3. Run `mvn -DskipTests` (omit the `-DskipTests` if you want to run all the
 unit tests too).
 
     This will produce a jar file called `target/closure-compiler-1.0-SNAPSHOT.jar`.
