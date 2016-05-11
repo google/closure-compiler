@@ -189,3 +189,13 @@ function setInterval(callback, opt_delay) {}
  * @see https://html.spec.whatwg.org/multipage/webappapis.html#timers
  */
 function setTimeout(callback, opt_delay, var_args) {}
+
+/**
+ * Returns whether the object has a property with the specified name.
+ *
+ * @param {*} propertyName Implicitly cast to a string.
+ * @return {boolean}
+ * @nosideeffects
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty
+ */
+function hasOwnProperty (propertyName) {}

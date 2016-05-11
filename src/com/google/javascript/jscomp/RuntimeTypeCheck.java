@@ -366,7 +366,7 @@ class RuntimeTypeCheck implements CompilerPass {
   }
 
   private void addBoilerplateCode() {
-    Node newNode = compiler.ensureLibraryInjected("runtime_type_check", true);
+    Node newNode = compiler.ensureLibraryInjected("runtime_type_check", false);
     if (newNode != null && logFunction != null) {
       // Inject the custom log function.
       Node logOverride = IR.exprResult(

@@ -301,10 +301,12 @@ public class PrototypeObjectType extends ObjectType {
       int i = 0;
       for (String property : propertyNames) {
         if (i > 0) {
-          sb.append(", ");
+          sb.append(",");
         }
         if (useNewlines) {
           sb.append("\n  ");
+        } else if (i > 0) {
+          sb.append(" ");
         }
 
         sb.append(property);

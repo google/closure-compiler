@@ -17,13 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Generates an AST for a JavaScript source file.
@@ -83,8 +86,59 @@ public class JsAst implements SourceAst {
     return features;
   }
 
+  public static class RhinoError {
+    public final String message;
+    public final String sourceName;
+    public final int line;
+    public final int lineOffset;
+
+    public RhinoError(String message, String sourceName, int line, int lineOffset) {
+      this.message = message;
+      this.sourceName = sourceName;
+      this.line = line;
+      this.lineOffset = lineOffset;
+    }
+  }
+
+  /** Simple class to share parse results between compilation jobs */
+  public static class ParseResult {
+    public final ImmutableList<RhinoError> errors;
+    public final ImmutableList<RhinoError> warnings;
+    ParseResult(ImmutableList<RhinoError> errors, ImmutableList<RhinoError> warnings) {
+      this.errors = errors;
+      this.warnings = warnings;
+    }
+  }
+
+  private static class RecordingReporterProxy implements ErrorReporter {
+    final ArrayList<RhinoError> errors = new ArrayList<>();
+    final ArrayList<RhinoError> warnings = new ArrayList<>();
+    private ErrorReporter delegateReporter;
+
+    RecordingReporterProxy(ErrorReporter delegateReporter) {
+      this.delegateReporter = delegateReporter;
+    }
+
+    @Override
+    public void warning(String message, String sourceName, int line, int lineOffset) {
+      warnings.add(new RhinoError(message, sourceName, line, lineOffset));
+      delegateReporter.warning(message, sourceName, line, lineOffset);
+    }
+
+    @Override
+    public void error(String message, String sourceName, int line, int lineOffset) {
+      errors.add(new RhinoError(message, sourceName, line, lineOffset));
+      delegateReporter.error(message, sourceName, line, lineOffset);
+    }
+  }
+
   private void parse(AbstractCompiler compiler) {
-    int startErrorCount = compiler.getErrorManager().getErrorCount();
+    ErrorManager errorManager = compiler.getErrorManager();
+    int startErrorCount = errorManager.getErrorCount();
+
+    RecordingReporterProxy reporter = new RecordingReporterProxy(
+        compiler.getDefaultErrorReporter());
+
     try {
       ParserRunner.ParseResult result = ParserRunner.parse(
           sourceFile,
@@ -92,7 +146,7 @@ public class JsAst implements SourceAst {
           compiler.getParserConfig(sourceFile.isExtern()
                         ? AbstractCompiler.ConfigContext.EXTERNS
                         : AbstractCompiler.ConfigContext.DEFAULT),
-          compiler.getDefaultErrorReporter());
+          reporter);
       root = result.ast;
       features = result.features;
 
@@ -104,16 +158,27 @@ public class JsAst implements SourceAst {
           JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
     }
 
-
-    if (root == null ||
+    if (root == null
         // Most passes try to report as many errors as possible,
         // so there may already be errors. We only care if there were
         // errors in the code we just parsed.
-        (compiler.getErrorManager().getErrorCount() > startErrorCount && !compiler.isIdeMode())) {
+        // Note: we use the ErrorManager here rather than the ErrorReporter as
+        // we don't want to fail if the error was excluded by a warning guard, conversely
+        // we do want to fail if a warning was promoted to an error.
+        || (errorManager.getErrorCount() > startErrorCount && !compiler.isIdeMode())) {
       // There was a parse error or IOException, so use a dummy block.
+
+
       root = IR.script();
     } else {
       compiler.prepareAst(root);
+    }
+
+    if (reporter.errors.size() > 0 || reporter.warnings.size() > 0) {
+      ParseResult result = new ParseResult(
+          ImmutableList.copyOf(reporter.errors),
+          ImmutableList.copyOf(reporter.warnings));
+      root.putProp(Node.PARSE_RESULTS, result);
     }
 
     // Set the source name so that the compiler passes can track

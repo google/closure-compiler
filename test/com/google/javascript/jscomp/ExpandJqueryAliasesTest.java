@@ -22,9 +22,6 @@ package com.google.javascript.jscomp;
 public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
   private JqueryCodingConvention conv = new JqueryCodingConvention();
 
-  static final DiagnosticType NAME_ERROR =
-      ExpandJqueryAliases.JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_ERROR;
-
   static final DiagnosticType INVALID_LIT_ERROR =
       ExpandJqueryAliases.JQUERY_UNABLE_TO_EXPAND_INVALID_LIT_ERROR;
 
@@ -262,9 +259,11 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
   }
 
   public void testJqueryExpandedEachExpansionEs6ComputedProp() {
-    testErrorEs6(LINE_JOINER.join(
-        "var jQuery={}; jQuery.expandedEach=function(vals, callback){};",
-        "jQuery.expandedEach({ [comp + 'Prop']: 1},",
-        "function(key, val) { var a = key; jQuery[key] = val; });"), NAME_ERROR);
+    testErrorEs6(
+        LINE_JOINER.join(
+            "var jQuery={}; jQuery.expandedEach=function(vals, callback){};",
+            "jQuery.expandedEach({ [comp + 'Prop']: 1},",
+            "function(key, val) { var a = key; jQuery[key] = val; });"),
+        ExpandJqueryAliases.JQUERY_UNABLE_TO_EXPAND_INVALID_NAME);
   }
 }

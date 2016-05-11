@@ -15,15 +15,14 @@
  */
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class AssignmentRestElementTree extends ParseTree {
-  public final IdentifierToken identifier;
+  public final ParseTree assignmentTarget;
 
-  public AssignmentRestElementTree(SourceRange location, IdentifierToken identifier) {
+  public AssignmentRestElementTree(SourceRange location, ParseTree assignmentTarget) {
     super(ParseTreeType.ASSIGNMENT_REST_ELEMENT, location);
-    this.identifier = identifier;
+    this.assignmentTarget = assignmentTarget;
   }
 }
 

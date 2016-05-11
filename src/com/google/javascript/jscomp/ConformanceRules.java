@@ -135,16 +135,6 @@ public final class ConformanceRules {
       onlyApplyTo = ImmutableList.copyOf(requirement.getOnlyApplyToList());
       onlyApplyToRegexp = buildPattern(
           requirement.getOnlyApplyToRegexpList());
-
-      boolean hasWhitelist = !whitelist.isEmpty()
-          || whitelistRegexp != null;
-      boolean hasOnlyApplyTo = !onlyApplyTo.isEmpty()
-          || onlyApplyToRegexp != null;
-
-      if (hasWhitelist && hasOnlyApplyTo) {
-        throw new IllegalArgumentException(
-            "It is an error to specify both whitelist and only_apply_to");
-      }
     }
 
     @Nullable
@@ -189,7 +179,8 @@ public final class ConformanceRules {
       if (srcfile == null) {
         return true;
       } else if (!onlyApplyTo.isEmpty() || onlyApplyToRegexp != null) {
-        return pathIsInListOrRegexp(srcfile, onlyApplyTo, onlyApplyToRegexp);
+        return pathIsInListOrRegexp(srcfile, onlyApplyTo, onlyApplyToRegexp)
+            && !pathIsInListOrRegexp(srcfile, whitelist, whitelistRegexp);
       } else {
         return !pathIsInListOrRegexp(srcfile, whitelist, whitelistRegexp);
       }
@@ -349,12 +340,15 @@ public final class ConformanceRules {
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       JSDocInfo jsDoc = n.getJSDocInfo();
       if (jsDoc != null && jsDoc.isConstant() && jsDoc.getType() == null) {
+        if (n.isAssign()) {
+          n = n.getFirstChild();
+        }
         JSType type = n.getJSType();
-        if (type != null && type.isUnknownType()) {
+        if (type != null && type.isUnknownType()
+            && !NodeUtil.isNamespaceDecl(n)) {
           return ConformanceResult.VIOLATION;
         }
       }
-
       return ConformanceResult.CONFORMANCE;
     }
   }
@@ -406,18 +400,27 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (NodeUtil.isInSyntheticScript(n)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
       if (n.isGetProp() || n.isName()) {
-        // TODO(johnlenz): restrict to global names
         if (n.isQualifiedName()) {
           for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
-            if (n.matchesQualifiedName(name)) {
+            if (n.matchesQualifiedName(name) && isRootOfQualifiedNameGlobal(t, n)) {
               return ConformanceResult.VIOLATION;
             }
           }
         }
       }
       return ConformanceResult.CONFORMANCE;
+    }
+
+    private static boolean isRootOfQualifiedNameGlobal(NodeTraversal t, Node n) {
+      String rootName = NodeUtil.getRootOfQualifiedName(n).getQualifiedName();
+      Var v = t.getScope().getVar(rootName);
+      return v != null && v.isGlobal();
     }
   }
 
@@ -466,11 +469,13 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      for (int i = 0; i < props.size(); i++) {
-        Property prop = props.get(i);
-        ConformanceResult result = checkConformance(t, n, prop);
-        if (result.level != ConformanceLevel.CONFORMANCE) {
-          return result;
+      if (NodeUtil.isGet(n) && n.getLastChild().isString()) {
+        for (int i = 0; i < props.size(); i++) {
+          Property prop = props.get(i);
+          ConformanceResult result = checkConformance(t, n, prop);
+          if (result.level != ConformanceLevel.CONFORMANCE) {
+            return result;
+          }
         }
       }
       return ConformanceResult.CONFORMANCE;
@@ -524,8 +529,7 @@ public final class ConformanceRules {
      * {@code n} is only a candidate if it is an l-value.
      */
     private boolean isCandidatePropUse(Node n, Property prop) {
-      if (NodeUtil.isGet(n) && n.getLastChild().isString()
-          && n.getLastChild().getString().equals(prop.property)) {
+      if (n.getLastChild().getString().equals(prop.property)) {
         if (requirementType == Type.BANNED_PROPERTY_WRITE) {
           return NodeUtil.isLValue(n);
         } else if (requirementType == Type.BANNED_PROPERTY_READ) {
@@ -947,8 +951,8 @@ public final class ConformanceRules {
               "invalid conformance template: " + value);
         }
         Node templateRoot = parseRoot.getFirstChild();
-        TemplateAstMatcher astMatcher = new TemplateAstMatcher(
-            compiler, templateRoot);
+        TemplateAstMatcher astMatcher =
+            new TemplateAstMatcher(compiler, templateRoot, TypeMatchingStrategy.LOOSE);
         builder.add(astMatcher);
       }
 
@@ -1255,7 +1259,7 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       // TODO(tbreisacher): Figure out how to remove this restriction after b/26884264 is fixed.
-      if (n.getSourceFileName() != null && n.getSourceFileName().startsWith(" [synthetic:")) {
+      if (NodeUtil.isInSyntheticScript(n)) {
         return ConformanceResult.CONFORMANCE;
       }
 
@@ -1372,6 +1376,10 @@ public final class ConformanceRules {
           && isDeclaration(n)
           && !n.getBooleanProp(Node.IS_NAMESPACE)
           && !isWhitelisted(n)) {
+        Node enclosingScript = NodeUtil.getEnclosingScript(n);
+        if (enclosingScript != null && enclosingScript.getBooleanProp(Node.GOOG_MODULE)) {
+          return ConformanceResult.CONFORMANCE;
+        }
         return ConformanceResult.VIOLATION;
       }
       return ConformanceResult.CONFORMANCE;
@@ -1384,11 +1392,14 @@ public final class ConformanceRules {
     }
 
     private boolean isWhitelisted(Node n) {
-      return n.isVar() && isWhitelistedName(n.getFirstChild().getString());
+      return (n.isVar() || n.isFunction()) && isWhitelistedName(n.getFirstChild().getString());
     }
 
     private boolean isWhitelistedName(String name) {
-      return name.equals("$jscomp") || name.startsWith("$jscomp$compprop");
+      return name.equals("$jscomp")
+          || name.startsWith("$jscomp$compprop")
+          || ClosureRewriteModule.isModuleContent(name)
+          || ClosureRewriteModule.isModuleExport(name);
     }
   }
 
@@ -1443,6 +1454,14 @@ public final class ConformanceRules {
           || isWizDeclaration(n)) {
         return ConformanceResult.CONFORMANCE;
       }
+      // TODO(tbreisacher): Instead of skipping goog.modules entirely, run
+      // this check before goog.modules are rewritten, so that we can catch
+      // implicitly public prototype methods.
+      Node enclosingScript = NodeUtil.getEnclosingScript(n);
+      if (enclosingScript != null && enclosingScript.getBooleanProp(Node.GOOG_MODULE)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
       JSDocInfo ownJsDoc = n.getFirstChild().getJSDocInfo();
       if (ownJsDoc != null && ownJsDoc.isConstructor()) {
         FunctionType functionType = n.getFirstChild()

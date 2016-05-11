@@ -209,6 +209,11 @@ public final class AngularPassTest extends Es6CompilerTestCase {
         AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 
+  public void testNgInjectOnGetElem() throws Exception {
+    testError("/** @ngInject */ foo.bar['baz'] = function(a) {};",
+        AngularPass.INJECTED_FUNCTION_ON_NON_QNAME);
+  }
+
   public void testNgInjectAddsInjectToClass() throws Exception {
     testErrorEs6("/** @ngInject */ class FnClass {constructor(a, b) {}}",
         AngularPass.INJECT_NON_FUNCTION_ERROR);

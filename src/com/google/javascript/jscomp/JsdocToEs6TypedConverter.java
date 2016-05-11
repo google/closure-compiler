@@ -87,7 +87,7 @@ public final class JsdocToEs6TypedConverter
             setTypeExpression(n, bestJSDocInfo.getType());
           }
         } else if (parent.isParamList()) {
-          JSDocInfo parentDocInfo = NodeUtil.getBestJSDocInfo(parent);
+          JSDocInfo parentDocInfo = NodeUtil.getBestJSDocInfo(parent.getParent());
           if (parentDocInfo == null) {
             break;
           }

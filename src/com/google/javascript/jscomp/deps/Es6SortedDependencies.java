@@ -21,12 +21,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
+import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +36,7 @@ import java.util.Set;
 /**
  * A sorted list of inputs following the ES6 module ordering spec.
  * <p>
- * Orders such than for each input always comes after its dependencies.
+ * Orders such that each input always comes after its dependencies.
  * Circular references are allowed by emitting the current input in the moment
  * before a loop would complete.
  * <p>
@@ -53,7 +55,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   private final List<INPUT> userOrderedInputs = new ArrayList<>();
   private final List<INPUT> importOrderedInputs = new ArrayList<>();
   private final Set<INPUT> completedInputs = new HashSet<>();
-  private final List<INPUT> nonExportingInputs = new ArrayList<>();
+  private final Map<String, INPUT> nonExportingInputs = new LinkedHashMap<>();
   private final Map<String, INPUT> exportingInputBySymbolName = new HashMap<>();
   // Maps an input A to the inputs it depends on, ie, inputs that provide stuff that A requires.
   private final Multimap<INPUT, INPUT> importedInputByImportingInput = LinkedHashMultimap.create();
@@ -92,15 +94,17 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
 
   @Override
   public INPUT getInputProviding(String symbolName) throws MissingProvideException {
-    if (exportingInputBySymbolName.containsKey(symbolName)) {
-      return exportingInputBySymbolName.get(symbolName);
+    INPUT input = maybeGetInputProviding(symbolName);
+    if (input != null) {
+      return input;
     }
+
     throw new MissingProvideException(symbolName);
   }
 
   @Override
   public List<INPUT> getInputsWithoutProvides() {
-    return Collections.unmodifiableList(nonExportingInputs);
+    return ImmutableList.copyOf(nonExportingInputs.values());
   }
 
   @Override
@@ -115,7 +119,50 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
 
   @Override
   public INPUT maybeGetInputProviding(String symbol) {
-    return exportingInputBySymbolName.get(symbol);
+    if (exportingInputBySymbolName.containsKey(symbol)) {
+      return exportingInputBySymbolName.get(symbol);
+    }
+
+    return nonExportingInputs.get(toModuleName(createUri(symbol)));
+  }
+
+  /**
+   * Turns a filename into a JS identifier that is used for moduleNames in
+   * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
+   * and replaces - with _. All moduleNames get a "module$" prefix.
+   *
+   * @see com.google.javascript.jscomp.ES6ModuleLoader
+   *
+   * TODO(tbreisacher): Switch to using the ModuleIdentifier class once
+   * it no longer causes circular dependencies in Google builds.
+   */
+  private static String toModuleName(URI filename) {
+    String moduleName = filename.toString();
+    if (moduleName.endsWith(".js")) {
+      moduleName = moduleName.substring(0, moduleName.length() - 3);
+    }
+
+    moduleName =
+        moduleName
+            .replaceAll("^\\./", "")
+            .replace('/', '$')
+            .replace('\\', '$')
+            .replace('-', '_')
+            .replace(':', '_')
+            .replace('.', '_')
+            .replace("%20", "_");
+    return "module$" + moduleName;
+  }
+
+  /**
+   * Copied from ES6ModuleLoader because our BUILD rules are written in such a way that we can't
+   * depend on ES6ModuleLoader from here.
+   * TODO(tbreisacher): Switch to using the ES6ModuleLoader once the BUILD graph allows it.
+   */
+  private static URI createUri(String input) {
+    // Colons might cause URI.create() to fail
+    String forwardSlashes = input.replace(':', '-').replace('\\', '/').replace(" ", "%20");
+    return URI.create(forwardSlashes).normalize();
   }
 
   private void orderInput(INPUT input) {
@@ -136,7 +183,8 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
     // Index.
     for (INPUT userOrderedInput : userOrderedInputs) {
       if (userOrderedInput.getProvides().isEmpty()) {
-        nonExportingInputs.add(userOrderedInput);
+        nonExportingInputs.put(
+            toModuleName(createUri(userOrderedInput.getName())), userOrderedInput);
       }
       for (String providedSymbolName : userOrderedInput.getProvides()) {
         exportingInputBySymbolName.put(providedSymbolName, userOrderedInput);

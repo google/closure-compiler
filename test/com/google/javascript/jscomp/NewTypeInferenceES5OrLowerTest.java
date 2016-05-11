@@ -225,9 +225,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var /** function(new:Foo, number) */ z = x;",
         "}"));
 
-    // TODO(dimvar): this is a bogus warning, x can be arbitrary and does not
-    // need to have the num property; see NominalType#getConstructorObject
-    // for what needs to change.
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
@@ -236,7 +233,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** function(new:Foo, string) */ x) {",
         "  var /** string */ s = x.num;",
         "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        NewTypeInference.INEXISTENT_PROPERTY);
   }
 
   public void testAlhpaRenamingDoesntChangeType() {
@@ -2140,7 +2137,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor */",
         "function Foo() {}",
         "/** @constructor */",
-        "function Bar(x) {}",
+        "function Bar() {}",
         "/** @return {?Foo} */",
         "Bar.prototype.method = function() { return null; };",
         "var /** !Foo */ x = goog.asserts.assertInstanceOf((new Bar).method(), Foo);"));
@@ -3033,13 +3030,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  ns.prop = function() {};",
         "}"));
 
+    // When initializing a namespace property to a function without jsdoc,
+    // do we consider that a definition of a function namespace?
+    // If so, we warn here, if not, it would need a jsdoc to be a definition.
+    // The first option seems more acceptable than the second.
     typeCheck(LINE_JOINER.join(
         "/** @const */",
         "var ns = {};",
         "ns.prop = function() {};",
         "function f() {",
         "  ns.prop = 234;",
-        "}"));
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -3406,6 +3408,29 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function f(x, y) {",
         "  if (y instanceof x) {}",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {*} value",
+        " * @param {function(new: T, ...)} type",
+        " * @template T",
+        " */",
+        "function assertInstanceof(value, type) {}",
+        "/** @const */ var ctor = unresolvedGlobalVar;",
+        "function f(obj) {",
+        "  if (obj instanceof ctor) {",
+        "    return assertInstanceof(obj, ctor);",
+        "  }",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x, y) {",
+        "  x(123);",
+        "  if (y instanceof x) {",
+        "    return y;",
+        "  }",
         "}"));
   }
 
@@ -4831,8 +4856,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */ var ns = {};",
         "/** @type {number} */ ns.foo = 123;",
         "/** @type {string} */ ns.foo = '';"),
-        GlobalTypeInfo.REDECLARED_PROPERTY,
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        GlobalTypeInfo.REDECLARED_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
         "/** @const */ var ns = {};",
@@ -4890,7 +4914,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor */",
         "a.b = function() {};",
         "}"),
-        NewTypeInference.UNKNOWN_NAMESPACE_PROPERTY);
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testNamespacesInExterns() {
@@ -9002,23 +9026,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "};"));
   }
 
-  public void testUnificationWithTopFunctionDoesntCrash() {
-    typeCheck(LINE_JOINER.join(
-        "/**",
-        " * @param {*} value",
-        " * @param {function(new: T, ...)} type",
-        " * @template T",
-        " */",
-        "function assertInstanceof(value, type) {}",
-        "/** @const */ var ctor = unresolvedGlobalVar;",
-        "function f(obj) {",
-        "  if (obj instanceof ctor) {",
-        "    return assertInstanceof(obj, ctor);",
-        "  }",
-        "}"),
-        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
-  }
-
   public void testGetpropOnPossiblyInexistentPropertyDoesntCrash() {
     typeCheck(LINE_JOINER.join(
         "/** @constructor */ function Foo(){};",
@@ -11689,7 +11696,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
   public void testStringMethods() {
     typeCheck(LINE_JOINER.join(
-        "/** @constructor */ function String(){}",
         "/** @this {String|string} */",
         "String.prototype.substr = function(start) {};",
         "/** @const */ var ns = {};",
@@ -11823,6 +11829,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  innerFun(function(str) { str - 5; });",
         "});"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {function(T)} x",
+        " */",
+        "function f(x) {}",
+        "/** @const */",
+        "var g = f;",
+        "g(function(x) { return x - 1; });"));
   }
 
   public void testNamespacesWithNonEmptyObjectLiteral() {
@@ -11865,8 +11881,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
   }
 
-  // TODO(dimvar): fix
-  public void testAllTestsShouldHaveDupPropWarnings() {
+  public void testNamespaceRedeclaredProps() {
+    // TODO(dimvar): fix
     typeCheck(LINE_JOINER.join(
         "/** @const */",
         "var ns = {};",
@@ -11880,7 +11896,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "ns.Foo = {};",
         "/** @const */",
-        "ns.Foo = { a: 123 };"));
+        "ns.Foo = { a: 123 };"),
+        GlobalTypeInfo.REDECLARED_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
         "/** @const */",
@@ -11892,7 +11909,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         // @suppress is ignored here b/c there is no @type in the jsdoc.
         " * @suppress {duplicate}",
         " */",
-        "ns.Foo = { a: 123 };"));
+        "ns.Foo = { a: 123 };"),
+        GlobalTypeInfo.REDECLARED_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
         "/** @const */",
@@ -11900,7 +11918,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "ns.Foo = {};",
         "/** @type {number} */",
-        "ns.Foo = 123;"));
+        "ns.Foo = 123;"),
+        GlobalTypeInfo.REDECLARED_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
         "/** @enum {number} */",
@@ -11908,7 +11927,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "en.Foo = {};",
         "/** @type {number} */",
-        "en.Foo = 123;"));
+        "en.Foo = 123;"),
+        GlobalTypeInfo.REDECLARED_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -11916,7 +11936,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "Foo.ns = {};",
         "/** @const */",
-        "Foo.ns = {};"));
+        "Foo.ns = {};"),
+        GlobalTypeInfo.REDECLARED_PROPERTY);
   }
 
   public void testNominalTypeAliasing() {
@@ -13797,8 +13818,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  /** @type {string} */",
         "  Foo.f.prop = 'asdf';",
         "}"),
-        GlobalTypeInfo.REDECLARED_PROPERTY,
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        GlobalTypeInfo.REDECLARED_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
         "/** @const */ var ns = {};",
@@ -13855,8 +13875,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     // TODO(dimvar): The expected formal type is string if g appears before f
     // and number o/w. Also, we allow adding named types to ctors in any scope,
     // but other properties only in the same scope where the ctor is defined.
-    // 1) Must warn about redeclared prop.
-    // 2) Must be consistent about which scopes can add new props.
+    // Must be consistent about which scopes can add new props.
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
@@ -13877,6 +13896,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function h() {",
         "  return new Foo.Bar(true);",
         "}"),
+        GlobalTypeInfo.REDECLARED_PROPERTY,
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
@@ -13903,14 +13923,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "var exports = Foo;"));
 
-    // Wrong warning because we don't handle circular namespaces correctly
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
         "/** @const */",
         "Foo.alias = Foo;",
-        "var x = new Foo.alias.alias.alias.alias();"),
-        NewTypeInference.INEXISTENT_PROPERTY);
+        "var x = new Foo.alias.alias.alias.alias();"));
   }
 
   public void testAddingPropsToTypedefs() {
@@ -15119,7 +15137,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x) { x - 5; }",
         "function g(x) { x.match(/asdf/); return x.match; }",
         "var /** function(number) */ tmp = g({match: f});"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE,
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
@@ -16211,5 +16228,258 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  this.m = function(x) {};",
         "}",
         "(new Foo).m = null;"));
+  }
+
+  public void testNamespacesSubtyping() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @type {number} */",
+        "ns.prop = 123;",
+        "function f() {",
+        "  var /** {prop:string} */ obj = ns;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testInstantiationWithNamespaces() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "var ns2 = {};",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " */",
+        "function f(x, y) {}",
+        "f(ns, ns2);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @type {number} */",
+        "ns.prop = 123;",
+        "/** @const */",
+        "var ns2 = {};",
+        "/** @type {string} */",
+        "ns2.prop = 'asdf';",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " */",
+        "function f(x, y) {}",
+        "f(ns, ns2);"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+  }
+
+  public void testSpecializeNamespaceProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @type {?number} */",
+        "ns.prop = null;",
+        "function f() {",
+        "  if (ns.prop !== null) {",
+        "    return ns.prop - 5;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @type {?number} */",
+        "ns.prop = null;",
+        "/** @return {number} */",
+        "function f() {",
+        "  if (ns.prop === null) {",
+        "    return 123;",
+        "  }",
+        "  return ns.prop;",
+        "}"));
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @type {?number} */",
+            "window.prop;"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  if (window.prop !== null) {",
+            "    return window.prop - 5;",
+            "  }",
+            "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {};",
+        "/** @type {?number} */",
+        "Foo.prop = null;",
+        "function f() {",
+        "  if (Foo.prop !== null) {",
+        "    return Foo.prop - 5;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "/** @type {?number} */",
+        "ns.Foo.prop = null;",
+        "function f() {",
+        "  if (ns.Foo.prop !== null) {",
+        "    return ns.Foo.prop - 5;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {};",
+        "/** @type {?number} */",
+        "f.prop = null;",
+        "function f() {",
+        "  if (f.prop !== null) {",
+        "    return f.prop - 5;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @type {?Object|undefined} */",
+        "ns.mutableProp = null;",
+        "function f() {",
+        "  if (ns.mutableProp != null) {",
+        "    var /** !Object */ x = ns.mutableProp;",
+        "  }",
+        "}"));
+  }
+
+  public void testInferScalarInsteadOfLooseObject() {
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.name.toLowerCase().startsWith('a');",
+        "}",
+        "h({name: 'asdf'});"));
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.name.toLowerCase().startsWith('a');",
+        "}",
+        "h({name: {}});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.name.toString();",
+        "}",
+        "h({name: 'asdf'});",
+        "h({name: {}});"));
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.name.length;",
+        "}",
+        "h({name: 'asdf'});",
+        "h({name: {}});"));
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.num.toExponential();",
+        "}",
+        "h({num: 123});"));
+
+    typeCheck(LINE_JOINER.join(
+        "function h(x) {",
+        "  return x.num.toExponential();",
+        "}",
+        "h({num: {}});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */ function Foo() {}",
+        "Foo.prototype.toLowerCase = function() {};",
+        "Foo.prototype.getProp = function() {};",
+        "var foo = new Foo;",
+        "foo.f = function() {",
+        "  if (foo.toLowerCase() > 'asdf') { throw new Error; }",
+        "  foo.getProp();",
+        "};"),
+        NewTypeInference.INEXISTENT_PROPERTY,
+        // spurious b/c foo is inferred as string in the inner scope
+        NewTypeInference.CROSS_SCOPE_GOTCHA);
+  }
+
+  public void testFixCrashWhenUnannotatedPrototypeMethod() {
+    typeCheck(LINE_JOINER.join(
+        "var a = {};",
+        "a.prototype.b = function() {",
+        "  this.c = function() {};",
+        "};"),
+        NewTypeInference.INEXISTENT_PROPERTY,
+        NewTypeInference.GLOBAL_THIS);
+  }
+
+  public void testSimpleInferPrototypeProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */ var ns = {};",
+        "/** @const */ ns.prop = Object.prototype.hasOwnProperty;"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */ var ns = {};",
+        "/** @const */ ns.prop = Foobar.prototype.randomProp;"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.method = function(x, y) { return x + y + 1 };",
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "ns.prop = Foo.prototype.method;"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+  }
+
+  public void testReportUknownTypes() {
+    reportUnknownTypes = true;
+
+    typeCheck(
+        "var x = globalvar;",
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+
+    typeCheck(
+        "function f(/** ? */ x) { return x; }",
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+
+    typeCheck(
+        "var x = ({})['asdf'];",
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  x['prop' + 'asdf'] = 123;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  x['asdf'] = 123;",
+        "}"),
+        NewTypeInference.UNKNOWN_EXPR_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @struct @constructor */",
+        "var Foo = function() {};",
+        "/**",
+        " * @struct",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "var Bar = function() {",
+        "  Foo.call(this);",
+        "};"));
   }
 }

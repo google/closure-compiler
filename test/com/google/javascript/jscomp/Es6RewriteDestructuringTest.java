@@ -15,9 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
+import java.util.Set;
 
 public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
@@ -52,6 +55,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var $jscomp$destructuring$var0 = foo();",
             "var b = $jscomp$destructuring$var0.a;",
             "var d = $jscomp$destructuring$var0.c;"));
+    assertThat(getInjectedLibraries()).isEmpty();
 
     test(
         "var {a,b} = foo();",
@@ -190,6 +194,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var y = $jscomp$destructuring$var2.next().value;",
             "  var z = $jscomp$destructuring$var2.next().value;",
             "}"));
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
 
     test(
         "function f({key: x = 5}) {}",
@@ -346,6 +351,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
             "let one = $jscomp$destructuring$var0.next().value;",
             "let others = $jscomp.arrayFromIterator($jscomp$destructuring$var0);"));
+    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
 
     test(
         "function f([first, ...rest]) {}",
@@ -355,6 +361,22 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var first = $jscomp$destructuring$var1.next().value;",
             "  var rest = $jscomp.arrayFromIterator($jscomp$destructuring$var1);",
             "}"));
+  }
+
+  public void testArrayDestructuringMixedRest() {
+    test(
+        "let [first, ...[re, st, ...{length: num_left}]] = f();",
+        LINE_JOINER.join(
+            "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
+            "let first = $jscomp$destructuring$var0.next().value;",
+            "var $jscomp$destructuring$var1 = "
+                + "$jscomp.makeIterator("
+                + "$jscomp.arrayFromIterator($jscomp$destructuring$var0));",
+            "let re = $jscomp$destructuring$var1.next().value;",
+            "let st = $jscomp$destructuring$var1.next().value;",
+            "var $jscomp$destructuring$var2 = "
+                + "$jscomp.arrayFromIterator($jscomp$destructuring$var1);",
+            "let num_left = $jscomp$destructuring$var2.length;"));
   }
 
   public void testArrayDestructuringArguments() {
@@ -392,7 +414,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         "for ({x} of y) { console.log(x); }",
         LINE_JOINER.join(
-            "for (let $jscomp$destructuring$var0 of y) {",
+            "for (var $jscomp$destructuring$var0 of y) {",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
             "   x = $jscomp$destructuring$var1.x;",
             "   console.log(x);",
@@ -540,4 +562,12 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         TYPE_MISMATCH_WARNING);
   }
 
+  @Override
+  protected Compiler createCompiler() {
+    return new NoninjectingCompiler();
+  }
+
+  protected Set<String> getInjectedLibraries() {
+    return ((NoninjectingCompiler) getLastCompiler()).injected;
+  }
 }

@@ -77,17 +77,7 @@ public final class TemplateAstMatcher {
   /**
    * The strategy to use when matching the {@code JSType} of nodes.
    */
-  private TypeMatchingStrategy typeMatchingStrategy;
-
-  /**
-   * Constructs this matcher with a Function node that serves as the template
-   * to match all other nodes against. The body of the function will be used
-   * to match against.
-   */
-  public TemplateAstMatcher(
-      AbstractCompiler compiler, Node templateFunctionNode) {
-    this(compiler, templateFunctionNode, TypeMatchingStrategy.DEFAULT);
-  }
+  private final TypeMatchingStrategy typeMatchingStrategy;
 
   /**
    * Constructs this matcher with a Function node that serves as the template
@@ -106,7 +96,7 @@ public final class TemplateAstMatcher {
 
     this.compiler = compiler;
     this.templateStart = initTemplate(templateFunctionNode);
-    this.typeMatchingStrategy = typeMatchingStrategy;
+    this.typeMatchingStrategy = Preconditions.checkNotNull(typeMatchingStrategy);
   }
 
   /**

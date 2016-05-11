@@ -218,17 +218,25 @@ jQuery.ajaxPrefilter = function(dataTypes, handler) {};
  */
 jQuery.prototype.ajaxSend = function(handler) {};
 
-/** @const {jQueryAjaxSettings|Object<string, *>} */
-jQuery.ajaxSettings;
+/**
+ * @record
+ * @extends {jQueryAjaxSettings}
+ */
+function jQueryAjaxSettingsExtra() {};
+
 
 /** @type {Object<string, boolean>} */
-jQuery.ajaxSettings.flatOptions = {};
+jQueryAjaxSettingsExtra.prototype.flatOptions;
 
 /** @type {boolean} */
-jQuery.ajaxSettings.processData;
+jQueryAjaxSettingsExtra.prototype.processData;
 
 /** @type {Object<string, string>} */
-jQuery.ajaxSettings.responseFields = {};
+jQueryAjaxSettingsExtra.prototype.responseFields;
+
+/** @const {jQueryAjaxSettingsExtra|Object<string, *>} */
+jQuery.ajaxSettings;
+
 
 /** @param {jQueryAjaxSettings|Object<string, *>} options */
 jQuery.ajaxSetup = function(options) {};
@@ -1745,49 +1753,53 @@ jQuery.prototype.stop = function(arg1, arg2, jumpToEnd) {};
  */
 jQuery.prototype.submit = function(arg1, handler) {};
 
-/** @type {Object<string, *>}
+/**
+ * @type {jQuerySupport|Object<string, *>}
  * @deprecated Please try to use feature detection instead.
  */
 jQuery.support;
+
+/** @record */
+function jQuerySupport() {};
 
 /**
  * @deprecated Please try to use feature detection instead.
  * @type {boolean}
  */
-jQuery.support.boxModel;
+jQuerySupport.prototype.boxModel;
 
 /** @type {boolean} */
-jQuery.support.changeBubbles;
+jQuerySupport.prototype.changeBubbles;
 
 /** @type {boolean} */
-jQuery.support.cors;
+jQuerySupport.prototype.cors;
 
 /** @type {boolean} */
-jQuery.support.cssFloat;
+jQuerySupport.prototype.cssFloat;
 
 /** @type {boolean} */
-jQuery.support.hrefNormalized;
+jQuerySupport.prototype.hrefNormalized;
 
 /** @type {boolean} */
-jQuery.support.htmlSerialize;
+jQuerySupport.prototype.htmlSerialize;
 
 /** @type {boolean} */
-jQuery.support.leadingWhitespace;
+jQuerySupport.prototype.leadingWhitespace;
 
 /** @type {boolean} */
-jQuery.support.noCloneEvent;
+jQuerySupport.prototype.noCloneEvent;
 
 /** @type {boolean} */
-jQuery.support.opacity;
+jQuerySupport.prototype.opacity;
 
 /** @type {boolean} */
-jQuery.support.style;
+jQuerySupport.prototype.style;
 
 /** @type {boolean} */
-jQuery.support.submitBubbles;
+jQuerySupport.prototype.submitBubbles;
 
 /** @type {boolean} */
-jQuery.support.tbody;
+jQuerySupport.prototype.tbody;
 
 /**
  * @param {(string|number|boolean|function(number,string))=} arg1

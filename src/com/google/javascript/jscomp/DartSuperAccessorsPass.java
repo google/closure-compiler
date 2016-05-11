@@ -127,10 +127,10 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
   private void visitSuperGet(Node superGet) {
     Node name = superGet.getLastChild().cloneTree();
     Node callSuperGet = IR.call(
-        NodeUtil.newQName(compiler, CALL_SUPER_GET),
-        IR.thisNode(),
+        NodeUtil.newQName(compiler, CALL_SUPER_GET).srcrefTree(superGet),
+        IR.thisNode().srcref(superGet),
         superGet.isGetProp() ? renameProperty(name) : name);
-    replace(superGet, callSuperGet.srcrefTree(superGet));
+    replace(superGet, callSuperGet);
     reportEs6Change();
   }
 
@@ -138,24 +138,23 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
     Preconditions.checkArgument(superSet.isAssign());
 
     // First, recurse on the assignment's right-hand-side.
-    NodeTraversal.traverse(compiler, superSet.getLastChild(), this);
+    NodeTraversal.traverseEs6(compiler, superSet.getLastChild(), this);
     Node rhs = superSet.getLastChild();
 
     Node superGet = superSet.getFirstChild();
 
     Node name = superGet.getLastChild().cloneTree();
     Node callSuperSet = IR.call(
-        NodeUtil.newQName(compiler, CALL_SUPER_SET),
-        IR.thisNode(),
+        NodeUtil.newQName(compiler, CALL_SUPER_SET).srcrefTree(superSet),
+        IR.thisNode().srcref(superSet),
         superGet.isGetProp() ? renameProperty(name) : name,
         rhs.cloneTree());
-    replace(superSet, callSuperSet.srcrefTree(superSet));
+    replace(superSet, callSuperSet);
     reportEs6Change();
   }
 
   private void reportEs6Change() {
-    compiler.needsEs6Runtime = true;
-    compiler.needsEs6DartRuntime = true;
+    compiler.ensureLibraryInjected("es6_dart_runtime", false);
     compiler.reportCodeChange();
   }
 
@@ -175,8 +174,10 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
     if (!renameProperties) {
       return propertyName;
     }
-    Node call = IR.call(IR.name(NodeUtil.JSC_PROPERTY_NAME_FN), propertyName);
-    call.srcrefTree(propertyName);
+    Node call = IR.call(
+        IR.name(NodeUtil.JSC_PROPERTY_NAME_FN).srcref(propertyName),
+        propertyName);
+    call.srcref(propertyName);
     call.putBooleanProp(Node.FREE_CALL, true);
     call.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     return call;
@@ -184,8 +185,8 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, this);
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, externs, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override

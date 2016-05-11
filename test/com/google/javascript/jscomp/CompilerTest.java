@@ -125,15 +125,18 @@ public final class CompilerTest extends TestCase {
 
   public void testCommonJSMissingRequire() throws Exception {
     List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("gin.js", "require('missing')"));
+        SourceFile.fromCode("/gin.js", "require('missing')"));
     Compiler compiler = initCompilerForCommonJS(
-        inputs, ImmutableList.of("module$gin"));
+        inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
 
-    assertEquals(1, compiler.getErrorManager().getErrorCount());
-    String error = compiler.getErrorManager().getErrors()[0].toString();
-    assertTrue(
-        "Unexpected error: " + error,
-        error.contains("Failed to load module \"missing\" at gin.js"));
+    ErrorManager manager = compiler.getErrorManager();
+    if (manager.getErrorCount() > 0) {
+      String error = manager.getErrors()[0].toString();
+      assertTrue(
+          "Unexpected error: " + error,
+          error.contains("Failed to load module \"missing\" at /gin.js"));
+    }
+    assertEquals(1, manager.getErrorCount());
   }
 
   private static String normalize(String path) {
@@ -198,12 +201,13 @@ public final class CompilerTest extends TestCase {
   }
 
   private Compiler initCompilerForCommonJS(
-      List<SourceFile> inputs, List<String> entryPoints)
+      List<SourceFile> inputs, List<ModuleIdentifier> entryPoints)
       throws Exception {
     CompilerOptions options = new CompilerOptions();
     options.setIdeMode(true);
-    options.setManageClosureDependencies(entryPoints);
-    options.setClosurePass(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(true);
+    options.dependencyOptions.setEntryPoints(entryPoints);
     options.setProcessCommonJSModules(true);
     Compiler compiler = new Compiler();
     compiler.init(new ArrayList<SourceFile>(), inputs, options);
@@ -269,46 +273,6 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode("test.js", badJsDoc), options);
     assertEquals(0, compiler.getWarningCount());
     assertEquals(0, compiler.getErrorCount());
-  }
-
-  /**
-   * Make sure that non-standard JSDoc annotation is not a hard error nor
-   * warning when it is off.
-   */
-  public void testCoverage() {
-    final String original =
-        "var name = 1;\n" +
-        "function f() {\n" +
-        " var name2 = 2;\n" +
-        "}\n" +
-        "window['f'] = f;\n";
-    final String expected =
-        "var JSCompiler_lcov_fileNames=JSCompiler_lcov_fileNames||[];" +
-        "var JSCompiler_lcov_instrumentedLines=" +
-            "JSCompiler_lcov_instrumentedLines||[];" +
-        "var JSCompiler_lcov_executedLines=JSCompiler_lcov_executedLines||[];" +
-        "var JSCompiler_lcov_data_test_js=[];" +
-        "JSCompiler_lcov_executedLines.push(JSCompiler_lcov_data_test_js);" +
-        "JSCompiler_lcov_instrumentedLines.push(\"04\");" +
-        "JSCompiler_lcov_fileNames.push(\"test.js\");" +
-        "var name=1;" +
-        "function f(){" +
-        "JSCompiler_lcov_data_test_js[2]=true;" +
-        "var name2=2" +
-        "}" +
-        "window[\"f\"]=f;";
-
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setInstrumentForCoverage(true);
-
-    compiler.compile(
-        SourceFile.fromCode("extern.js", "var window;"),
-        SourceFile.fromCode("test.js", original), options);
-    assertEquals(0, compiler.getWarningCount());
-    assertEquals(0, compiler.getErrorCount());
-    String outputSource = compiler.toSource();
-    assertEquals(expected, outputSource);
   }
 
   /**
@@ -792,6 +756,33 @@ public final class CompilerTest extends TestCase {
     Node ast = input.getAstRoot(compiler);
     CompilerInput newInput = (CompilerInput) deserialize(serialize(input));
     assertTrue(ast.isEquivalentTo(newInput.getAstRoot(compiler)));
+  }
+
+  public void testEs6ModuleEntryPoint() throws Exception {
+    List<SourceFile> inputs = ImmutableList.of(
+        SourceFile.fromCode(
+            "/index.js", "import foo from './foo'; foo('hello');"),
+        SourceFile.fromCode("/foo.js",
+            "export default (foo) => { alert(foo); }"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(
+        ModuleIdentifier.forFile("/index"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setEntryPoints(entryPoints);
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).isEmpty();
   }
 
   public void testGetEmptyResult() {

@@ -107,15 +107,18 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return;
     }
 
+    Preconditions.checkState(scope.isFunctionScope(), scope);
+
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
-    LiveVariablesAnalysis liveness =
-        new LiveVariablesAnalysis(cfg, scope, compiler);
-    // If the function has exactly 2 params, mark them as escaped. This is
-    // a work-around for an IE bug where it throws an exception if you
-    // write to the parameters of the callback in a sort(). See:
-    // http://code.google.com/p/closure-compiler/issues/detail?id=58
-    if (scope.getRootNode().getSecondChild().getChildCount() == 2) {
-      liveness.markAllParametersEscaped();
+    LiveVariablesAnalysis liveness = new LiveVariablesAnalysis(cfg, scope, compiler);
+    if (compiler.getOptions().getLanguageOut() == CompilerOptions.LanguageMode.ECMASCRIPT3) {
+      // If the function has exactly 2 params, mark them as escaped. This is a work-around for a
+      // bug in IE 8 and below, where it throws an exception if you write to the parameters of the
+      // callback in a sort(). See http://blickly.github.io/closure-compiler-issues/#58 and
+      // https://www.zachleat.com/web/array-sort/
+      if (NodeUtil.getFunctionParameters(scope.getRootNode()).getChildCount() == 2) {
+        liveness.markAllParametersEscaped();
+      }
     }
     liveness.analyze();
 
@@ -124,8 +127,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
             t, cfg, (Set<Var>) liveness.getEscapedLocals());
 
     GraphColoring<Var, Void> coloring =
-        new GreedyGraphColoring<>(interferenceGraph,
-            coloringTieBreaker);
+        new GreedyGraphColoring<>(interferenceGraph, coloringTieBreaker);
 
     coloring.color();
     colorings.push(coloring);
@@ -141,13 +143,12 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (colorings.isEmpty() || !n.isName() ||
-        parent.isFunction()) {
+    if (colorings.isEmpty() || !n.isName() || parent.isFunction()) {
       // Don't rename named functions.
       return;
     }
     Var var = t.getScope().getVar(n.getString());
-    GraphNode<Var, ?> vNode = colorings.peek().getGraph().getNode(var);
+    GraphNode<Var, Void> vNode = colorings.peek().getGraph().getNode(var);
     if (vNode == null) {
       // This is not a local.
       return;
@@ -178,8 +179,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
         // Look for all the variables that can be merged (in the graph by now)
         // and it is merged with the current coalescedVar.
-        if (colorings.peek().getGraph().getNode(iVar) != null &&
-            coalescedVar.equals(colorings.peek().getPartitionSuperNode(iVar))) {
+        if (colorings.peek().getGraph().getNode(iVar) != null
+            && coalescedVar.equals(colorings.peek().getPartitionSuperNode(iVar))) {
           allMergedNames.add(iVar.name);
         }
       }
@@ -240,15 +241,13 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           continue;
         }
 
-        if (!interferenceGraph.hasNode(v1) ||
-            !interferenceGraph.hasNode(v2)) {
+        if (!interferenceGraph.hasNode(v1) || !interferenceGraph.hasNode(v2)) {
           // Skip nodes that were not added. They are globals and escaped
           // locals. Also avoid merging a variable with itself.
           continue NEXT_VAR_PAIR;
         }
 
-        if (v1.getParentNode().isParamList() &&
-            v2.getParentNode().isParamList()) {
+        if (v1.getParentNode().isParamList() && v2.getParentNode().isParamList()) {
           interferenceGraph.connectIfNotFound(v1, null, v2);
           continue NEXT_VAR_PAIR;
         }
@@ -264,8 +263,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
           FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
           // Check the live states and add edge when possible.
-          if ((state.getIn().isLive(v1) && state.getIn().isLive(v2)) ||
-              (state.getOut().isLive(v1) && state.getOut().isLive(v2))) {
+          if ((state.getIn().isLive(v1) && state.getIn().isLive(v2))
+              || (state.getOut().isLive(v1) && state.getOut().isLive(v2))) {
             interferenceGraph.connectIfNotFound(v1, null, v2);
             continue NEXT_VAR_PAIR;
           }
@@ -410,8 +409,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
 
     private static boolean isAssignTo(Var var, Node n, Node parent) {
-      if (n.isName() && var.getName().equals(n.getString()) &&
-          parent != null) {
+      if (n.isName() && var.getName().equals(n.getString()) && parent != null) {
         if (parent.isParamList()) {
           // In a function declaration, the formal parameters are assigned.
           return true;
@@ -424,16 +422,17 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       } else {
         // Lastly, any assignmentOP is also an assign.
         Node name = n.getFirstChild();
-        return name != null && name.isName() &&
-          var.getName().equals(name.getString()) &&
-          NodeUtil.isAssignmentOp(n);
+        return name != null && name.isName()
+            && var.getName().equals(name.getString())
+            && NodeUtil.isAssignmentOp(n);
       }
     }
 
     private static boolean isReadFrom(Var var, Node name) {
-      return name != null && name.isName() &&
-          var.getName().equals(name.getString()) &&
-          !NodeUtil.isVarOrSimpleAssignLhs(name, name.getParent());
+      return name != null
+          && name.isName()
+          && var.getName().equals(name.getString())
+          && !NodeUtil.isVarOrSimpleAssignLhs(name, name.getParent());
     }
   }
 }

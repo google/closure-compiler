@@ -179,17 +179,23 @@ public class JSDocInfoTest extends TestCase {
     try {
       info.setReturnType(fromString("boolean"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     try {
       info.setEnumParameterType(fromString("string"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     try {
       info.declareTypedefType(fromString("string"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     assertTypeEquals(NUMBER_TYPE, resolve(info.getType()));
     assertNull(info.getReturnType());
@@ -206,17 +212,23 @@ public class JSDocInfoTest extends TestCase {
     try {
       info.setType(fromString("number"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     try {
       info.setEnumParameterType(fromString("string"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     try {
       info.declareTypedefType(fromString("string"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     assertTypeEquals(BOOLEAN_TYPE,
         resolve(info.getReturnType()));
@@ -233,17 +245,23 @@ public class JSDocInfoTest extends TestCase {
     try {
       info.setType(fromString("number"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     try {
       info.setReturnType(fromString("string"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     try {
       info.declareTypedefType(fromString("string"));
       fail("Expected exception");
-    } catch (IllegalStateException e) {}
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     assertNull(info.getType());
     assertNull(info.getTypedefType());
@@ -438,6 +456,37 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isConstant());
     assertTrue(info.isConstructor());
     assertTrue(info.isHidden());
+  }
+
+  public void testCloneTypeExpressions1() {
+    JSDocInfo info = new JSDocInfo();
+    info.setDescription("The source info");
+    info.setConstant(true);
+    info.setConstructor(true);
+    info.setHidden(true);
+    info.setBaseType(
+        new JSTypeExpression(
+            new Node(Token.BANG, Node.newString("Number")), ""));
+    info.setReturnType(fromString("string"));
+    info.declareParam(fromString("string"), "a");
+
+    JSDocInfo cloned = info.clone(true);
+
+    assertNotSame(info.getBaseType().getRoot(), cloned.getBaseType().getRoot());
+    assertTypeEquals(NUMBER_OBJECT_TYPE, resolve(cloned.getBaseType()));
+    assertEquals("The source info", cloned.getDescription());
+    assertNotSame(info.getReturnType().getRoot(), cloned.getReturnType().getRoot());
+    assertTypeEquals(STRING_TYPE, resolve(cloned.getReturnType()));
+    assertNotSame(info.getParameterType("a").getRoot(), cloned.getParameterType("a").getRoot());
+    assertTypeEquals(STRING_TYPE, resolve(cloned.getParameterType("a")));
+  }
+
+  public void testCloneTypeExpressions2() {
+    JSDocInfo info = new JSDocInfo();
+    info.declareParam(null, "a");
+    JSDocInfo cloned = info.clone(true);
+
+    assertNull(cloned.getParameterType("a"));
   }
 
   public void testSetFileOverviewWithDocumentationOff() {

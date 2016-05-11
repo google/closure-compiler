@@ -654,7 +654,7 @@ HTMLBodyElement.prototype.vLink;
 function HTMLFormElement() {}
 
 /**
- * @type {HTMLCollection<!HTMLElement>}
+ * @type {HTMLFormControlsCollection<!HTMLElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-76728479
  */
 HTMLFormElement.prototype.elements;
@@ -782,11 +782,11 @@ HTMLSelectElement.prototype.size;
 
 /**
  * @param {HTMLElement} element
- * @param {HTMLElement} before
+ * @param {HTMLElement=} opt_before
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-14493106
  */
-HTMLSelectElement.prototype.add = function(element, before) {};
+HTMLSelectElement.prototype.add = function(element, opt_before) {};
 
 /**
  * @return {undefined}
@@ -803,11 +803,12 @@ HTMLSelectElement.prototype.blur = function() {};
 HTMLSelectElement.prototype.focus = function() {};
 
 /**
- * @param {number} index
+ * @param {number=} opt_index
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-33404570
+ * @override
  */
-HTMLSelectElement.prototype.remove = function(index) {};
+HTMLSelectElement.prototype.remove = function(opt_index) {};
 
 /**
  * @constructor

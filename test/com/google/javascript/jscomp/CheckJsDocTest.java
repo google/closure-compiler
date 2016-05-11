@@ -284,6 +284,20 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
     testBadTemplate("/** @template T */ Foo.prototype.f = function() {};");
   }
 
+  public void testBadTypedef() {
+    testWarningEs6(
+        "/** @typedef {{foo: string}} */ class C { constructor() { this.foo = ''; }}",
+        MISPLACED_ANNOTATION);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/** @typedef {{foo: string}} */",
+            "var C = goog.defineClass(null, {",
+            "  constructor: function() { this.foo = ''; }",
+            "});"),
+        MISPLACED_ANNOTATION);
+  }
+
   public void testNoSideEffectsInSrc() {
     testSame("/** @nosideeffects */ function foo() {}; foo();", MISPLACED_ANNOTATION);
 

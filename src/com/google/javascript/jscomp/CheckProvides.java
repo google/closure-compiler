@@ -57,6 +57,7 @@ class CheckProvides implements HotSwapCompilerPass {
     private final Map<String, Node> provides = new HashMap<>();
     private final Map<String, Node> ctors = new HashMap<>();
     private final CodingConvention convention;
+    private boolean containsRequires = false;
 
     CheckProvidesCallback(CodingConvention convention){
       this.convention = convention;
@@ -70,6 +71,9 @@ class CheckProvides implements HotSwapCompilerPass {
             codingConvention.extractClassNameIfProvide(n, parent);
           if (providedClassName != null) {
             provides.put(providedClassName, n);
+          }
+          if (!containsRequires && codingConvention.extractClassNameIfRequire(n, parent) != null) {
+            containsRequires = true;
           }
           break;
         case Token.FUNCTION:
@@ -127,24 +131,26 @@ class CheckProvides implements HotSwapCompilerPass {
 
     private void visitScriptNode() {
       for (Map.Entry<String, Node> ctorEntry : ctors.entrySet()) {
-        String ctor = ctorEntry.getKey();
+        String ctorName = ctorEntry.getKey();
         int index = -1;
         boolean found = false;
 
-        if (ctor.startsWith("$jscomp.")) {
+        if (ctorName.startsWith("$jscomp.")
+            || ClosureRewriteModule.isModuleContent(ctorName)
+            || ClosureRewriteModule.isModuleExport(ctorName)) {
           continue;
         }
 
         do {
-          index = ctor.indexOf('.', index + 1);
-          String provideKey = index == -1 ? ctor : ctor.substring(0, index);
+          index = ctorName.indexOf('.', index + 1);
+          String provideKey = index == -1 ? ctorName : ctorName.substring(0, index);
           if (provides.containsKey(provideKey)) {
             found = true;
             break;
           }
         } while (index != -1);
 
-        if (!found) {
+        if (!found && (containsRequires || !provides.isEmpty())) {
           Node n = ctorEntry.getValue();
           compiler.report(
               JSError.make(n, MISSING_PROVIDE_WARNING, ctorEntry.getKey()));
@@ -152,6 +158,7 @@ class CheckProvides implements HotSwapCompilerPass {
       }
       provides.clear();
       ctors.clear();
+      containsRequires = false;
     }
   }
 }

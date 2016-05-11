@@ -16,9 +16,16 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A data structure for JS dependency information for a single .js file.
@@ -52,6 +59,57 @@ public interface DependencyInfo {
   public abstract class Base implements DependencyInfo {
     @Override public boolean isModule() {
       return "goog".equals(getLoadFlags().get("module"));
+    }
+  }
+
+  /** Utility methods. */
+  class Util {
+    private Util() {}
+
+    // TODO(sdh): This would be better as a defender method once Java 8 is allowed (b/28382956):
+    //     void DependencyInfo#writeAddDependency(Appendable);
+    /** Prints a goog.addDependency call for a single DependencyInfo. */
+    public static void writeAddDependency(Appendable out, DependencyInfo info) throws IOException {
+      out.append("goog.addDependency('")
+          .append(info.getPathRelativeToClosureBase())
+          .append("', ");
+      writeJsArray(out, info.getProvides());
+      out.append(", ");
+      writeJsArray(out, info.getRequires());
+      Map<String, String> loadFlags = info.getLoadFlags();
+      if (!loadFlags.isEmpty()) {
+        out.append(", ");
+        writeJsObject(out, loadFlags);
+      }
+      out.append(");\n");
+    }
+
+    /** Prints a map as a JS object literal. */
+    private static void writeJsObject(Appendable out, Map<String, String> map) throws IOException {
+      List<String> entries = new ArrayList<>();
+      for (Map.Entry<String, String> entry : map.entrySet()) {
+        String key = entry.getKey().replace("'", "\\'");
+        String value = entry.getValue().replace("'", "\\'");
+        entries.add("'" + key + "': '" + value + "'");
+      }
+      out.append("{");
+      out.append(Joiner.on(", ").join(entries));
+      out.append("}");
+    }
+
+    /** Prints a list of strings formatted as a JavaScript array of string literals. */
+    private static void writeJsArray(Appendable out, Collection<String> values) throws IOException {
+      Iterable<String> quoted =
+          Iterables.transform(
+              values,
+              new Function<String, String>() {
+                @Override public String apply(String arg) {
+                  return "'" + arg.replace("'", "\\'") + "'";
+                }
+              });
+      out.append("[");
+      out.append(Joiner.on(", ").join(quoted));
+      out.append("]");
     }
   }
 }

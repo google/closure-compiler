@@ -256,6 +256,9 @@
           <moduleShortName>jscomp</moduleShortName>
           <skipModule>true</skipModule>
           <failOnError>true</failOnError>
+          <compilerArgs>
+            <compilerArg>-generateJsInteropExports</compilerArg>
+          </compilerArgs>
         </configuration>
        </plugin>
     </plugins>

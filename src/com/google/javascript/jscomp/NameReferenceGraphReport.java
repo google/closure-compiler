@@ -79,7 +79,7 @@ final class NameReferenceGraphReport {
     builder.append("<h1>Name Reference Graph Dump</h1>\n");
     builder.append("OVERALL STATS\n");
     builder.append("<ul>\n");
-    builder.append("<li>Total names: " + nodes.size());
+    builder.append("<li>Total names: ").append(nodes.size());
     builder.append("</ul>\n");
 
     builder.append("ALL NAMES\n");
@@ -158,7 +158,7 @@ final class NameReferenceGraphReport {
     JSType declType = declarationNode.getValue().getType();
 
     builder.append("<LI> ");
-    builder.append("<A NAME=\"" + declName + "\">");
+    builder.append("<A NAME=\"").append(declName).append("\">");
     builder.append(declName);
     builder.append("\n");
 
@@ -229,7 +229,7 @@ final class NameReferenceGraphReport {
   private void generateEdgeReport(StringBuilder builder,
       Name referencedDecl, DiGraphEdge<Name, Reference> edge) {
     String srcDeclName = referencedDecl.getQualifiedName();
-    builder.append("<li><A HREF=\"#" + srcDeclName + "\">");
+    builder.append("<li><A HREF=\"#").append(srcDeclName).append("\">");
     builder.append(srcDeclName);
     builder.append("</a> ");
 
@@ -262,8 +262,7 @@ final class NameReferenceGraphReport {
 
 
     // Print out the text path so the user knows where things come from.
-    builder.append(sourceFile + ":" +
-        lineNumber + "," + columnNumber);
+    builder.append(sourceFile).append(":").append(lineNumber).append(",").append(columnNumber);
 
 
     builder.append(")");
@@ -281,7 +280,7 @@ final class NameReferenceGraphReport {
     } else if (defType.isUnknownType()) {
       builder.append(" (type: unknown) ");
     } else {
-      builder.append(" (type: " + defType + ") ");
+      builder.append(" (type: ").append(defType).append(") ");
     }
   }
 

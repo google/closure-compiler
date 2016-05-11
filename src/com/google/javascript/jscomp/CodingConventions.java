@@ -136,6 +136,11 @@ public final class CodingConventions {
     }
 
     @Override
+    public boolean hasPrivacyConvention() {
+      return nextConvention.hasPrivacyConvention();
+    }
+
+    @Override
     public SubclassRelationship getClassesDefinedByCall(Node callNode) {
       return nextConvention.getClassesDefinedByCall(callNode);
     }
@@ -362,6 +367,11 @@ public final class CodingConventions {
 
     @Override
     public boolean isPrivate(String name) {
+      return false;
+    }
+
+    @Override
+    public boolean hasPrivacyConvention() {
       return false;
     }
 

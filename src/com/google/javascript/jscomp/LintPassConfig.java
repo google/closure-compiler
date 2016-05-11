@@ -22,12 +22,14 @@ import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
+import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
+import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
+import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 
 import java.util.List;
-
 
 /**
  * A PassConfig for the standalone linter, which runs on a single file at a time. This runs a
@@ -42,12 +44,10 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
-        checkRequiresAndProvidesSorted,
-        jsdocChecks,
-        closureRewriteModule,
+        earlyLintChecks,
         closureGoogScopeAliases,
         closureRewriteClass,
-        lintChecks,
+        lateLintChecks,
         checkRequires);
   }
 
@@ -55,19 +55,26 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
     return ImmutableList.of();
   }
 
-  private final PassFactory checkRequiresAndProvidesSorted =
-      new PassFactory("checkRequiresAndProvidesSorted", true) {
+  private final PassFactory earlyLintChecks =
+      new PassFactory("earlyLintChecks", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new CheckRequiresAndProvidesSorted(compiler);
-        }
-      };
-
-  private final PassFactory closureRewriteModule =
-      new PassFactory("closureRewriteModule", true) {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new ClosureRewriteModule(compiler);
+          return new CombinedCompilerPass(
+              compiler,
+              ImmutableList.<Callback>of(
+                  new CheckDuplicateCase(compiler),
+                  new CheckEmptyStatements(compiler),
+                  new CheckEnums(compiler),
+                  new CheckJSDocStyle(compiler),
+                  new CheckJSDoc(compiler),
+                  new CheckMissingSemicolon(compiler),
+                  new CheckMissingSuper(compiler),
+                  new CheckPrimitiveAsObject(compiler),
+                  new CheckRequiresAndProvidesSorted(compiler),
+                  new CheckUnusedLabels(compiler),
+                  new CheckUselessBlocks(compiler),
+                  new ClosureCheckModule(compiler),
+                  new Es6SuperCheck(compiler)));
         }
       };
 
@@ -87,31 +94,15 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         }
       };
 
-    private final PassFactory jsdocChecks =
-      new PassFactory("jsdocChecks", true) {
+  private final PassFactory lateLintChecks =
+      new PassFactory("lateLintChecks", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CombinedCompilerPass(
               compiler,
               ImmutableList.<Callback>of(
-                  new CheckJSDocStyle(compiler),
-                  new CheckJSDoc(compiler)));
-        }
-      };
-
-  private final PassFactory lintChecks =
-      new PassFactory("lintChecks", true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new CombinedCompilerPass(
-              compiler,
-              ImmutableList.<Callback>of(
-                  new CheckDuplicateCase(compiler),
-                  new CheckEmptyStatements(compiler),
-                  new CheckEnums(compiler),
                   new CheckInterfaces(compiler),
-                  new CheckPrototypeProperties(compiler),
-                  new CheckUselessBlocks(compiler)));
+                  new CheckPrototypeProperties(compiler)));
         }
       };
 

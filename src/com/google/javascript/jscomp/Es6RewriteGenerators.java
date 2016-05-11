@@ -221,7 +221,7 @@ public final class Es6RewriteGenerators
   }
 
   private void visitGenerator(Node n, Node parent) {
-    compiler.needsEs6Runtime = true;
+    compiler.ensureLibraryInjected("es6_runtime", false);
     hasTranslatedTry = false;
     Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
             "function generatorBody() {",

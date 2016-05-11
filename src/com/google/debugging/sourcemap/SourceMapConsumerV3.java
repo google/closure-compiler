@@ -18,6 +18,7 @@ package com.google.debugging.sourcemap;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
@@ -513,7 +514,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
       lineNumber--;
     } while (lines.get(lineNumber) == null);
     ArrayList<Entry> entries = lines.get(lineNumber);
-    return getOriginalMappingForEntry(entries.get(entries.size() - 1));
+    return getOriginalMappingForEntry(Iterables.getLast(entries));
   }
 
   /**

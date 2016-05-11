@@ -45,6 +45,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -110,13 +111,13 @@ public class JSDocInfo implements Serializable {
 
     // Function information
     private JSTypeExpression baseType;
-    private List<JSTypeExpression> extendedInterfaces;
-    private List<JSTypeExpression> implementedInterfaces;
-    private Map<String, JSTypeExpression> parameters;
-    private List<JSTypeExpression> thrownTypes;
-    private List<String> templateTypeNames;
+    private ArrayList<JSTypeExpression> extendedInterfaces;
+    private ArrayList<JSTypeExpression> implementedInterfaces;
+    private LinkedHashMap<String, JSTypeExpression> parameters;
+    private ArrayList<JSTypeExpression> thrownTypes;
+    private ArrayList<String> templateTypeNames;
     private Set<String> disposedParameters;
-    private Map<String, Node> typeTransformations;
+    private LinkedHashMap<String, Node> typeTransformations;
 
     // Other information
     private String description;
@@ -154,14 +155,16 @@ public class JSDocInfo implements Serializable {
     }
 
     protected LazilyInitializedInfo clone() {
+      return clone(false);
+    }
+
+    protected LazilyInitializedInfo clone(boolean cloneTypeNodes) {
       LazilyInitializedInfo other = new LazilyInitializedInfo();
-      other.baseType = baseType;
-      other.extendedInterfaces = extendedInterfaces == null ? null
-          : new ArrayList<>(extendedInterfaces);
-      other.implementedInterfaces = implementedInterfaces == null ? null
-          : new ArrayList<>(implementedInterfaces);
-      other.parameters = parameters == null ? null : new LinkedHashMap<>(parameters);
-      other.thrownTypes = thrownTypes == null ? null : new ArrayList<>(thrownTypes);
+      other.baseType = cloneType(baseType, cloneTypeNodes);
+      other.extendedInterfaces = cloneTypeList(extendedInterfaces, cloneTypeNodes);
+      other.implementedInterfaces = cloneTypeList(implementedInterfaces, cloneTypeNodes);
+      other.parameters = cloneTypeMap(parameters, cloneTypeNodes);
+      other.thrownTypes = cloneTypeList(thrownTypes, cloneTypeNodes);
       other.templateTypeNames = templateTypeNames == null ? null
           : new ArrayList<>(templateTypeNames);
       other.disposedParameters = disposedParameters == null ? null
@@ -179,6 +182,31 @@ public class JSDocInfo implements Serializable {
 
       other.propertyBitField = propertyBitField;
       return other;
+    }
+
+    protected ArrayList<JSTypeExpression> cloneTypeList(
+        ArrayList<JSTypeExpression> list, boolean cloneTypeExpressionNodes) {
+      ArrayList<JSTypeExpression> newlist = null;
+      if (list != null) {
+        newlist = new ArrayList<>(list.size());
+        for (JSTypeExpression expr : list) {
+          newlist.add(cloneType(expr, cloneTypeExpressionNodes));
+        }
+      }
+      return newlist;
+    }
+
+    protected LinkedHashMap<String, JSTypeExpression> cloneTypeMap(
+        LinkedHashMap<String, JSTypeExpression> map, boolean cloneTypeExpressionNodes) {
+      LinkedHashMap<String, JSTypeExpression> newmap = null;
+      if (map != null) {
+        newmap = new LinkedHashMap<>();
+        for (Entry<String, JSTypeExpression> entry : map.entrySet()) {
+          JSTypeExpression value = entry.getValue();
+          newmap.put(entry.getKey(), cloneType(value, cloneTypeExpressionNodes));
+        }
+      }
+      return newmap;
     }
 
     // TODO(nnaze): Consider putting bit-fiddling logic in a reusable
@@ -206,10 +234,10 @@ public class JSDocInfo implements Serializable {
 
   private static final class LazilyInitializedDocumentation {
     private String sourceComment;
-    private List<Marker> markers;
+    private ArrayList<Marker> markers;
 
     private LinkedHashMap<String, String> parameters;
-    private Map<JSTypeExpression, String> throwsDescriptions;
+    private LinkedHashMap<JSTypeExpression, String> throwsDescriptions;
     private String blockDescription;
     private String fileOverview;
     private String returnDescription;
@@ -525,16 +553,27 @@ public class JSDocInfo implements Serializable {
   JSDocInfo() {}
 
   public JSDocInfo clone() {
+    return clone(false);
+  }
+
+  public JSDocInfo clone(boolean cloneTypeNodes) {
     JSDocInfo other = new JSDocInfo();
-    other.info = this.info == null ? null : this.info.clone();
+    other.info = this.info == null ? null : this.info.clone(cloneTypeNodes);
     other.documentation = this.documentation;
     other.visibility = this.visibility;
     other.bitset = this.bitset;
-    other.type = this.type;
-    other.thisType = this.thisType;
+    other.type = cloneType(this.type, cloneTypeNodes);
+    other.thisType = cloneType(this.thisType, cloneTypeNodes);
     other.includeDocumentation = this.includeDocumentation;
     other.originalCommentPosition = this.originalCommentPosition;
     return other;
+  }
+
+  private static JSTypeExpression cloneType(JSTypeExpression expr, boolean cloneTypeNodes) {
+    if (expr != null) {
+      return cloneTypeNodes ? expr.clone() : expr;
+    }
+    return null;
   }
 
   @VisibleForTesting
@@ -935,7 +974,14 @@ public class JSDocInfo implements Serializable {
         || hasThisType()
         || getParameterCount() > 0
         || getFlag(MASK_CONSTRUCTOR)
-        || (getFlag(MASK_NOSIDEEFFECTS) && (!hasType() || hasFunctionType));
+        || (getFlag(MASK_NOSIDEEFFECTS) && !hasType());
+  }
+
+  // For jsdocs that create new types. Not to be confused with jsdocs that
+  // declare the type of a variable or property.
+  public boolean containsTypeDefinition() {
+    return isConstructor() || isInterface()
+        || hasEnumParameterType() || hasTypedefType();
   }
 
   private boolean getFlag(int mask) {
@@ -1361,7 +1407,7 @@ public class JSDocInfo implements Serializable {
     if (info == null || info.parameters == null) {
       return null;
     }
-    return ImmutableList.copyOf(info.parameters.keySet()).get(index);
+    return Iterables.get(info.parameters.keySet(), index);
   }
 
   /**

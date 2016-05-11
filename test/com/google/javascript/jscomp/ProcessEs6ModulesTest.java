@@ -44,6 +44,7 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     // ECMASCRIPT5 to Trigger module processing after parsing.
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     return options;
   }
 
@@ -66,10 +67,12 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     // Shared with ProcessCommonJSModulesTest.
     String fileName = test.getFilename() + ".js";
     ImmutableList<SourceFile> inputs =
-        ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
+        ImmutableList.of(
+            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
+            SourceFile.fromCode(fileName, input));
     ImmutableList<SourceFile> expecteds =
         ImmutableList.of(
-            SourceFile.fromCode("other.js", ""),
+            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
             SourceFile.fromCode(fileName, expected));
     test.test(inputs, expecteds);
   }
@@ -78,7 +81,7 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
       CompilerTestCase test, ImmutableList<SourceFile> inputs, String expected) {
     ImmutableList<SourceFile> expecteds =
         ImmutableList.of(
-            SourceFile.fromCode("other.js", ""),
+            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
             SourceFile.fromCode(test.getFilename() + ".js", expected));
     test.test(inputs, expecteds);
   }
@@ -425,6 +428,20 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "  useBaz(baz) {}",
             "}",
             "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
+
+    testModules(
+        LINE_JOINER.join(
+            "export class Foo {",
+            "  /** @param {/other.Baz} baz */",
+            "  useBaz(baz) {}",
+            "}"),
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "class Foo$$module$testcode {",
+            "  /** @param {module$other.Baz} baz */",
+            "  useBaz(baz) {}",
+            "}",
+            "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
   }
 
   public void testRenameTypedef() {
@@ -605,5 +622,42 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
 
     testModules("import * as Foo from 'goog:other.Foo';",
         ProcessEs6Modules.NAMESPACE_IMPORT_CANNOT_USE_STAR);
+  }
+
+  public void testObjectDestructuringAndObjLitShorthand() {
+    testModules(
+        LINE_JOINER.join(
+            "import {f} from 'other';",
+            "const foo = 1;",
+            "const {a, b} = f({foo});",
+            "use(a, b);"),
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "const foo$$module$testcode = 1;",
+            "const {",
+            "  a: a$$module$testcode,",
+            "  b: b$$module$testcode,",
+            "} = module$other.f({foo: foo$$module$testcode});",
+            "use(a$$module$testcode, b$$module$testcode);"));
+  }
+
+  public void testImportWithoutReferences() {
+    testModules("import 'other';", "goog.require('module$other');");
+  }
+
+  public void testUselessUseStrict() {
+    setExpectParseWarningsThisTest();
+    testModules(LINE_JOINER.join(
+        "'use strict';",
+        "export default undefined;"),
+        LINE_JOINER.join(
+        "'use strict';",
+        "export default undefined;"));
+  }
+
+  public void testUseStrict_noWarning() {
+    testSame(LINE_JOINER.join(
+        "'use strict';",
+        "var x;"));
   }
 }

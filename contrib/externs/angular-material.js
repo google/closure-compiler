@@ -94,7 +94,10 @@ md.$dialog = function() {};
  *   locals: (Object|undefined),
  *   resolve: (Object|undefined),
  *   controllerAs: (string|undefined),
- *   parent: (angular.JQLite|Element|undefined)
+ *   parent: (angular.JQLite|Element|undefined),
+ *   onShowing: (Function|undefined),
+ *   onComplete: (Function|undefined),
+ *   onRemoving: (Function|undefined)
  * }}
  */
 md.$dialog.options;
@@ -341,6 +344,10 @@ md.$toast.prototype.hide = function(opt_response) {};
  * @param {*=} opt_response An argument for the resolved promise.
  */
 md.$toast.prototype.cancel = function(opt_response) {};
+
+
+/** @param {string} content */
+md.$toast.prototype.updateTextContent = function(content) {};
 
 
 /** @record */
@@ -710,3 +717,220 @@ md.VirtualRepeatController = function() {};
 
 /** @return {?number} */
 md.VirtualRepeatController.prototype.getItemSize = function() {};
+
+
+/******************************************************************************
+ * $panel Service
+ *****************************************************************************/
+
+/** @constructor */
+md.$panel = function() {};
+
+/**
+ * @typedef {{
+ *   template: (string|undefined),
+ *   templateUrl: (string|undefined),
+ *   controller: (Function|string|undefined),
+ *   controllerAs: (string|undefined),
+ *   locals: (!Object|undefined),
+ *   resolve: (!Object|undefined),
+ *   attachTo: (!angular.JQLite|!Element|undefined),
+ *   panelClass: (string|undefined),
+ *   position: (!md.$panel.MdPanelPosition|undefined),
+ *   clickOutsideToClose: (boolean|undefined),
+ *   escapeToClose: (boolean|undefined),
+ *   trapFocus: (boolean|undefined),
+ *   focusOnOpen: (boolean|undefined),
+ *   fullScreen: (boolean|undefined),
+ *   animation: (!md.$panel.MdPanelAnimation|undefined),
+ *   hasBackdrop: (boolean|undefined),
+ *   disableParentScroll: (boolean|undefined),
+ *   onDomAdded: (Function|undefined),
+ *   onOpenComplete: (Function|undefined),
+ *   onRemoving: (Function|undefined),
+ *   onDomRemoved: (Function|undefined),
+ *   origin: (!angular.JQLite|!Element|undefined)
+ * }}
+ */
+md.$panel.config;
+
+/**
+ * @param {!md.$panel.config=} opt_config
+ * @return {!md.$panel.MdPanelRef}
+ */
+md.$panel.prototype.create = function(opt_config) {};
+
+/**
+ * @param {!md.$panel.config=} opt_config
+ * @return {!md.$panel.MdPanelRef}
+ */
+md.$panel.prototype.open = function(opt_config) {};
+
+/** @return {!md.$panel.MdPanelPosition} */
+md.$panel.prototype.newPanelPosition = function() {};
+
+/** @return {!md.$panel.MdPanelAnimation} */
+md.$panel.prototype.newPanelAnimation = function() {};
+
+/**
+ * Possible values of xPosition.
+ * @enum {string}
+ */
+md.$panel.prototype.xPosition = {
+  CENTER: 'center',
+  ALIGN_START: 'align-start',
+  ALIGN_END: 'align-end',
+  OFFSET_START: 'offset-start',
+  OFFSET_END: 'offset-end'
+};
+
+/**
+ * Possible values of yPosition.
+ * @enum {string}
+ */
+md.$panel.prototype.yPosition = {
+  CENTER: 'center',
+  ALIGN_TOPS: 'align-tops',
+  ALIGN_BOTTOMS: 'align-bottoms',
+  ABOVE: 'above',
+  BELOW: 'below'
+};
+
+/**
+ * Possible default animations.
+ * @enum {string}
+ */
+md.$panel.prototype.animation = {
+  SLIDE: 'md-panel-animate-slide',
+  SCALE: 'md-panel-animate-scale',
+  FADE: 'md-panel-animate-fade'
+};
+
+
+/**
+ * @param {!md.$panel.config} config
+ * @param {!angular.$injector} $injector
+ * @constructor
+ */
+md.$panel.MdPanelRef = function(config, $injector) {};
+
+/** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
+md.$panel.MdPanelRef.prototype.open = function() {};
+
+/** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
+md.$panel.MdPanelRef.prototype.close = function() {};
+
+/** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
+md.$panel.MdPanelRef.prototype.attach = function() {};
+
+/** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
+md.$panel.MdPanelRef.prototype.detach = function() {};
+
+/** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
+md.$panel.MdPanelRef.prototype.show = function() {};
+
+/** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
+md.$panel.MdPanelRef.prototype.hide = function() {};
+
+md.$panel.MdPanelRef.prototype.destroy = function() {};
+
+/** @param {string} classToAdd */
+md.$panel.MdPanelRef.prototype.addClass = function(classToAdd) {};
+
+/** @param {string} classToRemove */
+md.$panel.MdPanelRef.prototype.removeClass = function(classToRemove) {};
+
+/** @param {string} classToToggle */
+md.$panel.MdPanelRef.prototype.toggleClass = function(classToToggle) {};
+
+/**
+ * @param {!angular.$window} $window
+ * @constructor
+ */
+md.$panel.MdPanelPosition = function($window) {};
+
+/** @return {!md.$panel.MdPanelPosition} */
+md.$panel.MdPanelPosition.prototype.absolute = function() {};
+
+/**
+ * @param {string|!Element|!angular.JQLite} element
+ * @return {!md.$panel.MdPanelPosition}
+ */
+md.$panel.MdPanelPosition.prototype.relativeTo = function(element) {};
+
+/**
+ * @param {string=} opt_top
+ * @return {!md.$panel.MdPanelPosition}
+ */
+md.$panel.MdPanelPosition.prototype.top = function(opt_top) {};
+
+/**
+ * @param {string=} opt_bottom
+ * @return {!md.$panel.MdPanelPosition}
+ */
+md.$panel.MdPanelPosition.prototype.bottom = function(opt_bottom) {};
+
+/**
+ * @param {string=} opt_left
+ * @return {!md.$panel.MdPanelPosition}
+ */
+md.$panel.MdPanelPosition.prototype.left = function(opt_left) {};
+
+/**
+ * @param {string=} opt_right
+ * @return {!md.$panel.MdPanelPosition}
+ */
+md.$panel.MdPanelPosition.prototype.right = function(opt_right) {};
+
+/** @return {!md.$panel.MdPanelPosition} */
+md.$panel.MdPanelPosition.prototype.centerHorizontally = function() {};
+
+/** @return {!md.$panel.MdPanelPosition} */
+md.$panel.MdPanelPosition.prototype.centerVertically = function() {};
+
+/** @return {!md.$panel.MdPanelPosition} */
+md.$panel.MdPanelPosition.prototype.center = function() {};
+
+/**
+ * @param {string} xPosition
+ * @param {string} yPosition
+ * @return {!md.$panel.MdPanelPosition}
+ */
+md.$panel.MdPanelPosition.prototype.addPanelPosition =
+    function(xPosition, yPosition) {};
+
+/**
+ * @param {string=} offsetX
+ * @return {!md.$panel.MdPanelPosition}
+ */
+md.$panel.MdPanelPosition.prototype.withOffsetX = function(offsetX) {};
+
+/**
+ * @param {string} offsetY
+ * @return {!md.$panel.MdPanelPosition}
+ */
+md.$panel.MdPanelPosition.prototype.withOffsetY = function(offsetY) {};
+
+/**
+ * @param {!angular.$injector} $injector
+ * @constructor
+ */
+md.$panel.MdPanelAnimation = function($injector) {};
+
+/**
+ * @param {string|!Element|!Event|{top: number, left: number}} openFrom
+ * @return {!md.$panel.MdPanelAnimation}
+ */
+md.$panel.MdPanelAnimation.prototype.openFrom = function(openFrom) {};
+
+/**
+ * @param {string|!Element|{top: number, left: number}} closeTo
+ * @return {!md.$panel.MdPanelAnimation}
+ */
+md.$panel.MdPanelAnimation.prototype.closeTo = function(closeTo) {};
+
+/**
+ * @param {string|{open: string, close: string}} cssClass
+ * @return {!md.$panel.MdPanelAnimation}
+ */
+md.$panel.MdPanelAnimation.prototype.withAnimation = function(cssClass) {};

@@ -746,7 +746,7 @@ public final class AstValidator implements CompilerPass {
         if (c.getNext() != null) {
           violation("Rest parameters must come after all other parameters.", c);
         }
-        validateRest(c);
+        validateRest(Token.PARAM_LIST, c);
       } else if (c.isDefaultValue()) {
         defaultParams = true;
         validateDefaultValue(Token.PARAM_LIST, c);
@@ -789,10 +789,16 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateRest(Node n) {
+  private void validateRest(int type, Node n) {
     validateNodeType(Token.REST, n);
     validateChildCount(n);
-    validateNonEmptyString(n.getFirstChild());
+    if (type == Token.PARAM_LIST) {
+      // TODO(bradfordcsmith): Make destructuring rest parameters work.
+      //     https://github.com/google/closure-compiler/issues/1383
+      validateNonEmptyString(n.getFirstChild());
+    } else {
+      validateLHS(type, n.getFirstChild());
+    }
   }
 
   private void validateSpread(Node n) {
@@ -831,6 +837,16 @@ public final class AstValidator implements CompilerPass {
 
   private void validateNameDeclarationChild(int type, Node n) {
     if (n.isName()) {
+      validateLHS(type, n);
+    } else if (n.isDestructuringLhs()) {
+      validateLHS(type, n.getFirstChild());
+    } else {
+      violation("Invalid child for " + Token.name(type) + " node", n);
+    }
+  }
+
+  private void validateLHS(int type, Node n) {
+    if (n.isName()) {
       // Don't use validateName here since this NAME node may have
       // a child.
       validateNonEmptyString(n);
@@ -859,13 +875,13 @@ public final class AstValidator implements CompilerPass {
       if (c == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
         validateExpression(c);
       } else if (c.isRest()) {
-        validateRest(c);
+        validateRest(type, c);
       } else if (c.isEmpty()) {
         validateChildless(c);
       } else {
         // The members of the array pattern can be simple names,
         // or nested array/object patterns, e.g. "var [a,[b,c]]=[1,[2,3]];"
-        validateNameDeclarationChild(type, c);
+        validateLHS(type, c);
       }
     }
   }
@@ -881,7 +897,7 @@ public final class AstValidator implements CompilerPass {
         validateObjectPatternStringKey(type, c);
       } else {
         // Nested destructuring pattern.
-        validateNameDeclarationChild(type, c);
+        validateLHS(type, c);
       }
     }
   }
@@ -1232,7 +1248,7 @@ public final class AstValidator implements CompilerPass {
     validateChildCountIn(n, 0, 1);
 
     if (n.hasOneChild()) {
-      validateNameDeclarationChild(type, n.getFirstChild());
+      validateLHS(type, n.getFirstChild());
     }
   }
 

@@ -20,8 +20,11 @@ import static com.google.javascript.jscomp.lint.CheckEnums.DUPLICATE_ENUM_VALUE;
 import static com.google.javascript.jscomp.lint.CheckEnums.ENUM_PROP_NOT_CONSTANT;
 import static com.google.javascript.jscomp.lint.CheckEnums.SHORTHAND_ASSIGNMENT_IN_ENUM;
 
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.Es6CompilerTestCase;
 
 /**
@@ -31,6 +34,13 @@ public final class CheckEnumsTest extends Es6CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckEnums(compiler);
+  }
+
+  @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    super.getOptions(options);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    return options;
   }
 
   public void testCheckEnums() throws Exception {

@@ -164,7 +164,7 @@ public final class JsMessage {
    * Gets the meaning annotated to the message, intended to force different
    * translations.
    */
-  String getMeaning() {
+  public String getMeaning() {
     return meaning;
   }
 

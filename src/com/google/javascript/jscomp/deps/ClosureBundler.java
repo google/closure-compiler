@@ -29,6 +29,7 @@ import java.nio.charset.Charset;
 public class ClosureBundler {
   private boolean useEval = false;
   private String sourceUrl = null;
+  private String path = "unknown_source";
 
   public ClosureBundler() {
   }
@@ -40,6 +41,11 @@ public class ClosureBundler {
 
   public final ClosureBundler withSourceUrl(String sourceUrl) {
     this.sourceUrl = sourceUrl;
+    return this;
+  }
+
+  public final ClosureBundler withPath(String path) {
+    this.path = path;
     return this;
   }
 
@@ -129,7 +135,7 @@ public class ClosureBundler {
   }
 
   private void append(Appendable out, Mode mode, String s) throws IOException {
-    String transformed = transformInput(s);
+    String transformed = transformInput(s, path);
     mode.append(transformed, out);
   }
 
@@ -153,7 +159,7 @@ public class ClosureBundler {
    * (For example, {@link TranspilingClosureBundler#transformInput} transpiles inputs from ES6
    * to ES5.)
    */
-  protected String transformInput(String input) {
+  protected String transformInput(String input, String path) {
     return input;
   }
 }

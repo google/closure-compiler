@@ -20,12 +20,10 @@
  * TODO: Mocks.
  * TODO: Remaining Services:
  *     $cookieStore
- *     $document
  *     $httpBackend
  *     $locale
  *     $rootElement
  *     $rootScope
- *     $rootScopeProvider
  *
  * TODO: Resolve two issues with angular.$http
  *         1) angular.$http isn't declared as a
@@ -453,7 +451,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *       function(!angular.JQLite=,!angular.Attributes=)|
  *       undefined),
  *   terminal: (boolean|undefined),
- *   transclude: (boolean|string|undefined)
+ *   transclude: (boolean|string|!Object.<string, string>|undefined)
  *   }}
  */
 angular.Directive;
@@ -470,11 +468,37 @@ angular.Directive;
  *   templateUrl: (string|
  *       function(!angular.JQLite=,!angular.Attributes=)|
  *       undefined),
- *   transclude: (boolean|undefined)
- *   }}
+ *   transclude: (boolean|!Object.<string, string>|undefined),
+ *   require: (!Object<string, string>|undefined)
+ * }}
  */
 angular.Component;
 
+
+/** @interface */
+angular.Change;
+
+/** @type {*} */
+angular.Change.prototype.currentValue;
+
+/** @type {*} */
+angular.Change.prototype.previousValue;
+
+/** @return {boolean} */
+angular.Change.prototype.isFirstChange = function() {};
+
+
+/** @record */
+angular.ComponentController = function() {};
+
+angular.ComponentController.prototype.$onInit = function() {};
+
+angular.ComponentController.prototype.$postLink = function() {};
+
+/** @param {!Object<!angular.Change>} changesObj */
+angular.ComponentController.prototype.$onChanges = function(changesObj) {};
+
+angular.ComponentController.prototype.$onDestroy = function() {};
 
 /**
  * @typedef {(Function|Array.<string|Function>)}
@@ -837,7 +861,7 @@ angular.Module.prototype.requires;
 /** @constructor */
 angular.Scope = function() {};
 
-/** @type {string} */
+/** @type {?string} */
 angular.Scope.prototype.$$phase;
 
 /**
@@ -987,7 +1011,7 @@ angular.version.codeName = '';
  *****************************************************************************/
 
 /**
- * @typedef {function()}
+ * @typedef {function(string=)}
  */
 angular.$anchorScroll;
 
@@ -2115,6 +2139,18 @@ angular.$provide.prototype.service = function(name, constructor) {};
 angular.$provide.prototype.value = function(name, object) {};
 
 /******************************************************************************
+ * $rootScopeProvider
+ *****************************************************************************/
+
+/** @constructor */
+angular.$rootScopeProvider = function() {};
+
+/**
+ * @param {number} limit
+ */
+angular.$rootScopeProvider.prototype.digestTtl = function(limit) {};
+
+/******************************************************************************
  * $route Service
  *****************************************************************************/
 
@@ -2125,14 +2161,14 @@ angular.$route = function() {};
 angular.$route.prototype.reload = function() {};
 
 /**
- * @param {!Object<string,string>} object
+ * @param {!Object<string, string>} object
  */
 angular.$route.prototype.updateParams = function(object) {};
 
 /** @type {!angular.$route.Route} */
 angular.$route.prototype.current;
 
-/** @type {Array.<!angular.$route.Route>} */
+/** @type {Object.<?string, !angular.$route.Route>} */
 angular.$route.prototype.routes;
 
 /** @constructor */
@@ -2495,8 +2531,44 @@ angular.$timeout_;
 angular.$timeout_.cancel = function(promise) {};
 
 /******************************************************************************
+ * $transclude Service
+ *****************************************************************************/
+
+/**
+ * @typedef {function(
+ *    angular.Scope=,
+ *    function(!angular.Scope, !Element)=,
+ *    Element=,
+ *    string=)}
+ */
+angular.$transclude;
+
+/**
+ * Augment the angular.$transclude type definition by reopening the type via an
+ * artificial angular.$transclude instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$transclude}
+ */
+angular.$transclude_;
+
+/**
+ * @type {function(string):boolean}
+ */
+angular.$transclude_.isSlotFilled = function(slotName) {};
+
+/******************************************************************************
  * $window Service
  *****************************************************************************/
 
 /** @typedef {!Window} */
 angular.$window;
+
+/******************************************************************************
+ * $document Service
+ *****************************************************************************/
+
+/** @typedef {!Document} */
+angular.$document;

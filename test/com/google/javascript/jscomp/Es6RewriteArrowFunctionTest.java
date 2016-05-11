@@ -75,9 +75,47 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     test(
         "switch(a) { case b: (() => { this; })(); }",
         LINE_JOINER.join(
+            "const $jscomp$this = this;",
             "switch(a) {",
             "  case b:",
-            "    const $jscomp$this = this;",
+            "    (function() { $jscomp$this; })();",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "switch(a) {",
+            "  case b:",
+            "    (() => { this; })();",
+            "  case c:",
+            "    (() => { this; })();",
+            "}"),
+        LINE_JOINER.join(
+            "const $jscomp$this = this;",
+            "switch(a) {",
+            "  case b:",
+            "    (function() { $jscomp$this; })();",
+            "  case c:",
+            "    (function() { $jscomp$this; })();",
+            "}"));
+
+   test(
+        LINE_JOINER.join(
+            "switch(a) {",
+            "  case b:",
+            "    (() => { this; })();",
+            "}",
+            "switch (c) {",
+            "  case d:",
+            "    (() => { this; })();",
+            "}"),
+        LINE_JOINER.join(
+            "const $jscomp$this = this;",
+            "switch(a) {",
+            "  case b:",
+            "    (function() { $jscomp$this; })();",
+            "}",
+            "switch (c) {",
+            "  case d:",
             "    (function() { $jscomp$this; })();",
             "}"));
   }

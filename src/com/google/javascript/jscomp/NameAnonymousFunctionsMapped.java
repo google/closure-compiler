@@ -101,7 +101,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
         case Token.STRING_KEY:
           return node.getString();
         default:
-          return new CodePrinter.Builder(node).build();
+          return compiler.toSource(node);
       }
     }
 

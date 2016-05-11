@@ -156,30 +156,48 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
   };
 
+  private static void extractInlineJSDoc(Node srcDeclaration, Node srcName, Node destDeclaration) {
+    JSDocInfo existingInfo = srcDeclaration.getJSDocInfo();
+    if (existingInfo == null) {
+      // Extract inline JSDoc from "src" and add it to the "dest" node.
+      existingInfo = srcName.getJSDocInfo();
+      srcName.setJSDocInfo(null);
+    }
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(existingInfo);
+    destDeclaration.setJSDocInfo(builder.build());
+  }
+
+  private static void maybeAddConstJSDoc(Node srcDeclaration, Node srcParent, Node srcName,
+      Node destDeclaration) {
+    if (srcDeclaration.isConst()
+        // Don't add @const for the left side of a for/in. If we do we get warnings from the NTI.
+        && !(NodeUtil.isForIn(srcParent) && srcDeclaration == srcParent.getFirstChild())) {
+      extractInlineJSDoc(srcDeclaration, srcName, destDeclaration);
+      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(destDeclaration.getJSDocInfo());
+      builder.recordConstancy();
+      destDeclaration.setJSDocInfo(builder.build());
+    }
+  }
+
+  private static void handleDeclarationList(Node declarationList, Node parent) {
+    // Normalize: "const i = 0, j = 0;" becomes "/** @const */ var i = 0; /** @const */ var j = 0;"
+    while (declarationList.hasMoreThanOneChild()) {
+      Node name = declarationList.getLastChild();
+      Node newDeclaration = IR.var(name.detachFromParent()).useSourceInfoFrom(declarationList);
+      maybeAddConstJSDoc(declarationList, parent, name, newDeclaration);
+      parent.addChildAfter(newDeclaration, declarationList);
+    }
+    maybeAddConstJSDoc(declarationList, parent, declarationList.getFirstChild(), declarationList);
+    declarationList.setType(Token.VAR);
+  }
+
   private void varify() {
     if (!letConsts.isEmpty()) {
       for (Node n : letConsts) {
         if (n.isConst()) {
-          // Normalize declarations like "const x = 1, y = 2;" so that inline
-          // type annotations are preserved.
-          for (Node child : n.children()) {
-            Node declaration = IR.var(child.detachFromParent());
-            declaration.useSourceInfoFrom(n);
-            JSDocInfo existingInfo = n.getJSDocInfo();
-            if (existingInfo == null) {
-              existingInfo = child.getJSDocInfo();
-              child.setJSDocInfo(null);
-            }
-            JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(existingInfo);
-            builder.recordConstancy();
-            JSDocInfo info = builder.build();
-            declaration.setJSDocInfo(info);
-            n.getParent().addChildAfter(declaration, n);
-          }
-          n.detachFromParent();
-        } else {
-          n.setType(Token.VAR);
+          handleDeclarationList(n, n.getParent());
         }
+        n.setType(Token.VAR);
       }
       compiler.reportCodeChange();
     }
@@ -359,33 +377,16 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
               if (NodeUtil.isNameDeclaration(reference.getParent())) {
                 Node declaration = reference.getParent();
                 Node grandParent = declaration.getParent();
-                // Normalize: "let i = 0, j = 0;" becomes "let i = 0; let j = 0;"
-                while (declaration.getChildCount() > 1) {
-                  Node name = declaration.getLastChild();
-                  grandParent.addChildAfter(
-                      IR.declaration(
-                          name.detachFromParent(), declaration.getType())
-                          .useSourceInfoIfMissingFromForTree(declaration),
-                      declaration);
-                }
-
+                handleDeclarationList(declaration, grandParent);
                 declaration = reference.getParent(); // Might have changed after normalization.
                 // Change declaration to assignment, or just drop it if there's
                 // no initial value.
                 if (reference.hasChildren()) {
-                  JSDocInfo existingInfo = declaration.getJSDocInfo();
-                  if (existingInfo == null) {
-                    existingInfo = reference.getJSDocInfo();
-                    reference.setJSDocInfo(null);
-                  }
-                  JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(existingInfo);
-                  if (declaration.isConst()) {
-                    builder.recordConstancy();
-                  }
-
                   Node newReference = reference.cloneNode();
                   Node assign = IR.assign(newReference, reference.removeFirstChild());
-                  assign.setJSDocInfo(builder.build());
+                  extractInlineJSDoc(declaration, reference, declaration);
+                  maybeAddConstJSDoc(declaration, grandParent, reference, declaration);
+                  assign.setJSDocInfo(declaration.getJSDocInfo());
 
                   Node replacement = IR.exprResult(assign)
                       .useSourceInfoIfMissingFromForTree(declaration);

@@ -474,23 +474,19 @@ class DisambiguateProperties implements CompilerPass {
              processProperty(t, prop, type, null))
           && propertiesToErrorFor.containsKey(name)) {
         String suggestion = "";
-        if (type instanceof JSType) {
-          JSType jsType = (JSType) type;
-          if (jsType.isAllType() || jsType.isUnknownType()) {
-            if (n.getFirstChild().isThis()) {
-              suggestion = "The \"this\" object is unknown in the function," +
-                    "consider using @this";
-            } else {
-              String qName = n.getFirstChild().getQualifiedName();
-              suggestion = "Consider casting " + qName + " if you know its type.";
-            }
+        if (type.isAllType() || type.isUnknownType()) {
+          if (n.getFirstChild().isThis()) {
+            suggestion = "The \"this\" object is unknown in the function, consider using @this";
           } else {
-            List<String> errors = new ArrayList<>();
-            printErrorLocations(errors, jsType);
-            if (!errors.isEmpty()) {
-              suggestion = "Consider fixing errors for the following types:\n";
-              suggestion += Joiner.on("\n").join(errors);
-            }
+            String qName = n.getFirstChild().getQualifiedName();
+            suggestion = "Consider casting " + qName + " if you know its type.";
+          }
+        } else {
+          List<String> errors = new ArrayList<>();
+          printErrorLocations(errors, type);
+          if (!errors.isEmpty()) {
+            suggestion = "Consider fixing errors for the following types:\n";
+            suggestion += Joiner.on("\n").join(errors);
           }
         }
         compiler.report(JSError.make(n, propertiesToErrorFor.get(name),

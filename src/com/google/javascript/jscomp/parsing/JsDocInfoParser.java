@@ -31,6 +31,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
 
 import java.util.ArrayList;
@@ -345,7 +346,7 @@ public final class JsDocInfoParser {
 
     String annotationName = stream.getString();
     Annotation annotation = annotationNames.get(annotationName);
-    if (annotation == null) {
+    if (annotation == null || annotationName.isEmpty()) {
       addParserWarning("msg.bad.jsdoc.tag", annotationName);
     } else {
       // Mark the beginning of the annotation.
@@ -801,7 +802,7 @@ public final class JsDocInfoParser {
             // for handling properties of params, so if the param name has a DOT
             // in it, report a warning and throw it out.
             // See https://github.com/google/closure-compiler/issues/499
-            if (name.indexOf('.') > -1) {
+            if (!TokenStream.isJSIdentifier(name)) {
               addParserWarning("msg.invalid.variable.name", name, lineno, charno);
               name = null;
             } else if (!jsdocBuilder.recordParameter(name, type)) {

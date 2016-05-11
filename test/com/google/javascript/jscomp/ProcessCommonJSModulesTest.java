@@ -26,22 +26,19 @@ import com.google.javascript.rhino.Node;
 public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Override
-  protected CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    // Trigger module processing after parsing.
+    options.setProcessCommonJSModules(true);
+    return options;
+  }
+
+  @Override
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        // Process only the last child to avoid issues with multiple scripts.
-        Node testCodeScript = root.getLastChild();
-        assertEquals(
-            "Last source should be main test script",
-            getFilename() + ".js",
-            testCodeScript.getSourceFileName());
-        ProcessCommonJSModules processor =
-            new ProcessCommonJSModules(
-                compiler,
-                new ES6ModuleLoader(ImmutableList.of("foo/bar/"), compiler.getInputsForTesting()),
-                false);
-        processor.process(externs, testCodeScript);
+        // No-op, CommonJS module handling is done directly after parsing.
       }
     };
   }
@@ -58,40 +55,53 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testWithoutExports() {
     setFilename("test");
     testModules(
-        "var name = require('other');" + "name()",
-        "goog.provide('module$test');"
-            + "goog.require('module$other');"
-            + "var name$$module$test = module$other;"
-            + "name$$module$test();");
-    setFilename("test/sub");
-    ProcessEs6ModulesTest.testModules(
-        this,
+        LINE_JOINER.join(
+            "var name = require('other');",
+            "name()"),
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "var name = module$other;",
+            "name();")
+    );
+    test(
         ImmutableList.of(
             SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), ""),
             SourceFile.fromCode(
                 Compiler.joinPathParts("test", "sub.js"),
-                "var name = require('mod/name');"
-                + "(function() { name(); })();")),
-                "goog.provide('module$test$sub');"
-                + "goog.require('module$mod$name');"
-                + "var name$$module$test$sub = module$mod$name;"
-                + "(function() { name$$module$test$sub(); })();");
+                LINE_JOINER.join(
+                    "var name = require('mod/name');", "(function() { name(); })();"))),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("mod", "name.js"),
+                LINE_JOINER.join(
+                    "/** @fileoverview",
+                    " * @suppress {missingProvide|missingRequire}",
+                    " */",
+                    "goog.provide('module$mod$name');")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("test", "sub.js"),
+                LINE_JOINER.join(
+                    "goog.require('module$mod$name');",
+                    "var name = module$mod$name;",
+                    "(function() { name(); })();"))));
   }
 
   public void testExports() {
     setFilename("test");
     testModules(
-        "var name = require('other');" + "exports.foo = 1;",
-        "goog.provide('module$test');"
-            + "goog.require('module$other');"
-            + "var name$$module$test = module$other;"
-            + "module$test.foo = 1;");
+        LINE_JOINER.join("var name = require('other');", "exports.foo = 1;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "goog.require('module$other');",
+            "var name$$module$test = module$other;",
+            "module$test.foo = 1;"));
     testModules(
-        "var name = require('other');" + "module.exports = function() {};",
-        "goog.provide('module$test');"
-            + "goog.require('module$other');"
-            + "var name$$module$test = module$other;"
-            + "/** @const */ module$test = function () {};");
+        LINE_JOINER.join("var name = require('other');", "module.exports = function() {};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "goog.require('module$other');",
+            "var name$$module$test = module$other;",
+            "/** @const */ module$test = function () {};"));
   }
 
   public void testExportsInExpression() {
@@ -139,10 +149,15 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testVarRenaming() {
     setFilename("test");
     testModules(
-        "var a = 1, b = 2;" + "(function() { var a; b = 4})()",
-        "goog.provide('module$test');"
-            + "var a$$module$test = 1, b$$module$test = 2;"
-            + "(function() { var a; b$$module$test = 4})();");
+        LINE_JOINER.join(
+            "module.exports = {};",
+            "var a = 1, b = 2;",
+            "(function() { var a; b = 4})();"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ module$test = {};",
+            "var a$$module$test = 1, b$$module$test = 2;",
+            "(function() { var a; b$$module$test = 4})();"));
   }
 
   public void testDash() {
@@ -168,18 +183,35 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testModuleName() {
     setFilename("foo/bar");
     testModules(
-        "var name = require('other');",
-        "goog.provide('module$foo$bar');"
-            + "goog.require('module$other');"
-            + "var name$$module$foo$bar = module$other;");
-    ProcessEs6ModulesTest.testModules(
-        this,
+        LINE_JOINER.join(
+            "var name = require('other');",
+            "module.exports = name;"),
+        LINE_JOINER.join(
+            "goog.provide('module$foo$bar');",
+            "goog.require('module$other');",
+            "var name$$module$foo$bar = module$other;",
+            "/** @const */ module$foo$bar = name$$module$foo$bar;"));
+    test(
         ImmutableList.of(
             SourceFile.fromCode(Compiler.joinPathParts("foo", "name.js"), ""),
-            SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"), "var name = require('./name');")),
-        "goog.provide('module$foo$bar');"
-            + "goog.require('module$foo$name');"
-            + "var name$$module$foo$bar = module$foo$name;");
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                LINE_JOINER.join("var name = require('./name');", "module.exports = name;"))),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "name.js"),
+                LINE_JOINER.join(
+                    "/** @fileoverview",
+                    " * @suppress {missingProvide|missingRequire}",
+                    " */",
+                    "goog.provide('module$foo$name');")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                LINE_JOINER.join(
+                    "goog.provide('module$foo$bar');",
+                    "goog.require('module$foo$name');",
+                    "var name$$module$foo$bar = module$foo$name;",
+                    "/** @const */ module$foo$bar = name$$module$foo$bar;"))));
   }
 
   public void testModuleExportsScope() {
@@ -296,5 +328,29 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "goog.require('module$other');",
             "var a$$module$test = module$other;",
             "/** @const */ module$test = { /** @const */ a: a$$module$test };"));
+  }
+
+  public void testRequireResultUnused() {
+    setFilename("test");
+    testModules("require('./other');", "goog.require('module$other');");
+  }
+
+  public void testRequireEnsure() {
+    setFilename("test");
+    testModules(
+        LINE_JOINER.join(
+            "require.ensure(['other'], function(require) {",
+            "  var other = require('other');",
+            "  var bar = other;",
+            "  module.exports = bar;",
+            "});"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "goog.require('module$other');",
+            "(function() {",
+            "  var other=module$other;",
+            "  var bar = other;",
+            "  module$test = bar;",
+            "})()"));
   }
 }

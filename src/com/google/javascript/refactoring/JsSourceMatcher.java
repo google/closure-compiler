@@ -18,6 +18,7 @@ package com.google.javascript.refactoring;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.TemplateAstMatcher;
+import com.google.javascript.jscomp.TypeMatchingStrategy;
 import com.google.javascript.rhino.Node;
 
 import java.util.Map;
@@ -37,8 +38,9 @@ public final class JsSourceMatcher implements Matcher {
    * to match all other nodes against. The body of the function will be used
    * to match against.
    */
-  public JsSourceMatcher(AbstractCompiler compiler, Node templateNode) {
-    matcher = new TemplateAstMatcher(compiler, templateNode);
+  public JsSourceMatcher(
+      AbstractCompiler compiler, Node templateNode, TypeMatchingStrategy typeMatchingStrategy) {
+    matcher = new TemplateAstMatcher(compiler, templateNode, typeMatchingStrategy);
   }
 
   @Override public boolean matches(Node n, NodeMetadata metadata) {

@@ -300,6 +300,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
         case Token.TRY:
         case Token.WHILE:
         case Token.WITH:
+        case Token.CLASS:
           // NOTE: TRY has up to 3 child blocks:
           // TRY
           //   BLOCK
@@ -314,6 +315,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
         case Token.HOOK:
         case Token.IF:
         case Token.OR:
+        case Token.SWITCH:
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();
@@ -656,18 +658,14 @@ class ReferenceCollectingCallback implements ScopedCallback,
         return false;
       }
 
-      if (NodeUtil.isNameDeclaration(parent.getParent())
-          && node == parent.getLastChild()) {
-        // Unless it is something like "for (var/let/const a of x){}",
-        // this is the RHS of a var/let/const and thus not a declaration.
-        if (parent.getGrandparent() == null
-            || !parent.getGrandparent().isForOf()) {
-          return false;
-        }
+      if (NodeUtil.isNameDeclaration(parent.getParent()) && node == parent.getSecondChild()) {
+        // This is the RHS of a var/let/const and thus not a declaration.
+        return false;
       }
 
       // Special cases for destructuring patterns.
-      if (parent.isDestructuringPattern()
+      if (parent.isDestructuringLhs()
+          || parent.isDestructuringPattern()
           || (parent.isStringKey() && parent.getParent().isObjectPattern())
           || (parent.isComputedProp() && parent.getParent().isObjectPattern()
               && node == parent.getLastChild())

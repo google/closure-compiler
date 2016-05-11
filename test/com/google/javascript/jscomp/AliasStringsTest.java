@@ -77,58 +77,142 @@ public final class AliasStringsTest extends CompilerTestCase {
   public void testSeveral() {
     strings = ImmutableSet.of("", "px", "none", "width");
 
-    test("function f() {" +
-         "var styles=['width',100,'px','display','none'].join('')}",
-         "var $$S_='';" +
-         "var $$S_none='none';" +
-         "var $$S_px='px';" +
-         "var $$S_width='width';" +
-         "function f() {var styles=[$$S_width,100,$$S_px,'display'," +
-         "$$S_none].join($$S_)}");
+    // 'display' is not in the allowed string set and only 'none' and 'width' are large and common
+    // enough to be worth interning.
+    test(
+        "function f() {"
+            + "  var styles1 = ["
+            + "      'width', 100, 'px', 'display', 'none'"
+            + "  ].join('');"
+            + "  var styles2 = ["
+            + "      'width', 100, 'px', 'display', 'none'"
+            + "  ].join('');"
+            + "  var styles3 = ["
+            + "      'width', 100, 'px', 'display', 'none'"
+            + "  ].join('');"
+            + "  var styles4 = ["
+            + "      'width', 100, 'px', 'display', 'none'"
+            + "  ].join('');"
+            + "  var styles5 = ["
+            + "      'width', 100, 'px', 'display', 'none'"
+            + "  ].join('');"
+            + "  var styles6 = ["
+            + "      'width', 100, 'px', 'display', 'none'"
+            + "  ].join('');"
+            + "}",
+        "var $$S_none = 'none';"
+            + "var $$S_width = 'width';"
+            + "function f() {"
+            + "  var styles1 = ["
+            + "      $$S_width, 100, 'px', 'display', $$S_none"
+            + "  ].join('');"
+            + "  var styles2 = ["
+            + "      $$S_width, 100, 'px', 'display', $$S_none"
+            + "  ].join('');"
+            + "  var styles3 = ["
+            + "      $$S_width, 100, 'px', 'display', $$S_none"
+            + "  ].join('');"
+            + "  var styles4 = ["
+            + "      $$S_width, 100, 'px', 'display', $$S_none"
+            + "  ].join('');"
+            + "  var styles5 = ["
+            + "      $$S_width, 100, 'px', 'display', $$S_none"
+            + "  ].join('');"
+            + "  var styles6 = ["
+            + "      $$S_width, 100, 'px', 'display', $$S_none"
+            + "  ].join('')"
+            + "}");
   }
 
   public void testSortedOutput() {
-    strings = ImmutableSet.of("aba", "aaa", "aca", "bca", "bba");
-    test("function f() {return ['aba', 'aaa', 'aca', 'bca', 'bba']}",
-         "var $$S_aaa='aaa';" +
-         "var $$S_aba='aba';" +
-         "var $$S_aca='aca';" +
-         "var $$S_bba='bba';" +
-         "var $$S_bca='bca';" +
-         "function f() {" +
-         "  return [$$S_aba, $$S_aaa, $$S_aca, $$S_bca, $$S_bba]}");
+    strings =
+        ImmutableSet.of(
+            "abababababababababab",
+            "aaaaaaaaaaaaaaaaaaaa",
+            "acacacacacacacacacac",
+            "bcabcabcabcabcabcabc",
+            "bbabbabbabbabbabbabb");
+    test(
+        "function f() {return ['abababababababababab', 'abababababababababab', "
+            + "                       'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', "
+            + "                       'acacacacacacacacacac', 'acacacacacacacacacac', "
+            + "                       'bcabcabcabcabcabcabc', 'bcabcabcabcabcabcabc', "
+            + "                       'bbabbabbabbabbabbabb', 'bbabbabbabbabbabbabb']}",
+        "var $$S_aaaaaaaaaaaaaaaaaaaa='aaaaaaaaaaaaaaaaaaaa';"
+            + "var $$S_abababababababababab='abababababababababab';"
+            + "var $$S_acacacacacacacacacac='acacacacacacacacacac';"
+            + "var $$S_bbabbabbabbabbabbabb='bbabbabbabbabbabbabb';"
+            + "var $$S_bcabcabcabcabcabcabc='bcabcabcabcabcabcabc';"
+            + "function f() {"
+            + "  return [$$S_abababababababababab, $$S_abababababababababab, "
+            + "          $$S_aaaaaaaaaaaaaaaaaaaa, $$S_aaaaaaaaaaaaaaaaaaaa, "
+            + "          $$S_acacacacacacacacacac, $$S_acacacacacacacacacac, "
+            + "          $$S_bcabcabcabcabcabcabc, $$S_bcabcabcabcabcabcabc, "
+            + "          $$S_bbabbabbabbabbabbabb, $$S_bbabbabbabbabbabbabb]}");
   }
 
   public void testObjectLiterals() {
-    strings = ImmutableSet.of("px", "!@#$%^&*()");
+    strings = ImmutableSet.of("pxpxpxpxpxpxpxpxpxpx", "abcdefghijabcdefghij");
 
     test("var foo={px:435}", "var foo={px:435}");
 
     // string as key
-    test("var foo={'px':435}", "var foo={'px':435}");
-    test("bar=function f(){return {'px':435}}",
-         "bar=function f(){return {'px':435}}");
+    test("var foo={'pxpxpxpxpxpxpxpxpxpx':435}", "var foo={'pxpxpxpxpxpxpxpxpxpx':435}");
+    test(
+        "bar=function f(){return {'pxpxpxpxpxpxpxpxpxpx':435}}",
+        "bar=function f(){return {'pxpxpxpxpxpxpxpxpxpx':435}}");
 
-    test("function f() {var foo={bar:'!@#$%^&*()'}}",
-         "var $$S_$21$40$23$24$25$5e$26$2a$28$29='!@#$%^&*()';" +
-         "function f() {var foo={bar:$$S_$21$40$23$24$25$5e$26$2a$28$29}}");
+    test(
+        "function f() {var foo={bar:'abcdefghijabcdefghij'+'abcdefghijabcdefghij'}}",
+        "var $$S_abcdefghijabcdefghij='abcdefghijabcdefghij';"
+            + "function f() {var foo={bar:$$S_abcdefghijabcdefghij+$$S_abcdefghijabcdefghij}}");
 
-    test("function f() {var foo={px:435,foo:'px',bar:'baz'}}",
-         "var $$S_px='px';" +
-         "function f() {var foo={px:435,foo:$$S_px,bar:'baz'}}");
+    test(
+        "function f() {"
+            + "  var foo = {"
+            + "      px: 435,"
+            + "      foo1: 'pxpxpxpxpxpxpxpxpxpx',"
+            + "      foo2: 'pxpxpxpxpxpxpxpxpxpx',"
+            + "      bar: 'baz'"
+            + "  }"
+            + "}",
+        "var $$S_pxpxpxpxpxpxpxpxpxpx = 'pxpxpxpxpxpxpxpxpxpx';"
+            + "function f() {"
+            + "  var foo = {"
+            + "      px: 435,"
+            + "      foo1: $$S_pxpxpxpxpxpxpxpxpxpx,"
+            + "      foo2: $$S_pxpxpxpxpxpxpxpxpxpx,"
+            + "      bar: 'baz'"
+            + "  }"
+            + "}");
   }
 
   public void testGetProp() {
-    strings = ImmutableSet.of("px", "width");
+    strings = ImmutableSet.of("pxpxpxpxpxpxpxpxpxpx", "widthwidthwidthwidth");
 
     testSame("function f(){element.style.px=1234}");
 
-    test("function f(){shape.width.units='px'}",
-        "var $$S_px='px';function f(){shape.width.units=$$S_px}");
+    test(
+        "function f() {"
+            + "  shape.width.units='pxpxpxpxpxpxpxpxpxpx';"
+            + "  shape.width.units='pxpxpxpxpxpxpxpxpxpx';"
+            + "}",
+        "var $$S_pxpxpxpxpxpxpxpxpxpx='pxpxpxpxpxpxpxpxpxpx';"
+            + "function f() {"
+            + "  shape.width.units=$$S_pxpxpxpxpxpxpxpxpxpx;"
+            + "  shape.width.units=$$S_pxpxpxpxpxpxpxpxpxpx;"
+            + "}");
 
-    test("function f(){shape['width'].units='pt'}",
-         "var $$S_width='width';" +
-         "function f(){shape[$$S_width].units='pt'}");
+    test(
+        "function f() {"
+            + "  shape['widthwidthwidthwidth'].units='pt';"
+            + "  shape['widthwidthwidthwidth'].units='pt';"
+            + "}",
+        "var $$S_widthwidthwidthwidth='widthwidthwidthwidth';"
+            + "function f() {"
+            + "  shape[$$S_widthwidthwidthwidth].units='pt';"
+            + "  shape[$$S_widthwidthwidthwidth].units='pt';"
+            + "}");
   }
 
   public void testFunctionCalls() {
@@ -150,9 +234,19 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   public void testBlackList() {
-    test("(function (){var f=\'sec ret\';g=\"TOPseCreT\"})",
-         "var $$S_sec$20ret='sec ret';" +
-         "(function (){var f=$$S_sec$20ret;g=\"TOPseCreT\"})");
+    // The 'TOPseCreT' string is configured to be ignored even though it fits the aliasing
+    // conditions.
+    test(
+        "(function() {"
+            + "  var f = 'sec ret sec ret sec ' + 'sec ret sec ret sec ';"
+            + "  g = 'TOPseCreT TOPseCreT ' + 'TOPseCreT TOPseCreT '"
+            + "})"
+            + "",
+        "var $$S_sec$20ret$20sec$20ret$20sec$20 = 'sec ret sec ret sec ';"
+            + "(function() {"
+            + "  var f = $$S_sec$20ret$20sec$20ret$20sec$20 + $$S_sec$20ret$20sec$20ret$20sec$20;"
+            + "  g = 'TOPseCreT TOPseCreT ' + 'TOPseCreT TOPseCreT '"
+            + "})");
   }
 
   public void testLongStableAlias() {
@@ -215,9 +309,7 @@ public final class AliasStringsTest extends CompilerTestCase {
     testSame("var foo=['foo',['bar']];");
 
     // Same string is in a global array and a local in a function
-    test("var foo=['foo', 'bar'];function bar() {return 'foo';}",
-        "var $$S_foo='foo';" +
-        "var foo=[$$S_foo, 'bar'];function bar() {return $$S_foo;}");
+    testSame("var foo=['foo', 'bar'];function bar() {return 'foo';}");
 
     // Regular object literal
     testSame("var foo={'foo': 'bar'};");
@@ -227,16 +319,11 @@ public final class AliasStringsTest extends CompilerTestCase {
 
     // Same string is in a global object literal (as key) and local in a
     // function
-    test("var foo={'foo': 'bar'};function bar() {return 'foo';}",
-        "var $$S_foo='foo';var foo={'foo': 'bar'};" +
-        "function bar() {return $$S_foo;}");
+    testSame("var foo={'foo': 'bar'};function bar() {return 'foo';}");
 
     // Same string is in a global object literal (as value) and local in a
     // function
-    test("var foo={'foo': 'foo'};function bar() {return 'foo';}",
-         "var $$S_foo='foo';" +
-         "var foo={'foo': $$S_foo};function bar() {return $$S_foo;}");
-
+    testSame("var foo={'foo': 'foo'};function bar() {return 'foo';}");
   }
 
   public void testStringsInModules() {
@@ -249,51 +336,53 @@ public final class AliasStringsTest extends CompilerTestCase {
     JSModule[] modules =
         createModuleBush(
             // m0
-            "function f(a) { alert('f:' + a); }" +
-            "function g() { alert('ciao'); }",
+            "function f(a) { alert('ffffffffffffffffffff' + 'ffffffffffffffffffff' + a); }"
+                + "function g() { alert('ciaociaociaociaociao'); }",
             // m1
-            "f('-------hi-------');" +
-            "f('bye');" +
-            "function h(a) { alert('h:' + a); }",
+            "f('---------hi---------');"
+                + "f('bye');"
+                + "function h(a) { alert('hhhhhhhhhhhhhhhhhhhh' + 'hhhhhhhhhhhhhhhhhhhh' + a); }",
             // m2
-            "f('-------hi-------');" +
-            "h('ciao' + '------adios------');" +
-            "(function() { alert('zzz'); })();",
+            "f('---------hi---------');"
+                + "h('ciaociaociaociaociao' + '--------adios-------');"
+                + "(function() { alert('zzzzzzzzzzzzzzzzzzzz' + 'zzzzzzzzzzzzzzzzzzzz'); })();",
             // m3
-            "f('-------hi-------'); alert('------adios------');" +
-            "h('-----peaches-----'); h('-----peaches-----');");
+            "f('---------hi---------'); alert('--------adios-------');"
+                + "h('-------peaches------'); h('-------peaches------');");
 
     moduleGraph = new JSModuleGraph(modules);
 
-    test(modules,
-         new String[] {
-             // m1
-             "var $$S_ciao = 'ciao';" +
-             "var $$S_f$3a = 'f:';" +
-             "function f(a) { alert($$S_f$3a + a); }" +
-             "function g() { alert($$S_ciao); }",
-             // m2
-             "var $$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d" +
-             " = '-------hi-------';" +
-             "var $$S_$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d" +
-             " = '------adios------'; " +
-             "var $$S_h$3a = 'h:';" +
-             "f($$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d);" +
-             "f('bye');" +
-             "function h(a) { alert($$S_h$3a + a); }",
-             // m3
-             "var $$S_zzz = 'zzz';" +
-             "f($$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d);" +
-             "h($$S_ciao + $$S_$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d);" +
-             "(function() { alert($$S_zzz) })();",
-             // m4
-             "var $$S_$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d" +
-             " = '-----peaches-----';" +
-             "f($$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d);" +
-             "alert($$S_$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d);" +
-             "h($$S_$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d);" +
-             "h($$S_$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d);",
-         });
+    test(
+        modules,
+        new String[] {
+          // m1
+          "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';"
+              + "var $$S_ffffffffffffffffffff = 'ffffffffffffffffffff';"
+              + "function f(a) { alert($$S_ffffffffffffffffffff + $$S_ffffffffffffffffffff + a); }"
+              + "function g() { alert($$S_ciaociaociaociaociao); }",
+          // m2
+          "var $$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d"
+              + " = '---------hi---------';"
+              + "var $$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d"
+              + " = '--------adios-------'; "
+              + "var $$S_hhhhhhhhhhhhhhhhhhhh = 'hhhhhhhhhhhhhhhhhhhh';"
+              + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
+              + "f('bye');"
+              + "function h(a) { alert($$S_hhhhhhhhhhhhhhhhhhhh + $$S_hhhhhhhhhhhhhhhhhhhh + a); }",
+          // m3
+          "var $$S_zzzzzzzzzzzzzzzzzzzz = 'zzzzzzzzzzzzzzzzzzzz';"
+              + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
+              + "h($$S_ciaociaociaociaociao + "
+              + "$$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d);"
+              + "(function() { alert($$S_zzzzzzzzzzzzzzzzzzzz + $$S_zzzzzzzzzzzzzzzzzzzz) })();",
+          // m4
+          "var $$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d"
+              + " = '-------peaches------';"
+              + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
+              + "alert($$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d);"
+              + "h($$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d);"
+              + "h($$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d);",
+        });
     moduleGraph = null;
   }
 
@@ -307,54 +396,63 @@ public final class AliasStringsTest extends CompilerTestCase {
     JSModule[] modules =
         createModuleBush(
             // m0
-            "function g() { alert('ciao'); }",
+            "function g() { alert('ciaociaociaociaociao'); }",
             // m1
-            "function h(a) { alert('h:' + a); }",
+            "function h(a) {"
+                + "  alert('hhhhhhhhhhhhhhhhhhh:' + a);"
+                + "  alert('hhhhhhhhhhhhhhhhhhh:' + a);"
+                + "}",
             // m2
-            "h('ciao' + 'adios');",
+            "h('ciaociaociaociaociao' + 'adios');",
             // m3
             "g();");
 
     moduleGraph = new JSModuleGraph(modules);
 
-    test(modules,
-         new String[] {
-             // m1
-             LINE_JOINER.join(
-             "var $$S_ciao = 'ciao';" ,
-             "function g() { alert($$S_ciao); }"),
-             // m2
-             LINE_JOINER.join(
-             "var $$S_h$3a = 'h:';",
-             "function h(a) { alert($$S_h$3a + a); }"),
-             // m3
-             "h($$S_ciao + 'adios');",
-             // m4
-             "g();",
-         });
+    test(
+        modules,
+        new String[] {
+          // m1
+          LINE_JOINER.join(
+              "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
+              "function g() { alert($$S_ciaociaociaociaociao); }"),
+          // m2
+          LINE_JOINER.join(
+              "var $$S_hhhhhhhhhhhhhhhhhhh$3a = 'hhhhhhhhhhhhhhhhhhh:';",
+              "function h(a) {"
+                  + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
+                  + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
+                  + "}"),
+          // m3
+          "h($$S_ciaociaociaociaociao + 'adios');",
+          // m4
+          "g();",
+        });
     moduleGraph = null;
   }
 
 
   public void testEmptyModules() {
     JSModule[] modules =
-      createModuleStar(
-          // m0
-          "",
-          // m1
-          "function foo() { f('good') }",
-          // m2
-          "function foo() { f('good') }");
+        createModuleStar(
+            // m0
+            "",
+            // m1
+            "function foo() { f('goodgoodgoodgoodgood') }",
+            // m2
+            "function foo() { f('goodgoodgoodgoodgood') }");
 
     moduleGraph = new JSModuleGraph(modules);
-    test(modules,
+    test(
+        modules,
         new String[] {
-        // m0
-        "var $$S_good='good'",
-        // m1
-        "function foo() {f($$S_good)}",
-        // m2
-        "function foo() {f($$S_good)}",});
+          // m0
+          "var $$S_goodgoodgoodgoodgood='goodgoodgoodgoodgood'",
+          // m1
+          "function foo() {f($$S_goodgoodgoodgoodgood)}",
+          // m2
+          "function foo() {f($$S_goodgoodgoodgoodgood)}",
+        });
 
     moduleGraph = null;
   }

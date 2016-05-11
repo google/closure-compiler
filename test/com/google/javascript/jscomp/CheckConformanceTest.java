@@ -55,7 +55,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
           "var Error;",
           "var alert;",
           "var unknown;",
-          "/** @constructor */ var ObjectWithNoProps;");
+          "/** @constructor */ var ObjectWithNoProps;",
+          "function eval() {}");
 
   private static final String DEFAULT_CONFORMANCE =
       LINE_JOINER.join(
@@ -127,6 +128,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testSame(
         "eval()",
         CheckConformance.CONFORMANCE_VIOLATION);
+
+    testSame("eval.name.length", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testViolation2() {
@@ -155,6 +158,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "  }\n" +
         "  var z = x.callee;\n" +
         "}");
+  }
+
+  public void testNotViolation2() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'location'\n"
+            + "  error_message: 'location is not allowed'\n"
+            + "}";
+    testSame("function f() { var location = null; }");
   }
 
   public void testMaybeViolation1() {
@@ -276,23 +289,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
   }
 
-  public void testSpecifyingWhitelistAndOnlyApplyToIsRuntimeError() {
-    configuration =
-        "requirement: {\n" +
-        "  type: BANNED_NAME\n" +
-        "  value: 'eval'\n" +
-        "  error_message: 'eval is not allowed'\n" +
-        "  whitelist: 'blah'\n" +
-        "  only_apply_to_regexp: 'test.js$'\n " +
-        "}";
-    try {
-      testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
-      fail("expected IllegalArgumentException");
-    } catch (Exception e) {
-      assertThat(e).isInstanceOf(IllegalArgumentException.class);
-    }
-  }
-
   public void testInferredConstCheck() {
     configuration =
         LINE_JOINER.join(
@@ -352,6 +348,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "  /** @const {?} */ this.FOO = unknown;",
             "};",
             "var x = new f();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @const */",
+            "var ns = {};",
+            "/** @const */",
+            "ns.subns = ns.subns || {};"));
   }
 
   public void testBannedCodePattern1() {
@@ -1032,7 +1035,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "  error_message: 'BanExpose Message'\n" +
         "}";
 
-    setExpectParseWarningsThisTest();
     testSame(
         EXTERNS,
         "/** @expose */ var x;",
@@ -1259,26 +1261,21 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "  error_message: 'BanGlobalVars Message'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "var x;",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanGlobalVars Message");
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "function fn() {}",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanGlobalVars Message");
 
-    testSame(
-        "goog.provide('x');");
-
+    testNoWarning("goog.provide('x');");
 
     // TODO(johnlenz): This might be overly conservative but doing otherwise is more complicated
     // so let see if we can get away with this.
-    testSame(
-        EXTERNS,
+    testWarning(
         "goog.provide('x'); var x;",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanGlobalVars Message");
@@ -1353,39 +1350,36 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "  error_message: 'NoImplicitlyPublicDecls Message'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "goog.provide('foo.bar');\n" +
-        "/** @constructor */foo.bar.Baz = function(){};",
+        "/** @constructor */foo.bar.Baz = function() {};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: NoImplicitlyPublicDecls Message");
-    testSame(
+    testNoWarning(
         "/** @package\n@fileoverview */\n" +
         "goog.provide('foo.bar');\n" +
         "/** @constructor */foo.bar.Baz = function(){};");
-    testSame(
+    testNoWarning(
         "goog.provide('foo.bar');\n" +
         "/** @package @constructor */foo.bar.Baz = function(){};");
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "goog.provide('foo.bar');\n" +
         "/** @public @constructor */foo.bar.Baz = function(){};\n" +
         "/** @type {number} */foo.bar.Baz.prototype.quux = 42;",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: NoImplicitlyPublicDecls Message");
-    testSame(
+    testNoWarning(
         "/** @fileoverview\n@package*/\n" +
         "goog.provide('foo.bar');\n" +
         "/** @public @constructor */foo.bar.Baz = function(){};\n" +
         "/** @type {number} */foo.bar.Baz.prototype.quux = 42;");
-    testSame(
+    testNoWarning(
         "goog.provide('foo.bar');\n" +
         "/** @public @constructor */foo.bar.Baz = function(){};\n" +
         "/** @package {number} */foo.bar.Baz.prototype.quux = 42;");
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "goog.provide('foo');\n" +
         "/** @public @constructor */\n" +
         "foo.Bar = function() {\n" +
@@ -1393,13 +1387,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: NoImplicitlyPublicDecls Message");
-    testSame(
+    testNoWarning(
         "goog.provide('foo');\n" +
         "/** @public @constructor */\n" +
         "foo.Bar = function() {\n" +
         "  /** @package {number} */ this.baz = 52;\n" +
         "};");
-    testSame(
+    testNoWarning(
         "/** @fileoverview\n@package */\n" +
         "goog.provide('foo');\n" +
         "/** @constructor */\n" +
@@ -1407,9 +1401,9 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "  /** @type {number} */ this.baz = 52;\n" +
         "};");
 
-    testSame("goog.provide('foo.bar');");
+    testNoWarning("goog.provide('foo.bar');");
 
-    testSame(
+    testNoWarning(
         "goog.provide('foo');\n" +
         "/** @public @constructor */" +
         "foo.Bar = function() {};\n" +
@@ -1420,9 +1414,9 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     // These kinds of declarations aren't currently caught by
     // NoImplicitlyPublicDecls, but they could be.
-    testSame("var foo");
-    testSame("var foo = 42;");
-    testSame("goog.provide('foo');\n" +
+    testNoWarning("var foo");
+    testNoWarning("var foo = 42;");
+    testNoWarning("goog.provide('foo');\n" +
         "/** @constructor @public */foo.Bar = function() {};\n" +
         "foo.Bar.prototype = {\n" +
         "  baz: function(){}\n" +
@@ -1575,7 +1569,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     test(
         EXTERNS,
         "goog.module('foo');",
-        "'use strict'; /** @const */ var foo={};",
+        "'use strict'; /** @const */ var module$exports$foo={};",
         null, null);
   }
 
@@ -1585,14 +1579,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
     test(
         EXTERNS,
         "export var x = 2;",
-        "/** \n"
-        + "* @fileoverview \n"
-        + "* @suppress {missingProvide,missingRequire}\n"
-        + "*/\n"
-        + ""
-        + "'use strict';"
-        + " /** @const */ var module$testcode={};"
-        + "var x$$module$testcode=2;module$testcode.x=x$$module$testcode;",
+        LINE_JOINER.join(
+          "/**",
+          " * @fileoverview",
+          " * @suppress {missingProvide,missingRequire}",
+          " */",
+          "",
+          "'use strict';",
+          "/** @const */ var module$testcode = {};",
+          "var x$$module$testcode=2;module$testcode.x = x$$module$testcode;"),
         null, null);
   }
 }

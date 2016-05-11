@@ -55,7 +55,7 @@ public enum WarningLevel {
 
     // Allow passes that aren't going to report anything to be skipped.
 
-    options.setCheckProvides(CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
     options.setCheckMissingGetCssNameLevel(CheckLevel.OFF);
     options.setCheckTypes(false);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);

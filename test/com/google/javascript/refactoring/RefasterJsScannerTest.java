@@ -130,7 +130,7 @@ public class RefasterJsScannerTest {
         + "/** @type {string} */\n"
         + "Location.prototype.href;\n"
         + "function foo() {}\n"
-        + "/** @type {Location} var loc;";
+        + "/** @type {Location} */ var loc;";
     String originalCode = "loc.href = 'str';";
     String expectedCode = "foo();";
     String template = ""
@@ -150,7 +150,7 @@ public class RefasterJsScannerTest {
         + "/** @constructor */\n"
         + "function FooType() {}\n"
         + "FooType.prototype.bar = function() {};\n"
-        + "var obj = new FooType();";
+        + "/** @type {FooType} */ var obj;";
     String originalCode = "obj.bar();";
     String expectedCode = "obj.baz();";
     String template = ""
@@ -207,7 +207,7 @@ public class RefasterJsScannerTest {
         + "function MyClass() {};\n"
         + "MyClass.prototype.foo = function() {};\n"
         + "MyClass.prototype.bar = function() {};\n"
-        + "var clazz = new MyClass();";
+        + "/** @type {MyClass} */ var clazz;";
     String originalCode = "alert(clazz.foo());";
     String expectedCode = "alert(clazz.bar());";
     String template = ""
@@ -265,7 +265,7 @@ public class RefasterJsScannerTest {
         + "function MyClass() {};\n"
         + "MyClass.prototype.foo = function() {};\n"
         + "MyClass.prototype.bar = function() {};\n"
-        + "var clazz = new MyClass();\n";
+        + "/** @type {MyClass} */ var clazz;\n";
     String originalCode = "clazz.foo();";
     String expectedCode = "clazz.bar();";
     String template = ""
@@ -387,7 +387,7 @@ public class RefasterJsScannerTest {
   public void test_caseStatement() throws Exception {
     String externs = ""
         + "var str = 'foo';\n"
-        + "var CONSTANT = 'bar';n";
+        + "var CONSTANT = 'bar';\n";
     String originalCode = ""
         + "switch(str) {\n"
         + "  case CONSTANT:\n"
@@ -503,6 +503,107 @@ public class RefasterJsScannerTest {
         + "function after_template(fn) {\n"
         + "  fn().someOtherFn();\n"
         + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_strictSubtypeMatching() throws Exception {
+    String externs = ""
+        + "/** @constructor */\n"
+        + "function T() {};\n"
+        + "/** @type {string} */\n"
+        + "T.prototype.p;\n"
+        + "/** @constructor @extends {T} */\n"
+        + "function S() {};\n"
+        + "/** @param {!T} someT */\n"
+        + "function setP(someT) {};\n";
+    String template = ""
+        + "/** @param {!T} t */\n"
+        + "function before_template(t) {\n"
+        + "  t.p = 'foo';\n"
+        + "}\n"
+        + "/** @param {!T} t */\n"
+        + "function after_template(t) {\n"
+        + "  setP(t);\n"
+        + "}\n";
+    String originalCode = "theT.p = 'foo';";
+    String expectedCode = "setP(theT);";
+
+    // {!T} matches {!T}
+    assertChanges(
+        externs + "/** @type {!T} */ var theT;",
+        originalCode,
+        expectedCode,
+        template);
+
+    // {?T} in the code does not match {!T} in the template.
+    assertChanges(
+        externs + "/** @type {?T} */ var theT;",
+        originalCode,
+        null, // No changes.
+        template);
+
+    // {unknown} does not match {!T}
+    assertChanges(
+        externs + "var theT;",
+        originalCode,
+        null, // No changes.
+        template);
+
+    // {!S} matches {!T}
+    assertChanges(
+        externs + "/** @type {!S} */ var theT;",
+        originalCode,
+        expectedCode,
+        template);
+
+    // {?S} does not match {!T}
+    assertChanges(
+        externs + "/** @type {?S} */ var theT;",
+        originalCode,
+        null, // No changes.
+        template);
+  }
+
+  @Test
+  public void test_templatesEvaluatedInOrder() throws Exception {
+    String externs = ""
+        + "/** @constructor */\n"
+        + "function T() {};\n"
+        + "/** @type {string} */\n"
+        + "T.prototype.p;\n"
+        + "/** @constructor @extends {T} */\n"
+        + "function S() {};\n"
+        + "/** @param {!T} someT */\n"
+        + "function setP(someT) {};\n"
+        + "/** @param {!S} someS */\n"
+        + "function setPonS(someS) {};\n"
+        + "/** @type {!T} */ var theT;"
+        + "/** @type {!S} */ var theS;";
+    String template = ""
+        + "/** @param {!S} s */\n"
+        + "function before_template_S(s) {\n"
+        + "  s.p = 'foo';\n"
+        + "}\n"
+        + "/** @param {!S} s */\n"
+        + "function after_template_S(t) {\n"
+        + "  setPonS(s);\n"
+        + "}\n"
+        + "\n"
+        + "/** @param {!T} t */\n"
+        + "function before_template_T(t) {\n"
+        + "  t.p = 'foo';\n"
+        + "}\n"
+        + "/** @param {!T} t */\n"
+        + "function after_template_T(t) {\n"
+        + "  setP(t);\n"
+        + "}\n";
+    String originalCode = "theT.p = 'foo'; theS.p = 'foo';";
+    // Templates are evaluated in order:
+    //  - theT.p does not match before_template_S but matches before_template_T
+    //  - theS.p would match either template (see {@link #test_strictSubtypeMatching}),
+    //    but since before_template_S comes first it takes precedence.
+    String expectedCode = "setP(theT); setPonS(theS);";
     assertChanges(externs, originalCode, expectedCode, template);
   }
 

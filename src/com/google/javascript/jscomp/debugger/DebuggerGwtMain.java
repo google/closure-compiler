@@ -56,7 +56,6 @@ public class DebuggerGwtMain implements EntryPoint {
     SourceFile externFile = SourceFile.fromCode("externs", externs.getValue());
     SourceFile srcFile = SourceFile.fromCode("input0", input0.getValue());
     Compiler compiler = new Compiler();
-    options.getDependencyOptions().setEs6ModuleOrder(false); // This is currently not GWT compatible
     try {
       Result result = compiler.compile(externFile, srcFile, options);
       updateUi(compiler, result);
@@ -90,6 +89,7 @@ public class DebuggerGwtMain implements EntryPoint {
     externs.setCharacterWidth(80);
     externs.setVisibleLines(5);
     externs.addKeyUpHandler(new KeyUpHandler() {
+      @Override
       public void onKeyUp(KeyUpEvent event) {
         doCompile();
       }
@@ -98,6 +98,7 @@ public class DebuggerGwtMain implements EntryPoint {
     input0.setCharacterWidth(80);
     input0.setVisibleLines(25);
     input0.addKeyUpHandler(new KeyUpHandler() {
+      @Override
       public void onKeyUp(KeyUpEvent event) {
         doCompile();
       }

@@ -213,7 +213,7 @@ $jscomp.Map = class {
   /**
    * Retrieves an element from the map, by key.
    * @param {*} key
-   * @return {VALUE|undefined}
+   * @return {VALUE}
    */
   get(key) {
     const {entry} = this.maybeGetEntry_(key);

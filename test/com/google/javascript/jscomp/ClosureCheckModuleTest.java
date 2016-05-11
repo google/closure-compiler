@@ -17,13 +17,26 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
+import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_AND_PROVIDES;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
+import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
+import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_MODULE_GLOBAL_NAME;
+import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME;
+import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
+import static com.google.javascript.jscomp.ClosureCheckModule.REQUIRE_NOT_AT_TOP_LEVEL;
 
 public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new ClosureCheckModule(compiler);
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.ERROR);
+    return options;
   }
 
   public void testGoogModuleReferencesThis() {
@@ -80,5 +93,90 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "",
             "var x = goog.require('other.x');"),
         MULTIPLE_MODULES_IN_FILE);
+  }
+
+  public void testGoogModuleReferencesGlobalName() {
+    testError("goog.module('x.y.z');\nx.y.z = function() {};", REFERENCE_TO_MODULE_GLOBAL_NAME);
+  }
+
+  public void testIllegalGoogRequires() {
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var x = goog.require('other.x').foo.toString();"),
+        REQUIRE_NOT_AT_TOP_LEVEL);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var moduleNames = [goog.require('other.x').name];"),
+        REQUIRE_NOT_AT_TOP_LEVEL);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "exports = [goog.require('other.x').name];"),
+        REQUIRE_NOT_AT_TOP_LEVEL);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var a = goog.require('foo.a'), b = goog.require('foo.b');"),
+        ONE_REQUIRE_PER_DECLARATION);
+  }
+
+  public void testIllegalShortImportReferencedByLongName() {
+    testError(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var A = goog.require('foo.A');",
+            "",
+            "exports = function() { return new foo.A; };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+  }
+
+  public void testIllegalShortImportDestructuring() {
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var {doThing} = goog.require('foo.utils');",
+            "",
+            "exports = function() { return foo.utils.doThing(''); };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
+  }
+
+  public void testIllegalLetShortRequire() {
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "let a = goog.require('foo.a');"),
+        LET_GOOG_REQUIRE);
+  }
+
+  public void testLegalGoogRequires() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var {assert} = goog.require('goog.asserts');"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const {assert} = goog.require('goog.asserts');"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const {assert, fail} = goog.require('goog.asserts');"));
   }
 }

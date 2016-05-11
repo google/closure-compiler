@@ -53,7 +53,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     this.excerpt = excerpt;
   }
 
-  static LightweightMessageFormatter withoutSource() {
+  public static LightweightMessageFormatter withoutSource() {
     return new LightweightMessageFormatter();
   }
 

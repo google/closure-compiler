@@ -34,7 +34,7 @@ import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import java.util.List;
 
-public final class NewParserTest extends BaseJSTypeTestCase {
+public final class ParserTest extends BaseJSTypeTestCase {
   private static final String SUSPICIOUS_COMMENT_WARNING =
       IRFactory.SUSPICIOUS_COMMENT_WARNING;
 
@@ -1295,12 +1295,24 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     expectedFeatures = FeatureSet.ES6;
     parseWarning("var [x,y] = foo();",
         "this language feature is only supported in es6 mode: destructuring");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var [x,y] = foo();");
+    // arbitrary LHS assignment target not allowed
+    parseError(
+        "var [x,y[15]] = foo();", "Only an identifier or destructuring pattern is allowed here.");
+  }
+
+  public void testArrayDestructuringAssign() {
+    mode = LanguageMode.ECMASCRIPT5;
+    expectedFeatures = FeatureSet.ES6;
     parseWarning("[x,y] = foo();",
         "this language feature is only supported in es6 mode: destructuring");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parse("var [x,y] = foo();");
     parse("[x,y] = foo();");
+    // arbitrary LHS assignment target is allowed
+    parse("[x,y[15]] = foo();");
   }
 
   public void testArrayDestructuringInitializer() {
@@ -1311,7 +1323,13 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("var [x,y=2] = foo();");
     parse("[x,y=2] = foo();");
 
+    parse("var [[a] = ['b']] = [];");
     parse("[[a] = ['b']] = [];");
+    // arbitrary LHS target allowed in assignment, but not declaration
+    parse("[[a.x] = ['b']] = [];");
+    parseError(
+        "var [[a.x] = ['b']] = [];",
+        "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testArrayDestructuringTrailingComma() {
@@ -1320,17 +1338,44 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parseError("var [x,] = ['x',];", "Array pattern may not end with a comma");
   }
 
-  public void testArrayDestructuringRest() {
+  public void testArrayDestructuringDeclarationRest() {
     mode = LanguageMode.ECMASCRIPT6;
     expectedFeatures = FeatureSet.ES6;
     parse("var [first, ...rest] = foo();");
     parse("let [first, ...rest] = foo();");
     parse("const [first, ...rest] = foo();");
+    // nested destructuring in regular parameters and rest parameters
+    parse("var [first, {a, b}, ...[re, st, ...{length}]] = foo();");
 
+    parseError(
+        "var [first, ...more = 'default'] = foo();",
+        "A default value cannot be specified after '...'");
     parseError("var [first, ...more, last] = foo();", "']' expected");
 
-    // TODO(tbreisacher): This should parse without error. This is valid in ES6.
-    parseError("var [first, ...[re, st]] = foo();", "lvalues in rest elements must be identifiers");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "var [first, ...rest] = foo();",
+        "this language feature is only supported in es6 mode: destructuring");
+  }
+
+  public void testArrayDestructuringAssignRest() {
+    mode = LanguageMode.ECMASCRIPT6;
+    expectedFeatures = FeatureSet.ES6;
+    parse("[first, ...rest] = foo();");
+    // nested destructuring in regular parameters and rest parameters
+    parse("[first, {a, b}, ...[re, st, ...{length}]] = foo();");
+    // arbitrary LHS assignment target is allowed
+    parse("[x, ...y[15]] = foo();");
+    // arbitrary LHS assignment target not allowed
+    parseError(
+        "var [x, ...y[15]] = foo();",
+        "Only an identifier or destructuring pattern is allowed here.");
+
+    parseError(
+        "[first, ...more = 'default'] = foo();", "A default value cannot be specified after '...'");
+    parseError("var [first, ...more, last] = foo();", "']' expected");
+
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [first, ...rest] = foo();",
@@ -1342,8 +1387,19 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     expectedFeatures = FeatureSet.ES6;
     parse("function f([x, y]) { use(x); use(y); }");
     parse("function f([x, [y, z]]) {}");
+    parse("function f([x, {y, foo: z}]) {}");
     parse("function f([x, y] = [1, 2]) { use(x); use(y); }");
     parse("function f([x, x]) {}");
+    // arbitrary LHS expression not allowed as a formal parameter
+    parseError(
+        "function f([a[0], x]) {}", "Only an identifier or destructuring pattern is allowed here.");
+    // restriction applies to sub-patterns
+    parseError(
+        "function f([a, [x.foo]]) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
+    parseError(
+        "function f([a, {foo: x.foo}]) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testObjectDestructuringVar() {
@@ -1356,6 +1412,10 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
     // Useless, but legal.
     parse("var {} = foo();");
+    // Arbitrary LHS target not allowed in declaration
+    parseError("var {x.a, y} = foo();", "'}' expected");
+    parseError(
+        "var {a: x.a, y} = foo();", "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testObjectDestructuringVarWithInitializer() {
@@ -1408,6 +1468,18 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("function f({w, x: {y, z}}) {}");
     parse("function f({x, y} = {x:1, y:2}) {}");
     parse("function f({x, x}) {}");
+    // arbitrary LHS expression not allowed as a formal parameter
+    parseError("function f({a[0], x}) {}", "'}' expected");
+    parseError(
+        "function f({foo: a[0], x}) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
+    // restriction applies to sub-patterns
+    parseError(
+        "function f({a, foo: [x.foo]}) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
+    parseError(
+        "function f({a, x: {foo: x.foo}}) {}",
+        "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testObjectDestructuringComputedProp() {
@@ -1447,11 +1519,15 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringComplexTarget() {
     mode = LanguageMode.ECMASCRIPT6;
     expectedFeatures = FeatureSet.ES6;
-    parseError("var {foo: bar.x} = baz();", "'}' expected");
+    parseError(
+        "var {foo: bar.x} = baz();",
+        "Only an identifier or destructuring pattern is allowed here.");
     parse("({foo: bar.x} = baz());");
     parse("for ({foo: bar.x} in baz());");
 
-    parseError("var {foo: bar[x]} = baz();", "'}' expected");
+    parseError(
+        "var {foo: bar[x]} = baz();",
+        "Only an identifier or destructuring pattern is allowed here.");
     parse("({foo: bar[x]} = baz());");
     parse("for ({foo: bar[x]} in baz());");
   }
@@ -1466,8 +1542,8 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("([x] = y);");
     parse("[(x), y] = z;");
     parse("[x, (y)] = z;");
-    parse("[x, ([y])] = z;");
-    parse("[x, (([y]))] = z;");
+    parseError("[x, ([y])] = z;", "invalid assignment target");
+    parseError("[x, (([y]))] = z;", "invalid assignment target");
   }
 
   public void testObjectLiteralCannotUseDestructuring() {
@@ -1780,12 +1856,12 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
-        + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
+        + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT6;
     parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
-        + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
+        + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
   }
 
@@ -1848,7 +1924,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     expectedFeatures = FeatureSet.ES6_IMPL;
     Node n = parseWarning("`string \\\ncontinuation`",
         "String continuations are not recommended. See"
-        + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
+        + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
     Node templateLiteral = n.getFirstFirstChild();
     Node stringNode = templateLiteral.getFirstChild();
     assertNode(stringNode).hasType(Token.STRING);
@@ -2790,13 +2866,12 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     // {x: 5} and {x: 'str'} are valid object literals but not valid patterns.
     parseError("for ({x: 5} in foo()) {}", "invalid assignment target");
     parseError("for ({x: 'str'} in foo()) {}", "invalid assignment target");
-    parseError("var {x: 5} = foo();", "'identifier' expected");
-    parseError("var {x: 'str'} = foo();", "'identifier' expected");
+    parseError("var {x: 5} = foo();", "invalid assignment target");
+    parseError("var {x: 'str'} = foo();", "invalid assignment target");
     parseError("({x: 5} = foo());", "invalid assignment target");
     parseError("({x: 'str'} = foo());", "invalid assignment target");
 
     // {method(){}} is a valid object literal but not a valid object pattern.
-    expectedFeatures = FeatureSet.ES3;
     parseError("function f({method(){}}) {}", "'}' expected");
     parseError("function f({method(){}} = foo()) {}", "'}' expected");
   }
@@ -2945,6 +3020,51 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     Node n = parse("\uFEFFfunction f() {}\n");
     Node fn = n.getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
+  }
+
+  public void testParseDeep1() {
+    String code = "var x; x = \n";
+    for (int i = 1; i < 15000; i++) {
+      code += "  \'" + i + "\' +\n";
+    }
+    code += "\'end\';n";
+    parse(code);
+  }
+
+  public void testParseDeep2() {
+    String code = "var x; x = \n";
+    for (int i = 1; i < 15000; i++) {
+      code += "  \'" + i + "\' +\n";
+    }
+    code += "\'end\'; /** a comment */\n";
+    parse(code);
+  }
+
+  public void testParseDeep3() {
+    String code = "var x; x = \n";
+    for (int i = 1; i < 15000; i++) {
+      code += "  \'" + i + "\' +\n";
+    }
+    code += "  /** @type {string} */ (x);\n";
+    parse(code);
+  }
+
+  public void testParseDeep4() {
+    // Currently, we back off if there is any JSDoc in the tree of binary expressions
+    String code = "var x; x = \n";
+    for (int i = 1; i < 15000; i++) {
+      if (i == 5) {
+        code += "  /** @type {string} */ (x) +\n";
+      }
+      code += "  \'" + i + "\' +\n";
+    }
+    code += "\'end\';n";
+    try {
+      parse(code);
+      fail();
+    } catch (java.lang.StackOverflowError e) {
+      // expected exception
+    }
   }
 
   private Node script(Node stmt) {

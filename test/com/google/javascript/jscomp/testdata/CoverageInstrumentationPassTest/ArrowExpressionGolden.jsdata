@@ -1,0 +1,10 @@
+var __jscov = window.top.__jscov || (window.top.__jscov = {fileNames:[], instrumentedLines:[], executedLines:[]});
+var JSCompiler_lcov_data_CoverageInstrumentationPassTest_ArrowExpression_jsdata = [];
+__jscov.executedLines.push(JSCompiler_lcov_data_CoverageInstrumentationPassTest_ArrowExpression_jsdata);
+__jscov.instrumentedLines.push("01");
+__jscov.fileNames.push("CoverageInstrumentationPassTest/ArrowExpression.jsdata");
+var f = function(x) {
+  JSCompiler_lcov_data_CoverageInstrumentationPassTest_ArrowExpression_jsdata[0] = true;
+  JSCompiler_lcov_data_CoverageInstrumentationPassTest_ArrowExpression_jsdata[0] = true;
+  return x + 1;
+};

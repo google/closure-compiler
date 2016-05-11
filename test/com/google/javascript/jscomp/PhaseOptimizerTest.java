@@ -36,7 +36,7 @@ import java.util.Random;
  */
 public final class PhaseOptimizerTest extends TestCase {
   private final List<String> passesRun = new ArrayList<>();
-  private final Node dummyRoot = new Node(Token.BLOCK);
+  private Node dummyRoot;
   private PhaseOptimizer optimizer;
   private Compiler compiler;
   private PerformanceTracker tracker;
@@ -44,6 +44,9 @@ public final class PhaseOptimizerTest extends TestCase {
   @Override
   public void setUp() {
     passesRun.clear();
+    dummyRoot = new Node(Token.BLOCK);
+    // Needed if we are validating the AST using AstValidator.
+    dummyRoot.setIsSyntheticBlock(true);
     compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     tracker = new PerformanceTracker(dummyRoot, TracerMode.TIMING_ONLY);

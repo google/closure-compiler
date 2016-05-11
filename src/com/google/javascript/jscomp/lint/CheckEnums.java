@@ -31,16 +31,16 @@ import java.util.Set;
  * Check for duplicate values in enums.
  */
 public final class CheckEnums extends AbstractPostOrderCallback implements CompilerPass {
-  public static final DiagnosticType DUPLICATE_ENUM_VALUE = DiagnosticType.warning(
+  public static final DiagnosticType DUPLICATE_ENUM_VALUE = DiagnosticType.disabled(
       "JSC_DUPLICATE_ENUM_VALUE",
       "The value {0} is duplicated in this enum.");
-  public static final DiagnosticType COMPUTED_PROP_NAME_IN_ENUM = DiagnosticType.warning(
+  public static final DiagnosticType COMPUTED_PROP_NAME_IN_ENUM = DiagnosticType.disabled(
       "JSC_COMPUTED_PROP_NAME_IN_ENUM",
       "Computed property name used in enum.");
-  public static final DiagnosticType SHORTHAND_ASSIGNMENT_IN_ENUM = DiagnosticType.warning(
+  public static final DiagnosticType SHORTHAND_ASSIGNMENT_IN_ENUM = DiagnosticType.disabled(
       "JSC_SHORTHAND_ASSIGNMENT_IN_ENUM",
       "Shorthand assignment used in enum.");
-  public static final DiagnosticType ENUM_PROP_NOT_CONSTANT = DiagnosticType.warning(
+  public static final DiagnosticType ENUM_PROP_NOT_CONSTANT = DiagnosticType.disabled(
       "JSC_ENUM_PROP_NOT_CONSTANT",
       "enum key {0} must be in ALL_CAPS.");
 

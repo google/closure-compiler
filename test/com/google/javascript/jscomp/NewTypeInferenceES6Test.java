@@ -180,7 +180,6 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
 
     typeCheck(LINE_JOINER.join(
-        "/** @constructor */",
         "class Foo {",
         "  /** @param {...number} var_args */",
         "  method(var_args) {}",
@@ -192,7 +191,6 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(LINE_JOINER.join(
-        "/** @constructor */",
         "class Foo {",
         "  /** @param {...number} var_args */",
         "  method(var_args) {}",

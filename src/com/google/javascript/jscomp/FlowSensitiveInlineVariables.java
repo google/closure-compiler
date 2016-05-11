@@ -31,9 +31,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -71,12 +70,11 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
    * need two separate dataflow result.
    */
   private final AbstractCompiler compiler;
-  private final Set<Var> inlinedNewDependencies = new HashSet<>();
 
   // These two pieces of data is persistent in the whole execution of enter
   // scope.
   private ControlFlowGraph<Node> cfg;
-  private List<Candidate> candidates;
+  private Set<Candidate> candidates;
   private MustBeReachingVariableDef reachingDef;
   private MaybeReachingVariableUse reachingUses;
 
@@ -138,7 +136,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     cfg = cfa.getCfg();
     reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler);
     reachingDef.analyze();
-    candidates = new LinkedList<>();
+    candidates = new LinkedHashSet<>();
 
     // Using the forward reaching definition search to find all the inline
     // candidates
@@ -147,20 +145,29 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     // Compute the backward reaching use. The CFG can be reused.
     reachingUses = new MaybeReachingVariableUse(cfg, t.getScope(), compiler);
     reachingUses.analyze();
-    for (Candidate c : candidates) {
+    while (!candidates.isEmpty()) {
+      Candidate c = candidates.iterator().next();
       if (c.canInline(t.getScope())) {
         c.inlineVariable();
+        candidates.remove(c);
 
-        // If definition c has dependencies, then inlining it may have
-        // introduced new dependencies for our other inlining candidates.
-        //
-        // MustBeReachingVariableDef uses this dependency graph in its
-        // analysis, so some of these candidates may no longer be valid.
-        // We keep track of when the variable dependency graph changed
-        // so that we can back off appropriately.
+        // If candidate "c" has dependencies, then inlining it may have introduced new dependencies
+        // for our other inlining candidates. MustBeReachingVariableDef uses a dependency graph in
+        // its analysis. Generating a new dependency graph will need another CFG computation.
+        // Ideally we should iterate to a fixed point, but that can be costly. Therefore, we use
+        // a conservative heuristic here: For each candidate "other", we back off if its set of
+        // dependencies cannot contain all of "c"'s dependencies.
         if (!c.defMetadata.depends.isEmpty()) {
-          inlinedNewDependencies.add(t.getScope().getVar(c.varName));
+          for (Iterator<Candidate> it = candidates.iterator(); it.hasNext();) {
+            Candidate other = it.next();
+            if (other.defMetadata.depends.contains(t.getScope().getVar(c.varName))
+                && !other.defMetadata.depends.containsAll(c.defMetadata.depends)) {
+              it.remove();
+            }
+          }
         }
+      } else {
+        candidates.remove(c);
       }
     }
   }
@@ -274,15 +281,6 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
       // Cannot inline a parameter.
       if (getDefCfgNode().isFunction()) {
         return false;
-      }
-
-      // If one of our dependencies has been inlined, then our dependency
-      // graph is wrong. Re-computing it would take another CFG computation,
-      // so we just back off for now.
-      for (Var dependency : defMetadata.depends) {
-        if (inlinedNewDependencies.contains(dependency)) {
-          return false;
-        }
       }
 
       getDefinition(getDefCfgNode());

@@ -118,23 +118,26 @@ class CoverageInstrumentationCallback extends
     FileInstrumentationData data = instrumentationData.get(fileName);
     Preconditions.checkNotNull(data);
 
+    String objName = CoverageInstrumentationPass.JS_INSTRUMENTATION_OBJECT_NAME;
+
+    // var JSCompiler_lcov_data_xx = [];
+    // __jscov.executedLines.push(JSCompiler_lcov_data_xx);
+    // __jscov.instrumentedLines.push(hex-data);
+    // __jscov.fileNames.push(filename);
     return IR.block(
-      newArrayDeclarationNode(traversal),
-      IR.exprResult(IR.call(
-          IR.getprop(
-              IR.name("JSCompiler_lcov_executedLines"),
-              IR.string("push")),
-          IR.name(arrayName))),
-      IR.exprResult(IR.call(
-          IR.getprop(
-              IR.name("JSCompiler_lcov_instrumentedLines"),
-              IR.string("push")),
-          IR.string(data.getInstrumentedLinesAsHexString()))),
-      IR.exprResult(IR.call(
-          IR.getprop(
-              IR.name("JSCompiler_lcov_fileNames"),
-              IR.string("push")),
-          IR.string(fileName)))).useSourceInfoIfMissingFromForTree(srcref);
+            newArrayDeclarationNode(traversal),
+            IR.exprResult(
+                IR.call(
+                    NodeUtil.newQName(compiler, objName + ".executedLines.push"),
+                    IR.name(arrayName))),
+            IR.exprResult(
+                IR.call(
+                    NodeUtil.newQName(compiler, objName + ".instrumentedLines.push"),
+                    IR.string(data.getInstrumentedLinesAsHexString()))),
+            IR.exprResult(
+                IR.call(
+                    NodeUtil.newQName(compiler, objName + ".fileNames.push"), IR.string(fileName))))
+        .useSourceInfoIfMissingFromForTree(srcref);
   }
 
   /**

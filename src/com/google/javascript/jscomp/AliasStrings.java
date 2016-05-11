@@ -22,7 +22,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +42,11 @@ import java.util.zip.CRC32;
  * contribute to garbage collection, which becomes a problem in large
  * applications. Strings that should be aliased occur many times in the code,
  * or occur on codepaths that get executed frequently.
+ *
+ * 2016/05/04 Note: This pass addressed some performance problems in older
+ * browser VMs, which don't happen on modern VMs. Turning on the pass usually
+ * hurts code size after gzip, so we no longer recommend it. At some point we
+ * will probably delete it.
  *
  */
 @GwtIncompatible("java.util.regex")
@@ -156,10 +160,6 @@ class AliasStrings extends AbstractPostOrderCallback
         info.occurrences.add(occurrence);
         info.numOccurrences++;
 
-        if (t.inGlobalHoistScope() || isInThrowExpression(n)) {
-          info.numOccurrencesInfrequentlyExecuted++;
-        }
-
         // The current module.
         JSModule module = t.getModule();
         if (info.numOccurrences != 1) {
@@ -201,36 +201,6 @@ class AliasStrings extends AbstractPostOrderCallback
       stringInfoMap.put(string, info);
     }
     return info;
-  }
-
-  /**
-   * Is the {@link Node} currently within a 'throw' expression?
-   */
-  private static boolean isInThrowExpression(Node n) {
-    // Look up the traversal stack to find a THROW node
-    for (Node ancestor : n.getAncestors()) {
-      switch (ancestor.getType()) {
-        case Token.THROW:
-          return true;
-        case Token.IF:
-        case Token.WHILE:
-        case Token.DO:
-        case Token.FOR:
-        case Token.SWITCH:
-        case Token.CASE:
-        case Token.DEFAULT_CASE:
-        case Token.BLOCK:
-        case Token.SCRIPT:
-        case Token.FUNCTION:
-        case Token.TRY:
-        case Token.CATCH:
-        case Token.RETURN:
-        case Token.EXPR_RESULT:
-          // early exit - these nodes types can't be within a THROW
-          return false;
-      }
-    }
-    return false;
   }
 
  /**
@@ -278,13 +248,6 @@ class AliasStrings extends AbstractPostOrderCallback
    *  @param info Accumulated information about a string
    */
   private static boolean shouldReplaceWithAlias(String str, StringInfo info) {
-    // Optimize for application performance.  If there are any uses of the
-    // string that are not 'infrequent uses', assume they are frequent and
-    // create an alias.
-    if (info.numOccurrences > info.numOccurrencesInfrequentlyExecuted) {
-      return true;
-    }
-
     // Optimize for code size.  Are aliases smaller than strings?
     //
     // This logic optimizes for the size of uncompressed code, but it tends to
@@ -362,7 +325,6 @@ class AliasStrings extends AbstractPostOrderCallback
 
     final List<StringOccurrence> occurrences;
     int numOccurrences;
-    int numOccurrencesInfrequentlyExecuted;
 
     JSModule moduleToContainDecl;
     Node parentForNewVarDecl;

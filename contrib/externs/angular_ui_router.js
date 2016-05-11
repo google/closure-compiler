@@ -42,7 +42,7 @@ ui.router = {};
 /**
  * @typedef {{
  *   params: Object,
- *   current: Object,
+ *   current: !ui.router.State,
  *   transition: ?angular.$q.Promise,
  *   get: function(...),
  *   go: function(...),

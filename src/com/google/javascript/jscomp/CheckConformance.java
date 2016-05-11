@@ -91,7 +91,8 @@ public final class CheckConformance implements Callback, CompilerPass {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    for (Rule rule : rules) {
+    for (int i = 0, len = rules.size(); i < len; i++) {
+      Rule rule = rules.get(i);
       rule.check(t, n);
     }
   }

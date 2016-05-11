@@ -153,6 +153,21 @@ final class FunctionTypeBuilder {
           "Cannot @implement the same interface more than once\n" +
           "Repeated interface: {0}");
 
+  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      EXTENDS_WITHOUT_TYPEDEF,
+      EXTENDS_NON_OBJECT,
+      RESOLVED_TAG_EMPTY,
+      IMPLEMENTS_WITHOUT_CONSTRUCTOR,
+      CONSTRUCTOR_REQUIRED,
+      VAR_ARGS_MUST_BE_LAST,
+      OPTIONAL_ARG_AT_END,
+      INEXISTENT_PARAM,
+      TYPE_REDEFINITION,
+      TEMPLATE_TYPE_DUPLICATED,
+      TEMPLATE_TYPE_EXPECTED,
+      THIS_TYPE_NON_OBJECT,
+      SAME_INTERFACE_MULTIPLE_IMPLEMENTS);
+
   private class ExtendedTypeValidator implements Predicate<JSType> {
     @Override
     public boolean apply(JSType type) {

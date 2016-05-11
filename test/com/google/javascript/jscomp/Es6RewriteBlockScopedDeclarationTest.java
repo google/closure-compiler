@@ -53,6 +53,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   public void testSimple() {
     test("let x = 3;", "var x = 3;");
     test("const x = 3;", "/** @const */ var x = 3;");
+    test("const x = 1, y = 2;", "/** @const */ var x = 1; /** @const */ var y = 2;");
     test("const a = 0; a;", "/** @const */ var a = 0; a;");
     test("if (a) { let x; }", "if (a) { var x; }");
     test("function f() { const x = 3; }",
@@ -285,6 +286,25 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  /** @type {number} */",
             "  var i = /** @type {?} */ (undefined);",
             "}"));
+
+    test(LINE_JOINER.join(
+            "for (const i in [0, 1]) {",
+            "  function f() {",
+            "    let i = 0;",
+            "    if (true) {",
+            "      let i = 1;",
+            "    }",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "for (var i in [0, 1]) {",
+            "  var f = function() {",
+            "    var i = 0;",
+            "    if (true) {",
+            "      var i$0 = 1;",
+            "    }",
+            "  }",
+            "}"));
   }
 
   public void testFunctionInLoop() {
@@ -477,6 +497,18 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  }($jscomp$loop$0);",
             "}"));
 
+    // Preserve inline type annotation
+    test(
+        "for (;;) { let /** number */ x = 3; var f = function() { return x; } }",
+        LINE_JOINER.join(
+            "var $jscomp$loop$0 = {};",
+            "for (;;$jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
+            "  /** @type {number} */ $jscomp$loop$0.x = 3;",
+            "  var f = function($jscomp$loop$0) {",
+            "    return function() { return $jscomp$loop$0.x}",
+            "  }($jscomp$loop$0);",
+            "}"));
+
     // Preserve inline type annotation and constancy
     test(
         "for (;;) { const /** number */ x = 3; var f = function() { return x; } }",
@@ -486,6 +518,34 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  /** @const @type {number} */ $jscomp$loop$0.x = 3;",
             "  var f = function($jscomp$loop$0) {",
             "    return function() { return $jscomp$loop$0.x}",
+            "  }($jscomp$loop$0);",
+            "}"));
+
+    // Preserve inline type annotation on declaration lists
+    test(LINE_JOINER.join(
+        "for (;;) { let /** number */ x = 3, /** number */ y = 4;",
+        "var f = function() { return x + y; } }"),
+        LINE_JOINER.join(
+            "var $jscomp$loop$0 = {};",
+            "for (;;$jscomp$loop$0 = {x: $jscomp$loop$0.x, y: $jscomp$loop$0.y}) {",
+            "  /** @type {number} */ $jscomp$loop$0.x = 3;",
+            "  /** @type {number} */ $jscomp$loop$0.y = 4;",
+            "  var f = function($jscomp$loop$0) {",
+            "    return function() { return $jscomp$loop$0.x + $jscomp$loop$0.y}",
+            "  }($jscomp$loop$0);",
+            "}"));
+
+    // Preserve inline type annotation and constancy on declaration lists
+    test(LINE_JOINER.join(
+        "for (;;) { const /** number */ x = 3, /** number */ y = 4;",
+        "var f = function() { return x + y; } }"),
+        LINE_JOINER.join(
+            "var $jscomp$loop$0 = {};",
+            "for (;;$jscomp$loop$0 = {x: $jscomp$loop$0.x, y: $jscomp$loop$0.y}) {",
+            "  /** @const @type {number} */ $jscomp$loop$0.x = 3;",
+            "  /** @const @type {number} */ $jscomp$loop$0.y = 4;",
+            "  var f = function($jscomp$loop$0) {",
+            "    return function() { return $jscomp$loop$0.x + $jscomp$loop$0.y}",
             "  }($jscomp$loop$0);",
             "}"));
 

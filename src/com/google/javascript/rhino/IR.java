@@ -163,7 +163,11 @@ public class IR {
 
   public static Node declaration(Node lhs, int type) {
     Preconditions.checkState(
-        lhs.isName() || lhs.isArrayPattern() || lhs.isObjectPattern());
+        lhs.isName() || lhs.isDestructuringPattern() || lhs.isDestructuringLhs(),
+        lhs);
+    if (lhs.isDestructuringPattern()) {
+      lhs = new Node(Token.DESTRUCTURING_LHS, lhs);
+    }
     return new Node(type, lhs);
   }
 
@@ -172,6 +176,7 @@ public class IR {
       Preconditions.checkState(!lhs.hasChildren());
     } else {
       Preconditions.checkState(lhs.isArrayPattern() || lhs.isObjectPattern());
+      lhs = new Node(Token.DESTRUCTURING_LHS, lhs);
     }
     Preconditions.checkState(mayBeExpression(value),
         "%s can't be an expression", value);

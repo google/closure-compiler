@@ -19,8 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.JsFileParser;
+import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -28,8 +30,6 @@ import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,9 +43,6 @@ import java.util.TreeMap;
  */
 public class CompilerInput implements SourceAst, DependencyInfo {
 
-  static final DiagnosticType MODULE_CONFLICT = DiagnosticType.warning(
-      "JSC_MODULE_CONFLICT", "File has both goog.module and ES6 modules: {0}");
-
   private static final long serialVersionUID = 1L;
 
   // Info about where the file lives.
@@ -55,12 +52,10 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   // The AST.
   private final SourceAst ast;
 
-  // Provided and required symbols.
-  private final Map<String, String> loadFlags = new TreeMap<>();
-  private final Set<String> provides = new HashSet<>();
-  private final Set<String> requires = new HashSet<>();
-  private boolean generatedDependencyInfoFromSource = false;
-  private boolean generatedLoadFlags = false;
+  // DependencyInfo to delegate to.
+  private DependencyInfo dependencyInfo;
+  private final List<String> extraRequires = new ArrayList<>();
+  private final List<String> extraProvides = new ArrayList<>();
 
   // An AbstractCompiler for doing parsing.
   // We do not want to persist this across serialized state.
@@ -147,38 +142,38 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     this.compiler = compiler;
   }
 
-  private void checkErrorManager() {
-    Preconditions.checkNotNull(compiler, "Expected setCompiler to be called first: %s", this);
-    Preconditions.checkNotNull(
-        compiler.getErrorManager(), "Expected compiler to call an error manager: %s", this);
-  }
-
   /** Gets a list of types depended on by this input. */
   @Override
   public Collection<String> getRequires() {
-    checkErrorManager();
-    try {
-      regenerateDependencyInfoIfNecessary();
-      return Collections.unmodifiableSet(requires);
-    } catch (IOException e) {
-      compiler.getErrorManager().report(CheckLevel.ERROR,
-          JSError.make(AbstractCompiler.READ_ERROR, getName()));
-      return ImmutableList.of();
-    }
+    return getDependencyInfo().getRequires();
+  }
+
+  /**
+   * Gets a list of types depended on by this input,
+   * but does not attempt to regenerate the dependency information.
+   * Typically this occurs from module rewriting.
+   */
+  Collection<String> getKnownRequires() {
+    return concat(
+        dependencyInfo != null ? dependencyInfo.getRequires() : ImmutableList.<String>of(),
+        extraRequires);
   }
 
   /** Gets a list of types provided by this input. */
   @Override
   public Collection<String> getProvides() {
-    checkErrorManager();
-    try {
-      regenerateDependencyInfoIfNecessary();
-      return Collections.unmodifiableSet(provides);
-    } catch (IOException e) {
-      compiler.getErrorManager().report(CheckLevel.ERROR,
-          JSError.make(AbstractCompiler.READ_ERROR, getName()));
-      return ImmutableList.of();
-    }
+    return getDependencyInfo().getProvides();
+  }
+
+  /**
+   * Gets a list of types provided, but does not attempt to
+   * regenerate the dependency information. Typically this occurs
+   * from module rewriting.
+   */
+  Collection<String> getKnownProvides() {
+    return concat(
+        dependencyInfo != null ? dependencyInfo.getProvides() : ImmutableList.<String>of(),
+        extraProvides);
   }
 
   // TODO(nicksantos): Remove addProvide/addRequire/removeRequire once
@@ -188,31 +183,55 @@ public class CompilerInput implements SourceAst, DependencyInfo {
    * Registers a type that this input defines.
    */
   public void addProvide(String provide) {
-    getProvides();
-    provides.add(provide);
+    extraProvides.add(provide);
   }
 
   /**
    * Registers a type that this input depends on.
    */
   public void addRequire(String require) {
-    getRequires();
-    requires.add(require);
+    extraRequires.add(require);
   }
 
   /**
-   * Regenerates the provides/requires if we need to do so.
+   * Returns the DependencyInfo object, generating it lazily if necessary.
    */
-  private void regenerateDependencyInfoIfNecessary() throws IOException {
+  private DependencyInfo getDependencyInfo() {
+    if (dependencyInfo == null) {
+      dependencyInfo = generateDependencyInfo();
+    }
+    if (!extraRequires.isEmpty() || !extraProvides.isEmpty()) {
+      dependencyInfo = new SimpleDependencyInfo(
+          getName(),
+          getName(),
+          concat(dependencyInfo.getProvides(), extraProvides),
+          concat(dependencyInfo.getRequires(), extraRequires),
+          dependencyInfo.getLoadFlags());
+      extraRequires.clear();
+      extraProvides.clear();
+    }
+    return dependencyInfo;
+  }
+
+  /**
+   * Generates the DependencyInfo by scanning and/or parsing the file.
+   * This is called lazily by getDependencyInfo, and does not take into
+   * account any extra requires/provides added by {@link #addRequire}
+   * or {@link #addProvide}.
+   */
+  private DependencyInfo generateDependencyInfo() {
+    Preconditions.checkNotNull(compiler, "Expected setCompiler to be called first: %s", this);
+    Preconditions.checkNotNull(
+        compiler.getErrorManager(), "Expected compiler to call an error manager: %s", this);
+
     // If the code is NOT a JsAst, then it was not originally JS code.
     // Look at the Ast for dependency info.
     if (!(ast instanceof JsAst)) {
-      Preconditions.checkNotNull(compiler,
-          "Expected setCompiler to be called first");
-      DepsFinder finder = new DepsFinder();
+
+      DepsFinder finder = new DepsFinder(compiler.getCodingConvention());
       Node root = getAstRoot(compiler);
       if (root == null) {
-        return;
+        return SimpleDependencyInfo.EMPTY;
       }
 
       finder.visitTree(getAstRoot(compiler));
@@ -227,51 +246,24 @@ public class CompilerInput implements SourceAst, DependencyInfo {
       // compilation scheme. The API needs to be fixed so callers aren't
       // doing weird things like this, and then we should get rid of the
       // multiple-scan strategy.
-      loadFlags.putAll(finder.loadFlags);
-      provides.addAll(finder.provides);
-      requires.addAll(finder.requires);
-      generatedLoadFlags = true;
+      return new SimpleDependencyInfo("", "", finder.provides, finder.requires, finder.loadFlags);
     } else {
       // Otherwise, look at the source code.
-      if (!generatedDependencyInfoFromSource) {
-        // Note: it's OK to use getName() instead of
-        // getPathRelativeToClosureBase() here because we're not using
-        // this to generate deps files. (We're only using it for
-        // symbol dependencies.)
+      // Note: it's OK to use getName() instead of
+      // getPathRelativeToClosureBase() here because we're not using
+      // this to generate deps files. (We're only using it for
+      // symbol dependencies.)
+      try {
         DependencyInfo info =
             (new JsFileParser(compiler.getErrorManager()))
             .setIncludeGoogBase(true)
             .parseFile(getName(), getName(), getCode());
-
-        loadFlags.putAll(info.getLoadFlags());
-        provides.addAll(info.getProvides());
-        requires.addAll(info.getRequires());
-
-        generatedDependencyInfoFromSource = true;
+        return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
+      } catch (IOException e) {
+        compiler.getErrorManager().report(CheckLevel.ERROR,
+            JSError.make(AbstractCompiler.READ_ERROR, getName()));
+        return SimpleDependencyInfo.EMPTY;
       }
-    }
-  }
-
-  /**
-   * Parses the file to determine the {@linkplain DependencyInfo#getLoadFlags
-   * load flags} if necessary, which includes the module type and the language
-   * version.  This calls {@link #regenerateDependencyInfoIfNecessary} since
-   * non-{@link JsAst} inputs don't need any additional parsing, and either
-   * case may add some pre-parse load flags, anyway.
-   */
-  private void determineLoadFlagsIfNecessary() throws IOException {
-    regenerateDependencyInfoIfNecessary();
-    if (!generatedLoadFlags) {
-      FeatureSet features = ((JsAst) ast).getFeatures(compiler);
-      if (features.hasEs6Modules()) {
-        if (loadFlags.containsKey("module")) {
-          compiler.getErrorManager().report(CheckLevel.WARNING,
-              JSError.make(MODULE_CONFLICT, getName()));
-        }
-        loadFlags.put("module", "es6");
-      }
-      loadFlags.put("lang", features.version());
-      generatedLoadFlags = true;
     }
   }
 
@@ -279,11 +271,24 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     private final Map<String, String> loadFlags = new TreeMap<>();
     private final List<String> provides = new ArrayList<>();
     private final List<String> requires = new ArrayList<>();
-    private final CodingConvention codingConvention =
-        new ClosureCodingConvention();
+    private final CodingConvention codingConvention;
+
+    DepsFinder(CodingConvention codingConvention) {
+      this.codingConvention = codingConvention;
+    }
 
     void visitTree(Node n) {
       visitSubtree(n, null);
+      Preconditions.checkArgument(n.isScript());
+      FeatureSet features = (FeatureSet) n.getProp(Node.FEATURE_SET);
+      if (features != null) {
+        // Only add the "lang" load flag if it's not the default (es3), so that
+        // legacy deps files will remain unchanged (i.e. load flags omitted).
+        String version = features.version();
+        if (!version.equals("es3")) {
+          loadFlags.put("lang", version);
+        }
+      }
     }
 
     void visitSubtree(Node n, Node parent) {
@@ -306,9 +311,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
           provides.add(provide);
         }
         return;
-      } else if (parent != null &&
-          !parent.isExprResult() &&
-          !parent.isScript()) {
+      } else if (parent != null && !parent.isExprResult() && !parent.isScript()) {
         return;
       }
 
@@ -371,19 +374,15 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   @Override
   public ImmutableMap<String, String> getLoadFlags() {
-    checkErrorManager();
-    try {
-      determineLoadFlagsIfNecessary();
-      return ImmutableMap.copyOf(loadFlags);
-    } catch (IOException e) {
-      compiler.getErrorManager().report(CheckLevel.ERROR,
-          JSError.make(AbstractCompiler.READ_ERROR, getName()));
-      return ImmutableMap.of();
-    }
+    return getDependencyInfo().getLoadFlags();
   }
 
   @Override
   public boolean isModule() {
     return "goog".equals(getLoadFlags().get("module"));
+  }
+
+  private static <T> Set<T> concat(Iterable<T> first, Iterable<T> second) {
+    return ImmutableSet.<T>builder().addAll(first).addAll(second).build();
   }
 }

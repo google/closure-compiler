@@ -214,7 +214,8 @@ public final class NodeTraversalTest extends TestCase {
         + "visit BLOCK [source_file: [testcode]] @2:15\n"
         + "visit FUNCTION foo [source_file: [testcode]] @2:0\n"
         + "visit SCRIPT [synthetic: 1] [source_file: [testcode]] "
-        + "[input_id: InputId: [testcode]] @1:0\n";
+        + "[input_id: InputId: [testcode]] "
+        + "[feature_set: FeatureSet{number=3}] @1:0\n";
 
     assertEquals(expectedResult, builder.toString());
   }

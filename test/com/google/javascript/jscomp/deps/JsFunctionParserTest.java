@@ -118,7 +118,7 @@ public final class JsFunctionParserTest extends TestCase {
     final String CONTENTS = " // hi ! \n /* this is a comment */ "
         + "goog.provide('yes1');\n /* and another comment */ \n"
         + "goog.provide('yes2'); // include this\n"
-        + "function foo() {}\n"
+        + "foo = function() {};\n"
         + "goog.provide('no1');";
 
     Collection<SymbolInfo> symbols = parser.parseFile(SRC_PATH, CONTENTS);

@@ -60,6 +60,7 @@ import javax.annotation.Nullable;
  *
  */
 class RenameProperties implements CompilerPass {
+  private static final Splitter DOT_SPLITTER = Splitter.on('.');
 
   private final AbstractCompiler compiler;
   private final boolean generatePseudoNames;
@@ -123,7 +124,7 @@ class RenameProperties implements CompilerPass {
   static final DiagnosticType BAD_ARG = DiagnosticType.error(
       "JSC_BAD_RENAME_PROPERTY_FUNCTION_NAME_ARG",
       "Bad " + RENAME_PROPERTY_FUNCTION_NAME + " argument - " +
-      "'{0}' is not a valid JavaScript identifier");
+      "''{0}'' is not a valid JavaScript identifier");
 
   /**
    * Creates an instance.
@@ -227,7 +228,7 @@ class RenameProperties implements CompilerPass {
       Node parent = nodeEntry.getValue();
       Node firstArg = nodeEntry.getKey().getSecondChild();
       StringBuilder sb = new StringBuilder();
-      for (String oldName : Splitter.on('.').split(firstArg.getString())) {
+      for (String oldName : DOT_SPLITTER.split(firstArg.getString())) {
         Property p = propertyMap.get(oldName);
         String replacement;
         if (p != null && p.newName != null) {
@@ -419,7 +420,7 @@ class RenameProperties implements CompilerPass {
         return;
       }
 
-      for (String name : firstArg.getString().split("[.]")) {
+      for (String name : DOT_SPLITTER.split(firstArg.getString())) {
         if (!TokenStream.isJSIdentifier(name)) {
           t.report(callNode, BAD_ARG, name);
           continue;
