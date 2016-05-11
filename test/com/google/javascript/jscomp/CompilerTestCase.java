@@ -1138,7 +1138,7 @@ public abstract class CompilerTestCase extends TestCase {
     assert_().withFailureMessage("Unexpected parse error(s): " + errorMsg).that(root).isNotNull();
     if (!expectParseWarningsThisTest) {
       assertEquals(
-          "Unexpected parse warnings(s): " + LINE_JOINER.join(compiler.getWarnings()),
+          "Unexpected parse warning(s): " + LINE_JOINER.join(compiler.getWarnings()),
           0,
           compiler.getWarnings().length);
     } else {
@@ -1572,10 +1572,11 @@ public abstract class CompilerTestCase extends TestCase {
           externs.hasOneChild(), "Compare as tree only works when output has a single script.");
       externs = externs.getFirstChild();
       String explanation = expected.checkTreeEqualsIncludingJsDoc(externs);
-      assertNull(
-          "\nExpected: " + compiler.toSource(expected) +
-          "\nResult:   " + compiler.toSource(externs) +
-          "\n" + explanation, explanation);
+      assertNull(""
+          + "\nExpected: " + compiler.toSource(expected)
+          + "\nResult:   " + compiler.toSource(externs)
+          + "\n" + explanation,
+          explanation);
     } else {
       String externsCode = compiler.toSource(externs);
       String expectedCode = compiler.toSource(expected);
@@ -1659,7 +1660,7 @@ public abstract class CompilerTestCase extends TestCase {
     JSModule[] modules = new JSModule[inputs.length];
     for (int i = 0; i < inputs.length; i++) {
       JSModule module = modules[i] = new JSModule("m" + i);
-      module.add(SourceFile.fromCode("i" + i, inputs[i]));
+      module.add(SourceFile.fromCode("i" + i + ".js", inputs[i]));
     }
     return modules;
   }

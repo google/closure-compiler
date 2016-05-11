@@ -1325,16 +1325,16 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(builder.toString())
         .isEqualTo(Joiner.on('\n').join(
             "{m0}",
-            "i0",
+            "i0.js",
             "",
             "{m1:m0}",
-            "i1",
+            "i1.js",
             "",
             "{m2:m1}",
-            "i2",
+            "i2.js",
             "",
             "{m3:m2}",
-            "i3",
+            "i3.js",
             ""));
   }
 
@@ -1349,16 +1349,16 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(builder.toString())
         .isEqualTo(Joiner.on('\n').join(
             "{m0}",
-            "i0",
+            "i0.js",
             "",
             "{m1:m0}",
-            "i1",
+            "i1.js",
             "",
             "{m2:m0}",
-            "i2",
+            "i2.js",
             "",
             "{m3:m0}",
-            "i3",
+            "i3.js",
             ""));
   }
 

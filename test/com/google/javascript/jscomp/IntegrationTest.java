@@ -538,6 +538,39 @@ public final class IntegrationTest extends IntegrationTestCase {
         });
   }
 
+  /**
+   * Check that valid ES6 modules compile to valid goog.require()/goog.provide() statements.
+   */
+  public void testES6Modules() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(options,
+        new String[] {
+          "import {x} from 'i1'; alert(x);",
+          "export var x = 5;",
+        },
+        new String[] {
+          "goog.require('module$i1'); alert(module$i1.x);",
+          "goog.provide('module$i1'); var x$$module$i1 = 5; module$i1.x = x$$module$i1;",
+        });
+  }
+
+  /**
+   * Check that the expected error is reported when an ES6 module tries to import a nonexist module.
+   */
+  public void testES6Modules_missing() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(options,
+        new String[] {
+          "import {x} from 'i2'; alert(x);",
+          "export var x = 5;",
+        },
+        ES6ModuleLoader.LOAD_ERROR);
+  }
+
   public void testAngularPassOff() {
     testSame(createCompilerOptions(),
         "/** @ngInject */ function f() {} " +
@@ -2288,11 +2321,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     Compiler compiler = compile(options, code);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
     assertEquals(
-        "JSC_PARSE_ERROR. Parse error. " +
-        "getters are not supported in older versions of JavaScript. " +
-        "If you are targeting newer versions of JavaScript, " +
-        "set the appropriate language_in option. " +
-        "at i0 line 1 : 0",
+        "JSC_PARSE_ERROR. Parse error."
+            + " getters are not supported in older versions of JavaScript."
+            + " If you are targeting newer versions of JavaScript,"
+            + " set the appropriate language_in option."
+            + " at i0.js line 1 : 0",
         compiler.getErrors()[0].toString());
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);

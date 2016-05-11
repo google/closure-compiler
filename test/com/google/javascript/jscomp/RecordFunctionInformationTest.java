@@ -70,8 +70,6 @@ public final class RecordFunctionInformationTest extends TestCase {
     Node externsRoot = externs(root);
     Node mainRoot = main(root);
 
-    String m0_after = f;
-    String m1_after = g;
     Node nodeG = mainRoot.getFirstChild().getLastChild();
     mainRoot.getFirstChild().removeChild(nodeG);
     mainRoot.getLastChild().addChildrenToBack(nodeG.cloneTree());
@@ -81,7 +79,7 @@ public final class RecordFunctionInformationTest extends TestCase {
     expected.addEntry(
         FunctionInformationMap.Entry.newBuilder()
         .setId(0)
-        .setSourceName("i0")
+        .setSourceName("i0.js")
         .setLineNumber(1)
         .setModuleName("m0")
         .setSize(g.length())
@@ -90,7 +88,7 @@ public final class RecordFunctionInformationTest extends TestCase {
     expected.addEntry(
         FunctionInformationMap.Entry.newBuilder()
         .setId(1)
-        .setSourceName("i0")
+        .setSourceName("i0.js")
         .setLineNumber(1)
         .setModuleName("m1")
         .setSize(g.length())
@@ -107,10 +105,6 @@ public final class RecordFunctionInformationTest extends TestCase {
                   ImmutableList.of(SourceFile.fromCode("testcode", js)),
                   new CompilerOptions());
     test(compiler, expected);
-  }
-
-  private void test(JSModule[] modules, FunctionInformationMap expected) {
-    test(compilerFor(modules), expected);
   }
 
   private void test(Compiler compiler, FunctionInformationMap expected) {
