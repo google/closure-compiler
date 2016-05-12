@@ -1557,13 +1557,13 @@ jQuery.noConflict = function(removeAll) {};
 $.noConflict = function(removeAll) {};
 
 /**
- * @return {function()}
+ * @return {undefined}
  * @nosideeffects
  */
 jQuery.noop = function() {};
 
 /**
- * @return {function()}
+ * @return {undefined}
  * @nosideeffects
  */
 $.noop = function() {};

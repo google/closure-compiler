@@ -1324,7 +1324,7 @@ jQuery.prototype.nextUntil = function(arg1, filter) {};
 jQuery.noConflict = function(removeAll) {};
 
 /**
- * @return {function()}
+ * @return {undefined}
  * @nosideeffects
  */
 jQuery.noop = function() {};

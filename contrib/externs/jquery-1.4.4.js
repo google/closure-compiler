@@ -290,7 +290,7 @@ jQuery.merge = function(first, second) {};
 jQuery.noConflict = function(removeAll) {};
 
 /**
- * @return {function()}
+ * @return {undefined}
  * @nosideeffects
  */
 jQuery.noop = function() {};
