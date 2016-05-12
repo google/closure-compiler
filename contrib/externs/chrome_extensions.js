@@ -7758,6 +7758,26 @@ chrome.usb.Device.prototype.vendorId;
 /** @type {number} */
 chrome.usb.Device.prototype.productId;
 
+/**
+ * The product name read from the device, if available.
+ * Since Chrome 46.
+ * @type {string}
+ */
+chrome.usb.Device.prototype.productName;
+
+/**
+ * The manufacturer name read from the device, if available.
+ * Since Chrome 46.
+ * @type {string}
+ */
+chrome.usb.Device.prototype.manufacturerName;
+
+/**
+ * The serial number read from the device, if available.
+ * Since Chrome 46.
+ * @type {string}
+ */
+chrome.usb.Device.prototype.serialNumber;
 
 
 /** @constructor */
