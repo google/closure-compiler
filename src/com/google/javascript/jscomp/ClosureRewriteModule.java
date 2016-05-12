@@ -516,6 +516,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       popScript();
     }
 
+    reportUnrecognizedRequires();
     if (compiler.hasHaltingErrors()) {
       return;
     }
@@ -529,8 +530,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
       inlineGoogLoadModuleCalls();
     }
-
-    reportUnrecognizedRequires();
   }
 
   @Override
