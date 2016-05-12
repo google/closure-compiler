@@ -42,7 +42,7 @@ Stripe.bitcoinReceiver = {};
 Stripe.setPublishableKey = function(publishableKey) {};
 
 /**
- * @param {Object} cardDetails
+ * @param {{number: string, cvc: string, exp_month: string, exp_year: string}} cardDetails
  * @param {function(string, Object)} callback
  */
 Stripe.card.createToken = function(cardDetails, callback) {};
