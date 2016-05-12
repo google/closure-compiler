@@ -42,10 +42,27 @@ Stripe.bitcoinReceiver = {};
 Stripe.setPublishableKey = function(publishableKey) {};
 
 /**
- * @param {{number: string, cvc: string, exp_month: string, exp_year: string}} cardDetails
+ * @typedef {{
+ *     number: string,
+ *     exp_month: string,
+ *     exp_year: string,
+ *     cvc: (string|undefined),
+ *     name: (string|undefined),
+ *     address_line1: (string|undefined),
+ *     address_line2: (string|undefined),
+ *     address_city: (string|undefined),
+ *     address_state: (string|undefined),
+ *     address_zip: (string|undefined),
+ *     address_country: (string|undefined)
+ * }}
+ */
+var StripeCardData;
+
+/**
+ * @param {StripeCardData} cardData
  * @param {function(string, Object)} callback
  */
-Stripe.card.createToken = function(cardDetails, callback) {};
+Stripe.card.createToken = function(cardData, callback) {};
 
 /**
  * @param {string} cardNumber
@@ -69,10 +86,22 @@ Stripe.card.validateCVC = function(cvc) {};
 Stripe.card.cardType = function(cardType) {};
 
 /**
- * @param {Object} accountDetails
+ * @typedef {{
+ *     country: string,
+ *     currency: string,
+ *     account_number: string,
+ *     routing_number: (string|undefined),
+ *     account_holder_name: (string|undefined),
+ *     account_holder_type: (string|undefined)
+ * }}
+ */
+var StripeAccountData;
+
+/**
+ * @param {StripeAccountData|Element} accountDataOrForm
  * @param {function(string, Object)} callback
  */
-Stripe.bankAccount.createToken = function(accountDetails, callback) {};
+Stripe.bankAccount.createToken = function(accountDataOrForm, callback) {};
 
 /**
  * @param {string} routingNumber
@@ -87,16 +116,33 @@ Stripe.bankAccount.validateRoutingNumber = function(routingNumber, country) {};
 Stripe.bankAccount.validateAccountNumber = function(accountNumber, country) {};
 
 /**
- * @param {Object} piiDetails
- * @param {function(string, Object)} callback
+ * @typedef {{
+ *     personal_id_number: string
+ * }}
  */
-Stripe.piiData.createToken = function(piiDetails, callback) {};
+var StripePIIData;
 
 /**
- * @param {Object} receiverDetails
+ * @param {StripePIIData} piiData
  * @param {function(string, Object)} callback
  */
-Stripe.bitcoinReceiver.createReceiver = function(receiverDetails, callback) {};
+Stripe.piiData.createToken = function(piiData, callback) {};
+
+/**
+ * @typedef {{
+ *     amount: number,
+ *     currency: string,
+ *     description: string,
+ *     email: string
+ * }}
+ */
+var StripeBitcoinReceiverData;
+
+/**
+ * @param {StripeBitcoinReceiverData} receiverData
+ * @param {function(string, Object)} callback
+ */
+Stripe.bitcoinReceiver.createReceiver = function(receiverData, callback) {};
 
 /**
  * @param {string} receiverId
