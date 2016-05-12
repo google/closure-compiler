@@ -79,3 +79,26 @@ Stripe.bankAccount.validateRoutingNumber = function(routingNumber, country) {};
  * @param {string} country
  */
 Stripe.bankAccount.validateAccountNumber = function(accountNumber, country) {};
+
+/**
+ * @param {Object} piiDetails
+ * @param {Function} callback
+ */
+Stripe.piiData.createToken = function(piiDetails, callback) {};
+
+/**
+ * @param {Object} receiverDetails
+ * @param {Function} callback
+ */
+Stripe.bitcoinReceiver.createReceiver = function(receiverDetails, callback) {};
+
+/**
+ * @param {string} receiverId
+ * @param {Function} callback
+ */
+Stripe.bitcoinReceiver.pollReceiver = function(receiverId, callback) {};
+
+/**
+ * @param {string} receiverId
+ */
+Stripe.bitcoinReceiver.cancelReceiverPoll = function(receiverId) {};
