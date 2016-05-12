@@ -620,13 +620,24 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * with the same path inside different zips are considered duplicate inputs.
    * Parameter {@code sourceFiles} may be modified if duplicates are removed.
    */
-  public static List<JSError> removeDuplicateZipEntries(List<SourceFile> sourceFiles)
-      throws IOException {
+  public static List<JSError> removeDuplicateZipEntries(
+      List<SourceFile> sourceFiles, List<JsModuleSpec> jsModuleSpecs) throws IOException {
     ImmutableList.Builder<JSError> errors = ImmutableList.builder();
     Map<String, SourceFile> sourceFilesByName = new HashMap<>();
-    Iterator<SourceFile> fileIterator = sourceFiles.listIterator();
+    Iterator<SourceFile> fileIterator = sourceFiles.iterator();
+    int currentFileIndex = 0;
+    Iterator<JsModuleSpec> moduleIterator = jsModuleSpecs.iterator();
+    // Tracks the total number of js files for current module and all the previous modules.
+    int cumulatedJsFileNum = 0;
+    JsModuleSpec currentModule  = null;
     while (fileIterator.hasNext()) {
       SourceFile sourceFile = fileIterator.next();
+      currentFileIndex++;
+      // Check whether we reached the next module.
+      if (moduleIterator.hasNext() && currentFileIndex > cumulatedJsFileNum) {
+        currentModule = moduleIterator.next();
+        cumulatedJsFileNum += currentModule.numJsFiles;
+      }
       String fullPath = sourceFile.getName();
       if (!fullPath.contains("!/")) {
         // Not a zip file
@@ -641,6 +652,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           errors.add(JSError.make(
               SourceFile.DUPLICATE_ZIP_CONTENTS, firstSourceFile.getName(), sourceFile.getName()));
           fileIterator.remove();
+          if (currentModule != null) {
+            currentModule.numJsFiles--;
+          }
         } else {
           errors.add(JSError.make(
               CONFLICTING_DUPLICATE_ZIP_CONTENTS, firstSourceFile.getName(), sourceFile.getName()));
@@ -723,7 +737,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         inputs.add(SourceFile.fromCode(jsonFile.getPath(), jsonFile.getSrc()));
       }
     }
-    for (JSError error : removeDuplicateZipEntries(inputs)) {
+    for (JSError error : removeDuplicateZipEntries(inputs, jsModuleSpecs)) {
       compiler.report(error);
     }
     return inputs;
@@ -2589,12 +2603,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Represents a specification for a js module.
    */
-  protected static class JsModuleSpec {
+  public static class JsModuleSpec {
     private final String name;
     // Number of input files, including js and zip files.
     private final int numInputs;
     private final ImmutableList<String> deps;
-    // Number of input js files. All zip files should be expended.
+    // Number of input js files. All zip files should be expanded.
     private int numJsFiles;
 
     private JsModuleSpec(String name, int numInputs, ImmutableList<String> deps) {
