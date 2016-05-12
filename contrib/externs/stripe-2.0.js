@@ -30,6 +30,12 @@ Stripe.card = {};
 /** @const */
 Stripe.bankAccount = {};
 
+/** @const */
+Stripe.piiData = {};
+
+/** @const */
+Stripe.bitcoinReceiver = {};
+
 /**
  * @param {string} publishableKey
  */
