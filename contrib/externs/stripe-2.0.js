@@ -43,7 +43,7 @@ Stripe.setPublishableKey = function(publishableKey) {};
 
 /**
  * @param {Object} cardDetails
- * @param {Function} callback
+ * @param {function(string, Object)} callback
  */
 Stripe.card.createToken = function(cardDetails, callback) {};
 
@@ -70,7 +70,7 @@ Stripe.card.cardType = function(cardType) {};
 
 /**
  * @param {Object} accountDetails
- * @param {Function} callback
+ * @param {function(string, Object)} callback
  */
 Stripe.bankAccount.createToken = function(accountDetails, callback) {};
 
@@ -88,19 +88,19 @@ Stripe.bankAccount.validateAccountNumber = function(accountNumber, country) {};
 
 /**
  * @param {Object} piiDetails
- * @param {Function} callback
+ * @param {function(string, Object)} callback
  */
 Stripe.piiData.createToken = function(piiDetails, callback) {};
 
 /**
  * @param {Object} receiverDetails
- * @param {Function} callback
+ * @param {function(string, Object)} callback
  */
 Stripe.bitcoinReceiver.createReceiver = function(receiverDetails, callback) {};
 
 /**
  * @param {string} receiverId
- * @param {Function} callback
+ * @param {function(string, Object)} callback
  */
 Stripe.bitcoinReceiver.pollReceiver = function(receiverId, callback) {};
 
