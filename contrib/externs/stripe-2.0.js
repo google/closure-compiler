@@ -31,51 +31,51 @@ Stripe.card = {};
 Stripe.bankAccount = {};
 
 /**
- * @param {string} t
+ * @param {string} publishableKey
  */
-Stripe.setPublishableKey = function(t) { };
+Stripe.setPublishableKey = function(publishableKey) {};
 
 /**
- * @param {Object} t
- * @param {Function} r
+ * @param {Object} cardDetails
+ * @param {Function} callback
  */
-Stripe.card.createToken = function(t,r) {};
+Stripe.card.createToken = function(cardDetails, callback) {};
 
 /**
- * @param {string} t
+ * @param {string} cardNumber
  */
-Stripe.card.validateCardNumber = function(t) { };
+Stripe.card.validateCardNumber = function(cardNumber) {};
 
 /**
- * @param {string} t
- * @param {string} n
+ * @param {string} month
+ * @param {string} year
  */
-Stripe.card.validateExpiry = function(t, n) { };
+Stripe.card.validateExpiry = function(month, year) {};
 
 /**
- * @param {string} t
+ * @param {string} cvc
  */
-Stripe.card.validateCVC = function(t) { };
+Stripe.card.validateCVC = function(cvc) {};
 
 /**
- * @param {string} t
+ * @param {string} cardType
  */
-Stripe.card.cardType = function(t) { };
+Stripe.card.cardType = function(cardType) {};
 
 /**
- * @param {Object} t
- * @param {Function} r
+ * @param {Object} accountDetails
+ * @param {Function} callback
  */
-Stripe.bankAccount.createToken = function(t,r) {};
+Stripe.bankAccount.createToken = function(accountDetails, callback) {};
 
 /**
- * @param {string} t
- * @param {string} r
+ * @param {string} routingNumber
+ * @param {string} country
  */
-Stripe.bankAccount.validateRoutingNumber = function(t, r) { };
+Stripe.bankAccount.validateRoutingNumber = function(routingNumber, country) {};
 
 /**
- * @param {string} t
- * @param {string} r
+ * @param {string} accountNumber
+ * @param {string} country
  */
-Stripe.bankAccount.validateAccountNumber = function(t, r) { };
+Stripe.bankAccount.validateAccountNumber = function(accountNumber, country) {};
