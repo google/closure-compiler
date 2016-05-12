@@ -147,6 +147,7 @@ import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
+import com.google.javascript.rhino.dtoa.DToA;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -812,24 +813,13 @@ class IRFactory {
 
   Node transformNumberAsString(LiteralToken token) {
     double value = normalizeNumber(token);
-    Node irNode = newStringNode(getStringValue(value));
+    Node irNode = newStringNode(DToA.numberToString(value));
     JSDocInfo jsDocInfo = handleJsDoc(token);
     if (jsDocInfo != null) {
       irNode.setJSDocInfo(jsDocInfo);
     }
     setSourceInfo(irNode, token);
     return irNode;
-  }
-
-  private static String getStringValue(double value) {
-    long longValue = (long) value;
-
-    // Return "1" instead of "1.0"
-    if (longValue == value) {
-      return Long.toString(longValue);
-    } else {
-      return Double.toString(value);
-    }
   }
 
   static int lineno(ParseTree node) {

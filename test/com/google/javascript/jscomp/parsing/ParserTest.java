@@ -1502,6 +1502,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var { 2 = 5 } = foo();", "':' expected");
   }
 
+  /**
+   * @bug #1262
+   */
+  public void testObjectNumberKeysSpecial() {
+    Node n = parse("var a = {12345678901234567890: 2}");
+
+    Node objectLit = n.getFirstChild().getFirstChild().getFirstChild();
+    assertThat(objectLit.getType()).isEqualTo(Token.OBJECTLIT);
+
+    Node number = objectLit.getFirstChild();
+    assertThat(number.getType()).isEqualTo(Token.STRING_KEY);
+    assertThat(number.getString()).isEqualTo("12345678901234567000");
+  }
+
   public void testObjectDestructuringKeywordKeys() {
     mode = LanguageMode.ECMASCRIPT6;
     expectedFeatures = FeatureSet.ES6;
