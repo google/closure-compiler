@@ -318,20 +318,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   protected abstract void addWhitelistWarningsGuard(
       CompilerOptions options, File whitelistFile);
 
-  /**
-   * Sets options based on the configurations set flags API.
-   * Called during the run() run() method.
-   * If you want to ignore the flags API, or interpret flags your own way,
-   * then you should override this method.
-   */
-  protected void setRunOptions(CompilerOptions options) throws IOException {
-    DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
-
-    if (config.warningGuards != null) {
-      for (FlagEntry<CheckLevel> entry : config.warningGuards) {
+  protected static void setWarningGuardOptions(
+      CompilerOptions options,
+      ArrayList<FlagEntry<CheckLevel>> warningGuards,
+      DiagnosticGroups diagnosticGroups) {
+    if (warningGuards != null) {
+      for (FlagEntry<CheckLevel> entry : warningGuards) {
         if ("*".equals(entry.value)) {
-          Set<String> groupNames =
-              diagnosticGroups.getRegisteredGroups().keySet();
+          Set<String> groupNames = diagnosticGroups.getRegisteredGroups().keySet();
           for (String groupName : groupNames) {
             if (!DiagnosticGroups.wildcardExcludedGroups.contains(groupName)) {
               diagnosticGroups.setWarningLevel(options, groupName, entry.flag);
@@ -342,6 +336,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         }
       }
     }
+  }
+
+  /**
+   * Sets options based on the configurations set flags API.
+   * Called during the run() run() method.
+   * If you want to ignore the flags API, or interpret flags your own way,
+   * then you should override this method.
+   */
+  protected void setRunOptions(CompilerOptions options) throws IOException {
+    DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
+
+    setWarningGuardOptions(options, config.warningGuards, diagnosticGroups);
 
     if (!config.warningsWhitelistFile.isEmpty()) {
       addWhitelistWarningsGuard(options, new File(config.warningsWhitelistFile));
