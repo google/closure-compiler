@@ -41,7 +41,7 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    if (!NodeUtil.isModuleFile(scriptRoot)) {
+    if (!NodeUtil.isGoogModuleFile(scriptRoot)) {
       return;
     }
 

@@ -222,7 +222,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
      */
     boolean willCreateExportsObject;
     boolean hasCreatedExportObject;
-    Node rootNode; // For recognizing top level names. Changes when unwrapping goog.scope()s.
+
+    // The root of the module. The SCRIPT node (or for goog.loadModule, the body of the
+    // function) that contains the module contents. For recognizing top level names. Changes when
+    // unwrapping a goog.loadModule() call.
+    Node rootNode;
 
     public void addChildScript(ScriptDescription childScript) {
       childScripts.addLast(childScript);
@@ -236,7 +240,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private class ScriptRecorder extends AbstractPreOrderCallback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isModuleFile(n)) {
+      if (NodeUtil.isGoogModuleFile(n)) {
         checkAndSetStrictModeDirective(t, n);
       }
 
@@ -316,7 +320,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             updateGoogForwardDeclare(t, n);
           }
           if (isCallTo(n, "goog.module.get")) {
-            updateGoogModuleGetCall(t, n);
+            updateGoogModuleGetCall(n);
           }
           break;
 
@@ -352,7 +356,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.SCRIPT:
-          updateEndScript(n);
+          updateEndScript();
           break;
       }
     }
@@ -889,7 +893,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     updateGoogRequire(t, call);
   }
 
-  private void updateGoogModuleGetCall(NodeTraversal t, Node call) {
+  private void updateGoogModuleGetCall(Node call) {
     Node legacyNamespaceNode = call.getSecondChild();
     String legacyNamespace = legacyNamespaceNode.getString();
 
@@ -915,9 +919,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node parent = getpropNode.getParent();
+    Preconditions.checkState(parent.isAssign() || parent.isExprResult(), parent);
 
     // Update "exports.foo = Foo" to "module$exports$pkg$Foo.foo = Foo";
-    Node exportsNameNode = parent.getFirstFirstChild();
+    Node exportsNameNode = getpropNode.getFirstChild();
+    Preconditions.checkState(exportsNameNode.getString().equals("exports"));
     safeSetString(exportsNameNode, currentScript.binaryNamespace);
 
     Node jsdocNode = parent.isAssign() ? parent : getpropNode;
@@ -1094,7 +1100,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     popScript();
   }
 
-  private void updateEndScript(Node scriptNode) {
+  private void updateEndScript() {
     if (!currentScript.isModule) {
       return;
     }

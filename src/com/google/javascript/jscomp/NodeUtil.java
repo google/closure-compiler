@@ -4397,7 +4397,7 @@ public final class NodeUtil {
   /**
    * @return Whether the node is a goog.module file's SCRIPT node.
    */
-  static boolean isModuleFile(Node n) {
+  static boolean isGoogModuleFile(Node n) {
     return n.isScript() && n.hasChildren() && isGoogModuleCall(n.getFirstChild());
   }
 
