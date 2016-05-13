@@ -268,7 +268,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         "but found:",
         "----------------------------------------------------------------",
         Arrays.toString(errors) + Arrays.toString(warnings) + "",
-        "----------------------------------------------------------------");
+        "----------------------------------------------------------------\n");
     assertEquals(
         errorMessage + "Warning count",
         warningKinds.length,
@@ -310,7 +310,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         "but found:",
         "----------------------------------------------------------------",
         warning.toString(),
-        "----------------------------------------------------------------"),
+        "----------------------------------------------------------------\n"),
         warningKind, warning.getType());
     assertEquals(LINE_JOINER.join(
         "Wrong warning message",
@@ -321,7 +321,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         "but found:",
         "----------------------------------------------------------------",
         warning.description,
-        "----------------------------------------------------------------"),
+        "----------------------------------------------------------------\n"),
         warningMsg, warning.description);
   }
 }

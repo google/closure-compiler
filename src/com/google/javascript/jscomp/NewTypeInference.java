@@ -1652,7 +1652,7 @@ final class NewTypeInference implements CompilerPass {
       if (!rhsPair.type.isSubtypeOf(declType)
           && !NodeUtil.isPrototypeAssignment(lhs)) {
         warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
-                declType.toString(), rhsPair.type.toString()));
+                errorMsgWithTypeDiff(declType, rhsPair.type)));
       }
       return rhsPair;
     }
@@ -1662,7 +1662,7 @@ final class NewTypeInference implements CompilerPass {
         analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
     if (declType != null && !rhsPair.type.isSubtypeOf(declType)) {
       warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
-              declType.toString(), rhsPair.type.toString()));
+              errorMsgWithTypeDiff(declType, rhsPair.type)));
     } else {
       rhsPair.env = updateLvalueTypeInEnv(rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
     }

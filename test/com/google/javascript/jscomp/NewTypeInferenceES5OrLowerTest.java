@@ -16606,5 +16606,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "More details:",
             "The found type is a union that "
             + "includes an unexpected type: string"));
+
+    typeCheckMessageContents(
+        "var /** {a:number} */ x; x = { a: 'asdf' }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : {a:number}",
+            "Found    : {a:string}",
+            "More details:",
+            "Incompatible types for property a.",
+            "Expected : number",
+            "Found    : string"));
   }
 }
