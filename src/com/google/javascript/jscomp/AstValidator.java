@@ -197,6 +197,7 @@ public final class AstValidator implements CompilerPass {
     switch (n.getType()) {
       // Childless expressions
       case Token.FALSE:
+      case Token.NEW_TARGET:
       case Token.NULL:
       case Token.SUPER:
       case Token.THIS:

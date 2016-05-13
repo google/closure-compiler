@@ -248,6 +248,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     testError("f(class extends D { f() { super.g() } })", CANNOT_CONVERT);
   }
 
+  public void testNewTarget() {
+    testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
+  }
+
   public void testClassWithJsDoc() {
     test("class C { }", "/** @constructor @struct */ var C = function() { };");
 

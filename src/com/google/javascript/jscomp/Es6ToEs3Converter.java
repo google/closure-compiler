@@ -122,6 +122,8 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           return false;
         }
         break;
+      case Token.NEW_TARGET:
+        cannotConvertYet(n, "new.target");
     }
     return true;
   }
