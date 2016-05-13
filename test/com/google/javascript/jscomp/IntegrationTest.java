@@ -557,7 +557,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   /**
-   * Check that the expected error is reported when an ES6 module tries to import a nonexist module.
+   * Check that the expected warning is reported when an ES6 module tries to import a nonexistent
+   * module.
    */
   public void testES6Modules_missing() {
     CompilerOptions options = createCompilerOptions();
@@ -568,7 +569,7 @@ public final class IntegrationTest extends IntegrationTestCase {
           "import {x} from 'i2'; alert(x);",
           "export var x = 5;",
         },
-        ES6ModuleLoader.LOAD_ERROR);
+        ES6ModuleLoader.LOAD_WARNING);
   }
 
   public void testAngularPassOff() {

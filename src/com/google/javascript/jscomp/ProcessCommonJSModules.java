@@ -43,6 +43,10 @@ public final class ProcessCommonJSModules implements CompilerPass {
   private static final String EXPORTS = "exports";
   private static final String MODULE = "module";
 
+  private static final DiagnosticType LOAD_ERROR = DiagnosticType.error(
+      "JSC_COMMONJS_MODULE_LOAD_ERROR",
+      "Failed to load module \"{0}\"");
+
   private final Compiler compiler;
   private final ES6ModuleLoader loader;
   private final boolean reportDependencies;
@@ -328,7 +332,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       String requireName = require.getSecondChild().getString();
       URI loadAddress = loader.locateCommonJsModule(requireName, t.getInput());
       if (loadAddress == null) {
-        compiler.report(t.makeError(require, ES6ModuleLoader.LOAD_ERROR, requireName));
+        compiler.report(t.makeError(require, LOAD_ERROR, requireName));
         return;
       }
 
@@ -722,7 +726,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           String moduleName = name.substring(0, endIndex);
           URI loadAddress = loader.locateCommonJsModule(moduleName, t.getInput());
           if (loadAddress == null) {
-            t.makeError(typeNode, ES6ModuleLoader.LOAD_ERROR, moduleName);
+            t.makeError(typeNode, LOAD_ERROR, moduleName);
             return;
           }
 

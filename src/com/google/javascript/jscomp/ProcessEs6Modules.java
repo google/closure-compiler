@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -143,11 +145,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       // These are rewritten to plain namespace object accesses.
       moduleName = importName.substring("goog:".length());
     } else {
-      URI loadAddress = loader.locateEs6Module(importName, t.getInput());
-      if (loadAddress == null) {
-        compiler.report(t.makeError(importDecl, ES6ModuleLoader.LOAD_ERROR, importName));
-        return;
-      }
+      URI loadAddress = checkNotNull(loader.locateEs6Module(importName, t.getInput()));
       moduleName = ES6ModuleLoader.toModuleName(loadAddress);
     }
 
@@ -252,13 +250,8 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       parent.addChildBefore(importNode, export);
       visit(t, importNode, parent);
 
-      URI loadAddress = loader.locateEs6Module(moduleIdentifier.getString(), t.getInput());
-      if (loadAddress == null) {
-        compiler.report(
-            t.makeError(
-                moduleIdentifier, ES6ModuleLoader.LOAD_ERROR, moduleIdentifier.getString()));
-        return;
-      }
+      URI loadAddress = checkNotNull(
+          loader.locateEs6Module(moduleIdentifier.getString(), t.getInput()));
       String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
 
       for (Node exportSpec : export.getFirstChild().children()) {
@@ -532,13 +525,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           }
 
           String moduleName = name.substring(0, endIndex);
-          URI loadAddress = loader.locateEs6Module(moduleName, t.getInput());
-          if (loadAddress == null) {
-            compiler.report(t.makeError(
-                typeNode, ES6ModuleLoader.LOAD_ERROR, moduleName));
-            return;
-          }
-
+          URI loadAddress = checkNotNull(loader.locateEs6Module(moduleName, t.getInput()));
           String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress);
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);

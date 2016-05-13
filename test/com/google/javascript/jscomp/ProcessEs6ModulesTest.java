@@ -123,11 +123,10 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   public void testImport_missing() {
-    test(
-        "import name from 'module_does_not_exist'; use(name);",
-        null,
-        ES6ModuleLoader.LOAD_ERROR,
-        null);
+    setExpectParseWarningsThisTest();  // JSC_ES6_MODULE_LOAD_WARNING
+    testModules(
+        "import name from 'does_not_exist'; use(name);",
+        "goog.require('module$does_not_exist'); use(module$does_not_exist.default);");
   }
 
   public void testImportStar() {

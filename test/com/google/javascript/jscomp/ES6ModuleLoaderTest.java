@@ -30,16 +30,23 @@ import java.net.URI;
 
 public final class ES6ModuleLoaderTest extends TestCase {
 
+  private AbstractCompiler compiler;
+
+  @Override
+  public void setUp() {
+    compiler = new Compiler();
+  }
+
   public void testWindowsAddresses() {
     ES6ModuleLoader loader =
-        new ES6ModuleLoader(ImmutableList.of("."), inputs("js\\a.js", "js\\b.js"));
+        new ES6ModuleLoader(compiler, ImmutableList.of("."), inputs("js\\a.js", "js\\b.js"));
     assertEquals("js/a.js", loader.normalizeInputAddress(input("js\\a.js")).toString());
     assertEquals("js/b.js", loader.locateEs6Module("./b", input("js\\a.js")).toString());
   }
 
   public void testLocateCommonJs() throws Exception {
-    ES6ModuleLoader loader =
-        new ES6ModuleLoader(ImmutableList.of("."), inputs("A/index.js", "B/index.js", "app.js"));
+    ES6ModuleLoader loader = new ES6ModuleLoader(
+            compiler, ImmutableList.of("."), inputs("A/index.js", "B/index.js", "app.js"));
 
     CompilerInput inputA = input("A/index.js");
     CompilerInput inputB = input("B/index.js");
@@ -51,7 +58,8 @@ public final class ES6ModuleLoaderTest extends TestCase {
   }
 
   public void testNormalizeUris() throws Exception {
-    ES6ModuleLoader loader = new ES6ModuleLoader(ImmutableList.of("a", "b", "/c"), inputs());
+    ES6ModuleLoader loader = new ES6ModuleLoader(
+        compiler, ImmutableList.of("a", "b", "/c"), inputs());
     assertUri("a.js", loader.normalizeInputAddress(input("a/a.js")));
     assertUri("a.js", loader.normalizeInputAddress(input("a.js")));
     assertUri("some.js", loader.normalizeInputAddress(input("some.js")));
@@ -62,18 +70,11 @@ public final class ES6ModuleLoaderTest extends TestCase {
 
   public void testDuplicateUris() throws Exception {
     try {
-      new ES6ModuleLoader(ImmutableList.of("a", "b"), inputs("a/f.js", "b/f.js"));
+      new ES6ModuleLoader(compiler, ImmutableList.of("a", "b"), inputs("a/f.js", "b/f.js"));
       fail("Expected error");
     } catch (IllegalArgumentException e) {
       assertTrue(e.getMessage().contains("Duplicate module URI"));
     }
-  }
-
-  public void testNotFound() throws Exception {
-    ES6ModuleLoader loader =
-        new ES6ModuleLoader(ImmutableList.of("a", "b"), inputs("a/a.js", "b/b.js"));
-    assertNull(
-        "a.js' module root is stripped", loader.locateEs6Module("../a/a.js", input("b/b.js")));
   }
 
   ImmutableList<CompilerInput> inputs(String... names) {
