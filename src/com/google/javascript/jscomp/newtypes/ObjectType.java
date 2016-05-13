@@ -545,15 +545,35 @@ final class ObjectType implements TypeWithProperties {
 
   static boolean isUnionSubtype(boolean keepLoosenessOfThis,
       Set<ObjectType> objs1, Set<ObjectType> objs2, SubtypeCache subSuperMap) {
+    return isUnionSubtypeHelper(
+        keepLoosenessOfThis, objs1, objs2, subSuperMap, null);
+  }
+
+  static void whyNotUnionSubtypes(boolean keepLoosenessOfThis,
+      Set<ObjectType> objs1, Set<ObjectType> objs2, SubtypeCache subSuperMap,
+      MismatchInfo[] boxedInfo) {
+    Preconditions.checkArgument(boxedInfo.length == 1);
+    boolean areSubtypes = isUnionSubtypeHelper(
+        keepLoosenessOfThis, objs1, objs2, subSuperMap, boxedInfo);
+    Preconditions.checkState(!areSubtypes);
+  }
+
+  private static boolean isUnionSubtypeHelper(boolean keepLoosenessOfThis,
+      Set<ObjectType> objs1, Set<ObjectType> objs2, SubtypeCache subSuperMap,
+      MismatchInfo[] boxedInfo) {
     for (ObjectType obj1 : objs1) {
       boolean foundSupertype = false;
       for (ObjectType obj2 : objs2) {
-        if (obj1.isSubtypeOfHelper(keepLoosenessOfThis, obj2, subSuperMap)) {
+        if (obj1.isSubtypeOfHelper(keepLoosenessOfThis, obj2, subSuperMap, null)) {
           foundSupertype = true;
           break;
         }
       }
       if (!foundSupertype) {
+        if (boxedInfo != null) {
+          boxedInfo[0] =
+              MismatchInfo.makeUnionTypeMismatch(JSType.fromObjectType(obj1));
+        }
         return false;
       }
     }
@@ -561,7 +581,15 @@ final class ObjectType implements TypeWithProperties {
   }
 
   boolean isSubtypeOf(ObjectType obj2, SubtypeCache subSuperMap) {
-    return isSubtypeOfHelper(true, obj2, subSuperMap);
+    return isSubtypeOfHelper(true, obj2, subSuperMap, null);
+  }
+
+  static void whyNotSubtypeOf(
+      ObjectType obj1, ObjectType obj2, MismatchInfo[] boxedInfo) {
+    Preconditions.checkArgument(boxedInfo.length == 1);
+    boolean areSubtypes =
+        obj1.isSubtypeOfHelper(true, obj2, SubtypeCache.create(), boxedInfo);
+    Preconditions.checkState(!areSubtypes);
   }
 
   /**
@@ -571,7 +599,7 @@ final class ObjectType implements TypeWithProperties {
    * { } \le { p: num= }  and also   { p: num= } \le { }.
    */
   private boolean isSubtypeOfHelper(boolean keepLoosenessOfThis,
-      ObjectType other, SubtypeCache subSuperMap) {
+      ObjectType other, SubtypeCache subSuperMap, MismatchInfo[] boxedInfo) {
     if (other == TOP_OBJECT) {
       return true;
     }
@@ -608,7 +636,7 @@ final class ObjectType implements TypeWithProperties {
         return false;
       }
     }
-    if (!arePropertiesSubtypes(other, otherPropNames, subSuperMap)) {
+    if (!arePropertiesSubtypes(other, otherPropNames, subSuperMap, boxedInfo)) {
       return false;
     }
 
@@ -618,16 +646,21 @@ final class ObjectType implements TypeWithProperties {
       // Can only be executed if we have declared types for callable objects.
       return false;
     }
-    return this.fn.isSubtypeOf(other.fn, subSuperMap);
+    boolean areFunsSubtypes = this.fn.isSubtypeOf(other.fn, subSuperMap);
+    if (boxedInfo != null) {
+      FunctionType.whyNotSubtypeOf(this.fn, other.fn, subSuperMap, boxedInfo);
+    }
+    return areFunsSubtypes;
   }
 
   private boolean arePropertiesSubtypes(ObjectType other,
-      Set<String> otherPropNames, SubtypeCache subSuperMap) {
+      Set<String> otherPropNames, SubtypeCache subSuperMap,
+      MismatchInfo[] boxedInfo) {
     for (String pname : otherPropNames) {
       QualifiedName qname = new QualifiedName(pname);
       if (!isPropertySubtype(
-          this.getLeftmostProp(qname), other.getLeftmostProp(qname),
-          subSuperMap)) {
+          pname, this.getLeftmostProp(qname), other.getLeftmostProp(qname),
+          subSuperMap, boxedInfo)) {
         return false;
       }
     }
@@ -636,8 +669,8 @@ final class ObjectType implements TypeWithProperties {
         if (!otherPropNames.contains(pname)) {
           QualifiedName qname = new QualifiedName(pname);
           if (!isPropertySubtype(
-              this.getLeftmostProp(qname), other.getLeftmostProp(qname),
-              subSuperMap)) {
+              pname, this.getLeftmostProp(qname), other.getLeftmostProp(qname),
+              subSuperMap, boxedInfo)) {
             return false;
           }
         }
@@ -646,7 +679,14 @@ final class ObjectType implements TypeWithProperties {
     return true;
   }
 
-  private static boolean isPropertySubtype(
+  private static boolean isPropertySubtype(String pname, Property prop1,
+      Property prop2, SubtypeCache subSuperMap, MismatchInfo[] boxedInfo) {
+    return boxedInfo != null
+        ? getPropMismatchInfo(pname, prop1, prop2, subSuperMap, boxedInfo)
+        : isPropertySubtypeHelper(prop1, prop2, subSuperMap);
+  }
+
+  private static boolean isPropertySubtypeHelper(
       Property prop1, Property prop2, SubtypeCache subSuperMap) {
     if (prop2.isOptional()) {
       if (prop1 != null
@@ -656,6 +696,33 @@ final class ObjectType implements TypeWithProperties {
     } else {
       if (prop1 == null || prop1.isOptional() ||
           !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Like isPropertySubtypeHelper, but also provides mismatch information
+  private static boolean getPropMismatchInfo(String pname, Property prop1,
+      Property prop2, SubtypeCache subSuperMap, MismatchInfo[] boxedInfo) {
+    Preconditions.checkNotNull(pname);
+    if (prop2.isOptional()) {
+      if (prop1 != null
+          && !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
+        boxedInfo[0] = MismatchInfo.makePropTypeMismatch(
+            pname, prop2.getType(), prop1.getType());
+        return false;
+      }
+    } else {
+      if (prop1 == null) {
+        boxedInfo[0] = MismatchInfo.makeMissingPropMismatch(pname);
+        return false;
+      } else if (prop1.isOptional()) {
+        boxedInfo[0] = MismatchInfo.makeMaybeMissingPropMismatch(pname);
+        return false;
+      } else if (!prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
+        boxedInfo[0] = MismatchInfo.makePropTypeMismatch(
+            pname, prop2.getType(), prop1.getType());
         return false;
       }
     }

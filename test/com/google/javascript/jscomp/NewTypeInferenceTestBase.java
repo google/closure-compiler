@@ -260,17 +260,19 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     parseAndTypeCheck(externs, js);
     JSError[] warnings = compiler.getWarnings();
     JSError[] errors = compiler.getErrors();
-    String errorMessage =
-        "Expected warning of type:\n"
-        + "================================================================\n"
-        + Arrays.toString(warningKinds)
-        + "================================================================\n"
-        + "but found:\n"
-        + "----------------------------------------------------------------\n"
-        + Arrays.toString(errors) + Arrays.toString(warnings) + "\n"
-        + "----------------------------------------------------------------\n";
+    String errorMessage = LINE_JOINER.join(
+        "Expected warning of type:",
+        "================================================================",
+        Arrays.toString(warningKinds),
+        "================================================================",
+        "but found:",
+        "----------------------------------------------------------------",
+        Arrays.toString(errors) + Arrays.toString(warnings) + "",
+        "----------------------------------------------------------------");
     assertEquals(
-        errorMessage + "Warning count", warningKinds.length, warnings.length + errors.length);
+        errorMessage + "Warning count",
+        warningKinds.length,
+        warnings.length + errors.length);
     for (JSError warning : warnings) {
       assertTrue(
           "Wrong warning type\n" + errorMessage,
@@ -281,5 +283,45 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           "Wrong warning type\n" + errorMessage,
           Arrays.asList(warningKinds).contains(error.getType()));
     }
+  }
+
+  // Used only in the cases where we provide extra details in the error message.
+  // Don't use in other cases.
+  // It is deliberately less general; no custom externs and only a single
+  // warning per test.
+  protected final void typeCheckMessageContents(
+      String js, DiagnosticType warningKind, String warningMsg) {
+    parseAndTypeCheck(DEFAULT_EXTERNS, js);
+    JSError[] warnings = compiler.getWarnings();
+    JSError[] errors = compiler.getErrors();
+    assertEquals(
+        "Expected no errors, but found:\n" + Arrays.toString(errors),
+        0, errors.length);
+    assertEquals(
+        "Expected one warning, but found:\n" + Arrays.toString(warnings),
+        1, warnings.length);
+    JSError warning = warnings[0];
+    assertEquals(LINE_JOINER.join(
+        "Wrong warning type",
+        "Expected warning of type:",
+        "================================================================",
+        warningKind.toString(),
+        "================================================================",
+        "but found:",
+        "----------------------------------------------------------------",
+        warning.toString(),
+        "----------------------------------------------------------------"),
+        warningKind, warning.getType());
+    assertEquals(LINE_JOINER.join(
+        "Wrong warning message",
+        "Expected:",
+        "================================================================",
+        warningMsg,
+        "================================================================",
+        "but found:",
+        "----------------------------------------------------------------",
+        warning.description,
+        "----------------------------------------------------------------"),
+        warningMsg, warning.description);
   }
 }

@@ -415,11 +415,17 @@ public final class FunctionType {
   }
 
   public boolean isValidOverride(FunctionType other) {
-    return isSubtypeOfHelper(other, false, SubtypeCache.create());
+    return isSubtypeOfHelper(other, false, SubtypeCache.create(), null);
   }
 
   boolean isSubtypeOf(FunctionType other, SubtypeCache subSuperMap) {
-    return isSubtypeOfHelper(other, true, subSuperMap);
+    return isSubtypeOfHelper(other, true, subSuperMap, null);
+  }
+
+  static void whyNotSubtypeOf(FunctionType f1, FunctionType f2,
+      SubtypeCache subSuperMap, MismatchInfo[] boxedInfo) {
+    Preconditions.checkArgument(boxedInfo.length == 1);
+    f1.isSubtypeOfHelper(f2, true, subSuperMap, boxedInfo);
   }
 
   // When we write ...?, it has a special meaning, it is NOT a variable-arity
@@ -431,8 +437,8 @@ public final class FunctionType {
         && this.restFormals != null && this.restFormals.isUnknown();
   }
 
-  private boolean isSubtypeOfHelper(
-      FunctionType other, boolean checkThisType, SubtypeCache subSuperMap) {
+  private boolean isSubtypeOfHelper(FunctionType other, boolean checkThisType,
+      SubtypeCache subSuperMap, MismatchInfo[] boxedInfo) {
     if (other.isTopFunction() ||
         other.isQmarkFunction() || this.isQmarkFunction()) {
       return true;
@@ -452,7 +458,7 @@ public final class FunctionType {
       // and the fix is not trivial, so for now we decided to not fix.
       // See unit tests in NewTypeInferenceES5OrLowerTest#testGenericsSubtyping
       return instantiateGenericsWithUnknown(this)
-          .isSubtypeOfHelper(other, checkThisType, subSuperMap);
+          .isSubtypeOfHelper(other, checkThisType, subSuperMap, boxedInfo);
     }
 
     if (!other.acceptsAnyArguments()) {
@@ -469,6 +475,10 @@ public final class FunctionType {
         if (thisFormal != null
             && !thisFormal.isUnknown() && !otherFormal.isUnknown()
             && !otherFormal.isSubtypeOf(thisFormal, subSuperMap)) {
+          if (boxedInfo != null) {
+            boxedInfo[0] =
+                MismatchInfo.makeArgTypeMismatch(i, otherFormal, thisFormal);
+          }
           return false;
         }
       }
@@ -514,8 +524,14 @@ public final class FunctionType {
     }
 
     // covariance in the return type
-    return returnType.isUnknown() || other.returnType.isUnknown()
-        || returnType.isSubtypeOf(other.returnType, subSuperMap);
+    boolean areRetTypesSubtypes = this.returnType.isUnknown()
+        || other.returnType.isUnknown()
+        || this.returnType.isSubtypeOf(other.returnType, subSuperMap);
+    if (boxedInfo != null) {
+      boxedInfo[0] =
+          MismatchInfo.makeRetTypeMismatch(other.returnType, this.returnType);
+    }
+    return areRetTypesSubtypes;
   }
 
   // Avoid using JSType#join if possible, to avoid creating new types

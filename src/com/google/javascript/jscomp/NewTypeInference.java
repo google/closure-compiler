@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypes;
+import com.google.javascript.jscomp.newtypes.MismatchInfo;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.TypeEnv;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
@@ -69,33 +70,28 @@ final class NewTypeInference implements CompilerPass {
   static final DiagnosticType MISTYPED_ASSIGN_RHS = DiagnosticType.warning(
       "JSC_NTI_MISTYPED_ASSIGN_RHS",
       "The right side in the assignment is not a subtype of the left side.\n"
-      + "left side  : {0}\n"
-      + "right side : {1}\n");
+      + "{0}");
 
   static final DiagnosticType INVALID_OPERAND_TYPE = DiagnosticType.warning(
       "JSC_NTI_INVALID_OPERAND_TYPE",
       "Invalid type(s) for operator {0}.\n"
-      + "expected : {1}\n"
-      + "found    : {2}\n");
+      + "{1}");
 
   static final DiagnosticType RETURN_NONDECLARED_TYPE = DiagnosticType.warning(
       "JSC_NTI_RETURN_NONDECLARED_TYPE",
-      "Returned type does not match declared return type.\n" +
-      "declared : {0}\n" +
-      "found    : {1}\n");
+      "Returned type does not match declared return type.\n"
+      + "{0}");
 
   static final DiagnosticType INVALID_INFERRED_RETURN_TYPE =
       DiagnosticType.warning(
           "JSC_NTI_INVALID_INFERRED_RETURN_TYPE",
-          "Function called in context that expects incompatible type.\n" +
-          "expected : {0}\n" +
-          "found    : {1}\n");
+          "Function called in context that expects incompatible type.\n"
+          + "{0}");
 
   static final DiagnosticType INVALID_ARGUMENT_TYPE = DiagnosticType.warning(
       "JSC_NTI_INVALID_ARGUMENT_TYPE",
-      "Invalid type for parameter {0} of function {1}.\n" +
-      "expected : {2}\n" +
-      "found    : {3}\n");
+      "Invalid type for parameter {0} of function {1}.\n"
+      + "{2}");
 
   static final DiagnosticType CROSS_SCOPE_GOTCHA = DiagnosticType.warning(
       "JSC_NTI_CROSS_SCOPE_GOTCHA",
@@ -130,8 +126,7 @@ final class NewTypeInference implements CompilerPass {
       DiagnosticType.warning(
           "JSC_NTI_INVALID_INDEX_TYPE",
           "Invalid type for index.\n"
-          + "expected : {0}\n"
-          + "found    : {1}\n");
+          + "{0}");
 
   static final DiagnosticType BOTTOM_INDEX_TYPE =
       DiagnosticType.warning(
@@ -142,7 +137,8 @@ final class NewTypeInference implements CompilerPass {
   static final DiagnosticType INVALID_OBJLIT_PROPERTY_TYPE =
       DiagnosticType.warning(
           "JSC_NTI_INVALID_OBJLIT_PROPERTY_TYPE",
-          "Object-literal property declared as {0} but has type {1}.");
+          "Invalid type for object-literal property.\n"
+          + "{0}");
 
   static final DiagnosticType FORIN_EXPECTS_OBJECT =
       DiagnosticType.warning(
@@ -182,8 +178,8 @@ final class NewTypeInference implements CompilerPass {
   static final DiagnosticType INVALID_THIS_TYPE_IN_BIND =
       DiagnosticType.warning(
           "JSC_NTI_INVALID_THIS_TYPE_IN_BIND",
-          "The first argument to bind has type {0} which is not a subtype of"
-          + " {1}.");
+          "Invalid type for the first argument to bind.\n"
+          + "{0}");
 
   static final DiagnosticType CANNOT_BIND_CTOR =
       DiagnosticType.warning(
@@ -245,7 +241,7 @@ final class NewTypeInference implements CompilerPass {
   static final DiagnosticType NOT_CALLABLE =
       DiagnosticType.warning(
           "JSC_NTI_NOT_FUNCTION_TYPE",
-          "{0} expressions are not callable");
+          "Cannot call non-function type {0}");
 
   static final DiagnosticType WRONG_ARGUMENT_COUNT =
       DiagnosticType.warning(
@@ -854,7 +850,7 @@ final class NewTypeInference implements CompilerPass {
           }
           if (!actualRetType.isSubtypeOf(declRetType)) {
             warnings.add(JSError.make(n, RETURN_NONDECLARED_TYPE,
-                    declRetType.toString(), actualRetType.toString()));
+                    errorMsgWithTypeDiff(declRetType, actualRetType)));
           }
           break;
         }
@@ -1154,7 +1150,7 @@ final class NewTypeInference implements CompilerPass {
       if (!rhsType.isSubtypeOf(declType)) {
         warnings.add(JSError.make(
             rhs, MISTYPED_ASSIGN_RHS,
-            declType.toString(), rhsType.toString()));
+            errorMsgWithTypeDiff(declType, rhsType)));
         // Don't flow the wrong initialization
         rhsType = declType;
       } else {
@@ -1926,7 +1922,7 @@ final class NewTypeInference implements CompilerPass {
       env = pair.env;
       if (!pair.type.isSubtypeOf(reqThisType)) {
         warnings.add(JSError.make(call, INVALID_THIS_TYPE_IN_BIND,
-                pair.type.toString(), reqThisType.toString()));
+                errorMsgWithTypeDiff(reqThisType, pair.type)));
       }
     }
 
@@ -1967,7 +1963,7 @@ final class NewTypeInference implements CompilerPass {
         String fnName = getReadableCalleeName(call.getFirstChild());
         warnings.add(JSError.make(arg, INVALID_ARGUMENT_TYPE,
                 Integer.toString(i + 1), fnName,
-                formalType.toString(), pair.type.toString()));
+                errorMsgWithTypeDiff(formalType, pair.type)));
         argTypeForDeferredCheck = null; // No deferred check needed.
       }
       argTypesForDeferredCheck.add(argTypeForDeferredCheck);
@@ -2452,7 +2448,7 @@ final class NewTypeInference implements CompilerPass {
           if (!pair.type.isSubtypeOf(jsdocType)) {
             warnings.add(JSError.make(
                 prop, INVALID_OBJLIT_PROPERTY_TYPE,
-                jsdocType.toString(), pair.type.toString()));
+                errorMsgWithTypeDiff(jsdocType, pair.type)));
             pair.type = jsdocType;
           }
         }
@@ -2606,6 +2602,51 @@ final class NewTypeInference implements CompilerPass {
         // This is important b/c analyzePropAccess & analyzePropLvalue introduce
         // loose objects, even if there are no undeclared formals.
         && required.isNonLooseSubtypeOf(inferred);
+  }
+
+  private static String errorMsgWithTypeDiff(JSType expected, JSType found) {
+    MismatchInfo mismatch = JSType.whyNotSubtypeOf(found, expected);
+    if (mismatch == null) {
+      return "Expected : " + expected + "\n"
+          + "Found    : " + found + "\n";
+    }
+    StringBuilder builder = new StringBuilder(
+        "Expected : " + expected + "\n"
+        + "Found    : " + found + "\n"
+        + "More details:\n");
+    if (mismatch.isPropMismatch()) {
+      builder.append(
+          "Incompatible types for property "
+          + mismatch.getPropName() + ".\n"
+          + "Expected : " + mismatch.getExpectedType() + "\n"
+          + "Found    : " + mismatch.getFoundType());
+    } else if (mismatch.isMissingProp()) {
+      builder.append(
+          "The found type is missing property "
+          + mismatch.getPropName());
+    } else if (mismatch.wantedRequiredFoundOptional()) {
+      builder.append(
+          "In found type, property " + mismatch.getPropName()
+          + " is optional but should be required.");
+    } else if (mismatch.isArgTypeMismatch()) {
+      builder.append(
+          "The expected and found types are functions which have"
+          + " incompatible types for argument "
+          + (mismatch.getArgIndex() + 1) + ".\n"
+          + "Expected a supertype of : " + mismatch.getExpectedType() + "\n"
+          + "but found               : " + mismatch.getFoundType());
+    } else if (mismatch.isRetTypeMismatch()) {
+      builder.append(
+          "The expected and found types are functions which have"
+          + " incompatible return types.\n"
+          + "Expected a subtype of : " + mismatch.getExpectedType() + "\n"
+          + "but found             : " + mismatch.getFoundType());
+    } else if (mismatch.isUnionTypeMismatch()) {
+      builder.append(
+          "The found type is a union that includes an unexpected type: "
+          + mismatch.getFoundType());
+    }
+    return builder.toString();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -2764,7 +2805,7 @@ final class NewTypeInference implements CompilerPass {
     if (!foundIndexType.isSubtypeOf(requiredIndexType)) {
       warnings.add(JSError.make(
           n, NewTypeInference.INVALID_INDEX_TYPE,
-          requiredIndexType.toString(), foundIndexType.toString()));
+          errorMsgWithTypeDiff(requiredIndexType, foundIndexType)));
       return true;
     }
     return false;
@@ -3547,9 +3588,16 @@ final class NewTypeInference implements CompilerPass {
         (expected instanceof String) || (expected instanceof JSType));
     Preconditions.checkArgument(
         (actual instanceof String) || (actual instanceof JSType));
-    warnings.add(JSError.make(
-        expr, INVALID_OPERAND_TYPE, Token.name(operatorType),
-        expected.toString(), actual.toString()));
+    if (expected instanceof JSType && actual instanceof JSType) {
+      warnings.add(JSError.make(
+          expr, INVALID_OPERAND_TYPE, Token.name(operatorType),
+          errorMsgWithTypeDiff((JSType) expected, (JSType) actual)));
+    } else {
+      warnings.add(JSError.make(
+          expr, INVALID_OPERAND_TYPE, Token.name(operatorType),
+          "Expected : " + expected.toString() + "\n"
+          + "Found    : " + actual.toString() + "\n"));
+    }
   }
 
   private static class EnvTypePair {
@@ -4029,8 +4077,8 @@ final class NewTypeInference implements CompilerPass {
           !fnSummary.getReturnType().isSubtypeOf(this.expectedRetType)) {
         warnings.add(JSError.make(
             this.callSite, INVALID_INFERRED_RETURN_TYPE,
-            this.expectedRetType.toString(),
-            fnSummary.getReturnType().toString()));
+            errorMsgWithTypeDiff(
+                this.expectedRetType, fnSummary.getReturnType())));
       }
       int i = 0;
       Node argNode = callSite.getSecondChild();

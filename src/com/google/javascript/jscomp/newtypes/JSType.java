@@ -166,7 +166,8 @@ public abstract class JSType implements TypeI {
       mask |= NON_SCALAR_MASK;
     }
 
-    if (objs.isEmpty() && typeVar == null && enums.isEmpty()) {
+    if (objs.isEmpty() && enums.isEmpty()
+        && typeVar == null && (mask & TYPEVAR_MASK) == 0) {
       return MaskType.make(mask);
     }
     if (!JSType.isInhabitable(objs)) {
@@ -597,7 +598,7 @@ public abstract class JSType implements TypeI {
     }
     JSType current = makeType(
         getMask() & ~TYPEVAR_MASK, builder.build(), null, getEnums());
-    if ((getMask() & TYPEVAR_MASK) != 0) {
+    if (hasTypeVariable()) {
       current = JSType.join(current, concreteTypes.containsKey(getTypeVar()) ?
           concreteTypes.get(getTypeVar()) : fromTypeVar(getTypeVar()));
     }
@@ -1037,12 +1038,31 @@ public abstract class JSType implements TypeI {
   }
 
   public boolean isNonLooseSubtypeOf(JSType other) {
-    return isSubtypeOfHelper(false, other, SubtypeCache.create());
+    return isSubtypeOfHelper(false, other, SubtypeCache.create(), null);
   }
 
   @Override
   public boolean isSubtypeOf(TypeI other) {
     return isSubtypeOf(other, SubtypeCache.create());
+  }
+
+  public static MismatchInfo whyNotSubtypeOf(JSType t1, JSType t2) {
+    if (t1.isSingletonObj() && t2.isSingletonObj()) {
+      MismatchInfo[] boxedInfo = new MismatchInfo[1];
+      ObjectType.whyNotSubtypeOf(
+          t1.getObjTypeIfSingletonObj(),
+          t2.getObjTypeIfSingletonObj(),
+          boxedInfo);
+      return boxedInfo[0];
+    }
+    if (t1.isUnion()) {
+      MismatchInfo[] boxedInfo = new MismatchInfo[1];
+      boolean areSubtypes =
+          t1.isSubtypeOfHelper(true, t2, SubtypeCache.create(), boxedInfo);
+      Preconditions.checkState(!areSubtypes);
+      return boxedInfo[0];
+    }
+    return null;
   }
 
   boolean isSubtypeOf(TypeI other, SubtypeCache subSuperMap) {
@@ -1051,14 +1071,15 @@ public abstract class JSType implements TypeI {
     }
     JSType type2 = (JSType) other;
     if (isLoose() || type2.isLoose()) {
-      return autobox().isSubtypeOfHelper(true, type2.autobox(), subSuperMap);
+      return autobox().isSubtypeOfHelper(true, type2.autobox(), subSuperMap, null);
     } else {
-      return isSubtypeOfHelper(true, type2, subSuperMap);
+      return isSubtypeOfHelper(true, type2, subSuperMap, null);
     }
   }
 
   private boolean isSubtypeOfHelper(
-      boolean keepLoosenessOfThis, JSType other, SubtypeCache subSuperMap) {
+      boolean keepLoosenessOfThis, JSType other, SubtypeCache subSuperMap,
+      MismatchInfo[] boxedInfo) {
     if (isUnknown() || other.isUnknown() || other.isTop()) {
       return true;
     }
@@ -1073,6 +1094,9 @@ public abstract class JSType implements TypeI {
     }
     int mask = getMask() & ~ENUM_MASK;
     if ((mask | other.getMask()) != other.getMask()) {
+      if (boxedInfo != null && isUnion()) {
+        whyNotUnionSubtypes(this, other, boxedInfo);
+      }
       return false;
     }
     if (getTypeVar() != null && !getTypeVar().equals(other.getTypeVar())) {
@@ -1083,8 +1107,36 @@ public abstract class JSType implements TypeI {
     }
     // Because of optional properties,
     //   x \le y \iff x \join y = y does not hold.
-    return ObjectType.isUnionSubtype(
+    boolean result = ObjectType.isUnionSubtype(
         keepLoosenessOfThis, getObjs(), other.getObjs(), subSuperMap);
+    if (boxedInfo != null) {
+      ObjectType.whyNotUnionSubtypes(
+          keepLoosenessOfThis, getObjs(), other.getObjs(),
+          subSuperMap, boxedInfo);
+    }
+    return result;
+  }
+
+  private static void whyNotUnionSubtypes(
+      JSType found, JSType expected, MismatchInfo[] boxedInfo) {
+    if (NUMBER.isSubtypeOf(found) && !NUMBER.isSubtypeOf(expected)) {
+      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(NUMBER);
+    } else if (STRING.isSubtypeOf(found) && !STRING.isSubtypeOf(expected)) {
+      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(STRING);
+    } else if (BOOLEAN.isSubtypeOf(found) && !BOOLEAN.isSubtypeOf(expected)) {
+      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(BOOLEAN);
+    } else if (NULL.isSubtypeOf(found) && !NULL.isSubtypeOf(expected)) {
+      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(NULL);
+    } else if (UNDEFINED.isSubtypeOf(found) && !UNDEFINED.isSubtypeOf(expected)) {
+      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(UNDEFINED);
+    } else if (found.hasTypeVariable() && !expected.hasTypeVariable()) {
+      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(
+          fromTypeVar(found.getTypeVar()));
+    } else if ((found.getMask() & NON_SCALAR_MASK) != 0
+        && (expected.getMask() & NON_SCALAR_MASK) == 0) {
+      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(makeType(
+          NON_SCALAR_MASK, found.getObjs(), null, ImmutableSet.<EnumType>of()));
+    }
   }
 
   public JSType removeType(JSType other) {

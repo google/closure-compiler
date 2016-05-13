@@ -16482,4 +16482,129 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  Foo.call(this);",
         "};"));
   }
+
+  public void testPinpointTypeDiffWhenMismatch() {
+    typeCheckMessageContents(LINE_JOINER.join(
+        "function f(/** {a:number, b:string} */ x) {}",
+        "f({a: 123, b: 123});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : {a:number, b:string}",
+            "Found    : {a:number, b:number}",
+            "More details:",
+            "Incompatible types for property b.",
+            "Expected : string",
+            "Found    : number"));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "function f(/** {a:number, b:(string|undefined)} */ x) {}",
+        "f({a: 123, b: 123});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : {a:number, b:string|undefined=}",
+            "Found    : {a:number, b:number}",
+            "More details:",
+            "Incompatible types for property b.",
+            "Expected : string|undefined",
+            "Found    : number"));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "function f(/** {a:number, b:string} */ x) {}",
+        "f({a: 123});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : {a:number, b:string}",
+            "Found    : {a:number}",
+            "More details:",
+            "The found type is missing property b"));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "function f(/** {a:number, b:string} */ x) {}",
+        "function g(/** {a:number, b:(string|undefined)} */ x) { f(x); }"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : {a:number, b:string}",
+            "Found    : {a:number, b:string|undefined=}",
+            "More details:",
+            "In found type, property b is optional but should be required."));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "function f(/** function((number|string)) */ x) {}",
+        "function g(/** number */ x) {}",
+        "f(g);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : function(number|string):?",
+            "Found    : function(number):undefined",
+            "More details:",
+            "The expected and found types are functions which have incompatible"
+            + " types for argument 1.",
+            "Expected a supertype of : number|string",
+            "but found               : number"));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "function f(/** function():number */ x) {}",
+        "/** @return {string} */ function g() { return 'asdf'; }",
+        "f(g)"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : function():number",
+            "Found    : function():string",
+            "More details:",
+            "The expected and found types are functions which have incompatible"
+            + " return types.",
+            "Expected a subtype of : number",
+            "but found             : string"));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "/** @constructor */ function Foo() {}",
+        "/** @constructor */ function Bar() {}",
+        "function f(/** !Foo */ x) {}",
+        "function g(/** (!Foo|!Bar) */ x) {",
+        "  f(x);",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : Foo",
+            "Found    : Bar|Foo",
+            "More details:",
+            "The found type is a union that includes an unexpected type: Bar"));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "/** @constructor */ function Foo() {}",
+        "/** @constructor @extends {Foo} */ function Bar() {}",
+        "function f(/** !Foo */ x) {}",
+        "function g(/** ?Bar */ x) {",
+        "  f(x);",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : Foo",
+            "Found    : Bar|null",
+            "More details:",
+            "The found type is a union that "
+            + "includes an unexpected type: null"));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "function f(/** number */ x) {}",
+        "function g(/** number|string */ x) {",
+        "  f(x);",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : number",
+            "Found    : number|string",
+            "More details:",
+            "The found type is a union that "
+            + "includes an unexpected type: string"));
+  }
 }
