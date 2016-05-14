@@ -3105,67 +3105,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         ClosureRewriteModule.QUALIFIED_REFERENCE_TO_GOOG_MODULE);
   }
 
-  public void testLegacyGoogModuleExport() {
-    CompilerOptions options = new CompilerOptions();
-    options.setClosurePass(true);
-    options.setCodingConvention(new ClosureCodingConvention());
-    options.setGenerateExports(true);
-
-    test(
-        options,
-        new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
-              "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
-              "goog.module('foo.example.ClassName');",
-              "goog.module.declareLegacyNamespace();",
-              "",
-              "/** @constructor */ function ClassName() {}",
-              "",
-              "/** @export */",
-              "exports = ClassName;"),
-        },
-        new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
-              "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
-              "var foo = {};",
-              "foo.example = {};",
-              "function module$contents$foo$example$ClassName_ClassName() {}",
-              "foo.example.ClassName = module$contents$foo$example$ClassName_ClassName;",
-              "goog.exportSymbol('foo.example.ClassName', foo.example.ClassName);"),
-        });
-
-    test(
-        options,
-        new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
-              "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
-              "goog.module('foo.ns');",
-              "goog.module.declareLegacyNamespace();",
-              "",
-              "/** @constructor */ function ClassName() {}",
-              "",
-              "/** @export */",
-              "exports.ExportedName = ClassName;"),
-        },
-        new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
-              "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
-              "var foo = {};",
-              "foo.ns = {};",
-              "function module$contents$foo$ns_ClassName() {}",
-              "foo.ns.ExportedName = module$contents$foo$ns_ClassName;",
-              "goog.exportSymbol('foo.ns.ExportedName', foo.ns.ExportedName);"),
-        });
-  }
-
   public void testUnboundedArrayLiteralInfiniteLoop() {
     CompilerOptions options = createCompilerOptions();
     options.setIdeMode(true);
