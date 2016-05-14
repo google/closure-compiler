@@ -2141,6 +2141,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @return {?Foo} */",
         "Bar.prototype.method = function() { return null; };",
         "var /** !Foo */ x = goog.asserts.assertInstanceOf((new Bar).method(), Foo);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var /** string */ s;",
+        "  s = goog.asserts.assertString(/** @type {number|string} */ (123));",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var /** string */ s;",
+        "  s = goog.asserts.assertString(123);",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testDontInferBottom() {

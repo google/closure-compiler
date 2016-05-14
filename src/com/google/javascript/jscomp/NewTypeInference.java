@@ -1989,6 +1989,13 @@ final class NewTypeInference implements CompilerPass {
       warnings.add(JSError.make(callNode, NewTypeInference.UNKNOWN_ASSERTION_TYPE));
     }
     EnvTypePair pair = analyzeExprFwd(assertedNode, env, JSType.UNKNOWN, assertedType);
+    if (!pair.type.isSubtypeOf(assertedType)
+        && JSType.haveCommonSubtype(assertedType, pair.type)) {
+      // We do this because the assertion needs to return a subtype of the
+      // asserted type to its context, but sometimes the asserted expression
+      // can't be specialized.
+      pair.type = assertedType;
+    }
     if (pair.type.isBottom()) {
       JSType t = analyzeExprFwd(assertedNode, env).type.substituteGenericsWithUnknown();
       if (t.isSubtypeOf(assertedType)) {
