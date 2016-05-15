@@ -92,6 +92,7 @@ public final class FeatureSet implements Serializable {
     // ES6 features that are not yet implemented in browsers
     DEFAULT_PARAMETERS("default parameter", ES6),
     DESTRUCTURING("destructuring", ES6),
+    NEW_TARGET("new.target", ES6),
     REGEXP_FLAG_U("RegExp flag 'u'", ES6),
     REGEXP_FLAG_Y("RegExp flag 'y'", ES6),
 

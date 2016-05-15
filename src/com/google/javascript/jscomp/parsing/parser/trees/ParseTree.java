@@ -154,6 +154,9 @@ public class ParseTree {
   public IndexSignatureTree asIndexSignature() { return (IndexSignatureTree) this; }
   public CallSignatureTree asCallSignature() { return (CallSignatureTree) this; }
 
+  public NewTargetExpressionTree asNewTargetExpression() {
+    return (NewTargetExpressionTree) this;
+  }
   public boolean isPattern() {
     ParseTree parseTree = this;
     while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {

@@ -98,6 +98,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressio
 import com.google.javascript.jscomp.parsing.parser.trees.NamespaceDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NamespaceNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.NewTargetExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
@@ -2125,6 +2126,11 @@ class IRFactory {
       return newNode(Token.SUPER);
     }
 
+    Node processNewTarget(NewTargetExpressionTree tree) {
+      maybeWarnEs6Feature(tree, Feature.NEW_TARGET);
+      return newNode(Token.NEW_TARGET);
+    }
+
     Node processMemberVariable(MemberVariableTree tree) {
       Node member = newStringNode(Token.MEMBER_VARIABLE_DEF, tree.name.value);
       maybeProcessType(member, tree.declaredType);
@@ -2698,6 +2704,8 @@ class IRFactory {
           return processClassDeclaration(node.asClassDeclaration());
         case SUPER_EXPRESSION:
           return processSuper(node.asSuperExpression());
+        case NEW_TARGET_EXPRESSION:
+          return processNewTarget(node.asNewTargetExpression());
         case YIELD_EXPRESSION:
           return processYield(node.asYieldStatement());
         case FOR_OF_STATEMENT:

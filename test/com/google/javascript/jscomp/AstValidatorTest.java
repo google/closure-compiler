@@ -105,6 +105,11 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.SCRIPT);
   }
 
+  public void testNewTargetIsValidExpression() {
+    Node n = new Node(Token.NEW_TARGET);
+    expectValid(n, Check.EXPRESSION);
+  }
+
   public void testInvalidEmptyStatement() {
     Node n = new Node(Token.EMPTY, new Node(Token.TRUE));
     expectInvalid(n, Check.STATEMENT);
