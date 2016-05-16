@@ -2617,41 +2617,50 @@ final class NewTypeInference implements CompilerPass {
       return "Expected : " + expected + "\n"
           + "Found    : " + found + "\n";
     }
-    StringBuilder builder = new StringBuilder(
-        "Expected : " + expected + "\n"
-        + "Found    : " + found + "\n"
-        + "More details:\n");
+    StringBuilder builder =
+        new StringBuilder("Expected : ")
+            .append(expected)
+            .append("\n" + "Found    : ")
+            .append(found)
+            .append("\n" + "More details:\n");
     if (mismatch.isPropMismatch()) {
-      builder.append(
-          "Incompatible types for property "
-          + mismatch.getPropName() + ".\n"
-          + "Expected : " + mismatch.getExpectedType() + "\n"
-          + "Found    : " + mismatch.getFoundType());
+      builder
+          .append("Incompatible types for property ")
+          .append(mismatch.getPropName())
+          .append(".\n" + "Expected : ")
+          .append(mismatch.getExpectedType())
+          .append("\n" + "Found    : ")
+          .append(mismatch.getFoundType());
     } else if (mismatch.isMissingProp()) {
-      builder.append(
-          "The found type is missing property "
-          + mismatch.getPropName());
+      builder.append("The found type is missing property ").append(mismatch.getPropName());
     } else if (mismatch.wantedRequiredFoundOptional()) {
-      builder.append(
-          "In found type, property " + mismatch.getPropName()
-          + " is optional but should be required.");
+      builder
+          .append("In found type, property ")
+          .append(mismatch.getPropName())
+          .append(" is optional but should be required.");
     } else if (mismatch.isArgTypeMismatch()) {
-      builder.append(
-          "The expected and found types are functions which have"
-          + " incompatible types for argument "
-          + (mismatch.getArgIndex() + 1) + ".\n"
-          + "Expected a supertype of : " + mismatch.getExpectedType() + "\n"
-          + "but found               : " + mismatch.getFoundType());
+      builder
+          .append(
+              "The expected and found types are functions which have"
+                  + " incompatible types for argument ")
+          .append(mismatch.getArgIndex() + 1)
+          .append(".\n" + "Expected a supertype of : ")
+          .append(mismatch.getExpectedType())
+          .append("\n" + "but found               : ")
+          .append(mismatch.getFoundType());
     } else if (mismatch.isRetTypeMismatch()) {
-      builder.append(
-          "The expected and found types are functions which have"
-          + " incompatible return types.\n"
-          + "Expected a subtype of : " + mismatch.getExpectedType() + "\n"
-          + "but found             : " + mismatch.getFoundType());
+      builder
+          .append(
+              "The expected and found types are functions which have"
+                  + " incompatible return types.\n"
+                  + "Expected a subtype of : ")
+          .append(mismatch.getExpectedType())
+          .append("\n" + "but found             : ")
+          .append(mismatch.getFoundType());
     } else if (mismatch.isUnionTypeMismatch()) {
-      builder.append(
-          "The found type is a union that includes an unexpected type: "
-          + mismatch.getFoundType());
+      builder
+          .append("The found type is a union that includes an unexpected type: ")
+          .append(mismatch.getFoundType());
     }
     return builder.toString();
   }
