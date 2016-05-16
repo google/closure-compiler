@@ -553,7 +553,7 @@ enum CompilationParam {
   //--------------------------------
 
   /** Processes goog.provide() and goog.require() calls */
-  CLOSURE_PASS {
+  CLOSURE_PASS(true) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setClosurePass(value);
