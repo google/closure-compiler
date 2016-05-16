@@ -178,7 +178,7 @@ Set.prototype.delete;
 Set.prototype.entries;
 
 /**
- * @param {function(this: THIS, VALUE, VALUE, SET)} callback
+ * @param {function(VALUE, VALUE, SET)} callback
  * @param {THIS=} opt_thisArg
  * @this {SET}
  * @template SET,THIS
