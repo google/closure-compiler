@@ -4394,11 +4394,27 @@ public final class NodeUtil {
     return false;
   }
 
+  private static boolean isGoogModuleDeclareLegacyNamespaceCall(Node n) {
+    if (isExprCall(n)) {
+      Node target = n.getFirstFirstChild();
+      return (target.matchesQualifiedName("goog.module.declareLegacyNamespace"));
+    }
+    return false;
+  }
+
   /**
    * @return Whether the node is a goog.module file's SCRIPT node.
    */
   static boolean isGoogModuleFile(Node n) {
     return n.isScript() && n.hasChildren() && isGoogModuleCall(n.getFirstChild());
+  }
+
+  /**
+   * @return Whether the node is a SCRIPT node for a goog.module that has a
+   *     declareLegacyNamespace call.
+   */
+  static boolean isLegacyGoogModuleFile(Node n) {
+    return isGoogModuleFile(n) && isGoogModuleDeclareLegacyNamespaceCall(n.getSecondChild());
   }
 
 }

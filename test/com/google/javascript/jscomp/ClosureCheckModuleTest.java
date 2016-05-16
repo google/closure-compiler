@@ -99,6 +99,136 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
     testError("goog.module('x.y.z');\nx.y.z = function() {};", REFERENCE_TO_MODULE_GLOBAL_NAME);
   }
 
+  public void testIllegalAtExport() {
+    testError(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "/** @constructor @export */ function ClassName() {}",
+            "",
+            "exports = ClassName;"),
+        ClosureCheckModule.AT_EXPORT_IN_GOOG_MODULE);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "/** @constructor */ function ClassName() {}",
+            "",
+            "/** @export */",
+            "exports = ClassName;"),
+        ClosureCheckModule.AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ns');",
+            "",
+            "/** @constructor */ function ClassName() {}",
+            "",
+            "/** @export */",
+            "exports.ClassName = ClassName;"),
+        ClosureCheckModule.AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "goog.module.declareLegacyNamespace();",
+            "",
+            "/** @constructor @export */ function ClassName() {}",
+            "",
+            "exports = ClassName;"),
+        ClosureCheckModule.AT_EXPORT_IN_GOOG_MODULE);
+  }
+
+  public void testLegalAtExport() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "class ClassName {",
+            "  constructor() {",
+            "    /** @export */",
+            "    this.prop;",
+            "    /** @export */",
+            "    this.anotherProp = false;",
+            "  }",
+            "}",
+            "",
+            "exports = ClassName;"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "var ClassName = class {",
+            "  constructor() {",
+            "    /** @export */",
+            "    this.prop;",
+            "    /** @export */",
+            "    this.anotherProp = false;",
+            "  }",
+            "}",
+            "",
+            "exports = ClassName;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "/** @constructor */",
+            "function ClassName() {",
+            "  /** @export */",
+            "  this.prop;",
+            "  /** @export */",
+            "  this.anotherProp = false;",
+            "}",
+            "",
+            "exports = ClassName;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "/** @constructor */",
+            "var ClassName = function() {",
+            "  /** @export */",
+            "  this.prop;",
+            "  /** @export */",
+            "  this.anotherProp = false;",
+            "};",
+            "",
+            "exports = ClassName;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "goog.module.declareLegacyNamespace();",
+            "",
+            "/** @constructor */ function ClassName() {}",
+            "",
+            "/** @export */",
+            "exports = ClassName;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ns');",
+            "goog.module.declareLegacyNamespace();",
+            "",
+            "/** @constructor */ function ClassName() {}",
+            "",
+            "/** @export */",
+            "exports.ClassName = ClassName;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "/** @constructor */ var exports = function() {}",
+            "",
+            "/** @export */",
+            "exports.prototype.fly = function() {};"));
+  }
+
   public void testIllegalGoogRequires() {
     testError(
         LINE_JOINER.join(

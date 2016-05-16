@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -30,6 +31,17 @@ import java.util.Map;
  * checks happen during goog.module rewriting, in {@link ClosureRewriteModule}.
  */
 public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
+  static final DiagnosticType AT_EXPORT_IN_GOOG_MODULE =
+      DiagnosticType.disabled(
+          "JSC_AT_EXPORT_IN_GOOG_MODULE",
+          "@export has no effect here");
+
+  static final DiagnosticType AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE =
+      DiagnosticType.disabled(
+          "JSC_AT_EXPORT_IN_GOOG_MODULE",
+          "@export is not allowed here in a non-legacy goog.module."
+          + " Consider using goog.exportSymbol instead.");
+
   static final DiagnosticType GOOG_MODULE_REFERENCES_THIS = DiagnosticType.error(
       "JSC_GOOG_MODULE_REFERENCES_THIS",
       "The body of a goog.module cannot reference 'this'.");
@@ -125,6 +137,38 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           t.report(n, MODULE_AND_PROVIDES);
         } else if (callee.matchesQualifiedName("goog.require")) {
           checkRequireCall(t, n, parent);
+        }
+        break;
+      case Token.ASSIGN: {
+        Node lhs = n.getFirstChild();
+        if (lhs.isQualifiedName()) {
+          Node root = NodeUtil.getRootOfQualifiedName(lhs);
+          if (root.matchesQualifiedName("exports")
+              && (lhs.isName() || !root.getNext().getString().equals("prototype"))
+              && !NodeUtil.isLegacyGoogModuleFile(NodeUtil.getEnclosingScript(n))) {
+            JSDocInfo jsDoc = n.getJSDocInfo();
+            if (jsDoc != null && jsDoc.isExport()) {
+              t.report(n, AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE);
+            }
+          }
+        }
+        break;
+      }
+      case Token.CLASS:
+      case Token.FUNCTION:
+        if (!NodeUtil.isStatement(n)) {
+          break;
+        }
+        // fallthrough
+      case Token.VAR:
+      case Token.LET:
+      case Token.CONST:
+        if (t.inGlobalHoistScope() && NodeUtil.getEnclosingClass(n) == null
+            && NodeUtil.getEnclosingType(n, Token.OBJECTLIT) == null) {
+          JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
+          if (jsdoc != null && jsdoc.isExport()) {
+            t.report(n, AT_EXPORT_IN_GOOG_MODULE);
+          }
         }
         break;
       case Token.THIS:
