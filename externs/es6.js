@@ -255,6 +255,14 @@ Math.hypot = function(value1, var_args) {};
  */
 Math.imul = function(value1, value2) {};
 
+/**
+ * @param {number} value
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
+ */
+Math.clz32 = function(value) {};
+
 
 /**
  * @param {*} a
@@ -301,9 +309,10 @@ String.raw = function(template, var_args) {};
 
 /**
  * @param {number} codePoint
+ * @param {...number} var_args Additional codepoints
  * @return {string}
  */
-String.fromCodePoint = function(codePoint) {};
+String.fromCodePoint = function(codePoint, var_args) {};
 
 
 /**
@@ -1447,6 +1456,27 @@ Array.prototype.find = function(predicate, opt_this) {};
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.findindex
  */
 Array.prototype.findIndex = function(predicate, opt_this) {};
+
+
+/**
+ * @param {T} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @return {!IArrayLike<T>}
+ * @this {!IArrayLike<T>|string}
+ * @template T
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.fill
+ */
+Array.prototype.fill = function(value, opt_begin, opt_end) {};
+
+
+/**
+ * @param {number} target
+ * @param {number} start
+ * @param {number=} opt_end
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.copywithin
+ */
+Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 
 /**
