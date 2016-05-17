@@ -68,6 +68,9 @@ public abstract class JSType implements TypeI {
   protected static final int TOP_SCALAR_MASK =
       NUMBER_MASK | STRING_MASK | BOOLEAN_MASK | NULL_MASK | UNDEFINED_MASK;
 
+  private static final ImmutableSet<ObjectType> NO_OBJS = ImmutableSet.<ObjectType>of();
+  private static final ImmutableSet<EnumType> NO_ENUMS = ImmutableSet.<EnumType>of();
+
   // NOTE(dimvar): This may cause problems when doing many compiles in the
   // same Java process. But passing the JSTypes object around just to avoid
   // making the field non-static is a huge readability pain.
@@ -183,7 +186,7 @@ public abstract class JSType implements TypeI {
   }
 
   private static JSType makeType(int mask) {
-    return makeType(mask, ImmutableSet.<ObjectType>of(), null, ImmutableSet.<EnumType>of());
+    return makeType(mask, NO_OBJS, null, NO_ENUMS);
   }
 
   protected abstract int getMask();
@@ -200,23 +203,19 @@ public abstract class JSType implements TypeI {
         NON_SCALAR_MASK,
         ImmutableSet.of(ObjectType.fromFunction(fn, fnNominal)),
         null,
-        ImmutableSet.<EnumType>of());
+        NO_ENUMS);
   }
 
   public static JSType fromObjectType(ObjectType obj) {
-    return makeType(NON_SCALAR_MASK, ImmutableSet.of(obj), null, ImmutableSet.<EnumType>of());
+    return makeType(NON_SCALAR_MASK, ImmutableSet.of(obj), null, NO_ENUMS);
   }
 
   public static JSType fromTypeVar(String typevarName) {
-    return makeType(
-        TYPEVAR_MASK,
-        ImmutableSet.<ObjectType>of(),
-        typevarName,
-        ImmutableSet.<EnumType>of());
+    return makeType(TYPEVAR_MASK, NO_OBJS, typevarName, NO_ENUMS);
   }
 
   static JSType fromEnum(EnumType e) {
-    return makeType(ENUM_MASK, ImmutableSet.<ObjectType>of(), null, ImmutableSet.of(e));
+    return makeType(ENUM_MASK, NO_OBJS, null, ImmutableSet.of(e));
   }
 
   boolean isValidType() {
@@ -268,7 +267,7 @@ public abstract class JSType implements TypeI {
   private static final JSType ALMOST_TOP = makeType(
       TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | NULL_MASK |
       UNDEFINED_MASK | NON_SCALAR_MASK,
-      ImmutableSet.of(ObjectType.TOP_OBJECT), null, ImmutableSet.<EnumType>of());
+      ImmutableSet.of(ObjectType.TOP_OBJECT), null, NO_ENUMS);
 
   public boolean isTop() {
     return TOP_MASK == getMask();
@@ -527,7 +526,7 @@ public abstract class JSType implements TypeI {
     }
     JSType result = makeType(
         mask & ~(NUMBER_MASK | STRING_MASK | BOOLEAN_MASK),
-        builder.build(), getTypeVar(), ImmutableSet.<EnumType>of());
+        builder.build(), getTypeVar(), NO_ENUMS);
     for (EnumType e : getEnums()) {
       result = join(result, e.getEnumeratedType().autobox());
     }
@@ -577,10 +576,10 @@ public abstract class JSType implements TypeI {
     ImmutableSet<EnumType> newEnums =
         EnumType.union(lhs.getEnums(), rhs.getEnums());
     if (newEnums.isEmpty()) {
-      return makeType(newMask, newObjs, newTypevar, ImmutableSet.<EnumType>of());
+      return makeType(newMask, newObjs, newTypevar, NO_ENUMS);
     }
     JSType tmpJoin =
-        makeType(newMask & ~ENUM_MASK, newObjs, newTypevar, ImmutableSet.<EnumType>of());
+        makeType(newMask & ~ENUM_MASK, newObjs, newTypevar, NO_ENUMS);
     return makeType(newMask, newObjs, newTypevar,
         EnumType.normalizeForJoin(newEnums, tmpJoin));
   }
@@ -994,7 +993,7 @@ public abstract class JSType implements TypeI {
       return this;
     }
     return makeType(getMask() & ~TRUE_MASK & ~NON_SCALAR_MASK,
-        ImmutableSet.<ObjectType>of(), getTypeVar(), getEnums());
+        NO_OBJS, getTypeVar(), getEnums());
   }
 
   public static JSType plus(JSType lhs, JSType rhs) {
@@ -1135,7 +1134,7 @@ public abstract class JSType implements TypeI {
     } else if ((found.getMask() & NON_SCALAR_MASK) != 0
         && (expected.getMask() & NON_SCALAR_MASK) == 0) {
       boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(makeType(
-          NON_SCALAR_MASK, found.getObjs(), null, ImmutableSet.<EnumType>of()));
+          NON_SCALAR_MASK, found.getObjs(), null, NO_ENUMS));
     }
   }
 
@@ -1313,6 +1312,46 @@ public abstract class JSType implements TypeI {
         this :
         makeType(getMask(), ObjectType.withPropertyRequired(getObjs(), pname),
             getTypeVar(), getEnums());
+  }
+
+  // For a type A, this method tries to return the greatest subtype of A that
+  // has a property called pname. If it can't safely find a subtype, it
+  // returns bottom.
+  public JSType findSubtypeWithProp(QualifiedName pname) {
+    Preconditions.checkArgument(pname.isIdentifier());
+    // common cases first
+    if (isTop() || isUnknown() || (getMask() & NON_SCALAR_MASK) == 0) {
+      return BOTTOM;
+    }
+    // For simplicity, if this type has scalars with pname, return bottom.
+    // If it has enums, return bottom.
+    if (NUMBER.isSubtypeOf(this)
+        && commonTypes.getNumberInstance().mayHaveProp(pname)
+        || STRING.isSubtypeOf(this)
+        && commonTypes.getNumberInstance().mayHaveProp(pname)
+        || BOOLEAN.isSubtypeOf(this)
+        && commonTypes.getBooleanInstance().mayHaveProp(pname)) {
+      return BOTTOM;
+    }
+    if ((getMask() & ENUM_MASK) != 0) {
+      return BOTTOM;
+    }
+    // NOTE(dimvar): Nothing for type variables for now, but we will have to
+    // handle them here when we implement bounded generics.
+    if (getObjs().size() == 1) {
+      ObjectType obj = Iterables.getOnlyElement(getObjs());
+      return obj.mayHaveProp(pname) ? this : BOTTOM;
+    }
+    ImmutableSet.Builder<ObjectType> builder = ImmutableSet.builder();
+    boolean foundObjWithProp = false;
+    for (ObjectType o : getObjs()) {
+      if (o.mayHaveProp(pname)) {
+        foundObjWithProp = true;
+        builder.add(o);
+      }
+    }
+    return foundObjWithProp
+        ? makeType(NON_SCALAR_MASK, builder.build(), null, NO_ENUMS) : BOTTOM;
   }
 
   @Override

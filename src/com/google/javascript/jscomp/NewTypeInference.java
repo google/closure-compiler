@@ -2842,14 +2842,21 @@ final class NewTypeInference implements CompilerPass {
         // else branch of "if (!x.prop)" is a property test.
         || specializedType.isTrueOrTruthy()) {
       recvReqType = reqObjType;
+      pair = analyzeExprFwd(receiver, inEnv, recvReqType);
+      JSType subtypeWithProp = pair.type.findSubtypeWithProp(propQname);
+      if (subtypeWithProp.isBottom()) {
+        recvSpecType = reqObjType;
+      } else {
+        recvSpecType = subtypeWithProp;
+      }
       if (specializedType.isTrueOrTruthy()) {
         // This handles cases like: if (x.prop1 && x.prop1.prop2) { ... }
         // In the THEN branch, the only thing we know about x.prop1 is that it
         // has a truthy property, so x.prop1 should be a loose object to avoid
         // spurious warnings.
-        recvSpecType = reqObjType.withLoose().withProperty(propQname, specializedType);
+        recvSpecType = recvSpecType.withLoose().withProperty(propQname, specializedType);
       } else {
-        recvSpecType = reqObjType.withProperty(propQname, specializedType);
+        recvSpecType = recvSpecType.withProperty(propQname, specializedType);
       }
     } else if (specializedType.isFalseOrFalsy()) {
       recvReqType = recvSpecType = reqObjType;

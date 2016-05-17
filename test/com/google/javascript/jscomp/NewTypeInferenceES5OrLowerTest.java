@@ -16632,4 +16632,99 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "Expected : number",
             "Found    : string"));
   }
+
+  public void testSpecializeAfterPropertyTest() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo|!Bar */ x) {",
+        "  if (x.prop) {",
+        "    var /** !Bar */ n = x;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** {a: (!Foo|!Bar)} */ x) {",
+        "  if (x.a.prop) {",
+        "    var /** !Bar */ n = x.a;",
+        "  }",
+        "}"));
+
+    // Here, we spuriously specialize to a Bar. Foo instances passed to g can
+    // have prop, but we don't see it. To avoid this unsoundness, one could
+    // restrict the specialization only to @struct instances.
+    // But the main motivation of specializing at property tests is to handle
+    // DOM elements better, which are not structs.
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "function g(x) { x.prop = 234; }",
+        "function f(/** !Foo|!Bar */ x) {",
+        "  if (x.prop) {",
+        "    var /** !Bar */ n = x;",
+        "  }",
+        "}",
+        "var obj = new Foo;",
+        "g(obj);",
+        "f(obj);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.prop = 345;",
+        "}",
+        "function f(/** !Foo|!Bar|!Baz */ x) {",
+        "  if (x.prop) {",
+        "    var /** (!Bar|!Baz) */ n = x;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo|!Bar */ x) {",
+        "  if (x.prop) {",
+        "    var /** string */ s = x.prop;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // For simplicity, we don't specialize here
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() { this.startsWith = function(s) {}; }",
+        "function f(/** !Foo|!Bar|string */ x) {",
+        "  if (x.startsWith) {",
+        "    var /** !Bar|string */ y = x;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
