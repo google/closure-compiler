@@ -52,27 +52,27 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   static final DiagnosticType GOOG_CLASS_DESCRIPTOR_NOT_VALID = DiagnosticType.error(
       "JSC_GOOG_CLASS_DESCRIPTOR_NOT_VALID",
-      "The class descriptor must be an object literal");
+      "The class must be defined by an object literal");
 
   static final DiagnosticType GOOG_CLASS_CONSTRUCTOR_MISSING = DiagnosticType.error(
       "JSC_GOOG_CLASS_CONSTRUCTOR_MISSING",
-      "The constructor expression is missing for the class descriptor");
+      "The 'constructor' property is missing for the class definition");
 
   static final DiagnosticType GOOG_CLASS_CONSTRUCTOR_NOT_VALID = DiagnosticType.error(
       "JSC_GOOG_CLASS_CONSTRUCTOR_NOT_VALID",
-      "The constructor expression must be a function literal");
+      "The 'constructor' expression must be a function literal");
 
   static final DiagnosticType GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE = DiagnosticType.error(
       "JSC_GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE",
-      "Should not have a constructor expression for an interface");
+      "An interface definition should not have a 'constructor' property");
 
   static final DiagnosticType GOOG_CLASS_STATICS_NOT_VALID = DiagnosticType.error(
       "JSC_GOOG_CLASS_STATICS_NOT_VALID",
-      "The class statics descriptor must be an object or function literal");
+      "The class 'statics' property must be an object or function literal");
 
   static final DiagnosticType GOOG_CLASS_UNEXPECTED_PARAMS = DiagnosticType.error(
       "JSC_GOOG_CLASS_UNEXPECTED_PARAMS",
-      "The class definition has too many arguments.");
+      "Too many arguments to goog.defineClass.");
 
   static final DiagnosticType GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED =
       DiagnosticType.error(
