@@ -1535,6 +1535,9 @@ public class CompilerOptions {
 
   public void setJ2clPass(boolean j2clPass) {
     this.j2clPass = j2clPass;
+    if (j2clPass) {
+      setWarningLevel(DiagnosticGroup.forType(SourceFile.DUPLICATE_ZIP_CONTENTS), CheckLevel.OFF);
+    }
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {
