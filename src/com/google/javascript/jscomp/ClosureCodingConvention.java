@@ -356,6 +356,12 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
+  public boolean isPropertyRenameFunction(String name) {
+    return NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)
+        || "goog.reflect.objectProperty".equals(name);
+  }
+
+  @Override
   public boolean isFunctionCallThatAlwaysThrows(Node n) {
     return CodingConventions.defaultIsFunctionCallThatAlwaysThrows(
         n, "goog.asserts.fail");

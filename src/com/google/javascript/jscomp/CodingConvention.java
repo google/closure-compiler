@@ -373,6 +373,11 @@ public interface CodingConvention extends Serializable {
   public boolean isPrototypeAlias(Node getProp);
 
   /**
+   * Whether this CALL function is returning the string name for a property, but allows renaming.
+   */
+  public boolean isPropertyRenameFunction(String name);
+
+  /**
    * Checks if the given method performs a object literal cast, and if it does,
    * returns information on the cast. By default, always returns null. Meant
    * to be overridden by subclasses.

@@ -29,7 +29,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
       "var window;" +
       "prop.toString;" +
       "var google = { gears: { factory: {}, workerPool: {} } };";
-
+  
   private RenameProperties renameProperties;
 
   private static boolean generatePseudoNames = false;
