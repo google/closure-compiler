@@ -15,9 +15,8 @@
  */
 
 /**
- *
- * @fileoverview an @externs file for the Angular Material library
- *
+ * @fileoverview An externs file for the Angular Material library.
+ * @externs
  */
 
 
