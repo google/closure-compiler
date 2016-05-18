@@ -290,6 +290,11 @@ public final class CodingConventions {
     }
 
     @Override
+    public boolean isPropertyRenameFunction(String name) {
+      return nextConvention.isPropertyRenameFunction(name);
+    }
+
+    @Override
     public boolean isPrototypeAlias(Node getProp) {
       return false;
     }
@@ -509,6 +514,11 @@ public final class CodingConventions {
     @Override
     public boolean isPropertyTestFunction(Node call) {
       return "Array.isArray".equals(call.getFirstChild().getQualifiedName());
+    }
+
+    @Override
+    public boolean isPropertyRenameFunction(String name) {
+      return NodeUtil.JSC_PROPERTY_NAME_FN.equals(name);
     }
 
     @Override

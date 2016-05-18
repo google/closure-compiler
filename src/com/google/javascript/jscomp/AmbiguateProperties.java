@@ -455,6 +455,57 @@ class AmbiguateProperties implements CompilerPass {
           maybeMarkCandidate(propNode, jstype);
           break;
         }
+        case Token.CALL: {
+          Node target = n.getFirstChild();
+          if (!target.isName()) {
+            break;
+          }
+
+          String renameFunctionName = target.getOriginalName();
+          if (renameFunctionName == null) {
+            renameFunctionName = target.getString();
+          }
+          if (renameFunctionName == null
+              || !compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
+            break;
+          }
+
+          if (n.getChildCount() != 2 && n.getChildCount() != 3) {
+            compiler.report(
+                JSError.make(
+                    n,
+                    DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
+                    renameFunctionName,
+                    " Must be called with 1 or 2 arguments."));
+            break;
+          }
+
+          Node propName = n.getSecondChild();
+          if (!propName.isString()) {
+            compiler.report(
+                JSError.make(
+                    n,
+                    DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
+                    renameFunctionName,
+                    " The first argument must be a string literal."));
+            break;
+          }
+
+          if (propName.getString().contains(".")) {
+            compiler.report(
+                JSError.make(
+                    n,
+                    DisambiguateProperties.Warnings.INVALID_RENAME_FUNCTION,
+                    renameFunctionName,
+                    " The first argument must not be a property path."));
+            break;
+          }
+
+          JSType jstype = getJSType(n.getChildAtIndex(2));
+
+          maybeMarkCandidate(propName, jstype);
+          break;
+        }
         case Token.OBJECTLIT:
           // The children of an OBJECTLIT node are keys, where the values
           // are the children of the keys.
@@ -542,14 +593,17 @@ class AmbiguateProperties implements CompilerPass {
    * present.
    */
   private JSType getJSType(Node n) {
+    if (n == null) {
+      return compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+
     JSType jsType = n.getJSType();
     if (jsType == null) {
       // TODO(user): This branch indicates a compiler bug, not worthy of
       // halting the compilation but we should log this and analyze to track
       // down why it happens. This is not critical and will be resolved over
       // time as the type checker is extended.
-      return compiler.getTypeRegistry().getNativeType(
-          JSTypeNative.UNKNOWN_TYPE);
+      return compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else {
       return jsType;
     }

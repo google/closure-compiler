@@ -95,12 +95,16 @@ class DisambiguateProperties implements CompilerPass {
     static final DiagnosticType INVALIDATION = DiagnosticType.disabled(
         "JSC_INVALIDATION",
         "Property disambiguator skipping all instances of property {0} "
-        + "because of type {1} node {2}. {3}");
+            + "because of type {1} node {2}. {3}");
 
     static final DiagnosticType INVALIDATION_ON_TYPE = DiagnosticType.disabled(
         "JSC_INVALIDATION_TYPE",
-        "Property disambiguator skipping instances of property {0} "
-        + "on type {1}. {2}");
+        "Property disambiguator skipping instances of property {0} on type {1}. {2}");
+
+    // TODO(tbreisacher): Check this in a separate pass, so that users get the error even if
+    // optimizations are not running.
+    static final DiagnosticType INVALID_RENAME_FUNCTION =
+        DiagnosticType.error("JSC_INVALID_RENAME_FUNCTION", "{0} call is invalid: {1}");
   }
 
   private final AbstractCompiler compiler;
@@ -461,6 +465,8 @@ class DisambiguateProperties implements CompilerPass {
         handleGetProp(t, n);
       } else if (n.isObjectLit()) {
         handleObjectLit(t, n);
+      } else if (n.isCall()) {
+        handleCall(t, n);
       }
     }
 
@@ -518,6 +524,84 @@ class DisambiguateProperties implements CompilerPass {
                 Warnings.INVALIDATION, name, String.valueOf(type), n.toString(), ""));
           }
         }
+      }
+    }
+
+    private void handleCall(NodeTraversal t, Node call) {
+      Node target = call.getFirstChild();
+      if (!target.isName()) {
+        return;
+      }
+
+      String renameFunctionName = target.getOriginalQualifiedName();
+      if (renameFunctionName == null
+          || !compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
+        return;
+      }
+
+      if (call.getChildCount() != 2 && call.getChildCount() != 3) {
+        compiler.report(
+            JSError.make(
+                call,
+                Warnings.INVALID_RENAME_FUNCTION,
+                renameFunctionName,
+                " Must be called with 1 or 2 arguments"));
+        return;
+      }
+
+      if (!call.getSecondChild().isString()) {
+        compiler.report(
+            JSError.make(
+                call,
+                Warnings.INVALID_RENAME_FUNCTION,
+                renameFunctionName,
+                " The first argument must be a string literal."));
+        return;
+      }
+
+      String propName = call.getSecondChild().getString();
+
+      if (propName.contains(".")) {
+        compiler.report(
+            JSError.make(
+                call,
+                Warnings.INVALID_RENAME_FUNCTION,
+                renameFunctionName,
+                " The first argument must not be a property path."));
+        return;
+      }
+
+      Node obj = call.getChildAtIndex(2);
+      JSType type = getType(obj);
+      Property prop = getProperty(propName);
+      if (!prop.scheduleRenaming(call.getSecondChild(), processProperty(t, prop, type, null))
+          && propertiesToErrorFor.containsKey(propName)) {
+        String suggestion = "";
+        if (type.isAllType() || type.isUnknownType()) {
+          if (obj.isThis()) {
+            suggestion = "The \"this\" object is unknown in the function, consider using @this";
+          } else {
+            String qName = obj.getQualifiedName();
+            suggestion = "Consider casting " + qName + " if you know its type.";
+          }
+        } else {
+          List<String> errors = new ArrayList<>();
+          printErrorLocations(errors, type);
+          if (!errors.isEmpty()) {
+            suggestion = "Consider fixing errors for the following types:\n";
+            suggestion += Joiner.on("\n").join(errors);
+          }
+        }
+
+        compiler.report(
+            JSError.make(
+                call,
+                propertiesToErrorFor.get(propName),
+                Warnings.INVALIDATION,
+                propName,
+                String.valueOf(type),
+                renameFunctionName,
+                suggestion));
       }
     }
 
@@ -680,7 +764,7 @@ class DisambiguateProperties implements CompilerPass {
   }
 
   private JSType getType(Node node) {
-    if (node.getJSType() == null) {
+    if (node == null || node.getJSType() == null) {
       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
     return node.getJSType();

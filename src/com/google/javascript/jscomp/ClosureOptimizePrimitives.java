@@ -22,9 +22,14 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * <p>Compiler pass that converts all calls to:
+ * Compiler pass that converts primitive calls:
+ *
+ * Converts:
  *   goog.object.create(key1, val1, key2, val2, ...) where all of the keys
- *   are literals into object literals.</p>
+ *   are literals into object literals.
+ *
+ *   goog.reflect.objectProperty(propName, object) to
+ *   JSCompiler_renameProperty
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
@@ -34,15 +39,19 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   private final AbstractCompiler compiler;
 
   /**
-   * Identifies all calls to goog.object.create.
+   * Identifies all calls to closure primitive functions
    */
-  private class FindObjectCreateCalls extends AbstractPostOrderCallback {
+  private class FindPrimitives extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
         Node fn = n.getFirstChild();
-        if (fn.matchesQualifiedName("goog$object$create")
+        if (compiler
+            .getCodingConvention()
+            .isPropertyRenameFunction(fn.getOriginalQualifiedName())) {
+          processRenamePropertyCall(n);
+        } else if (fn.matchesQualifiedName("goog$object$create")
             || fn.matchesQualifiedName("goog.object.create")) {
           processObjectCreateCall(n);
         } else if (fn.matchesQualifiedName("goog$object$createSet")
@@ -62,7 +71,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    FindObjectCreateCalls pass = new FindObjectCreateCalls();
+    FindPrimitives pass = new FindPrimitives();
     NodeTraversal.traverseEs6(compiler, root, pass);
   }
 
@@ -93,6 +102,24 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       callNode.getParent().replaceChild(callNode, objNode);
       compiler.reportCodeChange();
     }
+  }
+
+  /**
+   * Converts all of the given call nodes to object literals that are safe to
+   * do so.
+   */
+  private void processRenamePropertyCall(Node callNode) {
+    Node nameNode = callNode.getFirstChild();
+    if (nameNode.matchesQualifiedName(NodeUtil.JSC_PROPERTY_NAME_FN)) {
+      return;
+    }
+
+    Node newTarget = IR.name(NodeUtil.JSC_PROPERTY_NAME_FN).copyInformationFrom(nameNode);
+    newTarget.setOriginalName(nameNode.getOriginalQualifiedName());
+
+    callNode.replaceChild(nameNode, newTarget);
+    callNode.putBooleanProp(Node.FREE_CALL, true);
+    compiler.reportCodeChange();
   }
 
   /**
