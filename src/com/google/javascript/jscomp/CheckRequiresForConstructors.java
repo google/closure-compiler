@@ -197,7 +197,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       case Token.LET:
       case Token.CONST:
         maybeAddProvidedName(n);
-        maybeAddGoogScopeUsage(n, parent);
+        maybeAddGoogScopeUsage(t, n, parent);
         break;
       case Token.FUNCTION:
         // Exclude function expressions.
@@ -570,12 +570,18 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
    * "var Dog = some.cute.Dog;" counts as a usage of some.cute.Dog, if it's immediately
    * inside a goog.scope function.
    */
-  private void maybeAddGoogScopeUsage(Node n, Node parent) {
+  private void maybeAddGoogScopeUsage(NodeTraversal t, Node n, Node parent) {
     Preconditions.checkState(NodeUtil.isNameDeclaration(n));
     if (n.getChildCount() == 1 && parent == googScopeBlock) {
       Node rhs = n.getFirstFirstChild();
       if (rhs != null && rhs.isQualifiedName()) {
-        usages.put(rhs.getQualifiedName(), rhs);
+        Node root = NodeUtil.getRootOfQualifiedName(rhs);
+        if (root.isName()) {
+          Var var = t.getScope().getVar(root.getString());
+          if (var == null || (var.isGlobal() && !var.isExtern())) {
+            usages.put(rhs.getQualifiedName(), rhs);
+          }
+        }
       }
     }
   }

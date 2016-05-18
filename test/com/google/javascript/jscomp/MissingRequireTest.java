@@ -862,6 +862,15 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testSame(js);
   }
 
+  public void testNoMissingGoogRequireFromGoogScopeExterns() {
+    String externs = "var location;";
+    String js = ""
+        + "goog.scope(function() {\n"
+        + "  var BASE_URL = location.href;\n"
+        + "});";
+    testSame(externs, js, null);
+  }
+
   public void testTypedefInGoogScope() {
     String js = LINE_JOINER.join(
         "goog.scope(function() {",
