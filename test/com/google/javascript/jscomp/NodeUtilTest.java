@@ -2298,6 +2298,21 @@ public final class NodeUtilTest extends TestCase {
         .hasSize(3);
   }
 
+  public void testIsConstructor() {
+    assertTrue(NodeUtil.isConstructor(getFunctionNode("/** @constructor */ function Foo() {}")));
+    assertTrue(NodeUtil.isConstructor(getFunctionNode(
+        "/** @constructor */ var Foo = function() {}")));
+    assertTrue(NodeUtil.isConstructor(getFunctionNode(
+        "var x = {}; /** @constructor */ x.Foo = function() {}")));
+    assertTrue(NodeUtil.isConstructor(getFunctionNode("class Foo { constructor() {} }")));
+
+    assertFalse(NodeUtil.isConstructor(getFunctionNode("function Foo() {}")));
+    assertFalse(NodeUtil.isConstructor(getFunctionNode("var Foo = function() {}")));
+    assertFalse(NodeUtil.isConstructor(getFunctionNode("var x = {}; x.Foo = function() {};")));
+    assertFalse(NodeUtil.isConstructor(getFunctionNode("function constructor() {}")));
+    assertFalse(NodeUtil.isConstructor(getFunctionNode("class Foo { bar() {} }")));
+  }
+
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, "x");

@@ -848,6 +848,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.removeUnusedVars || options.removeUnusedLocalVars) {
       if (options.deadAssignmentElimination) {
         passes.add(deadAssignmentsElimination);
+        passes.add(deadPropertyAssignmentElimination);
       }
       if (!runOptimizeCalls) {
         passes.add(getRemoveUnusedVars("removeUnusedVars", false));
@@ -2143,6 +2144,15 @@ public final class DefaultPassConfig extends PassConfig {
       return new DeadAssignmentsElimination(compiler);
     }
   };
+
+  /** Kills dead property assignments. */
+  private final PassFactory deadPropertyAssignmentElimination =
+      new PassFactory("deadPropertyAssignmentElimination", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new DeadPropertyAssignmentElimination(compiler);
+        }
+      };
 
   /** Inlines function calls. */
   private final PassFactory inlineFunctions =

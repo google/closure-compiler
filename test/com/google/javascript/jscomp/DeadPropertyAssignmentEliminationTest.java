@@ -1,0 +1,718 @@
+/*
+ * Copyright 2016 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import static com.google.javascript.jscomp.DeadPropertyAssignmentElimination.ASSUME_CONSTRUCTORS_HAVENT_ESCAPED;
+
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
+public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
+
+  public void testBasic() {
+    testSame(LINE_JOINER.join(
+        "var foo = function() {",
+        "  this.a = 20;",
+        "}"));
+
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  this.a = 10;",
+            "  this.a = 20;",
+            "}"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  10;",
+            "  this.a = 20;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  this.a = 20;",
+            "  this.a = this.a + 20;",
+            "}"));
+  }
+
+  public void testMultipleProperties() {
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  this.a = 10;",
+            "  this.b = 15;",
+            "  this.a = 20;",
+            "}"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  10;",
+            "  this.b = 15;",
+            "  this.a = 20;",
+            "}"));
+  }
+
+  public void testNonStandardAssign() {
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  this.a = 10;",
+            "  this.a += 15;",
+            "  this.a = 20;",
+            "}"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  10;",
+            "  15;",
+            "  this.a = 20;",
+            "}"));
+  }
+
+  public void testChainingPropertiesAssignments() {
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  this.a = this.b = this.c = 10;",
+            "  this.b = 15;",
+            "}"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  this.a = this.c = 10;",
+            "  this.b = 15;",
+            "}"));
+  }
+
+  public void testConditionalProperties() {
+    // We don't handle conditionals at all.
+    testSame(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  this.a = 10;",
+            "  if (true) { this.a = 20; } else { this.a = 30; }",
+            "}"));
+
+    // However, we do handle everything up until the conditional.
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  this.a = 10;",
+            "  this.a = 20;",
+            "  if (true) { this.a = 20; } else { this.a = 30; }",
+            "}"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  10;",
+            "  this.a = 20;",
+            "  if (true) { this.a = 20; } else { this.a = 30; }",
+            "}"));
+  }
+
+  public void testQualifiedNamePrefixAssignment() {
+    testSame(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  a.b = other;",
+            "  a.b.c = 30;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  a.b = 20;",
+            "  a = other;",
+            "  a.b = 30;",
+            "}"));
+  }
+
+  public void testCall() {
+    testSame(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  doSomething();",
+            "  a.b.c = 30;",
+            "}"));
+
+    if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED) {
+      test(
+          LINE_JOINER.join(
+              "/** @constructor */",
+              "var foo = function() {",
+              "  this.c = 20;",
+              "  doSomething();",
+              "  this.c = 30;",
+              "}"),
+          LINE_JOINER.join(
+              "/** @constructor */",
+              "var foo = function() {",
+              "  20;",
+              "  doSomething();",
+              "  this.c = 30;",
+              "}"));
+    }
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var foo = function() {",
+            "  this.c = 20;",
+            "  doSomething(this);",
+            "  this.c = 30;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var foo = function() {",
+            "  this.c = 20;",
+            "  this.doSomething();",
+            "  this.c = 30;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var foo = function() {",
+            "  this.c = 20;",
+            "  doSomething(this.c);",
+            "  this.c = 30;",
+            "}"));
+  }
+
+  public void testUnknownLookup() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var foo = function(str) {",
+            "  this.x = 5;",
+            "  var y = this[str];",
+            "  this.x = 10;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var foo = function(x, str) {",
+            "  x.y = 5;",
+            "  var y = x[str];",
+            "  x.y = 10;",
+            "}"));
+  }
+
+  public void testName() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  var y = { a: 0 };",
+            "  x.a = 123;",
+            "  y = x;",
+            "  x.a = 234;",
+            "  return x.a + y.a;",
+            "}"));
+  }
+
+  public void testName2() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  var y = x;",
+            "  x.a = 123;",
+            "  x = {};",
+            "  x.a = 234;",
+            "  return x.a + y.a;",
+            "}"));
+  }
+
+  public void testAliasing() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.b.c = 1;",
+            "  var y = x.a.c;", // x.b.c is read here
+            "  x.b.c = 2;",
+            "  return x.b.c + y;",
+            "}",
+            "var obj = { c: 123 };",
+            "f({a: obj, b: obj});"));
+  }
+
+  public void testHook() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  var y;",
+            "  x.p = 234;",
+            "  y = pred ? (x.p = 123) : x.p;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  var y;",
+            "  x.p = 234;",
+            "  y = pred ? (x.p = 123) : 123;",
+            "  return x.p;",
+            "}"));
+  }
+
+  public void testConditionalExpression() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  return (x.p = 2) || (x.p = 3);", // Second assignment will never execute.
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  return (x.p = 0) && (x.p = 3);", // Second assignment will never execute.
+            "}"));
+  }
+
+  public void testBrackets() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, p) {",
+            "  x.prop = 123;",
+            "  x[p] = 234;",
+            "  return x.prop;",
+            "}"));
+  }
+
+  public void testFor() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  for(;x;) {}",
+            "  x.p = 2;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  for(;x;) {",
+            "    x.p = 1;",
+            "  }",
+            "  x.p = 2;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  for(;;) {",
+            "    x.p = 2;",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  for(x.p = 2;;) {",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  for(x.p = 2;;x.p=3) {",
+            "    return x.p;", // Reads the "x.p = 2" assignment.
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  for(;;) {",
+            "    x.p = 1;",
+            "    x.p = 2;",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  for(;;) {",
+            "  }",
+            "  x.p = 2;",
+            "}"));
+  }
+
+  public void testWhile() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  while(x);",
+            "  x.p = 2;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  while(1) {",
+            "    x.p = 2;",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  while(true) {",
+            "    x.p = 1;",
+            "    if (random()) continue;",
+            "    x.p = 2;",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  while(true) {",
+            "    x.p = 1;",
+            "    if (random()) break;",
+            "    x.p = 2;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  while(x.p = 2) {",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  1;",
+            "  while(x.p = 2) {",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  while(true) {",
+            "    x.p = 1;",
+            "    x.p = 2;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  while(true) {",
+            "    1;",
+            "    x.p = 2;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  while(1) {}",
+            "  x.p = 2;",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  1;",
+            "  while(1) {}",
+            "  x.p = 2;",
+            "}"));
+  }
+
+  public void testTry() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  try {",
+            "    x.p = 2;",
+            "  } catch (e) {}",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 1;",
+            "  try {",
+            "  } catch (e) {",
+            "    x.p = 2;",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  try {",
+            "    x.p = 1;",
+            "  } catch (e) {",
+            "    x.p = 2;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  try {",
+            "    x.p = 1;",
+            "    x.p = 2;",
+            "  } catch (e) {",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  try {",
+            "    1;",
+            "    x.p = 2;",
+            "  } catch (e) {",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  try {",
+            "    x.p = 1;",
+            "    maybeThrow();",
+            "    x.p = 2;",
+            "  } catch (e) {",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function f() {",
+            "  try {",
+            "    this.p = 1;",
+            "    maybeThrow();",
+            "    this.p = 2;",
+            "  } catch (e) {",
+            "  }",
+            "}"));
+  }
+
+  public void testThrow() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 10",
+            "  if (random) throw err;",
+            "  x.p = 20;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x.p = 10",
+            "  throw err;",
+            "  x.p = 20;",
+            "}"));
+  }
+
+  public void testSwitch() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  x.p = 1;",
+            "  switch (pred) {",
+            "    case 1:",
+            "      x.p = 2;",
+            "    case 2:",
+            "      x.p = 3;",
+            "      break;",
+            "    default:",
+            "      return x.p;",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  x.p = 1;",
+            "  switch (pred) {",
+            "    default:",
+            "      x.p = 2;",
+            "  }",
+            "  x.p = 3;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  x.p = 1;",
+            "  switch (pred) {",
+            "    default:",
+            "      return;",
+            "  }",
+            "  x.p = 2;",
+            "}"));
+
+    // For now we don't enter switch statements.
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  switch (pred) {",
+            "    default:",
+            "      x.p = 2;",
+            "      x.p = 3;",
+            "  }",
+            "}"));
+  }
+
+  public void testIf() {
+    test(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  if (pred) {",
+            "    x.p = 1;",
+            "    x.p = 2;",
+            "    return x.p;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  if (pred) {",
+            "    1;",
+            "    x.p = 2;",
+            "    return x.p;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  x.p = 1;",
+            "  if (pred) {}",
+            "  x.p = 2;",
+            "  return x.p;",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  1;",
+            "  if (pred) {}",
+            "  x.p = 2;",
+            "  return x.p;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, pred) {",
+            "  if (pred) {",
+            "    x.p = 1;",
+            "  }",
+            "  x.p = 2;",
+            "}"));
+  }
+
+  public void testCircularPropChain() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, y) {",
+            "  x.p = {};",
+            "  x.p.y.p.z = 10;",
+            "  x.p = {};",
+            "}"));
+  }
+
+  public void testDifferentQualifiedNames() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x, y) {",
+            "  x.p = 10;",
+            "  y.p = 11;",
+            "}"));
+  }
+
+  public void testGetPropContainsNonQualifiedNames() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  foo(x).p = 10;",
+            "  foo(x).p = 11;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  (x = 10).p = 10;",
+            "  (x = 10).p = 11;",
+            "}"));
+  }
+
+  public void testEs6Constrcutor() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+
+    testSame(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor() {",
+            "    this.p = 123;",
+            "    var z = this.p;",
+            "    this.p = 234;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor() {",
+            "    this.p = 123;",
+            "    this.p = 234;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor() {",
+            "    123;",
+            "    this.p = 234;",
+            "  }",
+            "}"));
+
+    if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED) {
+      test(
+          LINE_JOINER.join(
+              "class Foo {",
+              "  constructor() {",
+              "    this.p = 123;",
+              "    foo();",
+              "    this.p = 234;",
+              "  }",
+              "}"),
+          LINE_JOINER.join(
+              "class Foo {",
+              "  constructor() {",
+              "    123;",
+              "    foo();",
+              "    this.p = 234;",
+              "  }",
+              "}"));
+    }
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+  }
+
+
+  @Override
+  protected CompilerPass getProcessor(Compiler compiler) {
+    return new DeadPropertyAssignmentElimination(compiler);
+  }
+}

@@ -4417,4 +4417,24 @@ public final class NodeUtil {
     return isGoogModuleFile(n) && isGoogModuleDeclareLegacyNamespaceCall(n.getSecondChild());
   }
 
+  static boolean isConstructor(Node fnNode) {
+    if (fnNode == null || !fnNode.isFunction()) {
+      return false;
+    }
+
+    JSType jsType = fnNode.getJSType();
+    JSDocInfo jsDocInfo = getBestJSDocInfo(fnNode);
+
+    return (jsType != null && jsType.isConstructor())
+        || (jsDocInfo != null && jsDocInfo.isConstructor())
+        || isEs6Constructor(fnNode);
+  }
+
+  private static boolean isEs6Constructor(Node fnNode) {
+    return fnNode.isFunction()
+        && fnNode.getGrandparent() != null
+        && fnNode.getGrandparent().isClassMembers()
+        && fnNode.getParent().matchesQualifiedName("constructor");
+  }
+
 }
