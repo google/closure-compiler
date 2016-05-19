@@ -917,7 +917,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
 
   public void testFunctionWithinTry() {
     // Make sure we don't search for the handler outside of the function.
-    String src = "try { function f() {throw 1;} } catch (e) { }";
+    String src = "try { var f = function() {throw 1;} } catch (e) { }";
     String expected = "digraph AST {\n"
         + "  node [color=lightblue2, style=filled];\n"
         + "  node0 [label=\"SCRIPT\"];\n"
@@ -925,37 +925,39 @@ public final class ControlFlowAnalysisTest extends TestCase {
         + "  node0 -> node1 [weight=1];\n"
         + "  node2 [label=\"BLOCK\"];\n"
         + "  node1 -> node2 [weight=1];\n"
-        + "  node3 [label=\"FUNCTION\"];\n"
+        + "  node3 [label=\"VAR\"];\n"
         + "  node2 -> node3 [weight=1];\n"
         + "  node4 [label=\"NAME\"];\n"
         + "  node3 -> node4 [weight=1];\n"
-        + "  node5 [label=\"PARAM_LIST\"];\n"
-        + "  node3 -> node5 [weight=1];\n"
-        + "  node6 [label=\"BLOCK\"];\n"
-        + "  node3 -> node6 [weight=1];\n"
-        + "  node7 [label=\"THROW\"];\n"
-        + "  node6 -> node7 [weight=1];\n"
-        + "  node8 [label=\"NUMBER\"];\n"
-        + "  node7 -> node8 [weight=1];\n"
-        + "  node6 -> node7 [label=\"UNCOND\", " +
-                "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-        + "  node3 -> node6 [label=\"UNCOND\", " +
-                "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-        + "  node2 -> RETURN [label=\"UNCOND\", " +
-                "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-        + "  node9 [label=\"BLOCK\"];\n"
-        + "  node1 -> node9 [weight=1];\n"
-        + "  node10 [label=\"CATCH\"];\n"
+        + "  node5 [label=\"FUNCTION\"];\n"
+        + "  node4 -> node5 [weight=1];\n"
+        + "  node6 [label=\"NAME\"];\n"
+        + "  node5 -> node6 [weight=1];\n"
+        + "  node7 [label=\"PARAM_LIST\"];\n"
+        + "  node5 -> node7 [weight=1];\n"
+        + "  node8 [label=\"BLOCK\"];\n"
+        + "  node5 -> node8 [weight=1];\n"
+        + "  node9 [label=\"THROW\"];\n"
+        + "  node8 -> node9 [weight=1];\n"
+        + "  node10 [label=\"NUMBER\"];\n"
         + "  node9 -> node10 [weight=1];\n"
-        + "  node11 [label=\"NAME\"];\n"
-        + "  node10 -> node11 [weight=1];\n"
-        + "  node12 [label=\"BLOCK\"];\n"
-        + "  node10 -> node12 [weight=1];\n"
-        + "  node12 -> RETURN [label=\"UNCOND\", " +
+        + "  node3 -> RETURN [label=\"UNCOND\", " +
                 "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-        + "  node10 -> node12 [label=\"UNCOND\", " +
+        + "  node2 -> node3 [label=\"UNCOND\", " +
                 "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-        + "  node9 -> node10 [label=\"UNCOND\", " +
+        + "  node11 [label=\"BLOCK\"];\n"
+        + "  node1 -> node11 [weight=1];\n"
+        + "  node12 [label=\"CATCH\"];\n"
+        + "  node11 -> node12 [weight=1];\n"
+        + "  node13 [label=\"NAME\"];\n"
+        + "  node12 -> node13 [weight=1];\n"
+        + "  node14 [label=\"BLOCK\"];\n"
+        + "  node12 -> node14 [weight=1];\n"
+        + "  node14 -> RETURN [label=\"UNCOND\", " +
+                "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node12 -> node14 [label=\"UNCOND\", " +
+                "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node11 -> node12 [label=\"UNCOND\", " +
                 "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
         + "  node1 -> node2 [label=\"UNCOND\", " +
                 "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"

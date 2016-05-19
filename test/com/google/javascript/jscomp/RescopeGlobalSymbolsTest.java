@@ -144,6 +144,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "function test(){}",
         "_.test=function (){}");
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
     test(
         "if(1)function test(){}",
         "if(1)_.test=function (){}");

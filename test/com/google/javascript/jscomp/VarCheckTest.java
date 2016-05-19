@@ -267,8 +267,8 @@ public final class VarCheckTest extends Es6CompilerTestCase {
   }
 
   public void testFunctionDeclaredInBlock() {
-    testError("if (true) {function foo() {}} foo();", VarCheck.UNDEFINED_VAR_ERROR);
-    testError("foo(); if (true) {function foo() {}}", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("if (true) {function foo() {}} foo();", VarCheck.UNDEFINED_VAR_ERROR);
+    testErrorEs6("foo(); if (true) {function foo() {}}", VarCheck.UNDEFINED_VAR_ERROR);
 
     testSameEs6("if (true) {var foo = ()=>{}} foo();");
     testErrorEs6("if (true) {let foo = ()=>{}} foo();", VarCheck.UNDEFINED_VAR_ERROR);

@@ -261,6 +261,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
   }
 
   public void testCodeMotionDoesntBreakFunctionHoisting() throws Exception {
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
     fold("function f() { if (x) return; foo(); function foo() {} }",
          "function f() { if (x); else { function foo() {} foo(); } }");
   }

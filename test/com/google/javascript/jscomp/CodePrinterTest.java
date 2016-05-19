@@ -45,9 +45,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // Safari: needs ';' at the end of a throw statement
     assertPrint("function foo(){throw 'error';}",
         "function foo(){throw\"error\";}");
-    // Safari 3 needs a "{" around a single function
-    assertPrint("if (true) function foo(){return}",
-        "if(true){function foo(){return}}");
 
     assertPrint("var x = 10; { var y = 20; }", "var x=10;var y=20");
 
@@ -238,6 +235,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("if(x)if(y);", "if(x)if(y);");
     assertPrint("if(x){if(y);}", "if(x)if(y);");
     assertPrint("if(x){if(y){};;;}", "if(x)if(y);");
+  }
+
+  public void testPrintBlockScopedFunctions() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    // Safari 3 needs a "{" around a single function
+    assertPrint("if (true) function foo(){return}",
+        "if(true){function foo(){return}}");
     assertPrint("if(x){;;function y(){};;}", "if(x){function y(){}}");
   }
 
@@ -1418,6 +1422,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testFunctionSafariCompatibility() {
     // Functions within IFs cause syntax errors on Safari.
+    languageMode = LanguageMode.ECMASCRIPT6;
     assertPrint("function f(){if(e1){function goo(){return true}}else foo()}",
         "function f(){if(e1){function goo(){return true}}else foo()}");
 

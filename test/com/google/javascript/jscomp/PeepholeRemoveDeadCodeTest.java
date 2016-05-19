@@ -95,7 +95,7 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
     fold("function f() { if (false) {} }", "function f(){}");
     fold("function f() { { if (false) {} if (true) {} {} } }",
          "function f(){}");
-    fold("{var x; var y; var z; function f() { { var a; { var b; } } } }",
+    testEs6("{var x; var y; var z; function f() { { var a; { var b; } } } }",
          "var x;var y;var z;function f(){var a;var b}");
   }
 

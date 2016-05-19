@@ -197,6 +197,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("function f() { function foo() {} }");
     test("function f() { f(); a:function bar() {} }",
          "function f() { f(); a:{ var bar = function () {} }}");
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
     test("function f() { f(); {function bar() {}}}",
          "function f() { f(); {var bar = function () {}}}");
     test("function f() { f(); if (true) {function bar() {}}}",
@@ -216,6 +217,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testNormalizeFunctionDeclarations() throws Exception {
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
     testSame("function f() {}");
     testSame("var f = function () {}");
     test("var f = function f() {}",
@@ -315,6 +317,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testRemoveDuplicateVarDeclarations3() {
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
     test("var f = 1; function f(){}",
          "f = 1; function f(){}");
     test("var f; function f(){}",

@@ -33,6 +33,7 @@ public final class RenameLabelsTest extends CompilerTestCase {
          "function x(){ a(); }");
     test("function x(){ Foo:{ a(); break Foo; } }",
          "function x(){ a:{ a(); break a; } }");
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
     test("function x() { " +
             "Foo:{ " +
               "function goo() {" +

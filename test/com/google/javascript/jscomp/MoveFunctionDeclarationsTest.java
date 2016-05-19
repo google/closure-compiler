@@ -41,6 +41,7 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
   }
 
   public void testNoMoveDeepFunctionDeclarations() {
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
     testSame("a; if (a) function f(){};");
     testSame("a; if (a) { function f(){} }");
   }

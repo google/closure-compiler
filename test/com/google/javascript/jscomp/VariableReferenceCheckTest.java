@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
@@ -119,43 +117,43 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   }
 
   public void testNonHoistedFunction() {
-    assertUndeclared("if (true) { f(); function f() {} }");
+    assertUndeclaredEs6("if (true) { f(); function f() {} }");
   }
 
   public void testNonHoistedFunction2() {
-    assertNoWarning("if (false) { function f() {} f(); }");
+    assertNoWarningEs6("if (false) { function f() {} f(); }");
   }
 
   public void testNonHoistedFunction3() {
-    assertNoWarning("function g() { if (false) { function f() {} f(); }}");
+    assertNoWarningEs6("function g() { if (false) { function f() {} f(); }}");
   }
 
   public void testNonHoistedFunction4() {
-    assertAmbiguous("if (false) { function f() {} }  f();");
+    assertAmbiguousEs6("if (false) { function f() {} }  f();");
   }
 
   public void testNonHoistedFunction5() {
-    assertAmbiguous("function g() { if (false) { function f() {} }  f(); }");
+    assertAmbiguousEs6("function g() { if (false) { function f() {} }  f(); }");
   }
 
   public void testNonHoistedFunction6() {
-    assertUndeclared("if (false) { f(); function f() {} }");
+    assertUndeclaredEs6("if (false) { f(); function f() {} }");
   }
 
   public void testNonHoistedFunction7() {
-    assertUndeclared("function g() { if (false) { f(); function f() {} }}");
+    assertUndeclaredEs6("function g() { if (false) { f(); function f() {} }}");
   }
 
   public void testNonHoistedRecursiveFunction1() {
-    assertNoWarning("if (false) { function f() { f(); }}");
+    assertNoWarningEs6("if (false) { function f() { f(); }}");
   }
 
   public void testNonHoistedRecursiveFunction2() {
-    assertNoWarning("function g() { if (false) { function f() { f(); }}}");
+    assertNoWarningEs6("function g() { if (false) { function f() { f(); }}}");
   }
 
   public void testNonHoistedRecursiveFunction3() {
-    assertNoWarning("function g() { if (false) { function f() { f(); g(); }}}");
+    assertNoWarningEs6("function g() { if (false) { function f() { f(); g(); }}}");
   }
 
   public void testDestructuringInFor() {
@@ -276,9 +274,14 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   /**
    * Expects the JS to generate one bad-write warning.
    */
-  private void assertAmbiguous(String js) {
-    testError(js, VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL,
-        LanguageMode.ECMASCRIPT5);
+  private void assertUndeclaredEs6(String js) {
+    testWarningEs6(js, VariableReferenceCheck.EARLY_REFERENCE);
+  }
+
+  /**
+   * Expects the JS to generate one bad-write warning.
+   */
+  private void assertAmbiguousEs6(String js) {
     testSameEs6(js); // In ES6, these are block scoped functions, so no ambiguity.
   }
 
@@ -301,5 +304,12 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
    */
   private void assertNoWarning(String js) {
     testSame(js);
+  }
+
+  /**
+   * Expects the JS to generate no errors or warnings.
+   */
+  private void assertNoWarningEs6(String js) {
+    testSameEs6(js);
   }
 }

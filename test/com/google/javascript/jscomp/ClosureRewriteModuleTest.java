@@ -416,7 +416,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
   public void testTopLevelNames3() {
     // Functions in blocks are not module top level because they are block scoped.
-    test(
+    testEs6(
         LINE_JOINER.join(
             "goog.module('a.c');",
             "if (true) {",

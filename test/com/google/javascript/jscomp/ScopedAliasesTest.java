@@ -866,6 +866,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testInvalidVariableInScope() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testScopedError("if (true) { function f() {}}", ScopedAliases.GOOG_SCOPE_INVALID_VARIABLE);
     testScopedError("for (;;) { function f() {}}", ScopedAliases.GOOG_SCOPE_INVALID_VARIABLE);
   }

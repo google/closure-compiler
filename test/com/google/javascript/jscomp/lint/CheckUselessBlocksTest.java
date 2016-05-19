@@ -50,7 +50,7 @@ public final class CheckUselessBlocksTest extends Es6CompilerTestCase {
     testSame("blah: { break blah; }");
     // TODO(moz): For block-scoped function declaration, we should technically
     // warn if we are in non-strict mode and the language mode is ES5 or below.
-    testSame("{ function foo() {} }");
+    testSameEs6("{ function foo() {} }");
     testSameEs6("let x = 1;");
     testSameEs6("{ let x = 1; }");
     testSameEs6("if (true) { let x = 1; }");

@@ -8778,26 +8778,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"));
   }
 
-  public void testOuterVarDefinitionJoinDoesntCrash() {
-    typeCheck(LINE_JOINER.join(
-        "/** @constructor */ function Foo(){}",
-        "function f() {",
-        "  if (true) {",
-        "    function g() { new Foo; }",
-        "    g();",
-        "  }",
-        "}"));
-
-    // typeCheck(LINE_JOINER.join(
-    //     "function f() {",
-    //     "  if (true) {",
-    //     "    function g() { new Foo; }",
-    //     "    g();",
-    //     "  }",
-    //     "}"),
-    //     VarCheck.UNDEFINED_VAR_ERROR);
-  }
-
   public void testUnparameterizedArrayDefinitionDoesntCrash() {
     typeCheckCustomExterns(
         DEFAULT_EXTERNS + LINE_JOINER.join(
