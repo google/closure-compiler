@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
@@ -111,7 +112,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testBreakInForOf() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.FOR_OF);
     parse(""
         + "for (var x of [1, 2, 3]) {\n"
         + "  if (x == 2) break;\n"
@@ -156,7 +157,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testContinueInForOf() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.FOR_OF);
     parse(""
         + "for (var x of [1, 2, 3]) {\n"
         + "  if (x == 2) continue;\n"
@@ -450,7 +451,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(varNameNode.getJSDocInfo()).isNull();
 
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.LET_DECLARATIONS);
 
     Node letNode = parse("/** @type {number} */let a;").getFirstChild();
 
@@ -465,7 +466,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(letNameNode).hasType(Token.NAME);
     assertThat(letNameNode.getJSDocInfo()).isNull();
 
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.CONST_DECLARATIONS);
     Node constNode = parse("/** @type {number} */const a = 0;").getFirstChild();
 
     // CONST
@@ -726,10 +727,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testJSDocAttachment21() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.CONST_DECLARATIONS);
     parse("/** @param {string} x */ const f = function() {};");
 
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.LET_DECLARATIONS);
     parse("/** @param {string} x */ let f = function() {};");
   }
 
@@ -737,7 +738,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   // See https://github.com/google/closure-compiler/issues/781
   public void testJSDocAttachment22() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_MODULES;
+    expectFeatures(Feature.MODULES);
 
     Node n = parse("/** @param {string} x */ export function f(x) {};");
     Node export = n.getFirstChild();
@@ -975,9 +976,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("+{a: 1}");
     parse("-[1,2]");
     parse("~'42'");
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.SUPER);
     parse("!super.a");
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
 
     parseError("delete f()", "Invalid delete operand. Only properties can be deleted.");
     parseError("++a++", "Invalid prefix increment operand.");
@@ -1051,12 +1052,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testMethodInObjectLiteral() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.EXTENDED_OBJECT_LITERALS);
     testMethodInObjectLiteral("var a = {b() {}};");
     testMethodInObjectLiteral("var a = {b() { alert('b'); }};");
 
     // Static methods not allowed in object literals.
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("var a = {static b() { alert('b'); }};",
         "Cannot use keyword in short object literal");
   }
@@ -1070,7 +1071,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testExtendedObjectLiteral() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.EXTENDED_OBJECT_LITERALS);
     testExtendedObjectLiteral("var a = {b};");
     testExtendedObjectLiteral("var a = {b, c};");
     testExtendedObjectLiteral("var a = {b, c: d, e};");
@@ -1079,7 +1080,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     testExtendedObjectLiteral("var a = {namespace};");
     testExtendedObjectLiteral("var a = {module};");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("var a = { '!@#$%' };", "':' expected");
     parseError("var a = { 123 };", "':' expected");
     parseError("var a = { let };", "Cannot use keyword in short object literal");
@@ -1096,7 +1097,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testComputedPropertiesObjLit() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.COMPUTED_PROPERTIES);
 
     // Method
     testComputedProperty(Joiner.on('\n').join(
@@ -1127,7 +1128,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testComputedMethodClass() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.CLASSES, Feature.COMPUTED_PROPERTIES);
     parse(Joiner.on('\n').join(
         "class X {",
         "  [prop + '_']() {}",
@@ -1140,7 +1141,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testComputedProperty() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.COMPUTED_PROPERTIES);
 
     testComputedProperty(Joiner.on('\n').join(
         "var prop = 'some complex expression';",
@@ -1197,14 +1198,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTrailingCommaWarning3() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.TRAILING_COMMA);
     parseWarning("var a = ['foo', 'bar',];", TRAILING_COMMA_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
     parse("var a = ['foo', 'bar',];");
   }
 
   public void testTrailingCommaWarning4() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.TRAILING_COMMA);
     parseWarning("var a = [,];", TRAILING_COMMA_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
     parse("var a = [,];");
@@ -1215,7 +1216,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTrailingCommaWarning6() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.TRAILING_COMMA);
     parseWarning("var a = {'foo': 'bar',};", TRAILING_COMMA_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
     parse("var a = {'foo': 'bar',};");
@@ -1279,7 +1280,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testConstForbidden() {
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.CONST_DECLARATIONS);
     parseWarning("const x = 3;",
         "this language feature is only supported in es6 mode: const declaration");
   }
@@ -1294,7 +1295,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testArrayDestructuringVar() {
     mode = LanguageMode.ECMASCRIPT5;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parseWarning("var [x,y] = foo();",
         "this language feature is only supported in es6 mode: destructuring");
 
@@ -1307,7 +1308,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testArrayDestructuringAssign() {
     mode = LanguageMode.ECMASCRIPT5;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parseWarning("[x,y] = foo();",
         "this language feature is only supported in es6 mode: destructuring");
 
@@ -1319,7 +1320,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testArrayDestructuringInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("var [x=1,y] = foo();");
     parse("[x=1,y] = foo();");
     parse("var [x,y=2] = foo();");
@@ -1336,17 +1337,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testArrayDestructuringTrailingComma() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING, Feature.TRAILING_COMMA);
     parseError("var [x,] = ['x',];", "Array pattern may not end with a comma");
   }
 
   public void testArrayDestructuringDeclarationRest() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+
+    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS);
     parse("var [first, ...rest] = foo();");
+
+    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS, Feature.LET_DECLARATIONS);
     parse("let [first, ...rest] = foo();");
+
+    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS, Feature.CONST_DECLARATIONS);
     parse("const [first, ...rest] = foo();");
+
     // nested destructuring in regular parameters and rest parameters
+    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS);
     parse("var [first, {a, b}, ...[re, st, ...{length}]] = foo();");
 
     parseError(
@@ -1363,7 +1371,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testArrayDestructuringAssignRest() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS);
     parse("[first, ...rest] = foo();");
     // nested destructuring in regular parameters and rest parameters
     parse("[first, {a, b}, ...[re, st, ...{length}]] = foo();");
@@ -1386,7 +1394,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testArrayDestructuringFnDeclaration() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("function f([x, y]) { use(x); use(y); }");
     parse("function f([x, [y, z]]) {}");
     parse("function f([x, {y, foo: z}]) {}");
@@ -1406,7 +1414,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringVar() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("var {x, y} = foo();");
     parse("var {x: x, y: y} = foo();");
     parse("var {x: {y, z}} = foo();");
@@ -1422,7 +1430,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringVarWithInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("var {x = 1} = foo();");
     parse("var {x: {y = 1}} = foo();");
     parse("var {x: y = 1} = foo();");
@@ -1433,7 +1441,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringAssign() {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("({x, y}) = foo();", "invalid assignment target");
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("({x, y} = foo());");
     parse("({x: x, y: y} = foo());");
     parse("({x: {y, z}} = foo());");
@@ -1446,7 +1454,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringAssignWithInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("({x = 1}) = foo();", "invalid assignment target");
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("({x = 1} = foo());");
     parse("({x: {y = 1}} = foo());");
     parse("({x: y = 1} = foo());");
@@ -1455,9 +1463,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testObjectDestructuringWithInitializerInvalid() {
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parseError("var {{x}} = foo();", "'}' expected");
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("({{x}}) = foo();", "'}' expected");
     parseError("({{a} = {a: 'b'}}) = foo();", "'}' expected");
     parseError("({{a : b} = {a: 'b'}}) = foo();", "'}' expected");
@@ -1465,7 +1473,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringFnDeclaration() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("function f({x, y}) { use(x); use(y); }");
     parse("function f({w, x: {y, z}}) {}");
     parse("function f({x, y} = {x:1, y:2}) {}");
@@ -1486,7 +1494,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringComputedProp() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("var {[x]: y} = z;");
     parse("var { [foo()] : [x,y,z] = bar() } = baz();");
     parseError("var {[x]} = z;", "':' expected");
@@ -1494,7 +1502,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringStringAndNumberKeys() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("var {'s': x} = foo();");
     parse("var {3: x} = foo();");
 
@@ -1520,7 +1528,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringKeywordKeys() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("var {if: x, else: y} = foo();");
     parse("var {while: x=1, for: y} = foo();");
     parse("var {type} = foo();");
@@ -1534,7 +1542,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringComplexTarget() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parseError(
         "var {foo: bar.x} = baz();",
         "Only an identifier or destructuring pattern is allowed here.");
@@ -1550,7 +1558,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringExtraParens() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("({x: y} = z);");
     parse("({x: (y)} = z);");
     parse("({x: ((y))} = z);");
@@ -1569,7 +1577,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testMixedDestructuring() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("var {x: [y, z]} = foo();");
     parse("var [x, {y, z}] = foo();");
 
@@ -1582,7 +1590,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testMixedDestructuringWithInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     parse("var {x: [y, z] = [1, 2]} = foo();");
     parse("var [x, {y, z} = {y: 3, z: 4}] = foo();");
 
@@ -1595,17 +1603,26 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testDestructuringNoRHS() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+
+    expectFeatures(Feature.DESTRUCTURING);
     parseError("var {x: y};", "destructuring must have an initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parseError("let {x: y};", "destructuring must have an initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parseError("const {x: y};", "const variables must have an initializer");
 
+    expectFeatures(Feature.DESTRUCTURING);
     parseError("var {x};", "destructuring must have an initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parseError("let {x};", "destructuring must have an initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parseError("const {x};", "const variables must have an initializer");
 
+    expectFeatures(Feature.DESTRUCTURING);
     parseError("var [x, y];", "destructuring must have an initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parseError("let [x, y];", "destructuring must have an initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parseError("const [x, y];", "const variables must have an initializer");
   }
 
@@ -1616,29 +1633,29 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // array comprehensions
     parseError("[for (x of y) z];", error);
-    expectedFeatures = FeatureSet.ES6; // Note: the object pattern triggers this
+    expectFeatures(Feature.DESTRUCTURING); // Note: the object pattern triggers this
     parseError("[for ({x,y} of z) x+y];", error);
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("[for (x of y) if (x<10) z];", error);
     parseError("[for (a = 5 of v) a];", "'identifier' expected");
 
     // generator comprehensions
     parseError("(for (x of y) z);", error);
-    expectedFeatures = FeatureSet.ES6; // Note: the object pattern triggers this
+    expectFeatures(Feature.DESTRUCTURING); // Note: the object pattern triggers this
     parseError("(for ({x,y} of z) x+y);", error);
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("(for (x of y) if (x<10) z);", error);
     parseError("(for (a = 5 of v) a);", "'identifier' expected");
   }
 
   public void testLetForbidden1() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.LET_DECLARATIONS);
     parseWarning("let x = 3;",
         "this language feature is only supported in es6 mode: let declaration");
   }
 
   public void testLetForbidden2() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.LET_DECLARATIONS);
     parseWarning("function f() { let x = 3; };",
         "this language feature is only supported in es6 mode: let declaration");
   }
@@ -1659,7 +1676,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testGenerator() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.GENERATORS);
     mode = LanguageMode.ECMASCRIPT6_STRICT;
     parse("var obj = { *f() { yield 3; } };");
     parse("function* f() { yield 3; }");
@@ -1684,7 +1701,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testGettersForbidden1() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.GETTER);
     parseError("var x = {get foo() { return 3; }};",
         IRFactory.GETTER_ERROR_MESSAGE);
   }
@@ -1705,19 +1722,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testGettersForbidden5() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.GETTER);
     parseError("var x = {a: 2, get foo() { return 3; }};",
         IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testGettersForbidden6() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.GETTER);
     parseError("var x = {get 'foo'() { return 3; }};",
         IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testSettersForbidden() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.SETTER);
     parseError("var x = {set foo(a) { y = 3; }};",
         IRFactory.SETTER_ERROR_MESSAGE);
   }
@@ -1798,7 +1815,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testLet() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.LET_DECLARATIONS);
 
     parse("let x;");
     parse("let x = 1;");
@@ -1808,7 +1825,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testConst() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.CONST_DECLARATIONS);
 
     parseError("const x;", "const variables must have an initializer");
     parse("const x = 1;");
@@ -1835,21 +1852,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testYield2() {
     mode = LanguageMode.ECMASCRIPT6_STRICT;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.GENERATORS);
     parse("function * f() { yield; }");
     parse("function * f() { yield /a/i; }");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("function * f() { 1 + yield; }", "primary expression expected");
     parseError("function * f() { 1 + yield 2; }", "primary expression expected");
     parseError("function * f() { yield 1 + yield 2; }", "primary expression expected");
     parseError("function * f() { yield(1) + yield(2); }", "primary expression expected");
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.GENERATORS);
     parse("function * f() { (yield 1) + (yield 2); }"); // OK
     parse("function * f() { yield * yield; }"); // OK  (yield * (yield))
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("function * f() { yield + yield; }", "primary expression expected");
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.GENERATORS);
     parse("function * f() { (yield) + (yield); }"); // OK
     parse("function * f() { return yield; }"); // OK
     parse("function * f() { return yield 1; }"); // OK
@@ -1857,14 +1874,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testYield3() {
     mode = LanguageMode.ECMASCRIPT6_STRICT;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.GENERATORS);
     // TODO(johnlenz): validate "yield" parsing. Firefox rejects this
     // use of "yield".
     parseError("function * f() { yield , yield; }");
   }
 
   public void testStringLineContinuation() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.STRING_CONTINUATION);
     mode = LanguageMode.ECMASCRIPT3;
     Node n = parseError("'one\\\ntwo';",
         "String continuations are not supported in this language mode.");
@@ -1906,13 +1923,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testUseTemplateLiteral() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.TEMPLATE_LITERALS);
     testTemplateLiteral("f`hello world`;");
     testTemplateLiteral("`hello ${name} ${world}`.length;");
   }
 
   public void testTemplateLiteral() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.TEMPLATE_LITERALS);
     testTemplateLiteral("``");
     testTemplateLiteral("`\"`");
     testTemplateLiteral("`\\\"`");
@@ -1925,7 +1942,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTemplateLiteralWithNewline() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.TEMPLATE_LITERALS);
     assertSimpleTemplateLiteral("hello\nworld", "`hello\nworld`");
     assertSimpleTemplateLiteral("\n", "`\r`");
     assertSimpleTemplateLiteral("\n", "`\r\n`");
@@ -1937,7 +1954,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testTemplateLiteralWithLineContinuation() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.TEMPLATE_LITERALS);
     Node n = parseWarning("`string \\\ncontinuation`",
         "String continuations are not recommended. See"
         + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
@@ -1949,12 +1966,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testTemplateLiteralSubstitution() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.TEMPLATE_LITERALS);
     parse("`hello ${name}`;");
     parse("`hello ${name} ${world}`;");
     parse("`hello ${name }`");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("`hello ${name", "Expected '}' after expression in template literal");
     parseError("`hello ${name tail}", "Expected '}' after expression in template literal");
   }
@@ -1994,7 +2011,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testBinaryLiterals() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.BINARY_LITERALS);
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning("0b0001;",
         "Binary integer literals are not supported in this language mode.");
@@ -2006,7 +2023,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testOctalLiterals() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.OCTAL_LITERALS);
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning("0o0001;",
         "Octal integer literals are not supported in this language mode.");
@@ -2066,7 +2083,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testGetter() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.GETTER);
     mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {get 1(){}};",
         IRFactory.GETTER_ERROR_MESSAGE);
@@ -2079,12 +2096,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = {get 'a'(){}};");
     parse("var x = {get a(){}};");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("var x = {get a(b){}};", "')' expected");
   }
 
   public void testSetter() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.SETTER);
     mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {set 1(x){}};",
         IRFactory.SETTER_ERROR_MESSAGE);
@@ -2096,7 +2113,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = {set 1(x){}};");
     parse("var x = {set 'a'(x){}};");
     parse("var x = {set a(x){}};");
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("var x = {set a(){}};",
         "'identifier' expected");
   }
@@ -2150,7 +2167,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testReservedKeywords() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
     mode = LanguageMode.ECMASCRIPT3;
 
     parseError("var boolean;", "identifier is a reserved word");
@@ -2158,31 +2175,31 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "identifier is a reserved word");
     parseError("boolean = 1;", "identifier is a reserved word");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("class = 1;", "'identifier' expected");
     parseError("public = 2;", "primary expression expected");
 
     mode = LanguageMode.ECMASCRIPT5;
 
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
     parse("var boolean;");
     parse("function boolean() {};");
     parse("boolean = 1;");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("class = 1;", "'identifier' expected");
     // TODO(johnlenz): reenable
     //parse("public = 2;");
 
     mode = LanguageMode.ECMASCRIPT5_STRICT;
 
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
     parse("var boolean;");
     parse("function boolean() {};");
     parse("boolean = 1;");
-    expectedFeatures = FeatureSet.ES3;
-    parseError("public = 2;", "primary expression expected");
 
+    expectFeatures();
+    parseError("public = 2;", "primary expression expected");
     parseError("class = 1;", "'identifier' expected");
   }
 
@@ -2204,7 +2221,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testKeywordsAsProperties() {
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.KEYWORDS_AS_PROPERTIES);
     mode = LanguageMode.ECMASCRIPT3;
 
     parseWarning("var x = {function: 1};", IRFactory.INVALID_ES3_PROP_NAME);
@@ -2222,17 +2239,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var x = {set 1(a){} };",
         IRFactory.SETTER_ERROR_MESSAGE);
     parseWarning("var x = {class: 1};", IRFactory.INVALID_ES3_PROP_NAME);
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parse("var x = {'class': 1};");
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.KEYWORDS_AS_PROPERTIES);
     parseWarning("x.class;", IRFactory.INVALID_ES3_PROP_NAME);
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parse("x['class'];");
     parse("var x = {let: 1};");  // 'let' is not reserved in ES3
     parse("x.let;");
     parse("var x = {yield: 1};"); // 'yield' is not reserved in ES3
     parse("x.yield;");
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.KEYWORDS_AS_PROPERTIES);
     parseWarning("x.prototype.catch = function() {};",
         IRFactory.INVALID_ES3_PROP_NAME);
     parseWarning("x().catch();", IRFactory.INVALID_ES3_PROP_NAME);
@@ -2249,12 +2266,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = {set 1(a){} };");
     parse("var x = {class: 1};");
     parse("x.class;");
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parse("var x = {let: 1};");
     parse("x.let;");
     parse("var x = {yield: 1};");
     parse("x.yield;");
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.KEYWORDS_AS_PROPERTIES);
     parse("x.prototype.catch = function() {};");
     parse("x().catch();");
 
@@ -2270,12 +2287,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = {set 1(a){} };");
     parse("var x = {class: 1};");
     parse("x.class;");
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parse("var x = {let: 1};");
     parse("x.let;");
     parse("var x = {yield: 1};");
     parse("x.yield;");
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.KEYWORDS_AS_PROPERTIES);
     parse("x.prototype.catch = function() {};");
     parse("x().catch();");
   }
@@ -2445,8 +2462,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testValidTypeAnnotation2() {
     mode = LanguageMode.ECMASCRIPT5;
-    expectedFeatures = FeatureSet.ES5;
+    expectFeatures(Feature.GETTER);
     parse("var o = { /** @type {string} */ get prop() { return 'str' }};");
+    expectFeatures(Feature.SETTER);
     parse("var o = { /** @type {string} */ set prop(s) {}};");
   }
 
@@ -2458,7 +2476,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testValidTypeAnnotation4() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_MODULES;
+    expectFeatures(Feature.MODULES);
     parse("/** @type {number} */ export var x = 3;");
   }
 
@@ -2528,17 +2546,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
    * New RegExp flags added in ES6.
    */
   public void testES6RegExpFlags() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.REGEXP_FLAG_Y);
     mode = LanguageMode.ECMASCRIPT6;
     parse("/a/y");
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.REGEXP_FLAG_U);
     parse("/a/u");
 
     mode = LanguageMode.ECMASCRIPT5;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.REGEXP_FLAG_Y);
     parseWarning("/a/y",
         "this language feature is only supported in es6 mode: RegExp flag 'y'");
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.REGEXP_FLAG_U);
     parseWarning("/a/u",
         "this language feature is only supported in es6 mode: RegExp flag 'u'");
     parseWarning("/a/yu",
@@ -2548,7 +2566,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testDefaultParameters() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DEFAULT_PARAMETERS);
     parse("function f(a, b=0) {}");
     parse("function f(a, b=0, c) {}");
 
@@ -2559,12 +2577,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testRestParameters() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.REST_PARAMETERS);
     parse("function f(...b) {}");
     parse("(...xs) => xs");
     parse("(x, ...xs) => xs");
     parse("(x, y, ...xs) => xs");
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("(...xs, x) => xs", "')' expected");
   }
 
@@ -2578,7 +2596,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testRestParameters_ES5() {
     mode = LanguageMode.ECMASCRIPT5;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.REST_PARAMETERS);
     parseWarning("function f(...b) {}",
         "this language feature is only supported in es6 mode: rest parameter");
   }
@@ -2587,24 +2605,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("();", "invalid paren expression");
     parseError("(...xs);", "invalid paren expression");
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.REST_PARAMETERS);
     parseError("(x, ...xs);", "A rest parameter must be in a parameter list.");
     parseError("(a, b, c, ...xs);", "A rest parameter must be in a parameter list.");
   }
 
   public void testDefaultParametersWithRestParameters() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DEFAULT_PARAMETERS, Feature.REST_PARAMETERS);
     parse("function f(a=0, ...b) {}");
     parse("function f(a, b=0, ...c) {}");
     parse("function f(a, b=0, c=1, ...d) {}");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("function f(...a=3) {}", "',' expected");
   }
 
   public void testClass1() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.CLASSES);
     mode = LanguageMode.ECMASCRIPT6;
     parse("class C {}");
 
@@ -2619,7 +2637,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testClass2() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.CLASSES);
     mode = LanguageMode.ECMASCRIPT6;
     parse("class C {}");
 
@@ -2637,7 +2655,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testClass3() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.CLASSES);
     mode = LanguageMode.ECMASCRIPT6;
     parse("class C {\n" +
           "  member() {};\n" +
@@ -2653,7 +2671,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testClassKeywordsAsMethodNames() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.CLASSES, Feature.KEYWORDS_AS_PROPERTIES);
     mode = LanguageMode.ECMASCRIPT6;
     parse(Joiner.on('\n').join(
         "class KeywordMethods {",
@@ -2664,7 +2682,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testSuper1() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.SUPER);
     mode = LanguageMode.ECMASCRIPT6;
 
     // TODO(johnlenz): super in global scope should be a syntax error
@@ -2682,7 +2700,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testNewTarget() {
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.NEW_TARGET);
     mode = LanguageMode.ECMASCRIPT6;
 
     // TODO(bradfordcsmith): new.target in global scope should be a syntax error
@@ -2702,14 +2720,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testNewDotSomethingInvalid() {
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.NEW_TARGET);
     mode = LanguageMode.ECMASCRIPT6;
 
     parseError("function f(){new.something}", "'target' expected");
   }
 
   public void testArrow1() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.ARROW_FUNCTIONS);
     mode = LanguageMode.ECMASCRIPT6;
 
     parse("()=>1;");
@@ -2750,15 +2768,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testFor_ES6() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
     mode = LanguageMode.ECMASCRIPT6;
 
+    expectFeatures(Feature.LET_DECLARATIONS);
     parse("for (let x; x != 10; x = next()) {}");
     parse("for (let x; x != 10; x = next());");
     parse("for (let x = 0; x != 10; x++) {}");
     parse("for (let x = 0; x != 10; x++);");
 
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.CONST_DECLARATIONS);
     parseError("for (const x; x != 10; x = next()) {}", "const variables must have an initializer");
     parseError("for (const x; x != 10; x = next());", "const variables must have an initializer");
     parse("for (const x = 0; x != 10; x++) {}");
@@ -2771,13 +2789,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("for (a in b) c;");
     parse("for (var a in b) c;");
 
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.LET_DECLARATIONS);
     parse("for (let a in b) c;");
 
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.CONST_DECLARATIONS);
     parse("for (const a in b) c;");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("for (a,b in c) d;", "';' expected");
     parseError("for (var a,b in c) d;",
         "for-in statement may not have more than one variable declaration");
@@ -2807,50 +2825,65 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testForInDestructuring() {
-    expectedFeatures = FeatureSet.ES6;
     mode = LanguageMode.ECMASCRIPT6;
 
+    expectFeatures(Feature.DESTRUCTURING);
     parse("for ({a} in b) c;");
     parse("for (var {a} in b) c;");
+    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for (let {a} in b) c;");
+    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for (const {a} in b) c;");
 
+    expectFeatures(Feature.DESTRUCTURING);
     parse("for ({a: b} in c) d;");
     parse("for (var {a: b} in c) d;");
+    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for (let {a: b} in c) d;");
+    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for (const {a: b} in c) d;");
 
+    expectFeatures(Feature.DESTRUCTURING);
     parse("for ([a] in b) c;");
     parse("for (var [a] in b) c;");
+    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for (let [a] in b) c;");
+    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for (const [a] in b) c;");
 
+    expectFeatures(Feature.DESTRUCTURING);
     parseError("for ({a: b} = foo() in c) d;", "';' expected");
-    parseError("for (let {a: b} = foo() in c) d;",
-        "for-in statement may not have initializer");
-    parseError("for (const {a: b} = foo() in c) d;",
-        "for-in statement may not have initializer");
     parseError("for (var {a: b} = foo() in c) d;",
         "for-in statement may not have initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
+    parseError("for (let {a: b} = foo() in c) d;",
+        "for-in statement may not have initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
+    parseError("for (const {a: b} = foo() in c) d;",
+        "for-in statement may not have initializer");
 
+    expectFeatures(Feature.DESTRUCTURING);
     parseError("for ([a] = foo() in b) c;",
         "';' expected");
+    parseError("for (var [a] = foo() in b) c;",
+        "for-in statement may not have initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parseError("for (let [a] = foo() in b) c;",
         "for-in statement may not have initializer");
+    expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parseError("for (const [a] = foo() in b) c;",
-        "for-in statement may not have initializer");
-    parseError("for (var [a] = foo() in b) c;",
         "for-in statement may not have initializer");
   }
 
   public void testForOf1() {
     mode = LanguageMode.ECMASCRIPT6;
 
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectFeatures(Feature.FOR_OF);
     parse("for(a of b) c;");
     parse("for(var a of b) c;");
+    expectFeatures(Feature.FOR_OF, Feature.LET_DECLARATIONS);
     parse("for(let a of b) c;");
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.FOR_OF, Feature.CONST_DECLARATIONS);
     parse("for(const a of b) c;");
   }
 
@@ -2884,7 +2917,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testDestructuringInForLoops() {
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     mode = LanguageMode.ECMASCRIPT6;
 
     // Destructuring forbids an initializer in for-in/for-of
@@ -2903,14 +2936,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "for-of statement may not have initializer");
 
     // but requires it in a vanilla for loop
-    expectedFeatures = FeatureSet.ES6;
     parseError("for (var {x: y};;) {}", "destructuring must have an initializer");
     parseError("for (let {x: y};;) {}", "destructuring must have an initializer");
     parseError("for (const {x: y};;) {}", "const variables must have an initializer");
   }
 
   public void testInvalidDestructuring() {
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.DESTRUCTURING);
     mode = LanguageMode.ECMASCRIPT6;
 
     // {x: 5} and {x: 'str'} are valid object literals but not valid patterns.
@@ -2927,7 +2959,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testForOfPatterns() {
-    expectedFeatures = FeatureSet.ES6;
+    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING);
     mode = LanguageMode.ECMASCRIPT6;
 
     parse("for({x} of b) c;");
@@ -2935,16 +2967,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("for([x, y] of b) c;");
     parse("for([x, ...y] of b) c;");
 
+    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parse("for(let {x} of b) c;");
     parse("for(let {x: y} of b) c;");
     parse("for(let [x, y] of b) c;");
     parse("for(let [x, ...y] of b) c;");
 
+    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parse("for(const {x} of b) c;");
     parse("for(const {x: y} of b) c;");
     parse("for(const [x, y] of b) c;");
     parse("for(const [x, ...y] of b) c;");
 
+    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING);
     parse("for(var {x} of b) c;");
     parse("for(var {x: y} of b) c;");
     parse("for(var [x, y] of b) c;");
@@ -2952,19 +2987,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testForOfPatternsWithInitializer() {
-    expectedFeatures = FeatureSet.ES6;
     mode = LanguageMode.ECMASCRIPT6;
 
+    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING);
     parseError("for({x}=a of b) c;", "';' expected");
     parseError("for({x: y}=a of b) c;", "';' expected");
     parseError("for([x, y]=a of b) c;", "';' expected");
     parseError("for([x, ...y]=a of b) c;", "';' expected");
 
+    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parseError("for(let {x}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(let {x: y}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(let [x, y]=a of b) c;", "for-of statement may not have initializer");
     parseError("for(let [x, ...y]=a of b) c;", "for-of statement may not have initializer");
 
+    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parseError("for(const {x}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(const {x: y}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(const [x, y]=a of b) c;", "for-of statement may not have initializer");
@@ -2972,7 +3009,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testImport() {
-    expectedFeatures = FeatureSet.ES6_MODULES;
+    expectFeatures(Feature.MODULES);
     mode = LanguageMode.ECMASCRIPT6;
 
     parse("import 'someModule'");
@@ -2985,7 +3022,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("import d, {x as x1, y as y1} from './someModule'");
     parse("import * as sm from './someModule'");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("import class from './someModule'",
             "cannot use keyword 'class' here.");
     parseError("import * as class from './someModule'",
@@ -2997,9 +3034,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testExport() {
-    expectedFeatures = FeatureSet.ES6_MODULES;
     mode = LanguageMode.ECMASCRIPT6;
 
+    expectFeatures(Feature.MODULES);
     parse("export const x = 1");
     parse("export var x = 1");
     parse("export function f() {}");
@@ -3009,7 +3046,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("export {x as x1, y as x2}");
     parse("export {x as default, y as class}");
 
-    expectedFeatures = FeatureSet.ES3;
+    expectFeatures();
     parseError("export {default as x}",
         "cannot use keyword 'default' here.");
     parseError("export {package as x}",
@@ -3017,7 +3054,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("export {package}",
         "cannot use keyword 'package' here.");
 
-    expectedFeatures = FeatureSet.ES6_MODULES;
+    expectFeatures(Feature.MODULES);
     parse("export {x as x1, y as y1} from './someModule'");
     parse("export {x as x1, y as y1, } from './someModule'");
     parse("export {default as d} from './someModule'");
@@ -3189,6 +3226,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
    */
   private Node parse(String string) {
     return parseWarning(string);
+  }
+
+  /** Sets expectedFeatures based on the list of features. */
+  private void expectFeatures(Feature... features) {
+    expectedFeatures = FeatureSet.ES3;
+    for (Feature feature : features) {
+      expectedFeatures = expectedFeatures.require(feature);
+    }
   }
 
   private static class ParserResult {
