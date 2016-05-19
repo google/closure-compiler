@@ -685,6 +685,7 @@ function testGeneratorYieldLoopGuardIncr() {
 }
 
 function testGeneratorBlockScoped() {
+  'use strict';
   var f;
   assertUndefined(f);
   {
@@ -1017,4 +1018,3 @@ function testForInDeleteOrUndef() {
   assertEquals(1, out.length);
   assertEquals(2, out[0]);
 }
-
