@@ -204,9 +204,6 @@ angular.mock = {};
  */
 angular.module = function(name, opt_requires, opt_configFn) {};
 
-/**
- * @return {undefined}
- */
 angular.noop = function() {};
 
 /**
