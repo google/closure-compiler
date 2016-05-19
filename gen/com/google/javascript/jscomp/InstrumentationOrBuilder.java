@@ -75,7 +75,7 @@ public interface InstrumentationOrBuilder
    * used to inform the harness about a function exit.  Must return
    * its second argument.
    *
-   * @returns VAL
+   * @return VAL
    * </pre>
    */
   boolean hasReportExit();
@@ -87,7 +87,7 @@ public interface InstrumentationOrBuilder
    * used to inform the harness about a function exit.  Must return
    * its second argument.
    *
-   * @returns VAL
+   * @return VAL
    * </pre>
    */
   java.lang.String getReportExit();
@@ -99,7 +99,7 @@ public interface InstrumentationOrBuilder
    * used to inform the harness about a function exit.  Must return
    * its second argument.
    *
-   * @returns VAL
+   * @return VAL
    * </pre>
    */
   com.google.protobuf.ByteString

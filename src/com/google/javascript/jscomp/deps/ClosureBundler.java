@@ -156,8 +156,6 @@ public class ClosureBundler {
 
   /**
    * Template method. Subclasses that need to transform the inputs should override this method.
-   * (For example, {@link TranspilingClosureBundler#transformInput} transpiles inputs from ES6
-   * to ES5.)
    */
   protected String transformInput(String input, String path) {
     return input;
