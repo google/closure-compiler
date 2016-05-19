@@ -3548,3 +3548,125 @@ HTMLFormControlsCollection.prototype.namedItem = function(name) {};
  */
 function RadioNodeList() {}
 
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/forms.html#the-datalist-element
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLDataListElement() {}
+
+
+/** @type {HTMLCollection<!HTMLOptionElement>} */
+HTMLDataListElement.prototype.options;
+
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/forms.html#the-output-element
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLOutputElement() {}
+
+// TODO(jakubvrana): Add HTMLOutputElement properties.
+
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/forms.html#the-progress-element
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLProgressElement() {}
+
+
+/** @type {number} */
+HTMLProgressElement.prototype.value;
+
+
+/** @type {number} */
+HTMLProgressElement.prototype.max;
+
+
+/** @type {number} */
+HTMLProgressElement.prototype.position;
+
+
+/** @type {NodeList<!Node>} */
+HTMLProgressElement.prototype.labels;
+
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/embedded-content.html#the-track-element
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLTrackElement() {}
+
+
+/** @type {string} */
+HTMLTrackElement.prototype.kind;
+
+
+/** @type {string} */
+HTMLTrackElement.prototype.src;
+
+
+/** @type {string} */
+HTMLTrackElement.prototype.srclang;
+
+
+/** @type {string} */
+HTMLTrackElement.prototype.label;
+
+
+/** @type {boolean} */
+HTMLTrackElement.prototype.default;
+
+
+/** @const {number} */
+HTMLTrackElement.prototype.readyState;
+
+
+/** @const {TextTrack} */
+HTMLTrackElement.prototype.track;
+
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/forms.html#the-meter-element
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLMeterElement() {}
+
+
+/** @type {number} */
+HTMLMeterElement.prototype.value;
+
+
+/** @type {number} */
+HTMLMeterElement.prototype.min;
+
+
+/** @type {number} */
+HTMLMeterElement.prototype.max;
+
+
+/** @type {number} */
+HTMLMeterElement.prototype.low;
+
+
+/** @type {number} */
+HTMLMeterElement.prototype.high;
+
+
+/** @type {number} */
+HTMLMeterElement.prototype.optimum;
+
+
+/** @type {NodeList<!Node>} */
+HTMLMeterElement.prototype.labels;
