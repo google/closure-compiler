@@ -72,29 +72,33 @@ public final class FeatureSet implements Serializable {
     STRING_CONTINUATION("string continuation", ES5),
     TRAILING_COMMA("trailing comma", ES5),
 
-    // ES6 features that are already implemented in browsers
+    // ES6 features that are already implemented in modern stable browsers
+    // (Chrome 50, Firefox 46, and Edge 13)
     ARROW_FUNCTIONS("arrow function", ES6_IMPL),
     BINARY_LITERALS("binary literal", ES6_IMPL),
     OCTAL_LITERALS("octal literal", ES6_IMPL),
     CLASSES("class", ES6_IMPL),
     COMPUTED_PROPERTIES("computed property", ES6_IMPL),
-    CONST_DECLARATIONS("const declaration", ES6_IMPL),
     EXTENDED_OBJECT_LITERALS("extended object literal", ES6_IMPL),
     FOR_OF("for-of loop", ES6_IMPL),
     GENERATORS("generator", ES6_IMPL),
     LET_DECLARATIONS("let declaration", ES6_IMPL),
     MEMBER_DECLARATIONS("member declaration", ES6_IMPL),
+    REGEXP_FLAG_Y("RegExp flag 'y'", ES6_IMPL),
     REST_PARAMETERS("rest parameter", ES6_IMPL),
     SPREAD_EXPRESSIONS("spread expression", ES6_IMPL),
     SUPER("super", ES6_IMPL),
     TEMPLATE_LITERALS("template literal", ES6_IMPL),
 
-    // ES6 features that are not yet implemented in browsers
-    DEFAULT_PARAMETERS("default parameter", ES6),
+    // ES6 features that are not yet implemented in all "modern" browsers
+    // The following features will become stable once Edge 14 is released:
+    CONST_DECLARATIONS("const declaration", ES6),
     DESTRUCTURING("destructuring", ES6),
-    NEW_TARGET("new.target", ES6),
-    REGEXP_FLAG_U("RegExp flag 'u'", ES6),
-    REGEXP_FLAG_Y("RegExp flag 'y'", ES6),
+    NEW_TARGET("new.target", ES6), // Not fully supported until Edge 14
+    REGEXP_FLAG_U("RegExp flag 'u'", ES6), // (note: case folding still broken even in Edge 14)
+    // The following features are still broken even in Firefox 49:
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1187502 for details
+    DEFAULT_PARAMETERS("default parameter", ES6),
 
     // ES6 features that include modules
     MODULES("modules", ES6_MODULES),

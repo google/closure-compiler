@@ -465,6 +465,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(letNameNode).hasType(Token.NAME);
     assertThat(letNameNode.getJSDocInfo()).isNull();
 
+    expectedFeatures = FeatureSet.ES6;
     Node constNode = parse("/** @type {number} */const a = 0;").getFirstChild();
 
     // CONST
@@ -725,9 +726,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testJSDocAttachment21() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
-
+    expectedFeatures = FeatureSet.ES6;
     parse("/** @param {string} x */ const f = function() {};");
+
+    expectedFeatures = FeatureSet.ES6_IMPL;
     parse("/** @param {string} x */ let f = function() {};");
   }
 
@@ -1277,7 +1279,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testConstForbidden() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectedFeatures = FeatureSet.ES6;
     parseWarning("const x = 3;",
         "this language feature is only supported in es6 mode: const declaration");
   }
@@ -1806,7 +1808,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testConst() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectedFeatures = FeatureSet.ES6_IMPL;
+    expectedFeatures = FeatureSet.ES6;
 
     parseError("const x;", "const variables must have an initializer");
     parse("const x = 1;");
@@ -2526,14 +2528,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
    * New RegExp flags added in ES6.
    */
   public void testES6RegExpFlags() {
-    expectedFeatures = FeatureSet.ES6;
+    expectedFeatures = FeatureSet.ES6_IMPL;
     mode = LanguageMode.ECMASCRIPT6;
     parse("/a/y");
+    expectedFeatures = FeatureSet.ES6;
     parse("/a/u");
 
     mode = LanguageMode.ECMASCRIPT5;
+    expectedFeatures = FeatureSet.ES6_IMPL;
     parseWarning("/a/y",
         "this language feature is only supported in es6 mode: RegExp flag 'y'");
+    expectedFeatures = FeatureSet.ES6;
     parseWarning("/a/u",
         "this language feature is only supported in es6 mode: RegExp flag 'u'");
     parseWarning("/a/yu",
@@ -2753,6 +2758,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("for (let x = 0; x != 10; x++) {}");
     parse("for (let x = 0; x != 10; x++);");
 
+    expectedFeatures = FeatureSet.ES6;
     parseError("for (const x; x != 10; x = next()) {}", "const variables must have an initializer");
     parseError("for (const x; x != 10; x = next());", "const variables must have an initializer");
     parse("for (const x = 0; x != 10; x++) {}");
@@ -2767,6 +2773,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     expectedFeatures = FeatureSet.ES6_IMPL;
     parse("for (let a in b) c;");
+
+    expectedFeatures = FeatureSet.ES6;
     parse("for (const a in b) c;");
 
     expectedFeatures = FeatureSet.ES3;
@@ -2836,12 +2844,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testForOf1() {
-    expectedFeatures = FeatureSet.ES6_IMPL;
     mode = LanguageMode.ECMASCRIPT6;
 
+    expectedFeatures = FeatureSet.ES6_IMPL;
     parse("for(a of b) c;");
     parse("for(var a of b) c;");
     parse("for(let a of b) c;");
+    expectedFeatures = FeatureSet.ES6;
     parse("for(const a of b) c;");
   }
 
