@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -531,6 +532,20 @@ public final class RawNominalType extends Namespace {
     Preconditions.checkNotNull(this.ctorFn);
     if (this.interfaces == null) {
       this.interfaces = ImmutableSet.of();
+    }
+    if (isInterface()) {
+      // When an interface property is not annotated with a type, we don't know
+      // at the definition site if it's untyped; it may inherit a type from a
+      // superinterface. At finalization, we have seen all supertypes, so we
+      // can now safely declare the property with type ?.
+      for (Map.Entry<String, Property> entry : this.protoProps.entrySet()) {
+        Property prop = entry.getValue();
+        if (!prop.isDeclared()) {
+          this.protoProps = this.protoProps.with(
+              entry.getKey(), Property.makeWithDefsite(
+                  prop.getDefSite(), JSType.UNKNOWN, JSType.UNKNOWN));
+        }
+      }
     }
     JSType protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
         this.superClass, this.protoProps,

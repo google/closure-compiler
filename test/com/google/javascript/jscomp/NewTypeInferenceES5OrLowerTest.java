@@ -4568,6 +4568,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "C.prototype.method = function(x) {};",
         "(new C).method(true);"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "Foo.prototype.prop;",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo}",
+        " */",
+        "function Bar() {}"),
+        GlobalTypeInfo.INTERFACE_METHOD_NOT_IMPLEMENTED);
   }
 
   public void testInterfaceMultipleInheritanceNoCrash() {
