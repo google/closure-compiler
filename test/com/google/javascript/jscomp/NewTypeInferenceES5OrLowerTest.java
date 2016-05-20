@@ -12320,6 +12320,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function takeOptions(opts) {",
         "  var /** string */ x = opts.x || 'some string';",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(v) {",
+        "  if (v.constructor) {",
+        "    return v.constructor.name;",
+        "  }",
+        "}"));
   }
 
   public void testFunctionReturnTypeSpecialization() {
@@ -16449,7 +16456,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testReportUknownTypes() {
-    reportUnknownTypes = true;
+    this.reportUnknownTypes = true;
 
     typeCheck(
         "var x = globalvar;",

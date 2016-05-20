@@ -417,17 +417,20 @@ final class ObjectType implements TypeWithProperties {
       boolean specializeProps1, NominalType resultNominalType,
       PersistentMap<String, Property> props1,
       PersistentMap<String, Property> props2) {
+    if (resultNominalType == null) {
+      // If props1 or props2 contains a property that also exists on Object,
+      // we must take the inherited property type into account.
+      resultNominalType = builtinObject;
+    }
     PersistentMap<String, Property> newProps = props1;
-    if (resultNominalType != null) {
-      for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
-        String pname = propsEntry.getKey();
-        Property otherProp = resultNominalType.getProp(pname);
-        if (otherProp != null) {
-          newProps = addOrRemoveProp(
-              specializeProps1, newProps, pname, otherProp, propsEntry.getValue());
-          if (newProps == BOTTOM_MAP) {
-            return BOTTOM_MAP;
-          }
+    for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
+      String pname = propsEntry.getKey();
+      Property otherProp = resultNominalType.getProp(pname);
+      if (otherProp != null) {
+        newProps = addOrRemoveProp(
+            specializeProps1, newProps, pname, otherProp, propsEntry.getValue());
+        if (newProps == BOTTOM_MAP) {
+          return BOTTOM_MAP;
         }
       }
     }
@@ -446,8 +449,7 @@ final class ObjectType implements TypeWithProperties {
             prop1.specialize(prop2) :
             Property.meet(prop1, prop2);
       }
-      Property otherProp =
-          resultNominalType == null ? null : resultNominalType.getProp(pname);
+      Property otherProp = resultNominalType.getProp(pname);
       if (otherProp != null) {
         newProps = addOrRemoveProp(specializeProps1, newProps, pname, otherProp, newProp);
         if (newProps == BOTTOM_MAP) {

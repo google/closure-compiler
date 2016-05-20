@@ -49,6 +49,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           " * @return {boolean}",
           " */",
           "Object.prototype.hasOwnProperty = function(propertyName) {};",
+          "/** @type {?Function} */",
+          "Object.prototype.constructor = function() {};",
           "/**",
           " * @this {!String|string}",
           " * @param {!RegExp} regexp",
