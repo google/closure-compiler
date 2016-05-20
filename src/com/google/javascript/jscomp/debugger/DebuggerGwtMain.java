@@ -120,6 +120,9 @@ public class DebuggerGwtMain implements EntryPoint {
   private void createCheckboxes(CellPanel checkboxPanel) {
     for (final CompilationParam param : CompilationParam.getSortedValues()) {
       CheckBox cb = new CheckBox(param.toString());
+      if (param.getJavaInfo() != null) {
+        cb.setTitle("Java API equivalent: " + param.getJavaInfo());
+      }
       cb.setValue(param.getDefaultValue());
       param.apply(options, param.getDefaultValue());
       cb.addClickHandler(new ClickHandler() {
