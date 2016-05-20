@@ -34,6 +34,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -361,15 +362,23 @@ public class SourceFile implements StaticSourceFile, Serializable {
         if (!entryName.endsWith(".js")) { // Only accept js files
           continue;
         }
-        URL zipEntryUrl = new URL("jar:file:" + absoluteZipPath + "!/" + entryName);
-        sourceFiles.add(
-            builder()
-                .withCharset(inputCharset)
-                .withOriginalPath(zipName + "!/" + zipEntry.getName())
-                .buildFromUrl(zipEntryUrl));
+        sourceFiles.add(fromZipEntry(zipName, absoluteZipPath, entryName, inputCharset));
       }
     }
     return sourceFiles;
+  }
+
+  @GwtIncompatible("java.net.URL")
+  public static SourceFile fromZipEntry(
+      String originalZipPath, String absoluteZipPath, String entryPath, Charset inputCharset)
+      throws MalformedURLException {
+    String zipEntryPath = "jar:file:" + absoluteZipPath + "!/" + entryPath;
+    URL zipEntryUrl = new URL(zipEntryPath);
+
+    return builder()
+        .withCharset(inputCharset)
+        .withOriginalPath(originalZipPath + "!/" + entryPath)
+        .buildFromUrl(zipEntryUrl);
   }
 
   @GwtIncompatible("java.io.File")
