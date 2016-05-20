@@ -46,7 +46,7 @@ public final class ES6ModuleLoaderTest extends TestCase {
 
   public void testJsxExtension() {
     ES6ModuleLoader loader =
-        new ES6ModuleLoader(ImmutableList.of("."), inputs("js/a.js", "js/b.js", "js/c.jsx"));
+        new ES6ModuleLoader(compiler, ImmutableList.of("."), inputs("js/a.js", "js/b.js", "js/c.jsx"));
     assertEquals("js/a.js", loader.normalizeInputAddress(input("js/a.js")).toString());
     assertEquals("js/b.js", loader.locateEs6Module("./b", input("js/a.js")).toString());
     assertEquals("js/c.jsx", loader.locateEs6Module("./c.jsx", input("js/a.js")).toString());
