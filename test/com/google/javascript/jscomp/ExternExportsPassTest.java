@@ -679,7 +679,14 @@ public final class ExternExportsPassTest extends TestCase {
   private void compileAndCheck(String js, String expected) {
     Result result = compileAndExportExterns(js);
 
-    assertEquals(expected, result.externExport);
+    String fileoverview = Joiner.on("\n").join(
+        "/**",
+        " * @fileoverview Generated externs.",
+        " * @externs",
+        " */",
+        "");
+
+    assertEquals(fileoverview + expected, result.externExport);
   }
 
   public void testDontWarnOnExportFunctionWithUnknownParameterTypes() {
