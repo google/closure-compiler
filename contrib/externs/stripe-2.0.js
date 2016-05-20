@@ -43,6 +43,33 @@ Stripe.setPublishableKey = function(publishableKey) {};
 
 /**
  * @typedef {{
+ *     id: string,
+ *     card: {
+ *         name: string,
+ *         address_line1: string,
+ *         address_line2: string,
+ *         address_city: string,
+ *         address_state: string,
+ *         address_zip: string,
+ *         address_country: string
+ *     },
+ *     error: {
+ *         type: string,
+ *		   code: string,
+ *         message: string,
+ *         param: string
+ *     },
+ *     created: number,
+ *     livemode: boolean,
+ *     type: string,
+ *     object: string,
+ *     used: boolean
+ * }}
+ */
+var StripeCardTokenResponse;
+
+/**
+ * @typedef {{
  *     number: string,
  *     exp_month: string,
  *     exp_year: string,
@@ -60,7 +87,7 @@ var StripeCardData;
 
 /**
  * @param {StripeCardData} cardData
- * @param {function(string, Object)} callback
+ * @param {function(string, StripeCardTokenResponse)} callback
  */
 Stripe.card.createToken = function(cardData, callback) {};
 
