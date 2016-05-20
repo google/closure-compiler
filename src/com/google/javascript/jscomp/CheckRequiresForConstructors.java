@@ -68,7 +68,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     // Used during a normal compilation. The entire program + externs are available.
     FULL_COMPILE
   };
-  private final Mode mode;
+  private Mode mode;
 
   private final Set<String> providedNames = new HashSet<>();
   private final Map<String, Node> requires = new HashMap<>();
@@ -124,6 +124,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    // TODO(joeltine): Remove this and properly handle hot swap passes. See
+    // b/28869281 for context.
+    mode = Mode.SINGLE_FILE;
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
