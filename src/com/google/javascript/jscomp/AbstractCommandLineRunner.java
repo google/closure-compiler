@@ -1766,6 +1766,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           } catch (NumberFormatException e) {
             // do nothing, it will be caught at the end
           }
+
+          if (defValue.length() > 0) {
+            if (tweaks) {
+              options.setTweakToStringLiteral(defName, defValue);
+            } else {
+              options.setDefineToStringLiteral(defName, defValue);
+            }
+            continue;
+          }
         }
       }
 

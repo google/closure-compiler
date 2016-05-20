@@ -520,26 +520,11 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testBadDefineOverriding2() throws Exception {
-    List<String> defines = ImmutableList.of("DEF_STRING='xyz");
-    assertCreateDefinesThrowsException(defines);
-  }
-
-  public void testBadDefineOverriding3() throws Exception {
     List<String> defines = ImmutableList.of("=true");
     assertCreateDefinesThrowsException(defines);
   }
 
-  public void testBadDefineOverriding4() throws Exception {
-    List<String> defines = ImmutableList.of("DEF_STRING==");
-    assertCreateDefinesThrowsException(defines);
-  }
-
-  public void testBadDefineOverriding5() throws Exception {
-    List<String> defines = ImmutableList.of("DEF_STRING='");
-    assertCreateDefinesThrowsException(defines);
-  }
-
-  public void testBadDefineOverriding6() throws Exception {
+  public void testBadDefineOverriding3() throws Exception {
     List<String> defines = ImmutableList.of("DEF_STRING='''");
     assertCreateDefinesThrowsException(defines);
   }
@@ -553,7 +538,7 @@ public final class CompilerTest extends TestCase {
       return;
     }
 
-    fail();
+    fail(defines + " didn't fail");
   }
 
   static void assertDefineOverrides(Map<String, Node> expected,
