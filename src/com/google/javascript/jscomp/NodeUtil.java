@@ -714,6 +714,11 @@ public final class NodeUtil {
         return isValidDefineValue(val.getFirstChild(), defines)
             && isValidDefineValue(val.getLastChild(), defines);
 
+      case Token.HOOK:
+        return isValidDefineValue(val.getFirstChild(), defines)
+            && isValidDefineValue(val.getSecondChild(), defines)
+            && isValidDefineValue(val.getLastChild(), defines);
+
       // Unary operators are valid if the child is valid.
       case Token.NOT:
       case Token.NEG:

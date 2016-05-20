@@ -1306,8 +1306,10 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(testValidDefineValue("1 & 8"));
     assertTrue(testValidDefineValue("1 + 8"));
     assertTrue(testValidDefineValue("'a' + 'b'"));
+    assertTrue(testValidDefineValue("true ? 'a' : 'b'"));
 
     assertFalse(testValidDefineValue("1 & foo"));
+    assertFalse(testValidDefineValue("foo ? 'a' : 'b'"));
   }
 
   private boolean testValidDefineValue(String js) {
