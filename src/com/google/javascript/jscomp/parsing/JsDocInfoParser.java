@@ -227,7 +227,6 @@ public final class JsDocInfoParser {
     Config config = new Config(
         new HashSet<String>(),
         new HashSet<String>(),
-        false,
         LanguageMode.ECMASCRIPT3);
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(toParse),

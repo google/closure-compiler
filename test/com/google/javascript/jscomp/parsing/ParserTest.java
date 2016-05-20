@@ -3174,10 +3174,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
    */
   private Node parseError(String source, String... errors) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
+    Config config = ParserRunner.createConfig(mode, null);
+    config.setIdeMode(isIdeMode);
+    config.setParseJsDocDocumentation(isIdeMode);
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("input", false),
         source,
-        ParserRunner.createConfig(isIdeMode, mode, null),
+        config,
         testErrorReporter);
     Node script = result.ast;
 
@@ -3201,10 +3204,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private Node parseWarning(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     StaticSourceFile file = new SimpleSourceFile("input", false);
+    Config config = ParserRunner.createConfig(mode, null);
+    config.setIdeMode(isIdeMode);
+    config.setParseJsDocDocumentation(isIdeMode);
     ParserRunner.ParseResult result = ParserRunner.parse(
         file,
         string,
-        ParserRunner.createConfig(isIdeMode, mode, null),
+        config,
         testErrorReporter);
     Node script = result.ast;
 

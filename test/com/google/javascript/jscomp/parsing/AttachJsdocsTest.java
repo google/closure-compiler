@@ -788,10 +788,13 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
 
   private Node parse(String source, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
+    Config config = ParserRunner.createConfig(mode, null);
+    config.setIdeMode(true);
+    config.setParseJsDocDocumentation(true);
     Node script = ParserRunner.parse(
         new SimpleSourceFile("input", false),
         source,
-        ParserRunner.createConfig(true, mode, null),
+        config,
         testErrorReporter).ast;
 
     // verifying that all warnings were seen

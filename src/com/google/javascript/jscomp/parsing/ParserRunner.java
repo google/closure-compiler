@@ -51,17 +51,7 @@ public final class ParserRunner {
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
 
-  public static Config createConfig(boolean isIdeMode,
-                                    LanguageMode languageMode,
-                                    Set<String> extraAnnotationNames) {
-    return createConfig(
-        isIdeMode, isIdeMode, false, languageMode, extraAnnotationNames);
-  }
-
-  public static Config createConfig(boolean isIdeMode,
-                                    boolean parseJsDocDocumentation,
-                                    boolean preserveJsDocWhitespace,
-                                    LanguageMode languageMode,
+  public static Config createConfig(LanguageMode languageMode,
                                     Set<String> extraAnnotationNames) {
     initResourceConfig();
     Set<String> effectiveAnnotationNames;
@@ -71,8 +61,7 @@ public final class ParserRunner {
       effectiveAnnotationNames = new HashSet<>(annotationNames);
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
-    return new Config(effectiveAnnotationNames, suppressionNames,
-        isIdeMode, parseJsDocDocumentation, preserveJsDocWhitespace, languageMode);
+    return new Config(effectiveAnnotationNames, suppressionNames, languageMode);
   }
 
   public static Set<String> getReservedVars() {

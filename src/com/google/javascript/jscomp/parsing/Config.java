@@ -42,17 +42,17 @@ public final class Config {
   /**
    * Whether to parse the descriptions of JsDoc comments.
    */
-  final boolean parseJsDocDocumentation;
+  boolean parseJsDocDocumentation;
 
   /**
    * Whether to preserve whitespace when extracting text from JsDoc comments.
    */
-  final boolean preserveJsDocWhitespace;
+  boolean preserveJsDocWhitespace;
 
   /**
    * Whether we're in IDE mode.
    */
-  final boolean isIdeMode;
+  boolean isIdeMode;
 
   /**
    * Recognized JSDoc annotations, mapped from their name to their internal
@@ -70,19 +70,9 @@ public final class Config {
    */
   final LanguageMode languageMode;
 
-  Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
-      boolean isIdeMode, LanguageMode languageMode) {
-    this(annotationWhitelist, suppressionNames, isIdeMode, isIdeMode, false, languageMode);
-  }
-
-  Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
-      boolean isIdeMode, boolean parseJsDocDocumentation, boolean preserveJsDocWhitespace,
-      LanguageMode languageMode) {
+  Config(Set<String> annotationWhitelist, Set<String> suppressionNames, LanguageMode languageMode) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
-    this.parseJsDocDocumentation = parseJsDocDocumentation;
-    this.preserveJsDocWhitespace = preserveJsDocWhitespace;
     this.suppressionNames = suppressionNames;
-    this.isIdeMode = isIdeMode;
     this.languageMode = languageMode;
   }
 
@@ -104,5 +94,17 @@ public final class Config {
       }
     }
     return annotationBuilder.build();
+  }
+
+  public void setIdeMode(boolean isIdeMode) {
+    this.isIdeMode = isIdeMode;
+  }
+
+  public void setParseJsDocDocumentation(boolean parseJsDocDocumentation) {
+    this.parseJsDocDocumentation = parseJsDocDocumentation;
+  }
+
+  public void setPreserveJsDocWhitespace(boolean preserveJsDocWhitespace) {
+    this.preserveJsDocWhitespace = preserveJsDocWhitespace;
   }
 }

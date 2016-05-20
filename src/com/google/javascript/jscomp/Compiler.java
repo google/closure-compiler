@@ -2159,12 +2159,11 @@ public class Compiler extends AbstractCompiler {
   }
 
   protected Config createConfig(Config.LanguageMode mode) {
-    return ParserRunner.createConfig(
-        isIdeMode(),
-        options.isParseJsDocDocumentation(),
-        options.isPreserveJsDocWhitespace(),
-        mode,
-        options.extraAnnotationNames);
+    Config config = ParserRunner.createConfig(mode, options.extraAnnotationNames);
+    config.setIdeMode(isIdeMode());
+    config.setParseJsDocDocumentation(options.isParseJsDocDocumentation());
+    config.setPreserveJsDocWhitespace(options.isPreserveJsDocWhitespace());
+    return config;
   }
 
   //------------------------------------------------------------------------

@@ -384,7 +384,6 @@ class IRFactory {
   static final Config NULL_CONFIG = new Config(
       ImmutableSet.<String>of(),
       ImmutableSet.<String>of(),
-      false, // isIdeMode, parseJsDocDocumentation, preserveJsDocWhitespace
       LanguageMode.ECMASCRIPT6_TYPED);
 
   static final ErrorReporter NULL_REPORTER = new ErrorReporter() {

@@ -59,10 +59,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     super.setUp();
     fileLevelJsDocBuilder = null;
     extraAnnotations = new HashSet<>(ParserRunner.createConfig(
-        true, LanguageMode.ECMASCRIPT3, null)
+        LanguageMode.ECMASCRIPT3, null)
             .annotationNames.keySet());
     extraSuppressions = new HashSet<>(ParserRunner.createConfig(
-        true, LanguageMode.ECMASCRIPT3, null).suppressionNames);
+        LanguageMode.ECMASCRIPT3, null).suppressionNames);
 
     extraSuppressions.add("x");
     extraSuppressions.add("y");
@@ -4374,7 +4374,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Node parseFull(String code, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Config config =
-        new Config(extraAnnotations, extraSuppressions, true, LanguageMode.ECMASCRIPT3);
+        new Config(extraAnnotations, extraSuppressions, LanguageMode.ECMASCRIPT3);
+    config.setIdeMode(true);
+    config.setParseJsDocDocumentation(true);
 
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("source", false), code, config, testErrorReporter);
@@ -4411,8 +4413,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
     boolean isIdeMode = parseDocumentation;
-    Config config = new Config(extraAnnotations, extraSuppressions,
-        isIdeMode, parseDocumentation, preserveWhitespace, LanguageMode.ECMASCRIPT3);
+    Config config = new Config(extraAnnotations, extraSuppressions, LanguageMode.ECMASCRIPT3);
+    config.setIdeMode(isIdeMode);
+    config.setParseJsDocDocumentation(parseDocumentation);
+    config.setPreserveJsDocWhitespace(preserveWhitespace);
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
 
     JsDocInfoParser jsdocParser = new JsDocInfoParser(
