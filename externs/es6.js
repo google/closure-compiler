@@ -1426,12 +1426,12 @@ Array.of = function(var_args) {};
 Array.from = function(arrayLike, opt_mapFn, opt_this) {};
 
 
-/** @return {!Array<number>} */
+/** @return {!IteratorIterable<number>} */
 Array.prototype.keys;
 
 
 /**
- * @return {!Array<!Array>} An array of [key, value] pairs.
+ * @return {!IteratorIterable<!Array<number|T>>} Iterator of [key, value] pairs.
  */
 Array.prototype.entries;
 
