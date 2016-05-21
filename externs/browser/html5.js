@@ -3570,9 +3570,64 @@ HTMLDataListElement.prototype.options;
  */
 function HTMLOutputElement() {}
 
-// TODO(jakubvrana): Add HTMLOutputElement properties.
+/**
+ * @const
+ * @type {!DOMTokenList}
+ */
+HTMLOutputElement.prototype.htmlFor;
 
+/**
+ * @type {HTMLFormElement}
+ */
+HTMLOutputElement.prototype.form;
 
+/**
+ * @type {string}
+ */
+HTMLOutputElement.prototype.name;
+
+/**
+ * @const
+ * @type {!string}
+ */
+HTMLOutputElement.prototype.type = "output";
+
+/**
+ * @type {string}
+ */
+HTMLOutputElement.prototype.defaultValue;
+
+/**
+ * @type {string}
+ */
+HTMLOutputElement.prototype.value;
+
+/**
+ * @const
+ * @type {NodeList<!HTMLLabelElement>}
+ */
+HTMLOutputElement.prototype.labels;
+
+/** @type {string} */
+HTMLOutputElement.prototype.validationMessage;
+
+/**
+ * @const
+ * @type {ValidityState}
+ */
+HTMLOutputElement.prototype.validity;
+
+/** @type {boolean} */
+HTMLOutputElement.prototype.willValidate;
+
+/** @return {boolean} */
+HTMLOutputElement.prototype.checkValidity = function() {};
+
+/** @return {boolean} */
+HTMLOutputElement.prototype.reportValidity = function() {};
+
+/** @param {string} message */
+HTMLOutputElement.prototype.setCustomValidity = function(message) {};
 
 /**
  * @see https://html.spec.whatwg.org/multipage/forms.html#the-progress-element
