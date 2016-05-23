@@ -3590,7 +3590,7 @@ HTMLOutputElement.prototype.name;
  * @const
  * @type {!string}
  */
-HTMLOutputElement.prototype.type = "output";
+HTMLOutputElement.prototype.type;
 
 /**
  * @type {string}
