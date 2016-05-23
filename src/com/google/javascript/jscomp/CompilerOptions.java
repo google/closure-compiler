@@ -1846,7 +1846,7 @@ public class CompilerOptions {
     return preserveDetailedSourceInfo;
   }
 
-  void setKeepGoing(boolean keepGoing) {
+  public void setKeepGoing(boolean keepGoing) {
     this.keepGoing = keepGoing;
   }
 
