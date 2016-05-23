@@ -4375,7 +4375,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Config config =
         new Config(extraAnnotations, extraSuppressions, LanguageMode.ECMASCRIPT3);
-    config.setIdeMode(true);
+    config.setPreserveDetailedSourceInfo(true);
+    config.setKeepGoing(true);
     config.setParseJsDocDocumentation(true);
 
     ParseResult result = ParserRunner.parse(
@@ -4412,9 +4413,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
       boolean parseFileOverview, boolean preserveWhitespace, String... warnings) {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
-    boolean isIdeMode = parseDocumentation;
     Config config = new Config(extraAnnotations, extraSuppressions, LanguageMode.ECMASCRIPT3);
-    config.setIdeMode(isIdeMode);
     config.setParseJsDocDocumentation(parseDocumentation);
     config.setPreserveJsDocWhitespace(preserveWhitespace);
     StaticSourceFile file = new SimpleSourceFile("testcode", false);

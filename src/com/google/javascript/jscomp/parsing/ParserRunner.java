@@ -92,7 +92,7 @@ public final class ParserRunner {
     // TODO(johnlenz): unify "SourceFile", "Es6ErrorReporter" and "Config"
     SourceFile file = new SourceFile(sourceFile.getName(), sourceString);
     Es6ErrorReporter es6ErrorReporter =
-        new Es6ErrorReporter(errorReporter, config.isIdeMode);
+        new Es6ErrorReporter(errorReporter, config.keepGoing);
     com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
         new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
             config.languageMode));
@@ -101,7 +101,7 @@ public final class ParserRunner {
     Node root = null;
     List<Comment> comments = ImmutableList.of();
     FeatureSet features = p.getFeatures();
-    if (tree != null && (!es6ErrorReporter.hadError() || config.isIdeMode)) {
+    if (tree != null && (!es6ErrorReporter.hadError() || config.preserveDetailedSourceInfo)) {
       IRFactory factory =
           IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
       root = factory.getResultNode();
@@ -109,7 +109,7 @@ public final class ParserRunner {
       root.setIsSyntheticBlock(true);
       root.putProp(Node.FEATURE_SET, features);
 
-      if (config.isIdeMode) {
+      if (config.preserveDetailedSourceInfo) {
         comments = p.getComments();
       }
     }

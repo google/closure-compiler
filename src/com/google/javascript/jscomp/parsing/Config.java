@@ -50,9 +50,14 @@ public final class Config {
   boolean preserveJsDocWhitespace;
 
   /**
-   * Whether we're in IDE mode.
+   * Whether to keep detailed source location information such as the exact length of every node.
    */
-  boolean isIdeMode;
+  boolean preserveDetailedSourceInfo;
+
+  /**
+   * Whether to keep going after encountering a parse error.
+   */
+  boolean keepGoing;
 
   /**
    * Recognized JSDoc annotations, mapped from their name to their internal
@@ -96,8 +101,12 @@ public final class Config {
     return annotationBuilder.build();
   }
 
-  public void setIdeMode(boolean isIdeMode) {
-    this.isIdeMode = isIdeMode;
+  public void setPreserveDetailedSourceInfo(boolean preserveDetailedSourceInfo) {
+    this.preserveDetailedSourceInfo = preserveDetailedSourceInfo;
+  }
+
+  public void setKeepGoing(boolean keepGoing) {
+    this.keepGoing = keepGoing;
   }
 
   public void setParseJsDocDocumentation(boolean parseJsDocDocumentation) {

@@ -62,7 +62,11 @@ public class Linter {
     // in LintPassConfig can all handle untranspiled ES6.
     options.setSkipTranspilationAndCrash(true);
 
-    options.setIdeMode(true);
+    options.setPreserveDetailedSourceInfo(true);
+
+    // TODO(tbreisacher): Remove this so that people don't miss parse errors.
+    options.setKeepGoing(true);
+
     options.setCodingConvention(new GoogleCodingConvention());
 
     // Even though we're not running the typechecker, enable the checkTypes DiagnosticGroup, since

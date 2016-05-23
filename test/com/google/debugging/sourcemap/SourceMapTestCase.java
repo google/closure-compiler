@@ -283,8 +283,7 @@ public abstract class SourceMapTestCase extends TestCase {
     Compiler compiler = new Compiler();
     CompilerOptions options = getCompilerOptions();
 
-    // Turn on IDE mode to get rid of optimizations.
-    options.ideMode = true;
+    options.setChecksOnly(true);
 
     List<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode(fileName1, js1));

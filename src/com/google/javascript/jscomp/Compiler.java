@@ -712,8 +712,7 @@ public class Compiler extends AbstractCompiler {
         return;
       }
 
-      // IDE-mode is defined to stop here, before the heavy rewriting begins.
-      if (!options.checksOnly && !options.ideMode) {
+      if (!options.checksOnly) {
         optimize();
       }
     }
@@ -2113,11 +2112,6 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  public boolean isIdeMode() {
-    return options.ideMode;
-  }
-
-  @Override
   Config getParserConfig(ConfigContext context) {
     if (parserConfig == null) {
       switch (options.getLanguageIn()) {
@@ -2160,7 +2154,8 @@ public class Compiler extends AbstractCompiler {
 
   protected Config createConfig(Config.LanguageMode mode) {
     Config config = ParserRunner.createConfig(mode, options.extraAnnotationNames);
-    config.setIdeMode(isIdeMode());
+    config.setPreserveDetailedSourceInfo(options.preservesDetailedSourceInfo());
+    config.setKeepGoing(options.canKeepGoing());
     config.setParseJsDocDocumentation(options.isParseJsDocDocumentation());
     config.setPreserveJsDocWhitespace(options.isPreserveJsDocWhitespace());
     return config;
@@ -2236,7 +2231,7 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   boolean hasHaltingErrors() {
-    return !isIdeMode() && getErrorCount() > 0;
+    return !getOptions().canKeepGoing() && getErrorCount() > 0;
   }
 
   /**
@@ -2671,7 +2666,7 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   void addComments(String filename, List<Comment> comments) {
-    if (!isIdeMode()) {
+    if (!getOptions().preservesDetailedSourceInfo()) {
       throw new UnsupportedOperationException(
           "addComments may only be called in IDE mode.");
     }
@@ -2680,7 +2675,7 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   public List<Comment> getComments(String filename) {
-    if (!isIdeMode()) {
+    if (!getOptions().preservesDetailedSourceInfo()) {
       throw new UnsupportedOperationException(
           "getComments may only be called in IDE mode.");
     }

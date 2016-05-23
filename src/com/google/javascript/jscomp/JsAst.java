@@ -150,7 +150,7 @@ public class JsAst implements SourceAst {
       root = result.ast;
       features = result.features;
 
-      if (compiler.isIdeMode()) {
+      if (compiler.getOptions().preservesDetailedSourceInfo()) {
         compiler.addComments(sourceFile.getName(), result.comments);
       }
     } catch (IOException e) {
@@ -165,7 +165,8 @@ public class JsAst implements SourceAst {
         // Note: we use the ErrorManager here rather than the ErrorReporter as
         // we don't want to fail if the error was excluded by a warning guard, conversely
         // we do want to fail if a warning was promoted to an error.
-        || (errorManager.getErrorCount() > startErrorCount && !compiler.isIdeMode())) {
+        || (errorManager.getErrorCount() > startErrorCount
+            && !compiler.getOptions().canKeepGoing())) {
       // There was a parse error or IOException, so use a dummy block.
 
 

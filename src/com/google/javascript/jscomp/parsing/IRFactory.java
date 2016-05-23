@@ -931,13 +931,13 @@ class IRFactory {
   // Set the length on the node if we're in IDE mode.
   void maybeSetLength(
       Node node, SourcePosition start, SourcePosition end) {
-    if (config.isIdeMode) {
+    if (config.preserveDetailedSourceInfo) {
       node.setLength(end.offset - start.offset);
     }
   }
 
   void maybeSetLengthFrom(Node node, Node ref) {
-    if (config.isIdeMode) {
+    if (config.preserveDetailedSourceInfo) {
       node.setLength(ref.getLength());
     }
   }
@@ -1253,9 +1253,9 @@ class IRFactory {
 
       Node bodyNode = transform(functionTree.functionBody);
       if (!isArrow && !isSignature && !bodyNode.isBlock()) {
-        // When in ideMode the parser tries to parse some constructs the
+        // When in "keep going" mode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
-        Preconditions.checkState(config.isIdeMode);
+        Preconditions.checkState(config.keepGoing);
         bodyNode = IR.block();
       }
       parseDirectives(bodyNode);

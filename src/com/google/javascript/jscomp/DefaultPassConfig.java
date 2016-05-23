@@ -156,7 +156,7 @@ public final class DefaultPassConfig extends PassConfig {
     // wrap them in a function call that is stripped later, this shouldn't
     // be done in IDE mode where AST changes may be unexpected.
     protectHiddenSideEffects = options != null &&
-        options.protectHiddenSideEffects && !options.ideMode;
+        options.protectHiddenSideEffects && !options.allowsHotswapReplaceScript();
   }
 
   @Override
@@ -178,7 +178,7 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   void maybeInitializePreprocessorSymbolTable(AbstractCompiler compiler) {
-    if (options.ideMode) {
+    if (options.preservesDetailedSourceInfo()) {
       Node root = compiler.getRoot();
       if (preprocessorSymbolTable == null ||
           preprocessorSymbolTable.getRootNode() != root) {
@@ -188,7 +188,7 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   void maybeInitializeModuleRewriteState() {
-    if (options.ideMode && this.moduleRewriteState == null) {
+    if (options.allowsHotswapReplaceScript() && this.moduleRewriteState == null) {
       this.moduleRewriteState = new ClosureRewriteModule.GlobalRewriteState();
     }
   }
@@ -370,7 +370,7 @@ public final class DefaultPassConfig extends PassConfig {
 
       // We assume that only IDE-mode clients will try to query the
       // typed scope creator after the compile job.
-      if (!options.ideMode) {
+      if (!options.preservesDetailedSourceInfo()) {
         checks.add(clearTypedScopePass);
       }
     }

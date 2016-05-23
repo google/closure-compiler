@@ -1195,7 +1195,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       outputBundle();
       outputModuleGraphJson();
       return 0;
-    } else if (!options.checksOnly && result.success) {
+    } else if (options.outputJs && result.success) {
       outputModuleGraphJson();
       if (modules == null) {
         outputSingleBinary(options);

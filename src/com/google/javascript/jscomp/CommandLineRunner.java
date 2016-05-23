@@ -1496,6 +1496,7 @@ public class CommandLineRunner extends
     options.setEnvironment(flags.environment);
 
     options.setChecksOnly(flags.checksOnly);
+    options.setOutputJs(!flags.checksOnly);
 
     if (flags.useTypesForOptimization) {
       level.setTypeBasedOptimizationOptions(options);

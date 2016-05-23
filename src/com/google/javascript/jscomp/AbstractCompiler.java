@@ -265,11 +265,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract void reportChangeToEnclosingScope(Node n);
 
   /**
-   * Returns true if compiling in IDE mode.
-   */
-  abstract boolean isIdeMode();
-
-  /**
    * Represents the different contexts for which the compiler could have
    * distinct configurations.
    */

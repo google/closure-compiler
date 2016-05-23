@@ -105,26 +105,15 @@ public class CompilerOptions {
    */
   private boolean assumeStrictThis;
 
-  /**
-   * Configures the compiler for use as an IDE backend.  In this mode:
-   * <ul>
-   *  <li>No optimization passes will run.</li>
-   *  <li>The last time custom passes are invoked is
-   *      {@link CustomPassExecutionTime#BEFORE_OPTIMIZATIONS}</li>
-   *  <li>The compiler will always try to process all inputs fully, even
-   *      if it encounters errors.</li>
-   *  <li>The compiler may record more information than is strictly
-   *      needed for codegen.</li>
-   * </ul>
-   */
-  public boolean ideMode;
+  private boolean allowHotswapReplaceScript = false;
+  private boolean preserveDetailedSourceInfo = false;
+  private boolean keepGoing = false;
 
   private boolean parseJsDocDocumentation = false;
   private boolean preserveJsDocWhitespace = false;
 
   /**
-   * Even if checkTypes is disabled, clients might want to still infer types.
-   * This is mostly used when ideMode is enabled.
+   * Even if checkTypes is disabled, clients such as IDEs might want to still infer types.
    */
   boolean inferTypes;
 
@@ -730,6 +719,8 @@ public class CompilerOptions {
 
   public boolean checksOnly;
 
+  public boolean outputJs;
+
   public boolean generateExports;
 
   // TODO(dimvar): generate-exports should always run after typechecking.
@@ -1094,6 +1085,7 @@ public class CompilerOptions {
     appNameStr = "";
     recordFunctionInformation = false;
     checksOnly = false;
+    outputJs = true;
     generateExports = false;
     generateExportsAfterTypeChecking = true;
     exportLocalPropertyDefinitions = false;
@@ -1513,6 +1505,10 @@ public class CompilerOptions {
     this.checksOnly = checksOnly;
   }
 
+  public void setOutputJs(boolean outputJs) {
+    this.outputJs = outputJs;
+  }
+
   public void setGenerateExports(boolean generateExports) {
     this.generateExports = generateExports;
   }
@@ -1808,8 +1804,54 @@ public class CompilerOptions {
          ImmutableMap.copyOf(propertyInvalidationErrors);
   }
 
+  /**
+   * Configures the compiler for use as an IDE backend.  In this mode:
+   * <ul>
+   *  <li>No optimization passes will run.</li>
+   *  <li>The last time custom passes are invoked is
+   *      {@link CustomPassExecutionTime#BEFORE_OPTIMIZATIONS}</li>
+   *  <li>The compiler will always try to process all inputs fully, even
+   *      if it encounters errors.</li>
+   *  <li>The compiler may record more information than is strictly
+   *      needed for codegen.</li>
+   * </ul>
+   *
+   * @deprecated Some "IDE" clients will need some of these options but not
+   * others. Consider calling setChecksOnly, setAllowRecompilation, etc,
+   * explicitly, instead of calling this method which does a variety of
+   * different things.
+   */
+  @Deprecated
   public void setIdeMode(boolean ideMode) {
-    this.ideMode = ideMode;
+    setChecksOnly(ideMode);
+    setKeepGoing(ideMode);
+    setAllowHotswapReplaceScript(ideMode);
+    setPreserveDetailedSourceInfo(ideMode);
+    setParseJsDocDocumentation(ideMode);
+  }
+
+  void setAllowHotswapReplaceScript(boolean allowRecompilation) {
+    this.allowHotswapReplaceScript = allowRecompilation;
+  }
+
+  boolean allowsHotswapReplaceScript() {
+    return allowHotswapReplaceScript;
+  }
+
+  public void setPreserveDetailedSourceInfo(boolean preserveDetailedSourceInfo) {
+    this.preserveDetailedSourceInfo = preserveDetailedSourceInfo;
+  }
+
+  boolean preservesDetailedSourceInfo() {
+    return preserveDetailedSourceInfo;
+  }
+
+  void setKeepGoing(boolean keepGoing) {
+    this.keepGoing = keepGoing;
+  }
+
+  boolean canKeepGoing() {
+    return keepGoing;
   }
 
   /**
@@ -1829,7 +1871,7 @@ public class CompilerOptions {
    * @return True when JSDoc documentation will be parsed, false if not.
    */
   public boolean isParseJsDocDocumentation() {
-    return this.ideMode || this.parseJsDocDocumentation;
+    return this.parseJsDocDocumentation;
   }
 
   /**
