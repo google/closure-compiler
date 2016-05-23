@@ -510,6 +510,6 @@ public final class NominalType {
     }
     Preconditions.checkState(other instanceof NominalType);
     NominalType o = (NominalType) other;
-    return Objects.equals(typeMap, o.typeMap) && this.rawType.equals(o.rawType);
+    return this.rawType.equals(o.rawType) && Objects.equals(typeMap, o.typeMap);
   }
 }

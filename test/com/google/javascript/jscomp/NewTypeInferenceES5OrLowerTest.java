@@ -16725,4 +16725,33 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testAllowCastingToFromInterface() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @interface */",
+        "function Bar() {}",
+        "function f(/** !Foo */ x) {",
+        "  return /** @type {!Bar} */ (x);",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "function f(/** !Foo */ x) {",
+        "  return /** @type {!Bar} */ (x);",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @interface */",
+        "function Bar() {}",
+        "function f(/** !Foo */ x) {",
+        "  return /** @type {!Bar} */ (x);",
+        "}"));
+  }
 }
