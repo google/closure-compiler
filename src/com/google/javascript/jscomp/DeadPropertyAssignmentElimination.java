@@ -140,8 +140,7 @@ public class DeadPropertyAssignmentElimination extends AbstractPostOrderCallback
         Property childProperty = propertyQueue.remove();
         childProperty.markLastWriteRead();
         for (Property grandchildProperty : childProperty.children) {
-          if (!propertiesSet.contains(grandchildProperty)) {
-            propertiesSet.add(grandchildProperty);
+          if (propertiesSet.add(grandchildProperty)) {
             propertyQueue.add(grandchildProperty);
           }
         }
