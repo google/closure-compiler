@@ -20,9 +20,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -33,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -308,7 +310,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private class ScriptUpdater extends AbstractPreOrderCallback {
+  private class ScriptUpdater implements Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
@@ -472,7 +474,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   static class GlobalRewriteState {
     private Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
         new HashMap<>();
-    private IdentityHashMap<Node, String> moduleNamesByRootNode = new IdentityHashMap<>();
+    private Multimap<Node, String> legacyNamespacesByScriptNode = HashMultimap.create();
+    private Set<String> legacyScriptNamespaces = new HashSet<>();
 
     boolean containsModule(String legacyNamespace) {
       return scriptDescriptionsByGoogModuleNamespace.containsKey(legacyNamespace);
@@ -493,22 +496,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return binaryNamespace != null ? binaryNamespace : legacyNamespace;
     }
 
-    void trackModule(String legacyNamespace, ScriptDescription description) {
-      scriptDescriptionsByGoogModuleNamespace.put(legacyNamespace, description);
-      moduleNamesByRootNode.put(description.rootNode, legacyNamespace);
-    }
-
     void removeRoot(Node toRemove) {
-      if (moduleNamesByRootNode.containsKey(toRemove)) {
-        String removedModuleName = moduleNamesByRootNode.get(toRemove);
-        moduleNamesByRootNode.remove(toRemove);
-        scriptDescriptionsByGoogModuleNamespace.remove(removedModuleName);
+      if (legacyNamespacesByScriptNode.containsKey(toRemove)) {
+        for (String removedModuleName : legacyNamespacesByScriptNode.removeAll(toRemove)) {
+          scriptDescriptionsByGoogModuleNamespace.remove(removedModuleName);
+        }
       }
     }
   }
 
   private GlobalRewriteState rewriteState;
-  private Set<String> legacyScriptNamespaces = new HashSet<>();
   private Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
   private List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
 
@@ -598,11 +595,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (rewriteState.containsModule(legacyNamespace)) {
       t.report(call, DUPLICATE_MODULE, legacyNamespace);
     }
-    if (legacyScriptNamespaces.contains(legacyNamespace)) {
+    if (rewriteState.legacyScriptNamespaces.contains(legacyNamespace)) {
       t.report(call, DUPLICATE_NAMESPACE, legacyNamespace);
     }
 
-    rewriteState.trackModule(legacyNamespace, currentScript);
+    rewriteState.scriptDescriptionsByGoogModuleNamespace.put(legacyNamespace, currentScript);
+    rewriteState.legacyNamespacesByScriptNode.put(NodeUtil.getEnclosingScript(currentScript.rootNode), legacyNamespace);
 
   }
 
@@ -626,7 +624,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     // Log legacy namespaces and prefixes.
-    legacyScriptNamespaces.add(legacyNamespace);
+    rewriteState.legacyScriptNamespaces.add(legacyNamespace);
+    rewriteState.legacyNamespacesByScriptNode.put(NodeUtil.getEnclosingScript(call), legacyNamespace);
     LinkedList<String> parts = Lists.newLinkedList(Splitter.on('.').split(legacyNamespace));
     while (!parts.isEmpty()) {
       legacyScriptNamespacesAndPrefixes.add(Joiner.on('.').join(parts));
@@ -662,7 +661,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // Maybe report an error if there is an attempt to import something that is expected to be a
     // goog.module() but no such goog.module() has been defined.
     boolean targetIsAModule = rewriteState.containsModule(legacyNamespace);
-    boolean targetIsALegacyScript = legacyScriptNamespaces.contains(legacyNamespace);
+    boolean targetIsALegacyScript = rewriteState.legacyScriptNamespaces.contains(legacyNamespace);
     if (reportBadRequireErrors
         && currentScript.isModule
         && !targetIsAModule
@@ -1281,7 +1280,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       Node requireNode = unrecognizedRequire.requireNode;
       boolean targetMustBeGoogModule = unrecognizedRequire.mustBeGoogModule;
       boolean targetGoogModuleExists = rewriteState.containsModule(legacyNamespace);
-      boolean targetLegacyScriptExists = legacyScriptNamespaces.contains(legacyNamespace);
+      boolean targetLegacyScriptExists =
+          rewriteState.legacyScriptNamespaces.contains(legacyNamespace);
 
       if (targetMustBeGoogModule && !targetGoogModuleExists) {
         // The required thing had to be a goog.module() but no such goog.module() was in the

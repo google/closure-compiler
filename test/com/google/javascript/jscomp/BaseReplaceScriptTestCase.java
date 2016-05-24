@@ -70,6 +70,14 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
     assertTrue(result.success);
   }
 
+  protected void runReplaceScriptWithError(
+      List<String> sources, String newSource, int newSourceInd, DiagnosticType errorType) {
+    Result result =
+        runReplaceScript(getOptions(), sources, 0, 0, newSource, newSourceInd, true).getResult();
+    assertNumWarningsAndErrors(result, 1, 0);
+    assertEquals(result.errors[0].getType(), errorType);
+  }
+
   /**
    * For a given set of sources, first runs a full compile, then replaces one source with a given
    * new version and calls {@code replaceScript}.
@@ -179,4 +187,5 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
     assertEquals(e.getType(), type);
     assertEquals(e.lineNumber, lineNumber);
   }
+
 }

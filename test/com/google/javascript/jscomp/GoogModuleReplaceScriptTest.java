@@ -25,13 +25,14 @@ import java.util.List;
  */
 
 public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase {
+
   private void runNoOpReplaceScriptNoWarnings(List<String> sources) {
     for (int i = 0; i < sources.size(); i++) {
       runReplaceScriptNoWarnings(sources, sources.get(i), i);
     }
   }
 
-  public void testGoogModule1() {
+  public void testSimpleGoogModule() {
     String source0 =
         LINE_JOINER.join(
             "goog.module('ns.Bar');", "", "/** @constructor */ exports = function() {};");
@@ -44,7 +45,42 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
   }
 
-  public void testGoogModule2() {
+  public void testWrappedGoogModules() {
+    String source0 =
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports){ 'use strict';",
+            "  goog.module('ns.Bar');",
+            "  /** @constructor */ exports = function() {};",
+            "  return exports;",
+            "});");
+    String source1 = LINE_JOINER.join(
+            "goog.loadModule(function(exports){ 'use strict';",
+            "  goog.module('ns.Baz');",
+            "  var Bar = goog.require('ns.Bar');",
+            "  var a = new Bar();",
+            "  return exports;",
+            "});");
+    runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
+  }
+
+  public void testSimpleBundledGoogModule() {
+    String source0 =
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports){ 'use strict';",
+            "  goog.module('ns.Bar');",
+            "  /** @constructor */ exports = function() {};",
+            "  return exports;",
+            "});",
+            "goog.loadModule(function(exports){ 'use strict';",
+            "  goog.module('ns.Baz');",
+            "  var Bar = goog.require('ns.Bar');",
+            "  var a = new Bar();",
+            "  return exports;",
+            "});");
+    runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0));
+  }
+
+  public void testSimpleGoogModuleWithChangedFile() {
     String source0 =
         LINE_JOINER.join(
             "goog.module('ns.Bar');", "", "/** @constructor */ exports = function() {};");
@@ -63,7 +99,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runReplaceScriptNoWarnings(ImmutableList.of(source0, source1), newSource1, 1);
   }
 
-  public void testGoogModule3() {
+  public void testLegacyGoogModuleUsedFromModule() {
     String source0 =
         LINE_JOINER.join(
             "goog.module('ns.Bar');",
@@ -79,7 +115,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
   }
 
-  public void testGoogModule4() {
+  public void testLegacyGoogModuleUsedFromProvideFile() {
     String source0 =
         LINE_JOINER.join(
             "goog.module('ns.Bar');",
@@ -90,5 +126,33 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
         LINE_JOINER.join(
             "goog.provide('ns.Baz');", "goog.require('ns.Bar');", "", "var a = new ns.Bar();");
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
+  }
+
+  public void testGoogModuleDependsOnGoogProvide() {
+    String source0 = "goog.provide('ns.Bar'); /** @constructor */ ns.Bar = function() {};";
+    String source1 =
+        LINE_JOINER.join(
+            "goog.module('ns.Baz');",
+            "var Bar = goog.require('ns.Bar');",
+            "",
+            "var a = new Bar();");
+    runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
+  }
+
+  public void testGoogModuleDependsOnGoogProvideError() {
+    String source0 = "goog.provide('ns.Bar'); /** @constructor */ ns.Bar = function() {};";
+    String source1 =
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) { 'use strict';",
+            "  goog.module('ns.Baz');",
+            "  var Bar = goog.require('ns.Bar');",
+            "  var a = new Bar();",
+            "  return exports;",
+            "});");
+    runReplaceScriptWithError(
+        ImmutableList.of(source0 + source1),
+        source1,
+        0,
+        ProcessClosurePrimitives.MISSING_PROVIDE_ERROR);
   }
 }
