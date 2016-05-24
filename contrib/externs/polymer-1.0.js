@@ -35,6 +35,23 @@
 var Polymer = function(descriptor) {};
 
 
+/**
+ * Re-evaluates and applies custom CSS properties based on dynamic
+ * changes to this element's scope, such as adding or removing classes.
+ *
+ * For performance reasons, Polymer's custom CSS property shim relies
+ * on this explicit signal from the user to indicate when changes have
+ * been made that affect the values of custom properties.
+ *
+ * @param {Object=} properties Properties object which is mixed into
+ *     the document root `customStyle` property. This argument provides a
+ *     shortcut for setting `customStyle` and then calling `updateStyles`.
+ *
+ * @see http://polymer.github.io/polymer/
+ */
+Polymer.updateStyles = function(properties) {};
+
+
 /** @constructor @extends {HTMLElement} */
 var PolymerElement = function() {};
 
