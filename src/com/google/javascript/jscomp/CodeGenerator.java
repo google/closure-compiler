@@ -1204,23 +1204,58 @@ class CodeGenerator {
     cc.endSourceMapping(n);
   }
 
-  private boolean arrowFunctionNeedsParens(Node parent, Context context) {
+  private static boolean arrowFunctionNeedsParens(Node n) {
+    Node parent = n.getParent();
+
+    // Once you cut through the layers of non-terminals used to define operator precedence,
+    // you can see the following are true.
+    // (Read => as "may expand to" and "!=>" as "may not expand to")
+    //
+    // 1. You can substitute an ArrowFunction into rules where an Expression or
+    //    AssignmentExpression is required, because
+    //      Expression => AssignmentExpression => ArrowFunction
+    //
+    // 2. However, most operators act on LeftHandSideExpression, CallExpression, or
+    //    MemberExpression. None of these expand to ArrowFunction.
+    //
+    // 3. CallExpression cannot expand to an ArrowFunction at all, because all of its expansions
+    //    produce multiple symbols and none can be logically equivalent to ArrowFunction.
+    //
+    // 4. LeftHandSideExpression and MemberExpression may be replaced with an ArrowFunction in
+    //    parentheses, because:
+    //      LeftHandSideExpression => MemberExpression => PrimaryExpression
+    //      PrimaryExpression => '(' Expression ')' => '(' ArrowFunction ')'
     if (parent == null) {
       return false;
+    } else if (NodeUtil.isBinaryOperator(parent)
+        || NodeUtil.isUnaryOperator(parent)
+        || parent.isTaggedTemplateLit()
+        || parent.isGetProp()) {
+      // LeftHandSideExpression OP LeftHandSideExpression
+      // OP LeftHandSideExpression | LeftHandSideExpression OP
+      // MemberExpression TemplateLiteral
+      // MemberExpression '.' IdentifierName
+      return true;
+    } else if (parent.isGetElem() || parent.isCall() || parent.isHook()) {
+      // MemberExpression '[' Expression ']'
+      // MemberFunction '(' AssignmentExpressionList ')'
+      // LeftHandSideExpression ? AssignmentExpression : AssignmentExpression
+      return isFirstChild(n);
+    } else {
+      // All other cases are either illegal (e.g. because you cannot assign a value to an
+      // ArrowFunction) or do not require parens.
+      return false;
     }
-    switch (parent.getType()) {
-      case Token.EXPR_RESULT:
-      case Token.COMMA:
-        // Arrow function bodies bind more tightly than commas, and need no parens in that case.
-        return false;
-      default:
-        return (context == Context.START_OF_EXPR);
-    }
+  }
+
+  private static boolean isFirstChild(Node n) {
+    Node parent = n.getParent();
+    return parent != null && n == parent.getFirstChild();
   }
 
   private void addArrowFunction(Node n, Node first, Node last, Context context) {
     Preconditions.checkState(first.getString().isEmpty());
-    boolean funcNeedsParens = arrowFunctionNeedsParens(n.getParent(), context);
+    boolean funcNeedsParens = arrowFunctionNeedsParens(n);
     if (funcNeedsParens) {
       add("(");
     }

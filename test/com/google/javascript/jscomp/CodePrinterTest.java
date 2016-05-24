@@ -2092,6 +2092,39 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("[1,2].forEach((x)=>y)");
   }
 
+  /**
+   * Regression test for b/28633247 - necessary parens dropped around arrow functions.
+   */
+  public void testParensAroundArrow() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    // Parens required for non-assignment binary operator
+    assertPrintSame("x||((_)=>true)");
+    // Parens required for unary operator
+    assertPrintSame("void((e)=>e*5)");
+    // Parens not required for comma operator
+    assertPrint("((_) => true), ((_) => false)", "(_)=>true,(_)=>false");
+    // Parens not required for right side of assignment operator
+    // NOTE: An arrow function on the left side would be a parse error.
+    assertPrint("x = ((_) => _ + 1)", "x=(_)=>_+1");
+    // Parens required for template tag
+    assertPrintSame("((_)=>\"\")`template`");
+    // Parens required to reference a property
+    assertPrintSame("((a,b,c)=>a+b+c).length");
+    assertPrintSame("((a,b,c)=>a+b+c)[\"length\"]");
+    // Parens not required when evaluating property name.
+    // (It doesn't make much sense to do it, though.)
+    assertPrint("x[((_)=>0)]", "x[(_)=>0]");
+    // Parens required to call the arrow function immediately
+    assertPrintSame("((x)=>x*5)(10)");
+    // Parens not required for function call arguments
+    assertPrint("x(((_) => true), ((_) => false))", "x((_)=>true,(_)=>false)");
+    // Parens required for first operand to a conditional, but not the rest.
+    assertPrintSame("((x)=>1)?a:b");
+    assertPrint("x?((x)=>0):((x)=>1)", "x?(x)=>0:(x)=>1");
+  }
+
+
   public void testPrettyArrowFunction() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrettyPrint("if (x) {var f = ()=>{alert(1); alert(2)}}",

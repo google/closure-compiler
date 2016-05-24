@@ -753,6 +753,75 @@ public final class NodeUtil {
     return true;
   }
 
+  static boolean isBinaryOperator(Node n) {
+    return isBinaryOperatorType(n.getType());
+  }
+
+  /**
+   * An operator with two operands that does not assign a value to either.
+   * Once you cut through the layers of rules, these all parse similarly, taking
+   * LeftHandSideExpression operands on either side.
+   * Comma is not included, because it takes AssignmentExpression operands, making its syntax
+   * different.
+   */
+  static boolean isBinaryOperatorType(int type) {
+    switch (type) {
+      case Token.OR:
+      case Token.AND:
+      case Token.BITOR:
+      case Token.BITXOR:
+      case Token.BITAND:
+      case Token.EQ:
+      case Token.NE:
+      case Token.SHEQ:
+      case Token.SHNE:
+      case Token.LT:
+      case Token.GT:
+      case Token.LE:
+      case Token.GE:
+      case Token.INSTANCEOF:
+      case Token.IN:
+      case Token.LSH:
+      case Token.RSH:
+      case Token.URSH:
+      case Token.ADD:
+      case Token.SUB:
+      case Token.MUL:
+      case Token.DIV:
+      case Token.MOD:
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+  static boolean isUnaryOperator(Node n) {
+    return isUnaryOperatorType(n.getType());
+  }
+
+  /**
+   * An operator taking only one operand.
+   * These all parse very similarly, taking LeftHandSideExpression operands.
+   */
+  static boolean isUnaryOperatorType(int type) {
+    switch (type) {
+      case Token.DELPROP:
+      case Token.VOID:
+      case Token.TYPEOF:
+      case Token.POS:
+      case Token.NEG:
+      case Token.BITNOT:
+      case Token.NOT:
+      case Token.INC:
+      case Token.DEC:
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
   static boolean isSimpleOperator(Node n) {
     return isSimpleOperatorType(n.getType());
   }
