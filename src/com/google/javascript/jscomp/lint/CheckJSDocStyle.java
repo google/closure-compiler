@@ -366,7 +366,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     }
 
     if (name == null || !nodeToCheck.isName()) {
-      // Skip the name check.
+      // Skip the name check, but use "<unknown name>" for other errors that might be reported.
+      name = "<unknown name>";
     } else if (!nodeToCheck.matchesQualifiedName(name)) {
       t.report(nodeToCheck, INCORRECT_PARAM_NAME);
       return true;
@@ -374,10 +375,10 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
     boolean jsDocOptional = paramType != null && paramType.isOptionalArg();
     if (nameOptional && !jsDocOptional) {
-      t.report(nodeToCheck, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, nodeToCheck.getString());
+      t.report(nodeToCheck, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, name);
       return true;
     } else if (!nameOptional && jsDocOptional) {
-      t.report(nodeToCheck, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, nodeToCheck.getString());
+      t.report(nodeToCheck, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, name);
       return true;
     }
     return false;

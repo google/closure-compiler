@@ -357,6 +357,30 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "function f([pattern], namedParam) {",
             "}"),
         WRONG_NUMBER_OF_PARAMS);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {{",
+            " *   a: (string|undefined),",
+            " *   b: (number|undefined),",
+            " *   c: (boolean|undefined)",
+            " * }} obj",
+            " */",
+            "function create({a = 'hello', b = 8, c = false} = {}) {}"),
+        OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
+
+    // Same as above except there's an '=' to indicate that it's optional.
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {{",
+            " *   a: (string|undefined),",
+            " *   b: (number|undefined),",
+            " *   c: (boolean|undefined)",
+            " * }=} obj",
+            " */",
+            "function create({a = 'hello', b = 8, c = false} = {}) {}"));
   }
 
   public void testMissingParamWithDestructuringPatternWithDefault() {
