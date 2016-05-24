@@ -482,6 +482,17 @@ Polymer.Base;
 Polymer.Base.async = function(method, wait) {};
 
 /**
+ * Copies own properties (including accessor descriptors) from a source
+ * object to a target object.
+ *
+ * @param {?Object} target Target object to copy properties to.
+ * @param {?Object} source Source object to copy properties from.
+ * @return {?Object} Target object that was passed as first argument or source
+ *     object if the target was null.
+ */
+Polymer.Base.extend = function(target, source) {};
+
+/**
  * Returns a property descriptor object for the property specified.
  *
  * This method allows introspecting the configuration of a Polymer element's
@@ -492,6 +503,19 @@ Polymer.Base.async = function(method, wait) {};
  * @return {Object} Property descriptor for specified property.
 */
 Polymer.Base.getPropertyInfo = function(property) {};
+
+/**
+ * Copies props from a source object to a target object.
+ *
+ * Note, this method uses a simple `for...in` strategy for enumerating
+ * properties.  To ensure only `ownProperties` are copied from source
+ * to target and that accessor implementations are copied, use `extend`.
+ *
+ * @param {!Object} target Target object to copy properties to.
+ * @param {?Object} source Source object to copy properties from.
+ * @return {!Object} Target object that was passed as first argument.
+ */
+Polymer.Base.mixin = function(target, source) {};
 
 Polymer.Gestures;
 
