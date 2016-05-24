@@ -3522,26 +3522,6 @@ HTMLFieldSetElement.prototype.willValidate;
 
 /**
  * @constructor
- * @extends {HTMLCollection<T>}
- * @implements {IObject<string, (T|RadioNodeList<T>)>}
- * @implements {IArrayLike<T>}
- * @template T
- * @see https://html.spec.whatwg.org/multipage/infrastructure.html#the-htmlformcontrolscollection-interface
- */
-function HTMLFormControlsCollection() {}
-
-/**
- * @param {string} name
- * @return {T|RadioNodeList<T>|null}
- * @see https://html.spec.whatwg.org/multipage/infrastructure.html#dom-htmlformcontrolscollection-nameditem
- * @nosideeffects
- * @override
- * @suppress {newCheckTypes}
- */
-HTMLFormControlsCollection.prototype.namedItem = function(name) {};
-
-/**
- * @constructor
  * @extends {NodeList<T>}
  * @template T
  * @see https://html.spec.whatwg.org/multipage/infrastructure.html#radionodelist

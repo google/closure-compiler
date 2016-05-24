@@ -648,6 +648,26 @@ HTMLBodyElement.prototype.vLink;
 
 /**
  * @constructor
+ * @extends {HTMLCollection<T>}
+ * @implements {IObject<string, (T|RadioNodeList<T>)>}
+ * @implements {IArrayLike<T>}
+ * @template T
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#the-htmlformcontrolscollection-interface
+ */
+function HTMLFormControlsCollection() {}
+
+/**
+ * @param {string} name
+ * @return {T|RadioNodeList<T>|null}
+ * @see https://html.spec.whatwg.org/multipage/infrastructure.html#dom-htmlformcontrolscollection-nameditem
+ * @nosideeffects
+ * @override
+ * @suppress {newCheckTypes}
+ */
+HTMLFormControlsCollection.prototype.namedItem = function(name) {};
+
+/**
+ * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-40002357
  */
