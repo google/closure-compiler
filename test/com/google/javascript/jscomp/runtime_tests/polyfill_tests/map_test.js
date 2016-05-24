@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-goog.module('$jscomp_map_test');
+goog.module('jscomp.runtime_tests.polyfill_tests.map_test');
 goog.setTestOnly();
 
-const jsunit = goog.require('goog.testing.jsunit');
 const testSuite = goog.require('goog.testing.testSuite');
-const testing = goog.require('testing');
+const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
-const assertDeepEquals = testing.assertDeepEquals;
+const {
+  assertDeepEquals,
+  assertIteratorContents,
+} = testing;
 
 const DONE = {done: true, value: void 0};
 
@@ -58,8 +60,8 @@ testSuite({
       checkSetGet(map, String(i), {});
     }
     const keys = [+0, +Infinity, -Infinity, true, false, null, undefined];
-    for (let k of keys) {
-      checkSetGet(map, k, {});
+    for (let i = 0; i < keys.length; i++) {
+      checkSetGet(map, keys[i], {});
     }
     assertEquals(37, map.size);
 
@@ -174,7 +176,7 @@ testSuite({
   },
 
   testForEach_concurrentMutation() {
-    const map = new Map();
+    const /** !Map */ map = new Map();
     map.set('a', 'b');
     map.set('a1', 'b1');
     const keys = [];
@@ -188,7 +190,7 @@ testSuite({
   },
 
   testForEach_clear() {
-    const map = new Map();
+    const /** !Map */ map = new Map();
     map.set('a', 'b');
     map.set('c', 'd');
     let count = 0;
@@ -270,5 +272,14 @@ testSuite({
     assertDeepEquals(DONE, iter.next());
     map.set('g', 8);
     assertDeepEquals(DONE, iter.next());
-  }
+  },
+
+  testIterator() {
+    const map = new Map();
+    map.set('d', 4);
+    map.set(2, 'b');
+    map.set('c', 3);
+    map.set(1, 'a');
+    assertIteratorContents(map, ['d', 4], [2, 'b'], ['c', 3], [1, 'a']);
+  },
 });

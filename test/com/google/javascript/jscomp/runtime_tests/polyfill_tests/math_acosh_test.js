@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Closure Compiler Authors.
+ * Copyright 2016 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-delete String.prototype.repeat;
-delete String.prototype.codePointAt;
-delete String.prototype.includes;
-delete String.prototype.startsWith;
-delete String.prototype.endsWith;
-delete Array.prototype.entries;
-delete Array.prototype.keys;
-delete Array.prototype.values;
-delete Array.prototype.copyWithin;
-delete Array.prototype.fill;
-delete Array.prototype.find;
-delete Array.prototype.findIndex;
-delete Map;
-delete Set;
+goog.module('jscomp.runtime_tests.polyfill_tests.math_acosh_test');
+goog.setTestOnly();
+
+const testSuite = goog.require('goog.testing.testSuite');
+const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
+
+const {
+  assertExactlyNaN,
+  assertPositiveZero,
+  noCheck,
+} = testing;
+
+testSuite({
+  testAcosh() {
+    assertPositiveZero(Math.acosh(1));
+    assertExactlyNaN(Math.acosh(0));
+    assertExactlyNaN(Math.acosh(noCheck({})));
+    assertEquals(Infinity, Math.acosh(Infinity));
+  },
+});

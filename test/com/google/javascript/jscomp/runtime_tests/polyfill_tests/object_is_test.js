@@ -14,51 +14,12 @@
  * limitations under the License.
  */
 
-goog.module('$jscomp_object_test');
+goog.module('jscomp.runtime_tests.polyfill_tests.object_is_test');
 goog.setTestOnly();
 
-const jsunit = goog.require('goog.testing.jsunit');
 const testSuite = goog.require('goog.testing.testSuite');
-const testing = goog.require('testing');
-
-const assertDeepEquals = testing.assertDeepEquals;
 
 testSuite({
-
-  testAssertDeepEquals() {
-    // Quick sanity check, since we don't unit test assertDeepEquals
-    assertDeepEquals({a: 4}, {a: 4});
-    assertThrowsJsUnitException(() => assertDeepEquals({}, {a: 4}));
-    assertThrowsJsUnitException(() => assertDeepEquals({a: 4}, {}));
-  },
-
-  testAssign_simple() {
-    const obj = {a: 2, z: 3};
-    assertEquals(obj, Object.assign(obj, {a: 4, b: 5}, null, {c: 6, b: 7}));
-    assertDeepEquals({a: 4, b: 7, c: 6, z: 3}, obj);
-  },
-
-  testAssign_skipsPrototypeProperties() {
-    if (!Object.create) return;
-    const proto = {a: 4, b: 5};
-    const from = Object.create(proto);
-    from.a = 6;
-    from.c = 7;
-    assertDeepEquals({a: 6, c: 7}, Object.assign({}, from));
-    assertDeepEquals({a: 6, b: 1, c: 7}, Object.assign({b: 1}, from));
-  },
-
-  testAssign_skipsNonEnumerableProperties() {
-    const from = {'b': 23};
-    try {
-      Object.defineProperty(from, 'a', {enumerable: false, value: 42});
-    } catch (err) {
-      return; // Object.defineProperty in IE8 test harness exists, always fails
-    }
-    assertDeepEquals({'b': 23}, Object.assign({}, from));
-    assertDeepEquals({'a': 1, 'b': 23}, Object.assign({'a': 1}, from));
-  },
-
   testIs() {
     assertTrue(Object.is(4, 4));
     assertTrue(Object.is(0, 0));

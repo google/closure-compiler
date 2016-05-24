@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-goog.module('$jscomp_set_test');
+goog.module('jscomp.runtime_tests.polyfill_tests.set_test');
 goog.setTestOnly();
 
-const jsunit = goog.require('goog.testing.jsunit');
 const testSuite = goog.require('goog.testing.testSuite');
-const testing = goog.require('testing');
+const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
-const assertDeepEquals = testing.assertDeepEquals;
+const {
+  assertDeepEquals,
+  assertIteratorContents,
+} = testing;
 
 const DONE = {done: true, value: void 0};
 
@@ -56,8 +58,8 @@ testSuite({
       checkAddHas(set, String(i));
     }
     const keys = [+0, +Infinity, -Infinity, true, false, null, undefined];
-    for (let k of keys) {
-      checkAddHas(set, k);
+    for (let i = 0; i < keys.length; i++) {
+      checkAddHas(set, keys[i]);
     }
     assertEquals(37, set.size);
 
@@ -156,16 +158,25 @@ testSuite({
     const set = new Set();
     set.add('a');
     set.add('b');
-    const out = [];
+    const /** !Array<*> */ out = [];
     const receiver = {};
-    set.forEach(function(value, key, set) {
-      out.push(value, key, set, this);
-    }, receiver);
+    /**
+     * @this {!Object}
+     * @param {string} value
+     * @param {string} key
+     * @param {!Set<string>} set
+     */
+    function func(value, key, set) {
+      out.push(value, key);
+      out.push(set);
+      out.push(this);
+    }
+    set.forEach(func, receiver);
     assertArrayEquals(['a', 'a', set, receiver, 'b', 'b', set, receiver], out);
   },
 
   testForEach_concurrentMutation() {
-    const set = new Set();
+    const /** !Set */ set = new Set();
     set.add('a');
     set.add('a1');
     const keys = [];
@@ -179,7 +190,7 @@ testSuite({
   },
 
   testForEach_clear() {
-    const set = new Set();
+    const /** !Set */ set = new Set();
     set.add('a');
     set.add('b');
     let count = 0;
@@ -250,5 +261,14 @@ testSuite({
     assertDeepEquals(DONE, iter.next());
     set.add('g');
     assertDeepEquals(DONE, iter.next());
-  }
+  },
+
+  testIterator() {
+    const set = new Set();
+    set.add('d');
+    set.add(2);
+    set.add('c');
+    set.add(1);
+    assertIteratorContents(set, 'd', 2, 'c', 1);
+  },
 });
