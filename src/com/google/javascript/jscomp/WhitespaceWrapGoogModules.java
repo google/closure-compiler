@@ -20,7 +20,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /**
- * Replicates the effect of {@link ClosureBundler} in whitespace-only mode and wraps goog.modules
+ * Replicates the effect of {@literal ClosureBundler} in whitespace-only mode and wraps goog.modules
  * in goog.loadModule calls. See comment block below.
  */
 public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {

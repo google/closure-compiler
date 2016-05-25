@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
 
 /**
  * Check for unused labels blocks. This can help catching errors like:
- *   () => {a: 2}  // Returns undefined, not an Object
+ * () =&gt; {a: 2}  // Returns undefined, not an Object
  *
  * Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-unused-labels.js)
  */
