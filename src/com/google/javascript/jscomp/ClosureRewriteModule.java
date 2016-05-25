@@ -737,12 +737,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         return;
       }
     }
-
-    if (aliasName != null
-        && isTopLevel(t, NodeUtil.getEnclosingStatement(call), ScopeType.EXEC_CONTEXT)) {
-      // Record alias -> legacyNamespace associations for later inlining.
-      recordImportAlias(aliasName, legacyNamespace);
-    }
   }
 
   private void recordTopLevelClassOrFunctionName(Node classOrFunctionNode) {
