@@ -588,7 +588,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         lastJump = cur;
       }
       if (parent == null) {
-        if (compiler.getOptions().canKeepGoing()) {
+        if (compiler.getOptions().canContinueAfterErrors()) {
           // In IDE mode, we expect that the data flow graph may
           // not be well-formed.
           return;

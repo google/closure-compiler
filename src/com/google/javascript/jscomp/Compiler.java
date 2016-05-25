@@ -2155,7 +2155,7 @@ public class Compiler extends AbstractCompiler {
   protected Config createConfig(Config.LanguageMode mode) {
     Config config = ParserRunner.createConfig(mode, options.extraAnnotationNames);
     config.setPreserveDetailedSourceInfo(options.preservesDetailedSourceInfo());
-    config.setKeepGoing(options.canKeepGoing());
+    config.setKeepGoing(options.canContinueAfterErrors());
     config.setParseJsDocDocumentation(options.isParseJsDocDocumentation());
     config.setPreserveJsDocWhitespace(options.isPreserveJsDocWhitespace());
     return config;
@@ -2231,14 +2231,14 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   boolean hasHaltingErrors() {
-    return !getOptions().canKeepGoing() && getErrorCount() > 0;
+    return !getOptions().canContinueAfterErrors() && getErrorCount() > 0;
   }
 
   /**
    * Consults the {@link ErrorManager} to see if we've encountered errors
    * that should halt compilation. <p>
    *
-   * If {@link CompilerOptions#ideMode} is {@code true}, this function
+   * If {@link CompilerOptions#canContinueAfterErrors} is {@code true}, this function
    * always returns {@code false} without consulting the error manager. The
    * error manager will continue to be told about new errors and warnings, but
    * the compiler will complete compilation of all inputs.<p>

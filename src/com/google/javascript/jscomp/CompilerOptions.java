@@ -107,7 +107,7 @@ public class CompilerOptions {
 
   private boolean allowHotswapReplaceScript = false;
   private boolean preserveDetailedSourceInfo = false;
-  private boolean keepGoing = false;
+  private boolean continueAfterErrors = false;
 
   private boolean parseJsDocDocumentation = false;
   private boolean preserveJsDocWhitespace = false;
@@ -1832,7 +1832,7 @@ public class CompilerOptions {
   @Deprecated
   public void setIdeMode(boolean ideMode) {
     setChecksOnly(ideMode);
-    setKeepGoing(ideMode);
+    setContinueAfterErrors(ideMode);
     setAllowHotswapReplaceScript(ideMode);
     setPreserveDetailedSourceInfo(ideMode);
     setParseJsDocDocumentation(ideMode);
@@ -1854,12 +1854,12 @@ public class CompilerOptions {
     return preserveDetailedSourceInfo;
   }
 
-  public void setKeepGoing(boolean keepGoing) {
-    this.keepGoing = keepGoing;
+  public void setContinueAfterErrors(boolean continueAfterErrors) {
+    this.continueAfterErrors = continueAfterErrors;
   }
 
-  boolean canKeepGoing() {
-    return keepGoing;
+  boolean canContinueAfterErrors() {
+    return continueAfterErrors;
   }
 
   /**

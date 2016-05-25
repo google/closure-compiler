@@ -166,7 +166,7 @@ public class JsAst implements SourceAst {
         // we don't want to fail if the error was excluded by a warning guard, conversely
         // we do want to fail if a warning was promoted to an error.
         || (errorManager.getErrorCount() > startErrorCount
-            && !compiler.getOptions().canKeepGoing())) {
+            && !compiler.getOptions().canContinueAfterErrors())) {
       // There was a parse error or IOException, so use a dummy block.
 
 
