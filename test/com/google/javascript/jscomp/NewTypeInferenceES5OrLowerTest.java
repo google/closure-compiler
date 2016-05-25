@@ -10413,6 +10413,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var c = new ns.Foo(123);",
         "var /** !ns.Foo<string> */ x = c;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  /** @const */ var y = /** @type {number} */ (x);",
+        "  return function() { y; }",
+        "}"));
   }
 
   public void testSuppressions() {

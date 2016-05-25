@@ -265,11 +265,11 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     String errorMessage = LINE_JOINER.join(
         "Expected warning of type:",
         "================================================================",
-        Arrays.toString(warningKinds),
+        LINE_JOINER.join(warningKinds),
         "================================================================",
         "but found:",
         "----------------------------------------------------------------",
-        Arrays.toString(errors) + Arrays.toString(warnings) + "",
+        LINE_JOINER.join(errors) + "\n" + LINE_JOINER.join(warnings),
         "----------------------------------------------------------------\n");
     assertEquals(
         errorMessage + "Warning count",

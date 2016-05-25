@@ -1784,6 +1784,8 @@ class GlobalTypeInfo implements CompilerPass {
       switch (n.getType()) {
         case Token.REGEXP:
           return commonTypes.getRegexpType();
+        case Token.CAST:
+          return castTypes.get(n);
         case Token.ARRAYLIT: {
           if (!n.hasChildren()) {
             return commonTypes.getArrayInstance();
