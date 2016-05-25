@@ -37,6 +37,21 @@ public class J2clPassTest extends CompilerTestCase {
     return new J2clPass(compiler);
   }
 
+  public void testUtilGetDefine() {
+    String defineAbc = "var a={}; a.b={}; /** @define {boolean} */ a.b.c = true;\n";
+    test(
+        defineAbc + "nativebootstrap.Util.$getDefine('a.b.c', 'def');",
+        defineAbc + "('def', String(a.b.c));");
+    test(
+        defineAbc + "nativebootstrap.Util.$getDefine('a.b.c');",
+        defineAbc + "(null, String(a.b.c));");
+  }
+
+  public void testUtilGetDefine_notDefined() {
+    test("nativebootstrap.Util.$getDefine('not.defined');", "null;");
+    test("nativebootstrap.Util.$getDefine('not.defined', 'def');", "'def';");
+  }
+
   public void testQualifiedInlines() {
     // Arrays functions.
     test(

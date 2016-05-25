@@ -116,10 +116,7 @@ class ProcessDefines implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    if (namespace == null) {
-      namespace = new GlobalNamespace(compiler, root);
-    }
-    overrideDefines(collectDefines(root, namespace));
+    overrideDefines(collectDefines(root));
   }
 
   private void overrideDefines(Map<String, DefineInfo> allDefines) {
@@ -171,8 +168,11 @@ class ProcessDefines implements CompilerPass {
    * each one.
    * @return A map of {@link DefineInfo} structures, keyed by name.
    */
-  private Map<String, DefineInfo> collectDefines(Node root,
-      GlobalNamespace namespace) {
+  Map<String, DefineInfo> collectDefines(Node root) {
+    if (namespace == null) {
+      namespace = new GlobalNamespace(compiler, root);
+    }
+
     // Find all the global names with a @define annotation
     List<Name> allDefines = new ArrayList<>();
     for (Name name : namespace.getNameIndex().values()) {
