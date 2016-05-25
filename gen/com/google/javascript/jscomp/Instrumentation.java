@@ -263,7 +263,7 @@ public  final class Instrumentation extends
    * used to inform the harness about a function exit.  Must return
    * its second argument.
    *
-   * @returns VAL
+   * @return VAL
    * </pre>
    */
   public boolean hasReportExit() {
@@ -277,7 +277,7 @@ public  final class Instrumentation extends
    * used to inform the harness about a function exit.  Must return
    * its second argument.
    *
-   * @returns VAL
+   * @return VAL
    * </pre>
    */
   public java.lang.String getReportExit() {
@@ -302,7 +302,7 @@ public  final class Instrumentation extends
    * used to inform the harness about a function exit.  Must return
    * its second argument.
    *
-   * @returns VAL
+   * @return VAL
    * </pre>
    */
   public com.google.protobuf.ByteString
@@ -1063,7 +1063,7 @@ public  final class Instrumentation extends
      * used to inform the harness about a function exit.  Must return
      * its second argument.
      *
-     * @returns VAL
+     * @return VAL
      * </pre>
      */
     public boolean hasReportExit() {
@@ -1077,7 +1077,7 @@ public  final class Instrumentation extends
      * used to inform the harness about a function exit.  Must return
      * its second argument.
      *
-     * @returns VAL
+     * @return VAL
      * </pre>
      */
     public java.lang.String getReportExit() {
@@ -1099,7 +1099,7 @@ public  final class Instrumentation extends
      * used to inform the harness about a function exit.  Must return
      * its second argument.
      *
-     * @returns VAL
+     * @return VAL
      * </pre>
      */
     public com.google.protobuf.ByteString
@@ -1123,7 +1123,7 @@ public  final class Instrumentation extends
      * used to inform the harness about a function exit.  Must return
      * its second argument.
      *
-     * @returns VAL
+     * @return VAL
      * </pre>
      */
     public Builder setReportExit(
@@ -1144,7 +1144,7 @@ public  final class Instrumentation extends
      * used to inform the harness about a function exit.  Must return
      * its second argument.
      *
-     * @returns VAL
+     * @return VAL
      * </pre>
      */
     public Builder clearReportExit() {
@@ -1161,7 +1161,7 @@ public  final class Instrumentation extends
      * used to inform the harness about a function exit.  Must return
      * its second argument.
      *
-     * @returns VAL
+     * @return VAL
      * </pre>
      */
     public Builder setReportExitBytes(
@@ -1610,4 +1610,3 @@ public  final class Instrumentation extends
 
   // @@protoc_insertion_point(class_scope:jscomp.Instrumentation)
 }
-

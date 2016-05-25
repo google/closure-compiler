@@ -25,9 +25,11 @@ import com.google.javascript.rhino.Token;
 
 /**
  * Check for unused labels blocks. This can help catching errors like:
- *   () => {a: 2}  // Returns undefined, not an Object
+ * <pre>
+ *   () =&gt; {a: 2}  // Returns undefined, not an Object
+ * </pre>
  *
- * Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-unused-labels.js)
+ * <p>Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-unused-labels.js)
  */
 public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
   public static final DiagnosticType UNUSED_LABEL = DiagnosticType.disabled(

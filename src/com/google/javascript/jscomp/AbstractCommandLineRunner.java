@@ -1721,7 +1721,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * description of the map.
    *
    * @param definitions A list of overriding definitions for defines in
-   *     the form <name>[=<val>], where <val> is a number, boolean, or
+   *     the form {@code <name>[=<val>]}, where {@code <val>} is a number, boolean, or
    *     single-quoted string without single quotes.
    */
   @VisibleForTesting
@@ -2097,7 +2097,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     /**
      * A JavaScript module specification. The format is
-     * <name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be
+     * {@code <name>:<num-js-files>[:[<dep>,...][:]]]}. Module names must be
      * unique. Each dep is the name of a module that this module
      * depends on. Modules must be listed in dependency order, and JS
      * source files must be listed in the corresponding order. Where
@@ -2309,11 +2309,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     private final List<String> define = new ArrayList<>();
 
     /**
-     * Override the value of a variable annotated @define.
-     * The format is <name>[=<val>], where <name> is the name of a @define
-     * variable and <val> is a boolean, number, or a single-quoted string
-     * that contains no single quotes. If [=<val>] is omitted,
-     * the variable is marked true
+     * Override the value of a variable annotated @define.  The format
+     * is {@code <name>[=<val>]}, where {@code <name>} is the name of
+     * a @define variable and {@code <val>} is a boolean, number, or a
+     * single-quoted string that contains no single quotes. If
+     * {@code [=<val>]} is omitted, the variable is marked true
      */
     public CommandLineConfig setDefine(List<String> define) {
       this.define.clear();
@@ -2325,9 +2325,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     /**
      * Override the default value of a registered tweak. The format is
-     * <name>[=<val>], where <name> is the ID of a tweak and <val> is a boolean,
-     * number, or a single-quoted string that contains no single quotes. If
-     * [=<val>] is omitted, then true is assumed.
+     * {@code <name>[=<val>]}, where {@code <name>} is the ID of a
+     * tweak and {@code <val>} is a boolean, number, or a
+     * single-quoted string that contains no single quotes. If
+     * {@code [=<val>]} is omitted, then true is assumed.
      */
     public CommandLineConfig setTweak(List<String> tweak) {
       this.tweak.clear();
