@@ -401,8 +401,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     if (jsDoc != null
         && (jsDoc.hasType()
             || jsDoc.hasReturnType()
-            || jsDoc.isOverride()
-            || jsDoc.isConstructor())) {
+            || jsDoc.isOverride())) {
       return;
     }
     if (function.getFirstChild().getJSDocInfo() != null) {
