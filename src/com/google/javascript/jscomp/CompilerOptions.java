@@ -717,9 +717,17 @@ public class CompilerOptions {
   /** Record function information */
   public boolean recordFunctionInformation;
 
-  public boolean checksOnly;
+  boolean checksOnly;
 
-  public boolean outputJs;
+  static enum OutputJs {
+    // Don't output anything.
+    NONE,
+    // Output a "sentinel" file containing just a comment.
+    SENTINEL,
+    // Output the compiled JS.
+    NORMAL,
+  }
+  OutputJs outputJs;
 
   public boolean generateExports;
 
@@ -1085,7 +1093,7 @@ public class CompilerOptions {
     appNameStr = "";
     recordFunctionInformation = false;
     checksOnly = false;
-    outputJs = true;
+    outputJs = OutputJs.NORMAL;
     generateExports = false;
     generateExportsAfterTypeChecking = true;
     exportLocalPropertyDefinitions = false;
@@ -1505,7 +1513,7 @@ public class CompilerOptions {
     this.checksOnly = checksOnly;
   }
 
-  public void setOutputJs(boolean outputJs) {
+  void setOutputJs(OutputJs outputJs) {
     this.outputJs = outputJs;
   }
 

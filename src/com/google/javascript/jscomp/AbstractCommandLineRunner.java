@@ -35,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
+import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
@@ -973,6 +974,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       String wrapper, String codePlaceholder,
       @Nullable Function<String, String> escaper)
       throws IOException {
+    if (compiler.getOptions().outputJs == OutputJs.SENTINEL) {
+      out.append("// No JS output because the compiler was run in checks-only mode.\n");
+      return;
+    }
+    Preconditions.checkState(compiler.getOptions().outputJs == OutputJs.NORMAL);
+
     int pos = wrapper.indexOf(codePlaceholder);
     if (pos != -1) {
       String prefix = "";
@@ -1195,7 +1202,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       outputBundle();
       outputModuleGraphJson();
       return 0;
-    } else if (options.outputJs && result.success) {
+    } else if (options.outputJs != OutputJs.NONE && result.success) {
       outputModuleGraphJson();
       if (modules == null) {
         outputSingleBinary(options);
