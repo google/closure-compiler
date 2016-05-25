@@ -43,7 +43,7 @@ gapi.plusone = {};
  * either an element (by value) or a string element ID. This function would be
  * used only if the <script> tag sets parsetags to explicit, which you might do
  * for performance reasons.
- * @param {Element=} opt_container The container for which to render +1 buttons.
+ * @param {(Element|string)=} opt_container The container for which to render +1 buttons.
  *     If the container parameter is omitted, all +1 tags and classes on the
  *     page will be rendered.
  */
