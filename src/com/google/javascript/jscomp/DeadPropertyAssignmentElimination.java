@@ -45,13 +45,15 @@ import javax.annotation.Nullable;
  * are processed.</li>
  * <li>Hook nodes are not processed (it's assumed they read everything)</li>
  * <li>Switch blocks are not processed (it's assumed they read everything)</li>
+ * <li>Any reference to a property getter/setter is treated like a call that escapes all props.</li>
  * </ul>
  */
-public class DeadPropertyAssignmentElimination extends AbstractPostOrderCallback
-    implements CompilerPass {
+public class DeadPropertyAssignmentElimination implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
+  // TODO(kevinoconnor): Try to give special treatment to constructor, else remove this field
+  // and cleanup dead code.
   @VisibleForTesting
   static final boolean ASSUME_CONSTRUCTORS_HAVENT_ESCAPED = false;
 
@@ -61,40 +63,59 @@ public class DeadPropertyAssignmentElimination extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    GetterSetterCollector getterSetterCollector = new GetterSetterCollector();
+    NodeTraversal.traverseEs6(compiler, root, getterSetterCollector);
+    NodeTraversal.traverseEs6(compiler, root,
+        new FunctionVisitor(compiler, getterSetterCollector.propNames));
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!n.isFunction()) {
-      return;
+  private static class FunctionVisitor extends AbstractPostOrderCallback {
+
+    private final AbstractCompiler compiler;
+
+    /**
+     * A set of properties names that are known to be assigned to getter/setters. This is important
+     * since any reference to these properties needs to be treated as if it were a call.
+     */
+    private final Set<String> getterSetterNames;
+
+    FunctionVisitor(AbstractCompiler compiler, Set<String> getterSetterNames) {
+      this.compiler = compiler;
+      this.getterSetterNames = getterSetterNames;
     }
 
-    Node body = NodeUtil.getFunctionBody(n);
-    if (!body.hasChildren() || NodeUtil.containsFunction(body)) {
-      return;
-    }
-
-    FindCandidateAssignmentTraversal traversal =
-        new FindCandidateAssignmentTraversal(NodeUtil.isConstructor(n));
-    NodeTraversal.traverseEs6(compiler, body, traversal);
-
-    // Any candidate property assignment can have a write removed if that write is never read
-    // and it's written to at least one more time.
-    for (Property property : traversal.propertyMap.values()) {
-      if (property.writes.size() <= 1) {
-        continue;
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!n.isFunction()) {
+        return;
       }
-      PeekingIterator<PropertyWrite> iter = Iterators.peekingIterator(property.writes.iterator());
-      while (iter.hasNext()) {
-        PropertyWrite propertyWrite = iter.next();
-        if (iter.hasNext() && propertyWrite.isSafeToRemove(iter.peek())) {
-          Node lhs = propertyWrite.assignedAt;
-          Node rhs = lhs.getNext();
-          Node assignNode = lhs.getParent();
-          rhs.detachFromParent();
-          assignNode.getParent().replaceChild(assignNode, rhs);
-          compiler.reportCodeChange();
+
+      Node body = NodeUtil.getFunctionBody(n);
+      if (!body.hasChildren() || NodeUtil.containsFunction(body)) {
+        return;
+      }
+
+      FindCandidateAssignmentTraversal traversal =
+          new FindCandidateAssignmentTraversal(getterSetterNames, NodeUtil.isConstructor(n));
+      NodeTraversal.traverseEs6(compiler, body, traversal);
+
+      // Any candidate property assignment can have a write removed if that write is never read
+      // and it's written to at least one more time.
+      for (Property property : traversal.propertyMap.values()) {
+        if (property.writes.size() <= 1) {
+          continue;
+        }
+        PeekingIterator<PropertyWrite> iter = Iterators.peekingIterator(property.writes.iterator());
+        while (iter.hasNext()) {
+          PropertyWrite propertyWrite = iter.next();
+          if (iter.hasNext() && propertyWrite.isSafeToRemove(iter.peek())) {
+            Node lhs = propertyWrite.assignedAt;
+            Node rhs = lhs.getNext();
+            Node assignNode = lhs.getParent();
+            rhs.detachFromParent();
+            assignNode.getParent().replaceChild(assignNode, rhs);
+            compiler.reportCodeChange();
+          }
         }
       }
     }
@@ -192,11 +213,18 @@ public class DeadPropertyAssignmentElimination extends AbstractPostOrderCallback
     Map<String, Property> propertyMap = new HashMap<>();
 
     /**
+     * A set of properties names that are known to be assigned to getter/setters. This is important
+     * since any reference to these properties needs to be treated as if it were a call.
+     */
+    private final Set<String> getterSetterNames;
+
+    /**
      * Whether or not the function being analyzed is a constructor.
      */
     private final boolean isConstructor;
 
-    FindCandidateAssignmentTraversal(boolean isConstructor) {
+    FindCandidateAssignmentTraversal(Set<String> getterSetterNames, boolean isConstructor) {
+      this.getterSetterNames = getterSetterNames;
       this.isConstructor = isConstructor;
     }
 
@@ -322,6 +350,15 @@ public class DeadPropertyAssignmentElimination extends AbstractPostOrderCallback
     private boolean visitNode(Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:
+          // Handle potential getters/setters.
+          if (n.isGetProp()
+              && n.getLastChild().isString()
+              && getterSetterNames.contains(n.getLastChild().getString())) {
+            // We treat getters/setters as if they were a call, thus we mark all properties as read.
+            markAllPropsRead();
+            return true;
+          }
+
           if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
             // We always visit the LHS assignment in post-order
             return false;
@@ -330,7 +367,13 @@ public class DeadPropertyAssignmentElimination extends AbstractPostOrderCallback
           if (property != null) {
             // Mark all children properties as read.
             property.markLastWriteRead();
-            property.markChildrenRead();
+
+            // Only mark children properties as read if we're at at the end of the referenced
+            // property chain.
+            // Ex. A read of "a.b.c" should mark a, a.b, a.b.c, and a.b.c.* as read, but not a.d
+            if (!parent.isGetProp()) {
+              property.markChildrenRead();
+            }
           }
           return true;
         case Token.CALL:
@@ -347,7 +390,9 @@ public class DeadPropertyAssignmentElimination extends AbstractPostOrderCallback
         case Token.NAME:
           Property nameProp = Preconditions.checkNotNull(getOrCreateProperty(n));
           nameProp.markLastWriteRead();
-          nameProp.markChildrenRead();
+          if (!parent.isGetProp()) {
+            nameProp.markChildrenRead();
+          }
           return true;
 
         case Token.THROW:
@@ -388,6 +433,41 @@ public class DeadPropertyAssignmentElimination extends AbstractPostOrderCallback
         }
 
         property.markLastWriteRead();
+      }
+    }
+  }
+
+  /**
+   * A traversal to find all property names that are defined to have a getter and/or setter
+   * associated with them.
+   */
+  private static class GetterSetterCollector extends AbstractPostOrderCallback {
+
+    /**
+     * A set of properties names that are known to be assigned to getter/setters. This is important
+     * since any reference to these properties needs to be treated as if it were a call.
+     */
+    private final Set<String> propNames = new HashSet<>();
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      // Keep track of any potential getters/setters.
+      if (NodeUtil.isGetterOrSetter(n)) {
+        Node grandparent = parent.getParent();
+        if (NodeUtil.isGetOrSetKey(n) && n.getString() != null) {
+          // ES5 getter/setter nodes contain the property name directly on the node.
+          propNames.add(n.getString());
+        } else if (NodeUtil.isObjectDefinePropertyDefinition(grandparent)) {
+          // Handle Object.defineProperties(obj, 'propName', { ... }).
+          Node propNode = grandparent.getChildAtIndex(2);
+          if (propNode.isString()) {
+            propNames.add(propNode.getString());
+          }
+        } else if (grandparent.isStringKey()
+            && NodeUtil.isObjectDefinePropertiesDefinition(grandparent.getParent().getParent())) {
+          // Handle Object.defineProperties(obj, {propName: { ... }}).
+          propNames.add(grandparent.getString());
+        }
       }
     }
   }

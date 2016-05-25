@@ -710,6 +710,140 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
+  public void testGetter() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.enabled = false; };",
+            "Object.defineProperties(Foo.prototype, {bar: {",
+            "  get: function () { return this.enabled ? 'enabled' : 'disabled'; }",
+            "}});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  var f = foo.bar;",
+            "  foo.enabled = false;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.enabled = false; };",
+            "Object.defineProperty(Foo, 'bar', {",
+            "  get: function () { return this.enabled ? 'enabled' : 'disabled'; }",
+            "});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  var f = foo.bar;",
+            "  foo.enabled = false;",
+            "}"));
+  }
+
+  public void testGetter_afterDeadAssignment() {
+    testSame(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  var f = foo.bar;",
+            "  foo.enabled = false;",
+            "}",
+            "/** @constructor */ function Foo() { this.enabled = false; };",
+            "Object.defineProperties(Foo.prototype, {bar: {",
+            "  get: function () { return this.enabled ? 'enabled' : 'disabled'; }",
+            "}});"));
+  }
+
+  public void testGetter_onDifferentType() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.enabled = false;",
+            "};",
+            "Object.defineProperties(",
+            "    Foo.prototype, {",
+            "      baz: {",
+            "        get: function () { return this.enabled ? 'enabled' : 'disabled'; }",
+            "      }",
+            "    });",
+            "/** @constructor */",
+            "function Bar() {",
+            "  this.enabled = false;",
+            "  this.baz = 123;",
+            "};",
+            "function f() {",
+            "  var bar = new Bar();",
+            "  bar.enabled = true;",
+            "  var ret = bar.baz;",
+            "  bar.enabled = false;",
+            "  return ret;",
+            "};")
+    );
+  }
+
+  public void testSetter() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "Object.defineProperties(Foo.prototype, {bar: {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "}});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "Object.defineProperty(Foo, 'bar', {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}"));
+  }
+
+  public void testEs5Getter() {
+    testSame(
+        LINE_JOINER.join(
+            "var bar = {",
+            "  enabled: false,",
+            "  get baz() {",
+            "    return this.enabled ? 'enabled' : 'disabled';",
+            "  }",
+            "};",
+            "function f() {",
+            "  bar.enabled = true;",
+            "  var ret = bar.baz;",
+            "  bar.enabled = false;",
+            "  return ret;",
+            "};")
+    );
+  }
+
+  public void testEs5Setter() {
+    testSame(
+        LINE_JOINER.join(
+            "var bar = {",
+            "  enabled: false,",
+            "  set baz(x) {",
+            "    this.x = this.enabled ? x * 2 : x;",
+            "  }",
+            "};",
+            "function f() {",
+            "  bar.enabled = true;",
+            "  bar.baz = 10;",
+            "  bar.enabled = false;",
+            "};")
+    );
+  }
+
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

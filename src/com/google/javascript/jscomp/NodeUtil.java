@@ -3389,6 +3389,15 @@ public final class NodeUtil {
   }
 
   /**
+   * @return {@code true} if the node is a definition with Object.defineProperty
+   */
+  static boolean isObjectDefinePropertyDefinition(Node n) {
+    return n.isCall()
+        && n.getChildCount() == 4
+        && n.getFirstChild().matchesQualifiedName("Object.defineProperty");
+  }
+
+  /**
    * @return A list of STRING_KEY properties defined by a Object.defineProperties(o, {...}) call
    */
   static Iterable<Node> getObjectDefinedPropertiesKeys(Node definePropertiesCall) {
@@ -4509,6 +4518,17 @@ public final class NodeUtil {
         && fnNode.getGrandparent() != null
         && fnNode.getGrandparent().isClassMembers()
         && fnNode.getParent().matchesQualifiedName("constructor");
+  }
+
+  static boolean isGetterOrSetter(Node propNode) {
+    if (isGetOrSetKey(propNode)) {
+      return true;
+    }
+    if (!propNode.isStringKey() || !propNode.getFirstChild().isFunction()) {
+      return false;
+    }
+    String keyName = propNode.getString();
+    return keyName.equals("get") || keyName.equals("set");
   }
 
 }
