@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
   static final DiagnosticType AT_EXPORT_IN_GOOG_MODULE =
-      DiagnosticType.disabled(
+      DiagnosticType.error(
           "JSC_AT_EXPORT_IN_GOOG_MODULE",
           "@export has no effect here");
 
