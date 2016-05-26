@@ -1968,6 +1968,39 @@ google.visualization.Table.prototype.setSelection = function(opt_selection) {};
  * @constructor
  * @implements {google.visualization.IChart}
  */
+google.visualization.Timeline = function(container) {};
+
+
+/**
+ * @override
+ */
+google.visualization.Timeline.prototype.clearChart = function() {};
+
+
+/**
+ * @override
+ */
+google.visualization.Timeline.prototype.draw = function(data, opt_options) {};
+
+
+/**
+ * @override
+ */
+google.visualization.Timeline.prototype.getSelection = function() {};
+
+
+/**
+ * @override
+ */
+google.visualization.Timeline.prototype.setSelection = function(opt_selection) {};
+
+
+
+/**
+ * @param {Node} container
+ * @constructor
+ * @implements {google.visualization.IChart}
+ */
 google.visualization.TreeMap = function(container) {};
 
 
