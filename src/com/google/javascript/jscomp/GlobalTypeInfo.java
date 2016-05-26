@@ -565,6 +565,26 @@ class GlobalTypeInfo implements CompilerPass {
       rawType.addProtoProperty(pname, null, resultType, false);
     }
 
+    // Warn when inheriting from incompatible IObject types
+    if (rawType.inheritsFromIObject()) {
+      JSType wrapped = rawType.getInstanceAsJSType();
+      if (wrapped.getIndexType() == null) {
+        warnings.add(JSError.make(
+            rawType.getDefSite(),
+            SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+            rawType.getName(),
+            "IObject<K,V>#index",
+            "the keys K have types that can't be joined."));
+      } else if (wrapped.getIndexedType() == null) {
+        warnings.add(JSError.make(
+            rawType.getDefSite(),
+            SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+            rawType.getName(),
+            "IObject<K,V>#index",
+            "the values V should have a common subtype."));
+      }
+    }
+
     // Warn for a prop declared with @override that isn't overriding anything.
     for (String pname : nonInheritedPropNames) {
       PropertyDef propDef = propertyDefs.get(rawType, pname);

@@ -107,6 +107,10 @@ public final class NominalType {
     return foundIObject ? result : null;
   }
 
+  boolean inheritsFromIObjectReflexive() {
+    return this.rawType.inheritsFromIObjectReflexive();
+  }
+
   boolean isClassy() {
     return !isFunction() && !isBuiltinObject();
   }
@@ -241,9 +245,9 @@ public final class NominalType {
   }
 
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
-    Preconditions.checkState(this.rawType.isFinalized());
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
+      Preconditions.checkState(interf.rawType.isFinalized());
       result.add(interf.instantiateGenerics(typeMap));
     }
     return result.build();

@@ -16150,6 +16150,47 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** !Foo */ x, /** string */ s) {",
         "  x[s];",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface @extends {IObject<string, string>} */",
+        "function Int1() {}",
+        "/** @interface @extends {IObject<string, number>} */",
+        "function Int2() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Int1}",
+        " * @implements {Int2}",
+        " */",
+        "function Foo() {}"),
+        GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface @extends {IObject<string, string>} */",
+        "function Int1() {}",
+        "/** @interface @extends {IObject<string, number>} */",
+        "function Int2() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Int1}",
+        " * @implements {Int2}",
+        " */",
+        "function Foo() {}",
+        // Tests that we don't crash on property accesses of bad IObjects
+        "var /** null */ n = (new Foo)['asdf'+'asdf'];"),
+        GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface @extends {IObject<function(number), number>} */",
+        "function Int1() {}",
+        "/** @interface @extends {IObject<function(string), number>} */",
+        "function Int2() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Int1}",
+        " * @implements {Int2}",
+        " */",
+        "function Foo() {}"),
+        GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 
   public void testDontWarnForMissingReturnOnInfiniteLoop() {

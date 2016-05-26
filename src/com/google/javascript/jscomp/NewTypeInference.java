@@ -2024,7 +2024,7 @@ final class NewTypeInference implements CompilerPass {
         pair = analyzeExprFwd(
             index, pair.env, indexType.isBottom() ? JSType.UNKNOWN : indexType);
         mayWarnAboutBadIObjectIndex(index, recvType, pair.type, indexType);
-        pair.type = recvType.getIndexedType();
+        pair.type = getIndexedTypeOrUnknown(recvType);
         return pair;
       } else if (index.isString()) {
         return analyzePropAccessFwd(receiver, index.getString(), inEnv,
@@ -2831,6 +2831,13 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
+  // Don't always wrap getIndexedType calls with this function. Only do it when
+  // you want to pass around the result type and it has to be non-null.
+  private JSType getIndexedTypeOrUnknown(JSType t) {
+    JSType tmp = t.getIndexedType();
+    return tmp == null ? JSType.UNKNOWN : tmp;
+  }
+
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
       TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     QualifiedName propQname = new QualifiedName(pname);
@@ -3421,7 +3428,7 @@ final class NewTypeInference implements CompilerPass {
     JSType indexType = recvType.getIndexType();
     if (indexType != null) {
       pair = analyzeExprBwd(index, pair.env, indexType);
-      pair.type = recvType.getIndexedType();
+      pair.type = getIndexedTypeOrUnknown(recvType);
       return pair;
     }
     if (index.isString()) {
@@ -3822,7 +3829,7 @@ final class NewTypeInference implements CompilerPass {
     if (mayWarnAboutBadIObjectIndex(prop, recvLvalue.type, pair.type, indexType)) {
       return new LValueResultFwd(pair.env, JSType.UNKNOWN, null, null);
     }
-    JSType inferred = recvLvalue.type.getIndexedType();
+    JSType inferred = getIndexedTypeOrUnknown(recvLvalue.type);
     JSType declared = null;
     if (recvLvalue.declType != null) {
       JSType receiverAdjustedDeclType =

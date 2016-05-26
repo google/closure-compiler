@@ -243,19 +243,22 @@ public final class RawNominalType extends Namespace {
     }
   }
 
-  private boolean inheritsFromIObject() {
-    Preconditions.checkState(!this.isFinalized);
+  boolean inheritsFromIObjectReflexive() {
     if (isBuiltinWithName("IObject")) {
       return true;
     }
     if (this.interfaces != null) {
       for (NominalType interf : this.interfaces) {
-        if (interf.getRawNominalType().inheritsFromIObject()) {
+        if (interf.inheritsFromIObjectReflexive()) {
           return true;
         }
       }
     }
     return false;
+  }
+
+  public boolean inheritsFromIObject() {
+    return !isBuiltinWithName("IObject") && inheritsFromIObjectReflexive();
   }
 
   /** @return Whether the interface can be added without creating a cycle. */
@@ -274,7 +277,7 @@ public final class RawNominalType extends Namespace {
     // TODO(dimvar): When a class extends a class that inherits from IObject,
     // it should be unrestricted.
     for (NominalType interf : interfaces) {
-      if (interf.getRawNominalType().inheritsFromIObject()) {
+      if (interf.getRawNominalType().inheritsFromIObjectReflexive()) {
         this.objectKind = ObjectKind.UNRESTRICTED;
       }
     }
