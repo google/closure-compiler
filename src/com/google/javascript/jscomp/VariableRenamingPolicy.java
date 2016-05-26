@@ -33,8 +33,5 @@ public enum VariableRenamingPolicy {
   /**
    * Rename all variables and functions unless they are exported or externed.
    */
-  ALL,
-
-  // for transitioning off old flags. not for public consumption.
-  UNSPECIFIED
+  ALL
 }

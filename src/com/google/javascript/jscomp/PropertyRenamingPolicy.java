@@ -31,8 +31,5 @@ public enum PropertyRenamingPolicy {
    * achieves better compaction than the others.
    * @see RenameProperties
    */
-  ALL_UNQUOTED,
-
-  // for transitioning off old flags. not for public consumption.
-  UNSPECIFIED
+  ALL_UNQUOTED
 }
