@@ -160,9 +160,16 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
    * TODO(tbreisacher): Switch to using the ES6ModuleLoader once the BUILD graph allows it.
    */
   private static URI createUri(String input) {
-    // Colons might cause URI.create() to fail
-    String forwardSlashes = input.replace(':', '-').replace('\\', '/').replace(" ", "%20");
-    return URI.create(forwardSlashes).normalize();
+    // Handle special characters
+    String encodedInput = input.replace(':', '-')
+        .replace('\\', '/')
+        .replace(" ", "%20")
+        .replace("[", "%5B")
+        .replace("]", "%5D")
+        .replace("<", "%3C")
+        .replace(">", "%3E");
+
+    return URI.create(encodedInput).normalize();
   }
 
   private void orderInput(INPUT input) {

@@ -159,10 +159,16 @@ public final class ES6ModuleLoader {
   }
 
   static URI createUri(String input) {
-    // Colons might cause URI.create() to fail
-    String forwardSlashes =
-        input.replace(':', '-').replace("\\", MODULE_SLASH).replace(" ", "%20");
-    return URI.create(forwardSlashes).normalize();
+    // Handle special characters
+    String encodedInput = input.replace(':', '-')
+        .replace('\\', '/')
+        .replace(" ", "%20")
+        .replace("[", "%5B")
+        .replace("]", "%5D")
+        .replace("<", "%3C")
+        .replace(">", "%3E");
+
+    return URI.create(encodedInput).normalize();
   }
 
   private static String stripJsExtension(String fileName) {
