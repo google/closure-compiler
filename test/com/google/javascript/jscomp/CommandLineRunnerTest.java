@@ -506,7 +506,6 @@ public final class CommandLineRunnerTest extends TestCase {
          "    d = 'css-menu';");
   }
 
-
   public void testIssue70a() {
     args.add("--language_in=ECMASCRIPT5");
     test("function foo({}) {}", RhinoErrorReporter.ES6_FEATURE);
