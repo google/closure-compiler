@@ -674,6 +674,33 @@ PolymerElement.prototype._error = function(var_args) {};
  */
 PolymerElement.prototype._logf = function(var_args) {};
 
+/** @type {boolean} True after this.ready() has run */
+PolymerElement.prototype._readied;
+
+/**
+ * Do not call this function.
+ *
+ * @param {string} path .
+ * @param {*} value .
+ */
+PolymerElement.prototype._notifyPathUp = function(path, value) {};
+
+/**
+ * Do not call this function.
+ *
+ * @param {string} path .
+ * @param {*} value .
+ */
+PolymerElement.prototype._pathEffector = function(path, value) {};
+
+/**
+ * Do not call this function.
+ *
+ * @param {string} path .
+ * @param {*} value .
+ */
+PolymerElement.prototype._propertySetter = function(path, value) {};
+
 
 /**
  * A Polymer DOM API for manipulating DOM such that local DOM and light DOM
