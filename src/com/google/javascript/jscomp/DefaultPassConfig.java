@@ -202,6 +202,25 @@ public final class DefaultPassConfig extends PassConfig {
     return passes;
   }
 
+  private void addOldTypeCheckerPasses(
+      List<PassFactory> checks, CompilerOptions options) {
+    if (options.checkTypes || options.inferTypes) {
+      checks.add(resolveTypes);
+      checks.add(inferTypes);
+      if (options.checkTypes) {
+        checks.add(checkTypes);
+      } else {
+        checks.add(inferJsDocInfo);
+      }
+
+      // We assume that only clients who don't run optimizations will try to
+      // query the typed scope creator after the compile job.
+      if (!options.preservesDetailedSourceInfo()) {
+        checks.add(clearTypedScopePass);
+      }
+    }
+  }
+
   @Override
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
@@ -359,20 +378,14 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(inlineTypeAliases);
 
-    if (options.checkTypes || options.inferTypes) {
-      checks.add(resolveTypes);
-      checks.add(inferTypes);
-      if (options.checkTypes) {
-        checks.add(checkTypes);
-      } else {
-        checks.add(inferJsDocInfo);
-      }
+    if (!options.getNewTypeInference()) {
+      addOldTypeCheckerPasses(checks, options);
+    }
 
-      // We assume that only IDE-mode clients will try to query the
-      // typed scope creator after the compile job.
-      if (!options.preservesDetailedSourceInfo()) {
-        checks.add(clearTypedScopePass);
-      }
+    // NOTE(dimvar): This will move later into the checks as we convert checks
+    // to handle types from the new type inference
+    if (options.getNewTypeInference()) {
+      addOldTypeCheckerPasses(checks, options);
     }
 
     if (options.generateExportsAfterTypeChecking && options.generateExports) {
