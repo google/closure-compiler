@@ -24,7 +24,7 @@ public final class RemoveBodiesTest extends Es6CompilerTestCase {
     return new RemoveBodies(compiler);
   }
 
-  public void disabled_testInferAnnoatedTypeFromInferredType() {
+  public void disabled_testInferAnnotatedTypeFromInferredType() {
     enableTypeCheck();
 
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
