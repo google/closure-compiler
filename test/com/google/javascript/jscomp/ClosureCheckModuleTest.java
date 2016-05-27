@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_MODULE_LEVEL_STATEMENT;
+import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ERROR;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
@@ -308,5 +310,29 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "goog.module('xyz');",
             "",
             "const {assert, fail} = goog.require('goog.asserts');"));
+  }
+
+  public void testIllegalExports() {
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "if (window.exportMe) { exports = 5; }"),
+            EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "window.exportMe && (exports = 5);"),
+            EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "exports = 5;",
+            "exports = 'str';"),
+            EXPORT_REPEATED_ERROR);
   }
 }

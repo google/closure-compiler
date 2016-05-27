@@ -70,6 +70,16 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           "JSC_ONE_REQUIRE_PER_DECLARATION",
           "There may only be one goog.require() per var/let/const declaration.");
 
+  static final DiagnosticType EXPORT_NOT_A_MODULE_LEVEL_STATEMENT =
+      DiagnosticType.error(
+          "JSC_EXPORT_NOT_A_MODULE_LEVEL_STATEMENT",
+          "Exports must be a statement at the top-level of a module");
+
+  static final DiagnosticType EXPORT_REPEATED_ERROR =
+      DiagnosticType.error(
+          "JSC_EXPORT_REPEATED_ERROR",
+          "Name cannot be exported multiple times. Previous export on line {0}.");
+
   static final DiagnosticType REFERENCE_TO_MODULE_GLOBAL_NAME =
       DiagnosticType.error(
           "JSC_REFERENCE_TO_MODULE_GLOBAL_NAME",
@@ -95,6 +105,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
 
   private String currentModuleName = null;
   private Map<String, String> shortRequiredNamespaces = new HashMap<>();
+  private Node defaultExportNode = null;
 
   public ClosureCheckModule(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -141,16 +152,9 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
         break;
       case Token.ASSIGN: {
         Node lhs = n.getFirstChild();
-        if (lhs.isQualifiedName()) {
-          Node root = NodeUtil.getRootOfQualifiedName(lhs);
-          if (root.matchesQualifiedName("exports")
-              && (lhs.isName() || !root.getNext().getString().equals("prototype"))
-              && !NodeUtil.isLegacyGoogModuleFile(NodeUtil.getEnclosingScript(n))) {
-            JSDocInfo jsDoc = n.getJSDocInfo();
-            if (jsDoc != null && jsDoc.isExport()) {
-              t.report(n, AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE);
-            }
-          }
+        if (lhs.isQualifiedName()
+            && NodeUtil.getRootOfQualifiedName(lhs).matchesQualifiedName("exports")) {
+          checkModuleExport(t, n, parent);
         }
         break;
       }
@@ -197,7 +201,32 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       case Token.SCRIPT:
         currentModuleName = null;
         shortRequiredNamespaces.clear();
+        defaultExportNode = null;
         break;
+    }
+  }
+
+  private void checkModuleExport(NodeTraversal t, Node n, Node parent) {
+    Preconditions.checkArgument(n.isAssign());
+    Node lhs = n.getFirstChild();
+    Preconditions.checkState(lhs.isQualifiedName());
+    Preconditions.checkState(NodeUtil.getRootOfQualifiedName(lhs).matchesQualifiedName("exports"));
+    if (lhs.isName()) {
+      if  (defaultExportNode != null) {
+        // Multiple exports
+        t.report(n, EXPORT_REPEATED_ERROR, String.valueOf(defaultExportNode.getLineno()));
+      } else if (!t.inGlobalScope() || !parent.isExprResult()) {
+        // Invalid export location.
+        t.report(n, EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+      }
+      defaultExportNode = lhs;
+    }
+    if ((lhs.isName() || !NodeUtil.isPrototypeProperty(lhs))
+        && !NodeUtil.isLegacyGoogModuleFile(NodeUtil.getEnclosingScript(n))) {
+      JSDocInfo jsDoc = n.getJSDocInfo();
+      if (jsDoc != null && jsDoc.isExport()) {
+        t.report(n, AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE);
+      }
     }
   }
 
