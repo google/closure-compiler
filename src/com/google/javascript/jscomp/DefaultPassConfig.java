@@ -867,7 +867,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.removeUnusedVars || options.removeUnusedLocalVars) {
       if (options.deadAssignmentElimination) {
         passes.add(deadAssignmentsElimination);
-        passes.add(deadPropertyAssignmentElimination);
+        // TODO(kevinoconnor): Reenable this pass globally once breakages are resolved.
+        //passes.add(deadPropertyAssignmentElimination);
       }
       if (!runOptimizeCalls) {
         passes.add(getRemoveUnusedVars("removeUnusedVars", false));
