@@ -1,0 +1,2 @@
+<define-linker name="SingleLinker" class="com.google.gwt.core.linker.SingleScriptLinker" />
+<add-linker name="SingleLinker" />

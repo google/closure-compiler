@@ -17,7 +17,7 @@
   <inherits name="com.google.common.base.Base"/>
   <inherits name="com.google.common.collect.Collect"/>
   <source path="debugging/sourcemap"/>
-  <source path="javascript/jscomp" excludes=".svn,.git,**/ant/**,**/refactoring/**,**/webservice/**,**/testing/**"/>
+  <source path="javascript/jscomp" excludes=".svn,.git,**/ant/**,**/refactoring/**,**/webservice/**,**/testing/**,**/linker/**"/>
   <source path="javascript/rhino" excludes=".svn,.git,**/testing/**"/>
   <super-source path="javascript/jscomp/gwt/super"/>
   <set-property name="user.agent" value="safari"/>
