@@ -213,9 +213,9 @@ public final class DefaultPassConfig extends PassConfig {
         checks.add(inferJsDocInfo);
       }
 
-      // We assume that only clients who don't run optimizations will try to
-      // query the typed scope creator after the compile job.
-      if (!options.preservesDetailedSourceInfo()) {
+      // We assume that only clients who are going to re-compile, or do in-depth static analysis,
+      // will need the typed scope creator after the compile job.
+      if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
         checks.add(clearTypedScopePass);
       }
     }
