@@ -712,7 +712,7 @@ public class Compiler extends AbstractCompiler {
         return;
       }
 
-      if (!options.checksOnly) {
+      if (!options.checksOnly && !options.shouldGenerateTypedExterns()) {
         optimize();
       }
     }

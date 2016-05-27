@@ -109,6 +109,23 @@ public class CompilerOptions {
   private boolean preserveDetailedSourceInfo = false;
   private boolean continueAfterErrors = false;
 
+  /**
+   * Whether the compiler should generate an output file that represents the type-only interface
+   * of the code being compiled.  This is useful for incremental type checking.
+   */
+  private boolean generateTypedExterns;
+
+  public void setIncrementalTypeChecking(boolean value) {
+    generateTypedExterns = value;
+    if (value) {
+      setPreserveTypeAnnotations(value);
+    }
+  }
+
+  public boolean shouldGenerateTypedExterns() {
+    return generateTypedExterns;
+  }
+
   private boolean parseJsDocDocumentation = false;
   private boolean preserveJsDocWhitespace = false;
 

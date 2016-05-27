@@ -704,6 +704,7 @@ public final class CodePrinter {
             options.sourceMapDetailLevel);
     CodeGenerator cg = codeGeneratorFactory.getCodeGenerator(outputFormat, mcp);
 
+    cg.maybeTagAsExterns();
     if (tagAsStrict) {
       cg.tagAsStrict();
     }

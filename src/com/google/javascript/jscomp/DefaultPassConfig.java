@@ -422,10 +422,12 @@ public final class DefaultPassConfig extends PassConfig {
     // If you want to customize the compiler to use a different i18n pass,
     // you can create a PassConfig that calls replacePassFactory
     // to replace this.
-    if (options.replaceMessagesWithChromeI18n) {
-      checks.add(replaceMessagesForChrome);
-    } else if (options.messageBundle != null) {
-      checks.add(replaceMessages);
+    if (!options.shouldGenerateTypedExterns()) {
+      if (options.replaceMessagesWithChromeI18n) {
+        checks.add(replaceMessagesForChrome);
+      } else if (options.messageBundle != null) {
+        checks.add(replaceMessages);
+      }
     }
 
     if (options.getTweakProcessing().isOn()) {
@@ -434,6 +436,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Defines in code always need to be processed.
     checks.add(processDefines);
+
+    if (options.shouldGenerateTypedExterns()) {
+      checks.add(removeBodies);
+    }
 
     if (options.instrumentationTemplate != null ||
         options.recordFunctionInformation) {
@@ -1090,6 +1096,13 @@ public final class DefaultPassConfig extends PassConfig {
       } else {
         return new ErrorPass(compiler, GENERATE_EXPORTS_ERROR);
       }
+    }
+  };
+
+  private final PassFactory removeBodies = new PassFactory("removeBodies", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new RemoveBodies(compiler);
     }
   };
 
