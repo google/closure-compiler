@@ -101,7 +101,7 @@ public final class ParserRunner {
     Node root = null;
     List<Comment> comments = ImmutableList.of();
     FeatureSet features = p.getFeatures();
-    if (tree != null && (!es6ErrorReporter.hadError() || config.preserveDetailedSourceInfo)) {
+    if (tree != null && (!es6ErrorReporter.hadError() || config.keepGoing)) {
       IRFactory factory =
           IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
       root = factory.getResultNode();
