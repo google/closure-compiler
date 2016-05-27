@@ -19,7 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -142,7 +145,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
   /*
    * Eventize DAG represented using adjacency lists.
    */
-  private Map<String, Set<String>> eventizes;
+  private SetMultimap<String, String> eventizes;
 
   /*
    * Maps from eventful object name to state.
@@ -464,13 +467,13 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     /*
      * Topological order of Eventize DAG
      */
-    String[] order = new String[eventizes.size()];
+    String[] order = new String[eventizes.keySet().size()];
 
     /*
      * Perform topological sort
      */
     int white = 0, gray = 1, black = 2;
-    int last = eventizes.size() - 1;
+    int last = eventizes.keySet().size() - 1;
     Map<String, Integer> color = new HashMap<>();
     Stack<String> dfsStack = new Stack<>();
 
@@ -479,7 +482,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
      * Some types are only on one or the other side of the
      * inference.
      */
-    for (Map.Entry<String, Set<String>> eventizesEntry : eventizes.entrySet()) {
+    for (Map.Entry<String, Set<String>> eventizesEntry : Multimaps.asMap(eventizes).entrySet()) {
       color.put(eventizesEntry.getKey(), white);
       for (String s : eventizesEntry.getValue()) {
         color.put(s, white);
@@ -590,7 +593,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     public ComputeEventizeTraversal() {
       isConstructorStack = new Stack<>();
       isDisposalStack = new Stack<>();
-      eventizes = new HashMap<>();
+      eventizes = HashMultimap.create();
     }
 
     private Boolean inConstructorScope() {
@@ -646,13 +649,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
 
     private void addEventizeClass(String className, JSType thatType) {
       String propertyJsTypeName = thatType.getDisplayName();
-
-      Set<String> eventize = eventizes.get(propertyJsTypeName);
-      if (eventize == null) {
-        eventize = new HashSet<>();
-        eventizes.put(propertyJsTypeName, eventize);
-      }
-      eventize.add(className);
+      eventizes.put(propertyJsTypeName, className);
     }
 
     @Override
