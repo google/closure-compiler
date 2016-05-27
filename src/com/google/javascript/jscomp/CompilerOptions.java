@@ -1855,7 +1855,7 @@ public class CompilerOptions {
     setParseJsDocDocumentation(ideMode);
   }
 
-  void setAllowHotswapReplaceScript(boolean allowRecompilation) {
+  public void setAllowHotswapReplaceScript(boolean allowRecompilation) {
     this.allowHotswapReplaceScript = allowRecompilation;
   }
 
