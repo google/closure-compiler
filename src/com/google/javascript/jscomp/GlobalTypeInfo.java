@@ -1845,7 +1845,10 @@ class GlobalTypeInfo implements CompilerPass {
           return objLitType;
         }
         case Token.GETPROP:
-          return simpleInferGetpropType(n);
+          return simpleInferPropAccessType(
+              n.getFirstChild(), n.getLastChild().getString());
+        case Token.GETELEM:
+          return simpleInferGetelemType(n);
         case Token.COMMA:
         case Token.ASSIGN:
           return simpleInferExprType(n.getLastChild());
@@ -1864,7 +1867,6 @@ class GlobalTypeInfo implements CompilerPass {
               return JSType.STRING;
             case BOOLEAN:
               return JSType.BOOLEAN;
-            case UNDETERMINED:
             default:
               return null;
           }
@@ -1883,10 +1885,7 @@ class GlobalTypeInfo implements CompilerPass {
       return null;
     }
 
-    private JSType simpleInferGetpropType(Node n) {
-      Preconditions.checkArgument(n.isGetProp());
-      Node recv = n.getFirstChild();
-      String pname = n.getLastChild().getString();
+    private JSType simpleInferPropAccessType(Node recv, String pname) {
       if (recv.isGetProp() && recv.getLastChild().getString().equals("prototype")) {
         return simpleInferPrototypeProperty(recv.getFirstChild(), pname);
       }
@@ -1909,6 +1908,31 @@ class GlobalTypeInfo implements CompilerPass {
       JSType recvType = simpleInferExprType(recv);
       if (recvType != null && recvType.mayHaveProp(propQname)) {
         return recvType.getProp(propQname);
+      }
+      return null;
+    }
+
+    private JSType simpleInferGetelemType(Node n) {
+      Preconditions.checkState(n.isGetElem());
+      Node recv = n.getFirstChild();
+      Node propNode = n.getLastChild();
+      // As in NewTypeInference.java, we try to treat bracket accesses with a
+      // string literal as precisely as dot accesses.
+      if (propNode.isString()) {
+        JSType propType = simpleInferPropAccessType(recv, propNode.getString());
+        if (propType != null) {
+          return propType;
+        }
+      }
+      JSType recvType = simpleInferExprType(recv);
+      if (recvType != null) {
+        JSType indexType = recvType.getIndexType();
+        if (indexType != null) {
+          JSType propType = simpleInferExprType(propNode);
+          if (propType != null && propType.isSubtypeOf(indexType)) {
+            return recvType.getIndexedType();
+          }
+        }
       }
       return null;
     }

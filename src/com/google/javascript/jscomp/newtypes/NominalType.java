@@ -78,7 +78,7 @@ public final class NominalType {
     // and we use contravariance for the key of the index operation,
     // so we join here.
     JSType result = JSType.BOTTOM;
-    for (NominalType interf : getInstantiatedInterfaces()) {
+    for (NominalType interf : getInstantiatedIObjectInterfaces()) {
       JSType tmp = interf.getIndexType();
       if (tmp != null) {
         result = JSType.join(result, tmp);
@@ -97,7 +97,7 @@ public final class NominalType {
     JSType result = JSType.TOP;
     // We need this because the index type may explicitly be TOP.
     boolean foundIObject = false;
-    for (NominalType interf : getInstantiatedInterfaces()) {
+    for (NominalType interf : getInstantiatedIObjectInterfaces()) {
       JSType tmp = interf.getIndexedType();
       if (tmp != null) {
         foundIObject = true;
@@ -244,11 +244,25 @@ public final class NominalType {
         .substituteGenerics(typeMap);
   }
 
+  // We require finalization for the interfaces here because the inheritance
+  // chain of each type may not be correct until after the type is finalized.
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
+    Preconditions.checkState(this.rawType.isFinalized());
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
-      Preconditions.checkState(interf.rawType.isFinalized());
       result.add(interf.instantiateGenerics(typeMap));
+    }
+    return result.build();
+  }
+
+  // The main difference from getInstantiatedInterfaces is that this method
+  // can be used on non-finalized types.
+  private ImmutableSet<NominalType> getInstantiatedIObjectInterfaces() {
+    ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
+    for (NominalType interf : this.rawType.getInterfaces()) {
+      if (interf.inheritsFromIObjectReflexive()) {
+        result.add(interf.instantiateGenerics(typeMap));
+      }
     }
     return result.build();
   }

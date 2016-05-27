@@ -16801,4 +16801,82 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  return /** @type {!Bar} */ (x);",
         "}"));
   }
+
+  public void testInferConstGetelem() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ i) {",
+        "  /** @const {!Array<number>} */",
+        "  var cells = [1];",
+        "  /** @const */",
+        "  var cell = cells[i];",
+        "  return function() { var /** null */ n = cell; };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ i) {",
+        "  /** @const {!IObject<number,string>} */",
+        "  var cells = ['asdf'];",
+        "  /** @const */",
+        "  var cell = cells[i];",
+        "  return function() { var /** null */ n = cell; };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ i, /** !IObject<string,string> */ cells) {",
+        "  /** @const */",
+        "  var cell = cells[i];",
+        "  return function() { cell; };",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
+        NewTypeInference.INVALID_INDEX_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** {prop: number} */ obj) {",
+        "  /** @const */",
+        "  var x = obj['prop'];",
+        "  return function() { var /** null */ n = x; };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Bar() {}",
+        "/** @constructor @implements {Bar} */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo */ obj) {",
+        "  /** @const */",
+        "  var x = obj['prop'];",
+        "  return function() { var /** null */ n = x; };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Bar() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Bar}",
+        " * @implements {IObject<number, string>}",
+        " */",
+        "function Foo() {}",
+        "function f(/** number */ i, /** !Foo */ obj) {",
+        "  /** @const */",
+        "  var x = obj[i];",
+        "  return function() { var /** null */ n = x; };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !IObject<string, number> */ obj) {",
+        "  /** @const */",
+        "  var x = obj['someString'];",
+        "  return function() { var /** null */ n = x; };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
