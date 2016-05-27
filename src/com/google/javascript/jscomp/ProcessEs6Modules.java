@@ -87,6 +87,8 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
 
   private boolean reportDependencies;
 
+  private Node googRequireInsertSpot;
+
   /**
    * Creates a new ProcessEs6Modules instance which can be used to rewrite
    * ES6 modules to a concatenable form.
@@ -190,7 +192,9 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       Node require = IR.exprResult(
           IR.call(NodeUtil.newQName(compiler, "goog.require"), IR.string(moduleName)));
       require.copyInformationFromForTree(importDecl);
-      script.addChildToFront(require);
+      script.addChildAfter(require, googRequireInsertSpot);
+      googRequireInsertSpot = require;
+
       if (reportDependencies) {
         t.getInput().addRequire(moduleName);
       }
