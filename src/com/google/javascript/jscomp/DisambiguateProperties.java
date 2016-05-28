@@ -502,6 +502,11 @@ class DisambiguateProperties implements CompilerPass {
     }
 
     private void handleObjectLit(NodeTraversal t, Node n) {
+      // Object.defineProperties literals are handled at the CALL node.
+      if (n.getParent().isCall() && NodeUtil.isObjectDefinePropertiesDefinition(n.getParent())) {
+        return;
+      }
+
       for (Node child = n.getFirstChild();
           child != null;
           child = child.getNext()) {
@@ -529,16 +534,21 @@ class DisambiguateProperties implements CompilerPass {
 
     private void handleCall(NodeTraversal t, Node call) {
       Node target = call.getFirstChild();
-      if (!target.isName()) {
+      if (!target.isQualifiedName()) {
         return;
       }
 
-      String renameFunctionName = target.getOriginalQualifiedName();
-      if (renameFunctionName == null
-          || !compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
-        return;
+      String functionName = target.getOriginalQualifiedName();
+      if (functionName != null
+          && compiler.getCodingConvention().isPropertyRenameFunction(functionName)) {
+        handlePropertyRenameFunctionCall(t, call, functionName);
+      } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
+        handleObjectDefineProperties(t, call);
       }
+    }
 
+    private void handlePropertyRenameFunctionCall(
+        NodeTraversal t, Node call, String renameFunctionName) {
       if (call.getChildCount() != 2 && call.getChildCount() != 3) {
         compiler.report(
             JSError.make(
@@ -602,6 +612,25 @@ class DisambiguateProperties implements CompilerPass {
                 String.valueOf(type),
                 renameFunctionName,
                 suggestion));
+      }
+    }
+
+    private void handleObjectDefineProperties(NodeTraversal t, Node call) {
+      Node typeObj = call.getSecondChild();
+      JSType type = getType(typeObj);
+      Node objectLiteral = typeObj.getNext();
+      if (!objectLiteral.isObjectLit()) {
+        return;
+      }
+
+      for (Node key : objectLiteral.children()) {
+        if (key.isQuotedString()) {
+          continue;
+        }
+
+        String propName = key.getString();
+        Property prop = getProperty(propName);
+        prop.scheduleRenaming(key, processProperty(t, prop, type, null));
       }
     }
 

@@ -989,6 +989,88 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(js, result, "{foo=[[F.prototype], [G.prototype]]}");
   }
 
+  public void testObjectLiteralDefineProperties() {
+    String externs =
+        LINE_JOINER.join(
+            "/** @const */ var Object = {};",
+            "Object.defineProperties = function(typeRef, definitions) {}",
+            "/** @constructor */ function FooBar() {}",
+            "/** @type {string} */ FooBar.prototype.bar_;",
+            "/** @type {string} */ FooBar.prototype.bar;");
+
+    String js =
+        LINE_JOINER.join(
+            "/** @struct @constructor */ var Foo = function() {",
+            "  this.bar_ = 'bar';",
+            "};",
+            "/** @type {?} */ Foo.prototype.bar;",
+            "Object.defineProperties(Foo.prototype, {",
+            "  bar: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {Foo} */ get: function() { return this.bar_;},",
+            "    /** @this {Foo} */ set: function(value) { this.bar_ = value; }",
+            "  }",
+            "});");
+
+    String result =
+        LINE_JOINER.join(
+            "/** @struct @constructor */ var Foo = function() {",
+            "  this.Foo$bar_ = 'bar';",
+            "};",
+            "/** @type {?} */ Foo.prototype.Foo_prototype$bar;",
+            "Object.defineProperties(Foo.prototype, {",
+            "  Foo_prototype$bar: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {Foo} */ get: function() { return this.Foo$bar_;},",
+            "    /** @this {Foo} */ set: function(value) { this.Foo$bar_ = value; }",
+            "  }",
+            "});");
+    testSets(externs, js, result, "{bar=[[Foo.prototype]], bar_=[[Foo]]}");
+  }
+
+  public void testObjectLiteralDefinePropertiesQuoted() {
+    String externs =
+        LINE_JOINER.join(
+            "/** @const */ var Object = {};",
+            "Object.defineProperties = function(typeRef, definitions) {}",
+            "/** @constructor */ function FooBar() {}",
+            "/** @type {string} */ FooBar.prototype.bar_;",
+            "/** @type {string} */ FooBar.prototype.bar;");
+
+    String js =
+        LINE_JOINER.join(
+            "/** @struct @constructor */ var Foo = function() {",
+            "  this.bar_ = 'bar';",
+            "};",
+            "/** @type {?} */ Foo.prototype['bar'];",
+            "Object.defineProperties(Foo.prototype, {",
+            "  'bar': {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {Foo} */ get: function() { return this.bar_;},",
+            "    /** @this {Foo} */ set: function(value) { this.bar_ = value; }",
+            "  }",
+            "});");
+
+    String result =
+        LINE_JOINER.join(
+            "/** @struct @constructor */ var Foo = function() {",
+            "  this.Foo$bar_ = 'bar';",
+            "};",
+            "/** @type {?} */ Foo.prototype['bar'];",
+            "Object.defineProperties(Foo.prototype, {",
+            "  'bar': {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {Foo} */ get: function() { return this.Foo$bar_;},",
+            "    /** @this {Foo} */ set: function(value) { this.Foo$bar_ = value; }",
+            "  }",
+            "});");
+    testSets(externs, js, result, "{bar_=[[Foo]]}");
+  }
+
   public void testObjectLiteralLends() {
     String js = ""
         + "var mixin = function(x) { return x; };"
