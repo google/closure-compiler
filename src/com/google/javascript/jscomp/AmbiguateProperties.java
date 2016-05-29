@@ -504,6 +504,10 @@ class AmbiguateProperties implements CompilerPass {
             JSType jstype = getJSType(typeObj);
             Node objectLiteral = typeObj.getNext();
 
+            if (!objectLiteral.isObjectLit()) {
+              break;
+            }
+
             for (Node key : objectLiteral.children()) {
               if (key.isQuotedString()) {
                 continue;

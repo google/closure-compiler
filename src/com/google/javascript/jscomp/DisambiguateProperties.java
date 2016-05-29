@@ -618,6 +618,9 @@ class DisambiguateProperties implements CompilerPass {
       Node typeObj = call.getSecondChild();
       JSType type = getType(typeObj);
       Node objectLiteral = typeObj.getNext();
+      if (!objectLiteral.isObjectLit()) {
+        return;
+      }
 
       for (Node key : objectLiteral.children()) {
         if (key.isQuotedString()) {
