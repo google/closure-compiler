@@ -55,7 +55,7 @@ Stripe.setPublishableKey = function(publishableKey) {};
  *     },
  *     error: {
  *         type: string,
- *		   code: string,
+ *         code: string,
  *         message: string,
  *         param: string
  *     },
@@ -66,7 +66,7 @@ Stripe.setPublishableKey = function(publishableKey) {};
  *     used: boolean
  * }}
  */
-var StripeCardTokenResponse;
+var StripeCardCreateResponse;
 
 /**
  * @typedef {{
@@ -87,7 +87,7 @@ var StripeCardData;
 
 /**
  * @param {StripeCardData} cardData
- * @param {function(string, StripeCardTokenResponse)} callback
+ * @param {function(string, StripeCardCreateResponse)} callback
  */
 Stripe.card.createToken = function(cardData, callback) {};
 
@@ -125,8 +125,32 @@ Stripe.card.cardType = function(cardType) {};
 var StripeAccountData;
 
 /**
+ * @typedef {{
+ *     id: string,
+ *     bank_account: {
+ *         country: string,
+ *         bank_name: string,
+ *         last4: string,
+ *         validated: boolean,
+ *         object: string
+ *     },
+ *     error: {
+ *         type: string,
+ *         message: string,
+ *         param: string  
+ *     },
+ *     created: number,
+ *     livemode: boolean,
+ *     type: string,
+ *     object: string,
+ *     used: boolean
+ * }}
+ */
+var StripeBankAccountCreateResponse;
+
+/**
  * @param {StripeAccountData|Element} accountDataOrForm
- * @param {function(string, Object)} callback
+ * @param {function(string, StripeBankAccountCreateResponse)} callback
  */
 Stripe.bankAccount.createToken = function(accountDataOrForm, callback) {};
 
@@ -150,8 +174,25 @@ Stripe.bankAccount.validateAccountNumber = function(accountNumber, country) {};
 var StripePIIData;
 
 /**
+ * @typedef {{
+ *     id: string,
+ *     error: {
+ *         type: string,
+ *         message: string,
+ *         param: string  
+ *     },
+ *     created: number,
+ *     livemode: boolean,
+ *     type: string,
+ *     object: string,
+ *     used: boolean
+ * }}
+ */
+var StripePIIDataTokenResponse;
+
+/**
  * @param {StripePIIData} piiData
- * @param {function(string, Object)} callback
+ * @param {function(string, StripePIIDataTokenResponse)} callback
  */
 Stripe.piiData.createToken = function(piiData, callback) {};
 
@@ -166,14 +207,44 @@ Stripe.piiData.createToken = function(piiData, callback) {};
 var StripeBitcoinReceiverData;
 
 /**
+ * @typedef {{
+ *     id: string,
+ *     error: {
+ *         type: string,
+ *         message: string,
+ *         param: string  
+ *     },
+ *     object: string,
+ *     active: boolean,
+ *     amount: number,
+ *     amount_received: number,
+ *     bitcoin_amount: number,
+ *     bitcoin_amount_received: number,
+ *     bitcoin_uri: string,
+ *     created: number,
+ *     currency: string,
+ *     description: string,
+ *     email: string,
+ *     filled: boolean,
+ *     inbound_address: string,
+ *     livemode: boolean,
+ *     metadata: Object,
+ *     refund_address: string,
+ *     uncaptured_funds: boolean,
+ *     used_for_payment: boolean
+ * }}
+ */
+var StripeBitcoinReceiverResponse;
+
+/**
  * @param {StripeBitcoinReceiverData} receiverData
- * @param {function(string, Object)} callback
+ * @param {function(string, StripeBitcoinReceiverResponse)} callback
  */
 Stripe.bitcoinReceiver.createReceiver = function(receiverData, callback) {};
 
 /**
  * @param {string} receiverId
- * @param {function(string, Object)} callback
+ * @param {function(string, StripeBitcoinReceiverResponse)} callback
  */
 Stripe.bitcoinReceiver.pollReceiver = function(receiverId, callback) {};
 
