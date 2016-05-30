@@ -188,11 +188,11 @@ var StripePIIData;
  *     used: boolean
  * }}
  */
-var StripePIIDataTokenResponse;
+var StripePIIDataCreateResponse;
 
 /**
  * @param {StripePIIData} piiData
- * @param {function(string, StripePIIDataTokenResponse)} callback
+ * @param {function(string, StripePIIDataCreateResponse)} callback
  */
 Stripe.piiData.createToken = function(piiData, callback) {};
 
