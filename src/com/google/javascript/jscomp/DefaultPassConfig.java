@@ -63,11 +63,14 @@ import java.util.Set;
  * Pass factories and meta-data for native JSCompiler passes.
  *
  * @author nicksantos@google.com (Nick Santos)
+ *
+ * NOTE(dimvar): this needs some non-trivial refactoring. The pass config should
+ * use as little state as possible. The recommended way for a pass to leave
+ * behind some state for a subsequent pass is through the compiler object.
+ * Any other state remaining here should only be used when the pass config is
+ * creating the list of checks and optimizations, not after passes have started
+ * executing. For example, the field namespaceForChecks should be in Compiler.
  */
-// TODO(nicksantos): This needs state for a variety of reasons. Some of it
-// is to satisfy the existing API. Some of it is because passes really do
-// need to share state in non-trivial ways. This should be audited and
-// cleaned up.
 public final class DefaultPassConfig extends PassConfig {
 
   /* For the --mark-as-compiled pass */
