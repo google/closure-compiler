@@ -146,7 +146,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   static final DiagnosticType USE_OF_GOOG_BASE = DiagnosticType.disabled(
       "JSC_USE_OF_GOOG_BASE",
-      "goog.base is not compatible with ES5 strict mode.");
+      "goog.base is not compatible with ES5 strict mode.\n"
+      + " Please use an alternative. \n"
+      + " For EcmaScript classes use the super keyword, for traditional Closure classes\n"
+      + " use the class specific base method instead. For example, for the constructor MyClass:\n"
+      + "   MyClass.base(this, 'constructor')");
 
   /** The root Closure namespace */
   static final String GOOG = "goog";
