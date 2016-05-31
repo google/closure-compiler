@@ -562,12 +562,14 @@ Document.prototype.queryCommandValue;
 /**
  * @see https://developer.mozilla.org/en/DOM/document.write
  * @param {string} text
+ * @return {undefined}
  */
 Document.prototype.write = function(text) {};
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.writeln
  * @param {string} text
+ * @return {undefined}
  */
 Document.prototype.writeln = function(text) {};
 
