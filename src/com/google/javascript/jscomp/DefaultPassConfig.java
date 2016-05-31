@@ -379,7 +379,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(newTypeInference);
     }
 
-    checks.add(inlineTypeAliases);
+    if (!options.allowsHotswapReplaceScript()) {
+      checks.add(inlineTypeAliases);
+    }
 
     if (!options.getNewTypeInference()) {
       addOldTypeCheckerPasses(checks, options);
