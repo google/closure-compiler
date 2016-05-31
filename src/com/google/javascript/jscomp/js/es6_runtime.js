@@ -444,7 +444,7 @@ $jscomp.Map.createHead_ = function() {
  */
 $jscomp.Map.getId_ = function(obj) {
   if (!(obj instanceof Object)) {
-    return String(obj);
+    return "p_" + obj;
   }
   if (!($jscomp.Map.key_ in obj)) {
     if (obj instanceof Object && Object.isExtensible && Object.isExtensible(obj)) {
@@ -452,7 +452,7 @@ $jscomp.Map.getId_ = function(obj) {
     }
   }
   if (!($jscomp.Map.key_ in obj)) {
-    return " " + obj;
+    return "o_" + obj;
   }
   return obj[$jscomp.Map.key_];
 };
@@ -531,7 +531,7 @@ $jscomp.Map.prototype.get = function(key) {
 $jscomp.Map.prototype.maybeGetEntry_ = function(key) {
   /** @const */ var id = $jscomp.Map.getId_(key);
   /** @const */ var list = this.data_[id];
-  if (list) {
+  if (list && Object.prototype.hasOwnProperty.call(this.data_, id)) {
     for (var index = 0;index < list.length;index++) {
       /** @const */ var entry = list[index];
       if (key !== key && entry.key !== entry.key || key === entry.key) {

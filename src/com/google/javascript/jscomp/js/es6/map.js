@@ -92,7 +92,9 @@ $jscomp.Map = class {
     // TODO(sdh): could use goog.getUid for this if it exists.
     // (This might work better with goog.defineClass)
     if (!(obj instanceof Object)) {
-      return String(obj);
+      // Prepend primitives with 'p_', which will avoid potentially dangerous
+      // names like '__proto__', as well as anything from Object.prototype.
+      return 'p_' + obj;
     }
     if (!($jscomp.Map.key_ in obj)) {
       if (obj instanceof Object &&
@@ -105,11 +107,10 @@ $jscomp.Map = class {
       // String representation is best we can do, though it's not stricty
       // guaranteed to be consistent (i.e. for mutable objects).  But for
       // non-extensible objects, there's nothing better we could possibly
-      // use for bucketing.  We prepend ' ' for two reasons: (1) to
-      // separate from objects (whose uids are digits) and (2) to prevent
-      // the illegal key '__proto__'.  This should also prevent any other
-      // weird non-enumerable keys.
-      return ' ' + obj;
+      // use for bucketing.  We prepend 'o_' (for object) for two reasons:
+      // (1) to distinguish generated IDs (which are digits) and primitives,
+      // and (2) to prevent illegal or dangerous keys (see above).
+      return 'o_' + obj;
     }
     return obj[$jscomp.Map.key_];
   }
@@ -233,7 +234,7 @@ $jscomp.Map = class {
   maybeGetEntry_(key) {
     const id = $jscomp.Map.getId_(key);
     const list = this.data_[id];
-    if (list) {
+    if (list && Object.prototype.hasOwnProperty.call(this.data_, id)) {
       for (let index = 0; index < list.length; index++) {
         const entry = list[index];
         if ((key !== key && entry.key !== entry.key) || key === entry.key) {
