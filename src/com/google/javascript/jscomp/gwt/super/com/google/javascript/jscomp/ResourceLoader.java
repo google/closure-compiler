@@ -39,7 +39,7 @@ final class ResourceLoader {
   private static final JsObject RESOURCES = parse(Libraries.INSTANCE.resources().getText());
 
   static String loadTextResource(Class<?> clazz, String path) {
-    String content = RESOURCES.get(path);
+    String content = get(RESOURCES, path);
     if (content != null) {
       return content;
     }
@@ -50,16 +50,16 @@ final class ResourceLoader {
     // TODO(sdh): this is supposed to be relative to the given class, but
     // GWT can't handle that - probably better to remove the class argument
     // and just require that paths be relative to c.g.javascript.jscomp.
-    return RESOURCES.get(path) != null;
+    return get(RESOURCES, path) != null;
   }
 
   public static class JsObject {
     public JsObject() {}
-
-    public final native String get(String key) /*-{
-      return this[key];
-    }-*/;
   }
+
+  private static native String get(JsObject obj, String key) /*-{
+    return obj[key];
+  }-*/;
 
   @JsMethod(namespace = "JSON")
   private static native JsObject parse(String json);
