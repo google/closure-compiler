@@ -1577,3 +1577,125 @@ Number.isSafeInteger = function(value) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
  */
 Object.assign = function(target, var_args) {};
+
+
+
+/**
+ * @const
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect
+ */
+var Reflect = {};
+
+/**
+ * @param {function(this: THIS, ...*): RESULT} target
+ * @param {THIS} thisArg
+ * @param {!Array} argList
+ * @return {RESULT}
+ * @template THIS, RESULT
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/apply
+ */
+Reflect.apply = function(target, thisArg, argList) {};
+
+/**
+ * @param {function(new: ?, ...*)} target
+ * @param {!Array} argList
+ * @param {function(new: TARGET)=} opt_newTarget
+ * @return {TARGET}
+ * @template TARGET
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
+ */
+Reflect.construct = function(target, argList, opt_newTarget) {};
+
+/**
+ * @param {!Object} target
+ * @param {string} propertyKey
+ * @param {!Object} attributes
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty
+ */
+Reflect.defineProperty = function(target, propertyKey, attributes) {};
+
+/**
+ * @param {!Object} target
+ * @param {string} propertyKey
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty
+ */
+Reflect.deleteProperty = function(target, propertyKey) {};
+
+/**
+ * @param {!Object} target
+ * @param {string} propertyKey
+ * @param {!Object=} opt_receiver
+ * @return {*}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get
+ */
+Reflect.get = function(target, propertyKey, opt_receiver) {};
+
+/**
+ * @param {!Object} target
+ * @param {string} propertyKey
+ * @return {?ObjectPropertyDescriptor}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor
+ */
+Reflect.getOwnPropertyDescriptor = function(target, propertyKey) {};
+
+/**
+ * @param {!Object} target
+ * @return {?Object}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getPrototypeOf
+ */
+Reflect.getPrototypeOf = function(target) {};
+
+/**
+ * @param {!Object} target
+ * @param {*} propertyKey
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has
+ */
+Reflect.has = function(target, propertyKey) {};
+
+/**
+ * @param {!Object} target
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/isExtensible
+ */
+Reflect.isExtensible = function(target, propertyKey) {};
+
+/**
+ * @param {!Object} target
+ * @return {!Array<(string|symbol)>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/ownKeys
+ */
+Reflect.ownKeys = function(target) {};
+
+/**
+ * @param {!Object} target
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/preventExtensions
+ */
+Reflect.preventExtensions = function(target) {};
+
+/**
+ * @param {!Object} target
+ * @param {*} propertyKey
+ * @param {*} value
+ * @param {!Object=} opt_receiver
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set
+ */
+Reflect.set = function(target, propertyKey, value, opt_receiver) {};
+
+/**
+ * @param {!Object} target
+ * @param {?Object} proto
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/setPrototypeOf
+ */
+Reflect.setPrototypeOf = function(target, proto) {};
