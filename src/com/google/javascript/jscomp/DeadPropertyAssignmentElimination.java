@@ -46,6 +46,8 @@ import javax.annotation.Nullable;
  * <li>Hook nodes are not processed (it's assumed they read everything)</li>
  * <li>Switch blocks are not processed (it's assumed they read everything)</li>
  * <li>Any reference to a property getter/setter is treated like a call that escapes all props.</li>
+ * <li>If there's an Object.definePropert{y,ies} call where the object or property name is aliased
+ * then the optimization does not run at all.</li>
  * </ul>
  */
 public class DeadPropertyAssignmentElimination implements CompilerPass {
@@ -65,6 +67,12 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
   public void process(Node externs, Node root) {
     GetterSetterCollector getterSetterCollector = new GetterSetterCollector();
     NodeTraversal.traverseEs6(compiler, root, getterSetterCollector);
+
+    // If there's any potentially unknown getter/setter property, back off of the optimization.
+    if (getterSetterCollector.unknownGetterSetterPresent) {
+      return;
+    }
+
     NodeTraversal.traverseEs6(compiler, root,
         new FunctionVisitor(compiler, getterSetterCollector.propNames));
   }
@@ -441,7 +449,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
    * A traversal to find all property names that are defined to have a getter and/or setter
    * associated with them.
    */
-  private static class GetterSetterCollector extends AbstractPostOrderCallback {
+  private static class GetterSetterCollector implements Callback {
 
     /**
      * A set of properties names that are known to be assigned to getter/setters. This is important
@@ -449,8 +457,40 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
      */
     private final Set<String> propNames = new HashSet<>();
 
+    /**
+     * Whether or not a property might have a getter/setter but it could not be statically analyzed
+     * to determine which one.
+     */
+    private boolean unknownGetterSetterPresent = false;
+
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      // Stop the traversal if there's a unknown getter/setter present.
+      return !unknownGetterSetterPresent;
+    }
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      if (NodeUtil.isObjectDefinePropertyDefinition(n)) {
+        // We must assume any property in the compilation can be a getter/setter if any of the
+        // params are potentially aliasing the real values.
+        if (!NodeUtil.isPrototypeProperty(n.getSecondChild())
+            || !n.getChildAtIndex(2).isString()
+            || !n.getChildAtIndex(3).isObjectLit()) {
+          unknownGetterSetterPresent = true;
+          return;
+        }
+      } else if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
+        // If the first param is not a prototype reference or the second param is not an object
+        // literal then we must assume any property in the compilation can be a getter/setter.
+        if (!NodeUtil.isPrototypeProperty(n.getSecondChild())
+            || !n.getChildAtIndex(2).isObjectLit()) {
+          unknownGetterSetterPresent = true;
+          return;
+        }
+      }
+
       // Keep track of any potential getters/setters.
       if (NodeUtil.isGetterOrSetter(n)) {
         Node grandparent = parent.getParent();
