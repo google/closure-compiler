@@ -374,6 +374,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("function f({a,b:[c,d]}){}");
   }
 
+  public void testPrintDestructuringInRestParam() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("function f(...[a,b]){}");
+    assertPrintSame("function f(...{length:num_params}){}");
+  }
+
   public void testDestructuringForInLoops() {
     languageMode = LanguageMode.ECMASCRIPT6;
 

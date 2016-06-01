@@ -131,24 +131,62 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
         compiler.reportCodeChange();
       } else if (param.isDestructuringPattern()) {
-        String tempVarName;
-        JSDocInfo fnJSDoc = NodeUtil.getBestJSDocInfo(function);
-        if (fnJSDoc != null && fnJSDoc.getParameterNameAt(i) != null) {
-          tempVarName = fnJSDoc.getParameterNameAt(i);
-        } else {
-          tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-        }
-        Preconditions.checkState(TokenStream.isJSIdentifier(tempVarName));
-
-        Node newParam = IR.name(tempVarName);
-        newParam.setJSDocInfo(param.getJSDocInfo());
-        paramList.replaceChild(param, newParam);
-        Node newDecl = IR.var(param, IR.name(tempVarName));
-        body.addChildAfter(newDecl, insertSpot);
-        insertSpot = newDecl;
+        insertSpot =
+            replacePatternParamWithTempVar(
+                function, insertSpot, param, getTempParameterName(function, i));
+        compiler.reportCodeChange();
+      } else if (param.isRest() && param.getFirstChild().isDestructuringPattern()) {
+        insertSpot =
+            replacePatternParamWithTempVar(
+                function, insertSpot, param.getFirstChild(), getTempParameterName(function, i));
         compiler.reportCodeChange();
       }
     }
+  }
+
+  /**
+   * Replace a destructuring pattern parameter with a a temporary parameter name and add a new
+   * local variable declaration to the function assigning the temporary parameter to the pattern.
+   *
+   * <p> Note: Rewrites of variable declaration destructuring will happen later to rewrite
+   * this declaration as non-destructured code.
+   * @param function
+   * @param insertSpot The local variable declaration will be inserted after this statement.
+   * @param patternParam
+   * @param tempVarName the name to use for the temporary variable
+   * @return the declaration statement that was generated for the local variable
+   */
+  private Node replacePatternParamWithTempVar(
+      Node function, Node insertSpot, Node patternParam, String tempVarName) {
+    Node newParam = IR.name(tempVarName);
+    newParam.setJSDocInfo(patternParam.getJSDocInfo());
+    patternParam.getParent().replaceChild(patternParam, newParam);
+    Node newDecl = IR.var(patternParam, IR.name(tempVarName));
+    function.getLastChild().addChildAfter(newDecl, insertSpot);
+    return newDecl;
+  }
+
+  /**
+   * Find or create the best name to use for a parameter we need to rewrite.
+   *
+   * <ol>
+   * <li> Use the JS Doc function parameter name at the given index, if possible.
+   * <li> Otherwise, build one of our own.
+   * </ol>
+   * @param function
+   * @param parameterIndex
+   * @return name to use for the given parameter
+   */
+  private String getTempParameterName(Node function, int parameterIndex) {
+    String tempVarName;
+    JSDocInfo fnJSDoc = NodeUtil.getBestJSDocInfo(function);
+    if (fnJSDoc != null && fnJSDoc.getParameterNameAt(parameterIndex) != null) {
+      tempVarName = fnJSDoc.getParameterNameAt(parameterIndex);
+    } else {
+      tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+    }
+    Preconditions.checkState(TokenStream.isJSIdentifier(tempVarName));
+    return tempVarName;
   }
 
   private void visitForOf(Node node) {

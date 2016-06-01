@@ -195,7 +195,12 @@ public class ParseTree {
     return this.type == ParseTreeType.ASSIGNMENT_REST_ELEMENT;
   }
 
-  @Override public String toString() {
+  public boolean isRestParameter() {
+    return this.type == ParseTreeType.REST_PARAMETER;
+  }
+
+  @Override
+  public String toString() {
     return type + "@" + location;
   }
 }

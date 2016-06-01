@@ -1144,12 +1144,9 @@ public class Parser {
   private ParseTree parseParameter(ParamContext context) {
     SourcePosition start = getTreeStartLocation();
     ParseTree parameter = null;
-    boolean isRestParam = false;
 
     if (peek(TokenType.SPREAD)) {
-      isRestParam = true;
-      eat(TokenType.SPREAD);
-      parameter = new RestParameterTree(getTreeLocation(start), eatId());
+      parameter = parseRestParameter();
     } else if (peekId()) {
       parameter = parseIdentifierExpression();
       if (peek(TokenType.QUESTION)) {
@@ -1175,7 +1172,10 @@ public class Parser {
       typeLocation = getTreeLocation(getTreeStartLocation());
     }
 
-    if (context == ParamContext.IMPLEMENTATION && !isRestParam && peek(TokenType.EQUAL)) {
+    if (context == ParamContext.IMPLEMENTATION
+        && !parameter.isRestParameter()
+        && peek(TokenType.EQUAL)) {
+      features = features.require(Feature.DEFAULT_PARAMETERS);
       eat(TokenType.EQUAL);
       ParseTree defaultValue = parseAssignmentExpression();
       parameter = new DefaultParameterTree(getTreeLocation(start), parameter, defaultValue);
@@ -1187,6 +1187,14 @@ public class Parser {
     }
 
     return parameter;
+  }
+
+  private ParseTree parseRestParameter() {
+    features = features.require(Feature.REST_PARAMETERS);
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.SPREAD);
+    return new RestParameterTree(
+        getTreeLocation(start), parseRestAssignmentTarget(PatternKind.INITIALIZER));
   }
 
   private FormalParameterListTree parseFormalParameterList(ParamContext context) {

@@ -16,14 +16,13 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class RestParameterTree extends ParseTree {
-  public final IdentifierToken identifier;
+  public final ParseTree assignmentTarget;
 
-  public RestParameterTree(SourceRange location, IdentifierToken identifier) {
+  public RestParameterTree(SourceRange location, ParseTree assignmentTarget) {
     super(ParseTreeType.REST_PARAMETER, location);
-    this.identifier = identifier;
+    this.assignmentTarget = assignmentTarget;
   }
 }

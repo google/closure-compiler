@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -122,6 +123,12 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.STATEMENT);
     n = IR.exprResult(n);
     expectValid(n, Check.STATEMENT);
+  }
+
+  public void testValidRestParameter() {
+    setLanguage(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    valid("function f(a,...rest){}");
+    valid("function f(a,...[re,...st]){}");
   }
 
   private void valid(String code) {

@@ -1307,9 +1307,11 @@ class IRFactory {
     Node processRestParameter(RestParameterTree tree) {
       maybeWarnEs6Feature(tree, Feature.REST_PARAMETERS);
 
-      Node name = newStringNode(Token.NAME, tree.identifier.value);
-      setSourceInfo(name, tree.identifier);
-      return newNode(Token.REST, name);
+      Node assignmentTarget = transformNodeWithInlineJsDoc(tree.assignmentTarget);
+      if (assignmentTarget.isDestructuringPattern()) {
+        maybeWarnEs6Feature(tree.assignmentTarget, Feature.DESTRUCTURING);
+      }
+      return newNode(Token.REST, assignmentTarget);
     }
 
     Node processSpreadExpression(SpreadExpressionTree tree) {
@@ -2460,7 +2462,15 @@ class IRFactory {
                   type);
               break;
             case REST_PARAMETER:
-              restName = param.asRestParameter().identifier.toString();
+              // TypeScript doesn't allow destructuring parameters, so the assignment target must
+              // be an identifier.
+              restName =
+                  param
+                      .asRestParameter()
+                      .assignmentTarget
+                      .asIdentifierExpression()
+                      .identifierToken
+                      .toString();
               restType = type;
               break;
             default:
@@ -3250,3 +3260,4 @@ class IRFactory {
     return n;
   }
 }
+

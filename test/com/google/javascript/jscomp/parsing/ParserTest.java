@@ -2582,16 +2582,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("(...xs) => xs");
     parse("(x, ...xs) => xs");
     parse("(x, y, ...xs) => xs");
-    expectFeatures();
     parseError("(...xs, x) => xs", "')' expected");
+    parseError(
+        "function f(...a[0]) {}", "Only an identifier or destructuring pattern is allowed here.");
   }
 
-  public void testRestParameters_ES7() {
-    // Invalid in ES6 but will probably be valid in ES7.
-    // See https://github.com/google/closure-compiler/issues/1383
-    parseError("(...[x]) => xs", "'identifier' expected");
-    parseError("(...[x, y]) => xs", "'identifier' expected");
-    parseError("(a, b, c, ...[x, y, z]) => x", "'identifier' expected");
+  public void testDestructuredRestParameters() {
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.REST_PARAMETERS, Feature.DESTRUCTURING);
+    parse("(...[x]) => xs");
+    parse("(...[x, y]) => xs");
+    parse("(a, b, c, ...[x, y, z]) => x");
+    parseError(
+        "function f(...[a[0]]) {}", "Only an identifier or destructuring pattern is allowed here.");
   }
 
   public void testRestParameters_ES5() {
@@ -2604,8 +2607,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testExpressionsThatLookLikeParameters() {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("();", "invalid paren expression");
-    parseError("(...xs);", "invalid paren expression");
     expectFeatures(Feature.REST_PARAMETERS);
+    parseError("(...xs);", "invalid paren expression");
     parseError("(x, ...xs);", "A rest parameter must be in a parameter list.");
     parseError("(a, b, c, ...xs);", "A rest parameter must be in a parameter list.");
   }
@@ -2616,9 +2619,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function f(a=0, ...b) {}");
     parse("function f(a, b=0, ...c) {}");
     parse("function f(a, b=0, c=1, ...d) {}");
-
-    expectFeatures();
-    parseError("function f(...a=3) {}", "',' expected");
+    parseError("function f(a=1, ...b=3) {}", "A default value cannot be specified after '...'");
   }
 
   public void testClass1() {

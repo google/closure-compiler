@@ -790,16 +790,15 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateRest(int type, Node n) {
+  /**
+   * @param contextType A {@link Token} constant value indicating that {@code n} should be validated
+   *     appropriately for a descendant of a {@link Node} of this type.
+   * @param n
+   */
+  private void validateRest(int contextType, Node n) {
     validateNodeType(Token.REST, n);
     validateChildCount(n);
-    if (type == Token.PARAM_LIST) {
-      // TODO(bradfordcsmith): Make destructuring rest parameters work.
-      //     https://github.com/google/closure-compiler/issues/1383
-      validateNonEmptyString(n.getFirstChild());
-    } else {
-      validateLHS(type, n.getFirstChild());
-    }
+    validateLHS(contextType, n.getFirstChild());
   }
 
   private void validateSpread(Node n) {
@@ -846,7 +845,12 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateLHS(int type, Node n) {
+  /**
+   * @param contextType A {@link Token} constant value indicating that {@code n} should be validated
+   *     appropriately for a descendant of a {@link Node} of this type.
+   * @param n
+   */
+  private void validateLHS(int contextType, Node n) {
     if (n.isName()) {
       // Don't use validateName here since this NAME node may have
       // a child.
@@ -856,15 +860,15 @@ public final class AstValidator implements CompilerPass {
         validateExpression(n.getFirstChild());
       }
     } else if (n.isArrayPattern()) {
-      validateArrayPattern(type, n);
+      validateArrayPattern(contextType, n);
     } else if (n.isObjectPattern()) {
-      validateObjectPattern(type, n);
+      validateObjectPattern(contextType, n);
     } else if (n.isDefaultValue()) {
-      validateDefaultValue(type, n);
+      validateDefaultValue(contextType, n);
     } else if (n.isComputedProp()) {
-      validateObjectPatternComputedPropKey(type, n);
+      validateObjectPatternComputedPropKey(contextType, n);
     } else {
-      violation("Invalid child for " + Token.name(type) + " node", n);
+      violation("Invalid child for " + Token.name(contextType) + " node", n);
     }
   }
 
@@ -1475,3 +1479,4 @@ public final class AstValidator implements CompilerPass {
     }
   }
 }
+
