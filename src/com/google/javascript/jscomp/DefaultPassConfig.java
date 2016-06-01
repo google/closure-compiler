@@ -872,8 +872,14 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.removeUnusedVars || options.removeUnusedLocalVars) {
       if (options.deadAssignmentElimination) {
         passes.add(deadAssignmentsElimination);
-        // TODO(kevinoconnor): Reenable this pass globally once breakages are resolved.
-        //passes.add(deadPropertyAssignmentElimination);
+
+        // The Polymer source is usually not included in the compilation, but it creates
+        // getters/setters for many properties in compiled code. Dead property assignment
+        // elimination is only safe when it knows about getters/setters. Therefore, we skip
+        // it if the polymer pass is enabled.
+        if (!options.polymerPass) {
+          passes.add(deadPropertyAssignmentElimination);
+        }
       }
       if (!runOptimizeCalls) {
         passes.add(getRemoveUnusedVars("removeUnusedVars", false));
