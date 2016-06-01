@@ -20,6 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
@@ -48,6 +49,7 @@ import javax.annotation.Nullable;
  * <li>Any reference to a property getter/setter is treated like a call that escapes all props.</li>
  * <li>If there's an Object.definePropert{y,ies} call where the object or property name is aliased
  * then the optimization does not run at all.</li>
+ * <li>Properties names defined in externs will not be pruned.</li>
  * </ul>
  */
 public class DeadPropertyAssignmentElimination implements CompilerPass {
@@ -65,6 +67,12 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    // GatherExternProperties must be enabled for this pass to safely know what property writes are
+    // eligible for removal.
+    if (compiler.getExternProperties() == null) {
+      return;
+    }
+
     GetterSetterCollector getterSetterCollector = new GetterSetterCollector();
     NodeTraversal.traverseEs6(compiler, root, getterSetterCollector);
 
@@ -73,8 +81,9 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       return;
     }
 
-    NodeTraversal.traverseEs6(compiler, root,
-        new FunctionVisitor(compiler, getterSetterCollector.propNames));
+    Set<String> blacklistedPropNames = Sets.union(
+        getterSetterCollector.propNames, compiler.getExternProperties());
+    NodeTraversal.traverseEs6(compiler, root, new FunctionVisitor(compiler, blacklistedPropNames));
   }
 
   private static class FunctionVisitor extends AbstractPostOrderCallback {
@@ -82,14 +91,13 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     private final AbstractCompiler compiler;
 
     /**
-     * A set of properties names that are known to be assigned to getter/setters. This is important
-     * since any reference to these properties needs to be treated as if it were a call.
+     * A set of properties names that are potentially unsafe to remove duplicate writes to.
      */
-    private final Set<String> getterSetterNames;
+    private final Set<String> blacklistedPropNames;
 
-    FunctionVisitor(AbstractCompiler compiler, Set<String> getterSetterNames) {
+    FunctionVisitor(AbstractCompiler compiler, Set<String> blacklistedPropNames) {
       this.compiler = compiler;
-      this.getterSetterNames = getterSetterNames;
+      this.blacklistedPropNames = blacklistedPropNames;
     }
 
     @Override
@@ -104,7 +112,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       }
 
       FindCandidateAssignmentTraversal traversal =
-          new FindCandidateAssignmentTraversal(getterSetterNames, NodeUtil.isConstructor(n));
+          new FindCandidateAssignmentTraversal(blacklistedPropNames, NodeUtil.isConstructor(n));
       NodeTraversal.traverseEs6(compiler, body, traversal);
 
       // Any candidate property assignment can have a write removed if that write is never read
@@ -221,18 +229,17 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     Map<String, Property> propertyMap = new HashMap<>();
 
     /**
-     * A set of properties names that are known to be assigned to getter/setters. This is important
-     * since any reference to these properties needs to be treated as if it were a call.
+     * A set of properties names that are potentially unsafe to remove duplicate writes to.
      */
-    private final Set<String> getterSetterNames;
+    private final Set<String> blacklistedPropNames;
 
     /**
      * Whether or not the function being analyzed is a constructor.
      */
     private final boolean isConstructor;
 
-    FindCandidateAssignmentTraversal(Set<String> getterSetterNames, boolean isConstructor) {
-      this.getterSetterNames = getterSetterNames;
+    FindCandidateAssignmentTraversal(Set<String> blacklistedPropNames, boolean isConstructor) {
+      this.blacklistedPropNames = blacklistedPropNames;
       this.isConstructor = isConstructor;
     }
 
@@ -361,7 +368,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           // Handle potential getters/setters.
           if (n.isGetProp()
               && n.getLastChild().isString()
-              && getterSetterNames.contains(n.getLastChild().getString())) {
+              && blacklistedPropNames.contains(n.getLastChild().getString())) {
             // We treat getters/setters as if they were a call, thus we mark all properties as read.
             markAllPropsRead();
             return true;

@@ -22,6 +22,11 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
+  @Override
+  public void setUp() throws Exception {
+    enableGatherExternProperties();
+  }
+
   public void testBasic() {
     testSame(LINE_JOINER.join(
         "var foo = function() {",
@@ -988,6 +993,43 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testPropertyDefinedInExterns() {
+    String externs = LINE_JOINER.join(
+        "var window = {};",
+        "/** @type {number} */ window.innerWidth",
+        "/** @constructor */",
+        "var Image = function() {};",
+        "/** @type {string} */ Image.prototype.src;"
+    );
+
+    testSame(
+        externs,
+        LINE_JOINER.join(
+            "function z() {",
+            "  window.innerWidth = 10;",
+            "  window.innerWidth = 20;",
+            "}"),
+        null);
+
+    testSame(
+        externs,
+        LINE_JOINER.join(
+            "function z() {",
+            "  var img = new Image();",
+            "  img.src = '';",
+            "  img.src = 'foo.bar';",
+            "}"),
+        null);
+
+    testSame(
+        externs,
+        LINE_JOINER.join(
+            "function z(x) {",
+            "  x.src = '';",
+            "  x.src = 'foo.bar';",
+            "}"),
+        null);
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
