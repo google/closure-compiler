@@ -3174,14 +3174,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
    */
   private Node parseError(String source, String... errors) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
-    Config config = ParserRunner.createConfig(mode, null);
-    config.setPreserveDetailedSourceInfo(isIdeMode);
-    config.setKeepGoing(isIdeMode);
-    config.setParseJsDocDocumentation(isIdeMode);
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("input", false),
         source,
-        config,
+        createConfig(),
         testErrorReporter);
     Node script = result.ast;
 
@@ -3197,7 +3193,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     return script;
   }
 
-
   /**
    * Verify that the given code has the given parse warnings.
    * @return The parse tree.
@@ -3205,14 +3200,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private Node parseWarning(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     StaticSourceFile file = new SimpleSourceFile("input", false);
-    Config config = ParserRunner.createConfig(mode, null);
-    config.setPreserveDetailedSourceInfo(isIdeMode);
-    config.setKeepGoing(isIdeMode);
-    config.setParseJsDocDocumentation(isIdeMode);
     ParserRunner.ParseResult result = ParserRunner.parse(
         file,
         string,
-        config,
+        createConfig(),
         testErrorReporter);
     Node script = result.ast;
 
@@ -3234,6 +3225,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
    */
   private Node parse(String string) {
     return parseWarning(string);
+  }
+
+  private Config createConfig() {
+    if (isIdeMode) {
+      return ParserRunner.createConfig(
+          mode,
+          Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
+          Config.SourceLocationInformation.PRESERVE,
+          Config.RunMode.KEEP_GOING,
+          null);
+    } else {
+      return ParserRunner.createConfig(mode, null);
+    }
   }
 
   /** Sets expectedFeatures based on the list of features. */

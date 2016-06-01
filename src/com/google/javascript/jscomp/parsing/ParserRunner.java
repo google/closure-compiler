@@ -19,7 +19,10 @@ package com.google.javascript.jscomp.parsing;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.Config.RunMode;
+import com.google.javascript.jscomp.parsing.Config.SourceLocationInformation;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.Parser;
 import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
@@ -53,6 +56,21 @@ public final class ParserRunner {
 
   public static Config createConfig(LanguageMode languageMode,
                                     Set<String> extraAnnotationNames) {
+    return createConfig(
+        languageMode,
+        JsDocParsing.TYPES_ONLY,
+        SourceLocationInformation.DISCARD,
+        RunMode.STOP_AFTER_ERROR,
+        extraAnnotationNames);
+  }
+
+  public static Config createConfig(
+      LanguageMode languageMode,
+      JsDocParsing jsdocParsingMode,
+      SourceLocationInformation sourceLocationInfo,
+      RunMode runMode,
+      Set<String> extraAnnotationNames) {
+
     initResourceConfig();
     Set<String> effectiveAnnotationNames;
     if (extraAnnotationNames == null) {
@@ -61,7 +79,13 @@ public final class ParserRunner {
       effectiveAnnotationNames = new HashSet<>(annotationNames);
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
-    return new Config(effectiveAnnotationNames, suppressionNames, languageMode);
+    return new Config(
+        effectiveAnnotationNames,
+        jsdocParsingMode,
+        sourceLocationInfo,
+        runMode,
+        suppressionNames,
+        languageMode);
   }
 
   public static Set<String> getReservedVars() {
@@ -91,8 +115,8 @@ public final class ParserRunner {
       ErrorReporter errorReporter) {
     // TODO(johnlenz): unify "SourceFile", "Es6ErrorReporter" and "Config"
     SourceFile file = new SourceFile(sourceFile.getName(), sourceString);
-    Es6ErrorReporter es6ErrorReporter =
-        new Es6ErrorReporter(errorReporter, config.keepGoing);
+    boolean keepGoing = config.keepGoing == Config.RunMode.KEEP_GOING;
+    Es6ErrorReporter es6ErrorReporter = new Es6ErrorReporter(errorReporter, keepGoing);
     com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
         new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
             config.languageMode));
@@ -101,7 +125,7 @@ public final class ParserRunner {
     Node root = null;
     List<Comment> comments = ImmutableList.of();
     FeatureSet features = p.getFeatures();
-    if (tree != null && (!es6ErrorReporter.hadError() || config.keepGoing)) {
+    if (tree != null && (!es6ErrorReporter.hadError() || keepGoing)) {
       IRFactory factory =
           IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
       root = factory.getResultNode();
@@ -109,7 +133,7 @@ public final class ParserRunner {
       root.setIsSyntheticBlock(true);
       root.putProp(Node.FEATURE_SET, features);
 
-      if (config.preserveDetailedSourceInfo) {
+      if (config.preserveDetailedSourceInfo == Config.SourceLocationInformation.PRESERVE) {
         comments = p.getComments();
       }
     }

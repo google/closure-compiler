@@ -156,14 +156,16 @@ public final class JsDocInfoParser {
 
     this.sourceFile = sourceFile;
 
-    this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
+    boolean parseDocumentation = config.parseJsDocDocumentation.shouldParseDescriptions();
+    this.jsdocBuilder = new JSDocInfoBuilder(parseDocumentation);
     if (comment != null) {
       this.jsdocBuilder.recordOriginalCommentString(comment);
       this.jsdocBuilder.recordOriginalCommentPosition(commentPosition);
     }
     this.annotationNames = config.annotationNames;
     this.suppressionNames = config.suppressionNames;
-    this.preserveWhitespace = config.preserveJsDocWhitespace;
+    this.preserveWhitespace =
+        config.parseJsDocDocumentation == Config.JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
 
     this.errorReporter = errorReporter;
     this.templateNode = this.createTemplateNode();

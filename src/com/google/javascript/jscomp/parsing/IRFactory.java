@@ -281,8 +281,8 @@ class IRFactory {
     this.currentComment = skipNonJsDoc(nextCommentIter);
     this.newlines = new ArrayList<>();
     this.sourceFile = sourceFile;
-    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(
-        config.parseJsDocDocumentation);
+    this.fileLevelJsDocBuilder =
+        new JSDocInfoBuilder(config.parseJsDocDocumentation.shouldParseDescriptions());
 
     // Pre-generate all the newlines in the file.
     for (int charNo = 0; true; charNo++) {
@@ -931,13 +931,13 @@ class IRFactory {
   // Set the length on the node if we're in IDE mode.
   void maybeSetLength(
       Node node, SourcePosition start, SourcePosition end) {
-    if (config.preserveDetailedSourceInfo) {
+    if (config.preserveDetailedSourceInfo == Config.SourceLocationInformation.PRESERVE) {
       node.setLength(end.offset - start.offset);
     }
   }
 
   void maybeSetLengthFrom(Node node, Node ref) {
-    if (config.preserveDetailedSourceInfo) {
+    if (config.preserveDetailedSourceInfo == Config.SourceLocationInformation.PRESERVE) {
       node.setLength(ref.getLength());
     }
   }
@@ -1255,7 +1255,7 @@ class IRFactory {
       if (!isArrow && !isSignature && !bodyNode.isBlock()) {
         // When in "keep going" mode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
-        Preconditions.checkState(config.keepGoing);
+        Preconditions.checkState(config.keepGoing == Config.RunMode.KEEP_GOING);
         bodyNode = IR.block();
       }
       parseDirectives(bodyNode);

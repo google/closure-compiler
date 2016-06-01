@@ -788,10 +788,13 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
 
   private Node parse(String source, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
-    Config config = ParserRunner.createConfig(mode, null);
-    config.setPreserveDetailedSourceInfo(true);
-    config.setKeepGoing(true);
-    config.setParseJsDocDocumentation(true);
+    Config config =
+        ParserRunner.createConfig(
+            mode,
+            Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
+            Config.SourceLocationInformation.PRESERVE,
+            Config.RunMode.KEEP_GOING,
+            null);
     Node script = ParserRunner.parse(
         new SimpleSourceFile("input", false),
         source,

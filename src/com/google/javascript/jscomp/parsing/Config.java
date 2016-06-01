@@ -42,22 +42,34 @@ public final class Config {
   /**
    * Whether to parse the descriptions of JsDoc comments.
    */
-  boolean parseJsDocDocumentation;
+  public enum JsDocParsing {
+    TYPES_ONLY,
+    INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
+    INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
 
-  /**
-   * Whether to preserve whitespace when extracting text from JsDoc comments.
-   */
-  boolean preserveJsDocWhitespace;
+    boolean shouldParseDescriptions() {
+      return this != TYPES_ONLY;
+    }
+  }
+  final JsDocParsing parseJsDocDocumentation;
 
   /**
    * Whether to keep detailed source location information such as the exact length of every node.
    */
-  boolean preserveDetailedSourceInfo;
+  public enum SourceLocationInformation {
+    DISCARD,
+    PRESERVE,
+  }
+  final SourceLocationInformation preserveDetailedSourceInfo;
 
   /**
    * Whether to keep going after encountering a parse error.
    */
-  boolean keepGoing;
+  public enum RunMode {
+    STOP_AFTER_ERROR,
+    KEEP_GOING,
+  }
+  final RunMode keepGoing;
 
   /**
    * Recognized JSDoc annotations, mapped from their name to their internal
@@ -76,7 +88,26 @@ public final class Config {
   final LanguageMode languageMode;
 
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames, LanguageMode languageMode) {
+    this(
+        annotationWhitelist,
+        JsDocParsing.TYPES_ONLY,
+        SourceLocationInformation.DISCARD,
+        RunMode.STOP_AFTER_ERROR,
+        suppressionNames,
+        languageMode);
+  }
+
+  Config(
+      Set<String> annotationWhitelist,
+      JsDocParsing parseJsDocDocumentation,
+      SourceLocationInformation preserveDetailedSourceInfo,
+      RunMode keepGoing,
+      Set<String> suppressionNames,
+      LanguageMode languageMode) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
+    this.parseJsDocDocumentation = parseJsDocDocumentation;
+    this.preserveDetailedSourceInfo = preserveDetailedSourceInfo;
+    this.keepGoing = keepGoing;
     this.suppressionNames = suppressionNames;
     this.languageMode = languageMode;
   }
@@ -99,21 +130,5 @@ public final class Config {
       }
     }
     return annotationBuilder.build();
-  }
-
-  public void setPreserveDetailedSourceInfo(boolean preserveDetailedSourceInfo) {
-    this.preserveDetailedSourceInfo = preserveDetailedSourceInfo;
-  }
-
-  public void setKeepGoing(boolean keepGoing) {
-    this.keepGoing = keepGoing;
-  }
-
-  public void setParseJsDocDocumentation(boolean parseJsDocDocumentation) {
-    this.parseJsDocDocumentation = parseJsDocDocumentation;
-  }
-
-  public void setPreserveJsDocWhitespace(boolean preserveJsDocWhitespace) {
-    this.preserveJsDocWhitespace = preserveJsDocWhitespace;
   }
 }

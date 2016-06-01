@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
@@ -126,8 +127,7 @@ public class CompilerOptions {
     return generateTypedExterns;
   }
 
-  private boolean parseJsDocDocumentation = false;
-  private boolean preserveJsDocWhitespace = false;
+  private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
 
   /**
    * Even if checkTypes is disabled, clients such as IDEs might want to still infer types.
@@ -1852,7 +1852,10 @@ public class CompilerOptions {
     setContinueAfterErrors(ideMode);
     setAllowHotswapReplaceScript(ideMode);
     setPreserveDetailedSourceInfo(ideMode);
-    setParseJsDocDocumentation(ideMode);
+    setParseJsDocDocumentation(
+        ideMode
+            ? Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE
+            : Config.JsDocParsing.TYPES_ONLY);
   }
 
   public void setAllowHotswapReplaceScript(boolean allowRecompilation) {
@@ -1879,14 +1882,23 @@ public class CompilerOptions {
     return continueAfterErrors;
   }
 
-  /**
-   * Enables or disables the parsing of JSDoc documentation. When IDE mode is
-   * enabled then documentation is always parsed.
-   *
-   * @param parseJsDocDocumentation
-   *           True to enable JSDoc documentation parsing, false to disable it.
-   */
+
+  @Deprecated
   public void setParseJsDocDocumentation(boolean parseJsDocDocumentation) {
+    setParseJsDocDocumentation(
+        parseJsDocDocumentation
+            ? Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE
+            : Config.JsDocParsing.TYPES_ONLY);
+  }
+
+  /**
+   * Enables or disables the parsing of JSDoc documentation, and optionally also
+   * the preservation of all whitespace and formatting within a JSDoc comment.
+   * By default, whitespace is collapsed for all comments except {@literal @license} and
+   * {@literal @preserve} blocks,
+   *
+   */
+  public void setParseJsDocDocumentation(Config.JsDocParsing parseJsDocDocumentation) {
     this.parseJsDocDocumentation = parseJsDocDocumentation;
   }
 
@@ -1895,30 +1907,8 @@ public class CompilerOptions {
    *
    * @return True when JSDoc documentation will be parsed, false if not.
    */
-  public boolean isParseJsDocDocumentation() {
+  public Config.JsDocParsing isParseJsDocDocumentation() {
     return this.parseJsDocDocumentation;
-  }
-
-  /**
-   * Enables or disables the preservation of all whitespace and formatting within a JSDoc
-   * comment. By default, whitespace is collapsed for all comments except {@literal @license} and
-   * {@literal @preserve} blocks,
-   *
-   * <p>Setting this option has no effect if {@link #isParseJsDocDocumentation()}
-   * returns false.
-   *
-   * @param preserveJsDocWhitespace
-   *           True to preserve whitespace in text extracted from JSDoc comments.
-   */
-  public void setPreserveJsDocWhitespace(boolean preserveJsDocWhitespace) {
-    this.preserveJsDocWhitespace = preserveJsDocWhitespace;
-  }
-
-  /**
-   * @return Whether to preserve whitespace in all text extracted from JSDoc comments.
-   */
-  public boolean isPreserveJsDocWhitespace() {
-    return preserveJsDocWhitespace;
   }
 
   /**

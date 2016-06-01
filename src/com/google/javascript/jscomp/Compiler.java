@@ -2153,11 +2153,17 @@ public class Compiler extends AbstractCompiler {
   }
 
   protected Config createConfig(Config.LanguageMode mode) {
-    Config config = ParserRunner.createConfig(mode, options.extraAnnotationNames);
-    config.setPreserveDetailedSourceInfo(options.preservesDetailedSourceInfo());
-    config.setKeepGoing(options.canContinueAfterErrors());
-    config.setParseJsDocDocumentation(options.isParseJsDocDocumentation());
-    config.setPreserveJsDocWhitespace(options.isPreserveJsDocWhitespace());
+    Config config =
+        ParserRunner.createConfig(
+            mode,
+            options.isParseJsDocDocumentation(),
+            options.preservesDetailedSourceInfo()
+                ? Config.SourceLocationInformation.PRESERVE
+                : Config.SourceLocationInformation.DISCARD,
+            options.canContinueAfterErrors()
+                ? Config.RunMode.KEEP_GOING
+                : Config.RunMode.STOP_AFTER_ERROR,
+            options.extraAnnotationNames);
     return config;
   }
 

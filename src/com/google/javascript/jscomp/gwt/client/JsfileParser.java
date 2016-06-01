@@ -215,10 +215,10 @@ public class JsfileParser implements EntryPoint {
         ParserRunner.createConfig(
             // TODO(sdh): ES6_STRICT, with a non-strict fallback - then give warnings.
             Config.LanguageMode.ECMASCRIPT6,
+            Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
+            Config.SourceLocationInformation.PRESERVE,
+            Config.RunMode.KEEP_GOING,
             /* extraAnnotationNames */ ImmutableSet.<String>of());
-    config.setPreserveDetailedSourceInfo(true);
-    config.setKeepGoing(true);
-    config.setParseJsDocDocumentation(true);
 
     SourceFile source = SourceFile.fromCode(filename, code);
     FileInfo info = new FileInfo(errorReporter);
