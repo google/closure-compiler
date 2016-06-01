@@ -166,8 +166,7 @@ class InlineVariables implements CompilerPass {
     private void collectAliasCandidates(NodeTraversal t,
         ReferenceMap referenceMap) {
       if (mode != Mode.CONSTANTS_ONLY) {
-        for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
-          Var v = it.next();
+        for (Var v : t.getScope().getVarIterable()) {
           ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
           // NOTE(nicksantos): Don't handle variables that are never used.
@@ -195,9 +194,7 @@ class InlineVariables implements CompilerPass {
 
       boolean maybeModifiedArguments =
           maybeEscapedOrModifiedArguments(t.getScope(), referenceMap);
-      for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
-        Var v = it.next();
-
+      for (Var v : t.getScope().getVarIterable()) {
         ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
         // referenceInfo will be null if we're in constants-only mode

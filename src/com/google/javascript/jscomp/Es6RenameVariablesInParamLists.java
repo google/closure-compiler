@@ -21,7 +21,6 @@ import com.google.javascript.rhino.Node;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -71,8 +70,7 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
     Scope fScope = creator.createScope(n, t.getScope());
     Scope fBlockScope = creator.createScope(block, fScope);
     Map<String, String> currFuncRenameMap = new HashMap<>();
-    for (Iterator<Var> it = fBlockScope.getVars(); it.hasNext();) {
-      Var var = it.next();
+    for (Var var : fBlockScope.getVarIterable()) {
       String oldName = var.getName();
       if (collector.currFuncReferences.contains(oldName)
           && !currFuncRenameMap.containsKey(oldName)) {

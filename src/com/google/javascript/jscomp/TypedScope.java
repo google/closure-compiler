@@ -18,14 +18,13 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -144,6 +143,7 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
     }
   }
 
+  @Override
   Var declare(String name, Node nameNode, CompilerInput input) {
     throw new IllegalStateException(
         "Method declare(untyped) cannot be called on typed scopes.");
@@ -193,6 +193,7 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
     return null;
   }
 
+  @Override
   public Var getArgumentsVar() {
     throw new IllegalStateException("Method getArgumentsVar cannot be called on typed scopes.");
   }
@@ -213,12 +214,8 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
   }
 
   @Override
-  public Iterator<TypedVar> getVars() {
-    return vars.values().iterator();
-  }
-
-  Iterable<Var> getVarIterable() {
-    throw new IllegalStateException("Method getVarIterable cannot be called on typed scopes.");
+  public Iterable<TypedVar> getVarIterable() {
+    return vars.values();
   }
 
   @Override
@@ -241,8 +238,8 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
     return parent != null;
   }
 
-  public Iterator<TypedVar> getDeclarativelyUnboundVarsWithoutTypes() {
-    return Iterators.filter(getVars(), DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES);
+  public Iterable<TypedVar> getDeclarativelyUnboundVarsWithoutTypes() {
+    return Iterables.filter(getVarIterable(), DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES);
   }
 
   static interface TypeResolver {
@@ -263,16 +260,19 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
     this.typeResolver = resolver;
   }
 
+  @Override
   public boolean isBlockScope() {
     // TypedScope is not ES6 compatible yet, so always return false for now.
     return false;
   }
 
+  @Override
   public boolean isFunctionBlockScope() {
     throw new IllegalStateException(
         "Method isFunctionBlockScope cannot be called on typed scopes.");
   }
 
+  @Override
   public Scope getClosestHoistScope() {
     throw new IllegalStateException(
         "Method getClosestHoistScope cannot be called on typed scopes.");

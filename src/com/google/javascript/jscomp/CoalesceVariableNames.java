@@ -35,7 +35,6 @@ import com.google.javascript.rhino.Node;
 
 import java.util.Comparator;
 import java.util.Deque;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.TreeSet;
@@ -174,9 +173,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       // make this fast.
       String pseudoName = null;
       Set<String> allMergedNames = new TreeSet<>();
-      for (Iterator<Var> i = t.getScope().getVars(); i.hasNext();) {
-        Var iVar = i.next();
-
+      for (Var iVar : t.getScope().getVarIterable()) {
         // Look for all the variables that can be merged (in the graph by now)
         // and it is merged with the current coalescedVar.
         if (colorings.peek().getGraph().getNode(iVar) != null
@@ -212,8 +209,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     Scope scope = t.getScope();
 
     // First create a node for each non-escaped variable.
-    for (Iterator<Var> i = scope.getVars(); i.hasNext();) {
-      Var v = i.next();
+    for (Var v : scope.getVarIterable()) {
       if (!escaped.contains(v)) {
 
         // TODO(user): In theory, we CAN coalesce function names just like
@@ -229,13 +225,10 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
 
     // Go through each variable and try to connect them.
-    for (Iterator<Var> i1 = scope.getVars(); i1.hasNext();) {
-      Var v1 = i1.next();
+    for (Var v1 : scope.getVarIterable()) {
 
       NEXT_VAR_PAIR:
-      for (Iterator<Var> i2 = scope.getVars(); i2.hasNext();) {
-        Var v2 = i2.next();
-
+      for (Var v2 : scope.getVarIterable()) {
         // Skip duplicate pairs.
         if (v1.index >= v2.index) {
           continue;

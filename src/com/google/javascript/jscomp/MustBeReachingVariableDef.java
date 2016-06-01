@@ -26,7 +26,6 @@ import com.google.javascript.rhino.Token;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -126,10 +125,9 @@ final class MustBeReachingVariableDef extends
       reachingDef = new HashMap<>();
     }
 
-    public MustDef(Iterator<Var> vars) {
+    public MustDef(Iterable<? extends Var> vars) {
       this();
-      while (vars.hasNext()) {
-        Var var = vars.next();
+      for (Var var : vars) {
         // Every variable in the scope is defined once in the beginning of the
         // function: all the declared variables are undefined, all functions
         // have been assigned and all arguments has its value from the caller.
@@ -209,7 +207,7 @@ final class MustBeReachingVariableDef extends
 
   @Override
   MustDef createEntryLattice() {
-    return new MustDef(jsScope.getVars());
+    return new MustDef(jsScope.getVarIterable());
   }
 
   @Override
@@ -370,8 +368,7 @@ final class MustBeReachingVariableDef extends
   }
 
   private void escapeParameters(MustDef output) {
-    for (Iterator<Var> i = jsScope.getVars(); i.hasNext();) {
-      Var v = i.next();
+    for (Var v : jsScope.getVarIterable()) {
       if (isParameter(v)) {
         // Assume we no longer know where the parameter comes from
         // anymore.

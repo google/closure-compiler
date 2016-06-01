@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.rhino.Node;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -116,12 +115,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       Scope scope = t.getScope();
       if (scope.isFunctionBlockScope()) {
         varsInFunctionBody.clear();
-        for (Iterator<Var> it = scope.getVars(); it.hasNext(); ) {
-          varsInFunctionBody.add(it.next().name);
+        for (Var v : scope.getVarIterable()) {
+          varsInFunctionBody.add(v.name);
         }
       }
-      for (Iterator<Var> it = scope.getVars(); it.hasNext(); ) {
-        Var v = it.next();
+      for (Var v : scope.getVarIterable()) {
         ReferenceCollection referenceCollection = referenceMap.getReferences(v);
         // TODO(moz): Figure out why this could be null
         if (referenceCollection != null) {

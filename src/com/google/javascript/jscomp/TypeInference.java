@@ -106,10 +106,7 @@ class TypeInference
 
     // For each local variable declared with the VAR keyword, the entry
     // type is VOID.
-    Iterator<TypedVar> varIt =
-        functionScope.getDeclarativelyUnboundVarsWithoutTypes();
-    while (varIt.hasNext()) {
-      TypedVar var = varIt.next();
+    for (TypedVar var : functionScope.getDeclarativelyUnboundVarsWithoutTypes()) {
       if (isUnflowable(var)) {
         continue;
       }

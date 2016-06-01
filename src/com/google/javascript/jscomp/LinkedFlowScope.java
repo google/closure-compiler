@@ -26,7 +26,6 @@ import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -219,8 +218,7 @@ class LinkedFlowScope implements FlowScope {
   @Override
   public void completeScope(StaticTypedScope<JSType> staticScope) {
     TypedScope scope = (TypedScope) staticScope;
-    for (Iterator<TypedVar> it = scope.getVars(); it.hasNext();) {
-      TypedVar var = it.next();
+    for (TypedVar var : scope.getVarIterable()) {
       if (var.isTypeInferred()) {
         JSType type = var.getType();
         if (type == null || type.isUnknownType()) {

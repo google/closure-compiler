@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -216,9 +215,7 @@ final class RenameVars implements CompilerPass {
         return;
       }
       Scope scope = t.getScope();
-      Iterator<Var> it = scope.getVars();
-      while (it.hasNext()) {
-        Var current = it.next();
+      for (Var current : scope.getVarIterable()) {
         if (current.isBleedingFunction()) {
           localBleedingFunctions.add(current);
           localBleedingFunctionsPerScope.put(

@@ -21,7 +21,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -191,20 +190,10 @@ public class Scope implements StaticScope {
   }
 
   /**
-   * Return an iterator over all of the variables declared in this scope.
-   */
-  @SuppressWarnings("unchecked")
-  // Untyped scopes always only contain untyped vars; getVars is polymorphic
-  // so that TypedScope#getVars can return Iterator<TypedVar>.
-  public <T extends Var> Iterator<T> getVars() {
-    return (Iterator<T>) vars.values().iterator();
-  }
-
-  /**
    * Return an iterable over all of the variables declared in this scope
    * (except the special 'arguments' variable).
    */
-  Iterable<Var> getVarIterable() {
+  public Iterable<? extends Var> getVarIterable() {
     return vars.values();
   }
 

@@ -76,7 +76,6 @@ import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -293,10 +292,8 @@ final class TypedScopeCreator implements ScopeCreator {
 
     // Remove all variables that were previously declared in this scripts.
     // First find all vars to remove then remove them because of iterator!
-    Iterator<TypedVar> varIter = globalScope.getVars();
     List<TypedVar> varsToRemove = new ArrayList<>();
-    while (varIter.hasNext()) {
-      TypedVar oldVar = varIter.next();
+    for (TypedVar oldVar : globalScope.getVarIterable()) {
       if (scriptName.equals(oldVar.getInputName())) {
         varsToRemove.add(oldVar);
       }
@@ -473,9 +470,8 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       // Resolve types and attach them to scope slots.
-      Iterator<TypedVar> vars = scope.getVars();
-      while (vars.hasNext()) {
-        vars.next().resolveType(typeParsingErrorReporter);
+      for (TypedVar var : scope.getVarIterable()) {
+        var.resolveType(typeParsingErrorReporter);
       }
 
       // Tell the type registry that any remaining types

@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -367,8 +366,7 @@ class RemoveUnusedVars
    * for yet, add it to the list of variables to check later.
    */
   private void collectMaybeUnreferencedVars(Scope scope) {
-    for (Iterator<Var> it = scope.getVars(); it.hasNext(); ) {
-      Var var = it.next();
+    for (Var var : scope.getVarIterable()) {
       if (isRemovableVar(var)) {
         maybeUnreferenced.add(var);
       }

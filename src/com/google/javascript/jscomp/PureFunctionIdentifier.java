@@ -43,7 +43,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -533,9 +532,7 @@ class PureFunctionIdentifier implements CompilerPass {
         return;
       }
 
-      for (Iterator<Var> i = t.getScope().getVars(); i.hasNext();) {
-        Var v = i.next();
-
+      for (Var v : t.getScope().getVarIterable()) {
         boolean param = v.getParentNode().isParamList();
         if (param &&
             !sideEffectInfo.blacklisted().contains(v) &&

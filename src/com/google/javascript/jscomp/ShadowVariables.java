@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.RenameVars.Assignment;
 import com.google.javascript.rhino.Node;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.SortedSet;
@@ -182,9 +181,7 @@ class ShadowVariables implements CompilerPass {
         return;
       }
 
-      for (Iterator<Var> vars = s.getVars(); vars.hasNext();) {
-        Var var = vars.next();
-
+      for (Var var : s.getVarIterable()) {
         // Don't shadow variables that is bleed-out to fix an IE bug.
         if (var.isBleedingFunction()) {
           continue;
