@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -75,12 +75,12 @@ public final class Config {
    * Recognized JSDoc annotations, mapped from their name to their internal
    * representation.
    */
-  final Map<String, Annotation> annotationNames;
+  final ImmutableMap<String, Annotation> annotationNames;
 
   /**
    * Recognized names in a {@code @suppress} tag.
    */
-  final Set<String> suppressionNames;
+  final ImmutableSet<String> suppressionNames;
 
   /**
    * Accept ECMAScript5 syntax, such as getter/setter.
@@ -108,7 +108,7 @@ public final class Config {
     this.parseJsDocDocumentation = parseJsDocDocumentation;
     this.preserveDetailedSourceInfo = preserveDetailedSourceInfo;
     this.keepGoing = keepGoing;
-    this.suppressionNames = suppressionNames;
+    this.suppressionNames = ImmutableSet.copyOf(suppressionNames);
     this.languageMode = languageMode;
   }
 
@@ -116,7 +116,7 @@ public final class Config {
    * Create the annotation names from the user-specified
    * annotation whitelist.
    */
-  private static Map<String, Annotation> buildAnnotationNames(
+  private static ImmutableMap<String, Annotation> buildAnnotationNames(
       Set<String> annotationWhitelist) {
     ImmutableMap.Builder<String, Annotation> annotationBuilder =
         ImmutableMap.builder();
