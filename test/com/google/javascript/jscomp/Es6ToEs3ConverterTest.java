@@ -456,7 +456,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
    * Class expressions that are the RHS of an assignment.
    */
   public void testClassExpressionInAssignment() {
-    // TODO (mattloring) update these tests for unique renaming (CL in review)
     test("goog.example.C = class { }",
         "/** @constructor @struct */ goog.example.C = function() {}");
 
