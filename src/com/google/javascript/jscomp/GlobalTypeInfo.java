@@ -1855,6 +1855,9 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.CALL:
         case Token.NEW:
           return simpleInferCallNewType(n);
+        case Token.AND:
+        case Token.OR:
+          return simpleInferAndOrType(n);
         default:
           switch (NodeUtil.getKnownValueType(n)) {
             case NULL:
@@ -1956,6 +1959,25 @@ class GlobalTypeInfo implements CompilerPass {
             funScope.getDeclaredFunctionType().toFunctionType());
       }
       return null;
+    }
+
+    private JSType simpleInferAndOrType(Node n) {
+      Preconditions.checkState(n.isOr() || n.isAnd());
+      JSType lhs = simpleInferExprType(n.getFirstChild());
+      if (lhs == null) {
+        return null;
+      }
+      JSType rhs = simpleInferExprType(n.getSecondChild());
+      if (rhs == null) {
+        return null;
+      }
+      if (lhs.equals(rhs)) {
+        return lhs;
+      }
+      if (n.isAnd()) {
+        return JSType.join(lhs.specialize(JSType.FALSY), rhs);
+      }
+      return JSType.join(lhs.specialize(JSType.TRUTHY), rhs);
     }
 
     private boolean mayAddPropToType(Node getProp, RawNominalType rawType) {

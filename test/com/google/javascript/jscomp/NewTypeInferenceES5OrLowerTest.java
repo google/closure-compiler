@@ -10421,6 +10421,76 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"));
   }
 
+  public void testConstInferenceAndOf() {
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @const */",
+            "var goog = {};",
+            "/** @const */",
+            "goog.userAgent = {};",
+            "/** @type {boolean} */",
+            "goog.userAgent.IE;",
+            "/**",
+            " * @param {string|number} version",
+            " * @return {boolean}",
+            " */",
+            "goog.userAgent.isVersionOrHigher = function(version) {};"),
+        LINE_JOINER.join(
+            "/** @const */",
+            "var LEGACY = goog.userAgent.IE && !goog.userAgent.isVersionOrHigher(9);",
+            "function f() { var /** number */ n = LEGACY; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(/** ?Foo */ x) {",
+        "  /** @const */",
+        "  var y = x || new Foo;",
+        "  function g() {",
+        "    /** @type {!Foo} */",
+        "    var z = y;",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(/** ?Foo */ x) {",
+        "  /** @const */",
+        "  var y = x && new Foo;",
+        "  function g() {",
+        "    /** @type {!Foo} */",
+        "    var z = y;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x, /** number */ y) {",
+        "  /** @const */",
+        "  var z = x || y;",
+        "  return function() { return z; };",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x, y) {",
+        "  /** @const */",
+        "  var z = x || y;",
+        "  return function() { return z; };",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var x = null || 'asdf';",
+        "function f() {",
+        "  var /** string */ s = x;",
+        "}"));
+  }
+
   public void testSuppressions() {
     typeCheck(LINE_JOINER.join(
         "/**",
