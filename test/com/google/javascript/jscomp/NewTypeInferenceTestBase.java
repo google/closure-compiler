@@ -148,7 +148,27 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           "/** @type {boolean} */",
           "Window.prototype.closed;",
           "/** @type {!Window} */",
-          "var window;");
+          "var window;",
+          "",
+          "/**",
+          " * @interface",
+          " * @extends {IArrayLike<string>}",
+          " */",
+          "var ITemplateArray = function() {};",
+          "",
+          "/** @type {number} */",
+          "ITemplateArray.prototype.length;",
+          "",
+          "/** @type {!IArrayLike<string>} */",
+          "ITemplateArray.prototype.raw;",
+          "",
+          "/**",
+          " * @param {!ITemplateArray} template",
+          " * @param {...*} var_args",
+          " * @return {string}",
+          " */",
+          "String.raw = function(template, var_args) {};",
+          "");
 
   @Override
   protected void setUp() {

@@ -299,8 +299,25 @@ Number.prototype.toLocaleString = function(opt_locales, opt_options) {};
 String.prototype.repeat = function(count) {};
 
 /**
- * @param {string} template
- * @param {...*} var_args
+ * @interface
+ * @extends {IArrayLike<string>}
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-gettemplateobject
+ */
+var ITemplateArray = function() {};
+
+/**
+ * @type {number}
+ */
+ITemplateArray.prototype.length;
+
+/**
+ * @type {!IArrayLike<string>}
+ */
+ITemplateArray.prototype.raw;
+
+/**
+ * @param {!ITemplateArray} template
+ * @param {...*} var_args Substitution values.
  * @return {string}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/raw
  */

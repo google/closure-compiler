@@ -16,7 +16,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -83,10 +86,17 @@ class Es6TemplateLiterals {
     Node raw = createRawStringArray(templateLit);
     Node cooked = createCookedStringArray(templateLit);
 
+    // Specify the type of the first argument to be ITemplateArray.
+    JSTypeExpression nonNullSiteObject = new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("!ITemplateArray"), "<Es6TemplateLiterals.java>");
+    JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+    info.recordType(nonNullSiteObject);
+    Node siteObject = IR.cast(cooked, info.build());
+
     // Create a variable representing the template literal.
     Node callsiteId = IR.name(
         TEMPLATELIT_VAR + t.getCompiler().getUniqueNameIdSupplier().get());
-    Node var = IR.var(callsiteId, cooked).useSourceInfoIfMissingFromForTree(n);
+    Node var = IR.var(callsiteId, siteObject).useSourceInfoIfMissingFromForTree(n);
     Node script = NodeUtil.getEnclosingScript(n);
     script.addChildrenToFront(var);
 
