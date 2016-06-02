@@ -1063,7 +1063,7 @@ class CodeGenerator {
         add("`");
         for (Node c = first; c != null; c = c.getNext()) {
           if (c.isString()) {
-            add(c.getString());
+            add(strEscape(c.getString(), "'", "\"", "\\", false, false));
           } else {
             // Can't use add() since isWordChar('$') == true and cc would add
             // an extra space.
@@ -1655,25 +1655,23 @@ class CodeGenerator {
       singlequote = "\'";
     }
 
-    return strEscape(s, quote, doublequote, singlequote, "\\\\", useSlashV, false);
+    return quote + strEscape(s, doublequote, singlequote, "\\\\", useSlashV, false) + quote;
   }
 
   /** Escapes regular expression */
   String regexpEscape(String s) {
-    return strEscape(s, '/', "\"", "'", "\\", false, true);
+    return '/' + strEscape(s, "\"", "'", "\\", false, true) + '/';
   }
 
   /** Helper to escape JavaScript string as well as regular expression */
   private String strEscape(
       String s,
-      char quote,
       String doublequoteEscape,
       String singlequoteEscape,
       String backslashEscape,
       boolean useSlashV,
       boolean isRegexp) {
     StringBuilder sb = new StringBuilder(s.length() + 2);
-    sb.append(quote);
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
       switch (c) {
@@ -1775,7 +1773,6 @@ class CodeGenerator {
           }
       }
     }
-    sb.append(quote);
     return sb.toString();
   }
 

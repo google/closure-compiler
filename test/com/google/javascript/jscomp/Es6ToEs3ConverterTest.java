@@ -2005,6 +2005,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testUnicodeEscapes() {
     test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
     test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪
+    test("var str = `begin\\u{2026}end`", "var str = 'begin\\u2026end'");
   }
 
   @Override

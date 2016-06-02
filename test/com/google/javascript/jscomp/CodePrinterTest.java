@@ -2212,8 +2212,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testTemplateLiteral() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("`hello`");
-    assertPrint("`hel\rlo`", "`hel\nlo`");
-    assertPrint("`hel\r\nlo`", "`hel\nlo`");
+    assertPrint("`hel\rlo`", "`hel\\nlo`");
+    assertPrint("`hel\r\nlo`", "`hel\\nlo`");
     assertPrint("`hello`\n'world'", "`hello`;\"world\"");
     assertPrint("`hello`\n`world`", "`hello``world`");
     assertPrint("var x=`TestA`\n`TemplateB`", "var x=`TestA``TemplateB`");
@@ -2226,5 +2226,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("(function(){})()`${(function(){})()}`");
     assertPrintSame("url`hello`");
     assertPrintSame("url(`hello`)");
+    assertPrint("`\\u{2026}`", "`\\u2026`");
+    assertPrint("`start\\u{2026}end`", "`start\\u2026end`");
+    assertPrint("`\\u{1f42a}`", "`\\ud83d\\udc2a`");
+    assertPrint("`start\\u{1f42a}end`", "`start\\ud83d\\udc2aend`");
+    assertPrintSame("`\\u2026`");
+    assertPrintSame("`start\\u2026end`");
   }
 }
