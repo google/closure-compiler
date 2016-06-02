@@ -46,3 +46,13 @@ function testRegularAndRest() {
 function testGithub1207(...x) {
   var y = x;
 }
+
+function testRestArrayPattern() {
+  function f(a, ...[re, s, ...t]) { return [a, re, s, t]; }
+
+  var params = f(1, 2, 3, 4, 5);
+  assertEquals(params[0], 1);
+  assertEquals(params[1], 2);
+  assertEquals(params[2], 3);
+  assertArrayEquals(params[3], [4, 5]);
+}
