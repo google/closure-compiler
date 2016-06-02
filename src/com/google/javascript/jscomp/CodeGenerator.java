@@ -345,7 +345,7 @@ class CodeGenerator {
           throw new Error("Expected children to be strings");
         }
 
-        String regexp = regexpEscape(first.getString(), outputCharsetEncoder);
+        String regexp = regexpEscape(first.getString());
 
         // I only use one .add because whitespace matters
         if (childCount == 2) {
@@ -1655,20 +1655,12 @@ class CodeGenerator {
       singlequote = "\'";
     }
 
-    return strEscape(s, quote, doublequote, singlequote, "\\\\",
-        outputCharsetEncoder, useSlashV, false);
+    return strEscape(s, quote, doublequote, singlequote, "\\\\", useSlashV, false);
   }
 
   /** Escapes regular expression */
-  String regexpEscape(String s, OutputCharsetEncoder outputCharsetEncoder) {
-    return strEscape(s, '/', "\"", "'", "\\", outputCharsetEncoder, false, true);
-  }
-
-  /* If the user doesn't want to specify an output charset encoder, assume
-     they want Latin/ASCII characters only.
-   */
   String regexpEscape(String s) {
-    return regexpEscape(s, null);
+    return strEscape(s, '/', "\"", "'", "\\", false, true);
   }
 
   /** Helper to escape JavaScript string as well as regular expression */
@@ -1678,7 +1670,6 @@ class CodeGenerator {
       String doublequoteEscape,
       String singlequoteEscape,
       String backslashEscape,
-      OutputCharsetEncoder outputCharsetEncoder,
       boolean useSlashV,
       boolean isRegexp) {
     StringBuilder sb = new StringBuilder(s.length() + 2);
