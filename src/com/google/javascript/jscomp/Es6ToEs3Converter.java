@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * Converts ES6 code to valid ES5 code. This class does most of the transpilation, and
  * https://github.com/google/closure-compiler/wiki/ECMAScript6 lists which ES6 features are
@@ -637,47 +639,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
     addTypeDeclarations(metadata, enclosingStatement);
 
-    // Classes are @struct by default.
-    if (!newInfo.isUnrestrictedRecorded() && !newInfo.isDictRecorded()
-        && !newInfo.isStructRecorded()) {
-      newInfo.recordStruct();
-    }
-
-    if (ctorJSDocInfo != null) {
-      if (!ctorJSDocInfo.getSuppressions().isEmpty()) {
-        newInfo.recordSuppressions(ctorJSDocInfo.getSuppressions());
-      }
-
-      for (String param : ctorJSDocInfo.getParameterNames()) {
-        newInfo.recordParameter(param, ctorJSDocInfo.getParameterType(param));
-        newInfo.recordParameterDescription(param, ctorJSDocInfo.getDescriptionForParameter(param));
-      }
-
-      for (JSTypeExpression thrown : ctorJSDocInfo.getThrownTypes()) {
-        newInfo.recordThrowType(thrown);
-        newInfo.recordThrowDescription(thrown, ctorJSDocInfo.getThrowsDescriptionForType(thrown));
-      }
-
-      JSDocInfo.Visibility visibility = ctorJSDocInfo.getVisibility();
-      if (visibility != null && visibility != JSDocInfo.Visibility.INHERITED) {
-        newInfo.recordVisibility(visibility);
-      }
-
-      if (ctorJSDocInfo.isDeprecated()) {
-        newInfo.recordDeprecated();
-      }
-
-      if (ctorJSDocInfo.getDeprecationReason() != null
-          && !newInfo.isDeprecationReasonRecorded()) {
-        newInfo.recordDeprecationReason(ctorJSDocInfo.getDeprecationReason());
-      }
-
-      newInfo.mergePropertyBitfieldFrom(ctorJSDocInfo);
-
-      for (String templateType : ctorJSDocInfo.getTemplateTypeNames()) {
-        newInfo.recordTemplateTypeName(templateType);
-      }
-    }
+    updateClassJsDoc(ctorJSDocInfo, newInfo);
 
     if (NodeUtil.isStatement(classNode)) {
       constructor.getFirstChild().setString("");
@@ -708,6 +670,54 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
 
     compiler.reportCodeChange();
+  }
+
+  /**
+   * @param ctorInfo the JSDocInfo from the constructor method of the ES6 class.
+   * @param newInfo the JSDocInfo that will be added to the constructor function in the ES3 output
+   */
+  private void updateClassJsDoc(@Nullable JSDocInfo ctorInfo, JSDocInfoBuilder newInfo) {
+    // Classes are @struct by default.
+    if (!newInfo.isUnrestrictedRecorded() && !newInfo.isDictRecorded()
+        && !newInfo.isStructRecorded()) {
+      newInfo.recordStruct();
+    }
+
+    if (ctorInfo != null) {
+      if (!ctorInfo.getSuppressions().isEmpty()) {
+        newInfo.recordSuppressions(ctorInfo.getSuppressions());
+      }
+
+      for (String param : ctorInfo.getParameterNames()) {
+        newInfo.recordParameter(param, ctorInfo.getParameterType(param));
+        newInfo.recordParameterDescription(param, ctorInfo.getDescriptionForParameter(param));
+      }
+
+      for (JSTypeExpression thrown : ctorInfo.getThrownTypes()) {
+        newInfo.recordThrowType(thrown);
+        newInfo.recordThrowDescription(thrown, ctorInfo.getThrowsDescriptionForType(thrown));
+      }
+
+      JSDocInfo.Visibility visibility = ctorInfo.getVisibility();
+      if (visibility != null && visibility != JSDocInfo.Visibility.INHERITED) {
+        newInfo.recordVisibility(visibility);
+      }
+
+      if (ctorInfo.isDeprecated()) {
+        newInfo.recordDeprecated();
+      }
+
+      if (ctorInfo.getDeprecationReason() != null
+          && !newInfo.isDeprecationReasonRecorded()) {
+        newInfo.recordDeprecationReason(ctorInfo.getDeprecationReason());
+      }
+
+      newInfo.mergePropertyBitfieldFrom(ctorInfo);
+
+      for (String templateType : ctorInfo.getTemplateTypeNames()) {
+        newInfo.recordTemplateTypeName(templateType);
+      }
+    }
   }
 
   /**
