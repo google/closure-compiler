@@ -167,4 +167,31 @@ public class PolymerPassSuppressBehaviorsTest extends Es6CompilerTestCase {
             "};"));
   }
 
+  public void testConstBehaviours() {
+    disableTypeCheck();
+    testEs6(
+        LINE_JOINER.join(
+            "/** @polymerBehavior */",
+            "const FunBehavior = {",
+            "};"),
+
+        LINE_JOINER.join(
+            "/** @polymerBehavior @nocollapse */",
+            "const FunBehavior = {",
+            "};"));
+  }
+
+  public void testLetBehaviours() {
+    disableTypeCheck();
+    testEs6(
+        LINE_JOINER.join(
+            "/** @polymerBehavior */",
+            "let FunBehavior = {",
+            "};"),
+
+        LINE_JOINER.join(
+            "/** @polymerBehavior @nocollapse */",
+            "let FunBehavior = {",
+            "};"));
+  }
 }

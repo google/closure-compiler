@@ -37,7 +37,7 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (isBehavior(n)) {
-      if (!n.isVar() && !n.isAssign()) {
+      if (!NodeUtil.isNameDeclaration(n) && !n.isAssign()) {
         compiler.report(JSError.make(n, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
         return;
       }
@@ -48,7 +48,7 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
       n.setJSDocInfo(newDocs.build());
 
       Node behaviorValue = n.getSecondChild();
-      if (n.isVar()) {
+      if (NodeUtil.isNameDeclaration(n)) {
         behaviorValue = n.getFirstFirstChild();
       }
       suppressBehavior(behaviorValue);
