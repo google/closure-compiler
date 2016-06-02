@@ -16,9 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
-
+import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Tests for {@code CheckEventfulObjectDisposal.java}.
@@ -86,6 +88,32 @@ public final class CheckEventfulObjectDisposalTest extends CompilerTestCase {
             + "goog.inherits(test, goog.Disposable);"
             + "var testObj = new test();";
     testError(js, CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED);
+  }
+
+  public void testAlmostTooManyVariables() {
+    policy = DisposalCheckingPolicy.AGGRESSIVE;
+    List<String> parts = new ArrayList<>();
+    parts.add(CLOSURE_DEFS);
+    parts.add("var test = function() {");
+    parts.add("  var eh = new goog.events.EventHandler();");
+    for (int i = 0; i < LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE - 1; i++) {
+      parts.add("  var v" + i + " = null;");
+    }
+    parts.add("}");
+    testError(LINE_JOINER.join(parts), CheckEventfulObjectDisposal.EVENTFUL_OBJECT_PURELY_LOCAL);
+  }
+
+  public void testTooManyVariables() {
+    policy = DisposalCheckingPolicy.AGGRESSIVE;
+    List<String> parts = new ArrayList<>();
+    parts.add(CLOSURE_DEFS);
+    parts.add("var test = function() {");
+    parts.add("  var eh = new goog.events.EventHandler();");
+    for (int i = 0; i < LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE; i++) {
+      parts.add("  var v" + i + " = null;");
+    }
+    parts.add("}");
+    testSame(LINE_JOINER.join(parts));
   }
 
   public void testLocal() {

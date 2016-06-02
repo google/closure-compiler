@@ -16,13 +16,12 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
+import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -1232,6 +1231,16 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
+      TypedScope scope = t.getTypedScope();
+      if (scope.getVarCount() > LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE) {
+        // Too many variables to analyze, so just assume that all eventful objects are
+        // disposed. This will miss some errors but only in very large scopes.
+        for (TypedVar v : scope.getVarIterable()) {
+          eventfulObjectDisposed(t, v.getNode());
+        }
+        return;
+      }
+
       /*
        * Local variables captured in scope are filtered at present.
        * LiveVariableAnalysis used to filter such variables.
