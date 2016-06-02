@@ -1246,7 +1246,7 @@ class GlobalTypeInfo implements CompilerPass {
           break;
         case Token.NAME: {
           String name = n.getString();
-          if (name == null || "undefined".equals(name) || parent.isFunction()) {
+          if (name == null || parent.isFunction()) {
             return;
           }
           // TODO(dimvar): Handle local scopes introduced by catch properly,
@@ -1858,6 +1858,11 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.AND:
         case Token.OR:
           return simpleInferAndOrType(n);
+        case Token.HOOK: {
+          JSType lhs = simpleInferExprType(n.getSecondChild());
+          JSType rhs = simpleInferExprType(n.getLastChild());
+          return lhs == null || rhs == null ? null : JSType.join(lhs, rhs);
+        }
         default:
           switch (NodeUtil.getKnownValueType(n)) {
             case NULL:

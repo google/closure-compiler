@@ -42,6 +42,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           "goog.nullFunction = function() {};");
   protected static final String DEFAULT_EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
+          "/** @const {undefined} */",
+          "var undefined;",
           "/** @return {string} */",
           "Object.prototype.toString = function() {};",
           "/**",

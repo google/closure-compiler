@@ -8005,8 +8005,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function f(x) { return x; }",
         "/** @const */ var x = f(f ? 'str' : 5);",
-        "function g() { x; }"),
-        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+        "function g() { x; }"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -16948,5 +16947,23 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  return function() { var /** null */ n = x; };",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testInferConstHook() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x, /** string */ y, z) {",
+        "  /** @const */",
+        "  var c = z ? x : y;",
+        "  return function() { var /** null */ w = c; };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x, y, z) {",
+        "  /** @const */",
+        "  var c = z ? x : y;",
+        "  return function() { var /** null */ w = c; };",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
 }
