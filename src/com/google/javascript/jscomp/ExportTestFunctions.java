@@ -31,7 +31,7 @@ public class ExportTestFunctions implements CompilerPass {
 
   private static final Pattern TEST_FUNCTIONS_NAME_PATTERN =
       Pattern.compile(
-          "^(?:((\\w+\\.)+prototype\\.)*" +
+          "^(?:((\\w+\\.)+prototype\\.||window\\.)*" +
           "(setUpPage|setUp|shouldRunTests|tearDown|tearDownPage|test[\\w\\$]+))$");
 
   private AbstractCompiler compiler;
@@ -168,6 +168,9 @@ public class ExportTestFunctions implements CompilerPass {
 
     String testFunctionName =
         NodeUtil.getPrototypePropertyName(node.getFirstChild());
+    if (node.getFirstChild().getQualifiedName().startsWith("window.")) {
+      testFunctionName = node.getFirstChild().getQualifiedName().substring("window.".length());
+    }
     String objectName = fullyQualifiedFunctionName.substring(0,
         fullyQualifiedFunctionName.lastIndexOf('.'));
     String exportCallStr = SimpleFormat.format("%s(%s, '%s', %s);",

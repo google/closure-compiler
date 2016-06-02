@@ -184,6 +184,11 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
          + "google_exportProperty(Foo.prototype, 'testBar', "
          + "Foo.prototype.testBar);");
 
+    test("window.testBar = function() {};",
+         "window.testBar = function() {};"
+         + "google_exportProperty(window, 'testBar', "
+         + "window.testBar);");
+
     test("Foo = {}; Foo.prototype.testBar = function() "
          + "{ var testBaz = function() {}};",
          "Foo = {}; Foo.prototype.testBar = function() "

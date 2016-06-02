@@ -211,6 +211,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("function testSomeFunctionality() {}");
     testSame("var testSomeFunctionality = function() {};");
     testSame("let testSomeFunctionality = function() {};");
+    testSame("window.testSomeFunctionality = function() {};");
     testSame("const testSomeFunctionality = function() {};");
 
     testSame("function setUp() {}");
