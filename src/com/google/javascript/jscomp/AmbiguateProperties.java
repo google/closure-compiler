@@ -510,10 +510,10 @@ class AmbiguateProperties implements CompilerPass {
 
             for (Node key : objectLiteral.children()) {
               if (key.isQuotedString()) {
-                continue;
+                quotedNames.add(key.getString());
+              } else {
+                maybeMarkCandidate(key, jstype);
               }
-
-              maybeMarkCandidate(key, jstype);
             }
           }
           break;
