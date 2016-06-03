@@ -16984,4 +16984,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
+
+  public void testPrototypeTemplateFunctionWithAtTypeJsdoc() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Foo() {};",
+        "/** @type {function(T)} */",
+        "Foo.prototype.m;"));
+  }
 }
