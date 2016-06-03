@@ -511,7 +511,7 @@ public final class NormalizeTest extends CompilerTestCase {
     new WithCollapse().testConstantProperties();
   }
 
-  private class WithCollapse extends CompilerTestCase {
+  private static class WithCollapse extends CompilerTestCase {
     WithCollapse() {
       enableNormalize();
     }

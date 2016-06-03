@@ -602,7 +602,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   /**
    * Mark any visited mapping as "used".
    */
-  private class UsedMappingCheck implements MappingVisitor {
+  private static class UsedMappingCheck implements MappingVisitor {
     /**
      * @throws IOException
      */

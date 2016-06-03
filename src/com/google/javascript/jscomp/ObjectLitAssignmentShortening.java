@@ -40,7 +40,7 @@ class ObjectLitAssignmentShortening implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, new ObjectLitShorteningCallback(compiler));
   }
 
-  private class ObjectLitShorteningCallback extends AbstractPostOrderCallback {
+  private static class ObjectLitShorteningCallback extends AbstractPostOrderCallback {
 
     AbstractCompiler compiler;
 

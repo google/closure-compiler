@@ -210,7 +210,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private final class ScriptDescription {
+  private static final class ScriptDescription {
     boolean isModule;
     boolean declareLegacyNamespace;
     String legacyNamespace; // "a.b.c"

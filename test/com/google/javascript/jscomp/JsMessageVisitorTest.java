@@ -748,7 +748,7 @@ public final class JsMessageVisitorTest extends TestCase {
     }
   }
 
-  private class DummyJsVisitor extends JsMessageVisitor {
+  private static class DummyJsVisitor extends JsMessageVisitor {
 
     private DummyJsVisitor(Style style) {
       super(null, true, style, null);

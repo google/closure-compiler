@@ -101,7 +101,7 @@ class TypeTransformation {
    * A helper class for holding the information about the type variables
    * and the name variables in maprecord expressions
    */
-  private class NameResolver {
+  private static class NameResolver {
     ImmutableMap<String, JSType> typeVars;
     ImmutableMap<String, String> nameVars;
 

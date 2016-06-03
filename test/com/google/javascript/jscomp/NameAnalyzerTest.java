@@ -2075,8 +2075,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     return new MarkNoSideEffectCallsAndNameAnalyzerRunner(compiler);
   }
 
-  private class MarkNoSideEffectCallsAndNameAnalyzerRunner
-      implements CompilerPass {
+  private static class MarkNoSideEffectCallsAndNameAnalyzerRunner implements CompilerPass {
     MarkNoSideEffectCalls markNoSideEffectCalls;
     NameAnalyzer analyzer;
     MarkNoSideEffectCallsAndNameAnalyzerRunner(Compiler compiler) {

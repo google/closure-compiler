@@ -626,7 +626,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
    * Given "foo", finds the statement a = x in
    * foo: a = x;
    */
-  private class LabeledStatementSearcher extends AbstractPostOrderCallback {
+  private static class LabeledStatementSearcher extends AbstractPostOrderCallback {
     Node found = null;
     final String target;
 

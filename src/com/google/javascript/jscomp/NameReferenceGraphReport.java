@@ -289,8 +289,7 @@ final class NameReferenceGraphReport {
    * of DiGraphNodes.  It provides a compare function used by the
    * String class's sort method.
    */
-  class DiGraphNodeComparator implements
-      Comparator<DiGraphNode<Name, Reference>> {
+  static class DiGraphNodeComparator implements Comparator<DiGraphNode<Name, Reference>> {
     @Override
     public int compare(DiGraphNode<Name, Reference> node1,
         DiGraphNode<Name, Reference> node2) {

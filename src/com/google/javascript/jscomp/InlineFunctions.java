@@ -609,7 +609,7 @@ class InlineFunctions implements CompilerPass {
   /**
    * Inline functions at the call sites.
    */
-  private class Inline implements CallVisitorCallback {
+  private static class Inline implements CallVisitorCallback {
     private final FunctionInjector injector;
 
     Inline(FunctionInjector injector) {

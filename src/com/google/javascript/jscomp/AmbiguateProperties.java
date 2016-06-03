@@ -420,7 +420,7 @@ class AmbiguateProperties implements CompilerPass {
     }
   }
 
-  class PropertyGraphNode implements GraphNode<Property, Void> {
+  static class PropertyGraphNode implements GraphNode<Property, Void> {
     Property property;
     protected Annotation annotation;
 

@@ -92,7 +92,7 @@ public class JSDocInfo implements Serializable {
   }
 
   // Bitfield property indicies.
-  class Property {
+  static class Property {
     static final int
       NG_INJECT = 0,
       WIZ_ACTION = 1,

@@ -34,7 +34,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
   // computation.
   private int maxChange = 0;
 
-  private class Counter {
+  private static class Counter {
     int value = 0;
   }
 

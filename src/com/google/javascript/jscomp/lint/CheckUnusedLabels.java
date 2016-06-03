@@ -35,7 +35,7 @@ public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
   public static final DiagnosticType UNUSED_LABEL = DiagnosticType.disabled(
       "JSC_UNUSED_LABEL", "Unused label {0}.");
 
-  private class LabelContext {
+  private static class LabelContext {
     private final String name;
     private final LabelContext parent;
     private boolean used;

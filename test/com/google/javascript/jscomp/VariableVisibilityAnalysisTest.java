@@ -223,7 +223,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
    * Finds the variable for foo in:
    * foo: var a = ...
    */
-  private class LabeledVariableSearcher extends AbstractPostOrderCallback {
+  private static class LabeledVariableSearcher extends AbstractPostOrderCallback {
     Node found = null;
     final String target;
 

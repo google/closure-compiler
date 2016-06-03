@@ -522,7 +522,7 @@ class CrossModuleCodeMotion implements CompilerPass {
     }
   }
 
-  private class InstanceofInfo {
+  private static class InstanceofInfo {
     private final JSModule module;
     private final NamedInfo namedInfo;
 

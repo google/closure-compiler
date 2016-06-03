@@ -720,7 +720,7 @@ public final class RenameVarsTest extends CompilerTestCase {
     }
   }
 
-  private class NormalizePassWrapper implements CompilerPass {
+  private static class NormalizePassWrapper implements CompilerPass {
     private final Compiler compiler;
     private final CompilerPass wrappedPass;
 

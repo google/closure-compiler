@@ -1527,7 +1527,7 @@ public final class FunctionInjectorTest extends TestCase {
     boolean call(NodeTraversal t, Node n, Node parent);
   }
 
-  class TestCallback implements Callback {
+  static class TestCallback implements Callback {
 
     private final String callname;
     private final Method method;

@@ -98,7 +98,7 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
   /**
    * Collects all references in a naive way.
    */
-  private class CollectReferences extends NodeTraversal.AbstractPostOrderCallback {
+  private static class CollectReferences extends NodeTraversal.AbstractPostOrderCallback {
 
     private final Set<String> currFuncReferences = new HashSet<>();
 

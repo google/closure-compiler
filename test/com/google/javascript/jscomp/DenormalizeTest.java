@@ -123,7 +123,7 @@ public final class DenormalizeTest extends CompilerTestCase {
    * causes normalization of the result *and* the expected string, and
    * we really don't want the compiler twisting the expected code around.
    */
-  public final class NormalizeAndDenormalizePass implements CompilerPass {
+  public static final class NormalizeAndDenormalizePass implements CompilerPass {
     Denormalize denormalizePass;
     NormalizeStatements normalizePass;
     AbstractCompiler compiler;

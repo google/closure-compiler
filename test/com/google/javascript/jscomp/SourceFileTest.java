@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 
 public final class SourceFileTest extends TestCase {
 
-  private class ResetableSourceFile extends SourceFile.Preloaded {
+  private static class ResetableSourceFile extends SourceFile.Preloaded {
     ResetableSourceFile(String fileName, String code) {
       super(fileName, null, code);
     }

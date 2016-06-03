@@ -730,7 +730,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * The context of the current name. This includes the NameInfo and the scope
    * if it is a scope defining name (function).
    */
-  private class NameContext {
+  private static class NameContext {
     final NameInfo name;
 
     // If this is a function context, then scope will be the scope of the
