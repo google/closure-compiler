@@ -556,17 +556,15 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(initNameAnalyzeReport);
     }
 
-    // Running this pass before disambiguate properties allow the removing
-    // unused methods that share the same name as methods called from unused
-    // code.
+    // Running smart name removal before disambiguate properties allows disambiguate properties
+    // to be more effective if code that would prevent disambiguation can be removed.
     if (options.extraSmartNameRemoval && options.smartNameRemoval) {
 
       // These passes remove code that is dead because of define flags.
       // If the dead code is weakly typed, running these passes before property
       // disambiguation results in more code removal.
       // The passes are one-time on purpose. (The later runs are loopable.)
-      if (options.foldConstants &&
-          (options.inlineVariables || options.inlineLocalVariables)) {
+      if (options.foldConstants && (options.inlineVariables || options.inlineLocalVariables)) {
         passes.add(earlyInlineVariables);
         passes.add(earlyPeepholeOptimizations);
       }
