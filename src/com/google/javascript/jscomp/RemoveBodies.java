@@ -182,6 +182,7 @@ class RemoveBodies extends AbstractPreOrderCallback implements CompilerPass {
               Node newProtoAssignStmt = NodeUtil.newQNameDeclaration(
                   compiler, className + ".prototype." + pname, null, jsdoc);
               newProtoAssignStmt.useSourceInfoIfMissingFromForTree(expr);
+              // TODO(blickly): Preserve the declaration order of the this properties.
               insertionPoint.getParent().addChildAfter(newProtoAssignStmt, insertionPoint);
               compiler.reportCodeChange();
             }
