@@ -29,7 +29,7 @@ import com.google.javascript.jscomp.ShowByPathWarningsGuard.ShowType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
 import java.util.HashMap;
 import java.util.List;

@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
 /**
  * @author anatol@google.com (Anatol Pomazau)
