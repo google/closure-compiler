@@ -5267,6 +5267,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"));
   }
 
+  public void testAndOrShortCircuiting() {
+    typeCheck(LINE_JOINER.join(
+        "/** @return {string|null} */",
+        "function g() {",
+        "  /** @type {!Array<string|undefined>} */",
+        "  var a = [];",
+        "  return a[123] || null;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @return {number|undefined} */",
+        "function g() {",
+        "  /** @type {!Array<!Object|undefined>} */",
+        "  var a = [];",
+        "  return a[123] && 42;",
+        "}"));
+  }
+
   public void testNonStringComparisons() {
     typeCheck(LINE_JOINER.join(
         "function f(x) {",

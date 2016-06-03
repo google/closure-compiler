@@ -1500,6 +1500,7 @@ final class NewTypeInference implements CompilerPass {
       if (lhsUnspecializedType.isAnyFalsyType()) {
         return rhsPair;
       }
+      lhsPair.type = lhsPair.type.specialize(JSType.TRUTHY);
       return EnvTypePair.join(lhsPair, rhsPair);
     }
     Preconditions.checkState(logicalOp == Token.AND);
@@ -1509,6 +1510,7 @@ final class NewTypeInference implements CompilerPass {
     if (lhsUnspecializedType.isAnyTruthyType()) {
       return rhsPair;
     }
+    lhsPair.type = lhsPair.type.specialize(JSType.FALSY);
     return EnvTypePair.join(lhsPair, rhsPair);
   }
 
