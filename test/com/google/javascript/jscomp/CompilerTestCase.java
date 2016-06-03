@@ -1448,15 +1448,12 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   private void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
-    new Es6RewriteArrowFunction(compiler).process(externsRoot, codeRoot);
-    new Es6RenameVariablesInParamLists(compiler).process(externsRoot, codeRoot);
-    new Es6SplitVariableDeclarations(compiler).process(externsRoot, codeRoot);
-    new Es6RewriteDestructuring(compiler).process(externsRoot, codeRoot);
-
-    new Es6ConvertSuper(compiler).process(externsRoot, codeRoot);
-    new Es6ToEs3Converter(compiler).process(externsRoot, codeRoot);
-    new Es6RewriteBlockScopedDeclaration(compiler).process(externsRoot, codeRoot);
-    new Es6RewriteGenerators(compiler).process(externsRoot, codeRoot);
+    List<PassFactory> factories = new ArrayList<>();
+    TranspilationPasses.addEs6EarlyPasses(factories);
+    TranspilationPasses.addEs6LatePasses(factories);
+    for (PassFactory factory : factories) {
+      factory.create(compiler).process(externsRoot, codeRoot);
+    }
   }
 
   private void validateSourceLocation(JSError jserror) {
