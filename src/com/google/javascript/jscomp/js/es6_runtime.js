@@ -331,11 +331,18 @@ $jscomp.array.copyWithin$install = function() {
  */
 $jscomp.array.fill = function(value, opt_start, opt_end) {
   opt_start = opt_start === undefined ? 0 : opt_start;
-  if (opt_end == null || !value.length) {
-    opt_end = this.length || 0;
+  var length = this.length || 0;
+  if (opt_start < 0) {
+    opt_start = Math.max(0, length + /** @type {number} */ (opt_start));
   }
-  opt_end = Number(opt_end);
-  for (var i = Number(opt_start || 0);i < opt_end;i++) {
+  if (opt_end == null || opt_end > length) {
+    opt_end = length;
+  }
+  opt_end = +opt_end;
+  if (opt_end < 0) {
+    opt_end = Math.max(0, length + opt_end);
+  }
+  for (var i = +(opt_start || 0);i < opt_end;i++) {
     this[i] = value;
   }
   return this;

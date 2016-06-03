@@ -33,25 +33,49 @@ testSuite({
   },
 
   testFill() {
-    let arr = [];
-    arr[6] = 42;
-    assertEquals(arr, arr.fill('x', 2, 5));
-    assertDeepEquals([,, 'x', 'x', 'x',, 42], arr);
+    function fill(arr, ...args) {
+      assertEquals(arr, arr.fill(...args));
+      return arr;
+    }
 
-    assertEquals(arr, arr.fill('y', 4));
-    assertDeepEquals([,, 'x', 'x', 'y', 'y', 'y'], arr);
+    assertObjectEquals([9, 9, 9], fill([1, 2, 3], 9));
+    assertObjectEquals([9, 9, 9, 9], fill(new Array(4), 9));
+    assertObjectEquals([,, 9, 9], fill(new Array(4), 9, 2));
+    assertObjectEquals([9, 9,,,], fill(new Array(4), 9, 0, 2));
 
-    assertEquals(arr, arr.fill('z'));
-    assertDeepEquals(['z', 'z', 'z', 'z', 'z', 'z', 'z'], arr);
+    assertObjectEquals([1, 2, 9, 9, 9], fill([1, 2, 3, 4, 5], 9, 2));
+    assertObjectEquals([1, 9, 9, 9, 5], fill([1, 2, 3, 4, 5], 9, 1, 4));
+    assertObjectEquals([9, 9, 3, 4, 5], fill([1, 2, 3, 4, 5], 9, 0, 2));
+    assertObjectEquals([1, 2, 3, 9, 9], fill([1, 2, 3, 4, 5], 9, -2));
+    assertObjectEquals([1, 9, 9, 9, 9], fill([1, 2, 3, 4, 5], 9, -4));
+    assertObjectEquals([1, 2, 9, 4, 5], fill([1, 2, 3, 4, 5], 9, -3, 3));
+    assertObjectEquals([1, 9, 9, 9, 5], fill([1, 2, 3, 4, 5], 9, -4, -1));
+    assertObjectEquals([1, 2, 9, 4, 5], fill([1, 2, 3, 4, 5], 9, 2, -2));
 
-    arr = {length: 3, 1: 'x', 3: 'safe'};
+    assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, 5));
+    assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, 5, 1));
+    assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, 0, 0));
+    assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, 1, 1));
+    assertObjectEquals([1, 2, 9], fill([1, 2, 3], 9, 2, 5));
+    assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, -6, -4));
+    assertObjectEquals([9, 2, 3], fill([1, 2, 3], 9, -6, -2));
+
+    assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, NaN, NaN));
+    assertObjectEquals([1, 2, 3], fill([1, 2, 3], 9, 1, NaN));
+    assertObjectEquals([9, 2, 3], fill([1, 2, 3], 9, NaN, 1));
+  },
+
+  testFill_arrayLike() {
+    const arr = {length: 3, 1: 'x', 3: 'safe'};
     assertEquals(arr, Array.prototype.fill.call(arr, 'y'));
-    assertDeepEquals({0: 'y', 1: 'y', 2: 'y', 3: 'safe', length: 3}, arr);
+    assertObjectEquals({0: 'y', 1: 'y', 2: 'y', 3: 'safe', length: 3}, arr);
 
-    assertEquals(arr, Array.prototype.fill.call(arr, 'z', void 0, 2));
-    assertDeepEquals({0: 'z', 1: 'z', 2: 'y', 3: 'safe', length: 3}, arr);
+    assertEquals(arr, Array.prototype.fill.call(arr, 'z', undefined, 2));
+    assertObjectEquals({0: 'z', 1: 'z', 2: 'y', 3: 'safe', length: 3}, arr);
+  },
 
-    arr = {2: 'x'}; // does nothing if no length
+  testFill_notArrayLike() {
+    const arr = {2: 'x'}; // does nothing if no length
     assertEquals(arr, Array.prototype.fill.call(noCheck(arr), 'y', 0, 4));
   },
 });
