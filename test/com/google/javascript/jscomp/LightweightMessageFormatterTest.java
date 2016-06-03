@@ -15,9 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
-
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
