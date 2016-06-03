@@ -118,6 +118,12 @@ class PeepholeSubstituteAlternateSyntax
     }
   }
 
+  private static final ImmutableSet<String> BUILTIN_TYPES = ImmutableSet.of(
+      "Object",
+      "Array",
+      "Error",
+      "RegExp");
+
   private Node tryMinimizeWindowRefs(Node node) {
     // Normalization needs to be done to ensure there's no shadowing. The window prefix is also
     // required if the global externs are not on the window.
@@ -132,9 +138,8 @@ class PeepholeSubstituteAlternateSyntax
       Node stringNode = node.getLastChild();
 
       // Since normalization has run we know we're referring to the global window.
-      // TODO(kevinoconnor): Improve the set of standard types that can be folded.
       if ("window".equals(nameNode.getString())
-          && STANDARD_OBJECT_CONSTRUCTORS.contains(stringNode.getString())) {
+          && BUILTIN_TYPES.contains(stringNode.getString())) {
         Node newNameNode = IR.name(stringNode.getString());
         Node parentNode = node.getParent();
 
