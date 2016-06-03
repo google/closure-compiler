@@ -36,7 +36,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
 
   private VariableMap prevUsedPropertyMap = null;
 
-
   public RenamePropertiesTest() {
     super(EXTERNS);
     enableNormalize();
@@ -55,11 +54,28 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     return 1;
   }
 
+  @Override protected CodingConvention getCodingConvention() {
+    return new CodingConventions.Proxy(super.getCodingConvention()) {
+      @Override public boolean blockRenamingForProperty(String name) {
+        return name.endsWith("Exported");
+      }
+    };
+  }
+
   public void testPrototypeProperties() {
     test("Bar.prototype.getA = function(){}; bar.getA();" +
-         "Bar.prototype.getB = function(){};",
+         "Bar.prototype.getB = function(){};" +
+         "Bar.prototype.getC = function(){};",
          "Bar.prototype.a = function(){}; bar.a();" +
-         "Bar.prototype.b = function(){}");
+         "Bar.prototype.b = function(){};" +
+         "Bar.prototype.c = function(){}");
+  }
+
+  public void testExportedByConventionPrototypeProperties() {
+    test("Bar.prototype.getA = function(){}; bar.getA();" +
+         "Bar.prototype.getBExported = function(){}; bar.getBExported()",
+         "Bar.prototype.a = function(){}; bar.a();" +
+         "Bar.prototype.getBExported = function(){}; bar.getBExported()");
   }
 
   public void testPrototypePropertiesAsObjLitKeys1() {
@@ -129,6 +145,11 @@ public final class RenamePropertiesTest extends CompilerTestCase {
          "this.a = 'bar'");
   }
 
+  public void testExportedSetPropertyOfThis() {
+    test("this.propExported = 'bar'",
+         "this.propExported = 'bar'");
+  }
+
   public void testReadPropertyOfThis() {
     test("f(this.prop);",
          "f(this.a);");
@@ -137,6 +158,13 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   public void testObjectLiteralInLocalScope() {
     test("function x() { var foo = {prop1: 'bar', prop2: 'baz'}; }",
          "function x() { var foo = {a: 'bar', b: 'baz'}; }");
+  }
+
+  public void testExportedObjectLiteralInLocalScope() {
+    test("function x() { var foo = {prop1: 'bar', prop2Exported: 'baz'};" +
+         " foo.prop2Exported; }",
+         "function x() { var foo = {a: 'bar', prop2Exported: 'baz'};" +
+         " foo.prop2Exported; }");
   }
 
   public void testIncorrectAttemptToAccessQuotedProperty() {
@@ -385,7 +413,9 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return renameProperties =
-        new RenameProperties(compiler, generatePseudoNames,
+        new RenameProperties(
+            compiler,
+            generatePseudoNames,
             prevUsedPropertyMap,
             new DefaultNameGenerator());
   }

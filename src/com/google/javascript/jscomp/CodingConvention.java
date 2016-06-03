@@ -109,6 +109,18 @@ public interface CodingConvention extends Serializable {
   public boolean isExported(String name);
 
   /**
+   * Check whether the property name is eligible for renaming.
+   *
+   * This method will not block removal or collapsing
+   * of the property; it will just block renaming if the
+   * property is not optimized away.
+   *
+   * @param name A property name.
+   * @return {@code true} if the name can not be renamed.
+   */
+  public boolean blockRenamingForProperty(String name);
+
+  /**
    * @return the package name for the given source file, or null if
    *     no package name is known.
    */

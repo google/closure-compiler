@@ -130,6 +130,11 @@ public final class CodingConventions {
       return isExported(name, false) || isExported(name, true);
     }
 
+     @Override
+    public boolean blockRenamingForProperty(String name) {
+      return  nextConvention.blockRenamingForProperty(name);
+    }
+
     @Override
     public boolean isPrivate(String name) {
       return nextConvention.isPrivate(name);
@@ -368,6 +373,11 @@ public final class CodingConventions {
     @Override
     public boolean isExported(String name) {
       return isExported(name, false) || isExported(name, true);
+    }
+
+    @Override
+    public boolean blockRenamingForProperty(String name) {
+      return false;
     }
 
     @Override

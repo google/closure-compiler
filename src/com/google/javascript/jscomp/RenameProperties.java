@@ -325,17 +325,25 @@ class RenameProperties implements CompilerPass {
         case Token.GETPROP:
           Node propNode = n.getSecondChild();
           if (propNode.isString()) {
+            if (compiler.getCodingConvention().blockRenamingForProperty(
+                propNode.getString())) {
+              externedNames.add(propNode.getString());
+              break;
+            }
             maybeMarkCandidate(propNode);
           }
           break;
         case Token.OBJECTLIT:
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            if (!key.isQuotedString()) {
-              maybeMarkCandidate(key);
-            } else {
+            if (key.isQuotedString()) {
               // Ensure that we never rename some other property in a way
               // that could conflict with this quoted key.
               quotedNames.add(key.getString());
+            } else if (compiler.getCodingConvention().blockRenamingForProperty(
+                key.getString())) {
+              externedNames.add(key.getString());
+            } else {
+              maybeMarkCandidate(key);
             }
           }
           break;
