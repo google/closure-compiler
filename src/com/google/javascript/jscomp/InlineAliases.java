@@ -57,18 +57,38 @@ final class InlineAliases implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, new AliasesInliner());
   }
 
+  /**
+   * Check to see if the scope is global or a nested IIFE
+   */
+  static boolean isScopeGlobalOrIIFE(Scope scope) {
+    if (scope == null) {
+      return false;
+    }
+    while (scope != null && scope.isLocal()) {
+      if (scope.getRootNode().isFunction() && !scope.getRootNode().getParent().isCall()) {
+        return false;
+      }
+      if (!NodeUtil.isExecutedExactlyOnce(scope.getRootNode().getParent())) {
+        return false;
+      }
+
+      scope = scope.getParent();
+    }
+    return scope.isGlobal();
+  }
+
   private class AliasesCollector extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.VAR:
-          if (n.getChildCount() == 1 && t.inGlobalScope()) {
-            visitAliasDefinition(n.getFirstChild(), NodeUtil.getBestJSDocInfo(n.getFirstChild()));
+          if (n.getChildCount() == 1 && isScopeGlobalOrIIFE(t.getScope())) {
+            visitAliasDefinition(t, n.getFirstChild(), NodeUtil.getBestJSDocInfo(n.getFirstChild()));
           }
           break;
         case Token.ASSIGN:
-          if (parent != null && parent.isExprResult() && t.inGlobalScope()) {
-            visitAliasDefinition(n.getFirstChild(), n.getJSDocInfo());
+          if (parent != null && parent.isExprResult() && isScopeGlobalOrIIFE(t.getScope())) {
+            visitAliasDefinition(t, n.getFirstChild(), n.getJSDocInfo());
           }
           break;
       }
@@ -79,15 +99,13 @@ final class InlineAliases implements CompilerPass {
      * Note that since we are doing a post-order traversal, any previous aliases contained in
      * the rhs will have already been substituted by the time we record the new alias.
      */
-    private void visitAliasDefinition(Node lhs, JSDocInfo info) {
+    private void visitAliasDefinition(NodeTraversal t, Node lhs, JSDocInfo info) {
       if (info != null && info.hasConstAnnotation() && !info.hasTypeInformation()
           && lhs.isQualifiedName()) {
         Node rhs = NodeUtil.getRValueOfLValue(lhs);
         if (rhs != null && rhs.isQualifiedName()) {
-          GlobalNamespace.Name lhsName = namespace.getOwnSlot(lhs.getQualifiedName());
           GlobalNamespace.Name rhsName = namespace.getOwnSlot(rhs.getQualifiedName());
-          if (lhsName != null
-              && lhsName.isInlinableGlobalAlias()
+          if (isScopeGlobalOrIIFE(t.getScope())
               && rhsName != null
               && rhsName.isInlinableGlobalAlias()
               && !isPrivate(rhsName.getDeclaration().getNode())) {
@@ -116,7 +134,8 @@ final class InlineAliases implements CompilerPass {
           if (n.isQualifiedName() && aliases.containsKey(n.getQualifiedName())) {
             String leftmostName = NodeUtil.getRootOfQualifiedName(n).getString();
             Var v = t.getScope().getVar(leftmostName);
-            if (v != null && v.isLocal()) {
+
+            if (v != null && !isScopeGlobalOrIIFE(v.getScope())) {
               // Shadow of alias. Don't rewrite
               return;
             }
