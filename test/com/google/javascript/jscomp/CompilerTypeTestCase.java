@@ -24,6 +24,11 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 import java.util.Arrays;
 
+/**
+ * This class is mostly used by passes testing the old type checker.
+ * Passes that run after type checking and need type information use
+ * the class TypeICompilerTestCase.
+ */
 abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
 
   static final String CLOSURE_DEFS =

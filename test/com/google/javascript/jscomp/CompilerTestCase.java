@@ -410,7 +410,6 @@ public abstract class CompilerTestCase extends TestCase {
   // that rewrite the AST prior to typechecking, eg, AngularPass or PolymerPass.
   public void enableNewTypeInference() {
     this.newTypeInferenceEnabled = true;
-    this.runNTIAfterProcessing = true;
   }
 
   /**
