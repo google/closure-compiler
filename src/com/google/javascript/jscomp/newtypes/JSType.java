@@ -834,14 +834,19 @@ public abstract class JSType implements TypeI {
       return makeTruthy();
     }
     if (hasTruthyMask()) {
-      return other.makeTruthy();
+      // If the only thing we know about this type is that it's truthy, that's very
+      // little information, so we loosen the other type to avoid spurious warnings.
+      JSType otherTruthy = other.makeTruthy();
+      return otherTruthy.hasNonScalar()
+          ? otherTruthy.withLoose()
+          : otherTruthy;
     }
     if (other.hasFalsyMask()) {
       return makeFalsy();
     }
-    // NOTE(dimvar): I couldn't find a case where this.hasFalsyMask(). If the
-    // preconditions check breaks, add code analogous to the hasTruthyMask case.
-    Preconditions.checkState(!hasFalsyMask());
+    if (hasFalsyMask()) {
+      return other.makeFalsy();
+    }
     if (this.isTop()) {
       return other;
     }
@@ -981,16 +986,22 @@ public abstract class JSType implements TypeI {
   }
 
   private JSType makeTruthy() {
-    if (this.isTop() || this.isUnknown()) {
+    if (this.isTop()) {
       return this;
+    }
+    if (this.isUnknown()) {
+      return TRUTHY;
     }
     return makeType(getMask() & ~NULL_MASK & ~FALSE_MASK & ~UNDEFINED_MASK,
         getObjs(), getTypeVar(), getEnums());
   }
 
   private JSType makeFalsy() {
-    if (this.isTop() || this.isUnknown()) {
+    if (this.isTop()) {
       return this;
+    }
+    if (this.isUnknown()) {
+      return FALSY;
     }
     return makeType(getMask() & ~TRUE_MASK & ~NON_SCALAR_MASK,
         NO_OBJS, getTypeVar(), getEnums());

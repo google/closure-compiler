@@ -16995,4 +16995,30 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @type {function(T)} */",
         "Foo.prototype.m;"));
   }
+
+  public void testConditionalNonnull() {
+    typeCheck(LINE_JOINER.join(
+        "function f(y) {",
+        "  var x = y;",
+        "  if (x && typeof x === 'object')",
+        "    var /** !Object */ n = x;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {*} x */",
+        "function f(x) {",
+        "  if (x && typeof x === 'object')",
+        "    var /** !Object */ n = x;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (x) {",
+             // do nothing
+        "  } else {",
+        "    var /** !Object */ n = x;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
