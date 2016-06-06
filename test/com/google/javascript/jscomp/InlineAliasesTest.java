@@ -219,6 +219,17 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
          "var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new Foo.Subfoo;");
   }
 
+  public void testSimpleAliasInIIFE() {
+    test("function Foo(){}; (function() { var /** @const */ alias = Foo; var x = new alias; })()",
+        "function Foo(){}; (function() { var /** @const */ alias = Foo; var x = new Foo; })()");
+
+    test("var ns={}; function Foo(){}; (function() { /** @const */ ns.alias = Foo; var x = new ns.alias;})()",
+        "var ns={}; function Foo(){}; (function() { /** @const */ ns.alias = Foo; var x = new Foo;})()");
+
+    test("var ns={}; function Foo(){}; (function() { /** @const */ ns.alias = Foo; var x = new ns.alias.Subfoo;})()",
+        "var ns={}; function Foo(){};(function() {  /** @const */ ns.alias = Foo; var x = new Foo.Subfoo;})()");
+  }
+
   public void testAliasQualifiedName() {
     test(
         LINE_JOINER.join(
@@ -334,8 +345,10 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
   }
 
   public void testIncorrectConstAnnotationDoesntCrash() {
-    testSame("var x = 0; var /** @const */ alias = x; alias = 5; use(alias);");
-    testSame("var x = 0; var ns={}; /** @const */ ns.alias = x; ns.alias = 5; use(ns.alias);");
+    test("var x = 0; var /** @const */ alias = x; alias = 5; use(alias);",
+        "var x = 0; var /** @const */ alias = x; alias = 5; use(x);");
+    test("var x = 0; var ns={}; /** @const */ ns.alias = x; ns.alias = 5; use(ns.alias);",
+        "var x = 0; var ns={}; /** @const */ ns.alias = x; ns.alias = 5; use(x);");
   }
 
   public void testRedefinedAliasesNotRenamed() {
