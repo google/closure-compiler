@@ -1837,7 +1837,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testActiveXObject() {
     testSame(
-        CompilerTypeTestCase.ACTIVE_X_OBJECT_DEF,
+        CompilerTestCase.ACTIVE_X_OBJECT_DEF,
         "var x = new ActiveXObject();", null);
     assertEquals(
         "?",

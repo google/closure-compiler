@@ -160,6 +160,83 @@ public abstract class CompilerTestCase extends TestCase {
 
   private String filename = "testcode";
 
+  static final String ACTIVE_X_OBJECT_DEF =
+  "/**\n" +
+  " * @param {string} progId\n" +
+  " * @param {string=} opt_location\n" +
+  " * @constructor\n" +
+  " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx\n" +
+  " */\n" +
+  "function ActiveXObject(progId, opt_location) {}\n";
+
+  /** A default set of externs for testing. */
+  public static final String DEFAULT_EXTERNS =
+      LINE_JOINER.join(
+          "/**",
+          " * @interface",
+          " * @template KEY1, VALUE1",
+          " */",
+          "function IObject() {};",
+          "/**",
+          " * @record",
+          " * @extends IObject<number, VALUE2>",
+          " * @template VALUE2",
+          " */",
+          "function IArrayLike() {};",
+          "/**",
+          " * @type{number}",
+          " */",
+          "IArrayLike.prototype.length;",
+          "/**",
+          " * @constructor",
+          " * @param {*=} opt_value",
+          " * @return {!Object}",
+          " */",
+          "function Object(opt_value) {}",
+          "Object.defineProperties = function(obj, descriptors) {};",
+          "/** @constructor",
+          " * @param {*} var_args */ ",
+          "function Function(var_args) {}",
+          "/** @type {!Function} */ Function.prototype.apply;",
+          "/** @type {!Function} */ Function.prototype.bind;",
+          "/** @type {!Function} */ Function.prototype.call;",
+          "/** @type {number} */",
+          "Function.prototype.length;",
+          "/** @constructor",
+          " * @param {*=} arg",
+          " * @return {string} */",
+          "function String(arg) {}",
+          "/** @param {number} sliceArg */",
+          "String.prototype.slice = function(sliceArg) {};",
+          "/** @type {number} */ String.prototype.length;",
+          "/**",
+          " * @template T",
+          " * @constructor ",
+          " * @implements {IArrayLike<T>} ",
+          " * @param {*} var_args",
+          " * @return {!Array.<?>}",
+          " */",
+          "function Array(var_args) {}",
+          "/** @type {number} */ Array.prototype.length;",
+          "/**",
+          " * @param {...T} var_args",
+          " * @return {number} The new length of the array.",
+          " * @this {{length: number}|Array.<T>}",
+          " * @template T",
+          " * @modifies {this}",
+          " */",
+          "Array.prototype.push = function(var_args) {};",
+          "/**",
+          " * @constructor",
+          " * @template T",
+          " * @implements {IArrayLike<T>}",
+          " */",
+          "function Arguments() {}",
+          "/** @type {number} */",
+          "Arguments.prototype.length;",
+          "/** @type {?} */ var unknown;", // For producing unknowns in tests.
+          ACTIVE_X_OBJECT_DEF);
+
   /**
    * Constructs a test.
    *
@@ -331,7 +408,7 @@ public abstract class CompilerTestCase extends TestCase {
 
   // Run the new type inference after the test pass. Useful for testing passes
   // that rewrite the AST prior to typechecking, eg, AngularPass or PolymerPass.
-  void enableNewTypeInference() {
+  public void enableNewTypeInference() {
     this.newTypeInferenceEnabled = true;
     this.runNTIAfterProcessing = true;
   }
@@ -348,11 +425,11 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @see TypeCheck
    */
-  void disableTypeCheck() {
+  public void disableTypeCheck() {
     typeCheckEnabled = false;
   }
 
-  void disableNewTypeInference() {
+  public void disableNewTypeInference() {
     this.newTypeInferenceEnabled = false;
   }
 
