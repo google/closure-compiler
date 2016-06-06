@@ -989,61 +989,6 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
                 "}")});
   }
 
-  public void testImportProperty1() {
-    // On a module.
-    test(
-        new String[] {
-            LINE_JOINER.join(
-                "goog.module('p.A');",
-                "/** @constructor */ function A() {}",
-                "exports.A = A;"),
-            LINE_JOINER.join(
-                "goog.module('p.C');",
-                "var A = goog.require('p.A').A;",
-                "function main() {",
-                "  /** @type {A} */ var a = new A;",
-                "}")},
-
-        new String[] {
-            LINE_JOINER.join(
-                "/** @const */ var module$exports$p$A = {};",
-                "/** @constructor */ function module$contents$p$A_A() {}",
-                "/** @const */ module$exports$p$A.A = module$contents$p$A_A;"),
-            LINE_JOINER.join(
-                "/** @const */ var module$exports$p$C = {};",
-                "var module$contents$p$C_A = module$exports$p$A.A;",
-                "function module$contents$p$C_main() {",
-                "  /** @type {module$contents$p$C_A} */ var a = new module$contents$p$C_A;",
-                "}")});
-  }
-
-  public void testImportProperty2() {
-    // On a legacy script.
-    test(
-        new String[] {
-            LINE_JOINER.join(
-                "goog.provide('p.A');",
-                "/** @constructor */ p.a = function A() {}"),
-            LINE_JOINER.join(
-                "goog.module('p.C');",
-                "var A = goog.require('p.A').A;",
-                "function main() {",
-                "  /** @type {A} */ var a = new A;",
-                "}")},
-
-        new String[] {
-            LINE_JOINER.join(
-                "goog.provide('p.A');",
-                "/** @constructor */ p.a = function A() {}"),
-            LINE_JOINER.join(
-                "/** @const */ var module$exports$p$C = {};",
-                "goog.require('p.A');",
-                "/** @const */ var module$contents$p$C_A = p.A.A;",
-                "function module$contents$p$C_main() {",
-                "  /** @type {module$contents$p$C_A} */ var a = new module$contents$p$C_A;",
-                "}")});
-  }
-
   public void testSetTestOnly() {
     test(
         LINE_JOINER.join(

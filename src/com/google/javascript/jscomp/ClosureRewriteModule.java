@@ -818,11 +818,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         currentScript.googModuleGettedNamespaces.contains(legacyNamespaceNode.getString());
     boolean importHasAlias = NodeUtil.isNameDeclaration(statementNode);
     boolean isDestructuring = statementNode.getFirstChild().isDestructuringLhs();
-    // Is "(.*)goog.require("bar.Foo").Foo;" style?.
-    boolean immediatePropertyAccess =
-        call.getParent().isGetProp()
-            && call.getGrandparent().isName()
-            && NodeUtil.isNameDeclaration(call.getGrandparent().getParent());
 
     // If the current script is a module or the require statement has a return value that is stored
     // in an alias then the require is goog.module() style.
@@ -860,11 +855,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         // Delete the goog.require() because we're going to inline its alias later.
         statementNode.detachFromParent();
       } else if (targetIsNonLegacyGoogModule) {
-        if (immediatePropertyAccess || !isTopLevel(t, statementNode, ScopeType.EXEC_CONTEXT)) {
+        if (!isTopLevel(t, statementNode, ScopeType.EXEC_CONTEXT)) {
           // Rewrite
-          //   "var Foo = goog.require("bar.Foo").Foo;" to
-          //   "var Foo = module$exports$bar$Foo.Foo;"
-          // or
           //   "function() {var Foo = goog.require("bar.Foo");}" to
           //   "function() {var Foo = module$exports$bar$Foo;}"
           Node binaryNamespaceName = IR.name(rewriteState.getBinaryNamespace(legacyNamespace));
@@ -875,27 +867,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           statementNode.detachFromParent();
         }
       } else {
-        if (immediatePropertyAccess) {
-          // Rewrite
-          //   "var B = goog.require('B').B;" to
-          //   "goog.require('B'); var B = B.B;"
-          // because ProcessClosurePrimitives only wants to see simple goog.require() statements.
-          Node legacyNamespaceName = NodeUtil.newQName(compiler, legacyNamespace);
-          legacyNamespaceName.srcrefTree(call);
-          call.getParent().replaceChild(call, legacyNamespaceName);
-          Node callStatement = IR.exprResult(call);
-          callStatement.srcref(call);
-          statementNode.getParent().addChildBefore(callStatement, statementNode);
-          markConst(statementNode);
-        } else {
-          // Rewrite
-          //   "var B = goog.require('B');" to
-          //   "goog.require('B');"
-          // because even though we're going to inline the B alias,
-          // ProcessClosurePrimitives is going to want to see this legacy require.
-          call.detachFromParent();
-          statementNode.getParent().replaceChild(statementNode, IR.exprResult(call));
-        }
+        // Rewrite
+        //   "var B = goog.require('B');" to
+        //   "goog.require('B');"
+        // because even though we're going to inline the B alias,
+        // ProcessClosurePrimitives is going to want to see this legacy require.
+        call.detachFromParent();
+        statementNode.getParent().replaceChild(statementNode, IR.exprResult(call));
       }
       if (targetIsNonLegacyGoogModule) {
         // Add goog.require() and namespace name to preprocessor table because they're removed

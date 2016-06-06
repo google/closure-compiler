@@ -243,13 +243,6 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
     switch (parent.getType()) {
       case Token.EXPR_RESULT:
         return;
-      case Token.GETPROP:
-        // TODO(blickly): Disallow this pattern once destructuring assignment works in the release.
-        if (parent.getParent().isName()) {
-          checkRequireCall(t, callNode, parent.getParent());
-          return;
-        }
-        break;
       case Token.NAME:
       case Token.DESTRUCTURING_LHS:
         checkShortGoogRequireCall(t, callNode, parent.getParent());
