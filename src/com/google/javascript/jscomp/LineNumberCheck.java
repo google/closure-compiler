@@ -29,10 +29,10 @@ class LineNumberCheck implements Callback, CompilerPass {
 
   static final DiagnosticType MISSING_LINE_INFO = DiagnosticType.error(
       "JSC_MISSING_LINE_INFO",
-      "No source location information associated with {0}.\n" +
-      "Most likely a Node has been created with settings the source file " +
-      "and line/column location.  Usually this is done using " +
-      "Node.useSourceInfoIfMissingFrom and supplying a Node from the source AST.");
+      "No source location information associated with {0}."
+          + "\nMost likely a Node has been created without setting the source file"
+          + " and line/column location.  Usually this is done using"
+          + " Node.useSourceInfoIfMissingFrom and supplying a Node from the source AST.");
 
   private final AbstractCompiler compiler;
   private boolean requiresLineNumbers = false;
