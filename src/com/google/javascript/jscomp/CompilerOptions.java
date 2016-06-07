@@ -120,6 +120,7 @@ public class CompilerOptions {
     generateTypedExterns = value;
     if (value) {
       setPreserveTypeAnnotations(value);
+      setOutputJs(OutputJs.NORMAL);
     }
   }
 
