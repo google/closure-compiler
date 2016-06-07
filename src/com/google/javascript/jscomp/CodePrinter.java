@@ -671,13 +671,13 @@ public final class CodePrinter {
     TYPED;
 
     static Format fromOptions(CompilerOptions options, boolean outputTypes, boolean prettyPrint) {
-      if (options.getLanguageOut() == LanguageMode.ECMASCRIPT6_TYPED) {
-        return Format.PRETTY;
-      }
       if (outputTypes) {
         return Format.TYPED;
       }
-      return prettyPrint ? Format.PRETTY : Format.COMPACT;
+      if (prettyPrint || options.getLanguageOut() == LanguageMode.ECMASCRIPT6_TYPED) {
+        return Format.PRETTY;
+      }
+      return Format.COMPACT;
     }
   }
 

@@ -77,7 +77,7 @@ class CodeGenerator {
 
   public void maybeTagAsExterns() {
     if (this.outputAsExterns) {
-      add("/** @externs */");
+      add("/** @externs */\n");
     }
   }
 
