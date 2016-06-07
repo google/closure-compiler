@@ -244,6 +244,7 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
+  @Override
   public boolean isUnknownType() {
     return false;
   }
@@ -321,6 +322,7 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   /** Returns true if toMaybeFunctionType returns a non-null FunctionType. */
+  @Override
   public final boolean isFunctionType() {
     return toMaybeFunctionType() != null;
   }
@@ -337,6 +339,7 @@ public abstract class JSType implements TypeI, Serializable {
    * This definition is somewhat arbitrary and axiomatic, but this is the
    * definition that makes the most sense for the most callers.
    */
+  @Override
   public FunctionType toMaybeFunctionType() {
     return null;
   }
@@ -465,6 +468,7 @@ public abstract class JSType implements TypeI, Serializable {
    * Whether this type is a {@link FunctionType} that is a constructor or a
    * named type that points to such a type.
    */
+  @Override
   public boolean isConstructor() {
     return false;
   }
@@ -513,6 +517,7 @@ public abstract class JSType implements TypeI, Serializable {
    * Whether this type is a {@link FunctionType} that is an interface or a named
    * type that points to such a type.
    */
+  @Override
   public boolean isInterface() {
     return false;
   }
@@ -898,6 +903,7 @@ public abstract class JSType implements TypeI, Serializable {
   /**
    * Tests whether this type is nullable.
    */
+  @Override
   public boolean isNullable() {
     return isSubtype(getNativeType(JSTypeNative.NULL_TYPE));
   }
@@ -1223,6 +1229,7 @@ public abstract class JSType implements TypeI, Serializable {
    * If this is a union type, returns a union type that does not include
    * the null or undefined type.
    */
+  @Override
   public JSType restrictByNotNullOrUndefined() {
     return this;
   }

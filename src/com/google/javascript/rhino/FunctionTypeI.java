@@ -56,12 +56,21 @@ public interface FunctionTypeI extends TypeI {
 
   ObjectTypeI getInstanceType();
 
+  TypeI getReturnType();
+
   String getReferenceName();
 
+  /** Gets the AST Node where this function was defined. */
   Node getSource();
 
+  /**
+   * Returns a list of types that are subtypes of this type. This is only
+   * valid for constructor functions, and may be null. This allows a downward
+   * traversal of the subtype graph.
+   */
   List<? extends FunctionTypeI> getSubTypes();
 
+  /** Gets the type of {@code this} in this function. */
   TypeI getTypeOfThis();
 
   boolean hasProperties();

@@ -44,5 +44,10 @@ package com.google.javascript.rhino;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public interface ObjectTypeI extends TypeI {
+
+  /**
+   * Gets this object's constructor, or null if it is a native
+   * object (constructed natively vs. by instantiation of a function).
+   */
   FunctionTypeI getConstructor();
 }

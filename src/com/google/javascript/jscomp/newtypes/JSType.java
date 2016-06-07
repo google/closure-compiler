@@ -24,6 +24,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.FunctionTypeI;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
 
@@ -40,7 +41,7 @@ import java.util.TreeSet;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public abstract class JSType implements TypeI {
+public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   protected static final int BOTTOM_MASK = 0x0;
   protected static final int TYPEVAR_MASK = 0x1;
   protected static final int NON_SCALAR_MASK = 0x2;
@@ -363,6 +364,7 @@ public abstract class JSType implements TypeI {
     return !getObjs().isEmpty() || EnumType.hasNonScalar(getEnums());
   }
 
+  @Override
   public boolean isNullable() {
     return (getMask() & NULL_MASK) != 0;
   }
@@ -1502,12 +1504,12 @@ public abstract class JSType implements TypeI {
 
   @Override
   public FunctionTypeI toMaybeFunctionType() {
-    throw new UnsupportedOperationException("toMaybeFunctionType not implemented yet.");
+    return isFunctionType() ? this : null;
   }
 
   @Override
   public ObjectTypeI toMaybeObjectType() {
-    throw new UnsupportedOperationException("toMaybeObjectType not implemented yet.");
+    return isSingletonObj() ? this : null;
   }
 
   @Override
@@ -1528,6 +1530,60 @@ public abstract class JSType implements TypeI {
   @Override
   public int hashCode() {
     return Objects.hash(getMask(), getObjs(), getEnums(), getTypeVar());
+  }
+
+  @Override
+  public TypeI convertMethodToFunction() {
+    throw new UnsupportedOperationException("convertMethodToFunction not implemented yet");
+  }
+
+  @Override
+  public ObjectTypeI getInstanceType() {
+    Preconditions.checkState(this.isFunctionType());
+    JSType instanceType = getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
+    return instanceType == null ? null : instanceType.toMaybeObjectType();
+  }
+
+  @Override
+  public String getReferenceName() {
+    throw new UnsupportedOperationException("getReferenceName not implemented yet");
+  }
+
+  @Override
+  public Node getSource() {
+    throw new UnsupportedOperationException("getSource not implemented yet");
+  }
+
+  @Override
+  public List<? extends FunctionTypeI> getSubTypes() {
+    throw new UnsupportedOperationException("getSubTypes not implemented yet");
+  }
+
+  @Override
+  public TypeI getTypeOfThis() {
+    Preconditions.checkState(this.isFunctionType());
+    return getFunTypeIfSingletonObj().getThisType();
+  }
+
+  @Override
+  public boolean hasProperties() {
+    throw new UnsupportedOperationException("hasProperties not implemented yet");
+  }
+
+  @Override
+  public void setSource(Node n) {
+    throw new UnsupportedOperationException("setSource not implemented yet");
+  }
+
+  @Override
+  public TypeI getReturnType() {
+    Preconditions.checkState(this.isFunctionType());
+    return getFunTypeIfSingletonObj().getReturnType();
+  }
+
+  @Override
+  public FunctionTypeI getConstructor() {
+    throw new UnsupportedOperationException("getConstructor not implemented yet");
   }
 }
 
