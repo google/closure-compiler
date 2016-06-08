@@ -253,7 +253,7 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
             "      let e = 1;",
             "    }",
             "  } catch (e) {",
-            "      var e;",
+            "    var e;",
             "  }",
             "}"));
 
@@ -277,8 +277,24 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("class A { f() { return 1729; } }");
   }
 
-  public void testRedeclareClassName() {
+  public void testClassName() {
     assertNoWarning("var Clazz = class Foo {}; var Foo = 3;");
+
+    assertNoWarning(LINE_JOINER.join(
+        "var Foo = class Bar {",
+        "  bar() {",
+        "    var Bar = 3;",
+        "    return Bar;",
+        "  }",
+        "};"));
+
+    assertNoWarning(LINE_JOINER.join(
+        "var Foo = class Bar {",
+        "  bar() {",
+        "    var Foo = 3;",
+        "    return Clasz;",
+        "  }",
+        "};"));
   }
 
   public void testClassExtend() {

@@ -453,6 +453,44 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   /**
+   * Class expressions that have class name aliases supplied.
+   */
+  public void testClassExpressionWithClassNameAlias() {
+    test("var C = class Clazz {}",
+        "/** @constructor @struct */ var C = function() { var Clazz = C; }");
+
+    test("var C = class Clazz { foo() {} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */ var C = function() { var Clazz = C; }",
+            "C.prototype.foo = function() { var Clazz = C; }"));
+
+    test("var C = class Clazz { foo() { return Clazz; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */ var C = function() { var Clazz = C; }",
+            "C.prototype.foo = function() { var Clazz = C; return Clazz; }"));
+
+    test("var C = class C { foo() {} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */ var C = function() {}",
+            "C.prototype.foo = function() {};"));
+
+    test("var C = class Clazz { foo() { var Clazz = 1; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */ var C = function() { var Clazz = C; }",
+            "C.prototype.foo = function() { var Clazz = 1; };"));
+
+    test("var C = class Clazz { foo(Clazz) {} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */ var C = function() { var Clazz = C; }",
+            "C.prototype.foo = function(Clazz) {};"));
+
+    test("ns.C = class Clazz { foo() {} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */ ns.C = function() { var Clazz = ns.C; }",
+            "ns.C.prototype.foo = function() { var Clazz = ns.C; }"));
+  }
+
+  /**
    * Class expressions that are the RHS of an assignment.
    */
   public void testClassExpressionInAssignment() {
@@ -673,14 +711,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         CANNOT_CONVERT_YET);
   }
 
-  public void testMultiNameClass() {
-    test("var F = class G {}",
-        "/** @constructor @struct */ var F = function() {};");
-
-    test("F = class G {}",
-        "/** @constructor @struct */ F = function() {};");
-  }
-
   public void testClassNested() {
     test(
         "class C { f() { class D {} } }",
@@ -887,7 +917,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testMockingInFunction() {
     // Classes cannot be reassigned in function scope.
     testError("function f() { class C {} C = function() {};}",
-              Es6ToEs3Converter.CLASS_REASSIGNMENT);
+        Es6ToEs3Converter.CLASS_REASSIGNMENT);
   }
 
   // Make sure we don't crash on this code.
