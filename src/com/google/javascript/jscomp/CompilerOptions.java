@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -991,6 +992,20 @@ public class CompilerOptions {
 
   public void setWrapGoogModulesForWhitespaceOnly(boolean enable) {
     this.wrapGoogModulesForWhitespaceOnly = enable;
+  }
+
+  /**
+   * Print all configuration options to stderr after the compiler is initialized.
+   */
+  boolean printConfig = false;
+
+  /**
+   * Should the compiler print its configuration options to stderr when they are initialized?
+   *
+   * <p> Default {@code false}.
+   */
+  public void setPrintConfig(boolean printConfig) {
+    this.printConfig = printConfig;
   }
 
   /**
@@ -2470,6 +2485,211 @@ public class CompilerOptions {
   @GwtIncompatible("Conformance")
   public void setConformanceConfigs(List<ConformanceConfig> configs) {
     this.conformanceConfigs = ImmutableList.copyOf(configs);
+  }
+
+  @Override
+  public String toString() {
+    String strValue =
+        MoreObjects.toStringHelper(this)
+            .omitNullValues()
+            .add("aggressiveFusion", aggressiveFusion)
+            .add("aliasableStrings", aliasableStrings)
+            .add("aliasAllStrings", aliasAllStrings)
+            .add("aliasHandler", getAliasTransformationHandler())
+            .add("aliasStringsBlacklist", aliasStringsBlacklist)
+            .add("allowHotswapReplaceScript", allowsHotswapReplaceScript())
+            .add("ambiguateProperties", ambiguateProperties)
+            .add("angularPass", angularPass)
+            .add("anonymousFunctionNaming", anonymousFunctionNaming)
+            .add("appNameStr", appNameStr)
+            .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)
+            .add("assumeStrictThis", assumeStrictThis())
+            .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
+            .add("chainCalls", chainCalls)
+            .add("checkDeterminism", getCheckDeterminism())
+            .add("checkEventfulObjectDisposalPolicy", checkEventfulObjectDisposalPolicy)
+            .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
+            .add("checkGlobalThisLevel", checkGlobalThisLevel)
+            .add("checkMissingGetCssNameBlacklist", checkMissingGetCssNameBlacklist)
+            .add("checkMissingGetCssNameLevel", checkMissingGetCssNameLevel)
+            .add("checksOnly", checksOnly)
+            .add("checkSuspiciousCode", checkSuspiciousCode)
+            .add("checkSymbols", checkSymbols)
+            .add("checkTypes", checkTypes)
+            .add("closurePass", closurePass)
+            .add("coalesceVariableNames", coalesceVariableNames)
+            .add("codingConvention", getCodingConvention())
+            .add("collapseAnonymousFunctions", collapseAnonymousFunctions)
+            .add("collapseObjectLiterals", collapseObjectLiterals)
+            .add("collapseProperties", collapseProperties)
+            .add("collapseVariableDeclarations", collapseVariableDeclarations)
+            .add("colorizeErrorOutput", shouldColorizeErrorOutput())
+            .add("computeFunctionSideEffects", computeFunctionSideEffects)
+            .add("conformanceConfigs", getConformanceConfigs())
+            .add("continueAfterErrors", canContinueAfterErrors())
+            .add("convertToDottedProperties", convertToDottedProperties)
+            .add("crossModuleCodeMotion", crossModuleCodeMotion)
+            .add("crossModuleCodeMotionNoStubMethods", crossModuleCodeMotionNoStubMethods)
+            .add("crossModuleMethodMotion", crossModuleMethodMotion)
+            .add("cssRenamingMap", cssRenamingMap)
+            .add("cssRenamingWhitelist", cssRenamingWhitelist)
+            .add("customPasses", customPasses)
+            .add("dartPass", dartPass)
+            .add("deadAssignmentElimination", deadAssignmentElimination)
+            .add("debugFunctionSideEffectsPath", debugFunctionSideEffectsPath)
+            .add("declaredGlobalExternsOnWindow", declaredGlobalExternsOnWindow)
+            .add("defineReplacements", getDefineReplacements())
+            .add("dependencyOptions", dependencyOptions)
+            .add("devirtualizePrototypeMethods", devirtualizePrototypeMethods)
+            .add("devMode", devMode)
+            .add("disambiguatePrivateProperties", disambiguatePrivateProperties)
+            .add("disambiguateProperties", disambiguateProperties)
+            .add("enforceAccessControlCodingConventions", enforceAccessControlCodingConventions)
+            .add("environment", getEnvironment())
+            .add("errorFormat", errorFormat)
+            .add("errorHandler", errorHandler)
+            .add("exportLocalPropertyDefinitions", exportLocalPropertyDefinitions)
+            .add("exportTestFunctions", exportTestFunctions)
+            .add("externExports", isExternExportsEnabled())
+            .add("externExportsPath", externExportsPath)
+            .add("extraAnnotationNames", extraAnnotationNames)
+            .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)
+            .add("extraSmartNameRemoval", extraSmartNameRemoval)
+            .add("flowSensitiveInlineVariables", flowSensitiveInlineVariables)
+            .add("foldConstants", foldConstants)
+            .add("forceLibraryInjection", forceLibraryInjection)
+            .add("gatherCssNames", gatherCssNames)
+            .add("generateExportsAfterTypeChecking", generateExportsAfterTypeChecking)
+            .add("generateExports", generateExports)
+            .add("generatePseudoNames", generatePseudoNames)
+            .add("generateTypedExterns", shouldGenerateTypedExterns())
+            .add("idGenerators", idGenerators)
+            .add("idGeneratorsMapSerialized", idGeneratorsMapSerialized)
+            .add("inferConsts", inferConsts)
+            .add("inferTypes", inferTypes)
+            .add("inlineConstantVars", inlineConstantVars)
+            .add("inlineFunctions", inlineFunctions)
+            .add("inlineGetters", inlineGetters)
+            .add("inlineLocalFunctions", inlineLocalFunctions)
+            .add("inlineLocalVariables", inlineLocalVariables)
+            .add("inlineProperties", inlineProperties)
+            .add("inlineVariables", inlineVariables)
+            .add("inputAnonymousFunctionNamingMap", inputAnonymousFunctionNamingMap)
+            .add("inputDelimiter", inputDelimiter)
+            .add("inputPropertyMap", inputPropertyMap)
+            .add("inputSourceMaps", inputSourceMaps)
+            .add("inputVariableMap", inputVariableMap)
+            .add("instrumentationTemplateFile", instrumentationTemplateFile)
+            .add("instrumentationTemplate", instrumentationTemplate)
+            .add("instrumentForCoverage", instrumentForCoverage)
+            .add("j2clPass", j2clPass)
+            .add("jqueryPass", jqueryPass)
+            .add("labelRenaming", labelRenaming)
+            .add("languageIn", getLanguageIn())
+            .add("languageOut", getLanguageOut())
+            .add("legacyCodeCompile", legacyCodeCompile)
+            .add("lineBreak", lineBreak)
+            .add("lineLengthThreshold", lineLengthThreshold)
+            .add("locale", locale)
+            .add("markAsCompiled", markAsCompiled)
+            .add("markNoSideEffectCalls", markNoSideEffectCalls)
+            .add("maxFunctionSizeAfterInlining", maxFunctionSizeAfterInlining)
+            .add("messageBundle", messageBundle)
+            .add("moduleRoots", moduleRoots)
+            .add("moveFunctionDeclarations", moveFunctionDeclarations)
+            .add("nameGenerator", nameGenerator)
+            .add("nameReferenceGraphPath", nameReferenceGraphPath)
+            .add("nameReferenceReportPath", nameReferenceReportPath)
+            .add("optimizeArgumentsArray", optimizeArgumentsArray)
+            .add("optimizeCalls", optimizeCalls)
+            .add("optimizeParameters", optimizeParameters)
+            .add("optimizeReturns", optimizeReturns)
+            .add("outputCharset", outputCharset)
+            .add("outputJs", outputJs)
+            .add("outputJsStringUsage", outputJsStringUsage)
+            .add(
+                "parentModuleCanSeeSymbolsDeclaredInChildren",
+                parentModuleCanSeeSymbolsDeclaredInChildren)
+            .add("parseJsDocDocumentation", isParseJsDocDocumentation())
+            .add("polymerPass", polymerPass)
+            .add("preferLineBreakAtEndOfFile", preferLineBreakAtEndOfFile)
+            .add("preferSingleQuotes", preferSingleQuotes)
+            .add("preferStableNames", preferStableNames)
+            .add("preserveDetailedSourceInfo", preservesDetailedSourceInfo())
+            .add("preserveGoogRequires", preserveGoogRequires)
+            .add("preserveTypeAnnotations", preserveTypeAnnotations)
+            .add("prettyPrint", prettyPrint)
+            .add("preventLibraryInjection", preventLibraryInjection)
+            .add("printConfig", printConfig)
+            .add("printInputDelimiter", printInputDelimiter)
+            .add("printSourceAfterEachPass", printSourceAfterEachPass)
+            .add("processCommonJSModules", processCommonJSModules)
+            .add("processObjectPropertyString", processObjectPropertyString)
+            .add("propertyInvalidationErrors", propertyInvalidationErrors)
+            .add("propertyRenaming", propertyRenaming)
+            .add("protectHiddenSideEffects", protectHiddenSideEffects)
+            .add("quoteKeywordProperties", quoteKeywordProperties)
+            .add("recordFunctionInformation", recordFunctionInformation)
+            .add("removeAbstractMethods", removeAbstractMethods)
+            .add("removeClosureAsserts", removeClosureAsserts)
+            .add("removeDeadCode", removeDeadCode)
+            .add("removeUnusedClassProperties", removeUnusedClassProperties)
+            .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
+            .add("removeUnusedLocalVars", removeUnusedLocalVars)
+            .add(
+                "removeUnusedPrototypePropertiesInExterns",
+                removeUnusedPrototypePropertiesInExterns)
+            .add("removeUnusedPrototypeProperties", removeUnusedPrototypeProperties)
+            .add("removeUnusedVars", removeUnusedVars)
+            .add(
+                "renamePrefixNamespaceAssumeCrossModuleNames",
+                renamePrefixNamespaceAssumeCrossModuleNames)
+            .add("renamePrefixNamespace", renamePrefixNamespace)
+            .add("renamePrefix", renamePrefix)
+            .add("replaceIdGenerators", replaceIdGenerators)
+            .add("replaceMessagesWithChromeI18n", replaceMessagesWithChromeI18n)
+            .add("replaceStringsFunctionDescriptions", replaceStringsFunctionDescriptions)
+            .add("replaceStringsInputMap", replaceStringsInputMap)
+            .add("replaceStringsPlaceholderToken", replaceStringsPlaceholderToken)
+            .add("replaceStringsReservedStrings", replaceStringsReservedStrings)
+            .add("reportMissingOverride", reportMissingOverride)
+            .add("reportOTIErrorsUnderNTI", reportOTIErrorsUnderNTI)
+            .add("reportPath", reportPath)
+            .add("reserveRawExports", reserveRawExports)
+            .add("rewriteFunctionExpressions", rewriteFunctionExpressions)
+            .add("rewritePolyfills", rewritePolyfills)
+            .add("runtimeTypeCheckLogFunction", runtimeTypeCheckLogFunction)
+            .add("runtimeTypeCheck", runtimeTypeCheck)
+            .add("shadowVariables", shadowVariables)
+            .add("skipNonTranspilationPasses", skipNonTranspilationPasses)
+            .add("skipTranspilationAndCrash", skipTranspilationAndCrash)
+            .add("smartNameRemoval", smartNameRemoval)
+            .add("sourceMapDetailLevel", sourceMapDetailLevel)
+            .add("sourceMapFormat", sourceMapFormat)
+            .add("sourceMapLocationMappings", sourceMapLocationMappings)
+            .add("sourceMapOutputPath", sourceMapOutputPath)
+            .add("stripNamePrefixes", stripNamePrefixes)
+            .add("stripNameSuffixes", stripNameSuffixes)
+            .add("stripTypePrefixes", stripTypePrefixes)
+            .add("stripTypes", stripTypes)
+            .add("summaryDetailLevel", summaryDetailLevel)
+            .add("syntheticBlockEndMarker", syntheticBlockEndMarker)
+            .add("syntheticBlockStartMarker", syntheticBlockStartMarker)
+            .add("tcProjectId", tcProjectId)
+            .add("tracer", tracer)
+            .add("transformAMDToCJSModules", transformAMDToCJSModules)
+            .add("trustedStrings", trustedStrings)
+            .add("tweakProcessing", getTweakProcessing())
+            .add("tweakReplacements", getTweakReplacements())
+            .add("useDebugLog", useDebugLog)
+            .add("useNewTypeInference", getNewTypeInference())
+            .add("useTypesForOptimization", useTypesForOptimization)
+            .add("variableRenaming", variableRenaming)
+            .add("warningsGuard", getWarningsGuard())
+            .add("wrapGoogModulesForWhitespaceOnly", wrapGoogModulesForWhitespaceOnly)
+            .toString();
+
+    return strValue;
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -323,6 +323,13 @@ public class Compiler extends AbstractCompiler {
     initWarningsGuard(options.getWarningsGuard());
   }
 
+  public void printConfig(PrintStream printStream) {
+    printStream.println("==== CompilerOptions ====");
+    printStream.println(options.toString());
+    printStream.println("==== WarningsGuard ====");
+    printStream.println(warningsGuard.toString());
+  }
+
   void initWarningsGuard(WarningsGuard warningsGuard) {
     this.warningsGuard = new ComposeWarningsGuard(
         new SuppressDocWarningsGuard(getDiagnosticGroups().getRegisteredGroups()), warningsGuard);
@@ -408,6 +415,10 @@ public class Compiler extends AbstractCompiler {
     List<JSModule> modules = new ArrayList<>(1);
     modules.add(module);
     initModules(externs, modules, options);
+
+    if (options.printConfig) {
+      printConfig(System.err);
+    }
   }
 
   /**
