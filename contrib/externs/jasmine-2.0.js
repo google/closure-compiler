@@ -169,6 +169,10 @@ jasmine.Matchers.prototype.toThrowError = function(
  */
 jasmine.any = function(clazz) {};
 
+/**
+ * @return {!jasmine.Matchers}
+ */
+jasmine.anything = function() {};
 
 /**
  * @param {!Object} sample
