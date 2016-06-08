@@ -875,51 +875,64 @@ public class Parser {
     }
   }
 
-  private FunctionDeclarationTree parseMethodSignature(SourcePosition start,
-      IdentifierToken name, boolean isStatic, boolean isGenerator,
-      boolean isOptional, TokenType access) {
-    GenericTypeListTree generics = maybeParseGenericTypes();
-    FormalParameterListTree formalParameterList = parseFormalParameterList(ParamContext.SIGNATURE);
-    ParseTree returnType = maybeParseColonType();
-    ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
-    FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, isStatic, isGenerator, isOptional,
-        access, FunctionDeclarationTree.Kind.MEMBER, formalParameterList, returnType,
-        functionBody);
-    return declaration;
+  private FunctionDeclarationTree parseMethodSignature(
+      SourcePosition start,
+      IdentifierToken name,
+      boolean isStatic,
+      boolean isGenerator,
+      boolean isOptional,
+      TokenType access) {
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.MEMBER)
+            .setName(name)
+            .setStatic(isStatic)
+            .setGenerator(isGenerator)
+            .setOptional(isOptional)
+            .setAccess(access)
+            .setGenerics(maybeParseGenericTypes())
+            .setFormalParameterList(parseFormalParameterList(ParamContext.SIGNATURE))
+            .setReturnType(maybeParseColonType())
+            .setFunctionBody(new EmptyStatementTree(getTreeLocation(start)));
+    return builder.build(getTreeLocation(start));
   }
 
-  private FunctionDeclarationTree parseAmbientFunctionDeclaration(SourcePosition start,
-      IdentifierToken name, boolean isGenerator) {
-    GenericTypeListTree generics = maybeParseGenericTypes();
-    FormalParameterListTree formalParameterList = parseFormalParameterList(ParamContext.SIGNATURE);
-    ParseTree returnType = maybeParseColonType();
-    ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
-    FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, false, isGenerator, false, null,
-        FunctionDeclarationTree.Kind.DECLARATION, formalParameterList, returnType, functionBody);
-    return declaration;
+  private FunctionDeclarationTree parseAmbientFunctionDeclaration(
+      SourcePosition start, IdentifierToken name, boolean isGenerator) {
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.DECLARATION)
+            .setName(name)
+            .setGenerator(isGenerator)
+            .setGenerics(maybeParseGenericTypes())
+            .setFormalParameterList(parseFormalParameterList(ParamContext.SIGNATURE))
+            .setReturnType(maybeParseColonType())
+            .setFunctionBody(new EmptyStatementTree(getTreeLocation(start)));
+    return builder.build(getTreeLocation(start));
   }
 
   private FunctionDeclarationTree parseFunctionTail(
-      SourcePosition start, IdentifierToken name,
-      boolean isStatic, boolean isGenerator, TokenType access,
+      SourcePosition start,
+      IdentifierToken name,
+      boolean isStatic,
+      boolean isGenerator,
+      TokenType access,
       FunctionDeclarationTree.Kind kind) {
 
     inGeneratorContext.addLast(isGenerator);
 
-    GenericTypeListTree generics = maybeParseGenericTypes();
-    FormalParameterListTree formalParameterList =
-        parseFormalParameterList(ParamContext.IMPLEMENTATION);
-    ParseTree returnType = maybeParseColonType();
-    BlockTree functionBody = parseFunctionBody();
-    FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, isStatic, isGenerator, false, access,
-        kind, formalParameterList, returnType, functionBody);
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(kind)
+            .setName(name)
+            .setStatic(isStatic)
+            .setGenerator(isGenerator)
+            .setAccess(access)
+            .setGenerics(maybeParseGenericTypes())
+            .setFormalParameterList(parseFormalParameterList(ParamContext.IMPLEMENTATION))
+            .setReturnType(maybeParseColonType())
+            .setFunctionBody(parseFunctionBody());
 
     inGeneratorContext.removeLast();
 
-    return declaration;
+    return builder.build(getTreeLocation(start));
   }
 
   private NamespaceDeclarationTree parseNamespaceDeclaration(boolean isAmbient) {
@@ -1042,33 +1055,30 @@ public class Parser {
       GenericTypeListTree generics,
       FormalParameterListTree formalParameterList,
       Expression expressionIn) {
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.ARROW)
+            .setGenerics(generics)
+            .setFormalParameterList(formalParameterList);
 
     inGeneratorContext.addLast(false);
 
-    ParseTree returnType = null;
     if (peek(TokenType.COLON)) {
-      returnType = parseTypeAnnotation();
+      builder.setReturnType(parseTypeAnnotation());
     }
 
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed before '=>'");
     }
     eat(TokenType.ARROW);
-    ParseTree functionBody;
     if (peek(TokenType.OPEN_CURLY)) {
-      functionBody = parseFunctionBody();
+      builder.setFunctionBody(parseFunctionBody());
     } else {
-      functionBody = parseAssignment(expressionIn);
+      builder.setFunctionBody(parseAssignment(expressionIn));
     }
-
-    FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
-        getTreeLocation(start), null, generics, false, false, false, null,
-        FunctionDeclarationTree.Kind.ARROW,
-        formalParameterList, returnType, functionBody);
 
     inGeneratorContext.removeLast();
 
-    return declaration;
+    return builder.build(getTreeLocation(start));
   }
 
   private boolean peekFunctionTypeExpression() {
@@ -2670,7 +2680,8 @@ public class Parser {
         return tree.asFormalParameterList();
       default:
         reportError("invalid arrow function parameters");
-        return null;
+        // return empty parameter list so we can keep going to find other errors
+        return new FormalParameterListTree(getTreeLocation(start), ImmutableList.<ParseTree>of());
     }
   }
 
