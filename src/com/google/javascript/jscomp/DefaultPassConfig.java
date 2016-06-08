@@ -339,6 +339,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(objectPropertyStringPreprocess);
     }
 
+    // Beginning of ES6 transpilation passes.
+
+    checks.add(createEmptyPass("beforeTranspilationAndTypeCheck"));
+
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       checks.add(es6ExternsCheck);
       checks.add(es6SuperCheck);
