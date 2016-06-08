@@ -24,10 +24,14 @@ public final class RemoveBodiesTest extends Es6CompilerTestCase {
     return new RemoveBodies(compiler);
   }
 
-  public void disabled_testInferAnnotatedTypeFromInferredType() {
+  public void testInferAnnotatedTypeFromInferredType() {
     enableTypeCheck();
 
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
+
+    test(
+        "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
+        "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
   }
 
   public void testRemoveUselessStatements() {
@@ -114,6 +118,12 @@ public final class RemoveBodiesTest extends Es6CompilerTestCase {
 
     testSame("/** @const */ var x = 5;");
 
+    test(
+        "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
+        "/** @constructor */ function Foo() {} \n /** @const */ Foo.prototype.x = 5;");
+  }
+
+  public void testDefines() {
     // NOTE: This is another pattern that is only allowed in externs.
     test("/** @define {number} */ var x = 5;", "/** @define {number} */ var x;");
   }

@@ -25,6 +25,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -177,10 +178,18 @@ class RemoveBodies extends AbstractPreOrderCallback implements CompilerPass {
               if (!name.isGetProp() || !name.getFirstChild().isThis()) {
                 return;
               }
+              JSType type = name.getJSType();
               String pname = name.getLastChild().getString();
               JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
+              // Don't use an initializer unless we need it for the non-typechecked case.
+              Node initializer = null;
+              if (type == null) {
+                initializer = NodeUtil.getRValueOfLValue(name).detachFromParent();
+              } else if (isInferrableConst(jsdoc)) {
+                jsdoc = maybeUpdateJSDocInfoWithType(jsdoc, name);
+              }
               Node newProtoAssignStmt = NodeUtil.newQNameDeclaration(
-                  compiler, className + ".prototype." + pname, null, jsdoc);
+                  compiler, className + ".prototype." + pname, initializer, jsdoc);
               newProtoAssignStmt.useSourceInfoIfMissingFromForTree(expr);
               // TODO(blickly): Preserve the declaration order of the this properties.
               insertionPoint.getParent().addChildAfter(newProtoAssignStmt, insertionPoint);
@@ -194,7 +203,6 @@ class RemoveBodies extends AbstractPreOrderCallback implements CompilerPass {
     PRESERVE_ALL,
     REMOVE_RHS,
     REMOVE_ALL,
-    UNDECLARED,
   }
 
   private static boolean isClassMemberFunction(Node functionNode) {
@@ -243,9 +251,20 @@ class RemoveBodies extends AbstractPreOrderCallback implements CompilerPass {
       if (seenNames.contains(nameNode.getQualifiedName())) {
         return RemovalType.REMOVE_ALL;
       }
-      return RemovalType.UNDECLARED;
+      jsdocNode.setJSDocInfo(getAllTypeJSDoc());
+      return RemovalType.REMOVE_RHS;
+    }
+    if (isInferrableConst(jsdoc) && !NodeUtil.isNamespaceDecl(nameNode)) {
+      if (nameNode.getJSType() == null) {
+        return RemovalType.PRESERVE_ALL;
+      }
+      jsdocNode.setJSDocInfo(maybeUpdateJSDocInfoWithType(jsdoc, nameNode));
     }
     return RemovalType.REMOVE_RHS;
+  }
+
+  private static boolean isInferrableConst(JSDocInfo jsdoc) {
+    return jsdoc != null && jsdoc.hasConstAnnotation() && !jsdoc.hasType();
   }
 
   private void processName(Node nameNode, Node statement) {
@@ -262,9 +281,6 @@ class RemoveBodies extends AbstractPreOrderCallback implements CompilerPass {
         break;
       case PRESERVE_ALL:
         break;
-      case UNDECLARED:
-        jsdocNode.setJSDocInfo(getAllTypeJSDoc());
-        // Fall-through
       case REMOVE_RHS:
         maybeRemoveRhs(nameNode, statement, jsdocNode.getJSDocInfo());
         break;
@@ -278,6 +294,21 @@ class RemoveBodies extends AbstractPreOrderCallback implements CompilerPass {
     return builder.build();
   }
 
+  private static JSDocInfo maybeUpdateJSDocInfoWithType(JSDocInfo oldJSDoc, Node nameNode) {
+    Preconditions.checkArgument(nameNode.isQualifiedName());
+    JSType type = nameNode.getJSType();
+    if (type == null) {
+      return oldJSDoc;
+    }
+    return getTypeJSDoc(oldJSDoc, type.toNonNullAnnotationString());
+  }
+
+  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, String contents) {
+    JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(oldJSDoc);
+    builder.recordType(new JSTypeExpression(Node.newString(contents), ""));
+    return builder.build();
+  }
+
   private void removeNode(Node n) {
     if (NodeUtil.isStatement(n)) {
       n.detachFromParent();
@@ -288,15 +319,9 @@ class RemoveBodies extends AbstractPreOrderCallback implements CompilerPass {
   }
 
   private void maybeRemoveRhs(Node nameNode, Node statement, JSDocInfo jsdoc) {
-    if (jsdoc != null) {
-      if (jsdoc.hasConstAnnotation() && !jsdoc.hasType() && !NodeUtil.isNamespaceDecl(nameNode)) {
-        // Inferred @const types require the RHS to be left in.
-        return;
-      }
-      if (jsdoc.hasEnumParameterType()) {
-        removeEnumValues(NodeUtil.getRValueOfLValue(nameNode));
-        return;
-      }
+    if (jsdoc != null && jsdoc.hasEnumParameterType()) {
+      removeEnumValues(NodeUtil.getRValueOfLValue(nameNode));
+      return;
     }
     Node newStatement =
         NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
