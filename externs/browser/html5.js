@@ -2291,6 +2291,11 @@ WebSocket.prototype.binaryType;
 
 // HTML5 History
 /**
+ * @constructor
+ */
+function History() {};
+
+/**
  * Pushes a new state into the session history.
  * @see http://www.w3.org/TR/html5/history.html#the-history-interface
  * @param {*} data New state.
@@ -3650,3 +3655,203 @@ HTMLMeterElement.prototype.optimum;
 
 /** @type {NodeList<!Node>} */
 HTMLMeterElement.prototype.labels;
+
+
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/html5/webappapis.html#navigator
+ */
+function Navigator() {}
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-appcodename
+ */
+Navigator.prototype.appCodeName;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-appname
+ */
+Navigator.prototype.appName;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-appversion
+ */
+Navigator.prototype.appVersion;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-platform
+ */
+Navigator.prototype.platform;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-product
+ */
+Navigator.prototype.product;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-useragent
+ */
+Navigator.prototype.userAgent;
+
+/**
+ * @return {boolean}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-taintenabled
+ */
+Navigator.prototype.taintEnabled = function() {};
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-language
+ */
+Navigator.prototype.language;
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/html5/browsers.html#navigatoronline
+ */
+Navigator.prototype.onLine;
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-cookieenabled
+ */
+Navigator.prototype.cookieEnabled;
+
+/**
+ * @param {string} scheme
+ * @param {string} url
+ * @param {string} title
+ */
+Navigator.prototype.registerProtocolHandler = function(scheme, url, title) {}
+
+/**
+ * @param {string} mimeType
+ * @param {string} url
+ * @param {string} title
+ */
+Navigator.prototype.registerContentHandler = function(mimeType, url, title) {}
+
+/**
+ * @param {string} scheme
+ * @param {string} url
+ */
+Navigator.prototype.unregisterProtocolHandler = function(scheme, url) {}
+
+/**
+ * @param {string} mimeType
+ * @param {string} url
+ */
+Navigator.prototype.unregisterContentHandler = function(mimeType, url) {}
+
+/**
+ * @type {MimeTypeArray}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-mimetypes
+ */
+Navigator.prototype.mimeTypes;
+
+/**
+ * @type {PluginArray}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-plugins
+ */
+Navigator.prototype.plugins;
+
+/**
+ * @return {boolean}
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-javaenabled
+ * @nosideeffects
+ */
+Navigator.prototype.javaEnabled = function() {};
+
+/**
+ * @constructor
+ * @implements {IObject<(string|number),!Plugin>}
+ * @implements {IArrayLike<!Plugin>}
+ * @see https://www.w3.org/TR/html5/webappapis.html#pluginarray
+ */
+function PluginArray() {}
+
+/** @type {number} */
+PluginArray.prototype.length;
+
+/**
+ * @param {number} index
+ * @return {Plugin}
+ */
+PluginArray.prototype.item = function(index) {};
+
+/**
+ * @param {string} name
+ * @return {Plugin}
+ */
+PluginArray.prototype.namedItem = function(name) {};
+
+/** @param {boolean=} reloadDocuments */
+PluginArray.prototype.refresh = function(reloadDocuments) {};
+
+/**
+ * @constructor
+ * @implements {IObject<(string|number),!MimeType>}
+ * @implements {IArrayLike<!MimeType>}
+ * @see https://www.w3.org/TR/html5/webappapis.html#mimetypearray
+ */
+function MimeTypeArray() {}
+
+/**
+ * @param {number} index
+ * @return {MimeType}
+ */
+MimeTypeArray.prototype.item = function(index) {};
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/en/DOM/window.navigator.mimeTypes
+ */
+MimeTypeArray.prototype.length;
+
+/**
+ * @param {string} name
+ * @return {MimeType}
+ */
+MimeTypeArray.prototype.namedItem = function(name) {};
+
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/html5/webappapis.html#mimetype
+ */
+function MimeType() {}
+
+/** @type {string} */
+MimeType.prototype.description;
+
+/** @type {Plugin} */
+MimeType.prototype.enabledPlugin;
+
+/** @type {string} */
+MimeType.prototype.suffixes;
+
+/** @type {string} */
+MimeType.prototype.type;
+
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/html5/webappapis.html#dom-plugin
+ */
+function Plugin() {}
+
+/** @type {string} */
+Plugin.prototype.description;
+
+/** @type {string} */
+Plugin.prototype.filename;
+
+/** @type {number} */
+Plugin.prototype.length;
+
+/** @type {string} */
+Plugin.prototype.name;
+

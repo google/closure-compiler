@@ -830,44 +830,11 @@ HTMLTextAreaElement.prototype.selectionEnd;
 HTMLTextAreaElement.prototype.setSelectionRange =
     function(selectionStart, selectionEnd) {};
 
-/** @constructor */
-function Navigator() {}
-
-/**
- * @type {string}
- * @see https://developer.mozilla.org/en/Navigator.appCodeName
- */
-Navigator.prototype.appCodeName;
-
-/**
- * @type {string}
- * @see https://developer.mozilla.org/en/Navigator.appVersion
- */
-Navigator.prototype.appName;
-
-/**
- * @type {string}
- * @see https://developer.mozilla.org/en/Navigator.appVersion
- */
-Navigator.prototype.appVersion;
-
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.buildID
  */
 Navigator.prototype.buildID;
-
-/**
- * @type {boolean}
- * @see https://developer.mozilla.org/en/Navigator.cookieEnabled
- */
-Navigator.prototype.cookieEnabled;
-
-/**
- * @type {string}
- * @see https://developer.mozilla.org/en/Navigator.language
- */
-Navigator.prototype.language;
 
 /**
  * @type {!Array<string>|undefined}
@@ -876,40 +843,10 @@ Navigator.prototype.language;
 Navigator.prototype.languages;
 
 /**
- * @type {MimeTypeArray}
- * @see https://developer.mozilla.org/en/Navigator.mimeTypes
- */
-Navigator.prototype.mimeTypes;
-
-/**
- * @type {boolean}
- * @see https://developer.mozilla.org/en/Navigator.onLine
- */
-Navigator.prototype.onLine;
-
-/**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.oscpu
  */
 Navigator.prototype.oscpu;
-
-/**
- * @type {string}
- * @see https://developer.mozilla.org/en/Navigator.platform
- */
-Navigator.prototype.platform;
-
-/**
- * @type {PluginArray}
- * @see https://developer.mozilla.org/en/Navigator.plugins
- */
-Navigator.prototype.plugins;
-
-/**
- * @type {string}
- * @see https://developer.mozilla.org/en/Navigator.product
- */
-Navigator.prototype.product;
 
 /**
  * @type {string}
@@ -933,12 +870,6 @@ Navigator.prototype.sendBeacon = function(url, opt_data) {};
 
 /**
  * @type {string}
- * @see https://developer.mozilla.org/en/Navigator.userAgent
- */
-Navigator.prototype.userAgent;
-
-/**
- * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.vendor
  */
 Navigator.prototype.vendor;
@@ -949,89 +880,6 @@ Navigator.prototype.vendor;
  */
 Navigator.prototype.vendorSub;
 
-/**
- * @type {function(): boolean}
- * @see https://developer.mozilla.org/en/Navigator.javaEnabled
- * @nosideeffects
- */
-Navigator.prototype.javaEnabled = function() {};
-
-/**
- * @constructor
- * @implements {IObject<(string|number),!Plugin>}
- * @implements {IArrayLike<!Plugin>}
- * @see https://developer.mozilla.org/en/DOM/PluginArray
- */
-function PluginArray() {}
-
-/** @type {number} */
-PluginArray.prototype.length;
-
-/**
- * @param {number} index
- * @return {Plugin}
- */
-PluginArray.prototype.item = function(index) {};
-
-/**
- * @param {string} name
- * @return {Plugin}
- */
-PluginArray.prototype.namedItem = function(name) {};
-
-/** @param {boolean=} reloadDocuments */
-PluginArray.prototype.refresh = function(reloadDocuments) {};
-
-/** @constructor */
-function MimeTypeArray() {}
-
-/**
- * @param {number} index
- * @return {MimeType}
- */
-MimeTypeArray.prototype.item = function(index) {};
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/en/DOM/window.navigator.mimeTypes
- */
-MimeTypeArray.prototype.length;
-
-/**
- * @param {string} name
- * @return {MimeType}
- */
-MimeTypeArray.prototype.namedItem = function(name) {};
-
-/** @constructor */
-function MimeType() {}
-
-/** @type {string} */
-MimeType.prototype.description;
-
-/** @type {Plugin} */
-MimeType.prototype.enabledPlugin;
-
-/** @type {string} */
-MimeType.prototype.suffixes;
-
-/** @type {string} */
-MimeType.prototype.type;
-
-/** @constructor */
-function Plugin() {}
-
-/** @type {string} */
-Plugin.prototype.description;
-
-/** @type {string} */
-Plugin.prototype.filename;
-
-/** @type {number} */
-Plugin.prototype.length;
-
-/** @type {string} */
-Plugin.prototype.name;
 
 /** @constructor */
 function BoxObject() {}
