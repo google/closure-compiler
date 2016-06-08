@@ -43,13 +43,13 @@ import java.util.Set;
  *
  * @author blickly@google.com (Ben Lickly)
  */
-class RemoveBodies extends AbstractPreOrderCallback implements CompilerPass {
+class ConvertToTypedInterface extends AbstractPreOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
   private final Set<String> seenNames = new HashSet<>();
 
-  RemoveBodies(AbstractCompiler compiler) {
+  ConvertToTypedInterface(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 

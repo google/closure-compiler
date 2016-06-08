@@ -16,12 +16,12 @@
 
 package com.google.javascript.jscomp;
 
-/** Unit tests for {@link RemoveBodies}. */
-public final class RemoveBodiesTest extends Es6CompilerTestCase {
+/** Unit tests for {@link ConvertToTypedInterface}. */
+public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new RemoveBodies(compiler);
+    return new ConvertToTypedInterface(compiler);
   }
 
   public void testInferAnnotatedTypeFromInferredType() {

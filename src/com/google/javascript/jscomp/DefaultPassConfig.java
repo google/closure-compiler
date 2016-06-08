@@ -1129,7 +1129,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory removeBodies = new PassFactory("removeBodies", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new RemoveBodies(compiler);
+      return new ConvertToTypedInterface(compiler);
     }
   };
 
