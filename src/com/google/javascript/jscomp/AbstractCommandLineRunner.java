@@ -2238,7 +2238,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     /**
      * Prefix for filenames of compiled JS modules.
-     * <module-name>.js will be appended to this prefix. Directories
+     * {@code <module-name>.js} will be appended to this prefix. Directories
      * will be created as needed. Use with --module
      */
     public CommandLineConfig setModuleOutputPathPrefix(String moduleOutputPathPrefix) {

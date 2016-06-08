@@ -49,7 +49,7 @@ public final class ReplacedStringsDecoder {
    * Which gets replaced with:
    * <pre>  Error('key' + '`' + arg1 + '`' + arg2);</pre>
    * Where ` is the argument place holder. The replacement mapping would be:
-   * <pre>  key -> 'Some ` error ` message.'</pre>
+   * <pre>  key → 'Some ` error ` message.'</pre>
    * Where key is some arbitrary replacement string. An encoded string,
    * with args, from the client will look like:
    * <pre>  'key`arg1`arg2'</pre>
