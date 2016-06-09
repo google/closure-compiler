@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -61,12 +60,12 @@ final class InlineAliases implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.VAR:
+        case VAR:
           if (n.getChildCount() == 1 && t.inGlobalScope()) {
             visitAliasDefinition(n.getFirstChild(), NodeUtil.getBestJSDocInfo(n.getFirstChild()));
           }
           break;
-        case Token.ASSIGN:
+        case ASSIGN:
           if (parent != null && parent.isExprResult() && t.inGlobalScope()) {
             visitAliasDefinition(n.getFirstChild(), n.getJSDocInfo());
           }
@@ -111,8 +110,8 @@ final class InlineAliases implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.NAME:
-        case Token.GETPROP:
+        case NAME:
+        case GETPROP:
           if (n.isQualifiedName() && aliases.containsKey(n.getQualifiedName())) {
             String leftmostName = NodeUtil.getRootOfQualifiedName(n).getString();
             Var v = t.getScope().getVar(leftmostName);

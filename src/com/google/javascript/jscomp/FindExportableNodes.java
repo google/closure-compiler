@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -93,8 +92,8 @@ class FindExportableNodes extends AbstractPostOrderCallback {
       Node context = null;
 
       switch (n.getType()) {
-        case Token.FUNCTION:
-        case Token.CLASS:
+        case FUNCTION:
+        case CLASS:
           if (parent.isScript()) {
             export = NodeUtil.getName(n);
             context = n;
@@ -102,13 +101,13 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           }
           break;
 
-        case Token.MEMBER_FUNCTION_DEF:
+        case MEMBER_FUNCTION_DEF:
           export = n.getString();
           context = n;
           mode = Mode.EXPORT;
           break;
 
-        case Token.ASSIGN:
+        case ASSIGN:
           Node grandparent = parent.getParent();
           if (parent.isExprResult() && !n.getLastChild().isAssign()) {
             if (grandparent != null
@@ -125,9 +124,9 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           }
           break;
 
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
+        case VAR:
+        case LET:
+        case CONST:
           if (parent.isScript()) {
             if (n.getFirstChild().hasChildren() && !n.getFirstFirstChild().isAssign()) {
               export = n.getFirstChild().getString();
@@ -137,7 +136,7 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           }
           break;
 
-        case Token.GETPROP:
+        case GETPROP:
           if (allowLocalExports && parent.isExprResult()) {
             mode = Mode.EXTERN;
             export = n.getLastChild().getString();
@@ -145,9 +144,9 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           }
           break;
 
-        case Token.STRING_KEY:
-        case Token.GETTER_DEF:
-        case Token.SETTER_DEF:
+        case STRING_KEY:
+        case GETTER_DEF:
+        case SETTER_DEF:
           if (allowLocalExports) {
             export = n.getString();
             mode = Mode.EXTERN;

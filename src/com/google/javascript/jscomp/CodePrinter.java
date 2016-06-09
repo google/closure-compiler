@@ -382,21 +382,21 @@ public final class CodePrinter {
       Preconditions.checkState(n.isBlock(), n);
       Node parent = n.getParent();
       if (parent != null) {
-        int type = parent.getType();
+        Token.Kind type = parent.getType();
         switch (type) {
-          case Token.DO:
+          case DO:
             // Don't break before 'while' in DO-WHILE statements.
             return false;
-          case Token.FUNCTION:
+          case FUNCTION:
             // FUNCTIONs are handled separately, don't break here.
             return false;
-          case Token.TRY:
+          case TRY:
             // Don't break before catch
             return n != parent.getFirstChild();
-          case Token.CATCH:
+          case CATCH:
             // Don't break before finally
             return !NodeUtil.hasFinally(getTryForCatch(parent));
-          case Token.IF:
+          case IF:
             // Don't break before else
             return n == parent.getLastChild();
         }

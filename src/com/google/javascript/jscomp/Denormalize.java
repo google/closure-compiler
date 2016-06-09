@@ -134,7 +134,7 @@ class Denormalize implements CompilerPass, Callback {
         && NodeUtil.hasCorrespondingAssignmentOp(n.getLastChild())
         && n.getLastChild().getFirstChild().isName()) {
       Node op = n.getLastChild();
-      int assignOp = NodeUtil.getAssignOpFromOp(op);
+      Token.Kind assignOp = NodeUtil.getAssignOpFromOp(op);
       if (n.getFirstChild().getString().equals(op.getFirstChild().getString())) {
         op.setType(assignOp);
         Node opDetached = op.detachFromParent();

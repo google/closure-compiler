@@ -53,10 +53,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.PARAM_LIST:
+      case PARAM_LIST:
         visitParamList(n, parent);
         break;
-      case Token.FOR_OF:
+      case FOR_OF:
         visitForOf(n);
         break;
     }
@@ -69,10 +69,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       parent = parent.getParent();
     }
     switch (n.getType()) {
-      case Token.ARRAY_PATTERN:
+      case ARRAY_PATTERN:
         visitArrayPattern(t, n, parent);
         break;
-      case Token.OBJECT_PATTERN:
+      case OBJECT_PATTERN:
         visitObjectPattern(t, n, parent);
         break;
     }
@@ -438,7 +438,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       Node block = forNode.getLastChild();
       declarationNode.replaceChild(
           destructuringLhs, IR.name(tempVarName).useSourceInfoFrom(pattern));
-      int declarationType = declarationNode.getType();
+      Token.Kind declarationType = declarationNode.getType();
       Node decl = IR.declaration(pattern.detachFromParent(), IR.name(tempVarName), declarationType);
       decl.useSourceInfoIfMissingFromForTree(pattern);
       block.addChildToFront(decl);

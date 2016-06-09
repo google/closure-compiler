@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Removes local variable assignments that are useless based on information from
@@ -140,25 +139,25 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         continue;
       }
       switch (n.getType()) {
-        case Token.IF:
-        case Token.WHILE:
-        case Token.DO:
+        case IF:
+        case WHILE:
+        case DO:
           tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state);
           continue;
-        case Token.FOR:
+        case FOR:
           if (!NodeUtil.isForIn(n)) {
             tryRemoveAssignment(
                 t, NodeUtil.getConditionExpression(n), state);
           }
           continue;
-        case Token.SWITCH:
-        case Token.CASE:
-        case Token.RETURN:
+        case SWITCH:
+        case CASE:
+        case RETURN:
           if (n.hasChildren()) {
             tryRemoveAssignment(t, n.getFirstChild(), state);
           }
           continue;
-        // TODO(user): case Token.VAR: Remove var a=1;a=2;.....
+        // TODO(user): case VAR: Remove var a=1;a=2;.....
       }
 
       tryRemoveAssignment(t, n, state);
@@ -322,8 +321,8 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
     while (n != exprRoot) {
       VariableLiveness state = VariableLiveness.MAYBE_LIVE;
       switch (n.getParent().getType()) {
-        case Token.OR:
-        case Token.AND:
+        case OR:
+        case AND:
           // If the currently node is the first child of
           // AND/OR, be conservative only consider the READs
           // of the second operand.
@@ -336,7 +335,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
           }
           break;
 
-        case Token.HOOK:
+        case HOOK:
           // If current node is the condition, check each following
           // branch, otherwise it is a conditional branch and the
           // other branch can be ignored.
@@ -404,8 +403,8 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
 
     switch (n.getType()) {
       // Conditionals
-      case Token.OR:
-      case Token.AND:
+      case OR:
+      case AND:
         VariableLiveness v1 = isVariableReadBeforeKill(
           n.getFirstChild(), variable);
         VariableLiveness v2 = isVariableReadBeforeKill(
@@ -419,7 +418,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         } else {
           return VariableLiveness.MAYBE_LIVE;
         }
-      case Token.HOOK:
+      case HOOK:
         VariableLiveness first = isVariableReadBeforeKill(
             n.getFirstChild(), variable);
         if (first != VariableLiveness.MAYBE_LIVE) {

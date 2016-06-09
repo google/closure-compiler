@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +83,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.SCRIPT:
+      case SCRIPT:
         // For now, don't report any sorting-related warnings if there are
         // "var x = goog.require('goog.x');" style requires.
         if (!containsShorthandRequire) {
@@ -99,7 +98,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
         provides.clear();
         containsShorthandRequire = false;
         break;
-      case Token.CALL:
+      case CALL:
         Node callee = n.getFirstChild();
         if (!callee.matchesQualifiedName("goog.require")
             && !callee.matchesQualifiedName("goog.provide")

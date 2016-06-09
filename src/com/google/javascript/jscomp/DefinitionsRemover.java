@@ -163,7 +163,7 @@ class DefinitionsRemover {
    * RHS is missing.
    */
   abstract static class IncompleteDefinition extends Definition {
-    private static final Set<Integer> ALLOWED_TYPES =
+    private static final Set<Token.Kind> ALLOWED_TYPES =
         ImmutableSet.of(Token.NAME, Token.GETPROP, Token.GETELEM);
     private final Node lValue;
 
@@ -376,9 +376,9 @@ class DefinitionsRemover {
       // flexibility.
 
       switch (name.getType()) {
-        case Token.SETTER_DEF:
-        case Token.GETTER_DEF:
-        case Token.STRING_KEY:
+        case SETTER_DEF:
+        case GETTER_DEF:
+        case STRING_KEY:
           // TODO(johnlenz): return a GETELEM for quoted strings.
           return IR.getprop(
               IR.objectlit(),

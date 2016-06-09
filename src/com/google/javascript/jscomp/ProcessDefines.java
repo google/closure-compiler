@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 
@@ -380,13 +379,13 @@ class ProcessDefines implements CompilerPass {
      */
     private void updateAssignAllowedStack(Node n, boolean entering) {
       switch (n.getType()) {
-        case Token.CASE:
-        case Token.FOR:
-        case Token.FUNCTION:
-        case Token.HOOK:
-        case Token.IF:
-        case Token.SWITCH:
-        case Token.WHILE:
+        case CASE:
+        case FOR:
+        case FUNCTION:
+        case HOOK:
+        case IF:
+        case SWITCH:
+        case WHILE:
           if (entering) {
             assignAllowed.push(0);
           } else {

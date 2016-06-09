@@ -124,7 +124,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.NAMESPACE:
+      case NAMESPACE:
         if (currNamespace == null && parent.getType() != Token.DECLARE) {
           compiler.report(JSError.make(n, NON_AMBIENT_NAMESPACE_NOT_SUPPORTED));
           return false;
@@ -132,9 +132,9 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         currNamespace = nodeNamespaceMap.get(n);
         pushOverloads();
         return true;
-      case Token.SCRIPT:
-      case Token.INTERFACE:
-      case Token.CLASS:
+      case SCRIPT:
+      case INTERFACE:
+      case CLASS:
         pushOverloads();
         return true;
       default:
@@ -145,43 +145,43 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.CLASS:
+      case CLASS:
         visitClass(n, parent);
         popOverloads();
         break;
-      case Token.INTERFACE:
+      case INTERFACE:
         visitInterface(n, parent);
         popOverloads();
         break;
-      case Token.ENUM:
+      case ENUM:
         visitEnum(n, parent);
         break;
-      case Token.NAME:
-      case Token.REST:
+      case NAME:
+      case REST:
         maybeVisitColonType(n, n);
         break;
-      case Token.FUNCTION:
+      case FUNCTION:
         visitFunction(n, parent);
         break;
-      case Token.TYPE_ALIAS:
+      case TYPE_ALIAS:
         visitTypeAlias(t, n, parent);
         break;
-      case Token.DECLARE:
+      case DECLARE:
         visitAmbientDeclaration(n, parent);
         break;
-      case Token.EXPORT:
+      case EXPORT:
         visitExport(n, parent);
         break;
-      case Token.NAMESPACE:
+      case NAMESPACE:
         visitNamespaceDeclaration(n, parent);
         popOverloads();
         break;
-      case Token.VAR:
-      case Token.LET:
-      case Token.CONST:
+      case VAR:
+      case LET:
+      case CONST:
         visitVarInsideNamespace(n, parent);
         break;
-      case Token.SCRIPT:
+      case SCRIPT:
         popOverloads();
         break;
       default:
@@ -488,10 +488,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(jsDocNode.getJSDocInfo());
     JSTypeExpression typeExpression = new JSTypeExpression(type, n.getSourceFileName());
     switch (n.getType()) {
-      case Token.FUNCTION:
+      case FUNCTION:
         builder.recordReturnType(typeExpression);
         break;
-      case Token.MEMBER_VARIABLE_DEF:
+      case MEMBER_VARIABLE_DEF:
         builder.recordType(typeExpression);
         break;
       default:
@@ -653,29 +653,29 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     Preconditions.checkArgument(type instanceof TypeDeclarationNode);
     switch (type.getType()) {
       // "Primitive" types.
-      case Token.STRING_TYPE:
+      case STRING_TYPE:
         return IR.string("string");
-      case Token.BOOLEAN_TYPE:
+      case BOOLEAN_TYPE:
         return IR.string("boolean");
-      case Token.NUMBER_TYPE:
+      case NUMBER_TYPE:
         return IR.string("number");
-      case Token.VOID_TYPE:
+      case VOID_TYPE:
         return IR.string("void");
-      case Token.UNDEFINED_TYPE:
+      case UNDEFINED_TYPE:
         return IR.string("undefined");
-      case Token.ANY_TYPE:
+      case ANY_TYPE:
         return new Node(Token.QMARK);
         // Named types.
-      case Token.NAMED_TYPE:
+      case NAMED_TYPE:
         return convertNamedType(type);
-      case Token.ARRAY_TYPE: {
+      case ARRAY_TYPE: {
         Node arrayType = IR.string("Array");
         Node memberType = convertWithLocation(type.getFirstChild());
         arrayType.addChildToFront(
             new Node(Token.BLOCK, memberType).useSourceInfoIfMissingFrom(type));
         return new Node(Token.BANG, arrayType);
       }
-      case Token.PARAMETERIZED_TYPE: {
+      case PARAMETERIZED_TYPE: {
         Node namedType = type.getFirstChild();
         Node result = convertWithLocation(namedType);
         Node typeParameterTarget =
@@ -688,7 +688,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         return result;
       }
       // Composite types.
-      case Token.FUNCTION_TYPE: {
+      case FUNCTION_TYPE: {
         Node returnType = type.getFirstChild();
         Node paramList = new Node(Token.PARAM_LIST);
         for (Node param = returnType.getNext(); param != null; param = param.getNext()) {
@@ -714,13 +714,13 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         function.addChildToBack(convertWithLocation(returnType));
         return function;
       }
-      case Token.UNION_TYPE:
+      case UNION_TYPE:
         Node pipe = new Node(Token.PIPE);
         for (Node child : type.children()) {
           pipe.addChildToBack(convertWithLocation(child));
         }
         return pipe;
-      case Token.RECORD_TYPE: {
+      case RECORD_TYPE: {
         Node lb = new Node(Token.LB);
         for (Node member : type.children()) {
           if (member.isMemberFunctionDef()) {
@@ -740,11 +740,11 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         }
         return new Node(Token.LC, lb);
       }
-      case Token.TYPEOF:
+      case TYPEOF:
         // Currently, TypeQuery is not supported in Closure's type system.
         compiler.report(JSError.make(type, TYPE_QUERY_NOT_SUPPORTED));
         return new Node(Token.QMARK);
-      case Token.STRING:
+      case STRING:
         compiler.report(JSError.make(type, SPECIALIZED_SIGNATURE_NOT_SUPPORTED));
         return new Node(Token.QMARK);
       default:
@@ -861,8 +861,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       Node parentModuleRoot;
       Node grandParent = parent.getParent();
       switch (parent.getType()) {
-        case Token.DECLARE:
-        case Token.EXPORT:
+        case DECLARE:
+        case EXPORT:
           if (parent.getParent().getType() == Token.EXPORT) {
             parentModuleRoot = grandParent.getGrandparent();
           } else {
@@ -882,25 +882,25 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.SCRIPT:
-        case Token.NAMESPACE_ELEMENTS:
+        case SCRIPT:
+        case NAMESPACE_ELEMENTS:
           return true;
-        case Token.BLOCK:
+        case BLOCK:
           return n.getFirstChild() != null && n.getFirstChild().isScript();
-        case Token.DECLARE:
+        case DECLARE:
           return n.getFirstChild().getType() == Token.NAMESPACE;
-        case Token.EXPORT:
+        case EXPORT:
           switch (n.getFirstChild().getType()) {
-            case Token.CLASS:
-            case Token.INTERFACE:
-            case Token.ENUM:
-            case Token.TYPE_ALIAS:
-            case Token.NAMESPACE:
-            case Token.DECLARE:
+            case CLASS:
+            case INTERFACE:
+            case ENUM:
+            case TYPE_ALIAS:
+            case NAMESPACE:
+            case DECLARE:
               return true;
           }
           return false;
-        case Token.NAMESPACE:
+        case NAMESPACE:
           String[] segments = n.getFirstChild().getQualifiedName().split("\\.");
           for (String s : segments) {
             String currName = maybePrependCurrNamespace(s);
@@ -912,14 +912,14 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
           }
           nodeNamespaceMap.put(n, currNamespace);
           return true;
-        case Token.CLASS:
-        case Token.INTERFACE:
-        case Token.ENUM:
+        case CLASS:
+        case INTERFACE:
+        case ENUM:
           if (currNamespace != null) {
             currNamespace.typeNames.add(n.getFirstChild().getString());
           }
           return true;
-        case Token.TYPE_ALIAS:
+        case TYPE_ALIAS:
           if (currNamespace != null) {
             currNamespace.typeNames.add(n.getString());
           }

@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -76,16 +75,16 @@ class MarkNoSideEffectCalls implements CompilerPass {
     }
 
     switch (rhs.getType()) {
-      case Token.ASSIGN:
-      case Token.AND:
-      case Token.CALL:
-      case Token.GETPROP:
-      case Token.GETELEM:
-      case Token.FUNCTION:
-      case Token.HOOK:
-      case Token.NAME:
-      case Token.NEW:
-      case Token.OR:
+      case ASSIGN:
+      case AND:
+      case CALL:
+      case GETPROP:
+      case GETELEM:
+      case FUNCTION:
+      case HOOK:
+      case NAME:
+      case NEW:
+      case OR:
         return true;
       default:
         return false;

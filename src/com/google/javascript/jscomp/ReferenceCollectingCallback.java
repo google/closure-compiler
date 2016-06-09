@@ -294,13 +294,13 @@ class ReferenceCollectingCallback implements ScopedCallback,
   private static boolean isBlockBoundary(Node n, Node parent) {
     if (parent != null) {
       switch (parent.getType()) {
-        case Token.DO:
-        case Token.FOR:
-        case Token.FOR_OF:
-        case Token.TRY:
-        case Token.WHILE:
-        case Token.WITH:
-        case Token.CLASS:
+        case DO:
+        case FOR:
+        case FOR_OF:
+        case TRY:
+        case WHILE:
+        case WITH:
+        case CLASS:
           // NOTE: TRY has up to 3 child blocks:
           // TRY
           //   BLOCK
@@ -311,11 +311,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
           // FINALLY token. For simplicity, we consider each BLOCK
           // a separate basic BLOCK.
           return true;
-        case Token.AND:
-        case Token.HOOK:
-        case Token.IF:
-        case Token.OR:
-        case Token.SWITCH:
+        case AND:
+        case HOOK:
+        case IF:
+        case OR:
+        case SWITCH:
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();
@@ -575,7 +575,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   static final class Reference implements StaticRef {
 
-    private static final Set<Integer> DECLARATION_PARENTS =
+    private static final Set<Token.Kind> DECLARATION_PARENTS =
         ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.PARAM_LIST,
             Token.FUNCTION, Token.CLASS, Token.CATCH, Token.REST);
 
@@ -749,7 +749,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
      */
     boolean isLvalue() {
       Node parent = getParent();
-      int parentType = parent.getType();
+      Token.Kind parentType = parent.getType();
       return (parentType == Token.VAR && nameNode.getFirstChild() != null)
           || (parentType == Token.LET && nameNode.getFirstChild() != null)
           || (parentType == Token.CONST && nameNode.getFirstChild() != null)
@@ -799,7 +799,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       this.isFunction = root.isFunction();
 
       if (root.getParent() != null) {
-        int pType = root.getParent().getType();
+        Token.Kind pType = root.getParent().getType();
         this.isLoop = pType == Token.DO ||
             pType == Token.WHILE ||
             pType == Token.FOR;

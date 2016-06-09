@@ -66,7 +66,7 @@ class AnonymousFunctionNamingCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.FUNCTION:
+      case FUNCTION:
         // this handles functions that are assigned to variables or
         // properties
         // e.g. goog.string.htmlEscape = function(str) {
@@ -92,7 +92,7 @@ class AnonymousFunctionNamingCallback
           }
         }
         break;
-      case Token.ASSIGN:
+      case ASSIGN:
         // this handles functions that are assigned to a prototype through
         // an object literal
         // e.g. BuzzApp.prototype = {
@@ -104,7 +104,7 @@ class AnonymousFunctionNamingCallback
           nameObjectLiteralMethods(rhs, namer.getName(lhs));
         }
         break;
-      case Token.CLASS:
+      case CLASS:
         // this handle functions that are class methods.
         // e.g. class A{
         //        method(){}
@@ -131,7 +131,7 @@ class AnonymousFunctionNamingCallback
         // concatenate the context and key name to get a new qualified name.
         String name = namer.getCombinedName(context, namer.getName(keyNode));
 
-        int type = valueNode.getType();
+        Token.Kind type = valueNode.getType();
         if (type == Token.FUNCTION) {
           // set name if function is anonymous
           Node functionNameNode = valueNode.getFirstChild();

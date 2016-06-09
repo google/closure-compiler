@@ -189,7 +189,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     Node msgNode;
 
     switch (node.getType()) {
-      case Token.NAME:
+      case NAME:
         // var MSG_HELLO = 'Message'
         if ((parent != null) && (NodeUtil.isNameDeclaration(parent))) {
           messageKey = node.getString();
@@ -201,7 +201,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
         msgNode = node.getFirstChild();
         break;
-      case Token.ASSIGN:
+      case ASSIGN:
         // somenamespace.someclass.MSG_HELLO = 'Message'
         isVar = false;
 
@@ -217,7 +217,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         msgNode = node.getLastChild();
         break;
 
-      case Token.STRING_KEY:
+      case STRING_KEY:
         if (node.isQuotedString() || node.getFirstChild() == null) {
           return;
         }
@@ -227,7 +227,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         msgNode = node.getFirstChild();
         break;
 
-      case Token.CALL:
+      case CALL:
         // goog.getMsg()
         if (node.getFirstChild().matchesQualifiedName(MSG_FUNCTION_NAME)) {
           googMsgNodes.add(node);
@@ -412,18 +412,18 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     // Determine the message's value
     Node valueNode = nameNode.getFirstChild();
     switch (valueNode.getType()) {
-      case Token.STRING:
-      case Token.ADD:
+      case STRING:
+      case ADD:
         maybeInitMetaDataFromJsDocOrHelpVar(builder, parentNode,
             grandParentNode);
         builder.appendStringPart(extractStringFromStringExprNode(valueNode));
         break;
-      case Token.FUNCTION:
+      case FUNCTION:
         maybeInitMetaDataFromJsDocOrHelpVar(builder, parentNode,
             grandParentNode);
         extractFromFunctionNode(builder, valueNode);
         break;
-      case Token.CALL:
+      case CALL:
         maybeInitMetaDataFromJsDoc(builder, parentNode);
         extractFromCallNode(builder, valueNode);
         break;
@@ -547,9 +547,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
   private static String extractStringFromStringExprNode(Node node)
       throws MalformedException {
     switch (node.getType()) {
-      case Token.STRING:
+      case STRING:
         return node.getString();
-      case Token.ADD:
+      case ADD:
         StringBuilder sb = new StringBuilder();
         for (Node child : node.children()) {
           sb.append(extractStringFromStringExprNode(child));
@@ -591,10 +591,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
     for (Node fnChild : node.children()) {
       switch (fnChild.getType()) {
-        case Token.NAME:
+        case NAME:
           // This is okay. The function has a name, but it is empty.
           break;
-        case Token.PARAM_LIST:
+        case PARAM_LIST:
           // Parse the placeholder names from the function argument list.
           for (Node argumentNode : fnChild.children()) {
             if (argumentNode.isName()) {
@@ -608,7 +608,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
             }
           }
           break;
-        case Token.BLOCK:
+        case BLOCK:
           // Build the message's value by examining the return statement
           Node returnNode = fnChild.getFirstChild();
           if (!returnNode.isReturn()) {
@@ -649,13 +649,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       throws MalformedException {
 
     switch (node.getType()) {
-      case Token.STRING:
+      case STRING:
         builder.appendStringPart(node.getString());
         break;
-      case Token.NAME:
+      case NAME:
         builder.appendPlaceholderReference(node.getString());
         break;
-      case Token.ADD:
+      case ADD:
         for (Node child : node.children()) {
           extractFromReturnDescendant(builder, child);
         }
@@ -943,7 +943,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
    *
    * @throws MalformedException if the node is null or the wrong type
    */
-  protected void checkNode(@Nullable Node node, int type) throws MalformedException {
+  protected void checkNode(@Nullable Node node, Token.Kind type) throws MalformedException {
     if (node == null) {
       throw new MalformedException(
           "Expected node type " + type + "; found: null", node);

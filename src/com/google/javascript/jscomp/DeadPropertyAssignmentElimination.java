@@ -315,9 +315,9 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
     private static boolean isConditionalExpression(Node n) {
       switch (n.getType()) {
-        case Token.AND:
-        case Token.OR:
-        case Token.HOOK:
+        case AND:
+        case OR:
+        case HOOK:
           return true;
       }
 
@@ -364,7 +364,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
     private boolean visitNode(Node n, Node parent) {
       switch (n.getType()) {
-        case Token.GETPROP:
+        case GETPROP:
           // Handle potential getters/setters.
           if (n.isGetProp()
               && n.getLastChild().isString()
@@ -391,7 +391,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
             }
           }
           return true;
-        case Token.CALL:
+        case CALL:
           if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED && isConstructor && !NodeUtil.referencesThis(n)
               && NodeUtil.getEnclosingType(n, Token.TRY) == null) {
             // this.x properties are okay.
@@ -401,8 +401,8 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           }
           return false;
 
-        case Token.THIS:
-        case Token.NAME:
+        case THIS:
+        case NAME:
           Property nameProp = Preconditions.checkNotNull(getOrCreateProperty(n));
           nameProp.markLastWriteRead();
           if (!parent.isGetProp()) {
@@ -410,14 +410,14 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           }
           return true;
 
-        case Token.THROW:
-        case Token.FOR:
-        case Token.SWITCH:
+        case THROW:
+        case FOR:
+        case SWITCH:
           // TODO(kevinoconnor): Switch/for statements need special consideration since they may
           // execute out of order.
           markAllPropsRead();
           return false;
-        case Token.BLOCK:
+        case BLOCK:
           visitBlock(n);
           return true;
         default:

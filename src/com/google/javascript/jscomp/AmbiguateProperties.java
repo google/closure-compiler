@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -449,13 +448,13 @@ class AmbiguateProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.GETPROP: {
+        case GETPROP: {
           Node propNode = n.getSecondChild();
           JSType jstype = getJSType(n.getFirstChild());
           maybeMarkCandidate(propNode, jstype);
           break;
         }
-        case Token.CALL: {
+        case CALL: {
           Node target = n.getFirstChild();
             if (!target.isQualifiedName()) {
             break;
@@ -518,7 +517,7 @@ class AmbiguateProperties implements CompilerPass {
             }
           break;
         }
-        case Token.OBJECTLIT:
+        case OBJECTLIT:
           // Object.defineProperties literals are handled at the CALL node.
           if (n.getParent().isCall()
               && NodeUtil.isObjectDefinePropertiesDefinition(n.getParent())) {
@@ -540,7 +539,7 @@ class AmbiguateProperties implements CompilerPass {
             }
           }
           break;
-        case Token.GETELEM:
+        case GETELEM:
           // If this is a quoted property access (e.g. x['myprop']), we need to
           // ensure that we never rename some other property in a way that
           // could conflict with this quoted name.

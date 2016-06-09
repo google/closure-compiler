@@ -295,7 +295,7 @@ import java.util.Set;
         Predicate<Node> isEarlyExitPredicate = new Predicate<Node>() {
           @Override
           public boolean apply(Node input) {
-            int nodeType = input.getType();
+            Token.Kind nodeType = input.getType();
 
             return nodeType == Token.RETURN
                 || nodeType == Token.BREAK
@@ -336,19 +336,19 @@ import java.util.Set;
     int indexOfChildInParent = siblings.indexOf(child);
 
     switch (parent.getType()) {
-      case Token.IF:
-      case Token.HOOK:
+      case IF:
+      case HOOK:
         return (indexOfChildInParent == 1 || indexOfChildInParent == 2);
-      case Token.FOR:
+      case FOR:
         // Only initializer is not control dependent
         return indexOfChildInParent != 0;
-      case Token.SWITCH:
+      case SWITCH:
         return indexOfChildInParent > 0;
-      case Token.WHILE:
-      case Token.DO:
-      case Token.AND:
-      case Token.OR:
-      case Token.FUNCTION:
+      case WHILE:
+      case DO:
+      case AND:
+      case OR:
+      case FUNCTION:
         return true;
 
       default:

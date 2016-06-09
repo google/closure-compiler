@@ -126,11 +126,11 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     //   and within an objectlit, used by the goog.defineClass.
     Node parent = n.getParent();
     switch (parent.getType()) {
-      case Token.NAME:
+      case NAME:
         return true;
-      case Token.ASSIGN:
+      case ASSIGN:
         return n == parent.getLastChild() && parent.getParent().isExprResult();
-      case Token.STRING_KEY:
+      case STRING_KEY:
         return isContainedInGoogDefineClass(parent);
     }
     return false;

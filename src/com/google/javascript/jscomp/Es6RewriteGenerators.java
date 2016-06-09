@@ -111,13 +111,13 @@ public final class Es6RewriteGenerators
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.FUNCTION:
+      case FUNCTION:
         if (n.isGeneratorFunction()) {
           generatorCaseCount = 0;
           visitGenerator(n, parent);
         }
         break;
-      case Token.NAME:
+      case NAME:
         Node enclosing = NodeUtil.getEnclosingFunction(n);
         if (enclosing != null
             && enclosing.isGeneratorFunction()
@@ -125,13 +125,13 @@ public final class Es6RewriteGenerators
           n.setString(GENERATOR_ARGUMENTS);
         }
         break;
-      case Token.THIS:
+      case THIS:
         enclosing = NodeUtil.getEnclosingFunction(n);
         if (enclosing != null && enclosing.isGeneratorFunction()) {
           n.getParent().replaceChild(n, IR.name(GENERATOR_THIS));
         }
         break;
-      case Token.YIELD:
+      case YIELD:
         if (n.isYieldFor()) {
           visitYieldFor(t, n, parent);
         } else if (!parent.isExprResult()) {
@@ -330,49 +330,49 @@ public final class Es6RewriteGenerators
       return false;
     } else if (controlCanExit(currentStatement)) {
       switch (currentStatement.getType()) {
-        case Token.WHILE:
-        case Token.DO:
-        case Token.FOR:
+        case WHILE:
+        case DO:
+        case FOR:
           if (NodeUtil.isForIn(currentStatement)) {
             visitForIn();
             return false;
           }
           visitLoop(null);
           return false;
-        case Token.LABEL:
+        case LABEL:
           visitLabel();
           return false;
-        case Token.SWITCH:
+        case SWITCH:
           visitSwitch();
           return false;
-        case Token.IF:
+        case IF:
           if (!currentStatement.isGeneratorSafe()) {
             visitIf();
             return false;
           }
           break;
-        case Token.TRY:
+        case TRY:
           visitTry();
           return false;
-        case Token.EXPR_RESULT:
+        case EXPR_RESULT:
           if (currentStatement.getFirstChild().isYield()) {
             visitYieldExprResult();
             return true;
           }
           break;
-        case Token.RETURN:
+        case RETURN:
           visitReturn();
           return false;
-        case Token.CONTINUE:
+        case CONTINUE:
           visitContinue();
           return false;
-        case Token.BREAK:
+        case BREAK:
           if (!currentStatement.isGeneratorSafe()) {
             visitBreak();
             return false;
           }
           break;
-        case Token.THROW:
+        case THROW:
           visitThrow();
           return false;
         default:
@@ -917,7 +917,7 @@ public final class Es6RewriteGenerators
   /**
    * Finds the only child of the {@code node} of the given type.
    */
-  private Node getUnique(Node node, int type) {
+  private Node getUnique(Node node, Token.Kind type) {
     List<Node> matches = new ArrayList<>();
     insertAll(node, type, matches);
     Preconditions.checkState(matches.size() == 1, matches);
@@ -927,7 +927,7 @@ public final class Es6RewriteGenerators
   /**
    * Adds all children of the {@code node} of the given type to given list.
    */
-  private void insertAll(Node node, int type, List<Node> matchingNodes) {
+  private void insertAll(Node node, Token.Kind type, List<Node> matchingNodes) {
     if (node.getType() == type) {
       matchingNodes.add(node);
     }
@@ -977,15 +977,15 @@ public final class Es6RewriteGenerators
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.YIELD:
+        case YIELD:
           visitYieldExpression(n);
           break;
-        case Token.DO:
-        case Token.FOR:
-        case Token.WHILE:
+        case DO:
+        case FOR:
+        case WHILE:
           visitLoop(n);
           break;
-        case Token.CASE:
+        case CASE:
           if (controlCanExit(n.getFirstChild())) {
             compiler.report(
                 JSError.make(
@@ -1024,15 +1024,15 @@ public final class Es6RewriteGenerators
       Node guard = null;
       Node incr = null;
       switch (n.getType()) {
-        case Token.FOR:
+        case FOR:
           guard = n.getSecondChild();
           incr = guard.getNext();
           break;
-        case Token.WHILE:
+        case WHILE:
           guard = n.getFirstChild();
           incr = IR.empty();
           break;
-        case Token.DO:
+        case DO:
           guard = n.getLastChild();
           if (!guard.isEmpty()) {
             Node firstEntry = IR.name(GENERATOR_DO_WHILE_INITIAL);
@@ -1094,21 +1094,21 @@ public final class Es6RewriteGenerators
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.FUNCTION:
+        case FUNCTION:
           return false;
-        case Token.LABEL:
+        case LABEL:
           labels.add(0, n.getFirstChild().getString());
           break;
-        case Token.DO:
-        case Token.WHILE:
-        case Token.FOR:
+        case DO:
+        case WHILE:
+        case FOR:
           continueCatchers++;
           breakCatchers++;
           break;
-        case Token.SWITCH:
+        case SWITCH:
           breakCatchers++;
           break;
-        case Token.BLOCK:
+        case BLOCK:
           parent = n.getParent();
           if (parent != null
               && parent.isTry()
@@ -1117,7 +1117,7 @@ public final class Es6RewriteGenerators
             throwCatchers++;
           }
           break;
-        case Token.BREAK:
+        case BREAK:
           if (!n.isGeneratorSafe()
               && ((breakCatchers == 0 && !n.hasChildren())
                   || (n.hasChildren() && !labels.contains(n.getFirstChild().getString())))) {
@@ -1127,7 +1127,7 @@ public final class Es6RewriteGenerators
             }
           }
           break;
-        case Token.CONTINUE:
+        case CONTINUE:
           if (continueCatchers == 0
               || (n.hasChildren() && !labels.contains(n.getFirstChild().getString()))) {
             exited = true;
@@ -1136,7 +1136,7 @@ public final class Es6RewriteGenerators
             }
           }
           break;
-        case Token.THROW:
+        case THROW:
           if (throwCatchers == 0) {
             exited = true;
             if (addJumps && !n.isGeneratorSafe()) {
@@ -1144,13 +1144,13 @@ public final class Es6RewriteGenerators
             }
           }
           break;
-        case Token.RETURN:
+        case RETURN:
           exited = true;
           if (addJumps) {
             parent.addChildBefore(createFinallyJumpBlock(finallyName, finallyStartState), n);
           }
           break;
-        case Token.YIELD:
+        case YIELD:
           exited = true;
           break;
         default:
@@ -1162,19 +1162,19 @@ public final class Es6RewriteGenerators
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.LABEL:
+        case LABEL:
           labels.remove(0);
           break;
-        case Token.DO:
-        case Token.WHILE:
-        case Token.FOR:
+        case DO:
+        case WHILE:
+        case FOR:
           continueCatchers--;
           breakCatchers--;
           break;
-        case Token.SWITCH:
+        case SWITCH:
           breakCatchers--;
           break;
-        case Token.BLOCK:
+        case BLOCK:
           parent = n.getParent();
           if (parent != null
               && parent.isTry()

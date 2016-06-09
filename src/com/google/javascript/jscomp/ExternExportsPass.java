@@ -25,7 +25,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -320,13 +319,13 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       Node definition;
 
       switch (definitionParent.getType()) {
-        case Token.ASSIGN:
+        case ASSIGN:
           definition = definitionParent.getLastChild();
           break;
-        case Token.VAR:
+        case VAR:
           definition = definitionParent.getLastChild().getLastChild();
           break;
-        case Token.FUNCTION:
+        case FUNCTION:
           if (NodeUtil.isFunctionDeclaration(definitionParent)) {
             definition = definitionParent;
           } else {
@@ -479,8 +478,8 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
 
-      case Token.NAME:
-      case Token.GETPROP:
+      case NAME:
+      case GETPROP:
         String name = n.getQualifiedName();
         if (name == null) {
           return;

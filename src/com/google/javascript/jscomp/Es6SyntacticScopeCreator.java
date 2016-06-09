@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.SyntacticScopeCreator.DefaultRedeclarationHa
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * <p>The syntactic scope creator scans the parse tree to create a Scope object
@@ -130,12 +129,12 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     */
   private void scanVars(Node n) {
     switch (n.getType()) {
-      case Token.VAR:
+      case VAR:
         declareLHS(scope.getClosestHoistScope(), n);
         return;
 
-      case Token.LET:
-      case Token.CONST:
+      case LET:
+      case CONST:
         // Only declare when scope is the current lexical scope
         if (!isNodeAtCurrentLexicalScope(n)) {
           return;
@@ -143,7 +142,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         declareLHS(scope, n);
         return;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         if (NodeUtil.isFunctionExpression(n) || !isNodeAtCurrentLexicalScope(n)) {
           return;
         }
@@ -156,7 +155,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         declareVar(n.getFirstChild());
         return;   // should not examine function's children
 
-      case Token.CLASS:
+      case CLASS:
         if (NodeUtil.isClassExpression(n) || !isNodeAtCurrentLexicalScope(n)) {
           return;
         }
@@ -168,7 +167,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         declareVar(n.getFirstChild());
         return;  // should not examine class's children
 
-      case Token.CATCH:
+      case CATCH:
         Preconditions.checkState(n.getChildCount() == 2, n);
         // the first child is the catch var and the second child
         // is the code block
@@ -181,7 +180,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         scanVars(block);
         return;  // only one child to scan
 
-      case Token.SCRIPT:
+      case SCRIPT:
         inputId = n.getInputId();
         Preconditions.checkNotNull(inputId);
         break;

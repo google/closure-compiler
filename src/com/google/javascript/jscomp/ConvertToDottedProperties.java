@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Converts property accesses from quoted string syntax to dot syntax, where
@@ -45,16 +44,16 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.GETTER_DEF:
-      case Token.SETTER_DEF:
-      case Token.STRING_KEY:
+      case GETTER_DEF:
+      case SETTER_DEF:
+      case STRING_KEY:
         if (NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, n.getString())) {
           n.putBooleanProp(Node.QUOTED_PROP, false);
           compiler.reportCodeChange();
         }
         break;
 
-      case Token.GETELEM:
+      case GETELEM:
         Node left = n.getFirstChild();
         Node right = left.getNext();
         if (right.isString() &&

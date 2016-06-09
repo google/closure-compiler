@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -355,14 +354,14 @@ class OptimizeParameters
     // are "this", "arguments", local names, and functions that capture local
     // values.
     switch (n.getType()) {
-      case Token.THIS:
+      case THIS:
         return false;
-      case Token.FUNCTION:
+      case FUNCTION:
         // Don't move function closures.
         // TODO(johnlenz): Closure that only contain global reference can be
         // moved.
         return false;
-      case Token.NAME:
+      case NAME:
         if (n.getString().equals("arguments")) {
           return false;
         } else {

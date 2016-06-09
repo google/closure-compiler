@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -206,7 +205,7 @@ class InlineFunctions implements CompilerPass {
       switch (n.getType()) {
           // Functions expressions in the form of:
           //   var fooFn = function(x) { return ... }
-        case Token.VAR:
+        case VAR:
           Preconditions.checkState(n.hasOneChild(), n);
           Node nameNode = n.getFirstChild();
           if (nameNode.isName()
@@ -218,7 +217,7 @@ class InlineFunctions implements CompilerPass {
 
         // Named functions
         // function Foo(x) { return ... }
-        case Token.FUNCTION:
+        case FUNCTION:
           Preconditions.checkState(NodeUtil.isStatementBlock(parent)
               || parent.isLabel());
           if (!NodeUtil.isFunctionExpression(n)) {
@@ -239,7 +238,7 @@ class InlineFunctions implements CompilerPass {
       switch (n.getType()) {
         // Functions expressions in the form of:
         //   (function(){})();
-        case Token.CALL:
+        case CALL:
           Node fnNode = null;
           if (n.getFirstChild().isFunction()) {
             fnNode = n.getFirstChild();
@@ -406,7 +405,7 @@ class InlineFunctions implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         // Function calls
-        case Token.CALL:
+        case CALL:
           Node child = n.getFirstChild();
           String name = null;
           // NOTE: The normalization pass insures that local names do not

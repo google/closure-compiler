@@ -161,7 +161,7 @@ public class IR {
     return declaration(lhs, Token.VAR);
   }
 
-  public static Node declaration(Node lhs, int type) {
+  public static Node declaration(Node lhs, Token.Kind type) {
     Preconditions.checkState(
         lhs.isName() || lhs.isDestructuringPattern() || lhs.isDestructuringLhs(),
         lhs);
@@ -171,7 +171,7 @@ public class IR {
     return new Node(type, lhs);
   }
 
-  public static Node declaration(Node lhs, Node value, int type) {
+  public static Node declaration(Node lhs, Node value, Token.Kind type) {
     if (lhs.isName()) {
       Preconditions.checkState(!lhs.hasChildren());
     } else {
@@ -609,13 +609,13 @@ public class IR {
 
   // helper methods
 
-  private static Node binaryOp(int token, Node expr1, Node expr2) {
+  private static Node binaryOp(Token.Kind token, Node expr1, Node expr2) {
     Preconditions.checkState(mayBeExpression(expr1), expr1);
     Preconditions.checkState(mayBeExpression(expr2), expr2);
     return new Node(token, expr1, expr2);
   }
 
-  private static Node unaryOp(int token, Node expr) {
+  private static Node unaryOp(Token.Kind token, Node expr) {
     Preconditions.checkState(mayBeExpression(expr));
     return new Node(token, expr);
   }
@@ -634,28 +634,28 @@ public class IR {
    */
   private static boolean mayBeStatementNoReturn(Node n) {
     switch (n.getType()) {
-      case Token.EMPTY:
-      case Token.FUNCTION:
+      case EMPTY:
+      case FUNCTION:
         // EMPTY and FUNCTION are used both in expression and statement
         // contexts
         return true;
 
-      case Token.BLOCK:
-      case Token.BREAK:
-      case Token.CONST:
-      case Token.CONTINUE:
-      case Token.DEBUGGER:
-      case Token.DO:
-      case Token.EXPR_RESULT:
-      case Token.FOR:
-      case Token.IF:
-      case Token.LABEL:
-      case Token.SWITCH:
-      case Token.THROW:
-      case Token.TRY:
-      case Token.VAR:
-      case Token.WHILE:
-      case Token.WITH:
+      case BLOCK:
+      case BREAK:
+      case CONST:
+      case CONTINUE:
+      case DEBUGGER:
+      case DO:
+      case EXPR_RESULT:
+      case FOR:
+      case IF:
+      case LABEL:
+      case SWITCH:
+      case THROW:
+      case TRY:
+      case VAR:
+      case WHILE:
+      case WITH:
         return true;
 
       default:
@@ -680,78 +680,78 @@ public class IR {
    */
   private static boolean mayBeExpression(Node n) {
     switch (n.getType()) {
-      case Token.FUNCTION:
-      case Token.CLASS:
+      case FUNCTION:
+      case CLASS:
         // FUNCTION and CLASS are used both in expression and statement
         // contexts.
         return true;
 
-      case Token.ADD:
-      case Token.AND:
-      case Token.ARRAYLIT:
-      case Token.ASSIGN:
-      case Token.ASSIGN_BITOR:
-      case Token.ASSIGN_BITXOR:
-      case Token.ASSIGN_BITAND:
-      case Token.ASSIGN_LSH:
-      case Token.ASSIGN_RSH:
-      case Token.ASSIGN_URSH:
-      case Token.ASSIGN_ADD:
-      case Token.ASSIGN_SUB:
-      case Token.ASSIGN_MUL:
-      case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD:
-      case Token.BITAND:
-      case Token.BITOR:
-      case Token.BITNOT:
-      case Token.BITXOR:
-      case Token.CALL:
-      case Token.CAST:
-      case Token.COMMA:
-      case Token.DEC:
-      case Token.DELPROP:
-      case Token.DIV:
-      case Token.EQ:
-      case Token.FALSE:
-      case Token.GE:
-      case Token.GETPROP:
-      case Token.GETELEM:
-      case Token.GT:
-      case Token.HOOK:
-      case Token.IN:
-      case Token.INC:
-      case Token.INSTANCEOF:
-      case Token.LE:
-      case Token.LSH:
-      case Token.LT:
-      case Token.MOD:
-      case Token.MUL:
-      case Token.NAME:
-      case Token.NE:
-      case Token.NEG:
-      case Token.NEW:
-      case Token.NOT:
-      case Token.NUMBER:
-      case Token.NULL:
-      case Token.OBJECTLIT:
-      case Token.OR:
-      case Token.POS:
-      case Token.REGEXP:
-      case Token.RSH:
-      case Token.SHEQ:
-      case Token.SHNE:
-      case Token.SPREAD:
-      case Token.STRING:
-      case Token.SUB:
-      case Token.SUPER:
-      case Token.TEMPLATELIT:
-      case Token.TAGGED_TEMPLATELIT:
-      case Token.THIS:
-      case Token.TYPEOF:
-      case Token.TRUE:
-      case Token.URSH:
-      case Token.VOID:
-      case Token.YIELD:
+      case ADD:
+      case AND:
+      case ARRAYLIT:
+      case ASSIGN:
+      case ASSIGN_BITOR:
+      case ASSIGN_BITXOR:
+      case ASSIGN_BITAND:
+      case ASSIGN_LSH:
+      case ASSIGN_RSH:
+      case ASSIGN_URSH:
+      case ASSIGN_ADD:
+      case ASSIGN_SUB:
+      case ASSIGN_MUL:
+      case ASSIGN_DIV:
+      case ASSIGN_MOD:
+      case BITAND:
+      case BITOR:
+      case BITNOT:
+      case BITXOR:
+      case CALL:
+      case CAST:
+      case COMMA:
+      case DEC:
+      case DELPROP:
+      case DIV:
+      case EQ:
+      case FALSE:
+      case GE:
+      case GETPROP:
+      case GETELEM:
+      case GT:
+      case HOOK:
+      case IN:
+      case INC:
+      case INSTANCEOF:
+      case LE:
+      case LSH:
+      case LT:
+      case MOD:
+      case MUL:
+      case NAME:
+      case NE:
+      case NEG:
+      case NEW:
+      case NOT:
+      case NUMBER:
+      case NULL:
+      case OBJECTLIT:
+      case OR:
+      case POS:
+      case REGEXP:
+      case RSH:
+      case SHEQ:
+      case SHNE:
+      case SPREAD:
+      case STRING:
+      case SUB:
+      case SUPER:
+      case TEMPLATELIT:
+      case TAGGED_TEMPLATELIT:
+      case THIS:
+      case TYPEOF:
+      case TRUE:
+      case URSH:
+      case VOID:
+      case YIELD:
         return true;
 
       default:

@@ -166,7 +166,7 @@ class ExpressionDecomposer {
          grandchild = child,
              child = parent,
              parent = child.getParent()) {
-      int parentType = parent.getType();
+      Token.Kind parentType = parent.getType();
       Preconditions.checkState(
           !isConditionalOp(parent) || child == parent.getFirstChild());
       if (parentType == Token.ASSIGN) {
@@ -184,7 +184,7 @@ class ExpressionDecomposer {
           } else {
             // Alias "next()" in "next().foo"
             Node left = parent.getFirstChild();
-            int type = left.getType();
+            Token.Kind type = left.getType();
             if (left != child) {
               Preconditions.checkState(NodeUtil.isGet(left));
               if (type == Token.GETELEM) {
@@ -354,7 +354,7 @@ class ExpressionDecomposer {
     Node trueExpr = IR.block().srcref(expr);
     Node falseExpr = IR.block().srcref(expr);
     switch (expr.getType()) {
-      case Token.HOOK:
+      case HOOK:
         // a = x?y:z --> if (x) {a=y} else {a=z}
         cond = first;
         trueExpr.addChildToFront(NodeUtil.newExpr(
@@ -362,13 +362,13 @@ class ExpressionDecomposer {
         falseExpr.addChildToFront(NodeUtil.newExpr(
             buildResultExpression(last, needResult, tempName)));
         break;
-      case Token.AND:
+      case AND:
         // a = x&&y --> if (a=x) {a=y} else {}
         cond = buildResultExpression(first, needResult, tempName);
         trueExpr.addChildToFront(NodeUtil.newExpr(
             buildResultExpression(last, needResult, tempName)));
         break;
-      case Token.OR:
+      case OR:
         // a = x||y --> if (a=x) {} else {a=y}
         cond = buildResultExpression(first, needResult, tempName);
         falseExpr.addChildToFront(NodeUtil.newExpr(
@@ -643,9 +643,9 @@ class ExpressionDecomposer {
    */
   private static boolean isConditionalOp(Node n) {
     switch(n.getType()) {
-      case Token.HOOK:
-      case Token.AND:
-      case Token.OR:
+      case HOOK:
+      case AND:
+      case OR:
         return true;
       default:
         return false;
@@ -660,30 +660,30 @@ class ExpressionDecomposer {
   static Node findExpressionRoot(Node subExpression) {
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
-      int parentType = parent.getType();
+      Token.Kind parentType = parent.getType();
       switch (parentType) {
         // Supported expression roots:
         // SWITCH and IF can have multiple children, but the CASE, DEFAULT,
         // or BLOCK will be encountered first for any of the children other
         // than the condition.
-        case Token.EXPR_RESULT:
-        case Token.IF:
-        case Token.SWITCH:
-        case Token.RETURN:
-        case Token.THROW:
-        case Token.VAR:
+        case EXPR_RESULT:
+        case IF:
+        case SWITCH:
+        case RETURN:
+        case THROW:
+        case VAR:
           Preconditions.checkState(child == parent.getFirstChild());
           return parent;
         // Any of these indicate an unsupported expression:
-        case Token.FOR:
+        case FOR:
           if (!NodeUtil.isForIn(parent) && child == parent.getFirstChild()) {
             return parent;
           }
-        case Token.SCRIPT:
-        case Token.BLOCK:
-        case Token.LABEL:
-        case Token.CASE:
-        case Token.DEFAULT_CASE:
+        case SCRIPT:
+        case BLOCK:
+        case LABEL:
+        case CASE:
+        case DEFAULT_CASE:
           return null;
       }
       child = parent;
@@ -868,11 +868,11 @@ class ExpressionDecomposer {
     if (n.isAssign()) {
       Node lhs = n.getFirstChild();
       switch (lhs.getType()) {
-        case Token.NAME:
+        case NAME:
           return true;
-        case Token.GETPROP:
+        case GETPROP:
           return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects);
-        case Token.GETELEM:
+        case GETELEM:
           return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects)
               && !isExpressionTreeUnsafe(lhs.getLastChild(), seenSideEffects);
       }

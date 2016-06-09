@@ -1149,13 +1149,13 @@ public final class ConformanceRules {
       boolean violation;
 
       switch (n.getType()) {
-          case Token.GETPROP:
-          case Token.GETELEM:
-          case Token.NEW:
-          case Token.CALL:
+          case GETPROP:
+          case GETELEM:
+          case NEW:
+          case CALL:
             violation = report(n.getFirstChild());
             break;
-          case Token.IN:
+          case IN:
             violation = report(n.getLastChild());
             break;
           default:

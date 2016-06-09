@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
 import java.util.ArrayList;
@@ -322,7 +321,7 @@ class RenameProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.GETPROP:
+        case GETPROP:
           Node propNode = n.getSecondChild();
           if (propNode.isString()) {
             if (compiler.getCodingConvention().blockRenamingForProperty(
@@ -333,7 +332,7 @@ class RenameProperties implements CompilerPass {
             maybeMarkCandidate(propNode);
           }
           break;
-        case Token.OBJECTLIT:
+        case OBJECTLIT:
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             if (key.isQuotedString()) {
               // Ensure that we never rename some other property in a way
@@ -347,7 +346,7 @@ class RenameProperties implements CompilerPass {
             }
           }
           break;
-        case Token.GETELEM:
+        case GETELEM:
           // If this is a quoted property access (e.g. x['myprop']), we need to
           // ensure that we never rename some other property in a way that
           // could conflict with this quoted name.
@@ -356,7 +355,7 @@ class RenameProperties implements CompilerPass {
             quotedNames.add(child.getString());
           }
           break;
-        case Token.CALL: {
+        case CALL: {
           // We replace property renaming function calls with a string
           // containing the renamed property.
           Node fnName = n.getFirstChild();
@@ -368,7 +367,7 @@ class RenameProperties implements CompilerPass {
           }
           break;
         }
-        case Token.FUNCTION: {
+        case FUNCTION: {
           // We eliminate any stub implementations of JSCompiler_renameProperty
           // that we encounter.
           if (NodeUtil.isFunctionDeclaration(n)) {

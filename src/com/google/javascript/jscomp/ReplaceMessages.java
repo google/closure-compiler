@@ -118,11 +118,11 @@ final class ReplaceMessages extends JsMessageVisitor {
   private Node getNewValueNode(JsMessage message, Node origValueNode)
       throws MalformedException {
     switch (origValueNode.getType()) {
-      case Token.FUNCTION:
+      case FUNCTION:
         // The message is a function. Modify the function node.
         updateFunctionNode(message, origValueNode);
         return origValueNode;
-      case Token.STRING:
+      case STRING:
         // The message is a simple string. Modify the string node.
         String newString = message.toString();
         if (!origValueNode.getString().equals(newString)) {
@@ -130,10 +130,10 @@ final class ReplaceMessages extends JsMessageVisitor {
           compiler.reportCodeChange();
         }
         return origValueNode;
-      case Token.ADD:
+      case ADD:
         // The message is a simple string. Create a string node.
         return IR.string(message.toString());
-      case Token.CALL:
+      case CALL:
         // The message is a function call. Replace it with a string expression.
         return replaceCallNode(message, origValueNode);
       default:
@@ -367,9 +367,9 @@ final class ReplaceMessages extends JsMessageVisitor {
       throw new IllegalArgumentException("Expected a string; found: null");
     }
     switch (node.getType()) {
-      case Token.STRING:
+      case STRING:
         break;
-      case Token.ADD:
+      case ADD:
         Node c = node.getFirstChild();
         checkStringExprNode(c);
         checkStringExprNode(c.getNext());

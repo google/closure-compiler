@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -808,7 +807,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.CALL:
+        case CALL:
           visitCall(t, n);
           break;
         default:
@@ -1262,19 +1261,19 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.ASSIGN:
+        case ASSIGN:
           visitAssign(t, n);
           break;
-        case Token.CALL:
+        case CALL:
           visitCall(t, n);
           break;
-        case Token.FUNCTION:
+        case FUNCTION:
           visitFunction(t, n);
           break;
-        case Token.NEW:
+        case NEW:
           visitNew(t, n, parent);
           break;
-        case Token.RETURN:
+        case RETURN:
           visitReturn(t, n);
           break;
         default:

@@ -66,36 +66,36 @@ public class NodeTest extends TestCase {
   }
 
   public void testCheckTreeEqualsImplSame() {
-    Node node1 = new Node(1, new Node(2));
-    Node node2 = new Node(1, new Node(2));
+    Node node1 = new Node(Token.LET, new Node(Token.VAR));
+    Node node2 = new Node(Token.LET, new Node(Token.VAR));
     assertEquals(null, node1.checkTreeEqualsImpl(node2));
   }
 
   public void testCheckTreeEqualsImplDifferentType() {
-    Node node1 = new Node(1, new Node(2));
-    Node node2 = new Node(2, new Node(2));
+    Node node1 = new Node(Token.LET, new Node(Token.VAR));
+    Node node2 = new Node(Token.VAR, new Node(Token.VAR));
     assertEquals(new NodeMismatch(node1, node2),
         node1.checkTreeEqualsImpl(node2));
   }
 
   public void testCheckTreeEqualsImplDifferentChildCount() {
-    Node node1 = new Node(1, new Node(2));
-    Node node2 = new Node(1);
+    Node node1 = new Node(Token.LET, new Node(Token.VAR));
+    Node node2 = new Node(Token.LET);
     assertEquals(new NodeMismatch(node1, node2),
         node1.checkTreeEqualsImpl(node2));
   }
 
   public void testCheckTreeEqualsImplDifferentChild() {
-    Node child1 = new Node(1);
-    Node child2 = new Node(2);
-    Node node1 = new Node(1, child1);
-    Node node2 = new Node(1, child2);
+    Node child1 = new Node(Token.LET);
+    Node child2 = new Node(Token.VAR);
+    Node node1 = new Node(Token.LET, child1);
+    Node node2 = new Node(Token.LET, child2);
     assertEquals(new NodeMismatch(child1, child2),
         node1.checkTreeEqualsImpl(node2));
   }
 
   public void testCheckTreeEqualsSame() {
-    Node node1 = new Node(1);
+    Node node1 = new Node(Token.LET);
     assertEquals(null, node1.checkTreeEquals(node1));
   }
 
@@ -106,13 +106,13 @@ public class NodeTest extends TestCase {
   }
 
   public void testCheckTreeEqualsBooleanSame() {
-    Node node1 = new Node(1);
+    Node node1 = new Node(Token.LET);
     assertEquals(true, node1.isEquivalentTo(node1));
   }
 
   public void testCheckTreeEqualsBooleanDifferent() {
-    Node node1 = new Node(1);
-    Node node2 = new Node(2);
+    Node node1 = new Node(Token.LET);
+    Node node2 = new Node(Token.VAR);
     assertEquals(false, node1.isEquivalentTo(node2));
   }
 
@@ -166,17 +166,17 @@ public class NodeTest extends TestCase {
   }
 
   public void testVarArgs1() {
-    assertFalse(new Node(1).isVarArgs());
+    assertFalse(new Node(Token.LET).isVarArgs());
   }
 
   public void testVarArgs2() {
-    Node n = new Node(1);
+    Node n = new Node(Token.LET);
     n.setVarArgs(false);
     assertFalse(n.isVarArgs());
   }
 
   public void testVarArgs3() {
-    Node n = new Node(1);
+    Node n = new Node(Token.LET);
     n.setVarArgs(true);
     assertTrue(n.isVarArgs());
   }

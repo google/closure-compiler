@@ -198,24 +198,24 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       // This JSDoc should be attached to a FUNCTION node, or an assignment
       // with a function as the RHS, etc.
       switch (n.getType()) {
-        case Token.FUNCTION:
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
-        case Token.GETTER_DEF:
-        case Token.SETTER_DEF:
-        case Token.MEMBER_FUNCTION_DEF:
-        case Token.STRING_KEY:
-        case Token.COMPUTED_PROP:
-        case Token.EXPORT:
+        case FUNCTION:
+        case VAR:
+        case LET:
+        case CONST:
+        case GETTER_DEF:
+        case SETTER_DEF:
+        case MEMBER_FUNCTION_DEF:
+        case STRING_KEY:
+        case COMPUTED_PROP:
+        case EXPORT:
           return;
-        case Token.GETELEM:
-        case Token.GETPROP:
+        case GETELEM:
+        case GETPROP:
           if (n.getFirstChild().isQualifiedName()) {
             return;
           }
           break;
-        case Token.ASSIGN: {
+        case ASSIGN: {
           // TODO(tbreisacher): Check that the RHS of the assignment is a
           // function. Note that it can be a FUNCTION node, but it can also be
           // a call to goog.abstractMethod, goog.functions.constant, etc.
@@ -245,7 +245,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (info.getDescription() != null || info.isHidden() || info.getMeaning() != null) {
       boolean descOkay = false;
       switch (n.getType()) {
-        case Token.ASSIGN: {
+        case ASSIGN: {
           Node lhs = n.getFirstChild();
           if (lhs.isName()) {
             descOkay = lhs.getString().startsWith("MSG_");
@@ -254,12 +254,12 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
           }
           break;
         }
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
+        case VAR:
+        case LET:
+        case CONST:
           descOkay = n.getFirstChild().getString().startsWith("MSG_");
           break;
-        case Token.STRING_KEY:
+        case STRING_KEY:
           descOkay = n.getString().startsWith("MSG_");
           break;
       }
@@ -277,42 +277,42 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       boolean valid = false;
       switch (n.getType()) {
         // Function declarations are valid
-        case Token.FUNCTION:
+        case FUNCTION:
           valid = NodeUtil.isFunctionDeclaration(n);
           break;
         // Object literal properties, catch declarations and variable
         // initializers are valid.
-        case Token.NAME:
-        case Token.DEFAULT_VALUE:
-        case Token.ARRAY_PATTERN:
-        case Token.OBJECT_PATTERN:
+        case NAME:
+        case DEFAULT_VALUE:
+        case ARRAY_PATTERN:
+        case OBJECT_PATTERN:
           Node parent = n.getParent();
           switch (parent.getType()) {
-            case Token.GETTER_DEF:
-            case Token.SETTER_DEF:
-            case Token.CATCH:
-            case Token.FUNCTION:
-            case Token.VAR:
-            case Token.LET:
-            case Token.CONST:
-            case Token.PARAM_LIST:
+            case GETTER_DEF:
+            case SETTER_DEF:
+            case CATCH:
+            case FUNCTION:
+            case VAR:
+            case LET:
+            case CONST:
+            case PARAM_LIST:
               valid = true;
               break;
           }
           break;
         // Casts, variable declarations, exports, and Object literal properties are valid.
-        case Token.CAST:
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
-        case Token.EXPORT:
-        case Token.STRING_KEY:
-        case Token.GETTER_DEF:
-        case Token.SETTER_DEF:
+        case CAST:
+        case VAR:
+        case LET:
+        case CONST:
+        case EXPORT:
+        case STRING_KEY:
+        case GETTER_DEF:
+        case SETTER_DEF:
           valid = true;
           break;
         // Property assignments are valid, if at the root of an expression.
-        case Token.ASSIGN: {
+        case ASSIGN: {
           Node lvalue = n.getFirstChild();
           valid = n.getParent().isExprResult()
               && (lvalue.isGetProp()
@@ -320,10 +320,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
                   || lvalue.matchesQualifiedName("exports"));
           break;
         }
-        case Token.GETPROP:
+        case GETPROP:
           valid = n.getParent().isExprResult() && n.isQualifiedName();
           break;
-        case Token.CALL:
+        case CALL:
           valid = info.isDefine();
           break;
         default:

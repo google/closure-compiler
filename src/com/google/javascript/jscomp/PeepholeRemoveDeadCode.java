@@ -41,39 +41,39 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   @Override
   Node optimizeSubtree(Node subtree) {
     switch(subtree.getType()) {
-      case Token.ASSIGN:
+      case ASSIGN:
         return tryFoldAssignment(subtree);
-      case Token.COMMA:
+      case COMMA:
         return tryFoldComma(subtree);
-      case Token.SCRIPT:
-      case Token.BLOCK:
+      case SCRIPT:
+      case BLOCK:
         return tryOptimizeBlock(subtree);
-      case Token.EXPR_RESULT:
+      case EXPR_RESULT:
         subtree = tryFoldExpr(subtree);
         return subtree;
-      case Token.HOOK:
+      case HOOK:
         return tryFoldHook(subtree);
-      case Token.SWITCH:
+      case SWITCH:
         return tryOptimizeSwitch(subtree);
-      case Token.IF:
+      case IF:
         return tryFoldIf(subtree);
-      case Token.WHILE:
+      case WHILE:
         return tryFoldWhile(subtree);
-      case Token.FOR: {
+      case FOR: {
         Node condition = NodeUtil.getConditionExpression(subtree);
         if (condition != null) {
           tryFoldForCondition(condition);
         }
         return tryFoldFor(subtree);
       }
-      case Token.DO:
+      case DO:
         Node foldedDo = tryFoldDoAway(subtree);
         if (foldedDo.isDo()) {
           return tryFoldEmptyDo(foldedDo);
         }
         return foldedDo;
 
-      case Token.TRY:
+      case TRY:
         return tryFoldTry(subtree);
       default:
           return subtree;
@@ -178,7 +178,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     // Simplify the results of conditional expressions
     switch (n.getType()) {
-      case Token.HOOK:
+      case HOOK:
         Node trueNode = trySimplifyUnusedResult(n.getSecondChild());
         Node falseNode = trySimplifyUnusedResult(n.getLastChild());
         // If one or more of the conditional children were removed,
@@ -200,8 +200,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           result = n;
         }
         break;
-      case Token.AND:
-      case Token.OR:
+      case AND:
+      case OR:
         // Try to remove the second operand from a AND or OR operations:
         //    x() || f --> x()
         //    x() && f --> x()
@@ -214,12 +214,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           result = trySimplifyUnusedResult(n.getFirstChild());
         }
         break;
-      case Token.FUNCTION:
+      case FUNCTION:
         // A function expression isn't useful if it isn't used, remove it and
         // don't bother to look at its children.
         result = null;
         break;
-      case Token.COMMA:
+      case COMMA:
         // We rewrite other operations as COMMA expressions (which will later
         // get split into individual EXPR_RESULT statement, if possible), so
         // we special case COMMA (we don't want to rewrite COMMAs as new COMMAs
@@ -492,12 +492,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         for (Node blockChild : block.children()) {
           // If this is a block with a labelless break, it is useless.
           switch (blockChild.getType()) {
-            case Token.BREAK:
+            case BREAK:
               // A case with a single labelless break is useless if it is the default case or if
               // there is no default case. A break to a different control structure isn't useless.
               return !blockChild.hasChildren()
                   && (defaultCase == null || defaultCase == executingCase);
-            case Token.VAR:
+            case VAR:
               if (blockChild.hasOneChild()
                   && blockChild.getFirstFirstChild() == null) {
                 // Variable declarations without initializations are OK.
@@ -520,10 +520,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    */
   private static boolean isExit(Node n) {
     switch (n.getType()) {
-      case Token.BREAK:
-      case Token.CONTINUE:
-      case Token.RETURN:
-      case Token.THROW:
+      case BREAK:
+      case CONTINUE:
+      case RETURN:
+      case THROW:
         return true;
       default:
         return false;
@@ -688,9 +688,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private static boolean isExprConditional(Node n) {
     if (n.isExprResult()) {
       switch (n.getFirstChild().getType()) {
-        case Token.HOOK:
-        case Token.AND:
-        case Token.OR:
+        case HOOK:
+        case AND:
+        case OR:
           return true;
       }
     }
@@ -717,7 +717,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Preconditions.checkState(n.isIf(), n);
     Node parent = n.getParent();
     Preconditions.checkNotNull(parent);
-    int type = n.getType();
+    Token.Kind type = n.getType();
     Node cond = n.getFirstChild();
     Node thenBody = cond.getNext();
     Node elseBody = thenBody.getNext();

@@ -136,7 +136,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.CALL:
+      case CALL:
         Node callee = n.getFirstChild();
         if (callee.matchesQualifiedName("goog.module")) {
           if (currentModuleName == null) {
@@ -150,7 +150,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           checkRequireCall(t, n, parent);
         }
         break;
-      case Token.ASSIGN: {
+      case ASSIGN: {
         Node lhs = n.getFirstChild();
         if (lhs.isQualifiedName()
             && NodeUtil.getRootOfQualifiedName(lhs).matchesQualifiedName("exports")) {
@@ -158,15 +158,15 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
         }
         break;
       }
-      case Token.CLASS:
-      case Token.FUNCTION:
+      case CLASS:
+      case FUNCTION:
         if (!NodeUtil.isStatement(n)) {
           break;
         }
         // fallthrough
-      case Token.VAR:
-      case Token.LET:
-      case Token.CONST:
+      case VAR:
+      case LET:
+      case CONST:
         if (t.inGlobalHoistScope() && NodeUtil.getEnclosingClass(n) == null
             && NodeUtil.getEnclosingType(n, Token.OBJECTLIT) == null) {
           JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
@@ -175,17 +175,17 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           }
         }
         break;
-      case Token.THIS:
+      case THIS:
         if (t.inGlobalHoistScope()) {
           t.report(n, GOOG_MODULE_REFERENCES_THIS);
         }
         break;
-      case Token.THROW:
+      case THROW:
         if (t.inGlobalHoistScope()) {
           t.report(n, GOOG_MODULE_USES_THROW);
         }
         break;
-      case Token.GETPROP:
+      case GETPROP:
         if (currentModuleName != null && n.matchesQualifiedName(currentModuleName)) {
           t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
         } else if (shortRequiredNamespaces.containsKey(n.getQualifiedName())) {
@@ -198,7 +198,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
           }
         }
         break;
-      case Token.SCRIPT:
+      case SCRIPT:
         currentModuleName = null;
         shortRequiredNamespaces.clear();
         defaultExportNode = null;
@@ -241,10 +241,10 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
   private void checkRequireCall(NodeTraversal t, Node callNode, Node parent) {
     Preconditions.checkState(callNode.isCall());
     switch (parent.getType()) {
-      case Token.EXPR_RESULT:
+      case EXPR_RESULT:
         return;
-      case Token.NAME:
-      case Token.DESTRUCTURING_LHS:
+      case NAME:
+      case DESTRUCTURING_LHS:
         checkShortGoogRequireCall(t, callNode, parent.getParent());
         return;
     }

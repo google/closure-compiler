@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -146,12 +145,12 @@ class UnreachableCodeElimination implements CompilerPass {
       }
 
       switch (n.getType()) {
-        case Token.RETURN:
+        case RETURN:
           if (n.hasChildren()) {
             break;
           }
-        case Token.BREAK:
-        case Token.CONTINUE:
+        case BREAK:
+        case CONTINUE:
           // We are looking for a control flow changing statement that always
           // branches to the same node. If after removing it control still
           // branches to the same node, it is safe to remove.
@@ -215,10 +214,10 @@ class UnreachableCodeElimination implements CompilerPass {
         // to execute one iteration of the body. If the DO's body has breaks in
         // the middle, it can get even more tricky and code size might actually
         // increase.
-        case Token.DO:
+        case DO:
           return;
 
-        case Token.BLOCK:
+        case BLOCK:
           // BLOCKs are used in several ways including wrapping CATCH
           // blocks in TRYs
           if (parent.isTry() && NodeUtil.isTryCatchNodeContainer(n)) {
@@ -226,7 +225,7 @@ class UnreachableCodeElimination implements CompilerPass {
           }
           break;
 
-        case Token.CATCH:
+        case CATCH:
           Node tryNode = parent.getParent();
           NodeUtil.maybeAddFinally(tryNode);
           break;

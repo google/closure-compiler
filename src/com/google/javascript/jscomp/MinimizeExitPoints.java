@@ -50,17 +50,17 @@ class MinimizeExitPoints
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.LABEL:
+      case LABEL:
         tryMinimizeExits(
             n.getLastChild(), Token.BREAK, n.getFirstChild().getString());
         break;
 
-      case Token.FOR:
-      case Token.WHILE:
+      case FOR:
+      case WHILE:
         tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
         break;
 
-      case Token.DO:
+      case DO:
         tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
 
         Node cond = NodeUtil.getConditionExpression(n);
@@ -72,14 +72,14 @@ class MinimizeExitPoints
         }
         break;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         // FYI: the function will be analyzed w/out a call to
         // NodeTraversal/pushScope. Bypassing pushScope could cause a bug if
         // there is code that relies on NodeTraversal knowing the correct scope.
         tryMinimizeExits(n.getLastChild(), Token.RETURN, null);
         break;
 
-      case Token.SWITCH:
+      case SWITCH:
         tryMinimizeSwitchExits(n, Token.BREAK, null);
         break;
 
@@ -115,7 +115,7 @@ class MinimizeExitPoints
    * @param labelName If parent is a label the name of the label to look for,
    *   null otherwise. Non-null only for breaks within labels.
    */
-  void tryMinimizeExits(Node n, int exitType, @Nullable String labelName) {
+  void tryMinimizeExits(Node n, Token.Kind exitType, @Nullable String labelName) {
 
     // Just an 'exit'.
     if (matchingExitNode(n, exitType, labelName)) {
@@ -212,7 +212,7 @@ class MinimizeExitPoints
     }
   }
 
-  void tryMinimizeSwitchExits(Node n, int exitType, @Nullable String labelName) {
+  void tryMinimizeSwitchExits(Node n, Token.Kind exitType, @Nullable String labelName) {
     Preconditions.checkState(n.isSwitch());
     // Skipping the switch condition, visit all the children.
     for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
@@ -229,7 +229,7 @@ class MinimizeExitPoints
    * Attempt to remove explicit exits from switch cases that also occur implicitly
    * after the switch.
    */
-  void tryMinimizeSwitchCaseExits(Node n, int exitType, @Nullable String labelName) {
+  void tryMinimizeSwitchCaseExits(Node n, Token.Kind exitType, @Nullable String labelName) {
     Preconditions.checkState(NodeUtil.isSwitchCase(n));
 
     Preconditions.checkState(n != n.getParent().getLastChild());
@@ -267,7 +267,7 @@ class MinimizeExitPoints
    *     named-break associated with a label.
    */
   private void tryMinimizeIfBlockExits(Node srcBlock, Node destBlock,
-      Node ifNode, int exitType, @Nullable String labelName) {
+      Node ifNode, Token.Kind exitType, @Nullable String labelName) {
     Node exitNodeParent = null;
     Node exitNode = null;
 
@@ -326,7 +326,7 @@ class MinimizeExitPoints
    *     non-null only for breaks associated with labels.
    * @return Whether the node matches the specified block-exit type.
    */
-  private static boolean matchingExitNode(Node n, int type, @Nullable String labelName) {
+  private static boolean matchingExitNode(Node n, Token.Kind type, @Nullable String labelName) {
     if (n.getType() == type) {
       if (type == Token.RETURN) {
         // only returns without expressions.

@@ -624,7 +624,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         return;
       }
 
-      int type = n.getType();
+      Token.Kind type = n.getType();
       boolean isObjLitShorthand = type == Token.STRING_KEY && !n.hasChildren();
       Var aliasVar = null;
       if (type == Token.NAME || isObjLitShorthand) {

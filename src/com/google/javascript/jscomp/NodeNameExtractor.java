@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
 /**
@@ -46,10 +45,10 @@ class NodeNameExtractor {
    */
   String getName(Node node) {
     switch (node.getType()) {
-      case Token.CLASS:
-      case Token.FUNCTION:
+      case CLASS:
+      case FUNCTION:
         return NodeUtil.getName(node);
-      case Token.GETPROP:
+      case GETPROP:
         Node lhsOfDot = node.getFirstChild();
         Node rhsOfDot = lhsOfDot.getNext();
         String lhsOfDotName = getName(lhsOfDot);
@@ -59,7 +58,7 @@ class NodeNameExtractor {
         } else {
           return lhsOfDotName + delimiter + rhsOfDotName;
         }
-      case Token.GETELEM:
+      case GETELEM:
         Node outsideBrackets = node.getFirstChild();
         Node insideBrackets = outsideBrackets.getNext();
         String nameOutsideBrackets = getName(outsideBrackets);
@@ -69,18 +68,18 @@ class NodeNameExtractor {
         } else {
           return nameOutsideBrackets + delimiter + nameInsideBrackets;
         }
-      case Token.NAME:
+      case NAME:
         return node.getString();
-      case Token.STRING:
-      case Token.STRING_KEY:
-      case Token.MEMBER_FUNCTION_DEF:
+      case STRING:
+      case STRING_KEY:
+      case MEMBER_FUNCTION_DEF:
         return TokenStream.isJSIdentifier(node.getString()) ?
             node.getString() : ("__" + nextUniqueInt++);
-      case Token.NUMBER:
+      case NUMBER:
         return NodeUtil.getStringValue(node);
-      case Token.THIS:
+      case THIS:
         return "this";
-      case Token.CALL:
+      case CALL:
         return getName(node.getFirstChild());
       default:
         StringBuilder sb = new StringBuilder();

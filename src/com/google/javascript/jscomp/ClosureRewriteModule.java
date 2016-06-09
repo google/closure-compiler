@@ -30,7 +30,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -256,7 +255,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
 
       switch (n.getType()) {
-        case Token.CALL:
+        case CALL:
           if (isCallTo(n, "goog.loadModule")) {
             recordGoogLoadModule(n);
           }
@@ -280,26 +279,26 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           }
           break;
 
-        case Token.CLASS:
-        case Token.FUNCTION:
+        case CLASS:
+        case FUNCTION:
           if (isTopLevel(t, n, ScopeType.BLOCK)) {
             recordTopLevelClassOrFunctionName(n);
           }
           break;
 
-        case Token.CONST:
-        case Token.LET:
-        case Token.VAR:
+        case CONST:
+        case LET:
+        case VAR:
           if (isTopLevel(t, n, n.isVar() ? ScopeType.EXEC_CONTEXT : ScopeType.BLOCK)) {
             recordTopLevelVarNames(n);
           }
           break;
 
-        case Token.NAME:
+        case NAME:
           maybeRecordExportDeclaration(n);
           break;
 
-        case Token.RETURN:
+        case RETURN:
           if (isTopLevel(t, n, ScopeType.BLOCK)) {
             recordModuleReturn();
           }
@@ -314,7 +313,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.CALL:
+        case CALL:
           if (isCallTo(n, "goog.loadModule")) {
             updateGoogLoadModule(n);
           }
@@ -335,7 +334,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           }
           break;
 
-        case Token.GETPROP:
+        case GETPROP:
           if (isExportPropertyAssignment(n)) {
             updateExportsPropertyAssignment(n);
           } else if (n.isQualifiedName()) {
@@ -343,7 +342,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           }
           break;
 
-        case Token.RETURN:
+        case RETURN:
           if (isTopLevel(t, n, ScopeType.EXEC_CONTEXT)) {
             updateModuleReturn(n);
           }
@@ -360,11 +359,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.SCRIPT:
+        case SCRIPT:
           updateEndScript();
           break;
 
-        case Token.NAME:
+        case NAME:
           maybeUpdateTopLevelName(t, n);
           maybeUpdateExportDeclaration(t, n);
           maybeUpdateExportNameRef(n);

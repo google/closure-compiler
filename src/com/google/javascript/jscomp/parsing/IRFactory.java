@@ -503,11 +503,11 @@ class IRFactory {
 
   private static boolean isBreakTarget(Node n) {
     switch (n.getType()) {
-      case Token.FOR:
-      case Token.FOR_OF:
-      case Token.WHILE:
-      case Token.DO:
-      case Token.SWITCH:
+      case FOR:
+      case FOR_OF:
+      case WHILE:
+      case DO:
+      case SWITCH:
         return true;
     }
     return false;
@@ -515,10 +515,10 @@ class IRFactory {
 
   private static boolean isContinueTarget(Node n) {
     switch (n.getType()) {
-      case Token.FOR:
-      case Token.FOR_OF:
-      case Token.WHILE:
-      case Token.DO:
+      case FOR:
+      case FOR_OF:
+      case WHILE:
+      case DO:
         return true;
     }
     return false;
@@ -1059,7 +1059,7 @@ class IRFactory {
       if (n == null) {
         return false;
       }
-      int nType = n.getType();
+      Token.Kind nType = n.getType();
       return nType == Token.EXPR_RESULT &&
           n.getFirstChild().isString() &&
           ALLOWED_DIRECTIVES.contains(n.getFirstChild().getString());
@@ -1134,7 +1134,7 @@ class IRFactory {
 
     Node processForInLoop(ForInStatementTree loopNode) {
       Node initializer = transform(loopNode.initializer);
-      ImmutableSet<Integer> invalidInitializers =
+      ImmutableSet<Token.Kind> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
       if (invalidInitializers.contains(initializer.getType())) {
         errorReporter.error("Invalid LHS for a for-in loop", sourceName,
@@ -1150,7 +1150,7 @@ class IRFactory {
     Node processForOf(ForOfStatementTree loopNode) {
       maybeWarnEs6Feature(loopNode, Feature.FOR_OF);
       Node initializer = transform(loopNode.initializer);
-      ImmutableSet<Integer> invalidInitializers =
+      ImmutableSet<Token.Kind> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
       if (invalidInitializers.contains(initializer.getType())) {
         errorReporter.error("Invalid LHS for a for-of loop", sourceName,
@@ -1871,7 +1871,7 @@ class IRFactory {
     }
 
     Node processUnaryExpression(UnaryExpressionTree exprNode) {
-      int type = transformUnaryTokenType(exprNode.operator.type);
+      Token.Kind type = transformUnaryTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
       if (type == Token.NEG && operand.isNumber()) {
         operand.setDouble(-operand.getDouble());
@@ -1896,7 +1896,7 @@ class IRFactory {
     }
 
     Node processPostfixExpression(PostfixExpressionTree exprNode) {
-      int type = transformPostfixTokenType(exprNode.operator.type);
+      Token.Kind type = transformPostfixTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
       if (type == Token.INC || type == Token.DEC) {
         return createIncrDecrNode(type, true, operand);
@@ -1905,7 +1905,7 @@ class IRFactory {
       return node;
     }
 
-    private Node createIncrDecrNode(int type, boolean postfix, Node operand) {
+    private Node createIncrDecrNode(Token.Kind type, boolean postfix, Node operand) {
       if (!operand.isValidAssignmentTarget()) {
         errorReporter.error(
             SimpleFormat.format("Invalid %s %s operand.",
@@ -1926,7 +1926,7 @@ class IRFactory {
     }
 
     Node processVariableDeclarationList(VariableDeclarationListTree decl) {
-      int declType;
+      Token.Kind declType;
       switch (decl.declarationType) {
         case CONST:
           maybeWarnEs6Feature(decl, Feature.CONST_DECLARATIONS);
@@ -2506,7 +2506,7 @@ class IRFactory {
     }
 
     private Node transformList(
-        int type, ImmutableList<ParseTree> list) {
+        Token.Kind type, ImmutableList<ParseTree> list) {
       Node n = newNode(type);
       for (ParseTree tree : list) {
         n.addChildToBack(transform(tree));
@@ -2515,7 +2515,7 @@ class IRFactory {
     }
 
     private Node transformListOrEmpty(
-        int type, ImmutableList<ParseTree> list) {
+        Token.Kind type, ImmutableList<ParseTree> list) {
       if (list == null || list.isEmpty()) {
         return newNode(Token.EMPTY);
       } else {
@@ -3081,7 +3081,7 @@ class IRFactory {
     throw new IllegalStateException("unexpected: " + c);
   }
 
-  static int transformBooleanTokenType(TokenType token) {
+  static Token.Kind transformBooleanTokenType(TokenType token) {
     switch (token) {
       case TRUE:
         return Token.TRUE;
@@ -3093,7 +3093,7 @@ class IRFactory {
     }
   }
 
-  static int transformPostfixTokenType(TokenType token) {
+  static Token.Kind transformPostfixTokenType(TokenType token) {
     switch (token) {
       case PLUS_PLUS:
         return Token.INC;
@@ -3105,7 +3105,7 @@ class IRFactory {
     }
   }
 
-  static int transformUnaryTokenType(TokenType token) {
+  static Token.Kind transformUnaryTokenType(TokenType token) {
     switch (token) {
       case BANG:
         return Token.NOT;
@@ -3133,7 +3133,7 @@ class IRFactory {
     }
   }
 
-  static int transformBinaryTokenType(TokenType token) {
+  static Token.Kind transformBinaryTokenType(TokenType token) {
     switch (token) {
       case BAR:
         return Token.BITOR;
@@ -3218,19 +3218,19 @@ class IRFactory {
   }
 
   // Simple helper to create nodes and set the initial node properties.
-  Node newNode(int type) {
+  Node newNode(Token.Kind type) {
     return new Node(type).clonePropsFrom(templateNode);
   }
 
-  Node newNode(int type, Node child1) {
+  Node newNode(Token.Kind type, Node child1) {
     return new Node(type, child1).clonePropsFrom(templateNode);
   }
 
-  Node newNode(int type, Node child1, Node child2) {
+  Node newNode(Token.Kind type, Node child1, Node child2) {
     return new Node(type, child1, child2).clonePropsFrom(templateNode);
   }
 
-  Node newNode(int type, Node child1, Node child2, Node child3) {
+  Node newNode(Token.Kind type, Node child1, Node child2, Node child3) {
     return new Node(type, child1, child2, child3).clonePropsFrom(templateNode);
   }
 
@@ -3238,7 +3238,7 @@ class IRFactory {
     return IR.string(value).clonePropsFrom(templateNode);
   }
 
-  Node newStringNode(int type, String value) {
+  Node newStringNode(Token.Kind type, String value) {
     return Node.newString(type, value).clonePropsFrom(templateNode);
   }
 
@@ -3260,4 +3260,3 @@ class IRFactory {
     return n;
   }
 }
-

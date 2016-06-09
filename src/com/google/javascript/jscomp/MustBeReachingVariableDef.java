@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -236,18 +235,18 @@ final class MustBeReachingVariableDef extends
       Node n, Node cfgNode, MustDef output, boolean conditional) {
     switch (n.getType()) {
 
-      case Token.BLOCK:
-      case Token.FUNCTION:
+      case BLOCK:
+      case FUNCTION:
         return;
 
-      case Token.WHILE:
-      case Token.DO:
-      case Token.IF:
+      case WHILE:
+      case DO:
+      case IF:
         computeMustDef(
             NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         return;
 
-      case Token.FOR:
+      case FOR:
         if (!NodeUtil.isForIn(n)) {
           computeMustDef(
               NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
@@ -264,19 +263,19 @@ final class MustBeReachingVariableDef extends
         }
         return;
 
-      case Token.AND:
-      case Token.OR:
+      case AND:
+      case OR:
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         computeMustDef(n.getLastChild(), cfgNode, output, true);
         return;
 
-      case Token.HOOK:
+      case HOOK:
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         computeMustDef(n.getSecondChild(), cfgNode, output, true);
         computeMustDef(n.getLastChild(), cfgNode, output, true);
         return;
 
-      case Token.VAR:
+      case VAR:
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.hasChildren()) {
             computeMustDef(c.getFirstChild(), cfgNode, output, conditional);

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.primitives.Ints;
 import com.google.javascript.jscomp.NodeIterators.FunctionlessLocalScope;
 import com.google.javascript.jscomp.NodeIterators.LocalVarMotion;
 import com.google.javascript.rhino.Node;
@@ -25,8 +24,10 @@ import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
 /**
  * Tests for NodeIterators.
  * @author nicksantos@google.com (Nick Santos)
@@ -128,16 +129,16 @@ public final class NodeIteratorsTest extends TestCase {
    * the VarMotion iterator. Asserts that the iteration order matches the
    * tokens given.
    */
-  private void testVarMotionWithCode(String code, int... expectedTokens) {
-    List<Integer> expectedList = Ints.asList(expectedTokens);
+  private void testVarMotionWithCode(String code, Token.Kind... expectedTokens) {
+    List<Token.Kind> expectedList = Arrays.asList(expectedTokens);
     testVarMotionWithCode(code, expectedList);
   }
 
   /**
-   * @see #testVarMotionWithCode(String, int ...)
+   * @see #testVarMotionWithCode(String, Token.Kind ...)
    */
   private void testVarMotionWithCode(String code,
-      List<Integer> expectedTokens) {
+      List<Token.Kind> expectedTokens) {
     List<Node> ancestors = new ArrayList<>();
 
     // Add an empty node to the beginning of the code and start there.
@@ -167,7 +168,7 @@ public final class NodeIteratorsTest extends TestCase {
         currentAncestors.get(0),
         currentAncestors.get(1),
         currentAncestors.get(2));
-    List<Integer> actualTokens = new ArrayList<>();
+    List<Token.Kind> actualTokens = new ArrayList<>();
     while (moveIt.hasNext()) {
       actualTokens.add(moveIt.next().getType());
     }

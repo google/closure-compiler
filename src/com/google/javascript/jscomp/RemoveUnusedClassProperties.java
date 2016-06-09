@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 
 import java.util.ArrayList;
@@ -122,7 +121,7 @@ class RemoveUnusedClassProperties
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
      switch (n.getType()) {
-       case Token.GETPROP: {
+       case GETPROP: {
          String propName = n.getLastChild().getString();
          if (compiler.getCodingConvention().isExported(propName)
              || isPinningPropertyUse(n)
@@ -136,7 +135,7 @@ class RemoveUnusedClassProperties
          break;
        }
 
-       case Token.OBJECTLIT: {
+       case OBJECTLIT: {
          // Assume any object literal definition might be a reflection on the
          // class property.
          if (!NodeUtil.isObjectDefinePropertiesDefinition(n.getParent())) {
@@ -147,7 +146,7 @@ class RemoveUnusedClassProperties
          break;
        }
 
-      case Token.CALL:
+      case CALL:
         // Look for properties referenced through the property rename functions.
         Node target = n.getFirstChild();
         if (n.hasMoreThanOneChild()

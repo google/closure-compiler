@@ -371,14 +371,14 @@ final class TypedScopeCreator implements ScopeCreator {
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
       switch (node.getType()) {
-        case Token.VAR:
+        case VAR:
           for (Node child = node.getFirstChild();
                child != null; child = child.getNext()) {
             identifyNameNode(
                 child, NodeUtil.getBestJSDocInfo(child));
           }
           break;
-        case Token.EXPR_RESULT:
+        case EXPR_RESULT:
           Node firstChild = node.getFirstChild();
           if (firstChild.isAssign()) {
             identifyNameNode(
@@ -516,12 +516,12 @@ final class TypedScopeCreator implements ScopeCreator {
       attachLiteralTypes(n);
 
       switch (n.getType()) {
-        case Token.CALL:
+        case CALL:
           checkForClassDefiningCalls(n);
           checkForCallingConventionDefiningCalls(n, delegateCallingConventions);
           break;
 
-        case Token.FUNCTION:
+        case FUNCTION:
           if (t.getInput() == null || !t.getInput().isExtern()) {
             nonExternFunctions.add(n);
           }
@@ -532,7 +532,7 @@ final class TypedScopeCreator implements ScopeCreator {
           }
           break;
 
-        case Token.ASSIGN:
+        case ASSIGN:
           // Handle initialization of properties.
           Node firstChild = n.getFirstChild();
           if (firstChild.isGetProp() &&
@@ -542,15 +542,15 @@ final class TypedScopeCreator implements ScopeCreator {
           }
           break;
 
-        case Token.CATCH:
+        case CATCH:
           defineCatch(n);
           break;
 
-        case Token.VAR:
+        case VAR:
           defineVar(n);
           break;
 
-        case Token.GETPROP:
+        case GETPROP:
           // Handle stubbed properties.
           if (parent.isExprResult() &&
               n.isQualifiedName()) {
@@ -571,32 +571,32 @@ final class TypedScopeCreator implements ScopeCreator {
 
     private void attachLiteralTypes(Node n) {
       switch (n.getType()) {
-        case Token.NULL:
+        case NULL:
           n.setJSType(getNativeType(NULL_TYPE));
           break;
 
-        case Token.VOID:
+        case VOID:
           n.setJSType(getNativeType(VOID_TYPE));
           break;
 
-        case Token.STRING:
+        case STRING:
           n.setJSType(getNativeType(STRING_TYPE));
           break;
 
-        case Token.NUMBER:
+        case NUMBER:
           n.setJSType(getNativeType(NUMBER_TYPE));
           break;
 
-        case Token.TRUE:
-        case Token.FALSE:
+        case TRUE:
+        case FALSE:
           n.setJSType(getNativeType(BOOLEAN_TYPE));
           break;
 
-        case Token.REGEXP:
+        case REGEXP:
           n.setJSType(getNativeType(REGEXP_TYPE));
           break;
 
-        case Token.OBJECTLIT:
+        case OBJECTLIT:
           JSDocInfo info = n.getJSDocInfo();
           if (info != null &&
               info.getLendsName() != null) {
@@ -612,7 +612,7 @@ final class TypedScopeCreator implements ScopeCreator {
         // NOTE(johnlenz): If we ever support Array tuples,
         // we will need to handle them here as we do object literals
         // above.
-        case Token.ARRAYLIT:
+        case ARRAYLIT:
           n.setJSType(getNativeType(ARRAY_TYPE));
           break;
       }
@@ -749,7 +749,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * Asserts that it's OK to define this node's name.
      * The node should have a source name and be of the specified type.
      */
-    void assertDefinitionNode(Node n, int type) {
+    void assertDefinitionNode(Node n, Token.Kind type) {
       Preconditions.checkState(sourceName != null);
       Preconditions.checkState(n.getType() == type, n);
     }
@@ -1867,7 +1867,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       switch (n.getType()) {
 
-        case Token.VAR:
+        case VAR:
           // Handle typedefs.
           if (n.hasOneChild()) {
             checkForTypedef(n.getFirstChild(), n.getJSDocInfo());

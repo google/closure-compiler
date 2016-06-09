@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -356,14 +355,14 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
               @Override
               public boolean apply(Node input) {
                 switch (input.getType()) {
-                  case Token.GETELEM:
-                  case Token.GETPROP:
-                  case Token.ARRAYLIT:
-                  case Token.OBJECTLIT:
-                  case Token.REGEXP:
-                  case Token.NEW:
+                  case GETELEM:
+                  case GETPROP:
+                  case ARRAYLIT:
+                  case OBJECTLIT:
+                  case REGEXP:
+                  case NEW:
                     return true;
-                  case Token.NAME:
+                  case NAME:
                     Var var = scope.getOwnSlot(input.getString());
                     if (var != null
                         && var.getParentNode().isCatch()) {
@@ -445,13 +444,13 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         @Override
         public void visit(NodeTraversal t, Node n, Node parent) {
           switch (n.getType()) {
-            case Token.NAME:
+            case NAME:
               if (n.getString().equals(varName) && n.hasChildren()) {
                 def = n;
               }
               return;
 
-            case Token.ASSIGN:
+            case ASSIGN:
               Node lhs = n.getFirstChild();
               if (lhs.isName() && lhs.getString().equals(varName)) {
                 def = n;

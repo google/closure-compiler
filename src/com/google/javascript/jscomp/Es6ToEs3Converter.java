@@ -114,17 +114,17 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.REST:
+      case REST:
         visitRestParam(n, parent);
         break;
-      case Token.GETTER_DEF:
-      case Token.SETTER_DEF:
+      case GETTER_DEF:
+      case SETTER_DEF:
         if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
           cannotConvert(n, "ES5 getters/setters (consider using --language_out=ES5)");
           return false;
         }
         break;
-      case Token.NEW_TARGET:
+      case NEW_TARGET:
         cannotConvertYet(n, "new.target");
     }
     return true;
@@ -133,36 +133,36 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.NAME:
+      case NAME:
         if (!n.isFromExterns() && isGlobalSymbol(t, n)) {
           initSymbolBefore(n);
         }
         break;
-      case Token.GETPROP:
+      case GETPROP:
         if (!n.isFromExterns()) {
           visitGetprop(t, n);
         }
         break;
-      case Token.OBJECTLIT:
+      case OBJECTLIT:
         visitObject(n);
         break;
-      case Token.MEMBER_FUNCTION_DEF:
+      case MEMBER_FUNCTION_DEF:
         if (parent.isObjectLit()) {
           visitMemberFunctionDefInObjectLit(n, parent);
         }
         break;
-      case Token.FOR_OF:
+      case FOR_OF:
         visitForOf(n, parent);
         break;
-      case Token.STRING_KEY:
+      case STRING_KEY:
         visitStringKey(n);
         break;
-      case Token.CLASS:
+      case CLASS:
         visitClass(n, parent);
         break;
-      case Token.ARRAYLIT:
-      case Token.NEW:
-      case Token.CALL:
+      case ARRAYLIT:
+      case NEW:
+      case CALL:
         for (Node child : n.children()) {
           if (child.isSpread()) {
             visitArrayLitOrCallWithSpread(n, parent);
@@ -170,10 +170,10 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           }
         }
         break;
-      case Token.TAGGED_TEMPLATELIT:
+      case TAGGED_TEMPLATELIT:
         Es6TemplateLiterals.visitTaggedTemplateLiteral(t, n);
         break;
-      case Token.TEMPLATELIT:
+      case TEMPLATELIT:
         if (!parent.isTaggedTemplateLit()) {
           Es6TemplateLiterals.visitTemplateLiteral(t, n);
         }
@@ -250,7 +250,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     iterName.makeNonIndexable();
     Node getNext = IR.call(IR.getprop(iterName.cloneTree(), IR.string("next")));
     String variableName;
-    int declType;
+    Token.Kind declType;
     if (variable.isName()) {
       declType = Token.NAME;
       variableName = variable.getQualifiedName();
@@ -502,7 +502,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         }
         Node val = propdef.removeFirstChild();
         propdef.setType(Token.STRING);
-        int type = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
+        Token.Kind type = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
         Node access = new Node(type, IR.name(objName), propdef);
         result = IR.comma(IR.assign(access, val), result);
       }

@@ -284,21 +284,21 @@ public final class JSTypeCreatorFromJSDoc {
       typeParameters = ImmutableList.of();
     }
     switch (n.getType()) {
-      case Token.LC:
+      case LC:
         return getRecordTypeHelper(n, registry, typeParameters);
-      case Token.EMPTY: // for function types that don't declare a return type
+      case EMPTY: // for function types that don't declare a return type
         return JSType.UNKNOWN;
-      case Token.VOID:
+      case VOID:
         // TODO(dimvar): void can be represented in 2 ways: Token.VOID and a
         // Token.STRING whose getString() is "void".
         // Change jsdoc parsing to only have one representation.
         return JSType.UNDEFINED;
-      case Token.LB:
+      case LB:
         warnings.add(JSError.make(n, BAD_ARRAY_TYPE_SYNTAX));
         return JSType.UNKNOWN;
-      case Token.STRING:
+      case STRING:
         return getNamedTypeHelper(n, registry, typeParameters);
-      case Token.PIPE: {
+      case PIPE: {
         // The way JSType.join works, Subtype|Supertype is equal to Supertype,
         // so when programmers write un-normalized unions, we normalize them
         // silently. We may also want to warn.
@@ -322,7 +322,7 @@ public final class JSTypeCreatorFromJSDoc {
         }
         return union;
       }
-      case Token.BANG: {
+      case BANG: {
         JSType nullableType = getTypeFromCommentHelper(
             n.getFirstChild(), registry, typeParameters);
         if (nullableType.isTypeVariable()) {
@@ -330,7 +330,7 @@ public final class JSTypeCreatorFromJSDoc {
         }
         return nullableType.removeType(JSType.NULL);
       }
-      case Token.QMARK: {
+      case QMARK: {
         Node child = n.getFirstChild();
         if (child == null) {
           return JSType.UNKNOWN;
@@ -339,9 +339,9 @@ public final class JSTypeCreatorFromJSDoc {
               getTypeFromCommentHelper(child, registry, typeParameters));
         }
       }
-      case Token.STAR:
+      case STAR:
         return JSType.TOP;
-      case Token.FUNCTION:
+      case FUNCTION:
         return getFunTypeHelper(n, registry, typeParameters);
       default:
         throw new IllegalArgumentException("Unsupported type exp: " +
@@ -614,11 +614,11 @@ public final class JSTypeCreatorFromJSDoc {
       for (Node arg = child.getFirstChild(); arg != null; arg = arg.getNext()) {
         try {
           switch (arg.getType()) {
-            case Token.EQUALS:
+            case EQUALS:
               builder.addOptFormal(getTypeFromCommentHelper(
                   arg.getFirstChild(), registry, typeParameters));
               break;
-            case Token.ELLIPSIS:
+            case ELLIPSIS:
               Node restNode = arg.getFirstChild();
               builder.addRestFormals(restNode == null ? JSType.UNKNOWN :
                   getTypeFromCommentHelper(restNode, registry, typeParameters));
@@ -1049,11 +1049,11 @@ public final class JSTypeCreatorFromJSDoc {
       return null;
     }
     switch (jsdoc.getType()) {
-      case Token.EQUALS:
+      case EQUALS:
         p = ParameterKind.OPTIONAL;
         jsdoc = jsdoc.getFirstChild();
         break;
-      case Token.ELLIPSIS:
+      case ELLIPSIS:
         p = ParameterKind.REST;
         jsdoc = jsdoc.getFirstChild();
         break;

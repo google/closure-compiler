@@ -65,7 +65,7 @@ class ObjectPropertyStringPostprocess implements CompilerPass {
 
       Node firstArgument = objectName.getNext();
       Node secondArgument = firstArgument.getNext();
-      int secondArgumentType = secondArgument.getType();
+      Token.Kind secondArgumentType = secondArgument.getType();
       if (secondArgumentType == Token.GETPROP) {
         // Rewrite "new goog.testing.ObjectPropertyString(window, foo.bar)"
         // as "new goog.testing.ObjectPropertyString(foo, 'bar')".

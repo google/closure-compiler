@@ -153,8 +153,8 @@ class NameReferenceGraphConstruction implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.NAME:
-        case Token.GETPROP:
+        case NAME:
+        case GETPROP:
           if (parent.isGetProp()) {
             // We will resolve this when we visit parent later in the traversal.
             return;
@@ -180,7 +180,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
           }
           break;
 
-        case Token.ASSIGN:
+        case ASSIGN:
           Node lhs = n.getFirstChild();
           Node rhs = n.getLastChild();
           if (rhs.isFunction()) {
@@ -199,7 +199,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
           maybeAliasNamesOnAssign(lhs, rhs);
           break;
 
-        case Token.VAR:
+        case VAR:
           // var foo = bar;
           Node varName = n.getFirstChild();
           Node assignedValue = varName.getFirstChild();
@@ -209,7 +209,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
           maybeAliasNamesOnAssign(varName, assignedValue);
           break;
 
-        case Token.CALL:
+        case CALL:
           Node param = n.getFirstChild();
           // We need to alias every name that is passed as a parameter because
           // they have different names inside the function's scope.

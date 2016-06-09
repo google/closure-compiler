@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 
@@ -69,13 +68,13 @@ class DisambiguatePrivateProperties
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.GETPROP:
+      case GETPROP:
         maybeRename(n.getLastChild());
         break;
-      case Token.STRING_KEY:
-      case Token.GETTER_DEF:
-      case Token.SETTER_DEF:
-      case Token.MEMBER_FUNCTION_DEF:
+      case STRING_KEY:
+      case GETTER_DEF:
+      case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
         maybeRename(n);
         break;
     }

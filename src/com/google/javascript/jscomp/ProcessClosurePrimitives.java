@@ -252,7 +252,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.CALL:
+      case CALL:
         Node left = n.getFirstChild();
         if (left.isGetProp()) {
           Node name = left.getFirstChild();
@@ -307,8 +307,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         }
         break;
 
-      case Token.ASSIGN:
-      case Token.NAME:
+      case ASSIGN:
+      case NAME:
         if (n.isName() && n.getString().equals("CLOSURE_DEFINES")) {
           handleClosureDefinesValues(t, n);
         } else {
@@ -318,11 +318,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         }
         break;
 
-      case Token.EXPR_RESULT:
+      case EXPR_RESULT:
         handleTypedefDefinition(t, n);
         break;
 
-      case Token.CLASS:
+      case CLASS:
         if (t.inGlobalHoistScope() && !NodeUtil.isClassExpression(n)) {
           String name = n.getFirstChild().getString();
           ProvidedName pn = providedNames.get(name);
@@ -332,7 +332,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         }
         break;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         // If this is a declaration of a provided named function, this is an
         // error. Hoisted functions will explode if they're provided.
         if (t.inGlobalHoistScope() &&
@@ -345,7 +345,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         }
         break;
 
-      case Token.GETPROP:
+      case GETPROP:
         if (n.getFirstChild().isName() &&
             !parent.isCall() &&
             !parent.isAssign() &&
@@ -384,12 +384,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   static boolean isValidDefineValue(Node val) {
     switch (val.getType()) {
-      case Token.STRING:
-      case Token.NUMBER:
-      case Token.TRUE:
-      case Token.FALSE:
+      case STRING:
+      case NUMBER:
+      case TRUE:
+      case FALSE:
         return true;
-      case Token.NEG:
+      case NEG:
         return val.getFirstChild().isNumber();
       default:
         return false;
@@ -1139,7 +1139,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * @return Whether the argument checked out okay
    */
   private boolean verifyOfType(NodeTraversal t, Node methodName,
-      Node arg, int desiredType) {
+      Node arg, Token.Kind desiredType) {
     if (arg.getType() != desiredType) {
       compiler.report(
           t.makeError(methodName,

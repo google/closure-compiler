@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Annotates nodes with information from their original input file
@@ -60,23 +59,23 @@ class SourceInformationAnnotator extends
 
     // Annotate the original name.
     switch (n.getType()) {
-      case Token.GETPROP:
+      case GETPROP:
         Node propNode = n.getLastChild();
         setOriginalName(n, propNode.getString());
         break;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         String functionName = NodeUtil.getNearestFunctionName(n);
         if (functionName != null) {
           setOriginalName(n, functionName);
         }
         break;
 
-      case Token.NAME:
+      case NAME:
         setOriginalName(n, n.getString());
         break;
 
-      case Token.OBJECTLIT:
+      case OBJECTLIT:
         for (Node key = n.getFirstChild(); key != null;
              key = key.getNext()) {
            // We only want keys were unquoted.

@@ -435,7 +435,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   public boolean shouldTraverse(
       NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.FUNCTION:
+      case FUNCTION:
         // normal type checking
         final TypedScope outerScope = t.getTypedScope();
         final String functionPrivateName = n.getFirstChild().getString();
@@ -476,7 +476,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     boolean typeable = true;
 
     switch (n.getType()) {
-      case Token.CAST:
+      case CAST:
         Node expr = n.getFirstChild();
         JSType exprType = getJSType(expr);
         JSType castType = getJSType(n);
@@ -494,45 +494,45 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         break;
 
-      case Token.NAME:
+      case NAME:
         typeable = visitName(t, n, parent);
         break;
 
-      case Token.COMMA:
+      case COMMA:
         ensureTyped(t, n, getJSType(n.getLastChild()));
         break;
 
-      case Token.THIS:
+      case THIS:
         ensureTyped(t, n, t.getTypedScope().getTypeOfThis());
         break;
 
-      case Token.NULL:
+      case NULL:
         ensureTyped(t, n, NULL_TYPE);
         break;
 
-      case Token.NUMBER:
+      case NUMBER:
         ensureTyped(t, n, NUMBER_TYPE);
         break;
 
-      case Token.GETTER_DEF:
-      case Token.SETTER_DEF:
+      case GETTER_DEF:
+      case SETTER_DEF:
         // Object literal keys are handled with OBJECTLIT
         break;
 
-      case Token.ARRAYLIT:
+      case ARRAYLIT:
         ensureTyped(t, n, ARRAY_TYPE);
         break;
 
-      case Token.REGEXP:
+      case REGEXP:
         ensureTyped(t, n, REGEXP_TYPE);
         break;
 
-      case Token.GETPROP:
+      case GETPROP:
         visitGetProp(t, n, parent);
         typeable = !(parent.isAssign() && parent.getFirstChild() == n);
         break;
 
-      case Token.GETELEM:
+      case GETELEM:
         visitGetElem(t, n);
         // The type of GETELEM is always unknown, so no point counting that.
         // If that unknown leaks elsewhere (say by an assignment to another
@@ -540,43 +540,43 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         typeable = false;
         break;
 
-      case Token.VAR:
+      case VAR:
         visitVar(t, n);
         typeable = false;
         break;
 
-      case Token.NEW:
+      case NEW:
         visitNew(t, n);
         break;
 
-      case Token.CALL:
+      case CALL:
         visitCall(t, n);
         typeable = !parent.isExprResult();
         break;
 
-      case Token.RETURN:
+      case RETURN:
         visitReturn(t, n);
         typeable = false;
         break;
 
-      case Token.DEC:
-      case Token.INC:
+      case DEC:
+      case INC:
         left = n.getFirstChild();
         checkPropCreation(t, left);
         validator.expectNumber(t, left, getJSType(left), "increment/decrement");
         ensureTyped(t, n, NUMBER_TYPE);
         break;
 
-      case Token.VOID:
+      case VOID:
         ensureTyped(t, n, VOID_TYPE);
         break;
 
-      case Token.STRING:
-      case Token.TYPEOF:
+      case STRING:
+      case TYPEOF:
         ensureTyped(t, n, STRING_TYPE);
         break;
 
-      case Token.BITNOT:
+      case BITNOT:
         childType = getJSType(n.getFirstChild());
         if (!childType.matchesInt32Context()) {
           report(t, n, BIT_OPERATION, NodeUtil.opToStr(n.getType()), childType.toString());
@@ -584,17 +584,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, NUMBER_TYPE);
         break;
 
-      case Token.POS:
-      case Token.NEG:
+      case POS:
+      case NEG:
         left = n.getFirstChild();
         validator.expectNumber(t, left, getJSType(left), "sign operator");
         ensureTyped(t, n, NUMBER_TYPE);
         break;
 
-      case Token.EQ:
-      case Token.NE:
-      case Token.SHEQ:
-      case Token.SHNE: {
+      case EQ:
+      case NE:
+      case SHEQ:
+      case SHNE: {
         left = n.getFirstChild();
         right = n.getLastChild();
 
@@ -647,10 +647,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
       }
 
-      case Token.LT:
-      case Token.LE:
-      case Token.GT:
-      case Token.GE:
+      case LT:
+      case LE:
+      case GT:
+      case GE:
         leftType = getJSType(n.getFirstChild());
         rightType = getJSType(n.getLastChild());
         if (rightType.isNumber()) {
@@ -673,7 +673,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
 
-      case Token.IN:
+      case IN:
         left = n.getFirstChild();
         right = n.getLastChild();
         rightType = getJSType(right);
@@ -685,7 +685,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
 
-      case Token.INSTANCEOF:
+      case INSTANCEOF:
         left = n.getFirstChild();
         right = n.getLastChild();
         rightType = getJSType(right).restrictByNotNullOrUndefined();
@@ -695,54 +695,54 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
 
-      case Token.ASSIGN:
+      case ASSIGN:
         visitAssign(t, n);
         typeable = false;
         break;
 
-      case Token.ASSIGN_LSH:
-      case Token.ASSIGN_RSH:
-      case Token.ASSIGN_URSH:
-      case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD:
-      case Token.ASSIGN_BITOR:
-      case Token.ASSIGN_BITXOR:
-      case Token.ASSIGN_BITAND:
-      case Token.ASSIGN_SUB:
-      case Token.ASSIGN_ADD:
-      case Token.ASSIGN_MUL:
+      case ASSIGN_LSH:
+      case ASSIGN_RSH:
+      case ASSIGN_URSH:
+      case ASSIGN_DIV:
+      case ASSIGN_MOD:
+      case ASSIGN_BITOR:
+      case ASSIGN_BITXOR:
+      case ASSIGN_BITAND:
+      case ASSIGN_SUB:
+      case ASSIGN_ADD:
+      case ASSIGN_MUL:
         checkPropCreation(t, n.getFirstChild());
         // fall through
 
-      case Token.LSH:
-      case Token.RSH:
-      case Token.URSH:
-      case Token.DIV:
-      case Token.MOD:
-      case Token.BITOR:
-      case Token.BITXOR:
-      case Token.BITAND:
-      case Token.SUB:
-      case Token.ADD:
-      case Token.MUL:
+      case LSH:
+      case RSH:
+      case URSH:
+      case DIV:
+      case MOD:
+      case BITOR:
+      case BITXOR:
+      case BITAND:
+      case SUB:
+      case ADD:
+      case MUL:
         visitBinaryOperator(n.getType(), t, n);
         break;
 
-      case Token.TRUE:
-      case Token.FALSE:
-      case Token.NOT:
-      case Token.DELPROP:
+      case TRUE:
+      case FALSE:
+      case NOT:
+      case DELPROP:
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
 
-      case Token.CASE:
+      case CASE:
         JSType switchType = getJSType(parent.getFirstChild());
         JSType caseType = getJSType(n.getFirstChild());
         validator.expectSwitchMatchesCase(t, n, switchType, caseType);
         typeable = false;
         break;
 
-      case Token.WITH: {
+      case WITH: {
         Node child = n.getFirstChild();
         childType = getJSType(child);
         validator.expectObject(t, child, childType, "with requires an object");
@@ -750,39 +750,39 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
       }
 
-      case Token.MEMBER_FUNCTION_DEF:
+      case MEMBER_FUNCTION_DEF:
         ensureTyped(t, n, getJSType(n.getFirstChild()));
         break;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         visitFunction(t, n);
         break;
 
         // These nodes have no interesting type behavior.
         // These nodes require data flow analysis.
-      case Token.PARAM_LIST:
-      case Token.STRING_KEY:
-      case Token.LABEL:
-      case Token.LABEL_NAME:
-      case Token.SWITCH:
-      case Token.BREAK:
-      case Token.CATCH:
-      case Token.TRY:
-      case Token.SCRIPT:
-      case Token.EXPR_RESULT:
-      case Token.BLOCK:
-      case Token.EMPTY:
-      case Token.DEFAULT_CASE:
-      case Token.CONTINUE:
-      case Token.DEBUGGER:
-      case Token.THROW:
-      case Token.DO:
-      case Token.IF:
-      case Token.WHILE:
+      case PARAM_LIST:
+      case STRING_KEY:
+      case LABEL:
+      case LABEL_NAME:
+      case SWITCH:
+      case BREAK:
+      case CATCH:
+      case TRY:
+      case SCRIPT:
+      case EXPR_RESULT:
+      case BLOCK:
+      case EMPTY:
+      case DEFAULT_CASE:
+      case CONTINUE:
+      case DEBUGGER:
+      case THROW:
+      case DO:
+      case IF:
+      case WHILE:
         typeable = false;
         break;
 
-      case Token.FOR:
+      case FOR:
         if (NodeUtil.isForIn(n)) {
           Node obj = n.getSecondChild();
           if (getJSType(obj).isStruct()) {
@@ -793,10 +793,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       // These nodes are typed during the type inference.
-      case Token.AND:
-      case Token.HOOK:
-      case Token.OBJECTLIT:
-      case Token.OR:
+      case AND:
+      case HOOK:
+      case OBJECTLIT:
+      case OR:
         if (n.getJSType() != null) { // If we didn't run type inference.
           ensureTyped(t, n);
         } else {
@@ -1300,7 +1300,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   static JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
     if (valueType != null) {
       switch (key.getType()) {
-        case Token.GETTER_DEF:
+        case GETTER_DEF:
           // GET must always return a function type.
           if (valueType.isFunctionType()) {
             FunctionType fntype = valueType.toMaybeFunctionType();
@@ -1309,7 +1309,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             return null;
           }
           break;
-        case Token.SETTER_DEF:
+        case SETTER_DEF:
           if (valueType.isFunctionType()) {
             // SET must always return a function type.
             FunctionType fntype = valueType.toMaybeFunctionType();
@@ -1379,7 +1379,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // variable declarations are ignored.
     // TODO(user): remove this short-circuiting in favor of a
     // pre order traversal of the FUNCTION, CATCH, LP and VAR nodes.
-    int parentNodeType = parent.getType();
+    Token.Kind parentNodeType = parent.getType();
     if (parentNodeType == Token.FUNCTION ||
         parentNodeType == Token.CATCH ||
         parentNodeType == Token.PARAM_LIST ||
@@ -1859,18 +1859,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param t The traversal object, needed to report errors.
    * @param n The node being checked.
    */
-  private void visitBinaryOperator(int op, NodeTraversal t, Node n) {
+  private void visitBinaryOperator(Token.Kind op, NodeTraversal t, Node n) {
     Node left = n.getFirstChild();
     JSType leftType = getJSType(left);
     Node right = n.getLastChild();
     JSType rightType = getJSType(right);
     switch (op) {
-      case Token.ASSIGN_LSH:
-      case Token.ASSIGN_RSH:
-      case Token.LSH:
-      case Token.RSH:
-      case Token.ASSIGN_URSH:
-      case Token.URSH:
+      case ASSIGN_LSH:
+      case ASSIGN_RSH:
+      case LSH:
+      case RSH:
+      case ASSIGN_URSH:
+      case URSH:
         if (!leftType.matchesInt32Context()) {
           report(t, left, BIT_OPERATION,
                    NodeUtil.opToStr(n.getType()), leftType.toString());
@@ -1881,32 +1881,32 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         break;
 
-      case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD:
-      case Token.ASSIGN_MUL:
-      case Token.ASSIGN_SUB:
-      case Token.DIV:
-      case Token.MOD:
-      case Token.MUL:
-      case Token.SUB:
+      case ASSIGN_DIV:
+      case ASSIGN_MOD:
+      case ASSIGN_MUL:
+      case ASSIGN_SUB:
+      case DIV:
+      case MOD:
+      case MUL:
+      case SUB:
         validator.expectNumber(t, left, leftType, "left operand");
         validator.expectNumber(t, right, rightType, "right operand");
         break;
 
-      case Token.ASSIGN_BITAND:
-      case Token.ASSIGN_BITXOR:
-      case Token.ASSIGN_BITOR:
-      case Token.BITAND:
-      case Token.BITXOR:
-      case Token.BITOR:
+      case ASSIGN_BITAND:
+      case ASSIGN_BITXOR:
+      case ASSIGN_BITOR:
+      case BITAND:
+      case BITXOR:
+      case BITOR:
         validator.expectBitwiseable(t, left, leftType,
             "bad left operand to bitwise operator");
         validator.expectBitwiseable(t, right, rightType,
             "bad right operand to bitwise operator");
         break;
 
-      case Token.ASSIGN_ADD:
-      case Token.ADD:
+      case ASSIGN_ADD:
+      case ADD:
         break;
 
       default:

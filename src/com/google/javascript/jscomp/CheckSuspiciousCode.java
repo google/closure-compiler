@@ -71,7 +71,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private void checkMissingSemicolon(NodeTraversal t, Node n) {
     switch (n.getType()) {
-      case Token.IF:
+      case IF:
         Node trueCase = n.getSecondChild();
         reportIfWasEmpty(t, trueCase);
         Node elseCase = trueCase.getNext();
@@ -80,9 +80,9 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
         }
         break;
 
-      case Token.WHILE:
-      case Token.FOR:
-      case Token.FOR_OF:
+      case WHILE:
+      case FOR:
+      case FOR_OF:
         reportIfWasEmpty(t, NodeUtil.getLoopCodeBlock(n));
         break;
     }
@@ -102,14 +102,14 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private void checkNaN(NodeTraversal t, Node n) {
     switch (n.getType()) {
-      case Token.EQ:
-      case Token.GE:
-      case Token.GT:
-      case Token.LE:
-      case Token.LT:
-      case Token.NE:
-      case Token.SHEQ:
-      case Token.SHNE:
+      case EQ:
+      case GE:
+      case GT:
+      case LE:
+      case LT:
+      case NE:
+      case SHEQ:
+      case SHNE:
         reportIfNaN(t, n.getFirstChild());
         reportIfNaN(t, n.getLastChild());
     }

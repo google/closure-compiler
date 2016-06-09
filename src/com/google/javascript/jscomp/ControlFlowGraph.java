@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.Comparator;
 
@@ -149,11 +148,11 @@ public class ControlFlowGraph<N> extends
   public static boolean isEnteringNewCfgNode(Node n) {
     Node parent = n.getParent();
     switch (parent.getType()) {
-      case Token.BLOCK:
-      case Token.SCRIPT:
-      case Token.TRY:
+      case BLOCK:
+      case SCRIPT:
+      case TRY:
         return true;
-      case Token.FUNCTION:
+      case FUNCTION:
         // A function node represents the start of a function where the name
         // bleeds into the local scope and parameters are assigned
         // to the formal argument names. The node includes the name of the
@@ -162,14 +161,14 @@ public class ControlFlowGraph<N> extends
         // control is going into the function's body, represented by the second
         // child.
         return n != parent.getSecondChild();
-      case Token.WHILE:
-      case Token.DO:
-      case Token.IF:
+      case WHILE:
+      case DO:
+      case IF:
         // These control structures are represented by a node that holds the
         // condition. Each of them is a branch node based on its condition.
         return NodeUtil.getConditionExpression(parent) != n;
 
-      case Token.FOR:
+      case FOR:
         // The FOR(;;) node differs from other control structures in that
         // it has an initialization and an increment statement. Those
         // two statements have corresponding CFG nodes to represent them.
@@ -184,10 +183,10 @@ public class ControlFlowGraph<N> extends
         } else {
           return NodeUtil.getConditionExpression(parent) != n;
         }
-      case Token.SWITCH:
-      case Token.CASE:
-      case Token.CATCH:
-      case Token.WITH:
+      case SWITCH:
+      case CASE:
+      case CATCH:
+      case WITH:
         return n != parent.getFirstChild();
       default:
         return false;

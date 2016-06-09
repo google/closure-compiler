@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 /**
  * Reorder constant expression hoping for a better compression.
@@ -45,7 +46,7 @@ class ReorderConstantExpression extends AbstractPeepholeOptimization {
 
         // if relational, get the inverse operator.
         if (NodeUtil.isRelationalOperation(subtree)){
-          int inverseOperator = NodeUtil.getInverseOperator(subtree.getType());
+          Token.Kind inverseOperator = NodeUtil.getInverseOperator(subtree.getType());
           subtree.setType(inverseOperator);
         }
 

@@ -23,7 +23,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -275,15 +274,15 @@ class VarCheck extends AbstractPostOrderCallback implements
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         switch (parent.getType()) {
-          case Token.VAR:
-          case Token.LET:
-          case Token.CONST:
-          case Token.FUNCTION:
-          case Token.CLASS:
-          case Token.PARAM_LIST:
+          case VAR:
+          case LET:
+          case CONST:
+          case FUNCTION:
+          case CLASS:
+          case PARAM_LIST:
             // These are okay.
             break;
-          case Token.GETPROP:
+          case GETPROP:
             if (n == parent.getFirstChild()) {
               Scope scope = t.getScope();
               Var var = scope.getVar(n.getString());
@@ -293,7 +292,7 @@ class VarCheck extends AbstractPostOrderCallback implements
               }
             }
             break;
-         case Token.ASSIGN:
+         case ASSIGN:
             // Don't warn for the "window.foo = foo;" nodes added by
             // DeclaredGlobalExternsOnWindow, nor for alias declarations
             // of the form "/** @const */ ns.Foo = Bar;"

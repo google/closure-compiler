@@ -80,11 +80,11 @@ class MinimizedCondition {
    */
   static MinimizedCondition fromConditionNode(Node n) {
     switch (n.getType()) {
-      case Token.NOT:
-      case Token.AND:
-      case Token.OR:
-      case Token.HOOK:
-      case Token.COMMA:
+      case NOT:
+      case AND:
+      case OR:
+      case HOOK:
+      case COMMA:
         Node placeholder = swapWithPlaceholderNode(n);
         return computeMinimizedCondition(n).setPlaceholder(placeholder);
       default:
@@ -166,7 +166,7 @@ class MinimizedCondition {
   private static MinimizedCondition computeMinimizedCondition(Node n) {
     Preconditions.checkArgument(n.getParent() == null);
     switch (n.getType()) {
-      case Token.NOT: {
+      case NOT: {
         MinimizedCondition subtree =
             computeMinimizedCondition(n.getFirstChild().detachFromParent());
         ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
@@ -179,10 +179,10 @@ class MinimizedCondition {
             Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
             Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
       }
-      case Token.AND:
-      case Token.OR: {
-        int opType = n.getType();
-        int complementType = opType == Token.AND ? Token.OR : Token.AND;
+      case AND:
+      case OR: {
+        Token.Kind opType = n.getType();
+        Token.Kind complementType = opType == Token.AND ? Token.OR : Token.AND;
         MinimizedCondition leftSubtree =
             computeMinimizedCondition(n.getFirstChild().detachFromParent());
         MinimizedCondition rightSubtree =
@@ -205,7 +205,7 @@ class MinimizedCondition {
             Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
             Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
       }
-      case Token.HOOK: {
+      case HOOK: {
         Node cond = n.getFirstChild();
         Node thenNode = cond.getNext();
         Node elseNode = thenNode.getNext();
@@ -223,7 +223,7 @@ class MinimizedCondition {
             elseSubtree.negative);
         return new MinimizedCondition(posTree, negTree);
       }
-      case Token.COMMA: {
+      case COMMA: {
         Node lhs = n.getFirstChild();
         MinimizedCondition rhsSubtree =
             computeMinimizedCondition(lhs.getNext().detachFromParent());
@@ -274,16 +274,16 @@ class MinimizedCondition {
     private MeasuredNode negate() {
       this.change();
       switch (node.getType()) {
-        case Token.EQ:
+        case EQ:
           node.setType(Token.NE);
           return this;
-        case Token.NE:
+        case NE:
           node.setType(Token.EQ);
           return this;
-        case Token.SHEQ:
+        case SHEQ:
           node.setType(Token.SHNE);
           return this;
-        case Token.SHNE:
+        case SHNE:
           node.setType(Token.SHEQ);
           return this;
         default:

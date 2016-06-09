@@ -27,7 +27,6 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 
@@ -189,8 +188,8 @@ class ReplaceStrings extends AbstractPostOrderCallback
     // TODO(johnlenz): Determine if it is necessary to support ".call" or
     // ".apply".
     switch (n.getType()) {
-      case Token.NEW: // e.g. new Error('msg');
-      case Token.CALL: // e.g. Error('msg');
+      case NEW: // e.g. new Error('msg');
+      case CALL: // e.g. Error('msg');
         Node calledFn = n.getFirstChild();
 
         // Look for calls to static functions.
@@ -302,12 +301,12 @@ class ReplaceStrings extends AbstractPostOrderCallback
     String key = null;
     String replacementString;
     switch (expr.getType()) {
-      case Token.STRING:
+      case STRING:
         key = expr.getString();
         replacementString = getReplacement(key);
         replacement = IR.string(replacementString);
         break;
-      case Token.ADD:
+      case ADD:
         StringBuilder keyBuilder = new StringBuilder();
         Node keyNode = IR.string("");
         replacement = buildReplacement(expr, keyNode, keyBuilder);
@@ -315,7 +314,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
         replacementString = getReplacement(key);
         keyNode.setString(replacementString);
         break;
-      case Token.NAME:
+      case NAME:
         // If the referenced variable is a constant, use its value.
         Var var = t.getScope().getVar(expr.getString());
         if (var != null && var.isInferredConst()) {
@@ -384,12 +383,12 @@ class ReplaceStrings extends AbstractPostOrderCallback
   private Node buildReplacement(
       Node expr, Node prefix, StringBuilder keyBuilder) {
     switch (expr.getType()) {
-      case Token.ADD:
+      case ADD:
         Node left = expr.getFirstChild();
         Node right = left.getNext();
         prefix = buildReplacement(left, prefix, keyBuilder);
         return buildReplacement(right, prefix, keyBuilder);
-      case Token.STRING:
+      case STRING:
         keyBuilder.append(expr.getString());
         return prefix;
       default:

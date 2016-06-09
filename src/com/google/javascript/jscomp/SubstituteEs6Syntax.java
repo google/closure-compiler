@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * An optimization that does peephole optimizations of ES6 code.
@@ -47,7 +46,7 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch(n.getType()) {
-      case Token.FUNCTION:
+      case FUNCTION:
         if (n.isArrowFunction()) {
           maybeSimplifyArrowFunctionBody(n, n.getLastChild());
         }

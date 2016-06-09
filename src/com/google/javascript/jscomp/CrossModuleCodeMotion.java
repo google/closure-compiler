@@ -225,13 +225,13 @@ class CrossModuleCodeMotion implements CompilerPass {
   private static boolean hasConditionalAncestor(Node n) {
     for (Node ancestor : n.getAncestors()) {
       switch (ancestor.getType()) {
-        case Token.DO:
-        case Token.FOR:
-        case Token.HOOK:
-        case Token.IF:
-        case Token.SWITCH:
-        case Token.WHILE:
-        case Token.FUNCTION:
+        case DO:
+        case FOR:
+        case HOOK:
+        case IF:
+        case SWITCH:
+        case WHILE:
+        case FUNCTION:
           return true;
       }
     }
@@ -370,22 +370,22 @@ class CrossModuleCodeMotion implements CompilerPass {
     Node parent = name.getParent();
     Node grandparent = parent.getParent();
     switch (parent.getType()) {
-      case Token.VAR:
+      case VAR:
         if (canMoveValue(collector, ref.getScope(), name.getFirstChild())) {
           return info.addDeclaration(
               new Declaration(getModule(ref), name));
         }
         return false;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         if (NodeUtil.isFunctionDeclaration(parent)) {
           return info.addDeclaration(
               new Declaration(getModule(ref), name));
         }
         return false;
 
-      case Token.ASSIGN:
-      case Token.GETPROP:
+      case ASSIGN:
+      case GETPROP:
         Node child = name;
 
         // Look for assignment expressions where the name is the root
@@ -410,7 +410,7 @@ class CrossModuleCodeMotion implements CompilerPass {
         }
         return false;
 
-      case Token.CALL:
+      case CALL:
         if (NodeUtil.isExprCall(grandparent)) {
           SubclassRelationship relationship =
               compiler.getCodingConvention().getClassesDefinedByCall(parent);

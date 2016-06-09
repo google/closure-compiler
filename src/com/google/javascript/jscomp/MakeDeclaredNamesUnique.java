@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
 import java.util.ArrayDeque;
@@ -114,7 +113,7 @@ class MakeDeclaredNamesUnique
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.FUNCTION: {
+      case FUNCTION: {
         // Add recursive function name, if needed.
         // NOTE: "enterScope" is called after we need to pick up this name.
         Renamer renamer = nameStack.peek().forChildScope(false);
@@ -130,7 +129,7 @@ class MakeDeclaredNamesUnique
         break;
       }
 
-      case Token.PARAM_LIST: {
+      case PARAM_LIST: {
         Renamer renamer = nameStack.peek().forChildScope(true);
 
         // Add the function parameters
@@ -146,7 +145,7 @@ class MakeDeclaredNamesUnique
         break;
       }
 
-      case Token.CATCH: {
+      case CATCH: {
         Renamer renamer = nameStack.peek().forChildScope(false);
 
         String name = n.getFirstChild().getString();
@@ -163,7 +162,7 @@ class MakeDeclaredNamesUnique
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.NAME:
+      case NAME:
         String newName = getReplacementName(n.getString());
         if (newName != null) {
           Renamer renamer = nameStack.peek();
@@ -176,20 +175,20 @@ class MakeDeclaredNamesUnique
         }
         break;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         // Remove the function body scope
         nameStack.pop();
         // Remove function recursive name (if any).
         nameStack.pop();
         break;
 
-      case Token.PARAM_LIST:
+      case PARAM_LIST:
         // Note: The parameters and function body variables live in the
         // same scope, we introduce the scope when in the "shouldTraverse"
         // visit of LP, but remove it when when we exit the function above.
         break;
 
-      case Token.CATCH:
+      case CATCH:
         // Remove catch except name from the stack of names.
         nameStack.pop();
         break;

@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -110,39 +109,39 @@ class StripCode implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.VAR:
+        case VAR:
           removeVarDeclarationsByNameOrRvalue(t, n, parent);
           break;
 
-        case Token.NAME:
+        case NAME:
           maybeRemoveReferenceToRemovedVariable(t, n, parent);
           break;
 
-        case Token.ASSIGN:
-        case Token.ASSIGN_BITOR:
-        case Token.ASSIGN_BITXOR:
-        case Token.ASSIGN_BITAND:
-        case Token.ASSIGN_LSH:
-        case Token.ASSIGN_RSH:
-        case Token.ASSIGN_URSH:
-        case Token.ASSIGN_ADD:
-        case Token.ASSIGN_SUB:
-        case Token.ASSIGN_MUL:
-        case Token.ASSIGN_DIV:
-        case Token.ASSIGN_MOD:
+        case ASSIGN:
+        case ASSIGN_BITOR:
+        case ASSIGN_BITXOR:
+        case ASSIGN_BITAND:
+        case ASSIGN_LSH:
+        case ASSIGN_RSH:
+        case ASSIGN_URSH:
+        case ASSIGN_ADD:
+        case ASSIGN_SUB:
+        case ASSIGN_MUL:
+        case ASSIGN_DIV:
+        case ASSIGN_MOD:
           maybeEliminateAssignmentByLvalueName(t, n, parent);
           break;
 
-        case Token.CALL:
-        case Token.NEW:
+        case CALL:
+        case NEW:
           maybeRemoveCall(t, n, parent);
           break;
 
-        case Token.OBJECTLIT:
+        case OBJECTLIT:
           eliminateKeysWithStripNamesFromObjLit(t, n);
           break;
 
-        case Token.EXPR_RESULT:
+        case EXPR_RESULT:
           maybeEliminateExpressionByName(t, n, parent);
           break;
       }
@@ -188,15 +187,15 @@ class StripCode implements CompilerPass {
     void maybeRemoveReferenceToRemovedVariable(NodeTraversal t, Node n,
                                                Node parent) {
       switch (parent.getType()) {
-        case Token.VAR:
+        case VAR:
           // This is a variable declaration, not a reference.
           break;
 
-        case Token.GETPROP:
+        case GETPROP:
           // GETPROP
           //   NAME
           //   STRING (property name)
-        case Token.GETELEM:
+        case GETELEM:
           // GETELEM
           //   NAME
           //   NUMBER|STRING|NAME|...
@@ -205,18 +204,18 @@ class StripCode implements CompilerPass {
           }
           break;
 
-        case Token.ASSIGN:
-        case Token.ASSIGN_BITOR:
-        case Token.ASSIGN_BITXOR:
-        case Token.ASSIGN_BITAND:
-        case Token.ASSIGN_LSH:
-        case Token.ASSIGN_RSH:
-        case Token.ASSIGN_URSH:
-        case Token.ASSIGN_ADD:
-        case Token.ASSIGN_SUB:
-        case Token.ASSIGN_MUL:
-        case Token.ASSIGN_DIV:
-        case Token.ASSIGN_MOD:
+        case ASSIGN:
+        case ASSIGN_BITOR:
+        case ASSIGN_BITXOR:
+        case ASSIGN_BITAND:
+        case ASSIGN_LSH:
+        case ASSIGN_RSH:
+        case ASSIGN_URSH:
+        case ASSIGN_ADD:
+        case ASSIGN_SUB:
+        case ASSIGN_MUL:
+        case ASSIGN_DIV:
+        case ASSIGN_MOD:
           if (isReferenceToRemovedVar(t, n)) {
             if (parent.getFirstChild() == n) {
               Node grandparent = parent.getParent();

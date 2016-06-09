@@ -63,7 +63,7 @@ class ConvertToTypedInterface extends AbstractPreOrderCallback implements Compil
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.FUNCTION: {
+      case FUNCTION: {
         if (parent.isCall()) {
           Preconditions.checkState(!parent.getFirstChild().matchesQualifiedName("goog.scope"),
               parent);
@@ -78,25 +78,25 @@ class ConvertToTypedInterface extends AbstractPreOrderCallback implements Compil
         }
         break;
       }
-      case Token.EXPR_RESULT:
+      case EXPR_RESULT:
         Node expr = n.getFirstChild();
         switch (expr.getType()) {
-          case Token.NUMBER:
-          case Token.STRING:
+          case NUMBER:
+          case STRING:
             n.detachFromParent();
             compiler.reportCodeChange();
             break;
-          case Token.CALL:
+          case CALL:
             Preconditions.checkState(!n.getFirstChild().matchesQualifiedName("goog.scope"), n);
             Preconditions.checkState(
                 !n.getFirstChild().matchesQualifiedName("goog.forwardDeclare"), n);
             n.detachFromParent();
             compiler.reportCodeChange();
             break;
-          case Token.ASSIGN:
+          case ASSIGN:
             processName(expr.getFirstChild(), n);
             break;
-          case Token.GETPROP:
+          case GETPROP:
             processName(expr, n);
             break;
           default:
@@ -107,25 +107,25 @@ class ConvertToTypedInterface extends AbstractPreOrderCallback implements Compil
             break;
         }
         break;
-      case Token.VAR:
-      case Token.CONST:
-      case Token.LET:
+      case VAR:
+      case CONST:
+      case LET:
         if (n.getChildCount() == 1) {
           processName(n.getFirstChild(), n);
         }
         break;
-      case Token.THROW:
-      case Token.RETURN:
-      case Token.BREAK:
-      case Token.CONTINUE:
-      case Token.DEBUGGER:
+      case THROW:
+      case RETURN:
+      case BREAK:
+      case CONTINUE:
+      case DEBUGGER:
         n.detachFromParent();
         compiler.reportCodeChange();
         break;
-      case Token.FOR_OF:
-      case Token.DO:
-      case Token.WHILE:
-      case Token.FOR: {
+      case FOR_OF:
+      case DO:
+      case WHILE:
+      case FOR: {
         Node body = NodeUtil.getLoopCodeBlock(n);
         parent.replaceChild(n, body.detachFromParent());
         Node initializer = n.isFor() ? n.getFirstChild() : IR.empty();
@@ -136,7 +136,7 @@ class ConvertToTypedInterface extends AbstractPreOrderCallback implements Compil
         compiler.reportCodeChange();
         break;
       }
-      case Token.LABEL:
+      case LABEL:
         parent.replaceChild(n, n.getSecondChild().detachFromParent());
         compiler.reportCodeChange();
         break;
@@ -147,14 +147,14 @@ class ConvertToTypedInterface extends AbstractPreOrderCallback implements Compil
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.TRY:
-      case Token.DEFAULT_CASE:
+      case TRY:
+      case DEFAULT_CASE:
         parent.replaceChild(n, n.getFirstChild().detachFromParent());
         compiler.reportCodeChange();
         break;
-      case Token.IF:
-      case Token.SWITCH:
-      case Token.CASE:
+      case IF:
+      case SWITCH:
+      case CASE:
         parent.addChildrenAfter(n.removeChildren().getNext(), n);
         n.detachFromParent();
         compiler.reportCodeChange();

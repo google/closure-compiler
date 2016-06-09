@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -89,7 +88,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
 
     switch (n.getType()) {
       // Infer JSDocInfo on types of all type declarations on variables.
-      case Token.NAME:
+      case NAME:
         if (parent == null) {
           return;
         }
@@ -140,9 +139,9 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         attachJSDocInfoToNominalTypeOrShape(objType, docInfo, n.getString());
         break;
 
-      case Token.STRING_KEY:
-      case Token.GETTER_DEF:
-      case Token.SETTER_DEF:
+      case STRING_KEY:
+      case GETTER_DEF:
+      case SETTER_DEF:
         docInfo = n.getJSDocInfo();
         if (docInfo == null) {
           return;
@@ -156,7 +155,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         }
         break;
 
-      case Token.GETPROP:
+      case GETPROP:
         // Infer JSDocInfo on properties.
         // There are two ways to write doc comments on a property.
         //

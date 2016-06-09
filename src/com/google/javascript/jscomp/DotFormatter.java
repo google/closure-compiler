@@ -197,9 +197,9 @@ public final class DotFormatter {
   }
 
   private static String name(Node n) {
-    int type = n.getType();
+    Token.Kind type = n.getType();
     switch (type) {
-      case Token.VOID:
+      case VOID:
         return "VOID";
 
       default:

@@ -278,7 +278,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.CALL:
+        case CALL:
           if (n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.INHERITS)) {
             inheritsCalls.add(n);
           }
@@ -286,18 +286,18 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
             visitDefinedPropertiesCall(t, n);
           }
           break;
-        case Token.VAR:
+        case VAR:
           visitVar(n);
           break;
-        case Token.ASSIGN:
+        case ASSIGN:
           visitAssign(t, n);
           break;
-        case Token.GETPROP:
+        case GETPROP:
           if (parent.isExprResult()) {
             visitGetProp(t, n);
           }
           break;
-        case Token.FUNCTION:
+        case FUNCTION:
           visitFunctionClassDef(n);
           break;
       }

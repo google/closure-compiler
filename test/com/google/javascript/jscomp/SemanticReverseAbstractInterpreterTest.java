@@ -357,7 +357,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testInequalitiesCondition1() {
-    for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
+    for (Token.Kind op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
       FlowScope blind = newScope();
       testBinop(blind,
           op,
@@ -376,7 +376,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testInequalitiesCondition2() {
-    for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
+    for (Token.Kind op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
       FlowScope blind = newScope();
       testBinop(blind,
           op,
@@ -403,7 +403,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testInequalitiesCondition3() {
-    for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
+    for (Token.Kind op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
       FlowScope blind = newScope();
       testBinop(blind,
           op,
@@ -545,7 +545,7 @@ public final class SemanticReverseAbstractInterpreterTest
             new TypedName("s", STRING_OBJECT_FUNCTION_TYPE)));
   }
 
-  private void testBinop(FlowScope blind, int binop, Node left, Node right,
+  private void testBinop(FlowScope blind, Token.Kind binop, Node left, Node right,
       Collection<TypedName> trueOutcome,
       Collection<TypedName> falseOutcome) {
     Node condition = new Node(binop);

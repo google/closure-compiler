@@ -56,195 +56,386 @@ public class Token {
    *
    * TODO(bradfordcsmith): Add instructions for assigning new values.
    */
-  public static final int
-      RETURN = 4,
-      BITOR = 9,
-      BITXOR = 10,
-      BITAND = 11,
-      EQ = 12,
-      NE = 13,
-      LT = 14,
-      LE = 15,
-      GT = 16,
-      GE = 17,
-      LSH = 18,
-      RSH = 19,
-      URSH = 20,
-      ADD = 21,
-      SUB = 22,
-      MUL = 23,
-      DIV = 24,
-      MOD = 25,
-      NOT = 26,
-      BITNOT = 27,
-      POS = 28,
-      NEG = 29,
-      NEW = 30,
-      DELPROP = 31,
-      TYPEOF = 32,
-      GETPROP = 33,
-      GETELEM = 35,
-      CALL = 37,
-      NAME = 38,
-      NUMBER = 39,
-      STRING = 40,
-      NULL = 41,
-      THIS = 42,
-      FALSE = 43,
-      TRUE = 44,
-      SHEQ = 45, // shallow equality (===)
-      SHNE = 46, // shallow inequality (!==)
-      REGEXP = 47,
-      THROW = 49,
-      IN = 51,
-      INSTANCEOF = 52,
-      ARRAYLIT = 63, // array literal
-      OBJECTLIT = 64, // object literal
+  public enum Kind {
+      RETURN,
+      BITOR,
+      BITXOR,
+      BITAND,
+      EQ,
+      NE,
+      LT,
+      LE,
+      GT,
+      GE,
+      LSH,
+      RSH,
+      URSH,
+      ADD,
+      SUB,
+      MUL,
+      DIV,
+      MOD,
+      NOT,
+      BITNOT,
+      POS,
+      NEG,
+      NEW,
+      DELPROP,
+      TYPEOF,
+      GETPROP,
+      GETELEM,
+      CALL,
+      NAME,
+      NUMBER,
+      STRING,
+      NULL,
+      THIS,
+      FALSE,
+      TRUE,
+      SHEQ, // shallow equality (===)
+      SHNE, // shallow inequality (!==)
+      REGEXP,
+      THROW,
+      IN,
+      INSTANCEOF,
+      ARRAYLIT, // array literal
+      OBJECTLIT, // object literal
 
-      TRY = 77,
-      PARAM_LIST = 83,
-      COMMA = 85, // comma operator
+      TRY,
+      PARAM_LIST,
+      COMMA, // comma operator
 
-      ASSIGN = 86, // simple assignment  (=)
-      ASSIGN_BITOR = 87, // |=
-      ASSIGN_BITXOR = 88, // ^=
-      ASSIGN_BITAND = 89, // &=
-      ASSIGN_LSH = 90, // <<=
-      ASSIGN_RSH = 91, // >>=
-      ASSIGN_URSH = 92, // >>>=
-      ASSIGN_ADD = 93, // +=
-      ASSIGN_SUB = 94, // -=
-      ASSIGN_MUL = 95, // *=
-      ASSIGN_DIV = 96, // /=
-      ASSIGN_MOD = 97, // %=
+      ASSIGN, // simple assignment  (=)
+      ASSIGN_BITOR, // |=
+      ASSIGN_BITXOR, // ^=
+      ASSIGN_BITAND, // &=
+      ASSIGN_LSH, // <<=
+      ASSIGN_RSH, // >>=
+      ASSIGN_URSH, // >>>=
+      ASSIGN_ADD, // +=
+      ASSIGN_SUB, // -=
+      ASSIGN_MUL, // *=
+      ASSIGN_DIV, // /=
+      ASSIGN_MOD, // %=
 
-      HOOK = 98, // conditional (?:)
-      OR = 100, // logical or (||)
-      AND = 101, // logical and (&&)
-      INC = 102, // increment (++)
-      DEC = 103, // decrement (--)
-      FUNCTION = 105, // function keyword
-      IF = 108, // if keyword
-      SWITCH = 110, // switch keyword
-      CASE = 111, // case keyword
-      DEFAULT_CASE = 112, // default keyword
-      WHILE = 113, // while keyword
-      DO = 114, // do keyword
-      FOR = 115, // for keyword
-      BREAK = 116, // break keyword
-      CONTINUE = 117, // continue keyword
-      VAR = 118, // var keyword
-      WITH = 119, // with keyword
-      CATCH = 120, // catch keyword
-      VOID = 122, // void keyword
+      HOOK, // conditional (?:)
+      OR, // logical or (||)
+      AND, // logical and (&&)
+      INC, // increment (++)
+      DEC, // decrement (--)
+      FUNCTION, // function keyword
+      IF, // if keyword
+      SWITCH, // switch keyword
+      CASE, // case keyword
+      DEFAULT_CASE, // default keyword
+      WHILE, // while keyword
+      DO, // do keyword
+      FOR, // for keyword
+      BREAK, // break keyword
+      CONTINUE, // continue keyword
+      VAR, // var keyword
+      WITH, // with keyword
+      CATCH, // catch keyword
+      VOID, // void keyword
 
-      EMPTY = 124,
+      EMPTY,
 
-      BLOCK = 125, // statement block
-      LABEL = 126, // label
-      EXPR_RESULT = 130, // expression statement in scripts
-      SCRIPT = 132, // top-level node for entire script
+      BLOCK, // statement block
+      LABEL, // label
+      EXPR_RESULT, // expression statement in scripts
+      SCRIPT, // top-level node for entire script
 
-      GETTER_DEF = 147,
-      SETTER_DEF = 148,
+      GETTER_DEF,
+      SETTER_DEF,
 
-      CONST = 149, // JS 1.5 const keyword
-      DEBUGGER = 152,
+      CONST, // JS 1.5 const keyword
+      DEBUGGER,
 
       // JSCompiler introduced tokens
-      LABEL_NAME = 153,
-      STRING_KEY = 154, // object literal key
-      CAST = 155,
+      LABEL_NAME,
+      STRING_KEY, // object literal key
+      CAST,
 
       // ES6
-      ARRAY_PATTERN = 156, // destructuring patterns
-      OBJECT_PATTERN = 157,
-      DESTRUCTURING_LHS = 158, // The node inside a var/let/const with a destructuring LHS
+      ARRAY_PATTERN, // destructuring patterns
+      OBJECT_PATTERN,
+      DESTRUCTURING_LHS, // The node inside a var/let/const with a destructuring LHS
 
-      CLASS = 159, // classes
-      CLASS_MEMBERS = 160, // class member container
-      MEMBER_FUNCTION_DEF = 161,
-      SUPER = 162,
+      CLASS, // classes
+      CLASS_MEMBERS, // class member container
+      MEMBER_FUNCTION_DEF,
+      SUPER,
 
-      LET = 163, // block scoped vars
+      LET, // block scoped vars
 
-      FOR_OF = 164, // for-of
+      FOR_OF, // for-of
 
-      YIELD = 165, // generators
+      YIELD, // generators
 
-      IMPORT = 166, // modules
-      IMPORT_SPECS = 167,
-      IMPORT_SPEC = 168,
-      IMPORT_STAR = 169, // "* as name", called NameSpaceImport in the spec.
-      EXPORT = 170,
-      EXPORT_SPECS = 171,
-      EXPORT_SPEC = 172,
+      IMPORT, // modules
+      IMPORT_SPECS,
+      IMPORT_SPEC,
+      IMPORT_STAR, // "* as name", called NameSpaceImport in the spec.
+      EXPORT,
+      EXPORT_SPECS,
+      EXPORT_SPEC,
 
-      REST = 174, // "..." in formal parameters, or an array pattern.
-      SPREAD = 175, // "..." in a call expression, or an array literal.
+      REST, // "..." in formal parameters, or an array pattern.
+      SPREAD, // "..." in a call expression, or an array literal.
 
-      COMPUTED_PROP = 176,
+      COMPUTED_PROP,
 
-      TAGGED_TEMPLATELIT = 177, // tagged template literal, e.g. foo`bar`
-      TEMPLATELIT = 178, // template literal
-      TEMPLATELIT_SUB = 179, // template literal substitution
+      TAGGED_TEMPLATELIT, // tagged template literal, e.g. foo`bar`
+      TEMPLATELIT, // template literal
+      TEMPLATELIT_SUB, // template literal substitution
 
-      DEFAULT_VALUE = 180, // Formal parameter or destructuring element with a default value
-      NEW_TARGET = 181, // new.target
+      DEFAULT_VALUE, // Formal parameter or destructuring element with a default value
+      NEW_TARGET, // new.target
 
       // Used by type declaration ASTs
-      STRING_TYPE = 200,
-      BOOLEAN_TYPE = 201,
-      NUMBER_TYPE = 202,
-      FUNCTION_TYPE = 203,
-      PARAMETERIZED_TYPE = 204,
-      UNION_TYPE = 205,
-      ANY_TYPE = 206,
-      NULLABLE_TYPE = 208,
-      VOID_TYPE = 209,
-      REST_PARAMETER_TYPE = 210,
-      NAMED_TYPE = 211,
-      OPTIONAL_PARAMETER = 212,
-      RECORD_TYPE = 213,
-      UNDEFINED_TYPE = 214,
-      ARRAY_TYPE = 215,
-      GENERIC_TYPE = 216,
-      GENERIC_TYPE_LIST = 217,
+      STRING_TYPE,
+      BOOLEAN_TYPE,
+      NUMBER_TYPE,
+      FUNCTION_TYPE,
+      PARAMETERIZED_TYPE,
+      UNION_TYPE,
+      ANY_TYPE,
+      NULLABLE_TYPE,
+      VOID_TYPE,
+      REST_PARAMETER_TYPE,
+      NAMED_TYPE,
+      OPTIONAL_PARAMETER,
+      RECORD_TYPE,
+      UNDEFINED_TYPE,
+      ARRAY_TYPE,
+      GENERIC_TYPE,
+      GENERIC_TYPE_LIST,
 
       // JSDoc-only tokens
-      ANNOTATION = 300,
-      PIPE = 301,
-      STAR = 302,
-      EOC = 303,
-      QMARK = 304,
-      ELLIPSIS = 305,
-      BANG = 306,
-      EQUALS = 307,
-      LB = 308, // left brackets
-      LC = 309, // left curly braces
-      COLON = 310,
+      ANNOTATION,
+      PIPE,
+      STAR,
+      EOC,
+      QMARK,
+      ELLIPSIS,
+      BANG,
+      EQUALS,
+      LB, // left brackets
+      LC, // left curly braces
+      COLON,
 
       // TypeScript
-      INTERFACE = 311,
-      INTERFACE_EXTENDS = 312,
-      INTERFACE_MEMBERS = 313,
-      ENUM = 314,
-      ENUM_MEMBERS = 315,
-      IMPLEMENTS = 316,
-      TYPE_ALIAS = 317,
-      DECLARE = 318,
-      MEMBER_VARIABLE_DEF = 319,
-      INDEX_SIGNATURE = 320,
-      CALL_SIGNATURE = 321,
-      NAMESPACE = 322,
-      NAMESPACE_ELEMENTS = 323,
+      INTERFACE,
+      INTERFACE_EXTENDS,
+      INTERFACE_MEMBERS,
+      ENUM,
+      ENUM_MEMBERS,
+      IMPLEMENTS,
+      TYPE_ALIAS,
+      DECLARE,
+      MEMBER_VARIABLE_DEF,
+      INDEX_SIGNATURE,
+      CALL_SIGNATURE,
+      NAMESPACE,
+      NAMESPACE_ELEMENTS,
 
-      // Token Types to use for internal bookkeeping,
+      // Token.Kinds to use for internal bookkeeping,
       // an AST is invalid while these are present.
-      PLACEHOLDER1 = 1001,
-      PLACEHOLDER2 = 1002;
+      PLACEHOLDER1,
+      PLACEHOLDER2
+  }
 
-  public static String name(int token) {
+  /** Deprecated. Remove these after removing references to them */
+  public static final Kind
+      RETURN = Kind.RETURN,
+      BITOR = Kind.BITOR,
+      BITXOR = Kind.BITXOR,
+      BITAND = Kind.BITAND,
+      EQ = Kind.EQ,
+      NE = Kind.NE,
+      LT = Kind.LT,
+      LE = Kind.LE,
+      GT = Kind.GT,
+      GE = Kind.GE,
+      LSH = Kind.LSH,
+      RSH = Kind.RSH,
+      URSH = Kind.URSH,
+      ADD = Kind.ADD,
+      SUB = Kind.SUB,
+      MUL = Kind.MUL,
+      DIV = Kind.DIV,
+      MOD = Kind.MOD,
+      NOT = Kind.NOT,
+      BITNOT = Kind.BITNOT,
+      POS = Kind.POS,
+      NEG = Kind.NEG,
+      NEW = Kind.NEW,
+      DELPROP = Kind.DELPROP,
+      TYPEOF = Kind.TYPEOF,
+      GETPROP = Kind.GETPROP,
+      GETELEM = Kind.GETELEM,
+      CALL = Kind.CALL,
+      NAME = Kind.NAME,
+      NUMBER = Kind.NUMBER,
+      STRING = Kind.STRING,
+      NULL = Kind.NULL,
+      THIS = Kind.THIS,
+      FALSE = Kind.FALSE,
+      TRUE = Kind.TRUE,
+      SHEQ = Kind.SHEQ, // shallow equality (===)
+      SHNE = Kind.SHNE, // shallow inequality (!==)
+      REGEXP = Kind.REGEXP,
+      THROW = Kind.THROW,
+      IN = Kind.IN,
+      INSTANCEOF = Kind.INSTANCEOF,
+      ARRAYLIT = Kind.ARRAYLIT, // array literal
+      OBJECTLIT = Kind.OBJECTLIT, // object literal
+
+      TRY = Kind.TRY,
+      PARAM_LIST = Kind.PARAM_LIST,
+      COMMA = Kind.COMMA, // comma operator
+
+      ASSIGN = Kind.ASSIGN, // simple assignment  (=)
+      ASSIGN_BITOR = Kind.ASSIGN_BITOR, // |=
+      ASSIGN_BITXOR = Kind.ASSIGN_BITXOR, // ^=
+      ASSIGN_BITAND = Kind.ASSIGN_BITAND, // &=
+      ASSIGN_LSH = Kind.ASSIGN_LSH, // <<=
+      ASSIGN_RSH = Kind.ASSIGN_RSH, // >>=
+      ASSIGN_URSH = Kind.ASSIGN_URSH, // >>>=
+      ASSIGN_ADD = Kind.ASSIGN_ADD, // +=
+      ASSIGN_SUB = Kind.ASSIGN_SUB, // -=
+      ASSIGN_MUL = Kind.ASSIGN_MUL, // *=
+      ASSIGN_DIV = Kind.ASSIGN_DIV, // /=
+      ASSIGN_MOD = Kind.ASSIGN_MOD, // %=
+
+      HOOK = Kind.HOOK, // conditional (?:)
+      OR = Kind.OR, // logical or (||)
+      AND = Kind.AND, // logical and (&&)
+      INC = Kind.INC, // increment (++)
+      DEC = Kind.DEC, // decrement (--)
+      FUNCTION = Kind.FUNCTION, // function keyword
+      IF = Kind.IF, // if keyword
+      SWITCH = Kind.SWITCH, // switch keyword
+      CASE = Kind.CASE, // case keyword
+      DEFAULT_CASE = Kind.DEFAULT_CASE, // default keyword
+      WHILE = Kind.WHILE, // while keyword
+      DO = Kind.DO, // do keyword
+      FOR = Kind.FOR, // for keyword
+      BREAK = Kind.BREAK, // break keyword
+      CONTINUE = Kind.CONTINUE, // continue keyword
+      VAR = Kind.VAR, // var keyword
+      WITH = Kind.WITH, // with keyword
+      CATCH = Kind.CATCH, // catch keyword
+      VOID = Kind.VOID, // void keyword
+
+      EMPTY = Kind.EMPTY,
+
+      BLOCK = Kind.BLOCK, // statement block
+      LABEL = Kind.LABEL, // label
+      EXPR_RESULT = Kind.EXPR_RESULT, // expression statement in scripts
+      SCRIPT = Kind.SCRIPT, // top-level node for entire script
+
+      GETTER_DEF = Kind.GETTER_DEF,
+      SETTER_DEF = Kind.SETTER_DEF,
+
+      CONST = Kind.CONST, // JS 1.5 const keyword
+      DEBUGGER = Kind.DEBUGGER,
+
+      // JSCompiler introduced tokens
+      LABEL_NAME = Kind.LABEL_NAME,
+      STRING_KEY = Kind.STRING_KEY, // object literal key
+      CAST = Kind.CAST,
+
+      // ES6
+      ARRAY_PATTERN = Kind.ARRAY_PATTERN, // destructuring patterns
+      OBJECT_PATTERN = Kind.OBJECT_PATTERN,
+      DESTRUCTURING_LHS = Kind.DESTRUCTURING_LHS,
+
+      CLASS = Kind.CLASS, // classes
+      CLASS_MEMBERS = Kind.CLASS_MEMBERS, // class member container
+      MEMBER_FUNCTION_DEF = Kind.MEMBER_FUNCTION_DEF,
+      SUPER = Kind.SUPER,
+
+      LET = Kind.LET, // block scoped vars
+
+      FOR_OF = Kind.FOR_OF, // for-of
+
+      YIELD = Kind.YIELD, // generators
+
+      IMPORT = Kind.IMPORT, // modules
+      IMPORT_SPECS = Kind.IMPORT_SPECS,
+      IMPORT_SPEC = Kind.IMPORT_SPEC,
+      IMPORT_STAR = Kind.IMPORT_STAR, // "* as name", called NameSpaceImport in the spec.
+      EXPORT = Kind.EXPORT,
+      EXPORT_SPECS = Kind.EXPORT_SPECS,
+      EXPORT_SPEC = Kind.EXPORT_SPEC,
+
+      REST = Kind.REST, // "..." in formal parameters, or an array pattern.
+      SPREAD = Kind.SPREAD, // "..." in a call expression, or an array literal.
+
+      COMPUTED_PROP = Kind.COMPUTED_PROP,
+
+      TAGGED_TEMPLATELIT = Kind.TAGGED_TEMPLATELIT, // tagged template literal, e.g. foo`bar`
+      TEMPLATELIT = Kind.TEMPLATELIT, // template literal
+      TEMPLATELIT_SUB = Kind.TEMPLATELIT_SUB, // template literal substitution
+
+      DEFAULT_VALUE = Kind.DEFAULT_VALUE,
+      NEW_TARGET = Kind.NEW_TARGET, // new.target
+
+      // Used by type declaration ASTs
+      STRING_TYPE = Kind.STRING_TYPE,
+      BOOLEAN_TYPE = Kind.BOOLEAN_TYPE,
+      NUMBER_TYPE = Kind.NUMBER_TYPE,
+      FUNCTION_TYPE = Kind.FUNCTION_TYPE,
+      PARAMETERIZED_TYPE = Kind.PARAMETERIZED_TYPE,
+      UNION_TYPE = Kind.UNION_TYPE,
+      ANY_TYPE = Kind.ANY_TYPE,
+      NULLABLE_TYPE = Kind.NULLABLE_TYPE,
+      VOID_TYPE = Kind.VOID_TYPE,
+      REST_PARAMETER_TYPE = Kind.REST_PARAMETER_TYPE,
+      NAMED_TYPE = Kind.NAMED_TYPE,
+      OPTIONAL_PARAMETER = Kind.OPTIONAL_PARAMETER,
+      RECORD_TYPE = Kind.RECORD_TYPE,
+      UNDEFINED_TYPE = Kind.UNDEFINED_TYPE,
+      ARRAY_TYPE = Kind.ARRAY_TYPE,
+      GENERIC_TYPE = Kind.GENERIC_TYPE,
+      GENERIC_TYPE_LIST = Kind.GENERIC_TYPE_LIST,
+
+      // JSDoc-only tokens
+      ANNOTATION = Kind.ANNOTATION,
+      PIPE = Kind.PIPE,
+      STAR = Kind.STAR,
+      EOC = Kind.EOC,
+      QMARK = Kind.QMARK,
+      ELLIPSIS = Kind.ELLIPSIS,
+      BANG = Kind.BANG,
+      EQUALS = Kind.EQUALS,
+      LB = Kind.LB, // left brackets
+      LC = Kind.LC, // left curly braces
+      COLON = Kind.COLON,
+
+      // Kind
+      INTERFACE = Kind.INTERFACE,
+      INTERFACE_EXTENDS = Kind.INTERFACE_EXTENDS,
+      INTERFACE_MEMBERS = Kind.INTERFACE_MEMBERS,
+      ENUM = Kind.ENUM,
+      ENUM_MEMBERS = Kind.ENUM_MEMBERS,
+      IMPLEMENTS = Kind.IMPLEMENTS,
+      TYPE_ALIAS = Kind.TYPE_ALIAS,
+      DECLARE = Kind.DECLARE,
+      MEMBER_VARIABLE_DEF = Kind.MEMBER_VARIABLE_DEF,
+      INDEX_SIGNATURE = Kind.INDEX_SIGNATURE,
+      CALL_SIGNATURE = Kind.CALL_SIGNATURE,
+      NAMESPACE = Kind.NAMESPACE,
+      NAMESPACE_ELEMENTS = Kind.NAMESPACE_ELEMENTS,
+
+      // Token.Kinds to use for internal bookkeeping,
+      // an AST is invalid while these are present.
+      PLACEHOLDER1 = Kind.PLACEHOLDER1,
+      PLACEHOLDER2 = Kind.PLACEHOLDER2;
+
+  @Deprecated
+  public static String name(Kind token) {
     switch (token) {
       case RETURN:
         return "RETURN";
@@ -570,7 +761,7 @@ public class Token {
   }
 
   /** If the arity isn't always the same, this function returns -1 */
-  public static int arity(int token) {
+  public static int arity(Kind token) {
     switch (token) {
       case RETURN:
       case NEW:

@@ -25,7 +25,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
@@ -313,10 +312,10 @@ class GlobalNamespace
       boolean isPropAssign = false;
 
       switch (n.getType()) {
-        case Token.GETTER_DEF:
-        case Token.SETTER_DEF:
-        case Token.STRING_KEY:
-        case Token.MEMBER_FUNCTION_DEF:
+        case GETTER_DEF:
+        case SETTER_DEF:
+        case STRING_KEY:
+        case MEMBER_FUNCTION_DEF:
           // This may be a key in an object literal declaration.
           name = null;
           if (parent != null && parent.isObjectLit()) {
@@ -329,40 +328,40 @@ class GlobalNamespace
           }
           isSet = true;
           switch (n.getType()) {
-            case Token.MEMBER_FUNCTION_DEF:
-            case Token.STRING_KEY:
+            case MEMBER_FUNCTION_DEF:
+            case STRING_KEY:
               type = getValueType(n.getFirstChild());
               break;
-            case Token.GETTER_DEF:
+            case GETTER_DEF:
               type = Name.Type.GET;
               break;
-            case Token.SETTER_DEF:
+            case SETTER_DEF:
               type = Name.Type.SET;
               break;
             default:
               throw new IllegalStateException("unexpected:" + n);
           }
           break;
-        case Token.NAME:
+        case NAME:
           // This may be a variable get or set.
           if (parent != null) {
             switch (parent.getType()) {
-              case Token.VAR:
-              case Token.LET:
-              case Token.CONST:
+              case VAR:
+              case LET:
+              case CONST:
                 isSet = true;
                 Node rvalue = n.getFirstChild();
                 type = rvalue == null ? Name.Type.OTHER : getValueType(rvalue);
                 break;
-              case Token.ASSIGN:
+              case ASSIGN:
                 if (parent.getFirstChild() == n) {
                   isSet = true;
                   type = getValueType(n.getNext());
                 }
                 break;
-              case Token.GETPROP:
+              case GETPROP:
                 return;
-              case Token.FUNCTION:
+              case FUNCTION:
                 Node grandparent = parent.getParent();
                 if (grandparent == null || NodeUtil.isFunctionExpression(parent)) {
                   return;
@@ -370,13 +369,13 @@ class GlobalNamespace
                 isSet = true;
                 type = Name.Type.FUNCTION;
                 break;
-              case Token.CATCH:
-              case Token.INC:
-              case Token.DEC:
+              case CATCH:
+              case INC:
+              case DEC:
                 isSet = true;
                 type = Name.Type.OTHER;
                 break;
-              case Token.CLASS:
+              case CLASS:
                 isSet = true;
                 type = Name.Type.CLASS;
                 break;
@@ -390,23 +389,23 @@ class GlobalNamespace
           }
           name = n.getString();
           break;
-        case Token.GETPROP:
+        case GETPROP:
           // This may be a namespaced name get or set.
           if (parent != null) {
             switch (parent.getType()) {
-              case Token.ASSIGN:
+              case ASSIGN:
                 if (parent.getFirstChild() == n) {
                   isSet = true;
                   type = getValueType(n.getNext());
                   isPropAssign = true;
                 }
                 break;
-              case Token.INC:
-              case Token.DEC:
+              case INC:
+              case DEC:
                 isSet = true;
                 type = Name.Type.OTHER;
                 break;
-              case Token.GETPROP:
+              case GETPROP:
                 return;
               default:
                 if (NodeUtil.isAssignmentOp(parent) &&
@@ -470,7 +469,7 @@ class GlobalNamespace
       Node greatGrandparent = grandparent.getParent();
       String name;
       switch (grandparent.getType()) {
-        case Token.NAME:
+        case NAME:
           // VAR
           //   NAME (grandparent)
           //     OBJLIT (parent)
@@ -480,7 +479,7 @@ class GlobalNamespace
           }
           name = grandparent.getString();
           break;
-        case Token.ASSIGN:
+        case ASSIGN:
           // ASSIGN (grandparent)
           //   NAME|GETPROP
           //   OBJLIT (parent)
@@ -488,7 +487,7 @@ class GlobalNamespace
           Node lvalue = grandparent.getFirstChild();
           name = lvalue.getQualifiedName();
           break;
-        case Token.STRING_KEY:
+        case STRING_KEY:
           // OBJLIT
           //   STRING (grandparent)
           //     OBJLIT (parent)
@@ -546,20 +545,20 @@ class GlobalNamespace
         return Name.Type.OTHER;
       }
       switch (n.getType()) {
-        case Token.CLASS:
+        case CLASS:
           return Name.Type.CLASS;
-        case Token.OBJECTLIT:
+        case OBJECTLIT:
           return Name.Type.OBJECTLIT;
-        case Token.FUNCTION:
+        case FUNCTION:
           return Name.Type.FUNCTION;
-        case Token.OR:
+        case OR:
           // Recurse on the second value. If the first value were an object
           // literal or function, then the OR would be meaningless and the
           // second value would be dead code. Assume that if the second value
           // is an object literal or function, then the first value will also
           // evaluate to one when it doesn't evaluate to false.
           return getValueType(n.getLastChild());
-        case Token.HOOK:
+        case HOOK:
           // The same line of reasoning used for the OR case applies here.
           Node second = n.getSecondChild();
           Name.Type t = getValueType(second);
@@ -679,17 +678,17 @@ class GlobalNamespace
       Ref.Type type = Ref.Type.DIRECT_GET;
       if (parent != null) {
         switch (parent.getType()) {
-          case Token.EXPR_RESULT:
-          case Token.IF:
-          case Token.INSTANCEOF:
-          case Token.TYPEOF:
-          case Token.VOID:
-          case Token.NOT:
-          case Token.BITNOT:
-          case Token.POS:
-          case Token.NEG:
+          case EXPR_RESULT:
+          case IF:
+          case INSTANCEOF:
+          case TYPEOF:
+          case VOID:
+          case NOT:
+          case BITNOT:
+          case POS:
+          case NEG:
             break;
-          case Token.CALL:
+          case CALL:
             if (n == parent.getFirstChild()) {
               // It is a call target
               type = Ref.Type.CALL_GET;
@@ -699,18 +698,18 @@ class GlobalNamespace
               type = Ref.Type.ALIASING_GET;
             }
             break;
-          case Token.NEW:
+          case NEW:
             type = n == parent.getFirstChild() ? Ref.Type.DIRECT_GET : Ref.Type.ALIASING_GET;
             break;
-          case Token.OR:
-          case Token.AND:
+          case OR:
+          case AND:
             // This node is x or y in (x||y) or (x&&y). We only know that an
             // alias is not getting created for this name if the result is used
             // in a boolean context or assigned to the same name
             // (e.g. var a = a || {}).
             type = determineGetTypeForHookOrBooleanExpr(module, scope, parent, name);
             break;
-          case Token.HOOK:
+          case HOOK:
             if (n != parent.getFirstChild()) {
               // This node is y or z in (x?y:z). We only know that an alias is
               // not getting created for this name if the result is assigned to
@@ -718,7 +717,7 @@ class GlobalNamespace
               type = determineGetTypeForHookOrBooleanExpr(module, scope, parent, name);
             }
             break;
-          case Token.DELPROP:
+          case DELPROP:
             type = Ref.Type.DELETE_PROP;
             break;
           default:
@@ -762,42 +761,42 @@ class GlobalNamespace
       Node prev = parent;
       for (Node anc : parent.getAncestors()) {
         switch (anc.getType()) {
-          case Token.INSTANCEOF:
-          case Token.EXPR_RESULT:
-          case Token.VAR:
-          case Token.LET:
-          case Token.CONST:
-          case Token.IF:
-          case Token.WHILE:
-          case Token.FOR:
-          case Token.TYPEOF:
-          case Token.VOID:
-          case Token.NOT:
-          case Token.BITNOT:
-          case Token.POS:
-          case Token.NEG:
+          case INSTANCEOF:
+          case EXPR_RESULT:
+          case VAR:
+          case LET:
+          case CONST:
+          case IF:
+          case WHILE:
+          case FOR:
+          case TYPEOF:
+          case VOID:
+          case NOT:
+          case BITNOT:
+          case POS:
+          case NEG:
             return Ref.Type.DIRECT_GET;
-          case Token.HOOK:
+          case HOOK:
             if (anc.getFirstChild() == prev) {
               return Ref.Type.DIRECT_GET;
             }
             break;
-          case Token.ASSIGN:
+          case ASSIGN:
             if (!name.equals(anc.getFirstChild().getQualifiedName())) {
               return Ref.Type.ALIASING_GET;
             }
             break;
-          case Token.NAME:  // a variable declaration
+          case NAME:  // a variable declaration
             if (!name.equals(anc.getString())) {
               return Ref.Type.ALIASING_GET;
             }
             break;
-          case Token.CALL:
+          case CALL:
             if (anc.getFirstChild() != prev) {
               return Ref.Type.ALIASING_GET;
             }
             break;
-          case Token.DELPROP:
+          case DELPROP:
             return Ref.Type.DELETE_PROP;
         }
         prev = anc;
@@ -1289,16 +1288,16 @@ class GlobalNamespace
           return null;
         }
         switch (refParent.getType()) {
-          case Token.FUNCTION:
-          case Token.ASSIGN:
-          case Token.CLASS:
+          case FUNCTION:
+          case ASSIGN:
+          case CLASS:
             return refParent.getJSDocInfo();
-          case Token.VAR:
-          case Token.LET:
-          case Token.CONST:
+          case VAR:
+          case LET:
+          case CONST:
             return ref.node == refParent.getFirstChild() ?
                 refParent.getJSDocInfo() : ref.node.getJSDocInfo();
-          case Token.OBJECTLIT:
+          case OBJECTLIT:
             return ref.node.getJSDocInfo();
         }
       }

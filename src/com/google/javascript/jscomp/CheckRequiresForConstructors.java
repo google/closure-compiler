@@ -193,46 +193,46 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   public void visit(NodeTraversal t, Node n, Node parent) {
     maybeAddJsDocUsages(t, n);
     switch (n.getType()) {
-      case Token.ASSIGN:
+      case ASSIGN:
         maybeAddProvidedName(n);
         break;
-      case Token.VAR:
-      case Token.LET:
-      case Token.CONST:
+      case VAR:
+      case LET:
+      case CONST:
         maybeAddProvidedName(n);
         maybeAddGoogScopeUsage(t, n, parent);
         break;
-      case Token.FUNCTION:
+      case FUNCTION:
         // Exclude function expressions.
         if (NodeUtil.isStatement(n)) {
           maybeAddProvidedName(n);
         }
         break;
-      case Token.NAME:
+      case NAME:
         if (!NodeUtil.isLValue(n)) {
           visitQualifiedName(n);
         }
         break;
-      case Token.GETPROP:
+      case GETPROP:
         // If parent is a GETPROP, they will handle the weak usages.
         if (!parent.isGetProp() && n.isQualifiedName()) {
           visitQualifiedName(n);
         }
         break;
-      case Token.CALL:
+      case CALL:
         visitCallNode(t, n, parent);
         break;
-      case Token.SCRIPT:
+      case SCRIPT:
         visitScriptNode(t);
         reset();
         break;
-      case Token.NEW:
+      case NEW:
         visitNewNode(t, n);
         break;
-      case Token.CLASS:
+      case CLASS:
         visitClassNode(t, n);
         break;
-      case Token.IMPORT:
+      case IMPORT:
         visitImportNode(n);
         break;
     }

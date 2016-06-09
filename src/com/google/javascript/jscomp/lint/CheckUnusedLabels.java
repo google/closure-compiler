@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Check for unused labels blocks. This can help catching errors like:
@@ -66,8 +65,8 @@ public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
   @Override
   public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.BREAK:
-      case Token.CONTINUE:
+      case BREAK:
+      case CONTINUE:
         if (n.hasChildren()) {
           LabelContext temp = currentContext;
           while (temp != null) {
@@ -79,7 +78,7 @@ public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
           }
         }
         return false;
-      case Token.LABEL:
+      case LABEL:
         currentContext = new LabelContext(n.getFirstChild().getString(), currentContext);
     }
     return true;

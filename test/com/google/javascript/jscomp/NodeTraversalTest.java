@@ -63,7 +63,7 @@ public final class NodeTraversalTest extends TestCase {
    * AbstractNodeTypePruningCallback shouldTraverse method.
    */
   static class PruningCallback extends AbstractNodeTypePruningCallback {
-    public PruningCallback(Set<Integer> nodeTypes, boolean include) {
+    public PruningCallback(Set<Token.Kind> nodeTypes, boolean include) {
       super(nodeTypes, include);
     }
 

@@ -103,89 +103,89 @@ public final class AstValidator implements CompilerPass {
 
   public void validateStatement(Node n, boolean isAmbient) {
     switch (n.getType()) {
-      case Token.LABEL:
+      case LABEL:
         validateLabel(n);
         return;
-      case Token.BLOCK:
+      case BLOCK:
         validateBlock(n);
         return;
-      case Token.FUNCTION:
+      case FUNCTION:
         if (isAmbient) {
           validateFunctionSignature(n);
         } else {
           validateFunctionStatement(n);
         }
         return;
-      case Token.WITH:
+      case WITH:
         validateWith(n);
         return;
-      case Token.FOR:
+      case FOR:
         validateFor(n);
         return;
-      case Token.FOR_OF:
+      case FOR_OF:
         validateForOf(n);
         return;
-      case Token.WHILE:
+      case WHILE:
         validateWhile(n);
         return;
-      case Token.DO:
+      case DO:
         validateDo(n);
         return;
-      case Token.SWITCH:
+      case SWITCH:
         validateSwitch(n);
         return;
-      case Token.IF:
+      case IF:
         validateIf(n);
         return;
-      case Token.VAR:
-      case Token.LET:
-      case Token.CONST:
+      case VAR:
+      case LET:
+      case CONST:
         validateNameDeclarationHelper(n.getType(), n);
         return;
-      case Token.EXPR_RESULT:
+      case EXPR_RESULT:
         validateExprStmt(n);
         return;
-      case Token.RETURN:
+      case RETURN:
         validateReturn(n);
         return;
-      case Token.THROW:
+      case THROW:
         validateThrow(n);
         return;
-      case Token.TRY:
+      case TRY:
         validateTry(n);
         return;
-      case Token.BREAK:
+      case BREAK:
         validateBreak(n);
         return;
-      case Token.CONTINUE:
+      case CONTINUE:
         validateContinue(n);
         return;
-      case Token.EMPTY:
-      case Token.DEBUGGER:
+      case EMPTY:
+      case DEBUGGER:
         validateChildless(n);
         return;
-      case Token.CLASS:
+      case CLASS:
         validateClassDeclaration(n, isAmbient);
         return;
-      case Token.IMPORT:
+      case IMPORT:
         validateImport(n);
         return;
-      case Token.EXPORT:
+      case EXPORT:
         validateExport(n, isAmbient);
         return;
-      case Token.INTERFACE:
+      case INTERFACE:
         validateInterface(n);
         return;
-      case Token.ENUM:
+      case ENUM:
         validateEnum(n);
         return;
-      case Token.TYPE_ALIAS:
+      case TYPE_ALIAS:
         validateTypeAlias(n);
         return;
-      case Token.DECLARE:
+      case DECLARE:
         validateAmbientDeclaration(n);
         return;
-      case Token.NAMESPACE:
+      case NAMESPACE:
         validateNamespace(n, isAmbient);
         return;
       default:
@@ -196,136 +196,136 @@ public final class AstValidator implements CompilerPass {
   public void validateExpression(Node n) {
     switch (n.getType()) {
       // Childless expressions
-      case Token.FALSE:
-      case Token.NEW_TARGET:
-      case Token.NULL:
-      case Token.SUPER:
-      case Token.THIS:
-      case Token.TRUE:
+      case FALSE:
+      case NEW_TARGET:
+      case NULL:
+      case SUPER:
+      case THIS:
+      case TRUE:
         validateChildless(n);
         return;
 
       // General unary ops
-      case Token.DELPROP:
-      case Token.POS:
-      case Token.NEG:
-      case Token.NOT:
-      case Token.INC:
-      case Token.DEC:
-      case Token.TYPEOF:
-      case Token.VOID:
-      case Token.BITNOT:
-      case Token.CAST:
+      case DELPROP:
+      case POS:
+      case NEG:
+      case NOT:
+      case INC:
+      case DEC:
+      case TYPEOF:
+      case VOID:
+      case BITNOT:
+      case CAST:
         validateUnaryOp(n);
         return;
 
       // Assignments
-      case Token.ASSIGN:
-      case Token.ASSIGN_BITOR:
-      case Token.ASSIGN_BITXOR:
-      case Token.ASSIGN_BITAND:
-      case Token.ASSIGN_LSH:
-      case Token.ASSIGN_RSH:
-      case Token.ASSIGN_URSH:
-      case Token.ASSIGN_ADD:
-      case Token.ASSIGN_SUB:
-      case Token.ASSIGN_MUL:
-      case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD:
+      case ASSIGN:
+      case ASSIGN_BITOR:
+      case ASSIGN_BITXOR:
+      case ASSIGN_BITAND:
+      case ASSIGN_LSH:
+      case ASSIGN_RSH:
+      case ASSIGN_URSH:
+      case ASSIGN_ADD:
+      case ASSIGN_SUB:
+      case ASSIGN_MUL:
+      case ASSIGN_DIV:
+      case ASSIGN_MOD:
         validateAssignmentExpression(n);
         return;
 
-      case Token.HOOK:
+      case HOOK:
         validateTrinaryOp(n);
         return;
 
       // Node types that require special handling
-      case Token.STRING:
+      case STRING:
         validateString(n);
         return;
 
-      case Token.NUMBER:
+      case NUMBER:
         validateNumber(n);
         return;
 
-      case Token.NAME:
+      case NAME:
         validateName(n);
         return;
 
       // General binary ops
-      case Token.GETELEM:
-      case Token.COMMA:
-      case Token.OR:
-      case Token.AND:
-      case Token.BITOR:
-      case Token.BITXOR:
-      case Token.BITAND:
-      case Token.EQ:
-      case Token.NE:
-      case Token.SHEQ:
-      case Token.SHNE:
-      case Token.LT:
-      case Token.GT:
-      case Token.LE:
-      case Token.GE:
-      case Token.INSTANCEOF:
-      case Token.IN:
-      case Token.LSH:
-      case Token.RSH:
-      case Token.URSH:
-      case Token.SUB:
-      case Token.ADD:
-      case Token.MUL:
-      case Token.MOD:
-      case Token.DIV:
+      case GETELEM:
+      case COMMA:
+      case OR:
+      case AND:
+      case BITOR:
+      case BITXOR:
+      case BITAND:
+      case EQ:
+      case NE:
+      case SHEQ:
+      case SHNE:
+      case LT:
+      case GT:
+      case LE:
+      case GE:
+      case INSTANCEOF:
+      case IN:
+      case LSH:
+      case RSH:
+      case URSH:
+      case SUB:
+      case ADD:
+      case MUL:
+      case MOD:
+      case DIV:
         validateBinaryOp(n);
         return;
 
-      case Token.GETPROP:
+      case GETPROP:
         validateGetProp(n);
         return;
 
-      case Token.ARRAYLIT:
+      case ARRAYLIT:
         validateArrayLit(n);
         return;
 
-      case Token.OBJECTLIT:
+      case OBJECTLIT:
         validateObjectLit(n);
         return;
 
-      case Token.REGEXP:
+      case REGEXP:
         validateRegExpLit(n);
         return;
 
-      case Token.CALL:
+      case CALL:
         validateCall(n);
         return;
 
-      case Token.SPREAD:
+      case SPREAD:
         validateSpread(n);
         return;
 
-      case Token.NEW:
+      case NEW:
         validateNew(n);
         return;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         validateFunctionExpression(n);
         return;
 
-      case Token.CLASS:
+      case CLASS:
         validateClass(n);
         return;
 
-      case Token.TEMPLATELIT:
+      case TEMPLATELIT:
         validateTemplateLit(n);
         return;
 
-      case Token.TAGGED_TEMPLATELIT:
+      case TAGGED_TEMPLATELIT:
         validateTaggedTemplateLit(n);
         return;
 
-      case Token.YIELD:
+      case YIELD:
         validateYield(n);
         return;
 
@@ -356,10 +356,10 @@ public final class AstValidator implements CompilerPass {
 
     Node secondChild = n.getSecondChild();
     switch (secondChild.getType()) {
-      case Token.IMPORT_SPECS:
+      case IMPORT_SPECS:
         validateImportSpecifiers(secondChild);
         break;
-      case Token.IMPORT_STAR:
+      case IMPORT_STAR:
         validateNonEmptyString(secondChild);
         break;
       default:
@@ -485,18 +485,18 @@ public final class AstValidator implements CompilerPass {
 
   private void validateInterfaceMember(Node n) {
     switch (n.getType()) {
-      case Token.MEMBER_FUNCTION_DEF:
+      case MEMBER_FUNCTION_DEF:
         validateChildCount(n);
         validateFunctionSignature(n.getFirstChild());
         break;
-      case Token.MEMBER_VARIABLE_DEF:
+      case MEMBER_VARIABLE_DEF:
         validateChildless(n);
         break;
-      case Token.INDEX_SIGNATURE:
+      case INDEX_SIGNATURE:
         validateChildCount(n);
         validateChildless(n.getFirstChild());
         break;
-      case Token.CALL_SIGNATURE:
+      case CALL_SIGNATURE:
         validateChildCount(n);
         break;
       default:
@@ -561,9 +561,9 @@ public final class AstValidator implements CompilerPass {
 
   private void validateClassMember(Node n, boolean isAmbient) {
     switch (n.getType()) {
-      case Token.MEMBER_FUNCTION_DEF:
-      case Token.GETTER_DEF:
-      case Token.SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
+      case GETTER_DEF:
+      case SETTER_DEF:
         validateChildCount(n);
         Node function = n.getFirstChild();
         if (isAmbient) {
@@ -572,20 +572,20 @@ public final class AstValidator implements CompilerPass {
           validateFunctionExpression(function);
         }
         break;
-      case Token.MEMBER_VARIABLE_DEF:
+      case MEMBER_VARIABLE_DEF:
         validateChildless(n);
         break;
-      case Token.COMPUTED_PROP:
+      case COMPUTED_PROP:
         validateComputedPropClassMethod(n);
         break;
-      case Token.INDEX_SIGNATURE:
+      case INDEX_SIGNATURE:
         validateChildCount(n);
         validateChildless(n.getFirstChild());
         break;
-      case Token.CALL_SIGNATURE:
+      case CALL_SIGNATURE:
         validateChildCount(n);
         break;
-      case Token.EMPTY: // Empty is allowed too.
+      case EMPTY: // Empty is allowed too.
         break;
       default:
         violation("Class contained member of invalid type " + Token.name(n.getType()), n);
@@ -768,7 +768,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateDefaultValue(int type, Node n) {
+  private void validateDefaultValue(Token.Kind type, Node n) {
     validateAssignmentExpression(n);
     Node lhs = n.getFirstChild();
 
@@ -795,7 +795,7 @@ public final class AstValidator implements CompilerPass {
    *     appropriately for a descendant of a {@link Node} of this type.
    * @param n
    */
-  private void validateRest(int contextType, Node n) {
+  private void validateRest(Token.Kind contextType, Node n) {
     validateNodeType(Token.REST, n);
     validateChildCount(n);
     validateLHS(contextType, n.getFirstChild());
@@ -806,13 +806,13 @@ public final class AstValidator implements CompilerPass {
     validateChildCount(n);
     Node parent = n.getParent();
     switch (parent.getType()) {
-      case Token.CALL:
-      case Token.NEW:
+      case CALL:
+      case NEW:
         if (n == parent.getFirstChild()) {
           violation("SPREAD node is not callable.", n);
         }
         break;
-      case Token.ARRAYLIT:
+      case ARRAYLIT:
         break;
       default:
         violation("SPREAD node should not be the child of a "
@@ -828,14 +828,14 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateNameDeclarationHelper(int type, Node n) {
+  private void validateNameDeclarationHelper(Token.Kind type, Node n) {
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateNameDeclarationChild(type, c);
     }
   }
 
-  private void validateNameDeclarationChild(int type, Node n) {
+  private void validateNameDeclarationChild(Token.Kind type, Node n) {
     if (n.isName()) {
       validateLHS(type, n);
     } else if (n.isDestructuringLhs()) {
@@ -850,7 +850,7 @@ public final class AstValidator implements CompilerPass {
    *     appropriately for a descendant of a {@link Node} of this type.
    * @param n
    */
-  private void validateLHS(int contextType, Node n) {
+  private void validateLHS(Token.Kind contextType, Node n) {
     if (n.isName()) {
       // Don't use validateName here since this NAME node may have
       // a child.
@@ -872,7 +872,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateArrayPattern(int type, Node n) {
+  private void validateArrayPattern(Token.Kind type, Node n) {
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // When the array pattern is a direct child of a var/let/const node,
@@ -891,7 +891,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateObjectPattern(int type, Node n) {
+  private void validateObjectPattern(Token.Kind type, Node n) {
     validateNodeType(Token.OBJECT_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // When the object pattern is a direct child of a var/let/const node,
@@ -1070,10 +1070,10 @@ public final class AstValidator implements CompilerPass {
 
   private void validateSwitchMember(Node n) {
     switch (n.getType()) {
-      case Token.CASE:
+      case CASE:
         validateCase(n);
         return;
-      case Token.DEFAULT_CASE:
+      case DEFAULT_CASE:
         validateDefaultCase(n);
         return;
       default:
@@ -1176,22 +1176,22 @@ public final class AstValidator implements CompilerPass {
 
   private void validateObjectLitKey(Node n) {
     switch (n.getType()) {
-      case Token.GETTER_DEF:
+      case GETTER_DEF:
         validateObjectLitGetKey(n);
         return;
-      case Token.SETTER_DEF:
+      case SETTER_DEF:
         validateObjectLitSetKey(n);
         return;
-      case Token.STRING_KEY:
+      case STRING_KEY:
         validateObjectLitStringKey(n);
         return;
-      case Token.MEMBER_FUNCTION_DEF:
+      case MEMBER_FUNCTION_DEF:
         validateClassMember(n, false);
         if (n.isStaticMember()) {
           violation("Keys in an object literal should not be static.", n);
         }
         return;
-      case Token.COMPUTED_PROP:
+      case COMPUTED_PROP:
         validateObjectLitComputedPropKey(n);
         return;
       default:
@@ -1247,7 +1247,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateObjectPatternStringKey(int type, Node n) {
+  private void validateObjectPatternStringKey(Token.Kind type, Node n) {
     validateNodeType(Token.STRING_KEY, n);
     validateObjectLiteralKeyName(n);
     validateChildCountIn(n, 0, 1);
@@ -1264,7 +1264,7 @@ public final class AstValidator implements CompilerPass {
     validateExpression(n.getLastChild());
   }
 
-  private void validateObjectPatternComputedPropKey(int type, Node n) {
+  private void validateObjectPatternComputedPropKey(Token.Kind type, Node n) {
     validateNodeType(Token.COMPUTED_PROP, n);
     validateChildCount(n);
     validateExpression(n.getFirstChild());
@@ -1338,27 +1338,27 @@ public final class AstValidator implements CompilerPass {
 
   private void validateAmbientDeclarationHelper(Node n) {
     switch (n.getType()) {
-      case Token.VAR:
-      case Token.LET:
-      case Token.CONST:
+      case VAR:
+      case LET:
+      case CONST:
         validateNameDeclarationHelper(n.getType(), n);
         break;
-      case Token.FUNCTION:
+      case FUNCTION:
         validateFunctionSignature(n);
         break;
-      case Token.CLASS:
+      case CLASS:
         validateClassDeclaration(n, true);
         break;
-      case Token.ENUM:
+      case ENUM:
         validateEnum(n);
         break;
-      case Token.NAMESPACE:
+      case NAMESPACE:
         validateNamespace(n, true);
         break;
-      case Token.TYPE_ALIAS:
+      case TYPE_ALIAS:
         validateTypeAlias(n);
         break;
-      case Token.EXPORT:
+      case EXPORT:
         validateExport(n, true);
         break;
     }
@@ -1374,10 +1374,10 @@ public final class AstValidator implements CompilerPass {
 
   private void validateNamespaceName(Node n) {
     switch (n.getType()) {
-      case Token.NAME:
+      case NAME:
         validateName(n);
         break;
-      case Token.GETPROP:
+      case GETPROP:
         validateGetProp(n);
         break;
     }
@@ -1398,7 +1398,7 @@ public final class AstValidator implements CompilerPass {
     violationHandler.handleViolation(message, n);
   }
 
-  private void validateNodeType(int type, Node n) {
+  private void validateNodeType(Token.Kind type, Node n) {
     if (n.getType() != type) {
       violation(
           "Expected " + Token.name(type) + " but was "
@@ -1479,4 +1479,3 @@ public final class AstValidator implements CompilerPass {
     }
   }
 }
-

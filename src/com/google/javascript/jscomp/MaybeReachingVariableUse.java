@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -169,22 +168,22 @@ class MaybeReachingVariableUse extends
       Node n, Node cfgNode, ReachingUses output, boolean conditional) {
     switch (n.getType()) {
 
-      case Token.BLOCK:
-      case Token.FUNCTION:
+      case BLOCK:
+      case FUNCTION:
         return;
 
-      case Token.NAME:
+      case NAME:
         addToUseIfLocal(n.getString(), cfgNode, output);
         return;
 
-      case Token.WHILE:
-      case Token.DO:
-      case Token.IF:
+      case WHILE:
+      case DO:
+      case IF:
         computeMayUse(
             NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         return;
 
-      case Token.FOR:
+      case FOR:
         if (!NodeUtil.isForIn(n)) {
           computeMayUse(
               NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
@@ -202,19 +201,19 @@ class MaybeReachingVariableUse extends
         }
         return;
 
-      case Token.AND:
-      case Token.OR:
+      case AND:
+      case OR:
         computeMayUse(n.getLastChild(), cfgNode, output, true);
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;
 
-      case Token.HOOK:
+      case HOOK:
         computeMayUse(n.getLastChild(), cfgNode, output, true);
         computeMayUse(n.getSecondChild(), cfgNode, output, true);
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;
 
-      case Token.VAR:
+      case VAR:
         Node varName = n.getFirstChild();
         Preconditions.checkState(n.hasChildren(), "AST should be normalized", n);
 

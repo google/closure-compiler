@@ -228,7 +228,7 @@ public final class CallGraph implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, jsRoot, new AbstractPostOrderCallback() {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        int nodeType = n.getType();
+        Token.Kind nodeType = n.getType();
 
         if (nodeType == Token.CALL || nodeType == Token.NEW) {
           Callsite callsite = createCallsite(n);
@@ -365,7 +365,7 @@ public final class CallGraph implements CompilerPass {
    */
   private void updateFunctionForUse(Function function, Node useNode) {
     Node useParent = useNode.getParent();
-    int parentType = useParent.getType();
+    Token.Kind parentType = useParent.getType();
 
     if ((parentType == Token.CALL || parentType == Token.NEW)
         && useParent.getFirstChild() == useNode) {

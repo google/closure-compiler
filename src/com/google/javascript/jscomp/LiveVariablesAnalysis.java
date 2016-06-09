@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.BitSet;
 import java.util.HashSet;
@@ -184,19 +183,19 @@ class LiveVariablesAnalysis extends
       boolean conditional) {
 
     switch (n.getType()) {
-      case Token.SCRIPT:
-      case Token.BLOCK:
-      case Token.FUNCTION:
+      case SCRIPT:
+      case BLOCK:
+      case FUNCTION:
         return;
 
-      case Token.WHILE:
-      case Token.DO:
-      case Token.IF:
+      case WHILE:
+      case DO:
+      case IF:
         computeGenKill(NodeUtil.getConditionExpression(n), gen, kill,
             conditional);
         return;
 
-      case Token.FOR:
+      case FOR:
         if (!NodeUtil.isForIn(n)) {
           computeGenKill(NodeUtil.getConditionExpression(n), gen, kill,
               conditional);
@@ -219,7 +218,7 @@ class LiveVariablesAnalysis extends
         }
         return;
 
-      case Token.VAR:
+      case VAR:
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.hasChildren()) {
             computeGenKill(c.getFirstChild(), gen, kill, conditional);
@@ -230,21 +229,21 @@ class LiveVariablesAnalysis extends
         }
         return;
 
-      case Token.AND:
-      case Token.OR:
+      case AND:
+      case OR:
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // May short circuit.
         computeGenKill(n.getLastChild(), gen, kill, true);
         return;
 
-      case Token.HOOK:
+      case HOOK:
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // Assume both sides are conditional.
         computeGenKill(n.getSecondChild(), gen, kill, true);
         computeGenKill(n.getLastChild(), gen, kill, true);
         return;
 
-      case Token.NAME:
+      case NAME:
         if (isArgumentsName(n)) {
           markAllParametersEscaped();
         } else {

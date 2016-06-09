@@ -658,7 +658,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     }
 
     public String getNameString(Node n) {
-      int type = n.getType();
+      Token.Kind type = n.getType();
       if (type == Token.NAME) {
         return n.getString();
       } else if (type == Token.GETPROP) {

@@ -698,11 +698,11 @@ class GlobalTypeInfo implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.FUNCTION: {
+        case FUNCTION: {
           visitFunctionEarly(n);
           break;
         }
-        case Token.VAR: {
+        case VAR: {
           Node nameNode = n.getFirstChild();
           String varName = nameNode.getString();
           if (NodeUtil.isNamespaceDecl(nameNode)) {
@@ -727,16 +727,16 @@ class GlobalTypeInfo implements CompilerPass {
           }
           break;
         }
-        case Token.NAME: {
+        case NAME: {
           if (this.currentScope.isFunction()) {
             NTIScope.mayRecordEscapedVar(this.currentScope, n.getString());
           }
           break;
         }
-        case Token.EXPR_RESULT: {
+        case EXPR_RESULT: {
           Node expr = n.getFirstChild();
           switch (expr.getType()) {
-            case Token.ASSIGN:
+            case ASSIGN:
               Node lhs = expr.getFirstChild();
               if (isCtorDefinedByCall(lhs)) {
                 visitNewCtorDefinedByCall(lhs);
@@ -747,7 +747,7 @@ class GlobalTypeInfo implements CompilerPass {
               }
               expr = lhs;
               // fall through
-            case Token.GETPROP:
+            case GETPROP:
               if (isPrototypeProperty(expr)
                   || NodeUtil.referencesThis(expr)
                   || !expr.isQualifiedName()) {
@@ -1234,7 +1234,7 @@ class GlobalTypeInfo implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.FUNCTION:
+        case FUNCTION:
           Node grandparent = parent.getParent();
           if (grandparent == null
               || (!isPrototypePropertyDeclaration(grandparent)
@@ -1244,7 +1244,7 @@ class GlobalTypeInfo implements CompilerPass {
             visitFunctionLate(n, ownerType);
           }
           break;
-        case Token.NAME: {
+        case NAME: {
           String name = n.getString();
           if (name == null || parent.isFunction()) {
             return;
@@ -1263,26 +1263,26 @@ class GlobalTypeInfo implements CompilerPass {
           }
           break;
         }
-        case Token.GETPROP:
+        case GETPROP:
           if (parent.isExprResult() && n.isQualifiedName()) {
             visitPropertyDeclaration(n);
           }
           break;
-        case Token.ASSIGN: {
+        case ASSIGN: {
           Node lvalue = n.getFirstChild();
           if (lvalue.isGetProp() && lvalue.isQualifiedName() && parent.isExprResult()) {
             visitPropertyDeclaration(lvalue);
           }
           break;
         }
-        case Token.CAST:
+        case CAST:
           castTypes.put(n,
               getDeclaredTypeOfNode(n.getJSDocInfo(), currentScope));
           break;
-        case Token.OBJECTLIT:
+        case OBJECTLIT:
           visitObjectLit(n, parent);
           break;
-        case Token.CALL:
+        case CALL:
           visitCall(n);
           break;
       }
@@ -1802,11 +1802,11 @@ class GlobalTypeInfo implements CompilerPass {
 
     private JSType simpleInferExprType(Node n) {
       switch (n.getType()) {
-        case Token.REGEXP:
+        case REGEXP:
           return commonTypes.getRegexpType();
-        case Token.CAST:
+        case CAST:
           return castTypes.get(n);
-        case Token.ARRAYLIT: {
+        case ARRAYLIT: {
           if (!n.hasChildren()) {
             return commonTypes.getArrayInstance();
           }
@@ -1822,16 +1822,16 @@ class GlobalTypeInfo implements CompilerPass {
           }
           return commonTypes.getArrayInstance(arrayType);
         }
-        case Token.TRUE:
+        case TRUE:
           return JSType.TRUE_TYPE;
-        case Token.FALSE:
+        case FALSE:
           return JSType.FALSE_TYPE;
-        case Token.THIS:
+        case THIS:
           return this.currentScope.getDeclaredTypeOf("this");
-        case Token.NAME:
+        case NAME:
           return simpleInferDeclaration(
               this.currentScope.getDeclaration(n.getString(), false));
-        case Token.OBJECTLIT: {
+        case OBJECTLIT: {
           JSType objLitType = JSType.TOP_OBJECT;
           for (Node prop : n.children()) {
             JSType propType = simpleInferExprType(prop.getFirstChild());
@@ -1844,21 +1844,21 @@ class GlobalTypeInfo implements CompilerPass {
           }
           return objLitType;
         }
-        case Token.GETPROP:
+        case GETPROP:
           return simpleInferPropAccessType(
               n.getFirstChild(), n.getLastChild().getString());
-        case Token.GETELEM:
+        case GETELEM:
           return simpleInferGetelemType(n);
-        case Token.COMMA:
-        case Token.ASSIGN:
+        case COMMA:
+        case ASSIGN:
           return simpleInferExprType(n.getLastChild());
-        case Token.CALL:
-        case Token.NEW:
+        case CALL:
+        case NEW:
           return simpleInferCallNewType(n);
-        case Token.AND:
-        case Token.OR:
+        case AND:
+        case OR:
           return simpleInferAndOrType(n);
-        case Token.HOOK: {
+        case HOOK: {
           JSType lhs = simpleInferExprType(n.getSecondChild());
           JSType rhs = simpleInferExprType(n.getLastChild());
           return lhs == null || rhs == null ? null : JSType.join(lhs, rhs);

@@ -374,7 +374,7 @@ class Normalize implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
-        case Token.WHILE:
+        case WHILE:
           if (CONVERT_WHILE_TO_FOR) {
             Node expr = n.getFirstChild();
             n.setType(Token.FOR);
@@ -386,23 +386,23 @@ class Normalize implements CompilerPass {
           }
           break;
 
-        case Token.FUNCTION:
+        case FUNCTION:
           if (maybeNormalizeFunctionDeclaration(n)) {
             reportCodeChange("Function declaration");
           }
           break;
 
-        case Token.NAME:
-        case Token.STRING:
-        case Token.STRING_KEY:
-        case Token.GETTER_DEF:
-        case Token.SETTER_DEF:
+        case NAME:
+        case STRING:
+        case STRING_KEY:
+        case GETTER_DEF:
+        case SETTER_DEF:
           if (!compiler.getLifeCycleStage().isNormalizedObfuscated()) {
             annotateConstantsByConvention(n, parent);
           }
           break;
 
-        case Token.CAST:
+        case CAST:
           parent.replaceChild(n, n.removeFirstChild());
           break;
       }
@@ -546,11 +546,11 @@ class Normalize implements CompilerPass {
       Node last = n.getLastChild();
       // TODO(moz): Avoid adding blocks for cases like "label: let x;"
       switch (last.getType()) {
-        case Token.LABEL:
-        case Token.BLOCK:
-        case Token.FOR:
-        case Token.WHILE:
-        case Token.DO:
+        case LABEL:
+        case BLOCK:
+        case FOR:
+        case WHILE:
+        case DO:
           return;
         default:
           Node block = IR.block();
@@ -581,10 +581,10 @@ class Normalize implements CompilerPass {
         Node insertBefore = (before == null) ? c : before;
         Node insertBeforeParent = (before == null) ? n : beforeParent;
         switch (c.getType()) {
-          case Token.LABEL:
+          case LABEL:
             extractForInitializer(c, insertBefore, insertBeforeParent);
             break;
-          case Token.FOR:
+          case FOR:
             if (NodeUtil.isForIn(c)) {
               Node first = c.getFirstChild();
               if (first.isVar()) {

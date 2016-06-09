@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * <p>The syntactic scope creator scans the parse tree to create a Scope object
@@ -127,7 +126,7 @@ class SyntacticScopeCreator implements ScopeCreator {
    */
   private void scanVars(Node n) {
     switch (n.getType()) {
-      case Token.VAR:
+      case VAR:
         // Declare all variables. e.g. var x = 1, y, z;
         for (Node child = n.getFirstChild();
              child != null;) {
@@ -137,7 +136,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         }
         return;
 
-      case Token.FUNCTION:
+      case FUNCTION:
         if (NodeUtil.isFunctionExpression(n)) {
           return;
         }
@@ -150,7 +149,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         declareVar(n.getFirstChild());
         return;   // should not examine function's children
 
-      case Token.CATCH:
+      case CATCH:
         Preconditions.checkState(n.getChildCount() == 2, n);
         // The first child is the catch var and the second child
         // is the code block.
@@ -164,7 +163,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         scanVars(block);
         return; // only one child to scan
 
-      case Token.SCRIPT:
+      case SCRIPT:
         inputId = n.getInputId();
         Preconditions.checkNotNull(inputId);
         break;

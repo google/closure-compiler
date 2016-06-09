@@ -57,8 +57,8 @@ class PeepholeMinimizeConditions
   @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
     switch(node.getType()) {
-      case Token.THROW:
-      case Token.RETURN: {
+      case THROW:
+      case RETURN: {
         Node result = tryRemoveRedundantExit(node);
         if (result != node) {
           return result;
@@ -69,35 +69,35 @@ class PeepholeMinimizeConditions
       // TODO(johnlenz): Maybe remove redundant BREAK and CONTINUE. Overlaps
       // with MinimizeExitPoints.
 
-      case Token.NOT:
+      case NOT:
         tryMinimizeCondition(node.getFirstChild());
         return tryMinimizeNot(node);
 
-      case Token.IF:
+      case IF:
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeIf(node);
 
-      case Token.EXPR_RESULT:
+      case EXPR_RESULT:
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeExprResult(node);
 
-      case Token.HOOK:
+      case HOOK:
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeHook(node);
 
-      case Token.WHILE:
-      case Token.DO:
+      case WHILE:
+      case DO:
         tryMinimizeCondition(NodeUtil.getConditionExpression(node));
         return node;
 
-      case Token.FOR:
+      case FOR:
         if (!NodeUtil.isForIn(node)) {
           tryJoinForCondition(node);
           tryMinimizeCondition(NodeUtil.getConditionExpression(node));
         }
         return node;
 
-      case Token.BLOCK:
+      case BLOCK:
         return tryReplaceIf(node);
 
       default:
@@ -225,17 +225,17 @@ class PeepholeMinimizeConditions
 
   private static boolean statementMustExitParent(Node n) {
     switch (n.getType()) {
-      case Token.THROW:
-      case Token.RETURN:
+      case THROW:
+      case RETURN:
         return true;
-      case Token.BLOCK:
+      case BLOCK:
         if (n.hasChildren()) {
           Node child = n.getLastChild();
           return statementMustExitParent(child);
         }
         return false;
       // TODO(johnlenz): handle TRY/FINALLY
-      case Token.FUNCTION:
+      case FUNCTION:
       default:
         return false;
     }
@@ -403,18 +403,18 @@ class PeepholeMinimizeConditions
 
     Node notChild = n.getFirstChild();
     // negative operator of the current one : == -> != for instance.
-    int complementOperator;
+    Token.Kind complementOperator;
     switch (notChild.getType()) {
-      case Token.EQ:
+      case EQ:
         complementOperator = Token.NE;
         break;
-      case Token.NE:
+      case NE:
         complementOperator = Token.EQ;
         break;
-      case Token.SHEQ:
+      case SHEQ:
         complementOperator = Token.SHNE;
         break;
-      case Token.SHNE:
+      case SHNE:
         complementOperator = Token.SHEQ;
         break;
       // GT, GE, LT, LE are not handled in this because !(x<NaN) != x>=NaN.
@@ -913,23 +913,23 @@ class PeepholeMinimizeConditions
   private static boolean consumesDanglingElse(Node n) {
     while (true) {
       switch (n.getType()) {
-        case Token.IF:
+        case IF:
           if (n.getChildCount() < 3) {
             return true;
           }
           // This IF node has no else clause.
           n = n.getLastChild();
           continue;
-        case Token.BLOCK:
+        case BLOCK:
           if (n.getChildCount() != 1) {
             return false;
           }
           // This BLOCK has no curly braces.
           n = n.getLastChild();
           continue;
-        case Token.WITH:
-        case Token.WHILE:
-        case Token.FOR:
+        case WITH:
+        case WHILE:
+        case FOR:
           n = n.getLastChild();
           continue;
         default:
@@ -1001,8 +1001,8 @@ class PeepholeMinimizeConditions
     Node parent = n.getParent();
 
     switch (n.getType()) {
-      case Token.OR:
-      case Token.AND: {
+      case OR:
+      case AND: {
         Node left = n.getFirstChild();
         Node right = n.getLastChild();
 
@@ -1030,7 +1030,7 @@ class PeepholeMinimizeConditions
         // the new AST is easier for other passes to handle.
         TernaryValue rightVal = NodeUtil.getPureBooleanValue(right);
         if (NodeUtil.getPureBooleanValue(right) != TernaryValue.UNKNOWN) {
-          int type = n.getType();
+          Token.Kind type = n.getType();
           Node replacement = null;
           boolean rval = rightVal.toBoolean(true);
 
@@ -1058,7 +1058,7 @@ class PeepholeMinimizeConditions
         return n;
       }
 
-      case Token.HOOK: {
+      case HOOK: {
         Node condition = n.getFirstChild();
         Node trueNode = n.getSecondChild();
         Node falseNode = n.getLastChild();

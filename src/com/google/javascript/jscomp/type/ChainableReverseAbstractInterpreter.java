@@ -31,7 +31,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -116,7 +115,7 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   protected JSType getTypeIfRefinable(Node node, FlowScope scope) {
     switch (node.getType()) {
-      case Token.NAME:
+      case NAME:
         StaticTypedSlot<JSType> nameVar = scope.getSlot(node.getString());
         if (nameVar != null) {
           JSType nameVarType = nameVar.getType();
@@ -127,7 +126,7 @@ public abstract class ChainableReverseAbstractInterpreter
         }
         return null;
 
-      case Token.GETPROP:
+      case GETPROP:
         String qualifiedName = node.getQualifiedName();
         if (qualifiedName == null) {
           return null;
@@ -155,11 +154,11 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   protected void declareNameInScope(FlowScope scope, Node node, JSType type) {
     switch (node.getType()) {
-      case Token.NAME:
+      case NAME:
         scope.inferSlotType(node.getString(), type);
         break;
 
-      case Token.GETPROP:
+      case GETPROP:
         String qualifiedName = node.getQualifiedName();
         Preconditions.checkNotNull(qualifiedName);
 
@@ -168,7 +167,7 @@ public abstract class ChainableReverseAbstractInterpreter
         scope.inferQualifiedSlot(node, qualifiedName, origType, type, false);
         break;
 
-      case Token.THIS:
+      case THIS:
         // "this" references aren't currently modeled in the CFG.
         break;
 

@@ -48,7 +48,7 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     }
   }
 
-  public void hasType(int type) {
+  public void hasType(Token.Kind type) {
     String message = "Node is of type " + Token.name(getSubject().getType())
         + " not of type " + Token.name(type);
     assertEquals(message, type, getSubject().getType());

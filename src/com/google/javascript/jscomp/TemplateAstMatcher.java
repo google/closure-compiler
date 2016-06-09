@@ -39,8 +39,8 @@ import java.util.Map;
  */
 public final class TemplateAstMatcher {
   // Custom Token types for to use as placeholders in the template AST.
-  private static final int TEMPLATE_TYPE_PARAM = Token.PLACEHOLDER1;
-  private static final int TEMPLATE_LOCAL_NAME = Token.PLACEHOLDER2;
+  private static final Token.Kind TEMPLATE_TYPE_PARAM = Token.PLACEHOLDER1;
+  private static final Token.Kind TEMPLATE_LOCAL_NAME = Token.PLACEHOLDER2;
 
   private final AbstractCompiler compiler;
 

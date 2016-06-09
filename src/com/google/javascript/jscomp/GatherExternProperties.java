@@ -21,7 +21,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -60,14 +59,14 @@ class GatherExternProperties extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.GETPROP:
+      case GETPROP:
         // Gathers "name" from (someObject.name).
         Node dest = n.getSecondChild();
         if (dest.isString()) {
           externProperties.add(dest.getString());
         }
         break;
-      case Token.OBJECTLIT:
+      case OBJECTLIT:
         // Gathers "name" and "address" from ({name: null, address: null}).
         for (Node child = n.getFirstChild();
              child != null;

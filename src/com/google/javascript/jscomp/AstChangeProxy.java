@@ -102,7 +102,7 @@ class AstChangeProxy {
       return;
     }
 
-    int parentType = parent.getType();
+    Token.Kind parentType = parent.getType();
 
     Preconditions.checkState(size == 1 ||
         parentType == Token.BLOCK ||

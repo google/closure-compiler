@@ -312,26 +312,26 @@ final class NameAnalyzer implements CompilerPass {
       // nodes are global refs, and are handled later in this function.
       Node containingNode = parent.getParent();
       switch (parent.getType()) {
-        case Token.VAR:
+        case VAR:
           Preconditions.checkState(parent.hasOneChild());
           replaceWithRhs(containingNode, parent);
           break;
-        case Token.FUNCTION:
+        case FUNCTION:
           replaceWithRhs(containingNode, parent);
           break;
-        case Token.ASSIGN:
+        case ASSIGN:
           if (containingNode.isExprResult()) {
             replaceWithRhs(containingNode.getParent(), containingNode);
           } else {
             replaceWithRhs(containingNode, parent);
           }
           break;
-        case Token.OBJECTLIT:
+        case OBJECTLIT:
           // TODO(nicksantos): Come up with a way to remove this.
           // If we remove object lit keys, then we will need to also
           // create dependency scopes for them.
           break;
-        case Token.EXPR_RESULT:
+        case EXPR_RESULT:
           Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(parent.getFirstChild()));
           replaceWithRhs(containingNode, parent);
           break;
@@ -536,24 +536,24 @@ final class NameAnalyzer implements CompilerPass {
     private void recordConsumers(NodeTraversal t, Node n, Node recordNode) {
       Node parent = n.getParent();
       switch (parent.getType()) {
-        case Token.ASSIGN:
+        case ASSIGN:
           if (n == parent.getLastChild()) {
             recordAssignment(t, parent, recordNode);
           }
           recordConsumers(t, parent, recordNode);
           break;
-        case Token.NAME:
+        case NAME:
           NameInformation ns = createNameInformation(t, parent);
           recordDepScope(recordNode, ns);
           break;
-        case Token.OR:
+        case OR:
           recordConsumers(t, parent, recordNode);
           break;
-        case Token.AND:
+        case AND:
           // In "a && b" only "b" can be meaningfully aliased.
           // "a" must be falsy, which it must be an immutable, non-Object
-        case Token.COMMA:
-        case Token.HOOK:
+        case COMMA:
+        case HOOK:
           if (n != parent.getFirstChild()) {
             recordConsumers(t, parent, recordNode);
           }
@@ -1550,7 +1550,7 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     switch (rootNameNode.getType()) {
-      case Token.NAME:
+      case NAME:
         // Check whether this is an assignment to a prototype property
         // of an object defined in the global scope.
         if (!bNameWasShortened &&
@@ -1569,7 +1569,7 @@ final class NameAnalyzer implements CompilerPass {
         }
         return createNameInformation(
             rootNameNode.getString() + name, t.getScope(), rootNameNode);
-      case Token.THIS:
+      case THIS:
         if (t.inGlobalHoistScope()) {
           NameInformation nameInfo = new NameInformation();
           if (name.indexOf('.') == 0) {
@@ -1836,10 +1836,10 @@ final class NameAnalyzer implements CompilerPass {
   private void replaceTopLevelExpressionWithRhs(Node parent, Node n) {
     // validate inputs
     switch (parent.getType()) {
-      case Token.BLOCK:
-      case Token.SCRIPT:
-      case Token.FOR:
-      case Token.LABEL:
+      case BLOCK:
+      case SCRIPT:
+      case FOR:
+      case LABEL:
         break;
       default:
         throw new IllegalArgumentException(
@@ -1848,11 +1848,11 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     switch (n.getType()) {
-      case Token.EXPR_RESULT:
-      case Token.FUNCTION:
-      case Token.VAR:
+      case EXPR_RESULT:
+      case FUNCTION:
+      case VAR:
         break;
-      case Token.ASSIGN:
+      case ASSIGN:
         Preconditions.checkArgument(parent.isFor(),
             "Unsupported assignment in replaceWithRhs. parent: %s",
             Token.name(parent.getType()));
@@ -1904,21 +1904,21 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     switch (parent.getType()) {
-      case Token.NAME:
-      case Token.RETURN:
+      case NAME:
+      case RETURN:
         return true;
 
-      case Token.AND:
-      case Token.OR:
-      case Token.HOOK:
-      case Token.IF:
-      case Token.WHILE:
+      case AND:
+      case OR:
+      case HOOK:
+      case IF:
+      case WHILE:
         return parent.getFirstChild() == n;
 
-      case Token.FOR:
+      case FOR:
         return parent.getSecondChild() == n;
 
-      case Token.DO:
+      case DO:
         return parent.getLastChild() == n;
 
       default:
@@ -1953,20 +1953,20 @@ final class NameAnalyzer implements CompilerPass {
    */
   private static List<Node> getRhsSubexpressions(Node n) {
     switch (n.getType()) {
-      case Token.EXPR_RESULT:
+      case EXPR_RESULT:
         // process body
         return getRhsSubexpressions(n.getFirstChild());
-      case Token.FUNCTION:
+      case FUNCTION:
         // function nodes have no RHS
         return ImmutableList.of();
-      case Token.CALL:
+      case CALL:
         {
           // In our analyzable case, only the last argument to Object.defineProperties
           // (the object literal) can have side-effects
           Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
           return ImmutableList.of(n.getLastChild());
         }
-      case Token.NAME:
+      case NAME:
         {
           // parent is a var node.  RHS is the first child
           Node rhs = n.getFirstChild();
@@ -1976,14 +1976,14 @@ final class NameAnalyzer implements CompilerPass {
             return ImmutableList.of();
           }
         }
-      case Token.ASSIGN:
+      case ASSIGN:
         {
           // add LHS and RHS expressions - LHS may be a complex expression
           Node lhs = n.getFirstChild();
           Node rhs = lhs.getNext();
           return ImmutableList.of(lhs, rhs);
         }
-      case Token.VAR:
+      case VAR:
         {
           // recurse on all children
           ImmutableList.Builder<Node> nodes = ImmutableList.builder();

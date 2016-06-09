@@ -226,7 +226,7 @@ class FunctionArgumentInjector {
    * @param parent The parent of the node.
    */
   private static boolean canNameValueChange(Node n, Node parent) {
-    int type = parent.getType();
+    Token.Kind type = parent.getType();
     return (type == Token.VAR || type == Token.INC || type == Token.DEC ||
         (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) ||
         (NodeUtil.isForIn(parent)));
@@ -308,14 +308,14 @@ class FunctionArgumentInjector {
       } else if (references > 1) {
         // Safe is a misnomer, this is a check for "large".
         switch (cArg.getType()) {
-          case Token.NAME:
+          case NAME:
             String name = cArg.getString();
             safe = !(convention.isExported(name));
             break;
-          case Token.THIS:
+          case THIS:
             safe = true;
             break;
-          case Token.STRING:
+          case STRING:
             safe = (cArg.getString().length() < 2);
             break;
           default:
@@ -348,10 +348,10 @@ class FunctionArgumentInjector {
   static boolean mayHaveConditionalCode(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getType()) {
-        case Token.FUNCTION:
-        case Token.AND:
-        case Token.OR:
-        case Token.HOOK:
+        case FUNCTION:
+        case AND:
+        case OR:
+        case HOOK:
           return true;
       }
       if (mayHaveConditionalCode(c)) {
@@ -480,7 +480,7 @@ class FunctionArgumentInjector {
      */
     private boolean hasNonLocalSideEffect(Node n) {
       boolean sideEffect = false;
-      int type = n.getType();
+      Token.Kind type = n.getType();
       // Note: Only care about changes to non-local names, specifically
       // ignore VAR declaration assignments.
       if (NodeUtil.isAssignmentOp(n)
@@ -526,8 +526,8 @@ class FunctionArgumentInjector {
       return;
     } else if (n.isName()) {
       switch (n.getParent().getType()) {
-        case Token.VAR:
-        case Token.CATCH:
+        case VAR:
+        case CATCH:
           names.add(n.getString());
       }
     }

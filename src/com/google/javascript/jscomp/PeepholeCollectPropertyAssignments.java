@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * A pass that looks for assignments to properties of an object or array
@@ -147,12 +146,12 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     }
 
     switch (value.getType()) {
-      case Token.ARRAYLIT:
+      case ARRAYLIT:
         if (!collectArrayProperty(value, propertyCandidate)) {
           return false;
         }
         break;
-      case Token.OBJECTLIT:
+      case OBJECTLIT:
         if (!collectObjectProperty(value, propertyCandidate)) {
           return false;
         }

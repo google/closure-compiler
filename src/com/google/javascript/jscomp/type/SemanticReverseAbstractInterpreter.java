@@ -122,13 +122,13 @@ public final class SemanticReverseAbstractInterpreter
   public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
       FlowScope blindScope, boolean outcome) {
     // Check for the typeof operator.
-    int operatorToken = condition.getType();
+    Token.Kind operatorToken = condition.getType();
     switch (operatorToken) {
-      case Token.EQ:
-      case Token.NE:
-      case Token.SHEQ:
-      case Token.SHNE:
-      case Token.CASE:
+      case EQ:
+      case NE:
+      case SHEQ:
+      case SHNE:
+      case CASE:
         Node left;
         Node right;
         if (operatorToken == Token.CASE) {
@@ -164,7 +164,7 @@ public final class SemanticReverseAbstractInterpreter
         }
     }
     switch (operatorToken) {
-      case Token.AND:
+      case AND:
         if (outcome) {
           return caseAndOrNotShortCircuiting(condition.getFirstChild(),
               condition.getLastChild(), blindScope, true);
@@ -173,7 +173,7 @@ public final class SemanticReverseAbstractInterpreter
               condition.getLastChild(), blindScope, true);
         }
 
-      case Token.OR:
+      case OR:
         if (!outcome) {
           return caseAndOrNotShortCircuiting(condition.getFirstChild(),
               condition.getLastChild(), blindScope, false);
@@ -182,71 +182,71 @@ public final class SemanticReverseAbstractInterpreter
               condition.getLastChild(), blindScope, false);
         }
 
-      case Token.EQ:
+      case EQ:
         if (outcome) {
           return caseEquality(condition, blindScope, EQ);
         } else {
           return caseEquality(condition, blindScope, NE);
         }
 
-      case Token.NE:
+      case NE:
         if (outcome) {
           return caseEquality(condition, blindScope, NE);
         } else {
           return caseEquality(condition, blindScope, EQ);
         }
 
-      case Token.SHEQ:
+      case SHEQ:
         if (outcome) {
           return caseEquality(condition, blindScope, SHEQ);
         } else {
           return caseEquality(condition, blindScope, SHNE);
         }
 
-      case Token.SHNE:
+      case SHNE:
         if (outcome) {
           return caseEquality(condition, blindScope, SHNE);
         } else {
           return caseEquality(condition, blindScope, SHEQ);
         }
 
-      case Token.NAME:
-      case Token.GETPROP:
+      case NAME:
+      case GETPROP:
         return caseNameOrGetProp(condition, blindScope, outcome);
 
-      case Token.ASSIGN:
+      case ASSIGN:
         return firstPreciserScopeKnowingConditionOutcome(
             condition.getFirstChild(),
             firstPreciserScopeKnowingConditionOutcome(
                 condition.getSecondChild(), blindScope, outcome),
             outcome);
 
-      case Token.NOT:
+      case NOT:
         return firstPreciserScopeKnowingConditionOutcome(
             condition.getFirstChild(), blindScope, !outcome);
 
-      case Token.LE:
-      case Token.LT:
-      case Token.GE:
-      case Token.GT:
+      case LE:
+      case LT:
+      case GE:
+      case GT:
         if (outcome) {
           return caseEquality(condition, blindScope, ineq);
         }
         break;
 
-      case Token.INSTANCEOF:
+      case INSTANCEOF:
         return caseInstanceOf(
             condition.getFirstChild(), condition.getLastChild(), blindScope,
             outcome);
 
-      case Token.IN:
+      case IN:
         if (outcome && condition.getFirstChild().isString()) {
           return caseIn(condition.getLastChild(),
               condition.getFirstChild().getString(), blindScope);
         }
         break;
 
-      case Token.CASE: {
+      case CASE: {
         Node left =
             condition.getParent().getFirstChild(); // the switch condition
         Node right = condition.getFirstChild();
@@ -257,7 +257,7 @@ public final class SemanticReverseAbstractInterpreter
         }
       }
 
-      case Token.CALL: {
+      case CALL: {
         Node left = condition.getFirstChild();
         String leftName = left.getQualifiedName();
         if ("Array.isArray".equals(leftName) && left.getNext() != null) {

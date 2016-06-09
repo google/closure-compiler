@@ -24,7 +24,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -272,24 +271,24 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.NAME:
+      case NAME:
         checkNameDeprecation(t, n, parent);
         checkNameVisibility(t, n, parent);
         break;
-      case Token.GETPROP:
+      case GETPROP:
         checkPropertyDeprecation(t, n, parent);
         checkPropertyVisibility(t, n, parent);
         checkConstantProperty(t, n);
         break;
-      case Token.STRING_KEY:
-      case Token.GETTER_DEF:
-      case Token.SETTER_DEF:
+      case STRING_KEY:
+      case GETTER_DEF:
+      case SETTER_DEF:
         checkKeyVisibilityConvention(t, n, parent);
         break;
-      case Token.NEW:
+      case NEW:
         checkConstructorDeprecation(t, n, parent);
         break;
-      case Token.FUNCTION:
+      case FUNCTION:
         checkFinalClassOverrides(t, n, parent);
         break;
     }

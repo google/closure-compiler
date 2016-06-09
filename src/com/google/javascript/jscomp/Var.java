@@ -207,8 +207,8 @@ public class Var implements StaticSlot, StaticRef {
     return false;
   }
 
-  protected int declarationType() {
-    final Set<Integer> types = ImmutableSet.of(
+  protected Token.Kind declarationType() {
+    final Set<Token.Kind> types = ImmutableSet.of(
         Token.VAR,
         Token.LET,
         Token.CONST,
@@ -258,8 +258,8 @@ public class Var implements StaticSlot, StaticRef {
     }
 
     @Override
-    protected int declarationType() {
-      return -1;
+    protected Token.Kind declarationType() {
+      return null;
     }
 
     @Override

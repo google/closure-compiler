@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
 /**
  * Tests {@link ControlFlowAnalysis}.
  *
@@ -68,7 +67,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * some node with the second token.
    */
   private static List<DiGraphEdge<Node, Branch>> getAllEdges(
-      ControlFlowGraph<Node> cfg, int startToken, int endToken) {
+      ControlFlowGraph<Node> cfg, Token.Kind startToken, Token.Kind endToken) {
     List<DiGraphEdge<Node, Branch>> edges = getAllEdges(cfg);
     Iterator<DiGraphEdge<Node, Branch>> it = edges.iterator();
     while (it.hasNext()) {
@@ -88,7 +87,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * first token to some node with the second token.
    */
   private static List<DiGraphEdge<Node, Branch>> getAllEdges(
-      ControlFlowGraph<Node> cfg, int startToken, int endToken, Branch type) {
+      ControlFlowGraph<Node> cfg, Token.Kind startToken, Token.Kind endToken, Branch type) {
     List<DiGraphEdge<Node, Branch>> edges =
         getAllEdges(cfg, startToken, endToken);
     Iterator<DiGraphEdge<Node, Branch>> it = edges.iterator();
@@ -118,7 +117,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * This edge must flow from a parent to one of its descendants.
    */
   private static List<DiGraphEdge<Node, Branch>> getAllDownEdges(
-      ControlFlowGraph<Node> cfg, int startToken, int endToken, Branch type) {
+      ControlFlowGraph<Node> cfg, Token.Kind startToken, Token.Kind endToken, Branch type) {
     List<DiGraphEdge<Node, Branch>> edges =
         getAllEdges(cfg, startToken, endToken, type);
     Iterator<DiGraphEdge<Node, Branch>> it = edges.iterator();
@@ -138,8 +137,8 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * Assert that there exists a control flow edge of the given type
    * from some node with the first token to some node with the second token.
    */
-  private static void assertNoEdge(ControlFlowGraph<Node> cfg, int startToken,
-      int endToken) {
+  private static void assertNoEdge(ControlFlowGraph<Node> cfg, Token.Kind startToken,
+      Token.Kind endToken) {
     assertThat(getAllEdges(cfg, startToken, endToken)).isEmpty();
   }
 
@@ -149,7 +148,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * This edge must flow from a parent to one of its descendants.
    */
   private static void assertDownEdge(ControlFlowGraph<Node> cfg,
-      int startToken, int endToken, Branch type) {
+      Token.Kind startToken, Token.Kind endToken, Branch type) {
     assertTrue("No down edge found",
         0 != getAllDownEdges(cfg, startToken, endToken, type).size());
   }
@@ -160,7 +159,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * This edge must flow from a node to one of its ancestors.
    */
   private static void assertUpEdge(ControlFlowGraph<Node> cfg,
-      int startToken, int endToken, Branch type) {
+      Token.Kind startToken, Token.Kind endToken, Branch type) {
     assertTrue("No up edge found",
         0 != getAllDownEdges(cfg, endToken, startToken, type).size());
   }
@@ -171,7 +170,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * This edge must flow between two nodes that are not in the same subtree.
    */
   private static void assertCrossEdge(ControlFlowGraph<Node> cfg,
-      int startToken, int endToken, Branch type) {
+      Token.Kind startToken, Token.Kind endToken, Branch type) {
     int numDownEdges = getAllDownEdges(cfg, startToken, endToken, type).size();
     int numUpEdges = getAllDownEdges(cfg, endToken, startToken, type).size();
     int numEdges = getAllEdges(cfg, startToken, endToken, type).size();
@@ -183,7 +182,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * from some node with the first token to the return node.
    */
   private static void assertReturnEdge(ControlFlowGraph<Node> cfg,
-      int startToken) {
+      Token.Kind startToken) {
     List<DiGraphEdge<Node, Branch>> edges = getAllEdges(cfg);
     for (DiGraphEdge<Node, Branch> edge : edges) {
       Node source = edge.getSource().getValue();
@@ -202,7 +201,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * from some node with the first token to the return node.
    */
   private static void assertNoReturnEdge(ControlFlowGraph<Node> cfg,
-      int startToken) {
+      Token.Kind startToken) {
     List<DiGraphEdge<Node, Branch>> edges = getAllEdges(cfg);
     for (DiGraphEdge<Node, Branch> edge : edges) {
       Node source = edge.getSource().getValue();
@@ -1460,7 +1459,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    * @param nodeTypes The expected node types, in order.
    */
   private void assertNodeOrder(ControlFlowGraph<Node> cfg,
-      List<Integer> nodeTypes) {
+      List<Token.Kind> nodeTypes) {
     List<DiGraphNode<Node, Branch>> cfgNodes =
         Ordering.from(cfg.getOptionalNodeComparator(true)).sortedCopy(cfg.getDirectedGraphNodes());
 
@@ -1472,8 +1471,8 @@ public final class ControlFlowAnalysisTest extends TestCase {
     assertEquals("Wrong number of CFG nodes",
         nodeTypes.size(), cfgNodes.size());
     for (int i = 0; i < cfgNodes.size(); i++) {
-      int expectedType = nodeTypes.get(i);
-      int actualType = cfgNodes.get(i).getValue().getType();
+      Token.Kind expectedType = nodeTypes.get(i);
+      Token.Kind actualType = cfgNodes.get(i).getValue().getType();
       assertEquals(
           "node type mismatch at " + i + ".\n" +
           "found   : " + Token.name(actualType) + "\n" +

@@ -307,150 +307,150 @@ class TypeInference
 
   private FlowScope traverse(Node n, FlowScope scope) {
     switch (n.getType()) {
-      case Token.ASSIGN:
+      case ASSIGN:
         scope = traverseAssign(n, scope);
         break;
 
-      case Token.NAME:
+      case NAME:
         scope = traverseName(n, scope);
         break;
 
-      case Token.GETPROP:
+      case GETPROP:
         scope = traverseGetProp(n, scope);
         break;
 
-      case Token.AND:
+      case AND:
         scope = traverseAnd(n, scope).getJoinedFlowScope()
             .createChildFlowScope();
         break;
 
-      case Token.OR:
+      case OR:
         scope = traverseOr(n, scope).getJoinedFlowScope()
             .createChildFlowScope();
         break;
 
-      case Token.HOOK:
+      case HOOK:
         scope = traverseHook(n, scope);
         break;
 
-      case Token.OBJECTLIT:
+      case OBJECTLIT:
         scope = traverseObjectLiteral(n, scope);
         break;
 
-      case Token.CALL:
+      case CALL:
         scope = traverseCall(n, scope);
         break;
 
-      case Token.NEW:
+      case NEW:
         scope = traverseNew(n, scope);
         break;
 
-      case Token.ASSIGN_ADD:
-      case Token.ADD:
+      case ASSIGN_ADD:
+      case ADD:
         scope = traverseAdd(n, scope);
         break;
 
-      case Token.POS:
-      case Token.NEG:
+      case POS:
+      case NEG:
         scope = traverse(n.getFirstChild(), scope);  // Find types.
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
 
-      case Token.ARRAYLIT:
+      case ARRAYLIT:
         scope = traverseArrayLiteral(n, scope);
         break;
 
-      case Token.THIS:
+      case THIS:
         n.setJSType(scope.getTypeOfThis());
         break;
 
-      case Token.ASSIGN_LSH:
-      case Token.ASSIGN_RSH:
-      case Token.LSH:
-      case Token.RSH:
-      case Token.ASSIGN_URSH:
-      case Token.URSH:
-      case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD:
-      case Token.ASSIGN_BITAND:
-      case Token.ASSIGN_BITXOR:
-      case Token.ASSIGN_BITOR:
-      case Token.ASSIGN_MUL:
-      case Token.ASSIGN_SUB:
-      case Token.DIV:
-      case Token.MOD:
-      case Token.BITAND:
-      case Token.BITXOR:
-      case Token.BITOR:
-      case Token.MUL:
-      case Token.SUB:
-      case Token.DEC:
-      case Token.INC:
-      case Token.BITNOT:
+      case ASSIGN_LSH:
+      case ASSIGN_RSH:
+      case LSH:
+      case RSH:
+      case ASSIGN_URSH:
+      case URSH:
+      case ASSIGN_DIV:
+      case ASSIGN_MOD:
+      case ASSIGN_BITAND:
+      case ASSIGN_BITXOR:
+      case ASSIGN_BITOR:
+      case ASSIGN_MUL:
+      case ASSIGN_SUB:
+      case DIV:
+      case MOD:
+      case BITAND:
+      case BITXOR:
+      case BITOR:
+      case MUL:
+      case SUB:
+      case DEC:
+      case INC:
+      case BITNOT:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
 
-      case Token.PARAM_LIST:
+      case PARAM_LIST:
         scope = traverse(n.getFirstChild(), scope);
         n.setJSType(getJSType(n.getFirstChild()));
         break;
 
-      case Token.COMMA:
+      case COMMA:
         scope = traverseChildren(n, scope);
         n.setJSType(getJSType(n.getLastChild()));
         break;
 
-      case Token.TYPEOF:
+      case TYPEOF:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(STRING_TYPE));
         break;
 
-      case Token.DELPROP:
-      case Token.LT:
-      case Token.LE:
-      case Token.GT:
-      case Token.GE:
-      case Token.NOT:
-      case Token.EQ:
-      case Token.NE:
-      case Token.SHEQ:
-      case Token.SHNE:
-      case Token.INSTANCEOF:
-      case Token.IN:
+      case DELPROP:
+      case LT:
+      case LE:
+      case GT:
+      case GE:
+      case NOT:
+      case EQ:
+      case NE:
+      case SHEQ:
+      case SHNE:
+      case INSTANCEOF:
+      case IN:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(BOOLEAN_TYPE));
         break;
 
-      case Token.GETELEM:
+      case GETELEM:
         scope = traverseGetElem(n, scope);
         break;
 
-      case Token.EXPR_RESULT:
+      case EXPR_RESULT:
         scope = traverseChildren(n, scope);
         if (n.getFirstChild().isGetProp()) {
           ensurePropertyDeclared(n.getFirstChild());
         }
         break;
 
-      case Token.SWITCH:
+      case SWITCH:
         scope = traverse(n.getFirstChild(), scope);
         break;
 
-      case Token.RETURN:
+      case RETURN:
         scope = traverseReturn(n, scope);
         break;
 
-      case Token.VAR:
-      case Token.THROW:
+      case VAR:
+      case THROW:
         scope = traverseChildren(n, scope);
         break;
 
-      case Token.CATCH:
+      case CATCH:
         scope = traverseCatch(n, scope);
         break;
 
-      case Token.CAST:
+      case CAST:
         scope = traverseChildren(n, scope);
         JSDocInfo info = n.getJSDocInfo();
         if (info != null && info.hasType()) {
@@ -523,7 +523,7 @@ class TypeInference
       FlowScope scope, Node left, JSType leftType, JSType resultType) {
     Preconditions.checkNotNull(resultType);
     switch (left.getType()) {
-      case Token.NAME:
+      case NAME:
         String varName = left.getString();
         TypedVar var = syntacticScope.getVar(varName);
         JSType varType = var == null ? null : var.getType();
@@ -589,7 +589,7 @@ class TypeInference
           var.setType(resultType);
         }
         break;
-      case Token.GETPROP:
+      case GETPROP:
         String qualifiedName = left.getQualifiedName();
         if (qualifiedName != null) {
           boolean declaredSlotType = false;
@@ -1647,10 +1647,10 @@ class TypeInference
   private BooleanOutcomePair traverseWithinShortCircuitingBinOp(
       Node n, FlowScope scope) {
     switch (n.getType()) {
-      case Token.AND:
+      case AND:
         return traverseAnd(n, scope);
 
-      case Token.OR:
+      case OR:
         return traverseOr(n, scope);
 
       default:
@@ -1714,7 +1714,7 @@ class TypeInference
      * Gets the outcome scope if we do know the outcome of the entire
      * expression.
      */
-    FlowScope getOutcomeFlowScope(int nodeType, boolean outcome) {
+    FlowScope getOutcomeFlowScope(Token.Kind nodeType, boolean outcome) {
       if (nodeType == Token.AND && outcome ||
           nodeType == Token.OR && !outcome) {
         // We know that the whole expression must have executed.

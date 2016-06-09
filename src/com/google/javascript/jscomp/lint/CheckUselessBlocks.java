@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -98,21 +97,21 @@ public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
   @Override
   public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.BLOCK:
+      case BLOCK:
         if (isLoneBlock(n)) {
           loneBlocks.push(n);
         }
         break;
-      case Token.LET:
-      case Token.CONST:
+      case LET:
+      case CONST:
         allowLoneBlock(parent);
         break;
-      case Token.CLASS:
+      case CLASS:
         if (NodeUtil.isClassDeclaration(n)) {
           allowLoneBlock(parent);
         }
         break;
-      case Token.FUNCTION:
+      case FUNCTION:
         if (NodeUtil.isFunctionDeclaration(n)) {
           allowLoneBlock(parent);
         }
