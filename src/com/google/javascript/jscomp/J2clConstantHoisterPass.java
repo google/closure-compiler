@@ -48,10 +48,9 @@ public class J2clConstantHoisterPass implements CompilerPass {
       public void visit(NodeTraversal t, Node node, Node parent) {
         if (parent != null && NodeUtil.isLValue(node)) {
           fieldAssignments.put(node.getQualifiedName(), parent);
-          Node rValue = NodeUtil.getRValueOfLValue(node);
-          if (isHoistableFunction(t, parent, rValue)) {
-            hoistableFunctions.add(rValue);
-          }
+        }
+        if (isHoistableFunction(t, node)) {
+          hoistableFunctions.add(node);
         }
       }
     });
@@ -65,13 +64,10 @@ public class J2clConstantHoisterPass implements CompilerPass {
    * Returns whether the specified rValue is a function which does not receive any variables from
    * its containing scope, and is thus 'hoistable'.
    */
-  private static boolean isHoistableFunction(NodeTraversal t, Node parent, Node rValue) {
+  private static boolean isHoistableFunction(NodeTraversal t, Node node) {
     // TODO(michaelthomas): This could be improved slightly by not assuming that any variable in the
     // outer scope is used in the function.
-    return rValue != null
-        && rValue.isFunction()
-        && NodeUtil.isAssignmentOp(parent)
-        && t.getScope().getVarCount() == 0;
+    return node.isFunction() && t.getScope().getVarCount() == 0;
   }
 
   private void maybeHoistClassField(
