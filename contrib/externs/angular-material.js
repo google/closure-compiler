@@ -263,9 +263,107 @@ md.$dialog.ConfirmConfig_.prototype.parent = function(parent) {};
  */
 md.$dialog.ConfirmConfig_.prototype.css = function(css) {};
 
+
+/** @constructor */
+md.$dialog.PromptConfig_;
+
+/**
+ * @param {string} title
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.title = function(title) {};
+
+/**
+ * @deprecated `$mdDialog.prompt().content` is deprecated!
+ *     Use textContent or htmlContent instead.
+ * @param {?string} textContent
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.content = function(textContent) {};
+
+/**
+ * @param {?string} textContent
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.textContent = function(textContent) {};
+
+/**
+ * @param {string} htmlContent
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.htmlContent = function(htmlContent) {};
+
+/**
+ * @param {string} ariaLabel
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.ariaLabel = function(ariaLabel) {};
+
+/**
+ * @param {string} placeholder
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.placeholder = function(placeholder) {};
+
+/**
+ * @param {string} initialValue
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.initialValue = function(initialValue) {};
+
+/**
+ * @param {string} ok
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.ok = function(ok) {};
+
+/**
+ * @param {string} cancel
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.cancel = function(cancel) {};
+
+/**
+ * @param {string} theme
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.theme = function(theme) {};
+
+/**
+ * @param {boolean} close
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.clickOutsideToClose = function(close) {};
+
+/**
+ * @param {boolean} close
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.escapeToClose = function(close) {};
+
+/**
+ * @param {Object|undefined} event
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.targetEvent = function(event) {};
+
+/**
+ * @param {angular.JQLite|Element|undefined} parent
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.parent = function(parent) {};
+
+/**
+ * @param {string} css
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.css = function(css) {};
+
+
 /** @typedef {!md.$dialog.options|!md.$dialog.ConfirmConfig_|
- *     !md.$dialog.AlertConfig_} */
+ *     !md.$dialog.AlertConfig_|!md.$dialog.PromptConfig_} */
 md.$dialog.Config;
+
 
 /**
  * @param {!md.$dialog.Config} options
@@ -292,6 +390,10 @@ md.$dialog.prototype.alert = function() {};
 
 /** @return {!md.$dialog.ConfirmConfig_} */
 md.$dialog.prototype.confirm = function() {};
+
+
+/** @return {!md.$dialog.PromptConfig_} */
+md.$dialog.prototype.prompt = function() {};
 
 
 /******************************************************************************
