@@ -24,6 +24,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * An optimization pass for J2CL-generated code to hoist some constant assignments out clinit method
@@ -40,21 +42,40 @@ public class J2clConstantHoisterPass implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     final Multimap<String, Node> fieldAssignments = ArrayListMultimap.create();
+    final Set<Node> hoistableFunctions = new HashSet<>();
     NodeTraversal.traverseEs6(compiler, root, new AbstractPostOrderCallback() {
       @Override
       public void visit(NodeTraversal t, Node node, Node parent) {
         if (parent != null && NodeUtil.isLValue(node)) {
           fieldAssignments.put(node.getQualifiedName(), parent);
+          Node rValue = NodeUtil.getRValueOfLValue(node);
+          if (isHoistableFunction(t, parent, rValue)) {
+            hoistableFunctions.add(rValue);
+          }
         }
       }
     });
 
     for (Collection<Node> assignments : fieldAssignments.asMap().values()) {
-      maybeHoistClassField(assignments);
+      maybeHoistClassField(assignments, hoistableFunctions);
     }
   }
 
-  private void maybeHoistClassField(Collection<Node> assignments) {
+  /**
+   * Returns whether the specified rValue is a function which does not receive any variables from
+   * its containing scope, and is thus 'hoistable'.
+   */
+  private static boolean isHoistableFunction(NodeTraversal t, Node parent, Node rValue) {
+    // TODO(michaelthomas): This could be improved slightly by not assuming that any variable in the
+    // outer scope is used in the function.
+    return rValue != null
+        && rValue.isFunction()
+        && NodeUtil.isAssignmentOp(parent)
+        && t.getScope().getVarCount() == 0;
+  }
+
+  private void maybeHoistClassField(
+      Collection<Node> assignments, Collection<Node> hoistableFunctions) {
     // The field is only assigned twice:
     if (assignments.size() != 2) {
       return;
@@ -63,7 +84,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
     Node firstAssignment = Iterables.get(assignments, 0);
     Node secondAssignment = Iterables.get(assignments, 1);
 
-    // One of them is for field initilization in declaration phase:
+    // One of them is for field initialization in declaration phase:
     if (!isClassFieldInitialization(secondAssignment)) {
       return;
     }
@@ -73,7 +94,9 @@ public class J2clConstantHoisterPass implements CompilerPass {
       return;
     }
     // And it is assigned to a literal value; hence could be used in static eval and safe to move:
-    if (!isLiteralValue(firstAssignment.getSecondChild())) {
+    Node firstAssignmentRhs = firstAssignment.getSecondChild();
+    if (!NodeUtil.isLiteralValue(firstAssignmentRhs, true /* includeFunctions */)
+        || (firstAssignmentRhs.isFunction() && !hoistableFunctions.contains(firstAssignmentRhs))) {
       return;
     }
 
@@ -105,11 +128,14 @@ public class J2clConstantHoisterPass implements CompilerPass {
     declarationInClass.putBooleanProp(Node.IS_CONSTANT_VAR, true);
 
     // Sanity check
-    checkState(isLiteralValue(declarationAssignedValue));
+    checkState(NodeUtil.isLiteralValue(declarationAssignedValue, false /* includeFunctions */));
   }
 
   private static boolean isClassFieldInitialization(Node node) {
-    return node.getParent().isScript() && node.isVar();
+    return node.getParent().isScript()
+        && node.isVar()
+        && node.getFirstFirstChild() != null
+        && NodeUtil.isLiteralValue(node.getFirstFirstChild(), false /* includeFunctions */);
   }
 
   private static boolean isClinitFieldAssignment(Node node) {
@@ -125,10 +151,11 @@ public class J2clConstantHoisterPass implements CompilerPass {
     }
 
     String fnName = NodeUtil.getName(fnNode);
-    return fnName != null && (fnName.endsWith("$$0clinit") || fnName.endsWith(".$clinit"));
+    return fnName != null && isClinitMethodName(fnName);
   }
 
-  private static boolean isLiteralValue(Node node) {
-    return NodeUtil.isLiteralValue(node, false /* exclude functions */);
+  private static boolean isClinitMethodName(String methodName) {
+    return methodName != null
+        && (methodName.endsWith("$$0clinit") || methodName.endsWith(".$clinit"));
   }
 }

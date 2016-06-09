@@ -30,16 +30,19 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "  someClass.$clinit = function() {};",
             "  someClass$foo = true;",
             "  someClass$bar = 'hey';",
+            "  someClass$buzz = function() { return someClass$bar; };",
             "};",
             "var someClass$foo = false;",
-            "var someClass$bar = null;"),
+            "var someClass$bar = null;",
+            "var someClass$buzz = null;"),
         LINE_JOINER.join(
             "var someClass = /** @constructor */ function() {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",
             "};",
             "var someClass$foo = true;",
-            "var someClass$bar = 'hey';"));
+            "var someClass$bar = 'hey';",
+            "var someClass$buzz = function(){ return someClass$bar; };"));
   }
 
   public void testHoistClinitConstantAssignments_avoidUnsafe() {
@@ -62,5 +65,50 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "var someClass$foo1 = false;",
             "var someClass$foo2 = false;",
             "var someClass$hoo = false;"));
+  }
+
+  /**
+   * Tests that hoisting works as expected when encountering a clinit that has been devirtualized.
+   */
+  public void testHoistClinitConstantAssignments_devirtualized() {
+    test(
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "var someClass$$0clinit = function() {",
+            "  someClass$$0clinit = function() {};",
+            "  someClass$shouldHoist = true;",
+            "  someClass$shouldNotHoist = new Object();",
+            "};",
+            "var someClass$shouldHoist = false;",
+            "var someClass$shouldNotHoist = null;"),
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "var someClass$$0clinit = function() {",
+            "  someClass$$0clinit = function() {};",
+            "  someClass$shouldNotHoist = new Object();",
+            "};",
+            "var someClass$shouldHoist = true;",
+            "var someClass$shouldNotHoist = null;"));
+  }
+
+  public void testHoistClinitConstantAssignments_avoidUnsafeFunc() {
+    testSame(
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  var x = 10;",
+            "  someClass$foo = function() { return x; };", // Depends on the scope of the clinit.
+            "};",
+            "var someClass$foo = null;"));
+    testSame(
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  var x = 10;",
+            "  someClass$foo = function() { return 1; };", // x is assumed to be used
+            "};",
+            "var someClass$foo = null;"));
   }
 }
