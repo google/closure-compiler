@@ -37,7 +37,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.io.File;
 import java.io.IOException;
@@ -337,8 +336,7 @@ final class NameAnalyzer implements CompilerPass {
           break;
         default:
           throw new IllegalArgumentException(
-              "Unsupported parent node type in JsNameRefNode.remove: "
-                  + Token.name(parent.getType()));
+              "Unsupported parent node type in JsNameRefNode.remove: " + parent.getType());
       }
     }
   }
@@ -1843,8 +1841,7 @@ final class NameAnalyzer implements CompilerPass {
         break;
       default:
         throw new IllegalArgumentException(
-            "Unsupported parent node type in replaceWithRhs " +
-            Token.name(parent.getType()));
+            "Unsupported parent node type in replaceWithRhs " + parent.getType());
     }
 
     switch (n.getType()) {
@@ -1853,14 +1850,14 @@ final class NameAnalyzer implements CompilerPass {
       case VAR:
         break;
       case ASSIGN:
-        Preconditions.checkArgument(parent.isFor(),
+        Preconditions.checkArgument(
+            parent.isFor(),
             "Unsupported assignment in replaceWithRhs. parent: %s",
-            Token.name(parent.getType()));
+            parent.getType());
         break;
       default:
         throw new IllegalArgumentException(
-            "Unsupported node type in replaceWithRhs " +
-            Token.name(n.getType()));
+            "Unsupported node type in replaceWithRhs " + n.getType());
     }
 
     // gather replacements

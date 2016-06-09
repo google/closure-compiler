@@ -778,8 +778,7 @@ final class NewTypeInference implements CompilerPass {
           break;
         default:
           if (NodeUtil.isStatement(n)) {
-            throw new RuntimeException("Unhandled statement type: "
-                + Token.name(n.getType()));
+            throw new RuntimeException("Unhandled statement type: " + n.getType());
           } else {
             inEnv = analyzeExprBwd(n, outEnv).env;
             break;
@@ -827,7 +826,7 @@ final class NewTypeInference implements CompilerPass {
           outEnv = envPutType(inEnv, catchVarname, JSType.UNKNOWN);
           break;
         case EXPR_RESULT:
-          println("\tsemi ", Token.name(n.getFirstChild().getType()));
+          println("\tsemi ", n.getFirstChild().getType());
           if (n.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
             n.removeProp(Node.ANALYZED_DURING_GTI);
             outEnv = inEnv;
@@ -906,8 +905,7 @@ final class NewTypeInference implements CompilerPass {
           break;
         default:
           if (NodeUtil.isStatement(n)) {
-            throw new RuntimeException("Unhandled statement type: "
-                + Token.name(n.getType()));
+            throw new RuntimeException("Unhandled statement type: " + n.getType());
           } else {
             outEnv = analyzeExprFwd(n, inEnv, JSType.UNKNOWN).env;
             break;
@@ -1367,8 +1365,7 @@ final class NewTypeInference implements CompilerPass {
             inEnv, specializedType);
         break;
       default:
-        throw new RuntimeException("Unhandled expression type: " +
-              Token.name(expr.getType()));
+        throw new RuntimeException("Unhandled expression type: " + expr.getType());
     }
     mayWarnAboutUnknownType(expr, resultPair.type);
     // TODO(dimvar): We attach the type to every expression because that's also
@@ -1396,8 +1393,7 @@ final class NewTypeInference implements CompilerPass {
         // Maybe because we can't do anything about them, so why warn?
         // We mimic that behavior here.
         && (!expr.isGetElem() || isKnownGetElem)) {
-      warnings.add(JSError.make(expr, UNKNOWN_EXPR_TYPE,
-              Token.name(expr.getType())));
+      warnings.add(JSError.make(expr, UNKNOWN_EXPR_TYPE, expr.getType().toString()));
     }
   }
 
@@ -3225,8 +3221,11 @@ final class NewTypeInference implements CompilerPass {
         pair.type = symbolTable.getCastType(expr);
         return pair;
       default:
-        throw new RuntimeException("BWD: Unhandled expression type: "
-            + Token.name(expr.getType()) + " with parent: " + expr.getParent());
+        throw new RuntimeException(
+            "BWD: Unhandled expression type: "
+                + expr.getType()
+                + " with parent: "
+                + expr.getParent());
     }
   }
 
@@ -3613,8 +3612,7 @@ final class NewTypeInference implements CompilerPass {
       case NULL:
         return JSType.NULL;
       default:
-        throw new RuntimeException("The token isn't a scalar value " +
-            Token.name(token));
+        throw new RuntimeException("The token isn't a scalar value " + token);
     }
   }
 
@@ -3625,14 +3623,24 @@ final class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(
         (actual instanceof String) || (actual instanceof JSType));
     if (expected instanceof JSType && actual instanceof JSType) {
-      warnings.add(JSError.make(
-          expr, INVALID_OPERAND_TYPE, Token.name(operatorType),
-          errorMsgWithTypeDiff((JSType) expected, (JSType) actual)));
+      warnings.add(
+          JSError.make(
+              expr,
+              INVALID_OPERAND_TYPE,
+              operatorType.toString(),
+              errorMsgWithTypeDiff((JSType) expected, (JSType) actual)));
     } else {
-      warnings.add(JSError.make(
-          expr, INVALID_OPERAND_TYPE, Token.name(operatorType),
-          "Expected : " + expected.toString() + "\n"
-          + "Found    : " + actual.toString() + "\n"));
+      warnings.add(
+          JSError.make(
+              expr,
+              INVALID_OPERAND_TYPE,
+              operatorType.toString(),
+              "Expected : "
+                  + expected.toString()
+                  + "\n"
+                  + "Found    : "
+                  + actual.toString()
+                  + "\n"));
     }
   }
 
@@ -3725,8 +3733,8 @@ final class NewTypeInference implements CompilerPass {
         return result;
       }
       default:
-        throw new RuntimeException("markAndGetTypeOfPreanalyzedNode: unexpected node "
-            + Token.name(qnameNode.getType()));
+        throw new RuntimeException(
+            "markAndGetTypeOfPreanalyzedNode: unexpected node " + qnameNode.getType());
     }
   }
 
@@ -4053,8 +4061,7 @@ final class NewTypeInference implements CompilerPass {
       case IN:
         return JSType.TOP_OBJECT;
       default:
-        throw new RuntimeException(
-            "Unhandled node for pickReqObjType: " + Token.name(exprKind));
+        throw new RuntimeException("Unhandled node for pickReqObjType: " + exprKind);
     }
   }
 

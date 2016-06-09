@@ -43,7 +43,6 @@ import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -948,8 +947,8 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (nameNode.isName()) {
         isRedeclaration = currentScope.isDefinedLocally(nameNode.getString(), false);
       } else {
-        Preconditions.checkState(nameNode.isGetProp(),
-            "Expected getprop, found %s", Token.name(nameNode.getType()));
+        Preconditions.checkState(
+            nameNode.isGetProp(), "Expected getprop, found %s", nameNode.getType());
         isRedeclaration = currentScope.isDefined(nameNode);
         if (isRedeclaration && fnDoc != null) {
           nameNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -2344,8 +2343,7 @@ class GlobalTypeInfo implements CompilerPass {
         || defSite.isGetterDef() || defSite.isSetterDef()) {
       return defSite;
     }
-    throw new RuntimeException("Unknown defsite: "
-        + Token.name(defSite.getType()));
+    throw new RuntimeException("Unknown defsite: " + defSite.getType());
   }
 
   private boolean isConst(Node defSite) {

@@ -189,7 +189,7 @@ public final class AstValidator implements CompilerPass {
         validateNamespace(n, isAmbient);
         return;
       default:
-        violation("Expected statement but was " + Token.name(n.getType()) + ".", n);
+        violation("Expected statement but was " + n.getType() + ".", n);
     }
   }
 
@@ -330,7 +330,7 @@ public final class AstValidator implements CompilerPass {
         return;
 
       default:
-        violation("Expected expression but was " + Token.name(n.getType()), n);
+        violation("Expected expression but was " + n.getType(), n);
     }
   }
 
@@ -500,7 +500,7 @@ public final class AstValidator implements CompilerPass {
         validateChildCount(n);
         break;
       default:
-        violation("Interface contained member of invalid type " + Token.name(n.getType()), n);
+        violation("Interface contained member of invalid type " + n.getType(), n);
     }
   }
 
@@ -588,7 +588,7 @@ public final class AstValidator implements CompilerPass {
       case EMPTY: // Empty is allowed too.
         break;
       default:
-        violation("Class contained member of invalid type " + Token.name(n.getType()), n);
+        violation("Class contained member of invalid type " + n.getType(), n);
     }
   }
 
@@ -815,8 +815,7 @@ public final class AstValidator implements CompilerPass {
       case ARRAYLIT:
         break;
       default:
-        violation("SPREAD node should not be the child of a "
-            + Token.name(parent.getType()) + " node.", n);
+        violation("SPREAD node should not be the child of a " + parent.getType() + " node.", n);
     }
   }
 
@@ -841,7 +840,7 @@ public final class AstValidator implements CompilerPass {
     } else if (n.isDestructuringLhs()) {
       validateLHS(type, n.getFirstChild());
     } else {
-      violation("Invalid child for " + Token.name(type) + " node", n);
+      violation("Invalid child for " + type + " node", n);
     }
   }
 
@@ -868,7 +867,7 @@ public final class AstValidator implements CompilerPass {
     } else if (n.isComputedProp()) {
       validateObjectPatternComputedPropKey(contextType, n);
     } else {
-      violation("Invalid child for " + Token.name(contextType) + " node", n);
+      violation("Invalid child for " + contextType + " node", n);
     }
   }
 
@@ -1077,8 +1076,7 @@ public final class AstValidator implements CompilerPass {
         validateDefaultCase(n);
         return;
       default:
-        violation("Expected switch member but was "
-            + Token.name(n.getType()), n);
+        violation("Expected switch member but was " + n.getType(), n);
     }
   }
 
@@ -1115,8 +1113,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateAssignmentTarget(Node n) {
     if (!n.isValidAssignmentTarget()) {
-      violation("Expected assignment target expression but was "
-          + Token.name(n.getType()), n);
+      violation("Expected assignment target expression but was " + n.getType(), n);
     }
   }
 
@@ -1195,8 +1192,7 @@ public final class AstValidator implements CompilerPass {
         validateObjectLitComputedPropKey(n);
         return;
       default:
-        violation("Expected object literal key expression but was "
-              + Token.name(n.getType()), n);
+        violation("Expected object literal key expression but was " + n.getType(), n);
     }
   }
 
@@ -1292,7 +1288,7 @@ public final class AstValidator implements CompilerPass {
         // Validate that getString doesn't throw
         n.getString();
       } catch (UnsupportedOperationException e) {
-        violation("getString failed for" + Token.name(n.getType()), n);
+        violation("getString failed for" + n.getType(), n);
       }
     } else {
       validateNonEmptyString(n);
@@ -1400,9 +1396,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateNodeType(Token.Kind type, Node n) {
     if (n.getType() != type) {
-      violation(
-          "Expected " + Token.name(type) + " but was "
-              + Token.name(n.getType()), n);
+      violation("Expected " + type + " but was " + n.getType(), n);
     }
   }
 

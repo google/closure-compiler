@@ -170,8 +170,8 @@ class DefinitionsRemover {
     IncompleteDefinition(Node lValue, boolean inExterns) {
       super(inExterns);
       Preconditions.checkNotNull(lValue);
-      Preconditions.checkArgument(ALLOWED_TYPES.contains(lValue.getType()),
-          "Unexpected lValue type %s", Token.name(lValue.getType()));
+      Preconditions.checkArgument(
+          ALLOWED_TYPES.contains(lValue.getType()), "Unexpected lValue type %s", lValue.getType());
       this.lValue = lValue;
     }
 

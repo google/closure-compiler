@@ -379,7 +379,7 @@ public final class Es6RewriteGenerators
           // We never want to copy over an untranslated statement for which control exits.
           throw new RuntimeException(
               "Untranslatable control-exiting statement in generator function: "
-                  + Token.name(currentStatement.getType()));
+                  + currentStatement.getType());
       }
     }
 

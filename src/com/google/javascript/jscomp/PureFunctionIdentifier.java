@@ -497,8 +497,7 @@ class PureFunctionIdentifier implements CompilerPass {
               break;
             default:
               throw new IllegalArgumentException(
-                  "Unhandled side effect node type " +
-                  Token.name(node.getType()));
+                  "Unhandled side effect node type " + node.getType());
           }
         }
       }

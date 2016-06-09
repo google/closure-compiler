@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.GraphvizGraph.GraphvizEdge;
 import com.google.javascript.jscomp.graph.GraphvizGraph.GraphvizNode;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 
 import java.io.IOException;
@@ -174,7 +173,7 @@ public final class DotFormatter {
       builder.append(INDENT);
       builder.append(formatNodeName(key));
       builder.append(" [label=\"");
-      builder.append(name(n));
+      builder.append(n.getType().toString());
       TypeI type = n.getTypeI();
       if (type != null) {
         builder.append(" : ");
@@ -194,17 +193,6 @@ public final class DotFormatter {
       builder.append("];\n");
     }
     return key;
-  }
-
-  private static String name(Node n) {
-    Token.Kind type = n.getType();
-    switch (type) {
-      case VOID:
-        return "VOID";
-
-      default:
-        return Token.name(type);
-    }
   }
 
   private static String formatNodeName(Integer key) {

@@ -702,12 +702,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
         if (nameNode != null) {
           JSType type = node.getJSType();
           typeInformation.add(
-              Joiner.on("").join(
-                        Token.name(node.getType()),
-                        " ",
-                        getNameString(nameNode),
-                        " = ",
-                        String.valueOf(type)));
+              Joiner.on("")
+                  .join(node.getType(), " ", getNameString(nameNode), " = ", String.valueOf(type)));
         }
 
         if (node.isGetProp()) {
@@ -715,12 +711,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
           if (child.isName() && child.getString().endsWith("$self")) {
             JSType type = child.getJSType();
             typeInformation.add(
-                Joiner.on("").join(
-                    Token.name(child.getType()),
-                    " ",
-                    child.getString(),
-                    " = ",
-                    String.valueOf(type)));
+                Joiner.on("")
+                    .join(child.getType(), " ", child.getString(), " = ", String.valueOf(type)));
           }
         }
       }

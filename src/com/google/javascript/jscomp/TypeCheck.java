@@ -816,7 +816,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       default:
-        report(t, n, UNEXPECTED_TOKEN, Token.name(n.getType()));
+        report(t, n, UNEXPECTED_TOKEN, n.getType().toString());
         ensureTyped(t, n);
         break;
     }
@@ -1910,7 +1910,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       default:
-        report(t, n, UNEXPECTED_TOKEN, Token.name(op));
+        report(t, n, UNEXPECTED_TOKEN, op.toString());
     }
     ensureTyped(t, n);
   }

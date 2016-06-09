@@ -556,8 +556,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         }
         return sb.toString();
       default:
-        throw new MalformedException("STRING or ADD node expected; found: " +
-                getReadableTokenName(node), node);
+        throw new MalformedException("STRING or ADD node expected; found: " + node.getType(), node);
     }
   }
 
@@ -612,8 +611,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
           // Build the message's value by examining the return statement
           Node returnNode = fnChild.getFirstChild();
           if (!returnNode.isReturn()) {
-            throw new MalformedException("RETURN node expected; found: "
-                + getReadableTokenName(returnNode), returnNode);
+            throw new MalformedException(
+                "RETURN node expected; found: " + returnNode.getType(), returnNode);
           }
           for (Node child : returnNode.children()) {
             extractFromReturnDescendant(builder, child);
@@ -631,8 +630,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
           break;
         default:
           throw new MalformedException(
-              "NAME, LP, or BLOCK node expected; found: "
-                  + getReadableTokenName(node), fnChild);
+              "NAME, LP, or BLOCK node expected; found: " + node.getType(), fnChild);
       }
     }
   }
@@ -662,8 +660,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         break;
       default:
         throw new MalformedException(
-            "STRING, NAME, or ADD node expected; found: "
-                + getReadableTokenName(node), node);
+            "STRING, NAME, or ADD node expected; found: " + node.getType(), node);
     }
   }
 
@@ -894,13 +891,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
    */
   static boolean isLowerCamelCaseWithNumericSuffixes(String input) {
     return CAMELCASE_PATTERN.matcher(input).matches();
-  }
-
-  /**
-   * Returns human-readable name of the given node's type.
-   */
-  private static String getReadableTokenName(Node node) {
-    return Token.name(node.getType());
   }
 
   /**

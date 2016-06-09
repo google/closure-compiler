@@ -631,8 +631,8 @@ class CollapseProperties implements CompilerPass {
    */
   private void flattenNameRef(String alias, Node n, Node parent,
       String originalName) {
-    Preconditions.checkArgument(n.isGetProp(),
-        "Expected GETPROP, found %s. Node: %s", Token.name(n.getType()), n);
+    Preconditions.checkArgument(
+        n.isGetProp(), "Expected GETPROP, found %s. Node: %s", n.getType(), n);
 
     // BEFORE:
     //   getprop

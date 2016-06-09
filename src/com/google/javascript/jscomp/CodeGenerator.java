@@ -1207,7 +1207,7 @@ class CodeGenerator {
         cc.endStatement(true);
         break;
       default:
-        throw new RuntimeException("Unknown type " + Token.name(type) + "\n" + n.toStringTree());
+        throw new RuntimeException("Unknown type " + type + "\n" + n.toStringTree());
     }
 
     cc.endSourceMapping(n);

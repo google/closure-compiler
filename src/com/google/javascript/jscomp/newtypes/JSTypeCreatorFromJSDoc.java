@@ -344,8 +344,8 @@ public final class JSTypeCreatorFromJSDoc {
       case FUNCTION:
         return getFunTypeHelper(n, registry, typeParameters);
       default:
-        throw new IllegalArgumentException("Unsupported type exp: " +
-            Token.name(n.getType()) + " " + n.toStringTree());
+        throw new IllegalArgumentException(
+            "Unsupported type exp: " + n.getType() + " " + n.toStringTree());
     }
   }
 

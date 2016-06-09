@@ -271,8 +271,7 @@ public final class JsdocToEs6TypedConverter
           return optionalParam == null ? null : optionalParameter(optionalParam);
         default:
           throw new IllegalArgumentException(
-              "Unsupported node type: " + Token.name(n.getType())
-                  + " " + n.toStringTree());
+              "Unsupported node type: " + n.getType() + " " + n.toStringTree());
       }
     }
   }

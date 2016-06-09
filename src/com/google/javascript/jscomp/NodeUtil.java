@@ -605,8 +605,7 @@ public final class NodeUtil {
       case LE:
         return Token.GE;
       default:
-        throw new IllegalArgumentException(
-            "Unexpected token: " + Token.name(type));
+        throw new IllegalArgumentException("Unexpected token: " + type);
     }
   }
 
@@ -1155,8 +1154,7 @@ public final class NodeUtil {
    */
   static boolean constructorCallHasSideEffects(Node callNode) {
     if (!callNode.isNew()) {
-      throw new IllegalStateException(
-          "Expected NEW node, got " + Token.name(callNode.getType()));
+      throw new IllegalStateException("Expected NEW node, got " + callNode.getType());
     }
 
     if (callNode.isNoSideEffectsCall()) {
@@ -1539,8 +1537,7 @@ public final class NodeUtil {
         return 19;
 
       default:
-        throw new IllegalStateException("Unknown precedence for "
-            + Token.name(type) + " (type " + type + ")");
+        throw new IllegalStateException("Unknown precedence for " + type);
     }
   }
 
@@ -2986,8 +2983,7 @@ public final class NodeUtil {
   static String opToStrNoFail(Token.Kind operator) {
     String res = opToStr(operator);
     if (res == null) {
-      throw new Error("Unknown op " + operator + ": " +
-                      Token.name(operator));
+      throw new Error("Unknown op " + operator);
     }
     return res;
   }

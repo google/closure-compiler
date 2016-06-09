@@ -1473,11 +1473,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
     for (int i = 0; i < cfgNodes.size(); i++) {
       Token.Kind expectedType = nodeTypes.get(i);
       Token.Kind actualType = cfgNodes.get(i).getValue().getType();
-      assertEquals(
-          "node type mismatch at " + i + ".\n" +
-          "found   : " + Token.name(actualType) + "\n" +
-          "required: " + Token.name(expectedType) + "\n",
-          expectedType, actualType);
+      assertEquals("node type mismatch at " + i, expectedType, actualType);
     }
   }
 }

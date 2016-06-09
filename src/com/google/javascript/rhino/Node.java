@@ -1069,7 +1069,7 @@ public class Node implements Serializable {
       boolean printSource,
       boolean printAnnotations,
       boolean printType) {
-    sb.append(Token.name(kind));
+    sb.append(kind);
     if (this instanceof StringNode) {
       sb.append(' ');
       sb.append(getString());
@@ -2417,7 +2417,7 @@ public class Node implements Serializable {
     Preconditions.checkArgument(
         getType() == Token.CALL || getType() == Token.NEW,
         "setIsNoSideEffectsCall only supports CALL and NEW nodes, got %s",
-        Token.name(getType()));
+        getType());
 
     putIntProp(SIDE_EFFECT_FLAGS, flags);
   }
