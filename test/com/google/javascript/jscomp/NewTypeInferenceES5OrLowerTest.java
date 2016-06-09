@@ -17021,4 +17021,33 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testDontCrashOnBadPrototypeMethodDecl() {
+    typeCheck(LINE_JOINER.join(
+        // Forgot @const
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "(/** @lends {ns.Foo.prototype} */ { sayHi:function() {} });"),
+        GlobalTypeInfo.LENDS_ON_BAD_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        // Forgot @const
+        "var ns = {};",
+        "(function() {",
+        "  /** @constructor */",
+        "  ns.Z = function() {};",
+        "  ns.Z = Polymer(/** @lends {ns.Foo.prototype} */ {",
+        "    is:'x-element',",
+        "    sayHi:function() {}",
+        "  });",
+        "})();"),
+        GlobalTypeInfo.LENDS_ON_BAD_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function Foo() {}",
+        "Foo.prototype = {",
+        "  sayHi:function() {}",
+        "};"));
+  }
 }

@@ -1184,12 +1184,21 @@ class GlobalTypeInfo implements CompilerPass {
       } else {
         RawNominalType rawType = checkValidLendsToPrototypeAndGetClass(
             lendsQname, lendsName, objlit);
-        if (rawType == null) {
-          return;
-        }
-        for (Node prop : objlit.children()) {
-          String pname =  NodeUtil.getObjectLitKeyName(prop);
-          mayAddPropToPrototype(rawType, pname, prop, prop.getFirstChild());
+        if (rawType != null) {
+          for (Node prop : objlit.children()) {
+            String pname =  NodeUtil.getObjectLitKeyName(prop);
+            mayAddPropToPrototype(rawType, pname, prop, prop.getFirstChild());
+          }
+        } else {
+          // When rawType is null, some invalid declaration prevented the
+          // raw type from being registered. We must still compute the
+          // declared type of any function literals.
+          for (Node prop : objlit.children()) {
+            Node propInit = prop.getFirstChild();
+            if (propInit.isFunction()) {
+              visitFunctionLate(propInit, null);
+            }
+          }
         }
       }
     }
@@ -1236,6 +1245,9 @@ class GlobalTypeInfo implements CompilerPass {
       switch (n.getType()) {
         case FUNCTION:
           Node grandparent = parent.getParent();
+          // We skip property and prototype declarations because if we compute their
+          // declared type here it will be wrong, and it will block the correct
+          // computation later.
           if (grandparent == null
               || (!isPrototypePropertyDeclaration(grandparent)
                   && !isClassPropertyDeclaration(
