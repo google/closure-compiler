@@ -55,6 +55,8 @@ public final class FeatureSet implements Serializable {
   public static final FeatureSet ES6_MODULES = new FeatureSet(6, true, true, false);
   /** TypeScript syntax. */
   public static final FeatureSet TYPESCRIPT = new FeatureSet(6, true, false, true);
+  public static final FeatureSet ES7 = new FeatureSet(7, true, false, false);
+  public static final FeatureSet ES8 = new FeatureSet(8, true, false, false);
 
   /**
    * Specific features that can be included (indirectly) in a FeatureSet.
@@ -103,6 +105,12 @@ public final class FeatureSet implements Serializable {
     // ES6 features that include modules
     MODULES("modules", ES6_MODULES),
 
+    // '**' operator
+    EXPONENT_OP("exponent operator (**)", ES7),
+
+    // http://tc39.github.io/ecmascript-asyncawait/
+    ASYNC_FUNCTIONS("async functions", ES8),
+
     // ES6 typed features that are not at all implemented in browsers
     AMBIENT_DECLARATION("ambient declaration", TYPESCRIPT),
     CALL_SIGNATURE("call signature", TYPESCRIPT),
@@ -147,6 +155,8 @@ public final class FeatureSet implements Serializable {
   public String version() {
     if (typeScript) {
       return "ts";
+    } else if (number > 6) {
+      return "es" + number;
     } else if (unsupported || es6Modules) {
       return "es6";
     } else if (number > 5) {

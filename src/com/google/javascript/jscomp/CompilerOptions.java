@@ -2733,6 +2733,16 @@ public class CompilerOptions {
     ECMASCRIPT6_TYPED,
 
     /**
+     * A superset of ES6 which adds the exponent operator (**).
+     */
+    ECMASCRIPT7,
+
+    /**
+     * A superset of ES7 which adds async functions.
+     */
+    ECMASCRIPT8,
+
+    /**
      * For languageOut only. The same language mode as the input.
      */
     NO_TRANSPILE;
@@ -2741,6 +2751,8 @@ public class CompilerOptions {
     public boolean isStrict() {
       Preconditions.checkState(this != NO_TRANSPILE);
       switch (this) {
+        case ECMASCRIPT7:
+        case ECMASCRIPT8:
         case ECMASCRIPT5_STRICT:
         case ECMASCRIPT6_STRICT:
         case ECMASCRIPT6_TYPED:
@@ -2760,6 +2772,8 @@ public class CompilerOptions {
     public boolean isEs6OrHigher() {
       Preconditions.checkState(this != NO_TRANSPILE);
       switch (this) {
+        case ECMASCRIPT7:
+        case ECMASCRIPT8:
         case ECMASCRIPT6:
         case ECMASCRIPT6_STRICT:
         case ECMASCRIPT6_TYPED:
@@ -2792,6 +2806,12 @@ public class CompilerOptions {
         case "ECMASCRIPT6_TYPED":
         case "ES6_TYPED":
           return LanguageMode.ECMASCRIPT6_TYPED;
+        case "ECMASCRIPT7":
+        case "ES7":
+          return LanguageMode.ECMASCRIPT7;
+        case "ECMASCRIPT8":
+        case "ES8":
+          return LanguageMode.ECMASCRIPT8;
       }
       return null;
     }
