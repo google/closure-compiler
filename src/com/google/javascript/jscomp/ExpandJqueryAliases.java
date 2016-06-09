@@ -84,12 +84,13 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     // These passes should make the code easier to analyze.
     // Passes, such as StatementFusion, are omitted for this reason.
     final boolean late = false;
+    boolean useTypesForOptimization = compiler.getOptions().useTypesForOptimization;
     this.peepholePasses = new PeepholeOptimizationsPass(compiler,
-        new PeepholeMinimizeConditions(late),
+        new PeepholeMinimizeConditions(late, useTypesForOptimization),
         new PeepholeSubstituteAlternateSyntax(late),
         new PeepholeReplaceKnownMethods(late),
         new PeepholeRemoveDeadCode(),
-        new PeepholeFoldConstants(late, compiler.getOptions().useTypesForOptimization),
+        new PeepholeFoldConstants(late, useTypesForOptimization),
         new PeepholeCollectPropertyAssignments());
   }
 

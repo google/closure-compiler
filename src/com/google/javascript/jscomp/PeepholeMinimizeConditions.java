@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
@@ -38,6 +39,7 @@ class PeepholeMinimizeConditions
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
 
   private final boolean late;
+  private final boolean useTypes;
 
   /**
    * @param late When late is false, this mean we are currently running before
@@ -46,8 +48,9 @@ class PeepholeMinimizeConditions
    * merging statements with commas, etc). When this is true, we would
    * do anything to minimize for size.
    */
-  PeepholeMinimizeConditions(boolean late) {
+  PeepholeMinimizeConditions(boolean late, boolean useTypes) {
     this.late = late;
+    this.useTypes = useTypes;
   }
 
   /**
@@ -74,6 +77,7 @@ class PeepholeMinimizeConditions
         return tryMinimizeNot(node);
 
       case IF:
+        performCoercionSubstitutions(node.getFirstChild());
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeIf(node);
 
@@ -82,6 +86,7 @@ class PeepholeMinimizeConditions
         return tryMinimizeExprResult(node);
 
       case HOOK:
+        performCoercionSubstitutions(node.getFirstChild());
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeHook(node);
 
@@ -970,11 +975,65 @@ class PeepholeMinimizeConditions
    * @return The replacement for n, or the original if no change was made.
    */
   private Node tryMinimizeCondition(Node n) {
+    n = performCoercionSubstitutions(n);
     n = performConditionSubstitutions(n);
     MinimizedCondition minCond = MinimizedCondition.fromConditionNode(n);
     return replaceNode(
         minCond.getPlaceholder(),
         minCond.getMinimized(MinimizationStyle.PREFER_UNNEGATED));
+  }
+
+  /**
+   * Replaces 'foo ==/!=/===/!== null' with 'foo' or '!foo'. Should only be used for expressions
+   * used in conditions where the final result is coerced to a boolean.
+   *
+   * @return The replacement for n, or the original if no change was made.
+   */
+  private Node performCoercionSubstitutions(Node n) {
+    if (!useTypes) {
+      return n;
+    }
+
+    Node parent = n.getParent();
+
+    switch (n.getType()) {
+      case OR:
+      case AND:
+        performCoercionSubstitutions(n.getFirstChild());
+        performCoercionSubstitutions(n.getLastChild());
+        break;
+
+      case EQ:
+      case NE:
+      case SHEQ:
+      case SHNE:
+        Node left = n.getFirstChild();
+        Node right = n.getLastChild();
+        boolean leftIsNull = NodeUtil.isNullOrUndefined(left);
+        boolean rightIsNull = NodeUtil.isNullOrUndefined(right);
+        boolean leftIsObject = isObjectType(left);
+        boolean rightIsObject = isObjectType(right);
+        if (leftIsObject && rightIsNull || rightIsObject && leftIsNull) {
+          n.detachChildren();
+          Node objExpression = leftIsObject ? left : right;
+          Node replacement = n.getType() == Token.EQ || n.getType() == Token.SHEQ
+              ? IR.not(objExpression)
+              : objExpression;
+          parent.replaceChild(n, replacement);
+          reportCodeChange();
+          return replacement;
+        }
+        break;
+    }
+    return n;
+  }
+
+  private static boolean isObjectType(Node n) {
+    JSType jsType = n.getJSType();
+    if (jsType == null) {
+      return false;
+    }
+    return !jsType.isUnknownType() && jsType.isObject();
   }
 
   private Node replaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {

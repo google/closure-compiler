@@ -1448,7 +1448,7 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       final boolean late = false;
       return new PeepholeOptimizationsPass(compiler,
-            new PeepholeMinimizeConditions(late),
+            new PeepholeMinimizeConditions(late, options.useTypesForOptimization),
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(late),
             new PeepholeRemoveDeadCode(),
@@ -1466,7 +1466,7 @@ public final class DefaultPassConfig extends PassConfig {
       return new PeepholeOptimizationsPass(compiler,
             new StatementFusion(options.aggressiveFusion),
             new PeepholeRemoveDeadCode(),
-            new PeepholeMinimizeConditions(late),
+            new PeepholeMinimizeConditions(late, options.useTypesForOptimization),
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(late),
             new PeepholeFoldConstants(late, options.useTypesForOptimization),

@@ -24,17 +24,19 @@ package com.google.javascript.jscomp;
 public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   private boolean late = true;
+  private boolean useTypes = true;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     late = true;
+    useTypes = true;
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
-        compiler, new PeepholeMinimizeConditions(late));
+        compiler, new PeepholeMinimizeConditions(late, useTypes));
     peepholePass.setRetraverseOnChange(false);
     return peepholePass;
   }
@@ -737,4 +739,55 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "x = x++ ? x + 2 : x + 3");
   }
 
+  public void testCoercionSubstitution_disabled() {
+    enableTypeCheck();
+    useTypes = false;
+    testSame("var x = {};\nif (x != null) throw 'a';\n");
+  }
+
+  public void testCoercionSubstitution_if() {
+    enableTypeCheck();
+    test("var x = {};\nif (x != null) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
+    test("var x = {};\nif (x == null) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
+    test("var x = {};\nif (x !== null) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
+    test("var x = {};\nif (x === null) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
+    test("var x = {};\nif (null != x) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
+    test("var x = {};\nif (null == x) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
+    test("var x = {};\nif (null !== x) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
+    test("var x = {};\nif (null === x) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
+  }
+
+  public void testCoercionSubstitution_hook() {
+    enableTypeCheck();
+    test("var x = {};\nvar y = x != null ? 1 : 2;\n", "var x = {};\nvar y = x ? 1 : 2;\n");
+  }
+
+  public void testCoercionSubstitution_not() {
+    enableTypeCheck();
+    test("var x = {};\nvar y = !(x != null) ? 1 : 2;\n", "var x = {};\nvar y = x ? 2 : 1;\n");
+  }
+
+  public void testCoercionSubstitution_while() {
+    enableTypeCheck();
+    test("var x = {};\nwhile (x != null) throw 'a'\n", "var x = {};\nwhile (x) throw 'a';\n");
+  }
+
+  public void testCoercionSubstitution_unknownType() {
+    enableTypeCheck();
+    testSame("var x = /** @type {?} */ ({});\nif (x != null) throw 'a';\n");
+  }
+
+  public void testCoercionSubstitution_primitives() {
+    enableTypeCheck();
+    testSame("var x = 0;\nif (x != null) throw 'a';\n");
+    testSame("var x = '';\nif (x != null) throw 'a';\n");
+    testSame("var x = false;\nif (x != null) throw 'a';\n");
+  }
+
+  public void testCoercionSubstitution_boxedPrimitives() {
+    enableTypeCheck();
+    testSame("var x = new Number();\nif (x) throw 'a';\n");
+    testSame("var x = new String();\nif (x) throw 'a';\n");
+    testSame("var x = new Boolean();\nif (x) throw 'a';\n");
+  }
 }
