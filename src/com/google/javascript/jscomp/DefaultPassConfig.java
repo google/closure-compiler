@@ -934,6 +934,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clClinitPrunerPass);
       passes.add(j2clConstantHoisterPass);
       passes.add(j2clEqualitySameRewriterPass);
+      passes.add(j2clMarkPureFunctions);
     }
 
     assertAllLoopablePasses(passes);
@@ -2734,6 +2735,19 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new J2clPropertyInlinerPass(compiler);
+        }
+      };
+
+  /**
+   * A loopable pure function identifier pass. Run in the main
+   * loop so functions can become pure after removing clinits.
+   */
+  private final PassFactory j2clMarkPureFunctions =
+      new PassFactory("markPureFunctions", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new PureFunctionIdentifier.Driver(
+              compiler, options.debugFunctionSideEffectsPath, false);
         }
       };
 
