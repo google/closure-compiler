@@ -509,8 +509,9 @@ class IRFactory {
       case DO:
       case SWITCH:
         return true;
+      default:
+        return false;
     }
-    return false;
   }
 
   private static boolean isContinueTarget(Node n) {
@@ -520,8 +521,9 @@ class IRFactory {
       case WHILE:
       case DO:
         return true;
+      default:
+        return false;
     }
-    return false;
   }
 
 
