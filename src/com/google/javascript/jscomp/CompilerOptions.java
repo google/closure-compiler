@@ -2096,6 +2096,10 @@ public class CompilerOptions {
     this.convertToDottedProperties = convertToDottedProperties;
   }
 
+  public void setUseTypesForOptimization(boolean useTypesForOptimization) {
+    this.useTypesForOptimization = useTypesForOptimization;
+  }
+
   public void setRewriteFunctionExpressions(boolean rewriteFunctionExpressions) {
     this.rewriteFunctionExpressions = rewriteFunctionExpressions;
   }
