@@ -63,6 +63,24 @@ public final class ExternExportsPassTest extends TestCase {
                     "var foobar = function(d, e, f) {\n};\n");
   }
 
+  public void testInterface() {
+    compileAndCheck(
+        "/** @interface */ function Iface() {}; goog.exportSymbol('Iface', Iface)",
+        "/**\n" +
+        " * @interface\n" +
+        " */\n" +
+        "var Iface = function() {\n};\n");
+  }
+
+  public void testRecord() {
+    compileAndCheck(
+        "/** @record */ function Iface() {}; goog.exportSymbol('Iface', Iface)",
+        "/**\n" +
+        " * @record\n" +
+        " */\n" +
+        "var Iface = function() {\n};\n");
+  }
+
   public void testExportSymbolDefinedInVar() throws Exception {
     compileAndCheck("var a = function(d, e, f) {};" +
                     "goog.exportSymbol('foobar', a)",

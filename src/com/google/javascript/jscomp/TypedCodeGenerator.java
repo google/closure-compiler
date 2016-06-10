@@ -194,6 +194,8 @@ class TypedCodeGenerator extends CodeGenerator {
 
       if (funType.isConstructor()) {
         sb.append(" * @constructor\n");
+      } else if (funType.isStructuralInterface()) {
+        sb.append(" * @record\n");
       } else if (funType.isInterface()) {
         sb.append(" * @interface\n");
       }
