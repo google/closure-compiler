@@ -312,7 +312,7 @@ class InstrumentFunctions implements CompilerPass {
         } else {
           Node beforeChild = n;
           for (Node ancestor : n.getAncestors()) {
-            Token.Kind type = ancestor.getType();
+            Token type = ancestor.getType();
             if (type == Token.BLOCK || type == Token.SCRIPT) {
               addingRoot = ancestor;
               break;

@@ -181,8 +181,8 @@ class MinimizedCondition {
       }
       case AND:
       case OR: {
-        Token.Kind opType = n.getType();
-        Token.Kind complementType = opType == Token.AND ? Token.OR : Token.AND;
+        Token opType = n.getType();
+        Token complementType = opType == Token.AND ? Token.OR : Token.AND;
         MinimizedCondition leftSubtree =
             computeMinimizedCondition(n.getFirstChild().detachFromParent());
         MinimizedCondition rightSubtree =

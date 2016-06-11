@@ -216,24 +216,24 @@ public class Node implements Serializable {
     private static final long serialVersionUID = 1L;
     private String str; // This is used for specialized signatures.
 
-    public TypeDeclarationNode(Token.Kind nodeType, String str) {
+    public TypeDeclarationNode(Token nodeType, String str) {
       super(nodeType);
       this.str = str;
     }
 
-    public TypeDeclarationNode(Token.Kind nodeType) {
+    public TypeDeclarationNode(Token nodeType) {
       super(nodeType);
     }
 
-    public TypeDeclarationNode(Token.Kind nodeType, Node child) {
+    public TypeDeclarationNode(Token nodeType, Node child) {
       super(nodeType, child);
     }
 
-    public TypeDeclarationNode(Token.Kind nodeType, Node left, Node right) {
+    public TypeDeclarationNode(Token nodeType, Node left, Node right) {
       super(nodeType, left, right);
     }
 
-    public TypeDeclarationNode(Token.Kind nodeType, Node left, Node mid, Node right) {
+    public TypeDeclarationNode(Token nodeType, Node left, Node mid, Node right) {
       super(nodeType, left, mid, right);
     }
 
@@ -303,7 +303,7 @@ public class Node implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    StringNode(Token.Kind kind, String str) {
+    StringNode(Token kind, String str) {
       super(kind);
       if (null == str) {
         throw new IllegalArgumentException("StringNode: str is null");
@@ -311,7 +311,7 @@ public class Node implements Serializable {
       this.str = str;
     }
 
-    StringNode(Token.Kind kind, String str, int lineno, int charno) {
+    StringNode(Token kind, String str, int lineno, int charno) {
       super(kind, lineno, charno);
       if (null == str) {
         throw new IllegalArgumentException("StringNode: str is null");
@@ -474,13 +474,13 @@ public class Node implements Serializable {
     }
   }
 
-  public Node(Token.Kind nodeType) {
+  public Node(Token nodeType) {
     kind = nodeType;
     parent = null;
     sourcePosition = -1;
   }
 
-  public Node(Token.Kind nodeType, Node child) {
+  public Node(Token nodeType, Node child) {
     Preconditions.checkArgument(child.parent == null,
         "new child has existing parent");
     Preconditions.checkArgument(child.next == null,
@@ -494,7 +494,7 @@ public class Node implements Serializable {
     sourcePosition = -1;
   }
 
-  public Node(Token.Kind nodeType, Node left, Node right) {
+  public Node(Token nodeType, Node left, Node right) {
     Preconditions.checkArgument(left.parent == null,
         "first new child has existing parent");
     Preconditions.checkArgument(left.next == null,
@@ -514,7 +514,7 @@ public class Node implements Serializable {
     sourcePosition = -1;
   }
 
-  public Node(Token.Kind nodeType, Node left, Node mid, Node right) {
+  public Node(Token nodeType, Node left, Node mid, Node right) {
     Preconditions.checkArgument(left.parent == null);
     Preconditions.checkArgument(left.next == null);
     Preconditions.checkArgument(mid.parent == null);
@@ -534,7 +534,7 @@ public class Node implements Serializable {
     sourcePosition = -1;
   }
 
-  Node(Token.Kind nodeType, Node left, Node mid, Node mid2, Node right) {
+  Node(Token nodeType, Node left, Node mid, Node mid2, Node right) {
     Preconditions.checkArgument(left.parent == null);
     Preconditions.checkArgument(left.next == null);
     Preconditions.checkArgument(mid.parent == null);
@@ -558,13 +558,13 @@ public class Node implements Serializable {
     sourcePosition = -1;
   }
 
-  public Node(Token.Kind nodeType, int lineno, int charno) {
+  public Node(Token nodeType, int lineno, int charno) {
     kind = nodeType;
     parent = null;
     sourcePosition = mergeLineCharNo(lineno, charno);
   }
 
-  public Node(Token.Kind nodeType, Node child, int lineno, int charno) {
+  public Node(Token nodeType, Node child, int lineno, int charno) {
     this(nodeType, child);
     sourcePosition = mergeLineCharNo(lineno, charno);
   }
@@ -581,7 +581,7 @@ public class Node implements Serializable {
     return new StringNode(Token.STRING, str);
   }
 
-  public static Node newString(Token.Kind kind, String str) {
+  public static Node newString(Token kind, String str) {
     return new StringNode(kind, str);
   }
 
@@ -589,25 +589,25 @@ public class Node implements Serializable {
     return new StringNode(Token.STRING, str, lineno, charno);
   }
 
-  public static Node newString(Token.Kind kind, String str, int lineno, int charno) {
+  public static Node newString(Token kind, String str, int lineno, int charno) {
     return new StringNode(kind, str, lineno, charno);
   }
 
-  public Token.Kind getKind() {
+  public Token getKind() {
     return kind;
   }
 
   @Deprecated
-  public Token.Kind getType() {
+  public Token getType() {
     return getKind();
   }
 
-  public void setKind(Token.Kind kind) {
+  public void setKind(Token kind) {
     this.kind = kind;
   }
 
   @Deprecated
-  public void setType(Token.Kind kind) {
+  public void setType(Token kind) {
     setKind(kind);
   }
 
@@ -1150,7 +1150,7 @@ public class Node implements Serializable {
     }
   }
 
-  Token.Kind kind;       // kind of the node; NAME for example
+  Token kind;       // kind of the node; NAME for example
   Node next;             // next sibling
   private Node first;    // first element of a linked list of children
   private Node last;     // last element of a linked list of children

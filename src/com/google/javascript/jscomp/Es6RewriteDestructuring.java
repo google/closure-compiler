@@ -438,7 +438,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       Node block = forNode.getLastChild();
       declarationNode.replaceChild(
           destructuringLhs, IR.name(tempVarName).useSourceInfoFrom(pattern));
-      Token.Kind declarationType = declarationNode.getType();
+      Token declarationType = declarationNode.getType();
       Node decl = IR.declaration(pattern.detachFromParent(), IR.name(tempVarName), declarationType);
       decl.useSourceInfoIfMissingFromForTree(pattern);
       block.addChildToFront(decl);

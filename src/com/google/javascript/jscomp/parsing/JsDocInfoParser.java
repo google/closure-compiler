@@ -2480,13 +2480,13 @@ public final class JsDocInfoParser {
     }
   }
 
-  private Node wrapNode(Token.Kind type, Node n) {
+  private Node wrapNode(Token type, Node n) {
     return n == null ? null :
         new Node(type, n, n.getLineno(),
             n.getCharno()).clonePropsFrom(templateNode);
   }
 
-  private Node newNode(Token.Kind type) {
+  private Node newNode(Token type) {
     return new Node(type, stream.getLineno(),
         stream.getCharno()).clonePropsFrom(templateNode);
   }

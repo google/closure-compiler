@@ -749,7 +749,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * Asserts that it's OK to define this node's name.
      * The node should have a source name and be of the specified type.
      */
-    void assertDefinitionNode(Node n, Token.Kind type) {
+    void assertDefinitionNode(Node n, Token type) {
       Preconditions.checkState(sourceName != null);
       Preconditions.checkState(n.getType() == type, n);
     }

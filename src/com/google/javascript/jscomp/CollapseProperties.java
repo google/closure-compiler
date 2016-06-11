@@ -607,7 +607,7 @@ class CollapseProperties implements CompilerPass {
     // This method has to work for both GETPROP chains and, in rare cases,
     // OBJLIT keys, possibly nested. That's why we check for children before
     // proceeding. In the OBJLIT case, we don't need to do anything.
-    Token.Kind nType = n.getType();
+    Token nType = n.getType();
     boolean isQName = nType == Token.NAME || nType == Token.GETPROP;
     boolean isObjKey = NodeUtil.isObjectLitKey(n);
     Preconditions.checkState(isObjKey || isQName);

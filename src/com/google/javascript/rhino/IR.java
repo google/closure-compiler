@@ -161,7 +161,7 @@ public class IR {
     return declaration(lhs, Token.VAR);
   }
 
-  public static Node declaration(Node lhs, Token.Kind type) {
+  public static Node declaration(Node lhs, Token type) {
     Preconditions.checkState(
         lhs.isName() || lhs.isDestructuringPattern() || lhs.isDestructuringLhs(),
         lhs);
@@ -171,7 +171,7 @@ public class IR {
     return new Node(type, lhs);
   }
 
-  public static Node declaration(Node lhs, Node value, Token.Kind type) {
+  public static Node declaration(Node lhs, Node value, Token type) {
     if (lhs.isName()) {
       Preconditions.checkState(!lhs.hasChildren());
     } else {
@@ -609,13 +609,13 @@ public class IR {
 
   // helper methods
 
-  private static Node binaryOp(Token.Kind token, Node expr1, Node expr2) {
+  private static Node binaryOp(Token token, Node expr1, Node expr2) {
     Preconditions.checkState(mayBeExpression(expr1), expr1);
     Preconditions.checkState(mayBeExpression(expr2), expr2);
     return new Node(token, expr1, expr2);
   }
 
-  private static Node unaryOp(Token.Kind token, Node expr) {
+  private static Node unaryOp(Token token, Node expr) {
     Preconditions.checkState(mayBeExpression(expr));
     return new Node(token, expr);
   }

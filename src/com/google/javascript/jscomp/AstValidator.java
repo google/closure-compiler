@@ -768,7 +768,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateDefaultValue(Token.Kind type, Node n) {
+  private void validateDefaultValue(Token type, Node n) {
     validateAssignmentExpression(n);
     Node lhs = n.getFirstChild();
 
@@ -795,7 +795,7 @@ public final class AstValidator implements CompilerPass {
    *     appropriately for a descendant of a {@link Node} of this type.
    * @param n
    */
-  private void validateRest(Token.Kind contextType, Node n) {
+  private void validateRest(Token contextType, Node n) {
     validateNodeType(Token.REST, n);
     validateChildCount(n);
     validateLHS(contextType, n.getFirstChild());
@@ -827,14 +827,14 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateNameDeclarationHelper(Token.Kind type, Node n) {
+  private void validateNameDeclarationHelper(Token type, Node n) {
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateNameDeclarationChild(type, c);
     }
   }
 
-  private void validateNameDeclarationChild(Token.Kind type, Node n) {
+  private void validateNameDeclarationChild(Token type, Node n) {
     if (n.isName()) {
       validateLHS(type, n);
     } else if (n.isDestructuringLhs()) {
@@ -849,7 +849,7 @@ public final class AstValidator implements CompilerPass {
    *     appropriately for a descendant of a {@link Node} of this type.
    * @param n
    */
-  private void validateLHS(Token.Kind contextType, Node n) {
+  private void validateLHS(Token contextType, Node n) {
     if (n.isName()) {
       // Don't use validateName here since this NAME node may have
       // a child.
@@ -871,7 +871,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateArrayPattern(Token.Kind type, Node n) {
+  private void validateArrayPattern(Token type, Node n) {
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // When the array pattern is a direct child of a var/let/const node,
@@ -890,7 +890,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateObjectPattern(Token.Kind type, Node n) {
+  private void validateObjectPattern(Token type, Node n) {
     validateNodeType(Token.OBJECT_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // When the object pattern is a direct child of a var/let/const node,
@@ -1243,7 +1243,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateObjectPatternStringKey(Token.Kind type, Node n) {
+  private void validateObjectPatternStringKey(Token type, Node n) {
     validateNodeType(Token.STRING_KEY, n);
     validateObjectLiteralKeyName(n);
     validateChildCountIn(n, 0, 1);
@@ -1260,7 +1260,7 @@ public final class AstValidator implements CompilerPass {
     validateExpression(n.getLastChild());
   }
 
-  private void validateObjectPatternComputedPropKey(Token.Kind type, Node n) {
+  private void validateObjectPatternComputedPropKey(Token type, Node n) {
     validateNodeType(Token.COMPUTED_PROP, n);
     validateChildCount(n);
     validateExpression(n.getFirstChild());
@@ -1394,7 +1394,7 @@ public final class AstValidator implements CompilerPass {
     violationHandler.handleViolation(message, n);
   }
 
-  private void validateNodeType(Token.Kind type, Node n) {
+  private void validateNodeType(Token type, Node n) {
     if (n.getType() != type) {
       violation("Expected " + type + " but was " + n.getType(), n);
     }

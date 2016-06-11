@@ -131,7 +131,7 @@ class AnonymousFunctionNamingCallback
         // concatenate the context and key name to get a new qualified name.
         String name = namer.getCombinedName(context, namer.getName(keyNode));
 
-        Token.Kind type = valueNode.getType();
+        Token type = valueNode.getType();
         if (type == Token.FUNCTION) {
           // set name if function is anonymous
           Node functionNameNode = valueNode.getFirstChild();

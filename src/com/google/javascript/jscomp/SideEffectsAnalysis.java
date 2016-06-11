@@ -295,7 +295,7 @@ import java.util.Set;
         Predicate<Node> isEarlyExitPredicate = new Predicate<Node>() {
           @Override
           public boolean apply(Node input) {
-            Token.Kind nodeType = input.getType();
+            Token nodeType = input.getType();
 
             return nodeType == Token.RETURN
                 || nodeType == Token.BREAK

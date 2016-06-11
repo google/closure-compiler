@@ -163,7 +163,7 @@ class DefinitionsRemover {
    * RHS is missing.
    */
   abstract static class IncompleteDefinition extends Definition {
-    private static final Set<Token.Kind> ALLOWED_TYPES =
+    private static final Set<Token> ALLOWED_TYPES =
         ImmutableSet.of(Token.NAME, Token.GETPROP, Token.GETELEM);
     private final Node lValue;
 

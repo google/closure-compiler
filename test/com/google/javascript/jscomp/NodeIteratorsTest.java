@@ -129,16 +129,16 @@ public final class NodeIteratorsTest extends TestCase {
    * the VarMotion iterator. Asserts that the iteration order matches the
    * tokens given.
    */
-  private void testVarMotionWithCode(String code, Token.Kind... expectedTokens) {
-    List<Token.Kind> expectedList = Arrays.asList(expectedTokens);
+  private void testVarMotionWithCode(String code, Token... expectedTokens) {
+    List<Token> expectedList = Arrays.asList(expectedTokens);
     testVarMotionWithCode(code, expectedList);
   }
 
   /**
-   * @see #testVarMotionWithCode(String, Token.Kind ...)
+   * @see #testVarMotionWithCode(String, Token ...)
    */
   private void testVarMotionWithCode(String code,
-      List<Token.Kind> expectedTokens) {
+      List<Token> expectedTokens) {
     List<Node> ancestors = new ArrayList<>();
 
     // Add an empty node to the beginning of the code and start there.
@@ -168,7 +168,7 @@ public final class NodeIteratorsTest extends TestCase {
         currentAncestors.get(0),
         currentAncestors.get(1),
         currentAncestors.get(2));
-    List<Token.Kind> actualTokens = new ArrayList<>();
+    List<Token> actualTokens = new ArrayList<>();
     while (moveIt.hasNext()) {
       actualTokens.add(moveIt.next().getType());
     }

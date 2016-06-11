@@ -933,7 +933,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
    *
    * @throws MalformedException if the node is null or the wrong type
    */
-  protected void checkNode(@Nullable Node node, Token.Kind type) throws MalformedException {
+  protected void checkNode(@Nullable Node node, Token type) throws MalformedException {
     if (node == null) {
       throw new MalformedException(
           "Expected node type " + type + "; found: null", node);

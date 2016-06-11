@@ -226,7 +226,7 @@ class FunctionArgumentInjector {
    * @param parent The parent of the node.
    */
   private static boolean canNameValueChange(Node n, Node parent) {
-    Token.Kind type = parent.getType();
+    Token type = parent.getType();
     return (type == Token.VAR || type == Token.INC || type == Token.DEC ||
         (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) ||
         (NodeUtil.isForIn(parent)));
@@ -480,7 +480,7 @@ class FunctionArgumentInjector {
      */
     private boolean hasNonLocalSideEffect(Node n) {
       boolean sideEffect = false;
-      Token.Kind type = n.getType();
+      Token type = n.getType();
       // Note: Only care about changes to non-local names, specifically
       // ignore VAR declaration assignments.
       if (NodeUtil.isAssignmentOp(n)

@@ -1379,7 +1379,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // variable declarations are ignored.
     // TODO(user): remove this short-circuiting in favor of a
     // pre order traversal of the FUNCTION, CATCH, LP and VAR nodes.
-    Token.Kind parentNodeType = parent.getType();
+    Token parentNodeType = parent.getType();
     if (parentNodeType == Token.FUNCTION ||
         parentNodeType == Token.CATCH ||
         parentNodeType == Token.PARAM_LIST ||
@@ -1859,7 +1859,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param t The traversal object, needed to report errors.
    * @param n The node being checked.
    */
-  private void visitBinaryOperator(Token.Kind op, NodeTraversal t, Node n) {
+  private void visitBinaryOperator(Token op, NodeTraversal t, Node n) {
     Node left = n.getFirstChild();
     JSType leftType = getJSType(left);
     Node right = n.getLastChild();

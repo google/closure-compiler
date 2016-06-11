@@ -408,7 +408,7 @@ class PeepholeMinimizeConditions
 
     Node notChild = n.getFirstChild();
     // negative operator of the current one : == -> != for instance.
-    Token.Kind complementOperator;
+    Token complementOperator;
     switch (notChild.getType()) {
       case EQ:
         complementOperator = Token.NE;
@@ -1089,7 +1089,7 @@ class PeepholeMinimizeConditions
         // the new AST is easier for other passes to handle.
         TernaryValue rightVal = NodeUtil.getPureBooleanValue(right);
         if (NodeUtil.getPureBooleanValue(right) != TernaryValue.UNKNOWN) {
-          Token.Kind type = n.getType();
+          Token type = n.getType();
           Node replacement = null;
           boolean rval = rightVal.toBoolean(true);
 

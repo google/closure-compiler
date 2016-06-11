@@ -166,7 +166,7 @@ class ExpressionDecomposer {
          grandchild = child,
              child = parent,
              parent = child.getParent()) {
-      Token.Kind parentType = parent.getType();
+      Token parentType = parent.getType();
       Preconditions.checkState(
           !isConditionalOp(parent) || child == parent.getFirstChild());
       if (parentType == Token.ASSIGN) {
@@ -184,7 +184,7 @@ class ExpressionDecomposer {
           } else {
             // Alias "next()" in "next().foo"
             Node left = parent.getFirstChild();
-            Token.Kind type = left.getType();
+            Token type = left.getType();
             if (left != child) {
               Preconditions.checkState(NodeUtil.isGet(left));
               if (type == Token.GETELEM) {
@@ -660,7 +660,7 @@ class ExpressionDecomposer {
   static Node findExpressionRoot(Node subExpression) {
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
-      Token.Kind parentType = parent.getType();
+      Token parentType = parent.getType();
       switch (parentType) {
         // Supported expression roots:
         // SWITCH and IF can have multiple children, but the CASE, DEFAULT,

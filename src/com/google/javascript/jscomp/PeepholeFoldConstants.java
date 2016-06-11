@@ -491,7 +491,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    Token.Kind newType = null;
+    Token newType = null;
     switch (right.getType()) {
       case ADD:
         newType = Token.ASSIGN_ADD;
@@ -554,7 +554,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     // Tries to convert x += y -> x = x + y;
-    Token.Kind op = NodeUtil.getOpFromAssignmentOp(n);
+    Token op = NodeUtil.getOpFromAssignmentOp(n);
     Node replacement = IR.assign(left.detachFromParent(),
         new Node(op, left.cloneTree(), right.detachFromParent())
             .srcref(n));
@@ -572,7 +572,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     Node result = null;
 
-    Token.Kind type = n.getType();
+    Token type = n.getType();
 
     TernaryValue leftVal = NodeUtil.getImpureBooleanValue(left);
 
@@ -712,7 +712,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   /**
    * Try to fold arithmetic binary operators
    */
-  private Node performArithmeticOp(Token.Kind opType, Node left, Node right) {
+  private Node performArithmeticOp(Token opType, Node left, Node right) {
     // Unlike other operations, ADD operands are not always converted
     // to Number.
     if (opType == Token.ADD
@@ -799,7 +799,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *  - The left child's right child is a NUMBER constant.
    */
   private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
-    Token.Kind opType = n.getType();
+    Token opType = n.getType();
     Preconditions.checkState(
         (NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType))
         || n.isAdd());
@@ -1109,7 +1109,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return TernaryValue.UNKNOWN;
   }
 
-  static TernaryValue evaluateComparison(Token.Kind op, Node left, Node right, boolean useTypes) {
+  static TernaryValue evaluateComparison(Token op, Node left, Node right, boolean useTypes) {
     // Don't try to minimize side-effects here.
     if (NodeUtil.mayHaveSideEffects(left) || NodeUtil.mayHaveSideEffects(right)) {
       return TernaryValue.UNKNOWN;

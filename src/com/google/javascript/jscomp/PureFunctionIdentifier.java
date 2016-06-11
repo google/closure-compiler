@@ -799,7 +799,7 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   private static boolean isIncDec(Node n) {
-    Token.Kind type = n.getType();
+    Token type = n.getType();
     return (type == Token.INC || type == Token.DEC);
   }
 

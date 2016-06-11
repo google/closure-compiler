@@ -117,8 +117,8 @@ class ProcessTweaks implements CompilerPass {
 
     final String name;
     final String expectedTypeName;
-    final Token.Kind validNodeTypeA;
-    final Token.Kind validNodeTypeB;
+    final Token validNodeTypeA;
+    final Token validNodeTypeB;
     final TweakFunction registerFunction;
 
     TweakFunction(String name) {
@@ -126,12 +126,12 @@ class ProcessTweaks implements CompilerPass {
     }
 
     TweakFunction(String name, String expectedTypeName,
-        Token.Kind validNodeTypeA) {
+        Token validNodeTypeA) {
       this(name, expectedTypeName, validNodeTypeA, Token.EMPTY, null);
     }
 
     TweakFunction(String name, String expectedTypeName,
-        Token.Kind validNodeTypeA, Token.Kind validNodeTypeB) {
+        Token validNodeTypeA, Token validNodeTypeB) {
       this(name, expectedTypeName, validNodeTypeA, validNodeTypeB, null);
     }
 
@@ -140,7 +140,7 @@ class ProcessTweaks implements CompilerPass {
     }
 
     TweakFunction(String name, String expectedTypeName,
-        Token.Kind validNodeTypeA, Token.Kind validNodeTypeB,
+        Token validNodeTypeA, Token validNodeTypeB,
         TweakFunction registerFunction) {
       this.name = name;
       this.expectedTypeName = expectedTypeName;
@@ -149,7 +149,7 @@ class ProcessTweaks implements CompilerPass {
       this.registerFunction = registerFunction;
     }
 
-    boolean isValidNodeType(Token.Kind type) {
+    boolean isValidNodeType(Token type) {
       return type == validNodeTypeA || type == validNodeTypeB;
     }
 

@@ -1061,7 +1061,7 @@ class IRFactory {
       if (n == null) {
         return false;
       }
-      Token.Kind nType = n.getType();
+      Token nType = n.getType();
       return nType == Token.EXPR_RESULT &&
           n.getFirstChild().isString() &&
           ALLOWED_DIRECTIVES.contains(n.getFirstChild().getString());
@@ -1136,7 +1136,7 @@ class IRFactory {
 
     Node processForInLoop(ForInStatementTree loopNode) {
       Node initializer = transform(loopNode.initializer);
-      ImmutableSet<Token.Kind> invalidInitializers =
+      ImmutableSet<Token> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
       if (invalidInitializers.contains(initializer.getType())) {
         errorReporter.error("Invalid LHS for a for-in loop", sourceName,
@@ -1152,7 +1152,7 @@ class IRFactory {
     Node processForOf(ForOfStatementTree loopNode) {
       maybeWarnEs6Feature(loopNode, Feature.FOR_OF);
       Node initializer = transform(loopNode.initializer);
-      ImmutableSet<Token.Kind> invalidInitializers =
+      ImmutableSet<Token> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
       if (invalidInitializers.contains(initializer.getType())) {
         errorReporter.error("Invalid LHS for a for-of loop", sourceName,
@@ -1873,7 +1873,7 @@ class IRFactory {
     }
 
     Node processUnaryExpression(UnaryExpressionTree exprNode) {
-      Token.Kind type = transformUnaryTokenType(exprNode.operator.type);
+      Token type = transformUnaryTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
       if (type == Token.NEG && operand.isNumber()) {
         operand.setDouble(-operand.getDouble());
@@ -1898,7 +1898,7 @@ class IRFactory {
     }
 
     Node processPostfixExpression(PostfixExpressionTree exprNode) {
-      Token.Kind type = transformPostfixTokenType(exprNode.operator.type);
+      Token type = transformPostfixTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
       if (type == Token.INC || type == Token.DEC) {
         return createIncrDecrNode(type, true, operand);
@@ -1907,7 +1907,7 @@ class IRFactory {
       return node;
     }
 
-    private Node createIncrDecrNode(Token.Kind type, boolean postfix, Node operand) {
+    private Node createIncrDecrNode(Token type, boolean postfix, Node operand) {
       if (!operand.isValidAssignmentTarget()) {
         errorReporter.error(
             SimpleFormat.format("Invalid %s %s operand.",
@@ -1928,7 +1928,7 @@ class IRFactory {
     }
 
     Node processVariableDeclarationList(VariableDeclarationListTree decl) {
-      Token.Kind declType;
+      Token declType;
       switch (decl.declarationType) {
         case CONST:
           maybeWarnEs6Feature(decl, Feature.CONST_DECLARATIONS);
@@ -2508,7 +2508,7 @@ class IRFactory {
     }
 
     private Node transformList(
-        Token.Kind type, ImmutableList<ParseTree> list) {
+        Token type, ImmutableList<ParseTree> list) {
       Node n = newNode(type);
       for (ParseTree tree : list) {
         n.addChildToBack(transform(tree));
@@ -2517,7 +2517,7 @@ class IRFactory {
     }
 
     private Node transformListOrEmpty(
-        Token.Kind type, ImmutableList<ParseTree> list) {
+        Token type, ImmutableList<ParseTree> list) {
       if (list == null || list.isEmpty()) {
         return newNode(Token.EMPTY);
       } else {
@@ -3083,7 +3083,7 @@ class IRFactory {
     throw new IllegalStateException("unexpected: " + c);
   }
 
-  static Token.Kind transformBooleanTokenType(TokenType token) {
+  static Token transformBooleanTokenType(TokenType token) {
     switch (token) {
       case TRUE:
         return Token.TRUE;
@@ -3095,7 +3095,7 @@ class IRFactory {
     }
   }
 
-  static Token.Kind transformPostfixTokenType(TokenType token) {
+  static Token transformPostfixTokenType(TokenType token) {
     switch (token) {
       case PLUS_PLUS:
         return Token.INC;
@@ -3107,7 +3107,7 @@ class IRFactory {
     }
   }
 
-  static Token.Kind transformUnaryTokenType(TokenType token) {
+  static Token transformUnaryTokenType(TokenType token) {
     switch (token) {
       case BANG:
         return Token.NOT;
@@ -3135,7 +3135,7 @@ class IRFactory {
     }
   }
 
-  static Token.Kind transformBinaryTokenType(TokenType token) {
+  static Token transformBinaryTokenType(TokenType token) {
     switch (token) {
       case BAR:
         return Token.BITOR;
@@ -3220,19 +3220,19 @@ class IRFactory {
   }
 
   // Simple helper to create nodes and set the initial node properties.
-  Node newNode(Token.Kind type) {
+  Node newNode(Token type) {
     return new Node(type).clonePropsFrom(templateNode);
   }
 
-  Node newNode(Token.Kind type, Node child1) {
+  Node newNode(Token type, Node child1) {
     return new Node(type, child1).clonePropsFrom(templateNode);
   }
 
-  Node newNode(Token.Kind type, Node child1, Node child2) {
+  Node newNode(Token type, Node child1, Node child2) {
     return new Node(type, child1, child2).clonePropsFrom(templateNode);
   }
 
-  Node newNode(Token.Kind type, Node child1, Node child2, Node child3) {
+  Node newNode(Token type, Node child1, Node child2, Node child3) {
     return new Node(type, child1, child2, child3).clonePropsFrom(templateNode);
   }
 
@@ -3240,7 +3240,7 @@ class IRFactory {
     return IR.string(value).clonePropsFrom(templateNode);
   }
 
-  Node newStringNode(Token.Kind type, String value) {
+  Node newStringNode(Token type, String value) {
     return Node.newString(type, value).clonePropsFrom(templateNode);
   }
 

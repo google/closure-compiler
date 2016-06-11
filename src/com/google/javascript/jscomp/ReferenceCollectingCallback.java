@@ -575,7 +575,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   static final class Reference implements StaticRef {
 
-    private static final Set<Token.Kind> DECLARATION_PARENTS =
+    private static final Set<Token> DECLARATION_PARENTS =
         ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.PARAM_LIST,
             Token.FUNCTION, Token.CLASS, Token.CATCH, Token.REST);
 
@@ -749,7 +749,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
      */
     boolean isLvalue() {
       Node parent = getParent();
-      Token.Kind parentType = parent.getType();
+      Token parentType = parent.getType();
       return (parentType == Token.VAR && nameNode.getFirstChild() != null)
           || (parentType == Token.LET && nameNode.getFirstChild() != null)
           || (parentType == Token.CONST && nameNode.getFirstChild() != null)
@@ -799,7 +799,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       this.isFunction = root.isFunction();
 
       if (root.getParent() != null) {
-        Token.Kind pType = root.getParent().getType();
+        Token pType = root.getParent().getType();
         this.isLoop = pType == Token.DO ||
             pType == Token.WHILE ||
             pType == Token.FOR;

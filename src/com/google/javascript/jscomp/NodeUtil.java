@@ -594,7 +594,7 @@ public final class NodeUtil {
    * Returns the inverse of an operator if it is invertible.
    * ex. '>' ==> '<'
    */
-  static Token.Kind getInverseOperator(Token.Kind type) {
+  static Token getInverseOperator(Token type) {
     switch (type) {
       case GT:
         return Token.LT;
@@ -763,7 +763,7 @@ public final class NodeUtil {
    * Comma is not included, because it takes AssignmentExpression operands, making its syntax
    * different.
    */
-  static boolean isBinaryOperatorType(Token.Kind type) {
+  static boolean isBinaryOperatorType(Token type) {
     switch (type) {
       case OR:
       case AND:
@@ -803,7 +803,7 @@ public final class NodeUtil {
    * An operator taking only one operand.
    * These all parse very similarly, taking LeftHandSideExpression operands.
    */
-  static boolean isUnaryOperatorType(Token.Kind type) {
+  static boolean isUnaryOperatorType(Token type) {
     switch (type) {
       case DELPROP:
       case VOID:
@@ -830,7 +830,7 @@ public final class NodeUtil {
    * has no direct side-effects (unlike '+='), and has no
    * conditional aspects (unlike '||').
    */
-  static boolean isSimpleOperatorType(Token.Kind type) {
+  static boolean isSimpleOperatorType(Token type) {
     switch (type) {
       case ADD:
       case BITAND:
@@ -1434,7 +1434,7 @@ public final class NodeUtil {
    * 13 negation/increment ! ~ - ++ --
    * 14 call, member () [] .
    */
-  static int precedence(Token.Kind type) {
+  static int precedence(Token type) {
     switch (type) {
       case COMMA:  return 0;
       case ASSIGN_BITOR:
@@ -1847,7 +1847,7 @@ public final class NodeUtil {
    * Note: "+" is not associative because it is also the concatenation
    * for strings. e.g. "a" + (1 + 2) is not "a" + 1 + 2
    */
-  static boolean isAssociative(Token.Kind type) {
+  static boolean isAssociative(Token type) {
     switch (type) {
       case MUL:
       case AND:
@@ -1868,7 +1868,7 @@ public final class NodeUtil {
    * for strings. e.g. "a" + (1 + 2) is not "a" + 1 + 2
    * Note 2: only operations on literals and pure functions are commutative.
    */
-  static boolean isCommutative(Token.Kind type) {
+  static boolean isCommutative(Token type) {
     switch (type) {
       case MUL:
       case BITOR:
@@ -1903,7 +1903,7 @@ public final class NodeUtil {
     return isAssignmentOp(n) && !n.isAssign();
   }
 
-  static Token.Kind getOpFromAssignmentOp(Node n) {
+  static Token getOpFromAssignmentOp(Node n) {
     switch (n.getType()){
       case ASSIGN_BITOR:
         return Token.BITOR;
@@ -1931,7 +1931,7 @@ public final class NodeUtil {
     throw new IllegalArgumentException("Not an assignment op:" + n);
   }
 
-  static Token.Kind getAssignOpFromOp(Node n) {
+  static Token getAssignOpFromOp(Node n) {
     switch (n.getType()) {
       case BITOR:
         return Token.ASSIGN_BITOR;
@@ -1990,7 +1990,7 @@ public final class NodeUtil {
   /**
    * Gets the closest ancestor to the given node of the provided type.
    */
-  static Node getEnclosingType(Node n, final Token.Kind type) {
+  static Node getEnclosingType(Node n, final Token type) {
     return getEnclosingNode(n, new Predicate<Node>() {
       @Override
       public boolean apply(Node n) {
@@ -2885,7 +2885,7 @@ public final class NodeUtil {
    * @return the string representation or {@code null} if the token value is
    * not an operator
    */
-  public static String opToStr(Token.Kind operator) {
+  public static String opToStr(Token operator) {
     switch (operator) {
       case BITOR:
         return "|";
@@ -2980,7 +2980,7 @@ public final class NodeUtil {
    * @return the string representation
    * @throws Error if the token value is not an operator
    */
-  static String opToStrNoFail(Token.Kind operator) {
+  static String opToStrNoFail(Token operator) {
     String res = opToStr(operator);
     if (res == null) {
       throw new Error("Unknown op " + operator);
@@ -2992,7 +2992,7 @@ public final class NodeUtil {
    * @return true if n or any of its descendants are of the specified type.
    */
   static boolean containsType(Node node,
-                              Token.Kind type,
+                              Token type,
                               Predicate<Node> traverseChildrenPred) {
     return has(node, new MatchNodeType(type), traverseChildrenPred);
   }
@@ -3000,7 +3000,7 @@ public final class NodeUtil {
   /**
    * @return true if n or any of its descendants are of the specified type.
    */
-  public static boolean containsType(Node node, Token.Kind type) {
+  public static boolean containsType(Node node, Token type) {
     return containsType(node, type, Predicates.<Node>alwaysTrue());
   }
 
@@ -3046,7 +3046,7 @@ public final class NodeUtil {
     Node addingRoot = null;
     Node ancestor = n;
     while (null != (ancestor = ancestor.getParent())) {
-      Token.Kind type = ancestor.getType();
+      Token type = ancestor.getType();
       if (type == Token.SCRIPT) {
         addingRoot = ancestor;
         break;
@@ -3576,9 +3576,9 @@ public final class NodeUtil {
    * A predicate for matching nodes with the specified type.
    */
   static class MatchNodeType implements Predicate<Node>{
-    final Token.Kind type;
+    final Token type;
 
-    MatchNodeType(Token.Kind type){
+    MatchNodeType(Token type){
       this.type = type;
     }
 
@@ -3648,7 +3648,7 @@ public final class NodeUtil {
    * Finds the number of times a type is referenced within the node tree.
    */
   static int getNodeTypeReferenceCount(
-      Node node, Token.Kind type, Predicate<Node> traverseChildrenPred) {
+      Node node, Token type, Predicate<Node> traverseChildrenPred) {
     return getCount(node, new MatchNodeType(type), traverseChildrenPred);
   }
 

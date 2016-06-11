@@ -202,14 +202,14 @@ public class NodeTraversal {
    */
   public abstract static class AbstractNodeTypePruningCallback
         implements Callback {
-    private final Set<Token.Kind> nodeTypes;
+    private final Set<Token> nodeTypes;
     private final boolean include;
 
     /**
      * Creates an abstract pruned callback.
      * @param nodeTypes the nodes to include in the traversal
      */
-    public AbstractNodeTypePruningCallback(Set<Token.Kind> nodeTypes) {
+    public AbstractNodeTypePruningCallback(Set<Token> nodeTypes) {
       this(nodeTypes, true);
     }
 
@@ -218,7 +218,7 @@ public class NodeTraversal {
      * @param nodeTypes the nodes to include/exclude in the traversal
      * @param include whether to include or exclude the nodes in the traversal
      */
-    public AbstractNodeTypePruningCallback(Set<Token.Kind> nodeTypes,
+    public AbstractNodeTypePruningCallback(Set<Token> nodeTypes,
           boolean include) {
       this.nodeTypes = nodeTypes;
       this.include = include;
@@ -592,7 +592,7 @@ public class NodeTraversal {
    * Traverses a branch.
    */
   private void traverseBranch(Node n, Node parent) {
-    Token.Kind type = n.getType();
+    Token type = n.getType();
     if (type == Token.SCRIPT) {
       inputId = n.getInputId();
       sourceName = getSourceName(n);

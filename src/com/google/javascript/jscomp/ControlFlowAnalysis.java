@@ -876,9 +876,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   /**
    * Get the next sibling (including itself) of one of the given types.
    */
-  private static Node getNextSiblingOfType(Node first, Token.Kind ... types) {
+  private static Node getNextSiblingOfType(Node first, Token ... types) {
     for (Node c = first; c != null; c = c.getNext()) {
-      for (Token.Kind type : types) {
+      for (Token type : types) {
         if (c.getType() == type) {
           return c;
         }

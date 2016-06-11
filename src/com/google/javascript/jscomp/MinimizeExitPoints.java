@@ -115,7 +115,7 @@ class MinimizeExitPoints
    * @param labelName If parent is a label the name of the label to look for,
    *   null otherwise. Non-null only for breaks within labels.
    */
-  void tryMinimizeExits(Node n, Token.Kind exitType, @Nullable String labelName) {
+  void tryMinimizeExits(Node n, Token exitType, @Nullable String labelName) {
 
     // Just an 'exit'.
     if (matchingExitNode(n, exitType, labelName)) {
@@ -212,7 +212,7 @@ class MinimizeExitPoints
     }
   }
 
-  void tryMinimizeSwitchExits(Node n, Token.Kind exitType, @Nullable String labelName) {
+  void tryMinimizeSwitchExits(Node n, Token exitType, @Nullable String labelName) {
     Preconditions.checkState(n.isSwitch());
     // Skipping the switch condition, visit all the children.
     for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
@@ -229,7 +229,7 @@ class MinimizeExitPoints
    * Attempt to remove explicit exits from switch cases that also occur implicitly
    * after the switch.
    */
-  void tryMinimizeSwitchCaseExits(Node n, Token.Kind exitType, @Nullable String labelName) {
+  void tryMinimizeSwitchCaseExits(Node n, Token exitType, @Nullable String labelName) {
     Preconditions.checkState(NodeUtil.isSwitchCase(n));
 
     Preconditions.checkState(n != n.getParent().getLastChild());
@@ -267,7 +267,7 @@ class MinimizeExitPoints
    *     named-break associated with a label.
    */
   private void tryMinimizeIfBlockExits(Node srcBlock, Node destBlock,
-      Node ifNode, Token.Kind exitType, @Nullable String labelName) {
+      Node ifNode, Token exitType, @Nullable String labelName) {
     Node exitNodeParent = null;
     Node exitNode = null;
 
@@ -326,7 +326,7 @@ class MinimizeExitPoints
    *     non-null only for breaks associated with labels.
    * @return Whether the node matches the specified block-exit type.
    */
-  private static boolean matchingExitNode(Node n, Token.Kind type, @Nullable String labelName) {
+  private static boolean matchingExitNode(Node n, Token type, @Nullable String labelName) {
     if (n.getType() == type) {
       if (type == Token.RETURN) {
         // only returns without expressions.

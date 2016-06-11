@@ -1450,7 +1450,7 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeLogicalOpFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
-    Token.Kind exprKind = expr.getType();
+    Token exprKind = expr.getType();
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
     if ((specializedType.isTrueOrTruthy() && exprKind == Token.AND)
@@ -1487,7 +1487,7 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private EnvTypePair combineLhsAndRhsForLogicalOps(Token.Kind logicalOp,
+  private EnvTypePair combineLhsAndRhsForLogicalOps(Token logicalOp,
       JSType lhsUnspecializedType, EnvTypePair lhsPair, EnvTypePair rhsPair) {
     if (logicalOp == Token.OR) {
       if (lhsUnspecializedType.isAnyTruthyType()) {
@@ -2119,7 +2119,7 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(env, JSType.UNKNOWN);
   }
 
-  private EnvTypePair analyzeStrictComparisonFwd(Token.Kind comparisonOp,
+  private EnvTypePair analyzeStrictComparisonFwd(Token comparisonOp,
       Node lhs, Node rhs, TypeEnv inEnv, JSType specializedType) {
     if (specializedType.isTrueOrTruthy() || specializedType.isFalseOrFalsy()) {
       if (lhs.isTypeOf()) {
@@ -2163,7 +2163,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private EnvTypePair analyzeSpecializedTypeof(Node typeof, Node typeString,
-      Token.Kind comparisonOp, TypeEnv inEnv, JSType specializedType) {
+      Token comparisonOp, TypeEnv inEnv, JSType specializedType) {
     EnvTypePair pair;
     Node typeofRand = typeof.getFirstChild();
     JSType comparedType = getTypeFromString(typeString);
@@ -2342,7 +2342,7 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeNonStrictComparisonFwd(
       Node expr, TypeEnv inEnv, JSType specializedType) {
-    Token.Kind tokenType = expr.getType();
+    Token tokenType = expr.getType();
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
 
@@ -3599,7 +3599,7 @@ final class NewTypeInference implements CompilerPass {
         expr.getLastChild().getString().equals("typeOf");
   }
 
-  private static JSType scalarValueToType(Token.Kind token) {
+  private static JSType scalarValueToType(Token token) {
     switch (token) {
       case NUMBER:
         return JSType.NUMBER;
@@ -3617,7 +3617,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private void warnInvalidOperand(
-      Node expr, Token.Kind operatorType, Object expected, Object actual) {
+      Node expr, Token operatorType, Object expected, Object actual) {
     Preconditions.checkArgument(
         (expected instanceof String) || (expected instanceof JSType));
     Preconditions.checkArgument(
@@ -4041,7 +4041,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private static JSType pickReqObjType(Node expr) {
-    Token.Kind exprKind = expr.getType();
+    Token exprKind = expr.getType();
     switch (exprKind) {
       case OBJECTLIT: {
         JSDocInfo jsdoc = expr.getJSDocInfo();

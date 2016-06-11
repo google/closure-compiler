@@ -146,7 +146,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
         hook.addChildToBack(simplifyShortCircuitBranch(elseBranch));
         keepSubTree(hook);
       } else if (thenHasSideEffects || elseHasSideEffects) {
-        Token.Kind type = thenHasSideEffects ? Token.AND : Token.OR;
+        Token type = thenHasSideEffects ? Token.AND : Token.OR;
         Node body = thenHasSideEffects ? thenBranch : elseBranch;
         Node simplified = new Node(
             type, condition.detachFromParent(),
@@ -186,7 +186,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     }
   }
 
-  private static final Set<Token.Kind> FORBIDDEN_TYPES = ImmutableSet.of(
+  private static final Set<Token> FORBIDDEN_TYPES = ImmutableSet.of(
       Token.BLOCK, Token.SCRIPT, Token.VAR, Token.EXPR_RESULT, Token.RETURN);
   private final AbstractCompiler compiler;
   private final SideEffectAccumulator accumulator;

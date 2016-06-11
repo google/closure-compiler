@@ -113,7 +113,7 @@ class CodeGenerator {
       }
     }
 
-    Token.Kind type = n.getType();
+    Token type = n.getType();
     String opstr = NodeUtil.opToStr(type);
     int childCount = n.getChildCount();
     Node first = n.getFirstChild();
@@ -1354,7 +1354,7 @@ class CodeGenerator {
    * We assume nodes are left-recursive.
    */
   private void unrollBinaryOperator(
-      Node n, Token.Kind op, String opStr, Context context,
+      Node n, Token op, String opStr, Context context,
       Context rhsContext, int leftPrecedence, int rightPrecedence) {
     Node firstNonOperator = n.getFirstChild();
     while (firstNonOperator.getType() == op) {

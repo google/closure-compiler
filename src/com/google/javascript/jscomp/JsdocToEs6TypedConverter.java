@@ -156,7 +156,7 @@ public final class JsdocToEs6TypedConverter
     // representation directly, and delete this function.
     @Nullable
     public static TypeDeclarationNode convertTypeNodeAST(Node n) {
-      Token.Kind token = n.getType();
+      Token token = n.getType();
       switch (token) {
         case STAR:
         case EMPTY: // for function types that don't declare a return type

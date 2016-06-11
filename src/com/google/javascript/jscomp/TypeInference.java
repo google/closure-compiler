@@ -1714,7 +1714,7 @@ class TypeInference
      * Gets the outcome scope if we do know the outcome of the entire
      * expression.
      */
-    FlowScope getOutcomeFlowScope(Token.Kind nodeType, boolean outcome) {
+    FlowScope getOutcomeFlowScope(Token nodeType, boolean outcome) {
       if (nodeType == Token.AND && outcome ||
           nodeType == Token.OR && !outcome) {
         // We know that the whole expression must have executed.

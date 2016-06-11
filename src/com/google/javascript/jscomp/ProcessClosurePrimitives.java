@@ -1139,7 +1139,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * @return Whether the argument checked out okay
    */
   private boolean verifyOfType(NodeTraversal t, Node methodName,
-      Node arg, Token.Kind desiredType) {
+      Node arg, Token desiredType) {
     if (arg.getType() != desiredType) {
       compiler.report(
           t.makeError(methodName,

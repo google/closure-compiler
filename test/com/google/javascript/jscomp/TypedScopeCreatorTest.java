@@ -2100,7 +2100,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     return findNameType(name, scope).toString();
   }
 
-  private JSType findTokenType(final Token.Kind type, TypedScope scope) {
+  private JSType findTokenType(final Token type, TypedScope scope) {
     return findTypeOnMatchedNode(new Predicate<Node>() {
       @Override public boolean apply(Node n) {
         return type == n.getType();

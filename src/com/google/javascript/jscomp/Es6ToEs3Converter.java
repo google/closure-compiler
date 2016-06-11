@@ -250,7 +250,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     iterName.makeNonIndexable();
     Node getNext = IR.call(IR.getprop(iterName.cloneTree(), IR.string("next")));
     String variableName;
-    Token.Kind declType;
+    Token declType;
     if (variable.isName()) {
       declType = Token.NAME;
       variableName = variable.getQualifiedName();
@@ -502,7 +502,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         }
         Node val = propdef.removeFirstChild();
         propdef.setType(Token.STRING);
-        Token.Kind type = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
+        Token type = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
         Node access = new Node(type, IR.name(objName), propdef);
         result = IR.comma(IR.assign(access, val), result);
       }

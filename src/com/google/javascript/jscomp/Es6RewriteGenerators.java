@@ -917,7 +917,7 @@ public final class Es6RewriteGenerators
   /**
    * Finds the only child of the {@code node} of the given type.
    */
-  private Node getUnique(Node node, Token.Kind type) {
+  private Node getUnique(Node node, Token type) {
     List<Node> matches = new ArrayList<>();
     insertAll(node, type, matches);
     Preconditions.checkState(matches.size() == 1, matches);
@@ -927,7 +927,7 @@ public final class Es6RewriteGenerators
   /**
    * Adds all children of the {@code node} of the given type to given list.
    */
-  private void insertAll(Node node, Token.Kind type, List<Node> matchingNodes) {
+  private void insertAll(Node node, Token type, List<Node> matchingNodes) {
     if (node.getType() == type) {
       matchingNodes.add(node);
     }
