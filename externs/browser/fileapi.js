@@ -50,30 +50,33 @@ Blob.prototype.type;
  * @see http://www.w3.org/TR/FileAPI/#dfn-slice
  * @param {number} start
  * @param {number} length
+ * @param {string=} contentType
  * @return {!Blob}
  * @nosideeffects
  */
-Blob.prototype.slice = function(start, length) {};
+Blob.prototype.slice = function(start, length, contentType) {};
 
 /**
  * This replaces Blob.slice in Chrome since WebKit revision 84005.
  * @see http://lists.w3.org/Archives/Public/public-webapps/2011AprJun/0222.html
  * @param {number} start
  * @param {number} end
+ * @param {string=} contentType
  * @return {!Blob}
  * @nosideeffects
  */
-Blob.prototype.webkitSlice = function(start, end) {};
+Blob.prototype.webkitSlice = function(start, end, contentType) {};
 
 /**
  * This replaces Blob.slice in Firefox.
  * @see http://lists.w3.org/Archives/Public/public-webapps/2011AprJun/0222.html
  * @param {number} start
  * @param {number} end
+ * @param {string=} contentType
  * @return {!Blob}
  * @nosideeffects
  */
-Blob.prototype.mozSlice = function(start, end) {};
+Blob.prototype.mozSlice = function(start, end, contentType) {};
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#the-blobbuilder-interface
