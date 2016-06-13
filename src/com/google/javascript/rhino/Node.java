@@ -102,12 +102,13 @@ public class Node implements Serializable {
       GENERATOR_FN       = 59,    // Set if the node is a Generator function or
                                   // member method.
       ARROW_FN           = 60,
-      YIELD_FOR          = 61,    // Set if a yield is a "yield all"
-      EXPORT_DEFAULT     = 62,    // Set if a export is a "default" export
-      EXPORT_ALL_FROM    = 63,    // Set if an export is a "*"
-      IS_CONSTANT_VAR    = 64,    // A lexical variable is inferred const
-      GENERATOR_MARKER   = 65,    // Used by the ES6-to-ES3 translator.
-      GENERATOR_SAFE     = 66,    // Used by the ES6-to-ES3 translator.
+      ASYNC_FN           = 61, // http://tc39.github.io/ecmascript-asyncawait/
+      YIELD_FOR          = 62, // Set if a yield is a "yield all"
+      EXPORT_DEFAULT     = 63, // Set if a export is a "default" export
+      EXPORT_ALL_FROM    = 64, // Set if an export is a "*"
+      IS_CONSTANT_VAR    = 65, // A lexical variable is inferred const
+      GENERATOR_MARKER   = 66, // Used by the ES6-to-ES3 translator.
+      GENERATOR_SAFE     = 67, // Used by the ES6-to-ES3 translator.
 
       RAW_STRING_VALUE   = 71,    // Used to support ES6 tagged template literal.
       COMPUTED_PROP_METHOD = 72,  // A computed property that has the method
@@ -177,6 +178,7 @@ public class Node implements Serializable {
         case STATIC_MEMBER:      return "static_member";
         case GENERATOR_FN:       return "generator_fn";
         case ARROW_FN:           return "arrow_fn";
+        case ASYNC_FN:           return "async_fn";
         case YIELD_FOR:          return "yield_for";
         case EXPORT_DEFAULT:     return "export_default";
         case EXPORT_ALL_FROM:    return "export_all_from";
@@ -2364,6 +2366,21 @@ public class Node implements Serializable {
    */
   public boolean isArrowFunction() {
     return getBooleanProp(ARROW_FN);
+  }
+
+  /**
+   * Sets whether this node is an async function node. This
+   * method is meaningful only on {@link Token#FUNCTION}
+   */
+  public void setIsAsyncFunction(boolean isAsync) {
+    putBooleanProp(ASYNC_FN, isAsync);
+  }
+
+  /**
+   * Returns whether this is an async function node.
+   */
+  public boolean isAsyncFunction() {
+    return getBooleanProp(ASYNC_FN);
   }
 
   /**
