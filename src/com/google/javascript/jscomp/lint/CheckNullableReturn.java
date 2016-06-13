@@ -25,11 +25,11 @@ import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.TypeI;
 
 /**
  * Checks when a function is annotated as returning {SomeType} (nullable)
@@ -96,7 +96,7 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
    */
   private static boolean hasSingleThrow(Node blockNode) {
     if (blockNode.getChildCount() == 1
-        && blockNode.getFirstChild().getType() == Token.THROW) {
+        && blockNode.getFirstChild().getKind() == Token.THROW) {
       // Functions consisting of a single "throw FOO" can be actually abstract,
       // so do not check their return type nullability.
       return true;
@@ -113,12 +113,12 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
     if (n == null || !n.isFunction()) {
       return false;
     }
-    FunctionType functionType = n.getJSType().toMaybeFunctionType();
+    FunctionTypeI functionType = n.getTypeI().toMaybeFunctionType();
     if (functionType == null) {
       // If the JSDoc declares a non-function type on a function node, we still shouldn't crash.
       return false;
     }
-    JSType returnType = functionType.getReturnType();
+    TypeI returnType = functionType.getReturnType();
     if (returnType == null
         || returnType.isUnknownType() || !returnType.isNullable()) {
       return false;
@@ -140,14 +140,14 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
 
   /**
    * @return True if the node represents a nullable value. Essentially, this
-   *     is just n.getJSType().isNullable(), but for purposes of this pass,
+   *     is just n.getTypeI().isNullable(), but for purposes of this pass,
    *     the expression {@code x || null} is considered nullable even if
    *     x is always truthy. This often happens with expressions like
    *     {@code arr[i] || null}: The compiler doesn't know that arr[i] can
    *     be undefined.
    */
   private static boolean isNullable(Node n) {
-    return n.getJSType().isNullable()
+    return n.getTypeI().isNullable()
         || (n.isOr() && n.getLastChild().isNull());
   }
 

@@ -2161,8 +2161,7 @@ public class Node implements Serializable {
   }
 
   public TypeI getTypeI() {
-    // For the time being, we only want to return the type iff it's an old type.
-    return getJSType();
+    return typei;
   }
 
   public void setTypeI(TypeI type) {

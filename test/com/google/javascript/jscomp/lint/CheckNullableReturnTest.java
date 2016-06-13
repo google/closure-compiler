@@ -21,22 +21,15 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
-import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-
-import java.io.IOException;
+import com.google.javascript.jscomp.TypeICompilerTestCase;
 
 /**
  * Test case for {@link CheckNullableReturn}.
  *
  */
-public final class CheckNullableReturnTest extends CompilerTestCase {
-  private static String externs = "/** @constructor */ function SomeType() {}";
-
-  @Override
-  public void setUp() throws IOException {
-    enableTypeCheck();
-  }
+public final class CheckNullableReturnTest extends TypeICompilerTestCase {
+  private static String externs = DEFAULT_EXTERNS + "/** @constructor */ function SomeType() {}";
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -56,11 +49,11 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
   }
 
   public void testSimpleWarning() {
-    testError(""
-        + "/** @return {SomeType} */\n"
-        + "function f() {\n"
-        + "  return new SomeType();\n"
-        + "}");
+    testError(LINE_JOINER.join(
+        "/** @return {SomeType} */",
+        "function f() {",
+        "  return new SomeType();",
+        "}"));
   }
 
   public void testNullableReturn() {
@@ -68,13 +61,13 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
     testBodyOk("if (a) { return null; } return {};");
     testBodyOk("switch(1) { case 12: return null; } return {};");
     testBodyOk(
-        "/** @return {number} */ function f() { var x; }; return null;");
+        "/** @return {number} */ function f() { return 42; }; return null;");
   }
 
   public void testNotNullableReturn()  {
     // Empty function body. Ignore this case. The remainder of the functions in
     // this test have non-empty bodies.
-    testBodyOk("");
+    testBodyOkOti("");
 
     // Simple case.
     testBodyError("return {};");
@@ -91,11 +84,11 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
   }
 
   public void testFinallyStatements() {
-    testBodyOk("try { return null; } finally { }");
+    testBodyOk("try { return null; } finally { return {}; }");
     testBodyOk("try { } finally { return null; }");
     testBodyOk("try { return {}; } finally { return null; }");
     testBodyOk("try { return null; } finally { return {}; }");
-    testBodyError("try { } catch (e) { return null; } finally { return {}; }");
+    testBodyErrorOti("try { } catch (e) { return null; } finally { return {}; }");
   }
 
   public void testKnownConditions() {
@@ -105,13 +98,12 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
     testBodyOk("if (false) return {}; return null;");
     testBodyOk("if (false) return null; else return {};");
 
-    testBodyError("if (1) return {}");
+    testBodyError("if (1) return {}; return {x: 42};");
     testBodyOk("if (1) { return null; } else { return {}; }");
 
     testBodyOk("if (0) return {}; return null;");
     testBodyOk("if (0) { return null; } else { return {}; }");
 
-    testBodyError("if (3) return {}");
     testBodyOk("if (3) return null; else return {};");
   }
 
@@ -121,7 +113,7 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
     testBodyError("while (0) {} return {}");
 
     // Not known.
-    testBodyError("while(x) { return {}; }");
+    testBodyErrorOti("while(x) { return {}; }");
   }
 
   public void testTwoBranches() {
@@ -183,37 +175,37 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
         "try {",
         "  return bar();",
         "} catch (e) {",
-        "} finally { }"));
+        "} finally { return baz(); }"));
   }
 
   public void testNoExplicitReturn() {
-    testError(""
-        + "/** @return {SomeType} */\n"
-        + "function f() {\n"
-        + "  if (foo) {\n"
-        + "    return new SomeType();\n"
-        + "  }\n"
-        + "}");
+    testErrorOti(LINE_JOINER.join(
+        "/** @return {SomeType} */",
+        "function f() {",
+        "  if (foo) {",
+        "    return new SomeType();",
+        "  }",
+        "}"));
   }
 
   public void testNoWarningIfCanReturnNull() {
-    testOk(""
-        + "/** @return {SomeType} */\n"
-        + "function f() {\n"
-        + "  if (foo) {\n"
-        + "    return new SomeType();\n"
-        + "  } else {\n"
-        + "    return null;\n"
-        + "  }\n"
-        + "}");
+    testOk(LINE_JOINER.join(
+        "/** @return {SomeType} */",
+        "function f() {",
+        "  if (foo) {",
+        "    return new SomeType();",
+        "  } else {",
+        "    return null;",
+        "  }",
+        "}"));
   }
 
   public void testNoWarningOnEmptyFunction() {
-    testOk(LINE_JOINER.join(
+    testOkOti(LINE_JOINER.join(
         "/** @return {SomeType} */",
         "function f() {}"));
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testOk(LINE_JOINER.join(
+    testOkOti(LINE_JOINER.join(
         "var obj = {",
         "  /** @return {SomeType} */\n",
         "  f() {}",
@@ -244,7 +236,11 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
 
   public void testNonfunctionTypeDoesntCrash() {
     enableClosurePass();
-    test("goog.forwardDeclare('FunType'); /** @type {!FunType} */ (function() { return; })", null);
+    test(DEFAULT_EXTERNS,
+        "goog.forwardDeclare('FunType'); /** @type {!FunType} */ (function() { return; })",
+        (String) null,
+        null,
+        null);
   }
 
   private static String createFunction(String body) {
@@ -259,8 +255,16 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
     testSame(externs, js, null);
   }
 
+  private void testOkOti(String js) {
+    testSameOtiOnly(externs, js, null);
+  }
+
   private void testError(String js) {
     testSame(externs, js, CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+  }
+
+  private void testErrorOti(String js) {
+    testSameOtiOnly(externs, js, CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
   }
 
   private void testBodyOk(String body) {
@@ -269,9 +273,21 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
     testOk(createShorthandFunctionInObjLit(body));
   }
 
+  private void testBodyOkOti(String body) {
+    testOkOti(createFunction(body));
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testOkOti(createShorthandFunctionInObjLit(body));
+  }
+
   private void testBodyError(String body) {
     testError(createFunction(body));
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testError(createShorthandFunctionInObjLit(body));
+  }
+
+  private void testBodyErrorOti(String body) {
+    testErrorOti(createFunction(body));
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testErrorOti(createShorthandFunctionInObjLit(body));
   }
 }

@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
 /**
  * CompilerTestCase for passes that run after type checking and use type information.
  * Allows us to test those passes with both type checkers.
@@ -23,34 +27,30 @@ package com.google.javascript.jscomp;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public abstract class TypeICompilerTestCase extends CompilerTestCase {
+
   @Override
-  public void testSame(String js) {
+  public void test(
+      List<SourceFile> externs,
+      String js,
+      String expected,
+      DiagnosticType error,
+      DiagnosticType warning,
+      String description) {
     enableTypeCheck();
-    super.testSame(js);
+    super.test(externs, js, expected, error, warning, description);
     disableTypeCheck();
     enableNewTypeInference();
-    super.testSame(js);
+    super.test(externs, js, expected, error, warning, description);
     disableNewTypeInference();
   }
 
-  @Override
-  public void testSame(String js, DiagnosticType warning) {
+  public void testSameOtiOnly(String externs, String js, DiagnosticType warning) {
     enableTypeCheck();
-    super.testSame(js, warning);
+    SourceFile externsFile = SourceFile.fromCode("externs", externs);
+    externsFile.setIsExtern(true);
+    List<SourceFile> externsInputs = ImmutableList.of(externsFile);
+    super.test(externsInputs, js, null, null, warning, null);
     disableTypeCheck();
-    enableNewTypeInference();
-    super.testSame(js, warning);
-    disableNewTypeInference();
-  }
-
-  @Override
-  public void testSame(String externs, String js, DiagnosticType warning) {
-    enableTypeCheck();
-    super.testSame(externs, js, warning);
-    disableTypeCheck();
-    enableNewTypeInference();
-    super.testSame(externs, js, warning);
-    disableNewTypeInference();
   }
 }
 

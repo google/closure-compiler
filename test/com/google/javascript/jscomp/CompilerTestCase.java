@@ -1194,6 +1194,8 @@ public abstract class CompilerTestCase extends TestCase {
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
 
+    compiler.getOptions().setNewTypeInference(newTypeInferenceEnabled);
+
     Node root = compiler.parseInputs();
 
     String errorMsg = LINE_JOINER.join(compiler.getErrors());

@@ -3740,7 +3740,8 @@ final class NewTypeInference implements CompilerPass {
 
   private void maybeSetTypeI(Node n, JSType t) {
     TypeI ti = n.getTypeI();
-    JSType oldType = (ti instanceof JSType) ? (JSType) ti : null;
+    Preconditions.checkState(ti == null || ti instanceof JSType);
+    JSType oldType = (JSType) ti;
     // When creating a function summary, we set a precise type on the function's
     // name node. Since we're visiting inner scopes first, the name node is
     // revisited after the function's scope is analyzed, and its type then can
