@@ -449,17 +449,6 @@ Document.prototype.clear = function() {};
 Document.prototype.close;
 
 /**
- * @see https://developer.mozilla.org/en-US/docs/Web/API/document.createElementNS
- * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-instantiate
- * @param {?string} namespaceURI
- * @param {string} qualifiedName
- * @param {string=} opt_typeExtension
- * @return {!Element}
- */
-Document.prototype.createElementNS =
-    function(namespaceURI, qualifiedName, opt_typeExtension) {};
-
-/**
  * @param {string} type
  * @return {Event}
  */
@@ -479,44 +468,12 @@ Document.prototype.evaluate;
 Document.prototype.execCommand;
 
 /**
- * @param {string} s id.
- * @return {Element}
- * @nosideeffects
- * @see https://developer.mozilla.org/en/DOM/document.getElementById
- */
-Document.prototype.getElementById = function(s) {};
-
-/**
  * @param {string} name
  * @return {!NodeList<!Element>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/DOM/document.getElementsByClassName
  */
 Document.prototype.getElementsByClassName = function(name) {};
-
-/**
- * @param {string} name
- * @return {!NodeList<!Element>}
- * @nosideeffects
- * @see https://developer.mozilla.org/en/DOM/document.getElementsByName
- */
-Document.prototype.getElementsByName = function(name) {};
-
-/**
- * @param {string} namespace
- * @param {string} name
- * @return {!NodeList<!Element>}
- * @nosideeffects
- * @see https://developer.mozilla.org/en/DOM/document.getElementsByTagNameNS
- */
-Document.prototype.getElementsByTagNameNS = function(namespace, name) {};
-
-/**
- * @param {Node} externalNode
- * @param {boolean} deep
- * @return {Node}
- */
-Document.prototype.importNode = function(externalNode, deep) {};
 
 /** @param {string} uri */
 Document.prototype.load = function(uri) {};
