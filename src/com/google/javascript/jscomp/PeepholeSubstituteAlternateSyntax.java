@@ -118,11 +118,12 @@ class PeepholeSubstituteAlternateSyntax
     }
   }
 
-  private static final ImmutableSet<String> BUILTIN_TYPES = ImmutableSet.of(
+  private static final ImmutableSet<String> BUILTIN_EXTERNS = ImmutableSet.of(
       "Object",
       "Array",
       "Error",
-      "RegExp");
+      "RegExp",
+      "Math");
 
   private Node tryMinimizeWindowRefs(Node node) {
     // Normalization needs to be done to ensure there's no shadowing. The window prefix is also
@@ -139,7 +140,7 @@ class PeepholeSubstituteAlternateSyntax
 
       // Since normalization has run we know we're referring to the global window.
       if ("window".equals(nameNode.getString())
-          && BUILTIN_TYPES.contains(stringNode.getString())) {
+          && BUILTIN_EXTERNS.contains(stringNode.getString())) {
         Node newNameNode = IR.name(stringNode.getString());
         Node parentNode = node.getParent();
 
