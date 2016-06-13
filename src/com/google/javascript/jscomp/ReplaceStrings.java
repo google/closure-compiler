@@ -337,6 +337,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
     Preconditions.checkNotNull(replacementString);
     recordReplacement(key);
 
+    replacement.useSourceInfoIfMissingFromForTree(expr);
     parent.replaceChild(expr, replacement);
     compiler.reportCodeChange();
     return replacement;

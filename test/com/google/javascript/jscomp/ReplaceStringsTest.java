@@ -90,7 +90,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableLineNumberCheck(false);
     super.enableTypeCheck();
     functionsToInspect = defaultFunctionsToInspect;
     reserved = Collections.emptySet();
