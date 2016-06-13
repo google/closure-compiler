@@ -53,6 +53,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * This class implements the root of the intermediate representation.
  *
@@ -1988,6 +1990,15 @@ public class Node implements Serializable {
     child.next = null;
     child.parent = null;
     return child;
+  }
+
+  /** Remove the child after the given child, or the first child if given null. */
+  public Node removeFirstOrChildAfter(@Nullable Node prev) {
+    if (prev == null) {
+      return removeFirstChild();
+    } else {
+      return removeChildAfter(prev);
+    }
   }
 
   /**

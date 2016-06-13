@@ -552,15 +552,16 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    */
   Node tryOptimizeBlock(Node n) {
     // Remove any useless children
-    for (Node c = n.getFirstChild(); c != null; ) {
+    for (Node c = n.getFirstChild(), prev = null; c != null; ) {
       Node next = c.getNext();  // save c.next, since 'c' may be removed
       if (!isUnremovableNode(c) && !mayHaveSideEffects(c)) {
         // TODO(johnlenz): determine what this is actually removing. Candidates
         //    include: EMPTY nodes, control structures without children
         //    (removing infinite loops), empty try blocks.  What else?
-        n.removeChild(c);  // lazy kids
+        n.removeFirstOrChildAfter(prev);
         reportCodeChange();
       } else {
+        prev = c;
         tryOptimizeConditionalAfterAssign(c);
       }
       c = next;

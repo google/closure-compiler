@@ -137,7 +137,7 @@ class CreateSyntheticBlocks implements CompilerPass {
   private void moveSiblingExclusive(
       Node src, Node dest, @Nullable Node start, @Nullable Node end) {
     while (childAfter(src, start) != end) {
-      Node child = removeChildAfter(src, start);
+      Node child = src.removeFirstOrChildAfter(start);
       dest.addChildToBack(child);
     }
   }
@@ -151,17 +151,6 @@ class CreateSyntheticBlocks implements CompilerPass {
       return parent.getFirstChild();
     } else {
       return siblingBefore.getNext();
-    }
-  }
-
-  /**
-   * Like removeChildAfter, the firstChild is removed
-   */
-  private static Node removeChildAfter(Node parent, @Nullable Node siblingBefore) {
-    if (siblingBefore == null) {
-      return parent.removeFirstChild();
-    } else {
-      return parent.removeChildAfter(siblingBefore);
     }
   }
 
