@@ -168,7 +168,7 @@ class RhinoErrorReporter {
             .put(Pattern.compile("^Octal .*literal.*"), INVALID_OCTAL_LITERAL)
 
             .put(
-                Pattern.compile("^this language feature is only supported in es6 mode.*"),
+                Pattern.compile("^this language feature is only supported for ECMASCRIPT6 mode.*"),
                 ES6_FEATURE)
 
             .put(Pattern.compile("^type syntax is only supported in ES6 typed mode.*"), ES6_TYPED)

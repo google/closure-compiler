@@ -1067,7 +1067,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse(js);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(js, "this language feature is only supported in es6 mode: member declaration");
+    parseWarning(js, getRequiresEs6Message(Feature.MEMBER_DECLARATIONS));
   }
 
   public void testExtendedObjectLiteral() {
@@ -1092,8 +1092,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse(js);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(js, "this language feature is only supported in es6 mode:"
-        + " extended object literal");
+    parseWarning(js, getRequiresEs6Message(Feature.EXTENDED_OBJECT_LITERALS));
   }
 
   public void testComputedPropertiesObjLit() {
@@ -1177,7 +1176,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     parse(js);
     mode = LanguageMode.ECMASCRIPT5;
-    String warning = "this language feature is only supported in es6 mode: computed property";
+    String warning = getRequiresEs6Message(Feature.COMPUTED_PROPERTIES);
     parseWarning(js, warning, warning);
   }
 
@@ -1186,7 +1185,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse(js);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(js, "this language feature is only supported in es6 mode: computed property");
+    parseWarning(js, getRequiresEs6Message(Feature.COMPUTED_PROPERTIES));
   }
 
   public void testTrailingCommaWarning1() {
@@ -1282,7 +1281,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testConstForbidden() {
     expectFeatures(Feature.CONST_DECLARATIONS);
     parseWarning("const x = 3;",
-        "this language feature is only supported in es6 mode: const declaration");
+        getRequiresEs6Message(Feature.CONST_DECLARATIONS));
   }
 
   public void testAnonymousFunctionExpression() {
@@ -1297,7 +1296,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.DESTRUCTURING);
     parseWarning("var [x,y] = foo();",
-        "this language feature is only supported in es6 mode: destructuring");
+        getRequiresEs6Message(Feature.DESTRUCTURING));
 
     mode = LanguageMode.ECMASCRIPT6;
     parse("var [x,y] = foo();");
@@ -1310,7 +1309,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.DESTRUCTURING);
     parseWarning("[x,y] = foo();",
-        "this language feature is only supported in es6 mode: destructuring");
+        getRequiresEs6Message(Feature.DESTRUCTURING));
 
     mode = LanguageMode.ECMASCRIPT6;
     parse("[x,y] = foo();");
@@ -1366,7 +1365,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(
         "var [first, ...rest] = foo();",
-        "this language feature is only supported in es6 mode: destructuring");
+        getRequiresEs6Message(Feature.DESTRUCTURING));
   }
 
   public void testArrayDestructuringAssignRest() {
@@ -1389,7 +1388,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [first, ...rest] = foo();",
-        "this language feature is only supported in es6 mode: destructuring");
+        getRequiresEs6Message(Feature.DESTRUCTURING));
   }
 
   public void testArrayDestructuringFnDeclaration() {
@@ -1651,13 +1650,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testLetForbidden1() {
     expectFeatures(Feature.LET_DECLARATIONS);
     parseWarning("let x = 3;",
-        "this language feature is only supported in es6 mode: let declaration");
+        getRequiresEs6Message(Feature.LET_DECLARATIONS));
   }
 
   public void testLetForbidden2() {
     expectFeatures(Feature.LET_DECLARATIONS);
     parseWarning("function f() { let x = 3; };",
-        "this language feature is only supported in es6 mode: let declaration");
+        getRequiresEs6Message(Feature.LET_DECLARATIONS));
   }
 
   public void testLetForbidden3() {
@@ -1684,10 +1683,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5_STRICT;
     parseWarning("function* f() { yield 3; }",
-        "this language feature is only supported in es6 mode: generator");
+        getRequiresEs6Message(Feature.GENERATORS));
     parseWarning("var obj = { * f() { yield 3; } };",
-        "this language feature is only supported in es6 mode: generator",
-        "this language feature is only supported in es6 mode: member declaration");
+        getRequiresEs6Message(Feature.GENERATORS),
+        getRequiresEs6Message(Feature.MEMBER_DECLARATIONS));
   }
 
   public void testBracelessFunctionForbidden() {
@@ -1908,7 +1907,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private Node testTemplateLiteral(String s) {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(s,
-        "this language feature is only supported in es6 mode: template literal");
+        getRequiresEs6Message(Feature.TEMPLATE_LITERALS));
 
     mode = LanguageMode.ECMASCRIPT6;
     return parse(s);
@@ -2555,13 +2554,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.REGEXP_FLAG_Y);
     parseWarning("/a/y",
-        "this language feature is only supported in es6 mode: RegExp flag 'y'");
+        getRequiresEs6Message(Feature.REGEXP_FLAG_Y));
     expectFeatures(Feature.REGEXP_FLAG_U);
     parseWarning("/a/u",
-        "this language feature is only supported in es6 mode: RegExp flag 'u'");
+        getRequiresEs6Message(Feature.REGEXP_FLAG_U));
     parseWarning("/a/yu",
-        "this language feature is only supported in es6 mode: RegExp flag 'y'",
-        "this language feature is only supported in es6 mode: RegExp flag 'u'");
+        getRequiresEs6Message(Feature.REGEXP_FLAG_Y),
+        getRequiresEs6Message(Feature.REGEXP_FLAG_U));
   }
 
   public void testDefaultParameters() {
@@ -2572,7 +2571,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("function f(a, b=0) {}",
-        "this language feature is only supported in es6 mode: default parameter");
+        getRequiresEs6Message(Feature.DEFAULT_PARAMETERS));
   }
 
   public void testRestParameters() {
@@ -2601,7 +2600,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.REST_PARAMETERS);
     parseWarning("function f(...b) {}",
-        "this language feature is only supported in es6 mode: rest parameter");
+        getRequiresEs6Message(Feature.REST_PARAMETERS));
   }
 
   public void testExpressionsThatLookLikeParameters() {
@@ -2629,11 +2628,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("class C {}",
-        "this language feature is only supported in es6 mode: class");
+        getRequiresEs6Message(Feature.CLASSES));
 
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning("class C {}",
-        "this language feature is only supported in es6 mode: class");
+        getRequiresEs6Message(Feature.CLASSES));
 
   }
 
@@ -2693,11 +2692,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("super;",
-        "this language feature is only supported in es6 mode: super");
+        getRequiresEs6Message(Feature.SUPER));
 
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning("super;",
-        "this language feature is only supported in es6 mode: super");
+        getRequiresEs6Message(Feature.SUPER));
   }
 
   public void testNewTarget() {
@@ -2712,12 +2711,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(
         "function f() { new.target; }",
-        "this language feature is only supported in es6 mode: new.target");
+        getRequiresEs6Message(Feature.NEW_TARGET));
 
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning(
         "function f() { new.target; }",
-        "this language feature is only supported in es6 mode: new.target");
+        getRequiresEs6Message(Feature.NEW_TARGET));
   }
 
   public void testNewDotSomethingInvalid() {
@@ -2741,11 +2740,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("a => b",
-        "this language feature is only supported in es6 mode: arrow function");
+        getRequiresEs6Message(Feature.ARROW_FUNCTIONS));
 
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning("a => b;",
-        "this language feature is only supported in es6 mode: arrow function");
+        getRequiresEs6Message(Feature.ARROW_FUNCTIONS));
   }
 
   public void testArrowInvalid() {
@@ -3153,6 +3152,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
     } catch (java.lang.StackOverflowError e) {
       // expected exception
     }
+  }
+
+  private String getRequiresEs6Message(Feature feature) {
+    return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT6, feature);
+  }
+
+  private String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {
+    return String.format(
+        "this language feature is only supported for %s mode or better: %s",
+        languageMode,
+        feature);
   }
 
   private Node script(Node stmt) {

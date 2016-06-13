@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 import java.util.Set;
 
@@ -29,14 +30,49 @@ import java.util.Set;
  */
 public final class Config {
 
+  /**
+   * Level of language strictness required for the input source code.
+   */
+  public enum StrictMode {
+    STRICT, SLOPPY;
+  }
+
   /** JavaScript mode */
   public enum LanguageMode {
-    ECMASCRIPT3,
-    ECMASCRIPT5,
-    ECMASCRIPT5_STRICT,
-    ECMASCRIPT6,
-    ECMASCRIPT6_STRICT,
-    ECMASCRIPT6_TYPED,  // Implies STRICT.
+
+    // Note that minimumRequiredFor() relies on these being defined in order from fewest features to
+    // most features, and _STRICT versions should be supplied after unspecified strictness.
+    ECMASCRIPT3(FeatureSet.ES3, StrictMode.SLOPPY),
+    ECMASCRIPT5(FeatureSet.ES5, StrictMode.SLOPPY),
+    ECMASCRIPT5_STRICT(FeatureSet.ES5, StrictMode.STRICT),
+    ECMASCRIPT6(FeatureSet.ES6_MODULES, StrictMode.SLOPPY),
+    ECMASCRIPT6_STRICT(FeatureSet.ES6_MODULES, StrictMode.STRICT),
+    ECMASCRIPT7(FeatureSet.ES7_MODULES, StrictMode.STRICT),
+    ECMASCRIPT8(FeatureSet.ES8_MODULES, StrictMode.STRICT),
+    // TODO(bradfordcsmith): This should be renamed so it doesn't seem tied to es6
+    ECMASCRIPT6_TYPED(FeatureSet.TYPESCRIPT, StrictMode.STRICT),
+    ;
+
+    public final FeatureSet featureSet;
+    public final StrictMode strictMode;
+
+    LanguageMode(FeatureSet featureSet, StrictMode strictMode) {
+      this.featureSet = featureSet;
+      this.strictMode = strictMode;
+    }
+
+    /**
+     * Returns the lowest {@link LanguageMode} that supports the specified feature.
+     */
+    public static LanguageMode minimumRequiredFor(FeatureSet.Feature feature) {
+      // relies on the LanguageMode enums being in the right order
+      for (LanguageMode mode : LanguageMode.values()) {
+        if (mode.featureSet.contains(feature)) {
+          return mode;
+        }
+      }
+      throw new IllegalStateException("No input language mode supports feature: " + feature);
+    }
   }
 
   /**

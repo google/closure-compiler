@@ -201,6 +201,8 @@ public class Parser {
       ES6,
       ES6_STRICT,
       ES6_TYPED,
+      ES7,
+      ES8
     }
 
     public final boolean is6Typed;

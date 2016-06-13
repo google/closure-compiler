@@ -35,6 +35,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.Config.StrictMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
@@ -313,6 +314,8 @@ class IRFactory {
       case ECMASCRIPT5_STRICT:
       case ECMASCRIPT6_STRICT:
       case ECMASCRIPT6_TYPED:
+      case ECMASCRIPT7:
+      case ECMASCRIPT8:
         reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
         break;
       default:
@@ -995,7 +998,7 @@ class IRFactory {
     }
 
     Node processArrayPattern(ArrayPatternTree tree) {
-      maybeWarnEs6Feature(tree, Feature.DESTRUCTURING);
+      maybeWarnForFeature(tree, Feature.DESTRUCTURING);
 
       Node node = newNode(Token.ARRAY_PATTERN);
       for (ParseTree child : tree.elements) {
@@ -1005,7 +1008,7 @@ class IRFactory {
     }
 
     Node processObjectPattern(ObjectPatternTree tree) {
-      maybeWarnEs6Feature(tree, Feature.DESTRUCTURING);
+      maybeWarnForFeature(tree, Feature.DESTRUCTURING);
 
       Node node = newNode(Token.OBJECT_PATTERN);
       for (ParseTree child : tree.fields) {
@@ -1150,7 +1153,7 @@ class IRFactory {
     }
 
     Node processForOf(ForOfStatementTree loopNode) {
-      maybeWarnEs6Feature(loopNode, Feature.FOR_OF);
+      maybeWarnForFeature(loopNode, Feature.FOR_OF);
       Node initializer = transform(loopNode.initializer);
       ImmutableSet<Token> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
@@ -1210,15 +1213,15 @@ class IRFactory {
       boolean isSignature = (functionTree.functionBody.type == ParseTreeType.EMPTY_STATEMENT);
 
       if (isGenerator) {
-        maybeWarnEs6Feature(functionTree, Feature.GENERATORS);
+        maybeWarnForFeature(functionTree, Feature.GENERATORS);
       }
 
       if (isMember) {
-        maybeWarnEs6Feature(functionTree, Feature.MEMBER_DECLARATIONS);
+        maybeWarnForFeature(functionTree, Feature.MEMBER_DECLARATIONS);
       }
 
       if (isArrow) {
-        maybeWarnEs6Feature(functionTree, Feature.ARROW_FUNCTIONS);
+        maybeWarnForFeature(functionTree, Feature.ARROW_FUNCTIONS);
       }
 
       IdentifierToken name = functionTree.name;
@@ -1301,23 +1304,23 @@ class IRFactory {
     }
 
     Node processDefaultParameter(DefaultParameterTree tree) {
-      maybeWarnEs6Feature(tree, Feature.DEFAULT_PARAMETERS);
+      maybeWarnForFeature(tree, Feature.DEFAULT_PARAMETERS);
       return newNode(Token.DEFAULT_VALUE,
           transform(tree.lhs), transform(tree.defaultValue));
     }
 
     Node processRestParameter(RestParameterTree tree) {
-      maybeWarnEs6Feature(tree, Feature.REST_PARAMETERS);
+      maybeWarnForFeature(tree, Feature.REST_PARAMETERS);
 
       Node assignmentTarget = transformNodeWithInlineJsDoc(tree.assignmentTarget);
       if (assignmentTarget.isDestructuringPattern()) {
-        maybeWarnEs6Feature(tree.assignmentTarget, Feature.DESTRUCTURING);
+        maybeWarnForFeature(tree.assignmentTarget, Feature.DESTRUCTURING);
       }
       return newNode(Token.REST, assignmentTarget);
     }
 
     Node processSpreadExpression(SpreadExpressionTree tree) {
-      maybeWarnEs6Feature(tree, Feature.SPREAD_EXPRESSIONS);
+      maybeWarnForFeature(tree, Feature.SPREAD_EXPRESSIONS);
 
       return newNode(Token.SPREAD, transform(tree.expression));
     }
@@ -1540,20 +1543,20 @@ class IRFactory {
         node.addChildToBack(key);
       }
       if (maybeWarn) {
-        maybeWarnEs6Feature(objTree, Feature.EXTENDED_OBJECT_LITERALS);
+        maybeWarnForFeature(objTree, Feature.EXTENDED_OBJECT_LITERALS);
       }
       return node;
     }
 
     Node processComputedPropertyDefinition(ComputedPropertyDefinitionTree tree) {
-      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
+      maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
 
       return newNode(Token.COMPUTED_PROP,
           transform(tree.property), transform(tree.value));
     }
 
     Node processComputedPropertyMemberVariable(ComputedPropertyMemberVariableTree tree) {
-      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
+      maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
       maybeWarnTypeSyntax(tree, Feature.COMPUTED_PROPERTIES);
 
       Node n = newNode(Token.COMPUTED_PROP, transform(tree.property));
@@ -1566,7 +1569,7 @@ class IRFactory {
     }
 
     Node processComputedPropertyMethod(ComputedPropertyMethodTree tree) {
-      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
+      maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
 
       Node n = newNode(Token.COMPUTED_PROP,
           transform(tree.property), transform(tree.method));
@@ -1579,7 +1582,7 @@ class IRFactory {
     }
 
     Node processComputedPropertyGetter(ComputedPropertyGetterTree tree) {
-      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
+      maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
 
       Node key = transform(tree.property);
       Node body = transform(tree.body);
@@ -1592,7 +1595,7 @@ class IRFactory {
     }
 
     Node processComputedPropertySetter(ComputedPropertySetterTree tree) {
-      maybeWarnEs6Feature(tree, Feature.COMPUTED_PROPERTIES);
+      maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
 
       Node key = transform(tree.property);
       Node body = transform(tree.body);
@@ -1718,7 +1721,7 @@ class IRFactory {
             break;
           case 'u': case 'y':
             Feature feature = flag == 'u' ? Feature.REGEXP_FLAG_U : Feature.REGEXP_FLAG_Y;
-            maybeWarnEs6Feature(tree, feature);
+            maybeWarnForFeature(tree, feature);
             break;
           default:
             errorReporter.error(
@@ -1767,7 +1770,7 @@ class IRFactory {
     }
 
     Node processTemplateLiteral(TemplateLiteralExpressionTree tree) {
-      maybeWarnEs6Feature(tree, Feature.TEMPLATE_LITERALS);
+      maybeWarnForFeature(tree, Feature.TEMPLATE_LITERALS);
       Node templateLitNode = newNode(Token.TEMPLATELIT);
       setSourceInfo(templateLitNode, tree);
       Node node = tree.operand == null
@@ -1931,11 +1934,11 @@ class IRFactory {
       Token declType;
       switch (decl.declarationType) {
         case CONST:
-          maybeWarnEs6Feature(decl, Feature.CONST_DECLARATIONS);
+          maybeWarnForFeature(decl, Feature.CONST_DECLARATIONS);
           declType = Token.CONST;
           break;
         case LET:
-          maybeWarnEs6Feature(decl, Feature.LET_DECLARATIONS);
+          maybeWarnForFeature(decl, Feature.LET_DECLARATIONS);
           declType = Token.LET;
           break;
         case VAR:
@@ -2068,7 +2071,7 @@ class IRFactory {
     }
 
     Node processClassDeclaration(ClassDeclarationTree tree) {
-      maybeWarnEs6Feature(tree, Feature.CLASSES);
+      maybeWarnForFeature(tree, Feature.CLASSES);
 
       Node name = transformOrEmpty(tree.name, tree);
       maybeProcessGenerics(name, tree.generics);
@@ -2125,12 +2128,12 @@ class IRFactory {
     }
 
     Node processSuper(SuperExpressionTree tree) {
-      maybeWarnEs6Feature(tree, Feature.SUPER);
+      maybeWarnForFeature(tree, Feature.SUPER);
       return newNode(Token.SUPER);
     }
 
     Node processNewTarget(NewTargetExpressionTree tree) {
-      maybeWarnEs6Feature(tree, Feature.NEW_TARGET);
+      maybeWarnForFeature(tree, Feature.NEW_TARGET);
       return newNode(Token.NEW_TARGET);
     }
 
@@ -2153,7 +2156,7 @@ class IRFactory {
     }
 
     Node processExportDecl(ExportDeclarationTree tree) {
-      maybeWarnEs6Feature(tree, Feature.MODULES);
+      maybeWarnForFeature(tree, Feature.MODULES);
       Node decls = null;
       if (tree.isExportAll) {
         Preconditions.checkState(
@@ -2193,7 +2196,7 @@ class IRFactory {
     }
 
     Node processImportDecl(ImportDeclarationTree tree) {
-      maybeWarnEs6Feature(tree, Feature.MODULES);
+      maybeWarnForFeature(tree, Feature.MODULES);
 
       Node firstChild = transformOrEmpty(tree.defaultBindingIdentifier, tree);
       Node secondChild = (tree.nameSpaceImportIdentifier != null)
@@ -2525,11 +2528,15 @@ class IRFactory {
       }
     }
 
-    void maybeWarnEs6Feature(ParseTree node, Feature feature) {
+    void maybeWarnForFeature(ParseTree node, Feature feature) {
       features = features.require(feature);
-      if (!isEs6Mode()) {
+      if (!isSupportedForInputLanguageMode(feature)) {
+
         errorReporter.warning(
-            "this language feature is only supported in es6 mode: " + feature,
+            "this language feature is only supported for "
+            + LanguageMode.minimumRequiredFor(feature)
+            + " mode or better: "
+            + feature,
             sourceName,
             lineno(node), charno(node));
       }
@@ -2934,22 +2941,18 @@ class IRFactory {
     return result.toString();
   }
 
-  boolean isEs6Mode() {
-    return config.languageMode == LanguageMode.ECMASCRIPT6
-        || config.languageMode == LanguageMode.ECMASCRIPT6_STRICT
-        || config.languageMode == LanguageMode.ECMASCRIPT6_TYPED;
+  boolean isSupportedForInputLanguageMode(Feature feature) {
+    return config.languageMode.featureSet.contains(feature);
   }
 
   boolean isEs5OrBetterMode() {
-    return config.languageMode != LanguageMode.ECMASCRIPT3;
+    return config.languageMode.featureSet.contains(FeatureSet.ES5);
   }
 
   private boolean inStrictContext() {
     // TODO(johnlenz): in ECMASCRIPT5/6 is a "mixed" mode and we should track the context
     // that we are in, if we want to support it.
-    return config.languageMode == LanguageMode.ECMASCRIPT5_STRICT
-        || config.languageMode == LanguageMode.ECMASCRIPT6_STRICT
-        || config.languageMode == LanguageMode.ECMASCRIPT6_TYPED;
+    return config.languageMode.strictMode == StrictMode.STRICT;
   }
 
   double normalizeNumber(LiteralToken token) {
@@ -2970,7 +2973,7 @@ class IRFactory {
         case 'b':
         case 'B': {
           features = features.require(Feature.BINARY_LITERALS);
-          if (!isEs6Mode()) {
+          if (!isSupportedForInputLanguageMode(Feature.BINARY_LITERALS)) {
             errorReporter.warning(BINARY_NUMBER_LITERAL_WARNING,
                 sourceName,
                 lineno(token.location.start), charno(token.location.start));
@@ -2985,7 +2988,7 @@ class IRFactory {
         case 'o':
         case 'O': {
           features = features.require(Feature.OCTAL_LITERALS);
-          if (!isEs6Mode()) {
+          if (!isSupportedForInputLanguageMode(Feature.OCTAL_LITERALS)) {
             errorReporter.warning(OCTAL_NUMBER_LITERAL_WARNING,
                 sourceName,
                 lineno(token.location.start), charno(token.location.start));

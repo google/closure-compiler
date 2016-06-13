@@ -200,6 +200,10 @@ public final class ParserRunner {
         return Mode.ES6_STRICT;
       case ECMASCRIPT6_TYPED:
         return Mode.ES6_TYPED;
+      case ECMASCRIPT7:
+        return Mode.ES7;
+      case ECMASCRIPT8:
+        return Mode.ES8;
       default:
         throw new IllegalStateException("unexpected language mode: " + mode);
     }
