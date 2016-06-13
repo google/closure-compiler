@@ -38,16 +38,12 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
-    super.enableLineNumberCheck(false);
-  }
-
-  @Override
   public CompilerPass getProcessor(Compiler compiler) {
     AliasStrings pass =
         new AliasStrings(compiler, moduleGraph, strings, "(?i)secret", false);
-    if (hashReduction)
+    if (hashReduction) {
       pass.unitTestHashReductionMask = 0;
+    }
     return pass;
   }
 

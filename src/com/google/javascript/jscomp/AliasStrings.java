@@ -231,6 +231,7 @@ class AliasStrings extends AbstractPostOrderCallback
       }
       String alias = info.getVariableName(entry.getKey());
       Node var = IR.var(IR.name(alias), IR.string(entry.getKey()));
+      var.useSourceInfoFromForTree(info.parentForNewVarDecl);
       if (info.siblingToInsertVarDeclBefore == null) {
         info.parentForNewVarDecl.addChildToFront(var);
       } else {
