@@ -87,6 +87,9 @@ jQueryAjaxSettings.prototype.dataType;
 /** @type {(function(jQuery.jqXHR, string, string)|undefined)} */
 jQueryAjaxSettings.prototype.error;
 
+/** @type {Object<string, boolean>} */
+jQueryAjaxSettings.prototype.flatOptions;
+
 /** @type {(?boolean|undefined)} */
 jQueryAjaxSettings.prototype.global;
 
@@ -113,6 +116,9 @@ jQueryAjaxSettings.prototype.password;
 
 /** @type {(?boolean|undefined)} */
 jQueryAjaxSettings.prototype.processData;
+
+/** @type {Object<string, string>} */
+jQueryAjaxSettings.prototype.responseFields;
 
 /** @type {(?string|undefined)} */
 jQueryAjaxSettings.prototype.scriptCharset;
@@ -226,15 +232,6 @@ jQuery.prototype.ajaxSend = function(handler) {};
 
 /** @const {jQueryAjaxSettings|Object<string, *>} */
 jQuery.ajaxSettings;
-
-/** @type {Object<string, boolean>} */
-jQuery.ajaxSettings.flatOptions = {};
-
-/** @type {boolean} */
-jQuery.ajaxSettings.processData;
-
-/** @type {Object<string, string>} */
-jQuery.ajaxSettings.responseFields = {};
 
 /** @param {jQueryAjaxSettings|Object<string, *>} options */
 jQuery.ajaxSetup = function(options) {};
