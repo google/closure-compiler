@@ -15,8 +15,8 @@
  */
 
 /**
- * @fileoverview Definitions for ECMAScript 6.
- * @see http://wiki.ecmascript.org/doku.php?id=harmony:specification_drafts
+ * @fileoverview Definitions for ECMAScript 6 and later.
+ * @see https://tc39.github.io/ecma262/
  * @see https://www.khronos.org/registry/typedarray/specs/latest/
  * @externs
  */
@@ -1494,6 +1494,17 @@ Array.prototype.fill = function(value, opt_begin, opt_end) {};
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.copywithin
  */
 Array.prototype.copyWithin = function(target, start, opt_end) {};
+
+
+/**
+ * @param {T} searchElement
+ * @param {number=} opt_fromIndex
+ * @return {boolean}
+ * @this {!IArrayLike<T>|string}
+ * @template T
+ * @see https://tc39.github.io/ecma262/#sec-array.prototype.includes
+ */
+Array.prototype.includes = function(searchElement, opt_fromIndex) {};
 
 
 /**
