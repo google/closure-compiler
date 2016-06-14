@@ -159,7 +159,7 @@ jQueryAjaxSettings.prototype.xhrFields;
  * @return {!jQuery}
  * @implements {Iterable}
  */
-function jQuery(arg1, arg2) {}
+function jQuery(arg1, arg2) {};
 
 /**
  * @constructor
@@ -169,7 +169,7 @@ function jQuery(arg1, arg2) {}
  * @return {!jQuery}
  * @extends {jQuery}
  */
-function $(arg1, arg2) {}
+function $(arg1, arg2) {};
 
 /**
  * @param {(jQuerySelector|Array<Element>|string|jQuery)} arg1
