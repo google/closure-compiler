@@ -19,12 +19,13 @@ goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
+const userAgent = goog.require('goog.userAgent');
 
 const {
-  assertDeepEquals,
   assertIteratorContents,
 } = testing;
 
+const IE8 = userAgent.IE && !userAgent.isVersionOrHigher(9);
 const DONE = {done: true, value: void 0};
 
 /**
@@ -108,7 +109,7 @@ testSuite({
   },
 
   testKeyIdNotEnumerable() {
-    if (!Object.defineProperty) return;
+    if (IE8) return;
     const map = new Map();
     const key = {};
     map.set(key, 1);
@@ -207,10 +208,10 @@ testSuite({
     map.set('a', 'b');
     map.set('c', 'd');
     const iter = map.entries();
-    assertDeepEquals({done: false, value: ['a', 'b']}, iter.next());
-    assertDeepEquals({done: false, value: ['c', 'd']}, iter.next());
-    assertDeepEquals(DONE, iter.next());
-    assertDeepEquals(DONE, iter.next());
+    assertObjectEquals({done: false, value: ['a', 'b']}, iter.next());
+    assertObjectEquals({done: false, value: ['c', 'd']}, iter.next());
+    assertObjectEquals(DONE, iter.next());
+    assertObjectEquals(DONE, iter.next());
   },
 
   testValues() {
@@ -218,10 +219,10 @@ testSuite({
     map.set('a', 'b');
     map.set('c', 'd');
     const iter = map.values();
-    assertDeepEquals({done: false, value: 'b'}, iter.next());
-    assertDeepEquals({done: false, value: 'd'}, iter.next());
-    assertDeepEquals(DONE, iter.next());
-    assertDeepEquals(DONE, iter.next());
+    assertObjectEquals({done: false, value: 'b'}, iter.next());
+    assertObjectEquals({done: false, value: 'd'}, iter.next());
+    assertObjectEquals(DONE, iter.next());
+    assertObjectEquals(DONE, iter.next());
   },
 
   testKeys() {
@@ -229,10 +230,10 @@ testSuite({
     map.set('a', 'b');
     map.set('c', 'd');
     const iter = map.keys();
-    assertDeepEquals({done: false, value: 'a'}, iter.next());
-    assertDeepEquals({done: false, value: 'c'}, iter.next());
-    assertDeepEquals(DONE, iter.next());
-    assertDeepEquals(DONE, iter.next());
+    assertObjectEquals({done: false, value: 'a'}, iter.next());
+    assertObjectEquals({done: false, value: 'c'}, iter.next());
+    assertObjectEquals(DONE, iter.next());
+    assertObjectEquals(DONE, iter.next());
   },
 
   testKeys_continuesAfterClear() {
@@ -242,14 +243,14 @@ testSuite({
     const iter = map.keys();
     map.clear();
     map.set('e', 'f');
-    assertDeepEquals({done: false, value: 'e'}, iter.next());
+    assertObjectEquals({done: false, value: 'e'}, iter.next());
     map.clear();
     map.set('g', 'h');
-    assertDeepEquals({done: false, value: 'g'}, iter.next());
-    assertDeepEquals(DONE, iter.next());
+    assertObjectEquals({done: false, value: 'g'}, iter.next());
+    assertObjectEquals(DONE, iter.next());
     // But once it's done, it doesn't come back
     map.set('i', 'j');
-    assertDeepEquals(DONE, iter.next());
+    assertObjectEquals(DONE, iter.next());
   },
 
   testKeys_continuesAfterDelete() {
@@ -262,16 +263,16 @@ testSuite({
     map.set('b', 4);
     map.delete('c');
     map.set('d', 5);
-    assertDeepEquals({done: false, value: 'b'}, iter.next());
-    assertDeepEquals({done: false, value: 'd'}, iter.next());
+    assertObjectEquals({done: false, value: 'b'}, iter.next());
+    assertObjectEquals({done: false, value: 'd'}, iter.next());
     map.set('e', 6);
     map.delete('d');
     map.set('f', 7);
     map.delete('e');
-    assertDeepEquals({done: false, value: 'f'}, iter.next());
-    assertDeepEquals(DONE, iter.next());
+    assertObjectEquals({done: false, value: 'f'}, iter.next());
+    assertObjectEquals(DONE, iter.next());
     map.set('g', 8);
-    assertDeepEquals(DONE, iter.next());
+    assertObjectEquals(DONE, iter.next());
   },
 
   testIterator() {

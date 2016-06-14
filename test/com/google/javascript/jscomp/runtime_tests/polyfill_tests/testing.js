@@ -19,39 +19,37 @@ goog.setTestOnly();
 
 /** @suppress {extraRequire} */
 var asserts = goog.require('goog.testing.asserts');
+var userAgent = goog.require('goog.userAgent');
+
+/** @const */
+var IE8 = userAgent.IE && !userAgent.isVersionOrHigher(9);
+
+
+/** @const {function(?Object): !Object} Version of Object.create for IE8. */
+exports.objectCreate =
+    typeof Object.create == 'function' ?
+    Object.create :
+    function(proto) {
+      /** @constructor */
+      function Ctor() {}
+      Ctor.prototype = exports.noCheck(proto);
+      return new Ctor();
+    };
 
 
 /**
- * Asserts deep equality for objects and arrays.
- * @param {*} expected
- * @param {*} actual
- * @param {string=} opt_position
+ * Asserts that an array of property names are the same.
+ * If the browser is IE8, sorts the lists first, since IE8
+ * does not sort them correctly.
+ * @param {!Array} expected
+ * @param {!Array} actual
  */
-exports.assertDeepEquals = function(expected, actual, opt_position) {
-  var position = opt_position || '';
-  position = position || '<actual>';
-  assertEquals(position + ' instanceof Array',
-      expected instanceof Array, actual instanceof Array);
-  assertEquals(position + ' instanceof Object',
-      expected instanceof Object, actual instanceof Object);
-  if (expected instanceof Array && actual instanceof Array) {
-    assertEquals(position + '.length', expected.length, actual.length);
-    for (var i = 0; i < expected.length; i++) {
-      exports.assertDeepEquals(
-          expected[i], actual[i], position + '[' + i + ']');
-    }
-  } else if (expected instanceof Object && actual instanceof Object) {
-    for (var key in expected) {
-      assertTrue('Missing key: ' + position + '.' + key, key in actual);
-      exports.assertDeepEquals(
-          expected[key], actual[key], position + '.' + key);
-    }
-    for (key in actual) {
-      assertTrue('Unexpected key: ' + position + '.' + key, key in expected);
-    }
-  } else {
-    assertEquals(position, expected, actual);
+exports.assertPropertyListEquals = function(expected, actual) {
+  if (IE8) {
+    expected = expected.slice().sort();
+    actual = actual.slice().sort();
   }
+  assertObjectEquals(expected, actual);
 };
 
 
@@ -62,13 +60,20 @@ exports.assertDeepEquals = function(expected, actual, opt_position) {
  */
 exports.assertIteratorContents = function(iterator, var_args) {
   if (iterator[Symbol.iterator]) iterator = iterator[Symbol.iterator]();
+  var expected = [];
+  var actual = [];
   for (var i = 1; i < arguments.length; i++) {
     var elem = arguments[i];
-    exports.assertDeepEquals(
-        {value: elem, done: false}, iterator.next(), '[' + (i - 1) + ']');
+    expected.push({value: arguments[i], done: false});
+    actual.push(iterator.next());
   }
-  assertTrue(iterator.next().done);
-  assertTrue(iterator.next().done);
+  function normalizeDone(result) {
+    // Normalize done values so that assertObjectEquals always passes for them.
+    return result.done ? {value: undefined, done: true} : result;
+  }
+  expected.push({value: undefined, done: true}, {value: undefined, done: true});
+  actual.push(normalizeDone(iterator.next()), normalizeDone(iterator.next()));
+  assertObjectEquals(expected, actual);
 };
 
 

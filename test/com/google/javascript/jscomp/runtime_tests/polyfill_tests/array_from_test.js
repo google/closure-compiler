@@ -22,7 +22,6 @@ const userAgent = goog.require('goog.userAgent');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
 const {
-  assertDeepEquals,
   iterable,
   noCheck,
 } = testing;
@@ -36,24 +35,25 @@ testSuite({
   testFrom() {
     const arr = ['a', 2, 'c'];
     assertNotEquals(arr, Array.from(arr));
-    assertDeepEquals(arr, Array.from(arr));
+    assertObjectEquals(arr, Array.from(arr));
 
-    assertDeepEquals(['a', void 0, 42], Array.from({length: 3, 0: 'a', 2: 42}));
-    assertDeepEquals(['a', void 0], Array.from({length: 2, 0: 'a', 2: 42}));
-    assertDeepEquals(['a', 'c', 'b'], Array.from(noCheck('acb')));
-    assertDeepEquals(['a', 'c', 'b'], Array.from(noCheck('acb')));
+    assertObjectEquals(
+        ['a', void 0, 42], Array.from({length: 3, 0: 'a', 2: 42}));
+    assertObjectEquals(['a', void 0], Array.from({length: 2, 0: 'a', 2: 42}));
+    assertObjectEquals(['a', 'c', 'b'], Array.from(noCheck('acb')));
+    assertObjectEquals(['a', 'c', 'b'], Array.from(noCheck('acb')));
 
     (function(var_args) {
-      assertDeepEquals(['x', 'y'], Array.from(arguments));
+      assertObjectEquals(['x', 'y'], Array.from(arguments));
     })('x', 'y');
 
-    assertDeepEquals(['x', 'y'], Array.from(iterable('x', 'y')));
+    assertObjectEquals(['x', 'y'], Array.from(iterable('x', 'y')));
 
     const x2 = x => x + x;
-    assertDeepEquals([2, 4, 8], Array.from([1, 2, 4], x2));
-    assertDeepEquals(['aa', 'cc', 'bb'], Array.from(noCheck('acb'), x2));
-    assertDeepEquals([6], Array.from({length: 1, 0: 3}, x2));
-    assertDeepEquals([6, 'xx'], Array.from(iterable(3, 'x'), x2));
+    assertObjectEquals([2, 4, 8], Array.from([1, 2, 4], x2));
+    assertObjectEquals(['aa', 'cc', 'bb'], Array.from(noCheck('acb'), x2));
+    assertObjectEquals([6], Array.from({length: 1, 0: 3}, x2));
+    assertObjectEquals([6, 'xx'], Array.from(iterable(3, 'x'), x2));
 
     /**
      * @this {!Function}
@@ -61,7 +61,7 @@ testSuite({
      * @return {?}
      */
     const applyThisTwice = function(x) { return this(this(x)); };
-    assertDeepEquals([4, 8, 16], Array.from([1, 2, 4], applyThisTwice, x2));
-    assertDeepEquals(['aaaa'], Array.from(noCheck('a'), applyThisTwice, x2));
+    assertObjectEquals([4, 8, 16], Array.from([1, 2, 4], applyThisTwice, x2));
+    assertObjectEquals(['aaaa'], Array.from(noCheck('a'), applyThisTwice, x2));
   },
 });

@@ -22,7 +22,6 @@ const userAgent = goog.require('goog.userAgent');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
 const {
-  assertDeepEquals,
   getKeys,
   noCheck,
 } = testing;
@@ -36,36 +35,36 @@ testSuite({
   testCopyWithin() {
     let arr = [5, 4, 3, 2, 1, 0];
     assertEquals(arr, arr.copyWithin(0, 3, 5));
-    assertDeepEquals([2, 1, 3, 2, 1, 0], arr);
+    assertObjectEquals([2, 1, 3, 2, 1, 0], arr);
 
     arr = [5, 4, 3, 2, 1, 0];
     assertEquals(arr, arr.copyWithin(0, 3));
-    assertDeepEquals([2, 1, 0, 2, 1, 0], arr);
+    assertObjectEquals([2, 1, 0, 2, 1, 0], arr);
 
     arr = [5, 4, 3, 2, 1, 0];
     assertEquals(arr, arr.copyWithin(3, 1, 3));
-    assertDeepEquals([5, 4, 3, 4, 3, 0], arr);
+    assertObjectEquals([5, 4, 3, 4, 3, 0], arr);
 
     arr = [5, 4, 3, 2, 1, 0];
     assertEquals(arr, arr.copyWithin(3, 1));
-    assertDeepEquals([5, 4, 3, 4, 3, 2], arr);
+    assertObjectEquals([5, 4, 3, 4, 3, 2], arr);
 
     arr = [5, 4, 3, 2, 1, 0];
     assertEquals(arr, arr.copyWithin(1, 0));
-    assertDeepEquals([5, 5, 4, 3, 2, 1], arr);
+    assertObjectEquals([5, 5, 4, 3, 2, 1], arr);
 
     arr = [5, 4, 3, 2, 1, 0];
     assertEquals(arr, arr.copyWithin(0, 1));
-    assertDeepEquals([4, 3, 2, 1, 0, 0], arr);
+    assertObjectEquals([4, 3, 2, 1, 0, 0], arr);
 
     arr = [];
     arr[4] = 42;
     arr[2] = 21;
     assertEquals(arr, arr.copyWithin(0, 1));
-    assertDeepEquals(['1', '3', '4'], getKeys(arr));
+    assertObjectEquals(['1', '3', '4'], getKeys(arr));
 
     arr = {length: 3, 1: 4, 3: 'unused'};
     assertEquals(arr, Array.prototype.copyWithin.call(noCheck(arr), 0, 1));
-    assertDeepEquals({length: 3, 0: 4, 3: 'unused'}, arr);
+    assertObjectEquals({length: 3, 0: 4, 3: 'unused'}, arr);
   },
 });

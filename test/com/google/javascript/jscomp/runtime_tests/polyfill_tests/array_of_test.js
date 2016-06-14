@@ -22,7 +22,6 @@ const userAgent = goog.require('goog.userAgent');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
 const {
-  assertDeepEquals,
   noCheck,
 } = testing;
 
@@ -34,7 +33,7 @@ testSuite({
 
   testOf() {
     // TODO(sdh): Remove the noChecks when #1731 is resolved.
-    assertDeepEquals(
+    assertObjectEquals(
         [1, 'x', void 0], Array.of(noCheck(1), noCheck('x'), noCheck(void 0)));
   },
 });

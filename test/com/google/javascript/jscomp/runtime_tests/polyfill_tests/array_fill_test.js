@@ -22,7 +22,6 @@ const userAgent = goog.require('goog.userAgent');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
 const {
-  assertDeepEquals,
   noCheck,
 } = testing;
 
