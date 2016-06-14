@@ -30,6 +30,7 @@ import java.util.Set;
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
 public final class Es6ToEs3ConverterTest extends CompilerTestCase {
+
   private static final String EXTERNS_BASE =
       LINE_JOINER.join(
           "/** @constructor @template T */",
@@ -250,6 +251,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testNewTarget() {
     testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
+  }
+
+  public void testAsyncFunction() {
+    setLanguage(LanguageMode.ECMASCRIPT8, LanguageMode.ECMASCRIPT5);
+    testError("f = async function() {};", CANNOT_CONVERT_YET);
+    testError("async function f() {};", CANNOT_CONVERT_YET);
   }
 
   public void testClassWithJsDoc() {

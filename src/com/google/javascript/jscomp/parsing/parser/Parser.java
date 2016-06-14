@@ -485,6 +485,7 @@ public class Parser {
         nextToken();
         break;
       case FUNCTION:
+        // TODO(bradfordcsmith): handle async functions here
         export = isAmbient ? parseAmbientFunctionDeclaration() : parseFunctionDeclaration();
         needsSemiColon = isAmbient;
         break;
@@ -848,8 +849,14 @@ public class Parser {
             start, name, isStatic, isGenerator, false, accessOnFunction);
         eatPossibleImplicitSemiColon();
       } else {
-        function = parseFunctionTail(
-            start, name, isStatic, isGenerator, accessOnFunction, kind);
+        FunctionDeclarationTree.Builder builder =
+            FunctionDeclarationTree.builder(kind)
+                .setName(name)
+                .setStatic(isStatic)
+                .setAccess(accessOnFunction);
+        parseFunctionTail(builder, isGenerator);
+
+        function = builder.build(getTreeLocation(start));
       }
       if (kind == FunctionDeclarationTree.Kind.MEMBER) {
         return function;
@@ -911,30 +918,23 @@ public class Parser {
     return builder.build(getTreeLocation(start));
   }
 
-  private FunctionDeclarationTree parseFunctionTail(
-      SourcePosition start,
-      IdentifierToken name,
-      boolean isStatic,
-      boolean isGenerator,
-      TokenType access,
-      FunctionDeclarationTree.Kind kind) {
+  private void parseFunctionTail(FunctionDeclarationTree.Builder builder) {
+    parseFunctionTail(builder, /* isGenerator */ false);
+  }
 
+  private void parseGeneratorFunctionTail(FunctionDeclarationTree.Builder builder) {
+    parseFunctionTail(builder, /* isGenerator */ true);
+  }
+
+  private void parseFunctionTail(FunctionDeclarationTree.Builder builder, boolean isGenerator) {
     inGeneratorContext.addLast(isGenerator);
-
-    FunctionDeclarationTree.Builder builder =
-        FunctionDeclarationTree.builder(kind)
-            .setName(name)
-            .setStatic(isStatic)
-            .setGenerator(isGenerator)
-            .setAccess(access)
-            .setGenerics(maybeParseGenericTypes())
-            .setFormalParameterList(parseFormalParameterList(ParamContext.IMPLEMENTATION))
-            .setReturnType(maybeParseColonType())
-            .setFunctionBody(parseFunctionBody());
-
+    builder
+        .setGenerator(isGenerator)
+        .setGenerics(maybeParseGenericTypes())
+        .setFormalParameterList(parseFormalParameterList(ParamContext.IMPLEMENTATION))
+        .setReturnType(maybeParseColonType())
+        .setFunctionBody(parseFunctionBody());
     inGeneratorContext.removeLast();
-
-    return builder.build(getTreeLocation(start));
   }
 
   private NamespaceDeclarationTree parseNamespaceDeclaration(boolean isAmbient) {
@@ -957,6 +957,10 @@ public class Parser {
   }
 
   private ParseTree parseSourceElement() {
+    if (peekAsyncFunctionStart()) {
+      return parseAsyncFunctionDeclaration();
+    }
+
     if (peekFunction()) {
       return parseFunctionDeclaration();
     }
@@ -977,6 +981,24 @@ public class Parser {
 
   private boolean peekSourceElement() {
     return peekFunction() || peekStatementStandard() || peekDeclaration();
+  }
+
+  private boolean peekAsyncFunctionStart() {
+    if (peekPredefinedString(ASYNC) && peekFunction(1)) {
+      Token asyncToken = peekToken();
+      Token functionToken = peekToken(1);
+      if (asyncToken.location.start.line != functionToken.location.start.line) {
+        reportError(functionToken, "Newline is not allowed between 'async' and 'function'");
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private void eatAsyncFunctionStart() {
+    eatPredefinedString(ASYNC);
+    eat(TokenType.FUNCTION);
   }
 
   private boolean peekFunction() {
@@ -1107,22 +1129,52 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     eat(Keywords.FUNCTION.type);
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    IdentifierToken name = eatId();
 
-    return parseFunctionTail(
-        start, name, false, isGenerator, null,
-        FunctionDeclarationTree.Kind.DECLARATION);
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.DECLARATION).setName(eatId());
+    parseFunctionTail(builder, isGenerator);
+    return builder.build(getTreeLocation(start));
   }
 
   private ParseTree parseFunctionExpression() {
     SourcePosition start = getTreeStartLocation();
     eat(Keywords.FUNCTION.type);
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    IdentifierToken name = eatIdOpt();
 
-    return parseFunctionTail(
-        start, name, false, isGenerator, null,
-        FunctionDeclarationTree.Kind.EXPRESSION);
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
+            .setName(eatIdOpt());
+    parseFunctionTail(builder, isGenerator);
+
+    return builder.build(getTreeLocation(start));
+  }
+
+  private ParseTree parseAsyncFunctionDeclaration() {
+    SourcePosition start = getTreeStartLocation();
+    features.require(Feature.ASYNC_FUNCTIONS);
+    eatAsyncFunctionStart();
+
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.DECLARATION)
+            .setName(eatId())
+            .setAsync(true);
+
+    parseFunctionTail(builder);
+    return builder.build(getTreeLocation(start));
+  }
+
+  private ParseTree parseAsyncFunctionExpression() {
+    SourcePosition start = getTreeStartLocation();
+    features.require(Feature.ASYNC_FUNCTIONS);
+    eatAsyncFunctionStart();
+
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
+            .setName(eatIdOpt())
+            .setAsync(true);
+
+    parseFunctionTail(builder);
+    return builder.build(getTreeLocation(start));
   }
 
   private ParseTree parseAmbientFunctionDeclaration() {
@@ -2330,8 +2382,10 @@ public class Parser {
         ParseTree value = parseAssignmentExpression();
         return new ComputedPropertyDefinitionTree(getTreeLocation(start), name, value);
       } else {
-        ParseTree value = parseFunctionTail(
-            start, null, false, false, null, FunctionDeclarationTree.Kind.EXPRESSION);
+        FunctionDeclarationTree.Builder builder =
+            FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION);
+        parseFunctionTail(builder);
+        ParseTree value = builder.build(getTreeLocation(start));
         return new ComputedPropertyMethodTree(
             getTreeLocation(start), null, name, value);
       }
@@ -2351,10 +2405,13 @@ public class Parser {
     } else {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.STAR);
-      ParseTree name = parseComputedPropertyName();
 
-      ParseTree value = parseFunctionTail(
-          start, null, false, true, null, FunctionDeclarationTree.Kind.EXPRESSION);
+      ParseTree name = parseComputedPropertyName();
+      FunctionDeclarationTree.Builder builder =
+          FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION);
+
+      parseGeneratorFunctionTail(builder);
+      ParseTree value = builder.build(getTreeLocation(start));
       return new ComputedPropertyMethodTree(getTreeLocation(start), null, name, value);
     }
   }
@@ -3051,11 +3108,15 @@ public class Parser {
         || peek(TokenType.TEMPLATE_HEAD);
   }
 
+  private static final String ASYNC = "async";
+
   // 11.2 Member Expression without the new production
   private ParseTree parseMemberExpressionNoNew() {
     SourcePosition start = getTreeStartLocation();
     ParseTree operand;
-    if (peekFunction()) {
+    if (peekAsyncFunctionStart()) {
+      operand = parseAsyncFunctionExpression();
+    } else if (peekFunction()) {
       operand = parseFunctionExpression();
     } else {
       operand = parsePrimaryExpression();

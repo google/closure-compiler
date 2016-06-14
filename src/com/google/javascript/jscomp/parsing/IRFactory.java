@@ -1209,6 +1209,7 @@ class IRFactory {
       boolean isDeclaration = (functionTree.kind == FunctionDeclarationTree.Kind.DECLARATION);
       boolean isMember = (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER);
       boolean isArrow = (functionTree.kind == FunctionDeclarationTree.Kind.ARROW);
+      boolean isAsync = functionTree.isAsync;
       boolean isGenerator = functionTree.isGenerator;
       boolean isSignature = (functionTree.functionBody.type == ParseTreeType.EMPTY_STATEMENT);
 
@@ -1222,6 +1223,10 @@ class IRFactory {
 
       if (isArrow) {
         maybeWarnForFeature(functionTree, Feature.ARROW_FUNCTIONS);
+      }
+
+      if (isAsync) {
+        maybeWarnForFeature(functionTree, Feature.ASYNC_FUNCTIONS);
       }
 
       IdentifierToken name = functionTree.name;
@@ -1268,6 +1273,7 @@ class IRFactory {
 
       node.setIsGeneratorFunction(isGenerator);
       node.setIsArrowFunction(isArrow);
+      node.setIsAsyncFunction(isAsync);
       node.putBooleanProp(Node.OPT_ES6_TYPED, functionTree.isOptional);
 
       Node result;

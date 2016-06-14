@@ -2755,6 +2755,38 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("f( (x,y)\n=>2)", "No newline allowed before '=>'");
   }
 
+  public void testAsyncFunctionExpression() {
+    mode = LanguageMode.ECMASCRIPT8;
+    expectFeatures(Feature.ASYNC_FUNCTIONS);
+    parse("f = async function() {}");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "f = async function() {}",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+
+    mode = LanguageMode.ECMASCRIPT3;
+    parseWarning(
+        "f = async function() {}",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+  }
+
+  public void testAsyncFunctionDeclaration() {
+    mode = LanguageMode.ECMASCRIPT8;
+    expectFeatures(Feature.ASYNC_FUNCTIONS);
+    parse("async function f() {}");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "async function f() {}",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+
+    mode = LanguageMode.ECMASCRIPT3;
+    parseWarning(
+        "async function f() {}",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+  }
+
   public void testFor_ES5() {
     parse("for (var x; x != 10; x = next()) {}");
     parse("for (var x; x != 10; x = next());");

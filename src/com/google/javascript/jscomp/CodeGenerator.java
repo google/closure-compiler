@@ -1271,6 +1271,9 @@ class CodeGenerator {
 
     maybeAddGenericTypes(first);
 
+    if (n.isAsyncFunction()) {
+      add("async ");
+    }
     add(first.getNext()); // param list
     maybeAddTypeDecl(n);
 
@@ -1296,7 +1299,7 @@ class CodeGenerator {
       add("(");
     }
 
-    add("function");
+    add(n.isAsyncFunction() ? "async function" : "function");
     if (n.isGeneratorFunction()) {
       add("*");
       if (!first.getString().isEmpty()) {
