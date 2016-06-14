@@ -87,9 +87,6 @@ jQueryAjaxSettings.prototype.dataType;
 /** @type {(function(jQuery.jqXHR, string, string)|undefined)} */
 jQueryAjaxSettings.prototype.error;
 
-/** @type {Object<string, boolean>} */
-jQueryAjaxSettings.prototype.flatOptions;
-
 /** @type {(?boolean|undefined)} */
 jQueryAjaxSettings.prototype.global;
 
@@ -116,9 +113,6 @@ jQueryAjaxSettings.prototype.password;
 
 /** @type {(?boolean|undefined)} */
 jQueryAjaxSettings.prototype.processData;
-
-/** @type {Object<string, string>} */
-jQueryAjaxSettings.prototype.responseFields;
 
 /** @type {(?string|undefined)} */
 jQueryAjaxSettings.prototype.scriptCharset;
@@ -149,6 +143,18 @@ jQueryAjaxSettings.prototype.xhr;
 
 /** @type {(Object<?, ?>|undefined)} */
 jQueryAjaxSettings.prototype.xhrFields;
+
+/**
+ * @record
+ * @extends {jQueryAjaxSettings}
+ */
+function jQueryAjaxSettingsExtra() {};
+
+/** @type {Object<string, boolean>} */
+jQueryAjaxSettingsExtra.prototype.flatOptions;
+
+/** @type {Object<string, string>} */
+jQueryAjaxSettingsExtra.prototype.responseFields;
 
 
 /**
@@ -230,7 +236,7 @@ jQuery.ajaxPrefilter = function(dataTypes, handler) {};
  */
 jQuery.prototype.ajaxSend = function(handler) {};
 
-/** @const {jQueryAjaxSettings|Object<string, *>} */
+/** @const {jQueryAjaxSettingsExtra|Object<string, *>} */
 jQuery.ajaxSettings;
 
 /** @param {jQueryAjaxSettings|Object<string, *>} options */
