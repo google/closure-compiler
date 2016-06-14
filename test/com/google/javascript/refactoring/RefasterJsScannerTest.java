@@ -413,7 +413,7 @@ public class RefasterJsScannerTest {
     String externs = ""
         + "var obj = {};\n"
         + "obj.prop = 6;"
-        + "var CONSTANT = 3;n";
+        + "var CONSTANT = 3;\n";
     String originalCode = "for (var i = CONSTANT; i < 5; i++) {}";
     String expectedCode = "for (var i = CONSTANT2; i < 5; i++) {}";
     String template = ""
