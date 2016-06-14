@@ -105,8 +105,8 @@ class ExpressionDecomposer {
   }
 
   // TODO(johnlenz): This is not currently used by the function inliner,
-  // as moving the call out of the expression before the actual function
-  // results in additional variables being introduced.  As the variable
+  // as moving the call out of the expression before the actual function call
+  // causes additional variables to be introduced.  As the variable
   // inliner is improved, this might be a viable option.
   /**
    * Extract the specified expression from its parent expression.
@@ -693,10 +693,10 @@ class ExpressionDecomposer {
   }
 
   /**
-   * Determine whether a expression is movable, or can be be made movable be
+   * Determine whether a expression is movable, or can be be made movable after
    * decomposing the containing expression.
    *
-   * An subExpression is MOVABLE if it can be replaced with a temporary holding
+   * A subexpression is MOVABLE if it can be replaced with a temporary holding
    * its results and moved to immediately before the root of the expression.
    * There are three conditions that must be met for this to occur:
    * 1) There must be a location to inject a statement for the expression.  For
