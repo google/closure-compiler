@@ -1754,49 +1754,52 @@ jQuery.prototype.stop = function(arg1, arg2, jumpToEnd) {};
  */
 jQuery.prototype.submit = function(arg1, handler) {};
 
-/** @type {Object<string, *>}
+/**
+ * @record
+ */
+function jQuerySupport() {};
+
+/** @type {boolean} */
+jQuerySupport.prototype.boxModel;
+
+/** @type {boolean} */
+jQuerySupport.prototype.changeBubbles;
+
+/** @type {boolean} */
+jQuerySupport.prototype.cors;
+
+/** @type {boolean} */
+jQuerySupport.prototype.cssFloat;
+
+/** @type {boolean} */
+jQuerySupport.prototype.hrefNormalized;
+
+/** @type {boolean} */
+jQuerySupport.prototype.htmlSerialize;
+
+/** @type {boolean} */
+jQuerySupport.prototype.leadingWhitespace;
+
+/** @type {boolean} */
+jQuerySupport.prototype.noCloneEvent;
+
+/** @type {boolean} */
+jQuerySupport.prototype.opacity;
+
+/** @type {boolean} */
+jQuerySupport.prototype.style;
+
+/** @type {boolean} */
+jQuerySupport.prototype.submitBubbles;
+
+/** @type {boolean} */
+jQuerySupport.prototype.tbody;
+
+/**
+ * @type {!jQuerySupport}
  * @deprecated Please try to use feature detection instead.
  */
 jQuery.support;
-
-/**
- * @deprecated Please try to use feature detection instead.
- * @type {boolean}
- */
-jQuery.support.boxModel;
-
-/** @type {boolean} */
-jQuery.support.changeBubbles;
-
-/** @type {boolean} */
-jQuery.support.cors;
-
-/** @type {boolean} */
-jQuery.support.cssFloat;
-
-/** @type {boolean} */
-jQuery.support.hrefNormalized;
-
-/** @type {boolean} */
-jQuery.support.htmlSerialize;
-
-/** @type {boolean} */
-jQuery.support.leadingWhitespace;
-
-/** @type {boolean} */
-jQuery.support.noCloneEvent;
-
-/** @type {boolean} */
-jQuery.support.opacity;
-
-/** @type {boolean} */
-jQuery.support.style;
-
-/** @type {boolean} */
-jQuery.support.submitBubbles;
-
-/** @type {boolean} */
-jQuery.support.tbody;
 
 /**
  * @param {(string|number|boolean|function(number,string))=} arg1
