@@ -672,6 +672,8 @@ class ExpressionDecomposer {
         case RETURN:
         case THROW:
         case VAR:
+        case CONST:
+        case LET:
           Preconditions.checkState(child == parent.getFirstChild());
           return parent;
         // Any of these indicate an unsupported expression:

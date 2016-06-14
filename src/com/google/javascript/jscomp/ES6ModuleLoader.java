@@ -189,20 +189,27 @@ public final class ES6ModuleLoader {
   }
 
   /**
+   * Turns a filename into a JS identifier that can be used in rewritten code.
+   * Removes leading ./, replaces / with $, removes trailing .js
+   * and replaces - with _.
+   */
+  public static String toJSIdentifier(URI filename) {
+    return stripJsExtension(filename.toString())
+        .replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
+        .replace(MODULE_SLASH, "$")
+        .replace('\\', '$')
+        .replace('-', '_')
+        .replace(':', '_')
+        .replace('.', '_')
+        .replace("%20", "_");
+  }
+
+  /**
    * Turns a filename into a JS identifier that is used for moduleNames in
    * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
    * and replaces - with _. All moduleNames get a "module$" prefix.
    */
   public static String toModuleName(URI filename) {
-    String moduleName =
-        stripJsExtension(filename.toString())
-            .replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
-            .replace(MODULE_SLASH, "$")
-            .replace('\\', '$')
-            .replace('-', '_')
-            .replace(':', '_')
-            .replace('.', '_')
-            .replace("%20", "_");
-    return "module$" + moduleName;
+    return "module$" + toJSIdentifier(filename);
   }
 }

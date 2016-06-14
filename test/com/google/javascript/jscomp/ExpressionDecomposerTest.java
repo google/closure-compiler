@@ -70,6 +70,10 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperCanExposeExpression(
         DecompositionType.MOVABLE, "var x = foo()", "foo");
     helperCanExposeExpression(
+        DecompositionType.MOVABLE, "const x = foo()", "foo");
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE, "let x = foo()", "foo");
+    helperCanExposeExpression(
         DecompositionType.MOVABLE, "if(foo()){}", "foo");
     helperCanExposeExpression(
         DecompositionType.MOVABLE, "switch(foo()){}", "foo");
@@ -98,6 +102,10 @@ public final class ExpressionDecomposerTest extends TestCase {
         DecompositionType.DECOMPOSABLE, "x = 1 || foo()", "foo");
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "var x = 1 ? foo() : 0", "foo");
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "const x = 1 ? foo() : 0", "foo");
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "let x = 1 ? foo() : 0", "foo");
 
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "goo() && foo()", "foo");
@@ -107,6 +115,10 @@ public final class ExpressionDecomposerTest extends TestCase {
         DecompositionType.DECOMPOSABLE, "x += goo() && foo()", "foo");
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "var x = goo() && foo()", "foo");
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "const x = goo() && foo()", "foo");
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "let x = goo() && foo()", "foo");
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "if(goo() && foo()){}", "foo");
     helperCanExposeExpression(
@@ -214,47 +226,61 @@ public final class ExpressionDecomposerTest extends TestCase {
 
   public void testMoveExpression4() {
     helperMoveExpression(
+        "const x = foo()",
+        "foo",
+        "var result$$0 = foo(); const x = result$$0;");
+  }
+
+    public void testMoveExpression5() {
+    helperMoveExpression(
+        "let x = foo()",
+        "foo",
+        "var result$$0 = foo(); let x = result$$0;");
+  }
+
+  public void testMoveExpression6() {
+    helperMoveExpression(
         "if(foo()){}",
         "foo",
         "var result$$0 = foo(); if (result$$0);");
   }
 
-  public void testMoveExpression5() {
+  public void testMoveExpression7() {
     helperMoveExpression(
         "switch(foo()){}",
         "foo",
         "var result$$0 = foo(); switch(result$$0){}");
   }
 
-  public void testMoveExpression6() {
+  public void testMoveExpression8() {
     helperMoveExpression(
         "switch(1 + foo()){}",
         "foo",
         "var result$$0 = foo(); switch(1 + result$$0){}");
   }
 
-  public void testMoveExpression7() {
+  public void testMoveExpression9() {
     helperMoveExpression(
         "function f(){ return foo();}",
         "foo",
         "function f(){ var result$$0 = foo(); return result$$0;}");
   }
 
-  public void testMoveExpression8() {
+  public void testMoveExpression10() {
     helperMoveExpression(
         "x = foo() && 1",
         "foo",
         "var result$$0 = foo(); x = result$$0 && 1");
   }
 
-  public void testMoveExpression9() {
+  public void testMoveExpression11() {
     helperMoveExpression(
         "x = foo() || 1",
         "foo",
         "var result$$0 = foo(); x = result$$0 || 1");
   }
 
-  public void testMoveExpression10() {
+  public void testMoveExpression12() {
     helperMoveExpression(
         "x = foo() ? 0 : 1",
         "foo",
@@ -287,19 +313,35 @@ public final class ExpressionDecomposerTest extends TestCase {
 
   public void testExposeExpression4() {
     helperExposeExpression(
+        "const x = 1 ? foo() : 0",
+        "foo",
+        "var temp$$0;" +
+        " if (1) temp$$0 = foo(); else temp$$0 = 0;const x = temp$$0;");
+  }
+
+  public void testExposeExpression5() {
+    helperExposeExpression(
+        "let x = 1 ? foo() : 0",
+        "foo",
+        "var temp$$0;" +
+        " if (1) temp$$0 = foo(); else temp$$0 = 0;let x = temp$$0;");
+  }
+
+  public void testExposeExpression6() {
+    helperExposeExpression(
         "goo() && foo()",
         "foo",
         "if (goo()) foo();");
   }
 
-  public void testExposeExpression5() {
+  public void testExposeExpression7() {
     helperExposeExpression(
         "x = goo() && foo()",
         "foo",
         "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo(); x = temp$$0;");
   }
 
-  public void testExposeExpression6() {
+  public void testExposeExpression8() {
     helperExposeExpression(
         "var x = 1 + (goo() && foo())",
         "foo",
@@ -307,7 +349,23 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var x = 1 + temp$$0;");
   }
 
-  public void testExposeExpression7() {
+  public void testExposeExpression9() {
+    helperExposeExpression(
+        "const x = 1 + (goo() && foo())",
+        "foo",
+        "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo();" +
+        "const x = 1 + temp$$0;");
+  }
+
+  public void testExposeExpression10() {
+    helperExposeExpression(
+        "let x = 1 + (goo() && foo())",
+        "foo",
+        "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo();" +
+        "let x = 1 + temp$$0;");
+  }
+
+  public void testExposeExpression11() {
     helperExposeExpression(
         "if(goo() && foo());",
         "foo",
@@ -316,7 +374,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "if(temp$$0);");
   }
 
-  public void testExposeExpression8() {
+  public void testExposeExpression12() {
     helperExposeExpression(
         "switch(goo() && foo()){}",
         "foo",
@@ -325,7 +383,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "switch(temp$$0){}");
   }
 
-  public void testExposeExpression9() {
+  public void testExposeExpression13() {
     helperExposeExpression(
         "switch(1 + goo() + foo()){}",
         "foo",
@@ -333,7 +391,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "switch(temp_const$$0 + foo()){}");
   }
 
-  public void testExposeExpression10() {
+  public void testExposeExpression14() {
     helperExposeExpression(
         "function f(){ return goo() && foo();}",
         "foo",
@@ -343,7 +401,7 @@ public final class ExpressionDecomposerTest extends TestCase {
          "}");
   }
 
-  public void testExposeExpression11() {
+  public void testExposeExpression15() {
     // TODO(johnlenz): We really want a constant marking pass.
     // The value "goo" should be constant, but it isn't known to be so.
     helperExposeExpression(
@@ -356,7 +414,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "if (temp_const$$1(1, temp_const$$0, temp$$2));");
   }
 
-  public void testExposeExpression12() {
+  public void testExposeExpression16() {
     helperExposeExpression(
         "throw bar() && foo();",
         "foo",

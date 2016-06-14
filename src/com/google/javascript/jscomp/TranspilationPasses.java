@@ -50,11 +50,21 @@ public class TranspilationPasses {
    */
   public static void addEs6LatePasses(List<PassFactory> passes) {
     passes.add(es6ConvertSuper);
+    passes.add(es6ExtractClasses);
     passes.add(convertEs6ToEs3);
     passes.add(rewriteBlockScopedDeclaration);
     passes.add(rewriteGenerators);
     passes.add(rewritePolyfills);
   }
+
+
+  static final HotSwapPassFactory es6ExtractClasses =
+      new HotSwapPassFactory("Es6ExtractClasses", true) {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new Es6ExtractClasses(compiler);
+        }
+      };
 
   static final HotSwapPassFactory es6RewriteDestructuring =
       new HotSwapPassFactory("Es6RewriteDestructuring", true) {
