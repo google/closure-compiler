@@ -193,7 +193,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
         Node calledFn = n.getFirstChild();
 
         // Look for calls to static functions.
-        String name = calledFn.getQualifiedName();
+        String name = calledFn.getOriginalQualifiedName();
         if (name != null) {
           Config config = findMatching(name);
           if (config != null) {
