@@ -1660,7 +1660,9 @@ public class Compiler extends AbstractCompiler {
   @Override
   Node parseSyntheticCode(String fileName, String js) {
     initCompilerOptionsIfTesting();
-    return parse(SourceFile.fromCode(fileName, js));
+    CompilerInput input = new CompilerInput(SourceFile.fromCode(fileName, js));
+    putCompilerInput(input.getInputId(), input);
+    return input.getAstRoot(this);
   }
 
   @Override
@@ -2618,7 +2620,7 @@ public class Compiler extends AbstractCompiler {
     // Load/parse the code.
     String originalCode = ResourceLoader.loadTextResource(
         Compiler.class, "js/" + resourceName + ".js");
-    Node ast = parseSyntheticCode(originalCode);
+    Node ast = parseSyntheticCode(" [synthetic:" + resourceName + "] ", originalCode);
 
     // Look for string literals of the form 'require foo bar' or 'externs baz' or 'normalize'.
     // As we process each one, remove it from its parent.
@@ -2661,6 +2663,10 @@ public class Compiler extends AbstractCompiler {
 
     // Insert the code immediately after the last-inserted runtime library.
     Node firstChild = ast.removeChildren();
+    if (firstChild == null) {
+      // Handle require-only libraries.
+      return lastInjectedLibrary;
+    }
     Node lastChild = firstChild.getLastSibling();
     Node parent = getNodeForCodeInsertion(null);
     if (lastInjectedLibrary == null) {
