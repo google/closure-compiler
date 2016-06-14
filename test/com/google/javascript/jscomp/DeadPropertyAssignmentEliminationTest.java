@@ -849,7 +849,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     );
   }
 
-  public void testObjectDefineProperty_aliasedVars() {
+  public void testObjectDefineProperty_aliasedParams() {
     testSame(
         LINE_JOINER.join(
             "function addGetter(obj, propName) {",
@@ -891,7 +891,9 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  x.bar = 10;",
             "  x.bar = 20;",
             "}"));
+  }
 
+  public void testObjectDefineProperty_aliasedObject() {
     testSame(
         LINE_JOINER.join(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
@@ -910,7 +912,9 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  x.bar = 10;",
             "  x.bar = 20;",
             "}"));
+  }
 
+  public void testObjectDefineProperty_aliasedPropName() {
     testSame(
         LINE_JOINER.join(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
@@ -930,6 +934,44 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  x.bar = 20;",
             "}"));
 
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "var x = 'bar';",
+            "Object.defineProperty(Foo.prototype, x, {",
+            "  value: 10",
+            "});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  x.bar = 10;",
+            "  x.bar = 20;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "var x = 'bar';",
+            "Object.defineProperty(Foo.prototype, x, {",
+            "  value: 10",
+            "});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  10;",
+            "  x.bar = 20;",
+            "}"));
+  }
+
+  public void testObjectDefineProperty_aliasedPropSet() {
     testSame(
         LINE_JOINER.join(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
@@ -950,17 +992,14 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testObjectDefineProperties_aliasedVars() {
+  public void testObjectDefineProperties_aliasedPropertyMap() {
     testSame(
         LINE_JOINER.join(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
             "var properties = {bar: {",
             "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
             "}};",
-            "var x = Foo.prototype;",
-            "Object.defineProperties(x, {bar: {",
-            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
-            "}});",
+            "Object.defineProperties(Foo.prototype, properties);",
             "function f() {",
             "  var foo = new Foo()",
             "  foo.enabled = true;",
@@ -976,15 +1015,61 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     testSame(
         LINE_JOINER.join(
             "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
-            "var properties = {bar: {",
+            "var properties = {",
             "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
-            "}};",
-            "Object.defineProperties(Foo.prototype, properties);",
+            "};",
+            "Object.defineProperties(Foo.prototype, {bar: properties});",
             "function f() {",
             "  var foo = new Foo()",
             "  foo.enabled = true;",
             "  foo.bar = 10;",
             "  foo.enabled = false;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  x.bar = 10;",
+            "  x.bar = 20;",
+            "}"));
+  }
+
+  public void testObjectDefineProperties_aliasedObject() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "var properties = {bar: {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "}};",
+            "var x = Foo.prototype;",
+            "Object.defineProperties(x, {bar: {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "}});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  foo.bar = 10;",
+            "  foo.enabled = false;",
+            "  foo.enabled = true;",
+            "}",
+            "function z() {",
+            "  var x = {};",
+            "  x.bar = 10;",
+            "  x.bar = 20;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.enabled = false; this.x = null; };",
+            "var properties = {bar: {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "}};",
+            "var x = Foo.prototype;",
+            "Object.defineProperties(x, {bar: {",
+            "  set: function (x) { this.x = this.enabled ? x * 2 : x; }",
+            "}});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  foo.bar = 10;",
+            "  false;",
+            "  foo.enabled = true;",
             "}",
             "function z() {",
             "  var x = {};",

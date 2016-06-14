@@ -314,14 +314,14 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     private static boolean isConditionalExpression(Node n) {
-      switch (n.getType()) {
+      switch (n.getKind()) {
         case AND:
         case OR:
         case HOOK:
           return true;
+        default:
+          return false;
       }
-
-      return false;
     }
 
     private void visitAssignmentLhs(Node lhs) {
@@ -363,7 +363,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     private boolean visitNode(Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getKind()) {
         case GETPROP:
           // Handle potential getters/setters.
           if (n.isGetProp()
@@ -480,22 +480,22 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isObjectDefinePropertyDefinition(n)) {
-        // We must assume any property in the compilation can be a getter/setter if any of the
-        // params are potentially aliasing the real values.
-        if (!NodeUtil.isPrototypeProperty(n.getSecondChild())
-            || !n.getChildAtIndex(2).isString()
-            || !n.getChildAtIndex(3).isObjectLit()) {
+        // We must assume any property in the compilation can be a getter/setter if the property
+        // name and what is being assigned to are aliased.
+        if (!n.getChildAtIndex(2).isString() && !n.getLastChild().isObjectLit()) {
           unknownGetterSetterPresent = true;
-          return;
+        } else if (!n.getLastChild().isObjectLit()) {
+          // If know the property name but not what it's being assigned to then we need to blackist
+          // the property name.
+          propNames.add(n.getChildAtIndex(2).getString());
         }
-      } else if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
-        // If the first param is not a prototype reference or the second param is not an object
-        // literal then we must assume any property in the compilation can be a getter/setter.
-        if (!NodeUtil.isPrototypeProperty(n.getSecondChild())
-            || !n.getChildAtIndex(2).isObjectLit()) {
-          unknownGetterSetterPresent = true;
-          return;
-        }
+        return;
+      } else if (NodeUtil.isObjectDefinePropertiesDefinition(n)
+          && !n.getChildAtIndex(2).isObjectLit()) {
+        // If the second param is not an object literal then we must assume any property in the
+        // compilation can be a getter/setter.
+        unknownGetterSetterPresent = true;
+        return;
       }
 
       // Keep track of any potential getters/setters.
@@ -509,13 +509,39 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           Node propNode = grandparent.getChildAtIndex(2);
           if (propNode.isString()) {
             propNames.add(propNode.getString());
+          } else {
+            // Putting a getter/setter on an aliased property means any property can be a getter or
+            // setter.
+            unknownGetterSetterPresent = true;
           }
         } else if (grandparent.isStringKey()
             && NodeUtil.isObjectDefinePropertiesDefinition(grandparent.getParent().getParent())) {
           // Handle Object.defineProperties(obj, {propName: { ... }}).
           propNames.add(grandparent.getString());
         }
+      } else if (isAliasedPropertySet(n)) {
+        // If we know this property is being injected but don't know if there's a getter/setter
+        // then the property still must be blacklisted.
+        propNames.add(n.getString());
       }
+    }
+
+    /**
+     * Determines if the given keyNode contains an aliased property set. In particular this is only
+     * true if the grandparent is an {@code Object.defineProperties} call.
+     *
+     * <p>Ex. {@code Object.defineProperties(Foo.prototype, {bar: someObj}}.
+     */
+    private static boolean isAliasedPropertySet(Node keyNode) {
+      if (keyNode == null || !keyNode.isStringKey() || keyNode.getParent() == null) {
+        return false;
+      }
+
+      Node objectLit = keyNode.getParent();
+      return objectLit.getParent() != null
+          && NodeUtil.isObjectDefinePropertiesDefinition(objectLit.getParent())
+          && objectLit.getParent().getLastChild() == objectLit
+          && !keyNode.getFirstChild().isObjectLit();
     }
   }
 }
