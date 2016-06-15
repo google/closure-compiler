@@ -40,6 +40,7 @@
 package com.google.javascript.rhino;
 
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.io.Serializable;
@@ -95,9 +96,12 @@ public final class JSTypeExpression implements Serializable {
    * Evaluates the type expression into a {@code JSType} object.
    */
   public JSType evaluate(StaticTypedScope<JSType> scope, TypeIRegistry registry) {
-    JSType type = (JSType) registry.createTypeFromCommentNode(root, sourceName, scope);
-    root.setJSType(type);
-    return type;
+    if (registry instanceof JSTypeRegistry) {
+      JSType type = ((JSTypeRegistry) registry).createTypeFromCommentNode(root, sourceName, scope);
+      root.setJSType(type);
+      return type;
+    }
+    return null;
   }
 
   public TypeI evaluateInEmptyScope(TypeIRegistry registry) {

@@ -71,6 +71,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
         transform(
             info.getThrownTypes(),
             new Function<JSTypeExpression, Node>() {
+              @Override
               public Node apply(JSTypeExpression expr) {
                 return expr.getRoot();
               }
@@ -78,6 +79,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
 
     for (Node typeRoot : info.getTypeNodes()) {
       NodeUtil.visitPreOrder(typeRoot, new NodeUtil.Visitor() {
+        @Override
         public void visit(Node node) {
           if (!node.isString()) {
             return;
@@ -112,7 +114,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
           if (typeName.equals("null") || registry.getType(typeName) == null) {
             return;
           }
-          JSType type = (JSType) registry.createTypeFromCommentNode(node, "[internal]", null);
+          JSType type = (JSType) registry.createTypeFromCommentNode(node);
           if (type.isNullable()) {
             reportWarning(t, node, typeName);
           }

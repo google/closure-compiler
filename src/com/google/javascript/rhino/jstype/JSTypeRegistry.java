@@ -1496,13 +1496,17 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     nonNullableTypeNames.add(name);
   }
 
+  @Override
+  public JSType createTypeFromCommentNode(Node n) {
+    return createTypeFromCommentNode(n, "[internal]", null);
+  }
+
   /**
    * Creates a JSType from the nodes representing a type.
    * @param n The node with type info.
    * @param sourceName The source file name.
    * @param scope A scope for doing type name lookups.
    */
-  @Override
   public JSType createTypeFromCommentNode(
       Node n, String sourceName, StaticTypedScope<? extends TypeI> scope) {
     return createFromTypeNodesInternal(n, sourceName, (StaticTypedScope<JSType>) scope);
