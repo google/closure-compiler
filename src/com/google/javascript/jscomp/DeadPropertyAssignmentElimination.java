@@ -314,7 +314,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     private static boolean isConditionalExpression(Node n) {
-      switch (n.getKind()) {
+      switch (n.getType()) {
         case AND:
         case OR:
         case HOOK:
@@ -363,7 +363,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     private boolean visitNode(Node n, Node parent) {
-      switch (n.getKind()) {
+      switch (n.getType()) {
         case GETPROP:
           // Handle potential getters/setters.
           if (n.isGetProp()

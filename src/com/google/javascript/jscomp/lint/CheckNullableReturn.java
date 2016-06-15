@@ -96,7 +96,7 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
    */
   private static boolean hasSingleThrow(Node blockNode) {
     if (blockNode.getChildCount() == 1
-        && blockNode.getFirstChild().getKind() == Token.THROW) {
+        && blockNode.getFirstChild().getType() == Token.THROW) {
       // Functions consisting of a single "throw FOO" can be actually abstract,
       // so do not check their return type nullability.
       return true;
