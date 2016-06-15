@@ -677,8 +677,8 @@ public class CompilerOptions {
   /** Processes goog.provide() and goog.require() calls */
   public boolean closurePass;
 
-  /** Do not strip goog.require() calls from the code. */
-  public boolean preserveGoogRequires;
+  /** Do not strip goog.provide()/goog.require() calls from the code. */
+  private boolean preserveGoogProvidesAndRequires;
 
   /** Processes jQuery aliases */
   public boolean jqueryPass;
@@ -1121,7 +1121,7 @@ public class CompilerOptions {
     locale = null;
     markAsCompiled = false;
     closurePass = false;
-    preserveGoogRequires = false;
+    preserveGoogProvidesAndRequires = false;
     jqueryPass = false;
     angularPass = false;
     polymerPass = false;
@@ -2260,8 +2260,17 @@ public class CompilerOptions {
     this.closurePass = closurePass;
   }
 
-  public void setPreserveGoogRequires(boolean preserveGoogRequires) {
-    this.preserveGoogRequires = preserveGoogRequires;
+  @Deprecated
+  public void setPreserveGoogRequires(boolean preserveGoogProvidesAndRequires) {
+    setPreserveGoogProvidesAndRequires(preserveGoogProvidesAndRequires);
+  }
+
+  public void setPreserveGoogProvidesAndRequires(boolean preserveGoogProvidesAndRequires) {
+    this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
+  }
+
+  public boolean shouldPreservesGoogProvidesAndRequires() {
+    return this.preserveGoogProvidesAndRequires;
   }
 
   public void setPreserveTypeAnnotations(boolean preserveTypeAnnotations) {
@@ -2636,7 +2645,7 @@ public class CompilerOptions {
             .add("preferSingleQuotes", preferSingleQuotes)
             .add("preferStableNames", preferStableNames)
             .add("preserveDetailedSourceInfo", preservesDetailedSourceInfo())
-            .add("preserveGoogRequires", preserveGoogRequires)
+            .add("preserveGoogProvidesAndRequires", preserveGoogProvidesAndRequires)
             .add("preserveTypeAnnotations", preserveTypeAnnotations)
             .add("prettyPrint", prettyPrint)
             .add("preventLibraryInjection", preventLibraryInjection)

@@ -1176,7 +1176,7 @@ public final class DefaultPassConfig extends PassConfig {
           compiler,
           preprocessorSymbolTable,
           options.brokenClosureRequiresLevel,
-          options.preserveGoogRequires);
+          options.shouldPreservesGoogProvidesAndRequires());
 
       return new HotSwapCompilerPass() {
         @Override

@@ -159,8 +159,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private final JSModuleGraph moduleGraph;
 
   // The goog.provides must be processed in a deterministic order.
-  private final Map<String, ProvidedName> providedNames =
-       new LinkedHashMap<>();
+  private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
 
   private final Set<String> knownClosureSubclasses = new HashSet<>();
 
@@ -169,19 +168,19 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private final CheckLevel requiresLevel;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final List<Node> defineCalls = new ArrayList<>();
-  private final boolean preserveGoogRequires;
+  private final boolean preserveGoogProvidesAndRequires;
 
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
 
   ProcessClosurePrimitives(AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       CheckLevel requiresLevel,
-      boolean preserveGoogRequires) {
+      boolean preserveGoogProvidesAndRequires) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.moduleGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
-    this.preserveGoogRequires = preserveGoogRequires;
+    this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
 
     // goog is special-cased because it is provided in Closure's base library.
     providedNames.put(GOOG,
@@ -432,7 +431,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // the checks for broken requires turned off. In these cases, we
       // allow broken requires to be preserved by the first run to
       // let them be caught in the subsequent run.
-      if (!preserveGoogRequires && (provided != null || requiresLevel.isOn())) {
+      if (!preserveGoogProvidesAndRequires && (provided != null || requiresLevel.isOn())) {
         requiresToBeRemoved.add(parent);
       }
     }
@@ -442,6 +441,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * Handles a goog.provide call.
    */
   private void processProvideCall(NodeTraversal t, Node n, Node parent) {
+    Preconditions.checkState(n.isCall());
     Node left = n.getFirstChild();
     Node arg = left.getNext();
     if (verifyProvide(t, left, arg)) {
@@ -1321,9 +1321,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // Handle the case where there is a duplicate definition for an explicitly
       // provided symbol.
       if (candidateDefinition != null && explicitNode != null) {
-        explicitNode.detachFromParent();
-        compiler.reportCodeChange();
-
         JSDocInfo info;
         if (candidateDefinition.isExprResult()) {
           info = candidateDefinition.getFirstChild().getJSDocInfo();
@@ -1393,9 +1390,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                 replacementNode, parentName.replacementNode);
           }
         }
-        if (explicitNode != null) {
-          explicitNode.detachFromParent();
+        compiler.reportCodeChange();
+      }
+      if (explicitNode != null) {
+        if (preserveGoogProvidesAndRequires && explicitNode.hasChildren()) {
+          return;
         }
+        explicitNode.detachFromParent();
         compiler.reportCodeChange();
       }
     }

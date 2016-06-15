@@ -50,14 +50,14 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   private String additionalCode;
   private String additionalEndCode;
   private boolean addAdditionalNamespace;
-  private boolean preserveGoogRequires;
+  private boolean preserveGoogProvidesAndRequires;
   private boolean banGoogBase;
 
   @Override protected void setUp() {
     additionalCode = null;
     additionalEndCode = null;
     addAdditionalNamespace = false;
-    preserveGoogRequires = false;
+    preserveGoogProvidesAndRequires = false;
     banGoogBase = false;
   }
 
@@ -76,14 +76,14 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   @Override public CompilerPass getProcessor(final Compiler compiler) {
     if ((additionalCode == null) && (additionalEndCode == null)) {
       return new ProcessClosurePrimitives(
-          compiler, null, CheckLevel.ERROR, preserveGoogRequires);
+          compiler, null, CheckLevel.ERROR, preserveGoogProvidesAndRequires);
     } else {
       return new CompilerPass() {
         @Override
         public void process(Node externs, Node root) {
           // Process the original code.
           new ProcessClosurePrimitives(
-              compiler, null, CheckLevel.OFF, preserveGoogRequires)
+              compiler, null, CheckLevel.OFF, preserveGoogProvidesAndRequires)
               .process(externs, root);
 
           // Inject additional code at the beginning.
@@ -122,7 +122,7 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
 
           // Process the tree a second time.
           new ProcessClosurePrimitives(
-              compiler, null, CheckLevel.ERROR, preserveGoogRequires)
+              compiler, null, CheckLevel.ERROR, preserveGoogProvidesAndRequires)
               .process(externs, root);
         }
       };
@@ -415,13 +415,13 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   }
 
   public void testPreserveGoogRequires() {
-    preserveGoogRequires = true;
+    preserveGoogProvidesAndRequires = true;
     test(
         "goog.provide('foo'); goog.require('foo');",
-        "/** @const */ var foo={}; goog.require('foo');");
+        "/** @const */ var foo={}; goog.provide('foo'); goog.require('foo');");
     test(
         "goog.provide('foo'); goog.require('foo'); var a = {};",
-        "/** @const */ var foo = {}; goog.require('foo'); var a = {};");
+        "/** @const */ var foo = {}; goog.provide('foo'); goog.require('foo'); var a = {};");
   }
 
   public void testRequireErrorCases() {
