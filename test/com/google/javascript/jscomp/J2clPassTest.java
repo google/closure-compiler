@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 import java.util.List;
 
@@ -330,5 +331,63 @@ public class J2clPassTest extends CompilerTestCase {
 
     // No applicable for $markImplementor() inlining since it is not limited to just certain class
     // files.
+  }
+
+  public void testInlineNativeAlias() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ var $RegExp = window.RegExp;",
+            "var foo = new $RegExp('', '');"),
+        LINE_JOINER.join(
+            "/** @constructor */ var $RegExp = window.RegExp;",
+            "var foo = new window.RegExp('', '');"));
+  }
+
+  public void testInlineNativeAlias_const() {
+    setLanguage(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ const $RegExp = window.RegExp;",
+            "const foo = new $RegExp('', '');"),
+        LINE_JOINER.join(
+            "/** @constructor */ const $RegExp = window.RegExp;",
+            "const foo = new window.RegExp('', '');"));
+  }
+
+  public void testInlineNativeAlias_let() {
+    setLanguage(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ let $RegExp = window.RegExp;",
+            "let foo = new $RegExp('', '');"),
+        LINE_JOINER.join(
+            "/** @constructor */ let $RegExp = window.RegExp;",
+            "let foo = new window.RegExp('', '');"));
+  }
+
+  public void testInlineNativeAlias_notTopLevel() {
+    testSame(
+        LINE_JOINER.join(
+            "function x() {",
+            "  /** @constructor */ var $RegExp = window.RegExp;",
+            "  var foo = new $RegExp('', '');",
+            "}"));
+  }
+
+  public void testInlineNativeAlias_notConstructor() {
+    testSame(
+        LINE_JOINER.join(
+            "var $RegExp = window.RegExp;",
+            "var foo = new $RegExp('', '');"));
+  }
+
+  public void testInlineNativeAlias_redeclared() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ var $RegExp = window.RegExp;",
+            "function x() {",
+            "  var $RegExp = function() {};",
+            "  var foo = new $RegExp('', '');",
+            "}"));
   }
 }
