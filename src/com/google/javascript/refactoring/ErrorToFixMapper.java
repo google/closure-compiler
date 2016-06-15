@@ -102,7 +102,7 @@ public final class ErrorToFixMapper {
         .insertBefore(error.node, "!")
         .setDescription("Make type non-nullable")
         .build();
-    return ImmutableList.of(qmark, bang);
+    return ImmutableList.of(bang, qmark);
   }
 
   private static SuggestedFix removeNode(JSError error) {

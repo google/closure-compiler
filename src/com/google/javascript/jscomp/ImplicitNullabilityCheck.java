@@ -40,9 +40,8 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
   public static final DiagnosticType IMPLICITLY_NULLABLE_JSDOC =
     DiagnosticType.warning(
         "JSC_IMPLICITLY_NULLABLE_JSDOC",
-        "Name {0} in JSDoc is implicitly nullable.\n"
-        + "Please add a '!' to make it non-nullable,"
-        + " or a '?' to make it explicitly nullable.");
+        "Name {0} in JSDoc is implicitly nullable, and is discouraged by the style guide.\n"
+        + "Please add a '!' to make it non-nullable, or a '?' to make it explicitly nullable.");
 
   private final AbstractCompiler compiler;
 
