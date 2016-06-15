@@ -198,19 +198,19 @@ public class RecordType extends PrototypeObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create());
+    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
   }
 
   @Override
   protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache) {
-    if (JSType.isSubtypeHelper(this, that, implicitImplCache)) {
+      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
+    if (JSType.isSubtypeHelper(this, that, implicitImplCache, subtypingMode)) {
       return true;
     }
 
     // Top of the record types is the empty record, or OBJECT_TYPE.
     if (registry.getNativeObjectType(
-            JSTypeNative.OBJECT_TYPE).isSubtype(that, implicitImplCache)) {
+            JSTypeNative.OBJECT_TYPE).isSubtype(that, implicitImplCache, subtypingMode)) {
       return true;
     }
 
@@ -221,6 +221,6 @@ public class RecordType extends PrototypeObjectType {
       return false;
     }
 
-    return this.isStructuralSubtype(that.toMaybeRecordType(), implicitImplCache);
+    return this.isStructuralSubtype(that.toMaybeRecordType(), implicitImplCache, subtypingMode);
   }
 }

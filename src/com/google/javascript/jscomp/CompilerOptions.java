@@ -188,6 +188,21 @@ public class CompilerOptions {
   /** Checks types on expressions */
   public boolean checkTypes;
 
+  // When compiling to JS from other languages (eg Java), we can be lenient
+  // around null and undefined in types.
+  // NOTE(dimvar): IN DEVELOPMENT, DO NOT USE!
+  // This flag is temporary while developing the feature.
+  // The final version will check this on a per-file basis.
+  private boolean checkTypesModuloNullUndefined;
+
+  void setTypecheckModuloNullUndefined(boolean ignoreNull) {
+    this.checkTypesModuloNullUndefined = ignoreNull;
+  }
+
+  boolean getTypecheckModuloNullUndefined() {
+    return this.checkTypesModuloNullUndefined;
+  }
+
   public CheckLevel reportMissingOverride;
 
   /**
@@ -1029,6 +1044,7 @@ public class CompilerOptions {
     checkSymbols = false;
     checkSuspiciousCode = false;
     checkTypes = false;
+    checkTypesModuloNullUndefined = false;
     reportMissingOverride = CheckLevel.OFF;
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;

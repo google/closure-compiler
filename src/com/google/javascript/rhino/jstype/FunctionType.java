@@ -333,6 +333,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return Integer.MAX_VALUE;
   }
 
+  @Override
   public JSType getReturnType() {
     return call.returnType;
   }
@@ -1057,13 +1058,13 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create());
+    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
   }
 
   @Override
   protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache) {
-    if (JSType.isSubtypeHelper(this, that, implicitImplCache)) {
+      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
+    if (JSType.isSubtypeHelper(this, that, implicitImplCache, subtypingMode)) {
       return true;
     }
 
@@ -1079,14 +1080,14 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       }
 
       return treatThisTypesAsCovariant(other, implicitImplCache)
-          && this.call.isSubtype(other.call, implicitImplCache);
+          && this.call.isSubtype(other.call, implicitImplCache, subtypingMode);
     }
 
     return getNativeType(JSTypeNative.FUNCTION_PROTOTYPE)
-        .isSubtype(that, implicitImplCache);
+        .isSubtype(that, implicitImplCache, subtypingMode);
   }
 
-  protected boolean treatThisTypesAsCovariant(FunctionType other,
+  private boolean treatThisTypesAsCovariant(FunctionType other,
       ImplCache implicitImplCache) {
     // If functionA is a subtype of functionB, then their "this" types
     // should be contravariant. However, this causes problems because
@@ -1105,8 +1106,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
       // If one of the 'this' types is covariant of the other,
       // then we'll treat them as covariant (see comment above).
-      other.typeOfThis.isSubtype(this.typeOfThis, implicitImplCache) ||
-      this.typeOfThis.isSubtype(other.typeOfThis, implicitImplCache);
+      other.typeOfThis.isSubtype(this.typeOfThis, implicitImplCache, SubtypingMode.NORMAL)
+      || this.typeOfThis.isSubtype(other.typeOfThis, implicitImplCache, SubtypingMode.NORMAL);
     return treatThisTypesAsCovariant;
   }
 

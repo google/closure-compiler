@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
@@ -603,7 +604,7 @@ public abstract class JSType implements TypeI, Serializable {
     }
 
     if (!getTemplateTypeMap().checkEquivalenceHelper(
-        that.getTemplateTypeMap(), eqMethod, eqCache)) {
+        that.getTemplateTypeMap(), eqMethod, eqCache, SubtypingMode.NORMAL)) {
       return false;
     }
 
@@ -1242,7 +1243,7 @@ public abstract class JSType implements TypeI, Serializable {
    * and is deprecated for the other use cases.
    */
   public boolean isSubtypeWithoutStructuralTyping(JSType that) {
-    return isSubtype(that, ImplCache.createWithoutStructuralTyping());
+    return isSubtype(that, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
   }
 
   /**
@@ -1276,29 +1277,36 @@ public abstract class JSType implements TypeI, Serializable {
    */
   public boolean isSubtype(JSType that) {
     return isSubtypeHelper(this, that,
-        ImplCache.create());
+        ImplCache.create(), SubtypingMode.NORMAL);
+  }
+
+  static enum SubtypingMode {
+    NORMAL,
+    IGNORE_NULL_UNDEFINED
+  }
+
+  public boolean isSubtypeModuloNullUndefined(JSType that) {
+    return this.isSubtype(that, ImplCache.create(), SubtypingMode.IGNORE_NULL_UNDEFINED);
   }
 
   /**
    * checking isSubtype with structural interface matching
-   *
    * @param implicitImplCache a cache that records the checked
    * or currently checking type pairs, for example, if previous
    * checking found that constructor C is a subtype of interface I,
    * then in the cache, table key {@code <I,C>} maps to IMPLEMENT status.
-   * @param that
    */
   protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache) {
-    return isSubtypeHelper(this, that, implicitImplCache);
+      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
+    return isSubtypeHelper(this, that, implicitImplCache, subtypingMode);
   }
 
   /**
-   * if implicitImplCache is null, then there will
-   * be no structural interface matching
+   * if implicitImplCache is null, there is no structural interface matching
    */
   static boolean isSubtypeHelper(JSType thisType, JSType thatType,
-      ImplCache implicitImplCache) {
+      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
+    Preconditions.checkNotNull(thisType);
     // unknown
     if (thatType.isUnknownType()) {
       return true;
@@ -1315,7 +1323,7 @@ public abstract class JSType implements TypeI, Serializable {
     if (thatType.isUnionType()) {
       UnionType union = thatType.toMaybeUnionType();
       for (JSType element : union.alternatesWithoutStucturalTyping) {
-        if (thisType.isSubtype(element, implicitImplCache)) {
+        if (thisType.isSubtype(element, implicitImplCache, subtypingMode)) {
           return true;
         }
       }
@@ -1335,11 +1343,11 @@ public abstract class JSType implements TypeI, Serializable {
       JSType thisElement = thisTypeParams.getResolvedTemplateType(key);
       JSType thatElement = thatTypeParams.getResolvedTemplateType(key);
 
-      templateMatch = thisElement.isSubtype(thatElement, implicitImplCache)
-          || thatElement.isSubtype(thisElement, implicitImplCache);
+      templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode)
+          || thatElement.isSubtype(thisElement, implicitImplCache, subtypingMode);
     } else {
       templateMatch = thisTypeParams.checkEquivalenceHelper(
-          thatTypeParams, EquivalenceMethod.INVARIANT);
+          thatTypeParams, EquivalenceMethod.INVARIANT, subtypingMode);
     }
     if (!templateMatch) {
       return false;
@@ -1350,20 +1358,21 @@ public abstract class JSType implements TypeI, Serializable {
     if (implicitImplCache.isStructuralTyping()
         && thisType.isObject() && thatType.isStructuralType()) {
       return thisType.toMaybeObjectType().isStructuralSubtype(
-          thatType.toMaybeObjectType(), implicitImplCache);
+          thatType.toMaybeObjectType(), implicitImplCache, subtypingMode);
     }
 
     // Templatized types. For nominal types, the above check guarantees TemplateTypeMap
     // equivalence; check if the base type is a subtype.
     if (thisType.isTemplatizedType()) {
       return thisType.toMaybeTemplatizedType().getReferencedType().isSubtype(
-          thatType, implicitImplCache);
+          thatType, implicitImplCache, subtypingMode);
     }
 
     // proxy types
     if (thatType instanceof ProxyObjectType) {
       return thisType.isSubtype(
-          ((ProxyObjectType) thatType).getReferencedTypeInternal(), implicitImplCache);
+          ((ProxyObjectType) thatType).getReferencedTypeInternal(),
+          implicitImplCache, subtypingMode);
     }
     return false;
   }

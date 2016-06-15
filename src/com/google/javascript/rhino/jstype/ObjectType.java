@@ -510,7 +510,7 @@ public abstract class ObjectType
       ObjectType otherObject, EquivalenceMethod eqMethod, EqCache eqCache) {
     if (this.isTemplatizedType() && this.toMaybeTemplatizedType().wrapsSameRawType(otherObject)) {
       return this.getTemplateTypeMap().checkEquivalenceHelper(
-          otherObject.getTemplateTypeMap(), eqMethod, eqCache);
+          otherObject.getTemplateTypeMap(), eqMethod, eqCache, SubtypingMode.NORMAL);
     }
 
     MatchStatus result = eqCache.checkCache(this, otherObject);
@@ -535,7 +535,8 @@ public abstract class ObjectType
   }
 
   private static boolean isStructuralSubtypeHelper(
-      ObjectType typeA, ObjectType typeB, ImplCache implicitImplCache) {
+      ObjectType typeA, ObjectType typeB,
+      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
 
     // typeA is a subtype of record type typeB iff:
     // 1) typeA has all the non-optional properties declared in typeB.
@@ -551,7 +552,7 @@ public abstract class ObjectType
         return false;
       }
       JSType propA = typeA.getPropertyType(property);
-      if (!propA.isSubtype(propB, implicitImplCache)) {
+      if (!propA.isSubtype(propB, implicitImplCache, subtypingMode)) {
         return false;
       }
     }
@@ -561,7 +562,8 @@ public abstract class ObjectType
   /**
    * Determine if {@code this} is a an implicit subtype of {@code superType}.
    */
-  boolean isStructuralSubtype(ObjectType superType, ImplCache implicitImplCache) {
+  boolean isStructuralSubtype(ObjectType superType,
+      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
     // Union types should be handled by isSubtype already
     Preconditions.checkArgument(!this.isUnionType());
     Preconditions.checkArgument(!superType.isUnionType());
@@ -573,7 +575,8 @@ public abstract class ObjectType
       return cachedResult.subtypeValue();
     }
 
-    boolean result = isStructuralSubtypeHelper(this, superType, implicitImplCache);
+    boolean result = isStructuralSubtypeHelper(
+        this, superType, implicitImplCache, subtypingMode);
     implicitImplCache.updateCache(
         this, superType, result ? MatchStatus.MATCH : MatchStatus.NOT_MATCH);
     return result;

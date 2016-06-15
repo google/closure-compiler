@@ -121,15 +121,15 @@ public class EnumType extends PrototypeObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create());
+    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
   }
 
   @Override
   protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache) {
+      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
     return that.isEquivalentTo(getNativeType(JSTypeNative.OBJECT_TYPE)) ||
         that.isEquivalentTo(getNativeType(JSTypeNative.OBJECT_PROTOTYPE)) ||
-        JSType.isSubtypeHelper(this, that, implicitImplCache);
+        JSType.isSubtypeHelper(this, that, implicitImplCache, subtypingMode);
   }
 
   @Override

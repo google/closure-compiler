@@ -47,6 +47,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -252,7 +253,8 @@ public class UnionTypeBuilder implements Serializable {
                 if (templatizedCurrent.wrapsSameRawType(templatizedAlternate)) {
                   if (alternate.getTemplateTypeMap().checkEquivalenceHelper(
                       current.getTemplateTypeMap(),
-                      EquivalenceMethod.IDENTITY)) {
+                      EquivalenceMethod.IDENTITY,
+                      SubtypingMode.NORMAL)) {
                     // case 8
                     return this;
                   } else {

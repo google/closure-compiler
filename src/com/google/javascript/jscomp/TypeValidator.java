@@ -61,11 +61,17 @@ import javax.annotation.Nullable;
  * @author nicksantos@google.com (Nick Santos)
  */
 class TypeValidator {
-
   private final AbstractCompiler compiler;
   private final JSTypeRegistry typeRegistry;
   private final JSType allValueTypes;
   private final JSType nullOrUndefined;
+
+  // Feature in development. See CompilerOptions#checkTypesModuloNullUndefined
+  static enum SubtypingMode {
+    NORMAL,
+    IGNORE_NULL_UNDEFINED
+  }
+  private final SubtypingMode subtypingMode;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -158,6 +164,10 @@ class TypeValidator {
         STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
     this.nullOrUndefined = typeRegistry.createUnionType(
         NULL_TYPE, VOID_TYPE);
+    this.subtypingMode =
+        compiler.getOptions().getTypecheckModuloNullUndefined()
+        ? SubtypingMode.IGNORE_NULL_UNDEFINED
+        : SubtypingMode.NORMAL;
   }
 
   /**
@@ -712,9 +722,13 @@ class TypeValidator {
   }
 
   private void mismatch(Node n, String msg, JSType found, JSType required) {
-    registerMismatch(found, required, report(
-        JSError.make(n, TYPE_MISMATCH_WARNING,
-                     formatFoundRequired(msg, found, required))));
+    JSError err = JSError.make(n, TYPE_MISMATCH_WARNING,
+        formatFoundRequired(msg, found, required));
+    registerMismatch(found, required, err);
+    if (this.subtypingMode == SubtypingMode.NORMAL
+        || !found.isSubtypeModuloNullUndefined(required)) {
+      report(err);
+    }
   }
 
   private void recordStructuralInterfaceUses(JSType found, JSType required) {

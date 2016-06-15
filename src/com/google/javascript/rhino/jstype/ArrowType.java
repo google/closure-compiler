@@ -45,10 +45,9 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
 /**
- * The arrow type is an internal type that models the functional arrow type
- * seen in typical functional programming languages.  It is used solely for
- * separating the management of the arrow type from the complex
- * {@link FunctionType} that models JavaScript's notion of functions.
+ * The arrow type models a "bare" function type: from some parameter types to
+ * a return type. JavaScript functions include more things like properties, type
+ * of THIS, etc, and are modeled by {@link FunctionType}.
  */
 final class ArrowType extends JSType {
   private static final long serialVersionUID = 1L;
@@ -77,12 +76,12 @@ final class ArrowType extends JSType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create());
+    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
   }
 
   @Override
   protected boolean isSubtype(JSType other,
-      ImplCache implicitImplCache) {
+      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
     if (!(other instanceof ArrowType)) {
       return false;
     }
@@ -93,7 +92,7 @@ final class ArrowType extends JSType {
     // Section 3.4.7: Subtyping Function Types.
 
     // this.returnType <: that.returnType (covariant)
-    if (!this.returnType.isSubtype(that.returnType, implicitImplCache)) {
+    if (!this.returnType.isSubtype(that.returnType, implicitImplCache, subtypingMode)) {
       return false;
     }
 
@@ -123,7 +122,7 @@ final class ArrowType extends JSType {
       JSType thatParamType = thatParam.getJSType();
       if (thisParamType != null) {
         if (thatParamType == null ||
-            !thatParamType.isSubtype(thisParamType, implicitImplCache)) {
+            !thatParamType.isSubtype(thisParamType, implicitImplCache, subtypingMode)) {
           return false;
         }
       }
