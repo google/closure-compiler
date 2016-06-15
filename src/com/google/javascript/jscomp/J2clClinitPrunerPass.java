@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -104,7 +103,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
   }
 
   /**
-   * A traversal callback that removes the boy of empty clinits.
+   * A traversal callback that removes the body of empty clinits.
    */
   private static final class EmptyClinitPruner extends AbstractPostOrderCallback {
 
@@ -120,49 +119,38 @@ public class J2clClinitPrunerPass implements CompilerPass {
     /**
      * Clears the body of any functions are are equivalent to empty functions.
      */
-    private Node trySubstituteEmptyFunction(Node fnNode, AbstractCompiler compiler) {
-      Preconditions.checkArgument(fnNode.isFunction());
-
+    private void trySubstituteEmptyFunction(Node fnNode, AbstractCompiler compiler) {
       String fnQualifiedName = NodeUtil.getName(fnNode);
 
       // Ignore anonymous/constructor functions.
       if (Strings.isNullOrEmpty(fnQualifiedName)) {
-        return fnNode;
+        return;
       }
 
       Node body = fnNode.getLastChild();
       if (!body.hasChildren()) {
-        return fnNode;
+        return;
       }
 
       // Ensure that the first expression in the body is setting itself to the empty function and
       // there are no other expressions.
       Node firstExpr = body.getFirstChild();
-      if (firstExpr.isExprResult()
-          && isAssignToEmptyFn(firstExpr.getFirstChild(), fnQualifiedName)
-          && (firstExpr.getNext() == null)) {
-        body.removeChildren();
-        compiler.reportCodeChange();
+      if (!isAssignToEmptyFn(firstExpr, fnQualifiedName) || firstExpr.getNext() != null) {
+        return;
       }
 
-      return fnNode;
+      body.removeChild(firstExpr);
+      compiler.reportCodeChange();
     }
 
-    private static boolean isAssignToEmptyFn(Node assignNode, String enclosingFnName) {
-      if (!assignNode.isAssign()) {
+    private static boolean isAssignToEmptyFn(Node node, String enclosingFnName) {
+      if (!NodeUtil.isExprAssign(node)) {
         return false;
       }
 
-      Node lhs = assignNode.getFirstChild();
-      Node rhs = assignNode.getLastChild();
-
-      // If the RHS is not an empty function then this isn't of interest.
-      if (!NodeUtil.isEmptyFunctionExpression(rhs)) {
-        return false;
-      }
-
-      // Ensure that we are actually mutating the given function.
-      return lhs.getQualifiedName() != null && lhs.matchesQualifiedName(enclosingFnName);
+      Node lhs = node.getFirstChild().getFirstChild();
+      Node rhs = node.getFirstChild().getLastChild();
+      return NodeUtil.isEmptyFunctionExpression(rhs) && lhs.matchesQualifiedName(enclosingFnName);
     }
   }
 
