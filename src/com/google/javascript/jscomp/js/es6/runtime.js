@@ -35,10 +35,12 @@ $jscomp.getGlobal = function(maybeGlobal) {
 };
 
 
+// TODO(sdh): This should be typed as "the global object", but there's not
+// currently any way to do this in the existing type system.
 /**
  * The global object. For browsers we could just use `this` but in Node that
  * doesn't work.
- * @const {!Object}
+ * @const {?}
  */
 $jscomp.global = $jscomp.getGlobal(this);
 
@@ -99,20 +101,23 @@ $jscomp.initSymbolIterator = function() {
 $jscomp.makeIterator = function(iterable) {
   $jscomp.initSymbolIterator();
 
-  if (iterable[$jscomp.global.Symbol.iterator]) {
-    return iterable[$jscomp.global.Symbol.iterator]();
+  // NOTE: Disabling typechecking because [] not allowed on @struct.
+  var iteratorFunction = /** @type {?} */ (iterable)[Symbol.iterator];
+  if (iteratorFunction) {
+    return iteratorFunction.call(iterable);
   }
 
-  let index = 0;
+  var index = 0;
+  var arr = /** @type {!Array} */ (iterable);
   return /** @type {!Iterator} */ ({
-    next() {
-      if (index == iterable.length) {
-        return { done: true };
-      } else {
+    next: function() {
+      if (index < arr.length) {
         return {
           done: false,
-          value: iterable[index++]
+          value: arr[index++],
         };
+      } else {
+        return {done: true};
       }
     }
   });
@@ -129,8 +134,8 @@ $jscomp.makeIterator = function(iterable) {
  * @template T
  */
 $jscomp.arrayFromIterator = function(iterator) {
-  let i;
-  const arr = [];
+  var i;
+  var arr = [];
   while (!(i = iterator.next()).done) {
     arr.push(i.value);
   }
@@ -191,12 +196,11 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   /** @override */
   childCtor.prototype.constructor = childCtor;
 
-  for (const p in parentCtor) {
-    if ($jscomp.global.Object.defineProperties) {
-      let descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(
-          parentCtor, p);
+  for (var p in parentCtor) {
+    if (Object.defineProperties) {
+      var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
       if (descriptor) {
-        $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
+        Object.defineProperty(childCtor, p, descriptor);
       }
     } else {
       // Pre-ES5 browser. Just copy with an assignment.

@@ -22,40 +22,29 @@ $jscomp.array = $jscomp.array || {};
 
 
 /**
- * Returns a constant "done" value signaling that iteration is over.
- * @return {{done: boolean}}
- * @private
- */
-$jscomp.array.done_ = function() {
-  return {done: true, value: void 0};
-};
-
-
-/**
- * Use a special function since this isn't actually
- * supposed to be a generator.
+ * Creates an iterator from an array-like, with a transformation function.
  * @param {!IArrayLike<INPUT>} array
- * @param {function(number, INPUT): OUTPUT} func
+ * @param {function(number, INPUT): OUTPUT} transform
  * @return {!IteratorIterable<OUTPUT>}
- * @private
  * @template INPUT, OUTPUT
  * @suppress {checkTypes}
  */
-$jscomp.array.arrayIterator_ = function(array, func) {
+$jscomp.iteratorFromArray = function(array, transform) {
+  $jscomp.initSymbolIterator();
   // NOTE: IE8 doesn't support indexing from boxed Strings.
-  if (array instanceof String) array = String(array);
-  let i = 0;
-  const iter = {
-    next() {
+  if (array instanceof String) array = array + '';
+  var i = 0;
+  var iter = {
+    next: function() {
       if (i < array.length) {
-        const index = i++;
-        return {value: func(index, array[index]), done: false};
+        var index = i++;
+        return {value: transform(index, array[index]), done: false};
       }
-      iter.next = $jscomp.array.done_;
-      return $jscomp.array.done_();  // Note: fresh instance every time
-    },
-    [Symbol.iterator]() { return iter; },
+      iter.next = function() { return {done: true, value: void 0}; };
+      return iter.next();
+    }
   };
+  iter[Symbol.iterator] = function() { return iter; };
   return iter;
 };
 
@@ -70,16 +59,15 @@ $jscomp.array.arrayIterator_ = function(array, func) {
  * @param {function(this: THIS, VALUE, number, !IArrayLike<VALUE>): *} callback
  * @param {THIS} thisArg
  * @return {{i: number, v: (VALUE|undefined)}}
- * @private
  * @template THIS, VALUE
  */
-$jscomp.array.findInternal_ = function(array, callback, thisArg) {
+$jscomp.findInternal = function(array, callback, thisArg) {
   if (array instanceof String) {
     array = /** @type {!IArrayLike} */ (String(array));
   }
-  const len = array.length;
-  for (let i = 0; i < len; i++) {
-    const value = array[i];
+  var len = array.length;
+  for (var i = 0; i < len; i++) {
+    var value = array[i];
     if (callback.call(thisArg, value, i, array)) return {i: i, v: value};
   }
   return {i: -1, v: void 0};
@@ -103,19 +91,26 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * @return {!Array<OUTPUT>}
    * @template INPUT, OUTPUT, THIS
    */
-  $jscomp.array.from = function(
-      arrayLike, opt_mapFn = (x => x), opt_thisArg = void 0) {
-    const result = [];
-    if (arrayLike[Symbol.iterator]) {
-      const iter = arrayLike[Symbol.iterator]();
-      let next;
-      while (!(next = iter.next()).done) {
-        result.push(opt_mapFn.call(opt_thisArg, next.value));
+  $jscomp.array.from = function(arrayLike, opt_mapFn, opt_thisArg) {
+    $jscomp.initSymbolIterator();
+    opt_mapFn = opt_mapFn != null ? opt_mapFn : function(x) { return x; };
+    var result = [];
+    // NOTE: this is cast to ? because [] on @struct is an error
+    var iteratorFunction = /** @type {?} */ (arrayLike)[Symbol.iterator];
+    if (typeof iteratorFunction == 'function') {
+      arrayLike = iteratorFunction.call(arrayLike);
+    }
+    if (typeof arrayLike.next == 'function') {
+      var next;
+      while (!(next = arrayLike.next()).done) {
+        result.push(
+            opt_mapFn.call(/** @type {?} */ (opt_thisArg), next.value));
       }
     } else {
-      const len = arrayLike.length;  // need to support non-iterables
-      for (let i = 0; i < len; i++) {
-        result.push(opt_mapFn.call(opt_thisArg, arrayLike[i]));
+      var len = arrayLike.length;  // need to support non-iterables
+      for (var i = 0; i < len; i++) {
+        result.push(
+            opt_mapFn.call(/** @type {?} */ (opt_thisArg), arrayLike[i]));
       }
     }
     return result;
@@ -128,12 +123,12 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * <p>Polyfills the static function Array.of().  Does not support
    * constructor inheritance (i.e. (subclass of Array).of).
    *
-   * @param {...*} elements Elements to include in the array.
-   * @return {!Array<*>}
-   * TODO(tbreisacher): Put back the at-template type after b/26884264 is fixed.
+   * @param {...T} var_args Elements to include in the array.
+   * @return {!Array<T>}
+   * @template T
    */
-  $jscomp.array.of = function(...elements) {
-    return $jscomp.array.from(elements);
+  $jscomp.array.of = function(var_args) {
+    return $jscomp.array.from(arguments);
   };
 
 
@@ -146,7 +141,8 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * @template VALUE
    */
   $jscomp.array.entries = function() {
-    return $jscomp.array.arrayIterator_(this, (i, v) => [i, v]);
+    return $jscomp.iteratorFromArray(
+        this, function(i, v) { return [i, v]; });
   };
 
 
@@ -185,7 +181,7 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * @return {!IteratorIterable<number>}
    */
   $jscomp.array.keys = function() {
-    return $jscomp.array.arrayIterator_(this, i => i);
+    return $jscomp.iteratorFromArray(this, function(i) { return i; });
   };
 
 
@@ -206,7 +202,7 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * @template VALUE
    */
   $jscomp.array.values = function() {
-    return $jscomp.array.arrayIterator_(this, (_, v) => v);
+    return $jscomp.iteratorFromArray(this, function(k, v) { return v; });
   };
 
 
@@ -229,8 +225,8 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * @return {!IArrayLike<VALUE>} The array, with the copy performed in-place.
    * @template VALUE
    */
-  $jscomp.array.copyWithin = function(target, start, opt_end = void 0) {
-    const len = this.length;
+  $jscomp.array.copyWithin = function(target, start, opt_end) {
+    var len = this.length;
     target = Number(target);
     start = Number(start);
     opt_end = Number(opt_end != null ? opt_end : len);
@@ -278,15 +274,15 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * @return {!IArrayLike<VALUE>} The array, with the fill performed in-place.
    * @template VALUE
    */
-  $jscomp.array.fill = function(value, opt_start = 0, opt_end = void 0) {
+  $jscomp.array.fill = function(value, opt_start, opt_end) {
     var length = this.length || 0;
     if (opt_start < 0) {
       opt_start = Math.max(0, length + /** @type {number} */ (opt_start));
     }
     if (opt_end == null || opt_end > length) opt_end = length;
-    opt_end = +opt_end;
+    opt_end = Number(opt_end);
     if (opt_end < 0) opt_end = Math.max(0, length + opt_end);
-    for (var i = +(opt_start || 0); i < opt_end; i++) {
+    for (var i = Number(opt_start || 0); i < opt_end; i++) {
       this[i] = value;
     }
     return this;
@@ -306,13 +302,14 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * Finds and returns an element that satisfies the given predicate.
    *
    * @this {!IArrayLike<VALUE>}
-   * @param {function(this: THIS, VALUE, number, !IArrayLike<VALUE>): *} callback
+   * @param {function(this: THIS, VALUE, number, !IArrayLike<VALUE>): *}
+   *     callback
    * @param {THIS=} opt_thisArg
    * @return {VALUE|undefined} The found value, or undefined.
    * @template VALUE, THIS
    */
-  $jscomp.array.find = function(callback, opt_thisArg = void 0) {
-    return $jscomp.array.findInternal_(this, callback, opt_thisArg).v;
+  $jscomp.array.find = function(callback, opt_thisArg) {
+    return $jscomp.findInternal(this, callback, opt_thisArg).v;
   };
 
 
@@ -329,13 +326,14 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
    * Finds an element that satisfies the given predicate, returning its index.
    *
    * @this {!IArrayLike<VALUE>}
-   * @param {function(this: THIS, VALUE, number, !IArrayLike<VALUE>): *} callback
+   * @param {function(this: THIS, VALUE, number, !IArrayLike<VALUE>): *}
+   *     callback
    * @param {THIS=} opt_thisArg
-   * @return {VALUE|undefined} The found value, or undefined.
+   * @return {number} The found value, or undefined.
    * @template VALUE, THIS
    */
-  $jscomp.array.findIndex = function(callback, opt_thisArg = void 0) {
-    return $jscomp.array.findInternal_(this, callback, opt_thisArg).i;
+  $jscomp.array.findIndex = function(callback, opt_thisArg) {
+    return $jscomp.findInternal(this, callback, opt_thisArg).i;
   };
 
 

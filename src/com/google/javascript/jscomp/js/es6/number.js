@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 /**
  * @fileoverview Polyfills for ES6 Number functions.
  */
@@ -26,7 +27,7 @@ $jscomp.number = $jscomp.number || {};
    *
    * <p>Polyfills the static function Number.isFinite().
    *
-   * @param {*} x Any value.
+   * @param {number} x Any value.
    * @return {boolean} True if x is a number and not NaN or infinite.
    */
   $jscomp.number.isFinite = function(x) {
@@ -40,7 +41,7 @@ $jscomp.number = $jscomp.number || {};
    *
    * <p>Polyfills the static function Number.isInteger().
    *
-   * @param {*} x Any value.
+   * @param {number} x Any value.
    * @return {boolean} True if x is an integer.
    */
   $jscomp.number.isInteger = function(x) {
@@ -55,7 +56,7 @@ $jscomp.number = $jscomp.number || {};
    *
    * <p>Polyfills the static function Number.isNaN().
    *
-   * @param {*} x Any value.
+   * @param {number} x Any value.
    * @return {boolean} True if x is exactly NaN.
    */
   $jscomp.number.isNaN = function(x) {
@@ -69,7 +70,7 @@ $jscomp.number = $jscomp.number || {};
    *
    * <p>Polyfills the static function Number.isSafeInteger().
    *
-   * @param {*} x Any value.
+   * @param {number} x Any value.
    * @return {boolean} True if x is a safe integer.
    */
   $jscomp.number.isSafeInteger = function(x) {
@@ -78,31 +79,31 @@ $jscomp.number = $jscomp.number || {};
   };
 
 
+$jscomp.number.EPSILON = (function() {
   /**
    * The difference 1 and the smallest number greater than 1.
    *
    * <p>Polyfills the static field Number.EPSILON.
-   *
-   * @const {number}
    */
-  $jscomp.number.EPSILON = Math.pow(2, -52);
+  return Math.pow(2, -52);
+})();
 
 
+$jscomp.number.MAX_SAFE_INTEGER = (function() {
   /**
    * The maximum safe integer, 2^53 - 1.
    *
    * <p>Polyfills the static field Number.MAX_SAFE_INTEGER.
-   *
-   * @const {number}
    */
-  $jscomp.number.MAX_SAFE_INTEGER = 0x1fffffffffffff;
+  return 0x1fffffffffffff;
+})();
 
 
+$jscomp.number.MIN_SAFE_INTEGER = (function() {
   /**
    * The minimum safe integer, -(2^53 - 1).
    *
    * <p>Polyfills the static field Number.MIN_SAFE_INTEGER.
-   *
-   * @const {number}
    */
-  $jscomp.number.MIN_SAFE_INTEGER = -0x1fffffffffffff;
+  return -0x1fffffffffffff;
+})();

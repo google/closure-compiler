@@ -22,32 +22,24 @@ $jscomp.string = $jscomp.string || {};
 
 
 /**
- * Throws if the argument is null or undefined.
- * @param {*} str The argument to check.
+ * Throws if the argument is a RegExp, or if thisArg is undefined.
+ * @param {?} thisArg The 'this' arg, which must be defined.
+ * @param {*} arg The first argument of the function, which mustn't be a RegExp.
  * @param {string} func Name of the function, for reporting.
- * @private
+ * @return {string} The thisArg, coerced to a string.
  */
-$jscomp.string.noNullOrUndefined_ = function(str, func) {
-  if (str == null) {
+$jscomp.checkStringArgs = function(thisArg, arg, func) {
+  if (thisArg == null) {
     throw new TypeError(
-        `The 'this' value for String.prototype.${func} ` +
-        'must not be null or undefined');
+        "The 'this' value for String.prototype." + func +
+        ' must not be null or undefined');
   }
-};
-
-
-/**
- * Throws if the argument is a RegExp.
- * @param {*} str The argument to check.
- * @param {string} func Name of the function, for reporting.
- * @private
- */
-$jscomp.string.noRegExp_ = function(str, func) {
-  if (str instanceof RegExp) {
+  if (arg instanceof RegExp) {
     throw new TypeError(
-        `First argument to String.prototype.${func} ` +
-          'must not be a regular expression');
+        'First argument to String.prototype.' + func +
+        ' must not be a regular expression');
   }
+  return thisArg + '';
 };
 
 
@@ -56,14 +48,14 @@ $jscomp.string.noRegExp_ = function(str, func) {
    *
    * <p>Polyfills the static function String.fromCodePoint().
    *
-   * @param {...number} codepoints
+   * @param {...number} var_args
    * @return {string}
    */
-  $jscomp.string.fromCodePoint = function(...codepoints) {
+  $jscomp.string.fromCodePoint = function(var_args) {
     // Note: this is taken from v8's harmony-string.js StringFromCodePoint.
-    let result = '';
-    for (let code of codepoints) {
-      code = +code;
+    var result = '';
+    for (var i = 0; i < arguments.length; i++) {
+      var code = Number(arguments[i]);
       if (code < 0 || code > 0x10FFFF || code !== Math.floor(code)) {
         throw new RangeError('invalid_code_point ' + code);
       }
@@ -84,19 +76,18 @@ $jscomp.string.noRegExp_ = function(str, func) {
    *
    * <p>Polyfills the instance method String.prototype.repeat().
    *
-   * @this {*}
+   * @this {string}
    * @param {number} copies
    * @return {string}
    */
   $jscomp.string.repeat = function(copies) {
     'use strict';
-    $jscomp.string.noNullOrUndefined_(this, 'repeat');
-    let /** string */ string = String(this);
+    var string = $jscomp.checkStringArgs(this, null, 'repeat');
     if (copies < 0 || copies > 0x4FFFFFFF) { // impose a 1GB limit
       throw new RangeError('Invalid count value');
     }
     copies = copies | 0; // cast to a signed integer.
-    let result = '';
+    var result = '';
     while (copies) {
       if (copies & 1) result += string;
       if ((copies >>>= 1)) string += string;
@@ -121,26 +112,27 @@ $jscomp.string.noRegExp_ = function(str, func) {
    *
    * <p>Polyfills the instance method String.prototype.codePointAt().
    *
-   * @this {*}
+   * @this {string}
    * @param {number} position
    * @return {number|undefined} The codepoint.
    */
   $jscomp.string.codePointAt = function(position) {
     // NOTE: this is taken from v8's harmony-string.js StringCodePointAt
     'use strict';
-    $jscomp.string.noNullOrUndefined_(this, 'codePointAt');
-    const string = String(this);
-    const size = string.length;
+    var string = $jscomp.checkStringArgs(this, null, 'codePointAt');
+    var size = string.length;
+    // Make 'position' a number.  Non-numbers turn into NaN and then or to zero.
     position = Number(position) || 0;
     if (!(position >= 0 && position < size)) {
       return void 0;
     }
+    // Truncate 'position' to an integer.
     position = position | 0;
-    const first = string.charCodeAt(position);
+    var first = string.charCodeAt(position);
     if (first < 0xD800 || first > 0xDBFF || position + 1 === size) {
       return first;
     }
-    const second = string.charCodeAt(position + 1);
+    var second = string.charCodeAt(position + 1);
     if (second < 0xDC00 || second > 0xDFFF) {
       return first;
     }
@@ -164,17 +156,15 @@ $jscomp.string.noRegExp_ = function(str, func) {
    *
    * <p>Polyfills the instance method String.prototype.includes().
    *
-   * @this {*}
+   * @this {string}
    * @param {string} searchString
    * @param {number=} opt_position
    * @return {boolean}
    */
-  $jscomp.string.includes = function(searchString, opt_position = 0) {
+  $jscomp.string.includes = function(searchString, opt_position) {
     'use strict';
-    $jscomp.string.noRegExp_(searchString, 'includes');
-    $jscomp.string.noNullOrUndefined_(this, 'includes');
-    const string = String(this);
-    return string.indexOf(searchString, opt_position) !== -1;
+    var string = $jscomp.checkStringArgs(this, searchString, 'includes');
+    return string.indexOf(searchString, opt_position || 0) !== -1;
   };
 
 
@@ -194,21 +184,21 @@ $jscomp.string.noRegExp_ = function(str, func) {
    *
    * <p>Polyfills the instance method String.prototype.startsWith().
    *
-   * @this {*}
+   * @this {string}
    * @param {string} searchString
    * @param {number=} opt_position
    * @return {boolean}
    */
-  $jscomp.string.startsWith = function(searchString, opt_position = 0) {
+  $jscomp.string.startsWith = function(searchString, opt_position) {
     'use strict';
-    $jscomp.string.noRegExp_(searchString, 'startsWith');
-    $jscomp.string.noNullOrUndefined_(this, 'startsWith');
-    const string = String(this);
+    var string = $jscomp.checkStringArgs(this, searchString, 'startsWith');
     searchString = searchString + '';
-    const strLen = string.length;
-    const searchLen = searchString.length;
-    let i = Math.max(0, Math.min(opt_position | 0, string.length));
-    let j = 0;
+    var strLen = string.length;
+    var searchLen = searchString.length;
+    var i = Math.max(
+        0,
+        Math.min(/** @type {number} */ (opt_position) | 0, string.length));
+    var j = 0;
     while (j < searchLen && i < strLen) {
       if (string[i++] != searchString[j++]) return false;
     }
@@ -232,20 +222,18 @@ $jscomp.string.noRegExp_ = function(str, func) {
    *
    * <p>Polyfills the instance method String.prototype.endsWith().
    *
-   * @this {*}
+   * @this {string}
    * @param {string} searchString
    * @param {number=} opt_position
    * @return {boolean}
    */
-  $jscomp.string.endsWith = function(searchString, opt_position = void 0) {
+  $jscomp.string.endsWith = function(searchString, opt_position) {
     'use strict';
-    $jscomp.string.noRegExp_(searchString, 'endsWith');
-    $jscomp.string.noNullOrUndefined_(this, 'endsWith');
-    const string = String(this);
+    var string = $jscomp.checkStringArgs(this, searchString, 'endsWith');
     searchString = searchString + '';
     if (opt_position === void 0) opt_position = string.length;
-    let i = Math.max(0, Math.min(opt_position | 0, string.length));
-    let j = searchString.length;
+    var i = Math.max(0, Math.min(opt_position | 0, string.length));
+    var j = searchString.length;
     while (j > 0 && i > 0) {
       if (string[--i] != searchString[--j]) return false;
     }

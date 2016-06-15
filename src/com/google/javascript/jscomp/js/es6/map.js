@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Closure Compiler Authors.
+ * Copyright 2016 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,45 +15,37 @@
  */
 
 /**
- * @fileoverview Polyfills for ES6 Map.
+ * Whether to skip the conformance check and simply use the polyfill always.
+ * @define {boolean}
  */
+$jscomp.ASSUME_NO_NATIVE_MAP = false;
 
-
-/**
- * Polyfill for the global Map data type.
- * @implements {Iterable<!Array<KEY|VALUE>>}
- * @template KEY, VALUE
- */
-$jscomp.Map = class {
-
-
+  // Perform a conformance check to ensure correct native implementation.
   /**
-   * Mini test suite for the browser's implementation of Map, so that we
-   * can use it instead when possible.
-   * @return {boolean} True if the browser conforms to the spec.
-   * @private
+   * Checks conformance of built-in Map.
+   * @return {boolean}
    */
-  static checkBrowserConformance_() {
-    // We do a quick check for the object and some key properties:
-    //  1. whether the 'entries' method (one of the last-standardized) exists,
-    //  2. whether the constructor accepts an iterable parameter.
+  $jscomp.Map$isConformant = function() {
+    if ($jscomp.ASSUME_NO_NATIVE_MAP) return false;
+    var NativeMap = $jscomp.global.Map;
 
-    // TODO(sdh): DEFINE to assume not conformant (try-catch especially)
-    // TODO(sdh): how to do this without using goog?
-
-    /** @type {function(new: Map, !Iterator)} */
-    const Map = $jscomp.global['Map'];
-    if (!Map || !Map.prototype.entries || !Object.seal) return false;
+    if (!NativeMap ||
+        !NativeMap.prototype.entries ||
+        typeof Object.seal != 'function') {
+      return false;
+    }
     // Some implementations don't support constructor arguments.
+    /** @preserveTry */
     try {
-      const key = Object.seal({x: 4});
-      const map = new Map($jscomp.makeIterator([[key, 's']]));
+      NativeMap = /** @type {function(new: Map, !Iterator=)} */ (NativeMap);
+      var key = Object.seal({x: 4});
+      var map = new NativeMap($jscomp.makeIterator([[key, 's']]));
       if (map.get(key) != 's' || map.size != 1 || map.get({x: 4}) ||
           map.set({x: 4}, 't') != map || map.size != 2) {
         return false;
       }
-      const /** !Iterator<!Array> */ iter = map.entries();
-      let item = iter.next();
+      var /** !Iterator<!Array> */ iter = map.entries();
+      var item = iter.next();
       if (item.done || item.value[0] != key || item.value[1] != 's') {
         return false;
       }
@@ -66,67 +58,26 @@ $jscomp.Map = class {
     } catch (err) { // This should hopefully never happen, but let's be safe.
       return false;
     }
-  }
+  };
+
 
 
   /**
-   * Makes a new "head" element.
-   * @return {!$jscomp.Map.Entry_<KEY, VALUE>}
+   * Polyfill for the global Map data type.
+   * @constructor
+   * @struct
+   * @implements {Iterable<!Array<KEY|VALUE>>}
    * @template KEY, VALUE
-   * @suppress {checkTypes} ignore missing key/value for head only
-   * @private
-   */
-  static createHead_() {
-    const head = /** type {!$jscomp.Map.Entry_<KEY, VALUE>} */ ({});
-    head.previous = head.next = head.head = head;
-    return head;
-  }
-
-
-  /**
-   * @param {*} obj An extensible object.
-   * @return {string} A unique ID.
-   * @private
-   */
-  static getId_(obj) {
-    // TODO(sdh): could use goog.getUid for this if it exists.
-    // (This might work better with goog.defineClass)
-    if (!(obj instanceof Object)) {
-      // Prepend primitives with 'p_', which will avoid potentially dangerous
-      // names like '__proto__', as well as anything from Object.prototype.
-      return 'p_' + obj;
-    }
-    if (!($jscomp.Map.key_ in obj)) {
-      if (obj instanceof Object &&
-          Object.isExtensible && Object.isExtensible(obj)) {
-        $jscomp.Map.defineProperty_(
-            obj, $jscomp.Map.key_, ++$jscomp.Map.index_);
-      }
-    }
-    if (!($jscomp.Map.key_ in obj)) {
-      // String representation is best we can do, though it's not stricty
-      // guaranteed to be consistent (i.e. for mutable objects).  But for
-      // non-extensible objects, there's nothing better we could possibly
-      // use for bucketing.  We prepend 'o_' (for object) for two reasons:
-      // (1) to distinguish generated IDs (which are digits) and primitives,
-      // and (2) to prevent illegal or dangerous keys (see above).
-      return 'o_' + obj;
-    }
-    return obj[$jscomp.Map.key_];
-  }
-
-
-  // TODO(sdh): fix this type if heterogeneous arrays ever supported.
-  /**
-   * @param {!Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=}
+   * @param {!Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>|null=}
    *     opt_iterable Optional data to populate the map.
    */
-  constructor(opt_iterable = []) {
-    /** @private {!Object<!Array<!$jscomp.Map.Entry_<KEY, VALUE>>>} */
+  // TODO(sdh): fix param type if heterogeneous arrays ever supported.
+  $jscomp.Map = function(opt_iterable) {
+    /** @private {!Object<!Array<!$jscomp.Map.Entry<KEY, VALUE>>>} */
     this.data_ = {};
 
-    /** @private {!$jscomp.Map.Entry_<KEY, VALUE>} */
-    this.head_ = $jscomp.Map.createHead_();
+    /** @private {!$jscomp.Map.Entry<KEY, VALUE>} */
+    this.head_ = $jscomp.Map.createHead();
 
     // Note: this property should not be changed.  If we're willing to give up
     // ES3 support, we could define it as a property directly.  It should be
@@ -135,11 +86,15 @@ $jscomp.Map = class {
     this.size = 0;
 
     if (opt_iterable) {
-      for (const item of opt_iterable) {
+      var iter = $jscomp.makeIterator(opt_iterable);
+      var entry;
+      while (!(entry = iter.next()).done) {
+        var item =
+            /** @type {!IIterableResult<!Array<KEY|VALUE>>} */ (entry).value;
         this.set(/** @type {KEY} */ (item[0]), /** @type {VALUE} */ (item[1]));
       }
     }
-  }
+  };
 
 
   /**
@@ -147,28 +102,28 @@ $jscomp.Map = class {
    * @param {KEY} key
    * @param {VALUE} value
    */
-  set(key, value) {
-    let {id, list, entry} = this.maybeGetEntry_(key);
-    if (!list) {
-      list = (this.data_[id] = []);
+  $jscomp.Map.prototype.set = function(key, value) {
+    var r = $jscomp.Map.maybeGetEntry(this, key);
+    if (!r.list) {
+      r.list = (this.data_[r.id] = []);
     }
-    if (!entry) {
-      entry = {
+    if (!r.entry) {
+      r.entry = {
         next: this.head_,
         previous: this.head_.previous,
         head: this.head_,
-        key,
-        value,
+        key: key,
+        value: value,
       };
-      list.push(entry);
-      this.head_.previous.next = entry;
-      this.head_.previous = entry;
+      r.list.push(r.entry);
+      this.head_.previous.next = r.entry;
+      this.head_.previous = r.entry;
       this.size++;
     } else {
-      entry.value = value;
+      r.entry.value = value;
     }
     return this;
-  }
+  };
 
 
   /**
@@ -176,101 +131,81 @@ $jscomp.Map = class {
    * @param {KEY} key
    * @return {boolean} Whether the entry was deleted.
    */
-  delete(key) {
-    const {id, list, index, entry} = this.maybeGetEntry_(key);
-    if (entry && list) {
-      list.splice(index, 1);
-      if (!list.length) delete this.data_[id];
-      entry.previous.next = entry.next;
-      entry.next.previous = entry.previous;
-      entry.head = null;
+  $jscomp.Map.prototype.delete = function(key) {
+    var r = $jscomp.Map.maybeGetEntry(this, key);
+    if (r.entry && r.list) {
+      r.list.splice(r.index, 1);
+      if (!r.list.length) delete this.data_[r.id];
+      r.entry.previous.next = r.entry.next;
+      r.entry.next.previous = r.entry.previous;
+      r.entry.head = null;
       this.size--;
       return true;
     }
     return false;
-  }
+  };
 
 
   /**
    * Clears the map.
    */
-  clear() {
+  $jscomp.Map.prototype.clear = function() {
     this.data_ = {};
-    this.head_ = this.head_.previous = $jscomp.Map.createHead_();
+    this.head_ = this.head_.previous = $jscomp.Map.createHead();
     this.size = 0;
-  }
+  };
 
 
   /**
    * Checks whether the given key is in the map.
-   * @param {*} key
+   * @param {KEY} key
    * @return {boolean} True if the map contains the given key.
    */
-  has(key) {
-    return Boolean(this.maybeGetEntry_(key).entry);
-  }
+  $jscomp.Map.prototype.has = function(key) {
+    return !!($jscomp.Map.maybeGetEntry(this, key).entry);
+  };
 
 
   /**
    * Retrieves an element from the map, by key.
-   * @param {*} key
+   * @param {KEY} key
    * @return {VALUE}
    */
-  get(key) {
-    const {entry} = this.maybeGetEntry_(key);
-    return entry && entry.value;
-  }
-
-
-  /**
-   * Returns an entry or undefined.
-   * @param {KEY} key
-   * @return {{id: string,
-   *           list: (!Array<!$jscomp.Map.Entry_<KEY, VALUE>>|undefined),
-   *           index: number,
-   *           entry: (!$jscomp.Map.Entry_<KEY, VALUE>|undefined)}}
-   * @private
-   */
-  maybeGetEntry_(key) {
-    const id = $jscomp.Map.getId_(key);
-    const list = this.data_[id];
-    if (list && Object.prototype.hasOwnProperty.call(this.data_, id)) {
-      for (let index = 0; index < list.length; index++) {
-        const entry = list[index];
-        if ((key !== key && entry.key !== entry.key) || key === entry.key) {
-          return {id, list, index, entry};
-        }
-      }
-    }
-    return {id, list, index: -1, entry: void 0};
-  }
+  $jscomp.Map.prototype.get = function(key) {
+    var entry = $jscomp.Map.maybeGetEntry(this, key).entry;
+    // NOTE: this cast is a lie, but so is the extern.
+    return /** @type {VALUE} */ (entry && entry.value);
+  };
 
 
   /**
    * Returns an iterator of entries.
    * @return {!IteratorIterable<!Array<KEY|VALUE>>}
    */
-  entries() {
-    return this.iter_(entry => [entry.key, entry.value]);
-  }
+  $jscomp.Map.prototype.entries = function() {
+    return $jscomp.Map.makeIterator_(
+        this, function(entry) { return [entry.key, entry.value]; });
+  };
 
 
   /**
    * Returns an iterator of keys.
    * @return {!IteratorIterable<KEY>}
    */
-  keys() {
-    return this.iter_(entry => entry.key);
-  }
+  $jscomp.Map.prototype.keys = function() {
+    return $jscomp.Map.makeIterator_(
+        this, function(entry) { return entry.key; });
+  };
 
 
   /**
    * Returns an iterator of values.
    * @return {!IteratorIterable<VALUE>}
    */
-  values() {
-    return this.iter_(entry => entry.value);
-  }
+  $jscomp.Map.prototype.values = function() {
+    return $jscomp.Map.makeIterator_(
+        this, function(entry) { return entry.value; });
+  };
 
 
   /**
@@ -280,29 +215,57 @@ $jscomp.Map = class {
    * @param {THIS=} opt_thisArg
    * @template THIS
    */
-  forEach(callback, opt_thisArg = void 0) {
-    for (const entry of this.entries()) {
+  $jscomp.Map.prototype.forEach = function(callback, opt_thisArg) {
+    var iter = this.entries();
+    var item;
+    while (!(item = iter.next()).done) {
+      var entry = item.value;
       callback.call(
-          opt_thisArg,
+          /** @type {?} */ (opt_thisArg),
           /** @type {VALUE} */ (entry[1]),
           /** @type {KEY} */ (entry[0]),
-          /** @type {!$jscomp.Map<KEY, VALUE>} */ (this));
+          this);
     }
-  }
+  };
+
+
+  /**
+   * Returns an entry or undefined.
+   * @param {!$jscomp.Map<KEY, VALUE>} map
+   * @param {KEY} key
+   * @return {{id: string,
+   *           list: (!Array<!$jscomp.Map.Entry<KEY, VALUE>>|undefined),
+   *           index: number,
+   *           entry: (!$jscomp.Map.Entry<KEY, VALUE>|undefined)}}
+   * @template KEY, VALUE
+   */
+  $jscomp.Map.maybeGetEntry = function(map, key) {
+    var id = $jscomp.Map.getId(key);
+    var list = map.data_[id];
+    if (list && Object.prototype.hasOwnProperty.call(map.data_, id)) {
+      for (var index = 0; index < list.length; index++) {
+        var entry = list[index];
+        if ((key !== key && entry.key !== entry.key) || key === entry.key) {
+          return {id: id, list: list, index: index, entry: entry};
+        }
+      }
+    }
+    return {id: id, list: list, index: -1, entry: undefined};
+  };
 
 
   /**
    * Maps over the entries with the given function.
-   * @param {function(!$jscomp.Map.Entry_<KEY, VALUE>): T} func
+   * @param {!$jscomp.Map<KEY, VALUE>} map
+   * @param {function(!$jscomp.Map.Entry<KEY, VALUE>): T} func
    * @return {!IteratorIterable<T>}
-   * @template T
+   * @template KEY, VALUE, T
    * @private
    */
-  iter_(func) {
-    const map = this;
-    let entry = this.head_;
-    return /** @type {!IteratorIterable} */ ({
-      next() {
+  $jscomp.Map.makeIterator_ = function(map, func) {
+    var entry = map.head_;
+    var iter = {
+      next: function() {
         if (entry) {
           while (entry.head != map.head_) {
             entry = entry.previous;
@@ -314,88 +277,121 @@ $jscomp.Map = class {
           entry = null; // make sure depletion is permanent
         }
         return {done: true, value: void 0};
-      },
-      [Symbol.iterator]() {
-        return /** @type {!Iterator} */ (this);
       }
-    });
-  }
-};
+    };
+    iter[Symbol.iterator] = function() {
+      return /** @type {!Iterator} */ (iter);
+    };
+    return /** @type {!IteratorIterable} */ (iter);
+  };
 
 
-/**
- * Counter for generating IDs.
- * @private {number}
- */
-$jscomp.Map.index_ = 0;
+  /**
+   * Counter for generating IDs.
+   * @private {number}
+   */
+  $jscomp.Map.mapIndex_ = 0;
 
 
-/**
- * @param {!Object} obj
- * @param {string} key
- * @param {*} value
- * @private
- */
-$jscomp.Map.defineProperty_ =
-    Object.defineProperty ?
-        function(obj, key, value) {
-          Object.defineProperty(obj, key, {value: String(value)});
-        } : function(obj, key, value) {
-          obj[key] = String(value);
-        };
+  /**
+   * Makes a new "head" element.
+   * @return {!$jscomp.Map.Entry<KEY, VALUE>}
+   * @template KEY, VALUE
+   * @suppress {checkTypes} ignore missing key/value for head only
+   */
+  $jscomp.Map.createHead = function() {
+    var head = /** type {!$jscomp.Map.Entry<KEY, VALUE>} */ ({});
+    head.previous = head.next = head.head = head;
+    return head;
+  };
 
 
-/**
- * Internal record type for entries.
- * @private @record
- * @template KEY, VALUE
- */
-$jscomp.Map.Entry_ = function() {};
+  /**
+   * @param {*} obj An extensible object.
+   * @return {string} A unique ID.
+   */
+  $jscomp.Map.getId = function(obj) {
+    // TODO(sdh): could use goog.getUid for this if it exists.
+    // (This might work better with goog.defineClass)
+    if (!(obj instanceof Object)) {
+      // Prepend primitives with 'p_', which will avoid potentially dangerous
+      // names like '__proto__', as well as anything from Object.prototype.
+      return 'p_' + obj;
+    }
+    if (!($jscomp.Map.idKey in obj)) {
+      /** @preserveTry */
+      try {
+        $jscomp.Map.defineProperty(
+            obj, $jscomp.Map.idKey, {value: ++$jscomp.Map.mapIndex_});
+      } catch (ignored) {}
+    }
+    if (!($jscomp.Map.idKey in obj)) {
+      // String representation is best we can do, though it's not stricty
+      // guaranteed to be consistent (i.e. for mutable objects).  But for
+      // non-extensible objects, there's nothing better we could possibly
+      // use for bucketing.  We prepend 'o_' (for object) for two reasons:
+      // (1) to distinguish generated IDs (which are digits) and primitives,
+      // and (2) to prevent illegal or dangerous keys (see above).
+      return 'o_ ' + obj;
+    }
+    return obj[$jscomp.Map.idKey];
+  };
 
 
-/** @type {!$jscomp.Map.Entry_<KEY, VALUE>} */
-$jscomp.Map.Entry_.prototype.previous;
+  $jscomp.Map.defineProperty =
+      Object.defineProperty ?
+          function(obj, key, value) {
+            Object.defineProperty(obj, key, {value: String(value)});
+          } : function(obj, key, value) {
+            obj[key] = String(value);
+          };
 
 
-/** @type {!$jscomp.Map.Entry_<KEY, VALUE>} */
-$jscomp.Map.Entry_.prototype.next;
+  /**
+   * Internal record type for entries.
+   * @record
+   * @template KEY, VALUE
+   */
+  $jscomp.Map.Entry = function() {};
 
 
-/** @type {?Object} */
-$jscomp.Map.Entry_.prototype.head;
+  /** @type {!$jscomp.Map.Entry<KEY, VALUE>} */
+  $jscomp.Map.Entry.prototype.previous;
 
 
-/** @type {KEY} */
-$jscomp.Map.Entry_.prototype.key;
+  /** @type {!$jscomp.Map.Entry<KEY, VALUE>} */
+  $jscomp.Map.Entry.prototype.next;
 
 
-/** @type {VALUE} */
-$jscomp.Map.Entry_.prototype.value;
+  /** @type {?Object} */
+  $jscomp.Map.Entry.prototype.head;
 
 
-/**
- * Whether to skip the conformance check and simply use the polyfill always.
- * @define {boolean}
- */
-$jscomp.Map.ASSUME_NO_NATIVE = false;
+  /** @type {KEY} */
+  $jscomp.Map.Entry.prototype.key;
+
+
+  /** @type {VALUE} */
+  $jscomp.Map.Entry.prototype.value;
 
 
 /** Decides between the polyfill and the native implementation. */
 $jscomp.Map$install = function() {
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
-  if (!$jscomp.Map.ASSUME_NO_NATIVE && $jscomp.Map.checkBrowserConformance_()) {
-    $jscomp.Map = $jscomp.global['Map'];
-  } else {
-    // Install the iterator.
-    $jscomp.Map.prototype[Symbol.iterator] = $jscomp.Map.prototype.entries;
 
-    /**
-     * Fixed key used for storing generated object IDs.
-     * @private @const {symbol}
-     */
-    $jscomp.Map.key_ = Symbol('map-id-key');
+  if ($jscomp.Map$isConformant()) {
+    $jscomp.Map = $jscomp.global.Map;
+    return;
   }
+
+  $jscomp.Map.prototype[Symbol.iterator] = $jscomp.Map.prototype.entries;
+  /**
+   * Fixed key used for storing generated object IDs.
+   * @const {symbol}
+   */
+  $jscomp.Map.idKey = Symbol('map-id-key');
+
   // TODO(sdh): this prevents inlining; is there another way to avoid
   // duplicate work but allow this function to be inlined exactly once?
   $jscomp.Map$install = function() {};

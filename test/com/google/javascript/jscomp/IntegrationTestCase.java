@@ -52,8 +52,13 @@ abstract class IntegrationTestCase extends TestCase {
           "var IteratorIterable;",
           "/** @interface */",
           "function IArrayLike() {};",
+          // TODO(sdh): See if we can remove IIterableResult and Set once polyfills are split
+          "/** @interface */",
+          "var IIterableResult;",
           "/** @constructor */",
           "var Map;",
+          "/** @constructor */",
+          "var Set;",
           "",
           "/** @constructor */ function Window() {}",
           "/** @type {string} */ Window.prototype.name;",

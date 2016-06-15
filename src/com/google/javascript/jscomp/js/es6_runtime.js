@@ -26,7 +26,7 @@
 $jscomp.getGlobal = function(maybeGlobal) {
   return typeof window != "undefined" && window === maybeGlobal ? maybeGlobal : typeof global != "undefined" ? global : maybeGlobal;
 };
-/** @const @type {!Object} */ $jscomp.global = $jscomp.getGlobal(this);
+/** @const @type {?} */ $jscomp.global = $jscomp.getGlobal(this);
 /**
  @suppress {reportUnknownTypes}
  */
@@ -65,15 +65,19 @@ $jscomp.initSymbolIterator = function() {
  */
 $jscomp.makeIterator = function(iterable) {
   $jscomp.initSymbolIterator();
-  if (iterable[$jscomp.global.Symbol.iterator]) {
-    return iterable[$jscomp.global.Symbol.iterator]();
+  $jscomp.initSymbol();
+  $jscomp.initSymbolIterator();
+  var iteratorFunction = /** @type {?} */ (iterable)[Symbol.iterator];
+  if (iteratorFunction) {
+    return iteratorFunction.call(iterable);
   }
   var index = 0;
+  var arr = /** @type {!Array} */ (iterable);
   return /** @type {!Iterator} */ ({next:function() {
-    if (index == iterable.length) {
-      return {done:true};
+    if (index < arr.length) {
+      return {done:false, value:arr[index++]};
     } else {
-      return {done:false, value:iterable[index++]};
+      return {done:true};
     }
   }});
 };
@@ -84,7 +88,7 @@ $jscomp.makeIterator = function(iterable) {
  */
 $jscomp.arrayFromIterator = function(iterator) {
   var i;
-  /** @const */ var arr = [];
+  var arr = [];
   while (!(i = iterator.next()).done) {
     arr.push(i.value);
   }
@@ -113,10 +117,10 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   childCtor.prototype = new tempCtor;
   /** @override */ childCtor.prototype.constructor = childCtor;
   for (var p in parentCtor) {
-    if ($jscomp.global.Object.defineProperties) {
-      var descriptor = $jscomp.global.Object.getOwnPropertyDescriptor(parentCtor, p);
+    if (Object.defineProperties) {
+      var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
       if (descriptor) {
-        $jscomp.global.Object.defineProperty(childCtor, p, descriptor);
+        Object.defineProperty(childCtor, p, descriptor);
       }
     } else {
       childCtor[p] = parentCtor[p];
@@ -125,55 +129,49 @@ $jscomp.inherits = function(childCtor, parentCtor) {
 };
 $jscomp.array = $jscomp.array || {};
 /**
- @private
- @return {{done:boolean}}
- */
-$jscomp.array.done_ = function() {
-  return {done:true, value:void 0};
-};
-/**
- @private
  @param {!IArrayLike<INPUT>} array
- @param {function(number,INPUT):OUTPUT} func
+ @param {function(number,INPUT):OUTPUT} transform
  @return {!IteratorIterable<OUTPUT>}
  @template INPUT,OUTPUT
  @suppress {checkTypes}
  */
-$jscomp.array.arrayIterator_ = function(array, func) {
+$jscomp.iteratorFromArray = function(array, transform) {
+  $jscomp.initSymbolIterator();
   if (array instanceof String) {
-    array = String(array);
+    array = array + "";
   }
   var i = 0;
+  var iter = {next:function() {
+    if (i < array.length) {
+      var index = i++;
+      return {value:transform(index, array[index]), done:false};
+    }
+    iter.next = function() {
+      return {done:true, value:void 0};
+    };
+    return iter.next();
+  }};
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
-  var $jscomp$compprop0 = {};
-  /** @const */ var iter = ($jscomp$compprop0.next = function() {
-    if (i < array.length) {
-      /** @const */ var index = i++;
-      return {value:func(index, array[index]), done:false};
-    }
-    iter.next = $jscomp.array.done_;
-    return $jscomp.array.done_();
-  }, $jscomp$compprop0[Symbol.iterator] = function() {
+  iter[Symbol.iterator] = function() {
     return iter;
-  }, $jscomp$compprop0);
+  };
   return iter;
 };
 /**
- @private
  @param {!IArrayLike<VALUE>} array
  @param {function(this:THIS,VALUE,number,!IArrayLike<VALUE>):*} callback
  @param {THIS} thisArg
  @return {{i:number,v:(VALUE|undefined)}}
  @template THIS,VALUE
  */
-$jscomp.array.findInternal_ = function(array, callback, thisArg) {
+$jscomp.findInternal = function(array, callback, thisArg) {
   if (array instanceof String) {
     array = /** @type {!IArrayLike} */ (String(array));
   }
-  /** @const */ var len = array.length;
+  var len = array.length;
   for (var i = 0;i < len;i++) {
-    /** @const */ var value = array[i];
+    var value = array[i];
     if (callback.call(thisArg, value, i, array)) {
       return {i:i, v:value};
     }
@@ -188,39 +186,37 @@ $jscomp.array.findInternal_ = function(array, callback, thisArg) {
  @template INPUT,OUTPUT,THIS
  */
 $jscomp.array.from = function(arrayLike, opt_mapFn, opt_thisArg) {
-  opt_mapFn = opt_mapFn === undefined ? function(x) {
+  $jscomp.initSymbolIterator();
+  opt_mapFn = opt_mapFn != null ? opt_mapFn : function(x) {
     return x;
-  } : opt_mapFn;
-  /** @const */ var result = [];
+  };
+  var result = [];
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
-  if (arrayLike[Symbol.iterator]) {
-    $jscomp.initSymbol();
-    $jscomp.initSymbolIterator();
-    /** @const */ var iter = arrayLike[Symbol.iterator]();
+  var iteratorFunction = /** @type {?} */ (arrayLike)[Symbol.iterator];
+  if (typeof iteratorFunction == "function") {
+    arrayLike = iteratorFunction.call(arrayLike);
+  }
+  if (typeof arrayLike.next == "function") {
     var next;
-    while (!(next = iter.next()).done) {
-      result.push(opt_mapFn.call(opt_thisArg, next.value));
+    while (!(next = arrayLike.next()).done) {
+      result.push(opt_mapFn.call(/** @type {?} */ (opt_thisArg), next.value));
     }
   } else {
-    /** @const */ var len = arrayLike.length;
+    var len = arrayLike.length;
     for (var i = 0;i < len;i++) {
-      result.push(opt_mapFn.call(opt_thisArg, arrayLike[i]));
+      result.push(opt_mapFn.call(/** @type {?} */ (opt_thisArg), arrayLike[i]));
     }
   }
   return result;
 };
 /**
- @param {...*} elements
- @return {!Array<*>}
+ @param {...T} var_args
+ @return {!Array<T>}
+ @template T
  */
-$jscomp.array.of = function(elements) {
-  var $jscomp$restParams = [];
-  for (var $jscomp$restIndex = 0;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
-    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
-  }
-  var /** @type {!Array<*>} */ elements$10 = $jscomp$restParams;
-  return $jscomp.array.from(elements$10);
+$jscomp.array.of = function(var_args) {
+  return $jscomp.array.from(arguments);
 };
 /**
  @this {!IArrayLike<VALUE>}
@@ -228,7 +224,7 @@ $jscomp.array.of = function(elements) {
  @template VALUE
  */
 $jscomp.array.entries = function() {
-  return $jscomp.array.arrayIterator_(this, function(i, v) {
+  return $jscomp.iteratorFromArray(this, function(i, v) {
     return [i, v];
   });
 };
@@ -253,7 +249,7 @@ $jscomp.array.entries$install = function() {
  @return {!IteratorIterable<number>}
  */
 $jscomp.array.keys = function() {
-  return $jscomp.array.arrayIterator_(this, function(i) {
+  return $jscomp.iteratorFromArray(this, function(i) {
     return i;
   });
 };
@@ -269,7 +265,7 @@ $jscomp.array.keys$install = function() {
  @template VALUE
  */
 $jscomp.array.values = function() {
-  return $jscomp.array.arrayIterator_(this, function(_, v) {
+  return $jscomp.iteratorFromArray(this, function(k, v) {
     return v;
   });
 };
@@ -288,7 +284,7 @@ $jscomp.array.values$install = function() {
  @template VALUE
  */
 $jscomp.array.copyWithin = function(target, start, opt_end) {
-  /** @const */ var len = this.length;
+  var len = this.length;
   target = Number(target);
   start = Number(start);
   opt_end = Number(opt_end != null ? opt_end : len);
@@ -330,7 +326,6 @@ $jscomp.array.copyWithin$install = function() {
  @template VALUE
  */
 $jscomp.array.fill = function(value, opt_start, opt_end) {
-  opt_start = opt_start === undefined ? 0 : opt_start;
   var length = this.length || 0;
   if (opt_start < 0) {
     opt_start = Math.max(0, length + /** @type {number} */ (opt_start));
@@ -338,11 +333,11 @@ $jscomp.array.fill = function(value, opt_start, opt_end) {
   if (opt_end == null || opt_end > length) {
     opt_end = length;
   }
-  opt_end = +opt_end;
+  opt_end = Number(opt_end);
   if (opt_end < 0) {
     opt_end = Math.max(0, length + opt_end);
   }
-  for (var i = +(opt_start || 0);i < opt_end;i++) {
+  for (var i = Number(opt_start || 0);i < opt_end;i++) {
     this[i] = value;
   }
   return this;
@@ -361,7 +356,7 @@ $jscomp.array.fill$install = function() {
  @template VALUE,THIS
  */
 $jscomp.array.find = function(callback, opt_thisArg) {
-  return $jscomp.array.findInternal_(this, callback, opt_thisArg).v;
+  return $jscomp.findInternal(this, callback, opt_thisArg).v;
 };
 /**
  @suppress {checkTypes,const}
@@ -373,11 +368,11 @@ $jscomp.array.find$install = function() {
  @this {!IArrayLike<VALUE>}
  @param {function(this:THIS,VALUE,number,!IArrayLike<VALUE>):*} callback
  @param {THIS=} opt_thisArg
- @return {(VALUE|undefined)}
+ @return {number}
  @template VALUE,THIS
  */
 $jscomp.array.findIndex = function(callback, opt_thisArg) {
-  return $jscomp.array.findInternal_(this, callback, opt_thisArg).i;
+  return $jscomp.findInternal(this, callback, opt_thisArg).i;
 };
 /**
  @suppress {checkTypes,const}
@@ -385,41 +380,26 @@ $jscomp.array.findIndex = function(callback, opt_thisArg) {
 $jscomp.array.findIndex$install = function() {
   $jscomp.array.installHelper_("findIndex", $jscomp.array.findIndex);
 };
+/** @define {boolean} */ $jscomp.ASSUME_NO_NATIVE_MAP = false;
 /**
- @struct
- @constructor
- @implements {Iterable<!Array<(KEY|VALUE)>>}
- @param {(!Iterable<!Array<(KEY|VALUE)>>|!Array<!Array<(KEY|VALUE)>>)=} opt_iterable
- @template KEY,VALUE
- */
-$jscomp.Map = function(opt_iterable) {
-  opt_iterable = opt_iterable === undefined ? [] : opt_iterable;
-  /** @private @type {!Object<!Array<!$jscomp.Map.Entry_<KEY,VALUE>>>} */ this.data_ = {};
-  /** @private @type {!$jscomp.Map.Entry_<KEY,VALUE>} */ this.head_ = $jscomp.Map.createHead_();
-  /** @type {number} */ this.size = 0;
-  if (opt_iterable) {
-    for (var $jscomp$iter$1 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$1.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$1.next()) {
-      /** @const */ var item = $jscomp$key$item.value;
-      this.set(/** @type {KEY} */ (item[0]), /** @type {VALUE} */ (item[1]));
-    }
-  }
-};
-/**
- @private
  @return {boolean}
  */
-$jscomp.Map.checkBrowserConformance_ = function() {
-  /** @const @type {function(new:Map,!Iterator)} */ var Map = $jscomp.global["Map"];
-  if (!Map || !Map.prototype.entries || !Object.seal) {
+$jscomp.Map$isConformant = function() {
+  if ($jscomp.ASSUME_NO_NATIVE_MAP) {
+    return false;
+  }
+  var NativeMap = $jscomp.global.Map;
+  if (!NativeMap || !NativeMap.prototype.entries || typeof Object.seal != "function") {
     return false;
   }
   try {
-    /** @const */ var key = Object.seal({x:4});
-    /** @const */ var map = new Map($jscomp.makeIterator([[key, "s"]]));
+    NativeMap = /** @type {function(new:Map,!Iterator=)} */ (NativeMap);
+    var key = Object.seal({x:4});
+    var map = new NativeMap($jscomp.makeIterator([[key, "s"]]));
     if (map.get(key) != "s" || map.size != 1 || map.get({x:4}) || map.set({x:4}, "t") != map || map.size != 2) {
       return false;
     }
-    /** @const @type {!Iterator<!Array>} */ var iter = map.entries();
+    var /** !Iterator<!Array> */ iter = map.entries();
     var item = iter.next();
     if (item.done || item.value[0] != key || item.value[1] != "s") {
       return false;
@@ -434,55 +414,42 @@ $jscomp.Map.checkBrowserConformance_ = function() {
   }
 };
 /**
- @private
- @return {!$jscomp.Map.Entry_<KEY,VALUE>}
+ @struct
+ @constructor
+ @implements {Iterable<!Array<(KEY|VALUE)>>}
+ @param {(!Iterable<!Array<(KEY|VALUE)>>|!Array<!Array<(KEY|VALUE)>>|null)=} opt_iterable
  @template KEY,VALUE
- @suppress {checkTypes}
  */
-$jscomp.Map.createHead_ = function() {
-  /** @const */ var head = {};
-  head.previous = head.next = head.head = head;
-  return head;
-};
-/**
- @private
- @param {*} obj
- @return {string}
- */
-$jscomp.Map.getId_ = function(obj) {
-  if (!(obj instanceof Object)) {
-    return "p_" + obj;
-  }
-  if (!($jscomp.Map.key_ in obj)) {
-    if (obj instanceof Object && Object.isExtensible && Object.isExtensible(obj)) {
-      $jscomp.Map.defineProperty_(obj, $jscomp.Map.key_, ++$jscomp.Map.index_);
+$jscomp.Map = function(opt_iterable) {
+  /** @private @type {!Object<!Array<!$jscomp.Map.Entry<KEY,VALUE>>>} */ this.data_ = {};
+  /** @private @type {!$jscomp.Map.Entry<KEY,VALUE>} */ this.head_ = $jscomp.Map.createHead();
+  /** @type {number} */ this.size = 0;
+  if (opt_iterable) {
+    var iter = $jscomp.makeIterator(opt_iterable);
+    var entry;
+    while (!(entry = iter.next()).done) {
+      var item = /** @type {!IIterableResult<!Array<(KEY|VALUE)>>} */ (entry).value;
+      this.set(/** @type {KEY} */ (item[0]), /** @type {VALUE} */ (item[1]));
     }
   }
-  if (!($jscomp.Map.key_ in obj)) {
-    return "o_" + obj;
-  }
-  return obj[$jscomp.Map.key_];
 };
 /**
  @param {KEY} key
  @param {VALUE} value
  */
 $jscomp.Map.prototype.set = function(key, value) {
-  var $jscomp$destructuring$var0 = this.maybeGetEntry_(key);
-  var id = $jscomp$destructuring$var0.id;
-  var list = $jscomp$destructuring$var0.list;
-  var entry = $jscomp$destructuring$var0.entry;
-  if (!list) {
-    list = this.data_[id] = [];
+  var r = $jscomp.Map.maybeGetEntry(this, key);
+  if (!r.list) {
+    r.list = this.data_[r.id] = [];
   }
-  if (!entry) {
-    entry = {next:this.head_, previous:this.head_.previous, head:this.head_, key:key, value:value};
-    list.push(entry);
-    this.head_.previous.next = entry;
-    this.head_.previous = entry;
+  if (!r.entry) {
+    r.entry = {next:this.head_, previous:this.head_.previous, head:this.head_, key:key, value:value};
+    r.list.push(r.entry);
+    this.head_.previous.next = r.entry;
+    this.head_.previous = r.entry;
     this.size++;
   } else {
-    entry.value = value;
+    r.entry.value = value;
   }
   return this;
 };
@@ -491,19 +458,15 @@ $jscomp.Map.prototype.set = function(key, value) {
  @return {boolean}
  */
 $jscomp.Map.prototype.delete = function(key) {
-  /** @const */ var $jscomp$destructuring$var1 = this.maybeGetEntry_(key);
-  /** @const */ var id = $jscomp$destructuring$var1.id;
-  /** @const */ var list = $jscomp$destructuring$var1.list;
-  /** @const */ var index = $jscomp$destructuring$var1.index;
-  /** @const */ var entry = $jscomp$destructuring$var1.entry;
-  if (entry && list) {
-    list.splice(index, 1);
-    if (!list.length) {
-      delete this.data_[id];
+  var r = $jscomp.Map.maybeGetEntry(this, key);
+  if (r.entry && r.list) {
+    r.list.splice(r.index, 1);
+    if (!r.list.length) {
+      delete this.data_[r.id];
     }
-    entry.previous.next = entry.next;
-    entry.next.previous = entry.previous;
-    entry.head = null;
+    r.entry.previous.next = r.entry.next;
+    r.entry.next.previous = r.entry.previous;
+    r.entry.head = null;
     this.size--;
     return true;
   }
@@ -511,48 +474,29 @@ $jscomp.Map.prototype.delete = function(key) {
 };
 $jscomp.Map.prototype.clear = function() {
   this.data_ = {};
-  this.head_ = this.head_.previous = $jscomp.Map.createHead_();
+  this.head_ = this.head_.previous = $jscomp.Map.createHead();
   this.size = 0;
 };
 /**
- @param {*} key
+ @param {KEY} key
  @return {boolean}
  */
 $jscomp.Map.prototype.has = function(key) {
-  return Boolean(this.maybeGetEntry_(key).entry);
+  return !!$jscomp.Map.maybeGetEntry(this, key).entry;
 };
 /**
- @param {*} key
+ @param {KEY} key
  @return {VALUE}
  */
 $jscomp.Map.prototype.get = function(key) {
-  /** @const */ var $jscomp$destructuring$var2 = this.maybeGetEntry_(key);
-  /** @const */ var entry = $jscomp$destructuring$var2.entry;
-  return entry && entry.value;
-};
-/**
- @private
- @param {KEY} key
- @return {{id:string,list:(!Array<!$jscomp.Map.Entry_<KEY,VALUE>>|undefined),index:number,entry:(!$jscomp.Map.Entry_<KEY,VALUE>|undefined)}}
- */
-$jscomp.Map.prototype.maybeGetEntry_ = function(key) {
-  /** @const */ var id = $jscomp.Map.getId_(key);
-  /** @const */ var list = this.data_[id];
-  if (list && Object.prototype.hasOwnProperty.call(this.data_, id)) {
-    for (var index = 0;index < list.length;index++) {
-      /** @const */ var entry = list[index];
-      if (key !== key && entry.key !== entry.key || key === entry.key) {
-        return {id:id, list:list, index:index, entry:entry};
-      }
-    }
-  }
-  return {id:id, list:list, index:-1, entry:void 0};
+  var entry = $jscomp.Map.maybeGetEntry(this, key).entry;
+  return /** @type {VALUE} */ (entry && entry.value);
 };
 /**
  @return {!IteratorIterable<!Array<(KEY|VALUE)>>}
  */
 $jscomp.Map.prototype.entries = function() {
-  return this.iter_(function(entry) {
+  return $jscomp.Map.makeIterator_(this, function(entry) {
     return [entry.key, entry.value];
   });
 };
@@ -560,7 +504,7 @@ $jscomp.Map.prototype.entries = function() {
  @return {!IteratorIterable<KEY>}
  */
 $jscomp.Map.prototype.keys = function() {
-  return this.iter_(function(entry) {
+  return $jscomp.Map.makeIterator_(this, function(entry) {
     return entry.key;
   });
 };
@@ -568,7 +512,7 @@ $jscomp.Map.prototype.keys = function() {
  @return {!IteratorIterable<VALUE>}
  */
 $jscomp.Map.prototype.values = function() {
-  return this.iter_(function(entry) {
+  return $jscomp.Map.makeIterator_(this, function(entry) {
     return entry.value;
   });
 };
@@ -578,24 +522,42 @@ $jscomp.Map.prototype.values = function() {
  @template THIS
  */
 $jscomp.Map.prototype.forEach = function(callback, opt_thisArg) {
-  for (var $jscomp$iter$2 = $jscomp.makeIterator(this.entries()), $jscomp$key$entry = $jscomp$iter$2.next();!$jscomp$key$entry.done;$jscomp$key$entry = $jscomp$iter$2.next()) {
-    /** @const */ var entry = $jscomp$key$entry.value;
-    callback.call(opt_thisArg, /** @type {VALUE} */ (entry[1]), /** @type {KEY} */ (entry[0]), /** @type {!$jscomp.Map<KEY,VALUE>} */ (this));
+  var iter = this.entries();
+  var item;
+  while (!(item = iter.next()).done) {
+    var entry = item.value;
+    callback.call(/** @type {?} */ (opt_thisArg), /** @type {VALUE} */ (entry[1]), /** @type {KEY} */ (entry[0]), this);
   }
 };
 /**
- @private
- @param {function(!$jscomp.Map.Entry_<KEY,VALUE>):T} func
- @return {!IteratorIterable<T>}
- @template T
+ @param {!$jscomp.Map<KEY,VALUE>} map
+ @param {KEY} key
+ @return {{id:string,list:(!Array<!$jscomp.Map.Entry<KEY,VALUE>>|undefined),index:number,entry:(!$jscomp.Map.Entry<KEY,VALUE>|undefined)}}
+ @template KEY,VALUE
  */
-$jscomp.Map.prototype.iter_ = function(func) {
-  /** @const */ var map = this;
-  var entry = this.head_;
-  $jscomp.initSymbol();
-  $jscomp.initSymbolIterator();
-  var $jscomp$compprop3 = {};
-  return /** @type {!IteratorIterable} */ ($jscomp$compprop3.next = function() {
+$jscomp.Map.maybeGetEntry = function(map, key) {
+  var id = $jscomp.Map.getId(key);
+  var list = map.data_[id];
+  if (list && Object.prototype.hasOwnProperty.call(map.data_, id)) {
+    for (var index = 0;index < list.length;index++) {
+      var entry = list[index];
+      if (key !== key && entry.key !== entry.key || key === entry.key) {
+        return {id:id, list:list, index:index, entry:entry};
+      }
+    }
+  }
+  return {id:id, list:list, index:-1, entry:undefined};
+};
+/**
+ @private
+ @param {!$jscomp.Map<KEY,VALUE>} map
+ @param {function(!$jscomp.Map.Entry<KEY,VALUE>):T} func
+ @return {!IteratorIterable<T>}
+ @template KEY,VALUE,T
+ */
+$jscomp.Map.makeIterator_ = function(map, func) {
+  var entry = map.head_;
+  var iter = {next:function() {
     if (entry) {
       while (entry.head != map.head_) {
         entry = entry.previous;
@@ -607,53 +569,78 @@ $jscomp.Map.prototype.iter_ = function(func) {
       entry = null;
     }
     return {done:true, value:void 0};
-  }, $jscomp$compprop3[Symbol.iterator] = function() {
-    return /** @type {!Iterator} */ (this);
-  }, $jscomp$compprop3);
+  }};
+  $jscomp.initSymbol();
+  $jscomp.initSymbolIterator();
+  iter[Symbol.iterator] = function() {
+    return /** @type {!Iterator} */ (iter);
+  };
+  return /** @type {!IteratorIterable} */ (iter);
 };
-/** @private @type {number} */ $jscomp.Map.index_ = 0;
+/** @private @type {number} */ $jscomp.Map.mapIndex_ = 0;
 /**
- @private
- @param {!Object} obj
- @param {string} key
- @param {*} value
+ @return {!$jscomp.Map.Entry<KEY,VALUE>}
+ @template KEY,VALUE
+ @suppress {checkTypes}
  */
-$jscomp.Map.defineProperty_ = Object.defineProperty ? function(obj, key, value) {
+$jscomp.Map.createHead = function() {
+  var head = {};
+  head.previous = head.next = head.head = head;
+  return head;
+};
+/**
+ @param {*} obj
+ @return {string}
+ */
+$jscomp.Map.getId = function(obj) {
+  if (!(obj instanceof Object)) {
+    return "p_" + obj;
+  }
+  if (!($jscomp.Map.idKey in obj)) {
+    try {
+      $jscomp.Map.defineProperty(obj, $jscomp.Map.idKey, {value:++$jscomp.Map.mapIndex_});
+    } catch (ignored) {
+    }
+  }
+  if (!($jscomp.Map.idKey in obj)) {
+    return "o_ " + obj;
+  }
+  return obj[$jscomp.Map.idKey];
+};
+$jscomp.Map.defineProperty = Object.defineProperty ? function(obj, key, value) {
   Object.defineProperty(obj, key, {value:String(value)});
 } : function(obj, key, value) {
   obj[key] = String(value);
 };
 /**
- @private
  @record
  @template KEY,VALUE
  */
-$jscomp.Map.Entry_ = function() {
+$jscomp.Map.Entry = function() {
 };
-/** @type {!$jscomp.Map.Entry_<KEY,VALUE>} */ $jscomp.Map.Entry_.prototype.previous;
-/** @type {!$jscomp.Map.Entry_<KEY,VALUE>} */ $jscomp.Map.Entry_.prototype.next;
-/** @type {?Object} */ $jscomp.Map.Entry_.prototype.head;
-/** @type {KEY} */ $jscomp.Map.Entry_.prototype.key;
-/** @type {VALUE} */ $jscomp.Map.Entry_.prototype.value;
-/** @define {boolean} */ $jscomp.Map.ASSUME_NO_NATIVE = false;
+/** @type {!$jscomp.Map.Entry<KEY,VALUE>} */ $jscomp.Map.Entry.prototype.previous;
+/** @type {!$jscomp.Map.Entry<KEY,VALUE>} */ $jscomp.Map.Entry.prototype.next;
+/** @type {?Object} */ $jscomp.Map.Entry.prototype.head;
+/** @type {KEY} */ $jscomp.Map.Entry.prototype.key;
+/** @type {VALUE} */ $jscomp.Map.Entry.prototype.value;
 $jscomp.Map$install = function() {
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
-  if (!$jscomp.Map.ASSUME_NO_NATIVE && $jscomp.Map.checkBrowserConformance_()) {
-    $jscomp.Map = $jscomp.global["Map"];
-  } else {
-    $jscomp.initSymbol();
-    $jscomp.initSymbolIterator();
-    $jscomp.Map.prototype[Symbol.iterator] = $jscomp.Map.prototype.entries;
-    $jscomp.initSymbol();
-    /** @private @const @type {symbol} */ $jscomp.Map.key_ = Symbol("map-id-key");
+  if ($jscomp.Map$isConformant()) {
+    $jscomp.Map = $jscomp.global.Map;
+    return;
   }
+  $jscomp.initSymbol();
+  $jscomp.initSymbolIterator();
+  $jscomp.Map.prototype[Symbol.iterator] = $jscomp.Map.prototype.entries;
+  $jscomp.initSymbol();
+  /** @const @type {symbol} */ $jscomp.Map.idKey = Symbol("map-id-key");
   $jscomp.Map$install = function() {
   };
 };
 $jscomp.math = $jscomp.math || {};
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.clz32 = function(x) {
@@ -684,22 +671,22 @@ $jscomp.math.clz32 = function(x) {
   return result;
 };
 /**
- @param {*} a
- @param {*} b
+ @param {number} a
+ @param {number} b
  @return {number}
  */
 $jscomp.math.imul = function(a, b) {
   a = Number(a);
   b = Number(b);
-  /** @const */ var ah = a >>> 16 & 65535;
-  /** @const */ var al = a & 65535;
-  /** @const */ var bh = b >>> 16 & 65535;
-  /** @const */ var bl = b & 65535;
-  /** @const */ var lh = ah * bl + al * bh << 16 >>> 0;
+  var ah = a >>> 16 & 65535;
+  var al = a & 65535;
+  var bh = b >>> 16 & 65535;
+  var bl = b & 65535;
+  var lh = ah * bl + al * bh << 16 >>> 0;
   return al * bl + lh | 0;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.sign = function(x) {
@@ -707,21 +694,21 @@ $jscomp.math.sign = function(x) {
   return x === 0 || isNaN(x) ? x : x > 0 ? 1 : -1;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.log10 = function(x) {
   return Math.log(x) / Math.LN10;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.log2 = function(x) {
   return Math.log(x) / Math.LN2;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.log1p = function(x) {
@@ -742,7 +729,7 @@ $jscomp.math.log1p = function(x) {
   return Math.log(1 + x);
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.expm1 = function(x) {
@@ -761,7 +748,7 @@ $jscomp.math.expm1 = function(x) {
   return Math.exp(x) - 1;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.cosh = function(x) {
@@ -769,7 +756,7 @@ $jscomp.math.cosh = function(x) {
   return (Math.exp(x) + Math.exp(-x)) / 2;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.sinh = function(x) {
@@ -780,7 +767,7 @@ $jscomp.math.sinh = function(x) {
   return (Math.exp(x) - Math.exp(-x)) / 2;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.tanh = function(x) {
@@ -788,12 +775,12 @@ $jscomp.math.tanh = function(x) {
   if (x === 0) {
     return x;
   }
-  /** @const */ var y = Math.exp(2 * -Math.abs(x));
-  /** @const */ var z = (1 - y) / (1 + y);
+  var y = Math.exp(-2 * Math.abs(x));
+  var z = (1 - y) / (1 + y);
   return x < 0 ? -z : z;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.acosh = function(x) {
@@ -801,7 +788,7 @@ $jscomp.math.acosh = function(x) {
   return Math.log(x + Math.sqrt(x * x - 1));
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.asinh = function(x) {
@@ -809,11 +796,11 @@ $jscomp.math.asinh = function(x) {
   if (x === 0) {
     return x;
   }
-  /** @const */ var y = Math.log(Math.abs(x) + Math.sqrt(x * x + 1));
+  var y = Math.log(Math.abs(x) + Math.sqrt(x * x + 1));
   return x < 0 ? -y : y;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.atanh = function(x) {
@@ -821,46 +808,39 @@ $jscomp.math.atanh = function(x) {
   return ($jscomp.math.log1p(x) - $jscomp.math.log1p(-x)) / 2;
 };
 /**
- @param {*} x
- @param {*} y
- @param {...*} rest
+ @param {number} x
+ @param {number} y
+ @param {...*} var_args
  @return {number}
  */
-$jscomp.math.hypot = function(x, y, rest) {
-  var $jscomp$restParams = [];
-  for (var $jscomp$restIndex = 2;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
-    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];
-  }
-  var /** @type {!Array<*>} */ rest$11 = $jscomp$restParams;
+$jscomp.math.hypot = function(x, y, var_args) {
   x = Number(x);
   y = Number(y);
+  var i, z, sum;
   var max = Math.max(Math.abs(x), Math.abs(y));
-  for (var $jscomp$iter$4 = $jscomp.makeIterator(rest$11), $jscomp$key$z = $jscomp$iter$4.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$4.next()) {
-    var z = $jscomp$key$z.value;
-    max = Math.max(max, Math.abs(z));
+  for (i = 2;i < arguments.length;i++) {
+    max = Math.max(max, Math.abs(arguments[i]));
   }
   if (max > 1E100 || max < 1E-100) {
     x = x / max;
     y = y / max;
-    var sum = x * x + y * y;
-    for (var $jscomp$iter$5 = $jscomp.makeIterator(rest$11), $jscomp$key$z = $jscomp$iter$5.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$5.next()) {
-      var z$12 = $jscomp$key$z.value;
-      z$12 = Number(z$12) / max;
-      sum += z$12 * z$12;
+    sum = x * x + y * y;
+    for (i = 2;i < arguments.length;i++) {
+      z = Number(arguments[i]) / max;
+      sum += z * z;
     }
     return Math.sqrt(sum) * max;
   } else {
-    var sum$13 = x * x + y * y;
-    for (var $jscomp$iter$6 = $jscomp.makeIterator(rest$11), $jscomp$key$z = $jscomp$iter$6.next();!$jscomp$key$z.done;$jscomp$key$z = $jscomp$iter$6.next()) {
-      var z$14 = $jscomp$key$z.value;
-      z$14 = Number(z$14);
-      sum$13 += z$14 * z$14;
+    sum = x * x + y * y;
+    for (i = 2;i < arguments.length;i++) {
+      z = Number(arguments[i]);
+      sum += z * z;
     }
-    return Math.sqrt(sum$13);
+    return Math.sqrt(sum);
   }
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.trunc = function(x) {
@@ -868,11 +848,11 @@ $jscomp.math.trunc = function(x) {
   if (isNaN(x) || x === Infinity || x === -Infinity || x === 0) {
     return x;
   }
-  /** @const */ var y = Math.floor(Math.abs(x));
+  var y = Math.floor(Math.abs(x));
   return x < 0 ? -y : y;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {number}
  */
 $jscomp.math.cbrt = function(x) {
@@ -880,12 +860,12 @@ $jscomp.math.cbrt = function(x) {
     return x;
   }
   x = Number(x);
-  /** @const */ var y = Math.pow(Math.abs(x), 1 / 3);
+  var y = Math.pow(Math.abs(x), 1 / 3);
   return x < 0 ? -y : y;
 };
 $jscomp.number = $jscomp.number || {};
 /**
- @param {*} x
+ @param {number} x
  @return {boolean}
  */
 $jscomp.number.isFinite = function(x) {
@@ -895,7 +875,7 @@ $jscomp.number.isFinite = function(x) {
   return !isNaN(x) && x !== Infinity && x !== -Infinity;
 };
 /**
- @param {*} x
+ @param {number} x
  @return {boolean}
  */
 $jscomp.number.isInteger = function(x) {
@@ -905,36 +885,37 @@ $jscomp.number.isInteger = function(x) {
   return x === Math.floor(x);
 };
 /**
- @param {*} x
+ @param {number} x
  @return {boolean}
  */
 $jscomp.number.isNaN = function(x) {
   return typeof x === "number" && isNaN(x);
 };
 /**
- @param {*} x
+ @param {number} x
  @return {boolean}
  */
 $jscomp.number.isSafeInteger = function(x) {
   return $jscomp.number.isInteger(x) && Math.abs(x) <= $jscomp.number.MAX_SAFE_INTEGER;
 };
-/** @const @type {number} */ $jscomp.number.EPSILON = Math.pow(2, -52);
-/** @const @type {number} */ $jscomp.number.MAX_SAFE_INTEGER = 9007199254740991;
-/** @const @type {number} */ $jscomp.number.MIN_SAFE_INTEGER = -9007199254740991;
+$jscomp.number.EPSILON = function() {
+  return Math.pow(2, -52);
+}();
+$jscomp.number.MAX_SAFE_INTEGER = function() {
+  return 9007199254740991;
+}();
+$jscomp.number.MIN_SAFE_INTEGER = function() {
+  return -9007199254740991;
+}();
 $jscomp.object = $jscomp.object || {};
 /**
  @param {!Object} target
- @param {...?Object} sources
+ @param {...?Object} var_args
  @return {!Object}
  */
-$jscomp.object.assign = function(target, sources) {
-  var $jscomp$restParams = [];
-  for (var $jscomp$restIndex = 1;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
-    $jscomp$restParams[$jscomp$restIndex - 1] = arguments[$jscomp$restIndex];
-  }
-  var /** @type {!Array<?Object>} */ sources$15 = $jscomp$restParams;
-  for (var $jscomp$iter$7 = $jscomp.makeIterator(sources$15), $jscomp$key$source = $jscomp$iter$7.next();!$jscomp$key$source.done;$jscomp$key$source = $jscomp$iter$7.next()) {
-    /** @const */ var source = $jscomp$key$source.value;
+$jscomp.object.assign = function(target, var_args) {
+  for (var i = 1;i < arguments.length;i++) {
+    var source = arguments[i];
     if (!source) {
       continue;
     }
@@ -958,48 +939,57 @@ $jscomp.object.is = function(left, right) {
     return left !== left && right !== right;
   }
 };
+/** @define {boolean} */ $jscomp.ASSUME_NO_NATIVE_SET = false;
+/**
+ @return {boolean}
+ */
+$jscomp.Set$isConformant = function() {
+  if ($jscomp.ASSUME_NO_NATIVE_SET) {
+    return false;
+  }
+  var NativeSet = $jscomp.global.Set;
+  if (!NativeSet || !NativeSet.prototype.entries || typeof Object.seal != "function") {
+    return false;
+  }
+  try {
+    NativeSet = /** @type {function(new:Set,!Iterator=)} */ (NativeSet);
+    var value = Object.seal({x:4});
+    var set = new NativeSet($jscomp.makeIterator([value]));
+    if (!set.has(value) || set.size != 1 || set.add(value) != set || set.size != 1 || set.add({x:4}) != set || set.size != 2) {
+      return false;
+    }
+    var iter = set.entries();
+    var item = iter.next();
+    if (item.done || item.value[0] != value || item.value[1] != value) {
+      return false;
+    }
+    item = iter.next();
+    if (item.done || item.value[0] == value || item.value[0].x != 4 || item.value[1] != item.value[0]) {
+      return false;
+    }
+    return iter.next().done;
+  } catch (err) {
+    return false;
+  }
+};
 /**
  @struct
  @constructor
  @implements {Iterable<VALUE>}
- @param {(!Iterable<VALUE>|!Array<VALUE>)=} opt_iterable
+ @param {(!Iterable<VALUE>|!Array<VALUE>|null)=} opt_iterable
  @template VALUE
  */
 $jscomp.Set = function(opt_iterable) {
-  opt_iterable = opt_iterable === undefined ? [] : opt_iterable;
-  /** @private @const @type {!$jscomp.Map<VALUE,VALUE>} */ this.map_ = new $jscomp.Map;
+  /** @private @const */ this.map_ = new $jscomp.Map;
   if (opt_iterable) {
-    for (var $jscomp$iter$8 = $jscomp.makeIterator(opt_iterable), $jscomp$key$item = $jscomp$iter$8.next();!$jscomp$key$item.done;$jscomp$key$item = $jscomp$iter$8.next()) {
-      /** @const */ var item = $jscomp$key$item.value;
-      this.add(/** @type {VALUE} */ (item));
+    var iter = $jscomp.makeIterator(opt_iterable);
+    var entry;
+    while (!(entry = iter.next()).done) {
+      var item = /** @type {!IIterableResult<VALUE>} */ (entry).value;
+      this.add(item);
     }
   }
   this.size = this.map_.size;
-};
-/**
- @private
- @return {boolean}
- */
-$jscomp.Set.checkBrowserConformance_ = function() {
-  /** @const */ var Set = $jscomp.global["Set"];
-  if (!Set || !Set.prototype.entries || !Object.seal) {
-    return false;
-  }
-  /** @const */ var value = Object.seal({x:4});
-  /** @const */ var set = new Set($jscomp.makeIterator([value]));
-  if (set.has(value) || set.size != 1 || set.add(value) != set || set.size != 1 || set.add({x:4}) != set || set.size != 2) {
-    return false;
-  }
-  /** @const */ var iter = set.entries();
-  var item = iter.next();
-  if (item.done || item.value[0] != value || item.value[1] != value) {
-    return false;
-  }
-  item = iter.next();
-  if (item.done || item.value[0] == value || item.value[0].x != 4 || item.value[1] != item.value[0]) {
-    return false;
-  }
-  return iter.next().done;
 };
 /**
  @param {VALUE} value
@@ -1014,7 +1004,7 @@ $jscomp.Set.prototype.add = function(value) {
  @return {boolean}
  */
 $jscomp.Set.prototype.delete = function(value) {
-  /** @const */ var result = this.map_.delete(value);
+  var result = this.map_.delete(value);
   this.size = this.map_.size;
   return result;
 };
@@ -1023,7 +1013,7 @@ $jscomp.Set.prototype.clear = function() {
   this.size = 0;
 };
 /**
- @param {*} value
+ @param {VALUE} value
  @return {boolean}
  */
 $jscomp.Set.prototype.has = function(value) {
@@ -1047,59 +1037,47 @@ $jscomp.Set.prototype.values = function() {
  @template THIS
  */
 $jscomp.Set.prototype.forEach = function(callback, opt_thisArg) {
-  /** @const */ var $jscomp$this = this;
+  var set = this;
   this.map_.forEach(function(value) {
-    return callback.call(opt_thisArg, value, value, $jscomp$this);
+    return callback.call(/** @type {?} */ (opt_thisArg), value, value, set);
   });
 };
-/** @define {boolean} */ $jscomp.Set.ASSUME_NO_NATIVE = false;
 $jscomp.Set$install = function() {
-  if (!$jscomp.Set.ASSUME_NO_NATIVE && $jscomp.Set.checkBrowserConformance_()) {
-    $jscomp.Set = $jscomp.global["Set"];
-  } else {
-    $jscomp.Map$install();
-    $jscomp.initSymbol();
-    $jscomp.initSymbolIterator();
-    $jscomp.Set.prototype[Symbol.iterator] = $jscomp.Set.prototype.values;
+  $jscomp.Map$install();
+  if ($jscomp.Set$isConformant()) {
+    $jscomp.Set = $jscomp.global.Set;
+    return;
   }
+  $jscomp.initSymbol();
+  $jscomp.initSymbolIterator();
+  $jscomp.Set.prototype[Symbol.iterator] = $jscomp.Set.prototype.values;
   $jscomp.Set$install = function() {
   };
 };
 $jscomp.string = $jscomp.string || {};
 /**
- @private
- @param {*} str
+ @param {?} thisArg
+ @param {*} arg
  @param {string} func
- */
-$jscomp.string.noNullOrUndefined_ = function(str, func) {
-  if (str == null) {
-    throw new TypeError("The 'this' value for String.prototype." + func + " " + "must not be null or undefined");
-  }
-};
-/**
- @private
- @param {*} str
- @param {string} func
- */
-$jscomp.string.noRegExp_ = function(str, func) {
-  if (str instanceof RegExp) {
-    throw new TypeError("First argument to String.prototype." + func + " " + "must not be a regular expression");
-  }
-};
-/**
- @param {...number} codepoints
  @return {string}
  */
-$jscomp.string.fromCodePoint = function(codepoints) {
-  var $jscomp$restParams = [];
-  for (var $jscomp$restIndex = 0;$jscomp$restIndex < arguments.length;++$jscomp$restIndex) {
-    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
+$jscomp.checkStringArgs = function(thisArg, arg, func) {
+  if (thisArg == null) {
+    throw new TypeError("The 'this' value for String.prototype." + func + " must not be null or undefined");
   }
-  var /** @type {!Array<number>} */ codepoints$16 = $jscomp$restParams;
+  if (arg instanceof RegExp) {
+    throw new TypeError("First argument to String.prototype." + func + " must not be a regular expression");
+  }
+  return thisArg + "";
+};
+/**
+ @param {...number} var_args
+ @return {string}
+ */
+$jscomp.string.fromCodePoint = function(var_args) {
   var result = "";
-  for (var $jscomp$iter$9 = $jscomp.makeIterator(codepoints$16), $jscomp$key$code = $jscomp$iter$9.next();!$jscomp$key$code.done;$jscomp$key$code = $jscomp$iter$9.next()) {
-    var code = $jscomp$key$code.value;
-    code = +code;
+  for (var i = 0;i < arguments.length;i++) {
+    var code = Number(arguments[i]);
     if (code < 0 || code > 1114111 || code !== Math.floor(code)) {
       throw new RangeError("invalid_code_point " + code);
     }
@@ -1114,13 +1092,12 @@ $jscomp.string.fromCodePoint = function(codepoints) {
   return result;
 };
 /**
- @this {*}
+ @this {string}
  @param {number} copies
  @return {string}
  */
 $jscomp.string.repeat = function(copies) {
-  $jscomp.string.noNullOrUndefined_(this, "repeat");
-  var /** string */ string = String(this);
+  var string = $jscomp.checkStringArgs(this, null, "repeat");
   if (copies < 0 || copies > 1342177279) {
     throw new RangeError("Invalid count value");
   }
@@ -1146,24 +1123,23 @@ $jscomp.string.repeat$install = function() {
   }
 };
 /**
- @this {*}
+ @this {string}
  @param {number} position
  @return {(number|undefined)}
  */
 $jscomp.string.codePointAt = function(position) {
-  $jscomp.string.noNullOrUndefined_(this, "codePointAt");
-  /** @const */ var string = String(this);
-  /** @const */ var size = string.length;
+  var string = $jscomp.checkStringArgs(this, null, "codePointAt");
+  var size = string.length;
   position = Number(position) || 0;
   if (!(position >= 0 && position < size)) {
     return void 0;
   }
   position = position | 0;
-  /** @const */ var first = string.charCodeAt(position);
+  var first = string.charCodeAt(position);
   if (first < 55296 || first > 56319 || position + 1 === size) {
     return first;
   }
-  /** @const */ var second = string.charCodeAt(position + 1);
+  var second = string.charCodeAt(position + 1);
   if (second < 56320 || second > 57343) {
     return first;
   }
@@ -1178,17 +1154,14 @@ $jscomp.string.codePointAt$install = function() {
   }
 };
 /**
- @this {*}
+ @this {string}
  @param {string} searchString
  @param {number=} opt_position
  @return {boolean}
  */
 $jscomp.string.includes = function(searchString, opt_position) {
-  opt_position = opt_position === undefined ? 0 : opt_position;
-  $jscomp.string.noRegExp_(searchString, "includes");
-  $jscomp.string.noNullOrUndefined_(this, "includes");
-  /** @const */ var string = String(this);
-  return string.indexOf(searchString, opt_position) !== -1;
+  var string = $jscomp.checkStringArgs(this, searchString, "includes");
+  return string.indexOf(searchString, opt_position || 0) !== -1;
 };
 /**
  @suppress {checkTypes,const}
@@ -1199,20 +1172,17 @@ $jscomp.string.includes$install = function() {
   }
 };
 /**
- @this {*}
+ @this {string}
  @param {string} searchString
  @param {number=} opt_position
  @return {boolean}
  */
 $jscomp.string.startsWith = function(searchString, opt_position) {
-  opt_position = opt_position === undefined ? 0 : opt_position;
-  $jscomp.string.noRegExp_(searchString, "startsWith");
-  $jscomp.string.noNullOrUndefined_(this, "startsWith");
-  /** @const */ var string = String(this);
+  var string = $jscomp.checkStringArgs(this, searchString, "startsWith");
   searchString = searchString + "";
-  /** @const */ var strLen = string.length;
-  /** @const */ var searchLen = searchString.length;
-  var i = Math.max(0, Math.min(opt_position | 0, string.length));
+  var strLen = string.length;
+  var searchLen = searchString.length;
+  var i = Math.max(0, Math.min(/** @type {number} */ (opt_position) | 0, string.length));
   var j = 0;
   while (j < searchLen && i < strLen) {
     if (string[i++] != searchString[j++]) {
@@ -1230,15 +1200,13 @@ $jscomp.string.startsWith$install = function() {
   }
 };
 /**
- @this {*}
+ @this {string}
  @param {string} searchString
  @param {number=} opt_position
  @return {boolean}
  */
 $jscomp.string.endsWith = function(searchString, opt_position) {
-  $jscomp.string.noRegExp_(searchString, "endsWith");
-  $jscomp.string.noNullOrUndefined_(this, "endsWith");
-  /** @const */ var string = String(this);
+  var string = $jscomp.checkStringArgs(this, searchString, "endsWith");
   searchString = searchString + "";
   if (opt_position === void 0) {
     opt_position = string.length;
