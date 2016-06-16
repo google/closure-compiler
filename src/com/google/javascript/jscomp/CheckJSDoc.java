@@ -22,6 +22,8 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import javax.annotation.Nullable;
+
 /**
  * Checks for misplaced, misused or deprecated JSDoc annotations.
  *
@@ -85,6 +87,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     validateTemplates(n, info);
     validateTypedefs(n, info);
     validateNoSideEffects(n, info);
+    validateAbstractJsDoc(n, info);
   }
 
   private void validateTypedefs(Node n, JSDocInfo info) {
@@ -99,7 +102,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         && !info.isConstructorOrInterface()
         && !isClassDecl(n)
         && !info.containsFunctionDeclaration()) {
-      if (isFunctionDecl(n)) {
+      if (getFunctionDecl(n) != null) {
         reportMisplaced(n, "template",
             "The template variable is unused."
             + " Please remove the @template annotation.");
@@ -111,11 +114,29 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     }
   }
 
-  private boolean isFunctionDecl(Node n) {
-    return n.isFunction()
-        || (n.isVar() && n.getFirstFirstChild() != null
-            && n.getFirstFirstChild().isFunction())
-        || n.isAssign() && n.getFirstChild().isQualifiedName() && n.getLastChild().isFunction();
+  /**
+   * @return The function node associated with the function declaration associated with the
+   *     specified node, no null if no such function exists.
+   */
+  @Nullable
+  private Node getFunctionDecl(Node n) {
+    if (n.isFunction()) {
+      return n;
+    }
+    if (n.isMemberFunctionDef()) {
+      return n.getFirstChild();
+    }
+    if (n.isVar()
+        && n.getFirstFirstChild() != null
+        && n.getFirstFirstChild().isFunction()) {
+      return n.getFirstFirstChild();
+    }
+
+    if (n.isAssign() && n.getFirstChild().isQualifiedName() && n.getLastChild().isFunction()) {
+      return n.getLastChild();
+    }
+
+    return null;
   }
 
   private boolean isClassDecl(Node n) {
@@ -129,13 +150,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     return n != null && n.isName() && n.hasChildren() && isClass(n.getFirstChild());
   }
 
-
-
   private boolean isClass(Node n) {
     return n.isClass()
         || (n.isCall() && compiler.getCodingConvention().isClassFactoryCall(n));
   }
-
 
   /**
    * Checks that class-level annotations like @interface/@extends are not used on member functions.
@@ -144,6 +162,43 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (info != null && n.isMemberFunctionDef()
         && hasClassLevelJsDoc(info)) {
       report(n, DISALLOWED_MEMBER_JSDOC);
+    }
+  }
+
+  private void validateAbstractJsDoc(Node n, JSDocInfo info) {
+    if (info == null || !info.isAbstract()) {
+      return;
+    }
+    Node functionNode = getFunctionDecl(n);
+
+    if (functionNode == null) {
+      // @abstract annotation on a non-function
+      report(n, MISPLACED_ANNOTATION);
+      return;
+    }
+
+    if (NodeUtil.getFunctionBody(functionNode).hasChildren()) {
+      // @abstract annotation on a function with a non-empty body
+      report(n, MISPLACED_ANNOTATION);
+      return;
+    }
+
+    if (n.isMemberFunctionDef() && "constructor".equals(n.getString())) {
+      // @abstract annotation on an ES6 constructor
+      report(n, MISPLACED_ANNOTATION);
+      return;
+    }
+
+    if (!n.isMemberFunctionDef() && !NodeUtil.isPrototypeMethod(functionNode)) {
+      // @abstract annotation on a non-method (or static method) in ES5
+      report(n, MISPLACED_ANNOTATION);
+      return;
+    }
+
+    if (n.isStaticMember()) {
+      // @abstract annotation on a static method in ES6
+      report(n, MISPLACED_ANNOTATION);
+      return;
     }
   }
 

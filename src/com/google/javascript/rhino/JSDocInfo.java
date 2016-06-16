@@ -532,6 +532,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_MAPPEDIDGEN   = 0x02000000; // @idGenerator {mapped}
   private static final int MASK_NOCOLLAPSE    = 0x04000000; // @nocollapse
   private static final int MASK_RECORD        = 0x08000000; // @record
+  private static final int MASK_ABSTRACT      = 0x10000000; // @abstract
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
@@ -654,6 +655,10 @@ public class JSDocInfo implements Serializable {
 
   void setConstructor(boolean value) {
     setFlag(value, MASK_CONSTRUCTOR);
+  }
+
+  void setAbstract() {
+    setFlag(true, MASK_ABSTRACT);
   }
 
   void setUnrestricted() {
@@ -780,6 +785,14 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isConstructor() {
     return getFlag(MASK_CONSTRUCTOR);
+  }
+
+  /**
+   * Returns whether the {@code @abstract} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean isAbstract() {
+    return getFlag(MASK_ABSTRACT);
   }
 
   /**

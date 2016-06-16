@@ -1329,6 +1329,58 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. @lends tag incompatible with other annotations");
   }
 
+  public void testParseAbstract() throws Exception {
+    JSDocInfo info = parse("@abstract */");
+    assertThat(info.isAbstract()).isTrue();
+  }
+
+  public void testParseAbstract_alreadyAbstract() throws Exception {
+    parse("@abstract \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testParseAbstract_typedefBeforeAbstract() throws Exception {
+    parse("@typedef {Object<T,T>} \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testParseAbstract_typeBeforeAbstract() throws Exception {
+    parse("* @type {Object<T,T>} \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testParseAbstract_constructorBeforeAbstract() throws Exception {
+    // TODO(michaelthomas): Remove when @abstract is supported on constructors.
+    parse("@constructor \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testParseAbstract_interfaceBeforeAbstract() throws Exception {
+    parse("* @interface \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testParseAbstract_abstractBeforeTypedef() throws Exception {
+    parse("@abstract \n * @typedef {Object<T,T>} */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testParseAbstract_abstractBeforeType() throws Exception {
+    parse("* @abstract \n * @type {Object<T,T>} */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testParseAbstract_abstractBeforeInterface() throws Exception {
+    parse("* @abstract \n * @interface */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testParseAbstract_abstractBeforeConstructor() throws Exception {
+    // TODO(michaelthomas): Remove when @abstract is supported on constructors.
+    parse("* @abstract \n * @constructor */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
   public void testStackedAnnotation() throws Exception {
     JSDocInfo info = parse("@const @type {string}*/");
     assertThat(info.isConstant()).isTrue();

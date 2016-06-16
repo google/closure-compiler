@@ -394,6 +394,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case ABSTRACT:
+          if (!jsdocBuilder.recordAbstract()) {
+            addTypeWarning("msg.jsdoc.incompat.type");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case AUTHOR:
           if (jsdocBuilder.shouldParseDocumentation()) {
             ExtractionInfo authorInfo = extractSingleLineBlock();

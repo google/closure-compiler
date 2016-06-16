@@ -26,6 +26,7 @@ import java.util.Map;
  */
 enum Annotation {
   NG_INJECT,
+  ABSTRACT,
   AUTHOR,
   CONSISTENTIDGENERATOR,
   CONSTANT,
@@ -87,6 +88,7 @@ enum Annotation {
   static final Map<String, Annotation> recognizedAnnotations =
       new ImmutableMap.Builder<String, Annotation>().
       put("ngInject", Annotation.NG_INJECT).
+      put("abstract", Annotation.ABSTRACT).
       put("argument", Annotation.PARAM).
       put("author", Annotation.AUTHOR).
       put("consistentIdGenerator", Annotation.CONSISTENTIDGENERATOR).

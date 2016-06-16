@@ -81,6 +81,97 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         DISALLOWED_MEMBER_JSDOC);
   }
 
+  public void testAbstract_method() {
+    testSameEs6("class Foo { /** @abstract */ doSomething() {}}");
+    testSame(LINE_JOINER.join(
+        "/** @constructor */",
+        "var Foo = function() {};",
+        "/** @abstract */",
+        "Foo.prototype.something = function() {}"));
+  }
+
+  public void testAbstract_nonEmptyMethod() {
+    testWarningEs6(
+        "class Foo { /** @abstract */ doSomething() { return 0; }}",
+        MISPLACED_ANNOTATION);
+    testWarning(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var Foo = function() {};",
+            "/** @abstract */",
+            "Foo.prototype.something = function() { return 0; }"),
+        MISPLACED_ANNOTATION);
+  }
+
+  public void testAbstract_staticMethod() {
+    testWarningEs6(
+        "class Foo { /** @abstract */ static doSomething() {}}",
+        MISPLACED_ANNOTATION);
+    testWarning(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var Foo = function() {};",
+            "/** @abstract */",
+            "Foo.something = function() {}"),
+        MISPLACED_ANNOTATION);
+  }
+
+  public void testAbstract_class() {
+    testWarningEs6(
+        "/** @abstract */class Foo { constructor() {}}",
+        MISPLACED_ANNOTATION);
+    // Adding @abstract to an ES5 class/constructor is a parse error.
+  }
+
+  public void testAbstract_constructor() {
+    testWarningEs6(
+        "class Foo { /** @abstract */ constructor() {}}",
+        MISPLACED_ANNOTATION);
+    // Adding @abstract to an ES5 class/constructor is a parse error.
+  }
+
+  public void testAbstract_field() {
+    testWarningEs6(
+        "class Foo { constructor() { /** @abstract */ this.x = 1;}}",
+        MISPLACED_ANNOTATION);
+    testWarning(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var Foo = function() {",
+            "  /** @abstract */",
+            "  this.x = 1;",
+            "};"),
+        MISPLACED_ANNOTATION);
+  }
+
+  public void testAbstract_var() {
+    testWarningEs6(
+        "class Foo { constructor() {/** @abstract */ var x = 1;}}",
+        MISPLACED_ANNOTATION);
+    testWarning(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var Foo = function() {",
+            "  /** @abstract */",
+            "  var x = 1;",
+            "};"),
+        MISPLACED_ANNOTATION);
+  }
+
+  public void testAbstract_function() {
+    testWarningEs6(
+        "class Foo { constructor() {/** @abstract */ var x = function() {};}}",
+        MISPLACED_ANNOTATION);
+    testWarning(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var Foo = function() {",
+            "  /** @abstract */",
+            "  var x = function() {};",
+            "};"),
+        MISPLACED_ANNOTATION);
+  }
+
   public void testInlineJSDoc() {
     testSame("function f(/** string */ x) {}");
     testSame("function f(/** @type {string} */ x) {}");
