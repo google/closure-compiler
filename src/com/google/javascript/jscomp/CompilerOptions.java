@@ -2270,7 +2270,7 @@ public class CompilerOptions {
   }
 
   public boolean shouldPreservesGoogProvidesAndRequires() {
-    return this.preserveGoogProvidesAndRequires;
+    return this.preserveGoogProvidesAndRequires || this.shouldGenerateTypedExterns();
   }
 
   public void setPreserveTypeAnnotations(boolean preserveTypeAnnotations) {

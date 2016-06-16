@@ -55,6 +55,14 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "class Foo { method(/** string */ s) {} }");
   }
 
+  public void testRemoveCalls() {
+    test("alert('hello'); window.clearTimeout();", "");
+
+    testSame("goog.provide('a.b.c');");
+
+    testSame("goog.provide('a.b.c'); goog.require('x.y.z');");
+  }
+
   public void testEnums() {
     test(
         "/** @enum {number} */ var E = { A: 1, B: 2, C: 3};",

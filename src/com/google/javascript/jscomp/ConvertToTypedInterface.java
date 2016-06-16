@@ -87,11 +87,20 @@ class ConvertToTypedInterface extends AbstractPreOrderCallback implements Compil
             compiler.reportCodeChange();
             break;
           case CALL:
-            Preconditions.checkState(!n.getFirstChild().matchesQualifiedName("goog.scope"), n);
-            Preconditions.checkState(
-                !n.getFirstChild().matchesQualifiedName("goog.forwardDeclare"), n);
-            n.detachFromParent();
-            compiler.reportCodeChange();
+            Node callee = expr.getFirstChild();
+            Preconditions.checkState(!callee.matchesQualifiedName("goog.scope"), n);
+            Preconditions.checkState(!callee.matchesQualifiedName("goog.forwardDeclare"), n);
+            if (callee.matchesQualifiedName("goog.provide")) {
+              Node childBefore;
+              while (null != (childBefore = parent.getChildBefore(n))
+                  && childBefore.getBooleanProp(Node.IS_NAMESPACE)) {
+                parent.removeChild(childBefore);
+                compiler.reportCodeChange();
+              }
+            } else if (!callee.matchesQualifiedName("goog.require")) {
+              n.detachFromParent();
+              compiler.reportCodeChange();
+            }
             break;
           case ASSIGN:
             processName(expr.getFirstChild(), n);
