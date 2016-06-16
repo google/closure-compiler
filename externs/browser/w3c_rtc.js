@@ -457,6 +457,47 @@ MediaStreamEvent.prototype.stream;
 
 /**
  * @typedef {string}
+ * @see https://www.w3.org/TR/mediacapture-streams/#idl-def-MediaDeviceKind
+ * In WebIDL this is an enum with values 'audioinput', 'audiooutput', and
+ * 'videoinput', but there is no mechanism in Closure for describing a
+ * specialization of the string type.
+ */
+var MediaDeviceKind;
+
+/**
+ * @interface
+ */
+function MediaDeviceInfo() {}
+
+/** @const {string} */
+MediaDeviceInfo.prototype.deviceId;
+
+/** @const {!MediaDeviceKind} */
+MediaDeviceInfo.prototype.kind;
+
+/** @const {string} */
+MediaDeviceInfo.prototype.label;
+
+/** @const {string} */
+MediaDeviceInfo.prototype.groupIdlabel;
+
+/**
+ * @interface
+ * @extends {EventTarget}
+ * @see https://www.w3.org/TR/mediacapture-streams/#mediadevices
+ */
+function MediaDevices() {}
+
+/**
+ * @return {!Promise<!Array<!MediaDeviceInfo>>}
+ */
+MediaDevices.prototype.enumerateDevices = function() {};
+
+/** @const {!MediaDevices} */
+Navigator.prototype.mediaDevices;
+
+/**
+ * @typedef {string}
  * @see http://www.w3.org/TR/webrtc/#rtcsdptype
  * In WebIDL this is an enum with values 'offer', 'pranswer', and 'answer',
  * but there is no mechanism in Closure for describing a specialization of
