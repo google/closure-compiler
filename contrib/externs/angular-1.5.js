@@ -1468,6 +1468,7 @@ angular.$http;
  *   headers: (Object|undefined),
  *   method: (string|undefined),
  *   params: (Object.<(string|Object)>|undefined),
+ *   paramSerializer: (string|function(Object<string,string>):string|undefined),
  *   responseType: (string|undefined),
  *   timeout: (number|!angular.$q.Promise|undefined),
  *   transformRequest:
