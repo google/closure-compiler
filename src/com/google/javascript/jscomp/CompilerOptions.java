@@ -138,8 +138,11 @@ public class CompilerOptions {
 
   private boolean useNewTypeInference;
 
+  private boolean runOTIAfterNTI = true;
+
   /**
-   * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
+   * Relevant only when {@link #useNewTypeInference} and {@link #runOTIAfterNTI} are both true,
+   * where we normally disable OTI errors.
    * If you want both NTI and OTI errors in this case, set to true.
    * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
    * respectively.
@@ -1815,6 +1818,14 @@ public class CompilerOptions {
 
   public void setNewTypeInference(boolean enable) {
     this.useNewTypeInference = enable;
+  }
+
+  public boolean getRunOTIAfterNTI() {
+    return this.runOTIAfterNTI;
+  }
+
+  public void setRunOTIAfterNTI(boolean enable) {
+    this.runOTIAfterNTI = enable;
   }
 
   // Not dead code; used by the open-source users of the compiler.

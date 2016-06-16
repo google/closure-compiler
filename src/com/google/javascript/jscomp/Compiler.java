@@ -357,7 +357,7 @@ public class Compiler extends AbstractCompiler {
     // With NTI, we still need OTI to run because the later passes that use
     // types only understand OTI types at the moment.
     // But we do not want to see the warnings from OTI.
-    if (options.getNewTypeInference()) {
+    if (options.getNewTypeInference() && options.getRunOTIAfterNTI()) {
       options.checkTypes = true;
       if (!options.reportOTIErrorsUnderNTI) {
         options.setWarningLevel(
