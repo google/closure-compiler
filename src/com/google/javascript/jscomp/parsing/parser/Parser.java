@@ -984,16 +984,7 @@ public class Parser {
   }
 
   private boolean peekAsyncFunctionStart() {
-    if (peekPredefinedString(ASYNC) && peekFunction(1)) {
-      Token asyncToken = peekToken();
-      Token functionToken = peekToken(1);
-      if (asyncToken.location.start.line != functionToken.location.start.line) {
-        reportError(functionToken, "Newline is not allowed between 'async' and 'function'");
-      }
-      return true;
-    } else {
-      return false;
-    }
+    return peekPredefinedString(ASYNC) && !peekImplicitSemiColon(1) && peekFunction(1);
   }
 
   private void eatAsyncFunctionStart() {
@@ -1154,6 +1145,12 @@ public class Parser {
     features.require(Feature.ASYNC_FUNCTIONS);
     eatAsyncFunctionStart();
 
+    if (peek(TokenType.STAR)) {
+      reportError("async functions cannot be generators");
+      // ignore the star to see how much more we can parse for errors
+      eat(TokenType.STAR);
+    }
+
     FunctionDeclarationTree.Builder builder =
         FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.DECLARATION)
             .setName(eatId())
@@ -1167,6 +1164,12 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     features.require(Feature.ASYNC_FUNCTIONS);
     eatAsyncFunctionStart();
+
+    if (peek(TokenType.STAR)) {
+      reportError("async functions cannot be generators");
+      // ignore the star to see how much more we can parse for errors
+      eat(TokenType.STAR);
+    }
 
     FunctionDeclarationTree.Builder builder =
         FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)

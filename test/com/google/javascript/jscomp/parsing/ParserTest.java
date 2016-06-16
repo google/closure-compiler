@@ -2755,36 +2755,31 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("f( (x,y)\n=>2)", "No newline allowed before '=>'");
   }
 
-  public void testAsyncFunctionExpression() {
-    mode = LanguageMode.ECMASCRIPT8;
+  public void testAsyncFunction() {
+    String asyncFunctionExpressionSource = "f = async function() {};";
+    String asyncFunctionDeclarationSource = "async function f() {}";
     expectFeatures(Feature.ASYNC_FUNCTIONS);
-    parse("f = async function() {}");
 
-    mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(
-        "f = async function() {}",
-        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
-
-    mode = LanguageMode.ECMASCRIPT3;
-    parseWarning(
-        "f = async function() {}",
-        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+    for (LanguageMode m : LanguageMode.values()) {
+      mode = m;
+      if (m.featureSet.contains(Feature.ASYNC_FUNCTIONS)) {
+        parse(asyncFunctionExpressionSource);
+        parse(asyncFunctionDeclarationSource);
+      } else {
+        parseWarning(
+            asyncFunctionExpressionSource,
+            requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+        parseWarning(
+            asyncFunctionDeclarationSource,
+            requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+      }
+    }
   }
 
-  public void testAsyncFunctionDeclaration() {
+  public void testInvalidAsyncFunction() {
     mode = LanguageMode.ECMASCRIPT8;
-    expectFeatures(Feature.ASYNC_FUNCTIONS);
-    parse("async function f() {}");
-
-    mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(
-        "async function f() {}",
-        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
-
-    mode = LanguageMode.ECMASCRIPT3;
-    parseWarning(
-        "async function f() {}",
-        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+    parseError("async function *f(){}", "async functions cannot be generators");
+    parseError("f = async function *(){}", "async functions cannot be generators");
   }
 
   public void testFor_ES5() {

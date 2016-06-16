@@ -2098,6 +2098,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("[1,2].forEach((x)=>y)");
   }
 
+  public void testAsyncFunction() {
+    languageMode = LanguageMode.ECMASCRIPT8;
+    assertPrintSame("async function f(){}");
+    assertPrintSame("let f=async function f(){}");
+    assertPrintSame("let f=async function(){}");
+    // implicit semicolon prevents async being treated as a keyword
+    assertPrint("async\nfunction f(){}", "async;function f(){}");
+    assertPrint("let f=async\nfunction f(){}", "let f=async;function f(){}");
+  }
+
   /**
    * Regression test for b/28633247 - necessary parens dropped around arrow functions.
    */
