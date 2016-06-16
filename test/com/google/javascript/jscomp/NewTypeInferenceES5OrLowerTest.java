@@ -5702,8 +5702,10 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     //     VariableReferenceCheck.EARLY_REFERENCE);
 
     typeCheck("try {} catch (e) { e; }");
-    // If the CFG can see that the TRY won't throw, it doesn't go to the catch.
-    typeCheck("try {} catch (e) { 1 - 'asdf'; }");
+
+    typeCheck(
+        "try {} catch (e) { 1 - 'asdf'; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(
         "try { throw 123; } catch (e) { 1 - 'asdf'; }",
@@ -17049,5 +17051,53 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "Foo.prototype = {",
         "  sayHi:function() {}",
         "};"));
+  }
+
+  public void testAnalyzeDeadCodeAndLiveCodeThatFollowsIt() {
+    typeCheck(LINE_JOINER.join(
+        "try {",
+        "  true;",
+        "} catch (e) {",
+        "} finally {",
+        "  var x = 1 - 'asdf';",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (x) {",
+        "    4567;",
+        "    return 123;",
+        "    1 - 2;",
+        "  } else {",
+        "  }",
+        "  var /** null */ n = 123;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "for (;;) {",
+        "  break;",
+        "  1 - 'asdf';",
+        "}",
+        "var x = 123;"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "try {",
+        "  throw 123;",
+        "  1 - 'asdf';",
+        "} catch (e) {}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // When the TRY can throw, only use the TRY's type env in the CATCH
+    typeCheck(LINE_JOINER.join("function f(/** (number|string) */ x) {",
+        "  try {",
+        "    x = 123;",
+        "    throw 'asdf';",
+        "  } catch (e) {",
+        "    var /** number */ n = x;",
+        "  }",
+        "}"));
   }
 }

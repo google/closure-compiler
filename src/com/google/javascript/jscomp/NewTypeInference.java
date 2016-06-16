@@ -432,6 +432,10 @@ final class NewTypeInference implements CompilerPass {
 
   private TypeEnv getInEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
     List<DiGraphEdge<Node, ControlFlowGraph.Branch>> inEdges = dn.getInEdges();
+    // True for code considered dead in the CFG
+    if (inEdges.isEmpty()) {
+      return getEntryTypeEnv();
+    }
     if (inEdges.size() == 1) {
       return envs.get(inEdges.get(0));
     }
@@ -519,7 +523,7 @@ final class NewTypeInference implements CompilerPass {
       entryEnv = envPutType(entryEnv, fnName, getSummaryOfLocalFunDef(fnName));
     }
     println("Keeping env: ", entryEnv);
-    setOutEnv(cfg.getEntry(), entryEnv);
+    setOutEnv(this.cfg.getEntry(), entryEnv);
   }
 
   private TypeEnv getTypeEnvFromDeclaredTypes() {
@@ -584,7 +588,7 @@ final class NewTypeInference implements CompilerPass {
       DiGraphNode<Node, ControlFlowGraph.Branch> dn,
       List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset,
       Set<DiGraphNode<Node, ControlFlowGraph.Branch>> seen) {
-    if (seen.contains(dn) || dn == cfg.getImplicitReturn()) {
+    if (seen.contains(dn) || dn == this.cfg.getImplicitReturn()) {
       return;
     }
     switch (dn.getValue().getType()) {
@@ -610,7 +614,7 @@ final class NewTypeInference implements CompilerPass {
           }
         }
         break;
-      default:
+      default: {
         // Wait for all other incoming edges at join nodes.
         for (DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge :
             dn.getInEdges()) {
@@ -620,22 +624,31 @@ final class NewTypeInference implements CompilerPass {
           }
         }
         seen.add(dn);
-        if (cfg.getEntry() != dn) {
+        if (this.cfg.getEntry() != dn) {
           workset.add(dn);
         }
         // Don't recur for straight-line code
         while (true) {
+          Node n = dn.getValue();
+          if (n.isTry()) {
+            maybeAddDeadCode(workset, seen, n.getSecondChild());
+          } else if (n.isBreak() || n.isContinue() || n.isThrow()) {
+            maybeAddDeadCode(workset, seen, n.getNext());
+          }
           List<DiGraphNode<Node, ControlFlowGraph.Branch>> succs =
-              cfg.getDirectedSuccNodes(dn);
+              this.cfg.getDirectedSuccNodes(dn);
           if (succs.size() != 1) {
             break;
           }
           DiGraphNode<Node, ControlFlowGraph.Branch> succ = succs.get(0);
-          if (succ == cfg.getImplicitReturn()) {
+          if (succ == this.cfg.getImplicitReturn()) {
+            if (n.getNext() != null) {
+              maybeAddDeadCode(workset, seen, n.getNext());
+            }
             return;
           }
           // Make sure that succ isn't a join node
-          if (cfg.getDirectedPredNodes(succ).size() > 1) {
+          if (this.cfg.getDirectedPredNodes(succ).size() > 1) {
             break;
           }
           workset.add(succ);
@@ -643,10 +656,32 @@ final class NewTypeInference implements CompilerPass {
           dn = succ;
         }
         for (DiGraphNode<Node, ControlFlowGraph.Branch> succ :
-            cfg.getDirectedSuccNodes(dn)) {
+          this.cfg.getDirectedSuccNodes(dn)) {
           buildWorksetHelper(succ, workset, seen);
         }
         break;
+      }
+    }
+  }
+
+  // Analyze dead code, such as a catch that is never executed or a statement
+  // following a return/break/continue. This code can be a predecessor of live
+  // code in the cfg. We wait on incoming edges before adding nodes to the
+  // workset, and don't want dead code to block live code from being analyzed.
+  private void maybeAddDeadCode(
+      List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset,
+      Set<DiGraphNode<Node, ControlFlowGraph.Branch>> seen,
+      Node maybeDeadNode) {
+    if (maybeDeadNode == null) {
+      return;
+    }
+    DiGraphNode<Node, ControlFlowGraph.Branch> cfgNode =
+        this.cfg.getDirectedGraphNode(maybeDeadNode);
+    if (cfgNode == null) {
+      return;
+    }
+    if (this.cfg.getDirectedPredNodes(cfgNode).isEmpty()) {
+      buildWorksetHelper(cfgNode, workset, seen);
     }
   }
 
@@ -655,13 +690,13 @@ final class NewTypeInference implements CompilerPass {
     currentScope = scope;
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, scope.getRoot());
-    cfg = cfa.getCfg();
-    println(cfg);
+    this.cfg = cfa.getCfg();
+    println(this.cfg);
     // The size is > 1 when multiple files are compiled
     // Preconditions.checkState(cfg.getEntry().getOutEdges().size() == 1);
     List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset =
         new LinkedList<>();
-    buildWorkset(cfg.getEntry(), workset);
+    buildWorkset(this.cfg.getEntry(), workset);
     /* println("Workset: ", workset); */
     this.typeEnvFromDeclaredTypes = getTypeEnvFromDeclaredTypes();
     if (scope.isFunction() && scope.hasUndeclaredFormalsOrOuters()) {
@@ -674,7 +709,7 @@ final class NewTypeInference implements CompilerPass {
       // of the loop header has no effect. We should fix workset creation
       // (eg, by putting edges instead of nodes in seen, or some other way that
       // correctly waits for all incoming edges).
-      for (DiGraphEdge<Node, ControlFlowGraph.Branch> e : cfg.getEdges()) {
+      for (DiGraphEdge<Node, ControlFlowGraph.Branch> e : this.cfg.getEdges()) {
         envs.put(e, this.typeEnvFromDeclaredTypes);
       }
       analyzeFunctionBwd(workset);
@@ -948,7 +983,7 @@ final class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(!fnRoot.isFromExterns());
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     TypeEnv entryEnv = getEntryTypeEnv();
-    TypeEnv exitEnv = getInEnv(cfg.getImplicitReturn());
+    TypeEnv exitEnv = getInEnv(this.cfg.getImplicitReturn());
     if (exitEnv == null) {
       // This function only exits with THROWs
       exitEnv = envPutType(new TypeEnv(), RETVAL_ID, JSType.BOTTOM);
@@ -1010,7 +1045,7 @@ final class NewTypeInference implements CompilerPass {
       builder.addRetType(declRetType);
       if (!isAllowedToNotReturn(fn) &&
           !JSType.UNDEFINED.isSubtypeOf(declRetType) &&
-          hasPathWithNoReturn(cfg)) {
+          hasPathWithNoReturn(this.cfg)) {
         warnings.add(JSError.make(
             fnRoot, MISSING_RETURN_STATEMENT, declRetType.toString()));
       }
@@ -4077,7 +4112,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   TypeEnv getEntryTypeEnv() {
-    return getOutEnv(cfg.getEntry());
+    return getOutEnv(this.cfg.getEntry());
   }
 
   private static class DeferredCheck {
