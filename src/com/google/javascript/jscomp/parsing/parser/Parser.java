@@ -168,11 +168,11 @@ import java.util.List;
 public class Parser {
   private final Scanner scanner;
   private final ErrorReporter errorReporter;
-  private Token lastToken;
   private final Config config;
   private final CommentRecorder commentRecorder = new CommentRecorder();
   private final ArrayDeque<Boolean> inGeneratorContext = new ArrayDeque<>();
   private FeatureSet features = FeatureSet.ES3;
+  private SourcePosition lastSourcePosition;
 
   public Parser(
       Config config, ErrorReporter errorReporter,
@@ -181,6 +181,7 @@ public class Parser {
     this.errorReporter = errorReporter;
     this.scanner = new Scanner(errorReporter, commentRecorder, source, offset);
     this.inGeneratorContext.add(initialGeneratorContext);
+    lastSourcePosition = scanner.getPosition();
   }
 
   public Parser(
@@ -2770,7 +2771,11 @@ public class Parser {
   }
 
   private void resetScanner(ParseTree tree) {
-    scanner.setOffset(tree.location.start.offset);
+    // TODO(bradfordcsmith): lastSourcePosition should really point to the end of the last token
+    //     before the tree to correctly detect implicit semicolons, but it doesn't matter for the
+    //     current use case.
+    lastSourcePosition = tree.location.start;
+    scanner.setOffset(lastSourcePosition.offset);
   }
 
   private boolean peekAssignmentOperator() {
@@ -3522,7 +3527,7 @@ public class Parser {
    * Returns the line number of the most recently consumed token.
    */
   private int getLastLine() {
-    return lastToken.location.end.line;
+    return lastSourcePosition.line;
   }
 
   /**
@@ -3675,7 +3680,7 @@ public class Parser {
    * Returns a SourcePosition for the end of a parse tree that ends at the current location.
    */
   private SourcePosition getTreeEndLocation() {
-    return lastToken.location.end;
+    return lastSourcePosition;
   }
 
   /**
@@ -3694,26 +3699,27 @@ public class Parser {
    * <p>Tokenizing is contextual. nextToken() will never return a regular expression literal.
    */
   private Token nextToken() {
-    lastToken = scanner.nextToken();
-    return lastToken;
+    Token token = scanner.nextToken();
+    lastSourcePosition = token.location.end;
+    return token;
   }
 
   /**
    * Consumes a regular expression literal token and returns it.
    */
   private LiteralToken nextRegularExpressionLiteralToken() {
-    LiteralToken lastToken = scanner.nextRegularExpressionLiteralToken();
-    this.lastToken = lastToken;
-    return lastToken;
+    LiteralToken token = scanner.nextRegularExpressionLiteralToken();
+    lastSourcePosition = token.location.end;
+    return token;
   }
 
   /**
    * Consumes a template literal token and returns it.
    */
   private LiteralToken nextTemplateLiteralToken() {
-    LiteralToken lastToken = scanner.nextTemplateLiteralToken();
-    this.lastToken = lastToken;
-    return lastToken;
+    LiteralToken token = scanner.nextTemplateLiteralToken();
+    lastSourcePosition = token.location.end;
+    return token;
   }
 
   /**
