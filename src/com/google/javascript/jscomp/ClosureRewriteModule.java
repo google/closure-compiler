@@ -502,9 +502,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     void removeRoot(Node toRemove) {
       if (legacyNamespacesByScriptNode.containsKey(toRemove)) {
-        for (String removedModuleName : legacyNamespacesByScriptNode.removeAll(toRemove)) {
-          scriptDescriptionsByGoogModuleNamespace.remove(removedModuleName);
-        }
+        scriptDescriptionsByGoogModuleNamespace
+            .keySet()
+            .removeAll(legacyNamespacesByScriptNode.removeAll(toRemove));
       }
     }
   }
