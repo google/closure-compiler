@@ -1272,7 +1272,7 @@ class CodeGenerator {
     maybeAddGenericTypes(first);
 
     if (n.isAsyncFunction()) {
-      add("async ");
+      add("async");
     }
     add(first.getNext()); // param list
     maybeAddTypeDecl(n);

@@ -1066,37 +1066,6 @@ public class Parser {
     return peek(index, TokenType.FUNCTION);
   }
 
-  private ParseTree parseArrowFunctionTail(
-      SourcePosition start,
-      GenericTypeListTree generics,
-      FormalParameterListTree formalParameterList,
-      Expression expressionIn) {
-    FunctionDeclarationTree.Builder builder =
-        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.ARROW)
-            .setGenerics(generics)
-            .setFormalParameterList(formalParameterList);
-
-    inGeneratorContext.addLast(false);
-
-    if (peek(TokenType.COLON)) {
-      builder.setReturnType(parseTypeAnnotation());
-    }
-
-    if (peekImplicitSemiColon()) {
-      reportError("No newline allowed before '=>'");
-    }
-    eat(TokenType.ARROW);
-    if (peek(TokenType.OPEN_CURLY)) {
-      builder.setFunctionBody(parseFunctionBody());
-    } else {
-      builder.setFunctionBody(parseAssignment(expressionIn));
-    }
-
-    inGeneratorContext.removeLast();
-
-    return builder.build(getTreeLocation(start));
-  }
-
   private boolean peekFunctionTypeExpression() {
     if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // TODO(blickly): determine if we can parse this without the
@@ -2709,8 +2678,7 @@ public class Parser {
     // TODO(blickly): Allow TypeScript syntax in arrow function parameters
     ParseTree left = parseConditional(expressionIn);
     if (peek(TokenType.ARROW)) {
-      FormalParameterListTree params = transformArrowFunctionParameters(start, left);
-      return parseArrowFunctionTail(start, null, params, expressionIn);
+      return completeAssignmentExpressionParseAtArrow(left, expressionIn);
     }
     if (left.type == ParseTreeType.FORMAL_PARAMETER_LIST) {
       reportError("invalid paren expression");
@@ -2728,23 +2696,131 @@ public class Parser {
     return left;
   }
 
-  private FormalParameterListTree transformArrowFunctionParameters(
-      SourcePosition start, ParseTree tree) {
-    switch (tree.type) {
-      case IDENTIFIER_EXPRESSION:
-        return new FormalParameterListTree(
-            getTreeLocation(start), ImmutableList.<ParseTree>of(tree));
-      case PAREN_EXPRESSION:
-        resetScanner(tree);
-        // If we fail to parse as an ArrowFunction paramater list then
-        // parseFormalParameterList will take care reporting errors.
-        return parseFormalParameterList(ParamContext.IMPLEMENTATION);
+  private ParseTree completeAssignmentExpressionParseAtArrow(
+      ParseTree leftOfArrow, Expression expressionIn) {
+    if (leftOfArrow.type == ParseTreeType.CALL_EXPRESSION) {
+      // Could be:
+      //   ... async (args) => ...
+      // or
+      //   ... someAssignmentExpression // implicit semicolon
+      //   (args) =>
+      return completeAssignmentExpressionParseAtArrow(leftOfArrow.asCallExpression(), expressionIn);
+    } else {
+      return completeArrowFunctionParseAtArrow(leftOfArrow, expressionIn);
+    }
+  }
+
+  private ParseTree completeArrowFunctionParseAtArrow(
+      ParseTree leftOfArrow, Expression expressionIn) {
+    features = features.require(Feature.ARROW_FUNCTIONS);
+    FormalParameterListTree arrowFormalParameters = transformToArrowFormalParameters(leftOfArrow);
+    if (peekImplicitSemiColon()) {
+      reportError("No newline allowed before '=>'");
+    }
+    eat(TokenType.ARROW);
+    ParseTree arrowFunctionBody = parseArrowFunctionBody(expressionIn);
+
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.ARROW)
+            .setFormalParameterList(arrowFormalParameters)
+            .setFunctionBody(arrowFunctionBody);
+    return builder.build(getTreeLocation(arrowFormalParameters.location.start));
+  }
+
+  private FormalParameterListTree transformToArrowFormalParameters(ParseTree leftOfArrow) {
+    FormalParameterListTree arrowParameterList;
+    switch (leftOfArrow.type) {
       case FORMAL_PARAMETER_LIST:
-        return tree.asFormalParameterList();
+        arrowParameterList = leftOfArrow.asFormalParameterList();
+        break;
+      case IDENTIFIER_EXPRESSION:
+        // e.g. x => x + 1
+        arrowParameterList =
+            new FormalParameterListTree(
+                leftOfArrow.location, ImmutableList.<ParseTree>of(leftOfArrow));
+        break;
+      case ARGUMENT_LIST:
+      case PAREN_EXPRESSION:
+        // e.g. (x) => x + 1
+        resetScanner(leftOfArrow);
+        // If we fail to parse as an ArrowFunction parameter list then
+        // parseFormalParameterList will take care of reporting errors.
+        arrowParameterList = parseFormalParameterList(ParamContext.IMPLEMENTATION);
+        break;
       default:
-        reportError("invalid arrow function parameters");
-        // return empty parameter list so we can keep going to find other errors
-        return new FormalParameterListTree(getTreeLocation(start), ImmutableList.<ParseTree>of());
+        reportError(leftOfArrow, "invalid arrow function parameters");
+        arrowParameterList = newEmptyFormalParameterList(leftOfArrow.location);
+    }
+    return arrowParameterList;
+  }
+
+  private ParseTree completeAssignmentExpressionParseAtArrow(
+      CallExpressionTree callExpression, Expression expressionIn) {
+    ParseTree operand = callExpression.operand;
+    ParseTree arguments = callExpression.arguments;
+    ParseTree result;
+    if (operand.location.end.line < arguments.location.start.line) {
+      // break at the implicit semicolon
+      // Example:
+      // foo.bar // operand and implicit semicolon
+      // () => { doSomething; };
+      resetScannerAfter(operand);
+      result = operand;
+    } else if (isAsyncId(operand)) {
+      // e.g. async () => { doSomething; };
+      resetScanner(operand);
+      result = parseAsyncArrowFunction(expressionIn);
+    } else {
+      reportError("'=>' unexpected");
+      result = callExpression;
+    }
+    return result;
+  }
+
+  private ParseTree parseAsyncArrowFunction(Expression expressionIn) {
+    SourcePosition start = getTreeStartLocation();
+    features = features.require(Feature.ARROW_FUNCTIONS).require(Feature.ASYNC_FUNCTIONS);
+    eatPredefinedString(ASYNC);
+    FormalParameterListTree arrowParameterList =
+        parseFormalParameterList(ParamContext.IMPLEMENTATION);
+    if (peekImplicitSemiColon()) {
+      reportError("No newline allowed before '=>'");
+    }
+    eat(TokenType.ARROW);
+    ParseTree arrowFunctionBody = parseArrowFunctionBody(expressionIn);
+
+    FunctionDeclarationTree.Builder builder =
+        FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.ARROW)
+            .setAsync(true)
+            .setFormalParameterList(arrowParameterList)
+            .setFunctionBody(arrowFunctionBody);
+    return builder.build(getTreeLocation(start));
+  }
+
+  private ParseTree parseArrowFunctionBody(Expression expressionIn) {
+    inGeneratorContext.addLast(false);
+    ParseTree arrowFunctionBody;
+    if (peek(TokenType.OPEN_CURLY)) {
+      arrowFunctionBody = parseFunctionBody();
+    } else {
+      arrowFunctionBody = parseAssignment(expressionIn);
+    }
+    inGeneratorContext.removeLast();
+    return arrowFunctionBody;
+  }
+
+  private FormalParameterListTree newEmptyFormalParameterList(SourceRange location) {
+    return new FormalParameterListTree(location, ImmutableList.<ParseTree>of());
+  }
+
+  /**
+   * Does {@code parseTree} represent the 'async' keyword?
+   */
+  private boolean isAsyncId(ParseTree parseTree) {
+    if (parseTree.type == ParseTreeType.IDENTIFIER_EXPRESSION) {
+      return parseTree.asIdentifierExpression().identifierToken.value.equals(ASYNC);
+    } else {
+      return false;
     }
   }
 
@@ -2775,6 +2851,13 @@ public class Parser {
     //     before the tree to correctly detect implicit semicolons, but it doesn't matter for the
     //     current use case.
     lastSourcePosition = tree.location.start;
+    scanner.setOffset(lastSourcePosition.offset);
+  }
+
+  private void resetScannerAfter(ParseTree parseTree) {
+    lastSourcePosition = parseTree.location.end;
+    // NOTE: The "end" position for a parseTree actually points to the first character after the
+    //     last token in the tree, so this is not an off-by-one error.
     scanner.setOffset(lastSourcePosition.offset);
   }
 
@@ -3792,6 +3875,21 @@ public class Parser {
       reportError(message, arguments);
     } else {
       errorReporter.reportError(token.getStart(), message, arguments);
+    }
+  }
+
+  /**
+   * Reports an error message at a given parse tree's location.
+   *
+   * @param parseTree The location to report the message at.
+   * @param message The message to report in String.format style.
+   * @param arguments The arguments to fill in the message format.
+   */
+  private void reportError(ParseTree parseTree, String message, Object... arguments) {
+    if (parseTree == null) {
+      reportError(message, arguments);
+    } else {
+      errorReporter.reportError(parseTree.location.start, message, arguments);
     }
   }
 

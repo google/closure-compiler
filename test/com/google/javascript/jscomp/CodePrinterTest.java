@@ -2108,6 +2108,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("let f=async\nfunction f(){}", "let f=async;function f(){}");
   }
 
+  public void testAsyncArrowFunction() {
+    languageMode = LanguageMode.ECMASCRIPT8;
+    assertPrintSame("async()=>1");
+    // implicit semicolon prevents async being treated as a keyword
+    assertPrint("f=async\n()=>1", "f=async;()=>1");
+  }
+
   /**
    * Regression test for b/28633247 - necessary parens dropped around arrow functions.
    */

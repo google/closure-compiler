@@ -2750,6 +2750,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testArrowInvalid() {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("*()=>1;", "primary expression expected");
+    expectFeatures(Feature.ARROW_FUNCTIONS);
     parseError("var f = x\n=>2", "No newline allowed before '=>'");
     parseError("f = (x,y)\n=>2;", "No newline allowed before '=>'");
     parseError("f( (x,y)\n=>2)", "No newline allowed before '=>'");
@@ -2780,6 +2781,36 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT8;
     parseError("async function *f(){}", "async functions cannot be generators");
     parseError("f = async function *(){}", "async functions cannot be generators");
+  }
+
+  public void testAsyncArrowFunction() {
+    String arrowFunctionSource = "f = async (x) => x + 1";
+    expectFeatures(Feature.ASYNC_FUNCTIONS, Feature.ARROW_FUNCTIONS);
+
+    for (LanguageMode m : LanguageMode.values()) {
+      mode = m;
+      if (m.featureSet.contains(Feature.ASYNC_FUNCTIONS)) {
+        parse(arrowFunctionSource);
+      } else if (m.featureSet.contains(Feature.ARROW_FUNCTIONS)) {
+        parseWarning(
+            arrowFunctionSource,
+            requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+      } else {
+        parseWarning(
+            arrowFunctionSource,
+            requiresLanguageModeMessage(LanguageMode.ECMASCRIPT6, Feature.ARROW_FUNCTIONS),
+            requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
+      }
+    }
+  }
+
+  public void testAsyncArrowInvalid() {
+    mode = LanguageMode.ECMASCRIPT8;
+    parseError("f = not_async (x) => x + 1;", "'=>' unexpected");
+ 
+    expectFeatures(Feature.ARROW_FUNCTIONS);
+    // async requires parens
+    parseError("f = async x => x + 1;", "Semi-colon expected");
   }
 
   public void testFor_ES5() {
