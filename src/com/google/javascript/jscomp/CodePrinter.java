@@ -647,6 +647,14 @@ public final class CodePrinter {
       return this;
     }
 
+    /**
+     * Set a custom code generator factory to enable custom code generation.
+     */
+    public Builder setCodeGeneratorFactory(CodeGeneratorFactory factory) {
+      this.codeGeneratorFactory = factory;
+      return this;
+    }
+
     public interface CodeGeneratorFactory {
       CodeGenerator getCodeGenerator(Format outputFormat, CodeConsumer cc);
     }
@@ -665,7 +673,10 @@ public final class CodePrinter {
     }
   }
 
-  enum Format {
+  /**
+   * Specifies a format for code generation.
+   */
+  public enum Format {
     COMPACT,
     PRETTY,
     TYPED;

@@ -31,7 +31,7 @@ import java.util.Map;
  * CodeConsumer.
  *
  */
-class CodeGenerator {
+public class CodeGenerator {
   private static final String LT_ESCAPED = "\\x3c";
   private static final String GT_ESCAPED = "\\x3e";
 
@@ -62,7 +62,7 @@ class CodeGenerator {
     return new CodeGenerator(consumer);
   }
 
-  CodeGenerator(
+  protected CodeGenerator(
       CodeConsumer consumer,
       CompilerOptions options) {
     cc = consumer;
@@ -88,7 +88,7 @@ class CodeGenerator {
     add("'use strict';");
   }
 
-  void add(String str) {
+  protected void add(String str) {
     cc.add(str);
   }
 
@@ -96,11 +96,11 @@ class CodeGenerator {
     cc.addIdentifier(identifierEscape(identifier));
   }
 
-  void add(Node n) {
+  protected void add(Node n) {
     add(n, Context.OTHER);
   }
 
-  void add(Node n, Context context) {
+  protected void add(Node n, Context context) {
     if (!cc.continueProcessing()) {
       return;
     }
@@ -1833,10 +1833,12 @@ class CodeGenerator {
     return null;
   }
 
-  // Information on the current context. Used for disambiguating special cases.
-  // For example, a "{" could indicate the start of an object literal or a
-  // block, depending on the current context.
-  enum Context {
+  /**
+   * Information on the current context. Used for disambiguating special cases.
+   * For example, a "{" could indicate the start of an object literal or a
+   * block, depending on the current context.
+   */
+  public enum Context {
     STATEMENT,
     BEFORE_DANGLING_ELSE, // a hack to resolve the else-clause ambiguity
     START_OF_EXPR,

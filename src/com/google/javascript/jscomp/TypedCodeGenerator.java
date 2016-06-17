@@ -44,7 +44,7 @@ class TypedCodeGenerator extends CodeGenerator {
   }
 
   @Override
-  void add(Node n, Context context) {
+  protected void add(Node n, Context context) {
     Node parent = n.getParent();
     if (parent != null
         && (parent.isBlock()

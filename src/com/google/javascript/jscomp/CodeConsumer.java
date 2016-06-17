@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Node;
  * @see CodePrinter
  * @see InlineCostEstimator
  */
-abstract class CodeConsumer {
+public abstract class CodeConsumer {
   boolean statementNeedsEnded = false;
   boolean statementStarted = false;
   boolean sawFunction = false;
