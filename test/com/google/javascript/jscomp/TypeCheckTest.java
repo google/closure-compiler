@@ -16701,6 +16701,54 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "}"));
   }
 
+  public void testModuloNullUndef10() {
+    testTypesModuloNullUndefined(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @type {function(?number)} */",
+        "Foo.prototype.prop;",
+        "/** @constructor @implements {Foo} */",
+        "function Bar() {}",
+        "/** @type {function(number)} */",
+        "Bar.prototype.prop;"));
+  }
+
+  public void testModuloNullUndef11() {
+    testTypesModuloNullUndefined(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Bar() {}",
+        "/** @type {!number} */",
+        "Bar.prototype.prop;",
+        "function f(/** ?number*/ n) {",
+        "  (new Bar).prop = n;",
+        "}"));
+  }
+
+  public void testModuloNullUndef12() {
+    testTypesModuloNullUndefined(LINE_JOINER.join(
+        "function f(/** number */ n) {}",
+        "f(/** @type {?number} */ (null));"));
+  }
+
+  public void testModuloNullUndefThatWorkedWithoutSpecialSubtypingRules() {
+    testTypes(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(/** function(?Foo, !Foo) */ x) {",
+        "  return /** @type {function(!Foo, ?Foo)} */ (x);",
+        "}"));
+
+    testTypes(LINE_JOINER.join(
+        "function f(/** ?Object */ x) {",
+        "  return {} instanceof x;",
+        "}"));
+
+    testTypes(LINE_JOINER.join(
+        "function f(/** ?Function */ x) {",
+        "  return x();",
+        "}"));
+  }
+
   private void testTypesModuloNullUndefined(String js) {
     compiler.getOptions().setTypecheckModuloNullUndefined(true);
     testTypes(js);

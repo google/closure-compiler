@@ -700,10 +700,15 @@ class TypeValidator {
         // Implemented, but not correctly typed
         FunctionType constructor =
             implementedInterface.toObjectType().getConstructor();
-        registerMismatch(found, required, report(t.makeError(propNode,
+        JSError err = t.makeError(propNode,
             HIDDEN_INTERFACE_PROPERTY_MISMATCH, prop,
             constructor.getTopMostDefiningType(prop).toString(),
-            required.toString(), found.toString())));
+            required.toString(), found.toString());
+        registerMismatch(found, required, err);
+        if (this.subtypingMode == SubtypingMode.NORMAL
+            || !found.isSubtypeModuloNullUndefined(required)) {
+          report(err);
+        }
       }
     }
   }
