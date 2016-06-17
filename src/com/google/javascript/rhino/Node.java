@@ -597,20 +597,20 @@ public class Node implements Serializable {
     return new StringNode(token, str, lineno, charno);
   }
 
-  public Token getKind() {
+  public Token getToken() {
     return token;
   }
 
   public Token getType() {
-    return getKind();
+    return getToken();
   }
 
-  public void setKind(Token token) {
+  public void setToken(Token token) {
     this.token = token;
   }
 
   public void setType(Token token) {
-    setKind(token);
+    setToken(token);
   }
 
   public boolean hasChildren() {
