@@ -206,7 +206,12 @@ public class Parser {
       ES8
     }
 
-    public final boolean is6Typed;
+    /**
+     * Indicates that the parser should look for TypeScript-like data type syntax.
+     */
+    // TODO(bradfordcsmith): Make sure all of the type syntax handling code is avoided when
+    //     this is false.
+    public final boolean parseTypeSyntax;
     public final boolean atLeast6;
     public final boolean atLeast5;
     public final boolean isStrictMode;
@@ -215,7 +220,7 @@ public class Parser {
     public final boolean warnES6NumberLiteral;
 
     public Config(Mode mode) {
-      is6Typed = mode == Mode.ES6_TYPED;
+      parseTypeSyntax = mode == Mode.ES6_TYPED;
       atLeast6 = mode == Mode.ES6 || mode == Mode.ES6_STRICT
           || mode == Mode.ES6_TYPED;
       atLeast5 = atLeast6 || mode == Mode.ES5 || mode == Mode.ES5_STRICT;
@@ -747,7 +752,7 @@ public class Parser {
     }
 
     ImmutableList.Builder<ParseTree> interfaces = ImmutableList.builder();
-    if (peek(TokenType.IMPLEMENTS)) {
+    if (config.parseTypeSyntax && peek(TokenType.IMPLEMENTS)) {
       eat(TokenType.IMPLEMENTS);
       ParseTree type = parseType();
       interfaces.add(type);
@@ -823,7 +828,7 @@ public class Parser {
       nameExpr = null;
       name = eatIdOrKeywordAsId();
     } else {
-      if (peekIndexSignature()) {
+      if (config.parseTypeSyntax && peekIndexSignature()) {
         ParseTree indexSignature = parseIndexSignature();
         eatPossibleImplicitSemiColon();
         return indexSignature;
@@ -1067,7 +1072,7 @@ public class Parser {
   }
 
   private boolean peekFunctionTypeExpression() {
-    if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
+    if (config.parseTypeSyntax && peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // TODO(blickly): determine if we can parse this without the
       // overhead of forking the parser.
       Parser p = createLookaheadParser();
@@ -3666,11 +3671,8 @@ public class Parser {
   }
 
   private TokenType maybeParseAccessibilityModifier() {
-    if (peekAccessibilityModifier()) {
+    if (config.parseTypeSyntax && peekAccessibilityModifier()) {
       features = features.require(FeatureSet.TYPESCRIPT);
-      if (!config.is6Typed) {
-        reportError("Accessibility modifier is only supported in ES6 typed mode");
-      }
       return nextToken().type;
     } else {
       return null;
