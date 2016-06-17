@@ -94,6 +94,10 @@ public final class JSTypes {
     return this.builtinObject == null ? null : this.builtinObject.getAsNominalType();
   }
 
+  public JSType getObjectInstance() {
+    return this.builtinObject == null ? null : this.builtinObject.getInstanceAsJSType();
+  }
+
   public NominalType getIObjectType() {
     return this.iObject == null ? null : this.iObject.getAsNominalType();
   }
@@ -130,15 +134,15 @@ public final class JSTypes {
     return regexpInstance != null ? regexpInstance : JSType.UNKNOWN;
   }
 
-  JSType getNumberInstance() {
+  public JSType getNumberInstance() {
     return numberInstance != null ? numberInstance : JSType.NUMBER;
   }
 
-  JSType getBooleanInstance() {
+  public JSType getBooleanInstance() {
     return booleanInstance != null ? booleanInstance : JSType.BOOLEAN;
   }
 
-  JSType getStringInstance() {
+  public JSType getStringInstance() {
     return stringInstance != null ? stringInstance : JSType.STRING;
   }
 

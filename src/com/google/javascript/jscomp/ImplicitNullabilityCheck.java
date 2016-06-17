@@ -25,8 +25,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
-import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.List;
 
@@ -107,13 +107,15 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
                 }
                 break;
               }
+              default:
+                break;
             }
           }
           String typeName = node.getString();
           if (typeName.equals("null") || registry.getType(typeName) == null) {
             return;
           }
-          JSType type = (JSType) registry.createTypeFromCommentNode(node);
+          TypeI type = registry.createTypeFromCommentNode(node);
           if (type.isNullable()) {
             reportWarning(t, node, typeName);
           }

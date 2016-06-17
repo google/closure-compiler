@@ -73,6 +73,9 @@ final class NTIScope implements DeclaredTypeRegistry {
   private ImmutableSet<String> unknownTypeNames = ImmutableSet.of();
   private Map<String, Typedef> localTypedefs = new LinkedHashMap<>();
   private Map<String, Namespace> localNamespaces = new LinkedHashMap<>();
+  // The namespace map that we preserve post-finalization, purely for use
+  // in GlobalTypeInfo for symbol table purposes.
+  private Map<String, Namespace> preservedNamespaces;
   // The set localEnums is used for enum resolution, and then discarded.
   private Set<EnumType> localEnums = new LinkedHashSet<>();
 
@@ -624,6 +627,13 @@ final class NTIScope implements DeclaredTypeRegistry {
     return parent == null ? null : parent.getDeclaration(name, includeTypes);
   }
 
+  public JSType getType(String typeName) {
+    Preconditions.checkNotNull(
+        preservedNamespaces, "Failed to preserve namespaces post-finalization");
+    RawNominalType nominalType = (RawNominalType) preservedNamespaces.get(typeName);
+    return nominalType == null ? null : nominalType.getInstanceAsJSType();
+  }
+
   void resolveTypedefs(JSTypeCreatorFromJSDoc typeParser) {
     for (Typedef td : localTypedefs.values()) {
       if (!td.isResolved()) {
@@ -673,6 +683,7 @@ final class NTIScope implements DeclaredTypeRegistry {
       locals.put(typedefName, JSType.UNDEFINED);
     }
     copyOuterVarsTransitively(this);
+    preservedNamespaces = localNamespaces;
     localNamespaces = ImmutableMap.of();
     localTypedefs = ImmutableMap.of();
     escapedVars = ImmutableSet.of();

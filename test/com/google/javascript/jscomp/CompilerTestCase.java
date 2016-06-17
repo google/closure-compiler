@@ -221,7 +221,7 @@ public abstract class CompilerTestCase extends TestCase {
           "/**",
           " * @param {...T} var_args",
           " * @return {number} The new length of the array.",
-          " * @this {{length: number}|Array.<T>}",
+          " * @this {{length: number}|!Array.<T>}",
           " * @template T",
           " * @modifies {this}",
           " */",
@@ -762,7 +762,9 @@ public abstract class CompilerTestCase extends TestCase {
     options.setCheckTypes(parseTypeInfo);
     compiler.init(externs, js, options);
 
-    BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
+    if (this.typeCheckEnabled) {
+      BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
+    }
 
     test(compiler, maybeCreateArray(expected), error, warning, description);
   }

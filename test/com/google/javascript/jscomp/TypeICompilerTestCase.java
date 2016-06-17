@@ -29,6 +29,13 @@ import java.util.List;
 public abstract class TypeICompilerTestCase extends CompilerTestCase {
 
   @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    options = super.getOptions(options);
+    options.setRunOTIAfterNTI(false);
+    return options;
+  }
+
+  @Override
   public void test(
       List<SourceFile> externs,
       String js,
@@ -51,6 +58,15 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     List<SourceFile> externsInputs = ImmutableList.of(externsFile);
     super.test(externsInputs, js, null, null, warning, null);
     disableTypeCheck();
+  }
+
+  public void testSameNtiOnly(String externs, String js, DiagnosticType warning) {
+    enableNewTypeInference();
+    SourceFile externsFile = SourceFile.fromCode("externs", externs);
+    externsFile.setIsExtern(true);
+    List<SourceFile> externsInputs = ImmutableList.of(externsFile);
+    super.test(externsInputs, js, null, null, warning, null);
+    disableNewTypeInference();
   }
 }
 

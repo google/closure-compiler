@@ -232,6 +232,14 @@ public final class JSTypeCreatorFromJSDoc {
         ? ImmutableList.<String>of() : ownerType.getTypeParameters());
   }
 
+  public JSType getTypeOfCommentNode(
+      Node n, RawNominalType ownerType, DeclaredTypeRegistry registry) {
+    return getTypeFromComment(
+        n,
+        registry,
+        ownerType == null ? ImmutableList.<String>of() : ownerType.getTypeParameters());
+  }
+
   private JSType getDeclaredTypeOfNode(JSDocInfo jsdoc,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
     if (jsdoc == null) {

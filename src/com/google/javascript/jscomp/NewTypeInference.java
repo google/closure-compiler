@@ -399,7 +399,6 @@ final class NewTypeInference implements CompilerPass {
       for (DeferredCheck check : deferredChecks.values()) {
         check.runCheck(summaries, warnings);
       }
-      compiler.setSymbolTable(null);
       if (measureMem) {
         System.out.println("Peak mem: " + peakMem + "MB");
       }

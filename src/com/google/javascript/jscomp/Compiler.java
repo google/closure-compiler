@@ -1200,7 +1200,11 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   public TypeIRegistry getTypeIRegistry() {
-    return getTypeRegistry();
+    if (options.getNewTypeInference() && !options.getRunOTIAfterNTI()) {
+      return getSymbolTable();
+    } else {
+      return getTypeRegistry();
+    }
   }
 
   @Override

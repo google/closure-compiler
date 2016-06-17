@@ -43,6 +43,9 @@ import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,7 +67,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-class GlobalTypeInfo implements CompilerPass {
+class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   static final DiagnosticType DUPLICATE_JSDOC = DiagnosticType.warning(
       "JSC_NTI_DUPLICATE_JSDOC",
@@ -426,7 +429,6 @@ class GlobalTypeInfo implements CompilerPass {
     for (JSError warning : typeParser.getWarnings()) {
       this.warnings.add(warning);
     }
-    this.typeParser = null;
     this.warnings = null;
     this.varNameGen = null;
     this.funNameGen = null;
@@ -2395,6 +2397,79 @@ class GlobalTypeInfo implements CompilerPass {
       if (this.methodScope != null) {
         this.methodScope.setDeclaredType(updatedType);
       }
+    }
+  }
+
+  @Override
+  public TypeI createTypeFromCommentNode(Node n) {
+    return typeParser.getTypeOfCommentNode(n, null, globalScope);
+  }
+
+  @Override
+  public JSType getNativeFunctionType(JSTypeNative typeId) {
+    return getNativeType(typeId);
+  }
+
+  @Override
+  public JSType getNativeObjectType(JSTypeNative typeId) {
+    return getNativeType(typeId);
+  }
+
+  @Override
+  public JSType getNativeType(JSTypeNative typeId) {
+    // NOTE(aravindpg): not all JSTypeNative variants are handled here; add more as-needed.
+    switch (typeId) {
+      case ALL_TYPE:
+        return JSType.TOP;
+      case NO_TYPE:
+        return JSType.BOTTOM;
+      case UNKNOWN_TYPE:
+        return JSType.UNKNOWN;
+      case VOID_TYPE:
+        return JSType.UNDEFINED;
+      case NULL_TYPE:
+        return JSType.NULL;
+      case BOOLEAN_TYPE:
+        return JSType.BOOLEAN;
+      case STRING_TYPE:
+        return JSType.STRING;
+      case NUMBER_TYPE:
+        return JSType.NUMBER;
+      case REGEXP_TYPE:
+        return commonTypes.getRegexpType();
+      case ARRAY_TYPE:
+        return commonTypes.getArrayInstance();
+      case OBJECT_TYPE:
+        return JSType.TOP_OBJECT;
+      default:
+        throw new RuntimeException("Native type " + typeId.name() + " not found");
+    }
+  }
+
+  @Override
+  public String getReadableTypeName(Node n) {
+    // TODO(aravindpg): Unimplemented for now. Implementation should follow the one in
+    // JSTypeRegistry.
+    throw new UnsupportedOperationException("getReadableTypeName not implemented yet");
+  }
+
+  @Override
+  public JSType getType(String typeName) {
+    // Primitives are not present in the global scope, so hardcode them
+    switch (typeName) {
+      case "boolean":
+        return JSType.BOOLEAN;
+      case "number":
+        return JSType.NUMBER;
+      case "string":
+        return JSType.STRING;
+      case "null":
+        return JSType.NULL;
+      case "undefined":
+      case "void":
+        return JSType.UNDEFINED;
+      default:
+        return globalScope.getType(typeName);
     }
   }
 }
