@@ -102,6 +102,19 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "alert(1);"));
   }
 
+  public void testGoogModuleNoShorthand() {
+    testWarning(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "goog.require('a.c');",
+            "goog.require('a.b.d');",
+            "goog.require('a.b.c');",
+            "",
+            "alert(1);"),
+        REQUIRES_NOT_SORTED);
+  }
+
   public void testGoogModuleWithDestructuring() {
     testSameEs6(
         LINE_JOINER.join(

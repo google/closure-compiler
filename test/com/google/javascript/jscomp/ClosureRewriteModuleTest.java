@@ -1384,8 +1384,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
   }
 
   public void testUselessUseStrict() {
-    testWarning(LINE_JOINER.join(
-        "'use strict';",
-        "goog.module('b.c.c');"), ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE);
+    testWarning(
+        "'use strict'; goog.module('b.c.c');", ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE);
   }
 }
