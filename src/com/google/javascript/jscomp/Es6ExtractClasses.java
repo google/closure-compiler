@@ -42,7 +42,7 @@ import java.util.Set;
 public final class Es6ExtractClasses
     extends NodeTraversal.AbstractPostOrderCallback implements HotSwapCompilerPass {
 
-  private static final String CLASS_DECL_VAR = "$classdecl$var";
+  static final String CLASS_DECL_VAR = "$classdecl$var";
 
   private final AbstractCompiler compiler;
   private final ExpressionDecomposer expressionDecomposer;
