@@ -59,7 +59,6 @@ import java.util.Set;
  *
  * @author johnlenz@google.com (johnlenz)
  */
-// public for ReplaceDebugStringsTest
 class Normalize implements CompilerPass {
 
   private final AbstractCompiler compiler;
