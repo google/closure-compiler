@@ -1033,9 +1033,20 @@ public final class NodeUtil {
         return checkForNewObjects || !isFunctionExpression(n);
 
       case CLASS:
-        // Must also check the extends clause for side effects.
-        return checkForNewObjects || !isClassExpression(n)
-            || checkForStateChangeHelper(n.getSecondChild(), checkForNewObjects, compiler);
+        return checkForNewObjects || isClassDeclaration(n)
+            // Check the extends clause for side effects.
+            || checkForStateChangeHelper(n.getSecondChild(), checkForNewObjects, compiler)
+            // Check for class members that are computed properties with side effects.
+            || checkForStateChangeHelper(n.getLastChild(), checkForNewObjects, compiler);
+
+      case CLASS_MEMBERS:
+        for (Node member = n.getFirstChild(); member != null; member = member.getNext()) {
+          if (member.isComputedProp()
+              && checkForStateChangeHelper(member.getFirstChild(), checkForNewObjects, compiler)) {
+            return true;
+          }
+        }
+        return false;
 
       case NEW:
         if (checkForNewObjects) {

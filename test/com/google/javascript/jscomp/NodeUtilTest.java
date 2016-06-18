@@ -44,7 +44,7 @@ public final class NodeUtilTest extends TestCase {
     compiler.initCompilerOptionsIfTesting();
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
     Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrors()).isEmpty();
     return n;
   }
 
@@ -405,6 +405,8 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(false, "[function a(){}]");
     assertSideEffect(false, "(class { })");
     assertSideEffect(false, "(class { method() { i++ } })");
+    assertSideEffect(true, "(class { [computedName()]() {} })");
+    assertSideEffect(false, "(class { [computedName]() {} })");
     assertSideEffect(false, "(class Foo extends Bar { })");
     assertSideEffect(true, "(class extends foo() { })");
 
