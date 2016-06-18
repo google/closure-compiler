@@ -435,6 +435,7 @@ Document.prototype.getElementsByTagName = function(tagname) {};
 /**
  * @constructor
  * @implements {IArrayLike<T>}
+ * @implements {Iterable<T>}
  * @template T
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-536297177
  */
@@ -457,6 +458,7 @@ NodeList.prototype.item = function(index) {};
  * @constructor
  * @implements {IObject<(string|number), T>}
  * @implements {IArrayLike<T>}
+ * @implements {Iterable<T>}
  * @template T
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1780488922
  */
