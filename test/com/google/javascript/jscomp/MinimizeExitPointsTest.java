@@ -16,20 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.Node;
-
 /**
  * @author johnlenz@google.com (John Lenz)
  */
 public final class MinimizeExitPointsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node js) {
-        NodeTraversal.traverseEs6(compiler, js, new MinimizeExitPoints(compiler));
-      }
-    };
+    return new MinimizeExitPoints(compiler);
   }
 
   @Override
@@ -78,7 +71,12 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
          "f:g:{if(a()){}else{}}");
   }
 
-  public void testFunctionReturnOptimization() throws Exception {
+  public void testFunctionReturnOptimization1() throws Exception {
+    fold("function f(){return}",
+         "function f(){}");
+  }
+
+  public void testFunctionReturnOptimization2() throws Exception {
     fold("function f(){if(a()){b();if(c())return;}}",
          "function f(){if(a()){b();if(c());}}");
     fold("function f(){if(x)return; x=3; return; }",

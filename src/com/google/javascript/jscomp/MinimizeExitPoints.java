@@ -17,7 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
+import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -31,10 +32,7 @@ import javax.annotation.Nullable;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-class MinimizeExitPoints
-    extends AbstractPostOrderCallback
-    implements CompilerPass {
-
+class MinimizeExitPoints extends AbstractShallowCallback implements CompilerPass {
   AbstractCompiler compiler;
 
   MinimizeExitPoints(AbstractCompiler compiler) {
@@ -43,8 +41,15 @@ class MinimizeExitPoints
 
   @Override
   public void process(Node externs, Node root) {
-    // TODO(johnlenz): only inspect changed functions
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverseChangedFunctions(compiler, new FunctionCallback() {
+        @Override
+        public void enterFunction(AbstractCompiler compiler, Node root) {
+          if (root.isFunction()) {
+            root = root.getLastChild();
+          }
+          NodeTraversal.traverseEs6(compiler, root, MinimizeExitPoints.this);
+        }
+    });
   }
 
   @Override
@@ -72,11 +77,12 @@ class MinimizeExitPoints
         }
         break;
 
-      case FUNCTION:
-        // FYI: the function will be analyzed w/out a call to
-        // NodeTraversal/pushScope. Bypassing pushScope could cause a bug if
-        // there is code that relies on NodeTraversal knowing the correct scope.
-        tryMinimizeExits(n.getLastChild(), Token.RETURN, null);
+      case BLOCK:
+        // The traversal starts at the function block so `parent` will be null, so we use
+        // getParent here.
+        if (n.getParent() != null && n.getParent().isFunction()) {
+          tryMinimizeExits(n, Token.RETURN, null);
+        }
         break;
 
       case SWITCH:
@@ -165,7 +171,7 @@ class MinimizeExitPoints
     }
 
     // The rest assumes a block with at least one child, bail on anything else.
-    if (!n.isBlock() || n.getLastChild() == null) {
+    if (!n.isBlock() || !n.hasChildren()) {
       return;
     }
 
@@ -173,8 +179,7 @@ class MinimizeExitPoints
     // Convert "if (blah) break;  if (blah2) break; other_stmt;" to
     // become "if (blah); else { if (blah2); else { other_stmt; } }"
     // which will get converted to "if (!blah && !blah2) { other_stmt; }".
-    for (Node c : n.children()) {
-
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // An 'if' block to process below.
       if (c.isIf()) {
         Node ifTree = c;
