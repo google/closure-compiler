@@ -3410,6 +3410,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = compile(options, js);
+    assertThat(compiler.getErrors()).isEmpty();
     String result = compiler.toSource(compiler.getJsRoot());
     assertThat(result).isNotEmpty();
     assertThat(result).doesNotContain("No one ever calls me");
