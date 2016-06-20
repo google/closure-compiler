@@ -58,19 +58,19 @@ public class NodeTraversal {
   private final Deque<Node> scopeRoots = new ArrayDeque<>();
 
   /**
+   * Stack containing the control flow graphs (CFG) that have been created.
+   * There are fewer CFGs than scopes, since block-level scopes are not valid CFG roots.
+   * The CFG objects are lazily populated: elements are {@code null} until requested by
+   * {@link #getControlFlowGraph()}. Note that {@link ArrayDeque} does not allow
+   * {@code null} elements, so {@link LinkedList} is used instead.
+   */
+  private Deque<ControlFlowGraph<Node>> cfgs = new LinkedList<>();
+
+  /**
    * A stack of scope roots that are valid cfg roots. All cfg roots that have not been created
    * are represented in this Deque.
    */
   private final Deque<Node> cfgRoots = new ArrayDeque<>();
-
-
-  /**
-   * Stack of control flow graphs (CFG). There is one CFG per scope. CFGs
-   * are lazily populated: elements are {@code null} until requested by
-   * {@link #getControlFlowGraph()}. Note that {@link ArrayDeque} does not allow
-   * {@code null} elements, so {@link LinkedList} is used instead.
-   */
-  Deque<ControlFlowGraph<Node>> cfgs = new LinkedList<>();
 
   /** The current source file name */
   private String sourceName;
@@ -704,16 +704,21 @@ public class NodeTraversal {
     return root.isFunction() ? root : null;
   }
 
-  /** Creates a new scope (e.g. when entering a function). */
-  private void pushScope(Node node) {
-    Preconditions.checkState(curNode != null);
-    Preconditions.checkState(node != null);
+  /** Sets the given node as the current scope and pushes the relevant frames on the CFG stacks. */
+  private void recordScopeRoot(Node node) {
     compiler.setScope(node);
-    scopeRoots.push(node);
     if (NodeUtil.isValidCfgRoot(node)) {
       cfgRoots.push(node);
       cfgs.push(null);
     }
+  }
+
+  /** Creates a new scope (e.g. when entering a function). */
+  private void pushScope(Node node) {
+    Preconditions.checkState(curNode != null);
+    Preconditions.checkState(node != null);
+    scopeRoots.push(node);
+    recordScopeRoot(node);
     if (scopeCallback != null) {
       scopeCallback.enterScope(this);
     }
@@ -730,12 +735,8 @@ public class NodeTraversal {
    */
   private void pushScope(Scope s, boolean quietly) {
     Preconditions.checkState(curNode != null);
-    compiler.setScope(s.getRootNode());
     scopes.push(s);
-    if (NodeUtil.isValidCfgRoot(s.getRootNode())) {
-      cfgRoots.push(s.getRootNode());
-      cfgs.push(null);
-    }
+    recordScopeRoot(s.getRootNode());
     if (!quietly && scopeCallback != null) {
       scopeCallback.enterScope(this);
     }
