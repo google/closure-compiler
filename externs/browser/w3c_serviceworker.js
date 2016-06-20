@@ -402,7 +402,7 @@ Cache.prototype.delete = function(request, opt_options) {};
 /**
  * @param {RequestInfo=} opt_request
  * @param {CacheQueryOptions=} opt_options
- * @return {!Promise<!Array<!Response>>}
+ * @return {!Promise<!Array<!Request>>}
  */
 Cache.prototype.keys = function(opt_request, opt_options) {};
 
