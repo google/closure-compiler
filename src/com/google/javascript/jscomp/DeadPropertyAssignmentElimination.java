@@ -473,6 +473,16 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      // Don't traverse into $jscomp.inherits's definition; it uses Object.defineProperty to copy
+      // properties. It will not introduce a getter/setter that we haven't already seen.
+      if (n.isFunction()) {
+        String funcName = NodeUtil.getName(n);
+        if (funcName != null
+            && (funcName.equals("$jscomp.inherits") || funcName.equals("$jscomp$inherits"))) {
+          return false;
+        }
+      }
+
       // Stop the traversal if there's a unknown getter/setter present.
       return !unknownGetterSetterPresent;
     }

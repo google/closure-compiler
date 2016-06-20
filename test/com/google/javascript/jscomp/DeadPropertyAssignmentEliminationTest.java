@@ -1116,6 +1116,32 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         null);
   }
 
+  public void testJscompInherits() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.bar = null; };",
+            "var $jscomp = {};",
+            "$jscomp.inherits = function(x) {",
+            "  Object.defineProperty(x, x, x);",
+            "};",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.bar = 10;",
+            "  foo.bar = 20;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() { this.bar = null; };",
+            "var $jscomp = {};",
+            "$jscomp.inherits = function(x) {",
+            "  Object.defineProperty(x, x, x);",
+            "};",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  10;",
+            "  foo.bar = 20;",
+            "}"));
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new DeadPropertyAssignmentElimination(compiler);
