@@ -1298,6 +1298,18 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
         TypeWithPropertiesStatics.hasConstantProp(getEnums(), pname);
   }
 
+  @Override
+  public boolean containsArray() {
+    ObjectType arrayType = commonTypes.getArrayInstance().getObjTypeIfSingletonObj();
+    Preconditions.checkNotNull(arrayType);
+    for (ObjectType objType : this.getObjs()) {
+      if (objType.isSubtypeOf(arrayType, SubtypeCache.create())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public JSType withoutProperty(QualifiedName qname) {
     return getObjs().isEmpty() ?
         this :

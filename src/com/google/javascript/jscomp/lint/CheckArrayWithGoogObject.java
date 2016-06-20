@@ -15,32 +15,25 @@
  */
 package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
-
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.TemplatizedType;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.Set;
 
 /**
- * Checks when the pattern for (x in arr) { ... } where arr is an array,
- * or an union type containing an array. Also checks several goog.object methods
- * that are essentially for/in loops.
+ * Lints against passing arrays to goog.object methods with the intention of
+ * iterating over them as though with a for-in loop, which is discouraged with
+ * arrays.
  *
  */
-public final class CheckForInOverArray extends NodeTraversal.AbstractPostOrderCallback
+public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOrderCallback
     implements HotSwapCompilerPass {
   final AbstractCompiler compiler;
-  final JSTypeRegistry typeRegistry;
 
   private static final Set<String> GOOG_OBJECT_METHODS =
       ImmutableSet.of(
@@ -65,33 +58,13 @@ public final class CheckForInOverArray extends NodeTraversal.AbstractPostOrderCa
           "goog.object.unsafeClone",
           "goog.object.transpose");
 
-  public static final DiagnosticType FOR_IN_OVER_ARRAY =
-      DiagnosticType.warning(
-          "JSC_FOR_IN_OVER_ARRAY",
-          "For..in over array is discouraged.");
-
   public static final DiagnosticType ARRAY_PASSED_TO_GOOG_OBJECT =
       DiagnosticType.warning(
           "JSC_ARRAY_PASSED_TO_GOOG_OBJECT",
           "{0} expects an object, not an array. Did you mean to use goog.array?");
 
-  public CheckForInOverArray(AbstractCompiler compiler) {
+  public CheckArrayWithGoogObject(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.typeRegistry = compiler.getTypeRegistry();
-  }
-
-  public boolean isForInOverArray(Node n) {
-    if (NodeUtil.isForIn(n)) {
-      Preconditions.checkState(n.getChildCount() == 3, n);
-      // get the second child, which represents
-      // B in construct "for (A in B) { C }"
-      Node child = n.getSecondChild();
-      JSType type = child.getJSType();
-      if (type != null && containsArray(type)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   public boolean isGoogObjectIterationOverArray(Node n) {
@@ -111,38 +84,13 @@ public final class CheckForInOverArray extends NodeTraversal.AbstractPostOrderCa
     if (firstArg == null) {
       return false;
     }
-    JSType type = firstArg.getJSType();
-    return type != null && containsArray(type);
-  }
-
-  private boolean isArray(JSType type) {
-    if (type.isArrayType()) {
-      return true;
-    }
-    TemplatizedType templatizedType = type.toMaybeTemplatizedType();
-    return templatizedType != null && templatizedType.getReferencedType().isArrayType();
-  }
-
-  private boolean containsArray(JSType type) {
-    if (isArray(type)) {
-      return true;
-    }
-    if (type.isUnionType()) {
-      JSType arrayType = typeRegistry.getNativeType(ARRAY_TYPE);
-      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
-        if (alternate.isSubtype(arrayType)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    TypeI type = firstArg.getTypeI();
+    return type != null && type.containsArray();
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (isForInOverArray(n)) {
-      compiler.report(t.makeError(n, FOR_IN_OVER_ARRAY));
-    } else if (isGoogObjectIterationOverArray(n)) {
+    if (isGoogObjectIterationOverArray(n)) {
       compiler.report(
           t.makeError(n, ARRAY_PASSED_TO_GOOG_OBJECT, n.getFirstChild().getQualifiedName()));
     }

@@ -258,6 +258,29 @@ public abstract class JSType implements TypeI, Serializable {
     return toMaybeUnionType() != null;
   }
 
+  @Override
+  public boolean containsArray() {
+    // Check if this is itself an array
+    if (this.isArrayType()) {
+      return true;
+    }
+    TemplatizedType templatizedType = this.toMaybeTemplatizedType();
+    if (templatizedType != null && templatizedType.getReferencedType().isArrayType()) {
+      return true;
+    }
+
+    // Check if this is a union that contains an array
+    if (this.isUnionType()) {
+      JSType arrayType = registry.getNativeType(JSTypeNative.ARRAY_TYPE);
+      for (JSType alternate : this.toMaybeUnionType().getAlternates()) {
+        if (alternate.isSubtype(arrayType)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   /**
    * Returns true iff {@code this} can be a {@code struct}.
    * UnionType overrides the method, assume {@code this} is not a union here.

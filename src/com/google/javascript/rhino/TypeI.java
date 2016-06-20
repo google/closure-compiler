@@ -60,6 +60,8 @@ public interface TypeI {
 
   boolean isSubtypeOf(TypeI type);
 
+  boolean containsArray();
+
   boolean isUnknownType();
 
   boolean isNullable();
