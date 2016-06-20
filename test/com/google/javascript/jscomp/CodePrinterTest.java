@@ -2115,6 +2115,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("f=async\n()=>1", "f=async;()=>1");
   }
 
+  public void testAsyncMethod() {
+    languageMode = LanguageMode.ECMASCRIPT8;
+    assertPrintSame("o={async m(){}}");
+    assertPrintSame("o={async[a+b](){}}");
+    assertPrintSame("class C{async m(){}}");
+    assertPrintSame("class C{async[a+b](){}}");
+  }
+
   /**
    * Regression test for b/28633247 - necessary parens dropped around arrow functions.
    */

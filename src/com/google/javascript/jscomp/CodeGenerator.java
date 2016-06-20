@@ -534,6 +534,10 @@ public class CodeGenerator {
             add("*");
           }
 
+          if (n.isMemberFunctionDef() && n.getFirstChild().isAsyncFunction()) {
+            add("async ");
+          }
+
           switch (type) {
             case GETTER_DEF:
               // Get methods have no parameters.
@@ -973,6 +977,8 @@ public class CodeGenerator {
           add("set ");
         } else if (last.getBooleanProp(Node.GENERATOR_FN)) {
           add("*");
+        } else if (last.isAsyncFunction()) {
+          add("async");
         }
         add("[");
         add(first);

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
+import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 /**
@@ -41,6 +42,15 @@ public class ParseTree {
     this.type = type;
     this.location = location;
   }
+
+  public SourcePosition getStart() {
+    return location.start;
+  }
+
+  public SourcePosition getEnd() {
+    return location.end;
+  }
+
   public ArrayLiteralExpressionTree asArrayLiteralExpression() {
     return (ArrayLiteralExpressionTree) this; }
   public ArrayPatternTree asArrayPattern() { return (ArrayPatternTree) this; }

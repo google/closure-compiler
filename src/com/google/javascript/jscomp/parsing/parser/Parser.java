@@ -802,14 +802,23 @@ public class Parser {
 
     if (peek(TokenType.SEMI_COLON)) {
       return parseEmptyStatement();
-    }
-    if (peekGetAccessor(true)) {
+    } else if (peekGetAccessor(true)) {
       return parseGetAccessor(access);
-    }
-    if (peekSetAccessor(true)) {
+    } else if (peekSetAccessor(true)) {
       return parseSetAccessor(access);
+    } else if (!isAmbient && peekAsyncMethod()) {
+      // TODO(bradfordcsmith): Handle ambient?
+      // TODO(bradfordcsmith): Handle static methods & clean up how it's handled for other cases
+      return parseAsyncMethod(access);
+    } else {
+      return parseClassMemberDeclaration(true, isAmbient, access);
     }
-    return parseClassMemberDeclaration(true, isAmbient, access);
+  }
+
+  private boolean peekAsyncMethod() {
+    return peekPredefinedString(ASYNC)
+        && !peekImplicitSemiColon(1)
+        && peekPropertyNameOrComputedProp(1);
   }
 
   private ParseTree parseClassMemberDeclaration(
@@ -837,7 +846,8 @@ public class Parser {
       name = null;
     }
 
-    if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
+    // Member variables are supported only when parsing type syntax
+    if (!config.parseTypeSyntax || peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // Member function.
       FunctionDeclarationTree.Kind kind;
       TokenType accessOnFunction;
@@ -887,6 +897,35 @@ public class Parser {
         return new ComputedPropertyMemberVariableTree(getTreeLocation(start),
             nameExpr, isStatic, access, declaredType);
       }
+    }
+  }
+
+  private ParseTree parseAsyncMethod(TokenType access) {
+    features.require(Feature.ASYNC_FUNCTIONS);
+    eatPredefinedString(ASYNC);
+    if (peekIdOrKeyword()) {
+      IdentifierToken name = eatIdOrKeywordAsId();
+      FunctionDeclarationTree.Builder builder =
+          FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.MEMBER)
+              .setAsync(true)
+              .setName(name)
+              .setAccess(access);
+      parseFunctionTail(builder, /* isGenerator */ false);
+
+      return builder.build(getTreeLocation(name.getStart()));
+    } else if (config.parseTypeSyntax && peekIndexSignature()) {
+      ParseTree indexSignature = parseIndexSignature();
+      eatPossibleImplicitSemiColon();
+      return indexSignature;
+    } else { // expect '[' to start computed property name
+      ParseTree nameExpr = parseComputedPropertyName();
+      FunctionDeclarationTree.Builder builder =
+          FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION).setAsync(true);
+      parseFunctionTail(builder, /* isGenerator */ false);
+
+      ParseTree function = builder.build(getTreeLocation(nameExpr.getStart()));
+      return new ComputedPropertyMethodTree(
+          getTreeLocation(nameExpr.getStart()), access, nameExpr, function);
     }
   }
 
@@ -2346,6 +2385,8 @@ public class Parser {
         return parseGetAccessor(null);
       } else if (peekSetAccessor(false)) {
         return parseSetAccessor(null);
+      } else if (peekAsyncMethod()) {
+        return parseAsyncMethod(/* access */ null);
       } else if (peekType(1) == TokenType.OPEN_PAREN) {
         return parseClassMemberDeclaration(false, false, null);
       } else {

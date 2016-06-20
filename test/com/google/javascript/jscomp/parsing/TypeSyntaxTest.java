@@ -476,8 +476,8 @@ public final class TypeSyntaxTest extends TestCase {
   }
 
   public void testMemberVariable_notEs6Typed() {
-    testNotEs6Typed("class Foo {\n  foo;\n}", "member variable in class");
-    testNotEs6Typed("class Foo {\n  ['foo'];\n}", "member variable in class", "computed property");
+    testNotEs6TypedFullError("class Foo {\n  foo;\n}", "Parse error. '(' expected");
+    testNotEs6TypedFullError("class Foo {\n  ['foo'];\n}", "Parse error. '(' expected");
   }
 
   public void testMethodType() {
@@ -613,24 +613,25 @@ public final class TypeSyntaxTest extends TestCase {
     parse("class Foo { static private constructor() {}}");
 
 
+    String accessModifierInterpretedAsPropertyNameErrorMessage = "Parse error. '(' expected";
     testNotEs6TypedFullError(
         "class Foo { private constructor() {} }",
-        "Parse error. Semi-colon expected");
+        accessModifierInterpretedAsPropertyNameErrorMessage);
     testNotEs6TypedFullError(
         "class Foo { protected bar; }",
-        "Parse error. Semi-colon expected");
+        accessModifierInterpretedAsPropertyNameErrorMessage);
     testNotEs6TypedFullError(
         "class Foo { protected bar() {} }",
-        "Parse error. Semi-colon expected");
+        accessModifierInterpretedAsPropertyNameErrorMessage);
     testNotEs6TypedFullError(
         "class Foo { private get() {} }",
-        "Parse error. Semi-colon expected");
+        accessModifierInterpretedAsPropertyNameErrorMessage);
     testNotEs6TypedFullError(
         "class Foo { private set() {} }",
-        "Parse error. Semi-colon expected");
+        accessModifierInterpretedAsPropertyNameErrorMessage);
     testNotEs6TypedFullError(
         "class Foo { private [Symbol.iterator]() {} }",
-        "Parse error. Semi-colon expected");
+        accessModifierInterpretedAsPropertyNameErrorMessage);
   }
 
   public void testOptionalProperty() {

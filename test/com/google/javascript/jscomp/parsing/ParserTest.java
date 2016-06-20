@@ -2807,10 +2807,36 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testAsyncArrowInvalid() {
     mode = LanguageMode.ECMASCRIPT8;
     parseError("f = not_async (x) => x + 1;", "'=>' unexpected");
- 
+
     expectFeatures(Feature.ARROW_FUNCTIONS);
     // async requires parens
     parseError("f = async x => x + 1;", "Semi-colon expected");
+  }
+
+  public void testAsyncMethod() {
+    mode = LanguageMode.ECMASCRIPT8;
+    expectFeatures(Feature.ASYNC_FUNCTIONS);
+    parse("o={async m(){}}");
+    parse("o={async [a+b](){}}");
+    parse("class C{async m(){}}");
+    parse("class C{async [a+b](){}}");
+  }
+
+  public void testInvalidAsyncMethod() {
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.MEMBER_DECLARATIONS);
+    // 'async' allowed as a name
+    parse("o={async(){}}");
+    parse("class C{async(){}}");
+
+    expectFeatures();
+    parse("o={async:false}");
+    parseError("class C{async};", "'(' expected");
+
+    // newline after 'async' forces it to be the property name
+    mode = LanguageMode.ECMASCRIPT8;
+    parseError("o={async\nm(){}}", "'}' expected");
+    parseError("class C{async\nm(){}}", "'(' expected");
   }
 
   public void testFor_ES5() {
