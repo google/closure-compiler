@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
+import com.google.javascript.jscomp.TypeValidator.SubtypingMode;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -432,8 +433,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   @Override
-  public boolean shouldTraverse(
-      NodeTraversal t, Node n, Node parent) {
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isScript()) {
+      String filename = n.getSourceFileName();
+      if (filename != null && filename.endsWith(".java.js")) {
+        this.validator.setSubtypingMode(SubtypingMode.IGNORE_NULL_UNDEFINED);
+      } else {
+        this.validator.setSubtypingMode(SubtypingMode.NORMAL);
+      }
+    }
     switch (n.getType()) {
       case FUNCTION:
         // normal type checking

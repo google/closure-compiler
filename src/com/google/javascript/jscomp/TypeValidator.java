@@ -66,12 +66,13 @@ class TypeValidator {
   private final JSType allValueTypes;
   private final JSType nullOrUndefined;
 
-  // Feature in development. See CompilerOptions#checkTypesModuloNullUndefined
   static enum SubtypingMode {
     NORMAL,
     IGNORE_NULL_UNDEFINED
   }
-  private final SubtypingMode subtypingMode;
+  // In TypeCheck, when we are analyzing a file with .java.js suffix, we set
+  // this field to IGNORE_NULL_UNDEFINED
+  private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -164,10 +165,6 @@ class TypeValidator {
         STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
     this.nullOrUndefined = typeRegistry.createUnionType(
         NULL_TYPE, VOID_TYPE);
-    this.subtypingMode =
-        compiler.getOptions().getTypecheckModuloNullUndefined()
-        ? SubtypingMode.IGNORE_NULL_UNDEFINED
-        : SubtypingMode.NORMAL;
   }
 
   /**
@@ -204,6 +201,10 @@ class TypeValidator {
    */
   Iterable<TypeMismatch> getMismatches() {
     return mismatches;
+  }
+
+  void setSubtypingMode(SubtypingMode mode) {
+    this.subtypingMode = mode;
   }
 
   /**

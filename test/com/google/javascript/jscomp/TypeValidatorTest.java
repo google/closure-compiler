@@ -32,7 +32,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Tests for TypeValidator.
+ * Type-checking tests that can use methods from CompilerTestCase
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class TypeValidatorTest extends CompilerTestCase {
@@ -201,6 +202,157 @@ public final class TypeValidatorTest extends CompilerTestCase {
              "f(/** @type {Super} */ (new Sub));",
              TYPE_MISMATCH_WARNING);
     assertMismatches(Collections.<TypeMismatch>emptyList());
+  }
+
+  public void testModuloNullUndef1() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "function f(/** number */ to, /** (number|null) */ from) {",
+                "  to = from;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef2() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "function f(/** number */ to, /** (number|undefined) */ from) {",
+                "  to = from;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef3() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/** @constructor */",
+                "function Foo() {}",
+                "function f(/** !Foo */ to, /** ?Foo */ from) {",
+                "  to = from;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef4() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/** @constructor */",
+                "function Foo() {}",
+                "/** @constructor @extends {Foo} */",
+                "function Bar() {}",
+                "function f(/** !Foo */ to, /** ?Bar */ from) {",
+                "  to = from;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef5() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "function f(/** {a: number} */ to, /** {a: (null|number)} */ from) {",
+                "  to = from;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef6() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "function f(/** {a: number} */ to, /** ?{a: (null|number)} */ from) {",
+                "  to = from;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef7() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/** @constructor */",
+                "function Foo() {}",
+                "function f(/** function():!Foo */ to, /** function():?Foo */ from) {",
+                "  to = from;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef8() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/**",
+                " * @constructor",
+                " * @template T",
+                " */",
+                "function Foo() {}",
+                "function f(/** !Foo<number> */ to, /** !Foo<(number|null)> */ from) {",
+                "  to = from;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef9() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/** @interface */",
+                "function Foo() {}",
+                "/** @type {function(?number)} */",
+                "Foo.prototype.prop;",
+                "/** @constructor @implements {Foo} */",
+                "function Bar() {}",
+                "/** @type {function(number)} */",
+                "Bar.prototype.prop;"))));
+  }
+
+  public void testModuloNullUndef10() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/** @constructor */",
+                "function Bar() {}",
+                "/** @type {!number} */",
+                "Bar.prototype.prop;",
+                "function f(/** ?number*/ n) {",
+                "  (new Bar).prop = n;",
+                "}"))));
+  }
+
+  public void testModuloNullUndef11() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "function f(/** number */ n) {}",
+                "f(/** @type {?number} */ (null));"))));
+  }
+
+  public void testModuloNullUndef12() {
+    // Only warn for the file not ending in .java.js
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.js",
+            LINE_JOINER.join(
+                "function f(/** number */ to, /** (number|null) */ from) {",
+                "  to = from;",
+                "}")),
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "function g(/** number */ to, /** (number|null) */ from) {",
+                "  to = from;",
+                "}"))),
+        null,
+        null,
+        TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   private TypeMismatch fromNatives(JSTypeNative a, JSTypeNative b) {
