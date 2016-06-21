@@ -1929,6 +1929,31 @@ chrome.enterprise.Token.prototype.subtleCrypto;
 
 
 /**
+ * @param {!ArrayBuffer} challenge A challenge as emitted by the Verified Access
+ *     Web API.
+ * @param {function(!ArrayBuffer): void=} callback Called back with the
+ *     challenge response.
+ */
+chrome.enterprise.platformKeys.challengeMachineKey =
+    function(challenge, callback) {};
+
+
+/**
+ * @param {!ArrayBuffer} challenge A challenge as emitted by the Verified Access
+ *     Web API.
+ * @param {boolean} registerKey If set, the current Enterprise User Key is
+ *     registered with the "user"> token and relinquishes the Enterprise User
+ *     Key role. The key can then be associated with a certificate and used like
+ *     any other signing key. This key is 2048-bit RSA. Subsequent calls to this
+ *     function will then generate a new Enterprise User Key.
+ * @param {function(!ArrayBuffer): void=} callback Called back with the
+ *     challenge response.
+ */
+chrome.enterprise.platformKeys.challengeUserKey =
+    function(challenge, registerKey, callback) {};
+
+
+/**
  * @param {function(!Array<!chrome.enterprise.Token>): void} callback Called
  * with an array of Tokens.
  */
