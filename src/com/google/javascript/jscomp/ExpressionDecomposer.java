@@ -71,7 +71,7 @@ class ExpressionDecomposer {
   }
 
   // An arbitrary limit to prevent catch infinite recursion.
-  private static final int MAX_INTERATIONS = 100;
+  private static final int MAX_ITERATIONS = 100;
 
   /**
    * If required, rewrite the statement containing the expression.
@@ -84,10 +84,9 @@ class ExpressionDecomposer {
     while (DecompositionType.DECOMPOSABLE == canExposeExpression(expression)) {
       exposeExpression(expression);
       i++;
-      if (i > MAX_INTERATIONS) {
+      if (i > MAX_ITERATIONS) {
         throw new IllegalStateException(
-            "DecomposeExpression depth exceeded on :\n" +
-            expression.toStringTree());
+            "DecomposeExpression depth exceeded on :\n" + expression.toStringTree());
       }
     }
   }
@@ -287,8 +286,7 @@ class ExpressionDecomposer {
    * @param key The object literal key.
    * @param stopNode A node after which to stop iterating.
    */
-  private void decomposeObjectLiteralKeys(
-      Node key, Node stopNode, DecompositionState state) {
+  private void decomposeObjectLiteralKeys(Node key, Node stopNode, DecompositionState state) {
     if (key == null || key == stopNode) {
       return;
     }
@@ -300,8 +298,7 @@ class ExpressionDecomposer {
    * @param n The node with which to start iterating.
    * @param stopNode A node after which to stop iterating.
    */
-  private void decomposeSubExpressions(
-      Node n, Node stopNode, DecompositionState state) {
+  private void decomposeSubExpressions(Node n, Node stopNode, DecompositionState state) {
     if (n == null || n == stopNode) {
       return;
     }
@@ -313,8 +310,7 @@ class ExpressionDecomposer {
     // determining if the any of the children following have side-effects.
     // If they do we need to be more aggressive about removing values
     // from the expression.
-    decomposeSubExpressions(
-        n.getNext(), stopNode, state);
+    decomposeSubExpressions(n.getNext(), stopNode, state);
 
     // Now this node.
     // TODO(johnlenz): Move "safety" code to a shared class.
@@ -336,8 +332,7 @@ class ExpressionDecomposer {
    * @return The node that contains the logic of the expression after
    *     extraction.
    */
-  private Node extractConditional(
-      Node expr, Node injectionPoint, boolean needResult) {
+  private Node extractConditional(Node expr, Node injectionPoint, boolean needResult) {
     Node parent = expr.getParent();
     String tempName = getTempValueName();
 
@@ -430,8 +425,8 @@ class ExpressionDecomposer {
 
   private boolean isConstantNameNode(Node n, Set<String> knownConstants) {
     // Non-constant names values may have been changed.
-    return n.isName() && (NodeUtil.isConstantVar(n, scope)
-        || knownConstants.contains(n.getString()));
+    return n.isName()
+        && (NodeUtil.isConstantVar(n, scope) || knownConstants.contains(n.getString()));
   }
 
   /**
@@ -729,16 +724,16 @@ class ExpressionDecomposer {
 
   /**
    * Walk the AST from the call site to the expression root and verify that
-   * the portions of the expression that are evaluated before the call are:
-   * 1) Unaffected by the the side-effects, if any, of the call.
-   * 2) That there are no side-effects, that may influence the call.
+   * the portions of the expression that are evaluated before the call:
+   * 1) are unaffected by the side-effects, if any, of the call.
+   * 2) have no side-effects, that may influence the call.
    *
    * For example, if x has side-effects:
    *   a = 1 + x();
-   * the call to x can be moved because "a" final value of a can not be
+   * the call to x can be moved because the final value of "a" can not be
    * influenced by x(), but in:
    *   a = b + x();
-   * the call to x can not be moved because the value of b may be modified
+   * the call to x cannot be moved because the value of "b" may be modified
    * by the call to x.
    *
    * If x is without side-effects in:
@@ -749,9 +744,8 @@ class ExpressionDecomposer {
    * by x().  Note: this is true even if b is a local variable; the object that
    * b refers to may have a global alias.
    *
-   * @return UNDECOMPOSABLE if the expression can not be moved, DECOMPOSABLE if
-   * decomposition is required before the expression can be moved, otherwise
-   * MOVABLE.
+   * @return UNDECOMPOSABLE if the expression cannot be moved, DECOMPOSABLE if
+   * decomposition is required before the expression can be moved, otherwise MOVABLE.
    */
   private DecompositionType isSubexpressionMovable(
       Node expressionRoot, Node subExpression) {
@@ -764,9 +758,7 @@ class ExpressionDecomposer {
       if (parent == expressionRoot) {
         // Done. The walk back to the root of the expression is complete, and
         // nothing was encountered that blocks the call from being moved.
-        return requiresDecomposition
-            ? DecompositionType.DECOMPOSABLE
-            : DecompositionType.MOVABLE;
+        return requiresDecomposition ? DecompositionType.DECOMPOSABLE : DecompositionType.MOVABLE;
       }
 
       if (isConditionalOp(parent)) {
@@ -803,8 +795,7 @@ class ExpressionDecomposer {
               break;
             }
 
-            if (isExpressionTreeUnsafe(
-                n, seenSideEffects)) {
+            if (isExpressionTreeUnsafe(n, seenSideEffects)) {
               seenSideEffects = true;
               requiresDecomposition = true;
             }
@@ -826,9 +817,7 @@ class ExpressionDecomposer {
           // type information.
           //
           Node first = parent.getFirstChild();
-          if (requiresDecomposition
-              && parent.isCall()
-              && NodeUtil.isGet(first)) {
+          if (requiresDecomposition && parent.isCall() && NodeUtil.isGet(first)) {
             if (maybeExternMethod(first)) {
               return DecompositionType.UNDECOMPOSABLE;
             } else {
