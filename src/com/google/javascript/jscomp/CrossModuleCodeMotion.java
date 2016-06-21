@@ -311,8 +311,11 @@ class CrossModuleCodeMotion implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, collector);
 
     for (Var v : collector.getAllSymbols()) {
-      ReferenceCollection refCollection = collector.getReferences(v);
       NamedInfo info = getNamedInfo(v);
+      if (!info.allowMove) {
+        continue;
+      }
+      ReferenceCollection refCollection = collector.getReferences(v);
       for (Reference ref : refCollection) {
         processReference(collector, ref, info);
       }
@@ -323,24 +326,22 @@ class CrossModuleCodeMotion implements CompilerPass {
       ReferenceCollectingCallback collector, Reference ref, NamedInfo info) {
     Node n = ref.getNode();
     Node parent = n.getParent();
-    if (info.allowMove) {
-      if (maybeProcessDeclaration(collector, ref, info)) {
-        // Check to see if the declaration is conditional starting at the
-        // grandparent of the name node. Since a function declaration
-        // is considered conditional (the function might not be called)
-        // we would need to skip the parent in this check as the name could
-        // just be a function itself.
-        if (hasConditionalAncestor(parent.getParent())) {
-          info.allowMove = false;
-        }
+    if (maybeProcessDeclaration(collector, ref, info)) {
+      // Check to see if the declaration is conditional starting at the
+      // grandparent of the name node. Since a function declaration
+      // is considered conditional (the function might not be called)
+      // we would need to skip the parent in this check as the name could
+      // just be a function itself.
+      if (hasConditionalAncestor(parent.getParent())) {
+        info.allowMove = false;
+      }
+    } else {
+      if (parentModuleCanSeeSymbolsDeclaredInChildren &&
+          parent.isInstanceOf() && parent.getLastChild() == n) {
+        instanceofNodes.put(parent, new InstanceofInfo(getModule(ref), info));
       } else {
-        if (parentModuleCanSeeSymbolsDeclaredInChildren &&
-            parent.isInstanceOf() && parent.getLastChild() == n) {
-          instanceofNodes.put(parent, new InstanceofInfo(getModule(ref), info));
-        } else {
-          // Otherwise, it's a read
-          processRead(ref, info);
-        }
+        // Otherwise, it's a read
+        processRead(ref, info);
       }
     }
   }
