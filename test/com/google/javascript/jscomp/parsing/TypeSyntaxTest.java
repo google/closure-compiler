@@ -742,6 +742,9 @@ public final class TypeSyntaxTest extends TestCase {
 
     parse("declare namespace foo {\n  interface I {\n  }\n}");
     parse("declare namespace foo {\n  class I {\n    bar();\n  }\n}");
+    parse("declare namespace foo {\n  class I {\n    static bar();\n  }\n}");
+    parse("declare namespace foo {\n  class I {\n    async bar();\n  }\n}");
+    parse("declare namespace foo {\n  class I {\n    static async bar();\n  }\n}");
     parse("declare namespace foo {\n  enum E {\n  }\n}");
     parse("declare namespace foo {\n  function f();\n}");
     parse("declare namespace foo {\n  var foo\n}");

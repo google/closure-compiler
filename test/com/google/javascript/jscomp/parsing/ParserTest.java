@@ -2819,7 +2819,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("o={async m(){}}");
     parse("o={async [a+b](){}}");
     parse("class C{async m(){}}");
+    parse("class C{static async m(){}}");
     parse("class C{async [a+b](){}}");
+    parse("class C{static async [a+b](){}}");
   }
 
   public void testInvalidAsyncMethod() {
@@ -2828,6 +2830,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // 'async' allowed as a name
     parse("o={async(){}}");
     parse("class C{async(){}}");
+    parse("class C{static async(){}}");
 
     expectFeatures();
     parse("o={async:false}");
@@ -2836,7 +2839,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // newline after 'async' forces it to be the property name
     mode = LanguageMode.ECMASCRIPT8;
     parseError("o={async\nm(){}}", "'}' expected");
+    parseError("o={static async\nm(){}}", "Cannot use keyword in short object literal");
     parseError("class C{async\nm(){}}", "'(' expected");
+    parseError("class C{static async\nm(){}}", "'(' expected");
   }
 
   public void testFor_ES5() {

@@ -2121,6 +2121,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("o={async[a+b](){}}");
     assertPrintSame("class C{async m(){}}");
     assertPrintSame("class C{async[a+b](){}}");
+    assertPrintSame("class C{static async m(){}}");
+    assertPrintSame("class C{static async[a+b](){}}");
   }
 
   /**
