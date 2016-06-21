@@ -35,28 +35,28 @@ import java.util.Map;
 public interface DependencyInfo {
 
   /** Gets the unique name / path of this file. */
-  public String getName();
+  String getName();
 
   /** Gets the path of this file relative to Closure's base.js file. */
-  public String getPathRelativeToClosureBase();
+  String getPathRelativeToClosureBase();
 
   /** Gets the symbols provided by this file. */
-  public Collection<String> getProvides();
+  Collection<String> getProvides();
 
   /** Gets the symbols required by this file. */
-  public Collection<String> getRequires();
+  Collection<String> getRequires();
 
   /** Gets the loading information for this file. */
-  public ImmutableMap<String, String> getLoadFlags();
+  ImmutableMap<String, String> getLoadFlags();
 
   /** Whether the symbol is provided by a module */
-  public boolean isModule();
+  boolean isModule();
 
   /**
    * Abstract base implementation that defines derived accessors such
    * as {@link #isModule}.
    */
-  public abstract class Base implements DependencyInfo {
+  abstract class Base implements DependencyInfo {
     @Override public boolean isModule() {
       return "goog".equals(getLoadFlags().get("module"));
     }
