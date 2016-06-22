@@ -348,8 +348,6 @@ final class NewTypeInference implements CompilerPass {
   // RETVAL_ID is used when we calculate the summary type of a function
   private static final String RETVAL_ID = "%return";
   private static final String THIS_ID = "this";
-  private static final String GETTER_PREFIX = "%getter_fun";
-  private static final String SETTER_PREFIX = "%setter_fun";
   private final String ABSTRACT_METHOD_NAME;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
   // To avoid creating warning objects for disabled warnings
@@ -427,6 +425,14 @@ final class NewTypeInference implements CompilerPass {
       }
       System.out.println(b);
     }
+  }
+
+  static String createGetterPropName(String originalPropName) {
+    return "%getter_fun" + originalPropName;
+  }
+
+  static String createSetterPropName(String originalPropName) {
+    return "%setter_fun" + originalPropName;
   }
 
   private TypeEnv getInEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
@@ -2462,10 +2468,10 @@ final class NewTypeInference implements CompilerPass {
         String specialPropName;
         JSType propType;
         if (prop.isGetterDef()) {
-          specialPropName = GETTER_PREFIX + pname;
+          specialPropName = createGetterPropName(pname);
           propType = funType.getReturnType();
         } else {
-          specialPropName = SETTER_PREFIX + pname;
+          specialPropName = createSetterPropName(pname);
           propType = pair.type;
         }
         result = result.withProperty(new QualifiedName(specialPropName), propType);
@@ -2939,7 +2945,7 @@ final class NewTypeInference implements CompilerPass {
       recvType = JSType.TOP_OBJECT;
     }
     // Then, analyze the property access.
-    QualifiedName getterPname = new QualifiedName(GETTER_PREFIX + pname);
+    QualifiedName getterPname = new QualifiedName(createGetterPropName(pname));
     if (recvType.hasProp(getterPname)) {
       return new EnvTypePair(pair.env, recvType.getProp(getterPname));
     }
@@ -3954,7 +3960,7 @@ final class NewTypeInference implements CompilerPass {
       mayWarnAboutDictPropAccess(obj, recvType);
     }
     QualifiedName setterPname =
-        new QualifiedName(SETTER_PREFIX + pname.getLeftmostName());
+        new QualifiedName(createSetterPropName(pname.getLeftmostName()));
     if (recvType.hasProp(setterPname)) {
       FunctionType funType = recvType.getProp(setterPname).getFunType();
       Preconditions.checkNotNull(funType);

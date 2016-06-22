@@ -1510,6 +1510,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       QualifiedName ctorQname = QualifiedName.fromNode(ctorNameNode);
       RawNominalType rawType = currentScope.getNominalType(ctorQname);
       if (rawType == null) {
+        for (Node objLitChild : getProp.getParent().getLastChild().children()) {
+          Node initializer = objLitChild.getLastChild();
+          if (initializer != null && initializer.isFunction()) {
+            visitFunctionLate(initializer, null);
+          }
+        }
         return;
       }
       getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -2187,6 +2193,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (initializer != null && initializer.isFunction()) {
         methodScope = visitFunctionLate(initializer, rawType);
         methodType = methodScope.getDeclaredFunctionType();
+        if (defSite.isGetterDef()) {
+          pname = NewTypeInference.createGetterPropName(pname);
+        } else if (defSite.isSetterDef()) {
+          pname = NewTypeInference.createSetterPropName(pname);
+        }
       } else if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
         // We're parsing a function declaration without a function initializer
         methodType = computeFnDeclaredType(jsdoc, pname, defSite, rawType, currentScope);
@@ -2197,6 +2208,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         propDeclType = typeParser.getDeclaredTypeOfNode(jsdoc, rawType, currentScope);
       } else if (methodType != null) {
         propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
+      }
+      if (defSite.isGetterDef()) {
+        FunctionType ft = propDeclType.getFunTypeIfSingletonObj();
+        if (ft != null) {
+          propDeclType = ft.getReturnType();
+        }
       }
       propertyDefs.put(rawType, pname, new PropertyDef(defSite, methodType, methodScope));
 
@@ -2324,7 +2341,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         && isPrototypeProperty(n.getFirstFirstChild())) {
       return true;
     }
+    // We are looking for either an object literal being assigned to a
+    // prototype, or an object literal being lent to a prototype.
     if (n.isObjectLit()) {
+      Node parent = n.getParent();
+      if (parent.isAssign()
+          && parent.getFirstChild().isGetProp()
+          && parent.getFirstChild().getLastChild().getString().equals("prototype")) {
+        return true;
+      }
       JSDocInfo jsdoc = n.getJSDocInfo();
       return jsdoc != null && jsdoc.getLendsName() != null
           && jsdoc.getLendsName().endsWith("prototype");

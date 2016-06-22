@@ -17091,7 +17091,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     // When the TRY can throw, only use the TRY's type env in the CATCH
-    typeCheck(LINE_JOINER.join("function f(/** (number|string) */ x) {",
+    typeCheck(LINE_JOINER.join(
+        "function f(/** (number|string) */ x) {",
         "  try {",
         "    x = 123;",
         "    throw 'asdf';",
@@ -17099,5 +17100,37 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    var /** number */ n = x;",
         "  }",
         "}"));
+  }
+
+  public void testGetterSetterPrototypeProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() { this.prop = 123; }",
+        "Foo.prototype = {",
+        "  set a(x) { this.prop = x; },",
+        "  get a() { return this.prop + 1; }",
+        "};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() { this.prop = 123; }",
+        "Foo.prototype = {",
+        "  set a(x) { this.prop = x; },",
+        "  /** @return {number} */",
+        "  get a() { return this.prop + 1; }",
+        "};",
+        "var /** string */ s = (new Foo).a;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() { this.prop = 123; }",
+        "Foo.prototype = {",
+        "  /** @param {number} x*/",
+        "  set a(x) { this.prop = x; },",
+        "  get a() { return this.prop + 1; }",
+        "};",
+        "(new Foo).a = 'asdf';"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }
