@@ -577,8 +577,17 @@ final class NewTypeInference implements CompilerPass {
     }
     // Functions defined in externs have no summary, so use the declared type
     fnType = currentScope.getDeclaredTypeOf(name);
-    Preconditions.checkState(fnType.getFunType() != null,
-        "Needed function but found %s", fnType);
+    if (fnType.getFunType() == null) {
+      // Can happen when a function defined in externs clashes with a variable
+      // defined by a catch block.
+      // TODO(dimvar): once we fix scoping for catch blocks, uncomment the
+      // precondition below.
+      Preconditions.checkState(fnType.isUnknown());
+      return this.commonTypes.qmarkFunction();
+      // Preconditions.checkState(fnType.getFunType() != null,
+      //   "Needed function but found %s", fnType);
+    }
+
     return changeTypeIfFunctionNamespace(fnScope, fnType);
   }
 

@@ -5762,6 +5762,10 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "function f() {}",
+        "try {} catch (f) {}");
   }
 
   public void testIn() {
