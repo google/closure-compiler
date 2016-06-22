@@ -822,9 +822,10 @@ angular.Scope.prototype.$id;
 
 /**
  * @param {boolean=} opt_isolate
+ * @param {angular.Scope=} opt_parent
  * @return {!angular.Scope}
  */
-angular.Scope.prototype.$new = function(opt_isolate) {};
+angular.Scope.prototype.$new = function(opt_isolate, opt_parent) {};
 
 /**
  * @param {string} name
