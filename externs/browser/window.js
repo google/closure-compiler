@@ -33,7 +33,7 @@
 var top;
 
 /**
- * @type {Navigator}
+ * @type {!Navigator}
  * @see https://developer.mozilla.org/en/DOM/window.navigator
  * @const
  */
@@ -47,7 +47,7 @@ var navigator;
 var document;
 
 /**
- * @type {Location}
+ * @type {!Location}
  * @see https://developer.mozilla.org/en/DOM/window.location
  * @const
  * @suppress {duplicate}
