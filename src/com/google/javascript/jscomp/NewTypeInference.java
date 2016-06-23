@@ -810,6 +810,7 @@ final class NewTypeInference implements CompilerPass {
         case EMPTY:
         case SCRIPT:
         case TRY:
+        case WITH:
           inEnv = outEnv;
           break;
         case DO:
@@ -868,6 +869,7 @@ final class NewTypeInference implements CompilerPass {
         case FUNCTION:
         case SCRIPT:
         case TRY:
+        case WITH: // We don't typecheck WITH, we just avoid crashing.
           outEnv = inEnv;
           break;
         case CATCH:

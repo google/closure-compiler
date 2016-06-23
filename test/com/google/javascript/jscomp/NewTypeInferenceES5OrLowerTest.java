@@ -17137,4 +17137,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "(new Foo).a = 'asdf';"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testWith() {
+    typeCheck(LINE_JOINER.join(
+        "var a;",
+        "with (a) {}"));
+
+    typeCheck(LINE_JOINER.join(
+        "var a;",
+        "with (a) {",
+        "  var x = b;",
+        "}"));
+  }
 }

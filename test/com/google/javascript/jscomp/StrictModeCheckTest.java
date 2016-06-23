@@ -18,8 +18,11 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
+
+// Some unit tests in this file use ES6 even though the pass happens after transpilation.
+// We disable type checking for these tests, since the type checker can't handle ES6.
 public final class StrictModeCheckTest extends Es6CompilerTestCase {
-  private static final String EXTERNS = "var arguments; function eval(str) {}";
+  private static final String EXTERNS = DEFAULT_EXTERNS + "var arguments; function eval(str) {}";
 
   public StrictModeCheckTest() {
     super(EXTERNS);
@@ -29,6 +32,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
+    this.useNTI = true;
   }
 
   @Override
@@ -105,6 +109,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
 
   public void testUnknownVariable4() {
     disableTypeCheck();
+    this.useNTI = false;
     testSameEs6Strict("function foo(a) { let b; a = b; }");
     testSameEs6Strict("function foo(a) { const b = 42; a = b; }");
   }
@@ -181,6 +186,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
     testSame("var obj = { a: 0 }; delete obj.a;");
     testSame("var obj = { a: function() {} }; delete obj.a;");
     disableTypeCheck();
+    this.useNTI = false;
     testSameEs6Strict("var obj = { a(){} }; delete obj.a;");
     testSameEs6Strict("var obj = { a }; delete obj.a;");
   }
@@ -208,13 +214,14 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
 
     testSame(
         "'use strict';\n" +
-        "function App() {}\n" +
+        "/** @constructor */ function App() {}\n" +
         "App.prototype = {\n" +
         "  get appData() { return this.appData_; },\n" +
         "  set appData(data) { this.appData_ = data; }\n" +
         "};");
 
     disableTypeCheck();
+    this.useNTI = false;
     testWarningEs6("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
     testWarningEs6("var x = {a, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
     testWarningEs6("var x = {a(){}, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
@@ -245,6 +252,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
 
   public void testClass() {
     disableTypeCheck();
+    this.useNTI = false;
     testSameEs6(LINE_JOINER.join(
         "class A {",
         "  method1() {}",
