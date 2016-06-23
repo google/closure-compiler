@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public final class Es6ExtractClassesTest extends CompilerTestCase {
@@ -142,6 +143,18 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "const testcode$classdecl$var0 = class {};",
             "var foo = bar(testcode$classdecl$var0);"));
+  }
+
+  public void testFilenameContainsAt() {
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode("unusual@name", "alert(class {});")),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "unusual@name",
+                LINE_JOINER.join(
+                    "const unusual$name$classdecl$var0 = class{};",
+                    "alert(unusual$name$classdecl$var0);"))));
   }
 
   public void testConditionalBlocksExtractionFromCall() {
