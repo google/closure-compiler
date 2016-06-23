@@ -2840,6 +2840,10 @@ public class Node implements Serializable {
     return this.token == Token.MEMBER_VARIABLE_DEF;
   }
 
+  public boolean isModuleBody() {
+    return this.token == Token.MODULE_BODY;
+  }
+
   public boolean isName() {
     return this.token == Token.NAME;
   }

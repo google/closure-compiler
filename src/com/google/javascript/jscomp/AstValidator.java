@@ -92,8 +92,23 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.SCRIPT, n);
     validateHasSourceName(n);
     validateHasInputId(n);
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateStatement(c);
+    if (n.hasChildren() && n.getFirstChild().isModuleBody()) {
+      validateChildCount(n, 1);
+      validateModuleContents(n.getFirstChild());
+    } else {
+      validateStatements(n.getFirstChild());
+    }
+  }
+
+  public void validateModuleContents(Node n) {
+    validateNodeType(Token.MODULE_BODY, n);
+    validateStatements(n.getFirstChild());
+  }
+
+  public void validateStatements(Node n) {
+    while (n != null) {
+      validateStatement(n);
+      n = n.getNext();
     }
   }
 

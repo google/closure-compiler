@@ -44,6 +44,8 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
     if (!NodeUtil.isGoogModuleFile(scriptRoot)) {
       return;
     }
+    ClosureRewriteModule.inlineModuleIntoGlobal(scriptRoot);
+    compiler.reportCodeChange();
 
     // As per ClosureBundler:
     /*

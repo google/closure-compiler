@@ -2368,7 +2368,7 @@ public final class NodeUtil {
    * @return Whether the node is of a type that contain other statements.
    */
   public static boolean isStatementBlock(Node n) {
-    return n.isScript() || n.isBlock();
+    return n.isScript() || n.isBlock() || n.isModuleBody();
   }
 
   /**
@@ -2404,6 +2404,7 @@ public final class NodeUtil {
     switch (n.getType()) {
       case FUNCTION:
       case SCRIPT:
+      case MODULE_BODY:
         return true;
       case BLOCK:
         // Only valid for top level synthetic block
@@ -2436,6 +2437,7 @@ public final class NodeUtil {
     Preconditions.checkState(parent != null);
     switch (parent.getType()) {
       case SCRIPT:
+      case MODULE_BODY:
       case BLOCK:
       case LABEL:
       case NAMESPACE_ELEMENTS: // The body of TypeScript namespace is also a statement parent
@@ -2615,9 +2617,11 @@ public final class NodeUtil {
    * See {@link #isFunctionDeclaration}).
    */
   public static boolean isHoistedFunctionDeclaration(Node n) {
-    return isFunctionDeclaration(n)
-        && (n.getParent().isScript()
-            || n.getGrandparent().isFunction());
+    if (isFunctionDeclaration(n)) {
+      Node parent = n.getParent();
+      return parent.isScript() || parent.isModuleBody() || parent.getParent().isFunction();
+    }
+    return false;
   }
 
   static boolean isBlockScopedFunctionDeclaration(Node n) {
@@ -2633,6 +2637,7 @@ public final class NodeUtil {
         case SCRIPT:
         case DECLARE:
         case EXPORT:
+        case MODULE_BODY:
           return false;
         default:
           Preconditions.checkState(current.isLabel());
@@ -3056,20 +3061,23 @@ public final class NodeUtil {
   private static Node getAddingRoot(Node n) {
     Node addingRoot = null;
     Node ancestor = n;
-    while (null != (ancestor = ancestor.getParent())) {
-      Token type = ancestor.getType();
-      if (type == Token.SCRIPT) {
-        addingRoot = ancestor;
-        break;
-      } else if (type == Token.FUNCTION) {
-        addingRoot = ancestor.getLastChild();
-        break;
+    crawl_ancestors: while (null != (ancestor = ancestor.getParent())) {
+      switch (ancestor.getType()) {
+        case SCRIPT:
+        case MODULE_BODY:
+          addingRoot = ancestor;
+          break crawl_ancestors;
+        case FUNCTION:
+          addingRoot = ancestor.getLastChild();
+          break crawl_ancestors;
+        default:
+          continue crawl_ancestors;
       }
     }
 
     // make sure that the adding root looks ok
-    Preconditions.checkState(addingRoot.isBlock() ||
-        addingRoot.isScript());
+    Preconditions.checkState(addingRoot.isBlock() || addingRoot.isModuleBody()
+        || addingRoot.isScript());
     Preconditions.checkState(addingRoot.getFirstChild() == null ||
         !addingRoot.getFirstChild().isScript());
     return addingRoot;
@@ -4492,11 +4500,16 @@ public final class NodeUtil {
     return false;
   }
 
+  public static boolean isTopLevel(Node n) {
+    return n.isScript() || n.isModuleBody();
+  }
+
   /**
    * @return Whether the node is a goog.module file's SCRIPT node.
    */
   static boolean isGoogModuleFile(Node n) {
-    return n.isScript() && n.hasChildren() && isGoogModuleCall(n.getFirstChild());
+    return n.isScript() && n.hasChildren() && n.getFirstChild().isModuleBody()
+        && isGoogModuleCall(n.getFirstFirstChild());
   }
 
   /**
@@ -4504,7 +4517,8 @@ public final class NodeUtil {
    *     declareLegacyNamespace call.
    */
   static boolean isLegacyGoogModuleFile(Node n) {
-    return isGoogModuleFile(n) && isGoogModuleDeclareLegacyNamespaceCall(n.getSecondChild());
+    return isGoogModuleFile(n)
+        && isGoogModuleDeclareLegacyNamespaceCall(n.getFirstChild().getSecondChild());
   }
 
   static boolean isConstructor(Node fnNode) {
@@ -4537,5 +4551,4 @@ public final class NodeUtil {
     String keyName = propNode.getString();
     return keyName.equals("get") || keyName.equals("set");
   }
-
 }

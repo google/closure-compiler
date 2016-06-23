@@ -311,7 +311,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
           provides.add(provide);
         }
         return;
-      } else if (parent != null && !parent.isExprResult() && !parent.isScript()) {
+      } else if (parent != null && !parent.isExprResult() && !NodeUtil.isTopLevel(parent)) {
         return;
       }
 

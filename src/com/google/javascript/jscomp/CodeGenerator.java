@@ -599,6 +599,7 @@ public class CodeGenerator {
         }
 
       case SCRIPT:
+      case MODULE_BODY:
       case BLOCK:
         {
           if (n.getClass() != Node.class) {

@@ -167,7 +167,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       case VAR:
       case LET:
       case CONST:
-        if (t.inGlobalHoistScope() && NodeUtil.getEnclosingClass(n) == null
+        if (t.inModuleHoistScope() && NodeUtil.getEnclosingClass(n) == null
             && NodeUtil.getEnclosingType(n, Token.OBJECTLIT) == null) {
           JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
           if (jsdoc != null && jsdoc.isExport()) {
@@ -176,12 +176,12 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
         }
         break;
       case THIS:
-        if (t.inGlobalHoistScope()) {
+        if (t.inModuleHoistScope()) {
           t.report(n, GOOG_MODULE_REFERENCES_THIS);
         }
         break;
       case THROW:
-        if (t.inGlobalHoistScope()) {
+        if (t.inModuleHoistScope()) {
           t.report(n, GOOG_MODULE_USES_THROW);
         }
         break;
@@ -215,7 +215,7 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
       if  (defaultExportNode != null) {
         // Multiple exports
         t.report(n, EXPORT_REPEATED_ERROR, String.valueOf(defaultExportNode.getLineno()));
-      } else if (!t.inGlobalScope() || !parent.isExprResult()) {
+      } else if (!t.inModuleScope() || !parent.isExprResult()) {
         // Invalid export location.
         t.report(n, EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
       }

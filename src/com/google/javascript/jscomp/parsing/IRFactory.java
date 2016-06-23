@@ -1022,12 +1022,34 @@ class IRFactory {
     }
 
     Node processAstRoot(ProgramTree rootNode) {
-      Node node = newNode(Token.SCRIPT);
+      Node scriptNode = newNode(Token.SCRIPT);
       for (ParseTree child : rootNode.sourceElements) {
-        node.addChildToBack(transform(child));
+        scriptNode.addChildToBack(transform(child));
       }
-      parseDirectives(node);
-      return node;
+      parseDirectives(scriptNode);
+      if (isGoogModuleFile(scriptNode)) {
+        Node moduleNode = new Node(Token.MODULE_BODY);
+        setSourceInfo(moduleNode, rootNode);
+        moduleNode.addChildrenToBack(scriptNode.removeChildren());
+        scriptNode.addChildToBack(moduleNode);
+      }
+      return scriptNode;
+    }
+
+    private boolean isGoogModuleFile(Node scriptNode) {
+      Preconditions.checkArgument(scriptNode.isScript());
+      if (!scriptNode.hasChildren()) {
+        return false;
+      }
+      Node exprResult = scriptNode.getFirstChild();
+      if (!exprResult.isExprResult()) {
+        return false;
+      }
+      Node call = exprResult.getFirstChild();
+      if (!call.isCall()) {
+        return false;
+      }
+      return call.getFirstChild().matchesQualifiedName("goog.module");
     }
 
     /**

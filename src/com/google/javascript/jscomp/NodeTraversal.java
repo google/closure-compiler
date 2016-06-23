@@ -607,6 +607,8 @@ public class NodeTraversal {
       traverseFunction(n, parent);
     } else if (type == Token.CLASS) {
       traverseClass(n, parent);
+    } else if (type == Token.MODULE_BODY) {
+      traverseModule(n);
     } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
       traverseBlockScope(n);
     } else {
@@ -684,6 +686,15 @@ public class NodeTraversal {
     // Body
     traverseBranch(body, n);
 
+    popScope();
+  }
+
+  /** Traverses a module. */
+  private void traverseModule(Node n) {
+    pushScope(n);
+    for (Node child : n.children()) {
+      traverseBranch(child, n);
+    }
     popScope();
   }
 
@@ -837,7 +848,29 @@ public class NodeTraversal {
    * Determines whether the hoist scope of the current traversal is global.
    */
   public boolean inGlobalHoistScope() {
-    return !getCfgRoot().isFunction();
+    Node cfgRoot = getCfgRoot();
+    Preconditions.checkState(
+        cfgRoot.isScript()
+            || cfgRoot.isBlock()
+            || cfgRoot.isFunction()
+            || cfgRoot.isModuleBody(),
+        cfgRoot);
+    return cfgRoot.isScript() || cfgRoot.isBlock();
+  }
+
+  /**
+   * Determines whether the traversal is currently in the global scope. Note that this returns false
+   * in a global block scope.
+   */
+  public boolean inModuleScope() {
+    return getScopeRoot().isModuleBody();
+  }
+
+  /**
+   * Determines whether the hoist scope of the current traversal is global.
+   */
+  public boolean inModuleHoistScope() {
+    return getCfgRoot().isModuleBody();
   }
 
   int getScopeDepth() {

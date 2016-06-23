@@ -251,6 +251,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isGoogModuleFile(n)) {
+        inlineModuleIntoGlobal(n);
+        compiler.reportCodeChange();
         checkAndSetStrictModeDirective(t, n);
       }
 
@@ -761,6 +763,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void recordModuleReturn() {
     popScript();
+  }
+
+  static void inlineModuleIntoGlobal(Node scriptNode) {
+    Preconditions.checkArgument(NodeUtil.isGoogModuleFile(scriptNode));
+    Node moduleNode = scriptNode.getFirstChild();
+    scriptNode.removeChild(moduleNode);
+    scriptNode.addChildrenToBack(moduleNode.removeChildren());
   }
 
   private void updateGoogLoadModule(Node call) {

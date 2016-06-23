@@ -106,7 +106,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
           declareVar(classNameNode);
         }
       }
-    } else if (n.isBlock() || n.isFor() || n.isForOf() || n.isSwitch()) {
+    } else if (n.isBlock() || n.isFor() || n.isForOf() || n.isSwitch() || n.isModuleBody()) {
       if (scope.getParent() != null) {
         inputId = NodeUtil.getInputId(n);
       }
@@ -229,7 +229,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
   /**
    * Determines whether the name should be declared at current lexical scope.
-   * Assume the parent node is a BLOCK, FOR, FOR_OF, SCRIPT or LABEL.
+   * Assume the parent node is a BLOCK, FOR, FOR_OF, SCRIPT, MODULE_BODY, or LABEL.
    *
    * @param n The declaration node to be checked
    * @return whether the name should be declared at current lexical scope
@@ -238,7 +238,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     Node parent = n.getParent();
     Node grandparent = parent.getParent();
     Preconditions.checkState(parent.isBlock() || parent.isFor() || parent.isForOf()
-        || parent.isScript() || parent.isLabel(), parent);
+        || parent.isScript() || parent.isModuleBody() || parent.isLabel(), parent);
 
     if (parent.isSyntheticBlock()
         && grandparent != null && (grandparent.isCase() || grandparent.isDefaultCase())) {

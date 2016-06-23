@@ -234,6 +234,10 @@ public class Scope implements StaticScope {
     return getRootNode().isFunction();
   }
 
+  public boolean isModuleScope() {
+    return getRootNode().isModuleBody();
+  }
+
   /**
    * If a var were declared in this scope, return the scope it would be hoisted to.
    *
@@ -244,7 +248,10 @@ public class Scope implements StaticScope {
   public Scope getClosestHoistScope() {
     Scope current = this;
     while (current != null) {
-      if (current.isFunctionScope() || current.isFunctionBlockScope() || current.isGlobal()) {
+      if (current.isFunctionScope()
+          || current.isFunctionBlockScope()
+          || current.isGlobal()
+          || current.isModuleScope()) {
         return current;
       }
       current = current.parent;

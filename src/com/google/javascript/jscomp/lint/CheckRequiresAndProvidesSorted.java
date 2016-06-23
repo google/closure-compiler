@@ -106,7 +106,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           return;
         }
 
-        if (parent.isExprResult() && parent.getParent().isScript()) {
+        if (parent.isExprResult() && NodeUtil.isTopLevel(parent.getParent())) {
           String namespace = n.getLastChild().getString();
           if (namespace == null) {
             return;
