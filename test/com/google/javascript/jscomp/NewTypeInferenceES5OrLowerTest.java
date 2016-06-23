@@ -3204,6 +3204,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Bar() {}",
         "(new Bar).method('asdf');"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(ns) {",
+        "  return ns.prototype = {",
+        "    method: function(x, y) {}",
+        "  };",
+        "}"));
   }
 
   public void testAssignmentsToPrototype() {

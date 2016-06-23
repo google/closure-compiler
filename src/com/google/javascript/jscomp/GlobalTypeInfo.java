@@ -2346,6 +2346,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     if (n.isObjectLit()) {
       Node parent = n.getParent();
       if (parent.isAssign()
+          && parent.getParent().isExprResult()
           && parent.getFirstChild().isGetProp()
           && parent.getFirstChild().getLastChild().getString().equals("prototype")) {
         return true;
