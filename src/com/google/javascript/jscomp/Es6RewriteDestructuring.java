@@ -115,7 +115,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           newParam =
               nameOrPattern.isName()
                   ? nameOrPattern
-                  : IR.name(DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++));
+                  : IR.name(getTempParameterName(function, i));
           Node lhs = nameOrPattern.cloneTree();
           Node rhs = defaultValueHook(newParam.cloneTree(), defaultValue);
           Node newStatement =

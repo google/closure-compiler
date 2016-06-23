@@ -556,6 +556,26 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var $jscomp$destructuring$var0 = obj;",
             "  var x = $jscomp$destructuring$var0.x;",
             "}"));
+
+    test(
+        "ns.f = function({x} = {x: 0}) {};",
+        LINE_JOINER.join(
+            "ns.f = function($jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 =",
+            "      $jscomp$destructuring$var0 === undefined ? {x:0} : $jscomp$destructuring$var0;",
+            "  var x = $jscomp$destructuring$var1.x",
+            "};"));
+
+    test(
+        LINE_JOINER.join(
+            "/** @param {{x: number}=} obj */",
+            "ns.f = function({x} = {x: 0}) {};"),
+        LINE_JOINER.join(
+            "/** @param {{x: number}=} obj */",
+            "ns.f = function(obj) {",
+            "  var $jscomp$destructuring$var0 = obj===undefined ? {x:0} : obj;",
+            "  var x = $jscomp$destructuring$var0.x",
+            "};"));
   }
 
   public void testTypeCheck_inlineAnnotations() {
