@@ -82,6 +82,7 @@ class PeepholeMinimizeConditions
         return tryMinimizeIf(node);
 
       case EXPR_RESULT:
+        performCoercionSubstitutions(node.getFirstChild());
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeExprResult(node);
 
@@ -1033,7 +1034,8 @@ class PeepholeMinimizeConditions
     if (jsType == null) {
       return false;
     }
-    return !jsType.isUnknownType() && jsType.isObject();
+    jsType = jsType.restrictByNotNullOrUndefined();
+    return !jsType.isUnknownType() && !jsType.isNoType() && jsType.isObject();
   }
 
   private Node replaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {

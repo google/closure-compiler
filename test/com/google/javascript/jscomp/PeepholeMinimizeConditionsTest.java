@@ -757,6 +757,13 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     test("var x = {};\nif (null === x) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
   }
 
+  public void testCoercionSubstitution_expression() {
+    enableTypeCheck();
+    test(
+        "var x = {}; x != null && alert('b');",
+        "var x = {}; x && alert('b');");
+  }
+
   public void testCoercionSubstitution_hook() {
     enableTypeCheck();
     test("var x = {};\nvar y = x != null ? 1 : 2;\n", "var x = {};\nvar y = x ? 1 : 2;\n");
@@ -770,6 +777,16 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   public void testCoercionSubstitution_while() {
     enableTypeCheck();
     test("var x = {};\nwhile (x != null) throw 'a'\n", "var x = {};\nwhile (x) throw 'a';\n");
+  }
+
+  public void testCoercionSubstitution_nullableType() {
+    enableTypeCheck();
+    test(
+        "var x = /** @type {?Object} */ ({}); if (x != null) throw 'a';",
+        "var x = /** @type {?Object} */ ({}); if (x) throw 'a';");
+    testSame("var x = /** @type {?number} */ (0); if (x != null) throw 'a';");
+    testSame("var x = /** @type {?string} */ (''); if (x != null) throw 'a';");
+    testSame("var x = /** @type {?boolean} */ (true); if (x != null) throw 'a';");
   }
 
   public void testCoercionSubstitution_unknownType() {
