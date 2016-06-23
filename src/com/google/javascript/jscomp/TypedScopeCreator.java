@@ -288,10 +288,10 @@ final class TypedScopeCreator implements ScopeCreator {
         compiler, functionAnalysisResults)).process(null, scriptRoot);
 
     // TODO(bashir): Variable declaration is not the only side effect of last
-    // global scope generation but here we only wipe that part off!
+    // global scope generation but here we only wipe that part off.
 
     // Remove all variables that were previously declared in this scripts.
-    // First find all vars to remove then remove them because of iterator!
+    // First find all vars to remove then remove them because of iterator.
     List<TypedVar> varsToRemove = new ArrayList<>();
     for (TypedVar oldVar : globalScope.getVarIterable()) {
       if (scriptName.equals(oldVar.getInputName())) {
@@ -299,8 +299,17 @@ final class TypedScopeCreator implements ScopeCreator {
       }
     }
     for (TypedVar var : varsToRemove) {
+      // By removing the type here, we're potentially invalidating any files that contain
+      // references to this type. Those files will need to be recompiled. Ideally, this
+      // was handled by the compiler (see b/29121507), but in the meantime users of incremental
+      // compilation will need to manage it themselves (e.g., by recompiling dependent files
+      // based on the dep graph).
+      String typeName = var.getName();
       globalScope.undeclare(var);
-      globalScope.getTypeOfThis().toObjectType().removeProperty(var.getName());
+      globalScope.getTypeOfThis().toObjectType().removeProperty(typeName);
+      if (typeRegistry.getType(typeName) != null) {
+        typeRegistry.removeType(typeName);
+      }
     }
 
     // Now re-traverse the given script.

@@ -955,6 +955,15 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
+   * Removes a type by name.
+   *
+   * @param jsTypeName The name string.
+   */
+  public void removeType(String jsTypeName) {
+    namesToTypes.remove(jsTypeName);
+  }
+
+  /**
    * Looks up a type by name.
    *
    * @param jsTypeName The name string.
