@@ -7909,6 +7909,15 @@ chrome.usb.GetDevicesOptions;
 chrome.usb.GetUserSelectedDevicesOptions;
 
 
+/**
+ * @typedef {?{
+ *   transferInfo: !chrome.usb.GenericTransferInfo,
+ *   packets: number,
+ *   packetLength: number
+ * }}
+ */
+chrome.usb.IsochronousTransferInfo;
+
 
 
 /** @constructor */
@@ -8110,8 +8119,8 @@ chrome.usb.getConfiguration = function(handle, callback) {};
  * @see http://developer.chrome.com/apps/usb.html#method-listInterfaces
  * @param {!chrome.usb.ConnectionHandle} handle The device from which the
  *     interfaces should be listed.
- * @param {function(!Array<!Object>)} callback
- *     The callback to invoke when the interfaces are enumerated.
+ * @param {function(!Array<!chrome.usb.InterfaceDescriptor>)} callback The
+ *     callback to invoke when the interfaces are enumerated.
  */
 chrome.usb.listInterfaces = function(handle, callback) {};
 
@@ -8191,8 +8200,8 @@ chrome.usb.interruptTransfer = function(handle, transferInfo, callback) {};
  * @see http://developer.chrome.com/apps/usb.html#method-isochronousTransfer
  * @param {!chrome.usb.ConnectionHandle} handle A connection handle to make the
  *     transfer on.
- * @param {!Object} transferInfo The parameters to the transfer. See
- *     IsochronousTransferInfo.
+ * @param {!chrome.usb.IsochronousTransferInfo} transferInfo The parameters to
+ *     the transfer.
  * @param {function(!chrome.usb.TransferResultInfo)} callback Invoked once the
  *     transfer has been completed.
  */
