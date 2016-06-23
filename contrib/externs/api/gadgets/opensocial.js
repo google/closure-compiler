@@ -330,53 +330,57 @@ gadgets.io.encodeValues = function(fields) {};
  * Enumeration of request parameters.
  * @enum {string}
  */
-gadgets.io.RequestParameters = {};
-gadgets.io.RequestParameters.AUTHORIZATION;
-gadgets.io.RequestParameters.CONTENT_TYPE;
-gadgets.io.RequestParameters.GET_SUMMARIES;
-gadgets.io.RequestParameters.HEADERS;
-gadgets.io.RequestParameters.METHOD;
-gadgets.io.RequestParameters.NUM_ENTRIES;
-gadgets.io.RequestParameters.OAUTH_REQUEST_TOKEN;
-gadgets.io.RequestParameters.OAUTH_REQUEST_TOKEN_SECRET;
-gadgets.io.RequestParameters.OAUTH_SERVICE_NAME;
-gadgets.io.RequestParameters.OAUTH_TOKEN_NAME;
-gadgets.io.RequestParameters.OAUTH_USE_TOKEN;
-gadgets.io.RequestParameters.POST_DATA;
-gadgets.io.RequestParameters.REFRESH_INTERVAL;
+gadgets.io.RequestParameters = {
+  AUTHORIZATION: '',
+  CONTENT_TYPE: '',
+  GET_SUMMARIES: '',
+  HEADERS: '',
+  METHOD: '',
+  NUM_ENTRIES: '',
+  OAUTH_REQUEST_TOKEN: '',
+  OAUTH_REQUEST_TOKEN_SECRET: '',
+  OAUTH_SERVICE_NAME: '',
+  OAUTH_TOKEN_NAME: '',
+  OAUTH_USE_TOKEN: '',
+  POST_DATA: '',
+  REFRESH_INTERVAL: ''
+};
 
 /**
  * Enumeration of content types that can be specified in
  * {@link gadgets.io.RequestParameters.AUTHORIZATION}
  * @enum {string}
  */
-gadgets.io.AuthorizationType = {};
-gadgets.io.AuthorizationType.NONE;
-gadgets.io.AuthorizationType.OAUTH;
-gadgets.io.AuthorizationType.SIGNED;
+gadgets.io.AuthorizationType = {
+  NONE: '',
+  OAUTH: '',
+  SIGNED: ''
+};
 
 /**
  * Enumeration of content types that can be specified in
  * {@link gadgets.io.RequestParameters.CONTENT_TYPE}
  * @enum {string}
  */
-gadgets.io.ContentType = {};
-gadgets.io.ContentType.DOM;
-gadgets.io.ContentType.FEED;
-gadgets.io.ContentType.JSON;
-gadgets.io.ContentType.TEXT;
+gadgets.io.ContentType = {
+  DOM: '',
+  FEED: '',
+  JSON: '',
+  TEXT: ''
+};
 
 /**
  * Enumeration of content types that can be specified in
  * {@link gadgets.io.RequestParameters.METHOD}
  * @enum {string}
  */
-gadgets.io.MethodType = {};
-gadgets.io.MethodType.DELETE;
-gadgets.io.MethodType.GET;
-gadgets.io.MethodType.HEAD;
-gadgets.io.MethodType.POST;
-gadgets.io.MethodType.PUT;
+gadgets.io.MethodType = {
+  DELETE: '',
+  GET: '',
+  HEAD: '',
+  POST: '',
+  PUT: ''
+};
 
 /**
  * This is the response object that is passed to the callback of

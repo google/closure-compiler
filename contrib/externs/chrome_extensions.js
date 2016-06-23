@@ -745,10 +745,9 @@ chrome.audioModem.onTransmitFail;
 
 
 /**
- * @const
  * @see https://developer.chrome.com/apps/bluetooth
  */
-chrome.bluetooth = function() {};
+chrome.bluetooth = {};
 
 
 
