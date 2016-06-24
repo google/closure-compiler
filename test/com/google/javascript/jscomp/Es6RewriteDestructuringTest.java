@@ -20,8 +20,6 @@ import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-import java.util.Set;
-
 public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   @Override
@@ -55,7 +53,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var $jscomp$destructuring$var0 = foo();",
             "var b = $jscomp$destructuring$var0.a;",
             "var d = $jscomp$destructuring$var0.c;"));
-    assertThat(getInjectedLibraries()).isEmpty();
+    assertThat(getLastCompiler().injected).isEmpty();
 
     test(
         "var {a,b} = foo();",
@@ -194,7 +192,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var y = $jscomp$destructuring$var2.next().value;",
             "  var z = $jscomp$destructuring$var2.next().value;",
             "}"));
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
 
     test(
         "function f({key: x = 5}) {}",
@@ -351,7 +349,8 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
             "let one = $jscomp$destructuring$var0.next().value;",
             "let others = $jscomp.arrayFromIterator($jscomp$destructuring$var0);"));
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    assertThat(getLastCompiler().injected)
+        .containsExactly("es6/util/arrayfromiterator", "es6/util/makeiterator");
 
     test(
         "function f([first, ...rest]) {}",
@@ -601,7 +600,8 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     return new NoninjectingCompiler();
   }
 
-  protected Set<String> getInjectedLibraries() {
-    return ((NoninjectingCompiler) getLastCompiler()).injected;
+  @Override
+  NoninjectingCompiler getLastCompiler() {
+    return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

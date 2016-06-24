@@ -1939,8 +1939,9 @@ public class CompilerOptions {
   }
 
   /**
-   * Skip all passes (other than transpilation, if requested). Don't inject es6_runtime.js
-   * or do any checks/optimizations (this is useful for per-file transpilation).
+   * Skip all passes (other than transpilation, if requested). Don't inject any
+   * runtime libraries (unless explicitly requested) or do any checks/optimizations
+   * (this is useful for per-file transpilation).
    */
   public void setSkipNonTranspilationPasses(boolean skipNonTranspilationPasses) {
     this.skipNonTranspilationPasses = skipNonTranspilationPasses;

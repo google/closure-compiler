@@ -240,13 +240,17 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   private void testChecks(String js, String expected) {
     test(js, expected);
-    assertThat(((NoninjectingCompiler) getLastCompiler()).injected)
-        .containsExactly("runtime_type_check");
+    assertThat(getLastCompiler().injected).containsExactly("runtime_type_check");
   }
 
   @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();
+  }
+
+  @Override
+  NoninjectingCompiler getLastCompiler() {
+    return (NoninjectingCompiler) super.getLastCompiler();
   }
 
   @Override

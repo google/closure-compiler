@@ -2483,7 +2483,7 @@ public final class NodeUtil {
         && parent.getSecondChild() == n;
   }
 
-  // TODO(tbreisacher): Add a method for detecting nodes under es6_runtime.js
+  // TODO(tbreisacher): Add a method for detecting nodes injected as runtime libraries.
   static boolean isInSyntheticScript(Node n) {
     return n.getSourceFileName() != null && n.getSourceFileName().startsWith(" [synthetic:");
   }

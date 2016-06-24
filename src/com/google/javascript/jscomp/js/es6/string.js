@@ -21,28 +21,6 @@
 $jscomp.string = $jscomp.string || {};
 
 
-/**
- * Throws if the argument is a RegExp, or if thisArg is undefined.
- * @param {?} thisArg The 'this' arg, which must be defined.
- * @param {*} arg The first argument of the function, which mustn't be a RegExp.
- * @param {string} func Name of the function, for reporting.
- * @return {string} The thisArg, coerced to a string.
- */
-$jscomp.checkStringArgs = function(thisArg, arg, func) {
-  if (thisArg == null) {
-    throw new TypeError(
-        "The 'this' value for String.prototype." + func +
-        ' must not be null or undefined');
-  }
-  if (arg instanceof RegExp) {
-    throw new TypeError(
-        'First argument to String.prototype.' + func +
-        ' must not be a regular expression');
-  }
-  return thisArg + '';
-};
-
-
   /**
    * Creates a new string from the given codepoints.
    *

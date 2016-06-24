@@ -82,7 +82,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         LINE_JOINER.join(
             "case 0:",
             "  $jscomp$generator$state = -1;"));
-    assertThat(((NoninjectingCompiler) getLastCompiler()).injected).containsExactly("es6_runtime");
+    assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
 
     rewriteGeneratorBody(
         "yield 1;",
@@ -766,7 +766,8 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  break;",
             "case 2:",
             "  $jscomp$generator$state = -1;"));
-    assertThat(((NoninjectingCompiler) getLastCompiler()).injected).containsExactly("es6_runtime");
+    assertThat(getLastCompiler().injected)
+        .containsExactly("es6/symbol", "es6/util/makeiterator");
 
     rewriteGeneratorBodyWithVars(
         "var i = yield * n;",
@@ -1154,5 +1155,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();
+  }
+
+  @Override
+  NoninjectingCompiler getLastCompiler() {
+    return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

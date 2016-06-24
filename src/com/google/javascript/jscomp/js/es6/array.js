@@ -21,59 +21,6 @@
 $jscomp.array = $jscomp.array || {};
 
 
-/**
- * Creates an iterator from an array-like, with a transformation function.
- * @param {!IArrayLike<INPUT>} array
- * @param {function(number, INPUT): OUTPUT} transform
- * @return {!IteratorIterable<OUTPUT>}
- * @template INPUT, OUTPUT
- * @suppress {checkTypes}
- */
-$jscomp.iteratorFromArray = function(array, transform) {
-  $jscomp.initSymbolIterator();
-  // NOTE: IE8 doesn't support indexing from boxed Strings.
-  if (array instanceof String) array = array + '';
-  var i = 0;
-  var iter = {
-    next: function() {
-      if (i < array.length) {
-        var index = i++;
-        return {value: transform(index, array[index]), done: false};
-      }
-      iter.next = function() { return {done: true, value: void 0}; };
-      return iter.next();
-    }
-  };
-  iter[Symbol.iterator] = function() { return iter; };
-  return iter;
-};
-
-
-// TODO(sdh): would be nice to template on the ARRAY type as well,
-// so that the third arg type of callback can be refined to be
-// exactly the same as the array type, but then there's no way to
-// enforce that it must, in fact, be an array.
-/**
- * Internal implementation of find.
- * @param {!IArrayLike<VALUE>} array
- * @param {function(this: THIS, VALUE, number, !IArrayLike<VALUE>): *} callback
- * @param {THIS} thisArg
- * @return {{i: number, v: (VALUE|undefined)}}
- * @template THIS, VALUE
- */
-$jscomp.findInternal = function(array, callback, thisArg) {
-  if (array instanceof String) {
-    array = /** @type {!IArrayLike} */ (String(array));
-  }
-  var len = array.length;
-  for (var i = 0; i < len; i++) {
-    var value = array[i];
-    if (callback.call(thisArg, value, i, array)) return {i: i, v: value};
-  }
-  return {i: -1, v: void 0};
-};
-
-
   /**
    * Creates a new Array from an array-like or iterable object.
    *

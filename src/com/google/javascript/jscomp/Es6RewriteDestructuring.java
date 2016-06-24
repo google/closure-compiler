@@ -412,7 +412,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     nodeToDetach.detachFromParent();
 
     if (needsRuntime) {
-      compiler.ensureLibraryInjected("es6_runtime", false);
+      compiler.ensureLibraryInjected("es6/util/arrayfromiterator", false);
     }
     compiler.reportCodeChange();
   }

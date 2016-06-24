@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 The Closure Compiler Authors.
+ * Copyright 2016 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,22 @@
  * limitations under the License.
  */
 
-'require es6/symbol es6/util/arrayfromiterable';
-'require es6/util/arrayfromiterator es6/util/inherits';
-'require es6/util/iteratorfromarray es6/util/makeiterator';
-'require util/checkstringargs util/findinternal';
+/**
+ * @fileoverview Polyfill for array destructuring.
+ */
+'require es6/util/makeiterator es6/util/arrayfromiterator';
+
+
+/**
+ * Copies the values from an Iterable into an Array.
+ * @param {string|!Array<T>|!Iterable<T>|!Arguments<T>} iterable
+ * @return {!Array<T>}
+ * @template T
+ */
+$jscomp.arrayFromIterable = function(iterable) {
+  if (iterable instanceof Array) {
+    return iterable;
+  } else {
+    return $jscomp.arrayFromIterator($jscomp.makeIterator(iterable));
+  }
+};

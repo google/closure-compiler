@@ -48,6 +48,11 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
   }
 
   @Override
+  NoninjectingCompiler getLastCompiler() {
+    return (NoninjectingCompiler) super.getLastCompiler();
+  }
+
+  @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -85,8 +90,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     checkConversionWithinMembers(
         "return super['prop']",
         "return $jscomp.superGet(this, 'prop')");
-    assertThat(((NoninjectingCompiler) getLastCompiler()).injected)
-        .containsExactly("es6_dart_runtime");
+    assertThat(getLastCompiler().injected).containsExactly("es6_dart_runtime");
   }
 
   public void testSuperGetProp_renameOff() {
