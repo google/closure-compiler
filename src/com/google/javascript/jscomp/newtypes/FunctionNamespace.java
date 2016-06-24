@@ -25,18 +25,19 @@ import com.google.common.base.Preconditions;
 public final class FunctionNamespace extends Namespace {
   private DeclaredTypeRegistry scope;
 
-  public FunctionNamespace(String name, DeclaredTypeRegistry scope) {
+  public FunctionNamespace(
+      JSTypes commonTypes, String name, DeclaredTypeRegistry scope) {
+    super(commonTypes, name);
     Preconditions.checkNotNull(name);
     Preconditions.checkNotNull(scope);
-    this.name = name;
     this.scope = scope;
   }
 
   @Override
-  protected JSType computeJSType(JSTypes commonTypes) {
+  protected JSType computeJSType() {
     Preconditions.checkState(this.namespaceType == null);
     return JSType.fromObjectType(ObjectType.makeObjectType(
-        commonTypes.getFunctionType(),
+        this.commonTypes.getFunctionType(),
         null,
         this.scope.getDeclaredFunctionType().toFunctionType(),
         this,

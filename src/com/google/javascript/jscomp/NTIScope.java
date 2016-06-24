@@ -483,19 +483,21 @@ final class NTIScope implements DeclaredTypeRegistry {
       Preconditions.checkArgument(isDefinedLocally(varName, false));
       Preconditions.checkState(!this.localNamespaces.containsKey(varName));
       NTIScope s = Preconditions.checkNotNull(this.localFunDefs.get(varName));
-      this.localNamespaces.put(varName, new FunctionNamespace(varName, s));
+      this.localNamespaces.put(varName,
+          new FunctionNamespace(getCommonTypes(), varName, s));
     } else {
       Preconditions.checkArgument(!isNamespace(qnameNode));
       QualifiedName qname = QualifiedName.fromNode(qnameNode);
       Namespace ns = getNamespace(qname.getLeftmostName());
       NTIScope s = (NTIScope) ns.getDeclaration(qname).getFunctionScope();
       ns.addNamespace(qname.getAllButLeftmost(),
-          new FunctionNamespace(qname.toString(), s));
+          new FunctionNamespace(getCommonTypes(), qname.toString(), s));
     }
   }
 
   void addNamespaceLit(Node qnameNode) {
-    addNamespace(qnameNode, new NamespaceLit(qnameNode.getQualifiedName()));
+    addNamespace(qnameNode,
+        new NamespaceLit(getCommonTypes(), qnameNode.getQualifiedName()));
   }
 
   void updateType(String name, JSType newDeclType) {
@@ -655,7 +657,6 @@ final class NTIScope implements DeclaredTypeRegistry {
     Preconditions.checkState(isTopLevel() || this.declaredType != null,
         "No declared type for function-scope: %s", this.root);
     unknownTypeNames = ImmutableSet.of();
-    JSTypes commonTypes = getCommonTypes();
     // For now, we put types of namespaces directly into the locals.
     // Alternatively, we could move this into NewTypeInference.initEdgeEnvs
     for (Map.Entry<String, Namespace> entry : localNamespaces.entrySet()) {
@@ -669,9 +670,9 @@ final class NTIScope implements DeclaredTypeRegistry {
         // window, but we don't check here to avoid hard-coding the name.
         // Enforced in GlobalTypeInfo.
         nslit.maybeSetWindowInstance(externs.get(name));
-        t = nslit.toJSType(commonTypes);
+        t = nslit.toJSType();
       } else {
-        t = ns.toJSType(commonTypes);
+        t = ns.toJSType();
       }
       if (externs.containsKey(name)) {
         externs.put(name, t);

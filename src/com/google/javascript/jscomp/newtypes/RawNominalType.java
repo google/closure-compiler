@@ -81,8 +81,9 @@ public final class RawNominalType extends Namespace {
   }
 
   private RawNominalType(
-      Node defSite, String name, ImmutableList<String> typeParameters,
-      Kind kind, ObjectKind objectKind) {
+      JSTypes commonTypes, Node defSite,
+      String name, ImmutableList<String> typeParameters, Kind kind, ObjectKind objectKind) {
+    super(commonTypes, name);
     Preconditions.checkNotNull(objectKind);
     Preconditions.checkState(defSite == null || defSite.isFunction()
         || defSite.isCall(), "Expected function or call but found %s",
@@ -90,7 +91,6 @@ public final class RawNominalType extends Namespace {
     if (typeParameters == null) {
       typeParameters = ImmutableList.of();
     }
-    this.name = name;
     this.defSite = defSite;
     this.typeParameters = typeParameters;
     this.kind = kind;
@@ -112,36 +112,36 @@ public final class RawNominalType extends Namespace {
     this.wrappedAsNullableJSType = JSType.join(JSType.NULL, this.wrappedAsJSType);
   }
 
-  public static RawNominalType makeUnrestrictedClass(
+  public static RawNominalType makeUnrestrictedClass(JSTypes commonTypes,
       Node defSite, String name, ImmutableList<String> typeParameters) {
-    return new RawNominalType(
-        defSite, name, typeParameters, Kind.CLASS, ObjectKind.UNRESTRICTED);
+    return new RawNominalType(commonTypes, defSite,
+        name, typeParameters, Kind.CLASS, ObjectKind.UNRESTRICTED);
   }
 
-  public static RawNominalType makeStructClass(
+  public static RawNominalType makeStructClass(JSTypes commonTypes,
       Node defSite, String name, ImmutableList<String> typeParameters) {
-    return new RawNominalType(
-        defSite, name, typeParameters, Kind.CLASS, ObjectKind.STRUCT);
+    return new RawNominalType(commonTypes, defSite,
+        name, typeParameters, Kind.CLASS, ObjectKind.STRUCT);
   }
 
-  public static RawNominalType makeDictClass(
+  public static RawNominalType makeDictClass(JSTypes commonTypes,
       Node defSite, String name, ImmutableList<String> typeParameters) {
-    return new RawNominalType(
-        defSite, name, typeParameters, Kind.CLASS, ObjectKind.DICT);
+    return new RawNominalType(commonTypes, defSite,
+        name, typeParameters, Kind.CLASS, ObjectKind.DICT);
   }
 
-  public static RawNominalType makeNominalInterface(
+  public static RawNominalType makeNominalInterface(JSTypes commonTypes,
       Node defSite, String name, ImmutableList<String> typeParameters) {
     // interfaces are struct by default
-    return new RawNominalType(
-        defSite, name, typeParameters, Kind.INTERFACE, ObjectKind.STRUCT);
+    return new RawNominalType(commonTypes, defSite,
+        name, typeParameters, Kind.INTERFACE, ObjectKind.STRUCT);
   }
 
-  public static RawNominalType makeStructuralInterface(
+  public static RawNominalType makeStructuralInterface(JSTypes commonTypes,
       Node defSite, String name, ImmutableList<String> typeParameters) {
     // interfaces are struct by default
-    return new RawNominalType(
-        defSite, name, typeParameters, Kind.RECORD, ObjectKind.STRUCT);
+    return new RawNominalType(commonTypes, defSite,
+        name, typeParameters, Kind.RECORD, ObjectKind.STRUCT);
   }
 
   public Node getDefSite() {
@@ -550,6 +550,13 @@ public final class RawNominalType extends Namespace {
         }
       }
     }
+    // NOTE(dimvar): We currently don't add the "constructor" property to the
+    // prototype object. A tricky issue with it is that it needs to be ignored
+    // during subtyping, eg, when you are comparing a @record Foo with an
+    // object literal that has the same properties, they would still differ
+    // at the "constructor" property.
+    // If in future we decide that it's important to model this property,
+    // we'll have to address the subtyping issues.
     JSType protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
         this.superclass, this.protoProps,
         null, null, false, ObjectKind.UNRESTRICTED));
@@ -571,12 +578,12 @@ public final class RawNominalType extends Namespace {
   }
 
   @Override
-  protected JSType computeJSType(JSTypes commonTypes) {
+  protected JSType computeJSType() {
     Preconditions.checkState(this.isFinalized);
     Preconditions.checkState(this.namespaceType == null);
     return JSType.fromObjectType(ObjectType.makeObjectType(
-        commonTypes.getFunctionType(), null, ctorFn,
-        this, ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
+        this.commonTypes.getFunctionType(), null, this.ctorFn,
+        this, this.ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
   }
 
   public NominalType getAsNominalType() {

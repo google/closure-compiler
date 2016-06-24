@@ -505,7 +505,7 @@ public final class FunctionType {
     if (this.nominalType == null && other.nominalType != null
         || this.nominalType != null && other.nominalType == null
         || this.nominalType != null && other.nominalType != null
-           && !this.nominalType.isSubtypeOf(other.nominalType)) {
+           && !this.nominalType.isSubtypeOf(other.nominalType, subSuperMap)) {
       return false;
     }
 
@@ -737,7 +737,8 @@ public final class FunctionType {
 
   boolean unifyWithSubtype(FunctionType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
-    Preconditions.checkState(this.typeParameters.isEmpty());
+    Preconditions.checkState(this.typeParameters.isEmpty(),
+        "Non-empty type parameters %s", this.typeParameters);
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
     Preconditions.checkState(this != TOP_FUNCTION);
 

@@ -3925,8 +3925,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Child() {}",
         "Child.prototype = new Parent();",
         "/** @type {number} */ Child.prototype.prop = 5;"),
-        GlobalTypeInfo.INVALID_PROP_OVERRIDE,
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",

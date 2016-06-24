@@ -1150,7 +1150,7 @@ final class ObjectType implements TypeWithProperties {
   /**
    * Unify {@code this}, which may contain free type variables,
    * with {@code other}, a concrete type, modifying the supplied
-   * {@code typeMultimap} to add any new template varaible type bindings.
+   * {@code typeMultimap} to add any new template variable type bindings.
    * @return Whether unification succeeded
    */
   boolean unifyWithSubtype(ObjectType other, List<String> typeParameters,
