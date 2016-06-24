@@ -97,6 +97,55 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
         MULTIPLE_MODULES_IN_FILE);
   }
 
+  public void testBundledGoogModules() {
+    testError(
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports){",
+            "  'use strict';",
+            "  goog.module('xyz');",
+            "  foo.call(this, 1, 2, 3);",
+            "  return exports;",
+            "});"),
+        GOOG_MODULE_REFERENCES_THIS);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports){",
+            "  'use strict';",
+            "  goog.module('foo.example.ClassName');",
+            "  /** @constructor @export */ function ClassName() {}",
+            "  exports = ClassName;",
+            "  return exports;",
+            "});"),
+        ClosureCheckModule.AT_EXPORT_IN_GOOG_MODULE);
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports){",
+            "  'use strict';",
+            "  goog.module('xyz');",
+            "  exports = class {}",
+            "  return exports;",
+            "});",
+            "goog.loadModule(function(exports){",
+            "  goog.module('abc');",
+            "  var Foo = goog.require('xyz');",
+            "  var x = new Foo;",
+            "  return exports;",
+            "});"));
+
+    testError(
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports){",
+            "  'use strict';",
+            "  goog.module('xyz');",
+            "  goog.module('abc');",
+            "  var x = goog.require('other.x');",
+            "  return exports;",
+            "});"),
+        MULTIPLE_MODULES_IN_FILE);
+  }
+
   public void testGoogModuleReferencesGlobalName() {
     testError("goog.module('x.y.z');\nx.y.z = function() {};", REFERENCE_TO_MODULE_GLOBAL_NAME);
   }

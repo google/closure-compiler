@@ -4491,6 +4491,30 @@ public final class NodeUtil {
     return false;
   }
 
+  static boolean isModuleScopeRoot(Node n) {
+    return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
+  }
+
+  private static boolean isBundledGoogModuleScopeRoot(Node n) {
+    if (!n.isBlock() || !n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
+      return false;
+    }
+    Node function = n.getParent();
+    if (function == null
+        || !function.isFunction()
+        || getFunctionParameters(function).getChildCount() != 1
+        || !getFunctionParameters(function).getFirstChild().matchesQualifiedName("exports")) {
+      return false;
+    }
+    Node call = function.getParent();
+    if (!call.isCall()
+        || call.getChildCount() != 2
+        || !call.getFirstChild().matchesQualifiedName("goog.loadModule")) {
+      return false;
+    }
+    return call.getParent().isExprResult() && call.getGrandparent().isScript();
+  }
+
   private static boolean isGoogModuleDeclareLegacyNamespaceCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();

@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -27,10 +27,11 @@ import java.util.Map;
 /**
  * Checks that goog.module() is used correctly.
  *
- * Note that this file only does checks that can be done per-file. Whole program
- * checks happen during goog.module rewriting, in {@link ClosureRewriteModule}.
+ * <p>Note that this file only does checks that can be done per-file. Whole program checks happen
+ * during goog.module rewriting, in {@link ClosureRewriteModule}.
  */
-public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
+public final class ClosureCheckModule extends AbstractModuleCallback
+    implements HotSwapCompilerPass {
   static final DiagnosticType AT_EXPORT_IN_GOOG_MODULE =
       DiagnosticType.error(
           "JSC_AT_EXPORT_IN_GOOG_MODULE",
@@ -122,28 +123,36 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (n.isScript()) {
-      if (NodeUtil.isGoogModuleFile(n)) {
-        n.putBooleanProp(Node.GOOG_MODULE, true);
-        return true;
+  public void enterModule(NodeTraversal t, Node scopeRoot) {
+    Node firstStatement = scopeRoot.getFirstChild();
+    if (NodeUtil.isExprCall(firstStatement)) {
+      Node call = firstStatement.getFirstChild();
+      Node callee = call.getFirstChild();
+      if (callee.matchesQualifiedName("goog.module")) {
+        Preconditions.checkState(currentModuleName == null);
+        currentModuleName = extractFirstArgumentName(call);
       }
-      return false;
     }
-    return true;
+  }
+
+  @Override
+  public void exitModule(NodeTraversal t, Node scopeRoot) {
+    currentModuleName = null;
+    shortRequiredNamespaces.clear();
+    defaultExportNode = null;
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    if (currentModuleName == null) {
+      return;
+    }
     switch (n.getType()) {
       case CALL:
         Node callee = n.getFirstChild();
-        if (callee.matchesQualifiedName("goog.module")) {
-          if (currentModuleName == null) {
-            currentModuleName = extractFirstArgumentName(n);
-          } else {
-            t.report(n, MULTIPLE_MODULES_IN_FILE);
-          }
+        if (callee.matchesQualifiedName("goog.module")
+            && !currentModuleName.equals(extractFirstArgumentName(n))) {
+          t.report(n, MULTIPLE_MODULES_IN_FILE);
         } else if (callee.matchesQualifiedName("goog.provide")) {
           t.report(n, MODULE_AND_PROVIDES);
         } else if (callee.matchesQualifiedName("goog.require")) {
@@ -197,11 +206,6 @@ public final class ClosureCheckModule implements Callback, HotSwapCompilerPass {
                 n.getQualifiedName(), shortName);
           }
         }
-        break;
-      case SCRIPT:
-        currentModuleName = null;
-        shortRequiredNamespaces.clear();
-        defaultExportNode = null;
         break;
     }
   }

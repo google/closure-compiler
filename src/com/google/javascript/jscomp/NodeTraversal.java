@@ -150,14 +150,10 @@ public class NodeTraversal {
     public void visit(NodeTraversal t, Node n, Node parent) {}
   }
 
-  /**
-   * Abstract scoped callback to visit all nodes in postorder.
-   */
-  public abstract static class AbstractScopedCallback
-      implements ScopedCallback {
+  /** Abstract scoped callback to visit all nodes in postorder. */
+  public abstract static class AbstractScopedCallback implements ScopedCallback {
     @Override
-    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-        Node parent) {
+    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return true;
     }
 
@@ -174,26 +170,61 @@ public class NodeTraversal {
    */
   public abstract static class AbstractShallowCallback implements Callback {
     @Override
-    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-        Node parent) {
+    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       // We do want to traverse the name of a named function, but we don't
       // want to traverse the arguments or body.
-      return parent == null || !parent.isFunction() ||
-          n == parent.getFirstChild();
+      return parent == null || !parent.isFunction() || n == parent.getFirstChild();
     }
   }
 
   /**
-   * Abstract callback to visit all structure and statement nodes but doesn't
-   * traverse into functions or expressions.
+   * Abstract callback to visit all structure and statement nodes but doesn't traverse into
+   * functions or expressions.
    */
-  public abstract static class AbstractShallowStatementCallback
-      implements Callback {
+  public abstract static class AbstractShallowStatementCallback implements Callback {
     @Override
-    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-        Node parent) {
-      return parent == null || NodeUtil.isControlStructure(parent)
-         || NodeUtil.isStatementBlock(parent);
+    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      return parent == null
+          || NodeUtil.isControlStructure(parent)
+          || NodeUtil.isStatementBlock(parent);
+    }
+  }
+
+  /**
+   * Abstract callback that knows when goog.modules (and in the future ES6 modules) are entered
+   * and exited. This includes both whole file modules and bundled modules.
+   */
+  public abstract static class AbstractModuleCallback implements ScopedCallback {
+
+    /**
+     * Called immediately after entering a module.
+     */
+    public abstract void enterModule(NodeTraversal t, Node scopeRoot);
+
+    /**
+     * Called immediately before exiting a module.
+     */
+    public abstract void exitModule(NodeTraversal t, Node scopeRoot);
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return true;
+    }
+
+    @Override
+    public final void enterScope(NodeTraversal t) {
+      Node scopeRoot = t.getScopeRoot();
+      if (NodeUtil.isModuleScopeRoot(scopeRoot)) {
+        enterModule(t, scopeRoot);
+      }
+    }
+
+    @Override
+    public final void exitScope(NodeTraversal t) {
+      Node scopeRoot = t.getScopeRoot();
+      if (NodeUtil.isModuleScopeRoot(scopeRoot)) {
+        exitModule(t, scopeRoot);
+      }
     }
   }
 
@@ -863,14 +894,19 @@ public class NodeTraversal {
    * in a global block scope.
    */
   public boolean inModuleScope() {
-    return getScopeRoot().isModuleBody();
+    return NodeUtil.isModuleScopeRoot(getScopeRoot());
   }
 
   /**
    * Determines whether the hoist scope of the current traversal is global.
    */
   public boolean inModuleHoistScope() {
-    return getCfgRoot().isModuleBody();
+    Node moduleRoot = getCfgRoot();
+    if (moduleRoot.isFunction()) {
+      // For wrapped modules, the function block is the module scope root.
+      moduleRoot = moduleRoot.getLastChild();
+    }
+    return NodeUtil.isModuleScopeRoot(moduleRoot);
   }
 
   int getScopeDepth() {
