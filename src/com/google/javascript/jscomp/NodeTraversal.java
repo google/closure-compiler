@@ -420,11 +420,7 @@ public class NodeTraversal {
       pushScope(s);
 
       // traverseBranch is not called here to avoid re-creating the block scope.
-      for (Node child = n.getFirstChild(); child != null; ) {
-        Node next = child.getNext();
-        traverseBranch(child, n);
-        child = next;
-      }
+      traverseChildren(n);
 
       popScope();
     } else {
@@ -643,13 +639,7 @@ public class NodeTraversal {
     } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
       traverseBlockScope(n);
     } else {
-      for (Node child = n.getFirstChild(); child != null; ) {
-        // child could be replaced, in which case our child node
-        // would no longer point to the true next
-        Node next = child.getNext();
-        traverseBranch(child, n);
-        child = next;
-      }
+      traverseChildren(n);
     }
 
     curNode = n;
@@ -720,21 +710,27 @@ public class NodeTraversal {
     popScope();
   }
 
+  private void traverseChildren(Node n) {
+    for (Node child = n.getFirstChild(); child != null; ) {
+      // child could be replaced, in which case our child node
+      // would no longer point to the true next
+      Node next = child.getNext();
+      traverseBranch(child, n);
+      child = next;
+    }
+  }
+
   /** Traverses a module. */
   private void traverseModule(Node n) {
     pushScope(n);
-    for (Node child : n.children()) {
-      traverseBranch(child, n);
-    }
+    traverseChildren(n);
     popScope();
   }
 
   /** Traverses a non-function block. */
   private void traverseBlockScope(Node n) {
     pushScope(n);
-    for (Node child : n.children()) {
-      traverseBranch(child, n);
-    }
+    traverseChildren(n);
     popScope();
   }
 
