@@ -1507,10 +1507,11 @@ Object.getOwnPropertySymbols = function(obj) {};
 
 /**
  * @param {!Object} obj
+ * @param {Object} proto
  * @return {!Object}
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-object.setprototypeof
  */
-Object.setPrototypeOf = function(obj) {};
+Object.setPrototypeOf = function(obj, proto) {};
 
 
 /**
