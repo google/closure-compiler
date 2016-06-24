@@ -373,7 +373,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
   public void testConstructorDeclarationRedefined() {
     // Tests that redefining a @constructor does not fail when using replaceScript. Regression
-    // test for http://b/28939919.
+    // test for b/28939919.
     CompilerOptions options = getOptions();
 
     String originalSrc = LINE_JOINER.join(
@@ -420,7 +420,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
   public void testRedeclarationOfStructProperties() {
     // Tests that definition of a property on a @struct does not fail on replaceScript. A regression
-    // test for http://b/28940462.
+    // test for b/28940462.
     CompilerOptions options = getOptions();
 
     String src = LINE_JOINER.join(
@@ -440,7 +440,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
   public void testInterfaceOverrideDeclarations() {
     // Tests that incremental compilation of a class implementing an interface does not fail
-    // on replaceScript. Regression test for http://b/28942209.
+    // on replaceScript. Regression test for b/28942209.
     CompilerOptions options = getOptions();
 
     String src = LINE_JOINER.join(
@@ -464,7 +464,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
   public void testAssignmentToConstProperty() {
     // Tests that defining a field on a @const property does not fail with incorrect
-    // "assignment to property" error. Regression test for http://b/28981397.
+    // "assignment to property" error. Regression test for b/28981397.
     CompilerOptions options = getOptions();
 
     String src = LINE_JOINER.join(
