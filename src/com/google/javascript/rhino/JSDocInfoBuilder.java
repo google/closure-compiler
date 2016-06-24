@@ -460,6 +460,23 @@ public final class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#isXidGenerator()} flag set to {@code true}.
+   *
+   * @return {@code true} if the isXidGenerator flag was recorded and {@code false} if it was
+   *     already recorded.
+   */
+  public boolean recordXidGenerator() {
+    if (!currentInfo.isXidGenerator()) {
+      currentInfo.setXidGenerator(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its {@link
    * JSDocInfo#isStableIdGenerator()} flag set to {@code true}.
    *
    * @return {@code true} if the stableIdGenerator flag was recorded and {@code false} if it was

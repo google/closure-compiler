@@ -1879,7 +1879,7 @@ public final class DefaultPassConfig extends PassConfig {
           ReplaceIdGenerators pass =
               new ReplaceIdGenerators(
                   compiler, options.idGenerators, options.generatePseudoNames,
-                  options.idGeneratorsMapSerialized);
+                  options.idGeneratorsMapSerialized, options.xidHashFunction);
           pass.process(externs, root);
           idGeneratorMap = pass.getSerializedIdMappings();
         }

@@ -228,7 +228,7 @@ public class JSDocInfo implements Serializable {
     private int getMaskForBitIndex(int bitIndex) {
         Preconditions.checkArgument(bitIndex >= 0,
             "Bit index should be non-negative integer");
-      return 1 << bitIndex;
+        return 1 << bitIndex;
     }
   }
 
@@ -515,24 +515,26 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_DEPRECATED    = 0x00000100; // @deprecated
   private static final int MASK_INTERFACE     = 0x00000200; // @interface
   private static final int MASK_EXPORT        = 0x00000400; // @export
+  @SuppressWarnings("unused")
+  private static final int MASK_UNUSED_2      = 0x00000800; //
   private static final int MASK_FILEOVERVIEW  = 0x00001000; // @fileoverview
   private static final int MASK_IMPLICITCAST  = 0x00002000; // @implicitCast
   private static final int MASK_NOSIDEEFFECTS = 0x00004000; // @nosideeffects
   private static final int MASK_EXTERNS       = 0x00008000; // @externs
-  @SuppressWarnings("unused")
-  private static final int MASK_UNUSED_2      = 0x00010000; //
+  private static final int MASK_XIDGEN        = 0x00010000; // @idGenerator {xid}
   private static final int MASK_NOCOMPILE     = 0x00020000; // @nocompile
-  private static final int MASK_CONSISTIDGEN  = 0x00040000; // @consistentIdGenerator
-  private static final int MASK_IDGEN         = 0x00080000; // @idGenerator
+  private static final int MASK_CONSISTIDGEN  = 0x00040000; // @idGenerator {consistent}
+  private static final int MASK_IDGEN         = 0x00080000; // @idGenerator {unique}
   private static final int MASK_EXPOSE        = 0x00100000; // @expose
   private static final int MASK_UNRESTRICTED  = 0x00200000; // @unrestricted
   private static final int MASK_STRUCT        = 0x00400000; // @struct
   private static final int MASK_DICT          = 0x00800000; // @dict
-  private static final int MASK_STALBEIDGEN   = 0x01000000; // @stableIdGenerator
+  private static final int MASK_STABLEIDGEN   = 0x01000000; // @idGenerator {stable}
   private static final int MASK_MAPPEDIDGEN   = 0x02000000; // @idGenerator {mapped}
   private static final int MASK_NOCOLLAPSE    = 0x04000000; // @nocollapse
   private static final int MASK_RECORD        = 0x08000000; // @record
   private static final int MASK_ABSTRACT      = 0x10000000; // @abstract
+  // No more masks available
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
@@ -642,7 +644,11 @@ public class JSDocInfo implements Serializable {
   }
 
   void setStableIdGenerator(boolean value) {
-    setFlag(value, MASK_STALBEIDGEN);
+    setFlag(value, MASK_STABLEIDGEN);
+  }
+
+  void setXidGenerator(boolean value) {
+    setFlag(value, MASK_XIDGEN);
   }
 
   void setMappedIdGenerator(boolean value) {
@@ -757,11 +763,18 @@ public class JSDocInfo implements Serializable {
    * @return whether the {@code @stableIdGenerator} is present on this {@link JSDocInfo}.
    */
   public boolean isStableIdGenerator() {
-    return getFlag(MASK_STALBEIDGEN);
+    return getFlag(MASK_STABLEIDGEN);
   }
 
   /**
-   * @return whether the {@code @stableIdGenerator} is present on this {@link JSDocInfo}.
+   * @return whether the {@code @idGenerator {xid}} is present on this {@link JSDocInfo}.
+   */
+  public boolean isXidGenerator() {
+    return getFlag(MASK_XIDGEN);
+  }
+
+  /**
+   * @return whether the {@code @idGenerator {mapped}} is present on this {@link JSDocInfo}.
    */
   public boolean isMappedIdGenerator() {
     return getFlag(MASK_MAPPEDIDGEN);

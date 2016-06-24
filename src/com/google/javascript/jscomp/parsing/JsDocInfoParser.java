@@ -115,7 +115,7 @@ public final class JsDocInfoParser {
   private static final Set<String> modifiesAnnotationKeywords =
       ImmutableSet.of("this", "arguments");
   private static final Set<String> idGeneratorAnnotationKeywords =
-      ImmutableSet.of("unique", "consistent", "stable", "mapped");
+      ImmutableSet.of("unique", "consistent", "stable", "mapped", "xid");
 
   private JSDocInfoBuilder fileLevelJsDocBuilder;
 
@@ -1386,6 +1386,11 @@ public final class JsDocInfoParser {
         break;
       case "stable":
         if (!jsdocBuilder.recordStableIdGenerator()) {
+          addParserWarning("msg.jsdoc.idgen.duplicate");
+        }
+        break;
+      case "xid":
+        if (!jsdocBuilder.recordXidGenerator()) {
           addParserWarning("msg.jsdoc.idgen.duplicate");
         }
         break;

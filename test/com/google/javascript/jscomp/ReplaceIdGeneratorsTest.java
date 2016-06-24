@@ -32,7 +32,7 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    RenamingMap xidTestMap = new RenamingMap() {
+    RenamingMap idTestMap = new RenamingMap() {
       private final ImmutableMap<String, String> map = ImmutableMap.of(
           "foo", ":foo:",
           "bar", ":bar:");
@@ -48,10 +48,12 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
         new ImmutableMap.Builder<String, RenamingMap>()
             .put("goog.events.getUniqueId", gen)
             .put("goog.place.getUniqueId", gen)
-            .put("xid", xidTestMap)
+            .put("id", idTestMap)
+            .put("get.id", idTestMap)
             .build(),
         generatePseudoNames,
-        previousMappings);
+        previousMappings,
+        null /* xidHashFunction */);
     return lastPass;
   }
 
@@ -205,73 +207,99 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testObjectLit() {
-    test("/** @idGenerator */ goog.xid = function() {};" +
-        "things = goog.xid({foo1: 'test', 'foo bar': 'test'})",
+    test(LINE_JOINER.join(
+        "/** @idGenerator */ goog.id = function() {};",
+        "things = goog.id({foo1: 'test', 'foo bar': 'test'})"),
+        LINE_JOINER.join(
+        "goog.id = function() {};",
+        "things = {'a': 'test', 'b': 'test'}"),
+        LINE_JOINER.join(
+        "goog.id = function() {};",
+        "things = {'foo1$0': 'test', 'foo bar$1': 'test'}"));
+  }
 
-        "goog.xid = function() {};" +
-        "things = {'a': 'test', 'b': 'test'}",
+  public void testObjectLit_mapped() {
+    testNonPseudoSupportingGenerator(
+        LINE_JOINER.join(
+        "/** @idGenerator {mapped} */ id = function() {};",
+        "things = id({foo: 'test', 'bar': 'test'})"),
+         LINE_JOINER.join(
+        "id = function() {};",
+        "things = {':foo:': 'test', ':bar:': 'test'}"));
+  }
 
-        "goog.xid = function() {};" +
-        "things = {'foo1$0': 'test', 'foo bar$1': 'test'}");
+  public void testObjectLit_xid() {
+    testNonPseudoSupportingGenerator(
+        LINE_JOINER.join(
+        "/** @idGenerator {xid} */ xid.object = function() {};",
+        "things = xid.object({foo: 'test', 'value': 'test'})"),
+        LINE_JOINER.join(
+        "xid.object = function() {};",
+        "things = {'QB6rXc': 'test', 'b6Lt6c': 'test'}"));
   }
 
   public void testObjectLit_empty() {
-    test("/** @idGenerator */ goog.xid = function() {};" +
-        "things = goog.xid({})",
-
-        "goog.xid = function() {};" +
-        "things = {}",
-
-        "goog.xid = function() {};" +
-        "things = {}");
+    test(
+        LINE_JOINER.join(
+        "/** @idGenerator */ goog.id = function() {};",
+        "things = goog.id({})"),
+        LINE_JOINER.join(
+        "goog.id = function() {};",
+        "things = {}"),
+        LINE_JOINER.join(
+        "goog.id = function() {};",
+        "things = {}"));
   }
 
   public void testObjectLit_function() {
-    test("/** @idGenerator */ goog.xid = function() {};" +
-        "things = goog.xid({foo: function() {}})",
-
-        "goog.xid = function() {};" +
-        "things = {'a': function() {}}",
-
-        "goog.xid = function() {};" +
-        "things = {'foo$0': function() {}}");
+    test(
+        LINE_JOINER.join(
+        "/** @idGenerator */ goog.id = function() {};",
+        "things = goog.id({foo: function() {}})"),
+        LINE_JOINER.join(
+        "goog.id = function() {};",
+        "things = {'a': function() {}}"),
+        LINE_JOINER.join(
+        "goog.id = function() {};",
+        "things = {'foo$0': function() {}}"));
 
     testEs6(
-        "/** @idGenerator */ goog.xid = function() {};"
-            + "things = goog.xid({foo: function*() {}})",
-
-        "goog.xid = function() {};" +
-        "things = {'a': function*() {}}",
-
-        "goog.xid = function() {};" +
-        "things = {'foo$0': function*() {}}");
+        LINE_JOINER.join(
+        "/** @idGenerator */ goog.id = function() {};",
+        "things = goog.id({foo: function*() {}})"),
+        LINE_JOINER.join(
+        "goog.id = function() {};",
+        "things = {'a': function*() {}}"),
+        LINE_JOINER.join(
+        "goog.id = function() {};",
+        "things = {'foo$0': function*() {}}"));
   }
 
   public void testObjectLit_ES6() {
     testErrorEs6(LINE_JOINER.join(
         "/** @idGenerator */",
-        "goog.xid = function() {};",
-        "things = goog.xid({fooX() {}})"),
+        "goog.id = function() {};",
+        "things = goog.id({fooX() {}})"),
         ReplaceIdGenerators.SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN);
 
     testErrorEs6(LINE_JOINER.join(
         "/** @idGenerator */ ",
-        "goog.xid = function() {};",
-        "things = goog.xid({shorthand})"),
+        "goog.id = function() {};",
+        "things = goog.id({shorthand})"),
         ReplaceIdGenerators.SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN);
 
     testErrorEs6(LINE_JOINER.join(
         "/** @idGenerator */",
-        "goog.xid = function() {};",
-        "things = goog.xid({['fooX']: 'test'})"),
+        "goog.id = function() {};",
+        "things = goog.id({['fooX']: 'test'})"),
         ReplaceIdGenerators.COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN);
   }
 
   public void testClass() {
     testSameEs6("", LINE_JOINER.join(
         "/** @idGenerator */",
-        "goog.xid = function() {};",
-        "things = goog.xid(class fooBar{})"),
+        "goog.id = function() {};",
+        "things = goog.id(class fooBar{})"),
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
@@ -329,6 +357,26 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
         "id = function() {};" +
         "f1 = 'AAAMiw';" +
         "f1 = 'AAAMiw'");
+  }
+
+  public void testSimpleXid() {
+    testNonPseudoSupportingGenerator(
+        LINE_JOINER.join(
+        "/** @idGenerator {xid} */ id = function() {};",
+        "foo.bar = id('foo')"),
+        LINE_JOINER.join(
+        "id = function() {};",
+        "foo.bar = 'QB6rXc'"));
+
+    testNonPseudoSupportingGenerator(
+        LINE_JOINER.join(
+        "/** @idGenerator {xid} */ id = function() {};",
+        "f1 = id('foo');",
+        "f1 = id('foo')"),
+        LINE_JOINER.join(
+        "id = function() {};",
+        "f1 = 'QB6rXc';",
+        "f1 = 'QB6rXc'"));
   }
 
   public void testVar() {
@@ -403,54 +451,71 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
 
         "get.id = function() {};" +
         "foo.bar = {a: '125lGg'}");
+
+    testNonPseudoSupportingGenerator(
+        LINE_JOINER.join(
+        "/** @idGenerator {xid} */ get.id = function() {};",
+        "foo.bar = {a: get.id('foo')}"),
+        LINE_JOINER.join(
+        "get.id = function() {};",
+        "foo.bar = {a: 'QB6rXc'}"));
   }
 
-  public void testInObjLit2() {
-    test("/** @idGenerator {mapped}*/ xid = function() {};" +
-         "foo.bar = {a: xid('foo')}",
-
-         "xid = function() {};" +
-         "foo.bar = {a: ':foo:'}",
-
-         "xid = function() {};" +
-         "foo.bar = {a: ':foo:'}");
+  public void testInObjLit_mapped() {
+    test(
+        LINE_JOINER.join(
+        "/** @idGenerator {mapped}*/ id = function() {};",
+        "foo.bar = {a: id('foo')}"),
+        LINE_JOINER.join(
+        "id = function() {};",
+        "foo.bar = {a: ':foo:'}"),
+        LINE_JOINER.join(
+        "id = function() {};",
+        "foo.bar = {a: ':foo:'}"));
   }
 
   public void testMapped() {
-    test("/** @idGenerator {mapped}*/ xid = function() {};" +
-        "foo.bar = xid('foo');",
-
-        "xid = function() {};" +
-        "foo.bar = ':foo:';",
-
-        "xid = function() {};" +
-        "foo.bar = ':foo:';");
+    test(
+        LINE_JOINER.join(
+        "/** @idGenerator {mapped}*/ id = function() {};",
+        "foo.bar = id('foo');"),
+        LINE_JOINER.join(
+        "id = function() {};",
+        "foo.bar = ':foo:';"),
+        LINE_JOINER.join(
+        "id = function() {};",
+        "foo.bar = ':foo:';"));
   }
 
   public void testMappedMap() {
-    testMap("/** @idGenerator {mapped}*/ xid = function() {};" +
-        "foo.bar = xid('foo');" +
-        "foo.bar = xid('foo');",
-
-        "xid = function() {};" +
-        "foo.bar = ':foo:';" +
+    testMap(
+        LINE_JOINER.join(
+        "/** @idGenerator {mapped}*/ id = function() {};",
+        "foo.bar = id('foo');",
+        "foo.bar = id('foo');"),
+        LINE_JOINER.join(
+        "id = function() {};",
         "foo.bar = ':foo:';",
-
-        "[xid]\n" +
-        "\n" +
-        ":foo::foo\n" +
-        "\n");
+        "foo.bar = ':foo:';"),
+        LINE_JOINER.join(
+        "[id]",
+        "",
+        ":foo::foo",
+        "",
+        ""));
   }
 
   public void testMapped2() {
-    test("/** @idGenerator {mapped}*/ xid = function() {};" +
-        "foo.bar = function() { return xid('foo'); };",
-
-        "xid = function() {};" +
-        "foo.bar = function() { return ':foo:'; };",
-
-        "xid = function() {};" +
-        "foo.bar = function() { return ':foo:'; };");
+    test(
+        LINE_JOINER.join(
+        "/** @idGenerator {mapped}*/ id = function() {};",
+        "foo.bar = function() { return id('foo'); };"),
+        LINE_JOINER.join(
+        "id = function() {};",
+        "foo.bar = function() { return ':foo:'; };"),
+        LINE_JOINER.join(
+        "id = function() {};",
+        "foo.bar = function() { return ':foo:'; };"));
   }
 
   public void testTwoGenerators() {
@@ -593,10 +658,10 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testUnknownMapping() {
-    testSame("" +
-        "/** @idGenerator {mapped} */\n" +
-        "var id = function() {};\n" +
-        "function Foo() { id('foo'); }\n",
+    testSame(LINE_JOINER.join(
+        "/** @idGenerator {mapped} */",
+        "var unknownId = function() {};",
+        "function Foo() { unknownId('foo'); }"),
         ReplaceIdGenerators.MISSING_NAME_MAP_FOR_GENERATOR);
   }
 

@@ -775,6 +775,9 @@ public class CompilerOptions {
   /** Id generators to replace. */
   ImmutableMap<String, RenamingMap> idGenerators;
 
+  /** Hash function to use for xid generation. */
+  Xid.HashFunction xidHashFunction;
+
   /**
    * A previous map of ids (serialized to a string by a previous compile).
    * This will be used as a hint during the ReplaceIdGenerators pass, which
@@ -1401,6 +1404,13 @@ public class CompilerOptions {
        builder.put(name, gen);
     }
     this.idGenerators = builder.build();
+  }
+
+  /**
+   * Sets the hash function to use for Xid
+   */
+  public void setXidHashFunction(Xid.HashFunction xidHashFunction) {
+    this.xidHashFunction = xidHashFunction;
   }
 
   /**

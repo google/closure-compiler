@@ -2859,30 +2859,55 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@export {string}\n * @public */", "extra visibility tag");
   }
 
+  public void testStableIdGenerator() throws Exception {
+    JSDocInfo info = parse("/**\n"
+        + " * @stableIdGenerator\n"
+        + " */\n"
+        + "function getId() {}");
+    assertThat(info.isStableIdGenerator()).isTrue();
+  }
+
   public void testStableIdGeneratorConflict() throws Exception {
-    parse("/**\n" +
-          " * @stableIdGenerator\n" +
-          " * @stableIdGenerator\n" +
-          " */\n" +
-          "function getId() {}",
-          "extra @stableIdGenerator tag");
+    parse("/**\n"
+        + " * @stableIdGenerator\n"
+        + " * @stableIdGenerator\n"
+        + " */\n"
+        + "function getId() {}",
+        "extra @stableIdGenerator tag");
+  }
+
+  public void testXidGenerator() throws Exception {
+    JSDocInfo info = parse("/**\n"
+        + " * @idGenerator {xid}\n"
+        + " */\n"
+        + "function getId() {}");
+    assertThat(info.isXidGenerator()).isTrue();
+  }
+
+  public void testXidGeneratorConflict() throws Exception {
+    parse("/**\n"
+        + " * @idGenerator {xid}\n"
+        + " * @idGenerator {xid}\n"
+        + " */\n"
+        + "function getId() {}",
+        "extra @idGenerator tag");
   }
 
   public void testIdGenerator() throws Exception {
-    JSDocInfo info = parse("/**\n" +
-          " * @idGenerator\n" +
-          " */\n" +
-          "function getId() {}");
+    JSDocInfo info = parse("/**\n"
+        + " * @idGenerator\n"
+        + " */\n"
+        + "function getId() {}");
     assertThat(info.isIdGenerator()).isTrue();
   }
 
   public void testIdGeneratorConflict() throws Exception {
-    parse("/**\n" +
-          " * @idGenerator\n" +
-          " * @idGenerator\n" +
-          " */\n" +
-          "function getId() {}",
-          "extra @idGenerator tag");
+    parse("/**\n"
+        + " * @idGenerator\n"
+        + " * @idGenerator\n"
+        + " */\n"
+        + "function getId() {}",
+        "extra @idGenerator tag");
   }
 
   public void testIdGenerator1() throws Exception {
@@ -2901,6 +2926,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testIdGenerator4() throws Exception {
+    JSDocInfo info = parse("@idGenerator {xid} */");
+    assertThat(info.isXidGenerator()).isTrue();
+  }
+
+  public void testIdGenerator5() throws Exception {
     JSDocInfo info = parse("@idGenerator {mapped} */");
     assertThat(info.isMappedIdGenerator()).isTrue();
   }
