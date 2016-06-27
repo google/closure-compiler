@@ -264,7 +264,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureRewriteClass);
     }
 
+    // TODO(tbreisacher): Move this to before closureCheckModule so that it can operate on the
+    // original source tree, instead of the goog.scope/goog.module-rewritten one.
     if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
+        || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)
         || options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
       checks.add(checkRequires);
     }

@@ -38,8 +38,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
-    options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.WARNING);
-    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
     return super.getOptions(options);
   }
 

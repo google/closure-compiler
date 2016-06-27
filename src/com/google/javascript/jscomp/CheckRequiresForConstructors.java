@@ -92,7 +92,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
 
-  // TODO(tbreisacher): Move this into the missingRequire group (b/27856452).
   static final DiagnosticType MISSING_REQUIRE_CALL_WARNING =
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_CALL_WARNING", "missing require: ''{0}''");

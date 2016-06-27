@@ -409,6 +409,11 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("missingRequire",
           CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
 
+  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
+      DiagnosticGroups.registerGroup("strictMissingRequire",
+          CheckRequiresForConstructors.MISSING_REQUIRE_WARNING,
+          CheckRequiresForConstructors.MISSING_REQUIRE_CALL_WARNING);
+
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire",
           CheckRequiresForConstructors.DUPLICATE_REQUIRE_WARNING,
@@ -501,9 +506,6 @@ public class DiagnosticGroups {
               CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
               CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
               CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,
-              // TODO(tbreisacher): Move MISSING_REQUIRE_CALL_WARNING to missingRequire group
-              // as soon as projects that enable that group are fixed.
-              CheckRequiresForConstructors.MISSING_REQUIRE_CALL_WARNING,
               CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY,
               CheckUnusedLabels.UNUSED_LABEL,
               CheckUselessBlocks.USELESS_BLOCK,
