@@ -247,4 +247,22 @@ public final class FeatureSet implements Serializable {
   public String toLanguageModeString() {
     return "ECMASCRIPT" + number;
   }
+
+  /** Parses known strings into feature sets. */
+  public static FeatureSet valueOf(String name) {
+    switch (name) {
+      case "es3":
+        return ES3;
+      case "es5":
+        return ES5;
+      case "es6-impl":
+        return ES6_IMPL;
+      case "es6":
+        return ES6;
+      case "ts":
+        return TYPESCRIPT;
+      default:
+        throw new IllegalArgumentException("No such FeatureSet: " + name);
+    }
+  }
 }

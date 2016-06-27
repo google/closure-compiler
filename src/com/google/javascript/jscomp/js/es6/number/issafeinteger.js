@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require es6/number/constants es6/number/isinteger util/polyfill';
+
+$jscomp.polyfill('Number.isSafeInteger', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Returns whether the given argument is a "safe" integer,
+   * that is, its magnitude is less than 2^53.
+   *
+   * <p>Polyfills the static function Number.isSafeInteger().
+   *
+   * @param {number} x Any value.
+   * @return {boolean} True if x is a safe integer.
+   */
+  var polyfill = function(x) {
+    return Number.isInteger(x) && Math.abs(x) <= Number.MAX_SAFE_INTEGER;
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

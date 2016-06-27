@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require util/polyfill';
+
+$jscomp.polyfill('Math.cbrt', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Returns the cube root of the number, handling negatives safely.
+   *
+   * <p>Polyfills the static function Math.cbrt().
+   *
+   * @param {number} x Any number, or value that can be coerced into a number.
+   * @return {number} The cube root of x.
+   */
+  var polyfill = function(x) {
+    if (x === 0) return x;
+    x = Number(x);
+    var y = Math.pow(Math.abs(x), 1 / 3);
+    return x < 0 ? -y : y;
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

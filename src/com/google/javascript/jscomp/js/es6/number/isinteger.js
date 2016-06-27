@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require es6/number/isfinite util/polyfill';
+
+$jscomp.polyfill('Number.isInteger', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Returns whether the given argument is an integer.
+   *
+   * <p>Polyfills the static function Number.isInteger().
+   *
+   * @param {number} x Any value.
+   * @return {boolean} True if x is an integer.
+   */
+  var polyfill = function(x) {
+    if (!Number.isFinite(x)) return false;
+    return x === Math.floor(x);
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

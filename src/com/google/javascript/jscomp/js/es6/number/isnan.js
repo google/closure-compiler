@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require util/polyfill';
+
+$jscomp.polyfill('Number.isNaN', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Returns whether the given argument is the value NaN,
+   * guaranteeing not to coerce to a number first.
+   *
+   * <p>Polyfills the static function Number.isNaN().
+   *
+   * @param {number} x Any value.
+   * @return {boolean} True if x is exactly NaN.
+   */
+  var polyfill = function(x) {
+    return typeof x === 'number' && isNaN(x);
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

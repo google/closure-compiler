@@ -21,12 +21,11 @@
  * Note that DDC's output cannot currently be lowered to ES3 (heavy use of
  * getters or setters, including in the runtime), so these helpers make no
  * attempt of fallback behaviour when methods like Object.getPrototypeOf or
- * Object.getOwnPropertyDescriptor are undefined (unlike helpers in
- * es6_runtime.js).
+ * Object.getOwnPropertyDescriptor are undefined (unlike helpers in es6/*.js).
  *
  * @author ochafik@google.com (Olivier Chafik)
  */
-'require es6_runtime';
+'require base';
 
 /**
  * Gets a property descriptor for a target instance, skipping its class
@@ -35,11 +34,11 @@
  * @private
  * @param {!Object} target
  * @param {!string} name
- * @return {!Object.<ObjectPropertyDescriptor>|undefined}
+ * @return {?}
  */
 $jscomp.getSuperPropertyDescriptor_ = function(target, name) {
-  var getPrototypeOf = $jscomp.global.Object.getPrototypeOf;
-  var getOwnPropertyDescriptor = $jscomp.global.Object.getOwnPropertyDescriptor;
+  var getPrototypeOf = Object.getPrototypeOf;
+  var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
   var cls = getPrototypeOf(target);
   while (cls != null) {
     cls = getPrototypeOf(cls);

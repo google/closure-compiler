@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require util/polyfill';
+
+$jscomp.polyfill('Math.asinh', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Computes the inverse hyperbolic sine.
+   *
+   * <p>Polyfills the static function Math.asinh().
+   *
+   * @param {number} x Any number, or value that can be coerced to a number.
+   * @return {number} The inverse hyperbolic sine of x.
+   */
+  var polyfill = function(x) {
+    x = Number(x);
+    if (x === 0) return x;
+    var y = Math.log(Math.abs(x) + Math.sqrt(x * x + 1));
+    return x < 0 ? -y : y;
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

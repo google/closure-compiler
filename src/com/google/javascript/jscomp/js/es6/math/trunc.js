@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require util/polyfill';
+
+$jscomp.polyfill('Math.trunc', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Truncates any fractional digits from its argument (towards zero).
+   *
+   * <p>Polyfills the static function Math.trunc().
+   *
+   * @param {number} x Any number, or value that can be coerced to a number.
+   * @return {number}
+   */
+  var polyfill = function(x) {
+    x = Number(x);
+    if (isNaN(x) || x === Infinity || x === -Infinity || x === 0) return x;
+    var y = Math.floor(Math.abs(x));
+    return x < 0 ? -y : y;
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

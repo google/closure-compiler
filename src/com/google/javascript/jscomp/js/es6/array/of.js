@@ -14,9 +14,24 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require es6/array/from util/polyfill';
+
+$jscomp.polyfill('Array.of', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Creates an array from a fixed set of arguments.
+   *
+   * <p>Polyfills the static function Array.of().  Does not support
+   * constructor inheritance (i.e. (subclass of Array).of).
+   *
+   * @param {...T} var_args Elements to include in the array.
+   * @return {!Array<T>}
+   * @template T
+   */
+  var polyfill = function(var_args) {
+    return Array.from(arguments);
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

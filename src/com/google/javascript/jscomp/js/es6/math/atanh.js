@@ -14,9 +14,24 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require util/polyfill es6/math/log1p';
+
+$jscomp.polyfill('Math.atanh', function(orig) {
+  if (orig) return orig;
+  var log1p = Math.log1p;
+
+  /**
+   * Computes the inverse hyperbolic tangent.
+   *
+   * <p>Polyfills the static function Math.atanh().
+   *
+   * @param {number} x Any number, or value that can be coerced to a number.
+   * @return {number} The inverse hyperbolic tangent +x.
+   */
+  var polyfill = function(x) {
+    x = Number(x);
+    return (log1p(x) - log1p(-x)) / 2;
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

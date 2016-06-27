@@ -15,13 +15,15 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
-
+import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.RewritePolyfills.Polyfills;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.rhino.Node;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /** Unit tests for the RewritePolyfills compiler pass. */
 public final class RewritePolyfillsTest extends CompilerTestCase {
@@ -30,27 +32,28 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   private static final LanguageMode ES5 = LanguageMode.ECMASCRIPT5_STRICT;
   private static final LanguageMode ES3 = LanguageMode.ECMASCRIPT3;
 
-  private static final Polyfills POLYFILLS = new Polyfills.Builder()
-      // Classes
-      .addClasses(FeatureSet.ES6, FeatureSet.ES6, "", "Proxy")
-      .addClasses(FeatureSet.ES6, FeatureSet.ES5, "$jscomp", "Map")
-      .addClasses(FeatureSet.ES6, FeatureSet.ES3, "$jscomp", "Set")
-      // Statics
-      .addStatics(FeatureSet.ES6, FeatureSet.ES6, "", "Array", "from")
-      .addStatics(FeatureSet.ES6, FeatureSet.ES5, "$jscomp.math", "Math", "clz32")
-      .addStatics(FeatureSet.ES6, FeatureSet.ES3, "$jscomp.array", "Array", "of")
-      .addStatics(FeatureSet.ES5, FeatureSet.ES3, "$jscomp.object", "Object", "keys")
-      // Methods
-      .addMethods(FeatureSet.ES6, FeatureSet.ES6, "", "normalize")
-      .addMethods(FeatureSet.ES6, FeatureSet.ES5, "$jscomp.string", "endsWith")
-      .addMethods(FeatureSet.ES6, FeatureSet.ES3, "$jscomp.array", "fill")
-      .addMethods(FeatureSet.ES5, FeatureSet.ES3, "$jscomp.array", "forEach")
-      .build();
+  private final Map<String, String> injectableLibraries = new HashMap<>();
+  private final List<String> polyfillTable = new ArrayList<>();
 
+  private void addLibrary(String name, String from, String to, String library) {
+    if (library != null) {
+      injectableLibraries.put(
+          library,
+          String.format("$jscomp.polyfill('%s', function() {}, '%s', '%s');\n", name, from, to));
+    }
+    polyfillTable.add(String.format("%s %s %s %s", name, from, to, library != null ? library : ""));
+  }
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    injectableLibraries.clear();
+    polyfillTable.clear();
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewritePolyfills(compiler, POLYFILLS);
+    return new RewritePolyfills(compiler, Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)));
   }
 
   @Override
@@ -62,11 +65,21 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
   @Override
   protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  protected Set<String> getInjectedLibraries() {
-    return ((NoninjectingCompiler) getLastCompiler()).injected;
+    return new NoninjectingCompiler() {
+      Node lastInjected = null;
+      @Override Node ensureLibraryInjected(String library, boolean force) {
+        Node parent = getNodeForCodeInsertion(null);
+        Node ast = parseSyntheticCode(injectableLibraries.get(library));
+        Node firstChild = ast.removeChildren();
+        Node lastChild = firstChild.getLastSibling();
+        if (lastInjected == null) {
+          parent.addChildrenToFront(firstChild);
+        } else {
+          parent.addChildrenAfter(firstChild, lastInjected);
+        }
+        return lastInjected = lastChild;
+      }
+    };
   }
 
   @Override
@@ -74,225 +87,199 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     return 1;
   }
 
+  private String addLibraries(String code, String[] libraries) {
+    StringBuilder expected = new StringBuilder();
+    for (String library : libraries) {
+      expected.append(injectableLibraries.get(library));
+    }
+    expected.append(code);
+    return expected.toString();
+  }
+
+  private void testInjects(String code, String... libraries) {
+    test(code, addLibraries(code, libraries));
+  }
+
+  private void testInjects(String code, DiagnosticType warning, String... libraries) {
+    test(code, addLibraries(code, libraries), null, warning);
+  }
+
   public void testEmpty() {
     setLanguage(ES6, ES5);
-    testSame("");
+    testInjects("");
   }
 
-  public void testClassesRewritten() {
+  public void testClassesInjected() {
+    addLibrary("Map", "es6", "es5", "es6/map");
+    addLibrary("Set", "es6", "es3", "es6/set");
+
     setLanguage(ES6, ES5);
-    test(
-        "var m = new Map();",
-        "$jscomp.Map$install(); var m = new $jscomp.Map();");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    testInjects("var m = new Map();", "es6/map");
 
     setLanguage(ES6, ES3);
-    test(
-        "var s = new Set();",
-        "$jscomp.Set$install(); var s = new $jscomp.Set();");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    testInjects("var s = new Set();", "es6/set");
   }
 
-  public void testClassesRewrittenInstallerNotDuplicated() {
+  public void testLibrariesOnlyInjectedOnce() {
+    addLibrary("Map", "es6", "es5", "es6/map");
+
     setLanguage(ES6, ES5);
-    test(
-        "var m = new Map(); var n = new Map();",
-        "$jscomp.Map$install(); var m = new $jscomp.Map(); var n = new $jscomp.Map()");
+    testInjects("var m = new Map(); m = new Map();", "es6/map");
   }
 
-  public void testClassesNotRewrittenIfSufficientLanguageOut() {
+  public void testClassesNotInjectedIfSufficientLanguageOut() {
+    addLibrary("Proxy", "es6", "es6", null);
+    addLibrary("Map", "es6", "es5", "es6/map");
+    addLibrary("Set", "es6", "es3", "es6/set");
+
     setLanguage(ES6, ES6);
-    testSame("new Proxy();");
-    assertThat(getInjectedLibraries()).isEmpty();
-
-    testSame("var m = new Map();");
-    assertThat(getInjectedLibraries()).isEmpty();
-
-    testSame("new Set();");
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("new Proxy();");
+    testInjects("var m = new Map();");
+    testInjects("new Set();");
   }
 
-  public void testClassesNotRewrittenIfDeclaredInScope() {
+  public void testClassesNotInjectedIfDeclaredInScope() {
+    addLibrary("Map", "es6", "es5", "es6/map");
+
     setLanguage(ES6, ES5);
-    testSame("/** @constructor */ var Map = function() {}; new Map();");
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("/** @constructor */ var Map = function() {}; new Map();");
   }
 
   public void testClassesWarnIfInsufficientLanguageOut() {
+    addLibrary("Proxy", "es6", "es6", null);
+    addLibrary("Map", "es6", "es5", "es6/map");
+
     setLanguage(ES6, ES5);
-    testSame("new Proxy();", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("new Proxy();", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
 
     setLanguage(ES6, ES3);
-    test(
-        "new Map();",
-        "$jscomp.Map$install(); new $jscomp.Map();",
-        null,
-        RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    testInjects("new Map();", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR, "es6/map");
   }
 
-  public void testJsdocTypesRewritten() {
+  public void testStaticMethodsInjected() {
+    addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
+    addLibrary("Array.of", "es6", "es3", "es6/array/of");
+    addLibrary("Object.keys", "es5", "es3", "es5/object/keys");
+
     setLanguage(ES6, ES5);
-    test(
-        "/** @type {!Map<string, {x: !Set<string>, y: number}>} */ var x;",
-        "/** @type {!$jscomp.Map<string, {x: !$jscomp.Set<string>, y: number}>} */ var x;");
+    testInjects("Math.clz32(x);", "es6/math/clz32");
 
     setLanguage(ES6, ES3);
-    test(
-        "/** @param {function(!Set<string>)} s */ function f(s) {}",
-        "/** @param {function(!$jscomp.Set<string>)} s */ function f(s) {}");
+    testInjects("Array.of(x);", "es6/array/of");
+
+    setLanguage(ES6, ES3);
+    testInjects("Object.keys(x);", "es5/object/keys");
   }
 
-  public void testJsdocTypesNotRewrittenIfSufficientLanguageOut() {
+  public void testStaticMethodsNotInjectedIfSufficientLanguageOut() {
+    addLibrary("Array.from", "es6", "es6", null);
+    addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
+    addLibrary("Array.of", "es6", "es3", "es6/array/of");
+    addLibrary("Object.keys", "es5", "es3", "es5/object/keys");
+
     setLanguage(ES6, ES6);
-    testSame("/** @type {!Map<string, {x: !Set<string>, y: number}>} */ var x;");
-  }
-
-  public void testStaticMethodsRewritten() {
-    setLanguage(ES6, ES5);
-    test(
-        "Math.clz32(x);",
-        "$jscomp.math.clz32(x);");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
-
-    setLanguage(ES6, ES3);
-    test(
-        "Array.of(x);",
-        "$jscomp.array.of(x);");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
-
-    setLanguage(ES6, ES3);
-    test(
-        "Object.keys(x);",
-        "$jscomp.object.keys(x);");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
-  }
-
-  public void testStaticMethodsNotRewrittenIfSufficientLanguageOut() {
-    setLanguage(ES6, ES6);
-    testSame("Array.from(x);");
-    assertThat(getInjectedLibraries()).isEmpty();
-
-    testSame("Math.clz32(x);");
-    assertThat(getInjectedLibraries()).isEmpty();
-
-    testSame("Array.of(x);");
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("Array.from(x);");
+    testInjects("Math.clz32(x);");
+    testInjects("Array.of(x);");
 
     setLanguage(ES5, ES5);
-    testSame("Object.keys(x);");
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("Object.keys(x);");
   }
 
-  public void testStaticMethodsNotRewrittenIfDeclaredInScope() {
+  public void testStaticMethodsNotInjectedIfDeclaredInScope() {
+    addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
+
     setLanguage(ES6, ES5);
-    testSame("var Math = {clz32: function() {}}; Math.clz32(x);");
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("var Math = {clz32: function() {}}; Math.clz32(x);");
   }
 
   public void testStaticMethodsWarnIfInsufficientLanguageOut() {
+    addLibrary("Array.from", "es6", "es6", null);
+    addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
+
     setLanguage(ES6, ES5);
-    testSame("Array.from(x);", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("Array.from(x);", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
 
     setLanguage(ES6, ES3);
-    test(
-        "Math.clz32(x);",
-        "$jscomp.math.clz32(x);",
-        null,
-        RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    testInjects(
+        "Math.clz32(x);", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR, "es6/math/clz32");
   }
 
-  public void testPrototypeMethodsInstalled() {
-    setLanguage(ES6, ES5);
-    test(
-        "x.endsWith(y);",
-        "$jscomp.string.endsWith$install(); x.endsWith(y);");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+  public void testPrototypeMethodsInjected() {
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+    addLibrary("Array.prototype.fill", "es6", "es3", "es6/array/fill");
+    addLibrary("Array.prototype.forEach", "es5", "es3", "es5/array/foreach");
 
-    test(
-        "x.fill();",
-        "$jscomp.array.fill$install(); x.fill();");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    setLanguage(ES6, ES5);
+    testInjects("x.endsWith(y);", "es6/string/endswith");
+    testInjects("x.fill();", "es6/array/fill");
 
     setLanguage(ES5, ES3);
-    test(
-        "x.forEach(y);",
-        "$jscomp.array.forEach$install(); x.forEach(y);");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    testInjects("x.forEach(y);", "es5/array/foreach");
   }
 
-  public void testPrototypeMethodsInstalled_JSModule() {
-    setLanguage(ES6, ES5);
+  public void testPrototypeMethodsNotInjectedIfSufficientLanguageOut() {
+    addLibrary("String.prototype.normalize", "es6", "es6", null);
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+    addLibrary("Array.prototype.fill", "es6", "es3", "es6/array/fill");
+    addLibrary("Array.prototype.forEach", "es5", "es3", "es5/array/foreach");
 
-    JSModule[] jsModules = createModules("x.endsWith(y);");
-
-    test(
-        jsModules,
-        new String[] {
-          "$jscomp.string.endsWith$install(); x.endsWith(y);"
-        });
-  }
-
-  /** Install methods are only added to the base module. */
-  public void testPrototypeMethodsInstalled_JSModules() {
-    setLanguage(ES6, ES5);
-
-    JSModule[] jsModules = createModules(
-        "z();",
-        "x.endsWith(y);",
-        "w.endsWith(z);");
-
-    test(
-        jsModules,
-        new String[] {
-          "$jscomp.string.endsWith$install(); z();",
-          "x.endsWith(y);",
-          "w.endsWith(z);",
-        });
-  }
-
-  public void testPrototypeMethodsNotInstalledIfSufficientLanguageOut() {
     setLanguage(ES6, ES6);
-    testSame("x.normalize();");
-    assertThat(getInjectedLibraries()).isEmpty();
-
-    testSame("x.endsWith();");
-    assertThat(getInjectedLibraries()).isEmpty();
-
-    testSame("x.fill(y);");
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("x.normalize();");
+    testInjects("x.endsWith();");
+    testInjects("x.fill(y);");
 
     setLanguage(ES5, ES5);
-    testSame("x.forEach();");
-    assertThat(getInjectedLibraries()).isEmpty();
+    testInjects("x.forEach();");
+  }
+
+  public void testMultiplePrototypeMethodsWithSameName() {
+    addLibrary("Array.prototype.includes", "es6", "es3", "es6/array/includes");
+    addLibrary("String.prototype.includes", "es5", "es3", "es5/string/includes");
+
+    setLanguage(ES6, ES5);
+    testInjects("x.includes();", "es6/array/includes");
+
+    setLanguage(ES5, ES3);
+    testInjects("x.includes();", "es6/array/includes", "es5/string/includes");
   }
 
   public void testPrototypeMethodsInstalledIfStaticMethodShadowed() {
-    setLanguage(ES6, ES5);
-    test(
-        "var string = {}; string.endsWith = function() {}; "
-        + "string.foo = function(string) { return string.endsWith('x'); };",
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
-        "$jscomp.string.endsWith$install(); "
-        + "var string = {}; string.endsWith = function() {}; "
-        + "string.foo = function(string) { return string.endsWith('x'); };");
-    assertThat(getInjectedLibraries()).containsExactly("es6_runtime");
+    setLanguage(ES6, ES5);
+    testInjects(
+        "var string = {}; string.endsWith = function() {}; "
+            + "string.foo = function(string) { return string.endsWith('x'); };",
+        "es6/string/endswith");
   }
 
-  public void testPrototypeMethodsNotInstalledIfActuallyStatic() {
+  // NOTE(sdh): it's not clear what makes the most sense here.  At one point we
+  // took care to avoid installing these, but it may make sense to instead leave
+  // this distinction to a type-based optimization.  As such, I've simplified the
+  // logic to no longer look at variables' scope and instead just blacklist known
+  // symbols like goog.string and goog.array.
+  public void testPrototypeMethodsInstalledIfActuallyStatic() {
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+
     setLanguage(ES6, ES5);
-    testSame("var string = {}; string.endsWith = function() {}; string.endsWith('x');");
-    assertThat(getInjectedLibraries()).isEmpty();
-
-    testSame("var string = {endsWith: function() {}}; string.endsWith('x');");
-    assertThat(getInjectedLibraries()).isEmpty();
-
-    testSame(
+    testInjects(
+        "var string = {}; string.endsWith = function() {}; string.endsWith('x');",
+        "es6/string/endswith");
+    testInjects(
+        "var string = {endsWith: function() {}}; string.endsWith('x');",
+        "es6/string/endswith");
+    testInjects(
         "var string = {}; string.endsWith = function() {}; "
-        + "string.foo = function() { return string.endsWith('x'); };");
-    assertThat(getInjectedLibraries()).isEmpty();
+            + "string.foo = function() { return string.endsWith('x'); };",
+        "es6/string/endswith");
+  }
+
+  public void testPrototypeMethodsNotInstalledIfBlacklisted() {
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+
+    setLanguage(ES6, ES5);
+    // NOTE: By the time this pass runs, goog.module aliases have already been fully expanded.
+    testInjects("goog.string.endsWith('x');");
   }
 }

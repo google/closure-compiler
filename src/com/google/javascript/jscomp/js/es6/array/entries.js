@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require util/polyfill es6/util/iteratorfromarray';
+
+$jscomp.polyfill('Array.prototype.entries', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Returns an iterator of [key, value] arrays, one for each entry
+   * in the given array.
+   *
+   * @this {!IArrayLike<VALUE>}
+   * @return {!IteratorIterable<!Array<number|VALUE>>}
+   * @template VALUE
+   */
+  var polyfill = function() {
+    return $jscomp.iteratorFromArray(
+        this, function(i, v) { return [i, v]; });
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

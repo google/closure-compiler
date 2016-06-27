@@ -14,28 +14,24 @@
  * limitations under the License.
  */
 
+'require es6/symbol es6/map util/polyfill';
+
 /**
  * Whether to skip the conformance check and simply use the polyfill always.
  * @define {boolean}
  */
 $jscomp.ASSUME_NO_NATIVE_SET = false;
 
-  // Perform a conformance check to ensure correct native implementation.
-  /**
-   * Checks conformance of built-in Set.
-   * @return {boolean}
-   */
-  $jscomp.Set$isConformant = function() {
-    if ($jscomp.ASSUME_NO_NATIVE_SET) return false;
-    var NativeSet = $jscomp.global.Set;
+$jscomp.polyfill('Set', function(NativeSet) {
 
+  // Perform a conformance check to ensure correct native implementation.
+  var isConformant = !$jscomp.ASSUME_NO_NATIVE_SET && (function() {
     if (!NativeSet ||
         !NativeSet.prototype.entries ||
         typeof Object.seal != 'function') {
       return false;
     }
     // Some implementations don't support constructor arguments.
-    /** @preserveTry */
     try {
       NativeSet = /** @type {function(new: Set, !Iterator=)} */ (NativeSet);
       var value = Object.seal({x: 4});
@@ -58,7 +54,12 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
     } catch (err) { // This should hopefully never happen, but let's be safe.
       return false;
     }
-  };
+  })();
+  if (isConformant) return NativeSet;
+
+  // We depend on Symbol.iterator, so ensure it's loaded.
+  $jscomp.initSymbol();
+  $jscomp.initSymbolIterator();
 
 
 
@@ -67,14 +68,14 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
    * @constructor
    * @struct
    * @implements {Iterable<VALUE>}
-   * @template VALUE
+   * @template KEY, VALUE
    * @param {!Iterable<VALUE>|!Array<VALUE>|null=} opt_iterable
    *     Optional data to populate the set.
    */
   // TODO(sdh): fix param type if heterogeneous arrays ever supported.
-  $jscomp.Set = function(opt_iterable) {
-    /** @private @const */
-    this.map_ = new $jscomp.Map();
+  var PolyfillSet = function(opt_iterable) {
+    /** @private @const {!Map<VALUE, VALUE>} */
+    this.map_ = new Map();
     if (opt_iterable) {
       var iter = $jscomp.makeIterator(opt_iterable);
       var entry;
@@ -94,7 +95,7 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
    * Adds or updates a value in the set.
    * @param {VALUE} value
    */
-  $jscomp.Set.prototype.add = function(value) {
+  PolyfillSet.prototype.add = function(value) {
     this.map_.set(value, value);
     this.size = this.map_.size;
     return this;
@@ -106,7 +107,7 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
    * @param {VALUE} value
    * @return {boolean}
    */
-  $jscomp.Set.prototype.delete = function(value) {
+  PolyfillSet.prototype.delete = function(value) {
     var result = this.map_.delete(value);
     this.size = this.map_.size;
     return result;
@@ -114,7 +115,7 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
 
 
   /** Clears the set. */
-  $jscomp.Set.prototype.clear = function() {
+  PolyfillSet.prototype.clear = function() {
     this.map_.clear();
     this.size = 0;
   };
@@ -125,7 +126,7 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
    * @param {VALUE} value
    * @return {boolean} True if the set contains the given value.
    */
-  $jscomp.Set.prototype.has = function(value) {
+  PolyfillSet.prototype.has = function(value) {
     return this.map_.has(value);
   };
 
@@ -134,8 +135,17 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
    * Returns an iterator of entries.
    * @return {!IteratorIterable<!Array<VALUE>>}
    */
-  $jscomp.Set.prototype.entries = function() {
+  PolyfillSet.prototype.entries = function() {
     return this.map_.entries();
+  };
+
+
+  /**
+   * Returns an iterator of entries.
+   * @return {!IteratorIterable<VALUE>}
+   */
+  PolyfillSet.prototype[Symbol.iterator] = function() {
+    return this.map_.values();
   };
 
 
@@ -143,18 +153,18 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
    * Returns an iterator of values.
    * @return {!IteratorIterable<VALUE>}
    */
-  $jscomp.Set.prototype.values = function() {
+  PolyfillSet.prototype.values = function() {
     return this.map_.values();
   };
 
 
   /**
    * Iterates over the set, running the given function on each element.
-   * @param {function(this: THIS, VALUE, VALUE, !$jscomp.Set<VALUE>)} callback
+   * @param {function(this: THIS, VALUE, VALUE, !PolyfillSet<VALUE>)} callback
    * @param {THIS=} opt_thisArg
    * @template THIS
    */
-  $jscomp.Set.prototype.forEach = function(callback, opt_thisArg) {
+  PolyfillSet.prototype.forEach = function(callback, opt_thisArg) {
     var set = this;
     this.map_.forEach(function(value) {
       return callback.call(/** @type {?} */ (opt_thisArg), value, value, set);
@@ -162,18 +172,5 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
   };
 
 
-/** Decides between the polyfill and the native implementation. */
-$jscomp.Set$install = function() {
-  $jscomp.Map$install();
-
-  if ($jscomp.Set$isConformant()) {
-    $jscomp.Set = $jscomp.global.Set;
-    return;
-  }
-
-  $jscomp.Set.prototype[Symbol.iterator] = $jscomp.Set.prototype.values;
-
-  // TODO(sdh): this prevents inlining; is there another way to avoid
-  // duplicate work but allow this function to be inlined exactly once?
-  $jscomp.Set$install = function() {};
-};
+  return PolyfillSet;
+}, 'es6-impl', 'es3');

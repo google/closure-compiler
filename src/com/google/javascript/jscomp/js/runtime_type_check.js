@@ -314,8 +314,8 @@ $jscomp.typecheck.ExternClassChecker_.prototype.toString = function() {
  */
 $jscomp.typecheck.ExternClassChecker_.prototype.checkWindow_ =
     function(w, expr, classTypeDefined) {
-  var classType = w[this.className_];
-  classTypeDefined[0] |= !!classType;
+  var classType = /** @type {function(new: ?)} */ (w[this.className_]);
+  classTypeDefined[0] = classTypeDefined[0] || !!classType;
   if (classType && expr instanceof classType) {
     return true;
   }

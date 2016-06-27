@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require util/polyfill';
+
+$jscomp.polyfill('Math.sign', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Returns the sign of the number, indicating whether it is
+   * positive, negative, or zero.
+   *
+   * <p>Polyfills the static function Math.sign().
+   *
+   * @param {number} x Any number, or value that can be coerced to a number.
+   * @return {number} The sign, +1 if x is positive, -1 if x is
+   *     negative, or 0 if x is zero.
+   */
+  var polyfill = function(x) {
+    x = Number(x);
+    return x === 0 || isNaN(x) ? x : x > 0 ? 1 : -1;
+  };
+
+  return polyfill;
+}, 'es6-impl', 'es3');

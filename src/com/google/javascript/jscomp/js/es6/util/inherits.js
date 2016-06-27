@@ -56,7 +56,7 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   tempCtor.prototype = parentCtor.prototype;
   childCtor.prototype = new tempCtor();
   /** @override */
-  childCtor.prototype.constructor = childCtor;
+    childCtor.prototype.constructor = childCtor;
 
   for (var p in parentCtor) {
     if (Object.defineProperties) {
