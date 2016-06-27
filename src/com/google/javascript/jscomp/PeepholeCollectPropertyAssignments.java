@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Node;
  * E.g. {@code var a = [];a[0] = 0} is optimized to {@code var a = [0]} and
  * similarly for the object constructor.
  *
+ * @author msamuel@google.com (Mike Samuel)
  */
 final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimization {
 
