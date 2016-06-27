@@ -102,6 +102,14 @@ public final class JSTypes {
     return this.iObject == null ? null : this.iObject.getAsNominalType();
   }
 
+  public JSType getIObjectAnyAny() {
+    return this.iObject == null
+        ? JSType.TOP_OBJECT
+        : JSType.fromObjectType(
+            ObjectType.fromNominalType(
+                this.iObject.getAsNominalType().instantiateGenericsWithUnknown()));
+  }
+
   public JSType getArrayInstance(JSType t) {
     if (arrayType == null) {
       return JSType.UNKNOWN;

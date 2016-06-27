@@ -143,6 +143,10 @@ public final class NominalType {
     return this.rawType.isGeneric() && typeMap.isEmpty();
   }
 
+  NominalType instantiateGenericsWithUnknown() {
+    return instantiateGenerics(JSType.MAP_TO_UNKNOWN);
+  }
+
   NominalType instantiateGenerics(List<JSType> types) {
     ImmutableList<String> typeParams = this.rawType.getTypeParameters();
     Preconditions.checkState(types.size() == typeParams.size());

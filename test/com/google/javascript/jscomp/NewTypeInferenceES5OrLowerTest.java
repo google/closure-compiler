@@ -16098,8 +16098,9 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   public void testIObjectSubtyping() {
     typeCheck(LINE_JOINER.join(
         "function f(/** !IObject */ x) {}",
-        "f({});"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "f({});"));
+
+    typeCheck("var /** !IObject<number, string> */ x = {};");
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -17178,5 +17179,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** !Function */ x) {",
         "  if (x.superClass_) { x.superClass_.constructor = null; }",
         "}"));
+  }
+
+  public void testIObjectExternMissing() {
+    // For old projects that are missing IObject in their externs
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Object() {}",
+            "/** @constructor */",
+            "function Function() {}",
+            "/** @constructor */",
+            "function Symbol() {}"),
+        "var x = {};");
   }
 }

@@ -4092,7 +4092,7 @@ final class NewTypeInference implements CompilerPass {
     return lvalue;
   }
 
-  private static JSType pickReqObjType(Node expr) {
+  private JSType pickReqObjType(Node expr) {
     Token exprKind = expr.getType();
     switch (exprKind) {
       case OBJECTLIT: {
@@ -4103,7 +4103,8 @@ final class NewTypeInference implements CompilerPass {
         if (jsdoc != null && jsdoc.makesDicts()) {
           return JSType.TOP_DICT;
         }
-        return JSType.TOP_OBJECT;
+        return expr.hasChildren()
+            ? JSType.TOP_OBJECT : this.commonTypes.getIObjectAnyAny();
       }
       case FOR:
         Preconditions.checkState(NodeUtil.isForIn(expr));
