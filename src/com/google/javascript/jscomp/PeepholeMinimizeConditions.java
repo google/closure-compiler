@@ -106,6 +106,12 @@ class PeepholeMinimizeConditions
       case BLOCK:
         return tryReplaceIf(node);
 
+      case EQ:
+      case NE:
+      case SHEQ:
+      case SHNE:
+        return tryReplaceComparisonWithCoercion(node, true /* booleanResult */);
+
       default:
         return node; //Nothing changed
     }
@@ -995,8 +1001,6 @@ class PeepholeMinimizeConditions
       return n;
     }
 
-    Node parent = n.getParent();
-
     switch (n.getType()) {
       case OR:
       case AND:
@@ -1008,25 +1012,80 @@ class PeepholeMinimizeConditions
       case NE:
       case SHEQ:
       case SHNE:
-        Node left = n.getFirstChild();
-        Node right = n.getLastChild();
-        boolean leftIsNull = NodeUtil.isNullOrUndefined(left);
-        boolean rightIsNull = NodeUtil.isNullOrUndefined(right);
-        boolean leftIsObject = isObjectType(left);
-        boolean rightIsObject = isObjectType(right);
-        if (leftIsObject && rightIsNull || rightIsObject && leftIsNull) {
-          n.detachChildren();
-          Node objExpression = leftIsObject ? left : right;
-          Node replacement = n.getType() == Token.EQ || n.getType() == Token.SHEQ
-              ? IR.not(objExpression)
-              : objExpression;
-          parent.replaceChild(n, replacement);
-          reportCodeChange();
-          return replacement;
-        }
-        break;
+        return tryReplaceComparisonWithCoercion(n, false /* booleanResult */);
     }
     return n;
+  }
+
+  /**
+   * Replaces comparisons (e.g. obj == null, num == 0) with the equivalent type
+   * coercion (e.g. !obj, !num), if possible.
+   * @param n a comparison node
+   * @param booleanResult whether the replacement must evaluate to a boolean
+   * @return the replacement node or the original node if no replacement was made
+   */
+  private Node tryReplaceComparisonWithCoercion(Node n, boolean booleanResult) {
+    if (!useTypes) {
+      return n;
+    }
+
+    Preconditions.checkArgument(
+        n.getType() == Token.EQ
+            || n.getType() == Token.NE
+            || n.getType() == Token.SHEQ
+            || n.getType() == Token.SHNE);
+
+    Node left = n.getFirstChild();
+    Node right = n.getLastChild();
+    BooleanCoercability booleanCoercability = canConvertComparisonToBooleanCoercion(left, right);
+    if (booleanCoercability != BooleanCoercability.NONE) {
+      n.detachChildren();
+      Node objExpression = booleanCoercability == BooleanCoercability.LEFT ? left : right;
+      Node replacement;
+      if (n.getType() == Token.EQ || n.getType() == Token.SHEQ) {
+        replacement = IR.not(objExpression);
+      } else {
+        replacement = booleanResult ? IR.not(IR.not(objExpression)) : objExpression;
+      }
+      n.getParent().replaceChild(n, replacement);
+      reportCodeChange();
+      return replacement;
+    }
+    return n;
+  }
+
+  /**
+   * The ability of a comparison node to be converted to a coercion.
+   */
+  private enum BooleanCoercability {
+    // Comparison cannot be converted to coercion.
+    NONE,
+    // Comparison can be converted to coercion of the left child.
+    LEFT,
+    // Comparison can be converted to coercion of the right child.
+    RIGHT
+  }
+
+  private static BooleanCoercability canConvertComparisonToBooleanCoercion(Node left, Node right) {
+    // Convert null check of an object to coercion.
+    boolean leftIsNull = NodeUtil.isNullOrUndefined(left);
+    boolean rightIsNull = NodeUtil.isNullOrUndefined(right);
+    boolean leftIsObjectType = isObjectType(left);
+    boolean rightIsObjectType = isObjectType(right);
+    if (leftIsObjectType && rightIsNull || rightIsObjectType && leftIsNull) {
+      return leftIsNull ? BooleanCoercability.RIGHT : BooleanCoercability.LEFT;
+    }
+
+    // Convert comparing a number to zero with coercion.
+    boolean leftIsZero = left.isNumber() && left.getDouble() == 0;
+    boolean rightIsZero = right.isNumber() && right.getDouble() == 0;
+    boolean leftIsNumberType = isNumberType(left);
+    boolean rightIsNumberType = isNumberType(right);
+    if (leftIsNumberType && rightIsZero || rightIsNumberType && leftIsZero) {
+      return leftIsZero ? BooleanCoercability.RIGHT : BooleanCoercability.LEFT;
+    }
+
+    return BooleanCoercability.NONE;
   }
 
   private static boolean isObjectType(Node n) {
@@ -1036,6 +1095,15 @@ class PeepholeMinimizeConditions
     }
     jsType = jsType.restrictByNotNullOrUndefined();
     return !jsType.isUnknownType() && !jsType.isNoType() && jsType.isObject();
+  }
+
+  private static boolean isNumberType(Node n) {
+    JSType jsType = n.getJSType();
+    if (jsType == null) {
+      return false;
+    }
+    // Don't restrict by nullable. Nullable numbers are not coercable.
+    return !jsType.isUnknownType() && !jsType.isNoType() && jsType.isNumberValueType();
   }
 
   private Node replaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {
