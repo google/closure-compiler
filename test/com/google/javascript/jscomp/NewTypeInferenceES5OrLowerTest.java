@@ -17155,4 +17155,28 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var x = b;",
         "}"));
   }
+
+  public void testMeetingWithTruthyFalsy() {
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  if (!x) return null;",
+            "  return /** @type {number} */ (x);",
+            "}"));
+
+    typeCheck(
+        "function f(x) { if (!x) { return /** @type {number} */ (x); } }");
+  }
+
+  public void testPropAccessOnTruthy() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Function */ x) {",
+        "  return x.superClass_ ? x.superClass_.constructor : null;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Function */ x) {",
+        "  if (x.superClass_) { x.superClass_.constructor = null; }",
+        "}"));
+  }
 }

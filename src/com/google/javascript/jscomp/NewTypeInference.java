@@ -2928,7 +2928,7 @@ final class NewTypeInference implements CompilerPass {
     pair = mayWarnAboutNullableReferenceAndTighten(
         receiver, pair.type, recvSpecType, pair.env);
     JSType recvType = pair.type.autobox();
-    if (recvType.isUnknown()
+    if (recvType.isUnknown() || recvType.isTrueOrTruthy()
         || mayWarnAboutNonObject(receiver, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
     }

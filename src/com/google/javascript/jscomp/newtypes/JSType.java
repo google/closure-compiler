@@ -900,14 +900,30 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   private static JSType meetHelper(JSType lhs, JSType rhs) {
     if (lhs.isTop()) {
       return rhs;
-    } else if (rhs.isTop()) {
+    }
+    if (rhs.isTop()) {
       return lhs;
-    } else if (lhs.isUnknown()) {
+    }
+    if (lhs.isUnknown()) {
       return rhs;
-    } else if (rhs.isUnknown()) {
+    }
+    if (rhs.isUnknown()) {
       return lhs;
-    } else if (lhs.isBottom() || rhs.isBottom()) {
+    }
+    if (lhs.isBottom() || rhs.isBottom()) {
       return BOTTOM;
+    }
+    if (lhs.hasTruthyMask()) {
+      return rhs.makeTruthy();
+    }
+    if (lhs.hasFalsyMask()) {
+      return rhs.makeFalsy();
+    }
+    if (rhs.hasTruthyMask()) {
+      return lhs.makeTruthy();
+    }
+    if (rhs.hasFalsyMask()) {
+      return lhs.makeFalsy();
     }
     int newMask = lhs.getMask() & rhs.getMask();
     String newTypevar;
@@ -1255,11 +1271,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   public JSType getProp(QualifiedName qname) {
-    if (isBottom() || isUnknown()) {
+    if (isBottom() || isUnknown() || hasTruthyMask()) {
       return UNKNOWN;
     }
     Preconditions.checkState(!getObjs().isEmpty() || !getEnums().isEmpty(),
-        "Can't getProp of type %s", this);
+        "Can't getProp %s of type %s", qname, this);
     return nullAcceptingJoin(
         TypeWithPropertiesStatics.getProp(getObjs(), qname),
         TypeWithPropertiesStatics.getProp(getEnums(), qname));
