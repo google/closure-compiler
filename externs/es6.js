@@ -1507,7 +1507,7 @@ Object.getOwnPropertySymbols = function(obj) {};
 
 /**
  * @param {!Object} obj
- * @param {Object} proto
+ * @param {?} proto
  * @return {!Object}
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-object.setprototypeof
  */
@@ -1606,7 +1606,7 @@ Object.assign = function(target, var_args) {};
 var Reflect = {};
 
 /**
- * @param {function(this: THIS, ...*): RESULT} target
+ * @param {function(this: THIS, ...?): RESULT} target
  * @param {THIS} thisArg
  * @param {!Array} argList
  * @return {RESULT}
@@ -1616,9 +1616,9 @@ var Reflect = {};
 Reflect.apply = function(target, thisArg, argList) {};
 
 /**
- * @param {function(new: ?, ...*)} target
+ * @param {function(new: ?, ...?)} target
  * @param {!Array} argList
- * @param {function(new: TARGET)=} opt_newTarget
+ * @param {function(new: TARGET, ...?)=} opt_newTarget
  * @return {TARGET}
  * @template TARGET
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
@@ -1671,7 +1671,7 @@ Reflect.getPrototypeOf = function(target) {};
 
 /**
  * @param {!Object} target
- * @param {*} propertyKey
+ * @param {string} propertyKey
  * @return {boolean}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has
@@ -1684,7 +1684,7 @@ Reflect.has = function(target, propertyKey) {};
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/isExtensible
  */
-Reflect.isExtensible = function(target, propertyKey) {};
+Reflect.isExtensible = function(target) {};
 
 /**
  * @param {!Object} target
@@ -1703,7 +1703,7 @@ Reflect.preventExtensions = function(target) {};
 
 /**
  * @param {!Object} target
- * @param {*} propertyKey
+ * @param {string} propertyKey
  * @param {*} value
  * @param {!Object=} opt_receiver
  * @return {boolean}
