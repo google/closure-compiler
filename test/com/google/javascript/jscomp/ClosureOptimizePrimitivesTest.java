@@ -77,4 +77,11 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   public void testObjectCreateSet4() {
     test("goog.object.createSet('a').toString()", "({'a':true}).toString()");
   }
+
+  public void testDomTypedTagName() {
+    testSame("goog.dom.TypedTagName.A = 'A';");
+    test("goog.dom.createDom(goog.dom.TypedTagName.A)", "goog.dom.createDom('A')");
+    test("goog$dom$createDom(goog$dom$TypedTagName$A)", "goog$dom$createDom('A')");
+    test("goog.dom.createDom(goog.dom.TypedTagName.A + 'REA')", "goog.dom.createDom('A' + 'REA')");
+  }
 }
