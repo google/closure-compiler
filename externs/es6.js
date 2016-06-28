@@ -1423,9 +1423,8 @@ Array.of = function(var_args) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
- * @param {string|!IArrayLike<T>|!Iterable<T>} arrayLike
- * @param {function(this:S, (string|T), number,
- *     (string|!IArrayLike<T>|!Iterable<T>)): R=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>|!Iterator<T>} arrayLike
+ * @param {function(this:S, (string|T), number): R=} opt_mapFn
  * @param {S=} opt_this
  * @return {!Array<R>}
  * @template T,S,R
