@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   @Override
@@ -175,6 +177,207 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  var a = true ? (someClass.$clinit(), 0) : 0;",
             "  var b = function() { someClass.$clinit(); }",
             "  someClass.$clinit();",
+            "};"));
+  }
+
+  public void testRedundantClinit_returnCtor() {
+    test(
+        LINE_JOINER.join(
+            "var Foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  return new Foo();",
+            "};"),
+        LINE_JOINER.join(
+            "var Foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  return new Foo();",
+            "};"));
+  }
+
+  public void testRedundantClinit_returnCall() {
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  return foo();",
+            "};"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  return foo();",
+            "};"));
+  }
+
+  public void testRedundantClinit_exprResult() {
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  foo();",
+            "};"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  foo();",
+            "};"));
+  }
+
+  public void testRedundantClinit_var() {
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  var x = foo();",
+            "};"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  var x = foo();",
+            "};"));
+  }
+
+  public void testRedundantClinit_let() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  let x = foo();",
+            "};"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  let x = foo();",
+            "};"));
+  }
+
+  public void testRedundantClinit_const() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    test(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  const x = foo();",
+            "};"),
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  const x = foo();",
+            "};"));
+  }
+
+  public void testRedundantClinit_literalArgs() {
+    test(
+        LINE_JOINER.join(
+            "var Foo = function(a) {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  return new Foo(1);",
+            "};"),
+        LINE_JOINER.join(
+            "var Foo = function(a) {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  return new Foo(1);",
+            "};"));
+  }
+
+  public void testRedundantClinit_paramArgs() {
+    test(
+        LINE_JOINER.join(
+            "var Foo = function(a, b) {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function(a) {",
+            "  Foo.$clinit();",
+            "  return new Foo(a, 1);",
+            "};"),
+        LINE_JOINER.join(
+            "var Foo = function(a, b) {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function(a) {",
+            "  return new Foo(a, 1);",
+            "};"));
+  }
+
+  public void testRedundantClinit_unsafeArgs() {
+    testSame(
+        LINE_JOINER.join(
+            "var Foo = function(a) {",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.STATIC_VAR = null;",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  return new Foo(Foo.STATIC_VAR);",
+            "};"));
+  }
+
+  public void testRedundantClinit_otherClinit() {
+    testSame(
+        LINE_JOINER.join(
+            "var Foo = function() {",
+            "  Foo1.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  return new Foo();",
+            "};"));
+  }
+
+  public void testRedundantClinit_clinitNotFirstStatement() {
+    testSame(
+        LINE_JOINER.join(
+            "var Foo = function() {",
+            "  var x = 1;",
+            "  Foo.$clinit();",
+            "};",
+            "Foo.ctor = function() {",
+            "  Foo.$clinit();",
+            "  return new Foo();",
+            "};"));
+  }
+
+  public void testRedundantClinit_recursiveCall() {
+    testSame(
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  Foo1.$clinit();",
+            "  foo();",
             "};"));
   }
 
