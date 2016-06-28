@@ -273,6 +273,22 @@ CanvasRenderingContext2D.prototype.arc = function(
     x, y, radius, startAngle, endAngle, opt_anticlockwise) {};
 
 /**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} radiusX
+ * @param {number} radiusY
+ * @param {number} rotation
+ * @param {number} startAngle
+ * @param {number} endAngle
+ * @param {boolean=} opt_anticlockwise
+ * @return {undefined}
+ * @see http://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D/ellipse
+ */
+CanvasRenderingContext2D.prototype.ellipse = function(
+    x, y, radiusX, radiusY, rotation, startAngle, endAngle, opt_anticlockwise) {
+};
+
+/**
  * @param {string=} opt_fillRule
  * @return {undefined}
  */
