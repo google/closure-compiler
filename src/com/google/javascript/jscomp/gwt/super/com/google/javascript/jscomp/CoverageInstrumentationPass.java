@@ -25,7 +25,17 @@ class CoverageInstrumentationPass implements CompilerPass {
     CONDITIONAL
   }
 
+  public enum InstrumentOption {
+    ALL,   // Instrument to collect both line coverage and branch coverage.
+    LINE_ONLY,  // Collect coverage for every executable statement.
+    BRANCH_ONLY  // Collect coverage for control-flow branches.
+  }
+
   public CoverageInstrumentationPass(AbstractCompiler compiler, CoverageReach reach) {
+  }
+
+  public CoverageInstrumentationPass(
+      AbstractCompiler compiler, CoverageReach reach, InstrumentOption notUsed) {
   }
 
   @Override

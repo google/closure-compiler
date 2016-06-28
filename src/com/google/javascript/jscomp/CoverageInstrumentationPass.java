@@ -34,24 +34,36 @@ class CoverageInstrumentationPass implements CompilerPass {
 
   final AbstractCompiler compiler;
   private Map<String, FileInstrumentationData> instrumentationData;
-  private CoverageReach reach;
+  private final CoverageReach reach;
+  private final InstrumentOption instrumentOption;
+
+  public enum InstrumentOption {
+    ALL,   // Instrument to collect both line coverage and branch coverage.
+    LINE_ONLY,  // Collect coverage for every executable statement.
+    BRANCH_ONLY  // Collect coverage for control-flow branches.
+  }
 
   public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
 
   public enum CoverageReach {
-    ALL,
-    CONDITIONAL
+    ALL,         // Instrument all statements.
+    CONDITIONAL  // Do not instrument global statements.
   }
 
   /**
    *
    * @param compiler the compiler which generates the AST.
    */
-  public CoverageInstrumentationPass(AbstractCompiler compiler,
-      CoverageReach reach) {
+  public CoverageInstrumentationPass(
+      AbstractCompiler compiler, CoverageReach reach, InstrumentOption instrumentOption) {
     this.compiler = compiler;
     this.reach = reach;
+    this.instrumentOption = instrumentOption;
     instrumentationData = new LinkedHashMap<>();
+  }
+
+  public CoverageInstrumentationPass(AbstractCompiler compiler, CoverageReach reach) {
+    this(compiler, reach, InstrumentOption.LINE_ONLY);
   }
 
   /**
@@ -65,7 +77,9 @@ class CoverageInstrumentationPass implements CompilerPass {
   @Override
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
-      NodeTraversal.traverseEs6(compiler, rootNode,
+      NodeTraversal.traverseEs6(
+          compiler,
+          rootNode,
           new CoverageInstrumentationCallback(
               compiler, instrumentationData, reach));
 
@@ -76,11 +90,18 @@ class CoverageInstrumentationPass implements CompilerPass {
   }
 
   private Node createConditionalObjectDecl(String name, Node srcref) {
+    String jscovData;
+    if (instrumentOption != InstrumentOption.LINE_ONLY) {
+      jscovData =
+          "{fileNames:[], instrumentedLines: [], executedLines: [],"
+              + "branchPrsent:[], branchesInLine: []}";
+    } else {
+      jscovData = "{fileNames:[], instrumentedLines: [], executedLines: []}";
+    }
+
     String jscovDecl =
-        " var "
-            + name
-            + " = window.top.__jscov || "
-            + "(window.top.__jscov = {fileNames:[], instrumentedLines: [], executedLines: []});";
+        " var " + name + " = window.top.__jscov || " + "(window.top.__jscov = " + jscovData + ");";
+
     Node script = compiler.parseSyntheticCode(jscovDecl);
     Node var = script.removeFirstChild();
     return var.useSourceInfoIfMissingFromForTree(srcref);
