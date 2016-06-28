@@ -412,6 +412,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
       DiagnosticGroups.registerGroup("strictMissingRequire",
           CheckRequiresForConstructors.MISSING_REQUIRE_WARNING,
+          CheckRequiresForConstructors.MISSING_REQUIRE_FOR_GOOG_SCOPE,
           CheckRequiresForConstructors.MISSING_REQUIRE_CALL_WARNING);
 
   public static final DiagnosticGroup EXTRA_REQUIRE =

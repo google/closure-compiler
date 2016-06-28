@@ -92,6 +92,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
 
+  static final DiagnosticType MISSING_REQUIRE_FOR_GOOG_SCOPE =
+      DiagnosticType.disabled(
+          "JSC_MISSING_REQUIRE_FOR_GOOG_SCOPE", "missing require: ''{0}''");
+
   static final DiagnosticType MISSING_REQUIRE_CALL_WARNING =
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_CALL_WARNING", "missing require: ''{0}''");
@@ -315,6 +319,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
             String defaultName = parentNamespace != null ? parentNamespace : namespace;
             String nameToReport = Iterables.getFirst(classNames, defaultName);
             compiler.report(t.makeError(node, MISSING_REQUIRE_CALL_WARNING, nameToReport));
+          } else if (node.getParent().isName()
+              && node.getParent().getGrandparent() == googScopeBlock) {
+            compiler.report(t.makeError(node, MISSING_REQUIRE_FOR_GOOG_SCOPE, namespace));
           } else {
             compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, namespace));
           }
