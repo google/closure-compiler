@@ -17,7 +17,7 @@
 /**
  * @fileoverview Provides methods to polyfill native objects.
  */
-'require util/global';
+'require util/defineproperty util/global';
 
 
 /**
@@ -32,40 +32,13 @@ $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
   var split = target.split('.');
   for (var i = 0; i < split.length - 1; i++) {
     var key = split[i];
-    if (!(key in obj)) obj[key] = {};
+    if (!(key in obj)) obj[key] = {};  // Might want to be defineProperty.
     obj = obj[key];
   }
   var property = split[split.length - 1];
   var orig = obj[property];
   var impl = polyfill(orig);
   if (impl == orig) return;
-  $jscomp.polyfill.defineProperty(
+  $jscomp.defineProperty(
       obj, property, {configurable: true, writeable: true, value: impl});
 };
-
-
-/**
- * Polyfill for Object.defineProperty() method:
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty
- *
- * Obviously we can't support getters and setters in ES3, so we
- * throw a TypeError in that case.  We also refuse to define
- * properties on Array.prototype and Object.prototype, since we
- * can't make them non-enumerable and this messes up peoples' for
- * loops.  Beyond this, we simply assign values and not worry
- * about enumerability or writeability.
- * @param {?} target
- * @param {string} property
- * @param {?} descriptor
- */
-$jscomp.polyfill.defineProperty =
-    typeof Object.defineProperties == 'function' ?
-    Object.defineProperty :
-    function(target, property, descriptor) {
-      descriptor = /** @type {!ObjectPropertyDescriptor} */ (descriptor);
-      if (descriptor.get || descriptor.set) {
-        throw new TypeError('ES3 does not support getters and setters.');
-      }
-      if (target == Array.prototype || target == Object.prototype) return;
-      target[property] = descriptor.value;
-    };

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require es6/symbol es6/util/makeiterator util/polyfill';
+'require es6/symbol es6/util/makeiterator util/defineproperty';
+'require util/owns util/polyfill';
 
 /**
  * Whether to skip the conformance check and simply use the polyfill always.
@@ -90,10 +91,6 @@ $jscomp.polyfill('Map', function(NativeMap) {
 
   /** @type {VALUE} */
   MapEntry.prototype.value;
-
-
-  /** @const */
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 
   /**
@@ -281,7 +278,7 @@ $jscomp.polyfill('Map', function(NativeMap) {
   var maybeGetEntry = function(map, key) {
     var id = getId(key);
     var list = map.data_[id];
-    if (list && hasOwnProperty.call(map.data_, id)) {
+    if (list && $jscomp.owns(map.data_, id)) {
       for (var index = 0; index < list.length; index++) {
         var entry = list[index];
         if ((key !== key && entry.key !== entry.key) || key === entry.key) {
@@ -367,7 +364,7 @@ $jscomp.polyfill('Map', function(NativeMap) {
     if (!(idKey in obj)) {
       /** @preserveTry */
       try {
-        $jscomp.polyfill.defineProperty(obj, idKey, {value: ++mapIndex});
+        $jscomp.defineProperty(obj, idKey, {value: ++mapIndex});
       } catch (ignored) {}
     }
     if (!(idKey in obj)) {

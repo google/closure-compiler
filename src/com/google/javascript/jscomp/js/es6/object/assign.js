@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'require util/polyfill';
+'require util/owns util/polyfill';
 
 $jscomp.polyfill('Object.assign', function(orig) {
   if (orig) return orig;
@@ -34,11 +34,7 @@ $jscomp.polyfill('Object.assign', function(orig) {
       var source = arguments[i];
       if (!source) continue;
       for (var key in source) {
-        // Note: it's possible that source.hasOwnPropery was overwritten,
-        // so call the version on Object.prototype just to be sure.
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
+        if ($jscomp.owns(source, key)) target[key] = source[key];
       }
     }
     return target;
