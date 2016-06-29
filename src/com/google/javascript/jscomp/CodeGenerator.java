@@ -855,6 +855,11 @@ public class CodeGenerator {
         }
         break;
 
+      case AWAIT:
+        add("await ");
+        addExpr(first, NodeUtil.precedence(type), Context.OTHER);
+        break;
+
       case FALSE:
         Preconditions.checkState(childCount == 0);
         cc.addConstant("false");

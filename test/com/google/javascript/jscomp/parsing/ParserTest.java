@@ -2844,6 +2844,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("class C{static async\nm(){}}", "'(' expected");
   }
 
+  public void testAwaitExpression() {
+    mode = LanguageMode.ECMASCRIPT8;
+    expectFeatures(Feature.ASYNC_FUNCTIONS);
+    parse("async function f(p){await p}");
+    parse("f = async function(p){await p}");
+    parse("f = async(p)=>await p");
+    parse("class C{async m(p){await p}}");
+    parse("class C{static async m(p){await p}}");
+  }
+
   public void testFor_ES5() {
     parse("for (var x; x != 10; x = next()) {}");
     parse("for (var x; x != 10; x = next());");

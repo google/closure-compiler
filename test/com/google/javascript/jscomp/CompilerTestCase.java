@@ -1744,6 +1744,7 @@ public abstract class CompilerTestCase extends TestCase {
 
   Compiler createCompiler() {
     Compiler compiler = new Compiler();
+    compiler.setLanguageMode(acceptedLanguage);
     return compiler;
   }
 

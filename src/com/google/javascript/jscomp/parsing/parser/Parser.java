@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionT
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.AssignmentRestElementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.AwaitExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
@@ -3212,8 +3213,11 @@ public class Parser {
       Token operator = nextToken();
       ParseTree operand = parseUnaryExpression();
       return new UnaryExpressionTree(getTreeLocation(start), operator, operand);
+    } else if (peekAwaitExpression()) {
+      return parseAwaitExpression();
+    } else {
+      return parsePostfixExpression();
     }
-    return parsePostfixExpression();
   }
 
   private boolean peekUnaryOperator() {
@@ -3231,6 +3235,21 @@ public class Parser {
     default:
       return false;
     }
+  }
+
+  private static final String AWAIT = "await";
+
+  private boolean peekAwaitExpression() {
+    // TODO(bradfordcsmith): This should be handled such that it's treated as special only within an
+    //     async function.
+    return peekPredefinedString(AWAIT);
+  }
+
+  private ParseTree parseAwaitExpression() {
+    SourcePosition start = getTreeStartLocation();
+    eatPredefinedString(AWAIT);
+    ParseTree expression = parseUnaryExpression();
+    return new AwaitExpressionTree(getTreeLocation(start), expression);
   }
 
   // 11.3 Postfix Expression

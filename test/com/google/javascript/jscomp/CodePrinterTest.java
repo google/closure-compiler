@@ -2125,6 +2125,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("class C{static async[a+b](){}}");
   }
 
+  public void testAwaitExpression() {
+    languageMode = languageMode.ECMASCRIPT8;
+    assertPrintSame("async function f(promise){return await promise}");
+    assertPrintSame("pwait=async function(promise){return await promise}");
+    assertPrintSame("class C{async pwait(promise){await promise}}");
+    assertPrintSame("o={async pwait(promise){await promise}}");
+    assertPrintSame("pwait=async(promise)=>await promise");
+  }
+
   /**
    * Regression test for b/28633247 - necessary parens dropped around arrow functions.
    */

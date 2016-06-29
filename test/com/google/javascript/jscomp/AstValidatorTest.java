@@ -131,6 +131,33 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("function f(a,...[re,...st]){}");
   }
 
+  public void testAwaitExpression() {
+    setLanguage(LanguageMode.ECMASCRIPT8, LanguageMode.ECMASCRIPT5);
+    Node awaitNode = new Node(Token.AWAIT);
+    awaitNode.addChildToBack(IR.number(1));
+    Node parentFunction =
+        IR.function(IR.name("foo"), IR.paramList(), IR.block(IR.returnNode(awaitNode)));
+    parentFunction.setIsAsyncFunction(true);
+    expectValid(awaitNode, Check.EXPRESSION);
+  }
+
+  public void testAwaitExpressionNonAsyncFunction() {
+    setLanguage(LanguageMode.ECMASCRIPT8, LanguageMode.ECMASCRIPT5);
+    Node awaitNode = new Node(Token.AWAIT);
+    awaitNode.addChildToBack(IR.number(1));
+    Node parentFunction =
+        IR.function(IR.name("foo"), IR.paramList(), IR.block(IR.returnNode(awaitNode)));
+    parentFunction.setIsAsyncFunction(false);
+    expectInvalid(awaitNode, Check.EXPRESSION);
+  }
+
+  public void testAwaitExpressionNoFunction() {
+    setLanguage(LanguageMode.ECMASCRIPT8, LanguageMode.ECMASCRIPT5);
+    Node n = new Node(Token.AWAIT);
+    n.addChildToBack(IR.number(1));
+    expectInvalid(n, Check.EXPRESSION);
+  }
+
   private void valid(String code) {
     testSame(code);
     assertTrue(lastCheckWasValid);

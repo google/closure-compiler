@@ -46,6 +46,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionT
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.AssignmentRestElementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.AwaitExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
@@ -2183,6 +2184,13 @@ class IRFactory {
       return yield;
     }
 
+    Node processAwait(AwaitExpressionTree tree) {
+      maybeWarnForFeature(tree, Feature.ASYNC_FUNCTIONS);
+      Node await = newNode(Token.AWAIT);
+      await.addChildToBack(transform(tree.expression));
+      return await;
+    }
+
     Node processExportDecl(ExportDeclarationTree tree) {
       maybeWarnForFeature(tree, Feature.MODULES);
       Node decls = null;
@@ -2754,6 +2762,8 @@ class IRFactory {
           return processNewTarget(node.asNewTargetExpression());
         case YIELD_EXPRESSION:
           return processYield(node.asYieldStatement());
+        case AWAIT_EXPRESSION:
+          return processAwait(node.asAwaitExpression());
         case FOR_OF_STATEMENT:
           return processForOf(node.asForOfStatement());
 

@@ -164,6 +164,8 @@ public enum Token {
 
     YIELD, // generators
 
+    AWAIT, // async functions
+
     IMPORT, // modules
     IMPORT_SPECS,
     IMPORT_SPEC,

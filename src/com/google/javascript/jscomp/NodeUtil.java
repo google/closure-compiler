@@ -1485,6 +1485,7 @@ public final class NodeUtil {
       case MUL:
       case MOD:
       case DIV:    return 13;
+      case AWAIT:
       case INC:
       case DEC:
       case NEW:
