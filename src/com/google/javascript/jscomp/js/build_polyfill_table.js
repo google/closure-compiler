@@ -139,7 +139,7 @@ function checkDeps(errors, deps, versions) {
     while (queue.length) {
       const next = queue.shift();
       for (const dep of deps.get(next) || []) {
-        if (dep == file) errors.push('ERROR - Cyclic dependency:\n    ' + dep);
+        if (dep == file) errors.add('ERROR - Cyclic dependency:\n    ' + dep);
         if (seen.has(dep)) continue;
         seen.add(dep);
         queue.push(dep);
