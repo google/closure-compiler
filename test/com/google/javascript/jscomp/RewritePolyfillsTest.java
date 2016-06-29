@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.nullToEmpty;
+
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.RewritePolyfills.Polyfills;
@@ -41,7 +43,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
           library,
           String.format("$jscomp.polyfill('%s', function() {}, '%s', '%s');\n", name, from, to));
     }
-    polyfillTable.add(String.format("%s %s %s %s", name, from, to, library != null ? library : ""));
+    polyfillTable.add(String.format("%s %s %s %s", name, from, to, nullToEmpty(library)));
   }
 
   @Override
