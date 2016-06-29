@@ -85,6 +85,15 @@ public class CompilerOptions {
   public void setSkipTranspilationAndCrash(boolean value) {
     skipTranspilationAndCrash = value;
   }
+  
+  /**
+   * Sets the input sourcemap files, indexed by the JS files they refer to.
+   * 
+   * @param the collection of input sourcemap files
+   */
+  public void setInputSourceMaps(final ImmutableMap<String, SourceMapInput> inputSourceMaps) {
+    this.inputSourceMaps = inputSourceMaps;  
+  } 
 
   /**
    * Whether to infer consts. This should not be configurable by
