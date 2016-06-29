@@ -2571,5 +2571,5 @@ angular.$window;
  * $document Service
  *****************************************************************************/
 
-/** @typedef {!Document} */
+/** @typedef {!angular.JQLite} */
 angular.$document;
