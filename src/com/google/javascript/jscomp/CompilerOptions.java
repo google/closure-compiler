@@ -87,6 +87,15 @@ public class CompilerOptions {
   }
 
   /**
+   * Sets the input sourcemap files, indexed by the JS files they refer to.
+   *
+   * @param inputSourceMaps the collection of input sourcemap files
+   */
+  public void setInputSourceMaps(final ImmutableMap<String, SourceMapInput> inputSourceMaps) {
+    this.inputSourceMaps = inputSourceMaps;
+  }
+
+  /**
    * Whether to infer consts. This should not be configurable by
    * external clients. This is a transitional flag for a new type
    * of const analysis.
