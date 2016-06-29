@@ -299,19 +299,14 @@ Number.prototype.toLocaleString = function(opt_locales, opt_options) {};
 String.prototype.repeat = function(count) {};
 
 /**
- * @interface
- * @extends {IArrayLike<string>}
+ * @constructor
+ * @extends {Array<string>}
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-gettemplateobject
  */
 var ITemplateArray = function() {};
 
 /**
- * @type {number}
- */
-ITemplateArray.prototype.length;
-
-/**
- * @type {!IArrayLike<string>}
+ * @type {!Array<string>}
  */
 ITemplateArray.prototype.raw;
 
