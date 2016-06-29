@@ -909,6 +909,15 @@ Polymer.Debouncer.prototype = {
 /** @param {!Polymer.Debouncer} debouncer */
 Polymer.dom.addDebouncer = function(debouncer) {};
 
+
+/**
+ * Returns whether the given object is an instance of a Polymer element.
+ * @param {*} object
+ * @return {boolean}
+ */
+Polymer.isInstance = function(object) {};
+
+
 Polymer.CaseMap;
 
 /**
