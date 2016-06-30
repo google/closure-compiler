@@ -32,7 +32,7 @@ Number.isInteger es6-impl es3 es6/number/isinteger
 Number.isNaN es6-impl es3 es6/number/isnan
 Number.isSafeInteger es6-impl es3 es6/number/issafeinteger
 Object.assign es6-impl es3 es6/object/assign
-Object.getOwnPropertySymbols es6-impl es6-impl
+Object.getOwnPropertySymbols es6-impl es5 es6/object/getownpropertysymbols
 Object.is es6-impl es3 es6/object/is
 Object.setPrototypeOf es6-impl es6-impl
 Proxy es6 es6

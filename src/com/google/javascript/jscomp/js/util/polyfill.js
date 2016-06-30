@@ -17,7 +17,7 @@
 /**
  * @fileoverview Provides methods to polyfill native objects.
  */
-'require util/defineproperty util/global';
+'require util/defineproperty util/global util/patches';
 
 
 /**
@@ -39,6 +39,10 @@ $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
   var orig = obj[property];
   var impl = polyfill(orig);
   if (impl == orig) return;
+  var patches = $jscomp.patches[target] || [];
+  for (i = 0; i < patches.length; i++) {
+    impl = patches[i](/** @type {!Function} */ (impl));
+  }
   $jscomp.defineProperty(
-      obj, property, {configurable: true, writeable: true, value: impl});
+      obj, property, {configurable: true, writable: true, value: impl});
 };

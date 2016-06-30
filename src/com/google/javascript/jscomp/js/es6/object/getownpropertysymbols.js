@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Object polyfills.
- */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
+'require util/owns util/polyfill';
+
+$jscomp.polyfill('Object.getOwnPropertySymbols', function(orig) {
+  if (orig) return orig;
+
+  // Note: this is patched by $jscomp.initSymbol when needed.
+  return function() { return []; };
+}, 'es6-impl', 'es5');  // only works correctly with Object.getOwnPropertyNames

@@ -61,6 +61,7 @@ delete Number.isNaN;
 delete Number.isSafeInteger;
 
 delete Object.assign;
+delete Object.getOwnPropertySymbols;
 delete Object.is;
 
 delete Set;

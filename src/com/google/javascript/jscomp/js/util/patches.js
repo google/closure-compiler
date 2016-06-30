@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+'require base';
+
 /**
- * @fileoverview Brings in all ES6 Object polyfills.
+ * @const {!Object<!Array<function(!Function): !Function>>}
  */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
+$jscomp.patches = {};
