@@ -1870,6 +1870,9 @@ public class Parser {
     ParseTree initializer = parseExpressionNoIn();
     if (peek(TokenType.IN) || peek(TokenType.EQUAL) || peekPredefinedString(PredefinedName.OF)) {
       initializer = transformLeftHandSideExpression(initializer);
+      if (!initializer.isValidAssignmentTarget()) {
+        reportError("invalid assignment target");
+      }
     }
 
     if (peek(TokenType.IN) || peekPredefinedString(PredefinedName.OF)) {

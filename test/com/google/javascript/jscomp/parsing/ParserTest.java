@@ -64,6 +64,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
       "for legacy reasons. Removing this from your code is " +
       "safe for all browsers currently in use.";
 
+  private static final String INVALID_ASSIGNMENT_TARGET = "invalid assignment target";
+
   private Config.LanguageMode mode;
   private boolean isIdeMode = false;
   private FeatureSet expectedFeatures;
@@ -1565,8 +1567,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("([x] = y);");
     parse("[(x), y] = z;");
     parse("[x, (y)] = z;");
-    parseError("[x, ([y])] = z;", "invalid assignment target");
-    parseError("[x, (([y]))] = z;", "invalid assignment target");
+    parseError("[x, ([y])] = z;", INVALID_ASSIGNMENT_TARGET);
+    parseError("[x, (([y]))] = z;", INVALID_ASSIGNMENT_TARGET);
   }
 
   public void testObjectLiteralCannotUseDestructuring() {
@@ -2895,21 +2897,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("for (const a in b) c;");
 
     expectFeatures();
-    parseError("for (a,b in c) d;", "';' expected");
-    parseError("for (var a,b in c) d;",
+    parseError("for (a,b in c) d;", INVALID_ASSIGNMENT_TARGET);
+    parseError(
+        "for (var a,b in c) d;",
         "for-in statement may not have more than one variable declaration");
-    parseError("for (let a,b in c) d;",
+    parseError(
+        "for (let a,b in c) d;",
         "for-in statement may not have more than one variable declaration");
-    parseError("for (const a,b in c) d;",
+    parseError(
+        "for (const a,b in c) d;",
         "for-in statement may not have more than one variable declaration");
 
-    parseError("for (a=1 in b) c;", "';' expected");
-    parseError("for (let a=1 in b) c;",
-        "for-in statement may not have initializer");
-    parseError("for (const a=1 in b) c;",
-        "for-in statement may not have initializer");
-    parseError("for (var a=1 in b) c;",
-        "for-in statement may not have initializer");
+    parseError("for (a=1 in b) c;", INVALID_ASSIGNMENT_TARGET);
+    parseError("for (let a=1 in b) c;", "for-in statement may not have initializer");
+    parseError("for (const a=1 in b) c;", "for-in statement may not have initializer");
+    parseError("for (var a=1 in b) c;", "for-in statement may not have initializer");
+    parseError("for (\"a\" in b) c;", INVALID_ASSIGNMENT_TARGET);
   }
 
   public void testForIn_ES5() {
@@ -2918,9 +2921,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("for (a in b) c;");
     parse("for (var a in b) c;");
 
-    parseError("for (a=1 in b) c;", "';' expected");
-    parseWarning("for (var a=1 in b) c;",
-        "for-in statement should not have initializer");
+    parseError("for (a=1 in b) c;", INVALID_ASSIGNMENT_TARGET);
+    parseWarning("for (var a=1 in b) c;", "for-in statement should not have initializer");
   }
 
   public void testForInDestructuring() {
@@ -2951,27 +2953,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("for (const [a] in b) c;");
 
     expectFeatures(Feature.DESTRUCTURING);
-    parseError("for ({a: b} = foo() in c) d;", "';' expected");
-    parseError("for (var {a: b} = foo() in c) d;",
-        "for-in statement may not have initializer");
+    parseError("for ({a: b} = foo() in c) d;", INVALID_ASSIGNMENT_TARGET);
+    parseError("for (var {a: b} = foo() in c) d;", "for-in statement may not have initializer");
     expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
-    parseError("for (let {a: b} = foo() in c) d;",
-        "for-in statement may not have initializer");
+    parseError("for (let {a: b} = foo() in c) d;", "for-in statement may not have initializer");
     expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
-    parseError("for (const {a: b} = foo() in c) d;",
-        "for-in statement may not have initializer");
+    parseError("for (const {a: b} = foo() in c) d;", "for-in statement may not have initializer");
 
     expectFeatures(Feature.DESTRUCTURING);
-    parseError("for ([a] = foo() in b) c;",
-        "';' expected");
-    parseError("for (var [a] = foo() in b) c;",
-        "for-in statement may not have initializer");
+    parseError("for ([a] = foo() in b) c;", INVALID_ASSIGNMENT_TARGET);
+    parseError("for (var [a] = foo() in b) c;", "for-in statement may not have initializer");
     expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
-    parseError("for (let [a] = foo() in b) c;",
-        "for-in statement may not have initializer");
+    parseError("for (let [a] = foo() in b) c;", "for-in statement may not have initializer");
     expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
-    parseError("for (const [a] = foo() in b) c;",
-        "for-in statement may not have initializer");
+    parseError("for (const [a] = foo() in b) c;", "for-in statement may not have initializer");
   }
 
   public void testForOf1() {
@@ -2989,13 +2984,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testForOf2() {
     mode = LanguageMode.ECMASCRIPT6;
 
-    parseError("for(a=1 of b) c;", "';' expected");
-    parseError("for(var a=1 of b) c;",
-        "for-of statement may not have initializer");
-    parseError("for(let a=1 of b) c;",
-        "for-of statement may not have initializer");
-    parseError("for(const a=1 of b) c;",
-        "for-of statement may not have initializer");
+    parseError("for(a=1 of b) c;", INVALID_ASSIGNMENT_TARGET);
+    parseError("for(var a=1 of b) c;", "for-of statement may not have initializer");
+    parseError("for(let a=1 of b) c;", "for-of statement may not have initializer");
+    parseError("for(const a=1 of b) c;", "for-of statement may not have initializer");
   }
 
   public void testForOf3() {
@@ -3012,7 +3004,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testForOf4() {
     mode = LanguageMode.ECMASCRIPT6;
 
-    parseError("for(a, b of c) d;", "';' expected");
+    parseError("for(a, b of c) d;", INVALID_ASSIGNMENT_TARGET);
   }
 
   public void testDestructuringInForLoops() {
@@ -3045,12 +3037,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
 
     // {x: 5} and {x: 'str'} are valid object literals but not valid patterns.
-    parseError("for ({x: 5} in foo()) {}", "invalid assignment target");
-    parseError("for ({x: 'str'} in foo()) {}", "invalid assignment target");
-    parseError("var {x: 5} = foo();", "invalid assignment target");
-    parseError("var {x: 'str'} = foo();", "invalid assignment target");
-    parseError("({x: 5} = foo());", "invalid assignment target");
-    parseError("({x: 'str'} = foo());", "invalid assignment target");
+    parseError("for ({x: 5} in foo()) {}", INVALID_ASSIGNMENT_TARGET);
+    parseError("for ({x: 'str'} in foo()) {}", INVALID_ASSIGNMENT_TARGET);
+    parseError("var {x: 5} = foo();", INVALID_ASSIGNMENT_TARGET);
+    parseError("var {x: 'str'} = foo();", INVALID_ASSIGNMENT_TARGET);
+    parseError("({x: 5} = foo());", INVALID_ASSIGNMENT_TARGET);
+    parseError("({x: 'str'} = foo());", INVALID_ASSIGNMENT_TARGET);
 
     // {method(){}} is a valid object literal but not a valid object pattern.
     parseError("function f({method(){}}) {}", "'}' expected");
@@ -3089,10 +3081,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
 
     expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING);
-    parseError("for({x}=a of b) c;", "';' expected");
-    parseError("for({x: y}=a of b) c;", "';' expected");
-    parseError("for([x, y]=a of b) c;", "';' expected");
-    parseError("for([x, ...y]=a of b) c;", "';' expected");
+    parseError("for({x}=a of b) c;", INVALID_ASSIGNMENT_TARGET);
+    parseError("for({x: y}=a of b) c;", INVALID_ASSIGNMENT_TARGET);
+    parseError("for([x, y]=a of b) c;", INVALID_ASSIGNMENT_TARGET);
+    parseError("for([x, ...y]=a of b) c;", INVALID_ASSIGNMENT_TARGET);
 
     expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parseError("for(let {x}=a of b) c;", "for-of statement may not have initializer");
