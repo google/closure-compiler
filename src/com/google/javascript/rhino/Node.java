@@ -852,6 +852,15 @@ public class Node implements Serializable {
     child.parent = null;
   }
 
+  /** Detaches the child after the given child, or the first child if prev is null. */
+  public void replaceFirstOrChildAfter(@Nullable Node prev, Node newChild) {
+    if (prev == null) {
+      replaceChild(getFirstChild(), newChild);
+    } else {
+      replaceChildAfter(prev, newChild);
+    }
+  }
+
   @VisibleForTesting
   PropListItem lookupProperty(int propType) {
     PropListItem x = propListHead;
