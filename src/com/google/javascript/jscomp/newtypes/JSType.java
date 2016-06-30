@@ -24,6 +24,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.FunctionTypeI;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
@@ -1506,6 +1507,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public boolean isOriginalConstructor() {
+    throw new UnsupportedOperationException("isOriginalConstructor not implemented yet.");
+  }
+
+  @Override
   public boolean isEquivalentTo(TypeI type) {
     return equals(type);
   }
@@ -1541,6 +1547,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public JSType autoboxAndGetObject() {
+    throw new UnsupportedOperationException("autoboxAndGetObject not implemented yet");
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (o == null) {
       return false;
@@ -1558,6 +1569,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   @Override
   public int hashCode() {
     return Objects.hash(getMask(), getObjs(), getEnums(), getTypeVar());
+  }
+
+  @Override
+  public String getDisplayName() {
+    throw new UnsupportedOperationException("getDisplayName not implemented yet");
   }
 
   @Override
@@ -1612,6 +1628,56 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   @Override
   public FunctionTypeI getConstructor() {
     throw new UnsupportedOperationException("getConstructor not implemented yet");
+  }
+
+  @Override
+  public JSType getPrototypeObject() {
+    throw new UnsupportedOperationException("getPrototypeObject not implemented yet");
+  }
+
+  @Override
+  public JSDocInfo getJSDocInfo() {
+    throw new UnsupportedOperationException("getJSDocInfo not implemented yet");
+  }
+
+  @Override
+  public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
+    throw new UnsupportedOperationException("getOwnPropertyJSDocInfo not implemented yet");
+  }
+
+  @Override
+  public Node getOwnPropertyDefsite(String propertyName) {
+    throw new UnsupportedOperationException("getOwnPropertyDefsite not implemented yet");
+  }
+
+  @Override
+  public Node getPropertyDefsite(String propertyName) {
+    throw new UnsupportedOperationException("getPropertyDefsite not implemented yet");
+  }
+
+  @Override
+  public JSType getLowestSupertypeWithProperty(String propertyName, boolean isOverride) {
+    throw new UnsupportedOperationException("getLowestSupertypeWithProperty not implemented yet");
+  }
+
+  @Override
+  public boolean isPrototypeObject() {
+    throw new UnsupportedOperationException("isPrototypeObject not implemented yet");
+  }
+
+  @Override
+  public boolean isInstanceofObject() {
+    throw new UnsupportedOperationException("isObjectLiteral not implemented yet");
+  }
+
+  @Override
+  public boolean isInstanceType() {
+    throw new UnsupportedOperationException("isInstanceType not implemented yet");
+  }
+
+  @Override
+  public boolean hasProperty(String propertyName) {
+    throw new UnsupportedOperationException("hasProperty not implemented yet");
   }
 }
 

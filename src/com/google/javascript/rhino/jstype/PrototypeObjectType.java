@@ -382,6 +382,11 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
+  public boolean isInstanceofObject() {
+    return isAnonymous();
+  }
+
+  @Override
   public boolean isSubtype(JSType that) {
     return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
   }

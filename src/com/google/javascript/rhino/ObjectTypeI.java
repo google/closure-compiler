@@ -50,4 +50,25 @@ public interface ObjectTypeI extends TypeI {
    * object (constructed natively vs. by instantiation of a function).
    */
   FunctionTypeI getConstructor();
+
+  ObjectTypeI getPrototypeObject();
+
+  ObjectTypeI getLowestSupertypeWithProperty(String propertyName, boolean isOverride);
+
+  // TODO(aravindpg): might be better to define a PropertyI interface and
+  // then have a more general-purpose getProperty method here.
+
+  JSDocInfo getOwnPropertyJSDocInfo(String propertyName);
+
+  Node getOwnPropertyDefsite(String propertyName);
+
+  Node getPropertyDefsite(String propertyName);
+
+  /** Whether this type is an instance object of some constructor. */
+  // NOTE(dimvar): for OTI, this is true only for InstanceObjectType and a single case
+  // in FunctionType.java. Why do we need the FunctionType case? Could this method be
+  // true for "classy" objects only?
+  boolean isInstanceType();
+
+  boolean hasProperty(String propertyName);
 }

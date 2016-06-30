@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
@@ -23,13 +24,13 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.Property;
 
 import java.util.ArrayDeque;
 
@@ -137,11 +138,11 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
   // State about the current traversal.
   private int deprecatedDepth = 0;
-  private final ArrayDeque<JSType> currentClassStack = new ArrayDeque<>();
-  private final JSType noTypeSentinel;
+  private final ArrayDeque<TypeI> currentClassStack = new ArrayDeque<>();
+  private final TypeI noTypeSentinel;
 
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
-  private final Multimap<JSType, String> initializedConstantProperties;
+  private final Multimap<TypeI, String> initializedConstantProperties;
 
 
   CheckAccessControls(
@@ -180,8 +181,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       if (isDeprecatedFunction(n)) {
         deprecatedDepth++;
       }
-      JSType prevClass = getCurrentClass();
-      JSType currentClass = prevClass == null
+      TypeI prevClass = getCurrentClass();
+      TypeI currentClass = prevClass == null
           ? getClassOfMethod(n, parent)
           : prevClass;
       // ArrayDeques can't handle nulls, so we reuse the bottom type
@@ -207,29 +208,29 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * Gets the type of the class that "owns" a method, or null if
    * we know that its un-owned.
    */
-  private JSType getClassOfMethod(Node n, Node parent) {
+  private TypeI getClassOfMethod(Node n, Node parent) {
     if (parent.isAssign()) {
       Node lValue = parent.getFirstChild();
       if (NodeUtil.isGet(lValue)) {
         // We have an assignment of the form "a.b = ...".
-        JSType lValueType = lValue.getJSType();
-        if (lValueType != null && lValueType.isNominalConstructor()) {
+        TypeI lValueType = lValue.getTypeI();
+        if (lValueType != null && lValueType.isOriginalConstructor()) {
           // If a.b is a constructor, then everything in this function
           // belongs to the "a.b" type.
           return (lValueType.toMaybeFunctionType()).getInstanceType();
         } else {
           // If a.b is not a constructor, then treat this as a method
           // of whatever type is on "a".
-          return normalizeClassType(lValue.getFirstChild().getJSType());
+          return normalizeClassType(lValue.getFirstChild().getTypeI());
         }
       } else {
         // We have an assignment of the form "a = ...", so pull the
         // type off the "a".
-        return normalizeClassType(lValue.getJSType());
+        return normalizeClassType(lValue.getTypeI());
       }
     } else if (NodeUtil.isFunctionDeclaration(n) ||
                parent.isName()) {
-      return normalizeClassType(n.getJSType());
+      return normalizeClassType(n.getTypeI());
     } else if (parent.isStringKey()
         || parent.isGetterDef() || parent.isSetterDef()) {
       Node objectLitParent = parent.getGrandparent();
@@ -238,7 +239,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       }
       Node className = NodeUtil.getPrototypeClassName(objectLitParent.getFirstChild());
       if (className != null) {
-        return normalizeClassType(className.getJSType());
+        return normalizeClassType(className.getTypeI());
       }
     }
 
@@ -249,12 +250,14 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * Normalize the type of a constructor, its instance, and its prototype
    * all down to the same type (the instance type).
    */
-  private static JSType normalizeClassType(JSType type) {
+  private static TypeI normalizeClassType(TypeI type) {
     if (type == null || type.isUnknownType()) {
       return type;
-    } else if (type.isNominalConstructor()) {
+    } else if (type.isOriginalConstructor()) {
       return (type.toMaybeFunctionType()).getInstanceType();
-    } else if (type.isFunctionPrototypeType()) {
+    } else if (type.isPrototypeObject()) {
+      // newtypes.JSType should never enter this codepath
+      Preconditions.checkState(type instanceof ObjectType);
       FunctionType owner = ((ObjectType) type).getOwnerFunction();
       if (owner.isConstructor()) {
         return owner.getInstanceType();
@@ -291,6 +294,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       case FUNCTION:
         checkFinalClassOverrides(t, n, parent);
         break;
+      default:
+        break;
     }
   }
 
@@ -299,7 +304,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private void checkConstructorDeprecation(NodeTraversal t, Node n,
       Node parent) {
-    JSType type = n.getJSType();
+    TypeI type = n.getTypeI();
 
     if (type != null) {
       String deprecationInfo = getTypeDeprecationInfo(type);
@@ -355,8 +360,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    ObjectType objectType =
-        ObjectType.cast(dereference(n.getFirstChild().getJSType()));
+    ObjectTypeI objectType = castToObject(dereference(n.getFirstChild().getTypeI()));
     String propertyName = n.getLastChild().getString();
 
     if (objectType != null) {
@@ -537,9 +541,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * Checks if a constructor is trying to override a final class.
    */
   private void checkFinalClassOverrides(NodeTraversal t, Node fn, Node parent) {
-    JSType type = fn.getJSType().toMaybeFunctionType();
+    TypeI type = fn.getTypeI().toMaybeFunctionType();
     if (type != null && type.isConstructor()) {
-      JSType finalParentClass = getFinalParentClass(getClassOfMethod(fn, parent));
+      TypeI finalParentClass = getFinalParentClass(getClassOfMethod(fn, parent));
       if (finalParentClass != null) {
         compiler.report(
             t.makeError(fn, EXTEND_FINAL_CLASS,
@@ -564,8 +568,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    ObjectType objectType =
-      ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
+    ObjectTypeI objectType = castToObject(dereference(getprop.getFirstChild().getTypeI()));
 
     String propertyName = getprop.getLastChild().getString();
 
@@ -593,7 +596,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         return;
       }
 
-      ObjectType oType = objectType;
+      ObjectTypeI oType = objectType;
       while (oType != null) {
         if (initializedConstantProperties.containsEntry(
             oType, propertyName)) {
@@ -602,7 +605,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
                   propertyName));
             break;
           }
-        oType = oType.getImplicitPrototype();
+        oType = oType.getPrototypeObject();
       }
 
       initializedConstantProperties.put(objectType,
@@ -610,7 +613,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
       // Add the prototype when we're looking at an instance object
       if (objectType.isInstanceType()) {
-        ObjectType prototype = objectType.getImplicitPrototype();
+        ObjectTypeI prototype = objectType.getPrototypeObject();
         if (prototype != null && prototype.hasProperty(propertyName)) {
           initializedConstantProperties.put(prototype, propertyName);
         }
@@ -631,8 +634,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    ObjectType referenceType =
-        ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
+    ObjectTypeI referenceType = castToObject(dereference(getprop.getFirstChild().getTypeI()));
 
     String propertyName = getprop.getLastChild().getString();
     boolean isPrivateByConvention = isPrivateByConvention(propertyName);
@@ -643,7 +645,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    StaticSourceFile definingSource = getDefiningSource(
+    StaticSourceFile definingSource = AccessControlUtils.getDefiningSource(
         getprop, referenceType, propertyName);
 
     boolean isClassType = false;
@@ -654,7 +656,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         && parent.isAssign()
         && parent.getFirstChild() == getprop;
 
-    ObjectType objectType = getObjectType(
+    ObjectTypeI objectType = AccessControlUtils.getObjectType(
         referenceType, isOverride, propertyName);
 
     Visibility fileOverviewVisibility =
@@ -675,14 +677,13 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     }
 
     if (objectType != null) {
-      Property p = objectType.getOwnSlot(propertyName);
-      Node node = p.getNode();
+      Node node = objectType.getOwnPropertyDefsite(propertyName);
       if (node == null) {
         // Assume the property is public.
         return;
       }
       definingSource = node.getStaticSourceFile();
-      isClassType = p.getJSDocInfo().isConstructor();
+      isClassType = objectType.getOwnPropertyJSDocInfo(propertyName).isConstructor();
     } else if (isPrivateByConvention) {
       // We can only check visibility references if we know what file
       // it was defined in.
@@ -733,50 +734,13 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     return false;
   }
 
-  @Nullable private static StaticSourceFile getDefiningSource(
-      Node getprop,
-      @Nullable ObjectType referenceType,
-      String propertyName) {
-      if (referenceType != null) {
-        Node propDefNode = referenceType.getPropertyNode(propertyName);
-        if (propDefNode != null) {
-          return propDefNode.getStaticSourceFile();
-        }
-      }
-    return getprop.getStaticSourceFile();
-  }
-
-  @Nullable private static ObjectType getObjectType(
-      @Nullable ObjectType referenceType,
-      boolean isOverride,
-      String propertyName) {
-    if (referenceType == null) {
-      return null;
-    }
-
-    // Find the lowest property defined on a class with visibility
-    // information.
-    ObjectType objectType = isOverride
-        ? referenceType.getImplicitPrototype()
-        : referenceType;
-    for (; objectType != null;
-        objectType = objectType.getImplicitPrototype()) {
-      JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(propertyName);
-      if (docInfo != null
-          && docInfo.getVisibility() != Visibility.INHERITED) {
-        return objectType;
-      }
-    }
-    return null;
-  }
-
   private void checkOverriddenPropertyVisibility(
       NodeTraversal t,
       Node getprop,
       Node parent,
       Visibility visibility,
       Visibility fileOverviewVisibility,
-      ObjectType objectType,
+      ObjectTypeI objectType,
       boolean sameInput) {
     // Check an ASSIGN statement that's trying to override a property
     // on a superclass.
@@ -811,7 +775,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       Node parent,
       Visibility visibility,
       boolean isClassType,
-      JSType objectType,
+      ObjectTypeI objectType,
       StaticSourceFile referenceSource,
       StaticSourceFile definingSource) {
     // private access is always allowed in the same file.
@@ -821,7 +785,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    JSType ownerType = normalizeClassType(objectType);
+    TypeI ownerType = normalizeClassType(objectType);
 
     switch (visibility) {
       case PACKAGE:
@@ -857,8 +821,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       }
   }
 
-  @Nullable private JSType getCurrentClass() {
-    JSType cur = currentClassStack.peekFirst();
+  @Nullable private TypeI getCurrentClass() {
+    TypeI cur = currentClassStack.peekFirst();
     return cur == noTypeSentinel
         ? null
         : cur;
@@ -869,8 +833,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       Node getprop,
       Node parent,
       boolean isClassType,
-      JSType ownerType) {
-    JSType currentClass = getCurrentClass();
+      TypeI ownerType) {
+    TypeI currentClass = getCurrentClass();
     if (currentClass != null && ownerType.isEquivalentTo(currentClass)) {
       return;
     }
@@ -881,7 +845,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     // private access is not allowed outside the file from a different
     // enclosing class.
-    JSType accessedType = getprop.getFirstChild().getJSType();
+    TypeI accessedType = getprop.getFirstChild().getTypeI();
     String propertyName = getprop.getLastChild().getString();
     String readableTypeName = ownerType.equals(accessedType)
         ? typeRegistry.getReadableTypeName(getprop.getFirstChild())
@@ -896,14 +860,14 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   private void checkProtectedPropertyVisibility(
       NodeTraversal t,
       Node getprop,
-      JSType ownerType) {
+      TypeI ownerType) {
     // There are 3 types of legal accesses of a protected property:
     // 1) Accesses in the same file
     // 2) Overriding the property in a subclass
     // 3) Accessing the property from inside a subclass
     // The first two have already been checked for.
-    JSType currentClass = getCurrentClass();
-    if (currentClass == null || !currentClass.isSubtype(ownerType)) {
+    TypeI currentClass = getCurrentClass();
+    if (currentClass == null || !currentClass.isSubtypeOf(ownerType)) {
       String propertyName = getprop.getLastChild().getString();
       compiler.report(
           t.makeError(getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
@@ -994,7 +958,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private static boolean isDeprecatedFunction(Node n) {
     if (n.isFunction()) {
-      JSType type = n.getJSType();
+      TypeI type = n.getTypeI();
       if (type != null) {
         return getTypeDeprecationInfo(type) != null;
       }
@@ -1008,7 +972,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * as being deprecated. Returns empty string if the type is deprecated
    * but no reason was given. Returns null if the type is not deprecated.
    */
-  private static String getTypeDeprecationInfo(JSType type) {
+  private static String getTypeDeprecationInfo(TypeI type) {
     if (type == null) {
       return null;
     }
@@ -1020,9 +984,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       }
       return "";
     }
-    ObjectType objType = ObjectType.cast(type);
+    ObjectTypeI objType = castToObject(type);
     if (objType != null) {
-      ObjectType implicitProto = objType.getImplicitPrototype();
+      ObjectTypeI implicitProto = objType.getPrototypeObject();
       if (implicitProto != null) {
         return getTypeDeprecationInfo(implicitProto);
       }
@@ -1034,14 +998,14 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * Returns if a property is declared constant.
    */
   private boolean isPropertyDeclaredConstant(
-      ObjectType objectType, String prop) {
+      ObjectTypeI objectType, String prop) {
     if (enforceCodingConventions
         && compiler.getCodingConvention().isConstant(prop)) {
       return true;
     }
     for (;
          objectType != null;
-         objectType = objectType.getImplicitPrototype()) {
+         objectType = objectType.getPrototypeObject()) {
       JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(prop);
       if (docInfo != null && docInfo.isConstant()) {
         return true;
@@ -1055,7 +1019,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * as being deprecated. Returns empty string if the property is deprecated
    * but no reason was given. Returns null if the property is not deprecated.
    */
-  private static String getPropertyDeprecationInfo(ObjectType type,
+  private static String getPropertyDeprecationInfo(ObjectTypeI type,
                                                    String prop) {
     JSDocInfo info = type.getOwnPropertyJSDocInfo(prop);
     if (info != null && info.isDeprecated()) {
@@ -1065,7 +1029,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
       return "";
     }
-    ObjectType implicitProto = type.getImplicitPrototype();
+    ObjectTypeI implicitProto = type.getPrototypeObject();
     if (implicitProto != null) {
       return getPropertyDeprecationInfo(implicitProto, prop);
     }
@@ -1075,18 +1039,18 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   /**
    * Dereference a type, autoboxing it and filtering out null.
    */
-  private static JSType dereference(JSType type) {
-    return type == null ? null : type.dereference();
+  private static ObjectTypeI dereference(TypeI type) {
+    return type == null ? null : type.autoboxAndGetObject();
   }
 
   /**
    * Returns the super class of the given type that has a constructor.
    */
-  private static JSType getFinalParentClass(JSType type) {
+  private static ObjectTypeI getFinalParentClass(TypeI type) {
     if (type != null) {
-      ObjectType iproto = ObjectType.cast(type).getImplicitPrototype();
+      ObjectTypeI iproto = castToObject(type).getPrototypeObject();
       while (iproto != null && iproto.getConstructor() == null) {
-        iproto = iproto.getImplicitPrototype();
+        iproto = iproto.getPrototypeObject();
       }
       if (iproto != null) {
         Node source = iproto.getConstructor().getSource();
@@ -1097,5 +1061,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       }
     }
     return null;
+  }
+
+  @Nullable
+  private static ObjectTypeI castToObject(@Nullable TypeI type) {
+    return type == null ? null : type.toMaybeObjectType();
   }
 }

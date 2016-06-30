@@ -52,6 +52,8 @@ public interface TypeI {
 
   boolean isConstructor();
 
+  boolean isOriginalConstructor();
+
   boolean isEquivalentTo(TypeI type);
 
   boolean isFunctionType();
@@ -65,6 +67,14 @@ public interface TypeI {
   boolean isUnknownType();
 
   boolean isNullable();
+
+  boolean isPrototypeObject();
+
+  boolean isInstanceofObject();
+
+  ObjectTypeI autoboxAndGetObject();
+
+  JSDocInfo getJSDocInfo();
 
   /**
    * If this is a union type, returns a union type that does not include
@@ -83,4 +93,6 @@ public interface TypeI {
    * If it is a non-object or a union of objects, return null.
    */
   ObjectTypeI toMaybeObjectType();
+
+  String getDisplayName();
 }

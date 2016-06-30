@@ -119,6 +119,7 @@ public abstract class JSType implements TypeI, Serializable {
    * attached to arbitrary types. This must be overridden for
    * programmer-defined types.
    */
+  @Override
   public JSDocInfo getJSDocInfo() {
     return null;
   }
@@ -132,6 +133,7 @@ public abstract class JSType implements TypeI, Serializable {
    *
    * @return the display name of the type, or null if one is not available
    */
+  @Override
   public String getDisplayName() {
     return null;
   }
@@ -181,6 +183,11 @@ public abstract class JSType implements TypeI, Serializable {
   /** Whether this is the prototype of a function. */
   public boolean isFunctionPrototypeType() {
     return false;
+  }
+
+  @Override
+  public boolean isPrototypeObject() {
+    return isFunctionPrototypeType();
   }
 
   public boolean isStringObjectType() {
@@ -328,6 +335,11 @@ public abstract class JSType implements TypeI, Serializable {
         return ctor.makesDicts();
       }
     }
+    return false;
+  }
+
+  @Override
+  public boolean isInstanceofObject() {
     return false;
   }
 
@@ -527,6 +539,11 @@ public abstract class JSType implements TypeI, Serializable {
       return fn.isNativeObjectType();
     }
     return false;
+  }
+
+  @Override
+  public boolean isOriginalConstructor() {
+    return isNominalConstructor();
   }
 
   /**
@@ -834,6 +851,11 @@ public abstract class JSType implements TypeI, Serializable {
    */
   public final ObjectType dereference() {
     return autobox().toObjectType();
+  }
+
+  @Override
+  public final ObjectType autoboxAndGetObject() {
+    return dereference();
   }
 
   /**

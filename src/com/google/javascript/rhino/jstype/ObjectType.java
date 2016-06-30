@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 
@@ -276,6 +277,11 @@ public abstract class ObjectType
    */
   public abstract ObjectType getImplicitPrototype();
 
+  @Override
+  public ObjectType getPrototypeObject() {
+    return getImplicitPrototype();
+  }
+
   /**
    * Defines a property whose type is explicitly declared by the programmer.
    * @param propertyName the property's name
@@ -382,14 +388,26 @@ public abstract class ObjectType
     return p == null ? null : p.getNode();
   }
 
+  @Override
+  public Node getPropertyDefsite(String propertyName) {
+    return getPropertyNode(propertyName);
+  }
+
   /**
    * Gets the docInfo on the specified property on this type.  This should not
    * be implemented recursively, as you generally need to know exactly on
    * which type in the prototype chain the JSDocInfo exists.
    */
+  @Override
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
+  }
+
+  @Override
+  public Node getOwnPropertyDefsite(String propertyName) {
+    Property p = getOwnSlot(propertyName);
+    return p == null ? null : p.getNode();
   }
 
   /**
@@ -735,5 +753,18 @@ public abstract class ObjectType
       propTypeMap.put(name, this.getPropertyType(name));
     }
     return propTypeMap.build();
+  }
+
+  @Override
+  public ObjectType getLowestSupertypeWithProperty(String propertyName, boolean isOverride) {
+    // Find the lowest property defined on a class with visibility information.
+    ObjectType objectType = isOverride ? this.getImplicitPrototype() : this;
+    for (; objectType != null; objectType = objectType.getImplicitPrototype()) {
+      JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(propertyName);
+      if (docInfo != null && docInfo.getVisibility() != Visibility.INHERITED) {
+        return objectType;
+      }
+    }
+    return null;
   }
 }

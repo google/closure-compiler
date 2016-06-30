@@ -2187,6 +2187,20 @@ public class Node implements Serializable {
   }
 
   /**
+   * Gets the OTI {@link JSType} associated with this node if any, and null otherwise.<p>
+   *
+   * NTI and OTI don't annotate the exact same AST nodes with types. (For example, OTI
+   * doesn't annotate dead code.) When OTI runs after NTI, the checks that use type
+   * information must only see the old types. They can call this method to avoid getting
+   * a new type for an AST node where OTI did not add a type.
+   * Calls to this method are intended to be temporary. As we migrate passes to support
+   * NTI natively, we will be replacing calls to this method with calls to getTypeI.
+   */
+  public TypeI getTypeIIfOld() {
+    return typei instanceof JSType ? typei : null;
+  }
+
+  /**
    * Get the {@link JSDocInfo} attached to this node.
    * @return the information or {@code null} if no JSDoc is attached to this
    * node
