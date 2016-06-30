@@ -279,3 +279,12 @@ ViewCSS.prototype.getMatchedCSSRules =
  */
 Document.prototype.getCSSCanvasContext =
     function(contextId, name, width, height) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {?Range}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/caretRangeFromPoint
+ */
+Document.prototype.caretRangeFromPoint = function(x, y) {};
