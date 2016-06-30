@@ -96,8 +96,8 @@ class FileInstrumentationData {
     instrumentedBits = new BitSet();
 
     branchPresent = new BitSet();
-    branchesInLine = new HashMap<Integer, Integer>();
-    branchNodes = new HashMap<BranchIndexPair, Node>();
+    branchesInLine = new HashMap<>();
+    branchNodes = new HashMap<>();
   }
 
    String getArrayName() {
