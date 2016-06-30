@@ -373,24 +373,27 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   }
 
   private void handleWhile(Node node) {
+    Node cond = node.getFirstChild();
     // Control goes to the first statement if the condition evaluates to true.
-    createEdge(node, Branch.ON_TRUE,
-        computeFallThrough(node.getSecondChild()));
+    createEdge(node, Branch.ON_TRUE, computeFallThrough(cond.getNext()));
 
-    // Control goes to the follow() if the condition evaluates to false.
-    createEdge(node, Branch.ON_FALSE,
-        computeFollowNode(node, this));
+    if (!cond.isTrue()) {
+      // Control goes to the follow() if the condition evaluates to false.
+      createEdge(node, Branch.ON_FALSE, computeFollowNode(node, this));
+    }
     connectToPossibleExceptionHandler(
         node, NodeUtil.getConditionExpression(node));
   }
 
   private void handleDo(Node node) {
+    Node cond = node.getFirstChild();
     // The first edge can be the initial iteration as well as the iterations
     // after.
-    createEdge(node, Branch.ON_TRUE, computeFallThrough(node.getFirstChild()));
-    // The edge that leaves the do loop if the condition fails.
-    createEdge(node, Branch.ON_FALSE,
-        computeFollowNode(node, this));
+    createEdge(node, Branch.ON_TRUE, computeFallThrough(cond));
+    if (!cond.isTrue()) {
+      // The edge that leaves the do loop if the condition fails.
+      createEdge(node, Branch.ON_FALSE, computeFollowNode(node, this));
+    }
     connectToPossibleExceptionHandler(
         node, NodeUtil.getConditionExpression(node));
   }

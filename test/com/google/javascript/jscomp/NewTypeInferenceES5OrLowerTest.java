@@ -356,7 +356,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   public void testForLoopInference() {
     typeCheck(LINE_JOINER.join(
         "var x = 5;",
-        "for (;true;) {",
+        "for (;x < 10;) {",
         "  x = 'str';",
         "}",
         "var /** (string|number) */ y = x;",
@@ -365,7 +365,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(LINE_JOINER.join(
         "var x = 5;",
-        "while (true) {",
+        "while (x < 10) {",
         "  x = 'str';",
         "}",
         "(function(/** string */ s){})(x);",
@@ -373,7 +373,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(LINE_JOINER.join(
-        "while (true) {",
+        "while (true || false) {",
         "  var x = 'str';",
         "}",
         "var /** (string|undefined) */ y = x;",
