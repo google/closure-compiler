@@ -3283,12 +3283,6 @@ public final class NodeUtil {
         isLatin(name);
   }
 
-  @Deprecated
-  public static boolean isValidQualifiedName(String name) {
-    return isValidQualifiedName(LanguageMode.ECMASCRIPT3, name);
-  }
-
-
   /**
    * Determines whether the given name is a valid qualified name.
    */
