@@ -22,7 +22,6 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.List;
@@ -417,7 +416,7 @@ class FunctionRewriter implements CompilerPass {
       if (propName != null) {
         if (!propName.isString()) {
           throw new IllegalStateException(
-              "Expected STRING, got " + Token.name(propName.getType()));
+              "Expected STRING, got " + propName.getType());
         }
 
         return buildCallNode(FACTORY_METHOD_NAME, propName, node);
@@ -478,7 +477,7 @@ class FunctionRewriter implements CompilerPass {
       if (propName != null) {
         if (!propName.isString()) {
           throw new IllegalStateException(
-              "Expected STRING, got " + Token.name(propName.getType()));
+              "Expected STRING, got " + propName.getType());
         }
 
         return buildCallNode(FACTORY_METHOD_NAME, propName, node);

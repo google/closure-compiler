@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -85,9 +84,10 @@ public final class RawNominalType extends Namespace {
       String name, ImmutableList<String> typeParameters, Kind kind, ObjectKind objectKind) {
     super(commonTypes, name);
     Preconditions.checkNotNull(objectKind);
-    Preconditions.checkState(defSite == null || defSite.isFunction()
-        || defSite.isCall(), "Expected function or call but found %s",
-        Token.name(defSite.getType()));
+    Preconditions.checkState(
+        defSite == null || defSite.isFunction() || defSite.isCall(),
+        "Expected function or call but found %s",
+        defSite.getType());
     if (typeParameters == null) {
       typeParameters = ImmutableList.of();
     }

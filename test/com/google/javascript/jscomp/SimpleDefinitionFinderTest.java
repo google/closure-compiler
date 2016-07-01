@@ -22,7 +22,6 @@ import com.google.common.collect.TreeMultiset;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.Set;
@@ -394,7 +393,7 @@ public final class SimpleDefinitionFinderTest extends CompilerTestCase {
         Definition definition = defSite.definition;
         StringBuilder sb = new StringBuilder();
         sb.append("DEF ");
-        sb.append(Token.name(node.getType()));
+        sb.append(node.getType());
         sb.append(" ");
         sb.append(node.getQualifiedName());
         sb.append(" -> ");
@@ -405,7 +404,7 @@ public final class SimpleDefinitionFinderTest extends CompilerTestCase {
 
         Node rValue = definition.getRValue();
         if (rValue != null) {
-          sb.append(Token.name(rValue.getType()));
+          sb.append(rValue.getType());
         } else {
           sb.append("<null>");
         }
@@ -422,7 +421,7 @@ public final class SimpleDefinitionFinderTest extends CompilerTestCase {
       if (defs != null) {
         StringBuilder sb = new StringBuilder();
         sb.append("USE ");
-        sb.append(Token.name(node.getType()));
+        sb.append(node.getType());
         sb.append(" ");
         sb.append(node.getQualifiedName());
         sb.append(" -> ");
@@ -432,7 +431,7 @@ public final class SimpleDefinitionFinderTest extends CompilerTestCase {
 
           Node rValue = def.getRValue();
           if (rValue != null) {
-            defstr = Token.name(rValue.getType());
+            defstr = rValue.getType().toString();
           } else {
             defstr = "<null>";
           }

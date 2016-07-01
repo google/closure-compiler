@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Rewrites <code>new goog.testing.ObjectPropertyString(foo, 'bar')</code> to
@@ -111,7 +110,7 @@ final class ObjectPropertyStringPreprocess implements CompilerPass {
       if (!firstArgument.isQualifiedName()) {
         compiler.report(t.makeError(firstArgument,
             QUALIFIED_NAME_EXPECTED_ERROR,
-            Token.name(firstArgument.getType())));
+            firstArgument.getType().toString()));
         return;
       }
 
@@ -119,7 +118,7 @@ final class ObjectPropertyStringPreprocess implements CompilerPass {
       if (!secondArgument.isString()) {
         compiler.report(t.makeError(secondArgument,
             STRING_LITERAL_EXPECTED_ERROR,
-            Token.name(secondArgument.getType())));
+            secondArgument.getType().toString()));
         return;
       }
 
