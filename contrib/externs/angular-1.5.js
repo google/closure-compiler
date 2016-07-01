@@ -17,7 +17,6 @@
 /**
  * @fileoverview Externs for Angular 1.
  *
- * TODO: Mocks.
  * TODO: Remaining Services:
  *     $cookieStore
  *     $httpBackend
@@ -25,22 +24,12 @@
  *     $rootElement
  *     $rootScope
  *
- * TODO: Resolve two issues with angular.$http
- *         1) angular.$http isn't declared as a
- *            callable type. It should be declared as a function, and properties
- *            added following the technique used by $timeout, $parse and
- *            $interval.
- *         2) angular.$http.delete cannot be added as an extern
- *            as it is a reserved keyword.
- *            Its use is potentially not supported in IE.
- *            It may be aliased as 'remove' in a future version.
- *
  * @see http://angularjs.org/
  * @externs
  */
 
 /**
- * @typedef {(Window|Document|Element|Array.<Element>|string|!angular.JQLite|
+ * @typedef {(Window|Document|Element|Array<Element>|string|!angular.JQLite|
  *     NodeList|{length: number})}
  */
 var JQLiteSelector;
@@ -117,8 +106,9 @@ angular.forEach = function(obj, iterator, opt_context) {};
 angular.fromJson = function(json) {};
 
 /**
- * @param {*} arg
- * @return {*}
+ * @param {T} arg
+ * @return {T}
+ * @template T
  */
 angular.identity = function(arg) {};
 
@@ -457,29 +447,12 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
 angular.Directive;
 
 
-/**
- * @typedef {{
- *   bindings: (Object.<string, string>|undefined),
- *   controller: (angular.Injectable|string|undefined),
- *   controllerAs: (string|undefined),
- *   template: (string|
- *       function(!angular.JQLite=,!angular.Attributes=): string|
- *       undefined),
- *   templateUrl: (string|
- *       function(!angular.JQLite=,!angular.Attributes=)|
- *       undefined),
- *   transclude: (boolean|!Object.<string, string>|undefined),
- *   require: (!Object<string, string>|undefined)
- * }}
- */
-angular.Component;
-
 
 /** @interface */
 angular.Change;
 
 /** @type {*} */
-angular.Change.prototype.currentValue;
+angular.Change.prototype.crrentValue;
 
 /** @type {*} */
 angular.Change.prototype.previousValue;
@@ -500,8 +473,46 @@ angular.ComponentController.prototype.$onChanges = function(changesObj) {};
 
 angular.ComponentController.prototype.$onDestroy = function() {};
 
+
+
 /**
- * @typedef {(Function|Array.<string|Function>)}
+ * @record
+ */
+angular.Component = function() {};
+
+/** @type {!Object.<string, string>|undefined} */
+angular.Component.prototype.bindings;
+
+/** @type {!angular.Injectable|string|undefined|!angular.ComponentController} */
+angular.Component.prototype.controller;
+
+/** @type {string|undefined} */
+angular.Component.prototype.controllerAs;
+
+/**
+ * @type {string|
+ *        function(!angular.JQLite=,!angular.Attributes=)|
+ *        undefined}
+ */
+angular.Component.prototype.template;
+
+/**
+ * @type {string|
+ *        function(!angular.JQLite=,!angular.Attributes=)|
+ *        undefined}
+ */
+angular.Component.prototype.templateUrl;
+
+/** @type {boolean|!Object.<string, string>|undefined} */
+angular.Component.prototype.transclude;
+
+/** @type {!Object<string, string>|undefined} */
+angular.Component.prototype.require;
+
+
+
+/**
+ * @typedef {(Function|Array<string|Function>)}
  */
 angular.Injectable;
 
@@ -749,7 +760,72 @@ angular.JQLite.prototype.val = function(opt_value) {};
  */
 angular.JQLite.prototype.wrap = function(element) {};
 
-/** @constructor */
+
+
+/******************************************************************************
+ * $provide Service
+ *****************************************************************************/
+
+/**
+ * @interface
+ */
+angular.$provide = function() {};
+
+
+/** @record */
+angular.$provide.Provider = function() {};
+
+/** @type {(!Array<string|!Function>|!Function)} */
+angular.$provide.Provider.prototype.$get;
+
+/**
+ * @param {string} name
+ * @param {*} object
+ * @return {Object}
+ */
+angular.$provide.prototype.constant = function(name, object) {};
+
+/**
+ * @param {string} name
+ * @param {!angular.Injectable} decorator
+ */
+angular.$provide.prototype.decorator = function(name, decorator) {};
+
+/**
+ * @param {string} name
+ * @param {angular.Injectable} providerFunction
+ * @return {Object}
+ */
+angular.$provide.prototype.factory = function(name, providerFunction) {};
+
+/**
+ * @param {string} name
+ * @param {angular.Injectable|angular.$provide.Provider}
+ *     providerType
+ * @return {Object}
+ */
+angular.$provide.prototype.provider = function(name, providerType) {};
+
+/**
+ * @param {string} name
+ * @param {angular.Injectable} constructor
+ * @return {Object}
+ */
+angular.$provide.prototype.service = function(name, constructor) {};
+
+/**
+ * @param {string} name
+ * @param {*} object
+ * @return {Object}
+ */
+angular.$provide.prototype.value = function(name, object) {};
+
+
+/******************************************************************************
+ * angular.Module
+ *****************************************************************************/
+
+/** @interface */
 angular.Module = function() {};
 
 /**
@@ -851,7 +927,7 @@ angular.Module.prototype.decorator = function(name, decorator) {};
 /**
  * @type {string}
  */
-angular.Module.prototype.name = '';
+angular.Module.prototype.name;
 
 /**
  * @type {Array.<string>}
@@ -1020,24 +1096,17 @@ angular.$anchorScroll;
  * $anchorScrollProvider Service
  *****************************************************************************/
 
-/**
- * @typedef {{
- *   disableAutoScrolling: function()
- *   }}
- */
-angular.$anchorScrollProvider;
+/** @interface */
+angular.$anchorScrollProvider = function() {};
 
-/**
- * @type {function()}
- */
-angular.$anchorScrollProvider.disableAutoScrolling = function() {};
+angular.$anchorScrollProvider.prototype.disableAutoScrolling = function() {};
 
 /******************************************************************************
  * $animate Service
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$animate = function() {};
 
@@ -1145,7 +1214,7 @@ angular.$animate.prototype.cancel = function(animationPromise) {};
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$animateProvider = function() {};
 
@@ -1166,7 +1235,7 @@ angular.$animateProvider.prototype.classNameFilter = function(
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$ariaProvider = function() {};
 
@@ -1213,7 +1282,7 @@ angular.$compile.LinkOptions;
 // TODO(martinprobst): remaining $compileProvider methods.
 
 /**
- * @constructor
+ * @interface
  */
 angular.$compileProvider = function() {};
 
@@ -1258,7 +1327,7 @@ angular.$cacheFactory.Options;
 
 /**
  * @template T
- * @constructor
+ * @interface
  */
 angular.$cacheFactory.Cache = function() {};
 
@@ -1322,7 +1391,7 @@ angular.$controllerProvider;
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$cookies = function() {};
 
@@ -1376,7 +1445,7 @@ angular.$cookies.prototype.remove = function(key, opt_options) {};
 angular.$cookies.Config;
 
 /**
- * @constructor
+ * @interface
  */
 angular.$cookiesProvider = function() {};
 
@@ -1427,114 +1496,109 @@ angular.$filter.filter;
  *****************************************************************************/
 
 /**
- * @typedef {{register: function(string, angular.Injectable)}}
+ * @interface
  */
-angular.$filterProvider;
+angular.$filterProvider = function() {};
 
 /**
  * @param {string} name
- * @param {angular.Injectable} fn
+ * @param {!angular.Injectable} fn
  */
-angular.$filterProvider.register = function(name, fn) {};
+angular.$filterProvider.prototype.register = function(name, fn) {};
 
 /******************************************************************************
  * $http Service
  *****************************************************************************/
 
-/**
- * This is a typedef because the closure compiler does not allow
- * defining a type that is a function with properties.
- * If you are trying to use the $http service as a function, try
- * using one of the helper functions instead.
- * @typedef {{
- *   delete: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
- *   get: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
- *   head: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
- *   jsonp: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
- *   patch: function(string, *, angular.$http.Config=):
- *       !angular.$http.HttpPromise,
- *   post: function(string, *, angular.$http.Config=):
- *       !angular.$http.HttpPromise,
- *   put: function(string, *, angular.$http.Config=):!angular.$http.HttpPromise,
- *   defaults: angular.$http.Config,
- *   pendingRequests: !Array.<angular.$http.Config>
- * }}
- */
-angular.$http;
+/** @interface */
+angular.$http = function() {};
+
+/** @record */
+angular.$http.Config = function() {};
+
+
+/** @type {(boolean|!angular.$cacheFactory.Cache|undefined)} */
+angular.$http.Config.prototype.cache
+
+/** @type {(string|!Object|undefined)} */
+angular.$http.Config.prototype.data
+
+/** @type {(Object<?string|undefined>|undefined)} */
+angular.$http.Config.prototype.headers;
+
+/** @type {(string|undefined)} */
+angular.$http.Config.prototype.method;
+
+/** @type {(?Object<(boolean|number|string|Object)>|undefined)} */
+angular.$http.Config.prototype.params;
+
+/** @type {(string|undefined)} */
+angular.$http.Config.prototype.responseType;
+
+/** @type {(number|!angular.$q.Promise|undefined)} */
+angular.$http.Config.prototype.timeout;
 
 /**
- * @typedef {{
- *   cache: (boolean|!angular.$cacheFactory.Cache|undefined),
- *   data: (string|Object|undefined),
- *   headers: (Object|undefined),
- *   method: (string|undefined),
- *   params: (Object.<(string|Object)>|undefined),
- *   responseType: (string|undefined),
- *   timeout: (number|!angular.$q.Promise|undefined),
- *   transformRequest:
- *       (function((string|Object), Object):(string|Object)|
- *       Array.<function((string|Object), Object):(string|Object)>|undefined),
- *   transformResponse:
- *       (function((string|Object), Object):(string|Object)|
- *       Array.<function((string|Object), Object):(string|Object)>|undefined),
- *   url: (string|undefined),
- *   withCredentials: (boolean|undefined),
- *   xsrfCookieName: (string|undefined),
- *   xsrfHeaderName: (string|undefined)
- * }}
+ * @type {
+ *   (undefined|
+ *    function(?, Object):?|
+ *    Array<function(?, Object):?>)
+ * }
  */
-angular.$http.Config;
+angular.$http.Config.prototype.transformRequest;
 
-angular.$http.Config.transformRequest;
+/**
+ * @type {
+ *   (undefined|
+ *    function(?, Object, Object):?|
+ *    Array<function(?, Object, Object):?>)
+ * }
+ */
+angular.$http.Config.prototype.transformResponse;
 
-angular.$http.Config.transformResponse;
+/** @type {(string|undefined)} */
+angular.$http.Config.prototype.url;
 
-// /**
-//  * This extern is currently incomplete as delete is a reserved word.
-//  * To use delete, index $http.
-//  * Example: $http['delete'](url, opt_config);
-//  * @param {string} url
-//  * @param {angular.$http.Config=} opt_config
-//  * @return {!angular.$http.HttpPromise}
-//  */
-// angular.$http.delete = function(url, opt_config) {};
+/** @type {(boolean|undefined)} */
+angular.$http.Config.prototype.withCredentials;
+
+/** @type {(string|undefined)} */
+angular.$http.Config.prototype.xsrfCookieName;
+
+/** @type {(string|undefined)} */
+angular.$http.Config.prototype.xsrfHeaderName;
+
+
+
+/**
+ * Externs are parsed as ES5, so using 'delete'
+ * should be fine, even though it is a reserved word.
+ *
+ * @param {angular.$http.Config=} opt_config
+ * @return {!angular.$http.HttpPromise}
+ */
+angular.$http.prototype.delete = function(url, opt_config) {};
 
 /**
  * @param {string} url
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.get = function(url, opt_config) {};
+angular.$http.prototype.get = function(url, opt_config) {};
 
 /**
  * @param {string} url
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.head = function(url, opt_config) {};
+angular.$http.prototype.head = function(url, opt_config) {};
 
 /**
  * @param {string} url
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.jsonp = function(url, opt_config) {};
-
-/**
- * @param {string} url
- * @param {*} data
- * @param {angular.$http.Config=} opt_config
- * @return {!angular.$http.HttpPromise}
- */
-angular.$http.patch = function(url, data, opt_config) {};
-
-/**
- * @param {string} url
- * @param {*} data
- * @param {angular.$http.Config=} opt_config
- * @return {!angular.$http.HttpPromise}
- */
-angular.$http.post = function(url, data, opt_config) {};
+angular.$http.prototype.jsonp = function(url, opt_config) {};
 
 /**
  * @param {string} url
@@ -1542,33 +1606,58 @@ angular.$http.post = function(url, data, opt_config) {};
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
-angular.$http.put = function(url, data, opt_config) {};
+angular.$http.prototype.patch = function(url, data, opt_config) {};
+
+/**
+ * @param {string} url
+ * @param {*} data
+ * @param {angular.$http.Config=} opt_config
+ * @return {!angular.$http.HttpPromise}
+ */
+angular.$http.prototype.post = function(url, data, opt_config) {};
+
+/**
+ * @param {string} url
+ * @param {*} data
+ * @param {angular.$http.Config=} opt_config
+ * @return {!angular.$http.HttpPromise}
+ */
+angular.$http.prototype.put = function(url, data, opt_config) {};
 
 /**
  * @type {angular.$http.Config}
  */
-angular.$http.defaults;
+angular.$http.prototype.defaults;
 
 /**
- * @type {Array.<angular.$http.Config>}
+ * @type {!Array<!angular.$http.Config>}
  * @const
  */
-angular.$http.pendingRequests;
+angular.$http.prototype.pendingRequests;
+
+/** @record */
+angular.$http.Interceptor = function() {};
+
+/** @type {undefined|(function(!angular.$http.Config))} */
+angular.$http.Interceptor.prototype.request;
+
+/** @type {(undefined|(function(Object): !angular.$q.Promise|Object))} */
+angular.$http.Interceptor.prototype.requestError;
 
 /**
- * @typedef {{
- *   request: (undefined|(function(!angular.$http.Config):
- *       !angular.$http.Config|!angular.$q.Promise.<!angular.$http.Config>)),
- *   requestError: (undefined|(function(Object): !angular.$q.Promise|Object)),
- *   response: (undefined|(function(!angular.$http.Response):
- *       !angular.$http.Response|!angular.$q.Promise.<!angular.$http.Response>)),
- *   responseError: (undefined|(function(Object): !angular.$q.Promise|Object))
- *   }}
+ * @type {(undefined|
+ *       (function(!angular.$http.Response):
+ *           !angular.$http.Response|
+ *           !angular.$q.Promise.<!angular.$http.Response>))}
  */
-angular.$http.Interceptor;
+angular.$http.Interceptor.prototype.response;
 
 /**
- * @constructor
+ * @type {(undefined|(function(Object): !angular.$q.Promise|Object))} */
+angular.$http.Interceptor.prototype.responseError;
+
+/**
+ * @interface
  */
 angular.$HttpProvider = function() {};
 
@@ -1594,6 +1683,10 @@ angular.$HttpProvider.prototype.useApplyAsync = function(opt_value) {};
  */
 angular.$HttpProvider.prototype.useLegacyPromiseExtensions = function(
     opt_value) {};
+
+
+/** @typedef {function((string|?Object)): string} */
+angular.$httpParamSerializer;
 
 /******************************************************************************
  * $injector Service
@@ -1642,7 +1735,7 @@ angular.$injector.prototype.invoke = function(fn, opt_self, opt_locals) {};
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$interpolateProvider = function() {};
 
@@ -1693,7 +1786,7 @@ angular.$interval_.cancel = function(promise) {};
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$location = function() {};
 
@@ -1752,17 +1845,17 @@ angular.$location.prototype.url = function(opt_url) {};
  *****************************************************************************/
 
 /**
+ * @interface
+ */
+angular.$locationProvider = function() {};
+
+/**
  * @typedef {{
  *   enabled: (boolean|undefined),
  *   requireBase: (boolean|undefined)
  * }}
  */
 angular.$locationProvider.html5ModeConfig;
-
-/**
- * @constructor
- */
-angular.$locationProvider = function() {};
 
 /**
  * @param {string=} opt_prefix
@@ -1780,7 +1873,7 @@ angular.$locationProvider.prototype.html5Mode = function(opt_mode) {};
  * $logProvider Service
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 angular.$logProvider = function() {};
 
 /**
@@ -1794,7 +1887,7 @@ angular.$logProvider.prototype.debugEnabled = function(opt_debugEnabled) {};
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$log = function() {};
 
@@ -1965,7 +2058,7 @@ angular.NgModelController.prototype.$pending;
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.FormController = function() {};
 
@@ -2082,62 +2175,6 @@ angular.$parse_;
  */
 angular.$parse_.assign = function(scope, newValue) {};
 
-/******************************************************************************
- * $provide Service
- *****************************************************************************/
-
-/**
- * @constructor
- */
-angular.$provide = function() {};
-
-/** @typedef {{$get: (!Array.<string|!Function>|!Function)}} */
-angular.$provide.Provider;
-
-/** @typedef {(!Array.<string|!Function>|!Function)} */
-angular.$provide.Provider.$get;
-
-/**
- * @param {string} name
- * @param {*} object
- * @return {Object}
- */
-angular.$provide.prototype.constant = function(name, object) {};
-
-/**
- * @param {string} name
- * @param {!angular.Injectable} decorator
- */
-angular.$provide.prototype.decorator = function(name, decorator) {};
-
-/**
- * @param {string} name
- * @param {angular.Injectable} providerFunction
- * @return {Object}
- */
-angular.$provide.prototype.factory = function(name, providerFunction) {};
-
-/**
- * @param {string} name
- * @param {angular.Injectable|angular.$provide.Provider}
- *     providerType
- * @return {Object}
- */
-angular.$provide.prototype.provider = function(name, providerType) {};
-
-/**
- * @param {string} name
- * @param {angular.Injectable} constructor
- * @return {Object}
- */
-angular.$provide.prototype.service = function(name, constructor) {};
-
-/**
- * @param {string} name
- * @param {*} object
- * @return {Object}
- */
-angular.$provide.prototype.value = function(name, object) {};
 
 /******************************************************************************
  * $rootScopeProvider
@@ -2155,7 +2192,7 @@ angular.$rootScopeProvider.prototype.digestTtl = function(limit) {};
  * $route Service
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 angular.$route = function() {};
 
 /** @type {function()} */
@@ -2210,7 +2247,7 @@ angular.$routeParams;
  * $routeProvider Service
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 angular.$routeProvider = function() {};
 
 /**
@@ -2277,164 +2314,139 @@ angular.$sanitize;
 /**
  * Ref: http://docs.angularjs.org/api/ng.$sce
  *
- * @typedef {{
- *   HTML: string,
- *   CSS: string,
- *   URL: string,
- *   JS: string,
- *   RESOURCE_URL: string,
- *   isEnabled: function(): boolean,
- *   parseAs: function(string, string): !angular.$parse.Expression,
- *   getTrusted: function(string, *): string,
- *   trustAs: function(string, string): *,
- *   parseAsHtml: function(string): !angular.$parse.Expression,
- *   parseAsCss: function(string): !angular.$parse.Expression,
- *   parseAsUrl: function(string): !angular.$parse.Expression,
- *   parseAsJs: function(string): !angular.$parse.Expression,
- *   parseAsResourceUrl: function(string): !angular.$parse.Expression,
- *   getTrustedHtml: function(*): string,
- *   getTrustedCss: function(*): string,
- *   getTrustedUrl: function(*): string,
- *   getTrustedJs: function(*): string,
- *   getTrustedResourceUrl: function(*): string,
- *   trustAsHtml: function(string): *,
- *   trustAsCss: function(string): *,
- *   trustAsUrl: function(string): *,
- *   trustAsJs: function(string): *,
- *   trustAsResourceUrl: function(string): *
- *   }}
- *****************************************************************************/
-angular.$sce;
+ * @interface
+ */
+angular.$sce = function() {};
 
 
 /** @const {string} */
-angular.$sce.HTML;
+angular.$sce.prototype.HTML;
 
 /** @const {string} */
-angular.$sce.CSS;
+angular.$sce.prototype.CSS;
 
 /** @const {string} */
-angular.$sce.URL;
+angular.$sce.prototype.URL;
 
 /** @const {string} */
-angular.$sce.JS;
+angular.$sce.prototype.JS;
 
 /** @const {string} */
-angular.$sce.RESOURCE_URL;
+angular.$sce.prototype.RESOURCE_URL;
 
 /** @return {boolean} */
-angular.$sce.isEnabled = function() {};
+angular.$sce.prototype.isEnabled = function() {};
 
 /**
  * @param {string} type
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAs = function(type, expression) {};
+angular.$sce.prototype.parseAs = function(type, expression) {};
 
 /**
  * @param {string} type
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrusted = function(type, maybeTrusted) {};
+angular.$sce.prototype.getTrusted = function(type, maybeTrusted) {};
 
 /**
  * @param {string} type
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAs = function(type, trustedValue) {};
+angular.$sce.prototype.trustAs = function(type, trustedValue) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsHtml = function(expression) {};
+angular.$sce.prototype.parseAsHtml = function(expression) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsCss = function(expression) {};
+angular.$sce.prototype.parseAsCss = function(expression) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsUrl = function(expression) {};
+angular.$sce.prototype.parseAsUrl = function(expression) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsJs = function(expression) {};
+angular.$sce.prototype.parseAsJs = function(expression) {};
 
 /**
  * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
-angular.$sce.parseAsResourceUrl = function(expression) {};
+angular.$sce.prototype.parseAsResourceUrl = function(expression) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedHtml = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedHtml = function(maybeTrusted) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedCss = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedCss = function(maybeTrusted) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedUrl = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedUrl = function(maybeTrusted) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedJs = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedJs = function(maybeTrusted) {};
 
 /**
  * @param {*} maybeTrusted
  * @return {string}
  */
-angular.$sce.getTrustedResourceUrl = function(maybeTrusted) {};
+angular.$sce.prototype.getTrustedResourceUrl = function(maybeTrusted) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsHtml = function(trustedValue) {};
+angular.$sce.prototype.trustAsHtml = function(trustedValue) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsCss = function(trustedValue) {};
+angular.$sce.prototype.trustAsCss = function(trustedValue) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsUrl = function(trustedValue) {};
+angular.$sce.prototype.trustAsUrl = function(trustedValue) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsJs = function(trustedValue) {};
+angular.$sce.prototype.trustAsJs = function(trustedValue) {};
 
 /**
  * @param {string} trustedValue
  * @return {*}
  */
-angular.$sce.trustAsResourceUrl = function(trustedValue) {};
+angular.$sce.prototype.trustAsResourceUrl = function(trustedValue) {};
 
 /******************************************************************************
  * $sceDelegate Service
@@ -2443,7 +2455,7 @@ angular.$sce.trustAsResourceUrl = function(trustedValue) {};
 /**
  * Ref: http://docs.angularjs.org/api/ng/service/$sceDelegate
  *
- * @constructor
+ * @interface
  */
 angular.$sceDelegate = function() {};
 
@@ -2479,7 +2491,7 @@ angular.$sceDelegate.prototype.getTrusted = function(type, maybeTrusted) {};
 /**
  * Ref: http://docs.angularjs.org/api/ng/provider/$sceDelegateProvider
  *
- * @constructor
+ * @interface
  */
 angular.$sceDelegateProvider = function() {};
 
