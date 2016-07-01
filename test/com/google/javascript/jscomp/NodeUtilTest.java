@@ -2272,6 +2272,9 @@ public final class NodeUtilTest extends TestCase {
 
     classNode = getClassNode("/** @export */ var Foo = class {}");
     assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
+
+    classNode = getClassNode("/** @export */ var Foo = class Bar {}");
+    assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
   }
 
   public void testGetBestJsDocInfoExport() {

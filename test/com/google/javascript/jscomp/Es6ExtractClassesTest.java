@@ -145,6 +145,16 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "var foo = bar(testcode$classdecl$var0);"));
   }
 
+  public void testJSDoc() {
+    test(
+        "/** @unrestricted */ var foo = class bar {};",
+        LINE_JOINER.join(
+            "/** @unrestricted */",
+            "const testcode$classdecl$var0 = class {};",
+            "/** @unrestricted */",
+            "var foo = testcode$classdecl$var0;"));
+  }
+
   public void testFilenameContainsAt() {
     test(
         ImmutableList.of(

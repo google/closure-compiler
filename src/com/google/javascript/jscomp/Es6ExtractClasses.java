@@ -21,6 +21,8 @@ import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -168,10 +170,13 @@ public final class Es6ExtractClasses
         ES6ModuleLoader.createUri(classNode.getStaticSourceFile().getName()))
         + CLASS_DECL_VAR
         + (classDeclVarCounter++);
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(classNode);
+
     Node statement = NodeUtil.getEnclosingStatement(parent);
     parent.replaceChild(classNode, IR.name(name));
     Node classDeclaration = IR.constNode(IR.name(name), classNode)
         .useSourceInfoIfMissingFromForTree(classNode);
+    classDeclaration.setJSDocInfo(JSDocInfoBuilder.maybeCopyFrom(info).build());
     statement.getParent().addChildBefore(classDeclaration, statement);
     compiler.reportCodeChange();
   }
