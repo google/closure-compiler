@@ -3231,6 +3231,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInlineProperties() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    options.setCheckTypes(true);
     level.setOptionsForCompilationLevel(options);
     level.setTypeBasedOptimizationOptions(options);
 
@@ -3248,6 +3249,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testGoogDefineClass1() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    options.setCheckTypes(true);
     level.setOptionsForCompilationLevel(options);
     level.setTypeBasedOptimizationOptions(options);
 
@@ -3267,6 +3269,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testGoogDefineClass2() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    options.setCheckTypes(true);
     level.setOptionsForCompilationLevel(options);
     level.setTypeBasedOptimizationOptions(options);
 

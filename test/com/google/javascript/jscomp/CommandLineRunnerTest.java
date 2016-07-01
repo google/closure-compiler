@@ -307,6 +307,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testTypedAdvanced() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--jscomp_warning=checkTypes");
     test(
         "/** @constructor */\n" +
         "function Foo() {}\n" +

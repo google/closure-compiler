@@ -314,6 +314,14 @@ public class Compiler extends AbstractCompiler {
 
     reconcileOptionsWithGuards();
 
+    // Turn off type-based optimizations when type checking is off
+    if (!options.checkTypes) {
+      options.disambiguateProperties = false;
+      options.ambiguateProperties = false;
+      options.inlineProperties = false;
+      options.useTypesForOptimization = false;
+    }
+
     if (options.legacyCodeCompile) {
       options.disambiguateProperties = false;
       options.ambiguateProperties = false;

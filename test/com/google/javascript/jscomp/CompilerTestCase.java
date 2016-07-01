@@ -757,9 +757,7 @@ public abstract class CompilerTestCase extends TestCase {
 
     CompilerOptions options = getOptions();
 
-    // Note that in this context, turning on the checkTypes option won't
-    // actually cause the type check to run.
-    options.setCheckTypes(parseTypeInfo);
+    options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
     compiler.init(externs, js, options);
 
     if (this.typeCheckEnabled) {
@@ -1196,7 +1194,7 @@ public abstract class CompilerTestCase extends TestCase {
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
 
-    compiler.getOptions().setNewTypeInference(newTypeInferenceEnabled);
+    compiler.getOptions().setNewTypeInference(this.newTypeInferenceEnabled);
 
     Node root = compiler.parseInputs();
 
