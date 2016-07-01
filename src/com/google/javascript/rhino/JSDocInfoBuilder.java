@@ -866,8 +866,7 @@ public final class JSDocInfoBuilder {
    */
   public boolean recordConstructor() {
     if (!hasAnySingletonTypeTags()
-        && !currentInfo.isConstructorOrInterface()
-        && !currentInfo.isAbstract()) {
+        && !currentInfo.isConstructorOrInterface()) {
       currentInfo.setConstructor(true);
       populated = true;
       return true;
@@ -939,7 +938,6 @@ public final class JSDocInfoBuilder {
   public boolean recordAbstract() {
     if (!hasAnySingletonTypeTags()
         && !currentInfo.isInterface()
-        && !currentInfo.isConstructor()
         && !currentInfo.isAbstract()) {
       currentInfo.setAbstract();
       populated = true;

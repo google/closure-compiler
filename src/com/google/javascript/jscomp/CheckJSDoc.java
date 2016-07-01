@@ -169,6 +169,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (info == null || !info.isAbstract()) {
       return;
     }
+    if (n.isClass()) {
+      return;
+    }
+
     Node functionNode = getFunctionDecl(n);
 
     if (functionNode == null) {
@@ -190,7 +194,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return;
     }
 
-    if (!n.isMemberFunctionDef() && !NodeUtil.isPrototypeMethod(functionNode)) {
+    if (!info.isConstructor()
+        && !n.isMemberFunctionDef()
+        && !NodeUtil.isPrototypeMethod(functionNode)) {
       // @abstract annotation on a non-method (or static method) in ES5
       report(n, MISPLACED_ANNOTATION, "@abstract", "only functions or methods can be abstract");
       return;

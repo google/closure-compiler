@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -7882,6 +7883,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("var goog = {};" +
               "/** @constructor */ goog.F = function() {};" +
               "/** @constructor */ goog.G = goog.F;");
+  }
+
+  public void testNew19() {
+    testTypes(
+        "/** @constructor @abstract */ var Foo = function() {}; var foo = new Foo();",
+        INSTANTIATE_ABSTRACT_CLASS);
   }
 
   public void testName1() {

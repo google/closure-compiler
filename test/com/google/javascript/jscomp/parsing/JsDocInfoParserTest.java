@@ -1349,12 +1349,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. type annotation incompatible with other annotations");
   }
 
-  public void testParseAbstract_constructorBeforeAbstract() throws Exception {
-    // TODO(michaelthomas): Remove when @abstract is supported on constructors.
-    parse("@constructor \n * @abstract */",
-        "Bad type annotation. type annotation incompatible with other annotations");
-  }
-
   public void testParseAbstract_interfaceBeforeAbstract() throws Exception {
     parse("* @interface \n * @abstract */",
         "Bad type annotation. type annotation incompatible with other annotations");
@@ -1372,12 +1366,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseAbstract_abstractBeforeInterface() throws Exception {
     parse("* @abstract \n * @interface */",
-        "Bad type annotation. type annotation incompatible with other annotations");
-  }
-
-  public void testParseAbstract_abstractBeforeConstructor() throws Exception {
-    // TODO(michaelthomas): Remove when @abstract is supported on constructors.
-    parse("* @abstract \n * @constructor */",
         "Bad type annotation. type annotation incompatible with other annotations");
   }
 

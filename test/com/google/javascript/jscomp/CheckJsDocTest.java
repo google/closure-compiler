@@ -117,17 +117,15 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
   }
 
   public void testAbstract_class() {
-    testWarningEs6(
-        "/** @abstract */class Foo { constructor() {}}",
-        MISPLACED_ANNOTATION);
-    // Adding @abstract to an ES5 class/constructor is a parse error.
+    testSameEs6("/** @abstract */class Foo { constructor() {}}");
+    testSame("/** @abstract @constructor */ var Foo = function() {};");
   }
 
   public void testAbstract_constructor() {
     testWarningEs6(
         "class Foo { /** @abstract */ constructor() {}}",
         MISPLACED_ANNOTATION);
-    // Adding @abstract to an ES5 class/constructor is a parse error.
+    // ES5 constructors are treated as class definitions and tested above.
   }
 
   public void testAbstract_field() {

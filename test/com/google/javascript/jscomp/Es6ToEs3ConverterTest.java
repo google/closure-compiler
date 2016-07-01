@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CONFLICTING_GETTER_SETTER_TYPE;
+import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
@@ -500,6 +501,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct @const */",
             "var testcode$classdecl$var0 = function(){};",
             "(condition ? obj1 : obj2).prop = testcode$classdecl$var0;"));
+  }
+
+  public void testAbstractClass() {
+    enableTypeCheck();
+    test(
+        "/** @abstract */ class Foo {} var x = new Foo();",
+        "/** @abstract @constructor @struct */ var Foo = function() {}; var x = new Foo();",
+        null,
+        INSTANTIATE_ABSTRACT_CLASS);
   }
 
   /**
