@@ -1494,7 +1494,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testES6TranspiledByDefault() {
-    test("var x = class {};", "var x = function() {};");
+    test("var x = class X {};", "var x = function() {};");
   }
 
   public void testES5ChecksByDefault() {

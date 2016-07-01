@@ -23,13 +23,10 @@ import static com.google.javascript.jscomp.Es6ToEs3Converter.CONFLICTING_GETTER_
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
- * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
- * Es6ToEs3Converter}, but also some other ES6 transpilation passes. See #getProcessor.
+ * Test case for {@link Es6ToEs3Converter}.
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-// TODO(tbreisacher): Rename this to Es6TranspilationIntegrationTest since it's really testing
-// a lot of different passes. Also create a unit test for Es6ToEs3Converter.
 public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
@@ -131,8 +128,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             new Es6RenameVariablesInParamLists(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
-    optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
-    optimizer.addOneTimePass(makePassFactory("convertEs6", new Es6ToEs3Converter(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("convertEs6", new Es6ToEs3Converter(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("Es6RewriteBlockScopedDeclaration",
             new Es6RewriteBlockScopedDeclaration(compiler)));
@@ -247,14 +244,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testAnonymousSuper() {
-    test(
-        "f(class extends D { f() { super.g() } })",
-        LINE_JOINER.join(
-            "/** @constructor @struct @const @extends {D} */",
-            "var testcode$classdecl$var0 = function(var_args) { D.apply(this,arguments); };",
-            "$jscomp.inherits(testcode$classdecl$var0, D);",
-            "testcode$classdecl$var0.prototype.f = function() {super.g(); };",
-            "f(testcode$classdecl$var0)"));
+    testError("f(class extends D { f() { super.g() } })", CANNOT_CONVERT);
   }
 
   public void testNewTarget() {
@@ -456,21 +446,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "",
             "C.prototype.foo = function() {}"));
 
-    test(
-        "var C = class C { }",
-        LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function() {};",
-            "var C = testcode$classdecl$var0;"));
+    test("var C = class C { }",
+        "/** @constructor @struct */ var C = function() {}");
 
     test(
         "var C = class C { foo() {} }",
         LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function() {}",
-            "testcode$classdecl$var0.prototype.foo = function() {};",
+            "/** @constructor @struct */ var C = function() {}",
             "",
-            "var C = testcode$classdecl$var0;"));
+            "C.prototype.foo = function() {};"));
   }
 
   /**
@@ -487,27 +471,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "goog.example.C.prototype.foo = function() {};"));
   }
 
-  public void testClassExpression() {
-    test(
-        "var C = new (class {})();",
-        LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0=function(){};",
-            "var C=new testcode$classdecl$var0"));
-    test(
-        "(condition ? obj1 : obj2).prop = class C { };",
-        LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function(){};",
-            "(condition ? obj1 : obj2).prop = testcode$classdecl$var0;"));
-  }
-
   /**
-   * We don't bother transpiling this case because the transpiled code will be very difficult to
-   * typecheck.
+   * Class expressions that are not in a 'var' or simple 'assign' node.
+   * We don't bother transpiling these cases because the transpiled code
+   * will be very difficult to typecheck.
    */
-  public void testClassExpression_cannotConvert() {
+  public void testClassExpression() {
+    testError("var C = new (class {})();", CANNOT_CONVERT);
     testError("var C = new (foo || (foo = class { }))();", CANNOT_CONVERT);
+    testError("(condition ? obj1 : obj2).prop = class C { };", CANNOT_CONVERT);
   }
 
   public void testExtends() {
@@ -707,19 +679,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testMultiNameClass() {
-    test(
-        "var F = class G {}",
-        LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function(){};",
-            "var F = testcode$classdecl$var0;"));
+    test("var F = class G {}",
+        "/** @constructor @struct */ var F = function() {};");
 
-    test(
-        "F = class G {}",
-        LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function(){};",
-            "F = testcode$classdecl$var0;"));
+    test("F = class G {}",
+        "/** @constructor @struct */ F = function() {};");
   }
 
   public void testClassNested() {
@@ -935,24 +899,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   // Make sure we don't crash on this code.
   // https://github.com/google/closure-compiler/issues/752
   public void testGithub752() {
-    test(
-        "function f() { var a = b = class {};}",
-        LINE_JOINER.join(
-            "function f() {",
-            "  /** @constructor @struct @const */",
-            "  var testcode$classdecl$var0 = function() {};",
-            "  var a = b = testcode$classdecl$var0;",
-            "}"));
+    testError("function f() { var a = b = class {};}", CANNOT_CONVERT);
 
-    test(
-        "var ns = {}; function f() { var self = ns.Child = class {};}",
-        LINE_JOINER.join(
-            "var ns = {};",
-            "function f() {",
-            "  /** @constructor @struct @const */",
-            "  var testcode$classdecl$var0 = function() {};",
-            "  var self = ns.Child = testcode$classdecl$var0",
-            "}"));
+    testError("var ns = {}; function f() { var self = ns.Child = class {};}",
+              CANNOT_CONVERT);
   }
 
   public void testInvalidClassUse() {
