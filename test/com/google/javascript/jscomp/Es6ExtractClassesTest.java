@@ -39,86 +39,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "f(class{});",
         LINE_JOINER.join(
-            "const testcode$classdecl$var0 = class {};",
-            "f(testcode$classdecl$var0);"));
-  }
-
-  public void testSelfReference1() {
-    test(
-        "var Outer = class Inner { constructor() { alert(Inner); } };",
-        LINE_JOINER.join(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() { alert(testcode$classdecl$var0); }",
-            "};",
-            "var Outer=testcode$classdecl$var0"));
-
-    test(
-        "let Outer = class Inner { constructor() { alert(Inner); } };",
-        LINE_JOINER.join(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() { alert(testcode$classdecl$var0); }",
-            "};",
-            "let Outer=testcode$classdecl$var0"));
-
-    test(
-        "const Outer = class Inner { constructor() { alert(Inner); } };",
-        LINE_JOINER.join(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() { alert(testcode$classdecl$var0); }",
-            "};",
-            "const Outer=testcode$classdecl$var0"));
-  }
-
-  public void testSelfReference2() {
-    test(
-        "alert(class C { constructor() { alert(C); } });",
-        LINE_JOINER.join(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() { alert(testcode$classdecl$var0); }",
-            "};",
-            "alert(testcode$classdecl$var0)"));
-  }
-
-  public void testSelfReference3() {
-    test(
-        LINE_JOINER.join(
-            "alert(class C {",
-            "  m1() { class C {}; alert(C); }",
-            "  m2() { alert(C); }",
-            "});"),
-        LINE_JOINER.join(
-            "const testcode$classdecl$var0 = class {",
-            "  m1() { class C {}; alert(C); }",
-            "  m2() { alert(testcode$classdecl$var0); }",
-            "};",
-            "alert(testcode$classdecl$var0)"));
-  }
-
-  public void testSelfReference_googModule() {
-    test(
-        LINE_JOINER.join(
-            "goog.module('example');",
-            "exports = class Inner { constructor() { alert(Inner); } };"),
-        LINE_JOINER.join(
-            "goog.module('example');",
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    alert(testcode$classdecl$var0);",
-            "  }",
-            "};",
-            "exports = testcode$classdecl$var0;"));
-  }
-
-  public void testSelfReference_qualifiedName() {
-    test(
-        "outer.qual.Name = class Inner { constructor() { alert(Inner); } };",
-        LINE_JOINER.join(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    alert(testcode$classdecl$var0);",
-            "  }",
-            "};",
-            "outer.qual.Name = testcode$classdecl$var0;"));
+            "const testcode$classdecl$var0 = class {};", "f(testcode$classdecl$var0);"));
   }
 
   public void testConstAssignment() {
@@ -158,34 +79,22 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   }
 
   public void testConditionalBlocksExtractionFromCall() {
-    testError("maybeTrue() && f(class{});", CANNOT_CONVERT);
+    testSame("maybeTrue() && f(class{});");
   }
 
   public void testExtractionFromArrayLiteral() {
     test(
         "var c = [class C {}];",
         LINE_JOINER.join(
-            "const testcode$classdecl$var0 = class {};",
-            "var c = [testcode$classdecl$var0];"));
+            "const testcode$classdecl$var0 = class C {};", "var c = [testcode$classdecl$var0];"));
+  }
+
+  public void testConditionalBlocksExtractionFromArrayLiteral() {
+    testSame("var c = maybeTrue() && [class {}]");
   }
 
   public void testTernaryOperatorBlocksExtraction() {
-    testError("var c = maybeTrue() ? class A {} : anotherExpr", CANNOT_CONVERT);
-    testError("var c = maybeTrue() ? anotherExpr : class B {}", CANNOT_CONVERT);
-  }
-
-  public void testCannotExtract() {
-    testError(
-        "var c = maybeTrue() && class A extends sideEffect() {}",
-        CANNOT_CONVERT);
-
-    testError(
-        LINE_JOINER.join(
-            "var x;",
-            "function f(x, y) {}",
-
-            "f(x = 2, class Foo { [x=3]() {} });"),
-        CANNOT_CONVERT);
+    testSame("var c = maybeTrue() ? class A {} : class B {}");
   }
 
   public void testClassesHandledByEs6ToEs3Converter() {

@@ -46,7 +46,6 @@ import javax.annotation.Nullable;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-// TODO(tbreisacher): This class does too many things. Break it into smaller passes.
 public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
@@ -546,9 +545,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(classNode, parent);
 
     if (metadata == null || metadata.fullClassName == null) {
-      throw new IllegalStateException(
-          "Can only convert classes that are declarations or the right hand"
-          + " side of a simple assignment: " + classNode);
+      cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
+          + " side of a simple assignment.");
+      return;
     }
     if (metadata.hasSuperClass() && !metadata.superClassNameNode.isQualifiedName()) {
       compiler.report(JSError.make(metadata.superClassNameNode, DYNAMIC_EXTENDS_TYPE));
