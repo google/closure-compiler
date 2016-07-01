@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PerformanceTracker.Stats;
@@ -108,10 +110,10 @@ public final class PerformanceTrackerTest extends TestCase {
     tracker.outputTracerReport();
     outstream.close();
     Pattern p = Pattern.compile(
-        ".*Summary:\npass,runtime,runs,changingRuns,reduction,gzReduction"
+        ".*Summary:\npass,runtime,allocMem,runs,changingRuns,reduction,gzReduction"
         + ".*TOTAL:"
         + "\nRuntime\\(ms\\): [0-9]+"
-        + "\nMem usage after each pass\\(MB\\): [0-9]+\\.[0-9]+ \\+/- [0-9]+\\.[0-9]+"
+        + "\nMax mem usage \\(measured after each pass\\)\\(MB\\): -?[0-9]+"
         + "\n#Runs: [0-9]+"
         + "\n#Changing runs: [0-9]+"
         + "\n#Loopable runs: [0-9]+"
@@ -121,10 +123,9 @@ public final class PerformanceTrackerTest extends TestCase {
         + "\nEstimated Size\\(bytes\\): -?[0-9]+"
         + "\nEstimated GzSize\\(bytes\\): -?[0-9]+"
         + "\n\nLog:\n"
-        + "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize.*",
+        + "pass,runtime,allocMem,codeChanged,reduction,gzReduction,size,gzSize.*",
         Pattern.DOTALL);
     String outputString = output.toString();
-    assertTrue("Unexpected output from PerformanceTracker:\n" + outputString,
-        p.matcher(outputString).matches());
+    assertThat(outputString).matches(p);
   }
 }

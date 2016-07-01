@@ -69,12 +69,11 @@ public final class PerformanceTracker {
   private int initGzCodeSize = DEFAULT_WHEN_SIZE_UNTRACKED;
 
   private int runtime = 0;
+  private int maxMem = 0;
   private int runs = 0;
   private int changes = 0;
   private int loopRuns = 0;
   private int loopChanges = 0;
-  // An approximation of how many MBs are allocated after each compiler pass
-  private ArrayList<Integer> allocsInMB = new ArrayList<>();
 
   // The following fields for tracking size changes are just estimates.
   // They do not take into account preserved license blocks, newline padding,
@@ -145,7 +144,7 @@ public final class PerformanceTracker {
    * @param runtime execution time in milliseconds
    */
   void recordPassStop(String passName, long runtime) {
-    writeMemStats(passName);
+    int allocMem = getAllocatedMegabytes();
 
     Stats logStats = currentPass.pop();
     Preconditions.checkState(passName.equals(logStats.pass));
@@ -172,8 +171,10 @@ public final class PerformanceTracker {
 
     // Update fields that aren't related to code size
     logStats.runtime = runtime;
+    logStats.allocMem = allocMem;
     logStats.runs = 1;
     summaryStats.runtime += runtime;
+    summaryStats.allocMem = Math.max(allocMem, summaryStats.allocMem);
     summaryStats.runs += 1;
     if (codeChange.hasCodeChanged()) {
       logStats.changes = 1;
@@ -204,22 +205,9 @@ public final class PerformanceTracker {
     return (int) (bytes / (1024 * 1024));
   }
 
-  private void writeMemStats(String passName) {
-    try {
-      Runtime javaRuntime = Runtime.getRuntime();
-      int totalMem = bytesToMB(javaRuntime.totalMemory());
-      int freeMem = bytesToMB(javaRuntime.freeMemory());
-      int allocMem = totalMem - freeMem;
-      this.allocsInMB.add(allocMem);
-      this.output.write(
-          "After pass " + passName + ": "
-          + "\t Used mem(MB): " + allocMem
-          + "\t Free mem(MB): " + freeMem
-          + "\t Total mem(MB): " + totalMem + "\n");
-      this.output.flush();
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to write statistics to output.", e);
-    }
+  private int getAllocatedMegabytes() {
+    Runtime javaRuntime = Runtime.getRuntime();
+    return bytesToMB(javaRuntime.totalMemory() - javaRuntime.freeMemory());
   }
 
   public boolean tracksSize() {
@@ -274,31 +262,6 @@ public final class PerformanceTracker {
     return summaryCopy;
   }
 
-  private double meanMemUsed() {
-    double size = this.allocsInMB.size();
-    if (size == 0) {
-      return 0;
-    }
-    double sum = 0.0;
-    for (int i = 0; i < size; i++) {
-      sum += this.allocsInMB.get(i);
-    }
-    return sum / size;
-  }
-
-  private double usedMemStandardDeviation(double meanMemUsed) {
-    double size = this.allocsInMB.size();
-    if (size == 0) {
-      return 0;
-    }
-    double sum = 0.0;
-    for (int i = 0; i < size; i++) {
-      sum += Math.pow(this.allocsInMB.get(i) - meanMemUsed, 2);
-    }
-    double variance = sum / size;
-    return Math.sqrt(variance);
-  }
-
   private void calcTotalStats() {
     // This method only does work the first time it's called
     if (summaryCopy != null) {
@@ -308,6 +271,7 @@ public final class PerformanceTracker {
     for (Entry<String, Stats> entry : summary.entrySet()) {
       Stats stats = entry.getValue();
       runtime += stats.runtime;
+      maxMem = Math.max(maxMem, stats.allocMem);
       runs += stats.runs;
       changes += stats.changes;
       if (!stats.isOneTime) {
@@ -342,30 +306,28 @@ public final class PerformanceTracker {
             }
           });
 
-      this.output.write("Summary:\n" +
-          "pass,runtime,runs,changingRuns,reduction,gzReduction\n");
+      this.output.write("Summary:\n"
+          + "pass,runtime,allocMem,runs,changingRuns,reduction,gzReduction\n");
       for (Entry<String, Stats> entry : statEntries) {
         String key = entry.getKey();
         Stats stats = entry.getValue();
-        this.output.write(String.format("%s,%d,%d,%d,%d,%d\n", key, stats.runtime,
-            stats.runs, stats.changes, stats.diff, stats.gzDiff));
+        this.output.write(String.format("%s,%d,%d,%d,%d,%d,%d\n", key, stats.runtime,
+              stats.allocMem, stats.runs, stats.changes, stats.diff, stats.gzDiff));
       }
-      double meanMem = meanMemUsed();
-      double stdDev = usedMemStandardDeviation(meanMem);
       this.output.write("\nTOTAL:"
           + "\nRuntime(ms): " + runtime
-          + String.format("\nMem usage after each pass(MB): %.2f +/- %.2f", meanMem, stdDev)
+          + "\nMax mem usage (measured after each pass)(MB): " + maxMem
           + "\n#Runs: " + runs
           + "\n#Changing runs: " + changes + "\n#Loopable runs: " + loopRuns
           + "\n#Changing loopable runs: " + loopChanges + "\nEstimated Reduction(bytes): " + diff
           + "\nEstimated GzReduction(bytes): " + gzDiff + "\nEstimated Size(bytes): " + codeSize
           + "\nEstimated GzSize(bytes): " + gzCodeSize + "\n\n");
 
-      this.output.write("Log:\n" +
-          "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize\n");
+      this.output.write("Log:\n"
+          + "pass,runtime,allocMem,codeChanged,reduction,gzReduction,size,gzSize\n");
       for (Stats stats : log) {
-        this.output.write(String.format("%s,%d,%d,%d,%d,%d,%d,%d\n",
-            stats.pass, stats.runtime, stats.runs, stats.changes,
+        this.output.write(String.format("%s,%d,%d,%b,%d,%d,%d,%d\n",
+            stats.pass, stats.runtime, stats.allocMem, stats.changes == 1,
             stats.diff, stats.gzDiff, stats.size, stats.gzSize));
       }
       this.output.write("\n");
@@ -389,6 +351,7 @@ public final class PerformanceTracker {
     public final String pass;
     public final boolean isOneTime;
     public long runtime = 0;
+    public int allocMem = 0;
     public int runs = 0;
     public int changes = 0;
     public int diff = 0;
