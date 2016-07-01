@@ -2624,7 +2624,7 @@ public class Node implements Serializable {
    * This should only be called for STRING nodes children of OBJECTLIT.
    */
   public void setQuotedString() {
-    throw new IllegalStateException("not a StringNode");
+    throw new IllegalStateException(this + " is not a StringNode");
   }
 
   static class NodeMismatch {
