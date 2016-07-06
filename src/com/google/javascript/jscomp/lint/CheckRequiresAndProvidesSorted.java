@@ -16,11 +16,15 @@
 package com.google.javascript.jscomp.lint;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CodePrinter;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeUtil;
@@ -35,12 +39,12 @@ import java.util.List;
 public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallback
     implements HotSwapCompilerPass {
   public static final DiagnosticType REQUIRES_NOT_SORTED =
-      DiagnosticType.warning(
-          "JSC_REQUIRES_NOT_SORTED", "goog.require() statements are not sorted.");
+      DiagnosticType.warning("JSC_REQUIRES_NOT_SORTED",
+      "goog.require() statements are not sorted. The correct order is:\n\n{0}\n\n");
 
   public static final DiagnosticType PROVIDES_NOT_SORTED =
-      DiagnosticType.warning(
-          "JSC_PROVIDES_NOT_SORTED", "goog.provide() statements are not sorted.");
+      DiagnosticType.warning("JSC_PROVIDES_NOT_SORTED",
+          "goog.provide() statements are not sorted. The correct order is:\n\n{0}\n\n");
 
   public static final DiagnosticType PROVIDES_AFTER_REQUIRES =
       DiagnosticType.warning(
@@ -84,16 +88,12 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case SCRIPT:
-        // For now, don't report any sorting-related warnings if there are
+        // For now, don't report for requires being out of order if there are
         // "var x = goog.require('goog.x');" style requires.
         if (!containsShorthandRequire) {
-          if (!alphabetical.isOrdered(requires)) {
-            t.report(requires.get(0), REQUIRES_NOT_SORTED);
-          }
-          if (!alphabetical.isOrdered(provides)) {
-            t.report(provides.get(0), PROVIDES_NOT_SORTED);
-          }
+          reportIfOutOfOrder(requires, REQUIRES_NOT_SORTED);
         }
+        reportIfOutOfOrder(provides, PROVIDES_NOT_SORTED);
         requires.clear();
         provides.clear();
         containsShorthandRequire = false;
@@ -126,6 +126,21 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           containsShorthandRequire = true;
         }
         break;
+    }
+  }
+
+  private void reportIfOutOfOrder(List<Node> requiresOrProvides, DiagnosticType warning) {
+    if (!alphabetical.isOrdered(requiresOrProvides)) {
+      List<String> correctOrder = new ArrayList<>();
+      for (Node require : alphabetical.sortedCopy(requiresOrProvides)) {
+        CodePrinter.Builder builder = new CodePrinter.Builder(require);
+        CompilerOptions options = new CompilerOptions();
+        options.setPreferSingleQuotes(true);
+        builder.setCompilerOptions(options);
+        correctOrder.add(builder.build() + ";");
+      }
+      compiler.report(
+          JSError.make(requiresOrProvides.get(0), warning, Joiner.on('\n').join(correctOrder)));
     }
   }
 }

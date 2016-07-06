@@ -29,6 +29,11 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
     return new CheckRequiresAndProvidesSorted(compiler);
   }
 
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
   public void testNoWarning_require() {
     testSame("goog.require('a.b');\ngoog.require('a.c')");
     testSame(
@@ -56,8 +61,19 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   public void testWarning_require() {
-    testWarning("goog.require('a.c');\ngoog.require('a.b')", REQUIRES_NOT_SORTED);
+    testWarning("goog.require('a.c');\ngoog.require('a.b')", REQUIRES_NOT_SORTED,
+        "goog.require() statements are not sorted. The correct order is:\n\n"
+        + "goog.require('a.b');\ngoog.require('a.c');\n\n");
+
     testWarning("goog.require('a.c');\ngoog.require('a')", REQUIRES_NOT_SORTED);
+  }
+
+  public void testWarning_requireWithJSDoc() {
+    // TODO(tbreisacher): Preserve the @suppress comment.
+    testWarning("goog.require('a.c');\n/** @suppress {extraRequire} */\ngoog.require('a.b')",
+        REQUIRES_NOT_SORTED,
+        "goog.require() statements are not sorted. The correct order is:\n\n"
+        + "goog.require('a.b');\ngoog.require('a.c');\n\n");
   }
 
   public void testWarning_provide() {
