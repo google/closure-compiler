@@ -90,8 +90,6 @@ public abstract class CompilerTestCase extends TestCase {
    */
   private boolean newTypeInferenceEnabled = false;
 
-  @Deprecated private CheckLevel reportMissingOverrideCheckLevel = CheckLevel.WARNING;
-
   /** Whether to test the compiler pass before the type check. */
   protected boolean runTypeCheckAfterProcessing = false;
 
@@ -385,21 +383,6 @@ public abstract class CompilerTestCase extends TestCase {
    * Perform type checking before running the test pass. This will check
    * for type errors and annotate nodes with type information.
    *
-   * @param level the level of severity to report for type errors
-   *
-   * @deprecated Use enableTypeCheck()
-   * @see TypeCheck
-   */
-  @Deprecated
-  public void enableTypeCheck(CheckLevel level) {
-    enableTypeCheck();
-    reportMissingOverrideCheckLevel = level;
-  }
-
-  /**
-   * Perform type checking before running the test pass. This will check
-   * for type errors and annotate nodes with type information.
-   *
    * @see TypeCheck
    */
   public void enableTypeCheck() {
@@ -540,11 +523,11 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /** Returns a newly created TypeCheck. */
-  private static TypeCheck createTypeCheck(Compiler compiler, CheckLevel level) {
+  private static TypeCheck createTypeCheck(Compiler compiler) {
     ReverseAbstractInterpreter rai =
         new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
 
-    return new TypeCheck(compiler, rai, compiler.getTypeRegistry(), level);
+    return new TypeCheck(compiler, rai, compiler.getTypeRegistry());
   }
 
   private static void runNewTypeInference(Compiler compiler, Node externs, Node js) {
@@ -1273,7 +1256,7 @@ public abstract class CompilerTestCase extends TestCase {
         // objects for the same type are created, and the type system
         // uses reference equality to compare many types.
         if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
-          TypeCheck check = createTypeCheck(compiler, reportMissingOverrideCheckLevel);
+          TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
         } else if (!this.runNTIAfterProcessing
             && this.newTypeInferenceEnabled
@@ -1316,7 +1299,7 @@ public abstract class CompilerTestCase extends TestCase {
         }
 
         if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
-          TypeCheck check = createTypeCheck(compiler, reportMissingOverrideCheckLevel);
+          TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
         } else if (this.runNTIAfterProcessing
             && this.newTypeInferenceEnabled
