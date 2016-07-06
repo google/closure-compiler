@@ -239,7 +239,9 @@
         <configuration>
           <excludes>
             <exclude>**/debugger/**</exclude>
-            <exclude>**/gwt/**</exclude>
+            <exclude>**/gwt/client/**</exclude>
+            <exclude>**/gwt/public/**</exclude>
+            <exclude>**/gwt/super/**</exclude>
             <exclude>**/testing/**</exclude>
             <exclude>**/webservice/**</exclude>
           </excludes>

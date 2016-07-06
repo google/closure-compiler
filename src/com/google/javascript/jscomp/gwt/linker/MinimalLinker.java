@@ -37,7 +37,7 @@ import com.google.gwt.dev.util.Util;
 public class MinimalLinker extends AbstractLinker {
 
   private static final String PREFIX = "(function(){var $wnd=this;var $doc={};";
-  private static final String SUFFIX = "})();";
+  private static final String SUFFIX = "typeof gwtOnLoad==='function'&&gwtOnLoad()})();";
 
   @Override
   public String getDescription() {
