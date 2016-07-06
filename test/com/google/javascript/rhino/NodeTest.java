@@ -557,6 +557,37 @@ public class NodeTest extends TestCase {
         clone.getFirstChild().getJSDocInfo().getType().getRoot());
   }
 
+  public void testAddChildToFrontWithSingleNode() {
+    Node root = new Node(Token.SCRIPT);
+    Node nodeToAdd = new Node(Token.SCRIPT);
+
+    root.addChildToFront(nodeToAdd);
+
+    assertEquals(root, nodeToAdd.parent);
+    assertEquals(root.getFirstChild(), nodeToAdd);
+    assertEquals(root.getLastChild(), nodeToAdd);
+    assertNull(nodeToAdd.previous);
+    assertNull(nodeToAdd.next);
+  }
+
+  public void testAddChildToFrontWithLargerTree() {
+    Node left = Node.newString("left");
+    Node m1 = Node.newString("m1");
+    Node m2 = Node.newString("m2");
+    Node right = Node.newString("right");
+    Node root = new Node(Token.SCRIPT, left, m1, m2, right);
+    Node nodeToAdd = new Node(Token.SCRIPT);
+
+    root.addChildToFront(nodeToAdd);
+
+    assertEquals(root, nodeToAdd.parent);
+    assertEquals(root.getFirstChild(), nodeToAdd);
+    assertEquals(root.getLastChild(), right);
+    assertNull(nodeToAdd.previous);
+    assertEquals(left, nodeToAdd.next);
+    assertEquals(nodeToAdd, left.previous);
+  }
+
 
   private static Node getVarRef(String name) {
     return Node.newString(Token.NAME, name);

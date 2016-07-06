@@ -488,12 +488,15 @@ public class Node implements Serializable {
     Preconditions.checkArgument(child.parent == null,
         "new child has existing parent");
     Preconditions.checkArgument(child.next == null,
-        "new child has existing sibling");
+        "new child has existing next sibling");
+    Preconditions.checkArgument(child.previous == null,
+        "new child has existing previous sibling");
 
     token = nodeType;
     parent = null;
     first = last = child;
     child.next = null;
+    child.previous = null;
     child.parent = this;
     sourcePosition = -1;
   }
@@ -502,18 +505,24 @@ public class Node implements Serializable {
     Preconditions.checkArgument(left.parent == null,
         "first new child has existing parent");
     Preconditions.checkArgument(left.next == null,
-        "first new child has existing sibling");
+        "first new child has existing next sibling");
+    Preconditions.checkArgument(left.previous == null,
+        "first new child has existing previous sibling");
     Preconditions.checkArgument(right.parent == null,
         "second new child has existing parent");
     Preconditions.checkArgument(right.next == null,
-        "second new child has existing sibling");
+        "second new child has existing next sibling");
+    Preconditions.checkArgument(right.previous == null,
+        "second new child has existing previous sibling");
     token = nodeType;
     parent = null;
     first = left;
     last = right;
     left.next = right;
+    left.previous = null;
     left.parent = this;
     right.next = null;
+    right.previous = left;
     right.parent = this;
     sourcePosition = -1;
   }
@@ -521,19 +530,25 @@ public class Node implements Serializable {
   public Node(Token nodeType, Node left, Node mid, Node right) {
     Preconditions.checkArgument(left.parent == null);
     Preconditions.checkArgument(left.next == null);
+    Preconditions.checkArgument(left.previous == null);
     Preconditions.checkArgument(mid.parent == null);
     Preconditions.checkArgument(mid.next == null);
+    Preconditions.checkArgument(mid.previous == null);
     Preconditions.checkArgument(right.parent == null);
     Preconditions.checkArgument(right.next == null);
+    Preconditions.checkArgument(right.previous == null);
     token = nodeType;
     parent = null;
     first = left;
     last = right;
     left.next = mid;
+    left.previous = null;
     left.parent = this;
     mid.next = right;
+    mid.previous = left;
     mid.parent = this;
     right.next = null;
+    right.previous = mid;
     right.parent = this;
     sourcePosition = -1;
   }
@@ -541,23 +556,31 @@ public class Node implements Serializable {
   Node(Token nodeType, Node left, Node mid, Node mid2, Node right) {
     Preconditions.checkArgument(left.parent == null);
     Preconditions.checkArgument(left.next == null);
+    Preconditions.checkArgument(left.previous == null);
     Preconditions.checkArgument(mid.parent == null);
     Preconditions.checkArgument(mid.next == null);
+    Preconditions.checkArgument(mid.previous == null);
     Preconditions.checkArgument(mid2.parent == null);
     Preconditions.checkArgument(mid2.next == null);
+    Preconditions.checkArgument(mid2.previous == null);
     Preconditions.checkArgument(right.parent == null);
     Preconditions.checkArgument(right.next == null);
+    Preconditions.checkArgument(right.previous == null);
     token = nodeType;
     parent = null;
     first = left;
     last = right;
     left.next = mid;
+    left.previous = null;
     left.parent = this;
     mid.next = mid2;
+    mid.previous = left;
     mid.parent = this;
     mid2.next = right;
+    mid2.previous = mid;
     mid2.parent = this;
     right.next = null;
+    right.previous = mid2;
     right.parent = this;
     sourcePosition = -1;
   }
@@ -638,21 +661,7 @@ public class Node implements Serializable {
   }
 
   public Node getChildBefore(Node child) {
-    if (child == first) {
-      return null;
-    }
-    Node n = first;
-    if (n == null) {
-      throw new RuntimeException("node is not a child");
-    }
-
-    while (n.next != child) {
-      n = n.next;
-      if (n == null) {
-        throw new RuntimeException("node is not a child");
-      }
-    }
-    return n;
+    return child.previous;
   }
 
   public Node getChildAtIndex(int i) {
@@ -689,8 +698,12 @@ public class Node implements Serializable {
   public void addChildToFront(Node child) {
     Preconditions.checkArgument(child.parent == null);
     Preconditions.checkArgument(child.next == null);
+    Preconditions.checkArgument(child.previous == null);
     child.parent = this;
     child.next = first;
+    if (first != null) {
+      first.previous = child;
+    }
     first = child;
     if (last == null) {
       last = child;
@@ -700,8 +713,10 @@ public class Node implements Serializable {
   public void addChildToBack(Node child) {
     Preconditions.checkArgument(child.parent == null);
     Preconditions.checkArgument(child.next == null);
+    Preconditions.checkArgument(child.previous == null);
     child.parent = this;
     child.next = null;
+    child.previous = last;
     if (last == null) {
       first = last = child;
       return;
@@ -716,7 +731,11 @@ public class Node implements Serializable {
       child.parent = this;
     }
     Node lastSib = children.getLastSibling();
+    Preconditions.checkState(lastSib.next == null);
     lastSib.next = first;
+    if (first != null) {
+      first.previous = lastSib;
+    }
     first = children;
     if (last == null) {
       last = lastSib;
@@ -734,17 +753,19 @@ public class Node implements Serializable {
     Preconditions.checkArgument(node != null && node.parent == this,
         "The existing child node of the parent should not be null.");
     Preconditions.checkArgument(newChild.next == null,
-        "The new child node has siblings.");
+        "The new child node has next siblings.");
+    Preconditions.checkArgument(newChild.previous == null,
+        "The new child node has previous siblings.");
     Preconditions.checkArgument(newChild.parent == null,
         "The new child node already has a parent.");
     if (first == node) {
       newChild.parent = this;
       newChild.next = first;
+      first.previous = newChild;
       first = newChild;
       return;
     }
-    Node prev = getChildBefore(node);
-    addChildAfter(newChild, prev);
+    addChildAfter(newChild, node.previous);
   }
 
   /**
@@ -752,7 +773,9 @@ public class Node implements Serializable {
    */
   public void addChildAfter(Node newChild, Node node) {
     Preconditions.checkArgument(newChild.next == null,
-        "The new child node has siblings.");
+        "The new child node has next siblings.");
+    Preconditions.checkArgument(newChild.previous == null,
+        "The new child node has previous siblings.");
     addChildrenAfter(newChild, node);
   }
 
@@ -770,7 +793,11 @@ public class Node implements Serializable {
     if (node != null) {
       Node oldNext = node.next;
       node.next = children;
+      children.previous = node;
       lastSibling.next = oldNext;
+      if (oldNext != null) {
+        oldNext.previous = lastSibling;
+      }
       if (node == last) {
         last = lastSibling;
       }
@@ -778,6 +805,7 @@ public class Node implements Serializable {
       // Append to the beginning.
       if (first != null) {
         lastSibling.next = first;
+        first.previous = lastSibling;
       } else {
         last = lastSibling;
       }
@@ -789,16 +817,21 @@ public class Node implements Serializable {
    * Detach a child from its parent and siblings.
    */
   public void removeChild(Node child) {
-    Node prev = getChildBefore(child);
-    if (prev == null) {
-      first = first.next;
-    } else {
+    Node prev = child.previous;
+    if (first == child) {
+      first = child.next;
+    }
+    if (prev != null) {
       prev.next = child.next;
     }
-    if (child == last) {
+    if (last == child) {
       last = prev;
     }
+    if (child.next != null) {
+      child.next.previous = prev;
+    }
     child.next = null;
+    child.previous = null;
     child.parent = null;
   }
 
@@ -807,7 +840,9 @@ public class Node implements Serializable {
    */
   public void replaceChild(Node child, Node newChild) {
     Preconditions.checkArgument(newChild.next == null,
-        "The new child node has siblings.");
+        "The new child node has next siblings.");
+    Preconditions.checkArgument(newChild.previous == null,
+        "The new child node has previous siblings.");
     Preconditions.checkArgument(newChild.parent == null,
         "The new child node already has a parent.");
 
@@ -815,41 +850,51 @@ public class Node implements Serializable {
     newChild.copyInformationFrom(child);
 
     newChild.next = child.next;
+    newChild.previous = child.previous;
     newChild.parent = this;
     if (child == first) {
       first = newChild;
     } else {
-      Node prev = getChildBefore(child);
-      prev.next = newChild;
+      child.previous.next = newChild;
     }
     if (child == last) {
       last = newChild;
+    } else {
+      child.next.previous = newChild;
     }
     child.next = null;
+    child.previous = null;
     child.parent = null;
   }
 
   public void replaceChildAfter(Node prevChild, Node newChild) {
     Preconditions.checkArgument(prevChild.parent == this,
         "prev is not a child of this node.");
-
+    Preconditions.checkArgument(prevChild.next != null,
+        "prev is doesn't have a sibling to replace.");
     Preconditions.checkArgument(newChild.next == null,
-        "The new child node has siblings.");
+        "The new child node has next siblings.");
+    Preconditions.checkArgument(newChild.previous == null,
+        "The new child node has previous siblings.");
     Preconditions.checkArgument(newChild.parent == null,
         "The new child node already has a parent.");
 
     // Copy over important information.
-    newChild.copyInformationFrom(prevChild);
+    newChild.copyInformationFrom(prevChild.next);
 
-    Node child = prevChild.next;
-    newChild.next = child.next;
+    Node childToReplace = prevChild.next;
+    newChild.next = childToReplace.next;
+    newChild.previous = prevChild;
     newChild.parent = this;
     prevChild.next = newChild;
-    if (child == last) {
+    if (childToReplace == last) {
       last = newChild;
+    } else {
+      childToReplace.next.previous = newChild;
     }
-    child.next = null;
-    child.parent = null;
+    childToReplace.next = null;
+    childToReplace.previous = null;
+    childToReplace.parent = null;
   }
 
   /** Detaches the child after the given child, or the first child if prev is null. */
@@ -1163,6 +1208,7 @@ public class Node implements Serializable {
 
   Token token;           // Type of the token of the node; NAME for example
   Node next;             // next sibling
+  Node previous;         // previous sibling
   private Node first;    // first element of a linked list of children
   private Node last;     // last element of a linked list of children
 
@@ -1977,6 +2023,7 @@ public class Node implements Serializable {
       Node nextChild = child.getNext();
       child.parent = null;
       child.next = null;
+      child.previous = null;
       child = nextChild;
     }
     first = null;
@@ -1989,14 +2036,18 @@ public class Node implements Serializable {
     Preconditions.checkArgument(prev.next != null,
         "no next sibling.");
 
-    Node child = prev.next;
-    prev.next = child.next;
-    if (child == last) {
+    Node childToRemove = prev.next;
+    prev.next = childToRemove.next;
+    if (childToRemove == last) {
       last = prev;
     }
-    child.next = null;
-    child.parent = null;
-    return child;
+    if (childToRemove.next != null) {
+      childToRemove.next.previous = prev;
+    }
+    childToRemove.next = null;
+    childToRemove.previous = null;
+    childToRemove.parent = null;
+    return childToRemove;
   }
 
   /** Remove the child after the given child, or the first child if given null. */
@@ -2051,6 +2102,7 @@ public class Node implements Serializable {
       n2clone.parent = result;
       if (result.last != null) {
         result.last.next = n2clone;
+        n2clone.previous = result.last;
       }
       if (result.first == null) {
         result.first = n2clone;
