@@ -271,7 +271,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
       // remove any other pre-existing call arguments
       while (newCallTarget.getNext() != null) {
-        n.removeChildAfter(newCallTarget);
+        n.removeChild(newCallTarget.getNext());
       }
       n.addChildToBack(IR.thisNode().srcref(n));
     }
@@ -501,7 +501,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
       // remove any other pre-existing call arguments
       while (fnc.getNext() != null) {
-        n.removeChildAfter(fnc);
+        n.removeChild(fnc.getNext());
       }
     }
     compiler.reportCodeChange();

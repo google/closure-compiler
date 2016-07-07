@@ -655,32 +655,27 @@ class Normalize implements CompilerPass {
     private void moveNamedFunctions(Node functionBody) {
       Preconditions.checkState(
           functionBody.getParent().isFunction());
-      Node previous = null;
+      Node insertAfter = null;
       Node current = functionBody.getFirstChild();
       // Skip any declarations at the beginning of the function body, they
       // are already in the right place.
       while (current != null && NodeUtil.isFunctionDeclaration(current)) {
-        previous = current;
+        insertAfter = current;
         current = current.getNext();
       }
 
       // Find any remaining declarations and move them.
-      Node insertAfter = previous;
       while (current != null) {
         // Save off the next node as the current node maybe removed.
         Node next = current.getNext();
         if (NodeUtil.isFunctionDeclaration(current)) {
           // Remove the declaration from the body.
-          Preconditions.checkNotNull(previous);
-          functionBody.removeChildAfter(previous);
+          functionBody.removeChild(current);
 
           // Read the function at the top of the function body (after any
           // previous declarations).
           insertAfter = addToFront(functionBody, current, insertAfter);
           reportCodeChange("Move function declaration not at top of function");
-        } else {
-          // Update the previous only if the current node hasn't been moved.
-          previous = current;
         }
         current = next;
       }

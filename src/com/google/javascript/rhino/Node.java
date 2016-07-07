@@ -660,6 +660,10 @@ public class Node implements Serializable {
     return next;
   }
 
+  public Node getPrevious() {
+    return previous;
+  }
+
   public Node getChildBefore(Node child) {
     return child.previous;
   }
@@ -868,42 +872,14 @@ public class Node implements Serializable {
   }
 
   public void replaceChildAfter(Node prevChild, Node newChild) {
-    Preconditions.checkArgument(prevChild.parent == this,
-        "prev is not a child of this node.");
     Preconditions.checkArgument(prevChild.next != null,
         "prev is doesn't have a sibling to replace.");
-    Preconditions.checkArgument(newChild.next == null,
-        "The new child node has next siblings.");
-    Preconditions.checkArgument(newChild.previous == null,
-        "The new child node has previous siblings.");
-    Preconditions.checkArgument(newChild.parent == null,
-        "The new child node already has a parent.");
-
-    // Copy over important information.
-    newChild.copyInformationFrom(prevChild.next);
-
-    Node childToReplace = prevChild.next;
-    newChild.next = childToReplace.next;
-    newChild.previous = prevChild;
-    newChild.parent = this;
-    prevChild.next = newChild;
-    if (childToReplace == last) {
-      last = newChild;
-    } else {
-      childToReplace.next.previous = newChild;
-    }
-    childToReplace.next = null;
-    childToReplace.previous = null;
-    childToReplace.parent = null;
+    replaceChild(prevChild.next, newChild);
   }
 
   /** Detaches the child after the given child, or the first child if prev is null. */
   public void replaceFirstOrChildAfter(@Nullable Node prev, Node newChild) {
-    if (prev == null) {
-      replaceChild(getFirstChild(), newChild);
-    } else {
-      replaceChildAfter(prev, newChild);
-    }
+    replaceChild(prev == null ? first : prev.next, newChild);
   }
 
   @VisibleForTesting
@@ -2031,23 +2007,10 @@ public class Node implements Serializable {
   }
 
   public Node removeChildAfter(Node prev) {
-    Preconditions.checkArgument(prev.parent == this,
-        "prev is not a child of this node.");
-    Preconditions.checkArgument(prev.next != null,
-        "no next sibling.");
-
-    Node childToRemove = prev.next;
-    prev.next = childToRemove.next;
-    if (childToRemove == last) {
-      last = prev;
-    }
-    if (childToRemove.next != null) {
-      childToRemove.next.previous = prev;
-    }
-    childToRemove.next = null;
-    childToRemove.previous = null;
-    childToRemove.parent = null;
-    return childToRemove;
+    Node next = prev.next;
+    Preconditions.checkArgument(next != null, "no next sibling.");
+    removeChild(next);
+    return next;
   }
 
   /** Remove the child after the given child, or the first child if given null. */

@@ -230,7 +230,7 @@ class CollapseVariableDeclarations implements CompilerPass {
         Node next = n.getNext();
 
         Preconditions.checkState(var.getNext() == n);
-        collapse.parent.removeChildAfter(var);
+        collapse.parent.removeChild(var.getNext());
 
         if (n.isVar()) {
           while (n.hasChildren()) {
