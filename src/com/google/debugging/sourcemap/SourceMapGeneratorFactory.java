@@ -32,4 +32,6 @@ public final class SourceMapGeneratorFactory {
         throw new IllegalStateException("unsupported source map format");
     }
   }
+
+  private SourceMapGeneratorFactory() {}
 }

@@ -86,4 +86,6 @@ public final class RefasterJsTestUtils {
   private static String slurpFile(String originalFile) throws IOException {
     return Files.toString(new File(originalFile), StandardCharsets.UTF_8);
   }
+
+  private RefasterJsTestUtils() {}
 }

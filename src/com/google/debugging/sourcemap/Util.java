@@ -131,4 +131,6 @@ public class Util {
         .append(HEX_CHARS[(codePoint >>> 4) & 0xf])
         .append(HEX_CHARS[codePoint & 0xf]);
   }
+
+  private Util() {}
 }

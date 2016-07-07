@@ -203,4 +203,6 @@ public class Util {
 
   @JsMethod(namespace = "util")
   private static native <T> void objectSet(JsObject<T> array, String key, T value);
+
+  private Util() {}
 }

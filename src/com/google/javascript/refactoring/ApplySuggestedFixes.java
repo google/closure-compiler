@@ -146,4 +146,6 @@ public final class ApplySuggestedFixes {
       start = Math.max(start, replacement.getStartPosition() + replacement.getLength());
     }
   }
+
+  private ApplySuggestedFixes() {}
 }
