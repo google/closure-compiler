@@ -85,12 +85,9 @@ testSuite({
 
   testSealedKeys() {
     if (!Object.seal) return;
-    const key1 = {};
-    const key2 = {};
-    const key3 = {};
-    Object.seal(key1);
-    Object.seal(key2);
-    Object.freeze(key3);
+    const key1 = Object.seal({});
+    const key2 = Object.seal({});
+    const key3 = Object.freeze({});
 
     const map = new Map();
     checkSetGet(map, key1, 'a');

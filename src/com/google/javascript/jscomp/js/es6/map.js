@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-'require es6/symbol es6/util/makeiterator util/defineproperty';
-'require util/owns util/polyfill';
+'require es6/symbol es6/util/makeiterator es6/weakmap util/owns util/polyfill';
 
 /**
  * Whether to skip the conformance check and simply use the polyfill always.
@@ -63,6 +62,9 @@ $jscomp.polyfill('Map', function(NativeMap) {
   $jscomp.initSymbol();
   $jscomp.initSymbolIterator();
 
+
+  /** @const {!WeakMap<!Object, string>} */
+  var idMap = new WeakMap();
 
 
   /**
@@ -323,13 +325,6 @@ $jscomp.polyfill('Map', function(NativeMap) {
 
 
   /**
-   * Counter for generating IDs.
-   * @private {number}
-   */
-  var mapIndex = 0;
-
-
-  /**
    * Makes a new "head" element.
    * @return {!MapEntry<KEY, VALUE>}
    * @template KEY, VALUE
@@ -343,10 +338,10 @@ $jscomp.polyfill('Map', function(NativeMap) {
 
 
   /**
-   * Fixed key used for storing generated object IDs.
-   * @const {symbol}
+   * Counter for generating IDs.
+   * @private {number}
    */
-  var idKey = Symbol('map-id-key');
+  var mapIndex = 0;
 
 
   /**
@@ -354,29 +349,18 @@ $jscomp.polyfill('Map', function(NativeMap) {
    * @return {string} A unique ID.
    */
   var getId = function(obj) {
-    // TODO(sdh): could use goog.getUid for this if it exists.
-    // (This might work better with goog.defineClass)
-    if (!(obj instanceof Object)) {
-      // Prepend primitives with 'p_', which will avoid potentially dangerous
-      // names like '__proto__', as well as anything from Object.prototype.
-      return 'p_' + obj;
+    var type = obj && typeof obj;
+    if (type == 'object' || type == 'function') {
+      obj = /** @type {!Object} */ (obj);
+      if (!idMap.has(obj)) {
+        var id = '' + (++mapIndex);
+        idMap.set(obj, id);
+        return id;
+      }
+      return idMap.get(obj);
     }
-    if (!(idKey in obj)) {
-      /** @preserveTry */
-      try {
-        $jscomp.defineProperty(obj, idKey, {value: ++mapIndex});
-      } catch (ignored) {}
-    }
-    if (!(idKey in obj)) {
-      // String representation is best we can do, though it's not stricty
-      // guaranteed to be consistent (i.e. for mutable objects).  But for
-      // non-extensible objects, there's nothing better we could possibly
-      // use for bucketing.  We prepend 'o_' (for object) for two reasons:
-      // (1) to distinguish generated IDs (which are digits) and primitives,
-      // and (2) to prevent illegal or dangerous keys (see above).
-      return 'o_ ' + obj;
-    }
-    return obj[idKey];
+    // Add a prefix since obj could be '__proto__';
+    return 'p_' + obj;
   };
 
 

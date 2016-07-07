@@ -82,12 +82,9 @@ testSuite({
   testAdd_sealedObjects() {
     // NOTE: IE8 doesn't support Object.seal.
     if (userAgent.IE && !userAgent.isVersionOrHigher(9)) return;
-    const key1 = {};
-    const key2 = {};
-    const key3 = {};
-    Object.preventExtensions(key1);
-    Object.seal(key2);
-    Object.freeze(key3);
+    const key1 = Object.preventExtensions({});
+    const key2 = Object.seal({});
+    const key3 = Object.freeze({});
 
     const set = new Set();
     checkAddHas(set, key1);

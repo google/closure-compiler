@@ -18,3 +18,4 @@
 'require es6/set es6/string es6/symbol es6/util/arrayfromiterable';
 'require es6/util/arrayfromiterator es6/util/inherits';
 'require es6/util/iteratorfromarray es6/util/makeiterator';
+'require es6/weakmap es6/weakset';

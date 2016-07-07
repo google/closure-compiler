@@ -25,8 +25,6 @@
 
 $jscomp.polyfill('Proxy', null, 'es6', 'es6');
 
-$jscomp.polyfill('WeakMap', null, 'es6-impl', 'es6-impl');
-$jscomp.polyfill('WeakSet', null, 'es6-impl', 'es6-impl');
 $jscomp.polyfill('Reflect', null, 'es6-impl', 'es6-impl');
 $jscomp.polyfill('Object.setPrototypeOf', null, 'es6-impl', 'es6-impl');
 $jscomp.polyfill('String.raw', null, 'es6-impl', 'es6-impl');

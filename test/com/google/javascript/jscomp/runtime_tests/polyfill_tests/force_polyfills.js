@@ -74,3 +74,6 @@ delete String.prototype.startsWith;
 delete String.prototype.endsWith;
 
 delete Symbol;
+
+delete WeakMap;
+delete WeakSet;

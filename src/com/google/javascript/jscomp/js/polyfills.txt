@@ -46,5 +46,5 @@ String.prototype.normalize es6-impl es6-impl
 String.prototype.repeat es6-impl es3 es6/string/repeat
 String.prototype.startsWith es6-impl es3 es6/string/startswith
 String.raw es6-impl es6-impl
-WeakMap es6-impl es6-impl
-WeakSet es6-impl es6-impl
+WeakMap es6-impl es3 es6/weakmap
+WeakSet es6-impl es3 es6/weakset
