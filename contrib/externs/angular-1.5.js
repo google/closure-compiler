@@ -1532,6 +1532,9 @@ angular.$http.Config.prototype.method;
 /** @type {(?Object<(boolean|number|string|Object)>|undefined)} */
 angular.$http.Config.prototype.params;
 
+/** @type {(string|function(Object<string,string>):string|undefined)} */
+angular.$http.Config.prototype.paramSerializer;
+
 /** @type {(string|undefined)} */
 angular.$http.Config.prototype.responseType;
 
