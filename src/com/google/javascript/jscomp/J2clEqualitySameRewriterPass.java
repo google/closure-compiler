@@ -18,12 +18,19 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 
 /**
  * An optimization pass to re-write J2CL Equality.$same.
  */
 public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
     implements CompilerPass {
+
+  /** Whether to use "==" or "===". */
+  private static enum Eq {
+    DOUBLE,
+    TRIPLE
+  }
 
   private final AbstractCompiler compiler;
 
@@ -46,22 +53,38 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
   private void trySubstituteEqualitySame(Node callNode) {
     Node firstExpr = callNode.getSecondChild();
     Node secondExpr = callNode.getLastChild();
-    if (!NodeUtil.isLiteralValue(firstExpr, true) && !NodeUtil.isLiteralValue(secondExpr, true)) {
+
+    if (NodeUtil.isNullOrUndefined(firstExpr) || NodeUtil.isNullOrUndefined(secondExpr)) {
+      // At least one side is null or undefined so no coercion danger.
+      rewriteToEq(callNode, firstExpr, secondExpr, Eq.DOUBLE);
       return;
     }
 
-    // At least one is literal value. So we can replace w/ a simpler form.
-    firstExpr.detachFromParent();
-    secondExpr.detachFromParent();
-    Node replacement = asEqOperation(firstExpr, secondExpr);
-    callNode.getParent().replaceChild(callNode, replacement.useSourceInfoIfMissingFrom(callNode));
-    compiler.reportCodeChange();
+    if (NodeUtil.isLiteralValue(firstExpr, true) || NodeUtil.isLiteralValue(secondExpr, true)) {
+      // There is a coercion danger but since at least one side is not null, we can use === that
+      // will not trigger any coercion.
+      rewriteToEq(callNode, firstExpr, secondExpr, Eq.TRIPLE);
+      return;
+    }
+
+    // This part requires "--use_types_for_optimization" to be enabled, otherwise it will not do
+    // any optimization.
+    JSType firstType = getTypeRestrictByNotNullOrUndefined(firstExpr);
+    JSType secondType = getTypeRestrictByNotNullOrUndefined(secondExpr);
+    if (isObjectType(firstType) || isObjectType(secondType) || sameType(firstType, secondType)) {
+      // Typeof is same for both so no coersion danger.
+      rewriteToEq(callNode, firstExpr, secondExpr, Eq.DOUBLE);
+      return;
+    }
   }
 
-  private Node asEqOperation(Node firstExpr, Node secondExpr) {
-    return (NodeUtil.isNullOrUndefined(firstExpr) || NodeUtil.isNullOrUndefined(secondExpr))
-        ? IR.eq(firstExpr, secondExpr)
-        : IR.sheq(firstExpr, secondExpr);
+  private void rewriteToEq(Node callNode, Node firstExpr, Node secondExpr, Eq eq) {
+    firstExpr.detachFromParent();
+    secondExpr.detachFromParent();
+    Node replacement =
+        eq == Eq.DOUBLE ? IR.eq(firstExpr, secondExpr) : IR.sheq(firstExpr, secondExpr);
+    callNode.getParent().replaceChild(callNode, replacement.useSourceInfoIfMissingFrom(callNode));
+    compiler.reportCodeChange();
   }
 
   private static boolean isEqualitySameCall(Node node) {
@@ -72,5 +95,22 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
     // The '.$same' case only happens when collapseProperties is off.
     return fnName != null
         && (fnName.endsWith("Equality$$0same") || fnName.endsWith("Equality.$same"));
+  }
+
+  private static JSType getTypeRestrictByNotNullOrUndefined(Node node) {
+    JSType jsType = node.getJSType();
+    return jsType == null ? null : jsType.restrictByNotNullOrUndefined();
+  }
+
+  private static boolean isObjectType(JSType jsType) {
+    return !isUnknownType(jsType) && jsType.isObject();
+  }
+
+  private static boolean sameType(JSType jsType1, JSType jsType2) {
+    return !isUnknownType(jsType1) && !isUnknownType(jsType2) && jsType1.equals(jsType2);
+  }
+
+  private static boolean isUnknownType(JSType jsType) {
+    return jsType == null || jsType.isUnknownType() || jsType.isNoType();
   }
 }
