@@ -479,7 +479,7 @@ MediaDeviceInfo.prototype.kind;
 MediaDeviceInfo.prototype.label;
 
 /** @const {string} */
-MediaDeviceInfo.prototype.groupIdlabel;
+MediaDeviceInfo.prototype.groupId;
 
 /**
  * @interface
