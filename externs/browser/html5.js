@@ -2420,6 +2420,7 @@ PageTransitionEvent.prototype.initPageTransitionEvent = function(typeArg,
 
 /**
  * @constructor
+ * @implements {IArrayLike<!File>}
  */
 function FileList() {}
 
