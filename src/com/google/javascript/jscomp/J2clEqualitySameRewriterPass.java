@@ -67,8 +67,11 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
       return;
     }
 
-    // This part requires "--use_types_for_optimization" to be enabled, otherwise it will not do
-    // any optimization.
+    // "--use_types_for_optimization" must be on to enable the following type check.
+    if (!compiler.getOptions().useTypesForOptimization) {
+      return;
+    }
+
     JSType firstType = getTypeRestrictByNotNullOrUndefined(firstExpr);
     JSType secondType = getTypeRestrictByNotNullOrUndefined(secondExpr);
     if (isObjectType(firstType) || isObjectType(secondType) || sameType(firstType, secondType)) {

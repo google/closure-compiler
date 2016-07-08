@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   private static final String EXTERN = "Equality.$same = function(a, b) {};";
 
+  private boolean useTypesForOptimization = true;
+
   public J2clEqualitySameRewriterPassTest() {
     super(EXTERN);
   }
@@ -30,6 +32,12 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new J2clEqualitySameRewriterPass(compiler);
+  }
+
+  @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    options.useTypesForOptimization = useTypesForOptimization;
+    return super.getOptions(options);
   }
 
   public void testRewriteEqualitySame() {
@@ -101,5 +109,28 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(num, str);",
             "Equality.$same(num, unknown);",
             "Equality.$same(str, unknown);"));
+  }
+
+  public void testNotRewriteEqualitySame_noTypeCheck() {
+    useTypesForOptimization = false;
+    testSame(
+        LINE_JOINER.join(
+            "/** @type {number|undefined} */",
+            "var num1 = 5;",
+            "/** @type {?number} */",
+            "var num2 = 5;",
+            "Equality.$same(num1, num2);",
+            "/** @type {string} */",
+            "var str1 = '';",
+            "/** @type {string|undefined} */",
+            "var str2 = 'abc';",
+            "Equality.$same(str1, str2);",
+            "/** @type {!Object} */",
+            "var obj1 = {};",
+            "/** @type {Object} */",
+            "var obj2 = null;",
+            "Equality.$same(obj1, obj2);",
+            "Equality.$same(obj1, str2);",
+            "Equality.$same(obj1, num2);"));
   }
 }
