@@ -36,7 +36,14 @@ import com.google.gwt.dev.util.Util;
 @LinkerOrder(Order.PRIMARY)
 public class MinimalLinker extends AbstractLinker {
 
-  private static final String PREFIX = "(function(){var $wnd=this;var $doc={};";
+  /*
+   * Call gwtLoad as per the normal GWT linker (provided in {@code ModuleUtils}), this is in order
+   * to invoke the {@code onModuleLoad} methods of loaded modules. The gwtOnLoad method then sets
+   * {@code $moduleName} and {@code $moduleBase}, shadow them here so they don't leak into the
+   * global scope.
+   */
+  private static final String PREFIX =
+      "(function(){var $wnd=this; var $doc={}; var $moduleName, $moduleBase;";
   private static final String SUFFIX = "typeof gwtOnLoad==='function'&&gwtOnLoad()})();";
 
   @Override
