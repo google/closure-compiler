@@ -118,6 +118,6 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
   }
 
   private static boolean isUnknownType(JSType jsType) {
-    return jsType == null || jsType.isUnknownType() || jsType.isNoType();
+    return jsType == null || jsType.isUnknownType() || jsType.isNoType() || jsType.isAllType();
   }
 }

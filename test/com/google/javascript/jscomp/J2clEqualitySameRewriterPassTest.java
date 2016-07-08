@@ -105,10 +105,20 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "/** @type {string} */",
             "var str = 'ABC';",
             "/** @type {*} */",
-            "var unknown = null;",
+            "var allType = null;",
             "Equality.$same(num, str);",
-            "Equality.$same(num, unknown);",
-            "Equality.$same(str, unknown);"));
+            "Equality.$same(num, allType);",
+            "Equality.$same(str, allType);"));
+  }
+
+  public void testNotRewriteEqualitySame_allType() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @type {*} */",
+            "var allType1 = 1;",
+            "/** @type {*} */",
+            "var allType2 = '1';",
+            "Equality.$same(allType1, allType2);"));
   }
 
   public void testNotRewriteEqualitySame_noTypeCheck() {
