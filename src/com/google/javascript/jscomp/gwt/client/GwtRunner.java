@@ -19,10 +19,15 @@ package com.google.javascript.jscomp.gwt.client;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.javascript.jscomp.BasicErrorManager;
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.WarningLevel;
 
@@ -30,14 +35,13 @@ import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Runner for the GWT-compiled JSCompiler
- *
- * @author moz@google.com (Michael Zhou)
+ * Runner for the GWT-compiled JSCompiler as a single exported method.
  */
-@JsType(namespace = JsPackage.GLOBAL, name = "JSCompiler")
 public final class GwtRunner implements EntryPoint {
 
   private static final Map<String, CompilationLevel> COMPILATION_LEVEL_MAP =
@@ -62,12 +66,7 @@ public final class GwtRunner implements EntryPoint {
           "VERBOSE",
           WarningLevel.VERBOSE);
 
-  private final Compiler compiler;
-
-  public GwtRunner() {
-    compiler = new Compiler();
-    compiler.disableThreads();
-  }
+  private GwtRunner() {}
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
   private interface Flags {
@@ -94,6 +93,44 @@ public final class GwtRunner implements EntryPoint {
 
     @JsProperty
     boolean getRewritePolyfills();
+
+    @JsProperty
+    File[] getJsCode();
+
+    @JsProperty
+    File[] getExterns();
+  }
+
+  @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
+  private interface File {
+    @JsProperty String getName();
+    @JsProperty String getSource();
+  }
+
+  @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
+  private static class ModuleOutput {
+    @JsProperty String compiledCode;
+    @JsProperty JavaScriptObject[] errors;
+    @JsProperty JavaScriptObject[] warnings;
+  }
+
+  private static native JavaScriptObject createError(String file, String description, String type,
+        int lineNo, int charNo) /*-{
+    return {file: file, description: description, type: type, lineNo: lineNo, charNo: charNo};
+  }-*/;
+
+  /**
+   * Convert a list of {@link JSError} instances to a JS array containing plain objects.
+   */
+  private static JavaScriptObject[] toNativeErrorArray(List<JSError> errors) {
+    JavaScriptObject out[] = new JavaScriptObject[errors.size()];
+    for (int i = 0; i < errors.size(); ++i) {
+      JSError error = errors.get(i);
+      DiagnosticType type = error.getType();
+      out[i] = createError(error.sourceName, error.description, type != null ? type.key : null,
+          error.lineNumber, error.getCharno());
+    }
+    return out;
   }
 
   private static void applyDefaultOptions(CompilerOptions options) {
@@ -104,7 +141,6 @@ public final class GwtRunner implements EntryPoint {
     options.setPrettyPrint(true);
   }
 
-  // TODO(moz): Handle most compiler flags and report errors on invalid flags / values.
   private static void applyOptionsFromFlags(CompilerOptions options, Flags flags) {
     if (flags == null) {
       return;
@@ -149,17 +185,85 @@ public final class GwtRunner implements EntryPoint {
     options.getDependencyOptions().setDependencySorting(false);
   }
 
-  public String compile(String js, Flags flags) {
+  private static List<SourceFile> fromFileArray(File[] src, String unknownPrefix) {
+    List<SourceFile> out = new ArrayList<>();
+    if (src != null) {
+      for (int i = 0; i < src.length; ++i) {
+        File file = src[i];
+        String name = file.getName();
+        if (name == null) {
+          name = unknownPrefix + i;
+        }
+        String source = file.getSource();
+        if (source == null) {
+          source = "";
+        }
+        out.add(SourceFile.fromCode(name, source));
+      }
+    }
+    return ImmutableList.copyOf(out);
+  }
+
+  /**
+   * Public compiler call. Exposed in {@link #exportCompile}.
+   */
+  public static ModuleOutput compile(Flags flags) {
     CompilerOptions options = new CompilerOptions();
     applyDefaultOptions(options);
     applyOptionsFromFlags(options, flags);
     disableUnsupportedOptions(options);
-    SourceFile src = SourceFile.fromCode("src.js", js);
-    SourceFile externs = SourceFile.fromCode("externs.js", "var window;");
-    compiler.compile(ImmutableList.of(externs), ImmutableList.of(src), options);
-    return compiler.toSource();
+
+    NodeErrorManager errorManager = new NodeErrorManager();
+    Compiler compiler = new Compiler();
+    compiler.setErrorManager(errorManager);
+
+    List<SourceFile> externs = fromFileArray(flags.getExterns(), "Extern_");
+    List<SourceFile> jsCode = fromFileArray(flags.getJsCode(), "Input_");
+    compiler.compile(externs, jsCode, options);
+
+    ModuleOutput output = new ModuleOutput();
+    output.compiledCode = compiler.toSource();
+    output.errors = toNativeErrorArray(errorManager.errors);
+    output.warnings = toNativeErrorArray(errorManager.warnings);
+    return output;
   }
 
+  /**
+   * Exports the {@link #compile} method via JSNI.
+   *
+   * This will be placed on {@code module.exports} or {@code this}.
+   */
+  public native void exportCompile() /*-{
+    var fn = $entry(@com.google.javascript.jscomp.gwt.client.GwtRunner::compile(*));
+    if (typeof module !== 'undefined' && module.exports) {
+      module.exports = fn;
+    } else {
+      this.compile = fn;
+    }
+  }-*/;
+
   @Override
-  public void onModuleLoad() {}
+  public void onModuleLoad() {
+    exportCompile();
+  }
+
+  /**
+   * Custom {@link BasicErrorManager} to record {@link JSError} instances.
+   */
+  private static class NodeErrorManager extends BasicErrorManager {
+    final List<JSError> errors = new ArrayList<>();
+    final List<JSError> warnings = new ArrayList<>();
+
+    @Override
+    public void println(CheckLevel level, JSError error) {
+      if (level == CheckLevel.ERROR) {
+        errors.add(error);
+      } else if (level == CheckLevel.WARNING) {
+        warnings.add(error);
+      }
+    }
+
+    @Override
+    public void printSummary() {}
+  }
 }

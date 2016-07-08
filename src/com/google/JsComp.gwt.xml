@@ -24,5 +24,6 @@
   <set-property name="gwt.logging.enabled" value="TRUE"/>
   <entry-point class="com.google.javascript.jscomp.gwt.client.GwtRunner"/>
   <public path="javascript/jscomp/gwt/public"/>
-  <add-linker name="sso"/>
+  <define-linker name="min" class="com.google.javascript.jscomp.gwt.linker.MinimalLinker"/>
+  <add-linker name="min"/>
 </module>
