@@ -91,7 +91,7 @@ public class ClosureBundler {
       out.append("(0,eval(\"");
       append(out, Mode.ESCAPED, contents);
       appendSourceUrl(out, Mode.ESCAPED);
-      out.append("\"));");
+      out.append("\"));\n");
     } else {
       append(out, Mode.NORMAL, contents);
       appendSourceUrl(out, Mode.NORMAL);
@@ -104,7 +104,7 @@ public class ClosureBundler {
       out.append("goog.loadModule(\"");
       append(out, Mode.ESCAPED, contents);
       appendSourceUrl(out, Mode.ESCAPED);
-      out.append("\");");
+      out.append("\");\n");
     } else {
       // add the prefix on the first line so the line numbers aren't affected.
       out.append(
