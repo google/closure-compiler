@@ -452,7 +452,7 @@ angular.Directive;
 angular.Change;
 
 /** @type {*} */
-angular.Change.prototype.crrentValue;
+angular.Change.prototype.currentValue;
 
 /** @type {*} */
 angular.Change.prototype.previousValue;
