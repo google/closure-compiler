@@ -88,13 +88,17 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
   }
 
   private static boolean isEqualitySameCall(Node node) {
-    return node.isCall() && isEqualitySameMethodName(node.getFirstChild().getQualifiedName());
+    return node.isCall() && isEqualitySameMethodName(node.getFirstChild());
   }
 
-  private static boolean isEqualitySameMethodName(String fnName) {
-    // The '.$same' case only happens when collapseProperties is off.
-    return fnName != null
-        && (fnName.endsWith("Equality$$0same") || fnName.endsWith("Equality.$same"));
+  private static boolean isEqualitySameMethodName(Node fnName) {
+    if (!fnName.isQualifiedName()) {
+      return false;
+    }
+    // NOTE: This should be rewritten to use method name + file name of definition site
+    // like other j2cl passes, which is more precise.
+    String originalQname = fnName.getOriginalQualifiedName();
+    return originalQname.endsWith("Equality.$same");
   }
 
   private static JSType getTypeRestrictByNotNullOrUndefined(Node node) {
