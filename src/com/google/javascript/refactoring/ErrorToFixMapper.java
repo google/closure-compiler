@@ -45,6 +45,8 @@ public final class ErrorToFixMapper {
       Pattern.compile("missing require: '([^']+)'");
   private static final Pattern EXTRA_REQUIRE =
       Pattern.compile("extra require: '([^']+)'");
+  private static final Pattern DUPLICATE_REQUIRE =
+      Pattern.compile("'([^']+)' required more than once\\.");
 
   public static List<SuggestedFix> getFixesForJsError(JSError error, AbstractCompiler compiler) {
     SuggestedFix fix = getFixForJsError(error, compiler);
@@ -84,8 +86,9 @@ public final class ErrorToFixMapper {
       case "JSC_MISSING_REQUIRE_CALL_WARNING":
         return getFixForMissingRequire(error, compiler);
       case "JSC_DUPLICATE_REQUIRE_WARNING":
+        return getFixForExtraRequire(error, compiler, DUPLICATE_REQUIRE);
       case "JSC_EXTRA_REQUIRE_WARNING":
-        return getFixForExtraRequire(error, compiler);
+        return getFixForExtraRequire(error, compiler, EXTRA_REQUIRE);
       default:
         return null;
     }
@@ -161,8 +164,9 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static SuggestedFix getFixForExtraRequire(JSError error, AbstractCompiler compiler) {
-    Matcher regexMatcher = EXTRA_REQUIRE.matcher(error.description);
+  private static SuggestedFix getFixForExtraRequire(
+      JSError error, AbstractCompiler compiler, Pattern pattern) {
+    Matcher regexMatcher = pattern.matcher(error.description);
     Preconditions.checkState(regexMatcher.matches(),
         "Unexpected error description: %s", error.description);
     String namespace = regexMatcher.group(1);
