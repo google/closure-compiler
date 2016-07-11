@@ -1094,7 +1094,10 @@ class PeepholeMinimizeConditions
       return false;
     }
     jsType = jsType.restrictByNotNullOrUndefined();
-    return !jsType.isUnknownType() && !jsType.isNoType() && jsType.isObject();
+    return !jsType.isUnknownType()
+        && !jsType.isNoType()
+        && !jsType.isAllType()
+        && jsType.isObject();
   }
 
   private static boolean isNumberType(Node n) {
@@ -1103,7 +1106,10 @@ class PeepholeMinimizeConditions
       return false;
     }
     // Don't restrict by nullable. Nullable numbers are not coercable.
-    return !jsType.isUnknownType() && !jsType.isNoType() && jsType.isNumberValueType();
+    return !jsType.isUnknownType()
+        && !jsType.isNoType()
+        && !jsType.isAllType()
+        && jsType.isNumberValueType();
   }
 
   private Node replaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {

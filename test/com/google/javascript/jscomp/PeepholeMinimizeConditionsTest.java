@@ -827,6 +827,12 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     testSame("var x = /** @type {?} */ (1);\nif (x != 0) throw 'a';\n");
   }
 
+  public void testCoercionSubstitution_allType() {
+    enableTypeCheck();
+    testSame("var x = /** @type {*} */ ({});\nif (x != null) throw 'a';\n");
+    testSame("var x = /** @type {*} */ (1);\nif (x != 0) throw 'a';\n");
+  }
+
   public void testCoercionSubstitution_primitivesVsNull() {
     enableTypeCheck();
     testSame("var x = 0;\nif (x != null) throw 'a';\n");
