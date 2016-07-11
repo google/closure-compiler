@@ -247,12 +247,12 @@ class MinimizeExitPoints extends AbstractShallowCallback implements CompilerPass
 
     // Now try to minimize the exits of the last child before the break, if it is removed
     // look at what has become the child before the break.
-    Node childBeforeBreak = block.getChildBefore(maybeBreak);
+    Node childBeforeBreak = maybeBreak.getPrevious();
     while (childBeforeBreak != null) {
       Node c = childBeforeBreak;
       tryMinimizeExits(c, exitType, labelName);
       // If the node is still the last child, we are done.
-      childBeforeBreak = block.getChildBefore(maybeBreak);
+      childBeforeBreak = maybeBreak.getPrevious();
       if (c == childBeforeBreak) {
         break;
       }

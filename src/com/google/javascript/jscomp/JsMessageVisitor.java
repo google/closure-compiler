@@ -468,9 +468,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
 
     // Check the preceding node for meta data
-    if ((parentOfVarNode != null) &&
-        maybeInitMetaDataFromHelpVar(builder,
-            parentOfVarNode.getChildBefore(varNode))) {
+    if ((parentOfVarNode != null)
+        && maybeInitMetaDataFromHelpVar(builder, varNode.getPrevious())) {
       return;
     }
 

@@ -3576,7 +3576,7 @@ final class NewTypeInference implements CompilerPass {
     JSType result = pickReqObjType(objLit);
     for (Node prop = objLit.getLastChild();
          prop != null;
-         prop = objLit.getChildBefore(prop)) {
+         prop = prop.getPrevious()) {
       QualifiedName pname =
           new QualifiedName(NodeUtil.getObjectLitKeyName(prop));
       if (prop.isGetterDef() || prop.isSetterDef()) {
@@ -3613,7 +3613,7 @@ final class NewTypeInference implements CompilerPass {
     TypeEnv env = outEnv;
     for (Node prop = objLit.getLastChild();
          prop != null;
-         prop = objLit.getChildBefore(prop)) {
+         prop = prop.getPrevious()) {
       env = analyzeExprBwd(prop.getFirstChild(), env, enumeratedType).env;
     }
     return new EnvTypePair(env, requiredType);

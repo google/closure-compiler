@@ -880,7 +880,7 @@ class CollapseProperties implements CompilerPass {
       if (isObjLit) {
         declareVarsForObjLitValues(
             n, alias, rvalue,
-            varNode, varParent.getChildBefore(varNode), varParent);
+            varNode, varNode.getPrevious(), varParent);
       }
 
       addStubsForUndeclaredProperties(n, alias, varParent, varNode);

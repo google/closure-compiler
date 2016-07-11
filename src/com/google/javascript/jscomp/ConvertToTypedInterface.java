@@ -92,7 +92,7 @@ class ConvertToTypedInterface extends AbstractPreOrderCallback implements Compil
             Preconditions.checkState(!callee.matchesQualifiedName("goog.forwardDeclare"), n);
             if (callee.matchesQualifiedName("goog.provide")) {
               Node childBefore;
-              while (null != (childBefore = parent.getChildBefore(n))
+              while (null != (childBefore = n.getPrevious())
                   && childBefore.getBooleanProp(Node.IS_NAMESPACE)) {
                 parent.removeChild(childBefore);
                 compiler.reportCodeChange();

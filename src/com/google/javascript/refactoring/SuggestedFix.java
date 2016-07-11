@@ -237,7 +237,7 @@ public final class SuggestedFix {
       if (deleteWhitespaceBefore
           && parent != null
           && (parent.isScript() || parent.isBlock())) {
-        Node previousSibling = parent.getChildBefore(n);
+        Node previousSibling = n.getPrevious();
         if (previousSibling != null) {
           int previousSiblingEndPosition =
               previousSibling.getSourceOffset() + previousSibling.getLength();

@@ -140,7 +140,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     for (Node inheritsCall : inheritsCalls) {
       Node superclassNameNode = inheritsCall.getLastChild();
       String superclassQname = superclassNameNode.getQualifiedName();
-      Node subclassNameNode = inheritsCall.getChildBefore(superclassNameNode);
+      Node subclassNameNode = superclassNameNode.getPrevious();
       String subclassQname = subclassNameNode.getQualifiedName();
       JavascriptClass superClass = classByAlias.get(superclassQname);
       JavascriptClass subClass = classByAlias.get(subclassQname);

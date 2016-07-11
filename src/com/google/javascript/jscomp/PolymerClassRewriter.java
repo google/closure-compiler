@@ -129,7 +129,7 @@ final class PolymerClassRewriter {
       Node scriptNode = NodeUtil.getEnclosingScript(exprRoot);
       scriptNode.addChildrenToFront(statements);
     } else {
-      Node beforeRoot = parent.getChildBefore(exprRoot);
+      Node beforeRoot = exprRoot.getPrevious();
       if (beforeRoot == null) {
         parent.addChildrenToFront(statements);
       } else {

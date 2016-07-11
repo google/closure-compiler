@@ -241,10 +241,9 @@ class MaybeReachingVariableUse extends
         } else {
           /*
            * We want to traverse in reverse order because we want the LAST
-           * definition in the sub-tree....
-           * But we have no better way to traverse in reverse other :'(
+           * definition in the sub-tree.
            */
-          for (Node c = n.getLastChild(); c != null; c = n.getChildBefore(c)) {
+          for (Node c = n.getLastChild(); c != null; c = c.getPrevious()) {
             computeMayUse(c, cfgNode, output, conditional);
           }
         }
