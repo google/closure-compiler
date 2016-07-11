@@ -374,7 +374,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           function = s.getRootNode();
         }
         if (function != null) {
-          Node callee = function.getParent().getChildBefore(function);
+          Node callee = function.getPrevious();
           inGoogScope = callee != null && callee.matchesQualifiedName("goog.scope");
         }
 
