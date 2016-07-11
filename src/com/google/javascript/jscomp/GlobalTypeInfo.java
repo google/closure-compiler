@@ -117,7 +117,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       DiagnosticType.warning(
           "JSC_NTI_COULD_NOT_INFER_CONST_TYPE",
           "All constants must be typed. The compiler could not infer the type "
-          + "of this constant. Please use an explicit type annotation.");
+          + "of this constant. Please use an explicit type annotation. "
+          + "For more information, see:\n"
+          + "https://github.com/google/closure-compiler/wiki/Using-NTI-(new-type-inference)#warnings-about-uninferred-constants");
 
   static final DiagnosticType MISPLACED_CONST_ANNOTATION =
       DiagnosticType.warning(
