@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.base.Preconditions;
+
 import java.util.ArrayDeque;
 
 /**
@@ -50,12 +52,17 @@ import java.util.ArrayDeque;
 public class TemplateTypeMapReplacer extends ModificationVisitor {
   private final TemplateTypeMap replacements;
   private ArrayDeque<TemplateType> visitedTypes;
+  private TemplateType keyType = null;
 
   public TemplateTypeMapReplacer(
       JSTypeRegistry registry, TemplateTypeMap replacements) {
     super(registry, false);
     this.replacements = replacements;
     this.visitedTypes = new ArrayDeque<>();
+  }
+
+  void setKeyType(TemplateType keyType) {
+    this.keyType = keyType;
   }
 
   @Override
@@ -68,7 +75,7 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
         return type;
       } else {
         JSType replacement = replacements.getUnresolvedOriginalTemplateType(type);
-        if (isRecursive(type, replacement)) {
+        if (replacement == keyType || isRecursive(type, replacement)) {
           // Recursive templated type definition (e.g. T resolved to Foo<T>).
           return type;
         }
@@ -77,6 +84,8 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
         JSType visitedReplacement = replacement.visit(this);
         visitedTypes.pop();
 
+        Preconditions.checkState(
+            visitedReplacement != keyType, "Trying to replace key %s with the same value", keyType);
         return visitedReplacement;
       }
     } else {

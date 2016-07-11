@@ -300,6 +300,22 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         false);
   }
 
+  public void testDontCrashOnRecursiveTemplateReference() {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+          "/**",
+          " * @constructor @struct",
+          " * @implements {Iterable<!Array<KEY|VAL>>}",
+          " * @template KEY, VAL",
+          " */",
+          "function Map(opt_iterable) {}"),
+        LINE_JOINER.join(
+          "/** @constructor @implements {Iterable<VALUE>} @template VALUE */",
+          "function Foo() {",
+          "  /** @type {!Map<VALUE, VALUE>} */ this.map = new Map;",
+          "}"));
+  }
+
   public void testTemplatizedArray1() {
     testTypes("/** @param {!Array<number>} a\n" +
         "* @return {string}\n" +

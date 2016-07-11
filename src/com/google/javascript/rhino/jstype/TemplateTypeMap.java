@@ -73,20 +73,20 @@ public class TemplateTypeMap implements Serializable {
                   ImmutableList<JSType> templateValues) {
     Preconditions.checkNotNull(templateKeys);
     Preconditions.checkNotNull(templateValues);
+    Preconditions.checkArgument(templateValues.size() <= templateKeys.size());
 
     this.registry = registry;
     this.templateKeys = templateKeys;
-
-    int nKeys = templateKeys.size();
-    this.templateValues = templateValues.size() > nKeys ?
-        templateValues.subList(0, nKeys) : templateValues;
+    this.templateValues = templateValues;
 
     // Iteratively resolve any JSType values that refer to the TemplateType keys
     // of this TemplateTypeMap.
-    TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
-        registry, this);
+    TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, this);
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-    for (JSType templateValue : this.templateValues) {
+    for (int nValues = this.templateValues.size(), i = 0; i < nValues; i++) {
+      TemplateType templateKey = this.templateKeys.get(i);
+      replacer.setKeyType(templateKey);
+      JSType templateValue = this.templateValues.get(i);
       builder.add(templateValue.visit(replacer));
     }
     this.resolvedTemplateValues = builder.build();
