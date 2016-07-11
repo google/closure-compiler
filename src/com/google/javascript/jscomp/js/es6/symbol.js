@@ -52,6 +52,7 @@ $jscomp.initSymbol = function() {
   // Note that we use this extra array populated by getOwnPropertyNames
   // because there's no way to access the *unpatched* getOwnPropertyNames
   // from the getOwnPropertySymbols patch.
+  /** @type {!Array<string>} */
   var symbols = [];
   var removeSymbolsPatch = function(orig) {
     return function(target) {

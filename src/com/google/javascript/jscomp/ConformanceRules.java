@@ -1261,8 +1261,7 @@ public final class ConformanceRules {
       // TODO(tbreisacher): Figure out how to remove this restriction.
       String filename = n.getSourceFileName();
       if (filename != null
-          && (filename.contains("synthetic:es6/symbol")
-              || filename.contains("synthetic:es6/weakmap")
+          && (filename.contains("synthetic:es6/weakmap")
               || filename.contains("synthetic:es6/weakset")
               || filename.contains("synthetic:runtime_type_check"))) {
         return ConformanceResult.CONFORMANCE;
