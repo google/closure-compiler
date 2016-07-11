@@ -41,6 +41,9 @@ angular.$http.Response.prototype.data;
 /** @type {number} */
 angular.$http.Response.prototype.status;
 
+/** @type {string} */
+angular.$http.Response.prototype.statusText;
+
 /**
  * @param {string=} name
  * @return {string|Object}
