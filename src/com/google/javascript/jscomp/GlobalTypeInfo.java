@@ -46,6 +46,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -2491,9 +2492,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   @Override
   public String getReadableTypeName(Node n) {
-    // TODO(aravindpg): Unimplemented for now. Implementation should follow the one in
-    // JSTypeRegistry.
-    throw new UnsupportedOperationException("getReadableTypeName not implemented yet");
+    // TODO(aravindpg): stub, could implement in a more sophisticated way, following the
+    // implementation in JSTypeRegistry.
+    if (n.getTypeI() == null) {
+      return "<node (" + compiler.toSource(n) + ")>";
+    }
+    return n.getTypeI().toString();
   }
 
   @Override

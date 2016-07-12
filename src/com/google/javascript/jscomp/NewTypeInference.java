@@ -39,6 +39,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1684,7 +1685,7 @@ final class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       expr.removeProp(Node.ANALYZED_DURING_GTI);
-      // No need to set a type on the assignment expression
+      markAndGetTypeOfPreanalyzedNode(expr.getFirstChild(), inEnv, true);
       return new EnvTypePair(inEnv, requiredType);
     }
     mayWarnAboutConst(expr);
@@ -3742,6 +3743,9 @@ final class NewTypeInference implements CompilerPass {
   // Some expressions are analyzed during GTI, so they're skipped here.
   // But we must annotate them with a type anyway.
   private JSType markAndGetTypeOfPreanalyzedNode(Node qnameNode, TypeEnv env, boolean isFwd) {
+    if (NodeUtil.getRootOfQualifiedName(qnameNode).isThis()) {
+      return null;
+    }
     switch (qnameNode.getType()) {
       case NAME: {
         JSType result = envGetType(env, qnameNode.getString());
@@ -3759,17 +3763,6 @@ final class NewTypeInference implements CompilerPass {
           result = recvType.getProp(new QualifiedName(pname));
         }
 
-        // TODO(dimvar): revisit this decision?
-        // The old type system has a special type for Foo.prototype, even though
-        // it is Object with extra properties.
-        // We don't have a special type, so, for simplicity when converting to
-        // the old types, we cheat here and annotate the Foo.prototype node as
-        // a Foo instance.
-        if (pname.equals("prototype")
-            && (recvType.isConstructor() || recvType.isInterfaceDefinition())) {
-          FunctionType ft = recvType.getFunTypeIfSingletonObj();
-          result = ft.getInstanceTypeOfCtor();
-        }
         if (result == null) {
           warnings.add(JSError.make(qnameNode, UNKNOWN_NAMESPACE_PROPERTY,
                   qnameNode.getQualifiedName()));
@@ -3784,7 +3777,8 @@ final class NewTypeInference implements CompilerPass {
       }
       default:
         throw new RuntimeException(
-            "markAndGetTypeOfPreanalyzedNode: unexpected node " + qnameNode.getType());
+            "markAndGetTypeOfPreanalyzedNode: unexpected node " + compiler.toSource(qnameNode)
+            + " with token " + qnameNode.getType());
     }
   }
 

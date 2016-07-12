@@ -22,12 +22,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1532,7 +1534,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public TypeI restrictByNotNullOrUndefined() {
-    throw new UnsupportedOperationException("restrictByNotNullOrUndefined not implemented yet.");
+    return this.removeType(NULL_OR_UNDEF);
   }
 
   @Override
@@ -1546,8 +1548,8 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public JSType autoboxAndGetObject() {
-    throw new UnsupportedOperationException("autoboxAndGetObject not implemented yet");
+  public ObjectTypeI autoboxAndGetObject() {
+    return this.autobox().restrictByNotNullOrUndefined().toMaybeObjectType();
   }
 
   @Override
@@ -1572,7 +1574,8 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public String getDisplayName() {
-    throw new UnsupportedOperationException("getDisplayName not implemented yet");
+    // TODO(aravindpg): stub, could implement in a more sophisticated way
+    return toString();
   }
 
   @Override
@@ -1594,7 +1597,13 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public Node getSource() {
-    throw new UnsupportedOperationException("getSource not implemented yet");
+    if (isConstructor()) {
+      JSType instance = getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
+      return instance.getNominalTypeIfSingletonObj().getDefSite();
+    }
+    return this.isSingletonObj()
+        ? getNominalTypeIfSingletonObj().getDefSite()
+        : null;
   }
 
   @Override
@@ -1626,32 +1635,52 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public FunctionTypeI getConstructor() {
-    throw new UnsupportedOperationException("getConstructor not implemented yet");
+    Preconditions.checkState(this.isSingletonObj());
+    FunctionType ctorType = this.getNominalTypeIfSingletonObj().getConstructorFunction();
+    return commonTypes.fromFunctionType(ctorType);
   }
 
   @Override
   public JSType getPrototypeObject() {
-    throw new UnsupportedOperationException("getPrototypeObject not implemented yet");
+    Preconditions.checkState(this.isSingletonObj());
+    if (this.equals(TOP_OBJECT)) {
+      // In NTI, TOP_OBJECT is the supertype of all objects, which is
+      // the same as an instance of Object. In JS's dynamic semantics, the
+      // only object without a __proto__ is Object.prototype, but it's not
+      // representable in NTI.
+      // Returning null for TOP_OBJECT is technically wrong, because an instance
+      // of Object has a __proto__, but it doesn't break any tests and we need it
+      // to avoid going up the prototype chain forever.
+      return null;
+    } else {
+      return getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
+    }
   }
 
   @Override
   public JSDocInfo getJSDocInfo() {
-    throw new UnsupportedOperationException("getJSDocInfo not implemented yet");
+    return getSource() == null ? null : NodeUtil.getBestJSDocInfo(getSource());
   }
 
   @Override
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
-    throw new UnsupportedOperationException("getOwnPropertyJSDocInfo not implemented yet");
+    Node defsite = this.getOwnPropertyDefsite(propertyName);
+    if (defsite != null) {
+      return NodeUtil.getBestJSDocInfo(defsite);
+    }
+    return null;
   }
 
   @Override
   public Node getOwnPropertyDefsite(String propertyName) {
-    throw new UnsupportedOperationException("getOwnPropertyDefsite not implemented yet");
+    Preconditions.checkState(this.isSingletonObj());
+    return this.getObjTypeIfSingletonObj().getOwnPropertyDefSite(propertyName);
   }
 
   @Override
   public Node getPropertyDefsite(String propertyName) {
-    throw new UnsupportedOperationException("getPropertyDefsite not implemented yet");
+    Preconditions.checkState(this.isSingletonObj());
+    return this.getObjTypeIfSingletonObj().getPropertyDefSite(propertyName);
   }
 
   @Override
@@ -1661,22 +1690,27 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isPrototypeObject() {
-    throw new UnsupportedOperationException("isPrototypeObject not implemented yet");
+    // TODO(aravindpg): this is just a complete stub to ensure that we never enter a codepath
+    // that depends on us being a prototype object.
+    return false;
   }
 
   @Override
   public boolean isInstanceofObject() {
-    throw new UnsupportedOperationException("isObjectLiteral not implemented yet");
+    return this.isSingletonObj() && this.getNominalTypeIfSingletonObj().isBuiltinObject();
   }
 
   @Override
   public boolean isInstanceType() {
-    throw new UnsupportedOperationException("isInstanceType not implemented yet");
+    Preconditions.checkState(this.isSingletonObj());
+    return this.getNominalTypeIfSingletonObj().isClass();
   }
 
   @Override
   public boolean hasProperty(String propertyName) {
-    throw new UnsupportedOperationException("hasProperty not implemented yet");
+    Preconditions.checkState(this.isSingletonObj());
+    Preconditions.checkArgument(!propertyName.contains("."));
+    return hasProp(new QualifiedName(propertyName));
   }
 }
 

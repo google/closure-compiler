@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -296,7 +297,7 @@ public final class RawNominalType extends Namespace {
     return this.interfaces == null ? ImmutableSet.<NominalType>of() : this.interfaces;
   }
 
-  private Property getOwnProp(String pname) {
+  Property getOwnProp(String pname) {
     Property p = classProps.get(pname);
     if (p != null) {
       return p;
@@ -484,6 +485,11 @@ public final class RawNominalType extends Namespace {
       this.randomProps = this.randomProps.without(pname);
     }
     Property newProp;
+    // If this property already exists and has a defsite, and the defsite we
+    // currently have is null, then keep the old defsite.
+    if (defSite == null && this.protoProps.containsKey(pname)) {
+      defSite = this.protoProps.get(pname).getDefSite();
+    }
     if (isConstant) {
       newProp = Property.makeConstant(defSite, type, type);
     } else if (isStructuralInterface() && type != null

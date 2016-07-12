@@ -199,6 +199,8 @@ public abstract class Namespace {
     if (this.namespaces.containsKey(pname)) {
       Namespace subns = this.namespaces.get(pname);
       Preconditions.checkState(subns.namespaceType != null);
+      // TODO(aravindpg): we need a defsite here for the test
+      // CheckAccessControlsTest::testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace4
       return Property.make(subns.namespaceType, subns.namespaceType);
     }
     if (this.otherProps.containsKey(pname)) {

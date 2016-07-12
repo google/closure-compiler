@@ -22,6 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.google.javascript.rhino.Node;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +51,11 @@ public final class NominalType {
     this.rawType = rawType;
   }
 
-  // This should only be called during GlobalTypeInfo.
+  // This should only be called during GlobalTypeInfo. All other calling contexts
+  // expect fully-instantiated types for properties defined on types, etc., but by accessing
+  // the raw nominal type directly they will get the uninstantiated generic types instead.
   public RawNominalType getRawNominalType() {
+    // If the raw nominal type is finalized, then we are not in GlobalTypeInfo any more.
     Preconditions.checkState(!this.rawType.isFinalized());
     return this.rawType;
   }
@@ -140,6 +145,14 @@ public final class NominalType {
 
   public boolean isUninstantiatedGenericType() {
     return this.rawType.isGeneric() && typeMap.isEmpty();
+  }
+
+  public Node getDefSite() {
+    return this.rawType.getDefSite();
+  }
+
+  public FunctionType getConstructorFunction() {
+    return this.rawType.getConstructorFunction();
   }
 
   NominalType instantiateGenerics(List<JSType> types) {
@@ -237,7 +250,7 @@ public final class NominalType {
     return this.rawType.getSuperClass().instantiateGenerics(typeMap);
   }
 
-  public JSType getPrototype() {
+  public JSType getPrototypePropertyOfCtor() {
     Preconditions.checkState(this.rawType.isFinalized());
     return this.rawType.getCtorPropDeclaredType("prototype")
         .substituteGenerics(typeMap);
@@ -277,6 +290,8 @@ public final class NominalType {
       return Property.make(elmType, null);
     }
     Property p = this.rawType.getProp(pname);
+    // TODO(aravindpg): Also look for getters and setters specially (in RawNominalType::protoProps),
+    // but avoid putting them in the hot path of getProp.
     return p == null ? null : p.substituteGenerics(typeMap);
   }
 
@@ -286,6 +301,11 @@ public final class NominalType {
       return null;
     }
     return type.substituteGenerics(typeMap);
+  }
+
+  Property getOwnProp(String pname) {
+    Property p = this.rawType.getOwnProp(pname);
+    return p == null ? null : p.substituteGenerics(typeMap);
   }
 
   public boolean hasConstantProp(String pname) {

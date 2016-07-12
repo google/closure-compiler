@@ -355,6 +355,9 @@ final class NTIScope implements DeclaredTypeRegistry {
       }
       NTIScope funScope = (NTIScope) decl.getFunctionScope();
       if (funScope != null) {
+        Preconditions.checkNotNull(
+            funScope.getDeclaredFunctionType(),
+            "decl=%s, funScope=%s", decl, funScope);
         return getCommonTypes().fromFunctionType(
             funScope.getDeclaredFunctionType().toFunctionType());
       }
@@ -632,8 +635,11 @@ final class NTIScope implements DeclaredTypeRegistry {
   public JSType getType(String typeName) {
     Preconditions.checkNotNull(
         preservedNamespaces, "Failed to preserve namespaces post-finalization");
-    RawNominalType nominalType = (RawNominalType) preservedNamespaces.get(typeName);
-    return nominalType == null ? null : nominalType.getInstanceAsJSType();
+    Namespace ns = preservedNamespaces.get(typeName);
+    if (ns instanceof RawNominalType) {
+      return ((RawNominalType) ns).getInstanceAsJSType();
+    }
+    return null;
   }
 
   void resolveTypedefs(JSTypeCreatorFromJSDoc typeParser) {

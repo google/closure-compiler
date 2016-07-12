@@ -216,7 +216,7 @@ public final class FunctionType {
     Preconditions.checkState(isUniqueConstructor());
     NominalType nt = getNominalTypeIfSingletonObj(this.nominalType);
     NominalType superClass = nt.getInstantiatedSuperclass();
-    return superClass == null ? null : superClass.getPrototype();
+    return superClass == null ? null : superClass.getPrototypePropertyOfCtor();
   }
 
   public boolean isQmarkFunction() {

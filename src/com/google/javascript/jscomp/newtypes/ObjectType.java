@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
+import com.google.javascript.rhino.Node;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -338,10 +340,15 @@ final class ObjectType implements TypeWithProperties {
         if (isDeclared && declType == null) {
           declType = type;
         }
+        // If we're about to override an existing property, then preserve its defsite.
+        Node defsite = null;
+        if (hasProp(qname)) {
+          defsite = getLeftmostProp(qname).getDefSite();
+        }
         newProps = newProps.with(pname,
             isConstant ?
-            Property.makeConstant(null, type, declType) :
-            Property.make(type, isDeclared ? declType : null));
+            Property.makeConstant(defsite, type, declType) :
+            Property.makeWithDefsite(defsite, type, isDeclared ? declType : null));
       }
     } else { // This has a nested object
       String objName = qname.getLeftmostName();
@@ -1094,6 +1101,10 @@ final class ObjectType implements TypeWithProperties {
   }
 
   private Property getLeftmostProp(QualifiedName qname) {
+    return getLeftmostPropHelper(qname, false);
+  }
+
+  private Property getLeftmostPropHelper(QualifiedName qname, boolean ownProp) {
     String pname = qname.getLeftmostName();
     Property p = props.get(pname);
     if (p != null) {
@@ -1106,9 +1117,24 @@ final class ObjectType implements TypeWithProperties {
       }
     }
     if (this.nominalType != null) {
-      return this.nominalType.getProp(pname);
+      return ownProp
+          ? this.nominalType.getOwnProp(pname)
+          : this.nominalType.getProp(pname);
     }
-    return builtinObject == null ? null : builtinObject.getProp(pname);
+    if (!ownProp && builtinObject != null) {
+      return builtinObject.getProp(pname);
+    }
+    return null;
+  }
+
+  Node getPropertyDefSite(String propertyName) {
+    Property p = getLeftmostProp(new QualifiedName(propertyName));
+    return p == null ? null : p.getDefSite();
+  }
+
+  Node getOwnPropertyDefSite(String propertyName) {
+    Property p = getLeftmostPropHelper(new QualifiedName(propertyName), /* ownProp */ true);
+    return p == null ? null : p.getDefSite();
   }
 
   @Override
@@ -1301,7 +1327,7 @@ final class ObjectType implements TypeWithProperties {
       fn.appendTo(builder);
       builder.append("|>");
     }
-    if (nominalType == null || !props.isEmpty()) {
+    if (nominalType == null && ns == null || !props.isEmpty()) {
       builder.append('{');
       boolean firstIteration = true;
       for (String pname : new TreeSet<>(props.keySet())) {
