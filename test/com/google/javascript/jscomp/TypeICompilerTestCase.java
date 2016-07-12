@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
 /**
@@ -27,6 +25,20 @@ import java.util.List;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public abstract class TypeICompilerTestCase extends CompilerTestCase {
+
+  protected static enum TypeInferenceMode {
+    OtiOnly,
+    NtiOnly,
+    Both
+  }
+
+  protected TypeInferenceMode mode = TypeInferenceMode.Both;
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    this.mode = TypeInferenceMode.Both;
+  }
 
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
@@ -43,30 +55,16 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       DiagnosticType error,
       DiagnosticType warning,
       String description) {
-    enableTypeCheck();
-    super.test(externs, js, expected, error, warning, description);
-    disableTypeCheck();
-    enableNewTypeInference();
-    super.test(externs, js, expected, error, warning, description);
-    disableNewTypeInference();
-  }
-
-  public void testSameOtiOnly(String externs, String js, DiagnosticType warning) {
-    enableTypeCheck();
-    SourceFile externsFile = SourceFile.fromCode("externs", externs);
-    externsFile.setIsExtern(true);
-    List<SourceFile> externsInputs = ImmutableList.of(externsFile);
-    super.test(externsInputs, js, null, null, warning, null);
-    disableTypeCheck();
-  }
-
-  public void testSameNtiOnly(String externs, String js, DiagnosticType warning) {
-    enableNewTypeInference();
-    SourceFile externsFile = SourceFile.fromCode("externs", externs);
-    externsFile.setIsExtern(true);
-    List<SourceFile> externsInputs = ImmutableList.of(externsFile);
-    super.test(externsInputs, js, null, null, warning, null);
-    disableNewTypeInference();
+    if (this.mode == TypeInferenceMode.Both || this.mode == TypeInferenceMode.OtiOnly) {
+      enableTypeCheck();
+      super.test(externs, js, expected, error, warning, description);
+      disableTypeCheck();
+    }
+    if (this.mode == TypeInferenceMode.Both || this.mode == TypeInferenceMode.NtiOnly) {
+      enableNewTypeInference();
+      super.test(externs, js, expected, error, warning, description);
+      disableNewTypeInference();
+    }
   }
 }
 

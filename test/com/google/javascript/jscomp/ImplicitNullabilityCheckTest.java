@@ -59,18 +59,19 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   public void testNullableTypedef() {
     // Arguable whether or not this deserves a warning, so leaving
     // out of NTI for now.
-    testSameOtiOnly(
-        DEFAULT_EXTERNS,
-        "/** @typedef {?number} */ var Num; var /** Num */ x;",
-        ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
+    this.mode = TypeInferenceMode.OtiOnly;
+    warnImplicitlyNullable(
+        "/** @typedef {?number} */ var Num; var /** Num */ x;");
   }
 
   public void testUnkownTypenameDoesntWarn() {
     // Different warnings in OTI and NTI
-    testSameOtiOnly(
+    this.mode = TypeInferenceMode.OtiOnly;
+    testSame(
         DEFAULT_EXTERNS, "/** @type {gibberish} */ var x;", RhinoErrorReporter.TYPE_PARSE_ERROR);
 
-    testSameNtiOnly(
+    this.mode = TypeInferenceMode.NtiOnly;
+    testSame(
         DEFAULT_EXTERNS, "/** @type {gibberish} */ var x;", GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
   }
 
@@ -85,7 +86,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
         "function Foo() {}",
         "/** @type {Foo} */ var x;"));
 
-    // TODO(aravindpg): this ought to pass under both, or at any rate NTI.
+    // TODO(aravindpg): this ought to warn under both, or at any rate NTI.
     noWarning(LINE_JOINER.join(
         "function f() {",
         "  /** @constructor */",

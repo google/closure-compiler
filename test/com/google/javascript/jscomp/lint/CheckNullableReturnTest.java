@@ -67,7 +67,9 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   public void testNotNullableReturn()  {
     // Empty function body. Ignore this case. The remainder of the functions in
     // this test have non-empty bodies.
-    testBodyOkOti("");
+    this.mode = TypeInferenceMode.OtiOnly;
+    testBodyOk("");
+    this.mode = TypeInferenceMode.Both;
 
     // Simple case.
     testBodyError("return {};");
@@ -88,7 +90,8 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
     testBodyOk("try { } finally { return null; }");
     testBodyOk("try { return {}; } finally { return null; }");
     testBodyOk("try { return null; } finally { return {}; }");
-    testBodyErrorOti("try { } catch (e) { return null; } finally { return {}; }");
+    this.mode = TypeInferenceMode.OtiOnly;
+    testBodyError("try { } catch (e) { return null; } finally { return {}; }");
   }
 
   public void testKnownConditions() {
@@ -113,7 +116,8 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
     testBodyError("while (0) {} return {}");
 
     // Not known.
-    testBodyErrorOti("while(x) { return {}; }");
+    this.mode = TypeInferenceMode.OtiOnly;
+    testBodyError("while(x) { return {}; }");
   }
 
   public void testTwoBranches() {
@@ -179,7 +183,8 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testNoExplicitReturn() {
-    testErrorOti(LINE_JOINER.join(
+    this.mode = TypeInferenceMode.OtiOnly;
+    testError(LINE_JOINER.join(
         "/** @return {SomeType} */",
         "function f() {",
         "  if (foo) {",
@@ -201,11 +206,12 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testNoWarningOnEmptyFunction() {
-    testOkOti(LINE_JOINER.join(
+    this.mode = TypeInferenceMode.OtiOnly;
+    testOk(LINE_JOINER.join(
         "/** @return {SomeType} */",
         "function f() {}"));
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testOkOti(LINE_JOINER.join(
+    testOk(LINE_JOINER.join(
         "var obj = {",
         "  /** @return {SomeType} */\n",
         "  f() {}",
@@ -255,16 +261,8 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
     testSame(externs, js, null);
   }
 
-  private void testOkOti(String js) {
-    testSameOtiOnly(externs, js, null);
-  }
-
   private void testError(String js) {
     testSame(externs, js, CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
-  }
-
-  private void testErrorOti(String js) {
-    testSameOtiOnly(externs, js, CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
   }
 
   private void testBodyOk(String body) {
@@ -273,21 +271,9 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
     testOk(createShorthandFunctionInObjLit(body));
   }
 
-  private void testBodyOkOti(String body) {
-    testOkOti(createFunction(body));
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testOkOti(createShorthandFunctionInObjLit(body));
-  }
-
   private void testBodyError(String body) {
     testError(createFunction(body));
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testError(createShorthandFunctionInObjLit(body));
-  }
-
-  private void testBodyErrorOti(String body) {
-    testErrorOti(createFunction(body));
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testErrorOti(createShorthandFunctionInObjLit(body));
   }
 }
