@@ -3240,7 +3240,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "/** @constructor */\n" +
         "ns.C = function () {this.someProperty = 1}\n" +
         "alert(new ns.C().someProperty + new ns.C().someProperty);\n";
-    assertTrue(options.inlineProperties);
+    assertTrue(options.shouldInlineProperties());
     assertTrue(options.collapseProperties);
     // CollapseProperties used to prevent inlining this property.
     test(options, code, "alert(2);");
@@ -3260,7 +3260,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "  constructor: function () {this.someProperty = 1}\n" +
         "});\n" +
         "alert(new ns.C().someProperty + new ns.C().someProperty);\n";
-    assertTrue(options.inlineProperties);
+    assertTrue(options.shouldInlineProperties());
     assertTrue(options.collapseProperties);
     // CollapseProperties used to prevent inlining this property.
     test(options, code, "alert(2);");
@@ -3279,7 +3279,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "  constructor: function () {this.someProperty = 1}\n" +
         "});\n" +
         "alert(new C().someProperty + new C().someProperty);\n";
-    assertTrue(options.inlineProperties);
+    assertTrue(options.shouldInlineProperties());
     assertTrue(options.collapseProperties);
     // CollapseProperties used to prevent inlining this property.
     test(options, code, "alert(2);");
@@ -3304,7 +3304,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "});" +
         "var x = new C();\n" +
         "x.someMethod(x.someProperty);\n";
-    assertTrue(options.inlineProperties);
+    assertTrue(options.shouldInlineProperties());
     assertTrue(options.collapseProperties);
     // CollapseProperties used to prevent inlining this property.
     test(options, code, TypeValidator.TYPE_MISMATCH_WARNING);

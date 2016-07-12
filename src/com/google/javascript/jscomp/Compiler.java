@@ -316,15 +316,15 @@ public class Compiler extends AbstractCompiler {
 
     // Turn off type-based optimizations when type checking is off
     if (!options.checkTypes) {
-      options.disambiguateProperties = false;
-      options.ambiguateProperties = false;
-      options.inlineProperties = false;
-      options.useTypesForOptimization = false;
+      options.setDisambiguateProperties(false);
+      options.setAmbiguateProperties(false);
+      options.setInlineProperties(false);
+      options.setUseTypesForOptimization(false);
     }
 
     if (options.legacyCodeCompile) {
-      options.disambiguateProperties = false;
-      options.ambiguateProperties = false;
+      options.setDisambiguateProperties(false);
+      options.setAmbiguateProperties(false);
       options.useNonStrictWarningsGuard();
     }
 
@@ -1043,8 +1043,8 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   boolean areNodesEqualForInlining(Node n1, Node n2) {
-    if (options.ambiguateProperties ||
-        options.disambiguateProperties) {
+    if (options.shouldAmbiguateProperties() ||
+        options.shouldDisambiguateProperties()) {
       // The type based optimizations require that type information is preserved
       // during other optimizations.
       return n1.isEquivalentToTyped(n2);

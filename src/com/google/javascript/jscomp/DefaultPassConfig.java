@@ -579,7 +579,7 @@ public final class DefaultPassConfig extends PassConfig {
     // soon after type checking, both so that it can make use of type
     // information and so that other passes can take advantage of the renamed
     // properties.
-    if (options.disambiguateProperties) {
+    if (options.shouldDisambiguateProperties()) {
       passes.add(disambiguateProperties);
     }
 
@@ -731,7 +731,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(extractPrototypeMemberDeclarations);
     }
 
-    if (options.ambiguateProperties &&
+    if (options.shouldAmbiguateProperties() &&
         (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED)) {
       passes.add(ambiguateProperties);
     }
@@ -862,7 +862,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inlineFunctions);
     }
 
-    if (options.inlineProperties) {
+    if (options.shouldInlineProperties()) {
       passes.add(inlineProperties);
     }
 

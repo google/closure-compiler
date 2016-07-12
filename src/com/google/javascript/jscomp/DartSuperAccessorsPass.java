@@ -56,7 +56,8 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
     // We currently rely on JSCompiler_renameProperty, which is not type-aware.
     // We would need something like goog.reflect.object (with the super class type),
     // but right now this would yield much larger code.
-    Preconditions.checkState(!options.ambiguateProperties && !options.disambiguateProperties,
+    Preconditions.checkState(
+        !options.shouldAmbiguateProperties() && !options.shouldDisambiguateProperties(),
         "Dart super accessors pass is not compatible with property (dis)ambiguation yet");
   }
 

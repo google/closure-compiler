@@ -183,13 +183,13 @@ public enum CompilationLevel {
     switch (this) {
       case ADVANCED_OPTIMIZATIONS:
         options.inferTypes = true;
-        options.disambiguateProperties = true;
-        options.ambiguateProperties = true;
-        options.inlineProperties = true;
-        options.useTypesForOptimization = true;
+        options.setDisambiguateProperties(true);
+        options.setAmbiguateProperties(true);
+        options.setInlineProperties(true);
+        options.setUseTypesForOptimization(true);
         break;
       case SIMPLE_OPTIMIZATIONS:
-        options.useTypesForOptimization = true;
+        options.setUseTypesForOptimization(true);
         break;
       case WHITESPACE_ONLY:
         break;

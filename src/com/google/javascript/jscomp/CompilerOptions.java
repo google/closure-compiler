@@ -345,7 +345,7 @@ public class CompilerOptions {
   boolean assumeClosuresOnlyCaptureReferences;
 
   /** Inlines properties */
-  boolean inlineProperties;
+  private boolean inlineProperties;
 
   /** Move code to a deeper module */
   public boolean crossModuleCodeMotion;
@@ -575,10 +575,10 @@ public class CompilerOptions {
    * Rename properties to disambiguate between unrelated fields based on
    * type information.
    */
-  public boolean disambiguateProperties;
+  private boolean disambiguateProperties;
 
   /** Rename unrelated properties to the same name to reduce code size. */
-  public boolean ambiguateProperties;
+  private boolean ambiguateProperties;
 
   /** Input sourcemap files, indexed by the JS files they refer to */
   ImmutableMap<String, SourceMapInput> inputSourceMaps;
@@ -1485,6 +1485,10 @@ public class CompilerOptions {
     inlineProperties = enable;
   }
 
+  boolean shouldInlineProperties() {
+    return inlineProperties;
+  }
+
   /**
    * Set the variable removal policy for the compiler.
    */
@@ -2213,8 +2217,16 @@ public class CompilerOptions {
     this.disambiguateProperties = disambiguateProperties;
   }
 
+  boolean shouldDisambiguateProperties() {
+    return this.disambiguateProperties;
+  }
+
   public void setAmbiguateProperties(boolean ambiguateProperties) {
     this.ambiguateProperties = ambiguateProperties;
+  }
+
+  boolean shouldAmbiguateProperties() {
+    return this.ambiguateProperties;
   }
 
   public void setAnonymousFunctionNaming(
