@@ -64,6 +64,19 @@ MediaSource.prototype.addSourceBuffer = function(type) {};
  */
 MediaSource.prototype.removeSourceBuffer = function(sourceBuffer) {};
 
+/**
+ * Updates the live seekable range.
+ * @param {number} start
+ * @param {number} end
+ */
+MediaSource.prototype.setLiveSeekableRange = function(start, end) {};
+
+/**
+ * Clears the live seekable range.
+ * @return {void}
+ */
+MediaSource.prototype.clearLiveSeekableRange = function() {};
+
 /** @type {string} */
 MediaSource.prototype.readyState;
 
