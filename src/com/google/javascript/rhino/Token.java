@@ -239,11 +239,6 @@ public enum Token {
     PLACEHOLDER1,
     PLACEHOLDER2;
 
-  @Deprecated
-  public static String name(Token token) {
-    return token.toString();
-  }
-
   /** If the arity isn't always the same, this function returns -1 */
   public static int arity(Token token) {
     switch (token) {
