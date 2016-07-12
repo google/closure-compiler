@@ -1486,7 +1486,7 @@ public class CompilerOptions {
   }
 
   boolean shouldInlineProperties() {
-    return inlineProperties;
+    return useTypesForOptimization || inlineProperties;
   }
 
   /**
@@ -2218,7 +2218,7 @@ public class CompilerOptions {
   }
 
   boolean shouldDisambiguateProperties() {
-    return this.disambiguateProperties;
+    return this.useTypesForOptimization || this.disambiguateProperties;
   }
 
   public void setAmbiguateProperties(boolean ambiguateProperties) {
@@ -2226,7 +2226,7 @@ public class CompilerOptions {
   }
 
   boolean shouldAmbiguateProperties() {
-    return this.ambiguateProperties;
+    return this.useTypesForOptimization || this.ambiguateProperties;
   }
 
   public void setAnonymousFunctionNaming(
