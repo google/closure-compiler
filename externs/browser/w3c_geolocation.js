@@ -27,8 +27,8 @@
 function Geolocation() {}
 
 /**
- * @param {function(GeolocationPosition)} successCallback
- * @param {(function(GeolocationPositionError)|null)=} opt_errorCallback
+ * @param {function(!GeolocationPosition)} successCallback
+ * @param {(function(!GeolocationPositionError)|null)=} opt_errorCallback
  * @param {GeolocationPositionOptions=} opt_options
  */
 Geolocation.prototype.getCurrentPosition = function(successCallback,
@@ -36,8 +36,8 @@ Geolocation.prototype.getCurrentPosition = function(successCallback,
                                                        opt_options) {};
 
 /**
- * @param {function(GeolocationPosition)} successCallback
- * @param {(function(GeolocationPositionError)|null)=} opt_errorCallback
+ * @param {function(!GeolocationPosition)} successCallback
+ * @param {(function(!GeolocationPositionError)|null)=} opt_errorCallback
  * @param {GeolocationPositionOptions=} opt_options
  * @return {number}
  */
