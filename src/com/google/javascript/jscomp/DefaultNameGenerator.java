@@ -20,12 +20,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
-
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -76,12 +74,12 @@ final class DefaultNameGenerator implements NameGenerator {
 
   // TODO(user): Maybe we don't need a HashMap to look up.
   // I started writing a skip-list like data-structure that would let us
-  // have O(1) favors() and O(1) reset() but the code gotten very messy.
+  // have O(1) favors() and O(1) reset() but the code got very messy.
   // Lets start with a logical implementation first until performance becomes
   // a problem.
   private Map<Character, CharPriority> priorityLookupMap;
 
-  // It is important that the ordering of FIRST_CHAR is as close to NONFIRT_CHAR
+  // It is important that the ordering of FIRST_CHAR is as close to NONFIRST_CHAR
   // as possible. Using the ASCII ordering is not a good idea. The reason
   // is that we cannot use numbers as FIRST_CHAR yet the ACSII value of numbers
   // is very small. If we picked numbers first in NONFIRST_CHAR, we would
@@ -90,7 +88,7 @@ final class DefaultNameGenerator implements NameGenerator {
   static final char[] FIRST_CHAR =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
 
-  /** These appear after after the first character */
+  /** These appear after the first character */
   static final char[] NONFIRST_CHAR =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$"
         .toCharArray();
@@ -266,14 +264,14 @@ final class DefaultNameGenerator implements NameGenerator {
    */
   @Override
   public String generateNextName() {
-    while (true) {
-      String name = prefix;
-
+    String name;
+    do {
+      name = prefix;
       int i = nameCount;
 
       if (name.isEmpty()) {
         int pos = i % firstChars.length;
-        name += firstChars[pos].name;
+        name = String.valueOf(firstChars[pos].name);
         i /= firstChars.length;
       }
 
@@ -287,11 +285,8 @@ final class DefaultNameGenerator implements NameGenerator {
       nameCount++;
 
       // Make sure it's not a JS keyword or reserved name.
-      if (TokenStream.isKeyword(name) || reservedNames.contains(name)) {
-        continue;
-      }
+    } while (TokenStream.isKeyword(name) || reservedNames.contains(name));
 
-      return name;
-    }
+    return name;
   }
 }
