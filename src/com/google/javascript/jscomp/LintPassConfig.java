@@ -45,10 +45,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
         earlyLintChecks,
-        closureGoogScopeAliases,
         closureRewriteClass,
-        lateLintChecks,
-        checkRequires);
+        lateLintChecks);
   }
 
   @Override protected List<PassFactory> getOptimizations() {
@@ -71,18 +69,12 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckMissingSuper(compiler),
                   new CheckPrimitiveAsObject(compiler),
                   new CheckRequiresAndProvidesSorted(compiler),
+                  new CheckRequiresForConstructors(
+                      compiler, CheckRequiresForConstructors.Mode.SINGLE_FILE),
                   new CheckUnusedLabels(compiler),
                   new CheckUselessBlocks(compiler),
                   new ClosureCheckModule(compiler),
                   new Es6SuperCheck(compiler)));
-        }
-      };
-
-  private final PassFactory closureGoogScopeAliases =
-      new PassFactory("closureGoogScopeAliases", true) {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new ScopedAliases(compiler, null, options.getAliasTransformationHandler());
         }
       };
 
@@ -103,17 +95,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
               ImmutableList.<Callback>of(
                   new CheckInterfaces(compiler),
                   new CheckPrototypeProperties(compiler)));
-        }
-      };
-
-  // This cannot be part of lintChecks because the callbacks in the CombinedCompilerPass don't
-  // get access to the externs.
-  private final PassFactory checkRequires =
-      new PassFactory("checkRequires", true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new CheckRequiresForConstructors(
-              compiler, CheckRequiresForConstructors.Mode.SINGLE_FILE);
         }
       };
 }
