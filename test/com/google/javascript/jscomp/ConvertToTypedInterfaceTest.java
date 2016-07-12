@@ -34,8 +34,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
   }
 
-  public void testConstJsdocPropagation() {
-
+  public void testSimpleConstJsdocPropagation() {
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
     test("/** @const */ var x = true;", "/** @const {boolean} */ var x;");
     test("/** @const */ var x = 'str';", "/** @const {string} */ var x;");
@@ -49,6 +48,60 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
     testError(
         "/** @const */ var x = cond ? true : 5;",
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+  }
+
+  public void testConstJsdocPropagationForNames() {
+    test(
+        "/** @type {!Array<string>} */ var x = []; /** @const */ var y = x;",
+        "/** @type {!Array<string>} */ var x; /** @const {!Array<string>} */ var y;");
+
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo(/** number */ x) {",
+            "  /** @const */ this.x = x;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo(/** number */ x) {}",
+            "/** @const {number} */ Foo.prototype.x;"));
+
+    test(
+        LINE_JOINER.join(
+            "/** @constructor @param {!Array<string>} arr */",
+            "function Foo(arr) {",
+            "  /** @const */ this.arr = arr;",
+            "}"),
+        LINE_JOINER.join(
+          "/** @constructor @param {!Array<string>} arr */ function Foo(arr) {}",
+          "/** @const {!Array<string>} */ Foo.prototype.arr;"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor(/** number */ x) {",
+            "    /** @const */ this.x = x;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor(/** number */ x) {}",
+            "}",
+            "/** @const {number} */ Foo.prototype.x;"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  /** @param {number} x */",
+            "  constructor(x) {",
+            "    /** @const */ this.x = x;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class Foo {",
+            "  /** @param {number} x */",
+            "  constructor(x) {}",
+            "}",
+            "/** @const {number} */ Foo.prototype.x;"));
   }
 
   public void testRemoveUselessStatements() {

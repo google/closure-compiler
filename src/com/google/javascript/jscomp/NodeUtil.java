@@ -26,6 +26,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
@@ -4078,6 +4079,24 @@ public final class NodeUtil {
       return propNode.isString() && "toString".equals(propNode.getString());
     }
     return false;
+  }
+
+  /** Return declared JSDoc type for the given name declaration, or null if none present. */
+  @Nullable
+  static JSTypeExpression getDeclaredTypeExpression(Node declaration) {
+    Preconditions.checkArgument(declaration.isName());
+    JSDocInfo nameJsdoc = getBestJSDocInfo(declaration);
+    if (nameJsdoc != null) {
+      return nameJsdoc.getType();
+    }
+    Node parent = declaration.getParent();
+    if (parent.isParamList()) {
+      JSDocInfo functionJsdoc = getBestJSDocInfo(parent.getParent());
+      if (functionJsdoc != null) {
+        return functionJsdoc.getParameterType(declaration.getString());
+      }
+    }
+    return null;
   }
 
   /** Find the best JSDoc for the given node. */

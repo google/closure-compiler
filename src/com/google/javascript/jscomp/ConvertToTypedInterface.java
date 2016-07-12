@@ -75,14 +75,14 @@ class ConvertToTypedInterface implements CompilerPass {
         case EXPR_RESULT:
           if (NodeUtil.isExprAssign(n)) {
             Node expr = n.getFirstChild();
-            processName(expr.getFirstChild());
+            processName(t, expr.getFirstChild());
           }
           break;
         case VAR:
         case CONST:
         case LET:
           if (n.getChildCount() == 1) {
-            processName(n.getFirstChild());
+            processName(t, n.getFirstChild());
           }
           break;
         default:
@@ -90,7 +90,7 @@ class ConvertToTypedInterface implements CompilerPass {
       }
     }
 
-    private void processName(Node nameNode) {
+    private void processName(NodeTraversal t, Node nameNode) {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       if (!isInferrableConst(jsdoc, nameNode)) {
@@ -100,14 +100,14 @@ class ConvertToTypedInterface implements CompilerPass {
       if (rhs == null) {
         return;
       }
-      JSDocInfo newJsdoc = getTypedJSDoc(rhs, jsdoc);
+      JSDocInfo newJsdoc = getJSDocForRhs(t, rhs, jsdoc);
       if (newJsdoc != null) {
         jsdocNode.setJSDocInfo(newJsdoc);
         compiler.reportCodeChange();
       }
     }
 
-    private static JSDocInfo getTypedJSDoc(Node rhs, JSDocInfo oldJSDoc) {
+    private static JSDocInfo getJSDocForRhs(NodeTraversal t, Node rhs, JSDocInfo oldJSDoc) {
       switch (NodeUtil.getKnownValueType(rhs)) {
         case BOOLEAN:
           return getTypeJSDoc(oldJSDoc, "boolean");
@@ -119,10 +119,29 @@ class ConvertToTypedInterface implements CompilerPass {
           return getTypeJSDoc(oldJSDoc, "null");
         case VOID:
           return getTypeJSDoc(oldJSDoc, "void");
-        default:
-          return null;
+        case OBJECT:
+          break;
+        case UNDETERMINED:
+          if (rhs.isName()) {
+            Var decl = t.getScope().getVar(rhs.getString());
+            return getJSDocForName(decl, oldJSDoc);
+          }
+          break;
       }
+      return null;
     }
+
+    private static JSDocInfo getJSDocForName(Var decl, JSDocInfo oldJSDoc) {
+      if (decl == null) {
+        return null;
+      }
+      JSTypeExpression expr = NodeUtil.getDeclaredTypeExpression(decl.getNameNode());
+      if (expr == null) {
+        return null;
+      }
+      return getTypeJSDoc(oldJSDoc, expr);
+    }
+
   }
 
   private static class RemoveCode implements Callback {
@@ -427,9 +446,13 @@ class ConvertToTypedInterface implements CompilerPass {
     return getTypeJSDoc(oldJSDoc, type.toNonNullAnnotationString());
   }
 
-  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, String contents) {
+  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, JSTypeExpression newType) {
     JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(oldJSDoc);
-    builder.recordType(new JSTypeExpression(Node.newString(contents), ""));
+    builder.recordType(newType);
     return builder.build();
+  }
+
+  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, String contents) {
+    return getTypeJSDoc(oldJSDoc, new JSTypeExpression(Node.newString(contents), ""));
   }
 }
