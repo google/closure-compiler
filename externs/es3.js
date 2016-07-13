@@ -25,7 +25,104 @@
  */
 
 
-// These built-ins are still needed for compilation.
+// START ES6 RETROFIT CODE
+// symbol, Symbol and Symbol.iterator are actually ES6 types but some
+// Some types require them to be part of their definition (such as Array).
+
+
+// TODO(johnlenz): symbol should be a primitive type.
+/** @typedef {?} */
+var symbol;
+
+/**
+ * @param {string} description
+ * @return {symbol}
+ */
+function Symbol(description) {}
+
+
+/**
+ * @param {string} sym
+ * @return {symbol|undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/for
+ */
+Symbol.for;
+
+
+/**
+ * @param {symbol} sym
+ * @return {string|undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/keyFor
+ */
+Symbol.keyFor;
+
+
+// Well known symbols
+
+/** @const {symbol} */
+Symbol.iterator;
+
+/** @const {symbol} */
+Symbol.toStringTag;
+
+/** @const {symbol} */
+Symbol.unscopables;
+
+
+/**
+ * @record
+ * @template VALUE
+ */
+function IIterableResult() {};
+
+/** @type {boolean} */
+IIterableResult.prototype.done;
+
+/** @type {VALUE} */
+IIterableResult.prototype.value;
+
+
+
+/**
+ * @interface
+ * @template VALUE
+ */
+function Iterable() {}
+
+// TODO(johnlenz): remove this when the compiler understands "symbol" natively
+/**
+ * @return {Iterator<VALUE>}
+ * @suppress {externsValidation}
+ */
+Iterable.prototype[Symbol.iterator] = function() {};
+
+
+
+/**
+ * @interface
+ * @template VALUE
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol
+ */
+function Iterator() {}
+
+/**
+ * @param {VALUE=} value
+ * @return {!IIterableResult<VALUE>}
+ */
+Iterator.prototype.next;
+
+
+/**
+ * Use this to indicate a type is both an Iterator and an Iterable.
+ * @interface
+ * @extends {Iterator<T>}
+ * @extends {Iterable<T>}
+ * @template T
+ */
+function IteratorIterable() {}
+
+// END ES6 RETROFIT CODE
+
 
 /**
  * @interface
@@ -451,6 +548,7 @@ Function.prototype.toString = function() {};
 /**
  * @constructor
  * @implements {IArrayLike<T>}
+ * @implements {Iterable<T>}
  * @param {...*} var_args
  * @return {!Array<?>}
  * @nosideeffects
@@ -458,6 +556,12 @@ Function.prototype.toString = function() {};
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array
  */
 function Array(var_args) {}
+
+/**
+ * @return {Iterator<T>}
+ * @suppress {externsValidation}
+ */
+Array.prototype[Symbol.iterator] = function() {};
 
 // Functions:
 
