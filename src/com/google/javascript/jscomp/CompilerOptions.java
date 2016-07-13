@@ -614,6 +614,10 @@ public class CompilerOptions {
   /** Shared name generator */
   NameGenerator nameGenerator;
 
+  public void setNameGenerator(NameGenerator nameGenerator) {
+    this.nameGenerator = nameGenerator;
+  }
+
   //--------------------------------
   // Special-purpose alterations
   //--------------------------------
