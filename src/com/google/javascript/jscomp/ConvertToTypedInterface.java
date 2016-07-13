@@ -45,6 +45,11 @@ import java.util.Set;
  */
 class ConvertToTypedInterface implements CompilerPass {
 
+  static final DiagnosticType CONSTANT_WITHOUT_EXPLICIT_TYPE =
+      DiagnosticType.error(
+          "JSC_CONSTANT_WITHOUT_EXPLICIT_TYPE",
+          "/** @const */-annotated values in library API should have types explicitly specified.");
+
   private final AbstractCompiler compiler;
 
   ConvertToTypedInterface(AbstractCompiler compiler) {
@@ -53,7 +58,71 @@ class ConvertToTypedInterface implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverseEs6(compiler, root, new PropagateConstJsdoc(compiler));
     NodeTraversal.traverseRootsEs6(compiler, new RemoveCode(compiler), externs, root);
+  }
+
+  private static class PropagateConstJsdoc extends NodeTraversal.AbstractPostOrderCallback {
+    private final AbstractCompiler compiler;
+
+    PropagateConstJsdoc(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case EXPR_RESULT:
+          if (NodeUtil.isExprAssign(n)) {
+            Node expr = n.getFirstChild();
+            processName(expr.getFirstChild());
+          }
+          break;
+        case VAR:
+        case CONST:
+        case LET:
+          if (n.getChildCount() == 1) {
+            processName(n.getFirstChild());
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    private void processName(Node nameNode) {
+      Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
+      JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
+      if (!isInferrableConst(jsdoc, nameNode)) {
+        return;
+      }
+      Node rhs = NodeUtil.getRValueOfLValue(nameNode);
+      if (rhs == null) {
+        return;
+      }
+      JSDocInfo newJsdoc = getTypedJSDoc(rhs, jsdoc);
+      if (newJsdoc != null) {
+        jsdocNode.setJSDocInfo(newJsdoc);
+        compiler.reportCodeChange();
+      }
+    }
+
+    private static JSDocInfo getTypedJSDoc(Node rhs, JSDocInfo oldJSDoc) {
+      switch (NodeUtil.getKnownValueType(rhs)) {
+        case BOOLEAN:
+          return getTypeJSDoc(oldJSDoc, "boolean");
+        case NUMBER:
+          return getTypeJSDoc(oldJSDoc, "number");
+        case STRING:
+          return getTypeJSDoc(oldJSDoc, "string");
+        case NULL:
+          return getTypeJSDoc(oldJSDoc, "null");
+        case VOID:
+          return getTypeJSDoc(oldJSDoc, "void");
+        default:
+          return null;
+      }
+    }
   }
 
   private static class RemoveCode implements Callback {
@@ -202,7 +271,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 Node initializer = null;
                 if (type == null) {
                   initializer = NodeUtil.getRValueOfLValue(name).detachFromParent();
-                } else if (isInferrableConst(jsdoc)) {
+                } else if (isInferrableConst(jsdoc, name)) {
                   jsdoc = maybeUpdateJSDocInfoWithType(jsdoc, name);
                 }
                 Node newProtoAssignStmt = NodeUtil.newQNameDeclaration(
@@ -248,8 +317,9 @@ class ConvertToTypedInterface implements CompilerPass {
         jsdocNode.setJSDocInfo(getAllTypeJSDoc());
         return RemovalType.REMOVE_RHS;
       }
-      if (isInferrableConst(jsdoc) && !NodeUtil.isNamespaceDecl(nameNode)) {
+      if (isInferrableConst(jsdoc, nameNode)) {
         if (nameNode.getJSType() == null) {
+          compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
           return RemovalType.PRESERVE_ALL;
         }
         jsdocNode.setJSDocInfo(maybeUpdateJSDocInfoWithType(jsdoc, nameNode));
@@ -311,8 +381,12 @@ class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private static boolean isInferrableConst(JSDocInfo jsdoc) {
-    return jsdoc != null && jsdoc.hasConstAnnotation() && !jsdoc.hasType();
+  private static boolean isInferrableConst(JSDocInfo jsdoc, Node nameNode) {
+    return jsdoc != null
+        && jsdoc.hasConstAnnotation()
+        && !jsdoc.hasType()
+        && !jsdoc.isConstructorOrInterface()
+        && !NodeUtil.isNamespaceDecl(nameNode);
   }
 
   private static boolean isClassMemberFunction(Node functionNode) {

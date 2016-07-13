@@ -24,7 +24,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
     return new ConvertToTypedInterface(compiler);
   }
 
-  public void testInferAnnotatedTypeFromInferredType() {
+  public void testInferAnnotatedTypeFromTypeInference() {
     enableTypeCheck();
 
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
@@ -32,6 +32,23 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
     test(
         "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
+  }
+
+  public void testConstJsdocPropagation() {
+
+    test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
+    test("/** @const */ var x = true;", "/** @const {boolean} */ var x;");
+    test("/** @const */ var x = 'str';", "/** @const {string} */ var x;");
+    test("/** @const */ var x = null;", "/** @const {null} */ var x;");
+    test("/** @const */ var x = void 0;", "/** @const {void} */ var x;");
+
+    test(
+        "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
+        "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
+
+    testError(
+        "/** @const */ var x = cond ? true : 5;",
+        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
   public void testRemoveUselessStatements() {
@@ -123,12 +140,6 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
   public void testConstants() {
     test("/** @const {number} */ var x = 5;", "/** @const {number} */ var x;");
-
-    testSame("/** @const */ var x = 5;");
-
-    test(
-        "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
-        "/** @constructor */ function Foo() {} \n /** @const */ Foo.prototype.x = 5;");
   }
 
   public void testDefines() {
