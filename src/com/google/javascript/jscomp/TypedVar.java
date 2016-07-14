@@ -25,9 +25,9 @@ import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 /**
- * Several methods in this class, such as {@code isVar} throw an exception when called.
- * The reason for this is that we want to shadow methods from the parent class, to avoid calling
- * them accidentally.
+ * Several methods in this class, such as {@code isVar} throw an exception when called, and several
+ * methods are currently identical to the ones in Var. The reason for this is that we want to shadow
+ * methods from the parent class, to avoid calling them accidentally.
  */
 public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
 
@@ -88,6 +88,7 @@ public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticType
     return nameNode == null ? null : nameNode.getParent();
   }
 
+  @Override
   public boolean isBleedingFunction() {
     throw new IllegalStateException(
         "Method isBleedingFunction cannot be called on typed variables.");
@@ -113,10 +114,12 @@ public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticType
     return input == null || input.isExtern();
   }
 
+  @Override
   public boolean isInferredConst() {
     throw new IllegalStateException("Method isInferredConst cannot be called on typed variables.");
   }
 
+  @Override
   public boolean isDefine() {
     throw new IllegalStateException("Method isDefine cannot be called on typed variables.");
   }
@@ -205,18 +208,22 @@ public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticType
     return markedAssignedExactlyOnce;
   }
 
+  @Override
   boolean isVar() {
     throw new IllegalStateException("Method isVar cannot be called on typed variables.");
   }
 
+  @Override
   boolean isLet() {
     throw new IllegalStateException("Method isLet cannot be called on typed variables.");
   }
 
+  @Override
   boolean isConst() {
     throw new IllegalStateException("Method isConst cannot be called on typed variables.");
   }
 
+  @Override
   boolean isParam() {
     throw new IllegalStateException("Method isParam cannot be called on typed variables.");
   }
