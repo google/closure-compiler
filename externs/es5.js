@@ -68,16 +68,17 @@ String.prototype.trimRight = function() {};
  *
  * Note: not a real constructor.
  * @constructor
+ * @template THIS
  */
 function ObjectPropertyDescriptor() {}
 
 /** @type {*} */
 ObjectPropertyDescriptor.prototype.value;
 
-/** @type {(function():?)|undefined} */
+/** @type {(function(this: THIS):?)|undefined} */
 ObjectPropertyDescriptor.prototype.get;
 
-/** @type {(function(?):void)|undefined} */
+/** @type {(function(this: THIS, ?):void)|undefined} */
 ObjectPropertyDescriptor.prototype.set;
 
 /** @type {boolean|undefined} */
