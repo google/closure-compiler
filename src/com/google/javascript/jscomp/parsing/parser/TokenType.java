@@ -95,6 +95,7 @@ public enum TokenType {
   PLUS("+"),
   MINUS("-"),
   STAR("*"),
+  STAR_STAR("**"),
   PERCENT("%"),
   PLUS_PLUS("++"),
   MINUS_MINUS("--"),

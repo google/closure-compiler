@@ -67,6 +67,7 @@ public enum Token {
     MUL,
     DIV,
     MOD,
+    EXPONENT,
     NOT,
     BITNOT,
     POS,
@@ -242,129 +243,130 @@ public enum Token {
   /** If the arity isn't always the same, this function returns -1 */
   public static int arity(Token token) {
     switch (token) {
-      case RETURN:
-      case NEW:
-      case CALL:
-      case STRING_KEY:
-      case REGEXP:
-      case ARRAYLIT:
-      case OBJECTLIT:
-      case TEMPLATELIT:
-      case TRY:
-      case PARAM_LIST:
-      case IF:
-      case SWITCH:
-      case FOR:
-      case BREAK:
-      case CONTINUE:
-      case VAR:
-      case BLOCK:
-      case SCRIPT:
-      case CONST:
-      case DEBUGGER:
       case ANNOTATION:
-      case PIPE:
-      case STAR:
-      case EOC:
-      case QMARK:
-      case ELLIPSIS:
+      case ARRAYLIT:
       case BANG:
+      case BLOCK:
+      case BREAK:
+      case CALL:
+      case COLON:
+      case CONST:
+      case CONTINUE:
+      case DEBUGGER:
+      case ELLIPSIS:
+      case EOC:
       case EQUALS:
+      case FOR:
+      case IF:
       case LB:
       case LC:
-      case COLON:
+      case NEW:
+      case OBJECTLIT:
+      case PARAM_LIST:
+      case PIPE:
+      case QMARK:
+      case REGEXP:
+      case RETURN:
+      case SCRIPT:
+      case STAR:
+      case STRING_KEY:
+      case SWITCH:
+      case TEMPLATELIT:
+      case TRY:
+      case VAR:
       case YIELD:
         return -1;
-      case NAME:
+      case EMPTY:
+      case FALSE:
+      case IMPORT_STAR:
       case LABEL_NAME:
+      case MEMBER_VARIABLE_DEF:
+      case NAME:
+      case NULL:
       case NUMBER:
       case STRING:
-      case NULL:
       case THIS:
-      case FALSE:
       case TRUE:
-      case EMPTY:
-      case IMPORT_STAR:
-      case MEMBER_VARIABLE_DEF:
         return 0;
-      case NOT:
       case BITNOT:
-      case POS:
-      case NEG:
-      case DELPROP:
-      case TYPEOF:
-      case THROW:
-      case TEMPLATELIT_SUB:
-      case MEMBER_FUNCTION_DEF:
-      case INC:
+      case CALL_SIGNATURE:
+      case CAST:
       case DEC:
       case DEFAULT_CASE:
+      case DELPROP:
       case EXPR_RESULT:
       case GETTER_DEF:
-      case SETTER_DEF:
-      case CAST:
-      case SPREAD:
-      case VOID:
-      case NAMED_TYPE:
-      case TYPE_ALIAS:
+      case INC:
       case INDEX_SIGNATURE:
-      case CALL_SIGNATURE:
+      case MEMBER_FUNCTION_DEF:
+      case NAMED_TYPE:
+      case NEG:
+      case NOT:
+      case POS:
       case REST:
+      case SETTER_DEF:
+      case SPREAD:
+      case TEMPLATELIT_SUB:
+      case THROW:
+      case TYPEOF:
+      case TYPE_ALIAS:
+      case VOID:
         return 1;
-      case BITOR:
-      case BITXOR:
-      case BITAND:
-      case EQ:
-      case NE:
-      case LT:
-      case LE:
-      case GT:
-      case GE:
-      case LSH:
-      case RSH:
-      case URSH:
       case ADD:
-      case SUB:
-      case MUL:
-      case DIV:
-      case MOD:
-      case GETPROP:
-      case GETELEM:
-      case SHEQ:
-      case SHNE:
-      case IN:
-      case INSTANCEOF:
-      case TAGGED_TEMPLATELIT:
-      case DEFAULT_VALUE:
-      case COMMA:
+      case AND:
       case ASSIGN:
+      case ASSIGN_ADD:
+      case ASSIGN_BITAND:
       case ASSIGN_BITOR:
       case ASSIGN_BITXOR:
-      case ASSIGN_BITAND:
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case ASSIGN_URSH:
-      case ASSIGN_ADD:
-      case ASSIGN_SUB:
-      case ASSIGN_MUL:
       case ASSIGN_DIV:
+      case ASSIGN_LSH:
       case ASSIGN_MOD:
-      case OR:
-      case AND:
+      case ASSIGN_MUL:
+      case ASSIGN_RSH:
+      case ASSIGN_SUB:
+      case ASSIGN_URSH:
+      case BITAND:
+      case BITOR:
+      case BITXOR:
       case CASE:
-      case WHILE:
-      case DO:
-      case WITH:
       case CATCH:
-      case LABEL:
+      case COMMA:
       case COMPUTED_PROP:
+      case DEFAULT_VALUE:
+      case DIV:
+      case DO:
       case ENUM:
+      case EQ:
+      case EXPONENT:
+      case GE:
+      case GETELEM:
+      case GETPROP:
+      case GT:
+      case IN:
+      case INSTANCEOF:
+      case LABEL:
+      case LE:
+      case LSH:
+      case LT:
+      case MOD:
+      case MUL:
       case NAMESPACE:
+      case NE:
+      case OR:
+      case RSH:
+      case SHEQ:
+      case SHNE:
+      case SUB:
+      case TAGGED_TEMPLATELIT:
+      case URSH:
+      case WHILE:
+      case WITH:
         return 2;
       case CLASS:
-      case HOOK:
-      case FUNCTION:
       case FOR_OF:
+      case FUNCTION:
+      case HOOK:
       case IMPORT:
       case INTERFACE:
         return 3;
