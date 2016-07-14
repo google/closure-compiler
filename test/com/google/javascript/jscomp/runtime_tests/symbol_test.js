@@ -33,3 +33,15 @@ function testSymbols() {
   assertEquals('s1', sp[s1]());
   assertEquals('s2', sp[s2]());
 }
+
+function testArrayIterator() {
+  // Note: this test cannot pass in IE8 since we can't polyfill
+  // Array.prototype methods and maintain correct for-in behavior.
+  if (typeof Object.defineProperties !== 'function') return;
+
+  const iter = [2, 4, 6][Symbol.iterator]();
+  assertObjectEquals({value: 2, done: false}, iter.next());
+  assertObjectEquals({value: 4, done: false}, iter.next());
+  assertObjectEquals({value: 6, done: false}, iter.next());
+  assertTrue(iter.next().done);
+}

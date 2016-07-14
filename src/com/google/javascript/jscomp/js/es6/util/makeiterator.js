@@ -33,22 +33,6 @@ $jscomp.makeIterator = function(iterable) {
 
   // NOTE: Disabling typechecking because [] not allowed on @struct.
   var iteratorFunction = /** @type {?} */ (iterable)[Symbol.iterator];
-  if (iteratorFunction) {
-    return iteratorFunction.call(iterable);
-  }
-
-  var index = 0;
-  var arr = /** @type {!Array} */ (iterable);
-  return /** @type {!Iterator} */ ({
-    next: function() {
-      if (index < arr.length) {
-        return {
-          done: false,
-          value: arr[index++],
-        };
-      } else {
-        return {done: true};
-      }
-    }
-  });
+  return iteratorFunction ? iteratorFunction.call(iterable) :
+      $jscomp.arrayIterator(/** @type {!Array} */ (iterable));
 };

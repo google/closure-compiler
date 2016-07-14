@@ -59,6 +59,8 @@ abstract class IntegrationTestCase extends TestCase {
           "var Map;",
           "/** @constructor */",
           "var Set;",
+          "/** @constructor */",
+          "function ObjectPropertyDescriptor() {};",
           "",
           "/** @constructor */ function Window() {}",
           "/** @type {string} */ Window.prototype.name;",

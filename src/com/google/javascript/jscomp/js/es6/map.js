@@ -302,25 +302,19 @@ $jscomp.polyfill('Map', function(NativeMap) {
    */
   var makeIterator = function(map, func) {
     var entry = map.head_;
-    var iter = {
-      next: function() {
-        if (entry) {
-          while (entry.head != map.head_) {
-            entry = entry.previous;
-          }
-          while (entry.next != entry.head) {
-            entry = entry.next;
-            return {done: false, value: func(entry)};
-          }
-          entry = null; // make sure depletion is permanent
+    return $jscomp.iteratorPrototype(function() {
+      if (entry) {
+        while (entry.head != map.head_) {
+          entry = entry.previous;
         }
-        return {done: true, value: void 0};
+        while (entry.next != entry.head) {
+          entry = entry.next;
+          return {done: false, value: func(entry)};
+        }
+        entry = null; // make sure depletion is permanent
       }
-    };
-    iter[Symbol.iterator] = function() {
-      return /** @type {!Iterator} */ (iter);
-    };
-    return /** @type {!IteratorIterable} */ (iter);
+      return {done: true, value: void 0};
+    });
   };
 
 

@@ -17,7 +17,7 @@
 /**
  * @fileoverview Polyfill for ES6 Symbol.
  */
-'require util/global util/patch';
+'require util/global util/patch util/defineproperty';
 
 
 /** @const {string} */
@@ -103,15 +103,78 @@ $jscomp.Symbol = function(description) {
 
 
 /**
- * Initializes Symbol.iterator, if it's not already defined.
+ * Initializes Symbol.iterator (if it's not already defined) and adds a
+ * Symbol.iterator property to the Array prototype.
  * @suppress {reportUnknownTypes}
  */
 $jscomp.initSymbolIterator = function() {
   $jscomp.initSymbol();
-  if (!$jscomp.global.Symbol.iterator) {
-    $jscomp.global.Symbol.iterator = $jscomp.global.Symbol('iterator');
+  var symbolIterator = $jscomp.global.Symbol.iterator;
+  if (!symbolIterator) {
+    symbolIterator = $jscomp.global.Symbol.iterator =
+        $jscomp.global.Symbol('iterator');
+  }
+
+  if (typeof Array.prototype[symbolIterator] != 'function') {
+    $jscomp.defineProperty(
+        Array.prototype, symbolIterator, {
+          configurable: true,
+          writable: true,
+          /**
+           * @this {Array}
+           * @return {!IteratorIterable}
+           */
+          value: function() {
+            return $jscomp.arrayIterator(this);
+          }
+        });
   }
 
   // Only need to do this once. All future calls are no-ops.
   $jscomp.initSymbolIterator = function() {};
+};
+
+
+/**
+ * Returns an iterator from the given array.
+ * @param {!Array<T>} array
+ * @return {!IteratorIterable<T>}
+ * @template T
+ */
+$jscomp.arrayIterator = function(array) {
+  var index = 0;
+  return $jscomp.iteratorPrototype(function() {
+    if (index < array.length) {
+      return {
+        done: false,
+        value: array[index++],
+      };
+    } else {
+      return {done: true};
+    }
+  });
+};
+
+
+/**
+ * Returns an iterator with the given `next` method.  Passing
+ * all iterators through this function allows easily extending
+ * the definition of `%IteratorPrototype%` if methods are ever
+ * added to it in the future.
+ *
+ * @param {function(this: Iterator<T>): T} next
+ * @return {!IteratorIterable<T>}
+ * @template T
+ * @suppress {reportUnknownTypes}
+ */
+$jscomp.iteratorPrototype = function(next) {
+  $jscomp.initSymbolIterator();
+
+  var iterator = {next: next};
+  /**
+   * @this {IteratorIterable}
+   * @return {!IteratorIterable}
+   */
+  iterator[$jscomp.global.Symbol.iterator] = function() { return this; };
+  return /** @type {!IteratorIterable} */ (iterator);
 };
