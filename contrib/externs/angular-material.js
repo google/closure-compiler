@@ -842,7 +842,7 @@ md.$panel = function() {};
  *   escapeToClose: (boolean|undefined),
  *   trapFocus: (boolean|undefined),
  *   focusOnOpen: (boolean|undefined),
- *   fullScreen: (boolean|undefined),
+ *   fullscreen: (boolean|undefined),
  *   animation: (!md.$panel.MdPanelAnimation|undefined),
  *   hasBackdrop: (boolean|undefined),
  *   disableParentScroll: (boolean|undefined),
