@@ -456,7 +456,7 @@ public final class FunctionType {
       }
       // NOTE(dimvar): This is a bug. The code that triggers this should be rare
       // and the fix is not trivial, so for now we decided to not fix.
-      // See unit tests in NewTypeInferenceES5OrLowerTest#testGenericsSubtyping
+      // See unit tests in NewTypeInferenceTest#testGenericsSubtyping
       return instantiateGenericsWithUnknown(this)
           .isSubtypeOfHelper(other, checkThisType, subSuperMap, boxedInfo);
     }

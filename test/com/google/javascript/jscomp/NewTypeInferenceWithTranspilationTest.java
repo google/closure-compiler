@@ -19,13 +19,14 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
- * Tests for the new type inference on transpiled ES6 code.
- * We will eventually type check it natively, without transpiling.
+ * Tests for the new type inference on transpiled code (ES6 and beyond).
+ *
+ * <p>Eventually, NTI will typecheck all language features natively, without transpiling.
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 
-public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
+public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenceTestBase {
 
   @Override
   protected void setUp() {

@@ -19,11 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 /**
+ * Tests new type inference behavior for syntax it understands without transpilation.
+ *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 
-public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
+public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
   public void testExterns() {
     typeCheck(

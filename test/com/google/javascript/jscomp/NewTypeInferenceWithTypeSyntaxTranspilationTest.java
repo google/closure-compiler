@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 /**
- * Tests for the new type inference on transpiled ES6 code that includes
+ * Tests for the new type inference on transpiled code that includes
  * type annotations in the language syntax.
  *
  * <p>We will eventually type check it natively, without transpiling.
@@ -30,7 +30,8 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 
-public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase {
+public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
+    extends NewTypeInferenceTestBase {
 
   @Override
   protected void setUp() {
