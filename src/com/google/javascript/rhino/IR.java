@@ -713,6 +713,7 @@ public class IR {
       case DELPROP:
       case DIV:
       case EQ:
+      case EXPONENT:
       case FALSE:
       case GE:
       case GETPROP:
