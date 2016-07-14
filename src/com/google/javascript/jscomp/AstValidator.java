@@ -293,6 +293,7 @@ public final class AstValidator implements CompilerPass {
       case MUL:
       case MOD:
       case DIV:
+      case EXPONENT:
         validateBinaryOp(n);
         return;
 
