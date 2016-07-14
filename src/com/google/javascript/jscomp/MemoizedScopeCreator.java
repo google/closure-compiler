@@ -84,7 +84,7 @@ class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, 
     TypedScope typedParent = (TypedScope) parent;
     TypedScope scope = scopes.get(n);
     if (scope == null) {
-      scope = (TypedScope) delegate.createScope(n, typedParent);
+      scope = delegate.createScope(n, typedParent);
       scopes.put(n, scope);
     } else {
       Preconditions.checkState(typedParent == scope.getParent());
