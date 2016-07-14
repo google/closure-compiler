@@ -61,7 +61,7 @@ unit tests too).
 On the command line, at the root of this project, type
 
 ```
-java -jar build/compiler.jar
+java -jar target/closure-compiler-1.0-SNAPSHOT.jar
 ```
 
 This starts the compiler in interactive mode. Type
