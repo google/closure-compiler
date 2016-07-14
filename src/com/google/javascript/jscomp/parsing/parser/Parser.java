@@ -212,27 +212,31 @@ public class Parser {
      */
     // TODO(bradfordcsmith): Make sure all of the type syntax handling code is avoided when
     //     this is false.
-    public final boolean parseTypeSyntax;
-    public final boolean atLeast6;
-    public final boolean atLeast5;
-    public final boolean isStrictMode;
-    public final boolean warnTrailingCommas;
-    public final boolean warnLineContinuations;
-    public final boolean warnES6NumberLiteral;
+    private final boolean parseTypeSyntax;
+    private final boolean atLeast6;
+    private final boolean atLeast5;
+    private final boolean isStrictMode;
+    private final boolean warnTrailingCommas;
 
     public Config(Mode mode) {
       parseTypeSyntax = mode == Mode.ES6_TYPED;
-      atLeast6 = mode == Mode.ES6 || mode == Mode.ES6_STRICT
+      atLeast6 =
+          mode == Mode.ES8
+          || mode == Mode.ES7
+          || mode == Mode.ES6
+          || mode == Mode.ES6_STRICT
           || mode == Mode.ES6_TYPED;
       atLeast5 = atLeast6 || mode == Mode.ES5 || mode == Mode.ES5_STRICT;
-      this.isStrictMode = mode == Mode.ES5_STRICT || mode == Mode.ES6_STRICT
-          || mode == Mode.ES6_TYPED;
+      this.isStrictMode =
+          mode == Mode.ES5_STRICT
+          || mode == Mode.ES6_STRICT
+          || mode == Mode.ES6_TYPED
+          || mode == Mode.ES7
+          || mode == Mode.ES8;
 
       // Generally, we allow everything that is valid in any mode
       // we only warn about things that are not represented in the AST.
       this.warnTrailingCommas = !atLeast5;
-      this.warnLineContinuations = !atLeast6;
-      this.warnES6NumberLiteral = !atLeast6;
     }
   }
 
