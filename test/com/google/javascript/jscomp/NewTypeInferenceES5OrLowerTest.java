@@ -4190,7 +4190,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @interface */ function I() {}",
         "/** @type {number} */ I.prototype.prop;",
         "function f(/** !I */ x) {",
-        "  var /** { prop: number} */ y = x;",
+        "  var /** { prop: number } */ y = x;",
         "}"));
   }
 
@@ -16132,6 +16132,53 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x, y) {",
         "  x = y;",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<number, number>} x",
+        " * @param {{ '1': number, '2': number }} y",
+        " */",
+        "function f(x, y) {",
+        "  x = y;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @type {!IObject<string, number>} */",
+        "var x = { 'a': 123, 'b': 234 };"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @type {!IObject<string, number>} */",
+        "var x = { 'a': 123, 'b': true };"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // We check unquoted properties against IObject, which is not ideal.
+    // See comment in ObjectType#compareRecordTypeToIObject.
+    typeCheck(LINE_JOINER.join(
+        "/** @type {!IObject<string, number>} */",
+        "var x = { a: 123, b: true };"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @type {!IObject<number, number>} */",
+        "var x = { '1': 1, 'b': 2 };"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @type {!IObject<!Function, string>} */",
+        "var x = { 'a': 'asdf' };"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @record",
+        " * @extends {IObject<string, string>}",
+        " */",
+        "function Foo() {}",
+        "/** @type {number} */",
+        "Foo.prototype.prop;",
+        "/** @param {!Foo} x */",
+        "function f(x) {}",
+        "f({ prop: 123, 'a': 'asdf', 'b': 'asdf' });"));
   }
 
   public void testIObjectExtraProperties() {
@@ -17192,5 +17239,32 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "/** @constructor */",
             "function Symbol() {}"),
         "var x = {};");
+  }
+
+  public void testGithubIssue1866() {
+    // The combo @record-@struct can have multiple interpretations,
+    // and we haven't decided on the exact semantics yet, so I'm not sure what
+    // we support about it.
+    // But this code should compile without warnings anyway.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @record",
+        " * @struct",
+        " */",
+        "var MyType = function() {};",
+        "/** @type {(number|undefined)} */",
+        "MyType.prototype.a;",
+        "/**",
+        " * @param {?MyType} t",
+        " * @suppress {newCheckTypesAllChecks}",
+        " */",
+        "function MyFn(t) {",
+        "  if (!t) {",
+        "    t = {};",
+        "  }",
+        "  if (!t.a) {",
+        "    t.a = 1;",
+        "  }",
+        "};"));
   }
 }

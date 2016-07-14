@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +122,7 @@ public final class NominalType {
     return this.rawType.isBuiltinWithName("Object");
   }
 
-  private boolean isIObject() {
+  boolean isIObject() {
     return this.rawType.isBuiltinWithName("IObject");
   }
 
@@ -141,10 +140,6 @@ public final class NominalType {
 
   public boolean isUninstantiatedGenericType() {
     return this.rawType.isGeneric() && typeMap.isEmpty();
-  }
-
-  NominalType instantiateGenericsWithUnknown() {
-    return instantiateGenerics(JSType.MAP_TO_UNKNOWN);
   }
 
   NominalType instantiateGenerics(List<JSType> types) {
@@ -325,6 +320,9 @@ public final class NominalType {
     RawNominalType thisRaw = this.rawType;
     if (thisRaw == other.rawType) {
       return areTypeMapsCompatible(other);
+    }
+    if (other.isBuiltinObject()) {
+      return true;
     }
     if (other.isInterface()) {
       // If thisRaw is not finalized, thisRaw.interfaces may be null.

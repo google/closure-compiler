@@ -20,7 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
+import com.google.common.primitives.Ints;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -610,19 +610,29 @@ final class ObjectType implements TypeWithProperties {
       return this.isLooseSubtypeOf(other, subSuperMap);
     }
 
-    NominalType thisNt = this.nominalType;
-    NominalType otherNt = other.nominalType;
+    NominalType thisNt = getNominalType();
+    NominalType otherNt = other.getNominalType();
     boolean checkOnlyLocalProps = true;
-    if (otherNt != null && otherNt.isStructuralInterface()) {
+    if (otherNt.isStructuralInterface()) {
       if (otherNt.equals(subSuperMap.get(thisNt))) {
         return true;
       }
       subSuperMap = subSuperMap.with(thisNt, otherNt);
-      if (thisNt == null || !thisNt.isNominalSubtypeOf(otherNt)) {
+      if (!thisNt.isNominalSubtypeOf(otherNt)) {
         checkOnlyLocalProps = false;
       }
-    } else if (otherNt != null && !otherNt.isStructuralInterface()
-        && (thisNt == null || !thisNt.isNominalSubtypeOf(otherNt))) {
+      if (otherNt.isIObject()) {
+        // IObject is a weird structural type; we check that the generics
+        // match when checking two IObjects for subtyping.
+        if (thisNt.inheritsFromIObjectReflexive()
+            && !thisNt.isNominalSubtypeOf(otherNt)) {
+          return false;
+        }
+        if (thisNt.isBuiltinObject()) {
+          return compareRecordTypeToIObject(otherNt, subSuperMap);
+        }
+      }
+    } else if (!thisNt.isNominalSubtypeOf(otherNt)) {
       return false;
     }
 
@@ -654,6 +664,39 @@ final class ObjectType implements TypeWithProperties {
     }
     return areFunsSubtypes;
   }
+
+  // NOTE(dimvar): it's not ideal that the unquoted properties of the
+  // object literal are checked as part of the IObject type. We want
+  // a property to either always be accessed with dot or with brackets,
+  // and checking the unquoted properties against IObject gives the
+  // impression that we support both kinds of accesses for the same
+  // property. The alternatives are (none is very satisfactory):
+  // 1) Don't check any object-literal properties against IObject
+  // 2) Check all object-literal properties against IObject (what we're currently doing)
+  // 3) Check only the quoted object-literal properties against IObject.
+  //    This is not great because NTI also checks quoted properties individually
+  //    if the name is known.
+  // 4) Remember in the property map whether a property name was declared as
+  //    quoted or not. This will likely involve a lot of extra plumbing.
+  private boolean compareRecordTypeToIObject(
+      NominalType otherNt, SubtypeCache subSuperMap) {
+     JSType keyType = otherNt.getIndexType();
+     JSType valueType = otherNt.getIndexedType();
+     for (Map.Entry<String, Property> entry : this.props.entrySet()) {
+       String pname = entry.getKey();
+       JSType ptype = entry.getValue().getType();
+       if (keyType.isNumber() && Ints.tryParse(pname) == null) {
+         return false;
+       }
+       if (!keyType.isNumber() && !keyType.isString()) {
+         return false;
+       }
+       if (!ptype.isSubtypeOf(valueType, subSuperMap)) {
+         return false;
+       }
+     }
+     return true;
+   }
 
   private boolean arePropertiesSubtypes(ObjectType other,
       Set<String> otherPropNames, SubtypeCache subSuperMap,

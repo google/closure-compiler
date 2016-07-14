@@ -39,7 +39,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -4091,7 +4090,7 @@ final class NewTypeInference implements CompilerPass {
     return lvalue;
   }
 
-  private JSType pickReqObjType(Node expr) {
+  private static JSType pickReqObjType(Node expr) {
     Token exprKind = expr.getType();
     switch (exprKind) {
       case OBJECTLIT: {
@@ -4102,8 +4101,7 @@ final class NewTypeInference implements CompilerPass {
         if (jsdoc != null && jsdoc.makesDicts()) {
           return JSType.TOP_DICT;
         }
-        return expr.hasChildren()
-            ? JSType.TOP_OBJECT : this.commonTypes.getIObjectAnyAny();
+        return JSType.TOP_OBJECT;
       }
       case FOR:
         Preconditions.checkState(NodeUtil.isForIn(expr));

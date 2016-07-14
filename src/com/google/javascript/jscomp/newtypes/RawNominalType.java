@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -93,7 +92,11 @@ public final class RawNominalType extends Namespace {
     }
     this.defSite = defSite;
     this.typeParameters = typeParameters;
-    this.kind = kind;
+    // NTI considers IObject to be a record so that, eg, an object literal can
+    // be considered to have any IObject type.
+    // TODO(dimvar): look into declaring IObject as @record in the default
+    // externs, and the special handling here can be removed.
+    this.kind = isBuiltinHelper(name, "IObject", defSite) ? Kind.RECORD : kind;
     this.objectKind = isBuiltinHelper(name, "IObject", defSite)
         ? ObjectKind.UNRESTRICTED : objectKind;
     this.wrappedAsNominal = new NominalType(ImmutableMap.<String, JSType>of(), this);
