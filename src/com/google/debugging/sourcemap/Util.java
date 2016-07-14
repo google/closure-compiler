@@ -49,28 +49,27 @@ public class Util {
         case '\\': sb.append(backslashEscape); break;
         case '\"': sb.append(doublequoteEscape); break;
         case '\'': sb.append(singlequoteEscape); break;
-        case '>':                       // Break --> into --\> or ]]> into ]]\>
+        case '>':
+          // Unicode-escape the '>' in '-->' and ']]>'
           if (i >= 2 &&
               ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
                (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
-            sb.append("\\>");
+            sb.append("\\u003e");
           } else {
             sb.append(c);
           }
           break;
         case '<':
-          // Break </script into <\/script
+          // Unicode-escape the '<' in '</script' and '<!--'
           final String END_SCRIPT = "/script";
-
-          // Break <!-- into <\!--
           final String START_COMMENT = "!--";
 
           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
                               END_SCRIPT.length())) {
-            sb.append("<\\");
+            sb.append("\\u003c");
           } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
                                      START_COMMENT.length())) {
-            sb.append("<\\");
+            sb.append("\\u003c");
           } else {
             sb.append(c);
           }
