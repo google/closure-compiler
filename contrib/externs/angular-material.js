@@ -863,7 +863,7 @@ md.$panel.prototype.create = function(opt_config) {};
 
 /**
  * @param {!md.$panel.config=} opt_config
- * @return {!md.$panel.MdPanelRef}
+ * @return {!angular.$q.Promise<!md.$panel.MdPanelRef>}
  */
 md.$panel.prototype.open = function(opt_config) {};
 
