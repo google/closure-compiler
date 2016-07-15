@@ -176,7 +176,8 @@ public enum CompilationLevel {
   }
 
   /**
-   * Enable additional optimizations that use type information.
+   * Enable additional optimizations that use type information. Only has
+   * an effect for ADVANCED_OPTIMIZATIONS; this is a no-op for other modes.
    * @param options The CompilerOptions object to set the options on.
    */
   public void setTypeBasedOptimizationOptions(CompilerOptions options) {
@@ -189,8 +190,6 @@ public enum CompilationLevel {
         options.setUseTypesForOptimization(true);
         break;
       case SIMPLE_OPTIMIZATIONS:
-        options.setUseTypesForOptimization(true);
-        break;
       case WHITESPACE_ONLY:
         break;
     }
