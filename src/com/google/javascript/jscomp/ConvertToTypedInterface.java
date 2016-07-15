@@ -26,7 +26,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -283,22 +282,29 @@ class ConvertToTypedInterface implements CompilerPass {
                 if (!name.isGetProp() || !name.getFirstChild().isThis()) {
                   return;
                 }
-                JSType type = name.getJSType();
                 String pname = name.getLastChild().getString();
+                String fullyQualifiedName = className + ".prototype." + pname;
+                if (seenNames.contains(fullyQualifiedName)) {
+                  return;
+                }
+                JSType type = name.getJSType();
                 JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
-                // Don't use an initializer unless we need it for the non-typechecked case.
-                Node initializer = null;
-                if (type == null) {
-                  initializer = NodeUtil.getRValueOfLValue(name).detachFromParent();
+                if (jsdoc == null) {
+                  jsdoc = getAllTypeJSDoc();
                 } else if (isInferrableConst(jsdoc, name)) {
                   jsdoc = maybeUpdateJSDocInfoWithType(jsdoc, name);
+                  if (type == null) {
+                    compiler.report(JSError.make(name, CONSTANT_WITHOUT_EXPLICIT_TYPE));
+                    return;
+                  }
                 }
-                Node newProtoAssignStmt = NodeUtil.newQNameDeclaration(
-                    compiler, className + ".prototype." + pname, initializer, jsdoc);
+                Node newProtoAssignStmt =
+                    NodeUtil.newQNameDeclaration(compiler, fullyQualifiedName, null, jsdoc);
                 newProtoAssignStmt.useSourceInfoIfMissingFromForTree(expr);
                 // TODO(blickly): Preserve the declaration order of the this properties.
                 insertionPoint.getParent().addChildAfter(newProtoAssignStmt, insertionPoint);
                 compiler.reportCodeChange();
+                seenNames.add(fullyQualifiedName);
               }
             }
           });

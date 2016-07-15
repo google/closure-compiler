@@ -50,6 +50,24 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
+  public void testThisPropertiesInConstructors() {
+    test(
+        "/** @constructor */ function Foo() { /** @const {number} */ this.x; }",
+        "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
+
+    test(
+        "/** @constructor */ function Foo() { this.x; }",
+        "/** @constructor */ function Foo() {} \n /** @type {*} */ Foo.prototype.x;");
+
+    test(
+        "/** @constructor */ function Foo() { /** @type {?number} */ this.x = null; this.x = 5; }",
+        "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
+
+    testError(
+        "/** @constructor */ function Foo() { /** @const */ this.x = cond ? true : 5; }",
+        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+  }
+
   public void testConstJsdocPropagationForNames() {
     test(
         "/** @type {!Array<string>} */ var x = []; /** @const */ var y = x;",
