@@ -346,8 +346,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("const",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
-          ProcessClosurePrimitives.DEFINITION_NOT_IN_GLOBAL_SCOPE,
-          ProcessClosurePrimitives.DUPLICATE_DEFINITION_ERROR,
           ConstCheck.CONST_REASSIGNED_VALUE_ERROR,
           NewTypeInference.CONST_REASSIGNED,
           NewTypeInference.CONST_PROPERTY_REASSIGNED);
@@ -365,7 +363,6 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",
-          ProcessClosurePrimitives.DUPLICATE_DEFINITION_ERROR,
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,

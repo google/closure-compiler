@@ -76,16 +76,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       "JSC_DUPLICATE_NAMESPACE_ERROR",
       "namespace \"{0}\" cannot be provided twice");
 
-  static final DiagnosticType DUPLICATE_DEFINITION_ERROR =
-      DiagnosticType.error(
-          "JSC_DUPLICATE_DEFINITION_ERROR",
-          "Found multiple definitions of goog.provided name {0}.");
-
-  static final DiagnosticType DEFINITION_NOT_IN_GLOBAL_SCOPE =
-      DiagnosticType.error(
-          "JSC_DEFINITION_NOT_IN_GLOBAL_SCOPE",
-          "Definition of goog.provided name {0} must be in the global hoist scope");
-
   static final DiagnosticType WEAK_NAMESPACE_TYPE = DiagnosticType.warning(
       "JSC_WEAK_NAMESPACE_TYPE",
       "Provided symbol declared with type Object. This is rarely useful. "
@@ -513,27 +503,23 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   /**
    * Handles a candidate definition for a goog.provided name.
    */
-  private void handleCandidateProvideDefinition(NodeTraversal t, Node n, Node parent) {
-    String name = null;
-    if (n.isName() && NodeUtil.isNameDeclaration(parent)) {
-      name = n.getString();
-    } else if (n.isAssign() && parent.isExprResult()) {
-      name = n.getFirstChild().getQualifiedName();
-    }
+  private void handleCandidateProvideDefinition(
+      NodeTraversal t, Node n, Node parent) {
+    if (t.inGlobalHoistScope()) {
+      String name = null;
+      if (n.isName() && NodeUtil.isNameDeclaration(parent)) {
+        name = n.getString();
+      } else if (n.isAssign() && parent.isExprResult()) {
+        name = n.getFirstChild().getQualifiedName();
+      }
 
-    if (name != null) {
-      if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
-        processProvideFromPreviousPass(t, name, parent);
-      } else {
-        ProvidedName pn = providedNames.get(name);
-        if (pn != null) {
-          if (t.inGlobalHoistScope()) {
+      if (name != null) {
+        if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
+          processProvideFromPreviousPass(t, name, parent);
+        } else {
+          ProvidedName pn = providedNames.get(name);
+          if (pn != null) {
             pn.addDefinition(parent, t.getModule());
-          } else {
-            Var var = t.getScope().getVar(name);
-            if (var == null || var.isGlobal()) {
-              compiler.report(JSError.make(n, DEFINITION_NOT_IN_GLOBAL_SCOPE, name));
-            }
           }
         }
       }
@@ -1291,15 +1277,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
               || node.isFunction()
               || NodeUtil.isNameDeclaration(node));
       Preconditions.checkArgument(explicitNode != node);
-      if (candidateDefinition != null) {
-        Node errorNode = node.isExprResult() ? node.getFirstChild() : node;
-        compiler.report(
-            JSError.make(
-                errorNode, DUPLICATE_DEFINITION_ERROR, namespace, candidateDefinition.toString()));
-        return;
+      if ((candidateDefinition == null) || !node.isExprResult()) {
+        candidateDefinition = node;
+        updateMinimumModule(module);
       }
-      candidateDefinition = node;
-      updateMinimumModule(module);
     }
 
     private void updateMinimumModule(JSModule newModule) {

@@ -1265,7 +1265,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
   }
 
-  public void testProvidedNamespaceCannotBeReassigned1() {
+  public void testProvidedNamespaceIsConst() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
@@ -1276,38 +1276,27 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var goog = {};",
             "goog.provide('foo');",
             "function f() { foo = {};}"),
-        ProcessClosurePrimitives.DEFINITION_NOT_IN_GLOBAL_SCOPE);
-  }
-
-  public void testProvidedNamespaceCannotBeReassigned2() {
-    CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
-    options.setInlineConstantVars(true);
-    options.setCollapseProperties(true);
-    options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.ERROR);
-    test(
-        options,
         LINE_JOINER.join(
-            "var goog = {};",
-            "goog.provide('foo.bar');",
-            "foo.bar = function() {};",
-            "function f() { foo.bar = {};}"),
-        ProcessClosurePrimitives.DEFINITION_NOT_IN_GLOBAL_SCOPE);
+            "var foo = {};",
+            "function f() { foo = {}; }"),
+        ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
-  public void testProvidedNamespaceCannotBeReassigned3() {
+  public void testProvidedNamespaceIsConst2() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
     options.setCollapseProperties(true);
-    options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.ERROR);
     test(
         options,
         LINE_JOINER.join(
             "var goog = {};",
             "goog.provide('foo.bar');",
             "function f() { foo.bar = {};}"),
-        ProcessClosurePrimitives.DEFINITION_NOT_IN_GLOBAL_SCOPE);
+        LINE_JOINER.join(
+            "var foo$bar = {};",
+            "function f() { foo$bar = {}; }"),
+        ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
   public void testProvidedNamespaceIsConst3() {
@@ -1347,6 +1336,12 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var goog = {}; goog.provide('foo.Bar'); "
         + "foo = {}; foo.Bar = {};",
         "var foo = {}; foo = {}; foo.Bar = {};");
+  }
+
+  public void testProcessDefinesAlwaysOn() {
+    test(createCompilerOptions(),
+         "/** @define {boolean} */ var HI = true; HI = false;",
+         "var HI = false;false;");
   }
 
   public void testProcessDefinesAdditionalReplacements() {

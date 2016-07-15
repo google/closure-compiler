@@ -108,9 +108,17 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
                 "var Foobar = require('./i0');",
                 "var show = new Foobar();",
                 "show.foobar();")},
-        // TODO(tbreisacher): Add a clearer error for this. The user didn't type goog.provide
-        // at all so mentioning goog.provide in the error is probably confusing.
-        ProcessClosurePrimitives.DUPLICATE_DEFINITION_ERROR);
+        new String[] {
+            LINE_JOINER.join(
+                 "function Hello$$module$i0() {}",
+                "var module$i0 = Hello$$module$i0;",
+                "function Bar$$module$i0(){} ",
+                "Bar$$module$i0.prototype.foobar = function() { alert('foobar') };",
+                "module$i0 = Bar$$module$i0;"),
+            LINE_JOINER.join(
+                "var Foobar = module$i0;",
+                "var show = new Foobar();",
+                "show.foobar();")});
   }
 
   public void testMultipleExportAssignments2() {

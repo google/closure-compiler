@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_DEFINES_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.DEFINITION_NOT_IN_GLOBAL_SCOPE;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.DUPLICATE_DEFINITION_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.DUPLICATE_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJECTLIT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
@@ -237,9 +235,15 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
             "foo.bar={};",
             "foo.bar.moo={E:1,S:2};"));
 
-    testError(
+    test(
         "goog.provide('foo.bar.moo'); foo.bar.moo={E:1}; foo.bar.moo={E:2};",
-        DUPLICATE_DEFINITION_ERROR);
+        LINE_JOINER.join(
+            "/** @const */",
+            "var foo={};",
+            "/** @const */",
+            "foo.bar={};",
+            "foo.bar.moo={E:1};",
+            "foo.bar.moo={E:2};"));
 
     testEs6("goog.provide('foo'); var foo = class {}", "var foo = class {}");
   }
@@ -252,42 +256,35 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     testErrorEs6("goog.provide('foo'); class foo {}", CLASS_NAMESPACE_ERROR);
   }
 
-  public void testMultipleAssignment1() {
-    testError(
-        "goog.provide('foo'); foo = 0; foo = 1",
-        DUPLICATE_DEFINITION_ERROR);
+  public void testRemovalMultipleAssignment1() {
+    test("goog.provide('foo'); foo = 0; foo = 1",
+         "var foo = 0; foo = 1;");
   }
 
-  public void testMultipleAssignment2() {
-    testError(
-        "goog.provide('foo'); var foo = 0; foo = 1",
-         DUPLICATE_DEFINITION_ERROR);
-
-    testErrorEs6(
-        "goog.provide('foo'); let foo = 0; let foo = 1",
-        DUPLICATE_DEFINITION_ERROR);
+  public void testRemovalMultipleAssignment2() {
+    test("goog.provide('foo'); var foo = 0; foo = 1",
+         "var foo = 0; foo = 1;");
+    testEs6("goog.provide('foo'); let foo = 0; let foo = 1",
+        "let foo = 0; let foo = 1;");
   }
 
-  public void testMultipleAssignment3() {
-    testError(
-        "goog.provide('foo'); foo = 0; var foo = 1",
-         DUPLICATE_DEFINITION_ERROR);
-
-    testErrorEs6(
-        "goog.provide('foo'); foo = 0; let foo = 1",
-        DUPLICATE_DEFINITION_ERROR);
+  public void testRemovalMultipleAssignment3() {
+    test("goog.provide('foo'); foo = 0; var foo = 1",
+         "foo = 0; var foo = 1;");
+    testEs6("goog.provide('foo'); foo = 0; let foo = 1",
+        "foo = 0; let foo = 1;");
   }
 
-  public void testMultipleAssignment4() {
-    testError(
+  public void testRemovalMultipleAssignment4() {
+    test(
         "goog.provide('foo.bar'); foo.bar = 0; foo.bar = 1",
-        DUPLICATE_DEFINITION_ERROR);
+        "/** @const */ var foo = {}; foo.bar = 0; foo.bar = 1");
   }
 
   public void testNoRemovalFunction1() {
-    testError(
+    test(
         "goog.provide('foo'); function f(){foo = 0}",
-        DEFINITION_NOT_IN_GLOBAL_SCOPE);
+        "/** @const */ var foo = {}; function f(){foo = 0}");
   }
 
   public void testNoRemovalFunction2() {
@@ -302,26 +299,65 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
         "/** @const */ var foo = {}; function f(foo = 0){}");
   }
 
+  public void testRemovalMultipleAssignmentInIf1() {
+    test("goog.provide('foo'); if (true) { var foo = 0 } else { foo = 1 }",
+         "if (true) { var foo = 0 } else { foo = 1 }");
+  }
+
+  public void testRemovalMultipleAssignmentInIf2() {
+    test("goog.provide('foo'); if (true) { foo = 0 } else { var foo = 1 }",
+         "if (true) { foo = 0 } else { var foo = 1 }");
+  }
+
+  public void testRemovalMultipleAssignmentInIf3() {
+    test("goog.provide('foo'); if (true) { foo = 0 } else { foo = 1 }",
+         "if (true) { var foo = 0 } else { foo = 1 }");
+  }
+
+  public void testRemovalMultipleAssignmentInIf4() {
+    test(
+        "goog.provide('foo.bar'); if (true) { foo.bar = 0 } else { foo.bar = 1 }",
+        LINE_JOINER.join(
+            "/** @const */ var foo = {};",
+            "if (true) {",
+            "  foo.bar = 0;",
+            "} else {",
+            "  foo.bar = 1;",
+            "}"));
+  }
+
   public void testMultipleDeclarationError1() {
-    testError(
-        "goog.provide('foo.bar'); var foo = {}; if (true) { foo.bar = 0 } else { foo.bar = 1 }",
-        DUPLICATE_DEFINITION_ERROR);
+    String rest = "if (true) { foo.bar = 0 } else { foo.bar = 1 }";
+    test("goog.provide('foo.bar');" + "var foo = {};" + rest,
+         "var foo = {};" + "var foo = {};" + rest);
   }
 
   public void testMultipleDeclarationError2() {
-    testError(
+    test(
         LINE_JOINER.join(
             "goog.provide('foo.bar');",
             "if (true) { var foo = {}; foo.bar = 0 } else { foo.bar = 1 }"),
-        DUPLICATE_DEFINITION_ERROR);
+        LINE_JOINER.join(
+            "var foo = {};",
+            "if (true) {",
+            "  var foo = {}; foo.bar = 0",
+            "} else {",
+            "  foo.bar = 1",
+            "}"));
   }
 
   public void testMultipleDeclarationError3() {
-    testError(
+    test(
         LINE_JOINER.join(
             "goog.provide('foo.bar');",
             "if (true) { foo.bar = 0 } else { var foo = {}; foo.bar = 1 }"),
-        DUPLICATE_DEFINITION_ERROR);
+        LINE_JOINER.join(
+            "var foo = {};",
+            "if (true) {",
+            "  foo.bar = 0",
+            "} else {",
+            "  var foo = {}; foo.bar = 1",
+            "}"));
   }
 
   public void testProvideAfterDeclarationError() {
@@ -715,8 +751,8 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
             "a.b.c;"));
   }
 
-  public void testProvideOrder4() {
-    testError(
+  public void testProvideOrder4a() {
+    test(
         LINE_JOINER.join(
             "goog.provide('goog.a');",
             "goog.provide('goog.a.b');",
@@ -725,7 +761,25 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
             "} else {",
             "  goog.a.b = 2;",
             "}"),
-        DUPLICATE_DEFINITION_ERROR);
+        LINE_JOINER.join(
+            "/** @const */", "goog.a={};", "if(x)", "  goog.a.b=1;", "else", "  goog.a.b=2;"));
+  }
+
+  public void testProvideOrder4b() {
+    additionalEndCode = "";
+    addAdditionalNamespace = false;
+    // This tests a cleanly provided name, below a namespace.
+    test(
+        LINE_JOINER.join(
+            "goog.provide('goog.a');",
+            "goog.provide('goog.a.b');",
+            "if (x) {",
+            "  goog.a.b = 1;",
+            "} else {",
+            "  goog.a.b = 2;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @const */", "goog.a={};", "if(x)", "  goog.a.b=1;", "else", "  goog.a.b=2;"));
   }
 
   public void testInvalidProvide() {
