@@ -1369,6 +1369,22 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. type annotation incompatible with other annotations");
   }
 
+  public void testParseAbstract_abstractAndNotPrivate() throws Exception {
+    JSDocInfo info1 = parse("* @public \n * @abstract */");
+    assertTrue(info1.isAbstract());
+
+    JSDocInfo info2 = parse("* @protected \n * @abstract */");
+    assertTrue(info2.isAbstract());
+
+    JSDocInfo info3 = parse("* @package \n * @abstract */");
+    assertTrue(info3.isAbstract());
+  }
+
+  public void testParseAbstract_abstractAndPrivate() throws Exception {
+    parse("* @private \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
   public void testStackedAnnotation() throws Exception {
     JSDocInfo info = parse("@const @type {string}*/");
     assertThat(info.isConstant()).isTrue();
