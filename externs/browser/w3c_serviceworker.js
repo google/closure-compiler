@@ -418,17 +418,17 @@ Cache.prototype.keys = function(opt_request, opt_options) {};
 var CacheQueryOptions;
 
 /**
- * @type {!CacheStorage}
- * @see https://www.w3.org/TR/service-workers/#cache-objects
- * @const
- */
-var caches;
-
-/**
  * @see http://www.w3.org/TR/service-workers/#cache-storage-interface
  * @interface
  */
 function CacheStorage() {}
+
+/**
+ * Window instances have a property called caches which implements CacheStorage
+ * @see https://www.w3.org/TR/service-workers/#cache-objects
+ * @type {!CacheStorage}
+ */
+Window.prototype.caches;
 
 /**
  * @param {!RequestInfo} request
