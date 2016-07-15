@@ -14,8 +14,25 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Object polyfills.
- */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
-'require es6/object/setprototypeof';
+goog.module('jscomp.runtime_tests.polyfill_tests.reflect_apply_test');
+goog.setTestOnly();
+
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testApply() {
+    /**
+     * @param {number} a
+     * @param {number} b
+     * @this {{x: number}}
+     * @return {number}
+     */
+    const foo = function(a, b) { return 100 * this.x + 10 * a + b; };
+    // mess up the standard Function.prototype methods
+    foo.apply = () => 99;
+    foo.call = () => 99;
+    foo.bind = () => () => 99;
+
+    assertEquals(654, Reflect.apply(foo, {x: 6}, [5, 4]));
+  },
+});

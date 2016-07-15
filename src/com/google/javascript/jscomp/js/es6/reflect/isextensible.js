@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Object polyfills.
- */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
-'require es6/object/setprototypeof';
+'require util/polyfill';
+
+
+$jscomp.polyfill('Reflect.isExtensible', function(orig) {
+  if (orig) return orig;
+  if (typeof Object.isExtensible == 'function') {
+    return Object.isExtensible;
+  }
+  return function() { return true; };
+}, 'es6', 'es3');

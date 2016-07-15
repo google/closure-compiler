@@ -14,8 +14,24 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Object polyfills.
- */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
-'require es6/object/setprototypeof';
+'require util/polyfill';
+
+
+$jscomp.polyfill('Reflect.has', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Polyfill for Reflect.has() method:
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has
+   *
+   * Applies the 'in' operator as a function.
+   *
+   * @param {!Object} target
+   * @param {*} propertyKey
+   * @return {boolean}
+   */
+  var polyfill = function(target, propertyKey) {
+    return propertyKey in target;
+  };
+  return polyfill;
+}, 'es6', 'es3');

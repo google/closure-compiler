@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'require es6/array es6/map es6/math es6/number es6/object';
+'require es6/array es6/map es6/math es6/number es6/object es6/reflect';
 'require es6/set es6/string es6/symbol es6/util/arrayfromiterable';
 'require es6/util/arrayfromiterator es6/util/inherits';
 'require es6/util/iteratorfromarray es6/util/makeiterator';

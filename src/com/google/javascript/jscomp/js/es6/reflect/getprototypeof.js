@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Object polyfills.
- */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
-'require es6/object/setprototypeof';
+'require util/polyfill';
+
+
+$jscomp.polyfill('Reflect.getPrototypeOf', function(orig) {
+  // NOTE: We don't make guarantees about correct throwing behavior.
+  // Non-object arguments should be prevented by the type checker.
+  return orig || Object.getPrototypeOf;
+}, 'es6', 'es5'); // ES5: Requires Object.getPrototypeOf

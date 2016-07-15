@@ -284,4 +284,20 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     // NOTE: By the time this pass runs, goog.module aliases have already been fully expanded.
     testInjects("goog.string.endsWith('x');");
   }
+
+  public void testCleansUpUnnecessaryPolyfills() {
+    // Put two polyfill statements in the same library.
+    injectableLibraries.put("es6/set",
+        "$jscomp.polyfill('Set', '', 'es6', 'es3'); $jscomp.polyfill('Map', '', 'es5', 'es3');");
+    polyfillTable.add("Set es6 es3 es6/set");
+
+    setLanguage(ES6, ES5);
+    test("var set = new Set();", "$jscomp.polyfill('Set', '', 'es6', 'es3'); var set = new Set();");
+
+    setLanguage(ES6, ES3);
+    test(
+        "var set = new Set();",
+        "$jscomp.polyfill('Set', '', 'es6', 'es3'); $jscomp.polyfill('Map', '', 'es5', 'es3');"
+            + "var set = new Set();");
+  }
 }

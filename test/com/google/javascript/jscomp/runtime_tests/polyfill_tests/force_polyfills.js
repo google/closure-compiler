@@ -63,7 +63,9 @@ delete Number.isSafeInteger;
 delete Object.assign;
 delete Object.getOwnPropertySymbols;
 delete Object.is;
+delete Object.setPrototypeOf;
 
+delete Reflect;
 delete Set;
 
 delete String.fromCodePoint;

@@ -14,8 +14,23 @@
  * limitations under the License.
  */
 
+'require es6/reflect/getownpropertydescriptor es6/reflect/getprototypeof';
+
+
 /**
- * @fileoverview Brings in all ES6 Object polyfills.
+ * Helper function to find a descriptor.
+ * @param {!Object} target
+ * @param {string} propertyKey
+ * @return {!Object|undefined} Property descriptor, or undefined.
  */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
-'require es6/object/setprototypeof';
+$jscomp.findDescriptor = function(target, propertyKey) {
+  var /** ?Object */ obj = target;
+  while (obj) {
+    var property = Reflect.getOwnPropertyDescriptor(obj, propertyKey);
+    if (property) {
+      return property;
+    }
+    obj = Reflect.getPrototypeOf(obj);
+  }
+  return undefined;
+};

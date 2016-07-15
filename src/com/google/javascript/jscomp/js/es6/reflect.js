@@ -15,7 +15,11 @@
  */
 
 /**
- * @fileoverview Brings in all ES6 Object polyfills.
+ * @fileoverview Rolls together all ES6 Reflect polyfills.
  */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
-'require es6/object/setprototypeof';
+'require es6/reflect/apply es6/reflect/construct es6/reflect/defineproperty';
+'require es6/reflect/deleteproperty es6/reflect/get';
+'require es6/reflect/getownpropertydescriptor es6/reflect/getprototypeof';
+'require es6/reflect/has es6/reflect/isextensible es6/reflect/ownkeys';
+'require es6/reflect/preventextensions es6/reflect/set';
+'require es6/reflect/setprototypeof';

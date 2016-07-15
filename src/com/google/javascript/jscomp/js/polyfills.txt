@@ -34,9 +34,21 @@ Number.isSafeInteger es6-impl es3 es6/number/issafeinteger
 Object.assign es6-impl es3 es6/object/assign
 Object.getOwnPropertySymbols es6-impl es5 es6/object/getownpropertysymbols
 Object.is es6-impl es3 es6/object/is
-Object.setPrototypeOf es6-impl es6-impl
+Object.setPrototypeOf es6 es5 es6/object/setprototypeof
 Proxy es6 es6
-Reflect es6-impl es6-impl
+Reflect.apply es6 es3 es6/reflect/apply
+Reflect.construct es6 es5 es6/reflect/construct
+Reflect.defineProperty es6 es5 es6/reflect/defineproperty
+Reflect.deleteProperty es6 es3 es6/reflect/deleteproperty
+Reflect.get es6 es5 es6/reflect/get
+Reflect.getOwnPropertyDescriptor es6 es5 es6/reflect/getownpropertydescriptor
+Reflect.getPrototypeOf es6 es5 es6/reflect/getprototypeof
+Reflect.has es6 es3 es6/reflect/has
+Reflect.isExtensible es6 es3 es6/reflect/isextensible
+Reflect.ownKeys es6 es5 es6/reflect/ownkeys
+Reflect.preventExtensions es6 es3 es6/reflect/preventextensions
+Reflect.set es6 es5 es6/reflect/set
+Reflect.setPrototypeOf es6 es5 es6/reflect/setprototypeof
 Set es6-impl es3 es6/set
 String.fromCodePoint es6-impl es3 es6/string/fromcodepoint
 String.prototype.codePointAt es6-impl es3 es6/string/codepointat

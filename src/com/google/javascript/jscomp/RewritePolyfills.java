@@ -161,7 +161,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
         lastNode = compiler.ensureLibraryInjected(library, false);
       }
       if (lastNode != null) {
-        removeUnneededPolyfills(lastNode.getParent(), lastNode);
+        removeUnneededPolyfills(lastNode.getParent(), lastNode.getNext());
       }
       compiler.reportCodeChange();
     }
