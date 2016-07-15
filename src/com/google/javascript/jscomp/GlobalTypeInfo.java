@@ -46,7 +46,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -2160,7 +2159,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (NodeUtil.isFunctionBind(maybeBind) && !NodeUtil.isGoogPartial(maybeBind)) {
         Node call = maybeBind.getParent();
         Bind bindComponents = convention.describeFunctionBind(call, true, false);
-        JSType recvType = simpleInferExprType(bindComponents.thisValue);
+        JSType recvType = bindComponents.thisValue == null
+            ? null : simpleInferExprType(bindComponents.thisValue);
         if (recvType == null) {
           return null;
         }

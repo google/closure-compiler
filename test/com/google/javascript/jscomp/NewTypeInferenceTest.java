@@ -12799,6 +12799,10 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  this.p = 123;",
         "}",
         "(function(x) { this.p - x; }).bind(new Foo, 321);"));
+
+    typeCheck(
+        "(function() {}).bind();",
+        NewTypeInference.WRONG_ARGUMENT_COUNT);
   }
 
   public void testClosureStyleFunctionBind() {
