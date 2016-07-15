@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -2126,7 +2127,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testAwaitExpression() {
-    languageMode = languageMode.ECMASCRIPT8;
+    languageMode = LanguageMode.ECMASCRIPT8;
     assertPrintSame("async function f(promise){return await promise}");
     assertPrintSame("pwait=async function(promise){return await promise}");
     assertPrintSame("class C{async pwait(promise){await promise}}");
@@ -2268,5 +2269,46 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("`start\\u{1f42a}end`", "`start\\ud83d\\udc2aend`");
     assertPrintSame("`\\u2026`");
     assertPrintSame("`start\\u2026end`");
+  }
+
+  public void testEs6GoogModule() {
+    String code = ""
+        + "goog.module('foo.bar');\n"
+        + "const STR = '3';\n"
+        + "function fn() {\n"
+        + "  alert(STR);\n"
+        + "}\n"
+        + "exports.fn = fn;\n";
+    String expectedCode = ""
+        + "var module$exports$foo$bar = {};\n"
+        + "const STR = '3';\n"
+        + "function fn() {\n"
+        + "  alert(STR);\n"
+        + "}\n"
+        + "exports.fn = fn;\n";
+
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.setCheckSymbols(true);
+    compilerOptions.setCheckTypes(true);
+    compilerOptions.setClosurePass(true);
+    compilerOptions.setIdeMode(true);
+    compilerOptions.setPreserveGoogRequires(true);
+    Compiler compiler = new Compiler();
+    compiler.disableThreads();
+    compiler.compile(
+        ImmutableList.<SourceFile>of(), // Externs
+        ImmutableList.of(SourceFile.fromCode("test", code)),
+        compilerOptions);
+    Node node = compiler.getRoot().getLastChild().getFirstChild();
+
+    CompilerOptions codePrinterOptions = new CompilerOptions();
+    codePrinterOptions.setPreferSingleQuotes(true);
+    codePrinterOptions.setLineLengthThreshold(80);
+    codePrinterOptions.setUseOriginalNamesInOutput(true);
+    assertEquals(expectedCode, new CodePrinter.Builder(node)
+        .setCompilerOptions(codePrinterOptions)
+        .setPrettyPrint(true)
+        .setLineBreak(true)
+        .build());
   }
 }

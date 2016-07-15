@@ -47,6 +47,7 @@ public class CodeGenerator {
   private final boolean trustedStrings;
   private final boolean quoteKeywordProperties;
   private final boolean outputAsExterns;
+  private final boolean useOriginalName;
 
   private CodeGenerator(CodeConsumer consumer) {
     cc = consumer;
@@ -56,6 +57,7 @@ public class CodeGenerator {
     preserveTypeAnnotations = false;
     quoteKeywordProperties = false;
     outputAsExterns = false;
+    useOriginalName = false;
   }
 
   static CodeGenerator forCostEstimation(CodeConsumer consumer) {
@@ -73,6 +75,7 @@ public class CodeGenerator {
     this.preserveTypeAnnotations = options.preserveTypeAnnotations;
     this.quoteKeywordProperties = options.quoteKeywordProperties;
     this.outputAsExterns = options.shouldGenerateTypedExterns();
+    this.useOriginalName = options.getUseOriginalNamesInOutput();
   }
 
   public void maybeTagAsExterns() {
@@ -243,7 +246,11 @@ public class CodeGenerator {
         break;
 
       case NAME:
-        addIdentifier(n.getString());
+        if (useOriginalName && n.getOriginalName() != null) {
+          addIdentifier(n.getOriginalName());
+        } else {
+          addIdentifier(n.getString());
+        }
         maybeAddOptional(n);
         maybeAddTypeDecl(n);
 

@@ -911,6 +911,12 @@ public class CompilerOptions {
 
   int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
 
+  /**
+   * Whether to use the original names of nodes in the code output. This option is only really
+   * useful when using the compiler to print code meant to check in to source.
+   */
+  boolean useOriginalNamesInOutput = false;
+
   //--------------------------------
   // Special Output Options
   //--------------------------------
@@ -2439,6 +2445,14 @@ public class CompilerOptions {
 
   public int getLineLengthThreshold() {
     return this.lineLengthThreshold;
+  }
+
+  public void setUseOriginalNamesInOutput(boolean useOriginalNamesInOutput) {
+    this.useOriginalNamesInOutput = useOriginalNamesInOutput;
+  }
+
+  public boolean getUseOriginalNamesInOutput() {
+    return this.useOriginalNamesInOutput;
   }
 
   public void setExternExports(boolean externExports) {

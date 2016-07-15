@@ -607,6 +607,49 @@ public class RefasterJsScannerTest {
     assertChanges(externs, originalCode, expectedCode, template);
   }
 
+  @Test
+  public void test_es6() throws Exception {
+    String externs = ""
+        + "/** @constructor */\n"
+        + "function FooType() {}\n"
+        + "/** @param {string} str */"
+        + "FooType.prototype.bar = function(str) {};\n"
+        + "/** @param {string} str */"
+        + "FooType.prototype.baz = function(str) {};\n";
+    String template = ""
+        + "/**\n"
+        + " * @param {FooType} foo\n"
+        + " * @param {string} str\n"
+        + " */\n"
+        + "function before_foo(foo, str) {\n"
+        + "  foo.bar(str);\n"
+        + "};\n"
+        + "/**\n"
+        + " * @param {FooType} foo\n"
+        + " * @param {string} str\n"
+        + " */\n"
+        + "function after_foo(foo, str) {\n"
+        + "  foo.baz(str);\n"
+        + "}\n";
+    String originalCode = ""
+        + "goog.module('foo.bar');\n"
+        + "const STR = '3';\n"
+        + "const Clazz = class {\n"
+        + "  constructor() { /** @const */ this.obj = new FooType(); }\n"
+        + "  someMethod() { this.obj.bar(STR); }\n"
+        + "};\n"
+        + "exports.Clazz = Clazz;\n";
+    String expectedCode = ""
+        + "goog.module('foo.bar');\n"
+        + "const STR = '3';\n"
+        + "const Clazz = class {\n"
+        + "  constructor() { /** @const */ this.obj = new FooType(); }\n"
+        + "  someMethod() { this.obj.baz(STR); }\n"
+        + "};\n"
+        + "exports.Clazz = Clazz;\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
   private Compiler createCompiler() {
     return new Compiler();
   }
