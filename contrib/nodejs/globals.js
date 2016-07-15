@@ -104,10 +104,114 @@ function clearImmediate(id) {}
 function Process() {}
 
 /**
- * @param {Function} fn
- * @see http://nodejs.org/api/process.html#process_process_nexttick_callback
+ * @return {void}
+ * @see http://nodejs.org/api/process.html#process_process_abort
  */
-Process.prototype.nextTick = function (fn) {};
+Process.prototype.abort = function () {};
+
+/**
+ * @type {string}
+ * @see http://nodejs.org/api/process.html#process_process_arch
+ */
+Process.prototype.arch;
+
+/**
+ * @type {!Array<string>}
+ * @see http://nodejs.org/api/process.html#process_process_argv
+ */
+Process.prototype.argv;
+
+/**
+ * @param {string} directory
+ * @see http://nodejs.org/api/process.html#process_process_chdir_directory
+ */
+Process.prototype.chdir = function (directory) {};
+
+/**
+ * @type {*}
+ * @see http://nodejs.org/api/process.html#process_process_config
+ */
+Process.prototype.config;
+
+/**
+ * @type {boolean}
+ * @see http://nodejs.org/api/process.html#process_process_connected
+ */
+Process.prototype.connected;
+
+/**
+ * @return {string}
+ * @see http://nodejs.org/api/process.html#process_process_cwd
+ */
+Process.prototype.cwd = function () {};
+
+/**
+ * @return {void}
+ * @see http://nodejs.org/api/process.html#process_process_disconnect
+ */
+Process.prototype.disconnect = function () {};
+
+/**
+ * @type {*}
+ * @see http://nodejs.org/api/process.html#process_process_env
+ */
+Process.prototype.env;
+
+/**
+ * @param {number=} code
+ * @see http://nodejs.org/api/process.html#process_process_exit_code
+ */
+Process.prototype.exit = function (code) {};
+
+/**
+ * @param {number} pid
+ * @param {string|number} signal
+ * @see http://nodejs.org/api/process.html#process_process_kill_pid_signal
+ */
+Process.prototype.kill = function (pid, signal) {};
+
+/**
+ * @param {!Function} fn
+ * @param {...*} var_args
+ * @see http://nodejs.org/api/process.html#process_process_nexttick_callback_arg
+ */
+Process.prototype.nextTick = function (fn, var_args) {};
+
+/**
+ * @type {string}
+ * @see http://nodejs.org/api/process.html#process_process_pid
+ */
+Process.prototype.pid;
+
+/**
+ * @type {string}
+ * @see http://nodejs.org/api/process.html#process_process_platform
+ */
+Process.prototype.platform;
+
+/**
+ * @type {*}
+ * @see http://nodejs.org/api/process.html#process_process_release
+ */
+Process.prototype.release;
+
+/**
+ * @return {number}
+ * @see http://nodejs.org/api/process.html#process_process_uptime
+ */
+Process.prototype.uptime = function () {};
+
+/**
+ * @type {string}
+ * @see http://nodejs.org/api/process.html#process_process_version
+ */
+Process.prototype.version;
+
+/**
+ * @type {*}
+ * @see http://nodejs.org/api/process.html#process_process_versions
+ */
+Process.prototype.versions;
 
 /** @const {Process} */
 var process;

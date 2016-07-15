@@ -16,6 +16,7 @@
 
 /**
  * @fileoverview Definitions for node's path module.
+ * @externs
  * @see http://nodejs.org/api/path.html
  */
 
@@ -77,8 +78,20 @@ path.basename;
 path.extname;
 
 /**
+ * @param {string} p
+ * @return {boolean}
+ * @nosideeffects
+ */
+path.isAbsolute;
+
+/**
  * @type {string}
  */
 path.sep;
+
+/**
+ * @type {string}
+ */
+path.delimiter;
 
 module.exports = path;

@@ -15,7 +15,9 @@
  */
 
 /**
- * @fileoverview Definitions for node's child_process module. Depends on the events module.
+ * @fileoverview Definitions for node's child_process module. Depends on the
+ *     events module.
+ * @externs
  * @see http://nodejs.org/api/child_process.html
  * @see https://github.com/joyent/node/blob/master/lib/child_process.js
  */
@@ -95,6 +97,13 @@ child_process.ChildProcess.spawn;
 child_process.exec;
 
 /**
+ * @param {string} command
+ * @param {child_process.Options} options
+ * @return {!Buffer|string}
+ */
+child_process.execSync;
+
+/**
  * @param {string} file
  * @param {Array.<string>} args
  * @param {child_process.Options} options
@@ -102,6 +111,14 @@ child_process.exec;
  * @return {child_process.ChildProcess}
  */
 child_process.execFile;
+
+/**
+ * @param {string} file
+ * @param {Array.<string>} args
+ * @param {child_process.Options} options
+ * @return {!Buffer|string}
+ */
+child_process.execFileSync;
 
 /**
  * @param {string} modulePath
