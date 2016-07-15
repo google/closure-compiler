@@ -28,7 +28,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -749,7 +748,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
         && typeParameters.contains(getTypeVar())) {
       updateTypemap(typeMultimap, getTypeVar(), other);
       return true;
-    } else if (other.isUnknown()) {
+    } else if (other.isUnknown() || other.isTrueOrTruthy()) {
       return true;
     } else if (other.isTop()) {
       // T|number doesn't unify with TOP

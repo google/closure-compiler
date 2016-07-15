@@ -17218,7 +17218,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f(x) { if (!x) { return /** @type {number} */ (x); } }");
   }
 
-  public void testPropAccessOnTruthy() {
+  public void testUsingTruthy() {
     typeCheck(LINE_JOINER.join(
         "function f(/** !Function */ x) {",
         "  return x.superClass_ ? x.superClass_.constructor : null;",
@@ -17228,6 +17228,26 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f(/** !Function */ x) {",
         "  if (x.superClass_) { x.superClass_.constructor = null; }",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function g(x) { var /** !Object */ y = x; }",
+        "function f(x) {",
+        "  if (!x) return null;",
+        "  g(x);",
+        "  return x instanceof Array;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (!x) return null;",
+        "  forEach(x, function(y){});",
+        "}",
+        "/**",
+        " * @param {!Array<T>} arr",
+        " * @param {function(T)} cb",
+        " * @template T",
+        " */",
+        "function forEach(arr, cb) {}"));
   }
 
   public void testIObjectExternMissing() {

@@ -1600,7 +1600,7 @@ final class NewTypeInference implements CompilerPass {
     EnvTypePair objPair, ctorPair;
 
     // First, evaluate ignoring the specialized context
-    objPair = analyzeExprFwd(obj, inEnv);
+    objPair = analyzeExprFwd(obj, inEnv, JSType.TOP_OBJECT);
     JSType objType = objPair.type;
     if (!objType.isTop()
         && !objType.isUnknown()
