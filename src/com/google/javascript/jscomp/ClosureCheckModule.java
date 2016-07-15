@@ -51,6 +51,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       "JSC_GOOG_MODULE_USES_THROW",
       "The body of a goog.module cannot use 'throw'.");
 
+  static final DiagnosticType INVALID_DESTRUCTURING_REQUIRE =
+      DiagnosticType.error(
+          "JSC_INVALID_DESTRUCTURING_REQUIRE",
+          "Destructuring goog.require must be a simple object pattern.");
+
   static final DiagnosticType LET_GOOG_REQUIRE =
       DiagnosticType.disabled(
           "JSC_LET_GOOG_REQUIRE",
@@ -263,7 +268,27 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       t.report(declaration, ONE_REQUIRE_PER_DECLARATION);
     }
     Node lhs = declaration.getFirstChild();
+    if (lhs.isDestructuringLhs() && !isValidDestructuringImport(lhs)) {
+      t.report(declaration, INVALID_DESTRUCTURING_REQUIRE);
+    }
     String shortName = lhs.isName() ? lhs.getString() : null;
     shortRequiredNamespaces.put(extractFirstArgumentName(callNode), shortName);
+  }
+
+  private static boolean isValidDestructuringImport(Node destructuringLhs) {
+    Preconditions.checkArgument(destructuringLhs.isDestructuringLhs());
+    Node objectPattern = destructuringLhs.getFirstChild();
+    if (!objectPattern.isObjectPattern()) {
+      return false;
+    }
+    for (Node stringKey : objectPattern.children()) {
+       if (!stringKey.isStringKey()) {
+         return false;
+       }
+       if (stringKey.hasChildren() && !stringKey.getFirstChild().isName()) {
+         return false;
+       }
+    }
+    return true;
   }
 }

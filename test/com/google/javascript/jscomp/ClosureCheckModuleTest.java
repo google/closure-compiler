@@ -19,6 +19,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_MODUL
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ERROR;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
+import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_AND_PROVIDES;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
@@ -315,6 +316,27 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "",
             "var a = goog.require('foo.a'), b = goog.require('foo.b');"),
         ONE_REQUIRE_PER_DECLARATION);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var [foo, bar] = goog.require('other.x');"),
+        INVALID_DESTRUCTURING_REQUIRE);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var {foo, bar = 'str'} = goog.require('other.x');"),
+        INVALID_DESTRUCTURING_REQUIRE);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var {foo, bar: {name}} = goog.require('other.x');"),
+        INVALID_DESTRUCTURING_REQUIRE);
   }
 
   public void testIllegalShortImportReferencedByLongName() {
