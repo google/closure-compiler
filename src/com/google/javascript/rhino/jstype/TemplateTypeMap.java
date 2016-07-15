@@ -64,7 +64,7 @@ public class TemplateTypeMap implements Serializable {
   // These values have been iteratively type-resolved using this TemplateTypeMap
   // instance. These fully-resolved values are necessary for determining the
   // equivalence of two TemplateTypeMap instances.
-  private final ImmutableList<JSType> resolvedTemplateValues;
+  private final JSType[] resolvedTemplateValues;
   private boolean inRecursiveEquivalenceCheck = false;
   final JSTypeRegistry registry;
 
@@ -82,14 +82,19 @@ public class TemplateTypeMap implements Serializable {
     // Iteratively resolve any JSType values that refer to the TemplateType keys
     // of this TemplateTypeMap.
     TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, this);
-    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-    for (int nValues = this.templateValues.size(), i = 0; i < nValues; i++) {
-      TemplateType templateKey = this.templateKeys.get(i);
-      replacer.setKeyType(templateKey);
-      JSType templateValue = this.templateValues.get(i);
-      builder.add(templateValue.visit(replacer));
+
+    int nValues = this.templateValues.size();
+    JSType[] resolvedValues = null;
+    if (nValues > 0) {
+      resolvedValues = new JSType[nValues];
+      for (int i = 0; i < nValues; i++) {
+        TemplateType templateKey = this.templateKeys.get(i);
+        replacer.setKeyType(templateKey);
+        JSType templateValue = this.templateValues.get(i);
+        resolvedValues[i] = templateValue.visit(replacer);
+      }
     }
-    this.resolvedTemplateValues = builder.build();
+    this.resolvedTemplateValues = resolvedValues;
   }
 
   /**
@@ -181,7 +186,7 @@ public class TemplateTypeMap implements Serializable {
     TemplateTypeMap resolvedMap = this.addUnknownValues();
     int index = resolvedMap.getTemplateTypeIndex(key);
     return (index == -1) ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) :
-         resolvedMap.resolvedTemplateValues.get(index);
+         resolvedMap.resolvedTemplateValues[index];
   }
 
   /**
@@ -336,9 +341,11 @@ public class TemplateTypeMap implements Serializable {
   }
 
   boolean hasAnyTemplateTypesInternal() {
-    for (JSType templateValue : addUnknownValues().resolvedTemplateValues) {
-      if (templateValue.hasAnyTemplateTypes()) {
-        return true;
+    if (resolvedTemplateValues != null) {
+      for (JSType templateValue : addUnknownValues().resolvedTemplateValues) {
+        if (templateValue.hasAnyTemplateTypes()) {
+          return true;
+        }
       }
     }
     return false;
@@ -348,16 +355,17 @@ public class TemplateTypeMap implements Serializable {
   public String toString() {
     String s = "";
 
-    int len = Math.max(Math.max(templateKeys.size(), templateValues.size()),
-        resolvedTemplateValues.size());
+    int len = templateKeys.size();
     s += "{ ";
     for (int i = 0; i < len; i++) {
       s += "(";
-      s += (i < templateKeys.size()) ? templateKeys.get(i) : "";
+      s += templateKeys.get(i);
       s += ",";
       s += (i < templateValues.size()) ? templateValues.get(i) : "";
       s += ",";
-      s += (i < resolvedTemplateValues.size()) ? resolvedTemplateValues.get(i) : "";
+      s += (resolvedTemplateValues != null && i < resolvedTemplateValues.length)
+          ? resolvedTemplateValues[i]
+          : "";
       s += ") ";
     }
     s += "}";
