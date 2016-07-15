@@ -938,7 +938,8 @@ public final class JSDocInfoBuilder {
   public boolean recordAbstract() {
     if (!hasAnySingletonTypeTags()
         && !currentInfo.isInterface()
-        && !currentInfo.isAbstract()) {
+        && !currentInfo.isAbstract()
+        && currentInfo.getVisibility() != Visibility.PRIVATE) {
       currentInfo.setAbstract();
       populated = true;
       return true;
