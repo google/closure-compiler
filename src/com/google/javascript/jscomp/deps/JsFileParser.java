@@ -44,6 +44,8 @@ public final class JsFileParser extends JsFileLineParser {
 
   /** Pattern for matching goog.provide(*) and goog.require(*). */
   private static final Pattern GOOG_PROVIDE_REQUIRE_PATTERN =
+      // TODO(sdh): this handles goog.loadModule(function(){"use strict";goog.module
+      // but fails to match without "use strict"; since we look for semicolon, not open brace.
       Pattern.compile(
           "(?:^|;)(?:[a-zA-Z0-9$_,:{}\\s]+=)?\\s*"
               + "goog\\.(provide|module|require|addDependency)\\s*\\((.*?)\\)");
@@ -214,6 +216,10 @@ public final class JsFileParser extends JsFileLineParser {
   protected boolean parseLine(String line) throws ParseException {
     boolean lineHasProvidesOrRequires = false;
 
+    if (line.startsWith(BUNDLED_GOOG_MODULE_START)) {
+      setModuleType(ModuleType.WRAPPED_GOOG_MODULE);
+    }
+
     // Quick sanity check that will catch most cases. This is a performance
     // win for people with a lot of JS.
     if (line.contains("provide")
@@ -262,8 +268,6 @@ public final class JsFileParser extends JsFileLineParser {
 
       // base.js can't provide or require anything else.
       return false;
-    } else if (line.startsWith(BUNDLED_GOOG_MODULE_START)) {
-      setModuleType(ModuleType.WRAPPED_GOOG_MODULE);
     }
 
     if (line.startsWith("import") || line.startsWith("export")) {

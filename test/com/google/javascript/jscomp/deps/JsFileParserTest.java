@@ -85,7 +85,7 @@ public final class JsFileParserTest extends TestCase {
     DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1"),
         ImmutableList.of("yes2", "a.b.C", "a.b.d"),
-        true);
+        ImmutableMap.of("module", "goog"));
 
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 
@@ -106,7 +106,28 @@ public final class JsFileParserTest extends TestCase {
     DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1"),
         ImmutableList.of("yes2", "a.b.C", "a.b.d"),
-        true);
+        ImmutableMap.of("module", "goog"));
+
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertDeps(expected, result);
+  }
+
+  /**
+   * Tests:
+   *  -Correct recording of what was parsed.
+   */
+  public void testParseWrappedGoogModule() {
+    String contents = ""
+      + "goog.loadModule(function(){\"use strict\";goog.module('yes1');\n"
+      + "var yes2=goog.require('yes2');\n"
+      + "var C=goog.require(\"a.b.C\");\n"
+      + "const {\n  D,\n  E\n}=goog.require(\"a.b.d\");});";
+
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.of("yes1"),
+        ImmutableList.of("yes2", "a.b.C", "a.b.d"),
+        ImmutableMap.<String, String>of()); // wrapped modules aren't marked as modules
 
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 
