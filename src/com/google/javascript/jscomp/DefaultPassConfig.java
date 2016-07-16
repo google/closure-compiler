@@ -412,6 +412,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkAccessControls);
     }
 
+    checks.add(checkConsts);
+
     // Analyzer checks must be run after typechecking.
     if (options.enables(DiagnosticGroups.ANALYZER_CHECKS)) {
       checks.add(analyzerChecks);
@@ -601,12 +603,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.chainCalls) {
       passes.add(chainCalls);
     }
-
-    // Constant checking must be done after property collapsing because
-    // property collapsing can introduce new constants (e.g. enum values).
-    // TODO(johnlenz): make checkConsts namespace aware so it can be run
-    // as during the checks phase.
-    passes.add(checkConsts);
 
     // Detects whether invocations of the method goog.string.Const.from are done
     // with an argument which is a string literal.

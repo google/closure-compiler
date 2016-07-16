@@ -1282,23 +1282,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
-  public void testProvidedNamespaceIsConst2() {
-    CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
-    options.setInlineConstantVars(true);
-    options.setCollapseProperties(true);
-    test(
-        options,
-        LINE_JOINER.join(
-            "var goog = {};",
-            "goog.provide('foo.bar');",
-            "function f() { foo.bar = {};}"),
-        LINE_JOINER.join(
-            "var foo$bar = {};",
-            "function f() { foo$bar = {}; }"),
-        ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
-  }
-
   public void testProvidedNamespaceIsConst3() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -1338,10 +1321,10 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var foo = {}; foo = {}; foo.Bar = {};");
   }
 
-  public void testProcessDefinesAlwaysOn() {
+  public void testAtDefineReassigned() {
     test(createCompilerOptions(),
          "/** @define {boolean} */ var HI = true; HI = false;",
-         "var HI = false;false;");
+         ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
   public void testProcessDefinesAdditionalReplacements() {

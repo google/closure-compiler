@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -31,6 +30,8 @@ import java.util.Set;
  * XX++;      // error!
  *
  */
+// TODO(tbreisacher): Consider merging this with CheckAccessControls so that all
+// const-related checks are in the same place.
 class ConstCheck extends AbstractPostOrderCallback
     implements CompilerPass {
 
@@ -53,7 +54,6 @@ class ConstCheck extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
   }
 
