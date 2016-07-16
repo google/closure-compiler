@@ -59,7 +59,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
           processObjectCreateSetCall(n);
         }
       }
-      maybeProcessDomTypedTagName(n);
+      maybeProcessDomTagName(n);
     }
   }
 
@@ -192,7 +192,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   /**
    * Converts the given node to string if it is safe to do so.
    */
-  private void maybeProcessDomTypedTagName(Node n) {
+  private void maybeProcessDomTagName(Node n) {
     String qualifiedName = n.getQualifiedName();
     if (qualifiedName == null) {
       return;
@@ -200,8 +200,8 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     if (NodeUtil.isLValue(n)) {
       return;
     }
-    String prefix = "goog.dom.TypedTagName.";
-    String altPrefix = "goog$dom$TypedTagName$";
+    String prefix = "goog.dom.TagName.";
+    String altPrefix = "goog$dom$TagName$";
     String tagName;
     if (qualifiedName.startsWith(prefix)) {
       tagName = qualifiedName.substring(prefix.length());
