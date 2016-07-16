@@ -647,7 +647,7 @@ public class CommandLineRunner extends
     @Option(name = "--rewrite_polyfills",
         handler = BooleanOptionHandler.class,
         usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
-    private boolean rewritePolyfills = false;
+    private boolean rewritePolyfills = true;
 
     @Option(name = "--print_source_after_each_pass",
         hidden = true,
