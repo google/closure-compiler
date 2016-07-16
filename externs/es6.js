@@ -1500,6 +1500,16 @@ Number.isSafeInteger = function(value) {};
  */
 Object.assign = function(target, var_args) {};
 
+/**
+ * TODO(dbeam): find a better place for ES2017 externs like this one.
+ * @param {!Object<T>} obj
+ * @return {!Array<T>} values
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values
+ * @throws {Error}
+ * @template T
+ */
+Object.values = function(obj) {};
+
 
 
 /**
