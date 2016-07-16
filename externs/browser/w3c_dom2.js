@@ -1559,6 +1559,7 @@ HTMLHRElement.prototype.size;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-87744198
  */
 HTMLHRElement.prototype.width;
@@ -1830,6 +1831,7 @@ HTMLObjectElement.prototype.form;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-88925838
  */
 HTMLObjectElement.prototype.height;
@@ -1878,6 +1880,7 @@ HTMLObjectElement.prototype.vspace;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-38538620
  */
 HTMLObjectElement.prototype.width;
@@ -1952,6 +1955,7 @@ HTMLAppletElement.prototype.codeBase;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-90184867
  */
 HTMLAppletElement.prototype.height;
@@ -1982,6 +1986,7 @@ HTMLAppletElement.prototype.vspace;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-16526327
  */
 HTMLAppletElement.prototype.width;
@@ -2196,6 +2201,7 @@ HTMLTableElement.prototype.tHead;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-77447361
  */
 HTMLTableElement.prototype.width;
@@ -2302,6 +2308,7 @@ HTMLTableColElement.prototype.vAlign;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-25196799
  */
 HTMLTableColElement.prototype.width;
@@ -2489,6 +2496,7 @@ HTMLTableCellElement.prototype.headers;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-83679212
  */
 HTMLTableCellElement.prototype.height;
@@ -2519,6 +2527,7 @@ HTMLTableCellElement.prototype.vAlign;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-27480795
  */
 HTMLTableCellElement.prototype.width;
@@ -2630,6 +2639,7 @@ HTMLIFrameElement.prototype.frameBorder;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-1678118
  */
 HTMLIFrameElement.prototype.height;
@@ -2672,6 +2682,7 @@ HTMLIFrameElement.prototype.src;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-67133005
  */
 HTMLIFrameElement.prototype.width;
