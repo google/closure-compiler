@@ -67,7 +67,7 @@ import javax.annotation.Nullable;
     "java.util.Collections.shuffle, "
     + "com.google.common.hash.Hasher, "
     + "com.google.common.hash.Hashing")
-final class RandomNameGenerator implements NameGenerator {
+public final class RandomNameGenerator implements NameGenerator {
 
   /** Generate random names with this first character. */
   static final char[] FIRST_CHAR = DefaultNameGenerator.FIRST_CHAR;
@@ -104,7 +104,7 @@ final class RandomNameGenerator implements NameGenerator {
    * them) */
   private List<List<Character>> shuffledNonFirst;
 
-  RandomNameGenerator(Random random) {
+  public RandomNameGenerator(Random random) {
     this.random = random;
     reset(new HashSet<String>(), "", null);
   }
