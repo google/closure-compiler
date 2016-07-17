@@ -47,10 +47,11 @@ import javax.annotation.Nullable;
  * NameGenerator
  * <li>We don't use a completely different alphabet for each name prefix, but
  * instead choose among a few with a predictable formula.
+ * </ul>
  *
  * <p>More precisely:
- * <li>
- * <ul>We compute a random shuffle of the alphabet for "first characters", and
+ * <ul>
+ * <li>We compute a random shuffle of the alphabet for "first characters", and
  * a small number of random shuffles of the alphabet for "non-first
  * characters". Then we do a typical number-to-text conversion of a name's
  * "index", where the alphabet for digits is not just 0 to 9. The least
@@ -67,7 +68,7 @@ import javax.annotation.Nullable;
     "java.util.Collections.shuffle, "
     + "com.google.common.hash.Hasher, "
     + "com.google.common.hash.Hashing")
-final class RandomNameGenerator implements NameGenerator {
+public final class RandomNameGenerator implements NameGenerator {
 
   /** Generate random names with this first character. */
   static final char[] FIRST_CHAR = DefaultNameGenerator.FIRST_CHAR;
@@ -104,7 +105,7 @@ final class RandomNameGenerator implements NameGenerator {
    * them) */
   private List<List<Character>> shuffledNonFirst;
 
-  RandomNameGenerator(Random random) {
+  public RandomNameGenerator(Random random) {
     this.random = random;
     reset(new HashSet<String>(), "", null);
   }
