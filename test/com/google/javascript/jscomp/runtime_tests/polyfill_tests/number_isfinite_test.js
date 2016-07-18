@@ -20,9 +20,7 @@ goog.setTestOnly();
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
-const {
-  noCheck,
-} = testing;
+const noCheck = testing.noCheck;
 
 testSuite({
   testIsFinite() {

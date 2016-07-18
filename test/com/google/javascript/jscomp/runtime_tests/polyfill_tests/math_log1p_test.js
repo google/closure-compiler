@@ -20,12 +20,10 @@ goog.setTestOnly();
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
-const {
-  assertExactlyNaN,
-  assertNegativeZero,
-  assertPositiveZero,
-  noCheck,
-} = testing;
+const assertExactlyNaN = testing.assertExactlyNaN;
+const assertNegativeZero = testing.assertNegativeZero;
+const assertPositiveZero = testing.assertPositiveZero;
+const noCheck = testing.noCheck;
 
 testSuite({
   testLog1p() {

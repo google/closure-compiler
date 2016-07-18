@@ -21,10 +21,8 @@ const testSuite = goog.require('goog.testing.testSuite');
 const userAgent = goog.require('goog.userAgent');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
-const {
-  assertIteratorContents,
-  noCheck,
-} = testing;
+const assertIteratorContents = testing.assertIteratorContents;
+const noCheck = testing.noCheck;
 
 testSuite({
   shouldRunTests() {

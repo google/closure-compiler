@@ -20,10 +20,8 @@ goog.setTestOnly();
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
-const {
-  assertPropertyListEquals,
-  objectCreate,
-} = testing;
+const assertPropertyListEquals = testing.assertPropertyListEquals;
+const objectCreate = testing.objectCreate;
 
 testSuite({
   testGetOwnPropertyNames_strings() {

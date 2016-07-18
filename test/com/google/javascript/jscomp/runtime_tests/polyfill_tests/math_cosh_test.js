@@ -20,10 +20,8 @@ goog.setTestOnly();
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
-const {
-  assertExactlyNaN,
-  noCheck,
-} = testing;
+const assertExactlyNaN = testing.assertExactlyNaN;
+const noCheck = testing.noCheck;
 
 testSuite({
   testCosh() {

@@ -21,9 +21,7 @@ const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 const userAgent = goog.require('goog.userAgent');
 
-const {
-  assertIteratorContents,
-} = testing;
+const assertIteratorContents = testing.assertIteratorContents;
 
 const IE8 = userAgent.IE && !userAgent.isVersionOrHigher(9);
 const DONE = {done: true, value: void 0};

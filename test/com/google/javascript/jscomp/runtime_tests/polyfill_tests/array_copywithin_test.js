@@ -21,10 +21,8 @@ const testSuite = goog.require('goog.testing.testSuite');
 const userAgent = goog.require('goog.userAgent');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
-const {
-  getKeys,
-  noCheck,
-} = testing;
+const getKeys = testing.getKeys;
+const noCheck = testing.noCheck;
 
 testSuite({
   shouldRunTests() {
