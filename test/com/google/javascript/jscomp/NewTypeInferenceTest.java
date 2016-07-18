@@ -16656,7 +16656,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testReportUknownTypes() {
-    this.reportUnknownTypes = true;
+    compilerOptions.setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
 
     typeCheck(
         "var x = globalvar;",

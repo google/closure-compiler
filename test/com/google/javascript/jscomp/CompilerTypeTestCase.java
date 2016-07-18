@@ -66,7 +66,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
 
   protected Compiler compiler;
 
-  protected CompilerOptions getOptions() {
+  protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(
@@ -102,9 +102,14 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
   }
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
+    initializeNewCompiler(getDefaultOptions());
+  }
+
+  protected void initializeNewCompiler(CompilerOptions options) {
     compiler = new Compiler();
-    compiler.initOptions(getOptions());
+    compiler.initOptions(options);
     registry = compiler.getTypeRegistry();
     initTypes();
   }

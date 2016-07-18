@@ -34,9 +34,10 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
     extends NewTypeInferenceTestBase {
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
     super.setUp();
-    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT3);
   }
 
   public void testSimpleAnnotationsNoWarnings() {
@@ -214,6 +215,8 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
   }
 
   public void testGetterReturnNonDeclaredType() {
+    // getters cannot be transpiled to EC3
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
     typeCheck(
         "var x = {get a(): number { return 'str'; }}",
         NewTypeInference.RETURN_NONDECLARED_TYPE);

@@ -29,9 +29,10 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenceTestBase {
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
     super.setUp();
-    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT3);
   }
 
   public void testSimpleClasses() {

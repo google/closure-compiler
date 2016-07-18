@@ -60,7 +60,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
   private Node polymerCall;
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
     super.setUp();
     polymerCall = null;
     rootNode = null;
@@ -116,7 +116,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
+  protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(

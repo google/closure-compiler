@@ -39,7 +39,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
           + "var n = 10;";
 
   @Override
-  public void setUp() {
+  public void setUp() throws Exception {
     super.setUp();
     errorReporter = new TestErrorReporter(null, null);
     initRecordTypeTests();

@@ -31,7 +31,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   private Node behaviorArray;
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
     super.setUp();
     behaviorArray = null;
   }

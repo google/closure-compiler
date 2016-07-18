@@ -33,7 +33,7 @@ public final class SemanticReverseAbstractInterpreterTest
   private TypedScope functionScope;
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
     super.setUp();
 
     interpreter = new SemanticReverseAbstractInterpreter(registry);

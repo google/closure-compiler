@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -32,8 +33,8 @@ import java.util.List;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
-  private List<PassFactory> passes;
-  protected boolean reportUnknownTypes;
+
+  protected CompilerOptions compilerOptions;
 
   protected static final String CLOSURE_BASE =
       LINE_JOINER.join(
@@ -170,14 +171,21 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           "");
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
     super.setUp();
-    this.passes = new ArrayList<>();
+    compilerOptions = getDefaultOptions();
   }
 
   @Override
-  protected void tearDown() {
-    this.reportUnknownTypes = false;
+  protected CompilerOptions getDefaultOptions() {
+    CompilerOptions compilerOptions = super.getDefaultOptions();
+    compilerOptions.setClosurePass(true);
+    compilerOptions.setNewTypeInference(true);
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
+    // EC5 is the highest language level that type inference understands.
+    compilerOptions.setLanguage(LanguageMode.ECMASCRIPT5);
+    return compilerOptions;
   }
 
   protected final PassFactory makePassFactory(
@@ -191,23 +199,11 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   }
 
   private final void parseAndTypeCheck(String externs, String js) {
-    // NOTE(dimvar): it's unusual that we run setUp for each test in a test
-    // method rather than once per test method. But the parent class creates a
-    // new compiler object at every setUp call, and we need that.
-    setUp();
-    final CompilerOptions options = compiler.getOptions();
-    options.setClosurePass(true);
-    options.setNewTypeInference(true);
-    options.setWarningLevel(
-        DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
-    if (this.reportUnknownTypes) {
-      options.setWarningLevel(
-          DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
-    }
+    initializeNewCompiler(compilerOptions);
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
-        options);
+        compilerOptions);
 
     Node externsRoot = IR.block();
     externsRoot.setIsSyntheticBlock(true);
@@ -233,15 +229,17 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
 
     DeclaredGlobalExternsOnWindow rewriteExterns =
         new DeclaredGlobalExternsOnWindow(compiler);
+    List<PassFactory> passes = new ArrayList<>();
     passes.add(makePassFactory("globalExternsOnWindow", rewriteExterns));
     ProcessClosurePrimitives closurePass =
         new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false);
     passes.add(makePassFactory("ProcessClosurePrimitives", closurePass));
-    if (options.getLanguageIn() == CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED) {
+    if (compilerOptions.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED) {
       passes.add(makePassFactory("convertEs6TypedToEs6",
               new Es6TypedToEs6Converter(compiler)));
     }
-    if (options.getLanguageIn().isEs6OrHigher()) {
+    if (compilerOptions.getLanguageIn().isEs6OrHigher()
+        && !compilerOptions.getLanguageOut().isEs6OrHigher()) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
     }
