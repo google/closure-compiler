@@ -865,6 +865,7 @@ public class Scanner {
     }
   }
 
+  @SuppressWarnings("IdentityBinaryExpression")
   private boolean skipStringLiteralEscapeSequence() {
     nextChar();
     if (isAtEnd()) {
