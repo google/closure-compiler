@@ -21,9 +21,7 @@ const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 const userAgent = goog.require('goog.userAgent');
 
-const {
-  noCheck,
-} = testing;
+const noCheck = testing.noCheck;
 
 
 testSuite({
@@ -79,9 +77,9 @@ testSuite({
      * @this {!Object}
      */
     const set = function(x) { this.x = x; };
-    Object.defineProperty(obj, 'foo', {get, set});
+    Object.defineProperty(obj, 'foo', {get: get, set: set});
     assertObjectEquals(
-        {get, set, enumerable: false, configurable: false},
+        {get: get, set: set, enumerable: false, configurable: false},
         Reflect.getOwnPropertyDescriptor(obj, 'foo'));
   },
 

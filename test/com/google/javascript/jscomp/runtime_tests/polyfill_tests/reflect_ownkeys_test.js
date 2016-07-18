@@ -21,10 +21,8 @@ const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 const userAgent = goog.require('goog.userAgent');
 
-const {
-  assertPropertyListEquals,
-  objectCreate,
-} = testing;
+const assertPropertyListEquals = testing.assertPropertyListEquals;
+const objectCreate = testing.objectCreate;
 
 testSuite({
   shouldRunTests() {

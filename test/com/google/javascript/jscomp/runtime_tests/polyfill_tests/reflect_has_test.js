@@ -21,10 +21,8 @@ const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 const userAgent = goog.require('goog.userAgent');
 
-const {
-  noCheck,
-  objectCreate,
-} = testing;
+const noCheck = testing.noCheck;
+const objectCreate = testing.objectCreate;
 
 /** @type {boolean} */
 const LEGACY = userAgent.IE && !userAgent.isVersionOrHigher(9);

@@ -21,10 +21,7 @@ const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 const userAgent = goog.require('goog.userAgent');
 
-const {
-  // TODO(sdh): remove this when we figure out the NTI errors
-  noCheck,
-} = testing;
+const noCheck = testing.noCheck;
 
 testSuite({
   shouldRunTests() {
