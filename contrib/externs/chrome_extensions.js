@@ -9325,7 +9325,7 @@ chrome.gcdPrivate.onDeviceRemoved;
 
 /**
  * @const
- * @see http://goo.gl/bKHibo
+ * @see https://cs.chromium.org/chromium/src/extensions/common/api/bluetooth_private.idl
  */
 chrome.bluetoothPrivate = {};
 
@@ -9425,6 +9425,75 @@ chrome.bluetoothPrivate.PairingEventEvent.prototype.hasListeners =
 /** @type {!chrome.bluetoothPrivate.PairingEventEvent} */
 chrome.bluetoothPrivate.onPairing;
 
+
+/**
+ * @param {string} deviceAddress
+ * @param {function(number, string): void=} opt_callback
+ */
+chrome.bluetoothPrivate.pair = function(deviceAddress, opt_callback) {};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/bluetoothPrivate#type-PairingResponse
+ */
+chrome.bluetoothPrivate.PairingResponse = {
+  CONFIRM: '',
+  REJECT: '',
+  CANCEL: '',
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/bluetoothPrivate#type-PairingEventType
+ */
+chrome.bluetoothPrivate.PairingEventType = {
+  REQUEST_PINCODE: '',
+  DISPLAY_PINCODE: '',
+  REQUEST_PASSKEY: '',
+  DISPLAY_PASSKEY: '',
+  KEYS_ENTERED: '',
+  CONFIRM_PASSKEY: '',
+  REQUEST_AUTHORIZATION: '',
+  COMPLETE: '',
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/bluetoothPrivate#type-ConnectResultType
+ */
+chrome.bluetoothPrivate.ConnectResultType = {
+  ALREADY_CONNECTED: '',
+  ATTRIBUTE_LENGTH_INVALID: '',
+  AUTH_CANCELED: '',
+  AUTH_FAILED: '',
+  AUTH_REJECTED: '',
+  AUTH_TIMEOUT: '',
+  CONNECTION_CONGESTED: '',
+  FAILED: '',
+  IN_PROGRESS: '',
+  INSUFFICIENT_ENCRYPTION: '',
+  OFFSET_INVALID: '',
+  READ_NOT_PERMITTED: '',
+  REQUEST_NOT_SUPPORTED: '',
+  SUCCESS: '',
+  UNKNOWN_ERROR: '',
+  UNSUPPORTED_DEVICE: '',
+  WRITE_NOT_PERMITTED: '',
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/bluetoothPrivate#type-TransportType
+ */
+chrome.bluetoothPrivate.TransportType = {
+  LE: '',
+  BREDR: '',
+  DUAL: '',
+};
 
 
 /**
