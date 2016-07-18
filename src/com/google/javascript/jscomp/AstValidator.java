@@ -247,6 +247,7 @@ public final class AstValidator implements CompilerPass {
       case ASSIGN_MUL:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_EXPONENT:
         validateAssignmentExpression(n);
         return;
 

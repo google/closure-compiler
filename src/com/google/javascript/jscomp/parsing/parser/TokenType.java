@@ -115,6 +115,7 @@ public enum TokenType {
   PLUS_EQUAL("+="),
   MINUS_EQUAL("-="),
   STAR_EQUAL("*="),
+  STAR_STAR_EQUAL("**="),
   PERCENT_EQUAL("%="),
   LEFT_SHIFT_EQUAL("<<="),
   RIGHT_SHIFT_EQUAL(">>="),

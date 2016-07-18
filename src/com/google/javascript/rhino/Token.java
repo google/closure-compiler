@@ -110,6 +110,7 @@ public enum Token {
     ASSIGN_MUL, // *=
     ASSIGN_DIV, // /=
     ASSIGN_MOD, // %=
+    ASSIGN_EXPONENT, // **=
 
     HOOK, // conditional (?:)
     OR, // logical or (||)
