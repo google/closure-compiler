@@ -198,12 +198,8 @@ class DevirtualizePrototypeMethods
       }
     }
 
-    // TODO(user) The code only works if there is a single definition
-    // associated with a property name.  Once this pass starts using
-    // the NameReferenceGraph to disambiguate call sites, it will be
-    // necessary to consider type information when generating static
-    // method names and/or append unique ids to duplicate static
-    // method names.
+    // TODO(user) The code only works if there is a single definition associated with a property
+    // name.
     // Whatever scheme we use should not break stable renaming.
     String newMethodName = getRewrittenMethodName(
         getMethodName(node));

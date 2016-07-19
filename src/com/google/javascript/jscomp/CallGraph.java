@@ -139,7 +139,8 @@ public final class CallGraph implements CompilerPass {
   public void process(Node externsRoot, Node jsRoot) {
     Preconditions.checkState(!alreadyRun);
 
-    DefinitionProvider definitionProvider = constructDefinitionProvider(externsRoot, jsRoot);
+    SimpleDefinitionFinder definitionProvider = new SimpleDefinitionFinder(compiler);
+    definitionProvider.process(externsRoot, jsRoot);
 
     createFunctionsAndCallsites(jsRoot, definitionProvider);
 
@@ -494,27 +495,8 @@ public final class CallGraph implements CompilerPass {
   }
 
   /**
-   * Constructs a DefinitionProvider that can be used to determine the
-   * targets of callsites.
-   *
-   * We use SimpleNameFinder because in practice it does
-   * not appear to be less precise than NameReferenceGraph and is at least an
-   * order of magnitude faster on large compiles.
-   */
-  private DefinitionProvider constructDefinitionProvider(Node externsRoot,
-        Node jsRoot) {
-    SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
-    defFinder.process(externsRoot, jsRoot);
-    return defFinder;
-  }
-
-  /**
    * Queries the definition provider for the definitions that could be the
    * targets of the given callsite node.
-   *
-   * This is complicated by the fact that NameReferenceGraph and
-   * SimpleDefinitionProvider (the two definition providers we currently
-   * use) differ on the types of target nodes they will analyze.
    */
   private Collection<Definition> lookupDefinitionsForTargetsOfCall(
       Node callsite, DefinitionProvider definitionProvider) {
