@@ -1210,31 +1210,20 @@ class PureFunctionIdentifier implements CompilerPass {
   static class Driver implements CompilerPass {
     private final AbstractCompiler compiler;
     private final String reportPath;
-    private final boolean useNameReferenceGraph;
 
     Driver(AbstractCompiler compiler, String reportPath,
         boolean useNameReferenceGraph) {
       this.compiler = compiler;
       this.reportPath = reportPath;
-      this.useNameReferenceGraph = useNameReferenceGraph;
     }
 
     @Override
     public void process(Node externs, Node root) {
-      DefinitionProvider definitionProvider = null;
-      if (useNameReferenceGraph) {
-        NameReferenceGraphConstruction graphBuilder =
-            new NameReferenceGraphConstruction(compiler);
-        graphBuilder.process(externs, root);
-        definitionProvider = graphBuilder.getNameReferenceGraph();
-      } else {
-        SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
-        defFinder.process(externs, root);
-        definitionProvider = defFinder;
-      }
+      SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+      defFinder.process(externs, root);
 
       PureFunctionIdentifier pureFunctionIdentifier =
-          new PureFunctionIdentifier(compiler, definitionProvider);
+          new PureFunctionIdentifier(compiler, defFinder);
       pureFunctionIdentifier.process(externs, root);
 
       if (reportPath != null) {

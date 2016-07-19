@@ -930,20 +930,6 @@ public class CompilerOptions {
   /** The output path for the created externs file. */
   String externExportsPath;
 
-  String nameReferenceReportPath;
-
-  /** Where to save a cross-reference report from the name reference graph */
-  public void setNameReferenceReportPath(String filePath) {
-    nameReferenceReportPath = filePath;
-  }
-
-  String nameReferenceGraphPath;
-
-  /** Where to save the name reference graph */
-  public void setNameReferenceGraphPath(String filePath) {
-    nameReferenceGraphPath = filePath;
-  }
-
   //--------------------------------
   // Debugging Options
   //--------------------------------
@@ -1182,8 +1168,6 @@ public class CompilerOptions {
     errorFormat = ErrorFormat.SINGLELINE;
     debugFunctionSideEffectsPath = null;
     externExports = false;
-    nameReferenceReportPath = null;
-    nameReferenceGraphPath = null;
 
     // Debugging
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
@@ -2672,8 +2656,6 @@ public class CompilerOptions {
             .add("moduleRoots", moduleRoots)
             .add("moveFunctionDeclarations", moveFunctionDeclarations)
             .add("nameGenerator", nameGenerator)
-            .add("nameReferenceGraphPath", nameReferenceGraphPath)
-            .add("nameReferenceReportPath", nameReferenceReportPath)
             .add("optimizeArgumentsArray", optimizeArgumentsArray)
             .add("optimizeCalls", optimizeCalls)
             .add("optimizeParameters", optimizeParameters)

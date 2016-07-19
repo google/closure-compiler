@@ -2193,8 +2193,7 @@ final class TypedScopeCreator implements ScopeCreator {
       return null;
     }
 
-    // Sometimes this will return null in things like
-    // NameReferenceGraphConstruction that build partial scopes.
+    // Sometimes this will return null in things that build partial scopes.
     return functionAnalysisResults.get(n);
   }
 

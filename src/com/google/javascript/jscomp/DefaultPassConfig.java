@@ -17,13 +17,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -48,8 +46,6 @@ import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -84,14 +80,6 @@ public final class DefaultPassConfig extends PassConfig {
           "Rename prototypes and inline variables cannot be used together.");
 
   // Miscellaneous errors.
-  private static final DiagnosticType NAME_REF_GRAPH_FILE_ERROR =
-      DiagnosticType.error("JSC_NAME_REF_GRAPH_FILE_ERROR",
-          "Error \"{1}\" writing name reference graph to \"{0}\".");
-
-  private static final DiagnosticType NAME_REF_REPORT_FILE_ERROR =
-      DiagnosticType.error("JSC_NAME_REF_REPORT_FILE_ERROR",
-          "Error \"{1}\" writing name reference report to \"{0}\".");
-
   private static final java.util.regex.Pattern GLOBAL_SYMBOL_NAMESPACE_PATTERN =
     java.util.regex.Pattern.compile("^[a-zA-Z0-9$_]+$");
 
@@ -467,16 +455,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.instrumentationTemplate != null ||
         options.recordFunctionInformation) {
       checks.add(computeFunctionNames);
-    }
-
-    if (options.nameReferenceGraphPath != null &&
-        !options.nameReferenceGraphPath.isEmpty()) {
-      checks.add(printNameReferenceGraph);
-    }
-
-    if (options.nameReferenceReportPath != null &&
-        !options.nameReferenceReportPath.isEmpty()) {
-      checks.add(printNameReferenceReport);
     }
 
     checks.add(createEmptyPass("afterStandardChecks"));
@@ -2628,59 +2606,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     return additionalReplacements;
   }
-
-  private final PassFactory printNameReferenceGraph =
-    new PassFactory("printNameReferenceGraph", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override
-        public void process(Node externs, Node jsRoot) {
-          NameReferenceGraphConstruction gc =
-              new NameReferenceGraphConstruction(compiler);
-          gc.process(externs, jsRoot);
-          String graphFileName = options.nameReferenceGraphPath;
-          try {
-            Files.write(DotFormatter.toDot(gc.getNameReferenceGraph()),
-                new File(graphFileName),
-                UTF_8);
-          } catch (IOException e) {
-            compiler.report(
-                JSError.make(
-                    NAME_REF_GRAPH_FILE_ERROR, e.getMessage(), graphFileName));
-          }
-        }
-      };
-    }
-  };
-
-  private final PassFactory printNameReferenceReport =
-      new PassFactory("printNameReferenceReport", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override
-        public void process(Node externs, Node jsRoot) {
-          NameReferenceGraphConstruction gc =
-              new NameReferenceGraphConstruction(compiler);
-          String reportFileName = options.nameReferenceReportPath;
-          try {
-            NameReferenceGraphReport report =
-                new NameReferenceGraphReport(gc.getNameReferenceGraph());
-            Files.write(report.getHtmlReport(),
-                new File(reportFileName),
-                UTF_8);
-          } catch (IOException e) {
-            compiler.report(
-                JSError.make(
-                    NAME_REF_REPORT_FILE_ERROR,
-                    e.getMessage(),
-                    reportFileName));
-          }
-        }
-      };
-    }
-  };
 
   /** Rewrites Polymer({}) */
   private final HotSwapPassFactory polymerPass =

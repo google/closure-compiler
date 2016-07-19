@@ -1452,7 +1452,6 @@ public class Compiler extends AbstractCompiler {
         // TODO(johnlenz): we shouldn't need to check both isExternExportsEnabled and
         // externExportsPath.
         if (options.sourceMapOutputPath != null ||
-            options.nameReferenceReportPath != null ||
             options.isExternExportsEnabled() ||
             options.externExportsPath != null ||
             !options.replaceStringsFunctionDescriptions.isEmpty()) {
