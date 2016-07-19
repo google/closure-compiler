@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -336,40 +337,12 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       this.lhs = lhs;
       this.memberName = NodeUtil.getPrototypePropertyName(lhs);
       this.node = node;
-      this.qualifiedClassName = getPrototypeClassName(lhs).getQualifiedName();
+      this.qualifiedClassName =
+          NodeUtil.getPrototypeClassName(lhs).getQualifiedName();
     }
 
     private boolean isSameClass(PrototypeMemberDeclaration other) {
       return qualifiedClassName.equals(other.qualifiedClassName);
-    }
-
-    private static Node getPrototypeClassName(Node qName) {
-      Node cur = qName;
-      while (cur.isGetProp()) {
-        if (cur.getLastChild().getString().equals("prototype")) {
-          return cur.getFirstChild();
-        } else {
-          cur = cur.getFirstChild();
-        }
-      }
-      return null;
-    }
-
-    private static boolean isPrototypePropertyDeclaration(Node n) {
-      if (!NodeUtil.isExprAssign(n)) {
-        return false;
-      }
-      Node lvalue = n.getFirstFirstChild();
-      if (lvalue.isGetProp()) {
-        Node cur = lvalue.getFirstChild();
-        while (cur.isGetProp()) {
-          if (cur.getLastChild().getString().equals("prototype")) {
-            return true;
-          }
-          cur = cur.getFirstChild();
-        }
-      }
-      return false;
     }
 
     /**
@@ -377,7 +350,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
      * else it returns {@code null}.
      */
     private static PrototypeMemberDeclaration extractDeclaration(Node n) {
-      if (!isPrototypePropertyDeclaration(n)) {
+      if (!NodeUtil.isPrototypePropertyDeclaration(n)) {
         return null;
       }
       Node lhs = n.getFirstFirstChild();
