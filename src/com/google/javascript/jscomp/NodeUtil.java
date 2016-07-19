@@ -35,7 +35,6 @@ import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,7 +43,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -3440,14 +3438,8 @@ public final class NodeUtil {
     if (!n.isGetProp()) {
       return false;
     }
-    n = n.getFirstChild();
-    while (n.isGetProp()) {
-      if (n.getLastChild().getString().equals("prototype")) {
-        return n.isQualifiedName();
-      }
-      n = n.getFirstChild();
-    }
-    return false;
+    Node recv = n.getFirstChild();
+    return recv.isGetProp() && recv.getLastChild().getString().equals("prototype");
   }
 
   /**
@@ -3519,16 +3511,20 @@ public final class NodeUtil {
   }
 
   /**
-   * @return The class name part of a qualified prototype name.
+   * @param qName A qualified name node representing a class prototype, or a property on that
+   *     prototype, e.g. foo.Bar.prototype, or foo.Bar.prototype.toString.
+   * @return The class name part of a qualified prototype name, e.g. foo.Bar.
    */
   static Node getPrototypeClassName(Node qName) {
-    Node cur = qName;
-    while (cur.isGetProp()) {
-      if (cur.getLastChild().getString().equals("prototype")) {
-        return cur.getFirstChild();
-      } else {
-        cur = cur.getFirstChild();
-      }
+    if (!qName.isGetProp()) {
+      return null;
+    }
+    if (qName.getLastChild().getString().equals("prototype")) {
+      return qName.getFirstChild();
+    }
+    Node recv = qName.getFirstChild();
+    if (recv.isGetProp() && recv.getLastChild().getString().equals("prototype")) {
+      return recv.getFirstChild();
     }
     return null;
   }
