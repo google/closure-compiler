@@ -698,6 +698,7 @@ public final class NodeUtil {
       case BITXOR:
       case DIV:
       case EQ:
+      case EXPONENT:
       case GE:
       case GT:
       case LE:
@@ -789,6 +790,7 @@ public final class NodeUtil {
       case MUL:
       case DIV:
       case MOD:
+      case EXPONENT:
         return true;
 
       default:
@@ -813,6 +815,19 @@ public final class NodeUtil {
       case NEG:
       case BITNOT:
       case NOT:
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+  static boolean isUpdateOperator(Node n) {
+    return isUpdateOperatorType(n.getType());
+  }
+
+  static boolean isUpdateOperatorType(Token type) {
+    switch (type) {
       case INC:
       case DEC:
         return true;
@@ -841,6 +856,7 @@ public final class NodeUtil {
       case COMMA:
       case DIV:
       case EQ:
+      case EXPONENT:
       case GE:
       case GETELEM:
       case GETPROP:
@@ -1429,22 +1445,12 @@ public final class NodeUtil {
     return false;
   }
 
-  /*
-   *  0 comma ,
-   *  1 assignment = += -= *= /= %= <<= >>= >>>= &= ^= |=
-   *  2 conditional ?:
-   *  3 logical-or ||
-   *  4 logical-and &&
-   *  5 bitwise-or |
-   *  6 bitwise-xor ^
-   *  7 bitwise-and &
-   *  8 equality == !=
-   *  9 relational < <= > >=
-   * 10 bitwise shift << >> >>>
-   * 11 addition/subtraction + -
-   * 12 multiply/divide * / %
-   * 13 negation/increment ! ~ - ++ --
-   * 14 call, member () [] .
+  /**
+   * The comma operator has the lowest precedence, 0, followed by the assignment operators (=, &=,
+   * +=, etc.) which have precedence of 1, and so on.
+   *
+   * @see
+   *     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
    */
   static int precedence(Token type) {
     switch (type) {
@@ -1458,6 +1464,7 @@ public final class NodeUtil {
       case ASSIGN_ADD:
       case ASSIGN_SUB:
       case ASSIGN_MUL:
+      case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
       case ASSIGN: return 1;
@@ -1485,10 +1492,13 @@ public final class NodeUtil {
       case ADD:    return 12;
       case MUL:
       case MOD:
-      case DIV:    return 13;
+      case DIV:
+        return 13;
+
+      case EXPONENT:
+        return 14;
+
       case AWAIT:
-      case INC:
-      case DEC:
       case NEW:
       case DELPROP:
       case TYPEOF:
@@ -1496,7 +1506,12 @@ public final class NodeUtil {
       case NOT:
       case BITNOT:
       case POS:
-      case NEG:    return 14;
+      case NEG:
+        return 15; // Unary operators
+
+      case INC:
+      case DEC:
+        return 16; // Update operators
 
       case CALL:
       case GETELEM:
@@ -1528,14 +1543,14 @@ public final class NodeUtil {
       case TRUE:
       case TAGGED_TEMPLATELIT:
       case TEMPLATELIT:
-      // Tokens from the type declaration AST
+        // Tokens from the type declaration AST
       case UNION_TYPE:
-        return 15;
+        return 17;
       case FUNCTION_TYPE:
-        return 16;
+        return 18;
       case ARRAY_TYPE:
       case PARAMETERIZED_TYPE:
-        return 17;
+        return 19;
       case STRING_TYPE:
       case NUMBER_TYPE:
       case BOOLEAN_TYPE:
@@ -1545,9 +1560,9 @@ public final class NodeUtil {
       case NAMED_TYPE:
       case UNDEFINED_TYPE:
       case GENERIC_TYPE:
-        return 18;
+        return 20;
       case CAST:
-        return 19;
+        return 21;
 
       default:
         throw new IllegalStateException("Unknown precedence for " + type);
@@ -1560,6 +1575,8 @@ public final class NodeUtil {
         return true;
       case NAME:
         return n.getString().equals("undefined");
+      default:
+        break;
     }
     return false;
   }
@@ -1692,6 +1709,7 @@ public final class NodeUtil {
       case ASSIGN_URSH:
       case ASSIGN_SUB:
       case ASSIGN_MUL:
+      case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
       case BITNOT:
@@ -1705,6 +1723,7 @@ public final class NodeUtil {
       case MUL:
       case MOD:
       case DIV:
+      case EXPONENT:
       case INC:
       case DEC:
       case POS:
@@ -1905,9 +1924,12 @@ public final class NodeUtil {
       case ASSIGN_ADD:
       case ASSIGN_SUB:
       case ASSIGN_MUL:
+      case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
         return true;
+      default:
+        break;
     }
     return false;
   }
@@ -1936,6 +1958,8 @@ public final class NodeUtil {
         return Token.SUB;
       case ASSIGN_MUL:
         return Token.MUL;
+      case ASSIGN_EXPONENT:
+        return Token.EXPONENT;
       case ASSIGN_DIV:
         return Token.DIV;
       case ASSIGN_MOD:
@@ -1964,6 +1988,8 @@ public final class NodeUtil {
         return Token.ASSIGN_SUB;
       case MUL:
         return Token.ASSIGN_MUL;
+      case EXPONENT:
+        return Token.ASSIGN_EXPONENT;
       case DIV:
         return Token.ASSIGN_DIV;
       case MOD:
@@ -2947,6 +2973,8 @@ public final class NodeUtil {
         return "/";
       case MOD:
         return "%";
+      case EXPONENT:
+        return "**";
       case BITNOT:
         return "~";
       case ADD:
@@ -2975,6 +3003,8 @@ public final class NodeUtil {
         return "-=";
       case ASSIGN_MUL:
         return "*=";
+      case ASSIGN_EXPONENT:
+        return "**=";
       case ASSIGN_DIV:
         return "/=";
       case ASSIGN_MOD:
@@ -4177,6 +4207,7 @@ public final class NodeUtil {
       case ASSIGN_ADD:
       case ASSIGN_SUB:
       case ASSIGN_MUL:
+      case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
         return n.getNext();

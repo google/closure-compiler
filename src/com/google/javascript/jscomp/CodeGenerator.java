@@ -1257,6 +1257,7 @@ public class CodeGenerator {
       return false;
     } else if (NodeUtil.isBinaryOperator(parent)
         || NodeUtil.isUnaryOperator(parent)
+        || NodeUtil.isUpdateOperator(parent)
         || parent.isTaggedTemplateLit()
         || parent.isGetProp()) {
       // LeftHandSideExpression OP LeftHandSideExpression

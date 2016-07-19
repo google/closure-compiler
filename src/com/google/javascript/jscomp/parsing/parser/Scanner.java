@@ -498,6 +498,15 @@ public class Scanner {
         if (peek('=')) {
           nextChar();
           return createToken(TokenType.STAR_EQUAL, beginToken);
+        } else if (peek('*')) {
+          nextChar();
+          // '**' seen so far
+          if (peek('=')) {
+            nextChar();
+            return createToken(TokenType.STAR_STAR_EQUAL, beginToken);
+          } else {
+            return createToken(TokenType.STAR_STAR, beginToken);
+          }
         }
         return createToken(TokenType.STAR, beginToken);
       case '%':
