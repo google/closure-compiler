@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
@@ -58,7 +57,7 @@ class ConvertToTypedInterface implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, root, new PropagateConstJsdoc(compiler));
-    NodeTraversal.traverseRootsEs6(compiler, new RemoveCode(compiler), externs, root);
+    NodeTraversal.traverseEs6(compiler, root, new RemoveCode(compiler));
   }
 
   private static class PropagateConstJsdoc extends NodeTraversal.AbstractPostOrderCallback {
@@ -319,19 +318,15 @@ class ConvertToTypedInterface implements CompilerPass {
     private RemovalType shouldRemove(Node nameNode) {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
-      if (jsdoc != null && jsdoc.isConstructorOrInterface()) {
-        return RemovalType.PRESERVE_ALL;
-      }
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
       // System.err.println("RHS of " + nameNode + " is " + rhs);
       if (rhs == null
           || rhs.isFunction()
           || rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod")
           || rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction")
-          // || rhs.isQualifiedName() && NodeUtil.isPrototypeProperty(rhs)
-          || rhs.isObjectLit() && !rhs.hasChildren()
-          && (jsdoc == null || jsdoc.getTypeNodes().isEmpty())
-          ) {
+          || (rhs.isObjectLit()
+              && !rhs.hasChildren()
+              && (jsdoc == null || !hasAnnotatedType(jsdoc)))) {
         return RemovalType.PRESERVE_ALL;
       }
       if (jsdoc == null
@@ -409,9 +404,17 @@ class ConvertToTypedInterface implements CompilerPass {
   private static boolean isInferrableConst(JSDocInfo jsdoc, Node nameNode) {
     return jsdoc != null
         && jsdoc.hasConstAnnotation()
-        && !jsdoc.hasType()
-        && !jsdoc.isConstructorOrInterface()
+        && !hasAnnotatedType(jsdoc)
         && !NodeUtil.isNamespaceDecl(nameNode);
+  }
+
+  private static boolean hasAnnotatedType(JSDocInfo jsdoc) {
+    return jsdoc.hasType()
+        || jsdoc.hasReturnType()
+        || jsdoc.getParameterCount() > 0
+        || jsdoc.isConstructorOrInterface()
+        || jsdoc.hasThisType()
+        || jsdoc.hasEnumParameterType();
   }
 
   private static boolean isClassMemberFunction(Node functionNode) {

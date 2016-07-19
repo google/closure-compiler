@@ -122,6 +122,21 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "/** @const {number} */ Foo.prototype.x;"));
   }
 
+  public void testConstWithDeclaredTypes() {
+    test("/** @const @type {number} */ var n = compute();", "/** @const @type {number} */ var n;");
+    test("/** @const {number} */ var n = compute();", "/** @const @type {number} */ var n;");
+    test("/** @const @return {void} */ var f = compute();", "/** @const @return {void} */ var f;");
+    test("/** @const @this {Array} */ var f = compute();", "/** @const @this {Array} x */ var f;");
+
+    test(
+        "/** @const @param {number} x */ var f = compute();",
+        "/** @const @param {number} x */ var f;");
+
+    test(
+        "/** @const @constructor x */ var Foo = createConstructor();",
+        "/** @const @constructor x */ var Foo;");
+  }
+
   public void testRemoveUselessStatements() {
     test("34", "");
     test("'str'", "");
@@ -153,8 +168,8 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
   public void testEnums() {
     test(
-        "/** @enum {number} */ var E = { A: 1, B: 2, C: 3};",
-        "/** @enum {number} */ var E = { A: 0, B: 0, C: 0};");
+        "/** @const @enum {number} */ var E = { A: 1, B: 2, C: 3};",
+        "/** @const @enum {number} */ var E = { A: 0, B: 0, C: 0};");
 
     test(
         "/** @enum {number} */ var E = { A: foo(), B: bar(), C: baz()};",
