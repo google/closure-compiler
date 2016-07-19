@@ -257,7 +257,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       return;
     }
 
-    if (msgNode.isQualifiedName()
+    if (node.isAssign()
+        && msgNode.isQualifiedName()
         && msgNode.getLastChild().getString().equals(messageKey)) {
       // foo.Thing.MSG_EXAMPLE = bar.OtherThing.MSG_EXAMPLE;
       // This kind of construct is created by Es6ToEs3ClassSideInheritance. Just ignore it; the

@@ -187,6 +187,15 @@ public final class JsMessageVisitorTest extends TestCase {
     assertEquals("a", msg.getDesc());
   }
 
+  public void testInvalidJsMessageOnObjLit() {
+    extractMessages(""
+        + "pint.sub = {"
+        + "  /** @desc a */ MSG_MENU_MARK_AS_UNREAD: undefined"
+        + "}");
+    assertThat(compiler.getErrors()).hasLength(1);
+    assertError(compiler.getErrors()[0]).hasType(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+  }
+
   public void testOrphanedJsMessage() {
     extractMessagesSafely("goog.getMsg('a')");
     assertThat(compiler.getWarnings()).hasLength(1);
