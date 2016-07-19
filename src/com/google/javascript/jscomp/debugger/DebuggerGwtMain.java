@@ -36,7 +36,6 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -88,6 +87,7 @@ public class DebuggerGwtMain implements EntryPoint {
   public void onModuleLoad() {
     externs.setCharacterWidth(80);
     externs.setVisibleLines(5);
+    externs.setText("function Symbol() {}\n");
     externs.addKeyUpHandler(new KeyUpHandler() {
       @Override
       public void onKeyUp(KeyUpEvent event) {
