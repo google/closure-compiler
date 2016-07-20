@@ -87,7 +87,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.ParameterizedTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
-import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.RecordTypeTree;
@@ -109,6 +108,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.TypeQueryTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypedParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnionTypeTree;
+import com.google.javascript.jscomp.parsing.parser.trees.UpdateExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableStatementTree;
@@ -3223,7 +3223,7 @@ public class Parser {
     } else if (peekAwaitExpression()) {
       return parseAwaitExpression();
     } else {
-      return parsePostfixExpression();
+      return parseUpdateExpression();
     }
   }
 
@@ -3232,8 +3232,6 @@ public class Parser {
     case DELETE:
     case VOID:
     case TYPEOF:
-    case PLUS_PLUS:
-    case MINUS_MINUS:
     case PLUS:
     case MINUS:
     case TILDE:
@@ -3259,27 +3257,31 @@ public class Parser {
     return new AwaitExpressionTree(getTreeLocation(start), expression);
   }
 
-  // 11.3 Postfix Expression
-  private ParseTree parsePostfixExpression() {
+  private ParseTree parseUpdateExpression() {
     SourcePosition start = getTreeStartLocation();
-    ParseTree operand = parseLeftHandSideExpression();
-    while (peekPostfixOperator()) {
+    if (peekUpdateOperator()) {
       Token operator = nextToken();
-      operand = new PostfixExpressionTree(getTreeLocation(start), operand, operator);
+      ParseTree operand = parseUnaryExpression();
+      return UpdateExpressionTree.prefix(getTreeLocation(start), operator, operand);
+    } else {
+      ParseTree lhs = parseLeftHandSideExpression();
+      if (peekUpdateOperator() && !peekImplicitSemiColon()) {
+        // newline not allowed before an update operator.
+        Token operator = nextToken();
+        return UpdateExpressionTree.postfix(getTreeLocation(start), operator, lhs);
+      } else {
+        return lhs;
+      }
     }
-    return operand;
   }
 
-  private boolean peekPostfixOperator() {
-    if (peekImplicitSemiColon()) {
-      return false;
-    }
+  private boolean peekUpdateOperator() {
     switch (peekType()) {
-    case PLUS_PLUS:
-    case MINUS_MINUS:
-      return true;
-    default:
-      return false;
+      case PLUS_PLUS:
+      case MINUS_MINUS:
+        return true;
+      default:
+        return false;
     }
   }
 

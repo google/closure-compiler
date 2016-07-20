@@ -114,7 +114,6 @@ public class ParseTree {
     return (ObjectLiteralExpressionTree) this; }
   public ObjectPatternTree asObjectPattern() { return (ObjectPatternTree) this; }
   public ParenExpressionTree asParenExpression() { return (ParenExpressionTree) this; }
-  public PostfixExpressionTree asPostfixExpression() { return (PostfixExpressionTree) this; }
   public ProgramTree asProgram() { return (ProgramTree) this; }
   public PropertyNameAssignmentTree asPropertyNameAssignment() {
     return (PropertyNameAssignmentTree) this; }
@@ -170,6 +169,11 @@ public class ParseTree {
   public NewTargetExpressionTree asNewTargetExpression() {
     return (NewTargetExpressionTree) this;
   }
+
+  public UpdateExpressionTree asUpdateExpression() {
+    return (UpdateExpressionTree) this;
+  }
+
   public boolean isPattern() {
     ParseTree parseTree = this;
     while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {
