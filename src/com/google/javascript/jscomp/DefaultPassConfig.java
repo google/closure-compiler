@@ -535,7 +535,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inferConsts);
     }
 
-    if (options.reportPath != null && (options.extraSmartNameRemoval || options.smartNameRemoval)) {
+    if (options.reportPath != null && options.smartNameRemoval) {
       passes.add(initNameAnalyzeReport);
     }
 
