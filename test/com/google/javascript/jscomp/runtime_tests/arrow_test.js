@@ -112,3 +112,19 @@ function testBug932_arguments() {
   c.f(3, 4);
   assertArrayEquals([3, 3, 4, 4], log);
 }
+
+function testBug1907() {
+  class Base {
+    f() {
+      assertTrue(this instanceof Sub);
+    }
+  }
+
+  class Sub extends Base {
+    f() {
+      (() => super.f())();
+    }
+  }
+
+  (new Sub()).f();
+}
