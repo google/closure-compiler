@@ -2806,6 +2806,9 @@ public class Parser {
         reportError("invalid assignment target");
       }
       Token operator = nextToken();
+      if (TokenType.STAR_STAR_EQUAL.equals(operator.type)) {
+        features = features.require(Feature.EXPONENT_OP);
+      }
       ParseTree right = parseAssignment(expressionIn);
       return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
     }
@@ -2981,6 +2984,7 @@ public class Parser {
     switch (peekType()) {
     case EQUAL:
     case STAR_EQUAL:
+      case STAR_STAR_EQUAL:
     case SLASH_EQUAL:
     case PERCENT_EQUAL:
     case PLUS_EQUAL:
@@ -3193,7 +3197,7 @@ public class Parser {
   // 11.5 Multiplicative Expression
   private ParseTree parseMultiplicativeExpression() {
     SourcePosition start = getTreeStartLocation();
-    ParseTree left = parseUnaryExpression();
+    ParseTree left = parseExponentiationExpression();
     while (peekMultiplicativeOperator()) {
       Token operator = nextToken();
       ParseTree right = parseUnaryExpression();
@@ -3210,6 +3214,29 @@ public class Parser {
       return true;
     default:
       return false;
+    }
+  }
+
+  private ParseTree parseExponentiationExpression() {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree left = parseUnaryExpression();
+    if (peek(TokenType.STAR_STAR)) {
+      // ExponentiationExpression does not allow a UnaryExpression before '**'.
+      // Parentheses are required to disambiguate:
+      //   (-x)**y is valid
+      //   -(x**y) is valid
+      //   -x**y is a syntax error
+      if (left.type == ParseTreeType.UNARY_EXPRESSION) {
+        reportError(
+            "Unary operator '%s' requires parentheses before '**'",
+            left.asUnaryExpression().operator);
+      }
+      features = features.require(Feature.EXPONENT_OP);
+      Token operator = nextToken();
+      ParseTree right = parseExponentiationExpression();
+      return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
+    } else {
+      return left;
     }
   }
 

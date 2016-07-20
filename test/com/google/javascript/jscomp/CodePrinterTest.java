@@ -30,6 +30,27 @@ import java.util.List;
 public final class CodePrinterTest extends CodePrinterTestBase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
+  public void testExponentiationOperator() {
+    languageMode = LanguageMode.ECMASCRIPT7;
+    assertPrintSame("x**y");
+    // Exponentiation is right associative
+    assertPrint("x**(y**z)", "x**y**z");
+    assertPrintSame("(x**y)**z");
+    // parens are kept because ExponentiationExpression cannot expand to
+    //     UnaryExpression ** ExponentiationExpression
+    assertPrintSame("(-x)**y");
+    // parens are kept because unary operators are higher precedence than '**'
+    assertPrintSame("-(x**y)");
+    // parens are not needed for a unary operator on the right operand
+    assertPrint("x**(-y)", "x**-y");
+    // NOTE: "-x**y" is a syntax error tested in ParserTest
+  }
+
+  public void testExponentiationAssignmentOperator() {
+    languageMode = LanguageMode.ECMASCRIPT7;
+    assertPrintSame("x**=y");
+  }
+
   public void testPrint() {
     assertPrint("10 + a + b", "10+a+b");
     assertPrint("10 + (30*50)", "10+30*50");

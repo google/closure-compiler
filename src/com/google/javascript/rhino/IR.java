@@ -699,6 +699,7 @@ public class IR {
       case ASSIGN_ADD:
       case ASSIGN_SUB:
       case ASSIGN_MUL:
+      case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
       case AWAIT:

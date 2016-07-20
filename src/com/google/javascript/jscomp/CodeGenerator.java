@@ -139,9 +139,9 @@ public class CodeGenerator {
         add("(");
       }
 
-      if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
-        // Assignments are the only right-associative binary operators
-        addExpr(first, p, context);
+      if (NodeUtil.isAssignmentOp(n) || type == Token.EXPONENT) {
+        // Assignment operators and '**' are the only right-associative binary operators
+        addExpr(first, p + 1, context);
         cc.addOp(opstr, true);
         addExpr(last, p, rhsContext);
       } else {
@@ -559,6 +559,8 @@ public class CodeGenerator {
             case MEMBER_FUNCTION_DEF:
             case MEMBER_VARIABLE_DEF:
               // nothing to do.
+              break;
+            default:
               break;
           }
 
@@ -1531,14 +1533,32 @@ public class CodeGenerator {
   }
 
   private void addExpr(Node n, int minPrecedence, Context context) {
-    if ((NodeUtil.precedence(n.getType()) < minPrecedence) ||
-        ((context == Context.IN_FOR_INIT_CLAUSE) && n.isIn())){
+    if (opRequiresParentheses(n, minPrecedence, context)) {
       add("(");
       add(n, Context.OTHER);
       add(")");
     } else {
       add(n, context);
     }
+  }
+
+  private boolean opRequiresParentheses(Node n, int minPrecedence, Context context) {
+    if (context == Context.IN_FOR_INIT_CLAUSE && n.isIn()) {
+      // make sure this operator 'in' isn't confused with the for-loop 'in'
+      return true;
+    } else if (NodeUtil.isUnaryOperator(n) && isFirstOperandOfExponentiationExpression(n)) {
+      // Unary operators are higher precedence than '**', but
+      // ExponentiationExpression cannot expand to
+      //     UnaryExpression ** ExponentiationExpression
+      return true;
+    } else {
+      return NodeUtil.precedence(n.getType()) < minPrecedence;
+    }
+  }
+
+  private boolean isFirstOperandOfExponentiationExpression(Node n) {
+    Node parent = n.getParent();
+    return parent != null && parent.getType() == Token.EXPONENT && parent.getFirstChild() == n;
   }
 
   void addList(Node firstInList) {

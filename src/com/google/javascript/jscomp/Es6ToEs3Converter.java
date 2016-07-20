@@ -188,6 +188,14 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           Es6TemplateLiterals.visitTemplateLiteral(t, n);
         }
         break;
+      case EXPONENT:
+        visitExponentiationExpression(n, parent);
+        break;
+      case ASSIGN_EXPONENT:
+        visitExponentiationAssignmentExpression(n, parent);
+        break;
+      default:
+        break;
     }
   }
 
@@ -210,6 +218,25 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node statement = NodeUtil.getEnclosingStatement(n);
     Node initSymbol = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbol")));
     statement.getParent().addChildBefore(initSymbol.useSourceInfoFromForTree(statement), statement);
+    compiler.reportCodeChange();
+  }
+
+  private void visitExponentiationExpression(Node n, Node parent) {
+    Node left = n.removeFirstChild();
+    Node right = n.removeFirstChild();
+    Node mathDotPowCall =
+        IR.call(NodeUtil.newQName(compiler, "Math.pow"), left, right)
+            .useSourceInfoIfMissingFromForTree(n);
+    parent.replaceChild(n, mathDotPowCall);
+    compiler.reportCodeChange();
+  }
+
+  private void visitExponentiationAssignmentExpression(Node n, Node parent) {
+    Node left = n.removeFirstChild();
+    Node right = n.removeFirstChild();
+    Node mathDotPowCall = IR.call(NodeUtil.newQName(compiler, "Math.pow"), left.cloneTree(), right);
+    Node assign = IR.assign(left, mathDotPowCall).useSourceInfoIfMissingFromForTree(n);
+    parent.replaceChild(n, assign);
     compiler.reportCodeChange();
   }
 

@@ -1366,6 +1366,10 @@ class IRFactory {
     }
 
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
+      if (exprNode.operator.type == TokenType.STAR_STAR
+          || exprNode.operator.type == TokenType.STAR_STAR_EQUAL) {
+        maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
+      }
       if (hasPendingCommentBefore(exprNode.right)) {
         return newNode(
             transformBinaryTokenType(exprNode.operator.type),
@@ -3203,6 +3207,8 @@ class IRFactory {
         return Token.DIV;
       case PERCENT:
         return Token.MOD;
+      case STAR_STAR:
+        return Token.EXPONENT;
 
       case EQUAL_EQUAL_EQUAL:
         return Token.SHEQ;
@@ -3236,6 +3242,8 @@ class IRFactory {
         return Token.ASSIGN_SUB;
       case STAR_EQUAL:
         return Token.ASSIGN_MUL;
+      case STAR_STAR_EQUAL:
+        return Token.ASSIGN_EXPONENT;
       case SLASH_EQUAL:
         return Token.ASSIGN_DIV;
       case PERCENT_EQUAL:

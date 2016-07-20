@@ -80,6 +80,35 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectedFeatures = FeatureSet.ES3;
   }
 
+  public void testExponentOperator() {
+    mode = LanguageMode.ECMASCRIPT7;
+    expectFeatures(Feature.EXPONENT_OP);
+    parse("x**y");
+
+    // Parentheses are required for disambiguation when a unary expression is desired as
+    // the left operand.
+    parse("-(x**y)");
+    parse("(-x)**y");
+    parseError("-x**y", "Unary operator '-' requires parentheses before '**'");
+    // Parens are not required for unary operator on the right operand
+    parse("x**-y");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.EXPONENT_OP);
+    parseWarning(
+        "x**y", requiresLanguageModeMessage(LanguageMode.ECMASCRIPT7, Feature.EXPONENT_OP));
+  }
+
+  public void testExponentAssignmentOperator() {
+    mode = LanguageMode.ECMASCRIPT7;
+    expectFeatures(Feature.EXPONENT_OP);
+    parse("x**=y;");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseWarning(
+        "x**=y;", requiresLanguageModeMessage(LanguageMode.ECMASCRIPT7, Feature.EXPONENT_OP));
+  }
+
   public void testFunction() {
     parse("var f = function(x,y,z) { return 0; }");
     parse("function f(x,y,z) { return 0; }");
