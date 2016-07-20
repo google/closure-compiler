@@ -44,9 +44,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import java.util.HashSet;
-
+import com.google.common.collect.Sets;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -163,16 +165,29 @@ class PropertyMap implements Serializable {
   }
 
   void collectPropertyNames(Set<String> props) {
+    Set<PropertyMap> identitySet = Sets.newIdentityHashSet();
+    collectPropertyNamesHelper(props, identitySet);
+  }
+
+  // The interface inheritance chain can have cycles.
+  // Use cache to avoid stack overflow.
+  private void collectPropertyNamesHelper(
+      Set<String> props, Set<PropertyMap> cache) {
+    if (cache.contains(this)) {
+      return;
+    }
+    cache.add(this);
     props.addAll(properties.keySet());
     PropertyMap primaryParent = getPrimaryParent();
     if (primaryParent != null) {
-      primaryParent.collectPropertyNames(props);
+      primaryParent.collectPropertyNamesHelper(props, cache);
     }
     for (PropertyMap p : getSecondaryParents()) {
       if (p != null) {
-        p.collectPropertyNames(props);
+        p.collectPropertyNamesHelper(props, cache);
       }
     }
+    cache.remove(this);
   }
 
   boolean removeProperty(String name) {

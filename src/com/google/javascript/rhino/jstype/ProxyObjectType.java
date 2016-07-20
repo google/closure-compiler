@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collections;
 
 /**
@@ -257,6 +256,13 @@ public class ProxyObjectType extends ObjectType {
   public Iterable<ObjectType> getCtorImplementedInterfaces() {
     return referencedObjType == null ? Collections.<ObjectType>emptyList() :
         referencedObjType.getCtorImplementedInterfaces();
+  }
+
+  @Override
+  public Iterable<ObjectType> getCtorExtendedInterfaces() {
+    return this.referencedObjType == null
+        ? Collections.<ObjectType>emptyList()
+            : this.referencedObjType.getCtorExtendedInterfaces();
   }
 
   @Override
