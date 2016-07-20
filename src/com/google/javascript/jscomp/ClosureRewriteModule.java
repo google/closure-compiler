@@ -30,7 +30,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
@@ -39,7 +38,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -143,11 +141,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "JSC_DUPLICATE_NAMESPACE",
           "Duplicate namespace: {0}");
 
-  static final DiagnosticType MISSING_MODULE =
-      DiagnosticType.error(
-          "JSC_MISSING_MODULE",
-          "Required module \"{0}\" never defined.");
-
   static final DiagnosticType MISSING_MODULE_OR_PROVIDE =
       DiagnosticType.error(
           "JSC_MISSING_MODULE_OR_PROVIDE",
@@ -200,12 +193,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private static final class UnrecognizedRequire {
     final Node requireNode;
     final String legacyNamespace;
-    final boolean mustBeGoogModule;
+    final boolean mustBeOrdered;
 
-    UnrecognizedRequire(Node requireNode, String legacyNamespace, boolean mustBeGoogModule) {
+    UnrecognizedRequire(Node requireNode, String legacyNamespace, boolean mustBeOrdered) {
       this.requireNode = requireNode;
       this.legacyNamespace = legacyNamespace;
-      this.mustBeGoogModule = mustBeGoogModule;
+      this.mustBeOrdered = mustBeOrdered;
     }
   }
 
@@ -272,9 +265,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             recordGoogProvide(t, n);
           }
           if (isCallTo(n, "goog.require")) {
-            recordGoogRequire(t, n, true);
+            recordGoogRequire(t, n, true /** mustBeOrdered */);
           }
-          if (isCallTo(n, "goog.forwardDeclare")) {
+          if (isCallTo(n, "goog.forwardDeclare") && !parent.isExprResult()) {
             recordGoogForwardDeclare(t, n);
           }
           if (isCallTo(n, "goog.module.get")) {
@@ -329,7 +322,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           if (isCallTo(n, "goog.require")) {
             updateGoogRequire(t, n);
           }
-          if (isCallTo(n, "goog.forwardDeclare")) {
+          if (isCallTo(n, "goog.forwardDeclare") && !parent.isExprResult()) {
             updateGoogForwardDeclare(t, n);
           }
           if (isCallTo(n, "goog.module.get")) {
@@ -640,7 +633,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private void recordGoogRequire(NodeTraversal t, Node call, boolean reportBadRequireErrors) {
+  private void recordGoogRequire(NodeTraversal t, Node call, boolean mustBeOrdered) {
     maybeSplitMultiVar(call);
 
     Node legacyNamespaceNode = call.getLastChild();
@@ -654,12 +647,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // goog.module() but no such goog.module() has been defined.
     boolean targetIsAModule = rewriteState.containsModule(legacyNamespace);
     boolean targetIsALegacyScript = rewriteState.legacyScriptNamespaces.contains(legacyNamespace);
-    if (reportBadRequireErrors
-        && currentScript.isModule
+    if (currentScript.isModule
         && !targetIsAModule
         && !targetIsALegacyScript) {
-      unrecognizedRequires.add(
-          new UnrecognizedRequire(call, legacyNamespace, false /* mustBeGoogModule */));
+      unrecognizedRequires.add(new UnrecognizedRequire(call, legacyNamespace, mustBeOrdered));
     }
   }
 
@@ -673,10 +664,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // modules already require that goog.forwardDeclare() and goog.module.get() occur in matched
     // pairs. If a "missing module" error were to occur here it would also occur in the matching
     // goog.module.get(). To avoid reporting the error twice suppress it here.
-    boolean reportBadRequireErrors = false;
+    boolean mustBeOrdered = false;
 
     // For purposes of import collection goog.forwardDeclare is the same as goog.require;
-    recordGoogRequire(t, call, reportBadRequireErrors);
+    recordGoogRequire(t, call, mustBeOrdered);
   }
 
   private void recordGoogModuleGet(NodeTraversal t, Node call) {
@@ -692,15 +683,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String legacyNamespace = legacyNamespaceNode.getString();
 
     if (!rewriteState.containsModule(legacyNamespace)) {
-      if (!currentScript.isModule) {
-        // goog.module.get() is only allowed to reference goog.module() files (and not
-        // goog.provide() files) when used inside of a goog.provide() file, but for consistency
-        // with goog.require() it is allowed to reference either when used within a goog.module()
-        // file.
-        boolean mustBeGoogModule = true;
-
-        unrecognizedRequires.add(new UnrecognizedRequire(call, legacyNamespace, mustBeGoogModule));
-      }
+      unrecognizedRequires.add(
+          new UnrecognizedRequire(call, legacyNamespace, false /** mustBeOrderd */));
     }
     currentScript.googModuleGettedNamespaces.add(legacyNamespace);
 
@@ -1280,20 +1264,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       String legacyNamespace = unrecognizedRequire.legacyNamespace;
 
       Node requireNode = unrecognizedRequire.requireNode;
-      boolean targetMustBeGoogModule = unrecognizedRequire.mustBeGoogModule;
       boolean targetGoogModuleExists = rewriteState.containsModule(legacyNamespace);
       boolean targetLegacyScriptExists =
           rewriteState.legacyScriptNamespaces.contains(legacyNamespace);
 
-      if (targetMustBeGoogModule && !targetGoogModuleExists) {
-        // The required thing had to be a goog.module() but no such goog.module() was in the
-        // compile, so report a missing module error.
-        compiler.report(
-            JSError.make(requireNode, MISSING_MODULE.level, MISSING_MODULE, legacyNamespace));
-        continue;
-      }
-
-      if (!targetMustBeGoogModule && !targetGoogModuleExists && !targetLegacyScriptExists) {
+      if (!targetGoogModuleExists && !targetLegacyScriptExists) {
         // The required thing was free to be either a goog.module() or a legacy script but neither
         // flavor of file provided the required namespace, so report a vague error.
         compiler.report(
@@ -1310,8 +1285,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
       // The required thing actually was available somewhere in the program but just wasn't
       // available as early as the require statement would have liked.
-      compiler.report(
-          JSError.make(requireNode, LATE_PROVIDE_ERROR.level, LATE_PROVIDE_ERROR, legacyNamespace));
+      if (unrecognizedRequire.mustBeOrdered) {
+        compiler.report(
+            JSError.make(
+                requireNode, LATE_PROVIDE_ERROR.level, LATE_PROVIDE_ERROR, legacyNamespace));
+      }
     }
 
     // Clear the queue so that repeated reportUnrecognizedRequires() invocations in hotswap compiles

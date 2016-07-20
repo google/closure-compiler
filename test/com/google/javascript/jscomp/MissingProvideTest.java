@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_MODULE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_PROVIDE_ERROR;
 
@@ -31,6 +30,7 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
 
   public MissingProvideTest() {
     enableRewriteClosureCode();
+
     enableClosurePass();
   }
 
@@ -55,14 +55,14 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
   // module  var goog.require  module  normal       pass
   // module  var goog.require  module  missing      fail
   // module  goog.module.get   module  normal       pass
-  // module  goog.module.get   module  missing      pass
+  // module  goog.module.get   module  missing      fail
   // module  var goog.require  legacy  normal       pass
   // module  var goog.require  legacy  missing      fail
   // module  goog.module.get   legacy  normal       pass
-  // module  goog.module.get   legacy  missing      pass
+  // module  goog.module.get   legacy  missing      fail
   // legacy  goog.require      legacy  normal       pass
   // legacy  goog.require      legacy  missing      fail
-  // legacy  goog.module.get   legacy  normal       fail
+  // legacy  goog.module.get   legacy  normal       pass
   // legacy  goog.module.get   legacy  missing      fail
 
   public void test_Legacy_Require_Module_DeclLeg_Pass() {
@@ -104,8 +104,8 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
             "  var A = goog.module.get('missing.goog.module.A');",
             "});");
 
-    String warning = "Required module \"missing.goog.module.A\" never defined.";
-    test(legacyScript, null, MISSING_MODULE, null, warning);
+    String warning = "Required namespace \"missing.goog.module.A\" never defined.";
+    test(legacyScript, null, MISSING_MODULE_OR_PROVIDE, null, warning);
   }
 
   public void test_Legacy_ModuleGet_Module_Normal_Pass() {
@@ -132,8 +132,8 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
             "  var A = goog.module.get('missing.goog.module.A');",
             "});");
 
-    String warning = "Required module \"missing.goog.module.A\" never defined.";
-    test(legacyScript, null, MISSING_MODULE, null, warning);
+    String warning = "Required namespace \"missing.goog.module.A\" never defined.";
+    test(legacyScript, null, MISSING_MODULE_OR_PROVIDE, null, warning);
   }
 
   public void test_Module_Require_Module_Normal_Pass() {
@@ -188,24 +188,6 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
     test(new String[] {googModule1, googModule2}, null, null, null, null);
   }
 
-  public void test_Module_ModuleGet_Module_Missing_Pass() {
-    // When something is goog.module.get()'d in a module and the referenced thing is missing it's
-    // not really possible to know if the missing thing is a module or script and since missing
-    // scripts are allowed, this bad reference is allowed.
-    String googModule =
-        LINE_JOINER.join(
-            "goog.module('normal.goog.module.B');",
-            "var A = goog.forwardDeclare('missing.goog.module.A');",
-            "/** @constructor */ function B() {}",
-            "B.prototype.createA = function() {",
-            "  A = goog.module.get('missing.goog.module.A');",
-            "  new A;",
-            "}",
-            "exports = B;");
-
-    test(new String[] {googModule}, null, null, null, null);
-  }
-
   public void test_Module_Require_Legacy_Normal_Pass() {
     String legacyScript =
         LINE_JOINER.join(
@@ -258,21 +240,43 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
     test(new String[] {legacyScript, googModule}, null, null, null, null);
   }
 
-  public void test_Module_ModuleGet_Legacy_Missing_Pass() {
-    // goog.module.get inside of a goog.module() can reference legacy files and referenced legacy
-    // files are allowed to not exist.
+  public void test_Module_ModuleGet_Missing_Fail() {
+    // goog.module.get inside of a goog.module() cannot reference files that do not exist.
     String googModule =
         LINE_JOINER.join(
             "goog.module('normal.goog.module.B');",
-            "var A = goog.forwardDeclare('legacy.script.A');",
-            "/** @constructor */ function B() {}",
-            "B.prototype.createA = function() {",
-            "  A = goog.module.get('legacy.script.A');",
-            "  new A;",
+            "function f() {",
+            "  return goog.module.get('missing.legacy.script.A');",
             "}",
+            "exports = f;");
+
+    String warning = "Required namespace \"missing.legacy.script.A\" never defined.";
+    test(googModule, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+  }
+
+  public void test_Module_ForwardDeclare_Missing_Fail() {
+    // Short goog.forwardDeclare inside a goog.module() cannot reference files that do not exist.
+    String googModule =
+        LINE_JOINER.join(
+            "goog.module('normal.goog.module.B');",
+            "var A = goog.forwardDeclare('missing.legacy.script.A');",
+            "/** @constructor */ function B() {}",
             "exports = B;");
 
-    test(new String[] {googModule}, null, null, null, null);
+    String warning = "Required namespace \"missing.legacy.script.A\" never defined.";
+    test(googModule, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+  }
+
+  public void test_Legacy_ForwardDeclare_Missing_Pass() {
+    // Legacy goog.forwardDeclare inside a goog.module() works the same as outside a module.
+    String googModule =
+        LINE_JOINER.join(
+            "goog.module('normal.goog.module.B');",
+            "goog.forwardDeclare('missing.legacy.script.A');",
+            "/** @constructor */ function B() {}",
+            "exports = B;");
+
+    test(new String[] { googModule }, null, null, null, null);
   }
 
   public void test_Legacy_Require_Legacy_Normal_Pass() {
@@ -300,7 +304,7 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
     test(legacyScript, null, MISSING_PROVIDE_ERROR, null, warning);
   }
 
-  public void test_Legacy_ModuleGet_Legacy_Normal_Fail() {
+  public void test_Legacy_ModuleGet_Legacy_Normal_Pass() {
     String legacyScript =
         LINE_JOINER.join(
             "goog.provide('legacy.script.A');",
@@ -314,8 +318,7 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
             "  new A;",
             "}");
 
-    String warning = "Required module \"legacy.script.A\" never defined.";
-    test(new String[] {legacyScript, legacyScript2}, null, MISSING_MODULE, null, warning);
+    test(new String[] {legacyScript, legacyScript2}, null, null, null, null);
   }
 
   public void test_Legacy_ModuleGet_Legacy_Missing_Fail() {
@@ -328,7 +331,7 @@ public final class MissingProvideTest extends Es6CompilerTestCase {
             "  new A;",
             "}");
 
-    String warning = "Required module \"legacy.script.A\" never defined.";
-    test(legacyScript, null, MISSING_MODULE, null, warning);
+    String warning = "Required namespace \"legacy.script.A\" never defined.";
+    test(legacyScript, null, MISSING_MODULE_OR_PROVIDE, null, warning);
   }
 }

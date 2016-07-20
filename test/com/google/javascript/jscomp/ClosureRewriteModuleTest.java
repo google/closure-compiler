@@ -741,26 +741,32 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
   public void testInvalidGoogModuleGetAlias() {
     testError(
-        LINE_JOINER.join(
-            "goog.module('a');",
-            "x = goog.module.get('g');"),
-
+        new String[] {
+            "goog.provide('g');",
+            LINE_JOINER.join(
+                "goog.module('a');",
+                "x = goog.module.get('g');"),
+        },
         INVALID_GET_ALIAS);
 
     testError(
-        LINE_JOINER.join(
-            "goog.module('a');",
-            "var x;",
-            "x = goog.module.get('g');"),
-
+        new String[] {
+            "goog.provide('g');",
+            LINE_JOINER.join(
+                "goog.module('a');",
+                "var x;",
+                "x = goog.module.get('g');"),
+        },
         INVALID_GET_ALIAS);
 
     testError(
-        LINE_JOINER.join(
-            "goog.module('a');",
-            "var x = goog.forwardDeclare('z');",
-            "x = goog.module.get('g');"),
-
+        new String[] {
+            "goog.provide('g'); goog.provide('z');",
+            LINE_JOINER.join(
+                "goog.module('a');",
+                "var x = goog.forwardDeclare('z');",
+                "x = goog.module.get('g');"),
+        },
         INVALID_GET_ALIAS);
   }
 
@@ -1163,18 +1169,21 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         LATE_PROVIDE_ERROR);
   }
 
-  public void testRequireTooEarly2() {
+  public void testValidEarlyGoogModuleGet() {
     // Legacy Script to Module goog.module.get.
-    testError(
+    test(
         new String[] {
-            LINE_JOINER.join(
-                "goog.provide('ns.a');",
-                "function foo() {",
-                "  var b = goog.module.get('ns.b');",
-                "}"),
-            "goog.module('ns.b');"},
-
-        LATE_PROVIDE_ERROR);
+          LINE_JOINER.join(
+              "goog.provide('ns.a');",
+              "function foo() {",
+              "  var b = goog.module.get('ns.b');",
+              "}"),
+          "goog.module('ns.b');"
+        },
+        new String[] {
+          "goog.provide('ns.a'); function foo() { var b = module$exports$ns$b; }",
+          "/** @const */ var module$exports$ns$b = {};"
+        });
   }
 
   public void testRequireTooEarly3() {
