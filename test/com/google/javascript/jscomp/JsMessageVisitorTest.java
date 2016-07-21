@@ -196,6 +196,11 @@ public final class JsMessageVisitorTest extends TestCase {
     assertError(compiler.getErrors()[0]).hasType(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
+  public void testJsMessageOnRHSOfVar() {
+    extractMessagesSafely("var MSG_MENU_MARK_AS_UNREAD = a.name.space.MSG_MENU_MARK_AS_UNREAD;");
+    assertThat(messages).isEmpty();
+  }
+
   public void testOrphanedJsMessage() {
     extractMessagesSafely("goog.getMsg('a')");
     assertThat(compiler.getWarnings()).hasLength(1);
