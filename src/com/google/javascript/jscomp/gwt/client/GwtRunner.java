@@ -70,35 +70,22 @@ public final class GwtRunner implements EntryPoint {
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
   private interface Flags {
-    @JsProperty
-    String getCompilationLevel();
+    @JsProperty boolean getAngularPass();
+    @JsProperty String getCompilationLevel();
+    @JsProperty boolean getGenerateExports();
+    @JsProperty String getLanguageIn();
+    @JsProperty String getLanguageOut();
+    @JsProperty boolean getChecksOnly();
+    @JsProperty boolean getNewTypeInf();
+    @JsProperty boolean getPolymerPass();
+    @JsProperty boolean getPreserveTypeAnnotations();
+    @JsProperty String getRenamePrefixNamespace();
+    @JsProperty boolean getRewritePolyfills();
+    @JsProperty String getWarningLevel();
 
-    @JsProperty
-    String getWarningLevel();
-
-    @JsProperty
-    String getLanguageIn();
-
-    @JsProperty
-    String getLanguageOut();
-
-    @JsProperty
-    boolean getChecksOnly();
-
-    @JsProperty
-    boolean getNewTypeInf();
-
-    @JsProperty
-    boolean getPreserveTypeAnnotations();
-
-    @JsProperty
-    boolean getRewritePolyfills();
-
-    @JsProperty
-    File[] getJsCode();
-
-    @JsProperty
-    File[] getExterns();
+    // These flags do not match the Java compiler JAR.
+    @JsProperty File[] getJsCode();
+    @JsProperty File[] getExterns();
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
@@ -136,9 +123,8 @@ public final class GwtRunner implements EntryPoint {
   private static void applyDefaultOptions(CompilerOptions options) {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
-    options.setPrettyPrint(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 
   private static void applyOptionsFromFlags(CompilerOptions options, Flags flags) {
@@ -175,9 +161,13 @@ public final class GwtRunner implements EntryPoint {
       }
     }
 
+    options.setAngularPass(flags.getAngularPass());
     options.setChecksOnly(flags.getChecksOnly());
+    options.setGenerateExports(flags.getGenerateExports());
     options.setNewTypeInference(flags.getNewTypeInf());
+    options.setPolymerPass(flags.getPolymerPass());
     options.setPreserveTypeAnnotations(flags.getPreserveTypeAnnotations());
+    options.setRenamePrefixNamespace(flags.getRenamePrefixNamespace());
     options.setRewritePolyfills(flags.getRewritePolyfills());
   }
 
