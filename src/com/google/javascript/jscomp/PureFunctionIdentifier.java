@@ -1214,8 +1214,7 @@ class PureFunctionIdentifier implements CompilerPass {
     private final AbstractCompiler compiler;
     private final String reportPath;
 
-    Driver(AbstractCompiler compiler, String reportPath,
-        boolean useNameReferenceGraph) {
+    Driver(AbstractCompiler compiler, String reportPath) {
       this.compiler = compiler;
       this.reportPath = reportPath;
     }

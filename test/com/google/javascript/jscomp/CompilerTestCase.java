@@ -1281,7 +1281,7 @@ public abstract class CompilerTestCase extends TestCase {
 
         if (computeSideEffects && i == 0) {
           PureFunctionIdentifier.Driver mark =
-              new PureFunctionIdentifier.Driver(compiler, null, false);
+              new PureFunctionIdentifier.Driver(compiler, null);
           mark.process(externsRoot, mainRoot);
         }
 

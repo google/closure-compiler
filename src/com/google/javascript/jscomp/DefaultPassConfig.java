@@ -2013,7 +2013,7 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new PureFunctionIdentifier.Driver(
-          compiler, options.debugFunctionSideEffectsPath, false);
+          compiler, options.debugFunctionSideEffectsPath);
     }
   };
 
