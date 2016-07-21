@@ -23,6 +23,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -1827,70 +1828,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "Foo.prototype.baz = function() { return ''; };");
 
     testSets(externs, js, js, "{}");
-  }
-
-  public void testPropInParentInterface1() {
-    String js = LINE_JOINER.join(
-        "/** @interface */",
-        "function MyIterable() {}",
-        "MyIterable.prototype.iterator = function() {};",
-        "/**",
-        " * @interface",
-        " * @extends {MyIterable}",
-        " * @template T",
-        " */",
-        "function MyCollection() {}",
-        "/**",
-        " * @constructor",
-        " * @implements {MyCollection<?>}",
-        " */",
-        "function MyAbstractCollection() {}",
-        "/** @override */",
-        "MyAbstractCollection.prototype.iterator = function() {};");
-
-    testSets(js, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
-  }
-
-  public void testPropInParentInterface2() {
-    String js = LINE_JOINER.join(
-        "/** @interface */",
-        "function MyIterable() {}",
-        "MyIterable.prototype.iterator = function() {};",
-        "/**",
-        " * @interface",
-        " * @extends {MyIterable}",
-        " */",
-        "function MyCollection() {}",
-        "/**",
-        " * @constructor",
-        " * @implements {MyCollection<?>}",
-        " */",
-        "function MyAbstractCollection() {}",
-        "/** @override */",
-        "MyAbstractCollection.prototype.iterator = function() {};");
-
-    testSets(js, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
-  }
-
-  public void testPropInParentInterface3() {
-    String js = LINE_JOINER.join(
-        "/** @interface */",
-        "function MyIterable() {}",
-        "MyIterable.prototype.iterator = function() {};",
-        "/**",
-        " * @interface",
-        " * @extends {MyIterable}",
-        " */",
-        "function MyCollection() {}",
-        "/**",
-        " * @constructor",
-        " * @implements {MyCollection}",
-        " */",
-        "function MyAbstractCollection() {}",
-        "/** @override */",
-        "MyAbstractCollection.prototype.iterator = function() {};");
-
-    testSets(js, js, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
   }
 
   public void testErrorOnProtectedProperty() {
