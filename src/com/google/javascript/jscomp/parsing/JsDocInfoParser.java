@@ -1205,6 +1205,8 @@ public final class JsDocInfoParser {
                   addTypeWarning("msg.jsdoc.incompat.type", lineno, charno);
                 }
                 break;
+              default:
+                break;
             }
           }
 

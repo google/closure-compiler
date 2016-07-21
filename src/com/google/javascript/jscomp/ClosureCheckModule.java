@@ -212,6 +212,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           }
         }
         break;
+      default:
+        break;
     }
   }
 
@@ -256,6 +258,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       case DESTRUCTURING_LHS:
         checkShortGoogRequireCall(t, callNode, parent.getParent());
         return;
+      default:
+        break;
     }
     t.report(callNode, REQUIRE_NOT_AT_TOP_LEVEL);
   }

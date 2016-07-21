@@ -238,6 +238,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       case IMPORT:
         visitImportNode(n);
         break;
+      default:
+        break;
     }
   }
 

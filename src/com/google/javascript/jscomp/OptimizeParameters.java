@@ -376,6 +376,8 @@ class OptimizeParameters
           }
         }
         break;
+      default:
+        break;
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {

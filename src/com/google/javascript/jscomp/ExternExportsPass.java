@@ -25,7 +25,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -508,6 +507,9 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           handleSymbolExportCall(parent);
         }
 
+        break;
+      default:
+        break;
     }
   }
 

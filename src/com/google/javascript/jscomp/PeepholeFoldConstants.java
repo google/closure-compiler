@@ -234,6 +234,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case NEG:
         tryConvertOperandsToNumber(n);
         break;
+      default:
+        break;
     }
   }
 
@@ -263,6 +265,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (!NodeUtil.isUndefined(n)) {
           return;
         }
+        break;
+      default:
         break;
     }
 
@@ -325,6 +329,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if ("undefined".equals(argumentNode.getString())) {
           typeNameString = "undefined";
         }
+        break;
+      default:
         break;
     }
 
@@ -1132,6 +1138,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return tryAbstractRelationalComparison(right, left, useTypes, true).not();
       case GE:
         return tryAbstractRelationalComparison(left, right, useTypes, true).not();
+      default:
+        break;
     }
     throw new IllegalStateException("Unexpected operator for comparison");
   }

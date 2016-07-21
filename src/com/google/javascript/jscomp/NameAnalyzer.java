@@ -556,6 +556,8 @@ final class NameAnalyzer implements CompilerPass {
             recordConsumers(t, parent, recordNode);
           }
           break;
+        default:
+          break;
       }
     }
 

@@ -809,32 +809,35 @@ class PureFunctionIdentifier implements CompilerPass {
    */
   @SuppressWarnings("unused")
   private static boolean isKnownLocalValue(final Node value) {
-    Predicate<Node> taintingPredicate = new Predicate<Node>() {
-      @Override
-      public boolean apply(Node value) {
-        switch (value.getType()) {
-          case ASSIGN:
-            // The assignment might cause an alias, look at the LHS.
+    Predicate<Node> taintingPredicate =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node value) {
+            switch (value.getType()) {
+              case ASSIGN:
+                // The assignment might cause an alias, look at the LHS.
+                return false;
+              case THIS:
+                // TODO(johnlenz): maybe redirect this to be a tainting list for 'this'.
+                return false;
+              case NAME:
+                // TODO(johnlenz): add to local tainting list, if the NAME
+                // is known to be a local.
+                return false;
+              case GETELEM:
+              case GETPROP:
+                // There is no information about the locality of object properties.
+                return false;
+              case CALL:
+                // TODO(johnlenz): add to local tainting list, if the call result
+                // is not known to be a local result.
+                return false;
+              default:
+                break;
+            }
             return false;
-          case THIS:
-            // TODO(johnlenz): maybe redirect this to be a tainting list for 'this'.
-            return false;
-          case NAME:
-            // TODO(johnlenz): add to local tainting list, if the NAME
-            // is known to be a local.
-            return false;
-          case GETELEM:
-          case GETPROP:
-            // There is no information about the locality of object properties.
-            return false;
-          case CALL:
-            // TODO(johnlenz): add to local tainting list, if the call result
-            // is not known to be a local result.
-            return false;
-        }
-        return false;
-      }
-    };
+          }
+        };
 
     return NodeUtil.evaluatesToLocalValue(value, taintingPredicate);
   }

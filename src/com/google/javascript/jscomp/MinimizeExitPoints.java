@@ -89,8 +89,10 @@ class MinimizeExitPoints extends AbstractShallowCallback implements CompilerPass
         tryMinimizeSwitchExits(n, Token.BREAK, null);
         break;
 
-      // TODO(johnlenz): Minimize any block that ends in a optimizable statements:
-      //   break, continue, return
+        // TODO(johnlenz): Minimize any block that ends in a optimizable statements:
+        //   break, continue, return
+      default:
+        break;
     }
   }
 

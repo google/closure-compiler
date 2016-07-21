@@ -392,6 +392,8 @@ class ProcessDefines implements CompilerPass {
             assignAllowed.remove();
           }
           break;
+        default:
+          break;
       }
     }
 

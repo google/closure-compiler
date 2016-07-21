@@ -298,6 +298,8 @@ class TypeInference
             }
           }
           break;
+        default:
+          break;
       }
 
       result.add(newScope.optimize());
@@ -457,6 +459,8 @@ class TypeInference
           n.setJSType(info.getType().evaluate(syntacticScope, registry));
         }
         break;
+      default:
+        break;
     }
 
     return scope;
@@ -608,6 +612,8 @@ class TypeInference
 
         left.setJSType(resultType);
         ensurePropertyDefined(left, resultType);
+        break;
+      default:
         break;
     }
   }

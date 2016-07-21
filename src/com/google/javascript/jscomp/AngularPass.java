@@ -286,6 +286,8 @@ class AngularPass extends AbstractPostOrderCallback
           }
         }
         break;
+      default:
+        break;
     }
 
     if (fn == null || !fn.isFunction()) {

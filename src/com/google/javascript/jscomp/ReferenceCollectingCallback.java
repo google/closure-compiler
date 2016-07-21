@@ -320,6 +320,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
           // but all the rest of the children are.
           return n != parent.getFirstChild();
 
+        default:
+          break;
       }
     }
 

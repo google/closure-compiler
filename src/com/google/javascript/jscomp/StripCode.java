@@ -144,6 +144,8 @@ class StripCode implements CompilerPass {
         case EXPR_RESULT:
           maybeEliminateExpressionByName(t, n, parent);
           break;
+        default:
+          break;
       }
     }
 

@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -422,6 +421,9 @@ class ProcessTweaks implements CompilerPass {
         case GET_NUMBER:
         case GET_STRING:
           tweakInfo.addGetterCall(t.getSourceName(), tweakFunc, n);
+          break;
+        default:
+          break;
       }
     }
   }

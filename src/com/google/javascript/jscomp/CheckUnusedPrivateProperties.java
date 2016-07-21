@@ -79,6 +79,8 @@ class CheckUnusedPrivateProperties
         return n.getLastChild().getString();
       case MEMBER_FUNCTION_DEF:
         return n.getString();
+      default:
+        break;
     }
     throw new RuntimeException("Unexpected node type: " + n);
   }
@@ -146,7 +148,9 @@ class CheckUnusedPrivateProperties
            }
          }
          break;
-     }
+      default:
+        break;
+    }
   }
 
   private boolean isPrivatePropDecl(Node n) {

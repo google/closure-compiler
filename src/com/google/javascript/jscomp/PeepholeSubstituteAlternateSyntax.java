@@ -364,6 +364,8 @@ class PeepholeSubstituteAlternateSyntax
             reportCodeChange();
           }
           break;
+        default:
+          break;
       }
     }
 
@@ -595,6 +597,8 @@ class PeepholeSubstituteAlternateSyntax
           n.getParent().replaceChild(n, number);
           reportCodeChange();
           return number;
+        default:
+          break;
       }
 
       Node not = IR.not(IR.number(n.isTrue() ? 0 : 1));

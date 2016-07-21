@@ -757,9 +757,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
               }
               processQualifiedDefinition(expr);
               break;
-          }
+              default:
+                break;
+            }
           break;
         }
+        default:
+          break;
       }
     }
 
@@ -1302,6 +1306,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           break;
         case CALL:
           visitCall(n);
+          break;
+        default:
           break;
       }
     }

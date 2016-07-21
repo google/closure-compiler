@@ -170,7 +170,9 @@ class RemoveUnusedClassProperties
            }
          }
          break;
-     }
+      default:
+        break;
+    }
   }
 
   private boolean isRemovablePropertyDefinition(Node n) {

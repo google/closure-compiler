@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
@@ -228,6 +227,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case TRY:
         exceptionHandler.push(n);
         return true;
+      default:
+        break;
     }
 
     /*
@@ -288,6 +289,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
             Preconditions.checkState(exceptionHandler.peek() == parent);
             exceptionHandler.pop();
           }
+          break;
+        default:
+          break;
       }
     }
     return true;
@@ -777,6 +781,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
           }
           return computeFollowNode(fromNode, parent, cfa);
         }
+      default:
+        break;
     }
 
     // Now that we are done with the special cases follow should be its
@@ -944,6 +950,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         return true;
       case FUNCTION:
         return false;
+      default:
+        break;
     }
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (!ControlFlowGraph.isEnteringNewCfgNode(c) && mayThrowException(c)) {

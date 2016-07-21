@@ -467,6 +467,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // name and arguments are traversed by the scope creator, and ideally
         // should not be traversed by the type checker.
         break;
+      default:
+        break;
     }
     return true;
   }
@@ -1333,6 +1335,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           } else {
             return null;
           }
+          break;
+        default:
           break;
       }
     }

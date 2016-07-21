@@ -399,6 +399,8 @@ public final class CodePrinter {
           case IF:
             // Don't break before else
             return n == parent.getLastChild();
+          default:
+            break;
         }
       }
       return true;

@@ -143,6 +143,8 @@ public abstract class ChainableReverseAbstractInterpreter
           propVarType = getNativeType(UNKNOWN_TYPE);
         }
         return propVarType;
+      default:
+        break;
     }
     return null;
   }

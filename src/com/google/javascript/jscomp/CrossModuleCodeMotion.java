@@ -233,6 +233,8 @@ class CrossModuleCodeMotion implements CompilerPass {
         case WHILE:
         case FUNCTION:
           return true;
+        default:
+          break;
       }
     }
     return false;

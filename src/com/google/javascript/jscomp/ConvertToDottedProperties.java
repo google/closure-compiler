@@ -64,6 +64,8 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
           compiler.reportCodeChange();
         }
         break;
+      default:
+        break;
     }
   }
 }

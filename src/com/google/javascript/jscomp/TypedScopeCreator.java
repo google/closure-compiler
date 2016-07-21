@@ -397,6 +397,8 @@ final class TypedScopeCreator implements ScopeCreator {
                 firstChild, firstChild.getJSDocInfo());
           }
           break;
+        default:
+          break;
       }
     }
 
@@ -566,6 +568,8 @@ final class TypedScopeCreator implements ScopeCreator {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
           }
           break;
+        default:
+          break;
       }
 
       // Analyze any @lends object literals in this statement.
@@ -623,6 +627,8 @@ final class TypedScopeCreator implements ScopeCreator {
         // above.
         case ARRAYLIT:
           n.setJSType(getNativeType(ARRAY_TYPE));
+          break;
+        default:
           break;
       }
     }
@@ -1881,6 +1887,8 @@ final class TypedScopeCreator implements ScopeCreator {
           if (n.hasOneChild()) {
             checkForTypedef(n.getFirstChild(), n.getJSDocInfo());
           }
+          break;
+        default:
           break;
       }
     }

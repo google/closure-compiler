@@ -70,6 +70,8 @@ final class InlineAliases implements CompilerPass {
             visitAliasDefinition(n.getFirstChild(), n.getJSDocInfo());
           }
           break;
+        default:
+          break;
       }
     }
 
@@ -130,6 +132,8 @@ final class InlineAliases implements CompilerPass {
             parent.replaceChild(n, newNode);
             compiler.reportCodeChange();
           }
+          break;
+        default:
           break;
       }
       maybeRewriteJsdoc(n.getJSDocInfo());

@@ -126,6 +126,8 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           containsShorthandRequire = true;
         }
         break;
+      default:
+        break;
     }
   }
 

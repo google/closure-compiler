@@ -1698,6 +1698,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
             .withTypeOfThis(thisType)
             .setIsConstructor(isConstructor)
             .build();
+      default:
+        break;
     }
 
     throw new IllegalStateException("Unexpected node in type expression: " + n);

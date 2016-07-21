@@ -132,6 +132,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
         return n == parent.getLastChild() && parent.getParent().isExprResult();
       case STRING_KEY:
         return isContainedInGoogDefineClass(parent);
+      default:
+        break;
     }
     return false;
   }

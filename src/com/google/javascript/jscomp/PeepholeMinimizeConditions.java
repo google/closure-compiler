@@ -1013,6 +1013,8 @@ class PeepholeMinimizeConditions
       case SHEQ:
       case SHNE:
         return tryReplaceComparisonWithCoercion(n, false /* booleanResult */);
+      default:
+        break;
     }
     return n;
   }

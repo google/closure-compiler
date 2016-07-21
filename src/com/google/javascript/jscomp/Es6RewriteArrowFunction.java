@@ -56,6 +56,8 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
           visitArrowFunction(t, n);
         }
         break;
+      default:
+        break;
     }
     return true;
   }

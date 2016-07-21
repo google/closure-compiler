@@ -84,6 +84,8 @@ class SourceInformationAnnotator extends
            }
          }
         break;
+      default:
+        break;
     }
   }
 

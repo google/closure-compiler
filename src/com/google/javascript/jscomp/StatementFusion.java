@@ -147,6 +147,8 @@ class StatementFusion extends AbstractPeepholeOptimization {
       case BLOCK:
         return !n.isSyntheticBlock() &&
             isFusableControlStatement(n.getFirstChild());
+      default:
+        break;
     }
     return false;
   }

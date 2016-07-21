@@ -498,6 +498,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
             return true;
           }
           break;
+        default:
+          break;
       }
       return false;
     }

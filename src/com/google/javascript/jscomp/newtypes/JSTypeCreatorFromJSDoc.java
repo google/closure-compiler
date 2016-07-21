@@ -1065,6 +1065,8 @@ public final class JSTypeCreatorFromJSDoc {
         p = ParameterKind.REST;
         jsdoc = jsdoc.getFirstChild();
         break;
+      default:
+        break;
     }
     JSType t = getMaybeTypeFromComment(jsdoc, registry, typeParameters);
     return new ParameterType(t, p);

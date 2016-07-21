@@ -225,6 +225,8 @@ class InlineFunctions implements CompilerPass {
             maybeAddFunction(fn, t.getModule());
           }
           break;
+        default:
+          break;
       }
     }
 
@@ -255,6 +257,8 @@ class InlineFunctions implements CompilerPass {
             maybeAddFunction(fn, t.getModule());
             anonFns.put(fnNode, fn.getName());
           }
+          break;
+        default:
           break;
       }
     }
@@ -432,6 +436,8 @@ class InlineFunctions implements CompilerPass {
               callback.visitCallSite(t, n, fs);
             }
           }
+          break;
+        default:
           break;
       }
     }

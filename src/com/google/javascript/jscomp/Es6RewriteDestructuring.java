@@ -59,6 +59,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       case FOR_OF:
         visitForOf(n);
         break;
+      default:
+        break;
     }
     return true;
   }
@@ -74,6 +76,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         break;
       case OBJECT_PATTERN:
         visitObjectPattern(t, n, parent);
+        break;
+      default:
         break;
     }
   }

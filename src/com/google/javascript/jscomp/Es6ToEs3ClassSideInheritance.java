@@ -300,6 +300,8 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
         case FUNCTION:
           visitFunctionClassDef(n);
           break;
+        default:
+          break;
       }
     }
 

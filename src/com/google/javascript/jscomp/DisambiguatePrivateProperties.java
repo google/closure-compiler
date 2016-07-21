@@ -77,6 +77,8 @@ class DisambiguatePrivateProperties
       case MEMBER_FUNCTION_DEF:
         maybeRename(n);
         break;
+      default:
+        break;
     }
   }
 

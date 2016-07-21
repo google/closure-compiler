@@ -299,6 +299,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             recordModuleReturn();
           }
           break;
+        default:
+          break;
       }
 
       return true;
@@ -343,6 +345,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             updateModuleReturn(n);
           }
           break;
+        default:
+          break;
       }
 
       if (n.getJSDocInfo() != null) {
@@ -363,6 +367,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           maybeUpdateTopLevelName(t, n);
           maybeUpdateExportDeclaration(t, n);
           maybeUpdateExportNameRef(n);
+          break;
+        default:
           break;
       }
     }

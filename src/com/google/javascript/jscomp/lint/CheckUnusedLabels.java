@@ -80,6 +80,9 @@ public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
         return false;
       case LABEL:
         currentContext = new LabelContext(n.getFirstChild().getString(), currentContext);
+        break;
+      default:
+        break;
     }
     return true;
   }

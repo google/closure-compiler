@@ -228,6 +228,8 @@ class ReplaceStrings extends AbstractPostOrderCallback
           }
         }
         break;
+      default:
+        break;
     }
   }
 

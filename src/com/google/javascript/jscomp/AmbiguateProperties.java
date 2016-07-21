@@ -548,6 +548,8 @@ class AmbiguateProperties implements CompilerPass {
             quotedNames.add(child.getString());
           }
           break;
+        default:
+          break;
       }
     }
 

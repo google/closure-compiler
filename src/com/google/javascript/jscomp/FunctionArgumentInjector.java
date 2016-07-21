@@ -21,7 +21,6 @@ import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -353,6 +352,8 @@ class FunctionArgumentInjector {
         case OR:
         case HOOK:
           return true;
+        default:
+          break;
       }
       if (mayHaveConditionalCode(c)) {
         return true;
@@ -529,6 +530,9 @@ class FunctionArgumentInjector {
         case VAR:
         case CATCH:
           names.add(n.getString());
+          break;
+        default:
+          break;
       }
     }
 

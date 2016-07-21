@@ -682,6 +682,8 @@ class ExpressionDecomposer {
         case CASE:
         case DEFAULT_CASE:
           return null;
+        default:
+          break;
       }
       child = parent;
     }
@@ -866,6 +868,8 @@ class ExpressionDecomposer {
         case GETELEM:
           return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects)
               && !isExpressionTreeUnsafe(lhs.getLastChild(), seenSideEffects);
+        default:
+          break;
       }
     }
     return false;

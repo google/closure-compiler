@@ -116,6 +116,8 @@ public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
           allowLoneBlock(parent);
         }
         break;
+      default:
+        break;
     }
     return true;
   }

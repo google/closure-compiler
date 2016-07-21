@@ -816,6 +816,8 @@ class CollapseProperties implements CompilerPass {
       case FUNCTION:
         updateFunctionDeclarationAtFunctionNode(n, canCollapseChildNames);
         break;
+      default:
+        break;
     }
   }
 

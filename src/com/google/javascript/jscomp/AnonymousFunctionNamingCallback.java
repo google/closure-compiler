@@ -115,6 +115,8 @@ class AnonymousFunctionNamingCallback
         Node classMembersNode = n.getLastChild();
         nameClassMethods(classMembersNode, namer.getName(n));
         break;
+      default:
+        break;
     }
   }
 

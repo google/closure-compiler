@@ -154,6 +154,8 @@ class MakeDeclaredNamesUnique
         nameStack.push(renamer);
         break;
       }
+      default:
+        break;
     }
 
     return true;
@@ -191,6 +193,8 @@ class MakeDeclaredNamesUnique
       case CATCH:
         // Remove catch except name from the stack of names.
         nameStack.pop();
+        break;
+      default:
         break;
     }
   }

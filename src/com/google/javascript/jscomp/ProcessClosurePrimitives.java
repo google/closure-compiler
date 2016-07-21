@@ -352,6 +352,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           reportBadGoogBaseUse(t, n, "May only be called directly.");
         }
         break;
+      default:
+        break;
     }
   }
 

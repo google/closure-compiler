@@ -121,6 +121,8 @@ class PrepareAst implements CompilerPass {
         case CALL:
           annotateCalls(n);
           break;
+        default:
+          break;
       }
     }
 

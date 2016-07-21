@@ -567,6 +567,8 @@ class GlobalNamespace
           }
           Node third = second.getNext();
           return getValueType(third);
+        default:
+          break;
       }
       return Name.Type.OTHER;
     }
@@ -798,6 +800,8 @@ class GlobalNamespace
             break;
           case DELPROP:
             return Ref.Type.DELETE_PROP;
+          default:
+            break;
         }
         prev = anc;
       }
@@ -1299,6 +1303,8 @@ class GlobalNamespace
                 refParent.getJSDocInfo() : ref.node.getJSDocInfo();
           case OBJECTLIT:
             return ref.node.getJSDocInfo();
+          default:
+            break;
         }
       }
 

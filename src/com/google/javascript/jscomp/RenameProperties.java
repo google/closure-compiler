@@ -406,6 +406,8 @@ class RenameProperties implements CompilerPass {
           }
           break;
         }
+        default:
+          break;
       }
     }
 

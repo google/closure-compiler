@@ -152,6 +152,8 @@ class FindExportableNodes extends AbstractPostOrderCallback {
             mode = Mode.EXTERN;
           }
           break;
+        default:
+          break;
       }
 
       if (export != null) {

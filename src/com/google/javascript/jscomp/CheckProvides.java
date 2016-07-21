@@ -86,6 +86,9 @@ class CheckProvides implements HotSwapCompilerPass {
           break;
         case SCRIPT:
           visitScriptNode();
+          break;
+        default:
+          break;
       }
     }
 

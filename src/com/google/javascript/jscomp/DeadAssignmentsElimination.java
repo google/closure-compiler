@@ -157,7 +157,9 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
             tryRemoveAssignment(t, n.getFirstChild(), state);
           }
           continue;
-        // TODO(user): case VAR: Remove var a=1;a=2;.....
+          // TODO(user): case VAR: Remove var a=1;a=2;.....
+        default:
+          break;
       }
 
       tryRemoveAssignment(t, n, state);

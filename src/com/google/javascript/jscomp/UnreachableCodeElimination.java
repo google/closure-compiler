@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.rhino.Node;
-
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -167,6 +166,9 @@ class UnreachableCodeElimination implements CompilerPass {
               removeNode(n);
             }
           }
+          break;
+        default:
+          break;
       }
     }
 
@@ -228,6 +230,8 @@ class UnreachableCodeElimination implements CompilerPass {
         case CATCH:
           Node tryNode = parent.getParent();
           NodeUtil.maybeAddFinally(tryNode);
+          break;
+        default:
           break;
       }
 

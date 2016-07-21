@@ -186,6 +186,8 @@ final class RenameLabels implements CompilerPass {
         case CONTINUE:
           visitBreakOrContinue(node);
           break;
+        default:
+          break;
       }
     }
 

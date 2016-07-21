@@ -692,6 +692,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         case AND:
         case OR:
           return true;
+        default:
+          break;
       }
     }
     return false;

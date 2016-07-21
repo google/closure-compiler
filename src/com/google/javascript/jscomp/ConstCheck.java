@@ -114,6 +114,8 @@ class ConstCheck extends AbstractPostOrderCallback
         }
         break;
       }
+      default:
+        break;
     }
   }
 

@@ -404,6 +404,8 @@ class Normalize implements CompilerPass {
         case CAST:
           parent.replaceChild(n, n.removeFirstChild());
           break;
+        default:
+          break;
       }
     }
 
@@ -616,6 +618,8 @@ class Normalize implements CompilerPass {
               insertBeforeParent.addChildBefore(newStatement, insertBefore);
               reportCodeChange("FOR initializer");
             }
+            break;
+          default:
             break;
         }
       }

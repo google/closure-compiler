@@ -163,6 +163,8 @@ abstract class MethodCompilerPass implements CompilerPass {
             externMethods.add(name);
           }
         } break;
+        default:
+          break;
       }
     }
   }
@@ -215,6 +217,8 @@ abstract class MethodCompilerPass implements CompilerPass {
             }
           }
           break;
+        default:
+          break;
       }
     }
 
@@ -246,6 +250,8 @@ abstract class MethodCompilerPass implements CompilerPass {
 
             addPossibleSignature(dest.getString(), assignee, t);
           }
+          break;
+        default:
           break;
       }
     }

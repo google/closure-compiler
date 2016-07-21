@@ -85,6 +85,8 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
       case FOR_OF:
         reportIfWasEmpty(t, NodeUtil.getLoopCodeBlock(n));
         break;
+      default:
+        break;
     }
   }
 
@@ -112,6 +114,9 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
       case SHNE:
         reportIfNaN(t, n.getFirstChild());
         reportIfNaN(t, n.getLastChild());
+        break;
+      default:
+        break;
     }
   }
 

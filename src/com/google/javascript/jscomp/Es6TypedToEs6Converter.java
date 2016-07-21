@@ -898,6 +898,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
             case NAMESPACE:
             case DECLARE:
               return true;
+            default:
+              break;
           }
           return false;
         case NAMESPACE:
@@ -924,6 +926,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
             currNamespace.typeNames.add(n.getString());
           }
           return true;
+        default:
+          break;
       }
       return false;
     }

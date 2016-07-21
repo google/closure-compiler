@@ -194,6 +194,8 @@ class InferJSDocInfo extends AbstractPostOrderCallback
           }
         }
         break;
+      default:
+        break;
     }
   }
 

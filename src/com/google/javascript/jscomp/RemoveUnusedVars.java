@@ -317,6 +317,8 @@ class RemoveUnusedVars
           }
         }
         break;
+      default:
+        break;
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {

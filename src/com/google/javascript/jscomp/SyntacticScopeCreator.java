@@ -167,6 +167,8 @@ class SyntacticScopeCreator implements ScopeCreator {
         inputId = n.getInputId();
         Preconditions.checkNotNull(inputId);
         break;
+      default:
+        break;
     }
 
     // Variables can only occur in statement-level nodes, so

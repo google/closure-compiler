@@ -283,6 +283,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
           // a call to goog.abstractMethod, goog.functions.constant, etc.
           return;
         }
+        default:
+          break;
       }
       reportMisplaced(n,
           "function", "This JSDoc is not attached to a function node. "
@@ -324,6 +326,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         case STRING_KEY:
           descOkay = n.getString().startsWith("MSG_");
           break;
+        default:
+          break;
       }
       if (!descOkay) {
         report(n, MISPLACED_MSG_ANNOTATION);
@@ -359,6 +363,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
             case CONST:
             case PARAM_LIST:
               valid = true;
+              break;
+            default:
               break;
           }
           break;

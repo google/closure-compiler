@@ -162,6 +162,8 @@ public final class SemanticReverseAbstractInterpreter
                 resultEqualsValue, blindScope);
           }
         }
+      default:
+        break;
     }
     switch (operatorToken) {
       case AND:
@@ -265,6 +267,8 @@ public final class SemanticReverseAbstractInterpreter
         }
         break;
       }
+      default:
+        break;
     }
 
     return nextPreciserScopeKnowingConditionOutcome(

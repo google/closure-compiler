@@ -74,6 +74,8 @@ class GatherExternProperties extends AbstractPostOrderCallback
           externProperties.add(child.getString());
         }
         break;
+      default:
+        break;
     }
 
     // Gather field names from the type of the node (if any).

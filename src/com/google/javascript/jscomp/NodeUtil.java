@@ -182,6 +182,8 @@ public final class NodeUtil {
           return TernaryValue.TRUE;
         }
         break;
+      default:
+        break;
     }
 
     return TernaryValue.UNKNOWN;
@@ -235,6 +237,8 @@ public final class NodeUtil {
 
       case OBJECTLIT:
         return "[object Object]";
+      default:
+        break;
     }
     return null;
   }
@@ -345,6 +349,8 @@ public final class NodeUtil {
       case OBJECTLIT:
         String value = getStringValue(n);
         return value != null ? getStringNumberValue(value) : null;
+      default:
+        break;
     }
 
     return null;
@@ -499,6 +505,8 @@ public final class NodeUtil {
         return parent.getString();
       case NUMBER:
         return getStringValue(parent);
+      default:
+        break;
     }
 
     return null;
@@ -539,6 +547,8 @@ public final class NodeUtil {
         // We assume here that programs don't change the value of the keyword
         // undefined to something other than the value undefined.
         return "undefined".equals(name) || "Infinity".equals(name) || "NaN".equals(name);
+      default:
+        break;
     }
 
     return false;
@@ -556,6 +566,8 @@ public final class NodeUtil {
       case MUL: // multiply, unlike add it only works on numbers
                       // or results NaN if any of the operators is not a number
         return true;
+      default:
+        break;
     }
     return false;
   }
@@ -571,6 +583,8 @@ public final class NodeUtil {
       case LT: // exactly equal
       case LE: // exactly not equal
         return true;
+      default:
+        break;
     }
     return false;
   }
@@ -730,6 +744,8 @@ public final class NodeUtil {
         if (val.isQualifiedName()) {
           return defines.contains(val.getQualifiedName());
         }
+      default:
+        break;
     }
     return false;
   }
@@ -1432,6 +1448,8 @@ public final class NodeUtil {
         // and function declarations are not part of expressions.
         Preconditions.checkState(isFunctionExpression(n));
         return false;
+      default:
+        break;
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
@@ -1962,6 +1980,8 @@ public final class NodeUtil {
         return Token.DIV;
       case ASSIGN_MOD:
         return Token.MOD;
+      default:
+        break;
     }
     throw new IllegalArgumentException("Not an assignment op:" + n);
   }
@@ -2177,6 +2197,8 @@ public final class NodeUtil {
           return n.getParent().getFirstChild() == n;
         case FUNCTION:
           return isBlockScopedFunctionDeclaration(n.getParent());
+        default:
+          break;
       }
     }
     return false;
@@ -2386,6 +2408,8 @@ public final class NodeUtil {
       case FOR_OF:
       case CASE:
         return null;
+      default:
+        break;
     }
     throw new IllegalArgumentException(n + " does not have a condition.");
   }
@@ -2422,6 +2446,8 @@ public final class NodeUtil {
       case SWITCH:
       case CLASS:
         return true;
+      default:
+        break;
     }
     return false;
   }
@@ -2884,6 +2910,8 @@ public final class NodeUtil {
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
         return true;
+      default:
+        break;
     }
     return false;
   }
@@ -2900,6 +2928,8 @@ public final class NodeUtil {
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
         return key.getString();
+      default:
+        break;
     }
     throw new IllegalStateException("Unexpected node type: " + key);
   }
@@ -2915,6 +2945,8 @@ public final class NodeUtil {
       case GETTER_DEF:
       case SETTER_DEF:
         return true;
+      default:
+        break;
     }
     return false;
   }
@@ -3536,6 +3568,8 @@ public final class NodeUtil {
 
       case CAST:
         return isPropertyTest(compiler, parent);
+      default:
+        break;
     }
     return false;
   }
@@ -3900,6 +3934,8 @@ public final class NodeUtil {
       case GETPROP:
         return node.isQualifiedName()
             && NodeUtil.isConstantByConvention(convention, node.getLastChild());
+      default:
+        break;
     }
     return false;
   }
@@ -4215,6 +4251,8 @@ public final class NodeUtil {
       case FUNCTION:
       case CLASS:
         return parent;
+      default:
+        break;
     }
     return null;
   }
@@ -4292,6 +4330,8 @@ public final class NodeUtil {
           return (parent.getSecondChild() == expr);
         }
         break;
+      default:
+        break;
     }
     return true;
   }
@@ -4342,6 +4382,8 @@ public final class NodeUtil {
         case FUNCTION:
           // Done, we've reached the scope root.
           break inspect;
+        default:
+          break;
       }
     } while ((n = n.getParent()) != null);
     return true;

@@ -1391,6 +1391,8 @@ public final class AstValidator implements CompilerPass {
       case EXPORT:
         validateExport(n, true);
         break;
+      default:
+        break;
     }
   }
 
@@ -1409,6 +1411,8 @@ public final class AstValidator implements CompilerPass {
         break;
       case GETPROP:
         validateGetProp(n);
+        break;
+      default:
         break;
     }
   }
