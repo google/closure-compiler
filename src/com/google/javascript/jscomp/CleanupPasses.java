@@ -59,7 +59,7 @@ class CleanupPasses extends PassConfig {
   }
 
   final PassFactory fieldCleanupPassFactory =
-      new HotSwapPassFactory("FieldCleaupPassFactory", false) {
+      new HotSwapPassFactory("FieldCleanupPassFactory", false) {
         @Override
         protected HotSwapCompilerPass create(
             AbstractCompiler compiler) {
