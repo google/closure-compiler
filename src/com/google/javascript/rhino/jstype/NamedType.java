@@ -239,8 +239,8 @@ public class NamedType extends ProxyObjectType {
       setReferencedAndResolvedType(functionType.getInstanceType(), reporter);
     } else if (value != null && value.isNoObjectType()) {
       setReferencedAndResolvedType(
-          registry.getNativeFunctionType(
-              JSTypeNative.NO_OBJECT_TYPE).getInstanceType(), reporter);
+          registry.getNativeObjectType(
+              JSTypeNative.NO_OBJECT_TYPE), reporter);
     } else if (value instanceof EnumType) {
       setReferencedAndResolvedType(
           ((EnumType) value).getElementsType(), reporter);

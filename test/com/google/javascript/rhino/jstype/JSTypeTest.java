@@ -428,7 +428,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_OBJECT_TYPE.isDict());
     assertFalse(NO_OBJECT_TYPE.isAllType());
     assertFalse(NO_OBJECT_TYPE.isVoidType());
-    assertTrue(NO_OBJECT_TYPE.isConstructor());
+    assertFalse(NO_OBJECT_TYPE.isConstructor());
     assertFalse(NO_OBJECT_TYPE.isInstanceType());
 
     // isSubtype
@@ -572,7 +572,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_TYPE.isDict());
     assertFalse(NO_TYPE.isAllType());
     assertFalse(NO_TYPE.isVoidType());
-    assertTrue(NO_TYPE.isConstructor());
+    assertFalse(NO_TYPE.isConstructor());
     assertFalse(NO_TYPE.isInstanceType());
 
     // isSubtype

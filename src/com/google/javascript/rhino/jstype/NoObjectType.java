@@ -97,6 +97,11 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
+  public boolean isConstructor() {
+    return false;
+  }
+
+  @Override
   public ObjectType getImplicitPrototype() {
     return null;
   }
