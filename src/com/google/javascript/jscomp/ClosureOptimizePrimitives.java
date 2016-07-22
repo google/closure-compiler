@@ -206,24 +206,20 @@ final class ClosureOptimizePrimitives implements CompilerPass {
    * Converts the given node to string if it is safe to do so.
    */
   private void maybeProcessDomTagName(Node n) {
-    String qualifiedName = n.getQualifiedName();
-    if (qualifiedName == null) {
-      return;
-    }
     if (NodeUtil.isLValue(n)) {
       return;
     }
-    String prefix = "goog.dom.TagName.";
-    String altPrefix = "goog$dom$TagName$";
+    String prefix = "goog$dom$TagName$";
     String tagName;
-    if (qualifiedName.startsWith(prefix)) {
-      tagName = qualifiedName.substring(prefix.length());
-    } else if (qualifiedName.startsWith(altPrefix)) {
-      tagName = qualifiedName.substring(altPrefix.length());
+    if (n.isName() && n.getString().startsWith(prefix)) {
+      tagName = n.getString().substring(prefix.length());
+    } else if (n.isGetProp() && !n.getParent().isGetProp()
+        && n.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
+      tagName = n.getSecondChild().getString();
     } else {
       return;
     }
-    Node stringNode = Node.newString(tagName).srcref(n);
+    Node stringNode = IR.string(tagName).srcref(n);
     n.getParent().replaceChild(n, stringNode);
     compiler.reportCodeChange();
   }
