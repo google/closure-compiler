@@ -952,7 +952,8 @@ public final class ConformanceRules {
         }
         Node templateRoot = parseRoot.getFirstChild();
         TemplateAstMatcher astMatcher =
-            new TemplateAstMatcher(compiler, templateRoot, TypeMatchingStrategy.LOOSE);
+            new TemplateAstMatcher(
+                compiler.getTypeIRegistry(), templateRoot, TypeMatchingStrategy.LOOSE);
         builder.add(astMatcher);
       }
 

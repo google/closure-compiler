@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.TypeMatchingStrategy;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeIRegistry;
 
 import java.io.File;
 import java.io.IOException;
@@ -235,7 +236,7 @@ public final class RefasterJsScanner extends Scanner {
           + "after_%s function defined.", templateName);
       builder.add(
           new RefasterJsTemplate(
-              compiler,
+              compiler.getTypeIRegistry(),
               typeMatchingStrategy,
               beforeTemplates.get(templateName),
               afterTemplates.get(templateName)));
@@ -255,11 +256,11 @@ public final class RefasterJsScanner extends Scanner {
     final Node afterTemplate;
 
     RefasterJsTemplate(
-        AbstractCompiler compiler,
+        TypeIRegistry typeRegistry,
         TypeMatchingStrategy typeMatchingStrategy,
         Node beforeTemplate,
         Node afterTemplate) {
-      this.matcher = new JsSourceMatcher(compiler, beforeTemplate, typeMatchingStrategy);
+      this.matcher = new JsSourceMatcher(typeRegistry, beforeTemplate, typeMatchingStrategy);
       this.beforeTemplate = beforeTemplate;
       this.afterTemplate = afterTemplate;
     }

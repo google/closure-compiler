@@ -23,6 +23,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public final class TemplateAstMatcher {
   private static final Token TEMPLATE_TYPE_PARAM = Token.PLACEHOLDER1;
   private static final Token TEMPLATE_LOCAL_NAME = Token.PLACEHOLDER2;
 
-  private final AbstractCompiler compiler;
+  private final TypeIRegistry typeRegistry;
 
   /**
    * The head of the Node list that should be used to start the matching
@@ -85,16 +86,16 @@ public final class TemplateAstMatcher {
    * to match against.
    */
   public TemplateAstMatcher(
-      AbstractCompiler compiler,
+      TypeIRegistry typeRegistry,
       Node templateFunctionNode,
       TypeMatchingStrategy typeMatchingStrategy) {
-    Preconditions.checkNotNull(compiler);
+    Preconditions.checkNotNull(typeRegistry);
     Preconditions.checkState(
         templateFunctionNode.isFunction(),
         "Template node must be a function node. Received: %s",
         templateFunctionNode);
 
-    this.compiler = compiler;
+    this.typeRegistry = typeRegistry;
     this.templateStart = initTemplate(templateFunctionNode);
     this.typeMatchingStrategy = Preconditions.checkNotNull(typeMatchingStrategy);
   }
@@ -205,7 +206,7 @@ public final class TemplateAstMatcher {
       Preconditions.checkNotNull(expression,
           "Missing JSDoc for parameter %s of template function %s",
           name, fnName);
-      JSType type = expression.evaluate(null, compiler.getTypeIRegistry());
+      JSType type = expression.evaluate(null, typeRegistry);
       Preconditions.checkNotNull(type);
       params.add(name);
       paramTypes.put(name, type);
