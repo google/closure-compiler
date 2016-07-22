@@ -949,6 +949,11 @@ public class CompilerOptions {
       Collections.emptyList();
 
   /**
+   * Whether to include full file contents in the source map.
+   */
+  boolean sourceMapIncludeSourcesContent = false;
+
+  /**
    * Whether to return strings logged with AbstractCompiler#addToDebugLog
    * in the compiler's Result.
    */
@@ -2449,6 +2454,10 @@ public class CompilerOptions {
 
   public void setSourceMapOutputPath(String sourceMapOutputPath) {
     this.sourceMapOutputPath = sourceMapOutputPath;
+  }
+
+  public void setSourceMapIncludeSourcesContent(boolean sourceMapIncludeSourcesContent) {
+    this.sourceMapIncludeSourcesContent = sourceMapIncludeSourcesContent;
   }
 
   @GwtIncompatible("SourceMap")

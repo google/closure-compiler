@@ -70,18 +70,24 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   /**
    * A pre-order traversal ordered list of mappings stored in this map.
    */
-  private List<Mapping> mappings = new ArrayList<>();
+  private final List<Mapping> mappings = new ArrayList<>();
 
   /**
    * A map of source names to source name index
    */
-  private LinkedHashMap<String, Integer> sourceFileMap =
+  private final LinkedHashMap<String, Integer> sourceFileMap =
+       new LinkedHashMap<>();
+
+  /**
+   * A map of source names to source file contents
+   */
+  private final LinkedHashMap<String, String> sourceFileContentMap =
        new LinkedHashMap<>();
 
   /**
    * A map of source names to source name index
    */
-  private LinkedHashMap<String, Integer> originalNameMap =
+  private final LinkedHashMap<String, Integer> originalNameMap =
        new LinkedHashMap<>();
 
   /**
@@ -117,7 +123,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    * to permit single values, like strings or numbers, and JsonObject or
    * JsonArray objects.
    */
-  private LinkedHashMap<String, Object> extensions = new LinkedHashMap<>();
+  private final LinkedHashMap<String, Object> extensions = new LinkedHashMap<>();
 
   /**
    * The source root path for relocating source fails or avoid duplicate values
@@ -133,6 +139,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     mappings.clear();
     lastMapping = null;
     sourceFileMap.clear();
+    sourceFileContentMap.clear();
     originalNameMap.clear();
     lastSourceFile = null;
     lastSourceFileIndex = -1;
@@ -262,6 +269,10 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     mappings.add(mapping);
   }
 
+  @Override public void addSourcesContent(String source, String content) {
+    sourceFileContentMap.put(source, content);
+  }
+
   class ConsumerEntryVisitor implements EntryVisitor {
 
     @Override
@@ -381,7 +392,10 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     out.append("]");
     appendFieldEnd(out);
 
-    // Files names
+    // Sources contents
+    addSourcesContentMap(out);
+
+    // Identifier names
     appendFieldStart(out, "names");
     out.append("[");
     addSymbolNameMap(out);
@@ -469,6 +483,34 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    */
   private void addSourceNameMap(Appendable out) throws IOException {
     addNameMap(out, sourceFileMap);
+  }
+
+  private void addSourcesContentMap(Appendable out) throws IOException {
+    boolean found = false;
+    List<String> contents = new ArrayList<>();
+    for (int i = 0; i < sourceFileMap.size(); i++) {
+      contents.add("");
+    }
+    for (Map.Entry<String, String> entry : sourceFileContentMap.entrySet()) {
+      Integer index = sourceFileMap.get(entry.getKey());
+      if (index != null && index < contents.size()) {
+        contents.set(index, entry.getValue());
+        found = true;
+      }
+    }
+    if (!found) {
+      return;
+    }
+    appendFieldStart(out, "sourcesContent");
+    out.append("[");
+    for (int i = 0; i < contents.size(); i++) {
+      if (i != 0) {
+        out.append(",");
+      }
+      out.append(escapeString(contents.get(i)));
+    }
+    out.append("]");
+    appendFieldEnd(out);
   }
 
   /**

@@ -423,6 +423,7 @@ public class Compiler extends AbstractCompiler {
     List<JSModule> modules = new ArrayList<>(1);
     modules.add(module);
     initModules(externs, modules, options);
+    addFilesToSourceMap(inputs);
 
     if (options.printConfig) {
       printConfig(System.err);
@@ -1647,8 +1648,9 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   Node parseSyntheticCode(String js) {
-    CompilerInput input = new CompilerInput(
-        SourceFile.fromCode(" [synthetic:" + (++syntheticCodeId) + "] ", js));
+    SourceFile source = SourceFile.fromCode(" [synthetic:" + (++syntheticCodeId) + "] ", js);
+    addFilesToSourceMap(ImmutableList.of(source));
+    CompilerInput input = new CompilerInput(source);
     putCompilerInput(input.getInputId(), input);
     return input.getAstRoot(this);
   }
@@ -1671,6 +1673,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   Node parseSyntheticCode(String fileName, String js) {
     initCompilerOptionsIfTesting();
+    addFileToSourceMap(fileName, js);
     CompilerInput input = new CompilerInput(SourceFile.fromCode(fileName, js));
     putCompilerInput(input.getInputId(), input);
     return input.getAstRoot(this);
@@ -2732,5 +2735,19 @@ public class Compiler extends AbstractCompiler {
   @Override
   ImmutableMap<String, Node> getDefaultDefineValues() {
     return this.defaultDefineValues;
+  }
+
+  private void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
+    if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
+      for (SourceFile file : files) {
+        getSourceMap().addSourceFile(file);
+      }
+    }
+  }
+
+  private void addFileToSourceMap(String filename, String contents) {
+    if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
+      getSourceMap().addSourceFile(SourceFile.fromCode(filename, contents));
+    }
   }
 }

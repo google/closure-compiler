@@ -145,7 +145,6 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   }
 
   public void testGoldenOutput0a() throws Exception {
-    // Empty source map test
     checkSourceMap("a;",
 
                    "{\n" +
@@ -154,6 +153,20 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"lineCount\":1,\n" +
                    "\"mappings\":\"AAAAA;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
+                   "\"names\":[\"a\"]\n" +
+                   "}\n");
+
+    sourceMapIncludeSourcesContent = true;
+
+    checkSourceMap("a;",
+
+                   "{\n" +
+                   "\"version\":3,\n" +
+                   "\"file\":\"testcode\",\n" +
+                   "\"lineCount\":1,\n" +
+                   "\"mappings\":\"AAAAA;\",\n" +
+                   "\"sources\":[\"testcode\"],\n" +
+                   "\"sourcesContent\":[\"a;\"],\n" +
                    "\"names\":[\"a\"]\n" +
                    "}\n");
   }
@@ -186,6 +199,23 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
                        "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF," +
                        "SAAmDC,IAAnDD;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
+                   "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
+                   "}\n");
+
+    sourceMapIncludeSourcesContent = true;
+
+    checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
+
+                   "{\n" +
+                   "\"version\":3,\n" +
+                   "\"file\":\"testcode\",\n" +
+                   "\"lineCount\":1,\n" +
+                   "\"mappings\":\"AAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE," +
+                       "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF," +
+                       "SAAmDC,IAAnDD;\",\n" +
+                   "\"sources\":[\"testcode\"],\n" +
+                   "\"sourcesContent\":" +
+                       "[\"function f(foo, bar) { foo = foo + bar + 2; return foo; }\"],\n" +
                    "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
                    "}\n");
   }

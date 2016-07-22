@@ -1599,7 +1599,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   private void outputSourceMap(B options, String associatedName)
       throws IOException {
-    if (Strings.isNullOrEmpty(options.sourceMapOutputPath)) {
+    if (Strings.isNullOrEmpty(options.sourceMapOutputPath)
+        || options.sourceMapOutputPath.equals("/dev/null")) {
       return;
     }
 

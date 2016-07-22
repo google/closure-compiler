@@ -28,6 +28,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Collects information mapping the generated (compiled) source back to
@@ -40,6 +42,9 @@ import java.util.Map;
  * @author johnlenz@google.com (John Lenz)
  */
 public final class SourceMap {
+
+  private static final Logger logger =
+      Logger.getLogger("com.google.javascript.jscomp");
 
   /**
    * An enumeration of available source map formats
@@ -138,6 +143,14 @@ public final class SourceMap {
         sourceFile, originalName,
         new FilePosition(node.getLineno() - lineBaseOffset, node.getCharno()),
         outputStartPosition, outputEndPosition);
+  }
+
+  public void addSourceFile(SourceFile sourceFile) {
+    try {
+      generator.addSourcesContent(fixupSourceLocation(sourceFile.getName()), sourceFile.getCode());
+    } catch (IOException e) {
+      logger.log(Level.WARNING, "Exception while adding source content to source map.", e);
+    }
   }
 
   /**

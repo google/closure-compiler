@@ -54,6 +54,7 @@ public abstract class SourceMapTestCase extends TestCase {
       SourceFile.fromCode("externs", ""));
 
   protected DetailLevel detailLevel = SourceMap.DetailLevel.ALL;
+  protected boolean sourceMapIncludeSourcesContent = false;
 
   protected static class RunResult {
       String generatedSource;
@@ -275,6 +276,7 @@ public abstract class SourceMapTestCase extends TestCase {
     options.setSourceMapOutputPath("testcode_source_map.out");
     options.setSourceMapFormat(getSourceMapFormat());
     options.setSourceMapDetailLevel(detailLevel);
+    options.setSourceMapIncludeSourcesContent(sourceMapIncludeSourcesContent);
     return options;
   }
 

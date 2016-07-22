@@ -36,6 +36,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -95,6 +96,8 @@ public final class TranspilingClosureBundler extends ClosureBundler {
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setWrapGoogModulesForWhitespaceOnly(false);
     options.setPrettyPrint(true);
+    options.setSourceMapOutputPath("/dev/null");
+    options.setSourceMapIncludeSourcesContent(true);
     return options;
   }
 
@@ -107,7 +110,7 @@ public final class TranspilingClosureBundler extends ClosureBundler {
           hashCode,
           new Callable<String>() {
             @Override
-            public String call() {
+            public String call() throws IOException, UnsupportedEncodingException {
               // Neither the compiler nor the options is thread safe, so they can't be
               // saved as instance state.
               ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -129,7 +132,14 @@ public final class TranspilingClosureBundler extends ClosureBundler {
                 }
                 throw new IllegalStateException(message);
               }
-              return compiler.toSource();
+              StringBuilder source = new StringBuilder().append(compiler.toSource());
+              StringBuilder sourceMap = new StringBuilder();
+              compiler.getSourceMap().appendTo(sourceMap, path);
+              return source
+                  .append("\n//# sourceMappingURL=data:,")
+                  .append(URLEncoder.encode(sourceMap.toString(), "UTF-8").replace("+", "%20"))
+                  .append("\n")
+                  .toString();
             }
           });
     } catch (ExecutionException | UncheckedExecutionException e) {

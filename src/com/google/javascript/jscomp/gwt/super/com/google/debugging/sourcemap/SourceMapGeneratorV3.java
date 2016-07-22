@@ -46,4 +46,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   public void validate(boolean validate) {
   }
+
+  public void addSourcesContent(String source, String content) {
+  }
 }

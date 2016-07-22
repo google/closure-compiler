@@ -75,6 +75,13 @@ public interface SourceMapGenerator {
            FilePosition outputStartPosition, FilePosition outputEndPosition);
 
   /**
+   * Adds a sourcesContent entry for the corresponding source.
+   * @param source The source name.
+   * @param content The source content.
+   */
+  void addSourcesContent(String source, String content);
+
+  /**
    * Sets the prefix used for wrapping the generated source file before
    * it is written. This ensures that the source map is adjusted for the
    * change in character offsets.
