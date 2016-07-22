@@ -76,7 +76,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
             IR.getprop(superClass.cloneTree(), IR.string("apply")),
             IR.thisNode(),
             IR.name("arguments")));
-        body.addChildrenToFront(exprResult);
+        body.addChildToFront(exprResult);
       }
       Node constructor = IR.function(
           IR.name(""),

@@ -354,7 +354,7 @@ class FunctionToBlockMutator {
         Node label = IR.label(name, block).srcref(block);
 
         Node newRoot = IR.block().srcref(block);
-        newRoot.addChildrenToBack(label);
+        newRoot.addChildToBack(label);
 
 
         // The label is now the root.
@@ -388,7 +388,7 @@ class FunctionToBlockMutator {
     Node resultNode = createAssignStatementNode(resultName, retVal);
     resultNode.useSourceInfoIfMissingFromForTree(node);
 
-    node.addChildrenToBack(resultNode);
+    node.addChildToBack(resultNode);
   }
 
   /**

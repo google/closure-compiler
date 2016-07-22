@@ -736,7 +736,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
           member.setDeclaredTypeExpression(null);
           colon.addChildToBack(member.detachFromParent());
           colon.addChildToBack(memberType);
-          lb.addChildrenToBack(colon);
+          lb.addChildToBack(colon);
         }
         return new Node(Token.LC, lb);
       }

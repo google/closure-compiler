@@ -117,7 +117,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private void addExternForGlobalSymbolNamespace() {
     Node varNode = IR.var(IR.name(globalSymbolNamespace));
     CompilerInput input = compiler.getSynthesizedExternsInput();
-    input.getAstRoot(compiler).addChildrenToBack(varNode);
+    input.getAstRoot(compiler).addChildToBack(varNode);
     compiler.reportCodeChange();
   }
 

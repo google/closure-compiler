@@ -160,8 +160,10 @@ class StripCode implements CompilerPass {
      */
     void removeVarDeclarationsByNameOrRvalue(NodeTraversal t, Node n,
         Node parent) {
+      Node next = null;
       for (Node nameNode = n.getFirstChild(); nameNode != null;
-          nameNode = nameNode.getNext()) {
+          nameNode = next) {
+        next = nameNode.getNext();
         String name = nameNode.getString();
         if (isStripName(name) ||
             isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {

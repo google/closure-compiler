@@ -72,7 +72,7 @@ public final class RecordFunctionInformationTest extends TestCase {
 
     Node nodeG = mainRoot.getFirstChild().getLastChild();
     mainRoot.getFirstChild().removeChild(nodeG);
-    mainRoot.getLastChild().addChildrenToBack(nodeG.cloneTree());
+    mainRoot.getLastChild().addChildToBack(nodeG.cloneTree());
 
     FunctionInformationMap.Builder expected =
       FunctionInformationMap.newBuilder();

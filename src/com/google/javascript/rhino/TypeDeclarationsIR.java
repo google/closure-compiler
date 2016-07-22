@@ -205,7 +205,7 @@ public class TypeDeclarationsIR {
 
     if (restName != null) {
       Node rest = new Node(Token.REST, IR.name(restName));
-      node.addChildrenToBack(maybeAddType(rest, restType));
+      node.addChildToBack(maybeAddType(rest, restType));
     }
     return node;
   }

@@ -164,8 +164,10 @@ class PeepholeMinimizeConditions
    */
   private Node tryReplaceIf(Node n) {
 
+    Node next = null;
     for (Node child = n.getFirstChild();
-         child != null; child = child.getNext()){
+         child != null; child = next){
+      next = child.getNext();
       if (child.isIf()){
         Node cond = child.getFirstChild();
         Node thenBranch = cond.getNext();
@@ -225,6 +227,8 @@ class PeepholeMinimizeConditions
           n.replaceChild(child, returnNode);
           n.removeChild(nextNode);
           reportCodeChange();
+          // everything else in the block is dead code.
+          break;
         } else if (elseBranch != null && statementMustExitParent(thenBranch)) {
           child.removeChild(elseBranch);
           n.addChildAfter(elseBranch, child);
@@ -591,7 +595,7 @@ class PeepholeMinimizeConditions
                       unnegatedCond.getNode(),
                       innerCond.detachFromParent())
                       .srcref(placeholder));
-              n.addChildrenToBack(innerThenBranch.detachFromParent());
+              n.addChildToBack(innerThenBranch.detachFromParent());
               reportCodeChange();
               // Not worth trying to fold the current IF-ELSE into && because
               // the inner IF-ELSE wasn't able to be folded into && anyways.
@@ -702,13 +706,14 @@ class PeepholeMinimizeConditions
       if (name1.hasChildren()
           && maybeName2.isName()
           && name1.getString().equals(maybeName2.getString())) {
-        Node thenExpr = name1.removeChildren();
+        Preconditions.checkState(name1.hasOneChild());
+        Node thenExpr = name1.removeFirstChild();
         Node elseExpr = elseAssign.getLastChild().detachFromParent();
         placeholder.detachFromParent();
         Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
-        name1.addChildrenToBack(hookNode);
+        name1.addChildToBack(hookNode);
         parent.replaceChild(n, var);
         reportCodeChange();
         return var;
@@ -728,12 +733,13 @@ class PeepholeMinimizeConditions
           && maybeName1.isName()
           && maybeName1.getString().equals(name2.getString())) {
         Node thenExpr = thenAssign.getLastChild().detachFromParent();
-        Node elseExpr = name2.removeChildren();
+        Preconditions.checkState(name2.hasOneChild());
+        Node elseExpr = name2.removeFirstChild();
         placeholder.detachFromParent();
         Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
-        name2.addChildrenToBack(hookNode);
+        name2.addChildToBack(hookNode);
         parent.replaceChild(n, var);
         reportCodeChange();
 

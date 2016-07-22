@@ -67,9 +67,9 @@ public final class CombinedCompilerPassTest extends TestCase  {
     d.addChildToBack(b);
     d.addChildToBack(c);
 
-    h.addChildrenToBack(e);
-    h.addChildrenToBack(f);
-    h.addChildrenToBack(g);
+    h.addChildToBack(e);
+    h.addChildToBack(f);
+    h.addChildToBack(g);
 
     l.addChildToBack(i);
     l.addChildToBack(j);

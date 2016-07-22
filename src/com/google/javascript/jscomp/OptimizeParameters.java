@@ -512,7 +512,7 @@ class OptimizeParameters
       eliminateParamsAfter(fnNode, argNode.getNext());
       argNode.detachFromParent();
       Node var = IR.var(argNode).useSourceInfoIfMissingFrom(argNode);
-      fnNode.getLastChild().addChildrenToFront(var);
+      fnNode.getLastChild().addChildToFront(var);
       compiler.reportCodeChange();
       return true;
     }

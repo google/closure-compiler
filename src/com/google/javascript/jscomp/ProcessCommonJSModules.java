@@ -385,7 +385,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       callbackFunction.getSecondChild().removeChildren();
       n.removeChildren();
       n.putBooleanProp(Node.FREE_CALL, true);
-      n.addChildrenToFront(callbackFunction);
+      n.addChildToFront(callbackFunction);
 
       compiler.reportCodeChange();
     }

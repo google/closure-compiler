@@ -35,6 +35,7 @@ import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.Nullable;
 
 /**
@@ -2604,7 +2606,7 @@ public final class NodeUtil {
   static void maybeAddFinally(Node tryNode) {
     Preconditions.checkState(tryNode.isTry());
     if (!NodeUtil.hasFinally(tryNode)) {
-      tryNode.addChildrenToBack(IR.block().srcref(tryNode));
+      tryNode.addChildToBack(IR.block().srcref(tryNode));
     }
   }
 
@@ -3621,7 +3623,6 @@ public final class NodeUtil {
   static Node newVarNode(String name, Node value) {
     Node nodeName = IR.name(name);
     if (value != null) {
-      Preconditions.checkState(value.getNext() == null);
       nodeName.addChildToBack(value);
       nodeName.srcref(value);
     }

@@ -336,7 +336,7 @@ class MinimizedCondition {
       int cost = 0;
       boolean changed = false;
       for (MeasuredNode child : children) {
-        parent.addChildrenToBack(child.node);
+        parent.addChildToBack(child.node);
         cost += child.length;
         changed = changed || child.changed;
       }

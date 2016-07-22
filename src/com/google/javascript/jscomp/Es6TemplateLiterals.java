@@ -98,7 +98,7 @@ class Es6TemplateLiterals {
         TEMPLATELIT_VAR + t.getCompiler().getUniqueNameIdSupplier().get());
     Node var = IR.var(callsiteId, siteObject).useSourceInfoIfMissingFromForTree(n);
     Node script = NodeUtil.getEnclosingScript(n);
-    script.addChildrenToFront(var);
+    script.addChildToFront(var);
 
     // Define the "raw" property on the introduced variable.
     Node defineRaw = IR.exprResult(IR.assign(IR.getprop(
