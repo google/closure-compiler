@@ -39,6 +39,7 @@ class TagNameToType {
           .put("data", "HTMLDataElement")
           .put("datalist", "HTMLDataListElement")
           .put("del", "HTMLModElement")
+          .put("dialog", "HTMLDialogElement")
           .put("dir", "HTMLDirectoryElement")
           .put("div", "HTMLDivElement")
           .put("dl", "HTMLDListElement")
