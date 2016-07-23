@@ -458,9 +458,10 @@ class PeepholeSubstituteAlternateSyntax
           if (action == FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS ||
               action == FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS) {
             newLiteralNode = IR.arraylit();
-            n.removeChildren();
+            n.removeFirstChild(); // discard the function name
+            Node elements = n.removeChildren();
             if (action == FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS) {
-              newLiteralNode.addChildrenToFront(arg0);
+              newLiteralNode.addChildrenToFront(elements);
             }
           }
         }

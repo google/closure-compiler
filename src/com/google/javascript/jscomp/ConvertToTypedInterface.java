@@ -25,6 +25,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -256,7 +257,9 @@ class ConvertToTypedInterface implements CompilerPass {
         case IF:
         case SWITCH:
         case CASE:
-          parent.addChildrenAfter(n.removeChildren().getNext(), n);
+          n.removeFirstChild();
+          Node children = n.removeChildren();
+          parent.addChildrenAfter(children, n);
           n.detachFromParent();
           compiler.reportCodeChange();
           break;
