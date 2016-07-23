@@ -49,24 +49,26 @@ $jscomp.initSymbol = function() {
   };
 
   // Need to monkey-patch Object.getOwnPropertyNames to not return symbols.
-  // Note that we use this extra array populated by getOwnPropertyNames
-  // because there's no way to access the *unpatched* getOwnPropertyNames
-  // from the getOwnPropertySymbols patch.
-  /** @type {!Array<string>} */
-  var symbols = [];
+  var getNames = Object['getOwnPropertyNames'];
+
+  /**
+   * @param {!Object} target
+   * @param {!Array<string>} array
+   * @param {boolean} wantSymbols
+   * @return {!Array<string>}
+   */
+  var buildResult = function(target, array, wantSymbols) {
+    var names = getNames(target);
+    for (var i = 0, len = names.length; i < len; i++) {
+      if (isSymbol(names[i]) == wantSymbols) array.push(names[i]);
+    }
+    return array;
+  };
+
   var removeSymbolsPatch = function(orig) {
+    getNames = orig;
     return function(target) {
-      symbols = [];
-      var names = orig(target);
-      var result = [];
-      for (var i = 0, len = names.length; i < len; i++) {
-        if (!isSymbol(names[i])) {
-          result.push(names[i]);
-        } else {
-          symbols.push(names[i]);
-        }
-      }
-      return result;
+      return buildResult(target, [], false);
     };
   };
 
@@ -74,12 +76,7 @@ $jscomp.initSymbol = function() {
   $jscomp.patch('Object.getOwnPropertyNames', removeSymbolsPatch);
   $jscomp.patch('Object.getOwnPropertySymbols', function(orig) {
     return function(target) {
-      // First call the patched getOwnPropertyNames to reset and fill the array.
-      // Store the result somewhere to prevent nosideeffect removal.
-      removeSymbolsPatch.unused = Object.getOwnPropertyNames(target);
-      // In case the original function actually returned something, append that.
-      symbols.push.apply(orig(target));
-      return symbols;
+      return buildResult(target, orig(target), true);
     };
   });
   // Note: shouldn't need to patch Reflect.ownKeys.

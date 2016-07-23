@@ -555,6 +555,18 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(extraSmartNamePass);
     }
 
+    // RewritePolyfills is overly generous in the polyfills it adds.  After type
+    // checking and early smart name removal, we can use the new type information
+    // to figure out which polyfilled prototype methods are actually called, and
+    // which were "false alarms" (i.e. calling a method of the same name on a
+    // user-provided class).  We also remove any polyfills added by code that
+    // was smart-name-removed.  This is a one-time pass, since it does not work
+    // after inlining - we do not attempt to aggressively remove polyfills used
+    // by code that is only flow-sensitively dead.
+    if (options.rewritePolyfills) {
+      passes.add(removeUnusedPolyfills);
+    }
+
     // Property disambiguation should only run once and needs to be done
     // soon after type checking, both so that it can make use of type
     // information and so that other passes can take advantage of the renamed
@@ -2075,6 +2087,17 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new UnreachableCodeElimination(compiler, true);
+    }
+  };
+
+  /**
+   * Use data flow analysis to remove dead branches.
+   */
+  private final PassFactory removeUnusedPolyfills =
+      new PassFactory("removeUnusedPolyfills", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new RemoveUnusedPolyfills(compiler);
     }
   };
 
