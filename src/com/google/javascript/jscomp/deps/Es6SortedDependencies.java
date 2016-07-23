@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
-import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -123,53 +122,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
       return exportingInputBySymbolName.get(symbol);
     }
 
-    return nonExportingInputs.get(toModuleName(createUri(symbol)));
-  }
-
-  /**
-   * Turns a filename into a JS identifier that is used for moduleNames in
-   * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
-   * and replaces - with _. All moduleNames get a "module$" prefix.
-   *
-   * @see com.google.javascript.jscomp.ES6ModuleLoader
-   *
-   * TODO(tbreisacher): Switch to using the ModuleIdentifier class once
-   * it no longer causes circular dependencies in Google builds.
-   */
-  private static String toModuleName(URI filename) {
-    String moduleName = filename.toString();
-    if (moduleName.endsWith(".js")) {
-      moduleName = moduleName.substring(0, moduleName.length() - 3);
-    }
-
-    moduleName =
-        moduleName
-            .replaceAll("^\\./", "")
-            .replace('/', '$')
-            .replace('\\', '$')
-            .replace('-', '_')
-            .replace(':', '_')
-            .replace('.', '_')
-            .replace("%20", "_");
-    return "module$" + moduleName;
-  }
-
-  /**
-   * Copied from ES6ModuleLoader because our BUILD rules are written in such a way that we can't
-   * depend on ES6ModuleLoader from here.
-   * TODO(tbreisacher): Switch to using the ES6ModuleLoader once the BUILD graph allows it.
-   */
-  private static URI createUri(String input) {
-    // Handle special characters
-    String encodedInput = input.replace(':', '-')
-        .replace('\\', '/')
-        .replace(" ", "%20")
-        .replace("[", "%5B")
-        .replace("]", "%5D")
-        .replace("<", "%3C")
-        .replace(">", "%3E");
-
-    return URI.create(encodedInput).normalize();
+    return nonExportingInputs.get(ModuleNames.fileToModuleName(symbol));
   }
 
   private void orderInput(INPUT input) {
@@ -191,7 +144,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
     for (INPUT userOrderedInput : userOrderedInputs) {
       if (userOrderedInput.getProvides().isEmpty()) {
         nonExportingInputs.put(
-            toModuleName(createUri(userOrderedInput.getName())), userOrderedInput);
+            ModuleNames.fileToModuleName(userOrderedInput.getName()), userOrderedInput);
       }
       for (String providedSymbolName : userOrderedInput.getProvides()) {
         exportingInputBySymbolName.put(providedSymbolName, userOrderedInput);

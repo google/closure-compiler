@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ClosureBundler;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
@@ -2490,7 +2491,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private List<String> moduleRoots = ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+    private List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
     /**
      * Sets the module roots.

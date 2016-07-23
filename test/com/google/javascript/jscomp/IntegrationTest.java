@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -569,7 +570,7 @@ public final class IntegrationTest extends IntegrationTestCase {
           "import {x} from 'i2'; alert(x);",
           "export var x = 5;",
         },
-        ES6ModuleLoader.LOAD_WARNING);
+        ModuleLoader.LOAD_WARNING);
   }
 
   public void testAngularPassOff() {

@@ -20,6 +20,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -478,4 +479,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
     * can be overriden by values specifically set in the CompilerOptions.
     */
    abstract ImmutableMap<String, Node> getDefaultDefineValues();
+
+  /**
+   * Gets the module loader.
+   */
+  abstract ModuleLoader getModuleLoader();
 }

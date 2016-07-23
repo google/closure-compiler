@@ -21,12 +21,12 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
+import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModuleUri;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +48,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
       "Failed to load module \"{0}\"");
 
   private final Compiler compiler;
-  private final ES6ModuleLoader loader;
   private final boolean reportDependencies;
 
   /**
@@ -56,10 +55,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
    * rewrite CommonJS modules to a concatenable form.
    *
    * @param compiler The compiler
-   * @param loader The module loader which is used to locate CommonJS modules
    */
-  public ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader) {
-    this(compiler, loader, true);
+  public ProcessCommonJSModules(Compiler compiler) {
+    this(compiler, true);
   }
 
   /**
@@ -67,17 +65,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
    * rewrite CommonJS modules to a concatenable form.
    *
    * @param compiler The compiler
-   * @param loader The module loader which is used to locate CommonJS modules
    * @param reportDependencies Whether the rewriter should report dependency
    *     information to the Closure dependency manager. This needs to be true
    *     if we want to sort CommonJS module inputs correctly. Note that goog.provide
    *     and goog.require calls will still be generated if this argument is
    *     false.
    */
-  public ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader,
-      boolean reportDependencies) {
+  public ProcessCommonJSModules(Compiler compiler, boolean reportDependencies) {
     this.compiler = compiler;
-    this.loader = loader;
     this.reportDependencies = reportDependencies;
   }
 
@@ -87,10 +82,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, finder);
     NodeTraversal
         .traverseEs6(compiler, root, new ProcessCommonJsModulesCallback(!finder.found));
-  }
-
-  String inputToModuleName(CompilerInput input) {
-    return ES6ModuleLoader.toModuleName(loader.normalizeInputAddress(input));
   }
 
   /**
@@ -330,13 +321,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
       String requireName = require.getSecondChild().getString();
-      URI loadAddress = loader.locateCommonJsModule(requireName, t.getInput());
-      if (loadAddress == null) {
+      ModuleUri moduleUri = t.getInput().getUri().resolveCommonJsModule(requireName);
+      if (moduleUri == null) {
         compiler.report(t.makeError(require, LOAD_ERROR, requireName));
         return;
       }
 
-      String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
+      String moduleName = moduleUri.toModuleName();
       Node script = getCurrentScriptNode(parent);
 
       // When require("name") is used as a standalone statement (the result isn't used)
@@ -399,7 +390,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           "ProcessCommonJSModules supports only one invocation per " +
           "CompilerInput / script node");
 
-      String moduleName = inputToModuleName(t.getInput());
+      String moduleName = t.getInput().getUri().toModuleName();;
 
       boolean hasExports = !(moduleExportRefs.isEmpty() && exportRefs.isEmpty());
 
@@ -712,8 +703,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
       if (typeNode.isString()) {
         String name = typeNode.getString();
-        if (ES6ModuleLoader.isRelativeIdentifier(name)
-            || ES6ModuleLoader.isAbsoluteIdentifier(name)) {
+        if (ModuleLoader.isRelativeIdentifier(name) || ModuleLoader.isAbsoluteIdentifier(name)) {
           int lastSlash = name.lastIndexOf('/');
           int endIndex = name.indexOf('.', lastSlash);
           String localTypeName = null;
@@ -724,13 +714,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
 
           String moduleName = name.substring(0, endIndex);
-          URI loadAddress = loader.locateCommonJsModule(moduleName, t.getInput());
-          if (loadAddress == null) {
+          ModuleUri moduleUri = t.getInput().getUri().resolveCommonJsModule(moduleName);
+          if (moduleUri == null) {
             t.makeError(typeNode, LOAD_ERROR, moduleName);
             return;
           }
 
-          String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress);
+          String globalModuleName = moduleUri.toModuleName();
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
         } else if (fullRewrite) {

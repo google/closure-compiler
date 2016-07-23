@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -817,7 +818,7 @@ public class CompilerOptions {
   boolean processCommonJSModules = false;
 
   /** CommonJS module prefix. */
-  List<String> moduleRoots = ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+  List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
   /** Rewrite polyfills. */
   boolean rewritePolyfills = false;

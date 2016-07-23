@@ -15,13 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ProcessCommonJSModules.FindGoogProvideOrGoogModule;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -29,7 +28,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -57,8 +55,6 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           "JSC_NAMESPACE_IMPORT_CANNOT_USE_STAR",
           "Namespace imports ('goog:some.Namespace') cannot use import * as. "
               + "Did you mean to import {0} from ''{1}'';?");
-
-  private final ES6ModuleLoader loader;
 
   private final Compiler compiler;
   private int scriptNodeCount = 0;
@@ -94,17 +90,14 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
    * ES6 modules to a concatenable form.
    *
    * @param compiler The compiler
-   * @param loader The module loader which is used to locate ES6 modules
    * @param reportDependencies Whether the rewriter should report dependency
    *     information to the Closure dependency manager. This needs to be true
    *     if we want to sort ES6 module inputs correctly. Note that goog.provide
    *     and goog.require calls will still be generated if this argument is
    *     false.
    */
-  public ProcessEs6Modules(Compiler compiler, ES6ModuleLoader loader,
-      boolean reportDependencies) {
+  public ProcessEs6Modules(Compiler compiler, boolean reportDependencies) {
     this.compiler = compiler;
-    this.loader = loader;
     this.reportDependencies = reportDependencies;
   }
 
@@ -147,8 +140,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       // These are rewritten to plain namespace object accesses.
       moduleName = importName.substring("goog:".length());
     } else {
-      URI loadAddress = checkNotNull(loader.locateEs6Module(importName, t.getInput()));
-      moduleName = ES6ModuleLoader.toModuleName(loadAddress);
+      moduleName = t.getInput().getUri().resolveEs6Module(importName).toModuleName();
     }
 
     for (Node child : importDecl.children()) {
@@ -254,9 +246,8 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       parent.addChildBefore(importNode, export);
       visit(t, importNode, parent);
 
-      URI loadAddress = checkNotNull(
-          loader.locateEs6Module(moduleIdentifier.getString(), t.getInput()));
-      String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
+      String moduleName =
+          t.getInput().getUri().resolveEs6Module(moduleIdentifier.getString()).toModuleName();
 
       for (Node exportSpec : export.getFirstChild().children()) {
         String nameFromOtherModule = exportSpec.getFirstChild().getString();
@@ -330,8 +321,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     // ES6 module.
     rewriteRequires(script);
 
-    URI normalizedAddress = loader.normalizeInputAddress(t.getInput());
-    String moduleName = ES6ModuleLoader.toModuleName(normalizedAddress);
+    String moduleName = t.getInput().getUri().toModuleName();
 
     for (Map.Entry<String, NameNodePair> entry : exportMap.entrySet()) {
       String exportedName = entry.getKey();
@@ -517,8 +507,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
       if (typeNode.isString()) {
         String name = typeNode.getString();
-        if (ES6ModuleLoader.isRelativeIdentifier(name)
-            || ES6ModuleLoader.isAbsoluteIdentifier(name)) {
+        if (ModuleLoader.isRelativeIdentifier(name) || ModuleLoader.isAbsoluteIdentifier(name)) {
           int lastSlash = name.lastIndexOf('/');
           int endIndex = name.indexOf('.', lastSlash);
           String localTypeName = null;
@@ -529,8 +518,8 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           }
 
           String moduleName = name.substring(0, endIndex);
-          URI loadAddress = checkNotNull(loader.locateEs6Module(moduleName, t.getInput()));
-          String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress);
+          String globalModuleName =
+              t.getInput().getUri().resolveEs6Module(moduleName).toModuleName();
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
         } else {

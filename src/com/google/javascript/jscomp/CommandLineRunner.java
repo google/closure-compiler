@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.TextFormat;
 
@@ -1351,7 +1352,7 @@ public class CommandLineRunner extends
       } else if (flags.commonJsPathPrefix != null) {
         moduleRoots.addAll(flags.commonJsPathPrefix);
       } else {
-        moduleRoots.add(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+        moduleRoots.add(ModuleLoader.DEFAULT_FILENAME_PREFIX);
       }
 
       for (String entryPoint : flags.entryPoints) {

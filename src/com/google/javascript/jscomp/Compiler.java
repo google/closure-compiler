@@ -29,6 +29,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -80,7 +81,7 @@ import java.util.regex.Matcher;
  * window, document.
  *
  */
-public class Compiler extends AbstractCompiler {
+public class Compiler extends AbstractCompiler implements ErrorHandler {
   static final String SINGLETON_MODULE_NAME = "$singleton$";
 
   static final DiagnosticType MODULE_DEPENDENCY_ERROR =
@@ -118,6 +119,9 @@ public class Compiler extends AbstractCompiler {
   // The graph of the JS source modules. Must be null if there are less than
   // 2 modules, because we use this as a signal for which passes to run.
   private JSModuleGraph moduleGraph;
+
+  // The module loader for resolving paths into module URIs.
+  private ModuleLoader moduleLoader;
 
   // The JS source inputs
   private List<CompilerInput> inputs;
@@ -1387,18 +1391,20 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
-      if (options.lowerFromEs6()) {
-        processEs6Modules();
-      }
-
-      // Modules inferred in ProcessCommonJS pass.
-      if (options.transformAMDToCJSModules || options.processCommonJSModules) {
-        processAMDAndCommonJSModules();
-      }
-
       if (options.lowerFromEs6()
           || options.transformAMDToCJSModules
           || options.processCommonJSModules) {
+
+        this.moduleLoader = new ModuleLoader(this, options.moduleRoots, inputs);
+
+        if (options.lowerFromEs6()) {
+          processEs6Modules();
+        }
+
+        // Modules inferred in ProcessCommonJS pass.
+        if (options.transformAMDToCJSModules || options.processCommonJSModules) {
+          processAMDAndCommonJSModules();
+        }
 
         // Build a map of module identifiers for any input which provides no namespace.
         // These files could be imported modules which have no exports, but do have side effects.
@@ -1427,6 +1433,9 @@ public class Compiler extends AbstractCompiler {
         if (!inputsToRewrite.isEmpty()) {
           processEs6Modules(new ArrayList<>(inputsToRewrite.values()), true);
         }
+      } else {
+        // Use an empty module loader if we're not actually dealing with modules.
+        this.moduleLoader = ModuleLoader.EMPTY;
       }
 
       orderInputs();
@@ -1604,14 +1613,13 @@ public class Compiler extends AbstractCompiler {
   }
 
   void processEs6Modules(List<CompilerInput> inputsToProcess, boolean forceRewrite) {
-    ES6ModuleLoader loader = new ES6ModuleLoader(this, options.moduleRoots, inputs);
     for (CompilerInput input : inputsToProcess) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
       if (root == null) {
         continue;
       }
-      new ProcessEs6Modules(this, loader, true).processFile(root, forceRewrite);
+      new ProcessEs6Modules(this, true).processFile(root, forceRewrite);
     }
   }
 
@@ -1621,7 +1629,6 @@ public class Compiler extends AbstractCompiler {
    * on the way.
    */
   void processAMDAndCommonJSModules() {
-    ES6ModuleLoader loader = new ES6ModuleLoader(this, options.moduleRoots, inputs);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
@@ -1632,7 +1639,7 @@ public class Compiler extends AbstractCompiler {
         new TransformAMDToCJSModule(this).process(null, root);
       }
       if (options.processCommonJSModules) {
-        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this, loader, true);
+        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this, true);
         cjs.process(null, root);
       }
     }
@@ -2234,6 +2241,11 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
+  public void report(CheckLevel ignoredLevel, JSError error) {
+    report(error);
+  }
+
+  @Override
   public CheckLevel getErrorLevel(JSError error) {
     Preconditions.checkNotNull(options);
     return warningsGuard.level(error);
@@ -2735,6 +2747,11 @@ public class Compiler extends AbstractCompiler {
   @Override
   ImmutableMap<String, Node> getDefaultDefineValues() {
     return this.defaultDefineValues;
+  }
+
+  @Override
+  ModuleLoader getModuleLoader() {
+    return moduleLoader;
   }
 
   private void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
