@@ -1619,7 +1619,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
       if (root == null) {
         continue;
       }
-      new ProcessEs6Modules(this, true).processFile(root, forceRewrite);
+      new ProcessEs6Modules(this).processFile(root, forceRewrite);
     }
   }
 

@@ -81,24 +81,14 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   private boolean isEs6Module;
   private boolean forceRewrite;
 
-  private boolean reportDependencies;
-
   private Node googRequireInsertSpot;
 
   /**
    * Creates a new ProcessEs6Modules instance which can be used to rewrite
    * ES6 modules to a concatenable form.
-   *
-   * @param compiler The compiler
-   * @param reportDependencies Whether the rewriter should report dependency
-   *     information to the Closure dependency manager. This needs to be true
-   *     if we want to sort ES6 module inputs correctly. Note that goog.provide
-   *     and goog.require calls will still be generated if this argument is
-   *     false.
    */
-  public ProcessEs6Modules(Compiler compiler, boolean reportDependencies) {
+  public ProcessEs6Modules(Compiler compiler) {
     this.compiler = compiler;
-    this.reportDependencies = reportDependencies;
   }
 
   /**
@@ -186,10 +176,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       require.copyInformationFromForTree(importDecl);
       script.addChildAfter(require, googRequireInsertSpot);
       googRequireInsertSpot = require;
-
-      if (reportDependencies) {
-        t.getInput().addRequire(moduleName);
-      }
+      t.getInput().addRequire(moduleName);
     }
 
     parent.removeChild(importDecl);
@@ -368,9 +355,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           IR.call(NodeUtil.newQName(compiler, "goog.provide"),
               IR.string(moduleName)));
       script.addChildToFront(googProvide.copyInformationFromForTree(script));
-      if (reportDependencies) {
-        t.getInput().addProvide(moduleName);
-      }
+      t.getInput().addProvide(moduleName);
     }
 
     JSDocInfoBuilder jsDocInfo = script.getJSDocInfo() == null
