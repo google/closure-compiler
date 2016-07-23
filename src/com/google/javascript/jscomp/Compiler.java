@@ -2688,12 +2688,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
     }
 
     // Insert the code immediately after the last-inserted runtime library.
+    Node lastChild = ast.getLastChild();
     Node firstChild = ast.removeChildren();
     if (firstChild == null) {
       // Handle require-only libraries.
       return lastInjectedLibrary;
     }
-    Node lastChild = firstChild.getLastSibling();
     Node parent = getNodeForCodeInsertion(null);
     if (lastInjectedLibrary == null) {
       parent.addChildrenToFront(firstChild);

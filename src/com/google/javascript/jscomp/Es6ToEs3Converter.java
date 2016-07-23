@@ -340,7 +340,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * Processes a rest parameter
    */
   private void visitRestParam(Node restParam, Node paramList) {
-    Node functionBody = paramList.getLastSibling();
+    Node functionBody = paramList.getNext();
     int restIndex = paramList.getIndexOfChild(restParam);
     String paramName = restParam.getFirstChild().getString();
 
