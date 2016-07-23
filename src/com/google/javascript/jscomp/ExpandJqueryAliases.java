@@ -211,7 +211,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       Node assignVal = IR.or(objectToExtend.cloneTree(),
           IR.objectlit().srcref(n)).srcref(n);
       Node assign = IR.assign(objectToExtend.cloneTree(), assignVal).srcref(n);
-      fncBlock.addChildrenToFront(IR.exprResult(assign).srcref(n));
+      fncBlock.addChildToFront(IR.exprResult(assign).srcref(n));
     }
 
     while (extendArg.hasChildren()) {

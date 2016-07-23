@@ -119,7 +119,7 @@ class InstrumentFunctions implements CompilerPass {
       Node expr = IR.exprResult(call);
 
       Node addingRoot = compiler.getNodeForCodeInsertion(null);
-      addingRoot.addChildrenToFront(expr.useSourceInfoIfMissingFromForTree(addingRoot));
+      addingRoot.addChildToFront(expr.useSourceInfoIfMissingFromForTree(addingRoot));
       compiler.reportCodeChange();
     }
 

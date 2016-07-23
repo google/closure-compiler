@@ -181,7 +181,7 @@ public class ExportTestFunctions implements CompilerPass {
         .removeChildren();
     exportCall.useSourceInfoFromForTree(scriptNode);
 
-    scriptNode.addChildAfter(exportCall, parent);
+    scriptNode.addChildrenAfter(exportCall, parent);
     compiler.reportCodeChange();
   }
 

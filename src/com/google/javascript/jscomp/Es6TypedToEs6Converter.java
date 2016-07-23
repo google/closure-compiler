@@ -333,7 +333,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     Node declaredType = convertWithLocation(indexSignature.getDeclaredTypeExpression());
     Node block = new Node(Token.BLOCK, indexType, declaredType);
     Node iObject = IR.string("IObject");
-    iObject.addChildrenToFront(block);
+    iObject.addChildToFront(block);
     JSTypeExpression bang = new JSTypeExpression(new Node(Token.BANG, iObject)
         .useSourceInfoIfMissingFromForTree(indexSignature), indexSignature.getSourceFileName());
     indexSignature.detachFromParent();
