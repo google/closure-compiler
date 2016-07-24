@@ -2254,11 +2254,11 @@ HTMLTableElement.prototype.deleteTFoot = function() {};
 HTMLTableElement.prototype.deleteTHead = function() {};
 
 /**
- * @param {number} index
+ * @param {number=} opt_index
  * @return {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-39872903
  */
-HTMLTableElement.prototype.insertRow = function(index) {};
+HTMLTableElement.prototype.insertRow = function(opt_index) {};
 
 /**
  * @constructor
