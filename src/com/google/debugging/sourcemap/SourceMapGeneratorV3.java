@@ -20,16 +20,15 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.debugging.sourcemap.SourceMapConsumerV3.EntryVisitor;
 import com.google.gson.Gson;
-
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.annotation.Nullable;
 
 /**
@@ -488,9 +487,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   private void addSourcesContentMap(Appendable out) throws IOException {
     boolean found = false;
     List<String> contents = new ArrayList<>();
-    for (int i = 0; i < sourceFileMap.size(); i++) {
-      contents.add("");
-    }
+    contents.addAll(Collections.nCopies(sourceFileMap.size(), ""));
     for (Map.Entry<String, String> entry : sourceFileContentMap.entrySet()) {
       Integer index = sourceFileMap.get(entry.getKey());
       if (index != null && index < contents.size()) {
