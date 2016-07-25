@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.collect.ObjectArrays.concat;
+import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -63,6 +64,7 @@ public class Linter {
     options.setSkipTranspilationAndCrash(true);
 
     options.setPreserveDetailedSourceInfo(true);
+    options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
     options.setCodingConvention(new GoogleCodingConvention());
 
     // Even though we're not running the typechecker, enable the checkTypes DiagnosticGroup, since
