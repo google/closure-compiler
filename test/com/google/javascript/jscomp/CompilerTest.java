@@ -28,9 +28,6 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -41,6 +38,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * @author johnlenz@google.com (John Lenz)
@@ -800,6 +798,28 @@ public final class CompilerTest extends TestCase {
   public void testGetEmptyResult() {
     Result result = new Compiler().getResult();
     assertThat(result.errors).isEmpty();
+  }
+
+  public void testAnnotation() {
+    Compiler compiler = new Compiler();
+
+    assertThat(compiler.getAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY)).isNull();
+
+    compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, true);
+    assertThat(compiler.getAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY))
+        .isEqualTo(Boolean.TRUE);
+  }
+
+  public void testSetAnnotationTwice() {
+    Compiler compiler = new Compiler();
+
+    compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, true);
+    try {
+      compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, false);
+      fail("It didn't fail for overwriting existing annotation.");
+    } catch (IllegalArgumentException expected) {
+      return;
+    }
   }
 
   private static CompilerOptions createNewFlagBasedOptions() {

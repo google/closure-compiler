@@ -45,7 +45,6 @@ import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -457,6 +456,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(computeFunctionNames);
     }
 
+    if (options.j2clPassMode.equals(CompilerOptions.J2clPassMode.AUTO)) {
+      checks.add(j2clSourceFileChecker);
+    }
+
     checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
@@ -494,7 +497,7 @@ public final class DefaultPassConfig extends PassConfig {
     //
     // Inlining these functions turns a dynamic access to a static property of a class definition
     // into a fully qualified access and in so doing enables better dead code stripping.
-    if (options.j2clPass) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clPass);
       passes.add(j2clPropertyInlinerPass);
     }
@@ -918,7 +921,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(removeUnusedClassProperties);
     }
 
-    if (options.j2clPass) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clClinitPrunerPass);
       passes.add(j2clConstantHoisterPass);
       passes.add(j2clEqualitySameRewriterPass);
@@ -2692,14 +2695,22 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
+  private final PassFactory j2clSourceFileChecker =
+      new PassFactory("j2clSourceFileChecker", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new J2clSourceFileChecker(compiler);
+        }
+      };
+
   private final PassFactory checkConformance =
       new PassFactory("checkConformance", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CheckConformance(
-          compiler, ImmutableList.copyOf(options.getConformanceConfigs()));
-    }
-  };
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new CheckConformance(
+              compiler, ImmutableList.copyOf(options.getConformanceConfigs()));
+        }
+      };
 
   /** Optimizations that output ES6 features. */
   private final PassFactory optimizeToEs6 = new PassFactory("optimizeToEs6", true) {

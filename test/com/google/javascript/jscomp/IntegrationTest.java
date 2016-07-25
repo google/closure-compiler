@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
+import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
@@ -2218,6 +2219,16 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   public void testFoldJ2clClinits() {
+    testFoldJ2clClinits(J2clPassMode.ON);
+  }
+
+  public void testJ2clPassAuto() {
+    inputFileNamePrefix = "jar:file//foo.js.zip!";
+    inputFileNameSuffix = ".java.js";
+    testFoldJ2clClinits(J2clPassMode.AUTO);
+  }
+
+  private void testFoldJ2clClinits(J2clPassMode j2clPassMode) {
     CompilerOptions options = createCompilerOptions();
 
     String code =
@@ -2229,7 +2240,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "};",
             "InternalWidget.$clinit();");
 
-    options.setJ2clPass(true);
+    options.setJ2clPass(j2clPassMode);
     options.setFoldConstants(true);
     options.setComputeFunctionSideEffects(true);
     options.setCollapseProperties(true);

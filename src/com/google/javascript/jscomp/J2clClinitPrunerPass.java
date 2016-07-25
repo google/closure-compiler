@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,6 +36,10 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    if (J2clSourceFileChecker.shouldSkipExecution(compiler)) {
+      return;
+    }
+
     NodeTraversal.traverseEs6(compiler, root, new RedundantClinitPruner());
     NodeTraversal.traverseEs6(compiler, root, new LookAheadRedundantClinitPruner());
     NodeTraversal.traverseEs6(compiler, root, new EmptyClinitPruner());

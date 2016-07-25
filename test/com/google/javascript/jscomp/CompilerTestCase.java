@@ -29,9 +29,6 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * <p>Base class for testing JS compiler classes that change
@@ -1668,7 +1666,12 @@ public abstract class CompilerTestCase extends TestCase {
    * depends on the module before it.
    */
   static JSModule[] createModuleChain(String... inputs) {
-    JSModule[] modules = createModules(inputs);
+    return createModuleChain(Arrays.asList(inputs), "i", ".js");
+  }
+
+  static JSModule[] createModuleChain(
+      List<String> inputs, String fileNamePrefix, String fileNameSuffix) {
+    JSModule[] modules = createModules(inputs, fileNamePrefix, fileNameSuffix);
     for (int i = 1; i < modules.length; i++) {
       modules[i].addDependency(modules[i - 1]);
     }
@@ -1719,10 +1722,15 @@ public abstract class CompilerTestCase extends TestCase {
    * dependencies between the modules.
    */
   static JSModule[] createModules(String... inputs) {
-    JSModule[] modules = new JSModule[inputs.length];
-    for (int i = 0; i < inputs.length; i++) {
+    return createModules(Arrays.asList(inputs), "i", ".js");
+  }
+
+  static JSModule[] createModules(
+      List<String> inputs, String fileNamePrefix, String fileNameSuffix) {
+    JSModule[] modules = new JSModule[inputs.size()];
+    for (int i = 0; i < inputs.size(); i++) {
       JSModule module = modules[i] = new JSModule("m" + i);
-      module.add(SourceFile.fromCode("i" + i + ".js", inputs[i]));
+      module.add(SourceFile.fromCode(fileNamePrefix + i + fileNameSuffix, inputs.get(i)));
     }
     return modules;
   }

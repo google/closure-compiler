@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
-
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -695,7 +694,7 @@ public class CompilerOptions {
   boolean dartPass;
 
   /** Processes the output of J2CL */
-  boolean j2clPass;
+  J2clPassMode j2clPassMode;
 
   /** Remove goog.abstractMethod assignments. */
   boolean removeAbstractMethods;
@@ -1127,7 +1126,7 @@ public class CompilerOptions {
     angularPass = false;
     polymerPass = false;
     dartPass = false;
-    j2clPass = false;
+    j2clPassMode = J2clPassMode.OFF;
     removeAbstractMethods = true;
     removeClosureAsserts = false;
     stripTypes = Collections.emptySet();
@@ -1596,9 +1595,14 @@ public class CompilerOptions {
     this.dartPass = dartPass;
   }
 
-  public void setJ2clPass(boolean j2clPass) {
-    this.j2clPass = j2clPass;
-    if (j2clPass) {
+  @Deprecated
+  public void setJ2clPass(boolean flag) {
+    setJ2clPass(flag ? J2clPassMode.TRUE : J2clPassMode.FALSE);
+  }
+
+  public void setJ2clPass(J2clPassMode j2clPassMode) {
+    this.j2clPassMode = j2clPassMode;
+    if (j2clPassMode.equals(J2clPassMode.ON) || j2clPassMode.equals(J2clPassMode.TRUE)) {
       setWarningLevel(DiagnosticGroup.forType(SourceFile.DUPLICATE_ZIP_CONTENTS), CheckLevel.OFF);
     }
   }
@@ -2650,7 +2654,7 @@ public class CompilerOptions {
             .add("instrumentationTemplateFile", instrumentationTemplateFile)
             .add("instrumentationTemplate", instrumentationTemplate)
             .add("instrumentForCoverage", instrumentForCoverage)
-            .add("j2clPass", j2clPass)
+            .add("j2clPassMode", j2clPassMode)
             .add("jqueryPass", jqueryPass)
             .add("labelRenaming", labelRenaming)
             .add("languageIn", getLanguageIn())
@@ -3079,5 +3083,26 @@ public class CompilerOptions {
      * only if referenced from an entry point.
      */
     STRICT
+  }
+
+  /**
+   * A mode enum used to indicate whether J2clPass should be enabled, disabled, or enabled
+   * automatically if there is any J2cl source file (i.e. in the AUTO mode).
+   */
+  public static enum J2clPassMode {
+    /** J2clPass is disabled. */
+    FALSE,
+    /** J2clPass is enabled. */
+    TRUE,
+    /** J2clPass is disabled. */
+    OFF,
+    /** J2clPass is enabled. */
+    ON,
+    /** It auto-detects whether there are J2cl generated file. If yes, execute J2clPass. */
+    AUTO;
+
+    boolean shouldAddJ2clPasses() {
+      return this == TRUE || this == ON || this == AUTO;
+    }
   }
 }
