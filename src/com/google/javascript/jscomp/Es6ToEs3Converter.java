@@ -267,6 +267,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   /**
    * Converts extended object literal {a} to {a:a}.
    */
+  // TODO(blickly): Separate this so it can be part of the normalization early transpilation passes.
   private void visitStringKey(Node n) {
     if (!n.hasChildren()) {
       Node name = IR.name(n.getString());

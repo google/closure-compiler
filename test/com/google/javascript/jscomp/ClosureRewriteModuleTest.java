@@ -122,6 +122,27 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
           "var {x: module$contents$a_x, y: module$contents$a_y} = foo();"));
   }
 
+  public void testShortObjectLiteralsInsideModule() {
+    testEs6(
+        LINE_JOINER.join(
+          "goog.module('a');",
+          "var x = foo();",
+          "var o = {x};"),
+        LINE_JOINER.join(
+          "/** @const */ var module$exports$a = {};",
+          "var module$contents$a_x = foo();",
+          "var module$contents$a_o = {x: module$contents$a_x};"));
+
+    testEs6(
+        LINE_JOINER.join(
+          "goog.module('a');",
+          "var x = foo();",
+          "exports = {x};"),
+        LINE_JOINER.join(
+          "var module$contents$a_x = foo();",
+          "/** @const */ var module$exports$a = {/** @const */ x: module$contents$a_x};"));
+  }
+
   public void testDestructuringImports() {
     testEs6(
         new String[] {

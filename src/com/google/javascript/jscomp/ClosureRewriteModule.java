@@ -290,6 +290,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           }
           break;
 
+        case STRING_KEY:
+          // Short objects must be converted first, so that we can rewrite module-global names.
+          if (currentScript.isModule) {
+            rewriteShortObjectKey(n);
+          }
+          break;
+
         case NAME:
           maybeRecordExportDeclaration(n);
           break;
@@ -733,10 +740,14 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(varNode)) {
       String name = lhs.getString();
       currentScript.topLevelNames.add(name);
-      // Rewrite `const {x, y} = ...` syntax to `const {x: x, y: y} = ...` for easier processing
-      if (lhs.isStringKey()) {
-        lhs.addChildToFront(IR.name(name).srcref(lhs));
-      }
+    }
+  }
+
+  private void rewriteShortObjectKey(Node n) {
+    Preconditions.checkArgument(n.isStringKey());
+    if (!n.hasChildren()) {
+      Node nameNode = IR.name(n.getString()).srcref(n);
+      n.addChildToBack(nameNode);
     }
   }
 
