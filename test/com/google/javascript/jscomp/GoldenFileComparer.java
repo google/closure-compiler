@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
@@ -66,15 +66,13 @@ public class GoldenFileComparer {
     String[] compiledLines = compiledSource.split("\n");
     String[] goldenLines = goldenSource.split("\n");
 
-    assert_()
-        .withFailureMessage("Num lines of compiled code do not match that of expected")
+    assertWithMessage("Num lines of compiled code do not match that of expected")
         .that(compiledLines.length)
         .isEqualTo(goldenLines.length);
 
     // Loop through each line to make it convenient to pin-point the faulty one
     for (int i = 0; i < compiledLines.length; i++) {
-      assert_()
-          .withFailureMessage(
+      assertWithMessage(
               "Instrumented code does not match expected at line no: "
                   + (i + 1)
                   + "\nExpected:\n"

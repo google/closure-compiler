@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -1190,11 +1190,11 @@ public abstract class CompilerTestCase extends TestCase {
     String errorMsg = LINE_JOINER.join(compiler.getErrors());
     if (root == null && expected == null && error != null) {
       // Might be an expected parse error.
-      assert_().withFailureMessage("Expected one parse error, but got " + errorMsg)
+      assertWithMessage("Expected one parse error, but got " + errorMsg)
           .that(compiler.getErrorCount())
           .isEqualTo(1);
       JSError actualError = compiler.getErrors()[0];
-      assert_().withFailureMessage("Unexpected parse error(s): " + errorMsg)
+      assertWithMessage("Unexpected parse error(s): " + errorMsg)
           .that(actualError.getType())
           .isEqualTo(error);
       if (description != null) {
@@ -1202,7 +1202,7 @@ public abstract class CompilerTestCase extends TestCase {
       }
       return;
     }
-    assert_().withFailureMessage("Unexpected parse error(s): " + errorMsg).that(root).isNotNull();
+    assertWithMessage("Unexpected parse error(s): " + errorMsg).that(root).isNotNull();
     if (!expectParseWarningsThisTest) {
       assertEquals(
           "Unexpected parse warning(s): " + LINE_JOINER.join(compiler.getWarnings()),
@@ -1494,8 +1494,7 @@ public abstract class CompilerTestCase extends TestCase {
       if (description != null) {
         assertThat(actualError.description).isEqualTo(description);
       }
-      assert_()
-          .withFailureMessage("Some placeholders in the error message were not replaced")
+      assertWithMessage("Some placeholders in the error message were not replaced")
           .that(actualError.description)
           .doesNotContainMatch("\\{\\d\\}");
 
@@ -1503,8 +1502,7 @@ public abstract class CompilerTestCase extends TestCase {
         String warnings = "";
         for (JSError actualWarning : compiler.getWarnings()) {
           warnings += actualWarning.description + "\n";
-          assert_()
-              .withFailureMessage("Some placeholders in the warning message were not replaced")
+          assertWithMessage("Some placeholders in the warning message were not replaced")
               .that(actualWarning.description)
               .doesNotContainMatch("\\{\\d\\}");
         }
