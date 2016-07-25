@@ -1627,7 +1627,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (oType != null) {
         JSType thisPropType = interfaceType.getPropertyType(name);
         JSType oPropType = oType.getPropertyType(name);
-        if (thisPropType.isEquivalentTo(oPropType)
+        if (thisPropType.isSubtype(oPropType)
+            || oPropType.isSubtype(thisPropType)
             || thisPropType.isFunctionType() && oPropType.isFunctionType()
                && thisPropType.toMaybeFunctionType().hasEqualCallType(
                   oPropType.toMaybeFunctionType())) {
@@ -1699,10 +1700,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // Check whether the extended interfaces have any conflicts
       if (functionType.getExtendedInterfacesCount() > 1) {
         // Only check when extending more than one interfaces
-        HashMap<String, ObjectType> properties
-            = new HashMap<>();
-        LinkedHashMap<String, ObjectType> currentProperties
-            = new LinkedHashMap<>();
+        HashMap<String, ObjectType> properties = new HashMap<>();
+        LinkedHashMap<String, ObjectType> currentProperties = new LinkedHashMap<>();
         for (ObjectType interfaceType : functionType.getExtendedInterfaces()) {
           currentProperties.clear();
           checkInterfaceConflictProperties(t, n, functionPrivateName,

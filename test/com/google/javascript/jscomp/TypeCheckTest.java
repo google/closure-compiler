@@ -10159,6 +10159,58 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             + "loop: G -> F -> G"));
   }
 
+  public void testInheritPropFromMultipleInterfaces1() {
+    // Low#prop gets the type of whichever property is declared last,
+    // even if that type is not the most specific.
+    testTypes(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function High1() {}",
+            "/** @type {number|string} */",
+            "High1.prototype.prop;",
+            "/** @interface */",
+            "function High2() {}",
+            "/** @type {number} */",
+            "High2.prototype.prop;",
+            "/**",
+            " * @interface",
+            " * @extends {High1}",
+            " * @extends {High2}",
+            " */",
+            "function Low() {}",
+            "function f(/** !Low */ x) { var /** null */ n = x.prop; }"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : (number|string)",
+            "required: null"));
+  }
+
+  public void testInheritPropFromMultipleInterfaces2() {
+    // Low#prop gets the type of whichever property is declared last,
+    // even if that type is not the most specific.
+    testTypes(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function High1() {}",
+            "/** @type {number} */",
+            "High1.prototype.prop;",
+            "/** @interface */",
+            "function High2() {}",
+            "/** @type {number|string} */",
+            "High2.prototype.prop;",
+            "/**",
+            " * @interface",
+            " * @extends {High1}",
+            " * @extends {High2}",
+            " */",
+            "function Low() {}",
+            "function f(/** !Low */ x) { var /** null */ n = x.prop; }"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : number",
+            "required: null"));
+  }
+
   public void testConversionFromInterfaceToRecursiveConstructor() {
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
