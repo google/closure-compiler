@@ -45,6 +45,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.util.LinkedHashSet;
+
 /**
  * An object type with declared template types, such as
  * {@code Array<string>}.
@@ -73,6 +75,18 @@ public final class TemplatizedType extends ProxyObjectType {
     this.templateTypes = builder.build();
 
     replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
+  }
+
+  // NOTE(dimvar): The method getCtorImplementedInterfaces is inherited
+  // from ProxyObjectType, and is currently wrong. It should be instantiating
+  // the inherited interfaces, like we do in getCtorExtendedInterfaces.
+  @Override
+  public Iterable<ObjectType> getCtorExtendedInterfaces() {
+    LinkedHashSet<ObjectType> resolvedExtendedInterfaces = new LinkedHashSet<>();
+    for (ObjectType obj : getReferencedObjTypeInternal().getCtorExtendedInterfaces()) {
+      resolvedExtendedInterfaces.add(obj.visit(replacer).toObjectType());
+    }
+    return resolvedExtendedInterfaces;
   }
 
   @Override

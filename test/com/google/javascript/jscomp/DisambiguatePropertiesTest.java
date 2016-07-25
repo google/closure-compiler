@@ -1830,6 +1830,70 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(externs, js, js, "{}");
   }
 
+  public void testPropInParentInterface1() {
+    String js = LINE_JOINER.join(
+        "/** @interface */",
+        "function MyIterable() {}",
+        "MyIterable.prototype.iterator = function() {};",
+        "/**",
+        " * @interface",
+        " * @extends {MyIterable}",
+        " * @template T",
+        " */",
+        "function MyCollection() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {MyCollection<?>}",
+        " */",
+        "function MyAbstractCollection() {}",
+        "/** @override */",
+        "MyAbstractCollection.prototype.iterator = function() {};");
+
+    testSets(js, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
+  }
+
+  public void testPropInParentInterface2() {
+    String js = LINE_JOINER.join(
+        "/** @interface */",
+        "function MyIterable() {}",
+        "MyIterable.prototype.iterator = function() {};",
+        "/**",
+        " * @interface",
+        " * @extends {MyIterable}",
+        " */",
+        "function MyCollection() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {MyCollection<?>}",
+        " */",
+        "function MyAbstractCollection() {}",
+        "/** @override */",
+        "MyAbstractCollection.prototype.iterator = function() {};");
+
+    testSets(js, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
+  }
+
+  public void testPropInParentInterface3() {
+    String js = LINE_JOINER.join(
+        "/** @interface */",
+        "function MyIterable() {}",
+        "MyIterable.prototype.iterator = function() {};",
+        "/**",
+        " * @interface",
+        " * @extends {MyIterable}",
+        " */",
+        "function MyCollection() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {MyCollection}",
+        " */",
+        "function MyAbstractCollection() {}",
+        "/** @override */",
+        "MyAbstractCollection.prototype.iterator = function() {};");
+
+    testSets(js, js, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
+  }
+
   public void testErrorOnProtectedProperty() {
     testError("function addSingletonGetter(foo) { foo.foobar = 'a'; };",
          DisambiguateProperties.Warnings.INVALIDATION);

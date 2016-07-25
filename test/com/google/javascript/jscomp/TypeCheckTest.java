@@ -10211,6 +10211,92 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: null"));
   }
 
+  public void testInheritPropFromMultipleInterfaces3() {
+    testTypes(
+        LINE_JOINER.join(
+            "/**",
+            " * @interface",
+            " * @template T1",
+            " */",
+            "function MyCollection() {}",
+            "/**",
+            " * @interface",
+            " * @template T2",
+            " * @extends {MyCollection<T2>}",
+            " */",
+            "function MySet() {}",
+            "/**",
+            " * @interface",
+            " * @template T3,T4",
+            " */",
+            "function MyMapEntry() {}",
+            "/**",
+            " * @interface",
+            " * @template T5,T6",
+            " */",
+            "function MyMultimap() {}",
+            "/** @return {MyCollection<MyMapEntry<T5, T6>>} */",
+            "MyMultimap.prototype.entries = function() {};",
+            "/**",
+            " * @interface",
+            " * @template T7,T8",
+            " * @extends {MyMultimap<T7, T8>}",
+            " */",
+            "function MySetMultimap() {}",
+            "/** @return {MySet<MyMapEntry<T7, T8>>} */",
+            "MySetMultimap.prototype.entries = function() {};",
+            "/**",
+            " * @interface",
+            " * @template T9,T10",
+            " * @extends {MyMultimap<T9, T10>}",
+            " */",
+            "function MyFilteredMultimap() {}",
+            "/**",
+            " * @interface",
+            " * @template T11,T12",
+            " * @extends {MyFilteredMultimap<T11, T12>}",
+            " * @extends {MySetMultimap<T11, T12>}",
+            " */",
+            "function MyFilteredSetMultimap() {}"));
+  }
+
+  public void testInheritSameGenericInterfaceFromDifferentPaths() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/**",
+            " * @constructor",
+            " * @template T1",
+            " */",
+            "ns.Foo = function() {};",
+            "/**",
+            " * @interface",
+            " * @template T2",
+            " */",
+            "ns.High = function() {};",
+            "/** @type {!ns.Foo<T2>} */",
+            "ns.High.prototype.myprop;",
+            "/**",
+            " * @interface",
+            " * @template T3",
+            " * @extends {ns.High<T3>}",
+            " */",
+            "ns.Med1 = function() {};",
+            "/**",
+            " * @interface",
+            " * @template T4",
+            " * @extends {ns.High<T4>}",
+            " */",
+            "ns.Med2 = function() {};",
+            "/**",
+            " * @interface",
+            " * @template T5",
+            " * @extends {ns.Med1<T5>}",
+            " * @extends {ns.Med2<T5>}",
+            " */",
+            "ns.Low = function() {};"));
+  }
+
   public void testConversionFromInterfaceToRecursiveConstructor() {
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +

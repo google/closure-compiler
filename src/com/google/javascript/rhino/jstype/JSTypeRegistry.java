@@ -1424,14 +1424,15 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   public TemplateTypeMap createTemplateTypeMap(
       ImmutableList<TemplateType> templateKeys,
       ImmutableList<JSType> templateValues) {
-    templateKeys = templateKeys == null ?
-        ImmutableList.<TemplateType>of() : templateKeys;
-    templateValues = templateValues == null ?
-        ImmutableList.<JSType>of() : templateValues;
-
-    return (templateKeys.isEmpty() && templateValues.isEmpty()) ?
-        emptyTemplateTypeMap :
-        new TemplateTypeMap(this, templateKeys, templateValues);
+    if (templateKeys == null) {
+      templateKeys = ImmutableList.of();
+    }
+    if (templateValues == null) {
+      templateValues = ImmutableList.of();
+    }
+    return (templateKeys.isEmpty() && templateValues.isEmpty())
+        ? emptyTemplateTypeMap
+            : new TemplateTypeMap(this, templateKeys, templateValues);
   }
 
   /**
