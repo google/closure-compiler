@@ -28,13 +28,11 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.jscomp.graph.UndiGraph;
-
-import junit.framework.TestCase;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * Tests for the graph data structure.
@@ -213,8 +211,8 @@ public final class GraphTest extends TestCase {
     graph.createNode("b");
     graph.createNode("c");
     graph.connect("a", "-", "b");
-    assertThat("-").isEqualTo(graph.getFirstEdge("a", "b").getValue());
-    assertThat("-").isEqualTo(graph.getFirstEdge("b", "a").getValue());
+    assertThat(graph.getFirstEdge("a", "b").getValue()).isEqualTo("-");
+    assertThat(graph.getFirstEdge("b", "a").getValue()).isEqualTo("-");
     assertNull(graph.getFirstEdge("a", "c"));
   }
 
@@ -225,8 +223,8 @@ public final class GraphTest extends TestCase {
     graph.createNode("b");
     graph.createNode("c");
     graph.connect("a", "-", "b");
-    assertThat("-").isEqualTo(graph.getFirstEdge("a", "b").getValue());
-    assertThat("-").isEqualTo(graph.getFirstEdge("b", "a").getValue());
+    assertThat(graph.getFirstEdge("a", "b").getValue()).isEqualTo("-");
+    assertThat(graph.getFirstEdge("b", "a").getValue()).isEqualTo("-");
     assertNull(graph.getFirstEdge("a", "c"));
   }
 

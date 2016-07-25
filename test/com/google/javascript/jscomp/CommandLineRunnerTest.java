@@ -37,9 +37,6 @@ import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.Node;
-
-import junit.framework.TestCase;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -54,6 +51,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link CommandLineRunner}.
@@ -1548,15 +1546,14 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--env=CUSTOM");
     args.add("--output_manifest=test.MF");
     CommandLineRunner runner = createCommandLineRunner(new String[0]);
-    String expectedMessage = "";
     try {
       runner.doRun();
+      fail("Expected flag usage exception");
     } catch (FlagUsageException e) {
-      expectedMessage = e.getMessage();
+      assertThat(e.getMessage())
+          .isEqualTo(
+              "Bad --js flag. Manifest files cannot be generated when the input is from stdin.");
     }
-    assertThat("Bad --js flag. "
-        + "Manifest files cannot be generated when the input is from stdin.")
-        .isEqualTo(expectedMessage);
   }
 
   public void testTransformAMD() {

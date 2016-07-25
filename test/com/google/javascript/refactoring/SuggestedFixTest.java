@@ -16,6 +16,7 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertChanges;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertReplacement;
 import static org.junit.Assert.assertEquals;
@@ -31,7 +32,6 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -643,7 +643,7 @@ public class SuggestedFixTest {
         .addGoogRequire(match, "abc.def")
         .build();
     SetMultimap<String, CodeReplacement> replacementMap = fix.getReplacements();
-    assertEquals(0, replacementMap.size());
+    assertThat(replacementMap).isEmpty();
   }
 
   private void assertAddGoogRequire(String before, String after, String namespace) {
@@ -715,7 +715,7 @@ public class SuggestedFixTest {
         .removeGoogRequire(match, "fakefake")
         .build();
     SetMultimap<String, CodeReplacement> replacementMap = fix.getReplacements();
-    assertEquals(0, replacementMap.size());
+    assertThat(replacementMap).isEmpty();
   }
 
   @Test

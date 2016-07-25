@@ -19,11 +19,8 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
 import java.util.List;
-
+import junit.framework.TestCase;
 /**
  * Tests for {@link Es6SortedDependencies}
  * @author nicksantos@google.com (Nick Santos)
@@ -219,7 +216,7 @@ public class Es6SortedDependenciesTest extends TestCase {
     SortedDependencies<SimpleDependencyInfo> sorted =
         createSortedDependencies(ImmutableList.of(a, b, c));
 
-    assertThat(sorted.getSortedList()).isEqualTo(ImmutableList.of(c, a, b));
+    assertThat(sorted.getSortedList()).containsExactly(c, a, b).inOrder();
   }
 
   private void assertSortedInputs(

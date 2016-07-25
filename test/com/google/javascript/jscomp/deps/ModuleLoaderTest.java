@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.SourceFile;
@@ -60,7 +62,7 @@ public final class ModuleLoaderTest extends TestCase {
       new ModuleLoader(null, ImmutableList.of("a", "b"), inputs("a/f.js", "b/f.js"));
       fail("Expected error");
     } catch (IllegalArgumentException e) {
-      assertTrue(e.getMessage().contains("Duplicate module URI"));
+      assertThat(e.getMessage()).contains("Duplicate module URI");
     }
   }
 

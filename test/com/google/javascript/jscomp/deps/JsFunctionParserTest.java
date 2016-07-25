@@ -22,11 +22,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
 import com.google.javascript.jscomp.deps.JsFunctionParser.SymbolInfo;
-
-import junit.framework.TestCase;
-
 import java.util.Collection;
 import java.util.Iterator;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link JsFunctionParser}
@@ -69,22 +67,22 @@ public final class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertThat("yes1").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes1");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
 
     symbolInfo = i.next();
-    assertThat("yes2").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes2");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
 
     symbolInfo = i.next();
-    assertThat("yes3").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.require").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes3");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.require");
 
     symbolInfo = i.next();
-    assertThat("bar.data.SuperstarAddStarThreadActionRequestDelegate").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.require").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("bar.data.SuperstarAddStarThreadActionRequestDelegate");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.require");
 
-    assertThat(4).isEqualTo(symbols.size());
+    assertThat(symbols).hasSize(4);
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
@@ -97,18 +95,18 @@ public final class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertThat("yes1").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes1");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
 
     symbolInfo = i.next();
-    assertThat("yes2").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes2");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
 
     symbolInfo = i.next();
-    assertThat("yes3").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes3");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
 
-    assertThat(3).isEqualTo(symbols.size());
+    assertThat(symbols).hasSize(3);
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
@@ -125,14 +123,14 @@ public final class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertThat("yes1").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes1");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
 
     symbolInfo = i.next();
-    assertThat("yes2").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes2");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
 
-    assertThat(2).isEqualTo(symbols.size());
+    assertThat(symbols).hasSize(2);
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
@@ -146,10 +144,10 @@ public final class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertThat("yes1").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes1");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
 
-    assertThat(1).isEqualTo(symbols.size());
+    assertThat(symbols).hasSize(1);
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
@@ -163,8 +161,8 @@ public final class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertThat("yes1").isEqualTo(symbolInfo.symbol);
-    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(symbolInfo.symbol).isEqualTo("yes1");
+    assertThat(symbolInfo.functionName).isEqualTo("goog.provide");
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
