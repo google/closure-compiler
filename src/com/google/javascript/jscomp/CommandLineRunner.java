@@ -495,9 +495,9 @@ public class CommandLineRunner extends
       hidden = true,
       usage =
           "Rewrite J2CL output to be compiler-friendly if enabled (ON or AUTO). "
-              + "Options:OFF(default), ON, AUTO"
+              + "Options:OFF, ON, AUTO(default)"
     )
-    private String j2clPassMode = "OFF";
+    private String j2clPassMode = "AUTO";
 
     @Option(
       name = "--output_manifest",
