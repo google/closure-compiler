@@ -257,7 +257,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       return;
     }
 
-    if ((node.isAssign() || node.isName())
+    if (msgNode.isGetProp()
         && msgNode.isQualifiedName()
         && msgNode.getLastChild().getString().equals(messageKey)) {
       // foo.Thing.MSG_EXAMPLE = bar.OtherThing.MSG_EXAMPLE;
