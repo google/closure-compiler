@@ -744,9 +744,6 @@ public final class ExternExportsPassTest extends TestCase {
     options.externExportsPath = "externs.js";
     options.declaredGlobalExternsOnWindow = false;
 
-    // Turn off IDE mode.
-    options.setIdeMode(false);
-
     /* Check types so we can make sure our exported externs have
      * type information.
      */
