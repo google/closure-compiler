@@ -50,7 +50,11 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
     // These are the options that are always on in JsDev which is the only
     // use-case for replaceScript currently.
     options.setInferTypes(true);
-    options.setIdeMode(true);
+    options.setAllowHotswapReplaceScript(true);
+    options.setPreserveDetailedSourceInfo(true);
+    options.setChecksOnly(true);
+    options.setContinueAfterErrors(true);
+
     for (DiagnosticGroup group : typesOfGuard) {
       options.setWarningLevel(group, CheckLevel.ERROR);
     }
