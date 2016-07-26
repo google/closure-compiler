@@ -50,7 +50,8 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
           GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
           GlobalTypeInfo.MISPLACED_CONST_ANNOTATION,
           NewTypeInference.CONST_REASSIGNED,
-          NewTypeInference.CONST_PROPERTY_REASSIGNED);
+          NewTypeInference.CONST_PROPERTY_REASSIGNED,
+          NewTypeInference.CONST_PROPERTY_DELETED);
 
   public CheckAccessControlsTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
@@ -1726,7 +1727,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testConstantProperty14() {
-    // TODO(aravindpg): warn against this natively in NTI (b/30290313)
     testError(
         "/** @constructor */ function Foo() {"
         + "/** @const */ this.bar = 3; delete this.bar; }",

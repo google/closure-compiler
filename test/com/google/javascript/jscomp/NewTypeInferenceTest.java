@@ -17331,4 +17331,27 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "foo.CONST = 0;"),
         NewTypeInference.CONST_PROPERTY_REASSIGNED);
   }
+
+  public void testConstantPropertyDeletion() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @const */",
+        "  this.bar = 3;",
+        "  delete this.bar;",
+        "}"),
+        NewTypeInference.CONST_PROPERTY_DELETED);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @const */",
+        "  this.bar = 3;",
+        "}",
+        "function f(/** ?Foo */ x) {",
+        "  delete x.bar;",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE,
+        NewTypeInference.CONST_PROPERTY_DELETED);
+  }
 }

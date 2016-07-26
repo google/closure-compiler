@@ -160,6 +160,11 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_CONST_PROPERTY_REASSIGNED",
           "Cannot change the value of a constant property.");
 
+  static final DiagnosticType CONST_PROPERTY_DELETED =
+      DiagnosticType.warning(
+        "JSC_NTI_CONSTANT_PROPERTY_DELETED",
+        "Constant property {0} cannot be deleted");
+
   static final DiagnosticType NOT_A_CONSTRUCTOR =
       DiagnosticType.warning(
           "JSC_NTI_NOT_A_CONSTRUCTOR",
@@ -283,6 +288,7 @@ final class NewTypeInference implements CompilerPass {
       BOTTOM_INDEX_TYPE,
       BOTTOM_PROP,
       CANNOT_BIND_CTOR,
+      CONST_PROPERTY_DELETED,
       CONST_PROPERTY_REASSIGNED,
       CONST_REASSIGNED,
       CONSTRUCTOR_NOT_CALLABLE,
@@ -1392,7 +1398,7 @@ final class NewTypeInference implements CompilerPass {
         break;
       case DELPROP: {
         // IRFactory checks that the operand is a name, getprop or getelem.
-        // No further warnings here.
+        // analyzePropAccessFwd warns if we delete a constant property.
         resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv);
         resultPair.type = JSType.BOOLEAN;
         break;
@@ -2954,6 +2960,11 @@ final class NewTypeInference implements CompilerPass {
     }
     if (recvType.isTop()) {
       recvType = JSType.TOP_OBJECT;
+    }
+    if (propAccessNode.getParent().isDelProp()
+        && recvType.hasConstantProp(propQname)) {
+      warnings.add(JSError.make(
+          propAccessNode.getParent(), CONST_PROPERTY_DELETED, pname));
     }
     // Then, analyze the property access.
     QualifiedName getterPname = new QualifiedName(createGetterPropName(pname));
