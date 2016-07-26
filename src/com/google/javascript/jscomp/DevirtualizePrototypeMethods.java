@@ -68,14 +68,14 @@ class DevirtualizePrototypeMethods
 
   @Override
   public void process(Node externs, Node root) {
-    SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+    DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
     defFinder.process(externs, root);
     process(externs, root, defFinder);
   }
 
   @Override
   public void process(
-      Node externs, Node root, SimpleDefinitionFinder definitions) {
+      Node externs, Node root, DefinitionUseSiteFinder definitions) {
     for (DefinitionSite defSite : definitions.getDefinitionSites()) {
       rewriteDefinitionIfEligible(defSite, definitions);
     }
@@ -171,14 +171,14 @@ class DevirtualizePrototypeMethods
    * defined in the global scope exactly once.
    *
    * Definition and use site information is provided by the
-   * {@link SimpleDefinitionFinder} passed in as an argument.
+   * {@link DefinitionUseSiteFinder} passed in as an argument.
    *
    * @param defSite definition site to process.
    * @param defFinder structure that hold Node -> Definition and
    * Definition -> [UseSite] maps.
    */
   private void rewriteDefinitionIfEligible(DefinitionSite defSite,
-                                           SimpleDefinitionFinder defFinder) {
+                                           DefinitionUseSiteFinder defFinder) {
     if (defSite.inExterns ||
         !defSite.inGlobalScope ||
         !isEligibleDefinition(defFinder, defSite)) {
@@ -220,7 +220,7 @@ class DevirtualizePrototypeMethods
    *   choice at each call site.
    * - Definition must happen in a module loaded before the first use.
    */
-  private boolean isEligibleDefinition(SimpleDefinitionFinder defFinder,
+  private boolean isEligibleDefinition(DefinitionUseSiteFinder defFinder,
                                        DefinitionSite definitionSite) {
 
     Definition definition = definitionSite.definition;
@@ -305,7 +305,7 @@ class DevirtualizePrototypeMethods
    * After:
    *   foo(o, a, b, c)
    */
-  private void rewriteCallSites(SimpleDefinitionFinder defFinder,
+  private void rewriteCallSites(DefinitionUseSiteFinder defFinder,
                                 Definition definition,
                                 String newMethodName) {
     Collection<UseSite> useSites = defFinder.getUseSites(definition);

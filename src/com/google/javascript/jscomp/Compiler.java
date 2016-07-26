@@ -210,7 +210,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
   public PerformanceTracker tracker;
 
   // Used by optimize-returns, optimize-parameters and remove-unused-variables
-  private SimpleDefinitionFinder defFinder = null;
+  private DefinitionUseSiteFinder defFinder = null;
 
   // For use by the new type inference
   private GlobalTypeInfo symbolTable;
@@ -1346,12 +1346,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
   }
 
   @Override
-  SimpleDefinitionFinder getSimpleDefinitionFinder() {
+  DefinitionUseSiteFinder getSimpleDefinitionFinder() {
     return this.defFinder;
   }
 
   @Override
-  void setSimpleDefinitionFinder(SimpleDefinitionFinder defFinder) {
+  void setSimpleDefinitionFinder(DefinitionUseSiteFinder defFinder) {
     this.defFinder = defFinder;
   }
 

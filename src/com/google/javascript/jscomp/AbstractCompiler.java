@@ -186,9 +186,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * optimize-parameters, remove-unused-variables), to avoid having them
    * recompute it independently.
    */
-  abstract SimpleDefinitionFinder getSimpleDefinitionFinder();
+  abstract DefinitionUseSiteFinder getSimpleDefinitionFinder();
 
-  abstract void setSimpleDefinitionFinder(SimpleDefinitionFinder defFinder);
+  abstract void setSimpleDefinitionFinder(DefinitionUseSiteFinder defFinder);
 
   /**
    * Parses code for injecting.

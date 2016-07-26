@@ -35,26 +35,26 @@ public final class OptimizeCallsTest extends CompilerTestCase {
 
       @Override
       public void process(Node externs, Node root) {
-        new PureFunctionIdentifier(compiler,
-          new SimpleDefinitionFinder(compiler)).process(externs, root);
+        DefinitionUseSiteFinder definitionFinder = new DefinitionUseSiteFinder(compiler);
+        definitionFinder.process(externs, root);
+        new PureFunctionIdentifier(compiler, definitionFinder).process(externs, root);
         passes.process(externs, root);
       }
     };
   }
 
   public void testRemovingReturnCallToFunctionWithUnusedParams() {
-    test("function foo() {var x; return x = bar(1)} foo(); function bar(x) {}",
-         "function foo() {          bar(); return;} foo(); function bar()  {}");
+    test(
+        "function foo() {var x; return x = bar(1)} foo(); function bar(x) {}",
+        "function foo(){return}foo()");
   }
 
   public void testNestingFunctionCallWithUnsedParams() {
-    test("function f1(x) { } function f2(x) { }" +
-         "function f3(x) { } function f4(x) { }" +
-         "f3(f1(f2()));",
-         "function f1() {f2()} function f2() { }" +
-         "function f3() {f1()} " +
-         "f3();"
-    );
+    test(
+        "function f1(x) { } function f2(x) { }"
+            + "function f3(x) { } function f4(x) { }"
+            + "f3(f1(f2()));",
+        "function f3(){}f3()");
   }
 
   public void testUnusedAssignOnFunctionWithUnusedParams() {

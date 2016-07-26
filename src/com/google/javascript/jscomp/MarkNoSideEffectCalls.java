@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -50,7 +49,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+    NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler);
     defFinder.process(externs, root);
 
     // Gather the list of function nodes that have @nosideeffects annotations.
@@ -158,9 +157,9 @@ class MarkNoSideEffectCalls implements CompilerPass {
    * refer to function names that are known to have no side effects.
    */
   private class SetNoSideEffectCallProperty extends AbstractPostOrderCallback {
-    private final SimpleDefinitionFinder defFinder;
+    private final NameBasedDefinitionProvider defFinder;
 
-    SetNoSideEffectCallProperty(SimpleDefinitionFinder defFinder) {
+    SetNoSideEffectCallProperty(NameBasedDefinitionProvider defFinder) {
       this.defFinder = defFinder;
     }
 

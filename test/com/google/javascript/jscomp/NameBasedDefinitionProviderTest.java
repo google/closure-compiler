@@ -28,10 +28,10 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Tests for {@link SimpleDefinitionFinder}
+ * Tests for {@link DefinitionUseSiteFinder}
  *
  */
-public final class SimpleDefinitionFinderTest extends CompilerTestCase {
+public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
   Set<String> found = new TreeSet<>();
 
   @Override
@@ -366,19 +366,19 @@ public final class SimpleDefinitionFinderTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SimpleDefinitionEnumerator(compiler);
+    return new DefinitionEnumerator(compiler);
   }
 
   /**
-   * Run SimpleDefinitionFinder, then gather a list of definitions.
+   * Run DefinitionUseSiteFinder, then gather a list of definitions.
    */
-  private class SimpleDefinitionEnumerator
+  private class DefinitionEnumerator
       extends AbstractPostOrderCallback implements CompilerPass {
-    private final SimpleDefinitionFinder passUnderTest;
+    private final NameBasedDefinitionProvider passUnderTest;
     private final Compiler compiler;
 
-    SimpleDefinitionEnumerator(Compiler compiler) {
-      this.passUnderTest = new SimpleDefinitionFinder(compiler);
+    DefinitionEnumerator(Compiler compiler) {
+      this.passUnderTest = new NameBasedDefinitionProvider(compiler);
       this.compiler = compiler;
     }
 

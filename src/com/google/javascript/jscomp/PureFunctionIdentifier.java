@@ -35,7 +35,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -232,7 +231,7 @@ class PureFunctionIdentifier implements CompilerPass {
       }
     } else if (NodeUtil.isFunctionExpression(name)) {
       // The anonymous function reference is also the definition.
-      // TODO(user) Change SimpleDefinitionFinder so it is possible to query for
+      // TODO(user) Change DefinitionUseSiteFinder so it is possible to query for
       // function expressions by function node.
 
       // isExtern is false in the call to the constructor for the
@@ -1221,7 +1220,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+      NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler);
       defFinder.process(externs, root);
 
       PureFunctionIdentifier pureFunctionIdentifier =

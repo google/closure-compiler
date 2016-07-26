@@ -39,8 +39,8 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        SimpleDefinitionFinder definitionFinder =
-            new SimpleDefinitionFinder(compiler);
+        DefinitionUseSiteFinder definitionFinder =
+            new DefinitionUseSiteFinder(compiler);
         definitionFinder.process(externs, root);
         new PureFunctionIdentifier(compiler, definitionFinder)
             .process(externs, root);

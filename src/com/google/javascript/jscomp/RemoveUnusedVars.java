@@ -144,7 +144,7 @@ class RemoveUnusedVars
   @Override
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
-    SimpleDefinitionFinder defFinder = compiler.getSimpleDefinitionFinder();
+    DefinitionUseSiteFinder defFinder = compiler.getSimpleDefinitionFinder();
     if (this.modifyCallSites) {
       // When RemoveUnusedVars is run after OptimizeCalls, this.modifyCallSites
       // is true. But if OptimizeCalls stops making changes, PhaseOptimizer
@@ -171,7 +171,7 @@ class RemoveUnusedVars
 
   @Override
   public void process(
-      Node externs, Node root, SimpleDefinitionFinder defFinder) {
+      Node externs, Node root, DefinitionUseSiteFinder defFinder) {
     if (modifyCallSites) {
       Preconditions.checkNotNull(defFinder);
       callSiteOptimizer = new CallSiteOptimizer(compiler, defFinder);
@@ -433,13 +433,13 @@ class RemoveUnusedVars
 
   private static class CallSiteOptimizer {
     private final AbstractCompiler compiler;
-    private final SimpleDefinitionFinder defFinder;
+    private final DefinitionUseSiteFinder defFinder;
     private final List<Node> toRemove = new ArrayList<>();
     private final List<Node> toReplaceWithZero = new ArrayList<>();
 
     CallSiteOptimizer(
         AbstractCompiler compiler,
-        SimpleDefinitionFinder defFinder) {
+        DefinitionUseSiteFinder defFinder) {
       this.compiler = compiler;
       this.defFinder = defFinder;
     }
@@ -630,7 +630,7 @@ class RemoveUnusedVars
 
       // Be conservative, don't try to optimize any declaration that isn't as
       // simple function declaration or assignment.
-      if (!SimpleDefinitionFinder.isSimpleFunctionDeclaration(function)) {
+      if (!NodeUtil.isSimpleFunctionDeclaration(function)) {
         return false;
       }
 
@@ -642,7 +642,7 @@ class RemoveUnusedVars
      * @return Whether the call site is suitable for modification
      */
     private static boolean isModifiableCallSite(UseSite site) {
-      return SimpleDefinitionFinder.isCallOrNewSite(site)
+      return DefinitionUseSiteFinder.isCallOrNewSite(site)
           && !NodeUtil.isFunctionObjectApply(site.node.getParent());
     }
 
@@ -675,7 +675,7 @@ class RemoveUnusedVars
         }
 
         // Accessing the property directly prevents rewrite.
-        if (!SimpleDefinitionFinder.isCallOrNewSite(site)) {
+        if (!DefinitionUseSiteFinder.isCallOrNewSite(site)) {
           if (!(parent.isGetProp() &&
               NodeUtil.isFunctionObjectCall(parent.getParent()))) {
             return false;

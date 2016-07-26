@@ -63,7 +63,7 @@ final class ObjectPropertyStringPreprocess implements CompilerPass {
   public void process(Node externs, Node root) {
     addExternDeclaration(externs,
         IR.var(
-            IR.name(SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING)));
+            IR.name(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)));
     NodeTraversal.traverseEs6(compiler, root, new Callback());
   }
 
@@ -80,7 +80,7 @@ final class ObjectPropertyStringPreprocess implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.matchesQualifiedName(OBJECT_PROPERTY_STRING)) {
-        Node newName = IR.name(SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING);
+        Node newName = IR.name(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING);
         newName.useSourceInfoIfMissingFrom(n);
         parent.replaceChild(n, newName);
         compiler.reportCodeChange();
@@ -96,7 +96,7 @@ final class ObjectPropertyStringPreprocess implements CompilerPass {
 
       Node objectName = n.getFirstChild();
 
-      if (!objectName.matchesQualifiedName(SimpleDefinitionFinder.EXTERN_OBJECT_PROPERTY_STRING)) {
+      if (!objectName.matchesQualifiedName(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)) {
         return;
       }
 

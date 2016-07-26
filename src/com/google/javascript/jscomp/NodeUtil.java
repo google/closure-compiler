@@ -54,6 +54,9 @@ import javax.annotation.Nullable;
  * @author johnlenz@google.com (John Lenz)
  */
 public final class NodeUtil {
+
+  public static final String EXTERN_OBJECT_PROPERTY_STRING =
+      "JSCompiler_ObjectPropertyString";
   static final long MAX_POSITIVE_INTEGER_NUMBER = 1L << 53;
 
   static final String JSC_PROPERTY_NAME_FN = "JSCompiler_renameProperty";
@@ -1635,6 +1638,43 @@ public final class NodeUtil {
       default:
         return p.apply(n);
     }
+  }
+
+  /**
+   * @return Whether the function is defined in a non-aliasing expression.
+   */
+  static boolean isSimpleFunctionDeclaration(Node fn) {
+    Node parent = fn.getParent();
+    Node grandparent = parent.getParent();
+
+    // Simple definition finder doesn't provide useful results in some
+    // cases, specifically:
+    //  - functions with recursive definitions
+    //  - functions defined in object literals
+    //  - functions defined in array literals
+    // Here we defined a set of known function declaration that are 'ok'.
+
+    // Some projects seem to actually define "JSCompiler_renameProperty"
+    // rather than simply having an extern definition.  Don't mess with it.
+    Node nameNode = getNameNode(fn);
+    if (nameNode != null
+        && nameNode.isName()) {
+      String name = nameNode.getString();
+      if (name.equals(JSC_PROPERTY_NAME_FN)
+          || name.equals(EXTERN_OBJECT_PROPERTY_STRING)) {
+        return false;
+      }
+    }
+
+    // example: function a(){};
+    if (isFunctionDeclaration(fn)) {
+      return true;
+    }
+
+    // example: a = function(){};
+    // example: var a = function(){};
+    return fn.getFirstChild().getString().isEmpty()
+        && (isExprAssign(grandparent) || parent.isName());
   }
 
   enum ValueType {

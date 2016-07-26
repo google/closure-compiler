@@ -24,7 +24,6 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -1399,7 +1398,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     @Override
     public void process(Node externs, Node root) {
       compiler.setHasRegExpGlobalReferences(regExpHaveSideEffects);
-      SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+      NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler);
       defFinder.process(externs, root);
       PureFunctionIdentifier passUnderTest =
           new PureFunctionIdentifier(compiler, defFinder);

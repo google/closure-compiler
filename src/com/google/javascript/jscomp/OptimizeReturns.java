@@ -48,14 +48,14 @@ class OptimizeReturns
   @Override
   @VisibleForTesting
   public void process(Node externs, Node root) {
-    SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+    DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
     defFinder.process(externs, root);
     process(externs, root, defFinder);
   }
 
   @Override
   public void process(
-      Node externs, Node root, SimpleDefinitionFinder definitions) {
+      Node externs, Node root, DefinitionUseSiteFinder definitions) {
     // Find all function nodes whose callers ignore the return values.
     List<Node> toOptimize = new ArrayList<>();
     for (DefinitionSite defSite : definitions.getDefinitionSites()) {
@@ -75,7 +75,7 @@ class OptimizeReturns
    * - The definition is never accessed outside a function call context.
    */
   private static boolean callResultsMaybeUsed(
-      SimpleDefinitionFinder defFinder, DefinitionSite definitionSite) {
+      DefinitionUseSiteFinder defFinder, DefinitionSite definitionSite) {
 
     Definition definition = definitionSite.definition;
 
@@ -87,7 +87,7 @@ class OptimizeReturns
 
     // Be conservative, don't try to optimize any declaration that isn't as
     // simple function declaration or assignment.
-    if (!SimpleDefinitionFinder.isSimpleFunctionDeclaration(rValue)) {
+    if (!NodeUtil.isSimpleFunctionDeclaration(rValue)) {
       return true;
     }
 
@@ -126,7 +126,7 @@ class OptimizeReturns
    * Useless return will be removed later by the peephole optimization passes.
    */
   private void rewriteReturns(
-      final SimpleDefinitionFinder defFinder, Node fnNode) {
+      final DefinitionUseSiteFinder defFinder, Node fnNode) {
     Preconditions.checkState(fnNode.isFunction());
     NodeUtil.visitPostOrder(
       fnNode.getLastChild(),

@@ -138,12 +138,12 @@ public final class CallGraph implements CompilerPass {
   public void process(Node externsRoot, Node jsRoot) {
     Preconditions.checkState(!alreadyRun);
 
-    SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
-    defFinder.process(externsRoot, jsRoot);
+    DefinitionUseSiteFinder definitionProvider = new DefinitionUseSiteFinder(compiler);
+    definitionProvider.process(externsRoot, jsRoot);
 
-    createFunctionsAndCallsites(jsRoot, defFinder);
+    createFunctionsAndCallsites(jsRoot, definitionProvider);
 
-    fillInFunctionInformation(defFinder);
+    fillInFunctionInformation(definitionProvider);
 
     alreadyRun = true;
   }
@@ -338,7 +338,7 @@ public final class CallGraph implements CompilerPass {
    * <p>We do this here, rather than when connecting the callgraph, to make sure that we have
    * correct information for all functions, rather than just functions that are actually called.
    */
-  private void fillInFunctionInformation(SimpleDefinitionFinder finder) {
+  private void fillInFunctionInformation(DefinitionUseSiteFinder finder) {
     for (DefinitionSite definitionSite : finder.getDefinitionSites()) {
       Definition definition = definitionSite.definition;
 

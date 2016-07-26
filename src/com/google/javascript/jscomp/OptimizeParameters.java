@@ -55,14 +55,14 @@ class OptimizeParameters
   public void process(Node externs, Node root) {
     Preconditions.checkState(
         compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
-    SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+    DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
     defFinder.process(externs, root);
     process(externs, root, defFinder);
   }
 
   @Override
   public void process(
-      Node externs, Node root, SimpleDefinitionFinder definitions) {
+      Node externs, Node root, DefinitionUseSiteFinder definitions) {
     for (DefinitionSite defSite : definitions.getDefinitionSites()) {
       if (canChangeSignature(defSite, definitions)) {
         tryEliminateConstantArgs(defSite, definitions);
@@ -82,7 +82,7 @@ class OptimizeParameters
    *      signature can be modified.
    */
   private static boolean canChangeSignature(
-      DefinitionSite definitionSite, SimpleDefinitionFinder defFinder) {
+      DefinitionSite definitionSite, DefinitionUseSiteFinder defFinder) {
     Definition definition = definitionSite.definition;
 
     if (definitionSite.inExterns) {
@@ -112,7 +112,7 @@ class OptimizeParameters
     // maps of functions use in for-in expressions, etc).
     // Be conservative, don't try to optimize any declaration that isn't as
     // simple function declaration or assignment.
-    if (!SimpleDefinitionFinder.isSimpleFunctionDeclaration(rValue)) {
+    if (!NodeUtil.isSimpleFunctionDeclaration(rValue)) {
       return false;
     }
 
@@ -132,7 +132,7 @@ class OptimizeParameters
       // change the function signature, if all the aliases can't also be
       // changed.
       // TODO(johnlenz): Support .call signature changes.
-      if (!SimpleDefinitionFinder.isCallOrNewSite(site)) {
+      if (!DefinitionUseSiteFinder.isCallOrNewSite(site)) {
         return false;
       }
 
@@ -157,7 +157,7 @@ class OptimizeParameters
    * Removes any optional parameters if no callers specifies it as an argument.
    */
   private void tryEliminateOptionalArgs(
-      DefinitionSite defSite, SimpleDefinitionFinder defFinder) {
+      DefinitionSite defSite, DefinitionUseSiteFinder defFinder) {
     // Count the maximum number of arguments passed into this function all
     // all points of the program.
     int maxArgs = -1;
@@ -165,7 +165,7 @@ class OptimizeParameters
     Definition definition = defSite.definition;
     Collection<UseSite> useSites = defFinder.getUseSites(definition);
     for (UseSite site : useSites) {
-      Preconditions.checkState(SimpleDefinitionFinder.isCallOrNewSite(site));
+      Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       int numArgs = call.getChildCount() - 1;
@@ -189,7 +189,7 @@ class OptimizeParameters
    * foo(3);
    */
   private void tryEliminateConstantArgs(
-      DefinitionSite defSite, SimpleDefinitionFinder defFinder) {
+      DefinitionSite defSite, DefinitionUseSiteFinder defFinder) {
 
     List<Parameter> parameters = new ArrayList<>();
     boolean firstCall = true;
@@ -199,7 +199,7 @@ class OptimizeParameters
     Collection<UseSite> useSites = defFinder.getUseSites(definition);
     boolean continueLooking = false;
     for (UseSite site : useSites) {
-      Preconditions.checkState(SimpleDefinitionFinder.isCallOrNewSite(site));
+      Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       Node cur = call.getFirstChild();
@@ -223,7 +223,7 @@ class OptimizeParameters
 
     // Remove the constant parameters in all the calls
     for (UseSite site : useSites) {
-      Preconditions.checkState(SimpleDefinitionFinder.isCallOrNewSite(site));
+      Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       optimizeCallSite(defFinder, parameters, call);
@@ -400,7 +400,7 @@ class OptimizeParameters
   }
 
   private void optimizeCallSite(
-      SimpleDefinitionFinder defFinder, List<Parameter> parameters, Node call) {
+      DefinitionUseSiteFinder defFinder, List<Parameter> parameters, Node call) {
     boolean mayMutateArgs = call.mayMutateArguments();
     boolean mayMutateGlobalsOrThrow = call.mayMutateGlobalStateOrThrow();
     for (int index = parameters.size() - 1; index >= 0; index--) {
@@ -547,7 +547,7 @@ class OptimizeParameters
    * @return The Node of the argument removed.
    */
   private Node eliminateCallParamAt(
-      SimpleDefinitionFinder defFinder, Parameter p, Node call, int argIndex) {
+      DefinitionUseSiteFinder defFinder, Parameter p, Node call, int argIndex) {
     Preconditions.checkArgument(
         NodeUtil.isCallOrNew(call), "Node must be a call or new.");
 
