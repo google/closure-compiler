@@ -496,7 +496,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       if (name != null) {
         ProvidedName pn = providedNames.get(name);
         if (pn != null) {
+          n.putBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED, true);
           pn.addDefinition(n, t.getModule());
+        } else if (n.getBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED)) {
+          // We didn't find it in the providedNames, but it was previously marked as provided.
+          // This implies we're in hotswap pass and the current typedef is a provided namespace.
+          ProvidedName provided = new ProvidedName(name, n, t.getModule(), true);
+          providedNames.put(name, provided);
         }
       }
     }

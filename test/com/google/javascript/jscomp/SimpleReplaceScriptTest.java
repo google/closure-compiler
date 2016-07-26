@@ -319,7 +319,6 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     assertErrorType(result.errors[0], CheckProvides.MISSING_PROVIDE_WARNING, 1);
   }
 
-
   /** Test related to DefaultPassConfig.inferTypes */
   public void testNewTypeAdded() {
     CompilerOptions options = getOptions(DiagnosticGroups.CHECK_TYPES);
@@ -338,6 +337,25 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
     assertThat(result.warnings).isEmpty();
   }
+
+  public void testProvidedTypeDef() {
+    CompilerOptions options = getOptions();
+
+    String src1 = LINE_JOINER.join(
+        "goog.provide('foo.Cat');",
+        "goog.provide('foo.Bar');",
+        "/** @typedef {!Array<string>} */",
+        "foo.Bar;",
+        "foo.Cat={};");
+    String src2 = "goog.require('foo.Cat');\ngoog.require('foo.Bar');";
+
+    Compiler compiler =
+        runReplaceScript(options, ImmutableList.of(CLOSURE_BASE, src1, src2),
+            0, 0, src2, 2, false);
+
+    assertNoWarningsOrErrors(compiler.getResult());
+  }
+
 
   public void testDeclarationMoved() {
     CompilerOptions options = getOptions();
