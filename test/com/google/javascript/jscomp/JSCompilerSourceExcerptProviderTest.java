@@ -16,8 +16,9 @@
 package com.google.javascript.jscomp;
 
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 /**
@@ -108,9 +109,9 @@ public final class JSCompilerSourceExcerptProviderTest extends TestCase {
     if (lineNumber == 1) {
       assertEquals(1, region.getBeginningLineNumber());
     } else {
-      assertTrue(region.getBeginningLineNumber() <= lineNumber);
+      assertThat(region.getBeginningLineNumber()).isAtMost(lineNumber);
     }
-    assertTrue(lineNumber <= region.getEndingLineNumber());
+    assertThat(lineNumber).isAtMost(region.getEndingLineNumber());
     assertNotSame(sourceRegion, 0, sourceRegion.length());
     assertNotSame(sourceRegion, '\n', sourceRegion.charAt(0));
     assertNotSame(sourceRegion,

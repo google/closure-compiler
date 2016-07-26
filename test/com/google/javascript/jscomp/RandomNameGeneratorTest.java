@@ -20,12 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
-import junit.framework.TestCase;
-
 import java.util.Collections;
 import java.util.Random;
 import java.util.Set;
+import junit.framework.TestCase;
 
 public final class RandomNameGeneratorTest extends TestCase {
 
@@ -111,7 +109,7 @@ public final class RandomNameGeneratorTest extends TestCase {
         }
       }
     }
-    assertTrue(100.0 * countPass / countTest > 80.0);  // arbitrary threshold
+    assertThat(100.0 * countPass / countTest).isGreaterThan(80.0); // arbitrary threshold
 
     // Names are not sorted (some might be, by chance)
     countPass = 0;
@@ -121,7 +119,7 @@ public final class RandomNameGeneratorTest extends TestCase {
         countPass++;
       }
     }
-    assertTrue(100.0 * countPass / countTest > 25.0);  // arbitrary threshold
+    assertThat(100.0 * countPass / countTest).isGreaterThan(25.0); // arbitrary threshold
   }
 
   public static void testFirstCharAlphabet() throws Exception {
@@ -194,7 +192,7 @@ public final class RandomNameGeneratorTest extends TestCase {
         countPass++;
       }
     }
-    assertTrue(100.0 * countPass / countTest > 90.0);  // arbitrary threshold
+    assertThat(100.0 * countPass / countTest).isGreaterThan(90.0); // arbitrary threshold
   }
 
   public static void testReservedNames() throws Exception {

@@ -28,12 +28,10 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ShowByPathWarningsGuard.ShowType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Testcase for WarningsGuard and its implementations.
@@ -210,8 +208,7 @@ public final class WarningsGuardTest extends TestCase {
     List<WarningsGuard> guards = guard.getGuards();
     assertThat(guards).hasSize(6);
     for (int i = 1; i < 6; i++) {
-      assertTrue(
-          guards.get(i).getPriority() >= guards.get(i - 1).getPriority());
+      assertThat(guards.get(i).getPriority()).isAtLeast(guards.get(i - 1).getPriority());
     }
   }
 

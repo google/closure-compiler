@@ -22,11 +22,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
-
-import junit.framework.TestCase;
-
 import java.util.Arrays;
-
+import junit.framework.TestCase;
 /**
  * Tests for {@link LazyParsedDependencyInfo}.
  */
@@ -63,7 +60,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     // hard to upgrade due to parallel ant and maven builds.  Once this restriction
     // is lifted and we can depend on a newer Truth, these assertions should be
     // changed to assertThat(info.getLoadFlags()).containsExactly(...)
-    assertThat(info.getLoadFlags()).isEqualTo(ImmutableMap.of("foo", "bar"));
+    assertThat(info.getLoadFlags()).containsExactly("foo", "bar");
     assertFalse(info.isModule());
   }
 
@@ -75,7 +72,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
         new SimpleDependencyInfo("", "", EMPTY, EMPTY, ImmutableMap.of("module", "goog"));
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
-    assertThat(info.getLoadFlags()).isEqualTo(ImmutableMap.of("module", "goog", "lang", "es5"));
+    assertThat(info.getLoadFlags()).containsExactly("module", "goog", "lang", "es5");
     assertTrue(info.isModule());
   }
 
@@ -87,7 +84,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
         new SimpleDependencyInfo("", "", EMPTY, EMPTY, ImmutableMap.of("foo", "bar"));
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
-    assertThat(info.getLoadFlags()).isEqualTo(ImmutableMap.of("foo", "bar", "lang", "es6-impl"));
+    assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6-impl");
     assertFalse(info.isModule());
   }
 
@@ -99,7 +96,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
         new SimpleDependencyInfo("", "", EMPTY, EMPTY, ImmutableMap.of("foo", "bar"));
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
-    assertThat(info.getLoadFlags()).isEqualTo(ImmutableMap.of("foo", "bar", "lang", "es6"));
+    assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6");
     assertFalse(info.isModule());
   }
 
@@ -130,7 +127,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(Arrays.asList(compiler.getErrorManager().getWarnings())).isEmpty();
-    assertThat(info.getLoadFlags()).isEqualTo(ImmutableMap.of("module", "es6", "lang", "es6"));
+    assertThat(info.getLoadFlags()).containsExactly("module", "es6", "lang", "es6");
     assertThat(Arrays.asList(compiler.getErrorManager().getWarnings()))
         .containsExactly(JSError.make(LazyParsedDependencyInfo.MODULE_CONFLICT, "my/js.js"));
   }

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnalysis;
@@ -25,15 +27,13 @@ import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * A test suite with a very small programming language that has two types of
@@ -684,7 +684,7 @@ public final class DataFlowAnalysisTest extends TestCase {
       List<DiGraphEdge<Instruction, Branch>> outEdges =
         getCfg().getOutEdges(node);
       if (node.isArithmetic()) {
-        assertTrue(outEdges.size() < 2);
+        assertThat(outEdges.size()).isLessThan(2);
         ConstPropLatticeElement aResult = flowThroughArithmeticInstruction(
             (ArithmeticInstruction) node, input);
         result.addAll(Collections.nCopies(outEdges.size(), aResult));

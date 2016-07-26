@@ -20,11 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.IdMappingUtil.NEW_LINE;
 
 import com.google.common.collect.BiMap;
-
-import junit.framework.TestCase;
-
 import java.util.Map;
-
+import junit.framework.TestCase;
 /**
  * Tests for {@link IdMappingUtil}.
  */
@@ -52,6 +49,6 @@ public final class IdMappingUtilTest extends TestCase {
     assertThat(result.get("gen1")).containsEntry("id2", "data2:data22");
 
     assertThat(result).containsKey("gen2");
-    assertThat(result.get("gen2")).hasSize(0);
+    assertThat(result.get("gen2")).isEmpty();
   }
 }

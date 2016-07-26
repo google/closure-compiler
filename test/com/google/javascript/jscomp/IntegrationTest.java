@@ -694,7 +694,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     test(
         options, "/** @type {number} */ var n = window.name;", TypeValidator.TYPE_MISMATCH_WARNING);
-    assertTrue(lastCompiler.getErrorManager().getTypedPercent() > 0.0);
+    assertThat(lastCompiler.getErrorManager().getTypedPercent()).isGreaterThan(0.0);
   }
 
   public void testTypeNameParser() {

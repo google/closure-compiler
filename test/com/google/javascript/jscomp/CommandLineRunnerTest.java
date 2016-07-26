@@ -1550,8 +1550,8 @@ public final class CommandLineRunnerTest extends TestCase {
       runner.doRun();
       fail("Expected flag usage exception");
     } catch (FlagUsageException e) {
-      assertThat(e.getMessage())
-          .isEqualTo(
+      assertThat(e)
+          .hasMessage(
               "Bad --js flag. Manifest files cannot be generated when the input is from stdin.");
     }
   }

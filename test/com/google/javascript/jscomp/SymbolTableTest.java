@@ -28,13 +28,11 @@ import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * @author nicksantos@google.com (Nick Santos)
@@ -573,7 +571,7 @@ public final class SymbolTableTest extends TestCase {
     // so it's not meaningful to check the number of references.
     // We really want to make sure that all the references are in the externs,
     // except the last one.
-    assertTrue(refs.size() > 1);
+    assertThat(refs.size()).isGreaterThan(1);
 
     int last = refs.size() - 1;
     for (int i = 0; i < refs.size(); i++) {
@@ -1073,8 +1071,8 @@ public final class SymbolTableTest extends TestCase {
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertEquals(0, ordering.compare(first, first));
     assertEquals(0, ordering.compare(second, second));
-    assertTrue(ordering.compare(first, second) < 0);
-    assertTrue(ordering.compare(second, first) > 0);
+    assertThat(ordering.compare(first, second)).isLessThan(0);
+    assertThat(ordering.compare(second, first)).isGreaterThan(0);
   }
 
   private Symbol getGlobalVar(SymbolTable table, String name) {
