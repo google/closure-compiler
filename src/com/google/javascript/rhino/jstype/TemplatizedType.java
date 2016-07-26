@@ -77,9 +77,20 @@ public final class TemplatizedType extends ProxyObjectType {
     replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
   }
 
-  // NOTE(dimvar): The method getCtorImplementedInterfaces is inherited
-  // from ProxyObjectType, and is currently wrong. It should be instantiating
-  // the inherited interfaces, like we do in getCtorExtendedInterfaces.
+  // NOTE(dimvar): If getCtorImplementedInterfaces is implemented here, this is the
+  // correct implementation. The one inherited from ProxyObjectType is not correct
+  // because it doesn't instantiate the generic types. However, our unit tests don't
+  // actually ever call this method, so it could alternatively just throw
+  // an UnsupportedOperationException.
+  @Override
+  public Iterable<ObjectType> getCtorImplementedInterfaces() {
+    LinkedHashSet<ObjectType> resolvedImplementedInterfaces = new LinkedHashSet<>();
+    for (ObjectType obj : getReferencedObjTypeInternal().getCtorImplementedInterfaces()) {
+      resolvedImplementedInterfaces.add(obj.visit(replacer).toObjectType());
+    }
+    return resolvedImplementedInterfaces;
+  }
+
   @Override
   public Iterable<ObjectType> getCtorExtendedInterfaces() {
     LinkedHashSet<ObjectType> resolvedExtendedInterfaces = new LinkedHashSet<>();

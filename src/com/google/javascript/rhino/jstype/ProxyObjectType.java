@@ -259,8 +259,12 @@ public class ProxyObjectType extends ObjectType {
         referencedObjType.getCtorImplementedInterfaces();
   }
 
-  // NOTE(dimvar): There should be a method getCtorExtendedInterfaces here,
-  // analogous to getCtorImplementedInterfaces.
+  @Override
+  public Iterable<ObjectType> getCtorExtendedInterfaces() {
+    return this.referencedObjType == null
+        ? Collections.<ObjectType>emptyList()
+        : this.referencedObjType.getCtorExtendedInterfaces();
+  }
 
   @Override
   public int hashCode() {

@@ -10146,17 +10146,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInterfaceExtendsLoop2() {
-    testClosureTypesMultipleWarnings(
+    testClosureTypes(
         suppressMissingProperty("foo") +
-            "/** @record \n * @extends {F} */var G = function() {};" +
-            "/** @record \n * @extends {G} */var F = function() {};" +
-            "/** @constructor \n * @implements {F} */var H = function() {};" +
+        "/** @record \n * @extends {F} */var G = function() {};" +
+        "/** @record \n * @extends {G} */var F = function() {};" +
+        "/** @constructor \n * @implements {F} */var H = function() {};" +
         "alert((new H).foo);",
-        ImmutableList.of(
-            "extends loop involving F, "
-            + "loop: F -> G -> F",
-            "extends loop involving G, "
-            + "loop: G -> F -> G"));
+        "Parse error. Cycle detected in inheritance chain of type F");
   }
 
   public void testInheritPropFromMultipleInterfaces1() {
