@@ -21,6 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -90,7 +91,10 @@ public final class RefactoringDriver {
     deps.setDependencySorting(true);
     options.setDependencyOptions(deps);
 
-    options.setIdeMode(true);
+    options.setChecksOnly(true);
+    options.setContinueAfterErrors(true);
+    options.setPreserveDetailedSourceInfo(true);
+    options.setParseJsDocDocumentation(Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
     options.setCheckSuspiciousCode(true);
     options.setCheckSymbols(true);
     options.setCheckTypes(true);
