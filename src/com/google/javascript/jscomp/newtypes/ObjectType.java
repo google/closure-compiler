@@ -815,7 +815,8 @@ final class ObjectType implements TypeWithProperties {
     }
 
     if (other.fn == null) {
-      return this.fn == null || other.isLoose();
+      return this.fn == null
+          || other.getNominalType().isBuiltinObject() || other.isLoose();
     } else if (this.fn == null) {
       return isLoose;
     }

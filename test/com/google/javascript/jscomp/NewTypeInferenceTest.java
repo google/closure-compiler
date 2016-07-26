@@ -17254,6 +17254,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @template T",
         " */",
         "function forEach(arr, cb) {}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {!Function} x */",
+        "function g(x) {",
+        "  if (!x.foobar) {",
+        "    return;",
+        "  }",
+        "  for (var prop in x.foobar) {}",
+        "}"));
   }
 
   public void testIObjectExternMissing() {
