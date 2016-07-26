@@ -2290,6 +2290,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("`start\\u{1f42a}end`", "`start\\ud83d\\udc2aend`");
     assertPrintSame("`\\u2026`");
     assertPrintSame("`start\\u2026end`");
+    assertPrintSame("`\"`");
+    assertPrintSame("`'`");
+    assertPrintSame("`\\``");
   }
 
   public void testEs6GoogModule() {

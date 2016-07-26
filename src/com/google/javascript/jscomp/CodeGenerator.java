@@ -786,7 +786,7 @@ public class CodeGenerator {
         // then the call must not a FREE_CALL annotation. If it does, then
         // that means it was originally an call without an explicit this and
         // that must be preserved.
-        if (isIndirectEval(first) || n.getBooleanProp(Node.FREE_CALL) && NodeUtil.isGet(first)) {
+        if (isIndirectEval(first) || (n.getBooleanProp(Node.FREE_CALL) && NodeUtil.isGet(first))) {
           add("(0,");
           addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
           add(")");
@@ -1084,7 +1084,7 @@ public class CodeGenerator {
         add("`");
         for (Node c = first; c != null; c = c.getNext()) {
           if (c.isString()) {
-            add(strEscape(c.getString(), "'", "\"", "\\", false, false));
+            add(strEscape(c.getString(), "\"", "'", "\\`", "\\", false, false));
           } else {
             // Can't use add() since isWordChar('$') == true and cc would add
             // an extra space.
@@ -1698,12 +1698,12 @@ public class CodeGenerator {
       singlequote = "\'";
     }
 
-    return quote + strEscape(s, doublequote, singlequote, "\\\\", useSlashV, false) + quote;
+    return quote + strEscape(s, doublequote, singlequote, "`", "\\\\", useSlashV, false) + quote;
   }
 
   /** Escapes regular expression */
   String regexpEscape(String s) {
-    return '/' + strEscape(s, "\"", "'", "\\", false, true) + '/';
+    return '/' + strEscape(s, "\"", "'", "`", "\\", false, true) + '/';
   }
 
   /** Helper to escape JavaScript string as well as regular expression */
@@ -1711,6 +1711,7 @@ public class CodeGenerator {
       String s,
       String doublequoteEscape,
       String singlequoteEscape,
+      String backtickEscape,
       String backslashEscape,
       boolean useSlashV,
       boolean isRegexp) {
@@ -1735,6 +1736,7 @@ public class CodeGenerator {
         case '\\': sb.append(backslashEscape); break;
         case '\"': sb.append(doublequoteEscape); break;
         case '\'': sb.append(singlequoteEscape); break;
+        case '`': sb.append(backtickEscape); break;
 
         // From LineTerminators (ES5 Section 7.3, Table 3)
         case '\u2028': sb.append("\\u2028"); break;
@@ -1801,8 +1803,8 @@ public class CodeGenerator {
           }
           break;
         default:
-          if (outputCharsetEncoder != null && outputCharsetEncoder.canEncode(c)
-              || c > 0x1f && c < 0x7f) {
+          if ((outputCharsetEncoder != null && outputCharsetEncoder.canEncode(c))
+              || (c > 0x1f && c < 0x7f)) {
             // If we're given an outputCharsetEncoder, then check if the character can be
             // represented in this character set. If no charsetEncoder provided - pass straight
             // Latin characters through, and escape the rest. Doing the explicit character check is
