@@ -2089,7 +2089,7 @@ class IRFactory {
       for (ParseTree expr : tree.expressions) {
         int count = root.getChildCount();
         if (count < 2) {
-          root.addChildrenToBack(transform(expr));
+          root.addChildToBack(transform(expr));
         } else {
           end = expr.location.end;
           root = newNode(Token.COMMA, root, transform(expr));
@@ -2150,7 +2150,7 @@ class IRFactory {
       Node body = newNode(Token.ENUM_MEMBERS);
       setSourceInfo(body, tree);
       for (ParseTree child : tree.members) {
-        body.addChildrenToBack(transform(child));
+        body.addChildToBack(transform(child));
       }
 
       return newNode(Token.ENUM, name, body);
@@ -2357,7 +2357,7 @@ class IRFactory {
     Node processTypeAlias(TypeAliasTree tree) {
       maybeWarnTypeSyntax(tree, Feature.TYPE_ALIAS);
       Node typeAlias = newStringNode(Token.TYPE_ALIAS, tree.alias.value);
-      typeAlias.addChildrenToFront(transform(tree.original));
+      typeAlias.addChildToFront(transform(tree.original));
       return typeAlias;
     }
 
