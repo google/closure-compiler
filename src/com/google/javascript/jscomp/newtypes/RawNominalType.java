@@ -559,6 +559,18 @@ public final class RawNominalType extends Namespace {
         }
       }
     }
+    // Remove random property definitions if a supertype defines these properties
+    for (String pname : this.randomProps.keySet()) {
+      if (this.superclass != null && this.superclass.mayHaveProp(pname)) {
+        this.randomProps = this.randomProps.without(pname);
+        continue;
+      }
+      for (NominalType interf : this.interfaces) {
+        if (interf.mayHaveProp(pname)) {
+          this.randomProps = this.randomProps.without(pname);
+        }
+      }
+    }
     // NOTE(dimvar): We currently don't add the "constructor" property to the
     // prototype object. A tricky issue with it is that it needs to be ignored
     // during subtyping, eg, when you are comparing a @record Foo with an

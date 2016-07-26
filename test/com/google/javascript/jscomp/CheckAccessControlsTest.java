@@ -1773,7 +1773,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testConstantProperty15c() {
-    // TODO(aravindpg): warn against this natively in NTI (b/30206258)
     testError(
         ""
         + "/** @constructor */ function Bar() {this.CONST = 100;};\n"

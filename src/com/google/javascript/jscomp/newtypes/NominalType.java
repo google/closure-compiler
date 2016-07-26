@@ -313,6 +313,10 @@ public final class NominalType {
     return p != null && p.isConstant();
   }
 
+  boolean mayHaveProp(String pname) {
+    return this.rawType.mayHaveProp(pname);
+  }
+
   boolean isSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
     return isNominalSubtypeOf(other)
         || other.isStructuralInterface() && isStructuralSubtypeOf(other, subSuperMap);

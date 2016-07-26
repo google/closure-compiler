@@ -17295,4 +17295,40 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  }",
         "};"));
   }
+
+  public void testRandomPropDefsDontShadowConstDefinition() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.CONST = 100;",
+        "}",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " */",
+        "function Foo() {}",
+        "/** @type {!Foo} */",
+        "var foo = new Foo();",
+        "function f(x) {",
+        "  x = new Foo;",
+        "  x.CONST = 123;",
+        "}"),
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.CONST = 100;",
+        "}",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " */",
+        "function Foo() {};",
+        "/** @type {Foo} */",
+        "var foo = new Foo();",
+        "/** @type {number} */",
+        "foo.CONST = 0;"),
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
+  }
 }
