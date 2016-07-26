@@ -52,8 +52,6 @@ public interface TypeI {
 
   boolean isConstructor();
 
-  boolean isOriginalConstructor();
-
   boolean isEquivalentTo(TypeI type);
 
   boolean isFunctionType();

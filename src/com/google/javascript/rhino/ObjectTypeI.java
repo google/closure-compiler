@@ -51,18 +51,21 @@ public interface ObjectTypeI extends TypeI {
    */
   FunctionTypeI getConstructor();
 
-  ObjectTypeI getPrototypeObject();
+  FunctionTypeI getSuperClassConstructor();
 
-  ObjectTypeI getLowestSupertypeWithProperty(String propertyName, boolean isOverride);
+  /**
+   * Returns the __proto__ object of this object type, NOT the ".prototype" property.
+   */
+  ObjectTypeI getPrototypeObject();
 
   // TODO(aravindpg): might be better to define a PropertyI interface and
   // then have a more general-purpose getProperty method here.
 
   JSDocInfo getOwnPropertyJSDocInfo(String propertyName);
 
-  Node getOwnPropertyDefsite(String propertyName);
+  Node getOwnPropertyDefSite(String propertyName);
 
-  Node getPropertyDefsite(String propertyName);
+  Node getPropertyDefSite(String propertyName);
 
   /** Whether this type is an instance object of some constructor. */
   // NOTE(dimvar): for OTI, this is true only for InstanceObjectType and a single case

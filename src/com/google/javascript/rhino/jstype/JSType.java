@@ -541,11 +541,6 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
-  @Override
-  public boolean isOriginalConstructor() {
-    return isNominalConstructor();
-  }
-
   /**
    * Whether this type is an Instance object of some constructor.
    * Does not necessarily mean this is an {@link InstanceObjectType}.

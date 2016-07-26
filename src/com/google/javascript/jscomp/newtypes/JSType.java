@@ -1508,11 +1508,6 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public boolean isOriginalConstructor() {
-    throw new UnsupportedOperationException("isOriginalConstructor not implemented yet.");
-  }
-
-  @Override
   public boolean isEquivalentTo(TypeI type) {
     return equals(type);
   }
@@ -1641,6 +1636,12 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public FunctionTypeI getSuperClassConstructor() {
+    ObjectTypeI proto = getPrototypeObject();
+    return proto == null ? null : proto.getConstructor();
+  }
+
+  @Override
   public JSType getPrototypeObject() {
     Preconditions.checkState(this.isSingletonObj());
     if (this.equals(TOP_OBJECT)) {
@@ -1664,7 +1665,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
-    Node defsite = this.getOwnPropertyDefsite(propertyName);
+    Node defsite = this.getOwnPropertyDefSite(propertyName);
     if (defsite != null) {
       return NodeUtil.getBestJSDocInfo(defsite);
     }
@@ -1672,20 +1673,15 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public Node getOwnPropertyDefsite(String propertyName) {
+  public Node getOwnPropertyDefSite(String propertyName) {
     Preconditions.checkState(this.isSingletonObj());
     return this.getObjTypeIfSingletonObj().getOwnPropertyDefSite(propertyName);
   }
 
   @Override
-  public Node getPropertyDefsite(String propertyName) {
+  public Node getPropertyDefSite(String propertyName) {
     Preconditions.checkState(this.isSingletonObj());
     return this.getObjTypeIfSingletonObj().getPropertyDefSite(propertyName);
-  }
-
-  @Override
-  public JSType getLowestSupertypeWithProperty(String propertyName, boolean isOverride) {
-    throw new UnsupportedOperationException("getLowestSupertypeWithProperty not implemented yet");
   }
 
   @Override

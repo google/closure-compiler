@@ -59,7 +59,7 @@ public final class AccessControlUtils {
     }
     Visibility defaultVisibilityForFile =
         fileVisibilityMap.get(var.getSourceFile());
-    TypeI type = name.getTypeIIfOld();
+    TypeI type = name.getTypeI();
     boolean createdFromGoogProvide = (type != null && type.isInstanceofObject());
     // Ignore @fileoverview visibility when computing the effective visibility
     // for names created by goog.provide.
@@ -126,7 +126,7 @@ public final class AccessControlUtils {
   @Nullable static StaticSourceFile getDefiningSource(
       Node getprop, @Nullable ObjectTypeI referenceType, String propertyName) {
     if (referenceType != null) {
-      Node propDefNode = referenceType.getPropertyDefsite(propertyName);
+      Node propDefNode = referenceType.getPropertyDefSite(propertyName);
       if (propDefNode != null) {
         return propDefNode.getStaticSourceFile();
       }
@@ -145,7 +145,15 @@ public final class AccessControlUtils {
       return null;
     }
 
-    return referenceType.getLowestSupertypeWithProperty(propertyName, isOverride);
+    // Find the lowest property defined on a class with visibility information.
+    ObjectTypeI current = isOverride ? referenceType.getPrototypeObject() : referenceType;
+    for (; current != null; current = current.getPrototypeObject()) {
+      JSDocInfo docInfo = current.getOwnPropertyJSDocInfo(propertyName);
+      if (docInfo != null && docInfo.getVisibility() != Visibility.INHERITED) {
+        return current;
+      }
+    }
+    return null;
   }
 
   /**
