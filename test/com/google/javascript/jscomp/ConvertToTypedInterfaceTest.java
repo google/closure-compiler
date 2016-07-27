@@ -85,6 +85,16 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     test(
         LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo(/** number= */ opt_x) {",
+            "  /** @const */ this.x = opt_x;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo(/** number= */ opt_x) {}",
+            "/** @const {number|undefined} */ Foo.prototype.x;"));
+
+    test(
+        LINE_JOINER.join(
             "/** @constructor @param {!Array<string>} arr */",
             "function Foo(arr) {",
             "  /** @const */ this.arr = arr;",

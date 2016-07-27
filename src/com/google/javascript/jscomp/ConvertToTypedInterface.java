@@ -138,6 +138,13 @@ class ConvertToTypedInterface implements CompilerPass {
       if (expr == null) {
         return null;
       }
+      if (expr.getRoot().getType() == Token.EQUALS) {
+        expr = new JSTypeExpression(
+            new Node(Token.PIPE,
+                expr.getRoot().getFirstChild().cloneTree(),
+                IR.string("undefined")),
+            "<synthetic>");
+      }
       return getTypeJSDoc(oldJSDoc, expr);
     }
 
@@ -325,8 +332,8 @@ class ConvertToTypedInterface implements CompilerPass {
       // System.err.println("RHS of " + nameNode + " is " + rhs);
       if (rhs == null
           || rhs.isFunction()
-          || rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod")
-          || rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction")
+          || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
+          || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"))
           || (rhs.isObjectLit()
               && !rhs.hasChildren()
               && (jsdoc == null || !hasAnnotatedType(jsdoc)))) {
