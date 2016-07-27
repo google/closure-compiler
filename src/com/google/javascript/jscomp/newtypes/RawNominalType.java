@@ -38,9 +38,6 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class RawNominalType extends Namespace {
-  // The node (if any) that defines the type. Most times it's a function, in
-  // rare cases it's a call node.
-  private final Node defSite;
   // If true, we can't add more properties to this type.
   private boolean isFinalized;
   // Each instance of the class has these properties by default
@@ -82,7 +79,7 @@ public final class RawNominalType extends Namespace {
   private RawNominalType(
       JSTypes commonTypes, Node defSite,
       String name, ImmutableList<String> typeParameters, Kind kind, ObjectKind objectKind) {
-    super(commonTypes, name);
+    super(commonTypes, name, defSite);
     Preconditions.checkNotNull(objectKind);
     Preconditions.checkState(
         defSite == null || defSite.isFunction() || defSite.isCall(),
@@ -91,7 +88,6 @@ public final class RawNominalType extends Namespace {
     if (typeParameters == null) {
       typeParameters = ImmutableList.of();
     }
-    this.defSite = defSite;
     this.typeParameters = typeParameters;
     // NTI considers IObject to be a record so that, eg, an object literal can
     // be considered to have any IObject type.
@@ -146,10 +142,6 @@ public final class RawNominalType extends Namespace {
     // interfaces are struct by default
     return new RawNominalType(commonTypes, defSite,
         name, typeParameters, Kind.RECORD, ObjectKind.STRUCT);
-  }
-
-  public Node getDefSite() {
-    return this.defSite;
   }
 
   private static boolean isBuiltinHelper(

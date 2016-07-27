@@ -487,20 +487,20 @@ final class NTIScope implements DeclaredTypeRegistry {
       Preconditions.checkState(!this.localNamespaces.containsKey(varName));
       NTIScope s = Preconditions.checkNotNull(this.localFunDefs.get(varName));
       this.localNamespaces.put(varName,
-          new FunctionNamespace(getCommonTypes(), varName, s));
+          new FunctionNamespace(getCommonTypes(), varName, s, qnameNode));
     } else {
       Preconditions.checkArgument(!isNamespace(qnameNode));
       QualifiedName qname = QualifiedName.fromNode(qnameNode);
       Namespace ns = getNamespace(qname.getLeftmostName());
       NTIScope s = (NTIScope) ns.getDeclaration(qname).getFunctionScope();
       ns.addNamespace(qname.getAllButLeftmost(),
-          new FunctionNamespace(getCommonTypes(), qname.toString(), s));
+          new FunctionNamespace(getCommonTypes(), qname.toString(), s, qnameNode));
     }
   }
 
   void addNamespaceLit(Node qnameNode) {
     addNamespace(qnameNode,
-        new NamespaceLit(getCommonTypes(), qnameNode.getQualifiedName()));
+        new NamespaceLit(getCommonTypes(), qnameNode.getQualifiedName(), qnameNode));
   }
 
   void updateType(String name, JSType newDeclType) {

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.Node;
 
 /**
  *
@@ -27,8 +28,8 @@ public final class NamespaceLit extends Namespace {
   // For when window is used as a namespace
   private NominalType window = null;
 
-  public NamespaceLit(JSTypes commonTypes, String name) {
-    super(commonTypes, name);
+  public NamespaceLit(JSTypes commonTypes, String name, Node defSite) {
+    super(commonTypes, name, defSite);
   }
 
   NominalType getWindowType() {

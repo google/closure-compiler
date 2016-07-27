@@ -49,16 +49,23 @@ public abstract class Namespace {
   protected JSType namespaceType;
   // Used to detect recursion when computing the type of circular namespaces.
   private boolean duringComputeJSType = false;
+  // The node that defines this namespace.
+  protected final Node defSite;
 
-  protected Namespace(JSTypes commonTypes, String name) {
+  protected Namespace(JSTypes commonTypes, String name, Node defSite) {
     this.name = name;
     this.commonTypes = commonTypes;
+    this.defSite = Preconditions.checkNotNull(defSite);
   }
 
   protected abstract JSType computeJSType();
 
   public final String getName() {
     return name;
+  }
+
+  public Node getDefSite() {
+    return this.defSite;
   }
 
   private boolean isDefined(String name) {
@@ -199,9 +206,7 @@ public abstract class Namespace {
     if (this.namespaces.containsKey(pname)) {
       Namespace subns = this.namespaces.get(pname);
       Preconditions.checkState(subns.namespaceType != null);
-      // TODO(aravindpg): we need a defsite here for the test
-      // CheckAccessControlsTest::testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace4
-      return Property.make(subns.namespaceType, subns.namespaceType);
+      return Property.makeWithDefsite(subns.getDefSite(), subns.namespaceType, subns.namespaceType);
     }
     if (this.otherProps.containsKey(pname)) {
       return this.otherProps.get(pname);

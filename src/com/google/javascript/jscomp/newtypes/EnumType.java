@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSTypeExpression;
+import com.google.javascript.rhino.Node;
 
 import java.util.Collection;
 
@@ -50,9 +51,9 @@ public final class EnumType extends Namespace implements TypeWithProperties {
   // All properties have the same type, so we only need a set, not a map.
   private ImmutableSet<String> props;
 
-  private EnumType(JSTypes commonTypes, String name,
+  private EnumType(JSTypes commonTypes, String name, Node defSite,
       JSTypeExpression typeExpr, Collection<String> props) {
-    super(commonTypes, name);
+    super(commonTypes, name, defSite);
     Preconditions.checkNotNull(typeExpr);
     this.state = State.NOT_RESOLVED;
     // typeExpr is non-null iff the enum is not resolved
@@ -60,9 +61,9 @@ public final class EnumType extends Namespace implements TypeWithProperties {
     this.props = ImmutableSet.copyOf(props);
   }
 
-  public static EnumType make(JSTypes commonTypes, String name,
+  public static EnumType make(JSTypes commonTypes, String name, Node defSite,
       JSTypeExpression typeExpr, Collection<String> props) {
-    return new EnumType(commonTypes, name, typeExpr, props);
+    return new EnumType(commonTypes, name, defSite, typeExpr, props);
   }
 
   public boolean isResolved() {

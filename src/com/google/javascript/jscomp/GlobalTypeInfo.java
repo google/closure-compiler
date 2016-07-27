@@ -938,6 +938,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           EnumType.make(
               commonTypes,
               qnameNode.getQualifiedName(),
+              qnameNode,
               jsdoc.getEnumParameterType(), ImmutableSet.copyOf(propNames)));
     }
 
@@ -1148,7 +1149,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       QualifiedName pname = new QualifiedName(funQname.getLastChild().getString());
       if (!ns.isDefined(pname)) {
         ns.addNamespace(pname,
-            new FunctionNamespace(commonTypes, funQname.getQualifiedName(), s));
+            new FunctionNamespace(commonTypes, funQname.getQualifiedName(), s, funQname));
       }
     }
 

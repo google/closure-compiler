@@ -1184,11 +1184,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace4() {
-    // TODO(aravindpg): the problem here is that we do not store defsites for namespaces within
-    // namespaces (e.g. for `two` and `three` in `one.two.three`). Looking up "two" in the
-    // namespace object for "one" yields a property created (without a defsite) in
-    // Namespace.getNsProp (line 204).
-    this.mode = TypeInferenceMode.OtiOnly;
     test(
         ImmutableList.of(
             SourceFile.fromCode(

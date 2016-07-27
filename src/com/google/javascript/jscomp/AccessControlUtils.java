@@ -204,7 +204,7 @@ public final class AccessControlUtils {
     if (objectType != null) {
       raw = objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility();
     }
-    TypeI type = getprop.getTypeIIfOld();
+    TypeI type = getprop.getTypeI();
     boolean createdFromGoogProvide = (type != null && type.isInstanceofObject());
     // Ignore @fileoverview visibility when computing the effective visibility
     // for properties created by goog.provide.
