@@ -4799,4 +4799,8 @@ public final class NodeUtil {
     String keyName = propNode.getString();
     return keyName.equals("get") || keyName.equals("set");
   }
+
+  static boolean isCallTo(Node n, String qualifiedName) {
+    return n.isCall() && n.getFirstChild().matchesQualifiedName(qualifiedName);
+  }
 }

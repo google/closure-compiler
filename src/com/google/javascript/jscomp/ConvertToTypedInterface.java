@@ -403,6 +403,7 @@ class ConvertToTypedInterface implements CompilerPass {
       if (rhs == null
           || rhs.isFunction()
           || rhs.isClass()
+          || NodeUtil.isCallTo(rhs, "goog.defineClass")
           || isImportRhs(rhs)
           || isExportLhs(nameNode)
           || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
@@ -502,15 +503,31 @@ class ConvertToTypedInterface implements CompilerPass {
 
   private static boolean isClassMemberFunction(Node functionNode) {
     Preconditions.checkArgument(functionNode.isFunction());
-    return functionNode.getParent().isMemberFunctionDef()
-        && functionNode.getGrandparent().isClassMembers();
+    Node parent = functionNode.getParent();
+    if (parent.isMemberFunctionDef()
+        && parent.getParent().isClassMembers()) {
+      // ES6 class
+      return true;
+    }
+    // goog.defineClass
+    return parent.isStringKey()
+        && parent.getParent().isObjectLit()
+        && parent.getGrandparent().isCall()
+        && parent.getGrandparent().getFirstChild().matchesQualifiedName("goog.defineClass");
   }
 
   private static String getClassName(Node functionNode) {
     if (isClassMemberFunction(functionNode)) {
-      Node classNode = functionNode.getGrandparent().getParent();
-      Preconditions.checkState(classNode.isClass());
-      return NodeUtil.getName(classNode);
+      Node parent = functionNode.getParent();
+      if (parent.isMemberFunctionDef()) {
+        // ES6 class
+        Node classNode = functionNode.getGrandparent().getParent();
+        Preconditions.checkState(classNode.isClass());
+        return NodeUtil.getName(classNode);
+      }
+      // goog.defineClass
+      Preconditions.checkState(parent.isStringKey());
+      return parent.getGrandparent().getParent().getString();
     }
     return NodeUtil.getName(functionNode);
   }

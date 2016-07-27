@@ -343,6 +343,41 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
     testEs6(
         "class Foo { constructor() { /** @type {number} */ this.num = 5;} }",
         "class Foo { constructor() {} } /** @type {number} */ Foo.prototype.num;");
+
+    testEs6(
+        LINE_JOINER.join(
+            "const Foo = goog.defineClass(null, {",
+            "  constructor: function() { /** @type {number} */ this.num = 5;},",
+            "});"),
+        LINE_JOINER.join(
+            "const Foo = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "});",
+            "/** @type {number} */ Foo.prototype.num;"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "const Foo = goog.defineClass(null, {",
+            "  /** @return {number} */",
+            "  foo: function() { return 5;},",
+            "});"),
+        LINE_JOINER.join(
+            "const Foo = goog.defineClass(null, {",
+            "  /** @return {number} */",
+            "  foo: function() {},",
+            "});"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "const Foo = goog.defineClass(null, {",
+            "  /** @return {number} */",
+            "  foo() { return 5;},",
+            "});"),
+        LINE_JOINER.join(
+            "const Foo = goog.defineClass(null, {",
+            "  /** @return {number} */",
+            "  foo() {},",
+            "});"));
   }
 
   public void testConstructorBodyWithoutThisDeclaration() {
