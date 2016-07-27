@@ -99,7 +99,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
       lines = new ArrayList<>();
     }
 
-    // TODO(thorogood): Note that when compiled with GWT, this may not contain anything.
+    // The value type of each extension is the native JSON type (e.g. JsonObject, or JSONObject
+    // when compiled with GWT).
     extensions.putAll(sourceMapObject.getExtensions());
     new MappingBuilder(sourceMapObject.getMappings()).build();
   }
