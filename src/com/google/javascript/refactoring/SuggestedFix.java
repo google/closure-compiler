@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
  */
 public final class SuggestedFix {
 
-  private final Node originalMatchedNode;
+  private final MatchedNodeInfo matchedNodeInfo;
   // Multimap of filename to a modification to that file.
   private final SetMultimap<String, CodeReplacement> replacements;
 
@@ -57,20 +57,20 @@ public final class SuggestedFix {
   @Nullable private final String description;
 
   private SuggestedFix(
-      Node originalMatchedNode,
+      MatchedNodeInfo matchedNodeInfo,
       SetMultimap<String, CodeReplacement> replacements,
       @Nullable String description) {
-    this.originalMatchedNode = originalMatchedNode;
+    this.matchedNodeInfo = matchedNodeInfo;
     this.replacements = replacements;
     this.description = description;
   }
 
   /**
-   * Returns the JS Compiler Node for the original node that caused this SuggestedFix to
-   * be constructed.
+   * Returns information about the original JS Compiler Node that caused this SuggestedFix to be
+   * constructed.
    */
-  public Node getOriginalMatchedNode() {
-    return originalMatchedNode;
+  public MatchedNodeInfo getMatchedNodeInfo() {
+    return matchedNodeInfo;
   }
 
   /**
@@ -99,17 +99,22 @@ public final class SuggestedFix {
    * manipulate JS nodes.
    */
   public static final class Builder {
-    private Node originalMatchedNode = null;
+    private MatchedNodeInfo matchedNodeInfo = null;
     private final ImmutableSetMultimap.Builder<String, CodeReplacement> replacements =
         ImmutableSetMultimap.builder();
     private String description = null;
 
     /**
-     * Sets the node on this SuggestedFix that caused this SuggestedFix to be built
-     * in the first place.
+     * Sets the node on this SuggestedFix that caused this SuggestedFix to be built in the first
+     * place.
      */
-    public Builder setOriginalMatchedNode(Node node) {
-      originalMatchedNode = node;
+    public Builder attachMatchedNodeInfo(Node node, AbstractCompiler compiler) {
+      matchedNodeInfo =
+          new MatchedNodeInfo(
+              NodeUtil.getSourceName(node),
+              node.getLineno(),
+              node.getCharno(),
+              isInClosurizedFile(node, new NodeMetadata(compiler)));
       return this;
     }
 
@@ -666,7 +671,68 @@ public final class SuggestedFix {
     }
 
     public SuggestedFix build() {
-      return new SuggestedFix(originalMatchedNode, replacements.build(), description);
+      return new SuggestedFix(matchedNodeInfo, replacements.build(), description);
+    }
+
+    /** Looks for a goog.require(), goog.provide() or goog.module() call in the fix's file. */
+    private static boolean isInClosurizedFile(Node node, NodeMetadata metadata) {
+      Node script = NodeUtil.getEnclosingScript(node);
+
+      if (script == null) {
+        return false;
+      }
+
+      Node child = script.getFirstChild();
+      while (child != null) {
+        if (child.isExprResult() && child.getFirstChild().isCall()) {
+          if (Matchers.functionCall("goog.require").matches(child.getFirstChild(), metadata)) {
+            return true;
+          }
+          // goog.require or goog.module.
+        } else if (child.isVar() && child.getBooleanProp(Node.IS_NAMESPACE)) {
+          return true;
+        }
+        child = child.getNext();
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Information about the node that was matched for the suggested fix. This information can be
+   * used later on when processing the SuggestedFix.
+   *
+   * <p>NOTE: Since this class can be retained for a long time when running refactorings over large
+   * blobs of code, it's important that it does not contain any memory intensive objects in order to
+   * keep memory to a reasonable amount.
+   */
+  public static class MatchedNodeInfo {
+    private final String sourceFilename;
+    private final int lineno;
+    private final int charno;
+    private final boolean isInClosurizedFile;
+
+    MatchedNodeInfo(String sourceFilename, int lineno, int charno, boolean isInClosurizedFile) {
+      this.sourceFilename = sourceFilename;
+      this.lineno = lineno;
+      this.charno = charno;
+      this.isInClosurizedFile = isInClosurizedFile;
+    }
+
+    public String getSourceFilename() {
+      return sourceFilename;
+    }
+
+    public int getLineno() {
+      return lineno;
+    }
+
+    public int getCharno() {
+      return charno;
+    }
+
+    public boolean isInClosurizedFile() {
+      return isInClosurizedFile;
     }
   }
 }

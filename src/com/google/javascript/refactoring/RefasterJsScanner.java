@@ -125,7 +125,7 @@ public final class RefasterJsScanner extends Scanner {
         matchedTemplate.afterTemplate.getLastChild(),
         matchedTemplate.matcher.getTemplateNodeToMatchMap());
     Node nodeToReplace = match.getNode();
-    fix.setOriginalMatchedNode(nodeToReplace);
+    fix.attachMatchedNodeInfo(nodeToReplace, match.getMetadata().getCompiler());
     fix.replace(nodeToReplace, newNode, match.getMetadata().getCompiler());
     // If the template is a multiline template, make sure to delete the same number of sibling nodes
     // as the template has.

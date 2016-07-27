@@ -30,6 +30,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.refactoring.SuggestedFix.MatchedNodeInfo;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import org.junit.Test;
@@ -726,7 +727,33 @@ public class SuggestedFixTest {
     String generated = new SuggestedFix.Builder().generateCode(compiler, node);
     assertEquals(code, generated);
   }
-  
+
+  @Test
+  public void testAttachMatchedNodeInfo() {
+    String before = "/** @fileoverview blah */\n\n"
+        + "goog.provide('js.Foo');\n\n";
+    String googRequire = "goog.require('abc.def');";
+    String input =
+        before
+        + googRequire
+        + "\n"
+        + "/** @private */\n"
+        + "function foo_() {};\n";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    SuggestedFix fix = new SuggestedFix.Builder()
+        // Corresponds to the goog.require node.
+        .attachMatchedNodeInfo(root.getFirstChild().getNext().getFirstChild(), compiler)
+        .removeGoogRequire(match, "abc.def")
+        .build();
+    MatchedNodeInfo info = fix.getMatchedNodeInfo();
+    assertEquals("test", info.getSourceFilename());
+    assertEquals(5, info.getLineno());
+    assertEquals(0, info.getCharno());
+    assertTrue(info.isInClosurizedFile());
+  }
+
   /**
    * Returns the root script node produced from the compiled JS input.
    */
