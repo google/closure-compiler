@@ -242,7 +242,6 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup NEW_CHECK_TYPES_ALL_CHECKS =
       DiagnosticGroups.registerGroup("newCheckTypesAllChecks",
-          JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE,
           NewTypeInference.NULLABLE_DEREFERENCE);
 
   static {

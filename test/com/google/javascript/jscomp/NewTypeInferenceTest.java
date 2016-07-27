@@ -3216,25 +3216,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testAssignmentsToPrototype() {
-    // TODO(dimvar): the 1st should pass, the 2nd we may stop catching
-    // if we decide to not check these assignments at all.
-
-    // typeCheck(LINE_JOINER.join(
-    //     "/** @constructor */",
-    //     "function Foo() {}",
-    //     "/** @constructor @extends {Foo} */",
-    //     "function Bar() {}",
-    //     "Bar.prototype = new Foo;",
-    //     "Bar.prototype.method1 = function() {};"));
-
-    // typeCheck(LINE_JOINER.join(
-    //     "/**",
-    //     " * @constructor",
-    //     " * @struct",
-    //     " */",
-    //     "function Bar() {}",
-    //     "Bar.prototype = {};"),
-    //     TypeCheck.CONFLICTING_SHAPE_TYPE);
+     typeCheck(LINE_JOINER.join(
+         "/** @constructor */",
+         "function Foo() {}",
+         "/** @constructor @extends {Foo} */",
+         "function Bar() {}",
+         "Bar.prototype = new Foo;",
+         "Bar.prototype.method1 = function() {};"));
   }
 
   public void testConflictingPropertyDefinitions() {
@@ -9546,21 +9534,20 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @constructor @dict @extends {Foo} */",
         "function Bar() {}"));
 
+    // Don't warn when structs extend non-structs
     typeCheck(LINE_JOINER.join(
         "/** @constructor @unrestricted */",
         "function Foo() {}",
         "/** @constructor @struct @extends {Foo} */",
-        "function Bar() {}"),
-        JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE);
+        "function Bar() {}"));
 
+    // Don't warn when dicts extend non-dicts
     typeCheck(LINE_JOINER.join(
         "/** @constructor @unrestricted */",
         "function Foo() {}",
         "/** @constructor @dict @extends {Foo} */",
-        "function Bar() {}"),
-        JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE);
+        "function Bar() {}"));
 
-    // Detect bad inheritance but connect the classes anyway
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {",
@@ -9574,7 +9561,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " */",
         "function Bar() {}",
         "(new Bar).prop - 123;"),
-        JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE,
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(LINE_JOINER.join(
