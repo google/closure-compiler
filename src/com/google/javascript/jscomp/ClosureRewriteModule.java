@@ -210,13 +210,14 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     final Set<String> topLevelNames = new HashSet<>(); // For prefixed content renaming.
     final Deque<ScriptDescription> childScripts = new LinkedList<>(); // For goog.loadModule()
     final Set<String> googModuleGettedNamespaces = new HashSet<>(); // {"some.goog.module", ...}
-    final Map<String, String> importedNamesByAlias = new HashMap<>(); // For alias inlining.
+    final Map<String, String> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
 
     /**
      * Transient state.
      */
     boolean willCreateExportsObject;
     boolean hasCreatedExportObject;
+    String defaultExportName;
 
     // The root of the module. The SCRIPT node (or for goog.loadModule, the body of the
     // function) that contains the module contents. For recognizing top level names. Changes when
@@ -298,7 +299,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           break;
 
         case NAME:
-          maybeRecordExportDeclaration(n);
+          maybeRecordExportDeclaration(t, n);
           break;
 
         case RETURN:
@@ -427,9 +428,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             // "{module$exports$bar$Foo}" or
             // "{bar.Foo}"
             boolean nameIsAnAlias =
-                currentScript.importedNamesByAlias.containsKey(prefixTypeName);
+                currentScript.namesToInlineByAlias.containsKey(prefixTypeName);
             if (nameIsAnAlias) {
-              String aliasedNamespace = currentScript.importedNamesByAlias.get(prefixTypeName);
+              String aliasedNamespace = currentScript.namesToInlineByAlias.get(prefixTypeName);
               safeSetString(typeRefNode, aliasedNamespace + suffix);
               return;
             }
@@ -751,12 +752,26 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private void maybeRecordExportDeclaration(Node n) {
+  private void maybeRecordExportDeclaration(NodeTraversal t, Node n) {
     if (!currentScript.isModule
         || currentScript.declareLegacyNamespace
         || !n.getString().equals("exports")
         || !isAssignTarget(n)) {
       return;
+    }
+
+    Preconditions.checkState(currentScript.defaultExportName == null);
+    Node defaultExportRhs = n.getNext();
+    if (defaultExportRhs.isName() && !currentScript.declareLegacyNamespace) {
+      String exportedName = defaultExportRhs.getString();
+      Var var = t.getScope().getVar(exportedName);
+      // If rhs is the short name from an import, then we can't do the uninlining.
+      if (var != null
+          && var.getInitialValue() != null
+          && !isCallTo(var.getInitialValue(), "goog.require")) {
+        currentScript.defaultExportName = exportedName;
+        recordNameToInline(exportedName, currentScript.getBinaryNamespace());
+      }
     }
 
     currentScript.willCreateExportsObject = true;
@@ -845,7 +860,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       } else if (lhs.isName()) {
         // `var Foo` case
         String aliasName = statementNode.getFirstChild().getString();
-        recordImportAlias(aliasName, exportedNamespace);
+        recordNameToInline(aliasName, exportedNamespace);
       } else if (lhs.isDestructuringLhs() && lhs.getFirstChild().isObjectPattern()) {
         // `const {Foo}` case
         for (Node importSpec : lhs.getFirstChild().children()) {
@@ -853,7 +868,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           String aliasName =
               importSpec.hasChildren() ? importSpec.getFirstChild().getString() : importedProperty;
           String fullName = exportedNamespace + "." + importedProperty;
-          recordImportAlias(aliasName, fullName);
+          recordNameToInline(aliasName, fullName);
         }
       } else {
         throw new RuntimeException("Illegal goog.module import: " + lhs);
@@ -979,11 +994,18 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
     }
 
+    boolean nameIsExported = name.equals(currentScript.defaultExportName);
+    if (nameIsExported) {
+      safeSetString(nameNode, currentScript.getBinaryNamespace());
+      currentScript.hasCreatedExportObject = true;
+      return;
+    }
+
     // If the name is an alias for an imported namespace rewrite from
     // "new Foo;" to "new module$exports$Foo;"
-    boolean nameIsAnAlias = currentScript.importedNamesByAlias.containsKey(name);
+    boolean nameIsAnAlias = currentScript.namesToInlineByAlias.containsKey(name);
     if (nameIsAnAlias && var.getNode() != nameNode) {
-      String namespaceToInline = currentScript.importedNamesByAlias.get(name);
+      String namespaceToInline = currentScript.namesToInlineByAlias.get(name);
       safeSetMaybeQualifiedString(nameNode, namespaceToInline);
 
       // Make sure this action won't shadow a local variable.
@@ -1073,8 +1095,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return;
     }
 
-    // Rewrite "exports = ..." as "var module$exports$foo$Bar = ..."
     Node assignNode = n.getParent();
+    if (currentScript.defaultExportName != null) {
+      assignNode.getParent().detachFromParent();
+      return;
+    }
+
+    // Rewrite "exports = ..." as "var module$exports$foo$Bar = ..."
     Node rhs = assignNode.getLastChild();
     Node jsdocNode;
     if (currentScript.declareLegacyNamespace) {
@@ -1267,9 +1294,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     target.setJSDocInfo(builder.build());
   }
 
-  private void recordImportAlias(String aliasName, String legacyNamespace) {
+  private void recordNameToInline(String aliasName, String legacyNamespace) {
     Preconditions.checkNotNull(legacyNamespace);
-    currentScript.importedNamesByAlias.put(aliasName, legacyNamespace);
+    Preconditions.checkState(
+        null == currentScript.namesToInlineByAlias.put(aliasName, legacyNamespace),
+        "Already found a mapping for inlining short name: %s", aliasName);
   }
 
   /**

@@ -81,7 +81,8 @@ public class J2clPass implements CompilerPass {
     }
 
     private boolean isUtilGetDefineMethodName(String fnName) {
-      return fnName != null && fnName.endsWith("Util.$getDefine");
+      // TODO: Switch this to the filename + property name heuristic which is less brittle.
+      return fnName != null && fnName.endsWith(".$getDefine") && fnName.contains("Util");
     }
   }
 
