@@ -32,7 +32,6 @@ import java.util.Collection;
  */
 public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
 
-
   private final Multimap<String, UseSite> nameUseSiteMultimap;
 
   public DefinitionUseSiteFinder(AbstractCompiler compiler) {
@@ -42,9 +41,6 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
 
   @Override
   public void process(Node externs, Node source) {
-    if (hasProcessBeenRun) {
-      return;
-    }
     super.process(externs, source);
     NodeTraversal.traverseEs6(
         compiler, source, new UseSiteGatheringCallback());

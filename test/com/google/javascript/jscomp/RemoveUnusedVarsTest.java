@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 
+import com.google.javascript.rhino.Node;
+
 public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   private boolean removeGlobal;
@@ -38,13 +40,19 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    if (this.modifyCallSites) {
-      DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
-      compiler.setSimpleDefinitionFinder(defFinder);
-    }
-    return new RemoveUnusedVars(
-        compiler, removeGlobal, preserveFunctionExpressionNames,
-        modifyCallSites);
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        if (modifyCallSites) {
+          DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
+          defFinder.process(externs, root);
+          compiler.setDefinitionFinder(defFinder);
+        }
+        new RemoveUnusedVars(
+            compiler, removeGlobal, preserveFunctionExpressionNames,
+            modifyCallSites).process(externs, root);
+      }
+    };
   }
 
   public void testRemoveUnusedVars() {

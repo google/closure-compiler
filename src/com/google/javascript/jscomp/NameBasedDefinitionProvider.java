@@ -56,9 +56,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
 
   @Override
   public void process(Node externs, Node source) {
-    if (hasProcessBeenRun) {
-      return;
-    }
+    Preconditions.checkState(!hasProcessBeenRun, "The definition provider is already initialized.");
     this.hasProcessBeenRun = true;
 
     NodeTraversal.traverseEs6(compiler, externs, new DefinitionGatheringCallback(true));
@@ -67,11 +65,11 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
 
   @Override
   public Collection<Definition> getDefinitionsReferencedAt(Node useSite) {
+    Preconditions.checkState(hasProcessBeenRun, "The process was not run");
     if (definitionSiteMap.containsKey(useSite)) {
       return null;
     }
 
-    Preconditions.checkState(hasProcessBeenRun, "The process was not run");
     if (useSite.isGetProp()) {
       String propName = useSite.getLastChild().getString();
       if (propName.equals("apply") || propName.equals("call")) {

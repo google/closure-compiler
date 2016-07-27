@@ -1346,12 +1346,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
   }
 
   @Override
-  DefinitionUseSiteFinder getSimpleDefinitionFinder() {
+  DefinitionUseSiteFinder getDefinitionFinder() {
     return this.defFinder;
   }
 
   @Override
-  void setSimpleDefinitionFinder(DefinitionUseSiteFinder defFinder) {
+  void setDefinitionFinder(DefinitionUseSiteFinder defFinder) {
     this.defFinder = defFinder;
   }
 
