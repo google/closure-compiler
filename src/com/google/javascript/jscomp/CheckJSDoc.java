@@ -21,7 +21,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import javax.annotation.Nullable;
 
 /**
@@ -177,7 +176,11 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
 
     if (functionNode == null) {
       // @abstract annotation on a non-function
-      report(n, MISPLACED_ANNOTATION, "@abstract", "only functions or methods can be abstract");
+      report(
+          n,
+          MISPLACED_ANNOTATION,
+          "@abstract",
+          "only functions or non-static methods can be abstract");
       return;
     }
 
@@ -198,7 +201,11 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         && !n.isMemberFunctionDef()
         && !NodeUtil.isPrototypeMethod(functionNode)) {
       // @abstract annotation on a non-method (or static method) in ES5
-      report(n, MISPLACED_ANNOTATION, "@abstract", "only functions or methods can be abstract");
+      report(
+          n,
+          MISPLACED_ANNOTATION,
+          "@abstract",
+          "only functions or non-static methods can be abstract");
       return;
     }
 
