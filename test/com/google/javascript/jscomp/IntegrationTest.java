@@ -1750,14 +1750,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "function f() { var x = 3; x = 5; return x; }";
     testSame(options, code);
 
-    options.setFlowSensitiveInlineVariables(true);
+    options.setInlineVariables(true);
     test(options, code, "function f() { var x = 3; return 5; }");
 
     String unusedVar = "function f() { var x; x = 5; return x; } f()";
-    test(options, unusedVar, "function f() { var x; return 5; } f()");
+    test(options, unusedVar, "(function f() { var x; return 5; })()");
 
     options.setRemoveUnusedVars(true);
-    test(options, unusedVar, "function f() { return 5; } f()");
+    test(options, unusedVar, "(function () { return 5; })()");
   }
 
   public void testFlowSensitiveInlineVariables2() {
@@ -2663,7 +2663,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testIssue378() {
     CompilerOptions options = createCompilerOptions();
     options.setInlineVariables(true);
-    options.setFlowSensitiveInlineVariables(true);
     testSame(
         options,
         "function f(c) {var f = c; arguments[0] = this;"
@@ -2676,7 +2675,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         .setOptionsForCompilationLevel(options);
     options.setFoldConstants(true);
     options.setInlineVariables(true);
-    options.setFlowSensitiveInlineVariables(true);
     test(
         options,
         "function f(h) {\n"

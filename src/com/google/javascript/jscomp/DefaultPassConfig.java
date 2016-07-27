@@ -654,7 +654,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Because FlowSensitiveInlineVariables does not operate on the global scope due to compilation
     // time, we need to run it once before InlineFunctions so that we don't miss inlining
     // opportunities when a function will be inlined into the global scope.
-    if (options.flowSensitiveInlineVariables) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(flowSensitiveInlineVariables);
     }
 
@@ -680,7 +680,7 @@ public final class DefaultPassConfig extends PassConfig {
           CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
     }
 
-    if (options.flowSensitiveInlineVariables) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(flowSensitiveInlineVariables);
 
       // After inlining some of the variable uses, some variables are unused.
