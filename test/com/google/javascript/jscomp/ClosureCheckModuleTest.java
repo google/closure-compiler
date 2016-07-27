@@ -361,6 +361,61 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
         REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
   }
 
+  public void testIllegalImportNoAlias() {
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "goog.require('foo.utils');",
+            "",
+            "exports = function() { return foo.utils.doThing(''); };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
+  }
+
+  // TODO(johnlenz): Re-enable these tests (they are a bit tricky).
+  public void disable_testSingleNameImportNoAlias1() {
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "goog.require('foo');",
+            "",
+            "exports = function() { return foo.doThing(''); };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
+  }
+
+  public void disable_testSingleNameImportWithAlias() {
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var bar = goog.require('foo');",
+            "",
+            "exports = function() { return foo.doThing(''); };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
+  }
+
+  public void testSingleNameImportCrossAlias() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var bar = goog.require('foo');",
+            "var foo = goog.require('bar');",
+            "",
+            "exports = function() { return foo.doThing(''); };"));
+  }
+
+  public void testLegalSingleNameImport() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var foo = goog.require('foo');",
+            "",
+            "exports = function() { return foo.doThing(''); };"));
+  }
+
   public void testIllegalLetShortRequire() {
     testErrorEs6(
         LINE_JOINER.join(
