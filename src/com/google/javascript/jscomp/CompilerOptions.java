@@ -147,6 +147,14 @@ public class CompilerOptions {
 
   private boolean useNewTypeInference;
 
+  /**
+   * When this flag is enabled, we run OTI after NTI so that the AST is annotated with the old types
+   * instead of the new and susbsequent passes that use type information continue to get it from
+   * the old types. When disabled, we don't run OTI at all, so the AST stays annotated
+   * with the new types, and that is what subsequent passes use. It should only ever be disabled in
+   * tests that want to verify that a pass works with the new types.
+   * TODO(aravindpg): move this flag into CompilerTestCase in some form.
+   */
   private boolean runOTIAfterNTI = true;
 
   /**

@@ -351,6 +351,11 @@ public class DiagnosticGroups {
           NewTypeInference.CONST_PROPERTY_REASSIGNED,
           NewTypeInference.CONST_PROPERTY_DELETED);
 
+  static final DiagnosticGroup ACCESS_CONTROLS_CONST =
+      DiagnosticGroups.registerGroup("accessControlsConst",
+          CheckAccessControls.CONST_PROPERTY_DELETED,
+          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
+
   public static final DiagnosticGroup CONSTANT_PROPERTY =
       DiagnosticGroups.registerGroup("constantProperty",
           CheckAccessControls.CONST_PROPERTY_DELETED,

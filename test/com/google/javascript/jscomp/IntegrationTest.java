@@ -778,6 +778,19 @@ public final class IntegrationTest extends IntegrationTestCase {
             "})();"));
   }
 
+  public void testNTIConstWarningsOverrideAccessControls() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    String js =
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo(name) {}",
+            "/** @const */ Foo.prop = 1;",
+            "Foo.prop = 2;");
+    test(options, js, CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
+    options.setNewTypeInference(true);
+    test(options, js, NewTypeInference.CONST_PROPERTY_REASSIGNED);
+  }
+
   public void testNTInoMaskTypeParseError() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
