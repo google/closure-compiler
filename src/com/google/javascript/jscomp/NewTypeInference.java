@@ -283,18 +283,14 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_UNKNOWN_EXPR_TYPE",
           "This {0} expression has the unknown type.");
 
-  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+  static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
-      BOTTOM_INDEX_TYPE,
-      BOTTOM_PROP,
       CANNOT_BIND_CTOR,
       CONST_PROPERTY_DELETED,
       CONST_PROPERTY_REASSIGNED,
       CONST_REASSIGNED,
       CONSTRUCTOR_NOT_CALLABLE,
-      CROSS_SCOPE_GOTCHA,
       FAILED_TO_UNIFY,
-      FORIN_EXPECTS_OBJECT,
       FORIN_EXPECTS_STRING_KEY,
       GLOBAL_THIS,
       GOOG_BIND_EXPECTS_FUNCTION,
@@ -305,23 +301,32 @@ final class NewTypeInference implements CompilerPass {
       INEXISTENT_PROPERTY,
       INVALID_ARGUMENT_TYPE,
       INVALID_CAST,
-      INVALID_INFERRED_RETURN_TYPE,
+      INVALID_INDEX_TYPE,
       INVALID_OBJLIT_PROPERTY_TYPE,
-      INVALID_OPERAND_TYPE,
-      INVALID_THIS_TYPE_IN_BIND,
       MISSING_RETURN_STATEMENT,
       MISTYPED_ASSIGN_RHS,
-      INVALID_INDEX_TYPE,
       NOT_A_CONSTRUCTOR,
       NOT_CALLABLE,
-      NOT_UNIQUE_INSTANTIATION,
       POSSIBLY_INEXISTENT_PROPERTY,
-      PROPERTY_ACCESS_ON_NONOBJECT,
       RETURN_NONDECLARED_TYPE,
       UNKNOWN_ASSERTION_TYPE,
-      UNKNOWN_NAMESPACE_PROPERTY,
       UNKNOWN_TYPEOF_VALUE,
       WRONG_ARGUMENT_COUNT);
+
+  // TODO(dimvar): Check for which of these warnings it makes sense to keep
+  // going after warning, eg, for NOT_UNIQUE_INSTANTIATION, we must instantiate
+  // to the join of the types.
+  static final DiagnosticGroup NEW_DIAGNOSTICS = new DiagnosticGroup(
+      BOTTOM_INDEX_TYPE,
+      BOTTOM_PROP,
+      CROSS_SCOPE_GOTCHA,
+      FORIN_EXPECTS_OBJECT,
+      INVALID_INFERRED_RETURN_TYPE,
+      INVALID_OPERAND_TYPE,
+      INVALID_THIS_TYPE_IN_BIND,
+      NOT_UNIQUE_INSTANTIATION,
+      PROPERTY_ACCESS_ON_NONOBJECT,
+      UNKNOWN_NAMESPACE_PROPERTY);
 
   public static class WarningReporter {
     AbstractCompiler compiler;

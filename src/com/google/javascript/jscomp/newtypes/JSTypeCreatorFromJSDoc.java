@@ -97,7 +97,7 @@ public final class JSTypeCreatorFromJSDoc {
   public static final DiagnosticType BAD_ARRAY_TYPE_SYNTAX =
     DiagnosticType.warning(
         "JSC_NTI_BAD_ARRAY_TYPE_SYNTAX",
-        "The [] type syntax is not supported. Please use Array.<T> instead");
+        "The [] type syntax is not supported. Please use Array<T> instead");
 
   public static final DiagnosticType CANNOT_MAKE_TYPEVAR_NON_NULL =
     DiagnosticType.warning(
@@ -160,29 +160,33 @@ public final class JSTypeCreatorFromJSDoc {
         "JSC_NTI_TWO_JSDOCS",
         "Found two JsDoc comments for {0}");
 
-  public static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+  public static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
       BAD_ARRAY_TYPE_SYNTAX,
-      CANNOT_MAKE_TYPEVAR_NON_NULL,
       CIRCULAR_TYPEDEF_ENUM,
       CONFLICTING_EXTENDED_TYPE,
       CONFLICTING_IMPLEMENTED_TYPE,
+      EXTENDS_NON_INTERFACE,
+      EXTENDS_NON_OBJECT,
+      EXTENDS_NOT_ON_CTOR_OR_INTERF,
+      IMPLEMENTS_NON_INTERFACE,
+      IMPLEMENTS_WITHOUT_CONSTRUCTOR,
+      INHERITANCE_CYCLE,
+      NEW_EXPECTS_OBJECT_OR_TYPEVAR,
+      TEMPLATED_GETTER_SETTER,
+      TWO_JSDOCS,
+      WRONG_PARAMETER_ORDER);
+
+  // TODO(dimvar): Check for which of these warnings it makes sense to keep
+  // going after warning.
+  public static final DiagnosticGroup NEW_DIAGNOSTICS = new DiagnosticGroup(
+      CANNOT_MAKE_TYPEVAR_NON_NULL,
       DICT_IMPLEMENTS_INTERF,
       ENUM_IS_TOP,
       ENUM_IS_UNION,
       ENUM_WITH_TYPEVARS,
-      EXTENDS_NON_INTERFACE,
-      EXTENDS_NON_OBJECT,
-      EXTENDS_NOT_ON_CTOR_OR_INTERF,
       FUNCTION_WITH_NONFUNC_JSDOC,
-      IMPLEMENTS_NON_INTERFACE,
-      IMPLEMENTS_WITHOUT_CONSTRUCTOR,
-      INHERITANCE_CYCLE,
       INVALID_GENERICS_INSTANTIATION,
-      NEW_EXPECTS_OBJECT_OR_TYPEVAR,
-      TEMPLATED_GETTER_SETTER,
-      TWO_JSDOCS,
-      UNION_IS_UNINHABITABLE,
-      WRONG_PARAMETER_ORDER);
+      UNION_IS_UNINHABITABLE);
 
   private final CodingConvention convention;
   private final UniqueNameGenerator nameGen;

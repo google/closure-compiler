@@ -228,12 +228,25 @@ public class DiagnosticGroups {
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
 
+  // Run the new type inference, but omit many warnings that are not
+  // found by the old type checker. This makes migration to NTI more manageable.
+  public static final DiagnosticGroup NEW_CHECK_TYPES_COMPATIBILITY_MODE =
+      DiagnosticGroups.registerGroup("newCheckTypesCompatibility",  // undocumented
+          JSTypeCreatorFromJSDoc.COMPATIBLE_DIAGNOSTICS,
+          GlobalTypeInfo.COMPATIBLE_DIAGNOSTICS,
+          NewTypeInference.COMPATIBLE_DIAGNOSTICS);
+
+  public static final DiagnosticGroup NEW_CHECK_TYPES_EXTRA_CHECKS =
+      DiagnosticGroups.registerGroup("newCheckTypesExtraChecks",  // undocumented
+          JSTypeCreatorFromJSDoc.NEW_DIAGNOSTICS,
+          GlobalTypeInfo.NEW_DIAGNOSTICS,
+          NewTypeInference.NEW_DIAGNOSTICS);
+
   // Part of the new type inference
   public static final DiagnosticGroup NEW_CHECK_TYPES =
       DiagnosticGroups.registerGroup("newCheckTypes",
-          JSTypeCreatorFromJSDoc.ALL_DIAGNOSTICS,
-          GlobalTypeInfo.ALL_DIAGNOSTICS,
-          NewTypeInference.ALL_DIAGNOSTICS);
+          NEW_CHECK_TYPES_COMPATIBILITY_MODE,
+          NEW_CHECK_TYPES_EXTRA_CHECKS);
 
   public static final DiagnosticGroup CHECK_TYPES =
       DiagnosticGroups.registerGroup("checkTypes",
@@ -275,7 +288,6 @@ public class DiagnosticGroups {
 //           GlobalTypeInfo.REDECLARED_PROPERTY,
           GlobalTypeInfo.STRUCTDICT_WITHOUT_CTOR,
           GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
-          GlobalTypeInfo.UNDECLARED_NAMESPACE,
           GlobalTypeInfo.UNKNOWN_OVERRIDE,
           GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
           NewTypeInference.ASSERT_FALSE,

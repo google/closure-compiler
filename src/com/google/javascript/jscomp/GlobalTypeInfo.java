@@ -156,11 +156,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           "JSC_NTI_DUPLICATE_PROP_IN_ENUM",
           "Property {0} appears twice in the enum declaration.");
 
-  static final DiagnosticType UNDECLARED_NAMESPACE =
-      DiagnosticType.warning(
-          "JSC_NTI_UNDECLARED_NAMESPACE",
-          "Undeclared reference to {0}.");
-
   static final DiagnosticType LENDS_ON_BAD_TYPE =
       DiagnosticType.warning(
           "JSC_NTI_LENDS_ON_BAD_TYPE",
@@ -220,37 +215,39 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           "JSC_NTI_INTERFACE_METHOD_NOT_EMPTY",
           "interface member functions must have an empty body");
 
-  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
-      ANONYMOUS_NOMINAL_TYPE,
-      CANNOT_ADD_PROPERTIES_TO_TYPEDEF,
-      CANNOT_INIT_TYPEDEF,
+  static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
       CANNOT_OVERRIDE_FINAL_METHOD,
-      CONST_WITHOUT_INITIALIZER,
-      COULD_NOT_INFER_CONST_TYPE,
-      CTOR_IN_DIFFERENT_SCOPE,
-      DUPLICATE_JSDOC,
       DUPLICATE_PROP_IN_ENUM,
       EXPECTED_CONSTRUCTOR,
       EXPECTED_INTERFACE,
       FUNCTION_CONSTRUCTOR_NOT_DEFINED,
       INEXISTENT_PARAM,
-      INTERFACE_METHOD_NOT_EMPTY,
       INTERFACE_METHOD_NOT_IMPLEMENTED,
+      INTERFACE_METHOD_NOT_EMPTY,
       INVALID_INTERFACE_PROP_INITIALIZER,
       INVALID_PROP_OVERRIDE,
       LENDS_ON_BAD_TYPE,
-      MALFORMED_ENUM,
-      MISPLACED_CONST_ANNOTATION,
       ONE_TYPE_FOR_MANY_VARS,
       REDECLARED_PROPERTY,
-      SETTER_WITH_RETURN,
       STRUCTDICT_WITHOUT_CTOR,
       SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
-      UNDECLARED_NAMESPACE,
       UNKNOWN_OVERRIDE,
       UNRECOGNIZED_TYPE_NAME,
-      WRONG_PARAMETER_COUNT
-      );
+      WRONG_PARAMETER_COUNT);
+
+  // TODO(dimvar): Check for which of these warnings it makes sense to keep
+  // going after warning.
+  static final DiagnosticGroup NEW_DIAGNOSTICS = new DiagnosticGroup(
+      ANONYMOUS_NOMINAL_TYPE,
+      CANNOT_ADD_PROPERTIES_TO_TYPEDEF,
+      CANNOT_INIT_TYPEDEF,
+      CONST_WITHOUT_INITIALIZER,
+      COULD_NOT_INFER_CONST_TYPE,
+      CTOR_IN_DIFFERENT_SCOPE,
+      DUPLICATE_JSDOC,
+      MALFORMED_ENUM,
+      MISPLACED_CONST_ANNOTATION,
+      SETTER_WITH_RETURN);
 
   // An out-to-in list of the scopes, built during CollectNamedTypes
   // This will be reversed at the end of GlobalTypeInfo to make sure
