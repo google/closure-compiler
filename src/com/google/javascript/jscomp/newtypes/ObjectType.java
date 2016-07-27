@@ -1129,12 +1129,22 @@ final class ObjectType implements TypeWithProperties {
   }
 
   Node getPropertyDefSite(String propertyName) {
-    Property p = getLeftmostProp(new QualifiedName(propertyName));
-    return p == null ? null : p.getDefSite();
+    return getPropertyDefSiteHelper(propertyName, false);
   }
 
   Node getOwnPropertyDefSite(String propertyName) {
-    Property p = getLeftmostPropHelper(new QualifiedName(propertyName), /* ownProp */ true);
+    return getPropertyDefSiteHelper(propertyName, true);
+  }
+
+  Node getPropertyDefSiteHelper(String propertyName, boolean ownProp) {
+    Property p = getLeftmostPropHelper(new QualifiedName(propertyName), ownProp);
+    // Try getters and setters specially.
+    if (p == null) {
+      p = getLeftmostProp(new QualifiedName(JSType.createGetterPropName(propertyName)));
+    }
+    if (p == null) {
+      p = getLeftmostProp(new QualifiedName(JSType.createSetterPropName(propertyName)));
+    }
     return p == null ? null : p.getDefSite();
   }
 

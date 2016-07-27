@@ -2212,9 +2212,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         methodScope = visitFunctionLate(initializer, rawType);
         methodType = methodScope.getDeclaredFunctionType();
         if (defSite.isGetterDef()) {
-          pname = NewTypeInference.createGetterPropName(pname);
+          pname = JSType.createGetterPropName(pname);
         } else if (defSite.isSetterDef()) {
-          pname = NewTypeInference.createSetterPropName(pname);
+          pname = JSType.createSetterPropName(pname);
         }
       } else if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
         // We're parsing a function declaration without a function initializer

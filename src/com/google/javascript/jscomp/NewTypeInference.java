@@ -433,14 +433,6 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  static String createGetterPropName(String originalPropName) {
-    return "%getter_fun" + originalPropName;
-  }
-
-  static String createSetterPropName(String originalPropName) {
-    return "%setter_fun" + originalPropName;
-  }
-
   private TypeEnv getInEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
     List<DiGraphEdge<Node, ControlFlowGraph.Branch>> inEdges = dn.getInEdges();
     // True for code considered dead in the CFG
@@ -2485,10 +2477,10 @@ final class NewTypeInference implements CompilerPass {
         String specialPropName;
         JSType propType;
         if (prop.isGetterDef()) {
-          specialPropName = createGetterPropName(pname);
+          specialPropName = JSType.createGetterPropName(pname);
           propType = funType.getReturnType();
         } else {
-          specialPropName = createSetterPropName(pname);
+          specialPropName = JSType.createSetterPropName(pname);
           propType = pair.type;
         }
         result = result.withProperty(new QualifiedName(specialPropName), propType);
@@ -2967,7 +2959,7 @@ final class NewTypeInference implements CompilerPass {
           propAccessNode.getParent(), CONST_PROPERTY_DELETED, pname));
     }
     // Then, analyze the property access.
-    QualifiedName getterPname = new QualifiedName(createGetterPropName(pname));
+    QualifiedName getterPname = new QualifiedName(JSType.createGetterPropName(pname));
     if (recvType.hasProp(getterPname)) {
       return new EnvTypePair(pair.env, recvType.getProp(getterPname));
     }
@@ -3974,7 +3966,7 @@ final class NewTypeInference implements CompilerPass {
       mayWarnAboutDictPropAccess(obj, recvType);
     }
     QualifiedName setterPname =
-        new QualifiedName(createSetterPropName(pname.getLeftmostName()));
+        new QualifiedName(JSType.createSetterPropName(pname.getLeftmostName()));
     if (recvType.hasProp(setterPname)) {
       FunctionType funType = recvType.getProp(setterPname).getFunType();
       Preconditions.checkNotNull(funType);

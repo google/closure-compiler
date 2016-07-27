@@ -538,8 +538,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testNoPrivateAccessForProperties11() {
-    // TODO(aravindpg): handle looking up getters and setters as properties in NTI
-    this.mode = TypeInferenceMode.OtiOnly;
     test(new String[] {
         "/** @constructor */ function Foo() {}"
         + "Foo.prototype = {"
@@ -550,8 +548,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testNoPrivateAccessForProperties12() {
-    // TODO(aravindpg): handle looking up getters and setters as properties in NTI
-    this.mode = TypeInferenceMode.OtiOnly;
     test(new String[] {
         "/** @constructor */ function Foo() {}"
         + "Foo.prototype = {"

@@ -17363,4 +17363,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.NULLABLE_DEREFERENCE,
         NewTypeInference.CONST_PROPERTY_DELETED);
   }
+
+  public void testSetterNotTreatedAsProp() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() { this.prop = 123; }",
+        "Foo.prototype = {",
+        "  set a(x) { this.prop = x; }",
+        "};",
+        "var y = (new Foo).a;"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+  }
 }
