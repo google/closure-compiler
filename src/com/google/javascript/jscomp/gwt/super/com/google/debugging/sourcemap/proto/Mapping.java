@@ -16,43 +16,86 @@
 
 package com.google.debugging.sourcemap.proto;
 
-/** GWT compatible no-op replacement of {@code Mapping} */
+/**
+ * GWT compatible replacement of {@code Mapping}, which is a generated Java protocol buffer
+ * unsuitable for use in the GWT Closure.
+ *
+ * This is not intended to match the generated class exactly, it just implements the required
+ * methods.
+ */
 public final class Mapping {
+  private Mapping() {}
+
   public static final class OriginalMapping {
     public static final class Builder {
+      private String originalFile = null;
+      private int columnPosition = 0;
+      private int lineNumber = 0;
+      private String identifier = null;
+
       public Builder setOriginalFile(String value) {
-        throw new UnsupportedOperationException(
-            "Mapping.OriginalMapping.Builder.setOriginalFile not implemented");
+        this.originalFile = value;
+        return this;
+      }
+
+      public Builder setLineNumber(int value) {
+        this.lineNumber = value;
+        return this;
       }
 
       public Builder setColumnPosition(int value) {
-        throw new UnsupportedOperationException(
-            "Mapping.OriginalMapping.Builder.setColumnPosition not implemented");
+        this.columnPosition = value;
+        return this;
+      }
+
+      public Builder setIdentifier(String value) {
+        this.identifier = value;
+        return this;
       }
 
       public OriginalMapping build() {
-        throw new UnsupportedOperationException(
-            "Mapping.OriginalMapping.Builder.build not implemented");
+        return new OriginalMapping(originalFile, lineNumber, columnPosition, identifier);
       }
     }
 
+    public static Builder newBuilder() {
+      return new Builder();
+    }
+
+    private final String originalFile;
+    private final int lineNumber;
+    private final int columnPosition;
+    private final String identifier;
+
+    OriginalMapping(String originalFile, int lineNumber, int columnPosition, String identifier) {
+      this.originalFile = originalFile;
+      this.lineNumber = lineNumber;
+      this.columnPosition = columnPosition;
+      this.identifier = identifier;
+    }
+
     public String getOriginalFile() {
-      throw new UnsupportedOperationException(
-          "Mapping.OriginalMapping.getOriginalFile not implemented");
+      return originalFile;
     }
 
     public int getLineNumber() {
-      throw new UnsupportedOperationException(
-          "Mapping.OriginalMapping.getLineNumber not implemented");
+      return lineNumber;
     }
 
     public int getColumnPosition() {
-      throw new UnsupportedOperationException(
-          "Mapping.OriginalMapping.getColumnPosition not implemented");
+      return columnPosition;
+    }
+
+    public String getIdentifier() {
+      return identifier;
     }
 
     public Builder toBuilder() {
-      throw new UnsupportedOperationException("Mapping.OriginalMapping.toBuilder not implemented");
+      return new Builder()
+          .setOriginalFile(originalFile)
+          .setLineNumber(lineNumber)
+          .setColumnPosition(columnPosition)
+          .setIdentifier(identifier);
     }
   }
 }

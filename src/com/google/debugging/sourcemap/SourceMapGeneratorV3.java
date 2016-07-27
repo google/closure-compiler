@@ -16,10 +16,8 @@
 
 package com.google.debugging.sourcemap;
 
-import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Preconditions;
 import com.google.debugging.sourcemap.SourceMapConsumerV3.EntryVisitor;
-import com.google.gson.Gson;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -40,7 +38,6 @@ import javax.annotation.Nullable;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-@GwtIncompatible("com.google.gson")
 public final class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   /**
@@ -404,9 +401,11 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     // Extensions, only if there is any
     for (String key : this.extensions.keySet()) {
       Object objValue = this.extensions.get(key);
-      String value = objValue.toString();
-      if (objValue instanceof String){
-        value = new Gson().toJson(value);
+      String value;
+      if (objValue instanceof String) {
+        value = escapeString((String) objValue);  // escapes native String
+      } else {
+        value = objValue.toString();
       }
       appendField(out, key, value);
     }

@@ -35,6 +35,7 @@ import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,7 @@ public final class GwtRunner implements EntryPoint {
     // These flags do not match the Java compiler JAR.
     @JsProperty File[] getJsCode();
     @JsProperty File[] getExterns();
+    @JsProperty boolean getCreateSourceMap();  // String in JAR
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
@@ -97,6 +99,7 @@ public final class GwtRunner implements EntryPoint {
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
   private static class ModuleOutput {
     @JsProperty String compiledCode;
+    @JsProperty String sourceMap;
     @JsProperty JavaScriptObject[] errors;
     @JsProperty JavaScriptObject[] warnings;
   }
@@ -161,6 +164,10 @@ public final class GwtRunner implements EntryPoint {
       }
     }
 
+    if (flags.getCreateSourceMap()) {
+      options.setSourceMapOutputPath("%output%");
+    }
+
     options.setAngularPass(flags.getAngularPass());
     options.setChecksOnly(flags.getChecksOnly());
     options.setGenerateExports(flags.getGenerateExports());
@@ -215,6 +222,17 @@ public final class GwtRunner implements EntryPoint {
     output.compiledCode = compiler.toSource();
     output.errors = toNativeErrorArray(errorManager.errors);
     output.warnings = toNativeErrorArray(errorManager.warnings);
+
+    if (flags.getCreateSourceMap()) {
+      StringBuilder b = new StringBuilder();
+      try {
+        compiler.getSourceMap().appendTo(b, "IGNORED");
+      } catch (IOException e) {
+        // ignore
+      }
+      output.sourceMap = b.toString();
+    }
+
     return output;
   }
 
