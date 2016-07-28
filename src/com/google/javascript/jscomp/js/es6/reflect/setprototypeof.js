@@ -20,8 +20,8 @@
 $jscomp.polyfill('Reflect.setPrototypeOf', function(orig) {
   if (orig) return orig;
 
-  // NOTE: IE<11 do not expose the __proto__ property at all, so fail.
-  if (typeof ''.__proto__ != 'object') return function() {return false; };
+  // IE<11 has no way to polyfill this, so don't even try.
+  if (typeof ''.__proto__ != 'object') return null;
 
   /**
    * Polyfill for Reflect.setPrototypeOf() method:

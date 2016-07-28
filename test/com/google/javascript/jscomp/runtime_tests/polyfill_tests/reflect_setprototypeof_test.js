@@ -41,6 +41,6 @@ testSuite({
 
   testSetPrototypeOf_legacy() {
     if (!LEGACY) return;
-    assertFalse(Reflect.setPrototypeOf({}, {}));
+    assertFalse('setPrototypeOf' in Reflect);
   }
 });

@@ -38,7 +38,7 @@ $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
   var property = split[split.length - 1];
   var orig = obj[property];
   var impl = polyfill(orig);
-  if (impl == orig) return;
+  if (impl == orig || impl == null) return;
   var patches = $jscomp.patches[target] || [];
   for (i = 0; i < patches.length; i++) {
     impl = patches[i](/** @type {!Function} */ (impl));

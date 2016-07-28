@@ -20,12 +20,8 @@
 $jscomp.polyfill('Object.setPrototypeOf', function(orig) {
   if (orig) return orig;
 
-  // IE<11 has no way to polyfill this.
-  if (typeof ''.__proto__ != 'object') {
-    return function() {
-      throw new TypeError('Prototypes cannot be changed');
-    };
-  }
+  // IE<11 has no way to polyfill this, so don't even try.
+  if (typeof ''.__proto__ != 'object') return null;
 
   /**
    * Polyfill for Object.setPrototypeOf() method:
