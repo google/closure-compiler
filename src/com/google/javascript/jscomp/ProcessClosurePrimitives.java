@@ -367,7 +367,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   private void handleClosureDefinesValues(NodeTraversal t, Node n) {
     // var CLOSURE_DEFINES = {};
-    if (n.getParent().isVar() && n.hasOneChild() && n.getFirstChild().isObjectLit()) {
+    if (NodeUtil.isNameDeclaration(n.getParent())
+        && n.hasOneChild()
+        && n.getFirstChild().isObjectLit()) {
       HashMap<String, Node> builder = new HashMap<>();
       builder.putAll(compiler.getDefaultDefineValues());
       for (Node c : n.getFirstChild().children()) {

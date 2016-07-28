@@ -1253,6 +1253,8 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     testSame("var CLOSURE_DEFINES = {'FOO': 1};");
     testSame("var CLOSURE_DEFINES = {'FOO': 0xABCD};");
     testSame("var CLOSURE_DEFINES = {'FOO': -1};");
+    testSameEs6("let CLOSURE_DEFINES = {'FOO': 'string'};");
+    testSameEs6("const CLOSURE_DEFINES = {'FOO': 'string'};");
   }
 
   public void testDefineValuesErrors() {
