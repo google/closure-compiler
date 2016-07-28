@@ -184,8 +184,6 @@ angular.lowercase = function(s) {};
  */
 angular.merge = function(dest, srcs) {};
 
-angular.mock = {};
-
 /**
  * @param {string} name
  * @param {Array.<string>=} opt_requires
