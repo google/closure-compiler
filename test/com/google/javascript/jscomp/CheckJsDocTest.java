@@ -126,6 +126,10 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         "class Foo { /** @abstract */ constructor() {}}",
         MISPLACED_ANNOTATION);
     // ES5 constructors are treated as class definitions and tested above.
+
+    // This is valid if foo() returns an abstract class constructor
+    testSame(
+        "/** @constructor */ var C = foo(); /** @abstract */ C.prototype.method = function() {};");
   }
 
   public void testAbstract_field() {
