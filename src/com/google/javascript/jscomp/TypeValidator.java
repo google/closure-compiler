@@ -119,13 +119,6 @@ class TypeValidator {
           "variable {0} redefined with type {1}, " +
           "original definition at {2}:{3} with type {4}");
 
-  static final DiagnosticType HIDDEN_PROPERTY_MISMATCH =
-      DiagnosticType.warning("JSC_HIDDEN_PROPERTY_MISMATCH",
-          "mismatch of the {0} property type and the type " +
-          "of the property it overrides from superclass {1}\n" +
-          "original: {2}\n" +
-          "override: {3}");
-
   static final DiagnosticType INTERFACE_METHOD_NOT_IMPLEMENTED =
       DiagnosticType.warning(
           "JSC_INTERFACE_METHOD_NOT_IMPLEMENTED",
@@ -152,7 +145,6 @@ class TypeValidator {
       MISSING_EXTENDS_TAG_WARNING,
       DUP_VAR_DECLARATION,
       DUP_VAR_DECLARATION_TYPE_MISMATCH,
-      HIDDEN_PROPERTY_MISMATCH,
       INTERFACE_METHOD_NOT_IMPLEMENTED,
       HIDDEN_INTERFACE_PROPERTY_MISMATCH,
       UNKNOWN_TYPEOF_VALUE,
