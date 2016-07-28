@@ -101,6 +101,16 @@ public final class RefasterJsScanner extends Scanner {
     this.templateJs = refasterJsTemplate;
   }
 
+  /**
+   * Clears the RefasterJs templates used for comparison. This function should be called if this
+   * class is going to be used with multiple Compiler objects since type comparison is dependent
+   * on the compiler used to generate the types.
+   */
+  public void clearTemplates() {
+    templates = null;
+    matchedTemplate = null;
+  }
+
   @Override public boolean matches(Node node, NodeMetadata metadata) {
     if (templates == null) {
       try {
