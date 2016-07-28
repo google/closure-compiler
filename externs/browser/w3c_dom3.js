@@ -94,7 +94,7 @@ NameList.prototype.length;
 NameList.prototype.contains = function(str) {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} name
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-containsNS
@@ -146,7 +146,7 @@ DOMImplementationList.prototype.item = function(index) {};
 function DOMImplementationSource() {}
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} publicId
  * @param {DocumentType} doctype
  * @return {Document}
@@ -247,7 +247,7 @@ Document.prototype.normalizeDocument = function() {};
 
 /**
  * @param {Node} n
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} qualifiedName
  * @return {Node}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-renameNode
@@ -354,7 +354,7 @@ Node.prototype.getUserData = function(key) {};
 Node.prototype.hasAttributes = function() {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isDefaultNamespace
  * @nosideeffects
@@ -395,7 +395,7 @@ Node.prototype.isSupported = function(feature, version) {};
 Node.prototype.lookupNamespaceURI = function(prefix) {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @return {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-lookupNamespacePrefix
  * @nosideeffects
@@ -458,7 +458,7 @@ Attr.prototype.schemaTypeInfo;
 Element.prototype.schemaTypeInfo;
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} localName
  * @return {Attr}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElGetAtNodeNS
@@ -467,7 +467,7 @@ Element.prototype.schemaTypeInfo;
 Element.prototype.getAttributeNodeNS = function(namespaceURI, localName) {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} localName
  * @return {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElGetAttrNS
@@ -476,7 +476,7 @@ Element.prototype.getAttributeNodeNS = function(namespaceURI, localName) {};
 Element.prototype.getAttributeNS = function(namespaceURI, localName) {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} localName
  * @return {!NodeList<!Element>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-A6C90942
@@ -493,7 +493,7 @@ Element.prototype.getElementsByTagNameNS = function(namespaceURI, localName) {};
 Element.prototype.hasAttribute = function(name) {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} localName
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElHasAttrNS
@@ -502,7 +502,7 @@ Element.prototype.hasAttribute = function(name) {};
 Element.prototype.hasAttributeNS = function(namespaceURI, localName) {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} localName
  * @return {undefined}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElRemAtNS
@@ -517,7 +517,7 @@ Element.prototype.removeAttributeNS = function(namespaceURI, localName) {};
 Element.prototype.setAttributeNodeNS = function(newAttr) {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} qualifiedName
  * @param {string|number|boolean} value Values are converted to strings with
  *     ToString, so we accept number and boolean since both convert easily to
@@ -544,7 +544,7 @@ Element.prototype.setIdAttribute = function(name, isId) {};
 Element.prototype.setIdAttributeNode = function(idAttr, isId) {};
 
 /**
- * @param {string} namespaceURI
+ * @param {?string} namespaceURI
  * @param {string} localName
  * @param {boolean} isId
  * @return {undefined}
