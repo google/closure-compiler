@@ -73,13 +73,11 @@ import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Nullable;
 
 /**
@@ -1577,9 +1575,14 @@ final class TypedScopeCreator implements ScopeCreator {
               typeRegistry.createDefaultObjectUnion(delegateBaseObject),
               functionParamBuilder.build());
 
-          FunctionType delegateProxy = typeRegistry.createConstructorType(
-              delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX,
-              null, null, null, null);
+          FunctionType delegateProxy =
+              typeRegistry.createConstructorType(
+                  delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX,
+                  null,
+                  null,
+                  null,
+                  null,
+                  false);
           delegateProxy.setPrototypeBasedOn(delegateBaseObject);
 
           codingConvention.applyDelegateRelationship(

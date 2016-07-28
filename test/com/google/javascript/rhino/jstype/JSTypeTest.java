@@ -57,7 +57,6 @@ import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -121,8 +120,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     namedGoogBar = new NamedType(registry, "goog.Bar", null, -1, -1);
 
     subclassCtor =
-        new FunctionType(registry, null, null, createArrowType(null),
-            null, null, true, false);
+        new FunctionType(
+            registry, null, null, createArrowType(null), null, null, true, false, false);
     subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
     subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 
@@ -137,21 +136,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         Lists.<ObjectType>newArrayList(interfaceInstType));
     subInterfaceInstType = subInterfaceType.getInstanceType();
 
-    googBar = registry.createConstructorType(
-        "goog.Bar", null, null, null, null);
+    googBar = registry.createConstructorType("goog.Bar", null, null, null, null, false);
     googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE,
         null);
     googBar.setImplementedInterfaces(
         Lists.<ObjectType>newArrayList(interfaceInstType));
     googBarInst = googBar.getInstanceType();
 
-    googSubBar = registry.createConstructorType(
-        "googSubBar", null, null, null, null);
+    googSubBar = registry.createConstructorType("googSubBar", null, null, null, null, false);
     googSubBar.setPrototypeBasedOn(googBar.getInstanceType());
     googSubBarInst = googSubBar.getInstanceType();
 
-    googSubSubBar = registry.createConstructorType(
-        "googSubSubBar", null, null, null, null);
+    googSubSubBar = registry.createConstructorType("googSubSubBar", null, null, null, null, false);
     googSubSubBar.setPrototypeBasedOn(googSubBar.getInstanceType());
     googSubSubBarInst = googSubSubBar.getInstanceType();
 
@@ -3047,8 +3043,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType recordType1 = builder.build();
 
 
-    FunctionType googBarArgConstructor = registry.createConstructorType(
-        "barArg", null, registry.createParameters(googBar), null, null);
+    FunctionType googBarArgConstructor =
+        registry.createConstructorType(
+            "barArg", null, registry.createParameters(googBar), null, null, false);
 
     builder = new RecordTypeBuilder(registry);
     builder.addProperty("d", googBarArgConstructor, null);
@@ -3275,8 +3272,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * property to it instance type.
    */
   public void testFunctionPrototypeAndImplicitPrototype1() {
-    FunctionType constructor =
-        registry.createConstructorType("Foo", null, null, null, null);
+    FunctionType constructor = registry.createConstructorType("Foo", null, null, null, null, false);
     ObjectType instance = constructor.getInstanceType();
 
     // adding one property on the prototype
@@ -3292,8 +3288,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * properties of its instance type.
    */
   public void testFunctionPrototypeAndImplicitPrototype2() {
-    FunctionType constructor = registry.createConstructorType(
-        null, null, registry.createParameters(null, null, null), null, null);
+    FunctionType constructor =
+        registry.createConstructorType(
+            null, null, registry.createParameters(null, null, null), null, null, false);
     ObjectType instance = constructor.getInstanceType();
 
     // replacing the prototype
@@ -4534,11 +4531,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingFunctionPrototypeType() throws Exception {
-    FunctionType sub1 = registry.createConstructorType(
-        null, null, registry.createParameters(null, null, null), null, null);
+    FunctionType sub1 =
+        registry.createConstructorType(
+            null, null, registry.createParameters(null, null, null), null, null, false);
     sub1.setPrototypeBasedOn(googBar);
-    FunctionType sub2 = registry.createConstructorType(
-        null, null, registry.createParameters(null, null, null), null, null);
+    FunctionType sub2 =
+        registry.createConstructorType(
+            null, null, registry.createParameters(null, null, null), null, null, false);
     sub2.setPrototypeBasedOn(googBar);
 
     ObjectType o1 = sub1.getInstanceType();
@@ -4942,8 +4941,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     NamedType a = new NamedType(registry, "typeA", "source", 1, 0);
     NamedType b = new NamedType(registry, "typeB", "source", 1, 0);
 
-    ObjectType realA = registry.createConstructorType(
-        "typeA", null, null, null, null).getInstanceType();
+    ObjectType realA =
+        registry.createConstructorType("typeA", null, null, null, null, false).getInstanceType();
     ObjectType realB = registry.createEnumType(
         "typeB", null, NUMBER_TYPE).getElementsType();
     registry.declareType("typeA", realA);
@@ -5228,10 +5227,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testConstructorWithArgSubtypeChain() throws Exception {
-    FunctionType googBarArgConstructor = registry.createConstructorType(
-        "barArg", null, registry.createParameters(googBar), null, null);
-    FunctionType googSubBarArgConstructor = registry.createConstructorType(
-        "subBarArg", null, registry.createParameters(googSubBar), null, null);
+    FunctionType googBarArgConstructor =
+        registry.createConstructorType(
+            "barArg", null, registry.createParameters(googBar), null, null, false);
+    FunctionType googSubBarArgConstructor =
+        registry.createConstructorType(
+            "subBarArg", null, registry.createParameters(googSubBar), null, null, false);
 
     List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
@@ -5257,7 +5258,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testInterfaceInheritanceSubtypeChain() throws Exception {
     FunctionType tempType =
-      registry.createConstructorType("goog.TempType", null, null, null, null);
+        registry.createConstructorType("goog.TempType", null, null, null, null, false);
     tempType.setImplementedInterfaces(
         Lists.<ObjectType>newArrayList(subInterfaceInstType));
     List<JSType> typeChain = ImmutableList.of(
@@ -5799,15 +5800,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testGoodSetPrototypeBasedOn() {
-    FunctionType fun = registry.createConstructorType(
-        "fun", null, null, null, null);
+    FunctionType fun = registry.createConstructorType("fun", null, null, null, null, false);
     fun.setPrototypeBasedOn(unresolvedNamedType);
     assertTrue(fun.getInstanceType().isUnknownType());
   }
 
   public void testLateSetPrototypeBasedOn() {
-    FunctionType fun = registry.createConstructorType(
-        "fun", null, null, null, null);
+    FunctionType fun = registry.createConstructorType("fun", null, null, null, null, false);
     assertFalse(fun.getInstanceType().isUnknownType());
 
     fun.setPrototypeBasedOn(unresolvedNamedType);
@@ -6262,10 +6261,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testTemplatizedType() throws Exception {
-    FunctionType templatizedCtor = registry.createConstructorType(
-        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of(
-            registry.createTemplateType("A"),
-            registry.createTemplateType("B")));
+    FunctionType templatizedCtor =
+        registry.createConstructorType(
+            "TestingType",
+            null,
+            null,
+            UNKNOWN_TYPE,
+            ImmutableList.of(registry.createTemplateType("A"), registry.createTemplateType("B")),
+            false);
     JSType templatizedInstance = registry.createTemplatizedType(
         templatizedCtor.getInstanceType(),
         ImmutableList.of(NUMBER_TYPE, STRING_TYPE));
@@ -6292,10 +6295,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testPartiallyTemplatizedType() throws Exception {
-    FunctionType templatizedCtor = registry.createConstructorType(
-        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of(
-            registry.createTemplateType("A"),
-            registry.createTemplateType("B")));
+    FunctionType templatizedCtor =
+        registry.createConstructorType(
+            "TestingType",
+            null,
+            null,
+            UNKNOWN_TYPE,
+            ImmutableList.of(registry.createTemplateType("A"), registry.createTemplateType("B")),
+            false);
     JSType templatizedInstance = registry.createTemplatizedType(
         templatizedCtor.getInstanceType(),
         ImmutableList.of(NUMBER_TYPE));

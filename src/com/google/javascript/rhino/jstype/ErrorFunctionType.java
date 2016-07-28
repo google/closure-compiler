@@ -49,14 +49,20 @@ class ErrorFunctionType extends FunctionType {
 
   ErrorFunctionType(JSTypeRegistry registry, String name) {
     super(
-        registry, name, null,
+        registry,
+        name,
+        null,
         registry.createArrowType(
             registry.createOptionalParameters(
                 registry.getNativeType(ALL_TYPE),
                 registry.getNativeType(ALL_TYPE),
                 registry.getNativeType(ALL_TYPE)),
             null),
-        null, null, true, true);
+        null,
+        null,
+        true,
+        true,
+        false);
 
     // NOTE(nicksantos): Errors have the weird behavior in that they can
     // be called as functions, and they will return instances of themselves.

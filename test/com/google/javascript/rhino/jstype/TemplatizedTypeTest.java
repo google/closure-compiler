@@ -109,10 +109,14 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testCustomTemplatizedType() throws Exception {
-    FunctionType ctor = registry.createConstructorType(
-        "Foo", null, null, null, ImmutableList.of(
-            registry.createTemplateType("T"),
-            registry.createTemplateType("U")));
+    FunctionType ctor =
+        registry.createConstructorType(
+            "Foo",
+            null,
+            null,
+            null,
+            ImmutableList.of(registry.createTemplateType("T"), registry.createTemplateType("U")),
+            false);
     ObjectType baseType = ctor.getInstanceType();
 
     JSType templatizedType1 = registry.createTemplatizedType(

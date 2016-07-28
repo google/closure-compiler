@@ -61,6 +61,7 @@ public final class FunctionBuilder {
   private boolean inferredReturnType = false;
   private boolean isConstructor = false;
   private boolean isNativeType = false;
+  private boolean isAbstract = false;
 
   public FunctionBuilder(JSTypeRegistry registry) {
     this.registry = registry;
@@ -131,6 +132,12 @@ public final class FunctionBuilder {
     return this;
   }
 
+  /** Mark abstract method. */
+  public FunctionBuilder withIsAbstract(boolean isAbstract) {
+    this.isAbstract = isAbstract;
+    return this;
+  }
+
   /** Copies all the information from another function type. */
   public FunctionBuilder copyFromOtherFunction(FunctionType otherType) {
     this.name = otherType.getReferenceName();
@@ -141,13 +148,21 @@ public final class FunctionBuilder {
     this.templateTypeMap = otherType.getTemplateTypeMap();
     this.isConstructor = otherType.isConstructor();
     this.isNativeType = otherType.isNativeObjectType();
+    this.isAbstract = otherType.isAbstract();
     return this;
   }
 
   /** Construct a new function type. */
   public FunctionType build() {
-    return new FunctionType(registry, name, sourceNode,
+    return new FunctionType(
+        registry,
+        name,
+        sourceNode,
         new ArrowType(registry, parametersNode, returnType, inferredReturnType),
-        typeOfThis, templateTypeMap, isConstructor, isNativeType);
+        typeOfThis,
+        templateTypeMap,
+        isConstructor,
+        isNativeType,
+        isAbstract);
   }
 }

@@ -51,7 +51,6 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -260,48 +259,56 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Object type \"{0}\" contains non-stringifiable key and it may lead to an "
           + "error. Please use ES6 Map instead or implement your own Map structure.");
 
+  static final DiagnosticType ABSTRACT_METHOD_IN_CONCRETE_CLASS =
+      DiagnosticType.warning(
+          "JSC_ABSTRACT_METHOD_IN_CONCRETE_CLASS",
+          "Abstract methods can only appear in abstract classes. Please declare the class as "
+              + "@abstract");
+
   // If a diagnostic is disabled by default, do not add it in this list
   // TODO(dimvar): Either INEXISTENT_PROPERTY shouldn't be here, or we should
   // change DiagnosticGroups.setWarningLevel to not accidentally enable it.
-  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
-      DETERMINISTIC_TEST,
-      INEXISTENT_ENUM_ELEMENT,
-      INEXISTENT_PROPERTY,
-      POSSIBLE_INEXISTENT_PROPERTY,
-      INEXISTENT_PROPERTY_WITH_SUGGESTION,
-      NOT_A_CONSTRUCTOR,
-      INSTANTIATE_ABSTRACT_CLASS,
-      BIT_OPERATION,
-      NOT_CALLABLE,
-      CONSTRUCTOR_NOT_CALLABLE,
-      FUNCTION_MASKS_VARIABLE,
-      MULTIPLE_VAR_DEF,
-      ENUM_DUP,
-      INVALID_INTERFACE_MEMBER_DECLARATION,
-      INTERFACE_METHOD_NOT_EMPTY,
-      CONFLICTING_EXTENDED_TYPE,
-      CONFLICTING_IMPLEMENTED_TYPE,
-      BAD_IMPLEMENTED_TYPE,
-      HIDDEN_SUPERCLASS_PROPERTY,
-      HIDDEN_INTERFACE_PROPERTY,
-      HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
-      UNKNOWN_OVERRIDE,
-      INTERFACE_METHOD_OVERRIDE,
-      UNRESOLVED_TYPE,
-      WRONG_ARGUMENT_COUNT,
-      ILLEGAL_IMPLICIT_CAST,
-      INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
-      EXPECTED_THIS_TYPE,
-      IN_USED_WITH_STRUCT,
-      ILLEGAL_PROPERTY_CREATION,
-      ILLEGAL_OBJLIT_KEY,
-      NON_STRINGIFIABLE_OBJECT_KEY,
-      RhinoErrorReporter.TYPE_PARSE_ERROR,
-      TypedScopeCreator.UNKNOWN_LENDS,
-      TypedScopeCreator.LENDS_ON_NON_OBJECT,
-      TypedScopeCreator.CTOR_INITIALIZER,
-      TypedScopeCreator.IFACE_INITIALIZER,
-      FunctionTypeBuilder.THIS_TYPE_NON_OBJECT);
+  static final DiagnosticGroup ALL_DIAGNOSTICS =
+      new DiagnosticGroup(
+          DETERMINISTIC_TEST,
+          INEXISTENT_ENUM_ELEMENT,
+          INEXISTENT_PROPERTY,
+          POSSIBLE_INEXISTENT_PROPERTY,
+          INEXISTENT_PROPERTY_WITH_SUGGESTION,
+          NOT_A_CONSTRUCTOR,
+          INSTANTIATE_ABSTRACT_CLASS,
+          BIT_OPERATION,
+          NOT_CALLABLE,
+          CONSTRUCTOR_NOT_CALLABLE,
+          FUNCTION_MASKS_VARIABLE,
+          MULTIPLE_VAR_DEF,
+          ENUM_DUP,
+          INVALID_INTERFACE_MEMBER_DECLARATION,
+          INTERFACE_METHOD_NOT_EMPTY,
+          CONFLICTING_EXTENDED_TYPE,
+          CONFLICTING_IMPLEMENTED_TYPE,
+          BAD_IMPLEMENTED_TYPE,
+          HIDDEN_SUPERCLASS_PROPERTY,
+          HIDDEN_INTERFACE_PROPERTY,
+          HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
+          UNKNOWN_OVERRIDE,
+          INTERFACE_METHOD_OVERRIDE,
+          UNRESOLVED_TYPE,
+          WRONG_ARGUMENT_COUNT,
+          ILLEGAL_IMPLICIT_CAST,
+          INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
+          EXPECTED_THIS_TYPE,
+          IN_USED_WITH_STRUCT,
+          ILLEGAL_PROPERTY_CREATION,
+          ILLEGAL_OBJLIT_KEY,
+          NON_STRINGIFIABLE_OBJECT_KEY,
+          ABSTRACT_METHOD_IN_CONCRETE_CLASS,
+          RhinoErrorReporter.TYPE_PARSE_ERROR,
+          TypedScopeCreator.UNKNOWN_LENDS,
+          TypedScopeCreator.LENDS_ON_NON_OBJECT,
+          TypedScopeCreator.CTOR_INITIALIZER,
+          TypedScopeCreator.IFACE_INITIALIZER,
+          FunctionTypeBuilder.THIS_TYPE_NON_OBJECT);
 
   private final AbstractCompiler compiler;
   private final TypeValidator validator;
@@ -1022,6 +1029,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           if (functionType.isConstructor() || functionType.isInterface()) {
             checkDeclaredPropertyInheritance(
                 t, assign, functionType, property, info, propertyType);
+            checkAbstractMethodInConcreteClass(t, assign, functionType, info);
           }
         }
       }
@@ -1278,6 +1286,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       compiler.report(
           t.makeError(n, UNKNOWN_OVERRIDE,
               propertyName, ctorType.getInstanceType().toString()));
+    }
+  }
+
+  private void checkAbstractMethodInConcreteClass(
+      NodeTraversal t, Node n, FunctionType ctorType, JSDocInfo info) {
+    if (info == null || !info.isAbstract()) {
+      return;
+    }
+
+    if (ctorType.isConstructor() && !ctorType.isAbstract()) {
+      report(t, n, ABSTRACT_METHOD_IN_CONCRETE_CLASS);
     }
   }
 
@@ -1578,12 +1597,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return;
     }
 
-    Var var = t.getScope().getVar(constructor.getQualifiedName());
-    if (var != null && var.getJSDocInfo() != null && var.getJSDocInfo().isAbstract()) {
+    FunctionType fnType = type.toMaybeFunctionType();
+    if (fnType != null && fnType.isAbstract()) {
       report(t, n, INSTANTIATE_ABSTRACT_CLASS);
     }
-
-    FunctionType fnType = type.toMaybeFunctionType();
     if (fnType != null && fnType.hasInstanceType()) {
       visitParameterList(t, n, fnType);
       ensureTyped(t, n, fnType.getInstanceType());

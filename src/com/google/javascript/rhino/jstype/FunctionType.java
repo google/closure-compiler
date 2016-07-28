@@ -50,7 +50,6 @@ import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -124,6 +123,12 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private boolean isStructuralInterface;
 
   /**
+   * If true, the function type represents an abstract method or the constructor of an abstract
+   * class
+   */
+  private final boolean isAbstract;
+
+  /**
    * The interfaces directly implemented by this function (for constructors)
    * It is only relevant for constructors. May not be {@code null}.
    */
@@ -142,10 +147,16 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private List<FunctionType> subTypes;
 
   /** Creates an instance for a function that might be a constructor. */
-  FunctionType(JSTypeRegistry registry, String name, Node source,
-               ArrowType arrowType, JSType typeOfThis,
-               TemplateTypeMap templateTypeMap,
-               boolean isConstructor, boolean nativeType) {
+  FunctionType(
+      JSTypeRegistry registry,
+      String name,
+      Node source,
+      ArrowType arrowType,
+      JSType typeOfThis,
+      TemplateTypeMap templateTypeMap,
+      boolean isConstructor,
+      boolean nativeType,
+      boolean isAbstract) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
         nativeType, templateTypeMap);
@@ -168,6 +179,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
     this.call = arrowType;
     this.isStructuralInterface = false;
+    this.isAbstract = isAbstract;
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -186,6 +198,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     this.kind = Kind.INTERFACE;
     this.typeOfThis = new InstanceObjectType(registry, this);
     this.isStructuralInterface = false;
+    this.isAbstract = false;
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -872,10 +885,15 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         call.returnTypeInferred || other.call.returnTypeInferred;
 
     return new FunctionType(
-        registry, null, null,
-        new ArrowType(
-            registry, newParamsNode, newReturnType, newReturnTypeInferred),
-        newTypeOfThis, null, false, false);
+        registry,
+        null,
+        null,
+        new ArrowType(registry, newParamsNode, newReturnType, newReturnTypeInferred),
+        newTypeOfThis,
+        null,
+        false,
+        false,
+        false);
   }
 
   /**
@@ -1343,10 +1361,17 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
   /** Create a new constructor with the parameters and return type stripped. */
   public FunctionType forgetParameterAndReturnTypes() {
-    FunctionType result = new FunctionType(
-        registry, getReferenceName(), source,
-        registry.createArrowType(null, null), getInstanceType(),
-        null, true, false);
+    FunctionType result =
+        new FunctionType(
+            registry,
+            getReferenceName(),
+            source,
+            registry.createArrowType(null, null),
+            getInstanceType(),
+            null,
+            true,
+            false,
+            false);
     result.setPrototypeBasedOn(getInstanceType());
     return result;
   }
@@ -1393,6 +1418,10 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   @Override
   public boolean isStructuralInterface() {
     return isInterface() && isStructuralInterface;
+  }
+
+  public boolean isAbstract() {
+    return isAbstract;
   }
 
   /**

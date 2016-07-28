@@ -31,7 +31,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -1231,6 +1230,50 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "assignment to property x of n.T\n" +
         "found   : string\n" +
         "required: number");
+  }
+
+  public void testAbstractMethodInAbstractClass() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var C = function() {};",
+            "/** @abstract */ C.prototype.foo = function() {};"));
+  }
+
+  public void testAbstractMethodInConcreteClass() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor */ var C = function() {};",
+            "/** @abstract */ C.prototype.foo = function() {};"),
+        "Abstract methods can only appear in abstract classes. Please declare the class as "
+            + "@abstract");
+  }
+
+  public void testAbstractMethodInConcreteClassExtendingAbstractClass() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @abstract */ B.prototype.foo = function() {};"),
+        "Abstract methods can only appear in abstract classes. Please declare the class as "
+            + "@abstract");
+  }
+
+  public void testConcreteMethodOverridingAbstractMethod() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() {};"));
+  }
+
+  public void testAbstractMethodInInterface() {
+    // TODO(moz): There's no need to tag methods with @abstract in interfaces, maybe give a warning
+    // on this.
+    testTypes(
+        LINE_JOINER.join(
+            "/** @interface */ var I = function() {};",
+            "/** @abstract */ I.prototype.foo = function() {};"));
   }
 
   public void testPropertyUsedBeforeDefinition1() {

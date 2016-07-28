@@ -58,7 +58,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -298,12 +297,17 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // Object
     FunctionType OBJECT_FUNCTION_TYPE =
-        new FunctionType(this, "Object", null,
+        new FunctionType(
+            this,
+            "Object",
+            null,
             createArrowType(createOptionalParameters(ALL_TYPE), null),
             null,
-            createTemplateTypeMap(ImmutableList.of(
-                iObjectIndexTemplateKey, iObjectElementTemplateKey), null),
-            true, true);
+            createTemplateTypeMap(
+                ImmutableList.of(iObjectIndexTemplateKey, iObjectElementTemplateKey), null),
+            true,
+            true,
+            false);
     OBJECT_FUNCTION_TYPE.getInternalArrowType().returnType =
         OBJECT_FUNCTION_TYPE.getInstanceType();
 
@@ -318,10 +322,16 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // Function
     FunctionType FUNCTION_FUNCTION_TYPE =
-        new FunctionType(this, "Function", null,
-            createArrowType(
-                createParametersWithVarArgs(ALL_TYPE), UNKNOWN_TYPE),
-            null, null, true, true);
+        new FunctionType(
+            this,
+            "Function",
+            null,
+            createArrowType(createParametersWithVarArgs(ALL_TYPE), UNKNOWN_TYPE),
+            null,
+            null,
+            true,
+            true,
+            false);
     FUNCTION_FUNCTION_TYPE.setPrototypeBasedOn(OBJECT_TYPE);
     registerNativeType(
         JSTypeNative.FUNCTION_FUNCTION_TYPE, FUNCTION_FUNCTION_TYPE);
@@ -340,14 +350,20 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // Array
     FunctionType ARRAY_FUNCTION_TYPE =
-      new FunctionType(this, "Array", null,
-          createArrowType(createParametersWithVarArgs(ALL_TYPE), null),
-          null,
-          createTemplateTypeMap(ImmutableList.of(arrayElementTemplateKey), null)
-          .extend(createTemplateTypeMap(
-                ImmutableList.of(iObjectElementTemplateKey),
-                ImmutableList.<JSType>of(arrayElementTemplateKey))),
-          true, true);
+        new FunctionType(
+            this,
+            "Array",
+            null,
+            createArrowType(createParametersWithVarArgs(ALL_TYPE), null),
+            null,
+            createTemplateTypeMap(ImmutableList.of(arrayElementTemplateKey), null)
+                .extend(
+                    createTemplateTypeMap(
+                        ImmutableList.of(iObjectElementTemplateKey),
+                        ImmutableList.<JSType>of(arrayElementTemplateKey))),
+            true,
+            true,
+            false);
     ARRAY_FUNCTION_TYPE.getInternalArrowType().returnType =
         ARRAY_FUNCTION_TYPE.getInstanceType();
 
@@ -359,9 +375,16 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // Boolean
     FunctionType BOOLEAN_OBJECT_FUNCTION_TYPE =
-        new FunctionType(this, "Boolean", null,
+        new FunctionType(
+            this,
+            "Boolean",
+            null,
             createArrowType(createOptionalParameters(ALL_TYPE), BOOLEAN_TYPE),
-            null, null, true, true);
+            null,
+            null,
+            true,
+            true,
+            false);
     BOOLEAN_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(
         JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE,
@@ -373,12 +396,25 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // Date
     FunctionType DATE_FUNCTION_TYPE =
-      new FunctionType(this, "Date", null,
-          createArrowType(
-              createOptionalParameters(UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE,
-                  UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE),
-              STRING_TYPE),
-          null, null, true, true);
+        new FunctionType(
+            this,
+            "Date",
+            null,
+            createArrowType(
+                createOptionalParameters(
+                    UNKNOWN_TYPE,
+                    UNKNOWN_TYPE,
+                    UNKNOWN_TYPE,
+                    UNKNOWN_TYPE,
+                    UNKNOWN_TYPE,
+                    UNKNOWN_TYPE,
+                    UNKNOWN_TYPE),
+                STRING_TYPE),
+            null,
+            null,
+            true,
+            true,
+            false);
     DATE_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(JSTypeNative.DATE_FUNCTION_TYPE, DATE_FUNCTION_TYPE);
 
@@ -456,9 +492,16 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // Number
     FunctionType NUMBER_OBJECT_FUNCTION_TYPE =
-        new FunctionType(this, "Number", null,
+        new FunctionType(
+            this,
+            "Number",
+            null,
             createArrowType(createOptionalParameters(ALL_TYPE), NUMBER_TYPE),
-            null, null, true, true);
+            null,
+            null,
+            true,
+            true,
+            false);
     NUMBER_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(
         JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE, NUMBER_OBJECT_FUNCTION_TYPE);
@@ -469,9 +512,16 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // RegExp
     FunctionType REGEXP_FUNCTION_TYPE =
-      new FunctionType(this, "RegExp", null,
-          createArrowType(createOptionalParameters(ALL_TYPE, ALL_TYPE)),
-          null, null, true, true);
+        new FunctionType(
+            this,
+            "RegExp",
+            null,
+            createArrowType(createOptionalParameters(ALL_TYPE, ALL_TYPE)),
+            null,
+            null,
+            true,
+            true,
+            false);
     REGEXP_FUNCTION_TYPE.getInternalArrowType().returnType =
         REGEXP_FUNCTION_TYPE.getInstanceType();
 
@@ -483,9 +533,16 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // String
     FunctionType STRING_OBJECT_FUNCTION_TYPE =
-        new FunctionType(this, "String", null,
+        new FunctionType(
+            this,
+            "String",
+            null,
             createArrowType(createOptionalParameters(ALL_TYPE), STRING_TYPE),
-            null, null, true, true);
+            null,
+            null,
+            true,
+            true,
+            false);
     STRING_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(
         JSTypeNative.STRING_OBJECT_FUNCTION_TYPE, STRING_OBJECT_FUNCTION_TYPE);
@@ -547,16 +604,21 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         // createConstructorType(UNKNOWN_TYPE, true, UNKNOWN_TYPE), but,
         // in addition, overrides getInstanceType() to return the NoObject type
         // instead of a new anonymous object.
-        new FunctionType(this, "Function", null,
-            createArrowType(
-                createParametersWithVarArgs(UNKNOWN_TYPE),
-                UNKNOWN_TYPE),
-            UNKNOWN_TYPE, null, true, true) {
+        new FunctionType(
+            this,
+            "Function",
+            null,
+            createArrowType(createParametersWithVarArgs(UNKNOWN_TYPE), UNKNOWN_TYPE),
+            UNKNOWN_TYPE,
+            null,
+            true,
+            true,
+            false) {
           private static final long serialVersionUID = 1L;
 
-          @Override public FunctionType getConstructor() {
-            return registry.getNativeFunctionType(
-                JSTypeNative.FUNCTION_FUNCTION_TYPE);
+          @Override
+          public FunctionType getConstructor() {
+            return registry.getNativeFunctionType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
           }
         };
 
@@ -576,9 +638,16 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // the 'this' object in the global scope
     FunctionType GLOBAL_THIS_CTOR =
-        new FunctionType(this, "global this", null,
+        new FunctionType(
+            this,
+            "global this",
+            null,
             createArrowType(createParameters(false, ALL_TYPE), NUMBER_TYPE),
-            null, null, true, true);
+            null,
+            null,
+            true,
+            true,
+            false);
     ObjectType GLOBAL_THIS = GLOBAL_THIS_CTOR.getInstanceType();
     registerNativeType(JSTypeNative.GLOBAL_THIS, GLOBAL_THIS);
 
@@ -1373,22 +1442,35 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
   /**
    * Creates a constructor function type.
-   * @param name the function's name or {@code null} to indicate that the
-   *     function is anonymous.
-   * @param source the node defining this function. Its type
-   *     ({@link Node#getType()}) must be {@link Token#FUNCTION}.
-   * @param parameters the function's parameters or {@code null}
-   *     to indicate that the parameter types are unknown.
-   * @param returnType the function's return type or {@code null} to indicate
-   *     that the return type is unknown.
+   *
+   * @param name the function's name or {@code null} to indicate that the function is anonymous.
+   * @param source the node defining this function. Its type ({@link Node#getType()}) must be {@link
+   *     Token#FUNCTION}.
+   * @param parameters the function's parameters or {@code null} to indicate that the parameter
+   *     types are unknown.
+   * @param returnType the function's return type or {@code null} to indicate that the return type
+   *     is unknown.
    * @param templateKeys the templatized types for the class.
+   * @param isAbstract whether the function type represents an abstract class
    */
-  public FunctionType createConstructorType(String name, Node source,
-      Node parameters, JSType returnType, ImmutableList<TemplateType> templateKeys) {
+  public FunctionType createConstructorType(
+      String name,
+      Node source,
+      Node parameters,
+      JSType returnType,
+      ImmutableList<TemplateType> templateKeys,
+      boolean isAbstract) {
     Preconditions.checkArgument(source == null || source.isFunction());
-    return new FunctionType(this, name, source,
-        createArrowType(parameters, returnType), null,
-        createTemplateTypeMap(templateKeys, null), true, false);
+    return new FunctionType(
+        this,
+        name,
+        source,
+        createArrowType(parameters, returnType),
+        null,
+        createTemplateTypeMap(templateKeys, null),
+        true,
+        false,
+        isAbstract);
   }
 
   /**
