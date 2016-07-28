@@ -194,6 +194,8 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testWarningForPrototypeProperty() {
+    // TODO(aravindpg): in NTI the string representation of prototype object types is less than
+    // ideal due to the way NTI represents them. Fix if possible.
     String js =
         "/** @constructor */ function Foo() {}"
         + "/** @deprecated It is now in production, use that model... */ Foo.prototype.bar = 3;"
@@ -226,18 +228,11 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testWarningForMethod2() {
-    String js =
-        "/** @constructor */ function Foo() {} "
-        + "/** @deprecated Stop the ringing! */ Foo.prototype.bar; "
-        + "Foo.prototype.baz = function() { this.bar(); };";
-    this.mode = TypeInferenceMode.OtiOnly;
     testDepProp(
-        js,
+        "/** @constructor */ function Foo() {}"
+        + "/** @deprecated Stop the ringing! */ Foo.prototype.bar;"
+        + "Foo.prototype.baz = function() { this.bar(); };",
         "Property bar of type Foo has been deprecated: Stop the ringing!");
-    this.mode = TypeInferenceMode.NtiOnly;
-    testDepProp(
-        js,
-        "Property bar of type Foo{bar:TOP_FUNCTION} has been deprecated: Stop the ringing!");
   }
 
   public void testNoWarningInDeprecatedClass() {
@@ -1370,19 +1365,12 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testBadReadOfDeprecatedProperty() {
-    String js =
+    testDepProp(
         "/** @constructor */ function Foo() {"
         + " /** @deprecated GRR */ this.bar = 3;"
         + "  this.baz = this.bar;"
-        + "}";
-    this.mode = TypeInferenceMode.OtiOnly;
-    testDepProp(
-        js,
+        + "}",
         "Property bar of type Foo has been deprecated: GRR");
-    this.mode = TypeInferenceMode.NtiOnly;
-    testDepProp(
-        js,
-        "Property bar of type Foo{bar:number} has been deprecated: GRR");
   }
 
   public void testAutoboxedDeprecatedProperty() {

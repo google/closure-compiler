@@ -2490,12 +2490,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   @Override
   public String getReadableTypeName(Node n) {
-    // TODO(aravindpg): stub, could implement in a more sophisticated way, following the
+    // TODO(aravindpg): could implement in a more sophisticated way, following the
     // implementation in JSTypeRegistry.
     if (n.getTypeI() == null) {
       return "<node (" + compiler.toSource(n) + ")>";
     }
-    return n.getTypeI().toString();
+    return n.getTypeI().getDisplayName();
   }
 
   @Override

@@ -1577,7 +1577,15 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public String getDisplayName() {
-    // TODO(aravindpg): stub, could implement in a more sophisticated way
+    // TODO(aravindpg): could implement in a more sophisticated way.
+    // One particular pain point is that we currently return the object literal representation of
+    // prototype objects instead of something more readable such as "Foo.prototype". But this is
+    // difficult to fix since we don't represent prototype objects in any special way.
+    NominalType nt = getNominalTypeIfSingletonObj();
+    // Prefer just the class name to the name bundled with all its properties.
+    if (nt != null && nt.isClassy()) {
+      return nt.toString();
+    }
     return toString();
   }
 
