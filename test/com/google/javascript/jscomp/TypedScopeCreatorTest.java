@@ -1743,7 +1743,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "var result3 = z.method1();\n");
     assertEquals("string", findNameType("result1", globalScope).toString());
     assertEquals("boolean", findNameType("result2", globalScope).toString());
-    assertEquals("T", findNameType("result3", globalScope).toString());
+    assertEquals("?", findNameType("result3", globalScope).toString());
   }
 
   public void testClosureParameterTypesWithoutJSDoc() {

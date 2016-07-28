@@ -10336,6 +10336,89 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "ns.Low = function() {};"));
   }
 
+  public void testFillInMissingGenerics1() {
+    testTypes(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Bar() {}",
+            "/** @type {!Foo<T>} */",
+            "Bar.prototype.myprop;",
+            "/** @param {!Bar} x */",
+            "function f(x) {",
+            "  var /** null */ n = x.myprop;",
+            "}"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Foo<?>",
+            "required: null"));
+  }
+
+  public void testFillInMissingGenerics2() {
+    testTypes(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "/**",
+            " * @constructor",
+            " * @template T,U",
+            " */",
+            "function Bar() {}",
+            "/** @type {!Foo<U>} */",
+            "Bar.prototype.myprop;",
+            "/** @param {!Bar<number>} x */",
+            "function f(x) {",
+            "  var /** null */ n = x.myprop;",
+            "}"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Foo<?>",
+            "required: null"));
+  }
+
+  public void testFillInMissingGenerics3() {
+    // If we don't fill in the missing generics here, we get a spurious
+    // warning that Low gets incompatible types for myprop from its
+    // super-interfaces.
+    testTypes(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "/**",
+            " * @interface",
+            " * @template T",
+            " */",
+            "function High1() {}",
+            "/** @type {!Foo<T>} */",
+            "High1.prototype.myprop;",
+            "/**",
+            " * @interface",
+            " * @template T",
+            " */",
+            "function High2() {}",
+            "/** @type {!Foo<T>} */",
+            "High2.prototype.myprop;",
+            "/**",
+            " * @interface",
+            " * @extends {High1}",
+            " * @extends {High2}",
+            " */",
+            "function Low() {}"));
+  }
+
   public void testConversionFromInterfaceToRecursiveConstructor() {
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
