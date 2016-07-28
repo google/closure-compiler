@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -2289,6 +2290,20 @@ public final class NodeUtilTest extends TestCase {
 
     function = getFunctionNode("/** @constructor */ export let Foo = function() {}");
     assertTrue(NodeUtil.getBestJSDocInfo(function).isConstructor());
+  }
+
+  public void testGetDeclaredTypeExpression1() {
+    Node ast = parse("function f(/** string */ x) {}");
+    Node x = getNameNode(ast, "x");
+    JSTypeExpression typeExpr = NodeUtil.getDeclaredTypeExpression(x);
+    assertThat(typeExpr.getRoot().getString()).isEqualTo("string");
+  }
+
+  public void testGetDeclaredTypeExpression2() {
+    Node ast = parse("/** @param {string} x */ function f(x) {}");
+    Node x = getNameNode(ast, "x");
+    JSTypeExpression typeExpr = NodeUtil.getDeclaredTypeExpression(x);
+    assertThat(typeExpr.getRoot().getString()).isEqualTo("string");
   }
 
   public void testGetLhsNodesOfDeclaration() {
