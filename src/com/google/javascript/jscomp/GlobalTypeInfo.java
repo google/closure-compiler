@@ -2062,8 +2062,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           || !propCreationJsdoc.getSuppressions().contains("duplicate")) {
         return false;
       }
-      return typeInJsdoc != null && previousType != null
-          && typeInJsdoc.equals(previousType);
+      return typeInJsdoc == null || typeInJsdoc.equals(previousType);
     }
 
     private DeclaredFunctionType computeFnDeclaredType(

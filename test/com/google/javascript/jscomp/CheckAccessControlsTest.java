@@ -324,8 +324,9 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testWarningForBind() {
-    // TODO(aravindpg): Seems to be a genuine bug caused by the fact that we handle bind specially,
-    // and so are not able to override it properly. Make this pass under NTI as well.
+    // NTI reports NTI_REDCLARED_PROPERTY here, which is as intended. If this were a new
+    // property and not the existing `bind`, then we'd report the deprecation warning as expected
+    // (see testAutoboxedDeprecatedProperty and testAutoboxedPrivateProperty).
     this.mode = TypeInferenceMode.OtiOnly;
     testDepProp(
         "/** @deprecated I'm bound to this method... */ Function.prototype.bind = function() {};"
@@ -387,9 +388,11 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testPrivateAccessForProperties4() {
-    // TODO(aravindpg): NTI currently does not handle computed accesses properly (because of our
-    // reliance on NodeUtil.isPrototypeProperty), so it fails to recognize Foo.prototype['baz'] as
-    // a property of Foo.prototype. Fix this.
+    // If a prototype property is defined via a computed access in a separate file from the
+    // constructor itself, then when running with NTI we fail to recognize that property as being a
+    // prototype property. This is enough of a corner case that we are fine with allowing it.
+    // If they are in the same file then things work as expected
+    // (see testPrivateAccessForProperties4b).
     this.mode = TypeInferenceMode.OtiOnly;
     testSame(new String[] {
         "/** @constructor */ function Foo() {}"
@@ -403,6 +406,13 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         "/** @constructor */ function Foo() {}"
         + "/** @private */ Foo.prototype.bar_ = function() {};",
         "Foo.prototype.baz = function() { (new Foo()).bar_(); };"});
+  }
+
+  public void testPrivateAccessForProperties4b() {
+    testSame(
+        "/** @constructor */ function Foo() {}"
+        + "/** @private */ Foo.prototype.bar_ = function() {};"
+        + "Foo.prototype['baz'] = function() { (new Foo()).bar_(); };");
   }
 
   public void testPrivateAccessForProperties5() {
@@ -641,7 +651,8 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testProtectedAccessForProperties10() {
-    // TODO(aravindpg): NTI throws NTI_CTOR_IN_DIFFERENT_SCOPE
+    // TODO(aravindpg): NTI throws NTI_CTOR_IN_DIFFERENT_SCOPE, NTI_UNKNOWN_NAMESPACE_PROPERTY.
+    // The latter should be fixed.
     this.mode = TypeInferenceMode.OtiOnly;
     testSame(ImmutableList.of(
         SourceFile.fromCode(
@@ -1525,9 +1536,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testConstantProperty3a() {
-    // TODO(aravindpg): NTI reports NTI_REDCLARED_PROPERTY for this test (which is fine).
-    // Fix the test so it doesn't cause that warning and passes under both.
-    this.mode = TypeInferenceMode.OtiOnly;
     testSame("/** @constructor */ function Foo() {}\n"
         + "/** @type {number} */ Foo.prototype.PROP = 2;\n"
         + "/** @suppress {duplicate|const} */ Foo.prototype.PROP = 3;\n");
@@ -1676,7 +1684,8 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testConstantProperty12() {
-    // TODO(aravindpg): consider allowing this in NTI (b/30205953)
+    // NTI deliberately disallows this pattern (separate declaration and initialization
+    // of const properties). (b/30205953)
     this.mode = TypeInferenceMode.OtiOnly;
     testSame("/** @constructor */ function Foo() {}"
         + "/** @const */ Foo.prototype.bar;"
