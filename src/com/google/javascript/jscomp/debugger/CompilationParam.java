@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.debugger;
 import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
@@ -464,7 +465,11 @@ enum CompilationParam {
   REMOVE_UNUSED_VARIABLES {
     @Override
     void apply(CompilerOptions options, boolean value) {
-      options.setRemoveUnusedVars(value);
+      if (value) {
+        options.setRemoveUnusedVariables(Reach.ALL);
+      } else {
+        options.setRemoveUnusedVariables(Reach.NONE);
+      }
     }
   },
 

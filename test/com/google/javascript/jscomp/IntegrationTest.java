@@ -25,12 +25,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * Tests for {@link PassFactory}.
+ * Integration tests for the compiler.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
@@ -1490,7 +1491,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedPrototypeProperties(true);
     testSame(options, code);
 
-    options.setRemoveUnusedVars(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     test(options, code, "");
   }
 
@@ -1678,7 +1679,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setDeadAssignmentElimination(true);
     testSame(options, code);
 
-    options.setRemoveUnusedVars(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     test(options, code, "function f() { var x; 3; 4; x = 5; return x; } f();");
   }
 
@@ -1696,7 +1697,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "function f(x) {} f();";
     testSame(options, code);
 
-    options.setRemoveUnusedVars(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     test(options, code, "function f() {} f();");
   }
 
@@ -1705,7 +1706,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "(function f(x) {})();var g = function() {}; g();";
     testSame(options, code);
 
-    options.setRemoveUnusedVars(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     test(options, code, "(function() {})();var g = function() {}; g();");
 
     options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
@@ -1768,7 +1769,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String unusedVar = "function f() { var x; x = 5; return x; } f()";
     test(options, unusedVar, "(function f() { var x; return 5; })()");
 
-    options.setRemoveUnusedVars(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     test(options, unusedVar, "(function () { return 5; })()");
   }
 
@@ -2256,7 +2257,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setFoldConstants(true);
     options.setComputeFunctionSideEffects(true);
     options.setCollapseProperties(true);
-    options.setRemoveUnusedVars(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     options.setInlineFunctions(true);
 
     test(options, code, "");
@@ -2637,7 +2638,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testsyntheticBlockOnDeadAssignments() {
     CompilerOptions options = createCompilerOptions();
     options.setDeadAssignmentElimination(true);
-    options.setRemoveUnusedVars(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     options.syntheticBlockStartMarker = "START";
     options.syntheticBlockEndMarker = "END";
     test(options, "var x; x = 1; START(); x = 1;END();x()",
@@ -2815,7 +2816,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options = createCompilerOptions();
     options.setFoldConstants(true);
     options.setComputeFunctionSideEffects(false);
-    options.setRemoveUnusedVars(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
 
     // If we do splits too early, it would add a side-effect to x.
     test(options,

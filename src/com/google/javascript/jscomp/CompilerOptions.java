@@ -2107,14 +2107,6 @@ public class CompilerOptions {
     this.removeUnusedPrototypePropertiesInExterns = enabled;
   }
 
-  public void setRemoveUnusedVars(boolean removeUnusedVars) {
-    this.removeUnusedVars = removeUnusedVars;
-  }
-
-  public void setRemoveUnusedLocalVars(boolean removeUnusedLocalVars) {
-    this.removeUnusedLocalVars = removeUnusedLocalVars;
-  }
-
   public void setCollapseVariableDeclarations(boolean enabled) {
     this.collapseVariableDeclarations = enabled;
   }
