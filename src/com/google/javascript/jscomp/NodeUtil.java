@@ -3496,9 +3496,13 @@ public final class NodeUtil {
    * @return {@code true} if the node is a definition with Object.defineProperties
    */
   static boolean isObjectDefinePropertiesDefinition(Node n) {
-    return n.isCall()
-        && n.getChildCount() == 3
-        && n.getFirstChild().matchesQualifiedName("Object.defineProperties");
+    if (!(n.isCall() && n.getChildCount() == 3)) {
+      return false;
+    }
+    Node first = n.getFirstChild();
+    return first.matchesQualifiedName("Object.defineProperties")
+        || first.matchesQualifiedName("$jscomp.global.Object.defineProperties")
+        || first.matchesQualifiedName("$jscomp$global.Object.defineProperties");
   }
 
   /**

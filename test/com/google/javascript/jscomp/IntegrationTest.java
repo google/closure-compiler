@@ -1511,8 +1511,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setSmartNameRemoval(true);
-    options.setRemoveDeadCode(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(options, code, "");
   }
 

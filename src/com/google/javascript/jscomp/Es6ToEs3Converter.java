@@ -615,10 +615,11 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
 
     if (metadata.definePropertiesObjForPrototype.hasChildren()) {
+      compiler.ensureLibraryInjected("util/global", false);
       Node definePropsCall =
           IR.exprResult(
               IR.call(
-                  NodeUtil.newQName(compiler, "Object.defineProperties"),
+                  NodeUtil.newQName(compiler, "$jscomp.global.Object.defineProperties"),
                   NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"),
                   metadata.definePropertiesObjForPrototype));
       definePropsCall.useSourceInfoIfMissingFromForTree(classNode);
@@ -628,10 +629,11 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
 
     if (metadata.definePropertiesObjForClass.hasChildren()) {
+      compiler.ensureLibraryInjected("util/global", false);
       Node definePropsCall =
           IR.exprResult(
               IR.call(
-                  NodeUtil.newQName(compiler, "Object.defineProperties"),
+                  NodeUtil.newQName(compiler, "$jscomp.global.Object.defineProperties"),
                   NodeUtil.newQName(compiler, metadata.fullClassName),
                   metadata.definePropertiesObjForClass));
       definePropsCall.useSourceInfoIfMissingFromForTree(classNode);

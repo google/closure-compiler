@@ -1720,6 +1720,11 @@ public final class NameAnalyzerTest extends CompilerTestCase {
         "");
   }
 
+  public void testObjectDefineSetters_global() {
+    test("function Foo() {} "
+        + "$jscomp.global.Object.defineProperties(Foo, {prop: {set: function() {}}});", "");
+  }
+
   public void testNoRemoveWindowPropertyAlias1() {
      testSame(
          "var self_ = window.gbar;\n" +
