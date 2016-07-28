@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -2304,6 +2305,14 @@ public final class NodeUtilTest extends TestCase {
     Node x = getNameNode(ast, "x");
     JSTypeExpression typeExpr = NodeUtil.getDeclaredTypeExpression(x);
     assertThat(typeExpr.getRoot().getString()).isEqualTo("string");
+  }
+
+  public void testGetDeclaredTypeExpression3() {
+    Node ast = parse("/** @param {...number} x */ function f(...x) {}");
+    Node x = getNameNode(ast, "x");
+    JSTypeExpression typeExpr = NodeUtil.getDeclaredTypeExpression(x);
+    assertNode(typeExpr.getRoot()).hasType(Token.ELLIPSIS);
+    assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
   }
 
   public void testGetLhsNodesOfDeclaration() {

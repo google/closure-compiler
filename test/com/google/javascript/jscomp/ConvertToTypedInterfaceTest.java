@@ -85,16 +85,6 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     test(
         LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo(/** number= */ opt_x) {",
-            "  /** @const */ this.x = opt_x;",
-            "}"),
-        LINE_JOINER.join(
-            "/** @constructor */ function Foo(/** number= */ opt_x) {}",
-            "/** @const {number|undefined} */ Foo.prototype.x;"));
-
-    test(
-        LINE_JOINER.join(
             "/** @constructor @param {!Array<string>} arr */",
             "function Foo(arr) {",
             "  /** @const */ this.arr = arr;",
@@ -130,6 +120,38 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "  constructor(x) {}",
             "}",
             "/** @const {number} */ Foo.prototype.x;"));
+  }
+
+  public void testConstJsdocPropagationForNames_optional() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo(/** number= */ opt_x) {",
+            "  /** @const */ this.x = opt_x;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo(/** number= */ opt_x) {}",
+            "/** @const {number|undefined} */ Foo.prototype.x;"));
+
+  }
+
+  public void testConstJsdocPropagationForNames_rest() {
+    testEs6(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @param {...number} nums",
+            " */",
+            "function Foo(...nums) {",
+            "  /** @const */ this.nums = nums;",
+            "}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @param {...number} nums",
+            " */",
+            "function Foo(...nums) {}",
+            "/** @const {!Array<number>} */ Foo.prototype.nums;"));
   }
 
   public void testConstWithDeclaredTypes() {

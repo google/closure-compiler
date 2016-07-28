@@ -4197,6 +4197,9 @@ public final class NodeUtil {
       return nameJsdoc.getType();
     }
     Node parent = declaration.getParent();
+    if (parent.isRest()) {
+      parent = parent.getParent();
+    }
     if (parent.isParamList()) {
       JSDocInfo functionJsdoc = getBestJSDocInfo(parent.getParent());
       if (functionJsdoc != null) {
