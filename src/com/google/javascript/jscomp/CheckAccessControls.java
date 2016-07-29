@@ -1028,14 +1028,11 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private static String getPropertyDeprecationInfo(ObjectTypeI type,
                                                    String prop) {
-    JSDocInfo info = type.getOwnPropertyJSDocInfo(prop);
-    if (info != null && info.isDeprecated()) {
-      if (info.getDeprecationReason() != null) {
-        return info.getDeprecationReason();
-      }
-
-      return "";
+    String depReason = getDeprecationReason(type.getOwnPropertyJSDocInfo(prop));
+    if (depReason != null) {
+      return depReason;
     }
+
     ObjectTypeI implicitProto = type.getPrototypeObject();
     if (implicitProto != null) {
       return getPropertyDeprecationInfo(implicitProto, prop);
