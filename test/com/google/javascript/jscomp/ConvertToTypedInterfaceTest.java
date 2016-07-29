@@ -154,6 +154,25 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "/** @const {!Array<number>} */ Foo.prototype.nums;"));
   }
 
+  public void testConstJsdocPropagationForNames_defaultValue() {
+    testEs6(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @param {string=} str",
+            " */",
+            "function Foo(str = '') {",
+            "  /** @const */ this.s = str;",
+            "}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @param {string=} str",
+            " */",
+            "function Foo(str='') {}",
+            "/** @const {string} */ Foo.prototype.s;"));
+  }
+
   public void testConstWithDeclaredTypes() {
     test("/** @const @type {number} */ var n = compute();", "/** @const @type {number} */ var n;");
     test("/** @const {number} */ var n = compute();", "/** @const @type {number} */ var n;");

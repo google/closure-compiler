@@ -140,11 +140,15 @@ class ConvertToTypedInterface implements CompilerPass {
       }
       switch (expr.getRoot().getType()) {
         case EQUALS:
-          expr = new JSTypeExpression(
-              new Node(Token.PIPE,
-                  expr.getRoot().getFirstChild().cloneTree(),
-                  IR.string("undefined")),
-              "<synthetic>");
+          if (decl.isDefaultParam()) {
+            expr = new JSTypeExpression(expr.getRoot().getFirstChild().cloneTree(), "<synthetic>");
+          } else {
+            expr = new JSTypeExpression(
+                new Node(Token.PIPE,
+                    expr.getRoot().getFirstChild().cloneTree(),
+                    IR.string("undefined")),
+                "<synthetic>");
+          }
           break;
         case ELLIPSIS:
           {
