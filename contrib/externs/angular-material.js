@@ -944,6 +944,12 @@ md.$panel.prototype.animation = {
  */
 md.$panel.MdPanelRef = function(config, $injector) {};
 
+/** @type {string} */
+md.$panel.MdPanelRef.prototype.id;
+
+/** @type {boolean} */
+md.$panel.MdPanelRef.prototype.isAttached;
+
 /** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
 md.$panel.MdPanelRef.prototype.open = function() {};
 
