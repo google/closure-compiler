@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
@@ -1665,27 +1664,19 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
             !(nonNullableTypeNames.contains(n.getString()))) {
           Node typeList = n.getFirstChild();
           int nAllowedTypes = namedType.getTemplateTypeMap().numUnfilledTemplateKeys();
-          String typeName = n.getString();
-          if (!namedType.isUnknownType() && (typeList != null || nAllowedTypes > 0)) {
-            if (typeList == null) {
-              // Object and Array generics are different from other types.
-              // Don't fill in missing generics for them.
-              if (typeName.equals("Object") || typeName.equals("Array")) {
-                return createDefaultObjectUnion(namedType);
-              }
-              typeList = IR.empty();
-            }
+          if (!namedType.isUnknownType() && typeList != null) {
             // Templatized types.
-            ImmutableList.Builder<JSType> templateTypes = ImmutableList.builder();
+            ImmutableList.Builder<JSType> templateTypes =
+                ImmutableList.builder();
 
             // Special case for Object, where Object.<X> implies Object.<?,X>.
-            if ((typeName.equals("Object") || typeName.equals("window.Object"))
+            if ((n.getString().equals("Object") || n.getString().equals("window.Object"))
                 && typeList.getFirstChild() == typeList.getLastChild()) {
               templateTypes.add(getNativeType(UNKNOWN_TYPE));
             }
 
             int templateNodeIndex = 0;
-            for (Node templateNode : typeList.children()) {
+            for (Node templateNode : typeList.getFirstChild().siblings()) {
               // Don't parse more templatized type nodes than the type can
               // accommodate. This is because some existing clients have
               // template annotations on non-templatized classes, for instance:
@@ -1704,10 +1695,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
               }
               templateTypes.add(createFromTypeNodesInternal(
                   templateNode, sourceName, scope));
-            }
-            // If fewer than nAllowedTypes types are provided, fill in the rest with ?
-            for (int i = typeList.getChildCount(); i < nAllowedTypes; i++) {
-              templateTypes.add(getNativeType(UNKNOWN_TYPE));
             }
             namedType = createTemplatizedType(
                 (ObjectType) namedType, templateTypes.build());
