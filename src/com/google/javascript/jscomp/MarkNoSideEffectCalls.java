@@ -55,12 +55,11 @@ class MarkNoSideEffectCalls implements CompilerPass {
     // Gather the list of function nodes that have @nosideeffects annotations.
     // For use by SetNoSideEffectCallProperty.
     NodeTraversal.traverseEs6(
-        compiler, externs, new GatherNoSideEffectFunctions(true));
+        compiler, externs, new GatherNoSideEffectFunctions());
     NodeTraversal.traverseEs6(
-        compiler, root, new GatherNoSideEffectFunctions(false));
+        compiler, root, new GatherNoSideEffectFunctions());
 
-    NodeTraversal.traverseEs6(compiler, root,
-                           new SetNoSideEffectCallProperty(defFinder));
+    NodeTraversal.traverseEs6(compiler, root, new SetNoSideEffectCallProperty(defFinder));
   }
 
   /**
@@ -103,12 +102,6 @@ class MarkNoSideEffectCalls implements CompilerPass {
    * Gather function nodes that have @nosideeffects annotations.
    */
   private class GatherNoSideEffectFunctions extends AbstractPostOrderCallback {
-    private final boolean inExterns;
-
-    GatherNoSideEffectFunctions(boolean inExterns) {
-      this.inExterns = inExterns;
-    }
-
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
       if (node.isGetProp()) {

@@ -398,15 +398,12 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     @Override
-    public boolean shouldTraverse(NodeTraversal traversal,
-                                  Node node,
-                                  Node parent) {
-
+    public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
       // Functions need to be processed as part of pre-traversal so that an entry for the function
       // exists in the FunctionInformation map when processing assignments and calls within the
       // body.
       if (node.isFunction()) {
-        visitFunction(traversal, node, parent);
+        visitFunction(node, parent);
       }
 
       return true;
@@ -613,7 +610,7 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /** Record function and check for @nosideeffects annotations. */
-    private void visitFunction(NodeTraversal traversal, Node node, Node parent) {
+    private void visitFunction(Node node, Node parent) {
       Preconditions.checkArgument(node.isFunction());
       Preconditions.checkState(!functionSideEffectMap.containsKey(node));
 
