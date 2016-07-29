@@ -2315,6 +2315,14 @@ public final class NodeUtilTest extends TestCase {
     assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
   }
 
+  public void testGetDeclaredTypeExpression4() {
+    Node ast = parse("/** @param {number=} x */ function f(x = -1) {}");
+    Node x = getNameNode(ast, "x");
+    JSTypeExpression typeExpr = NodeUtil.getDeclaredTypeExpression(x);
+    assertNode(typeExpr.getRoot()).hasType(Token.EQUALS);
+    assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
+  }
+
   public void testGetLhsNodesOfDeclaration() {
     assertThat(getLhsNodesOfDeclaration("var x;")).hasSize(1);
     assertThat(getLhsNodesOfDeclaration("var x, y;")).hasSize(2);
