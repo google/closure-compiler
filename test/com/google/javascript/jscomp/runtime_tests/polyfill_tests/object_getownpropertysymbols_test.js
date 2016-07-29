@@ -23,8 +23,12 @@ const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 const assertPropertyListEquals = testing.assertPropertyListEquals;
 const objectCreate = testing.objectCreate;
 
+const SYMBOL_IS_POLYFILLED = typeof Symbol('') === 'string';
+
 testSuite({
   testGetOwnPropertySymbols_symbols() {
+    if (SYMBOL_IS_POLYFILLED) return;
+
     const a = Symbol('a');
     const b = Symbol('b');
     const c = Symbol('c');
@@ -40,6 +44,8 @@ testSuite({
   },
 
   testGetOwnPropertySymbols_stringsExcluded() {
+    if (SYMBOL_IS_POLYFILLED) return;
+
     const a = Symbol('a');
     const b = Symbol('b');
     const c = Symbol('c');
@@ -53,4 +59,13 @@ testSuite({
     assertPropertyListEquals([a, c], Object.getOwnPropertySymbols(obj));
     assertPropertyListEquals([c, b], Object.getOwnPropertySymbols(sub));
   },
+
+  testGetOwnPropertySymbols_polyfilled() {
+    if (!SYMBOL_IS_POLYFILLED) return;
+
+    // If symbol is polyfilled, then this always returns empty list.
+    const a = Symbol('a');
+    const obj = {[a]: 32, 'a': 23};
+    assertPropertyListEquals([], Object.getOwnPropertySymbols(obj));
+  }
 });

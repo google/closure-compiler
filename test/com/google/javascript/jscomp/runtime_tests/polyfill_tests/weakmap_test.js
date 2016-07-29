@@ -121,12 +121,4 @@ testSuite({
     assertEquals(3, map.get(a));
     assertEquals(5, map.get(b));
   },
-
-  testPatchedKeys() {
-    if (IE8) return;
-    const a = {'a': 42};
-    new WeakMap([[a, 3]]);
-    assertObjectEquals(['a'], Object.keys(a));
-    assertObjectEquals(['a'], Object.getOwnPropertyNames(a));
-  }
 });

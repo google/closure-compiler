@@ -115,12 +115,4 @@ testSuite({
     assertTrue(set.has(b));
     assertFalse(set.has({}));
   },
-
-  testPatchedKeys() {
-    if (IE8) return;
-    const a = {'a': 42};
-    new WeakSet([[a, 3]]);
-    assertObjectEquals(['a'], Object.keys(a));
-    assertObjectEquals(['a'], Object.getOwnPropertyNames(a));
-  }
 });

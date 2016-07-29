@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-'require util/owns util/polyfill';
+'require util/polyfill';
 
 $jscomp.polyfill('Object.getOwnPropertySymbols', function(orig) {
   if (orig) return orig;
 
-  // Note: this is patched by $jscomp.initSymbol when needed.
+  // NOTE: The symbol polyfill is a string, so symbols show up in
+  // Object.getOwnProperytyNames instead.  It's been decided that
+  // the trade-off of "fixing" this behavior is not worth the costs
+  // in (a) code size, (b) brittleness, and (c) complexity.
   return function() { return []; };
-}, 'es6-impl', 'es5');  // only works correctly with Object.getOwnPropertyNames
+}, 'es6-impl', 'es5'); // Same as Object.getOwnPropertyNames

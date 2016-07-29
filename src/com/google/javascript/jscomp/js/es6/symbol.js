@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Polyfill for ES6 Symbol.
- */
-'require util/global util/patch util/defineproperty';
-
+'require util/defineproperty';
+'require util/global';
 
 /** @const {string} */
 $jscomp.SYMBOL_PREFIX = 'jscomp_symbol_';
@@ -32,57 +29,9 @@ $jscomp.initSymbol = function() {
   // Only need to do this once. All future calls are no-ops.
   $jscomp.initSymbol = function() {};
 
-  if ($jscomp.global.Symbol) return;
-
-  $jscomp.global.Symbol = $jscomp.Symbol;
-
-  /**
-   * @param {string} name
-   * @return {boolean}
-   */
-  var isSymbol = function(name) {
-    if (name.length < $jscomp.SYMBOL_PREFIX.length) return false;
-    for (var i = 0; i < $jscomp.SYMBOL_PREFIX.length; i++) {
-      if (name[i] != $jscomp.SYMBOL_PREFIX[i]) return false;
-    }
-    return true;
-  };
-
-  // Need to monkey-patch Object.getOwnPropertyNames to not return symbols.
-  // Note that we use this extra array populated by getOwnPropertyNames
-  // because there's no way to access the *unpatched* getOwnPropertyNames
-  // from the getOwnPropertySymbols patch.
-  /** @type {!Array<string>} */
-  var symbols = [];
-  var removeSymbolsPatch = function(orig) {
-    return function(target) {
-      symbols = [];
-      var names = orig(target);
-      var result = [];
-      for (var i = 0, len = names.length; i < len; i++) {
-        if (!isSymbol(names[i])) {
-          result.push(names[i]);
-        } else {
-          symbols.push(names[i]);
-        }
-      }
-      return result;
-    };
-  };
-
-  $jscomp.patch('Object.keys', removeSymbolsPatch);
-  $jscomp.patch('Object.getOwnPropertyNames', removeSymbolsPatch);
-  $jscomp.patch('Object.getOwnPropertySymbols', function(orig) {
-    return function(target) {
-      // First call the patched getOwnPropertyNames to reset and fill the array.
-      // Store the result somewhere to prevent nosideeffect removal.
-      removeSymbolsPatch.unused = Object.getOwnPropertyNames(target);
-      // In case the original function actually returned something, append that.
-      symbols.push.apply(orig(target));
-      return symbols;
-    };
-  });
-  // Note: shouldn't need to patch Reflect.ownKeys.
+  if (!$jscomp.global.Symbol) {
+    $jscomp.global.Symbol = $jscomp.Symbol;
+  }
 };
 
 

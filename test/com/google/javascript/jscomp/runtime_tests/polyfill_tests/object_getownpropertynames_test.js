@@ -23,6 +23,8 @@ const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 const assertPropertyListEquals = testing.assertPropertyListEquals;
 const objectCreate = testing.objectCreate;
 
+const SYMBOL_IS_POLYFILLED = typeof Symbol('') === 'string';
+
 testSuite({
   testGetOwnPropertyNames_strings() {
     const obj = {'y': 42, 12: 13, 'x': 1};
@@ -48,8 +50,15 @@ testSuite({
     sub['42'] = 42;
     sub['x'] = 25;
 
-    assertPropertyListEquals(
-        ['12', 'b', 'a'], Object.getOwnPropertyNames(obj));
-    assertPropertyListEquals(['42', 'x'], Object.getOwnPropertyNames(sub));
+    if (SYMBOL_IS_POLYFILLED) {
+      assertPropertyListEquals(
+          ['12', a, 'b', 'a'], Object.getOwnPropertyNames(obj));
+      assertPropertyListEquals(
+          ['42', c, b, 'x'], Object.getOwnPropertyNames(sub));
+    } else {
+      assertPropertyListEquals(
+          ['12', 'b', 'a'], Object.getOwnPropertyNames(obj));
+      assertPropertyListEquals(['42', 'x'], Object.getOwnPropertyNames(sub));
+    }
   },
 });

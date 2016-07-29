@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-'require es6/symbol es6/util/makeiterator util/defineproperty';
-'require util/owns util/patch util/polyfill';
+'require es6/symbol';
+'require es6/util/makeiterator';
+'require util/defineproperty';
+'require util/owns';
+'require util/polyfill';
 
 $jscomp.polyfill('WeakMap', function(NativeWeakMap) {
   /**
@@ -36,7 +39,6 @@ $jscomp.polyfill('WeakMap', function(NativeWeakMap) {
   if (isConformant()) return NativeWeakMap;
 
   var prop = '$jscomp_hidden_' + Math.random().toString().substring(2);
-  var hidden = {}; // tag used to indicate a hidden object.
 
   /**
    * Inserts the hidden property into the target.
@@ -50,53 +52,27 @@ $jscomp.polyfill('WeakMap', function(NativeWeakMap) {
       // method (like toLocaleString) onto the object itself and encoding the
       // property on the copy instead.  This codepath must be easily removable
       // if IE8 support is not needed.
-      obj[prop] = hidden;
       $jscomp.defineProperty(target, prop, {value: obj});
     }
   }
 
   /**
-   * Monkey-patches the key-enumeration methods to ensure that the hidden
-   * property is not returned.
-   * @param {function(!Object): !Array<string>} prev
-   * @return {function(!Object): !Array<string>}
-   */
-  function fixList(prev) {
-    return function(target) {
-      var result = prev(target);
-      if ($jscomp.owns(target, prop) &&
-          $jscomp.owns(target[prop], prop) &&
-          target[prop][prop] === hidden) {
-        for (var i = 0; i < result.length; i++) {
-          if (result[i] == prop) {
-            result.splice(i, 1);
-            break;
-          }
-        }
-      }
-      return result;
-    };
-  }
-  $jscomp.patch('Object.getOwnPropertyNames', fixList);
-  $jscomp.patch('Object.keys', fixList);
-  $jscomp.patch('Reflect.enumerate', fixList);
-  $jscomp.patch('Reflect.ownKeys', fixList);
-
-  /**
    * Monkey-patches the freezing methods to ensure that the hidden
    * property is added before any freezing happens.
-   * @param {function(!Object): !Object} prev
-   * @return {function(!Object): !Object}
+   * @param {string} name
    */
-  function preInsert(prev) {
-    return function(target) {
-      insert(target);
-      return prev(target);
-    };
+  function patch(name) {
+    var prev = Object[name];
+    if (prev) {
+      Object[name] = function(target) {
+        insert(target);
+        return prev(target);
+      };
+    }
   }
-  $jscomp.patch('Object.freeze', preInsert);
-  $jscomp.patch('Object.preventExtensions', preInsert);
-  $jscomp.patch('Object.seal', preInsert);
+  patch('freeze');
+  patch('preventExtensions');
+  patch('seal');
   // Note: no need to patch Reflect.preventExtensions since the polyfill
   // just calls Object.preventExtensions anyway (and if it's not polyfilled
   // then neither is WeakMap).
