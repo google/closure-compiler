@@ -194,6 +194,7 @@ public abstract class CompilerTestCase extends TestCase {
           " * @return {!Object}",
           " */",
           "function Object(opt_value) {}",
+          "/** @type {?Function} */ Object.prototype.constructor;",
           "Object.defineProperties = function(obj, descriptors) {};",
           "/** @constructor",
           " * @param {*} var_args */ ",

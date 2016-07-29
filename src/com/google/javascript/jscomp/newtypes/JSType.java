@@ -1660,18 +1660,19 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   @Override
   public JSType getPrototypeObject() {
     Preconditions.checkState(this.isSingletonObj());
-    if (this.equals(TOP_OBJECT)) {
-      // In NTI, TOP_OBJECT is the supertype of all objects, which is
-      // the same as an instance of Object. In JS's dynamic semantics, the
-      // only object without a __proto__ is Object.prototype, but it's not
-      // representable in NTI.
-      // Returning null for TOP_OBJECT is technically wrong, because an instance
-      // of Object has a __proto__, but it doesn't break any tests and we need it
-      // to avoid going up the prototype chain forever.
+    JSType proto = getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
+    if (this.equals(proto)) {
+      // In JS's dynamic semantics, the only object without a __proto__ is
+      // Object.prototype, but it's not representable in NTI.
+      // Object.prototype is the only case where we are equal to our own prototype.
+      // In this case, we should return null.
+      Preconditions.checkState(
+          this.isInstanceofObject(),
+          "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
+          this);
       return null;
-    } else {
-      return getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
     }
+    return proto;
   }
 
   @Override

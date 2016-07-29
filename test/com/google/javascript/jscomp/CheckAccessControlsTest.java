@@ -1845,4 +1845,27 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         + " */ function Bar() {};",
         EXTEND_FINAL_CLASS);
   }
+
+  public void testCircularPrototypeLink() {
+    // NOTE: this does yield a useful warning, except we don't check for it in this test:
+    //      WARNING - Cycle detected in inheritance chain of type Foo
+    // This warning already has a test: TypeCheckTest::testPrototypeLoop.
+    testError(
+        LINE_JOINER.join(
+            "/** @constructor @extends {Foo} */ function Foo() {}",
+            "/** @const */ Foo.prop = 1;",
+            "Foo.prop = 2;"),
+        CONST_PROPERTY_REASSIGNED_VALUE);
+
+    // In OTI this next test causes a stack overflow.
+    this.mode = TypeInferenceMode.NtiOnly;
+
+    testError(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "/** @type {!Foo} */ Foo.prototype = new Foo();",
+            "/** @const */ Foo.prop = 1;",
+            "Foo.prop = 2;"),
+        CONST_PROPERTY_REASSIGNED_VALUE);
+  }
 }
