@@ -439,6 +439,10 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 //            "var module$contents$xid_xid = xid"));
 //  }
 
+  public void testGoogLoadModuleString() {
+    testSame("goog.loadModule(\"goog.module('a.b.c'); exports = class {};\");");
+  }
+
   public void testGoogScope1() {
     // Typedef defined inside a goog.scope(). The typedef is seen and is *not* legacy-to-binary
     // bridge exported.

@@ -253,7 +253,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
       switch (n.getType()) {
         case CALL:
-          if (isCallTo(n, "goog.loadModule")) {
+          if (isCallTo(n, "goog.loadModule") && n.getLastChild().isFunction()) {
             recordGoogLoadModule(n);
           }
           if (isCallTo(n, "goog.module")) {
@@ -320,7 +320,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case CALL:
-          if (isCallTo(n, "goog.loadModule")) {
+          if (isCallTo(n, "goog.loadModule") && n.getLastChild().isFunction()) {
             updateGoogLoadModule(n);
           }
           if (isCallTo(n, "goog.module")) {
