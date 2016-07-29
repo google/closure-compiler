@@ -45,7 +45,7 @@ import java.util.Map;
  */
 public class NameBasedDefinitionProvider implements DefinitionProvider, CompilerPass {
   protected final Multimap<String, Definition> nameDefinitionMultimap = LinkedHashMultimap.create();
-  protected final Map<Node, DefinitionSite> definitionSiteMap = new LinkedHashMap<>();
+  protected final Map<Node, DefinitionSite> definitionNodeByDefinitionSite = new LinkedHashMap<>();
   protected final AbstractCompiler compiler;
 
   protected boolean hasProcessBeenRun = false;
@@ -66,7 +66,8 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
   @Override
   public Collection<Definition> getDefinitionsReferencedAt(Node useSite) {
     Preconditions.checkState(hasProcessBeenRun, "The process was not run");
-    if (definitionSiteMap.containsKey(useSite)) {
+    Preconditions.checkArgument(useSite.isGetProp() || useSite.isName());
+    if (definitionNodeByDefinitionSite.containsKey(useSite)) {
       return null;
     }
 
@@ -80,14 +81,9 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
     String name = getSimplifiedName(useSite);
     if (name != null) {
       Collection<Definition> defs = nameDefinitionMultimap.get(name);
-      if (!defs.isEmpty()) {
-        return defs;
-      } else {
-        return null;
-      }
-    } else {
-      return null;
+      return defs.isEmpty() ? null : defs;
     }
+    return null;
   }
 
   private class DefinitionGatheringCallback implements Callback {
@@ -157,7 +153,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
           }
 
           nameDefinitionMultimap.put(name, def);
-          definitionSiteMap.put(
+          definitionNodeByDefinitionSite.put(
               node,
               new DefinitionSite(
                   node, def, traversal.getModule(), traversal.inGlobalScope(), inExterns));
@@ -190,7 +186,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
             // Incomplete definition
             Definition definition = new ExternalNameOnlyDefinition(node);
             nameDefinitionMultimap.put(name, definition);
-            definitionSiteMap.put(
+            definitionNodeByDefinitionSite.put(
                 node,
                 new DefinitionSite(
                     node, definition, traversal.getModule(), traversal.inGlobalScope(), inExterns));
@@ -212,7 +208,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
    * higher chances of name collisions.
    *
    * <p>TODO(user) revisit. it would be helpful to at least use fully qualified names in the case of
-   * namespaces. Might not matter as much if this pass runs after "collapsing properties".
+   * namespaces. Might not matter as much if this pass runs after {@link CollapseProperties}.
    */
   protected static String getSimplifiedName(Node node) {
     if (node.isName()) {
@@ -235,12 +231,13 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
    * @return definition site collection.
    */
   public Collection<DefinitionSite> getDefinitionSites() {
-    return definitionSiteMap.values();
+    Preconditions.checkState(hasProcessBeenRun, "The process was not run");
+    return definitionNodeByDefinitionSite.values();
   }
 
   public DefinitionSite getDefinitionForFunction(Node function) {
     Preconditions.checkState(hasProcessBeenRun, "The process was not run");
     Preconditions.checkState(function.isFunction());
-    return definitionSiteMap.get(NodeUtil.getNameNode(function));
+    return definitionNodeByDefinitionSite.get(NodeUtil.getNameNode(function));
   }
 }

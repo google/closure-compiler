@@ -111,10 +111,6 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
-      if (!inExterns && hasNoSideEffectsAnnotation(node)) {
-        traversal.report(node, PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION);
-      }
-
       if (node.isGetProp()) {
         if (parent.isExprResult() &&
             hasNoSideEffectsAnnotation(node)) {
@@ -165,12 +161,16 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
-      if (!node.isCall() && !node.isNew()) {
+      if (!NodeUtil.isCallOrNew(node)) {
+        return;
+      }
+      Node nameNode = node.getFirstChild();
+      // This is the result of an anonymous function execution. function() {}();
+      if (!nameNode.isName() && !nameNode.isGetProp()) {
         return;
       }
 
-      Collection<Definition> definitions =
-          defFinder.getDefinitionsReferencedAt(node.getFirstChild());
+      Collection<Definition> definitions = defFinder.getDefinitionsReferencedAt(nameNode);
       if (definitions == null) {
         return;
       }

@@ -55,6 +55,15 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       "JSC_DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL",
       "Inline JSDoc on default parameters must be marked as optional");
 
+  public static final DiagnosticType INVALID_NO_SIDE_EFFECT_ANNOTATION =
+      DiagnosticType.error(
+          "JSC_INVALID_NO_SIDE_EFFECT_ANNOTATION",
+          "@nosideeffects may only appear in externs files.");
+
+  public static final DiagnosticType INVALID_MODIFIES_ANNOTATION =
+      DiagnosticType.error(
+          "JSC_INVALID_MODIFIES_ANNOTATION", "@modifies may only appear in externs files.");
+
   private final AbstractCompiler compiler;
 
   CheckJSDoc(AbstractCompiler compiler) {
@@ -453,8 +462,20 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
    * Check that @nosideeeffects annotations are only present in externs.
    */
   private void validateNoSideEffects(Node n, JSDocInfo info) {
-    if (info != null && info.isNoSideEffects() && !n.isFromExterns()) {
-      reportMisplaced(n, "nosideeffects", "@nosideeffects is only supported in externs.");
+    // Cannot have @modifies or @nosideeffects in regular (non externs) js. Report errors.
+    if (info == null) {
+      return;
+    }
+
+    if (n.isFromExterns()) {
+      return;
+    }
+
+    if (info.hasSideEffectsArgumentsAnnotation() || info.modifiesThis()) {
+      report(n, INVALID_MODIFIES_ANNOTATION);
+    }
+    if (info.isNoSideEffects()) {
+      report(n, INVALID_NO_SIDE_EFFECT_ANNOTATION);
     }
   }
 }

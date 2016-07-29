@@ -62,6 +62,9 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
   private class UseSiteGatheringCallback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
+      if (!node.isGetProp() && !node.isName()) {
+        return;
+      }
 
       Collection<Definition> defs = getDefinitionsReferencedAt(node);
       if (defs == null) {
@@ -160,12 +163,12 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
    */
   void removeReferences(Node node) {
     if (DefinitionsRemover.isDefinitionNode(node)) {
-      DefinitionSite defSite = definitionSiteMap.get(node);
+      DefinitionSite defSite = definitionNodeByDefinitionSite.get(node);
       if (defSite != null) {
         Definition def = defSite.definition;
         String name = getSimplifiedName(def.getLValue());
         if (name != null) {
-          this.definitionSiteMap.remove(node);
+          this.definitionNodeByDefinitionSite.remove(node);
           this.nameDefinitionMultimap.remove(name, node);
         }
       }

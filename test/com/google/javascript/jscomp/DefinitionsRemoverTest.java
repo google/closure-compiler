@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,9 +66,9 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        DefinitionsGatherer g = new DefinitionsGatherer();
-        NodeTraversal.traverseEs6(compiler, root, g);
-        for (Definition def : g.definitions) {
+        DefinitionsGatherer definitionsGatherer = new DefinitionsGatherer();
+        NodeTraversal.traverseEs6(compiler, root, definitionsGatherer);
+        for (Definition def : definitionsGatherer.definitions) {
           def.remove();
           compiler.reportCodeChange();
         }

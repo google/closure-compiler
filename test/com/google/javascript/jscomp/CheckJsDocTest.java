@@ -20,6 +20,8 @@ import static com.google.javascript.jscomp.CheckJSDoc.ANNOTATION_DEPRECATED;
 import static com.google.javascript.jscomp.CheckJSDoc.ARROW_FUNCTION_AS_CONSTRUCTOR;
 import static com.google.javascript.jscomp.CheckJSDoc.DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
+import static com.google.javascript.jscomp.CheckJSDoc.INVALID_MODIFIES_ANNOTATION;
+import static com.google.javascript.jscomp.CheckJSDoc.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
 
@@ -391,9 +393,31 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
-  public void testNoSideEffectsInSrc() {
-    testSame("/** @nosideeffects */ function foo() {}; foo();", MISPLACED_ANNOTATION);
+  public void testInvalidAnnotation1() throws Exception {
+    testError("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  }
 
-    testSame("/** @nosideeffects */ function foo() {};", "foo();", null);
+  public void testInvalidAnnotation2() throws Exception {
+    testError("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  }
+
+  public void testInvalidAnnotation3() throws Exception {
+    testError("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  }
+
+  public void testInvalidAnnotation4() throws Exception {
+    testError(
+        "var f = function() {};" + "/** @nosideeffects */ f.x = function() {}",
+        INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  }
+
+  public void testInvalidAnnotation5() throws Exception {
+    testError(
+        "var f = function() {};" + "f.x = /** @nosideeffects */ function() {}",
+        INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  }
+
+  public void testInvalidModifiesAnnotation() throws Exception {
+    testError("/** @modifies {this} */ var f = function() {};", INVALID_MODIFIES_ANNOTATION);
   }
 }

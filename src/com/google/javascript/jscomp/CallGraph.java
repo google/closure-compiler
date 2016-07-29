@@ -495,10 +495,14 @@ public final class CallGraph implements CompilerPass {
    */
   private Collection<Definition> lookupDefinitionsForTargetsOfCall(
       Node callsite, DefinitionProvider definitionProvider) {
-    Preconditions.checkArgument(callsite.isCall()
-        || callsite.isNew());
+    Preconditions.checkArgument(
+        NodeUtil.isCallOrNew(callsite), "Expected CALL or NEW. Got:", callsite);
 
     Node targetExpression = callsite.getFirstChild();
+
+    if (!targetExpression.isName() && !targetExpression.isGetProp()) {
+      return null;
+    }
 
     Collection<Definition> definitions =
         definitionProvider.getDefinitionsReferencedAt(targetExpression);

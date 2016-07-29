@@ -35,7 +35,6 @@ import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,7 +43,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -1200,9 +1198,7 @@ public final class NodeUtil {
    * @param callNode - constructor call node
    */
   static boolean constructorCallHasSideEffects(Node callNode) {
-    if (!callNode.isNew()) {
-      throw new IllegalStateException("Expected NEW node, got " + callNode.getType());
-    }
+    Preconditions.checkArgument(callNode.isNew(), "Expected NEW node, got %s", callNode.getType());
 
     if (callNode.isNoSideEffectsCall()) {
       return false;

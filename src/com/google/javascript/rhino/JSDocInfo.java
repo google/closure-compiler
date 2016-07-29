@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -2111,5 +2110,18 @@ public class JSDocInfo implements Serializable {
 
   void setOriginalCommentPosition(int position) {
     originalCommentPosition = position;
+  }
+
+  /** Get the value of the @modifies{this} annotation stored in the doc info. */
+  public boolean modifiesThis() {
+    return (this.getModifies().contains("this"));
+  }
+
+  /** @return Whether the @modifies annotation includes "arguments" or any named parameters. */
+  public boolean hasSideEffectsArgumentsAnnotation() {
+    Set<String> modifies = this.getModifies();
+    // TODO(johnlenz): if we start tracking parameters individually
+    // this should simply be a check for "arguments".
+    return (modifies.size() > 1 || (modifies.size() == 1 && !modifies.contains("this")));
   }
 }

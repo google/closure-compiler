@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -1251,30 +1250,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         new Node.SideEffectFlags()
         .clearAllFlags().setMutatesArguments().valueOf(),
         call.getSideEffectFlags());
-  }
-
-  public void testInvalidAnnotation1() throws Exception {
-    testError("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
-  }
-
-  public void testInvalidAnnotation2() throws Exception {
-    testError("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
-  }
-
-  public void testInvalidAnnotation3() throws Exception {
-    testError("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
-  }
-
-  public void testInvalidAnnotation4() throws Exception {
-    testError("var f = function() {};" +
-         "/** @nosideeffects */ f.x = function() {}",
-         INVALID_NO_SIDE_EFFECT_ANNOTATION);
-  }
-
-  public void testInvalidAnnotation5() throws Exception {
-    testError("var f = function() {};" +
-         "f.x = /** @nosideeffects */ function() {}",
-         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testCallCache() throws Exception {

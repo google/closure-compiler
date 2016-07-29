@@ -22,7 +22,6 @@ import com.google.common.collect.TreeMultiset;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
@@ -416,6 +415,9 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
 
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
+      if (!node.isName() && !node.isGetProp()) {
+        return;
+      }
       Collection<Definition> defs =
           passUnderTest.getDefinitionsReferencedAt(node);
       if (defs != null) {
