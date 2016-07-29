@@ -8882,7 +8882,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var f = function() {",
         "   Foo.prototype.method = function(){};",
         "}"),
-        GlobalTypeInfo.CTOR_IN_DIFFERENT_SCOPE);
+        GlobalTypeInfo.CTOR_IN_DIFFERENT_SCOPE,
+        GlobalTypeInfo.REDECLARED_PROPERTY);
   }
 
   public void testTopFunctionAsArgumentDoesntCrash() {
@@ -17359,5 +17360,64 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "};",
         "var y = (new Foo).a;"),
         NewTypeInference.INEXISTENT_PROPERTY);
+  }
+
+  public void testNotUniqueInstantiationCompatibility() {
+    String js = LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " * @return {T}",
+        " */",
+        "function f(x, y) {",
+        "  return x;",
+        "}",
+        "var /** (number|boolean) */ x = f(123, 'asdf');");
+
+    typeCheck(js, NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+    typeCheck(js, NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testAnonymousCtorCompatibility() {
+    String js = LINE_JOINER.join(
+        "function f(x) {",
+        "  var c = x ?",
+        "      /** @constructor */",
+        "      function() { this.a = 123; } :",
+        "      /** @constructor */",
+        "      function() { this.b = 123; };",
+        "  var /** null */ n = new c();",
+        "}");
+
+    typeCheck(js,
+        GlobalTypeInfo.ANONYMOUS_NOMINAL_TYPE,
+        GlobalTypeInfo.ANONYMOUS_NOMINAL_TYPE,
+        NewTypeInference.NOT_A_CONSTRUCTOR);
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+    typeCheck(js, NewTypeInference.NOT_A_CONSTRUCTOR);
+  }
+
+  public void testPrototypeMethodInDifferentScopeCompatibility() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function g() {",
+        "  /** @return {number} */",
+        "  Foo.prototype.method = function() {",
+        "    return 123;",
+        "  };",
+        "}",
+        "var /** string */ s = (new Foo).method();");
+
+    typeCheck(js,
+        GlobalTypeInfo.CTOR_IN_DIFFERENT_SCOPE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+    typeCheck(js, NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }

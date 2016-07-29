@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
+
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;

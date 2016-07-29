@@ -176,12 +176,11 @@ public final class JSTypeCreatorFromJSDoc {
       TWO_JSDOCS,
       WRONG_PARAMETER_ORDER);
 
-  // TODO(dimvar): Check for which of these warnings it makes sense to keep
-  // going after warning.
   public static final DiagnosticGroup NEW_DIAGNOSTICS = new DiagnosticGroup(
       CANNOT_MAKE_TYPEVAR_NON_NULL,
       DICT_IMPLEMENTS_INTERF,
       ENUM_IS_TOP,
+      // TODO(dimvar): ENUM_IS_UNION is rare, but it happens. Should we support it?
       ENUM_IS_UNION,
       ENUM_WITH_TYPEVARS,
       FUNCTION_WITH_NONFUNC_JSDOC,

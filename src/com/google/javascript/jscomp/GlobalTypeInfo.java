@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
@@ -235,8 +236,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       UNRECOGNIZED_TYPE_NAME,
       WRONG_PARAMETER_COUNT);
 
-  // TODO(dimvar): Check for which of these warnings it makes sense to keep
-  // going after warning.
   static final DiagnosticGroup NEW_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
       CANNOT_ADD_PROPERTIES_TO_TYPEDEF,
@@ -1033,7 +1032,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (fnDoc.isConstructorOrInterface()) {
         if (nameNode == null) {
           warnings.add(JSError.make(defSite, ANONYMOUS_NOMINAL_TYPE));
-          return;
+          nameNode = IR.name(ANON_FUN_PREFIX + funNameGen.generateNextName());
+          nameNode.useSourceInfoFrom(defSite);
         }
         String qname = nameNode.getQualifiedName();
         ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -1489,13 +1489,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
       // We only add properties to the prototype of a class if the
       // property creations are in the same scope as the constructor
-      // TODO(blickly): Rethink this
       if (!currentScope.isDefined(ctorNameNode)) {
         warnings.add(JSError.make(getProp, CTOR_IN_DIFFERENT_SCOPE));
-        if (initializer != null && initializer.isFunction()) {
-          visitFunctionLate(initializer, rawType);
-        }
-        return;
       }
       mayWarnAboutInterfacePropInit(rawType, initializer);
       mayAddPropToPrototype(

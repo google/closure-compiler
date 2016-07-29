@@ -364,6 +364,7 @@ final class NewTypeInference implements CompilerPass {
   // To avoid creating warning objects for disabled warnings
   private final boolean reportUnknownTypes;
   private final boolean reportNullDeref;
+  private final boolean inCompatibilityMode;
 
   // Used only for development
   private static boolean showDebuggingPrints = false;
@@ -382,6 +383,8 @@ final class NewTypeInference implements CompilerPass {
         compiler.getOptions().enables(DiagnosticGroups.REPORT_UNKNOWN_TYPES);
     this.reportNullDeref = compiler.getOptions()
         .enables(DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS);
+    this.inCompatibilityMode =
+        compiler.getOptions().disables(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
     assertionFunctionsMap = new LinkedHashMap<>();
     for (AssertionFunctionSpec assertionFunction : convention.getAssertionFunctions()) {
       assertionFunctionsMap.put(
@@ -2038,7 +2041,7 @@ final class NewTypeInference implements CompilerPass {
     }
     JSType assertedType = assertionFunctionSpec.getAssertedNewType(callNode, currentScope);
     if (assertedType.isUnknown()) {
-      warnings.add(JSError.make(callNode, NewTypeInference.UNKNOWN_ASSERTION_TYPE));
+      warnings.add(JSError.make(callNode, UNKNOWN_ASSERTION_TYPE));
     }
     EnvTypePair pair = analyzeExprFwd(assertedNode, env, JSType.UNKNOWN, assertedType);
     if (!pair.type.isSubtypeOf(assertedType)
@@ -2053,7 +2056,7 @@ final class NewTypeInference implements CompilerPass {
       if (t.isSubtypeOf(assertedType)) {
         pair.type = t;
       } else {
-        warnings.add(JSError.make(assertedNode, NewTypeInference.ASSERT_FALSE));
+        warnings.add(JSError.make(assertedNode, ASSERT_FALSE));
         pair.type = JSType.UNKNOWN;
         pair.env = env;
       }
@@ -2366,7 +2369,15 @@ final class NewTypeInference implements CompilerPass {
               types.toString(),
               funType.toString()));
         }
-        builder.put(typeParam, JSType.UNKNOWN);
+        if (inCompatibilityMode) {
+          JSType joinedType = JSType.BOTTOM;
+          for (JSType t : types) {
+            joinedType = JSType.join(joinedType, t);
+          }
+          builder.put(typeParam, joinedType);
+        } else {
+          builder.put(typeParam, JSType.UNKNOWN);
+        }
       } else if (types.size() == 1) {
         JSType t = Iterables.getOnlyElement(types);
         builder.put(typeParam, t.isBottom() ? JSType.UNKNOWN : t);
@@ -2758,8 +2769,7 @@ final class NewTypeInference implements CompilerPass {
 
   private boolean mayWarnAboutStructPropAccess(Node obj, JSType type) {
     if (type.mayBeStruct()) {
-      warnings.add(JSError.make(obj,
-              NewTypeInference.ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
+      warnings.add(JSError.make(obj, ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
       return true;
     }
     return false;
@@ -2767,8 +2777,7 @@ final class NewTypeInference implements CompilerPass {
 
   private boolean mayWarnAboutDictPropAccess(Node obj, JSType type) {
     if (type.mayBeDict()) {
-      warnings.add(JSError.make(obj,
-              NewTypeInference.ILLEGAL_PROPERTY_ACCESS, "'.'", "dict"));
+      warnings.add(JSError.make(obj, ILLEGAL_PROPERTY_ACCESS, "'.'", "dict"));
       return true;
     }
     return false;
@@ -2871,12 +2880,12 @@ final class NewTypeInference implements CompilerPass {
       JSType foundIndexType, JSType requiredIndexType) {
     if (requiredIndexType.isBottom()) {
       warnings.add(JSError.make(
-          n, NewTypeInference.BOTTOM_INDEX_TYPE, iobjectType.toString()));
+          n, BOTTOM_INDEX_TYPE, iobjectType.toString()));
       return true;
     }
     if (!foundIndexType.isSubtypeOf(requiredIndexType)) {
       warnings.add(JSError.make(
-          n, NewTypeInference.INVALID_INDEX_TYPE,
+          n, INVALID_INDEX_TYPE,
           errorMsgWithTypeDiff(requiredIndexType, foundIndexType)));
       return true;
     }
