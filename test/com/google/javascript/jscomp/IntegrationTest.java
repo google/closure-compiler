@@ -284,6 +284,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCheckTypes(true);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
     test(
         options,
         LINE_JOINER.join(
@@ -1107,6 +1108,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options,
         LINE_JOINER.join(
             "/** @const */ var goog = {};",
+            "goog.abstractMethod = function() {};",
             "/** @interface */ function I() {}",
             "I.prototype.a = function(x) {};",
             "/** @constructor @implements {I} */ function Foo() {}",
@@ -1115,6 +1117,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "/** @override */ Bar.prototype.a = function(x) {};"),
         LINE_JOINER.join(
             "var goog={};",
+            "goog.abstractMethod = function() {};",
             "function I(){}",
             "I.prototype.a=function(x){};",
             "function Foo(){}",
@@ -1525,6 +1528,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
     options.extraSmartNameRemoval = true;
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
     String code = "/** @constructor */ function A() {} " +
         "A.prototype.foo = function() { " +
@@ -1571,6 +1575,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.extraSmartNameRemoval = true;
     options.setFoldConstants(true);
     options.setInlineVariables(true);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
     String code =
         "/** @constructor */ function A() {} "
@@ -2112,6 +2117,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setFoldConstants(true);
     options.setCheckTypes(true);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
     // An external function that returns a local object that the
     // method "go" that only modifies the object.

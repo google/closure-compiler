@@ -20,4 +20,7 @@
 var goog = goog || {};
 
 /** @param {string} name */
-goog.provide = function(name) {}
+goog.provide = function(name) {};
+
+/** @param {string} name */
+goog.require = function(name) {};

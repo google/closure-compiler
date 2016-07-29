@@ -21,7 +21,6 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -187,7 +186,7 @@ public abstract class PassConfig {
         topScope,
         typedScopeCreator,
         options.reportMissingOverride)
-        .reportMissingProperties(options.enables(
+        .reportMissingProperties(!options.disables(
             DiagnosticGroup.forType(TypeCheck.INEXISTENT_PROPERTY)));
   }
 
