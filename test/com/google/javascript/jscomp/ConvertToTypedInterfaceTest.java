@@ -24,6 +24,11 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
     return new ConvertToTypedInterface(compiler);
   }
 
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
   public void testInferAnnotatedTypeFromTypeInference() {
     enableTypeCheck();
 
@@ -45,8 +50,9 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
 
-    testError(
+    testWarning(
         "/** @const */ var x = cond ? true : 5;",
+        "/** @const {*} */ var x;",
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
@@ -63,8 +69,9 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "/** @constructor */ function Foo() { /** @type {?number} */ this.x = null; this.x = 5; }",
         "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
 
-    testError(
+    testWarning(
         "/** @constructor */ function Foo() { /** @const */ this.x = cond ? true : 5; }",
+        "/** @constructor */ function Foo() {}  /** @const {*} */ Foo.prototype.x; ",
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 

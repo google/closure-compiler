@@ -45,7 +45,7 @@ import java.util.Set;
 class ConvertToTypedInterface implements CompilerPass {
 
   static final DiagnosticType CONSTANT_WITHOUT_EXPLICIT_TYPE =
-      DiagnosticType.error(
+      DiagnosticType.warning(
           "JSC_CONSTANT_WITHOUT_EXPLICIT_TYPE",
           "/** @const */-annotated values in library API should have types explicitly specified.");
 
@@ -235,7 +235,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case VAR:
         case CONST:
         case LET:
-          if (n.getChildCount() == 1) {
+          if (n.getChildCount() == 1 && NodeUtil.isStatement(n)) {
             processName(n.getFirstChild(), n);
           }
           break;
@@ -244,25 +244,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case BREAK:
         case CONTINUE:
         case DEBUGGER:
-          n.detachFromParent();
-          compiler.reportCodeChange();
-          break;
-        case FOR_OF:
-        case DO:
-        case WHILE:
-        case FOR: {
-          Node body = NodeUtil.getLoopCodeBlock(n);
-          parent.replaceChild(n, body.detachFromParent());
-          Node initializer = n.isFor() ? n.getFirstChild() : IR.empty();
-          if (NodeUtil.isNameDeclaration(initializer)) {
-            parent.addChildBefore(initializer.detachFromParent(), body);
-            processName(initializer.getFirstChild(), initializer);
-          }
-          compiler.reportCodeChange();
-          break;
-        }
-        case LABEL:
-          parent.replaceChild(n, n.getSecondChild().detachFromParent());
+          NodeUtil.removeChild(parent, n);
           compiler.reportCodeChange();
           break;
         default:
@@ -285,8 +267,29 @@ class ConvertToTypedInterface implements CompilerPass {
           n.removeFirstChild();
           Node children = n.removeChildren();
           parent.addChildrenAfter(children, n);
-          n.detachFromParent();
+          NodeUtil.removeChild(parent, n);
           compiler.reportCodeChange();
+          break;
+        case FOR_OF:
+        case DO:
+        case WHILE:
+        case FOR: {
+          Node body = NodeUtil.getLoopCodeBlock(n);
+          parent.addChildAfter(body.detachFromParent(), n);
+          NodeUtil.removeChild(parent, n);
+          Node initializer = n.isFor() ? n.getFirstChild() : IR.empty();
+          if (initializer.isVar() && initializer.getChildCount() == 1) {
+            parent.addChildBefore(initializer.detachFromParent(), body);
+            processName(initializer.getFirstChild(), initializer);
+          }
+          compiler.reportCodeChange();
+          break;
+        }
+        case LABEL:
+          if (n.getParent() != null) {
+            parent.replaceChild(n, n.getSecondChild().detachFromParent());
+            compiler.reportCodeChange();
+          }
           break;
         default:
           break;
@@ -314,16 +317,11 @@ class ConvertToTypedInterface implements CompilerPass {
                 if (seenNames.contains(fullyQualifiedName)) {
                   return;
                 }
-                JSType type = name.getJSType();
                 JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
                 if (jsdoc == null) {
                   jsdoc = getAllTypeJSDoc();
                 } else if (isInferrableConst(jsdoc, name)) {
-                  jsdoc = maybeUpdateJSDocInfoWithType(jsdoc, name);
-                  if (type == null) {
-                    compiler.report(JSError.make(name, CONSTANT_WITHOUT_EXPLICIT_TYPE));
-                    return;
-                  }
+                  jsdoc = pullJsdocTypeFromAst(compiler, jsdoc, name);
                 }
                 Node newProtoAssignStmt =
                     NodeUtil.newQNameDeclaration(compiler, fullyQualifiedName, null, jsdoc);
@@ -366,17 +364,13 @@ class ConvertToTypedInterface implements CompilerPass {
         return RemovalType.REMOVE_RHS;
       }
       if (isInferrableConst(jsdoc, nameNode)) {
-        if (nameNode.getJSType() == null) {
-          compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
-          return RemovalType.PRESERVE_ALL;
-        }
-        jsdocNode.setJSDocInfo(maybeUpdateJSDocInfoWithType(jsdoc, nameNode));
+        jsdocNode.setJSDocInfo(pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
       }
       return RemovalType.REMOVE_RHS;
     }
 
     private void processName(Node nameNode, Node statement) {
-      Preconditions.checkState(NodeUtil.isStatement(statement), statement);
+     Preconditions.checkState(NodeUtil.isStatement(statement), statement);
       if (!nameNode.isQualifiedName()) {
         // We don't track these. We can just remove them.
         removeNode(statement);
@@ -468,19 +462,22 @@ class ConvertToTypedInterface implements CompilerPass {
     return jsdoc != null && jsdoc.isConstructor();
   }
 
+  private static JSDocInfo pullJsdocTypeFromAst(
+      AbstractCompiler compiler, JSDocInfo oldJSDoc, Node nameNode) {
+    Preconditions.checkArgument(nameNode.isQualifiedName());
+    JSType type = nameNode.getJSType();
+    if (type == null) {
+      compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
+      return getTypeJSDoc(oldJSDoc, new JSTypeExpression(new Node(Token.STAR), ""));
+    } else {
+      return getTypeJSDoc(oldJSDoc, type.toNonNullAnnotationString());
+    }
+  }
+
   private static JSDocInfo getAllTypeJSDoc() {
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
     builder.recordType(new JSTypeExpression(new Node(Token.STAR), ""));
     return builder.build();
-  }
-
-  private static JSDocInfo maybeUpdateJSDocInfoWithType(JSDocInfo oldJSDoc, Node nameNode) {
-    Preconditions.checkArgument(nameNode.isQualifiedName());
-    JSType type = nameNode.getJSType();
-    if (type == null) {
-      return oldJSDoc;
-    }
-    return getTypeJSDoc(oldJSDoc, type.toNonNullAnnotationString());
   }
 
   private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, JSTypeExpression newType) {
