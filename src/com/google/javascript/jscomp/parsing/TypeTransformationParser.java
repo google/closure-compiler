@@ -268,9 +268,18 @@ public final class TypeTransformationParser {
       // No need to add a new warning because the validation does it
       return false;
     }
+    fixLineNumbers(expr);
     // Store the result if the AST is valid
     typeTransformationAst = expr;
     return true;
+  }
+
+  private void fixLineNumbers(Node expr) {
+    // TODO(tbreisacher): Also fix column numbers.
+    expr.setLineno(expr.getLineno() + templateLineno - 1);
+    for (Node child : expr.children()) {
+      fixLineNumbers(child);
+    }
   }
 
   /**
