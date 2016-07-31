@@ -3283,6 +3283,11 @@ MutationObserver.prototype.observe = function(target, options) {};
 MutationObserver.prototype.disconnect = function() {};
 
 /**
+ * @return {!Array<!MutationRecord>}
+ */
+MutationObserver.prototype.takeRecords = function() {};
+
+/**
  * @type {function(new:MutationObserver, function(Array<MutationRecord>))}
  */
 Window.prototype.WebKitMutationObserver;
