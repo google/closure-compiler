@@ -53,6 +53,7 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -1541,7 +1542,7 @@ class TypeInference
       }
     }
 
-    if ((propertyType == null || propertyType.isUnknownType()) && objType != null) {
+    if (propertyType == null && objType != null) {
       JSType foundType = objType.findPropertyType(propName);
       if (foundType != null) {
         propertyType = foundType;
