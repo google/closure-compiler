@@ -42,6 +42,11 @@ final class PolymerPassErrors {
   static final DiagnosticType POLYMER_INVALID_PROPERTY = DiagnosticType.error(
       "JSC_POLYMER_INVALID_PROPERTY", "Polymer property has an invalid or missing type.");
 
+  static final DiagnosticType POLYMER_INVALID_EXTENDS = DiagnosticType.error(
+      "JSC_POLYMER_INVALID_EXTENDS",
+      "Cannot extend HTML element ''{0}''. The element is probably either misspelled,"
+          + " or needs to be added to the list of known elements.");
+
   static final DiagnosticType POLYMER_INVALID_BEHAVIOR_ARRAY = DiagnosticType.error(
       "JSC_POLYMER_INVALID_BEHAVIOR_ARRAY", "The behaviors property must be an array literal.");
 

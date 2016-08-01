@@ -15,6 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DECLARATION;
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXTERNS;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -66,7 +70,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     polymerElementProps = externsCallback.getPolymerElementProps();
 
     if (polymerElementExterns == null) {
-      compiler.report(JSError.make(externs, PolymerPassErrors.POLYMER_MISSING_EXTERNS));
+      compiler.report(JSError.make(externs, POLYMER_MISSING_EXTERNS));
       return;
     }
 
@@ -96,7 +100,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   private void rewriteClassDefinition(Node node, Node parent, NodeTraversal traversal) {
     Node grandparent = parent.getParent();
     if (grandparent.isConst()) {
-      compiler.report(JSError.make(node, PolymerPassErrors.POLYMER_INVALID_DECLARATION));
+      compiler.report(JSError.make(node, POLYMER_INVALID_DECLARATION));
       return;
     }
     PolymerClassDefinition def = PolymerClassDefinition.extractFromCallNode(
@@ -131,6 +135,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     baseExterns.getFirstChild().setString(polymerElementType);
 
     String elementType = tagNameMap.get(def.nativeBaseElement);
+    if (elementType == null) {
+      compiler.report(JSError.make(def.descriptor, POLYMER_INVALID_EXTENDS, def.nativeBaseElement));
+      return;
+    }
     JSTypeExpression elementBaseType =
         new JSTypeExpression(new Node(Token.BANG, IR.string(elementType)), VIRTUAL_FILE);
     JSDocInfoBuilder baseDocs = JSDocInfoBuilder.copyFrom(baseExterns.getJSDocInfo());
