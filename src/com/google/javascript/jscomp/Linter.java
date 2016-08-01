@@ -75,6 +75,7 @@ public class Linter {
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.USE_OF_GOOG_BASE, CheckLevel.WARNING);
+    options.setSummaryDetailLevel(0);
     compiler.setPassConfig(new LintPassConfig(options));
     compiler.disableThreads();
     SourceFile externs = SourceFile.fromCode("<Linter externs>", "");
