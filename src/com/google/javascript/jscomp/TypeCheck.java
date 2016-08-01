@@ -135,10 +135,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_CONSTRUCTOR_NOT_CALLABLE",
           "Constructor {0} should be called with the \"new\" keyword");
 
-  static final DiagnosticType FUNCTION_MASKS_VARIABLE =
+  static final DiagnosticType ABSTRACT_METHOD_NOT_CALLABLE =
       DiagnosticType.warning(
-          "JSC_FUNCTION_MASKS_VARIABLE",
-          "function {0} masks variable (IE bug)");
+          "JSC_ABSTRACT_METHOD_NOT_CALLABLE", "Abstract method {0} cannot be called");
+
+  static final DiagnosticType FUNCTION_MASKS_VARIABLE =
+      DiagnosticType.warning("JSC_FUNCTION_MASKS_VARIABLE", "function {0} masks variable (IE bug)");
 
   static final DiagnosticType MULTIPLE_VAR_DEF = DiagnosticType.warning(
       "JSC_MULTIPLE_VAR_DEF",
@@ -1806,6 +1808,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         report(t, n, EXPECTED_THIS_TYPE, functionType.toString());
       }
 
+      checkAbstractMethodCall(t, n);
       visitParameterList(t, n, functionType);
       ensureTyped(t, n, functionType.getReturnType());
     } else {
@@ -1815,6 +1818,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // TODO(nicksantos): Add something to check for calls of RegExp objects,
     // which is not supported by IE. Either say something about the return type
     // or warn about the non-portability of the call or both.
+  }
+
+  /** Check that @abstract methods are not called */
+  private void checkAbstractMethodCall(NodeTraversal t, Node call) {
+    if (!NodeUtil.isFunctionObjectCall(call) && !NodeUtil.isFunctionObjectApply(call)) {
+      return;
+    }
+
+    FunctionType methodType = call.getFirstFirstChild().getJSType().toMaybeFunctionType();
+    if (methodType != null && methodType.isAbstract() && !methodType.isConstructor()) {
+      report(t, call, ABSTRACT_METHOD_NOT_CALLABLE, methodType.getDisplayName());
+    }
   }
 
   /**

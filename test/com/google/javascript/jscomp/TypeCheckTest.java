@@ -8111,6 +8111,173 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("var f = new Function(); f();");
   }
 
+  public void testAbstractMethodCall1() {
+    // Converted from Closure style "goog.base" super call
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "B.superClass_ = A.prototype",
+            "/** @override */ B.prototype.foo = function() { B.superClass_.foo.call(this); };"),
+        "Abstract method A.prototype.foo cannot be called");
+  }
+
+  public void testAbstractMethodCall2() {
+    // Converted from Closure style "goog.base" super call, with namespace
+    testTypes(
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/** @constructor @abstract */ ns.A = function() {};",
+            "/** @abstract */ ns.A.prototype.foo = function() {};",
+            "/** @constructor @extends {ns.A} */ ns.B = function() {};",
+            "ns.B.superClass_ = ns.A.prototype",
+            "/** @override */ ns.B.prototype.foo = function() {",
+            "  ns.B.superClass_.foo.call(this);",
+            "};"),
+        "Abstract method ns.A.prototype.foo cannot be called");
+  }
+
+  public void testAbstractMethodCall3() {
+    // Converted from ES6 super call
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() { A.prototype.foo.call(this); };"),
+        "Abstract method A.prototype.foo cannot be called");
+  }
+
+  public void testAbstractMethodCall4() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/** @constructor @abstract */ ns.A = function() {};",
+            "ns.A.prototype.foo = function() {};",
+            "/** @constructor @extends {ns.A} */ ns.B = function() {};",
+            "ns.B.superClass_ = ns.A.prototype",
+            "/** @override */ ns.B.prototype.foo = function() {",
+            "  ns.B.superClass_.foo.call(this);",
+            "};"));
+  }
+
+  public void testAbstractMethodCall5() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() { A.prototype.foo.call(this); };"));
+  }
+
+  public void testAbstractMethodCall6() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/** @constructor @abstract */ ns.A = function() {};",
+            "ns.A.prototype.foo = function() {};",
+            "ns.A.prototype.foo.bar = function() {};",
+            "/** @constructor @extends {ns.A} */ ns.B = function() {};",
+            "ns.B.superClass_ = ns.A.prototype",
+            "/** @override */ ns.B.prototype.foo = function() {",
+            "  ns.B.superClass_.foo.bar.call(this);",
+            "};"));
+  }
+
+  public void testAbstractMethodCall7() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "A.prototype.foo = function() {};",
+            "A.prototype.foo.bar = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() { A.prototype.foo.bar.call(this); };"));
+  }
+
+  public void testAbstractMethodCall8() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() { A.prototype.foo['call'](this); };"));
+  }
+
+  public void testAbstractMethodCall9() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @struct @constructor */ var A = function() {};",
+            "A.prototype.foo = function() {};",
+            "/** @struct @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() {",
+            "  (function() {",
+            "    return A.prototype.foo.call($jscomp$this);",
+            "  })();",
+            "};"));
+  }
+
+  public void testAbstractMethodCall10() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "A.prototype.foo.call(new Subtype);"),
+        "Abstract method A.prototype.foo cannot be called");
+  }
+
+  public void testAbstractMethodCall11() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ function A() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ function B() {};",
+            "var abstractMethod = A.prototype.foo;",
+            "abstractMethod.call(new B);"),
+        "Abstract method A.prototype.foo cannot be called");
+  }
+
+  public void testAbstractMethodCall12() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "B.superClass_ = A.prototype",
+            "/** @override */ B.prototype.foo = function() { B.superClass_.foo.apply(this); };"),
+        "Abstract method A.prototype.foo cannot be called");
+  }
+
+  public void testAbstractMethodCall13() {
+    // Calling abstract @constructor is allowed
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "/** @constructor @extends {A} */ var B = function() { A.call(this); };"));
+  }
+
+  public void testAbstractMethodCall_Indirect1() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ function A() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ function B() {};",
+            "var abstractMethod = A.prototype.foo;",
+            "(0, abstractMethod).call(new B);"),
+        "Abstract method A.prototype.foo cannot be called");
+  }
+
+  public void testAbstractMethodCall_Indirect2() {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ function A() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ function B() {};",
+            "var abstractMethod = A.prototype.foo;",
+            "(abstractMethod = abstractMethod).call(new B);"),
+        "Abstract method A.prototype.foo cannot be called");
+  }
+
   public void testFunctionCall1() {
     testTypes(
         "/** @param {number} x */ var foo = function(x) {};" +
