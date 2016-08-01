@@ -307,7 +307,7 @@ _.shuffle = function(obj) {};
 /**
  * @param {Object.<?, VALUE>|Array.<VALUE>} obj
  * @param {number=} opt_n
- * @return {!VALUE|Array.<VALUE>}
+ * @return {VALUE|Array.<VALUE>}
  * @template VALUE
  */
 _.sample = function(obj, opt_n) {};
@@ -392,7 +392,7 @@ _.drop = function(array, opt_n) {};
 
 /**
  * @param {!Array.<VALUE>} array
- * @return {!Array.<!VALUE>}
+ * @return {!Array.<VALUE>}
  * @template VALUE
  */
 _.compact = function(array) {};

@@ -375,7 +375,7 @@ _.drop = function(array, opt_n) {};
 
 /**
  * @param {!Array.<VALUE>} array
- * @return {!Array.<!VALUE>}
+ * @return {!Array.<VALUE>}
  * @template VALUE
  */
 _.compact = function(array) {};
