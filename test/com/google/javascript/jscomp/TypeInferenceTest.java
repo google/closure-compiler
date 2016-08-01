@@ -46,11 +46,9 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.testing.Asserts;
-
-import junit.framework.TestCase;
-
 import java.util.HashMap;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Tests {@link TypeInference}.
@@ -276,6 +274,16 @@ public final class TypeInferenceTest extends TestCase {
     assumingThisType(thisType);
     inFunction("var y = 1; this.foo = x; y = this.foo;");
     verify("y", createUndefinableType(STRING_TYPE));
+  }
+
+  public void testPropertyInferencePreferLocallyInferredUnknownToOwnerProperty() {
+    ObjectType thisType = registry.createAnonymousObjectType(null);
+    thisType.defineDeclaredProperty("arr", createUndefinableType(ARRAY_TYPE), null);
+    assumingThisType(thisType);
+    // The "this.arr" in "this.arr.length" was locally inferred as unknown, due to the statement
+    // "this.arr;". Later it should be correctly inferred as the property on the owner type.
+    inFunction("this.arr; for(var i = 0; i < this.arr.length; i++) { alert(i); }");
+    verify("this.arr", ARRAY_TYPE);
   }
 
   public void testAssert1() {
