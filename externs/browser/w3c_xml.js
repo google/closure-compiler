@@ -364,6 +364,13 @@ XMLHttpRequest.prototype.getResponseHeader = function(header) {};
 XMLHttpRequest.prototype.responseText;
 
 /**
+ * This is not supported in any IE browser (as of August 2016).
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseURL
+ */
+XMLHttpRequest.prototype.responseURL;
+
+/**
  * @type {Document}
  * @see http://www.w3.org/TR/XMLHttpRequest/#the-responsexml-attribute
  */
