@@ -401,12 +401,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(analyzerChecks);
     }
 
-    // NOTE(dimvar): This will move later into the checks as we convert checks
-    // to handle types from the new type inference
-    if (options.getNewTypeInference()) {
-      addOldTypeCheckerPasses(checks, options);
-    }
-
     if (options.checkEventfulObjectDisposalPolicy != CompilerOptions.DisposalCheckingPolicy.OFF) {
       checks.add(checkEventfulObjectDisposal);
     }
@@ -417,6 +411,12 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.enables(DiagnosticGroups.ES5_STRICT)) {
       checks.add(checkStrictMode);
+    }
+
+    // NOTE(dimvar): This will move later into the checks as we convert checks
+    // to handle types from the new type inference
+    if (options.getNewTypeInference()) {
+      addOldTypeCheckerPasses(checks, options);
     }
 
     if (!options.getConformanceConfigs().isEmpty()) {
