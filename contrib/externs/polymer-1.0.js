@@ -1351,3 +1351,25 @@ hydrolysis.Analyzer = function(attachAST, opt_loader) {};
  * @param {Object=} opt_options Any additional options for the load.
  */
 hydrolysis.Analyzer.analyze = function(href, opt_options) {};
+
+
+
+/**
+ * Contains information useful for debugging. Should not be used in production
+ * code and the API may change on short notice.
+ * @type {!Object}
+ */
+Polymer.telemetry;
+
+/**
+ * Number of elements instantiated so far.
+ * @type {number}
+ */
+Polymer.telemetry.instanceCount;
+
+/**
+ * Array of all registered element prototypes. Being prototypes, not all runtime
+ * properties will be available, but eg. `is` is always there.
+ * @type {!Array<!PolymerElement>}
+ */
+Polymer.telemetry.registrations;
