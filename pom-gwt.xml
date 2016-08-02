@@ -132,31 +132,6 @@
     </dependency>
   </dependencies>
 
-  <repositories>
-    <repository>
-      <id>google-snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/google-snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>plugin-snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/public/</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
-
   <build>
     <defaultGoal>install</defaultGoal>
     <sourceDirectory>${basedir}/src</sourceDirectory>
