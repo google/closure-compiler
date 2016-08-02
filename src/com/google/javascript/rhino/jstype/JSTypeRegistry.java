@@ -48,6 +48,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
@@ -62,7 +63,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -140,7 +140,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   // Types that have been "forward-declared."
   // If these types are not declared anywhere in the binary, we shouldn't
   // try to type-check them at all.
-  private final Set<String> forwardDeclaredTypes = new HashSet<>();
+  private final Set<String> forwardDeclaredTypes;
 
   // A map of properties to the types on which those properties have been
   // declared.
@@ -178,12 +178,14 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   // there are no template types.
   private final TemplateTypeMap emptyTemplateTypeMap;
 
-  /**
-   * Constructs a new type registry populated with the built-in types.
-   */
-  public JSTypeRegistry(
-      ErrorReporter reporter) {
+  public JSTypeRegistry(ErrorReporter reporter) {
+    this(reporter, ImmutableSet.<String>of());
+  }
+
+  /** Constructs a new type registry populated with the built-in types. */
+  public JSTypeRegistry(ErrorReporter reporter, Set<String> forwardDeclaredTypes) {
     this.reporter = reporter;
+    this.forwardDeclaredTypes = forwardDeclaredTypes;
     this.emptyTemplateTypeMap = new TemplateTypeMap(
         this, ImmutableList.<TemplateType>of(), ImmutableList.<JSType>of());
     nativeTypes = new JSType[JSTypeNative.values().length];
@@ -909,14 +911,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   public void overwriteDeclaredType(String name, JSType t) {
     Preconditions.checkState(namesToTypes.containsKey(name));
     register(t, name);
-  }
-
-  /**
-   * Records a forward-declared type name. We will not emit errors if this
-   * type name never resolves to anything.
-   */
-  public void forwardDeclareType(String name) {
-    forwardDeclaredTypes.add(name);
   }
 
   /**

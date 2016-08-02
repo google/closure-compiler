@@ -211,6 +211,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
   // Used by optimize-returns, optimize-parameters and remove-unused-variables
   private DefinitionUseSiteFinder defFinder = null;
 
+  // Types that have been forward declared
+  private final Set<String> forwardDeclaredTypes = new HashSet<>();
+
   // For use by the new type inference
   private GlobalTypeInfo symbolTable;
 
@@ -1237,20 +1240,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
   @Override
   public JSTypeRegistry getTypeRegistry() {
     if (typeRegistry == null) {
-      typeRegistry = new JSTypeRegistry(oldErrorReporter);
+      typeRegistry = new JSTypeRegistry(oldErrorReporter, forwardDeclaredTypes);
     }
     return typeRegistry;
   }
 
   @Override
   void forwardDeclareType(String typeName) {
-    // Always add it to the old type registry, since OTI runs after NTI to
-    // provide types for the remaining passes.
-    // TODO(dimvar): change this when we stop running OTI after NTI.
-    getTypeRegistry().forwardDeclareType(typeName);
-    if (this.options.getNewTypeInference()) {
-      getSymbolTable().addUnknownTypeName(typeName);
-    }
+    forwardDeclaredTypes.add(typeName);
   }
 
   @Override
@@ -1352,16 +1349,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
   @Override
   GlobalTypeInfo getSymbolTable() {
     if (this.symbolTable == null) {
-      this.symbolTable = new GlobalTypeInfo(this);
+      this.symbolTable = new GlobalTypeInfo(this, forwardDeclaredTypes);
     }
     return this.symbolTable;
-  }
-
-  @Override
-  void setSymbolTable(CompilerPass symbolTable) {
-    Preconditions.checkArgument(
-        symbolTable == null || symbolTable instanceof GlobalTypeInfo);
-    this.symbolTable = (GlobalTypeInfo) symbolTable;
   }
 
   @Override
@@ -1531,7 +1521,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
         // Forward-declare all the provided types, so that they
         // are not flagged even if they are dropped from the process.
         for (String provide : input.getProvides()) {
-          getTypeRegistry().forwardDeclareType(provide);
+          forwardDeclareType(provide);
         }
       }
 

@@ -168,7 +168,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     forwardDeclaredNamedType =
         new NamedType(registry, "forwardDeclared", "source", 1, 0);
-    registry.forwardDeclareType("forwardDeclared");
     forwardDeclaredNamedType.resolve(
         new SimpleErrorReporter(), EMPTY_SCOPE);
 
@@ -4974,9 +4973,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testForwardDeclaredNamedTypeEquals() {
     // test == if references are equal
-    NamedType a = new NamedType(registry, "typeA", "source", 1, 0);
-    NamedType b = new NamedType(registry, "typeA", "source", 1, 0);
-    registry.forwardDeclareType("typeA");
+    NamedType a = new NamedType(registry, "forwardDeclared", "source", 1, 0);
+    NamedType b = new NamedType(registry, "forwardDeclared", "source", 1, 0);
 
     assertTypeEquals(a, b);
 
@@ -4995,8 +4993,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testForwardDeclaredNamedType() {
-    NamedType a = new NamedType(registry, "typeA", "source", 1, 0);
-    registry.forwardDeclareType("typeA");
+    NamedType a = new NamedType(registry, "forwardDeclared", "source", 1, 0);
 
     assertTypeEquals(UNKNOWN_TYPE, a.getLeastSupertype(UNKNOWN_TYPE));
     assertTypeEquals(CHECKED_UNKNOWN_TYPE,

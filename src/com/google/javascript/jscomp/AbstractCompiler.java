@@ -190,8 +190,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract CompilerPass getSymbolTable();
 
-  abstract void setSymbolTable(CompilerPass symbolTable);
-
   /**
    * Used by three passes that run in sequence (optimize-returns,
    * optimize-parameters, remove-unused-variables), to avoid having them

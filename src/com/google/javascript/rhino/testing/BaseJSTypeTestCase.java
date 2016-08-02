@@ -41,6 +41,7 @@ package com.google.javascript.rhino.testing;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionBuilder;
@@ -51,7 +52,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
-
 import junit.framework.TestCase;
 
 public abstract class BaseJSTypeTestCase extends TestCase {
@@ -119,7 +119,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     errorReporter = new TestErrorReporter(null, null);
-    registry = new JSTypeRegistry(errorReporter);
+    registry = new JSTypeRegistry(errorReporter, ImmutableSet.of("forwardDeclared"));
     initTypes();
   }
 

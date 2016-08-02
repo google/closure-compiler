@@ -275,11 +275,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   private Map<Node, JSType> declaredObjLitProps = new LinkedHashMap<>();
 
   private JSTypes commonTypes;
-  private Set<String> unknownTypeNames = new LinkedHashSet<>();
+  private final Set<String> unknownTypeNames;
 
-  GlobalTypeInfo(AbstractCompiler compiler) {
+  GlobalTypeInfo(AbstractCompiler compiler, Set<String> unknownTypeNames) {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
+    this.unknownTypeNames = unknownTypeNames;
     this.convention = compiler.getCodingConvention();
     this.varNameGen = new UniqueNameGenerator();
     this.funNameGen = new DefaultNameGenerator(ImmutableSet.<String>of(), "", null);
@@ -310,10 +311,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     return declaredObjLitProps.get(n);
   }
 
-  void addUnknownTypeName(String name) {
-    this.unknownTypeNames.add(name);
-  }
-
   // Differs from the similar method in NTIScope class on how it treats qnames.
   String getFunInternalName(Node n) {
     Preconditions.checkArgument(n.isFunction());
@@ -337,7 +334,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     this.globalScope = new NTIScope(root, null, ImmutableList.<String>of(), commonTypes);
     this.globalScope.addUnknownTypeNames(this.unknownTypeNames);
-    this.unknownTypeNames = null; // Don't retain the LinkedHashSet
     scopes.add(this.globalScope);
 
     // Processing of a scope is split into many separate phases, and it's not
