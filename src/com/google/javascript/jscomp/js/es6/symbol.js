@@ -41,13 +41,13 @@ $jscomp.symbolCounter_ = 0;
 
 /**
  * Produces "symbols" (actually just unique strings).
- * @param {string} description
+ * @param {string=} opt_description
  * @return {symbol}
  * @suppress {reportUnknownTypes}
  */
-$jscomp.Symbol = function(description) {
+$jscomp.Symbol = function(opt_description) {
   return /** @type {symbol} */ (
-      $jscomp.SYMBOL_PREFIX + description + ($jscomp.symbolCounter_++));
+      $jscomp.SYMBOL_PREFIX + (opt_description || '') + ($jscomp.symbolCounter_++));
 };
 
 

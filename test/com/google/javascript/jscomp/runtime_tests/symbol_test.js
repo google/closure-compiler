@@ -21,17 +21,20 @@ goog.require('goog.testing.jsunit');
 
 const s1 = Symbol('example');
 const s2 = Symbol('example');
+const s3 = Symbol();
 
 /** @unrestricted */
 const SymbolProps = class {
   [s1]() { return 's1'; }
   [s2]() { return 's2'; }
+  [s3]() { return 's3'; }
 }
 
 function testSymbols() {
   const sp = new SymbolProps();
   assertEquals('s1', sp[s1]());
   assertEquals('s2', sp[s2]());
+  assertEquals('s3', sp[s3]());
 }
 
 function testArrayIterator() {

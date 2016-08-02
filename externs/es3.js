@@ -35,10 +35,10 @@
 var symbol;
 
 /**
- * @param {string} description
+ * @param {string=} opt_description
  * @return {symbol}
  */
-function Symbol(description) {}
+function Symbol(opt_description) {}
 
 
 /**
