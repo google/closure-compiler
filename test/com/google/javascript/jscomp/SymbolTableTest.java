@@ -40,9 +40,9 @@ import junit.framework.TestCase;
 
 public final class SymbolTableTest extends TestCase {
 
-  private static final String EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS +
-      "var Number;" +
-      "\nfunction customExternFn(customExternArg) {}";
+  private static final String EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS
+      + "var Number;"
+      + "\nfunction customExternFn(customExternArg) {}";
 
   private CompilerOptions options;
 
@@ -55,7 +55,11 @@ public final class SymbolTableTest extends TestCase {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
         options);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
-    options.setIdeMode(true);
+    options.setChecksOnly(true);
+    options.setPreserveDetailedSourceInfo(true);
+    options.setContinueAfterErrors(true);
+    options.setAllowHotswapReplaceScript(true);
+    options.setParseJsDocDocumentation(true);
   }
 
   public void testGlobalVar() throws Exception {
@@ -152,9 +156,8 @@ public final class SymbolTableTest extends TestCase {
 
   public void testLocalThisReferences2() throws Exception {
     SymbolTable table = createSymbolTable(
-        "/** @constructor */ function F() {}" +
-        "F.prototype.baz = " +
-        "    function() { this.foo = 3; this.bar = 5; };");
+        "/** @constructor */ function F() {}\n"
+            + "F.prototype.baz = function() { this.foo = 3; this.bar = 5; };");
 
     Symbol baz = getGlobalVar(table, "F.prototype.baz");
     assertNotNull(baz);
