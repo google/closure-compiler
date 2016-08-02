@@ -1326,3 +1326,35 @@ Polymer.RenderStatus.whenReady = function(cb) {}
  * @param {...*} args The function arguments.
  */
 Polymer.RenderStatus.afterNextRender = function(element, fn, args) {}
+
+
+Polymer.AppLayout;
+
+/** @constructor */
+Polymer.AppLayout.LocalDomWithBackground = function(){};
+/** @type {!HTMLElement} */
+Polymer.AppLayout.LocalDomWithBackground.prototype.backgroundFrontLayer;
+/** @type {!HTMLElement} */
+Polymer.AppLayout.LocalDomWithBackground.prototype.backgroundRearLayer;
+/** @type {!HTMLElement} */
+Polymer.AppLayout.LocalDomWithBackground.prototype.background;
+
+/**
+ * @constructor
+ * @extends {PolymerElement}
+ */
+Polymer.AppLayout.ElementWithBackground = function(){};
+
+Polymer.AppLayout.ElementWithBackground.prototype = {
+  /** @type {!Polymer.AppLayout.LocalDomWithBackground} */
+  $: null,
+  /** @return {boolean} True if there's content below the current element */
+  isContentBelow: function(){},
+  /** Updates the elements scroll state */
+  _updateScrollState: function(){},
+  /** @return {boolean} true if the element is on screen */
+  isOnScreen: function(){},
+  /** @type {number} Internal bookkeeping to track screen position */
+  _deltaHeight: 0,
+  _getDOMRef: function(title){},
+}
