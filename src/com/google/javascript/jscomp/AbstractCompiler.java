@@ -87,6 +87,17 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract List<CompilerInput> getInputsInOrder();
 
+  static enum MostRecentTypechecker {
+    NONE,
+    OTI,
+    NTI
+  }
+
+  /**
+   * Sets the type-checking pass that ran most recently.
+   */
+  abstract void setMostRecentTypechecker(MostRecentTypechecker mostRecent);
+
   /**
    * Gets a central registry of type information from the compiled JS.
    */

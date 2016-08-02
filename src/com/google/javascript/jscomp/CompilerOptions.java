@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
-
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -149,18 +148,7 @@ public class CompilerOptions {
   private boolean useNewTypeInference;
 
   /**
-   * When this flag is enabled, we run OTI after NTI so that the AST is annotated with the old types
-   * instead of the new and susbsequent passes that use type information continue to get it from
-   * the old types. When disabled, we don't run OTI at all, so the AST stays annotated
-   * with the new types, and that is what subsequent passes use. It should only ever be disabled in
-   * tests that want to verify that a pass works with the new types.
-   * TODO(aravindpg): move this flag into CompilerTestCase in some form.
-   */
-  private boolean runOTIAfterNTI = true;
-
-  /**
-   * Relevant only when {@link #useNewTypeInference} and {@link #runOTIAfterNTI} are both true,
-   * where we normally disable OTI errors.
+   * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
    * If you want both NTI and OTI errors in this case, set to true.
    * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
    * respectively.
@@ -1838,14 +1826,6 @@ public class CompilerOptions {
 
   public void setNewTypeInference(boolean enable) {
     this.useNewTypeInference = enable;
-  }
-
-  public boolean getRunOTIAfterNTI() {
-    return this.runOTIAfterNTI;
-  }
-
-  public void setRunOTIAfterNTI(boolean enable) {
-    this.runOTIAfterNTI = enable;
   }
 
   // Not dead code; used by the open-source users of the compiler.

@@ -56,13 +56,6 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     this.mode = TypeInferenceMode.Both;
   }
 
-  @Override
-  protected CompilerOptions getOptions(CompilerOptions options) {
-    options = super.getOptions(options);
-    options.setRunOTIAfterNTI(false);
-    return options;
-  }
-
   // NOTE(aravindpg): the idea with these selective overrides is that every `test` call
   // in a subclass must go through one and exactly one of the overrides here, which are
   // the ones that actually run the test twice (once under OTI and once under NTI).

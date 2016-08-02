@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CodingConvention.Bind;
 import com.google.javascript.jscomp.NewTypeInference.WarningReporter;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
@@ -47,7 +48,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -332,6 +332,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     Preconditions.checkNotNull(warnings, "Cannot rerun GlobalTypeInfo.process");
     Preconditions.checkArgument(externs == null || externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
+
+    this.compiler.setMostRecentTypechecker(MostRecentTypechecker.NTI);
+
     this.globalScope = new NTIScope(root, null, ImmutableList.<String>of(), commonTypes);
     this.globalScope.addUnknownTypeNames(this.unknownTypeNames);
     this.unknownTypeNames = null; // Don't retain the LinkedHashSet

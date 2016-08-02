@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 import java.util.List;
 
 /**
@@ -44,14 +43,6 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-  }
-
-  @Override
-  protected CompilerOptions getOptions(CompilerOptions options) {
-    options = super.getOptions(options);
-    // Set to false to test NTI-created types in the passes after type checking
-    options.setRunOTIAfterNTI(false);
-    return options;
   }
 
   // Temporary hack until we migrate to junit 4. We use this function to run a unit

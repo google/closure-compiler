@@ -46,7 +46,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -215,6 +214,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
   // For use by the new type inference
   private GlobalTypeInfo symbolTable;
 
+  private MostRecentTypechecker mostRecentTypechecker = MostRecentTypechecker.NONE;
+
   // This error reporter gets the messages from the current Rhino parser or TypeRegistry.
   private final ErrorReporter oldErrorReporter =
       RhinoErrorReporter.forOldRhino(this);
@@ -369,7 +370,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
     // With NTI, we still need OTI to run because the later passes that use
     // types only understand OTI types at the moment.
     // But we do not want to see the warnings from OTI.
-    if (options.getNewTypeInference() && options.getRunOTIAfterNTI()) {
+    if (options.getNewTypeInference()) {
       options.checkTypes = true;
       // Supress warnings from the const checks of CheckAccessControls so as to avoid
       // duplication.
@@ -1216,10 +1217,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
 
   @Override
   public TypeIRegistry getTypeIRegistry() {
-    if (options.getNewTypeInference() && !options.getRunOTIAfterNTI()) {
-      return getSymbolTable();
-    } else {
-      return getTypeRegistry();
+    switch (mostRecentTypechecker) {
+      case NONE:
+        // Even in compiles where typechecking is not enabled, some passes ask for the
+        // type registry, eg, GatherExternProperties does. Also, in CheckAccessControls,
+        // the constructor asks for a type registry, and this may happen before type checking
+        // runs. So, in the NONE case, if NTI is enabled, return a new registry, since NTI is
+        // the relevant type checker. If NTI is not enabled, return an old registry.
+        return options.getNewTypeInference() ? getSymbolTable() : getTypeRegistry();
+      case OTI:
+        return getTypeRegistry();
+      case NTI:
+        return getSymbolTable();
+      default:
+        throw new RuntimeException("Unhandled typechecker " + mostRecentTypechecker);
     }
   }
 
@@ -1240,6 +1251,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
     if (this.options.getNewTypeInference()) {
       getSymbolTable().addUnknownTypeName(typeName);
     }
+  }
+
+  @Override
+  void setMostRecentTypechecker(MostRecentTypechecker lastRun) {
+    this.mostRecentTypechecker = lastRun;
   }
 
   @Override
