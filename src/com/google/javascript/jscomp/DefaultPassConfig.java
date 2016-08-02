@@ -666,6 +666,9 @@ public final class DefaultPassConfig extends PassConfig {
     passes.addAll(getMainOptimizationLoop());
     passes.add(createEmptyPass("afterMainOptimizations"));
 
+    // Must run after ProcessClosurePrimitives, Es6ConvertSuper, and assertion removals.
+    passes.add(removeSuperMethodsPass);
+
     passes.add(createEmptyPass("beforeModuleMotion"));
 
     if (options.crossModuleCodeMotion) {
@@ -1055,6 +1058,27 @@ public final class DefaultPassConfig extends PassConfig {
         checkVariableReferences,
         closureGoogScopeAliases,
         "Variable checking must happen before goog.scope processing.");
+
+    assertPassOrder(
+        checks,
+        TranspilationPasses.es6ConvertSuper,
+        removeSuperMethodsPass,
+        "Super-call method removal must run after Es6 super rewriting, "
+            + "because Es6 super calls are matched on their post-processed form.");
+
+    assertPassOrder(
+        checks,
+        closurePrimitives,
+        removeSuperMethodsPass,
+        "Super-call method removal must run after Es6 super rewriting, "
+            + "because Closure base calls are expected to be in post-processed form.");
+
+    assertPassOrder(
+        checks,
+        closureCodeRemoval,
+        removeSuperMethodsPass,
+        "Super-call method removal must run after closure code removal, because "
+            + "removing assertions may make more super calls eligible to be stripped.");
   }
 
   /** Checks that all constructed classes are goog.require()d. */
@@ -2743,4 +2767,11 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
+  private final PassFactory removeSuperMethodsPass =
+      new PassFactory("removeSuperMethods", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new RemoveSuperMethodsPass(compiler);
+        }
+      };
 }
