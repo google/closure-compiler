@@ -1326,3 +1326,28 @@ Polymer.RenderStatus.whenReady = function(cb) {}
  * @param {...*} args The function arguments.
  */
 Polymer.RenderStatus.afterNextRender = function(element, fn, args) {}
+
+
+
+/**
+ * Static analysis for Polymer.
+ * @type {!Object}
+ */
+var hydrolysis = {};
+
+/**
+ * A database of Polymer metadata defined in HTML
+ * @param {boolean} attachAST If true, attach a parse5 compliant AST
+ * @param {Object=} opt_loader An optional FileLoader used to load
+ * external resources
+ */
+hydrolysis.Analyzer = function(attachAST, opt_loader) {};
+
+
+/**
+ * Shorthand for transitively loading and processing all imports
+ * beginning at href.
+ * @param {string} href The root import to begin loading from.
+ * @param {Object=} opt_options Any additional options for the load.
+ */
+hydrolysis.Analyzer.analyze = function(href, opt_options) {};
