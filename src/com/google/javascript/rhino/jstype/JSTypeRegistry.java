@@ -171,9 +171,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   private final Multimap<StaticTypedScope<JSType>, NamedType> resolvedNamedTypes =
       ArrayListMultimap.create();
 
-  // NamedType warns about unresolved types in the last generation.
-  private boolean lastGeneration = true;
-
   // The template type name.
   private final Map<String, TemplateType> templateTypes = new HashMap<>();
 
@@ -865,10 +862,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       stack.add(current);
     }
     return stack;
-  }
-
-  boolean isLastGeneration() {
-    return lastGeneration;
   }
 
   /**
