@@ -651,9 +651,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testProtectedAccessForProperties10() {
-    // TODO(aravindpg): NTI throws NTI_CTOR_IN_DIFFERENT_SCOPE, NTI_UNKNOWN_NAMESPACE_PROPERTY.
-    // The latter should be fixed.
-    this.mode = TypeInferenceMode.OtiOnly;
+    // NTI throws NTI_CTOR_IN_DIFFERENT_SCOPE
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.js",
@@ -663,7 +661,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
             "sub_foo.js",
             "/** @constructor @extends {Foo} */"
             + "var SubFoo = function() {};"
-            + "(function() {"
+            + "(/** @suppress {newCheckTypes} */ function() {"
             + "SubFoo.prototype.baz = function() { this.bar(); }"
             + "})();")));
   }

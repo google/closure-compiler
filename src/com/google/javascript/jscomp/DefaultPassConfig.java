@@ -378,12 +378,6 @@ public final class DefaultPassConfig extends PassConfig {
       addOldTypeCheckerPasses(checks, options);
     }
 
-    // NOTE(dimvar): This will move later into the checks as we convert checks
-    // to handle types from the new type inference
-    if (options.getNewTypeInference()) {
-      addOldTypeCheckerPasses(checks, options);
-    }
-
     if (options.generateExportsAfterTypeChecking && options.generateExports) {
       checks.add(generateExports);
     }
@@ -405,6 +399,12 @@ public final class DefaultPassConfig extends PassConfig {
     // Analyzer checks must be run after typechecking.
     if (options.enables(DiagnosticGroups.ANALYZER_CHECKS)) {
       checks.add(analyzerChecks);
+    }
+
+    // NOTE(dimvar): This will move later into the checks as we convert checks
+    // to handle types from the new type inference
+    if (options.getNewTypeInference()) {
+      addOldTypeCheckerPasses(checks, options);
     }
 
     if (options.checkEventfulObjectDisposalPolicy != CompilerOptions.DisposalCheckingPolicy.OFF) {
