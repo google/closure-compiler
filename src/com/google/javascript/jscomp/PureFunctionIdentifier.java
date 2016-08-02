@@ -477,7 +477,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
       // Handle deferred local variable modifications:
       FunctionInformation sideEffectInfo = functionSideEffectMap.get(function);
-      Preconditions.checkNotNull(sideEffectInfo, function + "had no side effect info.");
+      Preconditions.checkNotNull(sideEffectInfo, "%s has no side effect info.", function);
 
       if (sideEffectInfo.mutatesGlobalState()){
         sideEffectInfo.resetLocalVars();
