@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -40,7 +39,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -117,10 +115,9 @@ public final class TranspilingClosureBundler extends ClosureBundler {
               Compiler compiler = new Compiler(new PrintStream(baos));
               // Threads can't be used in small unit tests.
               compiler.disableThreads();
-              SourceFile externs = SourceFile.fromCode("externs", "function Symbol() {}");
               SourceFile sourceFile = SourceFile.fromCode(path, js);
               compiler.<SourceFile, SourceFile>compile(
-                  ImmutableList.<SourceFile>of(externs),
+                  ImmutableList.<SourceFile>of(),
                   ImmutableList.<SourceFile>of(sourceFile),
                   getOptions());
               if (compiler.getErrorManager().getErrorCount() > 0) {
@@ -162,9 +159,9 @@ public final class TranspilingClosureBundler extends ClosureBundler {
     Compiler compiler = new Compiler();
     // Threads can't be used in small unit tests.
     compiler.disableThreads();
-    SourceFile externs = SourceFile.fromCode("externs", "function Symbol() {}");
     SourceFile sourceFile = SourceFile.fromCode("source", "");
-    compiler.compile(ImmutableList.of(externs), ImmutableList.of(sourceFile), options);
+    compiler.<SourceFile, SourceFile>compile(
+        ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(sourceFile), options);
     return compiler.toSource();
   }
 }
