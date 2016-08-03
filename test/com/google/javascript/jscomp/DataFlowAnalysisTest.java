@@ -800,18 +800,26 @@ public final class DataFlowAnalysisTest extends TestCase {
   static void verifyInHas(GraphNode<Instruction, Branch> node, Variable var,
       Integer constant) {
     FlowState<ConstPropLatticeElement> fState = node.getAnnotation();
-    assertEquals(constant, fState.getIn().constMap.get(var));
+    veritfyLatticeElementHas(fState.getIn(), var, constant);
   }
 
   static void verifyOutHas(GraphNode<Instruction, Branch> node, Variable var,
       Integer constant) {
     FlowState<ConstPropLatticeElement> fState = node.getAnnotation();
-    assertEquals(constant, fState.getOut().constMap.get(var));
+    veritfyLatticeElementHas(fState.getOut(), var, constant);
   }
 
   static void verifyBranchedInHas(GraphNode<Instruction, Branch> node,
       Variable var, Integer constant) {
     BranchedFlowState<ConstPropLatticeElement> fState = node.getAnnotation();
-    assertEquals(constant, fState.getIn().constMap.get(var));
+    veritfyLatticeElementHas(fState.getIn(), var, constant);
+  }
+
+  static void veritfyLatticeElementHas(ConstPropLatticeElement el, Variable var, Integer constant) {
+    if (constant == null) {
+      assertThat(el.constMap).doesNotContainKey(var);
+    } else {
+      assertThat(el.constMap).containsEntry(var, constant);
+    }
   }
 }
