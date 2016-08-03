@@ -9905,10 +9905,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @const */ var x;",
         GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
 
-    typeCheck(
-        "/** @final */ var x;",
-        GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
-
     typeCheckCustomExterns(
         DEFAULT_EXTERNS + "/** @const {number} */ var x;",
         "");
@@ -10128,10 +10124,11 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testDontOverrideFinalMethods() {
+    // TODO(blickly): Add support for @final annotation to NTI.
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
-        "/** @final */",
+        "/** @const */",
         "Foo.prototype.method = function(x) {};",
         "/** @constructor @extends {Foo} */",
         "function Bar() {}",
@@ -10141,7 +10138,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
-        "/** @final */",
+        "/** @const */",
         "Foo.prototype.num = 123;",
         "/** @constructor @extends {Foo} */",
         "function Bar() {}",

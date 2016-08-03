@@ -32,9 +32,7 @@ import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.ArrayDeque;
-
 import javax.annotation.Nullable;
 
 /**
@@ -1054,7 +1052,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     if (type != null) {
       FunctionTypeI ctor = castToObject(type).getSuperClassConstructor();
       JSDocInfo doc = ctor == null ? null : ctor.getJSDocInfo();
-      if (doc != null && doc.isConstant()) {
+      if (doc != null && doc.isFinal()) {
         return ctor.getInstanceType();
       }
     }

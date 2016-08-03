@@ -27,7 +27,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 /**
@@ -62,6 +61,12 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordThrowDescription(null, "TypeNameWithoutBraces");
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/** */ ", JSDocInfoPrinter.print(info));
+  }
+
+  public void testFinal() {
+    builder.recordFinality();
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/** @final */ ", JSDocInfoPrinter.print(info));
   }
 
   /**

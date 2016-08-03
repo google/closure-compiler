@@ -1823,25 +1823,39 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   public void testFinalClassCannotBeSubclassed() {
     testError(
-        "/**\n"
-        + " * @constructor\n"
-        + " * @const\n"
-        + " */ Foo = function() {};\n"
-        + "/**\n"
-        + " * @constructor\n"
-        + " * @extends {Foo}\n*"
-        + " */ Bar = function() {};",
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @final",
+            " */ var Foo = function() {};",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}*",
+            " */ var Bar = function() {};"),
         EXTEND_FINAL_CLASS);
+
     testError(
-        "/**\n"
-        + " * @constructor\n"
-        + " * @const\n"
-        + " */ function Foo() {};\n"
-        + "/**\n"
-        + " * @constructor\n"
-        + " * @extends {Foo}\n*"
-        + " */ function Bar() {};",
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @final",
+            " */ function Foo() {};",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}*",
+            " */ function Bar() {};"),
         EXTEND_FINAL_CLASS);
+
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @const",
+            " */ var Foo = function() {};",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}",
+            " */ var Bar = function() {};"));
   }
 
   public void testCircularPrototypeLink() {

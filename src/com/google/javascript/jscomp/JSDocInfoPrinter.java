@@ -24,7 +24,6 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +42,7 @@ public final class JSDocInfoPrinter {
     // order:
     //   export|public|private|package|protected
     //   const
+    //   final
     //   dict|struct|unrestricted
     //   constructor|interface|record
     //   extends
@@ -65,8 +65,12 @@ public final class JSDocInfoPrinter {
       parts.add("@" + info.getVisibility().toString().toLowerCase());
     }
 
-    if (info.isConstant() && !info.isDefine()) {
+    if (info.isConstant() && !info.isDefine() && !info.isFinal()) {
       parts.add("@const");
+    }
+
+    if (info.isFinal()) {
+      parts.add("@final");
     }
 
     if (info.makesDicts()) {

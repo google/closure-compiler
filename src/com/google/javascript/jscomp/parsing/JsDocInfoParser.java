@@ -690,6 +690,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case FINAL:
+          if (!jsdocBuilder.recordFinality()) {
+            addTypeWarning("msg.jsdoc.final");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case POLYMER_BEHAVIOR:
           if (jsdocBuilder.isPolymerBehaviorRecorded()) {
             addParserWarning("msg.jsdoc.polymerBehavior.extra");

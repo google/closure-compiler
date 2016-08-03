@@ -41,7 +41,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -1473,6 +1472,18 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isConstant()).isTrue();
   }
 
+  public void testStackedAnnotation13() throws Exception {
+    JSDocInfo info = parse("@final @constructor */", true);
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isFinal()).isTrue();
+  }
+
+  public void testStackedAnnotation14() throws Exception {
+    JSDocInfo info = parse("@constructor @final */", true);
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isFinal()).isTrue();
+  }
+
   public void testParsePreserve() throws Exception {
     this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@preserve Foo\nBar\n\nBaz*/";
@@ -1597,6 +1608,18 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse(
         "@define {string}\n @type {string} */",
         "Bad type annotation. " + "type annotation incompatible with other annotations");
+  }
+
+  public void testParseFinal1() throws Exception {
+    assertThat(parse("@final*/").isFinal()).isTrue();
+  }
+
+  public void testParseFinal2() throws Exception {
+    parse("@final\n@final*/", "Bad type annotation. extra @final tag");
+  }
+
+  public void testParseFinal3() throws Exception {
+    assertThat(parse("@final*/").isConstant()).isTrue();
   }
 
   public void testParseOverride1() throws Exception {
@@ -1726,7 +1749,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         " *\n" +
         "\n" +
         " **********\n" +
-        " * @final\n" +
+        " * @const\n" +
         " */";
 
     JSDocInfo info = parse(comment, MISSING_TYPE_DECL_WARNING_TEXT);

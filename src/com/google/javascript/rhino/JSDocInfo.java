@@ -507,8 +507,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_DEFINE        = 0x00000004; // @define
   private static final int MASK_HIDDEN        = 0x00000008; // @hidden
   private static final int MASK_PRESERVETRY   = 0x00000010; // @preserveTry
-  @SuppressWarnings("unused")
-  private static final int MASK_UNUSED_1      = 0x00000020; //
+  private static final int MASK_FINAL         = 0x00000020; // @final
   private static final int MASK_OVERRIDE      = 0x00000040; // @override
   private static final int MASK_NOALIAS       = 0x00000080; // @noalias
   private static final int MASK_DEPRECATED    = 0x00000100; // @deprecated
@@ -658,6 +657,10 @@ public class JSDocInfo implements Serializable {
     setFlag(value, MASK_CONSTANT);
   }
 
+  void setFinal(boolean value) {
+    setFlag(value, MASK_FINAL);
+  }
+
   void setConstructor(boolean value) {
     setFlag(value, MASK_CONSTRUCTOR);
   }
@@ -779,16 +782,22 @@ public class JSDocInfo implements Serializable {
     return getFlag(MASK_MAPPEDIDGEN);
   }
 
-  /**
-   * Returns whether the {@code @const} annotation is present on this
-   * {@link JSDocInfo}.
-   */
   public boolean isConstant() {
-    return getFlag(MASK_CONSTANT) || isDefine();
+    return getFlag(MASK_CONSTANT | MASK_DEFINE | MASK_FINAL);
   }
 
+  /**
+   * Returns whether the {@code @const} annotation is present on this {@link JSDocInfo}.
+   */
   public boolean hasConstAnnotation() {
     return getFlag(MASK_CONSTANT);
+  }
+
+  /**
+   * Returns whether the {@code @final} annotation is present on this {@link JSDocInfo}.
+   */
+  public boolean isFinal() {
+    return getFlag(MASK_FINAL);
   }
 
   /**

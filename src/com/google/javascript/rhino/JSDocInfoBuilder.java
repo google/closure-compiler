@@ -743,6 +743,22 @@ public final class JSDocInfoBuilder {
   }
 
   /**
+   * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isFinal()} flag set to {@code true}.
+   *
+   * @return {@code true} if the finality was recorded and {@code false} if it was already defined
+   */
+  public boolean recordFinality() {
+    if (!currentInfo.isFinal()) {
+      currentInfo.setFinal(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records a description giving context for translation (i18n).
    *
    * @return {@code true} if the description was recorded and {@code false}
