@@ -355,6 +355,13 @@ public final class TypeValidatorTest extends CompilerTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testModuloNullUndef13() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            "var /** @type {{ a:number }} */ x = null;")));
+  }
+
   private TypeMismatch fromNatives(JSTypeNative a, JSTypeNative b) {
     JSTypeRegistry registry = compiler.getTypeRegistry();
     return new TypeMismatch(

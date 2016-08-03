@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.TypeI;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
@@ -1380,6 +1381,10 @@ public abstract class JSType implements TypeI, Serializable {
         }
       }
       return false;
+    }
+    if (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
+        && (thisType.isNullType() || thisType.isVoidType())) {
+      return true;
     }
 
     // TemplateTypeMaps. This check only returns false if the TemplateTypeMaps
