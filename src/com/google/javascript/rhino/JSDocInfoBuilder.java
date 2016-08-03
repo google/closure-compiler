@@ -41,10 +41,8 @@ package com.google.javascript.rhino;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -1005,20 +1003,6 @@ public final class JSDocInfoBuilder {
 
   public boolean isDictRecorded() {
     return currentInfo.makesDicts();
-  }
-
-  /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#shouldPreserveTry()} flag set to {@code true}.
-   */
-  public boolean recordPreserveTry() {
-    if (!currentInfo.shouldPreserveTry()) {
-      currentInfo.setShouldPreserveTry(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
   }
 
   /**

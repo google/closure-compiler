@@ -663,11 +663,6 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   //   assertNull(catchNode.getFirstChild().getJSDocInfo());
   // }
 
-  public void testOldJsdocTryCatch3() {
-    Node root = parse("/** @preserveTry */ try {} catch (e) {}");
-    assertThat(root.getFirstChild().getJSDocInfo()).isNotNull();
-  }
-
   public void testOldJsdocTryFinally() {
     Node root = parse("try {} finally { /** attach */ e; }");
     Node finallyBlock = root.getFirstChild().getLastChild();

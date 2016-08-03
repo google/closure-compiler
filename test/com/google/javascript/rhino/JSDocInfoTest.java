@@ -54,7 +54,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.TestErrorReporter;
-
 import junit.framework.TestCase;
 
 public class JSDocInfoTest extends TestCase {
@@ -91,7 +90,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstant());
     assertFalse(info.isConstructor());
     assertFalse(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
   }
 
   public void testSetTypeAndVisibility() {
@@ -110,7 +108,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstant());
     assertFalse(info.isConstructor());
     assertFalse(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
   }
 
   public void testSetReturnType() {
@@ -128,7 +125,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstant());
     assertFalse(info.isConstructor());
     assertFalse(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
   }
 
   public void testSetReturnTypeAndBaseType() {
@@ -150,7 +146,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstant());
     assertFalse(info.isConstructor());
     assertFalse(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
   }
 
   public void testSetEnumParameterType() {
@@ -169,7 +164,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstant());
     assertFalse(info.isConstructor());
     assertFalse(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
   }
 
   public void testMultipleSetType() {
@@ -291,7 +285,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstructor());
     assertFalse(info.isDefine());
     assertFalse(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
   }
 
   public void testSetConstructor() {
@@ -302,7 +295,6 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isConstructor());
     assertFalse(info.isDefine());
     assertFalse(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
   }
 
   public void testSetDefine() {
@@ -313,7 +305,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstructor());
     assertTrue(info.isDefine());
     assertFalse(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
   }
 
   public void testSetHidden() {
@@ -325,18 +316,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstructor());
     assertFalse(info.isDefine());
     assertTrue(info.isHidden());
-    assertFalse(info.shouldPreserveTry());
-  }
-
-  public void testSetShouldPreserveTry() {
-    JSDocInfo info = new JSDocInfo();
-    info.setShouldPreserveTry(true);
-
-    assertFalse(info.isConstant());
-    assertFalse(info.isConstructor());
-    assertFalse(info.isDefine());
-    assertFalse(info.isHidden());
-    assertTrue(info.shouldPreserveTry());
   }
 
   public void testSetOverride() {
@@ -386,14 +365,12 @@ public class JSDocInfoTest extends TestCase {
     info.setConstant(true);
     info.setConstructor(true);
     info.setHidden(true);
-    info.setShouldPreserveTry(true);
 
     assertFalse(info.hasType());
     assertTrue(info.isConstant());
     assertTrue(info.isConstructor());
     assertFalse(info.isDefine());
     assertTrue(info.isHidden());
-    assertTrue(info.shouldPreserveTry());
 
     info.setHidden(false);
 
@@ -401,7 +378,6 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isConstructor());
     assertFalse(info.isDefine());
     assertFalse(info.isHidden());
-    assertTrue(info.shouldPreserveTry());
 
     info.setConstant(false);
     info.setConstructor(false);
@@ -410,7 +386,6 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isConstructor());
     assertFalse(info.isDefine());
     assertFalse(info.isHidden());
-    assertTrue(info.shouldPreserveTry());
 
     info.setConstructor(true);
 
@@ -418,7 +393,6 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isConstructor());
     assertFalse(info.isDefine());
     assertFalse(info.isHidden());
-    assertTrue(info.shouldPreserveTry());
   }
 
   public void testClone() {

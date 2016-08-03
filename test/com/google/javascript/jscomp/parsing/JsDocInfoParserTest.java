@@ -1763,7 +1763,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     String comment =
         " * @const\n" +
         " * @hidden\n" +
-        " * @preserveTry\n" +
         " * @constructor\n" +
         " */";
 
@@ -1772,7 +1771,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isDefine()).isFalse();
     assertThat(info.isConstructor()).isTrue();
     assertThat(info.isHidden()).isTrue();
-    assertThat(info.shouldPreserveTry()).isTrue();
   }
 
   public void testRegression5() throws Exception {

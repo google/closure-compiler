@@ -33,7 +33,6 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -852,12 +851,6 @@ public final class JsDocInfoParser {
             token = eatUntilEOLIfNotAnnotation();
           }
           return token;
-
-        case PRESERVE_TRY:
-          if (!jsdocBuilder.recordPreserveTry()) {
-            addParserWarning("msg.jsdoc.preservertry");
-          }
-          return eatUntilEOLIfNotAnnotation();
 
         case NO_SIDE_EFFECTS:
           if (!jsdocBuilder.recordNoSideEffects()) {

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 
 /**
@@ -68,7 +67,6 @@ enum Annotation {
   PARAM,
   POLYMER_BEHAVIOR,
   PRESERVE, // same as license
-  PRESERVE_TRY,
   PRIVATE,
   PROTECTED,
   PUBLIC,
@@ -134,7 +132,6 @@ enum Annotation {
       put("param", Annotation.PARAM).
       put("polymerBehavior", Annotation.POLYMER_BEHAVIOR).
       put("preserve", Annotation.PRESERVE).
-      put("preserveTry", Annotation.PRESERVE_TRY).
       put("private", Annotation.PRIVATE).
       put("protected", Annotation.PROTECTED).
       put("public", Annotation.PUBLIC).
