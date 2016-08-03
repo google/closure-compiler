@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 
 /**
@@ -115,12 +116,17 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
       if (subclassType == null || calledClassType == null) {
         return false;
       }
-      return subclassType
-          .toObjectType()
-          .getConstructor()
-          .getSuperClassConstructor()
-          .getInstanceType()
-          .equals(calledClassType);
+      if (subclassType.toObjectType() == null
+          || subclassType.toObjectType().getConstructor() == null) {
+        return false;
+      }
+      FunctionType superClassConstructor =
+          subclassType.toObjectType().getConstructor().getSuperClassConstructor();
+      // TODO(moz): Investigate why this could be null
+      if (superClassConstructor == null) {
+        return false;
+      }
+      return superClassConstructor.getInstanceType().equals(calledClassType);
     }
 
     private boolean returnMatches(Node call) {
