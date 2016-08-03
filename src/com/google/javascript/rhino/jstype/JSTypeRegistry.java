@@ -53,6 +53,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
@@ -1140,6 +1141,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     }
   }
 
+  @Override
+  public JSType evaluateTypeExpressionInGlobalScope(JSTypeExpression expr) {
+    return expr.evaluate(null, this);
+  }
+
   /**
    * Creates a type representing optional values of the given type.
    * @return the union of the type and the void type
@@ -1192,6 +1198,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       builder.addAlternate(type);
     }
     return builder.build();
+  }
+
+  @Override
+  public JSType createUnionType(List<? extends TypeI> variants) {
+    return createUnionType(variants.toArray(new JSType[0]));
   }
 
   /**

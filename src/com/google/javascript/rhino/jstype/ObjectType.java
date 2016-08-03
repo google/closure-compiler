@@ -403,6 +403,12 @@ public abstract class ObjectType
     return getPropertyNode(propertyName);
   }
 
+  @Override
+  public JSDocInfo getPropertyJSDocInfo(String propertyName) {
+    Property p = getSlot(propertyName);
+    return p == null ? null : p.getJSDocInfo();
+  }
+
   /**
    * Gets the docInfo on the specified property on this type.  This should not
    * be implemented recursively, as you generally need to know exactly on
@@ -484,6 +490,7 @@ public abstract class ObjectType
    *
    * Overridden by FunctionType to add "prototype".
    */
+  @Override
   public Set<String> getOwnPropertyNames() {
     return getPropertyMap().getOwnPropertyNames();
   }

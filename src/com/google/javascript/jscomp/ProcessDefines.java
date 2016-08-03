@@ -29,7 +29,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
-
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -157,7 +156,7 @@ class ProcessDefines implements CompilerPass {
    */
   private boolean isValidDefineType(JSTypeExpression expression) {
     TypeIRegistry registry = compiler.getTypeIRegistry();
-    TypeI type = expression.evaluateInEmptyScope(registry);
+    TypeI type = registry.evaluateTypeExpressionInGlobalScope(expression);
     return !type.isUnknownType()
         && type.isSubtypeOf(registry.getNativeType(NUMBER_STRING_BOOLEAN));
   }

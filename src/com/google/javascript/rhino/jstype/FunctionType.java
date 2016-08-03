@@ -300,6 +300,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return false;
   }
 
+  @Override
   public Iterable<Node> getParameters() {
     Node n = getParametersNode();
     if (n != null) {
@@ -315,6 +316,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /** Gets the minimum number of arguments that this function requires. */
+  @Override
   public int getMinArguments() {
     // NOTE(nicksantos): There are some native functions that have optional
     // parameters before required parameters. This algorithm finds the position
@@ -334,6 +336,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * Gets the maximum number of arguments that this function requires,
    * or Integer.MAX_VALUE if this is a variable argument function.
    */
+  @Override
   public int getMaxArguments() {
     Node params = getParametersNode();
     if (params != null) {
@@ -900,6 +903,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * Given a constructor or an interface type, get its superclass constructor
    * or {@code null} if none exists.
    */
+  @Override
   public FunctionType getSuperClassConstructor() {
     Preconditions.checkArgument(isConstructor() || isInterface());
     ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();

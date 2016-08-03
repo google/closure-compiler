@@ -40,6 +40,7 @@
 package com.google.javascript.rhino;
 
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import java.util.List;
 
 /**
  * @author blickly@google.com (Ben Lickly)
@@ -62,4 +63,8 @@ public interface TypeIRegistry {
   String getReadableTypeName(Node n);
 
   <T extends TypeI> T getType(String typeName);
+
+  TypeI createUnionType(List<? extends TypeI> variants);
+
+  TypeI evaluateTypeExpressionInGlobalScope(JSTypeExpression expr);
 }

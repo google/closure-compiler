@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
-
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -30,19 +28,16 @@ import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.Property;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -51,7 +46,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
 import javax.annotation.Nullable;
 
 /**
@@ -225,24 +219,24 @@ public final class ConformanceRules {
 
 
   abstract static class AbstractTypeRestrictionRule extends AbstractRule {
-    private final JSType nativeObjectType;
-    private final JSType whitelistedTypes;
+    private final TypeI nativeObjectType;
+    private final TypeI whitelistedTypes;
     private final ImmutableList<AssertionFunctionSpec> assertions;
 
 
     public AbstractTypeRestrictionRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      nativeObjectType = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
+      nativeObjectType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
       List<String> whitelistedTypeNames = requirement.getValueList();
       whitelistedTypes = union(whitelistedTypeNames);
       assertions = ImmutableList.copyOf(compiler.getCodingConvention().getAssertionFunctions());
     }
 
     protected boolean isWhitelistedType(Node n) {
-      if (whitelistedTypes != null && n.getJSType() != null) {
-        JSType targetType = n.getJSType().restrictByNotNullOrUndefined();
-        if (targetType.isSubtype(whitelistedTypes)) {
+      if (whitelistedTypes != null && n.getTypeI() != null) {
+        TypeI targetType = n.getTypeI().restrictByNotNullOrUndefined();
+        if (targetType.isSubtypeOf(whitelistedTypes)) {
           return true;
         }
       }
@@ -256,36 +250,36 @@ public final class ConformanceRules {
     }
 
     protected boolean isNativeObjectType(Node n) {
-      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      TypeI type = n.getTypeI().restrictByNotNullOrUndefined();
       return type.isEquivalentTo(nativeObjectType);
     }
 
     protected boolean isAllType(Node n) {
-      JSType type = n.getJSType();
+      TypeI type = n.getTypeI();
       return type != null && type.isAllType();
     }
 
     protected boolean isUnknown(Node n) {
-      JSType type = n.getJSType();
+      TypeI type = n.getTypeI();
       return (type == null || type.isUnknownType());
     }
 
     protected boolean isTemplateType(Node n) {
-      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      TypeI type = n.getTypeI().restrictByNotNullOrUndefined();
       return type.isTemplateType();
     }
 
     private boolean isEmptyType(Node n) {
-      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      TypeI type = n.getTypeI().restrictByNotNullOrUndefined();
       return type.isEmptyType();
     }
 
-    protected JSType union(List<String> typeNames) {
-      JSTypeRegistry registry = compiler.getTypeRegistry();
-      List<JSType> types = new ArrayList<>();
+    protected TypeI union(List<String> typeNames) {
+      TypeIRegistry registry = compiler.getTypeIRegistry();
+      List<TypeI> types = new ArrayList<>();
 
       for (String typeName : typeNames) {
-        JSType type = registry.getType(typeName);
+        TypeI type = registry.getType(typeName);
         if (type != null) {
           types.add(type);
         }
@@ -293,8 +287,7 @@ public final class ConformanceRules {
       if (types.isEmpty()) {
         return null;
       } else {
-        JSType[] variants = types.toArray(new JSType[0]);
-        return registry.createUnionType(variants);
+        return registry.createUnionType(types);
       }
     }
 
@@ -343,7 +336,7 @@ public final class ConformanceRules {
         if (n.isAssign()) {
           n = n.getFirstChild();
         }
-        JSType type = n.getJSType();
+        TypeI type = n.getTypeI();
         if (type != null && type.isUnknownType()
             && !NodeUtil.isNamespaceDecl(n)) {
           return ConformanceResult.VIOLATION;
@@ -484,19 +477,19 @@ public final class ConformanceRules {
     private ConformanceResult checkConformance(NodeTraversal t, Node n, Property prop) {
       if (isCandidatePropUse(n, prop)) {
         TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
-        JSType methodClassType = registry.getType(prop.type);
+        TypeI methodClassType = registry.getType(prop.type);
         Node lhs = n.getFirstChild();
-        if (methodClassType != null && lhs.getJSType() != null) {
-          JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();
+        if (methodClassType != null && lhs.getTypeI() != null) {
+          TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
           if (targetType.isUnknownType()
              || targetType.isEmptyType()
              || targetType.isAllType()
              || targetType.isEquivalentTo(
                  registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
             return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
-          } else if (targetType.isSubtype(methodClassType)) {
+          } else if (targetType.isSubtypeOf(methodClassType)) {
             return ConformanceResult.VIOLATION;
-          } else if (methodClassType.isSubtype(targetType)) {
+          } else if (methodClassType.isSubtypeOf(targetType)) {
             if (matchesPrototype(methodClassType, targetType)) {
               return ConformanceResult.VIOLATION;
             } else {
@@ -509,10 +502,10 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private boolean matchesPrototype(JSType type, JSType maybePrototype) {
-      ObjectType methodClassObjectType = type.toMaybeObjectType();
+    private boolean matchesPrototype(TypeI type, TypeI maybePrototype) {
+      ObjectTypeI methodClassObjectType = type.toMaybeObjectType();
       if (methodClassObjectType != null) {
-        if (methodClassObjectType.getImplicitPrototype().isEquivalentTo(
+        if (methodClassObjectType.getPrototypeObject().isEquivalentTo(
             maybePrototype)) {
           return true;
         }
@@ -576,7 +569,7 @@ public final class ConformanceRules {
            && parent.getFirstChild() == n;
     }
 
-    static JSType evaluateTypeString(
+    static TypeI evaluateTypeString(
         AbstractCompiler compiler, String expression)
         throws InvalidRequirementSpec {
       Node typeNodes = JsDocInfoParser.parseTypeString(expression);
@@ -585,7 +578,7 @@ public final class ConformanceRules {
       }
       JSTypeExpression typeExpr = new JSTypeExpression(
           typeNodes, "conformance");
-      return typeExpr.evaluate(null, compiler.getTypeIRegistry());
+      return compiler.getTypeIRegistry().evaluateTypeExpressionInGlobalScope(typeExpr);
     }
 
     /**
@@ -595,7 +588,7 @@ public final class ConformanceRules {
     static boolean validateCall(
         AbstractCompiler compiler,
         Node callOrNew,
-        FunctionType functionType,
+        FunctionTypeI functionType,
         boolean isCallInvocation) {
       Preconditions.checkState(callOrNew.isCall() || callOrNew.isNew());
 
@@ -605,14 +598,14 @@ public final class ConformanceRules {
 
     private static boolean validateThis(
         Node callOrNew,
-        FunctionType functionType,
+        FunctionTypeI functionType,
         boolean isCallInvocation) {
 
       if (callOrNew.isNew()) {
         return true;
       }
 
-      JSType thisType = functionType.getTypeOfThis();
+      TypeI thisType = functionType.getTypeOfThis();
       if (thisType.isUnknownType()) {
         return true;
       }
@@ -620,15 +613,15 @@ public final class ConformanceRules {
       Node thisNode = isCallInvocation
           ? callOrNew.getSecondChild()
           : callOrNew.getFirstFirstChild();
-      JSType thisNodeType =
-          thisNode.getJSType().restrictByNotNullOrUndefined();
-      return thisNodeType.isSubtype(thisType);
+      TypeI thisNodeType =
+          thisNode.getTypeI().restrictByNotNullOrUndefined();
+      return thisNodeType.isSubtypeOf(thisType);
     }
 
     private static boolean validateParameterList(
         AbstractCompiler compiler,
         Node callOrNew,
-        FunctionType functionType,
+        FunctionTypeI functionType,
         boolean isCallInvocation) {
       Iterator<Node> arguments = callOrNew.children().iterator();
       arguments.next(); // skip the function name
@@ -649,7 +642,7 @@ public final class ConformanceRules {
         argument = arguments.next();
 
         if (!validateParameter(
-            getJSType(compiler, argument), getJSType(compiler, parameter))) {
+            getTypeI(compiler, argument), getTypeI(compiler, parameter))) {
           return false;
         }
       }
@@ -670,24 +663,24 @@ public final class ConformanceRules {
      * @param argType The type of the argument.
      * @param paramType The type of the parameter.
      */
-    static boolean validateParameter(JSType argType, JSType paramType) {
-      return argType.isSubtype(paramType);
+    static boolean validateParameter(TypeI argType, TypeI paramType) {
+      return argType.isSubtypeOf(paramType);
     }
 
     /**
-     * This method gets the JSType from the Node argument and verifies that it is
+     * This method gets the TypeI from the Node argument and verifies that it is
      * present.
      */
-    static JSType getJSType(AbstractCompiler compiler, Node n) {
-      JSType jsType = n.getJSType();
-      if (jsType == null) {
-        return getNativeType(compiler, UNKNOWN_TYPE);
+    static TypeI getTypeI(AbstractCompiler compiler, Node n) {
+      TypeI type = n.getTypeI();
+      if (type == null) {
+        return getNativeType(compiler, JSTypeNative.UNKNOWN_TYPE);
       } else {
-        return jsType;
+        return type;
       }
     }
 
-    static JSType getNativeType(AbstractCompiler compiler, JSTypeNative typeId) {
+    static TypeI getNativeType(AbstractCompiler compiler, JSTypeNative typeId) {
       return compiler.getTypeIRegistry().getNativeType(typeId);
     }
 
@@ -699,9 +692,9 @@ public final class ConformanceRules {
   static class RestrictedNameCall extends AbstractRule {
     private static class Restriction {
       final String name;
-      final FunctionType restrictedCallType;
+      final FunctionTypeI restrictedCallType;
 
-      Restriction(String name, FunctionType restrictedCallType) {
+      Restriction(String name, FunctionTypeI restrictedCallType) {
         this.name = name;
         this.restrictedCallType = restrictedCallType;
       }
@@ -724,7 +717,7 @@ public final class ConformanceRules {
           throw new InvalidRequirementSpec("bad prop value");
         }
 
-        FunctionType restrictedCallType = ConformanceUtil.evaluateTypeString(
+        FunctionTypeI restrictedCallType = ConformanceUtil.evaluateTypeString(
             compiler, restrictedDecl).toMaybeFunctionType();
         if (restrictedCallType == null) {
           throw new InvalidRequirementSpec("invalid conformance type");
@@ -782,10 +775,10 @@ public final class ConformanceRules {
     private static class Restriction {
       final String type;
       final String property;
-      final FunctionType restrictedCallType;
+      final FunctionTypeI restrictedCallType;
 
       Restriction(
-          String type, String property, FunctionType restrictedCallType) {
+          String type, String property, FunctionTypeI restrictedCallType) {
         this.type = type;
         this.property = property;
         this.restrictedCallType = restrictedCallType;
@@ -811,7 +804,7 @@ public final class ConformanceRules {
           throw new InvalidRequirementSpec("bad prop value");
         }
 
-        FunctionType restrictedCallType = ConformanceUtil.evaluateTypeString(
+        FunctionTypeI restrictedCallType = ConformanceUtil.evaluateTypeString(
             compiler, restrictedDecl).toMaybeFunctionType();
         if (restrictedCallType == null) {
           throw new InvalidRequirementSpec("invalid conformance type");
@@ -853,12 +846,12 @@ public final class ConformanceRules {
     private ConformanceResult checkConformance(
         NodeTraversal t, Node n, Restriction r, boolean isCallInvocation) {
       TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
-      JSType methodClassType = registry.getType(r.type);
+      TypeI methodClassType = registry.getType(r.type);
       Node lhs = isCallInvocation
           ? n.getFirstFirstChild()
           : n.getFirstChild();
-      if (methodClassType != null && lhs.getJSType() != null) {
-        JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();
+      if (methodClassType != null && lhs.getTypeI() != null) {
+        TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
         if (targetType.isUnknownType()
            || targetType.isNoResolvedType()
            || targetType.isAllType()
@@ -869,7 +862,7 @@ public final class ConformanceRules {
               isCallInvocation)) {
             return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
           }
-        } else if (targetType.isSubtype(methodClassType)) {
+        } else if (targetType.isSubtypeOf(methodClassType)) {
           if (!ConformanceUtil.validateCall(
               compiler, n.getParent(), r.restrictedCallType,
               isCallInvocation)) {
@@ -1010,13 +1003,11 @@ public final class ConformanceRules {
           if (cause instanceof InvalidRequirementSpec) {
             throw (InvalidRequirementSpec) cause;
           }
-          throw e;
+          throw Throwables.propagate(cause);
         }
         return rule;
-      } catch (InvalidRequirementSpec e) {
-        throw e;
-      } catch (Exception e) {
-        throw Throwables.propagate(e);
+      } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+        throw new RuntimeException(e);
       }
     }
 
@@ -1110,7 +1101,7 @@ public final class ConformanceRules {
    * Banned throw of non-error object types.
    */
   public static final class BanThrowOfNonErrorTypes extends AbstractRule {
-    final JSType errorObjType;
+    final TypeI errorObjType;
     public BanThrowOfNonErrorTypes(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
@@ -1120,13 +1111,13 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (errorObjType != null && n.isThrow()) {
-        JSType thrown = n.getFirstChild().getJSType();
+        TypeI thrown = n.getFirstChild().getTypeI();
         if (thrown != null) {
           // Allow vague types, as is typical of re-throws of exceptions
           if (!thrown.isUnknownType()
               && !thrown.isAllType()
               && !thrown.isEmptyType()
-              && !thrown.isSubtype(errorObjType)) {
+              && !thrown.isSubtypeOf(errorObjType)) {
             return ConformanceResult.VIOLATION;
           }
         }
@@ -1168,7 +1159,7 @@ public final class ConformanceRules {
     }
 
     boolean report(Node n) {
-      return n.getJSType() != null
+      return n.getTypeI() != null
           && isKnown(n)
           && invalidDeref(n)
           && !isWhitelistedType(n);
@@ -1176,7 +1167,7 @@ public final class ConformanceRules {
 
     // Whether the type is known to be invalid to dereference.
     private boolean invalidDeref(Node n) {
-      JSType type = n.getJSType();
+      TypeI type = n.getTypeI();
       return type.isNullable() || type.isVoidable();
     }
   }
@@ -1195,7 +1186,7 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (n.isThis()) {
-        JSType type = n.getJSType();
+        TypeI type = n.getTypeI();
         if (type != null && type.isUnknownType() && !isTypeImmediatelyTightened(n)) {
           Node root = t.getScopeRoot();
           if (!reports.contains(root)) {
@@ -1276,7 +1267,7 @@ public final class ConformanceRules {
           && !isTemplateType(n)
           && !isDeclaredUnknown(n)) {
         String propName = n.getLastChild().getString();
-        String typeName = n.getFirstChild().getJSType().toString();
+        String typeName = n.getFirstChild().getTypeI().toString();
         return new ConformanceResult(ConformanceLevel.VIOLATION,
             "The property \"" + propName + "\" on type \"" + typeName + "\"");
       }
@@ -1292,9 +1283,9 @@ public final class ConformanceRules {
     }
 
     private boolean isClassType(Node n) {
-      ObjectType type = n.getJSType().restrictByNotNullOrUndefined().toMaybeObjectType();
+      ObjectTypeI type = n.getTypeI().restrictByNotNullOrUndefined().toMaybeObjectType();
       if (type != null && type.isInstanceType()) {
-        FunctionType ctor = type.getConstructor();
+        FunctionTypeI ctor = type.getConstructor();
         if (ctor != null) {
           JSDocInfo info = ctor.getJSDocInfo();
           if (info != null && info.isConstructorOrInterface()) {
@@ -1307,17 +1298,14 @@ public final class ConformanceRules {
 
     private boolean isDeclaredUnknown(Node n) {
       Node target = n.getFirstChild();
-      ObjectType targetType = target.getJSType().toObjectType();
+      ObjectTypeI targetType = target.getTypeI().toMaybeObjectType();
       if (targetType != null) {
-        Property prop = targetType.getSlot(n.getLastChild().getString());
-        if (prop != null) {
-          JSDocInfo info = prop.getJSDocInfo();
-          if (info != null && info.hasType()) {
-            JSTypeExpression expr = info.getType();
-            Node typeExprNode = expr.getRoot();
-            if (typeExprNode.getType() == Token.QMARK && !typeExprNode.hasChildren()) {
-              return true;
-            }
+        JSDocInfo info = targetType.getPropertyJSDocInfo(n.getLastChild().getString());
+        if (info != null && info.hasType()) {
+          JSTypeExpression expr = info.getType();
+          Node typeExprNode = expr.getRoot();
+          if (typeExprNode.getType() == Token.QMARK && !typeExprNode.hasChildren()) {
+            return true;
           }
         }
       }
@@ -1341,7 +1329,7 @@ public final class ConformanceRules {
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (n.isGetProp()) {
         Node target = n.getFirstChild();
-        JSType type = target.getJSType();
+        TypeI type = target.getTypeI();
         if (type != null && !conforms(type) && !isTypeImmediatelyTightened(n)) {
           return ConformanceResult.VIOLATION;
         }
@@ -1349,11 +1337,11 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private boolean conforms(JSType type) {
+    private boolean conforms(TypeI type) {
       if (type.isUnionType()) {
         // unwrap union types which might contain unresolved type name
         // references for example {Foo|undefined}
-        for (JSType part : type.toMaybeUnionType().getAlternates()) {
+        for (TypeI part : type.getUnionMembers()) {
           if (!conforms(part)) {
             return false;
           }
@@ -1469,13 +1457,13 @@ public final class ConformanceRules {
 
       JSDocInfo ownJsDoc = n.getFirstChild().getJSDocInfo();
       if (ownJsDoc != null && ownJsDoc.isConstructor()) {
-        FunctionType functionType = n.getFirstChild()
-            .getJSType()
+        FunctionTypeI functionType = n.getFirstChild()
+            .getTypeI()
             .toMaybeFunctionType();
         if (functionType == null) {
           return ConformanceResult.CONFORMANCE;
         }
-        ObjectType instanceType = functionType.getInstanceType();
+        ObjectTypeI instanceType = functionType.getInstanceType();
         if (instanceType == null) {
           return ConformanceResult.CONFORMANCE;
         }
@@ -1515,11 +1503,10 @@ public final class ConformanceRules {
       return "wiz".equals(name.getString());
     }
 
-    private static ConformanceResult checkCtorProperties(ObjectType type) {
+    private static ConformanceResult checkCtorProperties(ObjectTypeI type) {
       for (String propertyName : type.getOwnPropertyNames()) {
-        Property prop = type.getOwnSlot(propertyName);
-        JSDocInfo docInfo = prop.getJSDocInfo();
-        Node scriptNode = getScriptNode(prop.getNode());
+        JSDocInfo docInfo = type.getOwnPropertyJSDocInfo(propertyName);
+        Node scriptNode = getScriptNode(type.getOwnPropertyDefSite(propertyName));
         ConformanceResult result = visibilityAtDeclarationOrFileoverview(
             docInfo, scriptNode);
         if (result != ConformanceResult.CONFORMANCE) {

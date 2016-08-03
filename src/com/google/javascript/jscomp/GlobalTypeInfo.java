@@ -44,6 +44,7 @@ import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
@@ -2509,5 +2510,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       default:
         return globalScope.getType(typeName);
     }
+  }
+
+  @Override
+  public JSType createUnionType(List<? extends TypeI> variants) {
+    throw new UnsupportedOperationException("createUnionType not implemented yet");
+  }
+
+  @Override
+  public TypeI evaluateTypeExpressionInGlobalScope(JSTypeExpression expr) {
+    throw new UnsupportedOperationException("evaluateInEmptyScope not implemented yet");
   }
 }

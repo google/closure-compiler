@@ -76,4 +76,10 @@ public interface FunctionTypeI extends TypeI {
   boolean hasProperties();
 
   void setSource(Node n);
+
+  int getMinArguments();
+
+  int getMaxArguments();
+
+  Iterable<Node> getParameters();
 }

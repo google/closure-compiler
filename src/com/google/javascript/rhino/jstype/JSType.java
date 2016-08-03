@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.TypeI;
-
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
@@ -158,6 +157,7 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
+  @Override
   public boolean isNoResolvedType() {
     return false;
   }
@@ -166,6 +166,7 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
+  @Override
   public final boolean isEmptyType() {
     return isNoType() || isNoObjectType() || isNoResolvedType() ||
         (registry.getNativeFunctionType(
@@ -248,6 +249,7 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
+  @Override
   public boolean isAllType() {
     return false;
   }
@@ -261,6 +263,7 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
+  @Override
   public final boolean isUnionType() {
     return toMaybeUnionType() != null;
   }
@@ -449,6 +452,7 @@ public abstract class JSType implements TypeI, Serializable {
     return null;
   }
 
+  @Override
   public final boolean isTemplateType() {
     return toMaybeTemplateType() != null;
   }
@@ -952,6 +956,7 @@ public abstract class JSType implements TypeI, Serializable {
   /**
    * Tests whether this type is voidable.
    */
+  @Override
   public boolean isVoidable() {
     return isSubtype(getNativeType(JSTypeNative.VOID_TYPE));
   }
@@ -1264,6 +1269,13 @@ public abstract class JSType implements TypeI, Serializable {
     } else {
       return new TypePair(this, that);
     }
+  }
+
+  @Override
+  public Iterable<JSType> getUnionMembers() {
+    return isUnionType()
+        ? this.toMaybeUnionType().getAlternates()
+        : null;
   }
 
   /**

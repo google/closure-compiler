@@ -42,7 +42,6 @@ package com.google.javascript.rhino;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-
 import java.io.Serializable;
 
 /**
@@ -102,10 +101,6 @@ public final class JSTypeExpression implements Serializable {
       return type;
     }
     return null;
-  }
-
-  public TypeI evaluateInEmptyScope(TypeIRegistry registry) {
-    return evaluate(null, registry);
   }
 
   @Override

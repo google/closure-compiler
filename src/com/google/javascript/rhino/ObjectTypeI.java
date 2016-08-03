@@ -63,6 +63,8 @@ public interface ObjectTypeI extends TypeI {
 
   JSDocInfo getOwnPropertyJSDocInfo(String propertyName);
 
+  JSDocInfo getPropertyJSDocInfo(String propertyName);
+
   Node getOwnPropertyDefSite(String propertyName);
 
   Node getPropertyDefSite(String propertyName);
@@ -74,4 +76,6 @@ public interface ObjectTypeI extends TypeI {
   boolean isInstanceType();
 
   boolean hasProperty(String propertyName);
+
+  Iterable<String> getOwnPropertyNames();
 }

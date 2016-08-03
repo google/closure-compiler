@@ -50,6 +50,14 @@ public interface TypeI {
 
   boolean isBottom();
 
+  boolean isAllType();
+
+  boolean isTemplateType();
+
+  boolean isEmptyType();
+
+  boolean isNoResolvedType();
+
   boolean isConstructor();
 
   boolean isEquivalentTo(TypeI type);
@@ -64,7 +72,11 @@ public interface TypeI {
 
   boolean isUnknownType();
 
+  boolean isUnionType();
+
   boolean isNullable();
+
+  boolean isVoidable();
 
   boolean isPrototypeObject();
 
@@ -91,6 +103,12 @@ public interface TypeI {
    * If it is a non-object or a union of objects, return null.
    */
   ObjectTypeI toMaybeObjectType();
+
+  /**
+   * If this type is a union type, returns a list of its members. Otherwise
+   * returns null.
+   */
+  Iterable<? extends TypeI> getUnionMembers();
 
   String getDisplayName();
 }

@@ -29,7 +29,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1536,6 +1535,36 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public boolean isAllType() {
+    throw new UnsupportedOperationException("isAllType not implemented yet");
+  }
+
+  @Override
+  public boolean isNoResolvedType() {
+    throw new UnsupportedOperationException("isUnresolved not implemented yet");
+  }
+
+  @Override
+  public boolean isUnionType() {
+    throw new UnsupportedOperationException("isUnionType not implemented yet");
+  }
+
+  @Override
+  public boolean isVoidable() {
+    throw new UnsupportedOperationException("isVoidable not implemented yet");
+  }
+
+  @Override
+  public boolean isEmptyType() {
+    throw new UnsupportedOperationException("isEmpty not implemented yet");
+  }
+
+  @Override
+  public boolean isTemplateType() {
+    throw new UnsupportedOperationException("isGeneric not implemented yet");
+  }
+
+  @Override
   public TypeI restrictByNotNullOrUndefined() {
     return this.removeType(NULL_OR_UNDEF);
   }
@@ -1629,6 +1658,21 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public int getMinArguments() {
+    throw new UnsupportedOperationException("getMinArguments not implemented yet");
+  }
+
+  @Override
+  public int getMaxArguments() {
+    throw new UnsupportedOperationException("getMaxArguments not implemented yet");
+  }
+
+  @Override
+  public Iterable<Node> getParameters() {
+    throw new UnsupportedOperationException("getParameters not implemented yet");
+  }
+
+  @Override
   public boolean hasProperties() {
     throw new UnsupportedOperationException("hasProperties not implemented yet");
   }
@@ -1690,6 +1734,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public JSDocInfo getPropertyJSDocInfo(String propertyName) {
+    throw new UnsupportedOperationException("getPropertyJSDocInfo not implemented yet");
+  }
+
+  @Override
   public Node getOwnPropertyDefSite(String propertyName) {
     Preconditions.checkState(this.isSingletonObj());
     return this.getObjTypeIfSingletonObj().getOwnPropertyDefSite(propertyName);
@@ -1699,6 +1748,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   public Node getPropertyDefSite(String propertyName) {
     Preconditions.checkState(this.isSingletonObj());
     return this.getObjTypeIfSingletonObj().getPropertyDefSite(propertyName);
+  }
+
+  @Override
+  public Iterable<String> getOwnPropertyNames() {
+    throw new UnsupportedOperationException("getOwnPropertyNames not implemented yet");
   }
 
   @Override
@@ -1724,6 +1778,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     Preconditions.checkState(this.isSingletonObj());
     Preconditions.checkArgument(!propertyName.contains("."));
     return hasProp(new QualifiedName(propertyName));
+  }
+
+  @Override
+  public Iterable<TypeI> getUnionMembers() {
+    throw new UnsupportedOperationException("getUnionMembers not implemented yet");
   }
 }
 
