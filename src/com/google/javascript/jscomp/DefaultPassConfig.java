@@ -338,7 +338,9 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
-      checks.add(es6ExternsCheck);
+      if (!options.skipNonTranspilationPasses) {
+        checks.add(es6ExternsCheck);
+      }
       checks.add(es6SuperCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
     }
