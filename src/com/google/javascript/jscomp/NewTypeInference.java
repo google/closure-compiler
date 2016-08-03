@@ -2799,35 +2799,33 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
-  private boolean isPropertyAbsentTest(Node propAccessNode) {
-    Node parent = propAccessNode.getParent();
-    if (parent.getType() == Token.EQ || parent.getType() == Token.SHEQ) {
-      Node other = parent.getFirstChild() == propAccessNode
-          ? parent.getSecondChild() : parent.getFirstChild();
-      return NodeUtil.isUndefined(other);
-    }
-    return false;
-  }
-
   private boolean mayWarnAboutInexistentProp(Node propAccessNode,
-      JSType recvType, QualifiedName propQname, TypeEnv env) {
-    if (!propAccessNode.isGetProp() || isPropertyAbsentTest(propAccessNode)
-        || recvType.hasProp(propQname)) {
+      JSType recvType, QualifiedName propQname) {
+    Preconditions.checkState(propAccessNode.isGetProp() || propAccessNode.isGetElem());
+    String pname = propQname.toString();
+
+    if (propAccessNode.isGetElem()
+        // Loose types always "have" the properties accessed on them, because of
+        // type inference. If the property is not defined anywhere though,
+        // we still want to warn in that case.
+        || !recvType.isLoose() && recvType.hasProp(propQname)) {
       return false;
     }
-    Node recv = propAccessNode.getFirstChild();
-    // TODO(dimvar): recvType is loose only in a rare case that needs to be
-    // fixed, related to specializing namespace properties. After fixing that,
-    // we need a preconditions check to ban loose types here.
-    if (recvType.isLoose()) {
-      updateLvalueTypeInEnv(env, recv, QualifiedName.fromNode(recv), JSType.UNKNOWN);
-      return false;
+
+    if (recvType.isUnknown() || recvType.isTrueOrTruthy() || recvType.isLoose()) {
+      if (symbolTable.isPropertyDefined(pname)) {
+        return false;
+      }
+      warnings.add(JSError.make(
+          propAccessNode, INEXISTENT_PROPERTY, pname, "any type in the program"));
+      return true;
     }
+
     // To avoid giant types in the error message, we use a heuristic:
     // if the receiver is a qualified name whose type is too long, we print
     // the qualified name instead.
     String recvTypeAsString = recvType.toString();
-    String pname = propQname.toString();
+    Node recv = propAccessNode.getFirstChild();
     String errorMsg;
     if (!recv.isQualifiedName()) {
       errorMsg = recvTypeAsString;
@@ -2940,8 +2938,11 @@ final class NewTypeInference implements CompilerPass {
     pair = mayWarnAboutNullableReferenceAndTighten(
         receiver, pair.type, recvSpecType, pair.env);
     JSType recvType = pair.type.autobox();
-    if (recvType.isUnknown() || recvType.isTrueOrTruthy()
-        || mayWarnAboutNonObject(receiver, recvType, specializedType)) {
+    if (recvType.isUnknown() || recvType.isTrueOrTruthy()) {
+      mayWarnAboutInexistentProp(propAccessNode, recvType, propQname);
+      return new EnvTypePair(pair.env, requiredType);
+    }
+    if (mayWarnAboutNonObject(receiver, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
     }
     FunctionType ft = recvType.getFunTypeIfSingletonObj();
@@ -2987,7 +2988,7 @@ final class NewTypeInference implements CompilerPass {
         && !specializedType.isTrueOrTruthy()
         && !specializedType.isFalseOrFalsy()
         && !recvType.mayBeDict()
-        && !mayWarnAboutInexistentProp(propAccessNode, recvType, propQname, pair.env)
+        && !mayWarnAboutInexistentProp(propAccessNode, recvType, propQname)
         && recvType.hasProp(propQname)
         && !resultType.isSubtypeOf(requiredType)
         && tightenTypeAndDontWarn(
@@ -3957,21 +3958,19 @@ final class NewTypeInference implements CompilerPass {
       return new LValueResultFwd(inEnv, requiredType, null, null);
     }
     if (!recvType.hasProp(pname)) {
+      // Warn for inexistent prop either on the non-top-level of a qualified
+      // name, or for assignment ops that won't create a new property.
+      if (insideQualifiedName
+          || propAccessNode.getParent().getType() != Token.ASSIGN) {
+        mayWarnAboutInexistentProp(propAccessNode, recvType, pname);
+        if (!recvType.isLoose()) {
+          return new LValueResultFwd(inEnv, requiredType, null, null);
+        }
+      }
       if (recvType.isLoose()) {
         // For loose objects, create the inner property if it doesn't exist.
         recvType = recvType.withProperty(pname, JSType.TOP_OBJECT.withLoose());
         inEnv = updateLvalueTypeInEnv(inEnv, obj, recvLvalue.ptr, recvType);
-      } else {
-        // Warn for inexistent prop either on the non-top-level of a qualified
-        // name, or for assignment ops that won't create a new property.
-        boolean warnForInexistentProp = insideQualifiedName ||
-            propAccessNode.getParent().getType() != Token.ASSIGN;
-        if (warnForInexistentProp
-            && !recvType.isUnknown()
-            && !recvType.mayBeDict()) {
-          mayWarnAboutInexistentProp(propAccessNode, recvType, pname, inEnv);
-          return new LValueResultFwd(inEnv, requiredType, null, null);
-        }
       }
     }
     if (propAccessNode.isGetElem()) {

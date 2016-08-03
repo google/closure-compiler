@@ -38,9 +38,18 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
 
   protected static final String CLOSURE_BASE =
       LINE_JOINER.join(
-          "/** @const */ var goog = {};",
+          "/** @const */",
+          "var goog = {};",
           "/** @return {void} */",
-          "goog.nullFunction = function() {};");
+          "goog.nullFunction = function() {};",
+          "/** @type {!Function} */",
+          "goog.abstractMethod = function(){};",
+          "goog.asserts;",
+          "goog.asserts.assertInstanceOf;",
+          "goog.getMsg;",
+          "goog.addSingletonGetter;",
+          "Object.prototype.superClass_;");
+
   protected static final String DEFAULT_EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
           "/** @const {undefined} */",

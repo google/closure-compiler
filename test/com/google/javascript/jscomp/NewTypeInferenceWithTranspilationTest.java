@@ -62,7 +62,9 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
   }
 
   public void testTaggedTemplateLitGlobalThisRef() {
-    typeCheck("taggedTemp`${this.a}TaggedTemp`", NewTypeInference.GLOBAL_THIS);
+    typeCheck(
+        "taggedTemp`${this.toString}TaggedTemp`",
+        NewTypeInference.GLOBAL_THIS);
   }
 
   public void testTaggedTemplate() {

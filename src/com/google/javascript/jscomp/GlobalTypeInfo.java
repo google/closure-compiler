@@ -46,9 +46,11 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -277,6 +279,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   private JSTypes commonTypes;
   private final Set<String> unknownTypeNames;
+  // It's useful to know all properties defined anywhere in the program.
+  // For a property access on ?, we can warn if the property isn't defined;
+  // same for Object in compatibility mode.
+  private Set<String> allPropertyNames = new LinkedHashSet<>();
 
   GlobalTypeInfo(AbstractCompiler compiler, Set<String> unknownTypeNames) {
     this.warnings = new WarningReporter(compiler);
@@ -286,6 +292,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     this.varNameGen = new UniqueNameGenerator();
     this.funNameGen = new DefaultNameGenerator(ImmutableSet.<String>of(), "", null);
     this.typeParser = new JSTypeCreatorFromJSDoc(this.convention, this.varNameGen);
+    this.allPropertyNames.add("prototype");
     this.commonTypes = JSTypes.make();
     JSType.setCommonTypes(this.commonTypes);
   }
@@ -310,6 +317,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   JSType getPropDeclaredType(Node n) {
     return declaredObjLitProps.get(n);
+  }
+
+  boolean isPropertyDefined(String pname) {
+    return this.allPropertyNames.contains(pname);
   }
 
   // Differs from the similar method in NTIScope class on how it treats qnames.
@@ -931,6 +942,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         if (propNames.contains(pname)) {
           warnings.add(JSError.make(qnameNode, DUPLICATE_PROP_IN_ENUM, pname));
         }
+        allPropertyNames.add(pname);
         propNames.add(pname);
       }
       currentScope.addNamespace(qnameNode,
@@ -1285,6 +1297,16 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           break;
         }
         case GETPROP:
+          if (NodeUtil.isPropertyTest(compiler, n) || isPropertyAbsentTest(n)) {
+            // Consider a property access x.foo, where x is a loose type and foo is not
+            // defined anywhere in the program. If we only warn when x doesn't have the
+            // property foo, we'll basically never warn for loose types;
+            // because of inference, loose types always "have" the properties accessed
+            // on them. So, we warn even if x has foo. Then, to avoid spurious warnings,
+            // we consider property tests as definition sites, otherwise we would warn
+            // for code like this: function f(x) { if (x.foo) { return x.foo + 1; } }
+            allPropertyNames.add(n.getLastChild().getString());
+          }
           if (parent.isExprResult() && n.isQualifiedName()) {
             visitPropertyDeclaration(n);
           }
@@ -1309,6 +1331,16 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         default:
           break;
       }
+    }
+
+    private boolean isPropertyAbsentTest(Node propAccessNode) {
+      Node parent = propAccessNode.getParent();
+      if (parent.getType() == Token.EQ || parent.getType() == Token.SHEQ) {
+        Node other = parent.getFirstChild() == propAccessNode
+            ? parent.getSecondChild() : parent.getFirstChild();
+        return NodeUtil.isUndefined(other);
+      }
+      return parent.isNot() && parent.getParent().isIf();
     }
 
     private void visitVar(Node nameNode, Node parent) {
@@ -1355,12 +1387,14 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (NodeUtil.isNamespaceDecl(maybeLvalue)
           && currentScope.isNamespace(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
+          allPropertyNames.add(prop.getString());
           visitNamespacePropertyDeclaration(
               prop, maybeLvalue, prop.getString());
         }
       } else if (!NodeUtil.isEnumDecl(maybeLvalue)
           && !NodeUtil.isPrototypeAssignment(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
+          allPropertyNames.add(prop.getString());
           if (prop.getJSDocInfo() != null) {
             declaredObjLitProps.put(prop,
                 getDeclaredTypeOfNode(
@@ -1390,6 +1424,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     }
 
     private void visitPropertyDeclaration(Node getProp) {
+      allPropertyNames.add(getProp.getLastChild().getString());
       // Class property
       if (isClassPropertyDeclaration(getProp, currentScope)) {
         visitClassPropertyDeclaration(getProp);
