@@ -59,18 +59,18 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   public void testNullableTypedef() {
     // Arguable whether or not this deserves a warning, so leaving
     // out of NTI for now.
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     warnImplicitlyNullable(
         "/** @typedef {?number} */ var Num; var /** Num */ x;");
   }
 
   public void testUnkownTypenameDoesntWarn() {
     // Different warnings in OTI and NTI
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
         DEFAULT_EXTERNS, "/** @type {gibberish} */ var x;", RhinoErrorReporter.TYPE_PARSE_ERROR);
 
-    this.mode = TypeInferenceMode.NtiOnly;
+    this.mode = TypeInferenceMode.NTI_ONLY;
     testSame(
         DEFAULT_EXTERNS, "/** @type {gibberish} */ var x;", GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
   }

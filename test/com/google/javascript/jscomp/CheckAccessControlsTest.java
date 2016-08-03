@@ -200,12 +200,12 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         "/** @constructor */ function Foo() {}"
         + "/** @deprecated It is now in production, use that model... */ Foo.prototype.bar = 3;"
         + "Foo.prototype.baz = function() { alert(Foo.prototype.bar); };";
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testDepProp(
         js,
         "Property bar of type Foo.prototype has been deprecated:"
             + " It is now in production, use that model...");
-    this.mode = TypeInferenceMode.NtiOnly;
+    this.mode = TypeInferenceMode.NTI_ONLY;
     testDepProp(
         js,
         "Property bar of type Object{bar:?, baz:function(this:Foo):?} has been deprecated:"
@@ -327,7 +327,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
     // NTI reports NTI_REDCLARED_PROPERTY here, which is as intended. If this were a new
     // property and not the existing `bind`, then we'd report the deprecation warning as expected
     // (see testAutoboxedDeprecatedProperty and testAutoboxedPrivateProperty).
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testDepProp(
         "/** @deprecated I'm bound to this method... */ Function.prototype.bind = function() {};"
             + "(function() {}).bind();",
@@ -393,7 +393,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
     // prototype property. This is enough of a corner case that we are fine with allowing it.
     // If they are in the same file then things work as expected
     // (see testPrivateAccessForProperties4b).
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(new String[] {
         "/** @constructor */ function Foo() {}"
         + "/** @private */ Foo.prototype.bar_ = function() {};",
@@ -1557,7 +1557,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   public void testNamespaceConstantProperty2() {
     // NTI requires an @const annotation on namespaces, as in testNamespaceConstantProperty1.
     // This is the only difference between the two tests.
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testError(
         "var o = {};\n"
         + "/** @const */ o.x = 1;\n"
@@ -1600,7 +1600,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   public void testConstantProperty3b2() {
     // NTI reports NTI_REDECLARED_PROPERTY
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     // The old type checker should report this but it doesn't.
     testSame("/** @const */ var o = { XYZ: 1 };"
         + "o.XYZ = 2;");
@@ -1665,7 +1665,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   public void testConstantProperty10b() {
     // NTI reports NTI_REDECLARED_PROPERTY
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame("/** @constructor */ function Foo() { this.PROP = 1;}"
         + "Foo.prototype.PROP;");
   }
@@ -1684,7 +1684,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   public void testConstantProperty12() {
     // NTI deliberately disallows this pattern (separate declaration and initialization
     // of const properties). (b/30205953)
-    this.mode = TypeInferenceMode.OtiOnly;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame("/** @constructor */ function Foo() {}"
         + "/** @const */ Foo.prototype.bar;"
         + "/**\n"
@@ -1856,7 +1856,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         CONST_PROPERTY_REASSIGNED_VALUE);
 
     // In OTI this next test causes a stack overflow.
-    this.mode = TypeInferenceMode.NtiOnly;
+    this.mode = TypeInferenceMode.NTI_ONLY;
 
     testError(
         LINE_JOINER.join(
