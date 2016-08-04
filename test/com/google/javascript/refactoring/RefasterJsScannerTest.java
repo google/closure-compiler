@@ -650,6 +650,76 @@ public class RefasterJsScannerTest {
     assertChanges(externs, originalCode, expectedCode, template);
   }
 
+  @Test
+  public void test_unknownTemplateTypes() throws Exception {
+    // By declaring a new type in the template code that does not appear in the original code,
+    // the result of this refactoring should be a no-op. However, if template type matching isn't
+    // correct, the template type could be treated as an unknown type which would incorrectly
+    // match the original code. This test ensures this behavior is right.
+    String externs = "";
+    String originalCode = ""
+        + "/** @constructor */\n"
+        + "function Clazz() {};\n"
+        + "var cls = new Clazz();\n"
+        + "cls.showError('boo');\n";
+    String template = ""
+        + "/** @constructor */\n"
+        + "function SomeClassNotInCompilationUnit() {};\n"
+        + "var foo = new SomeClassNotInCompilationUnit();\n"
+        + "foo.showError('bar');\n"
+        + "\n"
+        + "/**"
+        + " * @param {SomeClassNotInCompilationUnit} obj\n"
+        + " * @param {string} msg\n"
+        + " */\n"
+        + "function before_template(obj, msg) {\n"
+        + "  obj.showError(msg);\n"
+        + "}\n"
+        + "/**"
+        + " * @param {SomeClassNotInCompilationUnit} obj\n"
+        + " * @param {string} msg\n"
+        + " */\n"
+        + "function after_template(obj, msg) {\n"
+        + "  obj.showError(msg, false);\n"
+        + "}\n";
+    assertChanges(externs, originalCode, null, template);
+  }
+
+  @Test
+  public void test_unknownTemplateTypesNonNullable() throws Exception {
+    // By declaring a new type in the template code that does not appear in the original code,
+    // the result of this refactoring should be a no-op. However, if template type matching isn't
+    // correct, the template type could be treated as an unknown type which would incorrectly
+    // match the original code. This test ensures this behavior is right.
+    String externs = "";
+    String originalCode = ""
+        + "/** @constructor */\n"
+        + "function Clazz() {};\n"
+        + "var cls = new Clazz();\n"
+        + "cls.showError('boo');\n";
+    String template = ""
+        + "/** @constructor */\n"
+        + "function SomeClassNotInCompilationUnit() {};\n"
+        + "var foo = new SomeClassNotInCompilationUnit();\n"
+        + "foo.showError('bar');\n"
+        + "\n"
+        + "/**"
+        + " * @param {!SomeClassNotInCompilationUnit} obj\n"
+        + " * @param {string} msg\n"
+        + " */\n"
+        + "function before_template(obj, msg) {\n"
+        + "  obj.showError(msg);\n"
+        + "}\n"
+        + "/**"
+        + " * @param {!SomeClassNotInCompilationUnit} obj\n"
+        + " * @param {string} msg\n"
+        + " */\n"
+        + "function after_template(obj, msg) {\n"
+        + "  obj.showError(msg, false);\n"
+        + "}\n";
+    assertChanges(externs, originalCode, null, template);
+  }
+
   private Compiler createCompiler() {
     return new Compiler();
   }

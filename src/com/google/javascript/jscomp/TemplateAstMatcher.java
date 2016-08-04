@@ -383,7 +383,7 @@ public final class TemplateAstMatcher {
       // TODO(johnlenz): We shouldn't spend time checking template whose
       // types whose definitions aren't included (NoResolvedType). Alternately
       // we should treat them as "unknown" and perform loose matches.
-      if (templateType.isNoResolvedType()) {
+      if (isUnresolvedType(templateType)) {
         return false;
       }
 
@@ -435,5 +435,25 @@ public final class TemplateAstMatcher {
     }
 
     return true;
+  }
+
+  private boolean isUnresolvedType(JSType type) {
+    // TODO(mknichel): When types are used in templates that do not appear in the
+    // compilation unit being processed, the template type will be a named type
+    // that resolves to unknown instead of being a no resolved type. This should
+    // be fixed in the compiler such that it resolves to a no resolved type, and
+    // then this code can be simplified to use that.
+    if (type.isNoResolvedType()
+        || (type.isNamedType() && type.isUnknownType())) {
+      return true;
+    }
+    if (type.isUnionType()) {
+      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
+        if (isUnresolvedType(alternate)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }
