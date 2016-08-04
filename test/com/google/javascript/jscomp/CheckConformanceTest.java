@@ -1587,7 +1587,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
           "",
           "'use strict';",
           "/** @const */ var module$testcode = {};",
-          "var x$$module$testcode=2;module$testcode.x = x$$module$testcode;"),
+          "var x$$module$testcode=2;",
+          "module$testcode.x = x$$module$testcode;"),
         null, null);
   }
 }
