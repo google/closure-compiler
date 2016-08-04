@@ -1333,13 +1333,16 @@ public abstract class JSType implements TypeI, Serializable {
         ImplCache.create(), SubtypingMode.NORMAL);
   }
 
-  static enum SubtypingMode {
+  /**
+   * In files translated from Java, we typecheck null and undefined loosely.
+   */
+  public static enum SubtypingMode {
     NORMAL,
     IGNORE_NULL_UNDEFINED
   }
 
-  public boolean isSubtypeModuloNullUndefined(JSType that) {
-    return this.isSubtype(that, ImplCache.create(), SubtypingMode.IGNORE_NULL_UNDEFINED);
+  public boolean isSubtype(JSType that, SubtypingMode mode) {
+    return isSubtype(that, ImplCache.create(), mode);
   }
 
   /**

@@ -362,6 +362,63 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "var /** @type {{ a:number }} */ x = null;")));
   }
 
+  public void testInheritanceModuloNullUndef1() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/** @constructor */",
+                "function Foo() {}",
+                "/** @return {string} */",
+                "Foo.prototype.toString = function() { return ''; };",
+                "/** @constructor @extends {Foo} */",
+                "function Bar() {}",
+                "/**",
+                " * @override",
+                " * @return {?string}",
+                " */",
+                "Bar.prototype.toString = function() { return null; };"))));
+  }
+
+  public void testInheritanceModuloNullUndef2() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/** @interface */",
+                "function Foo() {}",
+                "/** @return {string} */",
+                "Foo.prototype.toString = function() {};",
+                "/** @constructor @implements {Foo} */",
+                "function Bar() {}",
+                "/**",
+                " * @override",
+                " * @return {?string}",
+                " */",
+                "Bar.prototype.toString = function() {};"))));
+  }
+
+  public void testInheritanceModuloNullUndef3() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.java.js",
+            LINE_JOINER.join(
+                "/** @interface */",
+                "function High1() {}",
+                "/** @type {number} */",
+                "High1.prototype.prop;",
+                "/** @interface */",
+                "function High2() {}",
+                "/** @type {?number} */",
+                "High2.prototype.prop;",
+                "/**",
+                " * @interface",
+                " * @extends {High1}",
+                " * @extends {High2}",
+                " */",
+                "function Low() {}"))));
+  }
+
   private TypeMismatch fromNatives(JSTypeNative a, JSTypeNative b) {
     JSTypeRegistry registry = compiler.getTypeRegistry();
     return new TypeMismatch(

@@ -34,6 +34,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -66,10 +67,6 @@ class TypeValidator {
   private final JSType allValueTypes;
   private final JSType nullOrUndefined;
 
-  static enum SubtypingMode {
-    NORMAL,
-    IGNORE_NULL_UNDEFINED
-  }
   // In TypeCheck, when we are analyzing a file with .java.js suffix, we set
   // this field to IGNORE_NULL_UNDEFINED
   private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
@@ -689,7 +686,7 @@ class TypeValidator {
       }
       required = required.restrictByNotNullOrUndefined();
 
-      if (!found.isSubtype(required)) {
+      if (!found.isSubtype(required, this.subtypingMode)) {
         // Implemented, but not correctly typed
         FunctionType constructor =
             implementedInterface.toObjectType().getConstructor();
@@ -698,10 +695,7 @@ class TypeValidator {
             constructor.getTopMostDefiningType(prop).toString(),
             required.toString(), found.toString());
         registerMismatch(found, required, err);
-        if (this.subtypingMode == SubtypingMode.NORMAL
-            || !found.isSubtypeModuloNullUndefined(required)) {
-          report(err);
-        }
+        report(err);
       }
     }
   }
@@ -720,11 +714,10 @@ class TypeValidator {
   }
 
   private void mismatch(Node n, String msg, JSType found, JSType required) {
-    JSError err = JSError.make(n, TYPE_MISMATCH_WARNING,
-        formatFoundRequired(msg, found, required));
-    registerMismatch(found, required, err);
-    if (this.subtypingMode == SubtypingMode.NORMAL
-        || !found.isSubtypeModuloNullUndefined(required)) {
+    if (!found.isSubtype(required, this.subtypingMode)) {
+      JSError err = JSError.make(
+          n, TYPE_MISMATCH_WARNING, formatFoundRequired(msg, found, required));
+      registerMismatch(found, required, err);
       report(err);
     }
   }

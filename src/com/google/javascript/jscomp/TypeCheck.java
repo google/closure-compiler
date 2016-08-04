@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
-import com.google.javascript.jscomp.TypeValidator.SubtypingMode;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -42,6 +41,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.NamedType;
@@ -51,6 +51,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -324,6 +325,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private final CheckLevel reportMissingOverride;
   private final boolean reportUnknownTypes;
+  private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
 
   // This may be expensive, so don't emit these warnings if they're
   // explicitly turned off.
@@ -452,10 +454,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (n.isScript()) {
       String filename = n.getSourceFileName();
       if (filename != null && filename.endsWith(".java.js")) {
-        this.validator.setSubtypingMode(SubtypingMode.IGNORE_NULL_UNDEFINED);
+        this.subtypingMode = SubtypingMode.IGNORE_NULL_UNDEFINED;
       } else {
-        this.validator.setSubtypingMode(SubtypingMode.NORMAL);
+        this.subtypingMode = SubtypingMode.NORMAL;
       }
+      this.validator.setSubtypingMode(this.subtypingMode);
     }
     switch (n.getType()) {
       case FUNCTION:
@@ -1258,7 +1261,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             new TemplateTypeMapReplacer(typeRegistry, ctorTypeMap));
       }
 
-      if (!propertyType.isSubtype(superClassPropType)) {
+      if (!propertyType.isSubtype(superClassPropType, this.subtypingMode)) {
         compiler.report(
             t.makeError(n, HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
                 propertyName, topInstanceType.toString(),
@@ -1270,7 +1273,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (interfaceType.hasProperty(propertyName)) {
           JSType superPropertyType =
               interfaceType.getPropertyType(propertyName);
-          if (!propertyType.isSubtype(superPropertyType)) {
+          if (!propertyType.isSubtype(superPropertyType, this.subtypingMode)) {
             topInstanceType = interfaceType.getConstructor().
                 getTopMostDefiningType(propertyName);
             compiler.report(
@@ -1646,8 +1649,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (oType != null) {
         JSType thisPropType = interfaceType.getPropertyType(name);
         JSType oPropType = oType.getPropertyType(name);
-        if (thisPropType.isSubtype(oPropType)
-            || oPropType.isSubtype(thisPropType)
+        if (thisPropType.isSubtype(oPropType, this.subtypingMode)
+            || oPropType.isSubtype(thisPropType, this.subtypingMode)
             || thisPropType.isFunctionType() && oPropType.isFunctionType()
                && thisPropType.toMaybeFunctionType().hasEqualCallType(
                   oPropType.toMaybeFunctionType())) {

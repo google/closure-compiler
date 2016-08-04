@@ -243,11 +243,10 @@ public class TemplateTypeMap implements Serializable {
         // key-value pairs involved.
         if (thisKey == thatKey) {
           EquivalenceMatch newMatchType = EquivalenceMatch.VALUE_MISMATCH;
-          if (thisType.checkEquivalenceHelper(thatType, eqMethod, eqCache)) {
-            newMatchType = EquivalenceMatch.VALUE_MATCH;
-          } else if (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
-              && thisType.isSubtypeModuloNullUndefined(thatType)
-              && thatType.isSubtypeModuloNullUndefined(thatType)) {
+          if (thisType.checkEquivalenceHelper(thatType, eqMethod, eqCache)
+              || (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
+                  && thisType.isSubtype(thatType, subtypingMode)
+                  && thatType.isSubtype(thatType, subtypingMode))) {
             newMatchType = EquivalenceMatch.VALUE_MATCH;
           }
 
