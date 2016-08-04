@@ -253,7 +253,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
   }
 
   protected static void fuseExpressionIntoSecondChild(Node exp, Node stmt) {
-    Node val = stmt.removeChildAfter(stmt.getFirstChild());
+    Node val = stmt.getSecondChild().detach();
     Node comma = fuseExpressionIntoExpression(exp, val);
     stmt.addChildAfter(comma, stmt.getFirstChild());
   }

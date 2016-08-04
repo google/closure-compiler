@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -24,8 +25,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 /**
  * Creates synthetic blocks to optimizations from moving code
@@ -115,16 +114,14 @@ class CreateSyntheticBlocks implements CompilerPass {
     innerBlock.setIsSyntheticBlock(true);
     // Move everything after the start Node up to the end Node into the inner
     // block.
-    moveSiblingExclusive(originalParent, innerBlock,
-        marker.startMarker,
-        marker.endMarker);
+    moveSiblingExclusive(innerBlock, marker.startMarker, marker.endMarker);
 
     // Add the start node.
-    outerBlock.addChildToBack(originalParent.removeChildAfter(outerBlock));
+    outerBlock.addChildToBack(outerBlock.getNext().detach());
     // Add the inner block
     outerBlock.addChildToBack(innerBlock);
     // and finally the end node.
-    outerBlock.addChildToBack(originalParent.removeChildAfter(outerBlock));
+    outerBlock.addChildToBack(outerBlock.getNext().detach());
 
     compiler.reportCodeChange();
   }
@@ -134,23 +131,12 @@ class CreateSyntheticBlocks implements CompilerPass {
    * destination block. If start is null, move the first child of the block.
    * If end is null, move the last child of the block.
    */
-  private void moveSiblingExclusive(
-      Node src, Node dest, @Nullable Node start, @Nullable Node end) {
-    while (childAfter(src, start) != end) {
-      Node child = src.removeFirstOrChildAfter(start);
+  private void moveSiblingExclusive(Node dest, Node start, Node end) {
+    Preconditions.checkNotNull(start);
+    Preconditions.checkNotNull(end);
+    while (start.getNext() != end) {
+      Node child = start.getNext().detach();
       dest.addChildToBack(child);
-    }
-  }
-
-  /**
-   * Like Node.getNext, that null is used to signal the child before the
-   * block.
-   */
-  private static Node childAfter(Node parent, @Nullable Node siblingBefore) {
-    if (siblingBefore == null) {
-      return parent.getFirstChild();
-    } else {
-      return siblingBefore.getNext();
     }
   }
 
