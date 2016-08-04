@@ -19,8 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.DependencyInfo;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,9 +29,6 @@ import java.util.TreeMap;
  * A DependencyInfo class that determines load flags by parsing the AST just-in-time.
  */
 public class LazyParsedDependencyInfo implements DependencyInfo {
-
-  static final DiagnosticType MODULE_CONFLICT = DiagnosticType.warning(
-      "JSC_MODULE_CONFLICT", "File has both goog.module and ES6 modules: {0}");
 
   private final DependencyInfo delegate;
   private final JsAst ast;
@@ -52,8 +49,9 @@ public class LazyParsedDependencyInfo implements DependencyInfo {
       loadFlagsBuilder.putAll(delegate.getLoadFlags());
       FeatureSet features = ((JsAst) ast).getFeatures(compiler);
       if (features.hasEs6Modules()) {
-        if (loadFlagsBuilder.containsKey("module")) {
-          compiler.report(JSError.make(MODULE_CONFLICT, getName()));
+        String previousModule = loadFlagsBuilder.get("module");
+        if (previousModule != null && !previousModule.equals("es6")) {
+          compiler.report(JSError.make(ModuleLoader.MODULE_CONFLICT, getName()));
         }
         loadFlagsBuilder.put("module", "es6");
       }

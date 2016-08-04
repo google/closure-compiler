@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.LazyParsedDependencyInfo;
 import com.google.javascript.jscomp.SourceFile;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -68,6 +67,7 @@ public class DepsGenerator {
   private final Collection<SourceFile> deps;
   private final String closurePathAbs;
   private final InclusionStrategy mergeStrategy;
+  private final ModuleLoader loader;
   final ErrorManager errorManager;
 
   static final DiagnosticType SAME_FILE_WARNING = DiagnosticType.warning(
@@ -102,12 +102,14 @@ public class DepsGenerator {
       Collection<SourceFile> srcs,
       InclusionStrategy mergeStrategy,
       String closurePathAbs,
-      ErrorManager errorManager) {
+      ErrorManager errorManager,
+      ModuleLoader loader) {
     this.deps = deps;
     this.srcs = srcs;
     this.mergeStrategy = mergeStrategy;
     this.closurePathAbs = closurePathAbs;
     this.errorManager = errorManager;
+    this.loader = loader;
   }
 
   /**
@@ -323,7 +325,7 @@ public class DepsGenerator {
   private Map<String, DependencyInfo> parseSources(
       Set<String> preparsedFiles) throws IOException {
     Map<String, DependencyInfo> parsedFiles = new HashMap<>();
-    JsFileParser jsParser = new JsFileParser(errorManager);
+    JsFileParser jsParser = new JsFileParser(errorManager).setModuleLoader(loader);
     Compiler compiler = new Compiler();
     compiler.init(
         ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), new CompilerOptions());

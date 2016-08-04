@@ -18,11 +18,12 @@ package com.google.javascript.jscomp.deps;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -142,7 +143,16 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   private void processInputs() {
     // Index.
     for (INPUT userOrderedInput : userOrderedInputs) {
-      if (userOrderedInput.getProvides().isEmpty()) {
+      Collection<String> provides = userOrderedInput.getProvides();
+      String firstProvide = Iterables.getFirst(provides, null);
+      if (firstProvide == null
+          // TODO(sdh): It would be better to have a more robust way to distinguish
+          // between actual provided symbols and synthetic symbols generated for
+          // ES6 (or other) modules.  We can't read loadFlags here (to see if
+          // the module type is 'es6') either, since that requires a full parse.
+          // So for now we rely on the heuristic that all generated provides start
+          // with "module$".
+          || (provides.size() == 1 && firstProvide.startsWith("module$"))) {
         nonExportingInputs.put(
             ModuleNames.fileToModuleName(userOrderedInput.getName()), userOrderedInput);
       }

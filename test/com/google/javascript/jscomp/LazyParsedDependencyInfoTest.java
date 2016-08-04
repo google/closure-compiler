@@ -21,9 +21,11 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.DependencyInfo;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import java.util.Arrays;
 import junit.framework.TestCase;
+
 /**
  * Tests for {@link LazyParsedDependencyInfo}.
  */
@@ -129,7 +131,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     assertThat(Arrays.asList(compiler.getErrorManager().getWarnings())).isEmpty();
     assertThat(info.getLoadFlags()).containsExactly("module", "es6", "lang", "es6");
     assertThat(Arrays.asList(compiler.getErrorManager().getWarnings()))
-        .containsExactly(JSError.make(LazyParsedDependencyInfo.MODULE_CONFLICT, "my/js.js"));
+        .containsExactly(JSError.make(ModuleLoader.MODULE_CONFLICT, "my/js.js"));
   }
 
   private static final ImmutableList<String> EMPTY = ImmutableList.of();

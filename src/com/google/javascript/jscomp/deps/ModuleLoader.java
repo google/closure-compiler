@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -41,6 +40,9 @@ import javax.annotation.Nullable;
  */
 public final class ModuleLoader {
 
+  public static final DiagnosticType MODULE_CONFLICT = DiagnosticType.warning(
+      "JSC_MODULE_CONFLICT", "File has both goog.module and ES6 modules: {0}");
+
   /** According to the spec, the forward slash should be the delimiter on all platforms. */
   public static final String MODULE_SLASH = ModuleNames.MODULE_SLASH;
 
@@ -53,7 +55,7 @@ public final class ModuleLoader {
 
   @Nullable private final ErrorHandler errorHandler;
 
-  /** The resolver, containing root URIs to match module roots against. */
+  /** Root URIs to match module roots against. */
   private final ImmutableList<URI> moduleRootUris;
   /** The set of all known input module URIs (including trailing .js), after normalization. */
   private final ImmutableSet<URI> moduleUris;
@@ -76,7 +78,7 @@ public final class ModuleLoader {
     checkNotNull(pathResolver);
     this.pathResolver = pathResolver;
     this.errorHandler = errorHandler;
-    this.moduleRootUris = createRootUris(Iterables.transform(moduleRoots, pathResolver));
+    this.moduleRootUris = createRootUris(moduleRoots, pathResolver);
     this.moduleUris =
         resolveUris(
             Iterables.transform(Iterables.transform(inputs, UNWRAP_DEPENDENCY_INFO), pathResolver),
@@ -85,7 +87,7 @@ public final class ModuleLoader {
 
   public ModuleLoader(@Nullable ErrorHandler errorHandler,
       Iterable<String> moduleRoots, Iterable<? extends DependencyInfo> inputs) {
-    this(errorHandler, moduleRoots, inputs, PathResolver.DIRECT);
+    this(errorHandler, moduleRoots, inputs, PathResolver.RELATIVE);
   }
 
 
@@ -146,12 +148,11 @@ public final class ModuleLoader {
      * @return The normalized module URI, or {@code null} if not found.
      */
     public ModuleUri resolveEs6Module(String moduleName) {
-      URI uri = locateNoCheck(moduleName + ".js");
-      // TODO(sdh): circular dependency - pull out the errors some other way...?
-      if (!moduleUris.contains(uri) && errorHandler != null) {
+      URI resolved = locateNoCheck(moduleName + ".js");
+      if (!moduleUris.contains(resolved) && errorHandler != null) {
         errorHandler.report(CheckLevel.WARNING, JSError.make(LOAD_WARNING, moduleName));
       }
-      return new ModuleUri(uri);
+      return new ModuleUri(resolved);
     }
 
     /**
@@ -196,10 +197,10 @@ public final class ModuleLoader {
     return name.startsWith(MODULE_SLASH);
   }
 
-  private static ImmutableList<URI> createRootUris(Iterable<String> roots) {
+  private static ImmutableList<URI> createRootUris(Iterable<String> roots, PathResolver resolver) {
     ImmutableList.Builder<URI> builder = ImmutableList.builder();
     for (String root : roots) {
-      builder.add(ModuleNames.escapeUri(root));
+      builder.add(ModuleNames.escapeUri(resolver.apply(root)));
     }
     return builder.build();
   }
@@ -230,9 +231,9 @@ public final class ModuleLoader {
     return uri;
   }
 
-  /** An enum indicating whether to follow symlinks while resolving paths. */
+  /** An enum indicating whether to absolutize paths. */
   public enum PathResolver implements Function<String, String> {
-    DIRECT {
+    RELATIVE {
       @Override
       public String apply(String path) {
         return path;
@@ -240,14 +241,10 @@ public final class ModuleLoader {
     },
 
     @GwtIncompatible // Paths.get, Path.toRealPath
-    FOLLOW_SYMLINKS {
+    ABSOLUTE {
       @Override
       public String apply(String path) {
-        try {
-          return Paths.get(path).toRealPath().toString();
-        } catch (IOException e) {
-          return path;
-        }
+        return Paths.get(path).toAbsolutePath().toString();
       }
     };
   }

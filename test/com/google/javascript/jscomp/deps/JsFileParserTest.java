@@ -19,12 +19,11 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
-
-import junit.framework.TestCase;
-
 import java.util.Collections;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link JsFileParser}.
@@ -110,6 +109,103 @@ public final class JsFileParserTest extends TestCase {
         true);
 
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertDeps(expected, result);
+  }
+
+  // TODO(sdh): Add a test for import with .js suffix once #1897 is fixed.
+
+  /**
+   * Tests:
+   *  -ES6 modules parsed correctly, particularly the various formats.
+   */
+  public void testParseEs6Module() {
+    String contents = ""
+        + "import def, {yes2} from './yes2';\n"
+        + "import C from './a/b/C';\n"
+        + "import * as d from './a/b/d';\n"
+        + "import \"./dquote\";\n"
+        + "export * from './exported';\n";
+
+    DependencyInfo expected = new SimpleDependencyInfo("a.js", "b.js",
+        ImmutableList.of("module$b"),
+        ImmutableList.of(
+            "module$yes2", "module$a$b$C", "module$a$b$d", "module$dquote", "module$exported"),
+        ImmutableMap.of("module", "es6"));
+
+    DependencyInfo result = parser.parseFile("b.js", "a.js", contents);
+
+    assertDeps(expected, result);
+  }
+
+  /**
+   * Tests:
+   *  -Relative paths resolved correctly.
+   */
+  public void testParseEs6Module2() {
+    String contents = ""
+        + "import './x';\n"
+        + "import '../y';\n"
+        + "import '../a/z';\n"
+        + "import '../c/w';\n";
+
+    DependencyInfo expected = new SimpleDependencyInfo("../../a/b.js", "/foo/bar/a/b.js",
+        ImmutableList.of("module$$foo$bar$a$b"),
+        ImmutableList.of(
+            "module$$foo$bar$a$x", "module$$foo$bar$y",
+            "module$$foo$bar$a$z", "module$$foo$bar$c$w"),
+        ImmutableMap.of("module", "es6"));
+
+    DependencyInfo result = parser.parseFile("/foo/bar/a/b.js", "../../a/b.js", contents);
+
+    assertDeps(expected, result);
+  }
+
+  /**
+   * Tests:
+   *  -Handles goog.require and import 'goog:...'.
+   */
+  public void testParseEs6Module3() {
+    String contents = ""
+        + "import 'goog:foo.bar.baz';\n"
+        + "goog.require('baz.qux');\n";
+
+    DependencyInfo expected = new SimpleDependencyInfo("b.js", "a.js",
+        ImmutableList.of("module$a"),
+        ImmutableList.of("foo.bar.baz", "baz.qux"),
+        ImmutableMap.of("module", "es6"));
+
+    DependencyInfo result = parser.parseFile("a.js", "b.js", contents);
+
+    assertDeps(expected, result);
+  }
+
+  /**
+   * Tests:
+   *  -setModuleLoader taken into account
+   */
+  public void testParseEs6Module4() {
+    ModuleLoader loader =
+        new ModuleLoader(null, ImmutableList.of("/foo"), ImmutableList.<DependencyInfo>of());
+
+    String contents = ""
+        + "import './a';\n"
+        + "import './qux/b';\n"
+        + "import '../closure/c';\n"
+        + "import '../closure/d/e';\n"
+        + "import '../../corge/f';\n";
+
+    DependencyInfo expected = new SimpleDependencyInfo("../bar/baz.js", "/foo/js/bar/baz.js",
+        ImmutableList.of("module$js$bar$baz"),
+        ImmutableList.of(
+            "module$js$bar$a", "module$js$bar$qux$b", "module$js$closure$c",
+            "module$js$closure$d$e", "module$corge$f"),
+        ImmutableMap.of("module", "es6"));
+
+    DependencyInfo result =
+        parser
+            .setModuleLoader(loader)
+            .parseFile("/foo/js/bar/baz.js", "../bar/baz.js", contents);
 
     assertDeps(expected, result);
   }
