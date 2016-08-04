@@ -689,12 +689,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case FINAL:
-          if (!jsdocBuilder.recordFinality()) {
-            addTypeWarning("msg.jsdoc.final");
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case POLYMER_BEHAVIOR:
           if (jsdocBuilder.isPolymerBehaviorRecorded()) {
             addParserWarning("msg.jsdoc.polymerBehavior.extra");
@@ -1036,6 +1030,7 @@ public final class JsDocInfoParser {
           return token;
 
         case CONSTANT:
+        case FINAL:
         case DEFINE:
         case EXPORT:
         case RETURN:
@@ -1057,6 +1052,7 @@ public final class JsDocInfoParser {
                   || annotation == Annotation.PROTECTED
                   || annotation == Annotation.PUBLIC
                   || annotation == Annotation.CONSTANT
+                  || annotation == Annotation.FINAL
                   || annotation == Annotation.EXPORT;
           boolean canSkipTypeAnnotation =
               isAlternateTypeAnnotation || annotation == Annotation.RETURN;
@@ -1099,6 +1095,12 @@ public final class JsDocInfoParser {
               case CONSTANT:
                 if (!jsdocBuilder.recordConstancy()) {
                   addParserWarning("msg.jsdoc.const");
+                }
+                break;
+
+              case FINAL:
+                if (!jsdocBuilder.recordFinality()) {
+                  addTypeWarning("msg.jsdoc.final");
                 }
                 break;
 

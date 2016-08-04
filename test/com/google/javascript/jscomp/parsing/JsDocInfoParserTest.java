@@ -2864,6 +2864,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
+  public void testFinalType() throws Exception {
+    JSDocInfo jsdoc = parse("@final {string} */");
+    assertTypeEquals(STRING_TYPE, jsdoc.getType());
+  }
+
   public void testExportType() throws Exception {
     JSDocInfo jsdoc = parse("@export {string} descr\n next line */", true);
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
