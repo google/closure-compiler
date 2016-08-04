@@ -505,7 +505,7 @@ enum CompilationParam {
   },
 
   /** Converts quoted property accesses to dot syntax (a['b'] -> a.b) */
-  COVERT_TO_DOTTED_PROPERTIES {
+  CONVERT_TO_DOTTED_PROPERTIES {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setConvertToDottedProperties(value);
