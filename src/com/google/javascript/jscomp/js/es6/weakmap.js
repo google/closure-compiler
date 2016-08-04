@@ -27,14 +27,18 @@ $jscomp.polyfill('WeakMap', function(NativeWeakMap) {
    */
   function isConformant() {
     if (!NativeWeakMap || !Object.seal) return false;
-    var x = Object.seal({});
-    var y = Object.seal({});
-    var map = new /** @type {function(new: WeakMap, !Array)} */ (NativeWeakMap)(
-        [[x, 2], [y, 3]]);
-    if (map.get(x) != 2 || map.get(y) != 3) return false;
-    map.delete(x);
-    map.set(y, 4);
-    return !map.has(x) && map.get(y) == 4;
+    try {
+      var x = Object.seal({});
+      var y = Object.seal({});
+      var map = new /** @type {function(new: WeakMap, !Array)} */ (
+          NativeWeakMap)([[x, 2], [y, 3]]);
+      if (map.get(x) != 2 || map.get(y) != 3) return false;
+      map.delete(x);
+      map.set(y, 4);
+      return !map.has(x) && map.get(y) == 4;
+    } catch (err) { // This should hopefully never happen, but let's be safe.
+      return false;
+    }
   }
   if (isConformant()) return NativeWeakMap;
 

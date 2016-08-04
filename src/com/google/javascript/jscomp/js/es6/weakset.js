@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-'require es6/symbol es6/util/makeiterator util/polyfill es6/weakmap';
+'require es6/symbol';
+'require es6/util/makeiterator';
+'require util/polyfill';
+'require es6/weakmap';
 
 $jscomp.polyfill('WeakSet', function(NativeWeakSet) {
   /**
@@ -23,14 +26,18 @@ $jscomp.polyfill('WeakSet', function(NativeWeakSet) {
    */
   function isConformant() {
     if (!NativeWeakSet || !Object.seal) return false;
-    var x = Object.seal({});
-    var y = Object.seal({});
-    var set = new /** @type {function(new: WeakSet, !Array)} */ (NativeWeakSet)(
-        [x]);
-    if (!set.has(x) || set.has(y)) return false;
-    set.delete(x);
-    set.add(y);
-    return !set.has(x) && set.has(y);
+    try {
+      var x = Object.seal({});
+      var y = Object.seal({});
+      var set = new /** @type {function(new: WeakSet, !Array)} */ (
+          NativeWeakSet)([x]);
+      if (!set.has(x) || set.has(y)) return false;
+      set.delete(x);
+      set.add(y);
+      return !set.has(x) && set.has(y);
+    } catch (err) { // This should hopefully never happen, but let's be safe.
+      return false;
+    }
   }
   if (isConformant()) return NativeWeakSet;
 
