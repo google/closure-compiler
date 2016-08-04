@@ -566,7 +566,7 @@ public class NodeTest extends TestCase {
     assertEquals(root, nodeToAdd.parent);
     assertEquals(root.getFirstChild(), nodeToAdd);
     assertEquals(root.getLastChild(), nodeToAdd);
-    assertNull(nodeToAdd.previous);
+    assertEquals(nodeToAdd.previous, nodeToAdd);
     assertNull(nodeToAdd.next);
   }
 
@@ -583,7 +583,7 @@ public class NodeTest extends TestCase {
     assertEquals(root, nodeToAdd.parent);
     assertEquals(root.getFirstChild(), nodeToAdd);
     assertEquals(root.getLastChild(), right);
-    assertNull(nodeToAdd.previous);
+    assertEquals(nodeToAdd.previous, root.getLastChild());
     assertEquals(left, nodeToAdd.next);
     assertEquals(nodeToAdd, left.previous);
   }
