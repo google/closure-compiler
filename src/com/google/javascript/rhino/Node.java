@@ -1983,6 +1983,14 @@ public class Node implements Serializable {
    * node.getParent().removeChild();
    */
   public Node detachFromParent() {
+    return detach();
+  }
+
+  /**
+   * Removes this node from its parent. Equivalent to:
+   * node.getParent().removeChild();
+   */
+  public Node detach() {
     Preconditions.checkState(parent != null);
     parent.removeChild(this);
     return this;

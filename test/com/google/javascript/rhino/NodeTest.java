@@ -588,6 +588,25 @@ public class NodeTest extends TestCase {
     assertEquals(nodeToAdd, left.previous);
   }
 
+  public void testDetach1() {
+    Node left = Node.newString("left");
+    Node mid = Node.newString("mid");
+    Node right = Node.newString("right");
+    Node root = new Node(Token.SCRIPT, left, mid, right);
+
+    assertEquals(root, mid.parent);
+    assertEquals(left, mid.previous);
+    assertEquals(right, mid.next);
+
+    mid.detach();
+
+    assertNull(mid.parent);
+    assertNull(mid.previous);
+    assertNull(mid.next);
+
+    assertEquals(left, right.getPrevious());
+    assertEquals(right, left.getNext());
+  }
 
   private static Node getVarRef(String name) {
     return Node.newString(Token.NAME, name);
