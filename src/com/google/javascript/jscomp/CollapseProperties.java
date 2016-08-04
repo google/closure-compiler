@@ -943,7 +943,7 @@ class CollapseProperties implements CompilerPass {
 
     if (isObjLit) {
       numChanges += declareVarsForObjLitValues(
-          n, name, rvalue, varNode, grandparent.getChildBefore(varNode),
+          n, name, rvalue, varNode, varNode.getPrevious(),
           grandparent);
     }
 
