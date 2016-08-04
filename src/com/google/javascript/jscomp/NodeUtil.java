@@ -32,9 +32,12 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +46,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.Nullable;
 
 /**
@@ -1255,32 +1259,32 @@ public final class NodeUtil {
       return false;
     }
 
-    Node nameNode = callNode.getFirstChild();
+    Node callee = callNode.getFirstChild();
 
     // Built-in functions with no side effects.
-    if (nameNode.isName()) {
-      String name = nameNode.getString();
+    if (callee.isName()) {
+      String name = callee.getString();
       if (BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS.contains(name)) {
         return false;
       }
-    } else if (nameNode.isGetProp()) {
+    } else if (callee.isGetProp()) {
       if (callNode.hasOneChild()
           && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
-                nameNode.getLastChild().getString())) {
+                callee.getLastChild().getString())) {
         return false;
       }
 
       if (callNode.isOnlyModifiesThisCall()
-          && evaluatesToLocalValue(nameNode.getFirstChild())) {
+          && evaluatesToLocalValue(callee.getFirstChild())) {
         return false;
       }
 
       // Many common Math functions have no side-effects.
       // TODO(nicksantos): This is a terrible terrible hack, until
       // I create a definitionProvider that understands namespacing.
-      if (nameNode.getFirstChild().isName() && nameNode.isQualifiedName()
-          && nameNode.getFirstChild().getString().equals("Math")) {
-        switch(nameNode.getLastChild().getString()) {
+      if (callee.getFirstChild().isName() && callee.isQualifiedName()
+          && callee.getFirstChild().getString().equals("Math")) {
+        switch(callee.getLastChild().getString()) {
           case "abs":
           case "acos":
           case "acosh":
@@ -1319,12 +1323,15 @@ public final class NodeUtil {
       }
 
       if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
-        if (nameNode.getFirstChild().isRegExp()
-            && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+        if (callee.getFirstChild().isRegExp()
+            && REGEXP_METHODS.contains(callee.getLastChild().getString())) {
           return false;
-        } else if (nameNode.getFirstChild().isString()) {
-          String method = nameNode.getLastChild().getString();
-          Node param = nameNode.getNext();
+        } else if (isTypedAsString(callee.getFirstChild(), compiler)) {
+          // Unlike regexs, string methods don't need to be hosted on a string literal
+          // to avoid leaking mutating global state changes, it is just necessary that
+          // the regex object can't be referenced.
+          String method = callee.getLastChild().getString();
+          Node param = callee.getNext();
           if (param != null) {
             if (param.isString()) {
               if (STRING_REGEXP_METHODS.contains(method)) {
@@ -1344,6 +1351,25 @@ public final class NodeUtil {
     }
 
     return true;
+  }
+
+  private static boolean isTypedAsString(Node n, AbstractCompiler compiler) {
+    if (n.isString()) {
+      return true;
+    }
+
+    if (compiler.getOptions().useTypesForOptimization) {
+      TypeI type = n.getTypeI();
+      if (type != null) {
+        TypeI nativeStringType = compiler.getTypeIRegistry()
+            .getNativeType(JSTypeNative.STRING_TYPE);
+        if (type.isEquivalentTo(nativeStringType)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   /**

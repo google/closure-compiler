@@ -30,11 +30,12 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
-import junit.framework.TestCase;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import junit.framework.TestCase;
+
 
 /**
  * Tests for NodeUtil
@@ -276,11 +277,7 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private Node parseExpr(String js) {
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    compiler.initOptions(options);
-    Node root = compiler.parseTestCode(js);
+    Node root = parse(js);
     return root.getFirstFirstChild();
   }
 
@@ -289,65 +286,52 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testGetFunctionName1() throws Exception {
-    Compiler compiler = new Compiler();
-    Node parent = compiler.parseTestCode("function name(){}");
-
+    Node parent = parse("function name(){}");
     testGetFunctionName(parent.getFirstChild(), "name");
   }
 
   public void testGetFunctionName2() throws Exception {
-    Compiler compiler = new Compiler();
-    Node parent = compiler.parseTestCode("var name = function(){}")
+    Node parent = parse("var name = function(){}")
         .getFirstFirstChild();
 
     testGetFunctionName(parent.getFirstChild(), "name");
   }
 
   public void testGetFunctionName3() throws Exception {
-    Compiler compiler = new Compiler();
-    Node parent = compiler.parseTestCode("qualified.name = function(){}")
+    Node parent = parse("qualified.name = function(){}")
         .getFirstFirstChild();
 
     testGetFunctionName(parent.getLastChild(), "qualified.name");
   }
 
   public void testGetFunctionName4() throws Exception {
-    Compiler compiler = new Compiler();
-    Node parent = compiler.parseTestCode("var name2 = function name1(){}")
+    Node parent = parse("var name2 = function name1(){}")
         .getFirstFirstChild();
 
     testGetFunctionName(parent.getFirstChild(), "name2");
   }
 
   public void testGetFunctionName5() throws Exception {
-    Compiler compiler = new Compiler();
-    Node n = compiler.parseTestCode("qualified.name2 = function name1(){}");
+    Node n = parse("qualified.name2 = function name1(){}");
     Node parent = n.getFirstFirstChild();
 
     testGetFunctionName(parent.getLastChild(), "qualified.name2");
   }
 
   public void testGetBestFunctionName1() throws Exception {
-    Compiler compiler = new Compiler();
-    Node parent = compiler.parseTestCode("function func(){}");
+    Node parent = parse("function func(){}");
 
     assertEquals("func",
         NodeUtil.getNearestFunctionName(parent.getFirstChild()));
   }
 
   public void testGetBestFunctionName2() throws Exception {
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
-    compiler.initOptions(options);
-
-    Node parent = compiler.parseTestCode("var obj = {memFunc(){}}")
+    Node parent = parse("var obj = {memFunc(){}}")
         .getFirstFirstChild().getFirstFirstChild();
 
     assertEquals("memFunc",
         NodeUtil.getNearestFunctionName(parent.getLastChild()));
   }
-
 
   private void testGetFunctionName(Node function, String name) {
     assertEquals(Token.FUNCTION, function.getType());
@@ -374,6 +358,7 @@ public final class NodeUtilTest extends TestCase {
   private void assertSideEffect(boolean se, String js, boolean globalRegExp) {
     Node n = parse(js);
     Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
     compiler.setHasRegExpGlobalReferences(globalRegExp);
     assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler));
   }

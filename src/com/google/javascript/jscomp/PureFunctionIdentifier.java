@@ -35,6 +35,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -415,7 +416,7 @@ class PureFunctionIdentifier implements CompilerPass {
         return;
       }
 
-      if (!NodeUtil.nodeTypeMayHaveSideEffects(node) && !node.isReturn()) {
+      if (!NodeUtil.nodeTypeMayHaveSideEffects(node, compiler) && !node.isReturn()) {
         return;
       }
 
