@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.graph;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -193,7 +192,7 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public GraphNode<N, E> createNode(N value) {
+  public DiGraphNode<N, E> createNode(N value) {
     return createDirectedGraphNode(value);
   }
 

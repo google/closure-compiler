@@ -25,7 +25,7 @@ import com.google.common.io.Files;
 import com.google.javascript.jscomp.CodingConvention.Cache;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
@@ -35,7 +35,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -240,12 +239,12 @@ class PureFunctionIdentifier implements CompilerPass {
    */
   private void propagateSideEffects() {
     // Nodes are function declarations; Edges are function call sites.
-    DiGraph<FunctionInformation, Node> sideEffectGraph =
+    LinkedDirectedGraph<FunctionInformation, Node> sideEffectGraph =
         LinkedDirectedGraph.createWithoutAnnotations();
 
     // create graph nodes
     for (FunctionInformation functionInfo : functionSideEffectMap.values()) {
-      sideEffectGraph.createNode(functionInfo);
+      functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
     }
 
     // add connections to called functions and side effect root.
@@ -275,7 +274,7 @@ class PureFunctionIdentifier implements CompilerPass {
           Node defValue = def.getRValue();
           FunctionInformation dep = functionSideEffectMap.get(defValue);
           Preconditions.checkNotNull(dep);
-          sideEffectGraph.connect(dep, callSite, functionInfo);
+          sideEffectGraph.connect(dep.graphNode, callSite, functionInfo.graphNode);
         }
       }
     }
@@ -811,6 +810,7 @@ class PureFunctionIdentifier implements CompilerPass {
    * list of calls that appear in a function's body.
    */
   private static class FunctionInformation {
+    private DiGraphNode graphNode;
     private List<Node> callsInFunctionBody = null;
     private Set<Var> blacklisted = null;
     private Set<Var> taintedLocals = null;
