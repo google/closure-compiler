@@ -850,7 +850,7 @@ class IRFactory {
   void setSourceInfo(Node node, Node ref) {
     node.setLineno(ref.getLineno());
     node.setCharno(ref.getCharno());
-    maybeSetLengthFrom(node, ref);
+    setLengthFrom(node, ref);
   }
 
   void setSourceInfo(Node irNode, ParseTree node) {
@@ -874,7 +874,7 @@ class IRFactory {
       node.setLineno(lineno);
       int charno = charno(start);
       node.setCharno(charno);
-      maybeSetLength(node, start, end);
+      setLength(node, start, end);
     }
   }
 
@@ -936,17 +936,13 @@ class IRFactory {
   }
 
   // Set the length on the node if we're in IDE mode.
-  void maybeSetLength(
+  void setLength(
       Node node, SourcePosition start, SourcePosition end) {
-    if (config.preserveDetailedSourceInfo == Config.SourceLocationInformation.PRESERVE) {
-      node.setLength(end.offset - start.offset);
-    }
+    node.setLength(end.offset - start.offset);
   }
 
-  void maybeSetLengthFrom(Node node, Node ref) {
-    if (config.preserveDetailedSourceInfo == Config.SourceLocationInformation.PRESERVE) {
-      node.setLength(ref.getLength());
-    }
+  void setLengthFrom(Node node, Node ref) {
+    node.setLength(ref.getLength());
   }
 
   private class TransformDispatcher {
@@ -1990,7 +1986,7 @@ class IRFactory {
       if (decl.initializer != null) {
         Node initializer = transform(decl.initializer);
         lhs.addChildToBack(initializer);
-        maybeSetLength(lhs, decl.location.start, decl.location.end);
+        setLength(lhs, decl.location.start, decl.location.end);
       }
       maybeProcessType(lhs, decl.declaredType);
       return lhs;

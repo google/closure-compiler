@@ -89,8 +89,6 @@ public class Node implements Serializable {
       FREE_CALL          = 50,    // A CALL without an explicit "this" value.
       STATIC_SOURCE_FILE = 51,    // A StaticSourceFile indicating the file
                                   // where this node lives.
-      LENGTH             = 52,    // The length of the code represented by
-                                  // this node.
       INPUT_ID           = 53,    // The id of the input associated with this
                                   // node.
       SLASH_V            = 54,    // Whether a STRING node contains a \v
@@ -174,7 +172,6 @@ public class Node implements Serializable {
         case FREE_CALL:          return "free_call";
         case STATIC_SOURCE_FILE: return "source_file";
         case INPUT_ID:           return "input_id";
-        case LENGTH:             return "length";
         case SLASH_V:            return "slash_v";
         case INFERRED_FUNCTION:  return "inferred";
         case CHANGE_TIME:        return "change_time";
@@ -1254,6 +1251,9 @@ public class Node implements Serializable {
    */
   private int sourcePosition;
 
+  /** The length of the code represented by the node. */
+  private int length;
+
   private TypeI typei;
 
   protected Node parent;
@@ -1320,11 +1320,11 @@ public class Node implements Serializable {
   }
 
   public int getLength() {
-    return getIntProp(LENGTH);
+    return this.length;
   }
 
   public void setLength(int length) {
-    putIntProp(LENGTH, length);
+    this.length = length;
   }
 
   public int getLineno() {
@@ -2157,7 +2157,7 @@ public class Node implements Serializable {
     putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     setStaticSourceFile(other.getStaticSourceFile());
     sourcePosition = other.sourcePosition;
-    setLength(other.getLength());
+    length = other.length;
     return this;
   }
 
@@ -2194,7 +2194,7 @@ public class Node implements Serializable {
     if (getStaticSourceFile() == null) {
       setStaticSourceFile(other.getStaticSourceFile());
       sourcePosition = other.sourcePosition;
-      setLength(other.getLength());
+      length = other.length;
     }
 
     return this;
