@@ -586,13 +586,12 @@ public final class ConformanceRules {
      * @see TypeCheck#visitParameterList
      */
     static boolean validateCall(
-        AbstractCompiler compiler,
         Node callOrNew,
         FunctionTypeI functionType,
         boolean isCallInvocation) {
       Preconditions.checkState(callOrNew.isCall() || callOrNew.isNew());
 
-      return validateParameterList(compiler, callOrNew, functionType, isCallInvocation)
+      return validateParameterList(callOrNew, functionType, isCallInvocation)
           && validateThis(callOrNew, functionType, isCallInvocation);
     }
 
@@ -619,7 +618,6 @@ public final class ConformanceRules {
     }
 
     private static boolean validateParameterList(
-        AbstractCompiler compiler,
         Node callOrNew,
         FunctionTypeI functionType,
         boolean isCallInvocation) {
@@ -629,61 +627,13 @@ public final class ConformanceRules {
         arguments.next();
       }
 
-      Iterator<Node> parameters = functionType.getParameters().iterator();
-      Node parameter = null;
-      Node argument = null;
-      while (arguments.hasNext()
-          && (parameters.hasNext() || parameter != null && parameter.isVarArgs())) {
-        // If there are no parameters left in the list, then the while loop
-        // above implies that this must be a var_args function.
-        if (parameters.hasNext()) {
-          parameter = parameters.next();
-        }
-        argument = arguments.next();
-
-        if (!validateParameter(
-            getTypeI(compiler, argument), getTypeI(compiler, parameter))) {
-          return false;
-        }
+      // Get all the annotated types of the argument nodes
+      ImmutableList.Builder<TypeI> argumentTypes = ImmutableList.builder();
+      while (arguments.hasNext()) {
+        argumentTypes.add(arguments.next().getTypeI());
       }
-
-      int numArgs = callOrNew.getChildCount() - 1;
-      if (isCallInvocation && numArgs > 0) {
-        numArgs -= 1;
-      }
-      int minArgs = functionType.getMinArguments();
-      int maxArgs = functionType.getMaxArguments();
-      return minArgs <= numArgs && numArgs <= maxArgs;
+      return functionType.acceptsArguments(argumentTypes.build());
     }
-
-    /**
-     * Expect that the type of an argument matches the type of the parameter
-     * that it's fulfilling.
-     *
-     * @param argType The type of the argument.
-     * @param paramType The type of the parameter.
-     */
-    static boolean validateParameter(TypeI argType, TypeI paramType) {
-      return argType.isSubtypeOf(paramType);
-    }
-
-    /**
-     * This method gets the TypeI from the Node argument and verifies that it is
-     * present.
-     */
-    static TypeI getTypeI(AbstractCompiler compiler, Node n) {
-      TypeI type = n.getTypeI();
-      if (type == null) {
-        return getNativeType(compiler, JSTypeNative.UNKNOWN_TYPE);
-      } else {
-        return type;
-      }
-    }
-
-    static TypeI getNativeType(AbstractCompiler compiler, JSTypeNative typeId) {
-      return compiler.getTypeIRegistry().getNativeType(typeId);
-    }
-
   }
 
   /**
@@ -736,13 +686,13 @@ public final class ConformanceRules {
 
           if (n.matchesQualifiedName(r.name)) {
             if (!ConformanceUtil.validateCall(
-                compiler, n.getParent(), r.restrictedCallType, false)) {
+                n.getParent(), r.restrictedCallType, false)) {
               return ConformanceResult.VIOLATION;
             }
           } else if (n.isGetProp() && n.getLastChild().getString().equals("call")
               && n.getFirstChild().matchesQualifiedName(r.name)) {
             if (!ConformanceUtil.validateCall(
-                compiler, n.getParent(), r.restrictedCallType, true)) {
+                n.getParent(), r.restrictedCallType, true)) {
               return ConformanceResult.VIOLATION;
             }
           }
@@ -858,14 +808,12 @@ public final class ConformanceRules {
            || targetType.isEquivalentTo(
                registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
           if (!ConformanceUtil.validateCall(
-              compiler, n.getParent(), r.restrictedCallType,
-              isCallInvocation)) {
+              n.getParent(), r.restrictedCallType, isCallInvocation)) {
             return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
           }
         } else if (targetType.isSubtypeOf(methodClassType)) {
           if (!ConformanceUtil.validateCall(
-              compiler, n.getParent(), r.restrictedCallType,
-              isCallInvocation)) {
+              n.getParent(), r.restrictedCallType, isCallInvocation)) {
             return ConformanceResult.VIOLATION;
           }
         }

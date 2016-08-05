@@ -1674,18 +1674,25 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public int getMinArguments() {
-    throw new UnsupportedOperationException("getMinArguments not implemented yet");
-  }
+  public boolean acceptsArguments(List<? extends TypeI> argumentTypes) {
+    Preconditions.checkState(this.isFunctionType());
 
-  @Override
-  public int getMaxArguments() {
-    throw new UnsupportedOperationException("getMaxArguments not implemented yet");
-  }
+    int numArgs = argumentTypes.size();
+    FunctionType fnType = this.getFunTypeIfSingletonObj();
 
-  @Override
-  public Iterable<Node> getParameters() {
-    throw new UnsupportedOperationException("getParameters not implemented yet");
+    if (numArgs < fnType.getMinArity() || numArgs > fnType.getMaxArity()) {
+      return false;
+    }
+
+    for (int i = 0; i < numArgs; i++) {
+      TypeI ithArgType = argumentTypes.get(i);
+      JSType ithParamType = fnType.getFormalType(i);
+      if (!ithArgType.isSubtypeOf(ithParamType)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   @Override

@@ -77,9 +77,6 @@ public interface FunctionTypeI extends TypeI {
 
   void setSource(Node n);
 
-  int getMinArguments();
-
-  int getMaxArguments();
-
-  Iterable<Node> getParameters();
+  /** Checks if a call to this function with the given list of arguments is valid. */
+  boolean acceptsArguments(List<? extends TypeI> argumentTypes);
 }

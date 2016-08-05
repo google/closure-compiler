@@ -53,6 +53,7 @@ import com.google.javascript.rhino.TypeI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -300,7 +301,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return false;
   }
 
-  @Override
   public Iterable<Node> getParameters() {
     Node n = getParametersNode();
     if (n != null) {
@@ -316,7 +316,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /** Gets the minimum number of arguments that this function requires. */
-  @Override
   public int getMinArguments() {
     // NOTE(nicksantos): There are some native functions that have optional
     // parameters before required parameters. This algorithm finds the position
@@ -336,7 +335,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * Gets the maximum number of arguments that this function requires,
    * or Integer.MAX_VALUE if this is a variable argument function.
    */
-  @Override
   public int getMaxArguments() {
     Node params = getParametersNode();
     if (params != null) {
@@ -1509,5 +1507,31 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       }
     }
     return null;
+  }
+
+  @Override
+  public boolean acceptsArguments(List<? extends TypeI> argumentTypes) {
+    // NOTE(aravindpg): This code is essentially lifted from TypeCheck::visitParameterList,
+    // but what small differences there are make it very painful to refactor out the shared code.
+    Iterator<? extends TypeI> arguments = argumentTypes.iterator();
+    Iterator<Node> parameters = this.getParameters().iterator();
+    Node parameter = null;
+    TypeI argument = null;
+    while (arguments.hasNext()
+        && (parameters.hasNext() || parameter != null && parameter.isVarArgs())) {
+      // If there are no parameters left in the list, then the while loop
+      // above implies that this must be a var_args function.
+      if (parameters.hasNext()) {
+        parameter = parameters.next();
+      }
+      argument = arguments.next();
+
+      if (!argument.isSubtypeOf(parameter.getTypeI())) {
+        return false;
+      }
+    }
+
+    int numArgs = argumentTypes.size();
+    return this.getMinArguments() <= numArgs && numArgs <= this.getMaxArguments();
   }
 }
