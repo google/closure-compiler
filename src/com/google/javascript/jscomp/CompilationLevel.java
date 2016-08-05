@@ -142,6 +142,8 @@ public enum CompilationLevel {
 
     // All the advanced optimizations.
     options.removeClosureAsserts = true;
+    options.removeAbstractMethods = true;
+    options.removeSuperMethods = true;
     options.reserveRawExports = true;
     options.setRenamingPolicy(
         VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);

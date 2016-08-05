@@ -693,8 +693,11 @@ public class CompilerOptions {
   /** Processes the output of J2CL */
   J2clPassMode j2clPassMode;
 
-  /** Remove goog.abstractMethod assignments. */
+  /** Remove methods that only make a super call without changing the arguments. */
   boolean removeAbstractMethods;
+
+  /** Remove goog.abstractMethod assignments. */
+  boolean removeSuperMethods;
 
   /** Remove goog.asserts calls. */
   boolean removeClosureAsserts;
@@ -1124,7 +1127,8 @@ public class CompilerOptions {
     polymerPass = false;
     dartPass = false;
     j2clPassMode = J2clPassMode.OFF;
-    removeAbstractMethods = true;
+    removeAbstractMethods = false;
+    removeSuperMethods = false;
     removeClosureAsserts = false;
     stripTypes = Collections.emptySet();
     stripNameSuffixes = Collections.emptySet();
@@ -1528,6 +1532,10 @@ public class CompilerOptions {
 
   public void setRemoveAbstractMethods(boolean remove) {
     this.removeAbstractMethods = remove;
+  }
+
+  public void setRemoveSuperMethods(boolean remove) {
+    this.removeSuperMethods = remove;
   }
 
   public void setRemoveClosureAsserts(boolean remove) {
@@ -2679,6 +2687,7 @@ public class CompilerOptions {
             .add("quoteKeywordProperties", quoteKeywordProperties)
             .add("recordFunctionInformation", recordFunctionInformation)
             .add("removeAbstractMethods", removeAbstractMethods)
+            .add("removeSuperMethods", removeSuperMethods)
             .add("removeClosureAsserts", removeClosureAsserts)
             .add("removeDeadCode", removeDeadCode)
             .add("removeUnusedClassProperties", removeUnusedClassProperties)
