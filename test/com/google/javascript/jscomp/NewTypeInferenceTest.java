@@ -17520,4 +17520,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
+
+  public void testDontCrashWithPolymerJsdoc() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */ function Polymer() {}",
+        "Polymer.prototype = {",
+        "  /** @event @param {number} x */",
+        "  prop: 'asdf'",
+        "};"));
+  }
 }

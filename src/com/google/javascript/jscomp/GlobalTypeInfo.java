@@ -2246,7 +2246,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         } else if (defSite.isSetterDef()) {
           pname = JSType.createSetterPropName(pname);
         }
-      } else if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
+      } else if (jsdoc != null && jsdoc.containsFunctionDeclaration()
+          // This can happen with stray jsdocs in an object literal
+          && !defSite.isStringKey()) {
         // We're parsing a function declaration without a function initializer
         methodType = computeFnDeclaredType(jsdoc, pname, defSite, rawType, currentScope);
       }
