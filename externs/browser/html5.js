@@ -1972,6 +1972,54 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
     portsArg) {};
 
 /**
+ * HTML5 BroadcastChannel class.
+ * @param {string} channelName
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel
+ * @see https://html.spec.whatwg.org/multipage/comms.html#dom-broadcastchannel
+ * @implements {EventTarget}
+ * @constructor
+ */
+function BroadcastChannel(channelName) {}
+
+/**
+ * Sends the message, of any type of object, to each BroadcastChannel object
+ * listening to the same channel.
+ * @param {*} message
+ */
+BroadcastChannel.prototype.postMessage;
+
+/**
+ * Closes the channel object, indicating it won't get any new messages, and
+ * allowing it to be, eventually, garbage collected.
+ * @return {void}
+ */
+BroadcastChannel.prototype.close;
+
+/** @override */
+BroadcastChannel.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @override */
+BroadcastChannel.prototype.dispatchEvent = function(evt) {};
+
+/** @override */
+BroadcastChannel.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/**
+ * An EventHandler property that specifies the function to execute when a
+ * message event is fired on this object.
+ * @type {?function(!MessageEvent<*>)}
+ */
+BroadcastChannel.prototype.onmessage;
+
+/**
+ * The name of the channel.
+ * @type {string}
+ */
+BroadcastChannel.prototype.name;
+
+/**
  * HTML5 DataTransfer class.
  *
  * We say that this extends ClipboardData, because Event.prototype.clipboardData
