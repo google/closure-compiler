@@ -17,7 +17,8 @@
 /**
  * @fileoverview Polyfill for array destructuring.
  */
-'require es6/util/makeiterator es6/util/arrayfromiterator';
+'require es6/util/makeiterator';
+'require es6/util/arrayfromiterator';
 
 
 /**

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require es6/reflect/apply util/polyfill';
+'require es6/reflect/apply';
+'require util/polyfill';
 
 
 $jscomp.polyfill('Reflect.construct', function(orig) {

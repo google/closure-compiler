@@ -17,5 +17,7 @@
 /**
  * @fileoverview Brings in all ES6 Object polyfills.
  */
-'require es6/object/assign es6/object/getownpropertysymbols es6/object/is';
+'require es6/object/assign';
+'require es6/object/getownpropertysymbols';
+'require es6/object/is';
 'require es6/object/setprototypeof';

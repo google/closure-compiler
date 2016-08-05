@@ -2663,27 +2663,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
          node != null && node.isExprResult() && node.getFirstChild().isString();
          node = ast.getFirstChild()) {
       String directive = node.getFirstChild().getString();
-      List<String> words = Splitter.on(' ').splitToList(directive);
+      List<String> words = Splitter.on(' ').limit(2).splitToList(directive);
       switch (words.get(0)) {
         case "use":
           // 'use strict' is ignored (and deleted).
           break;
         case "require":
-          // 'require lib1 lib2'; pulls in the named libraries before this one.
-          for (String dependency : words.subList(1, words.size())) {
-            ensureLibraryInjected(dependency, force);
-          }
+          // 'require lib'; pulls in the named library before this one.
+          ensureLibraryInjected(words.get(1), force);
           break;
         case "declare":
-          // 'declare name1 name2'; adds the names to the externs (with no type information).
+          // 'declare name'; adds the name to the externs (with no type information).
           // Note that we could simply add the entire externs library, but that leads to
           // potentially-surprising behavior when the externs that are present depend on
           // whether or not a polyfill is used.
-          for (String extern : words.subList(1, words.size())) {
-            getSynthesizedExternsInputAtEnd()
-                .getAstRoot(this)
-                .addChildToBack(IR.var(IR.name(extern)));
-          }
+          getSynthesizedExternsInputAtEnd()
+              .getAstRoot(this)
+              .addChildToBack(IR.var(IR.name(words.get(1))));
           break;
         default:
           throw new RuntimeException("Bad directive: " + directive);

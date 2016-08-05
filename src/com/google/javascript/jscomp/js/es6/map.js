@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-'require es6/symbol es6/util/makeiterator es6/weakmap util/owns util/polyfill';
+'require es6/symbol';
+'require es6/util/makeiterator';
+'require es6/weakmap';
+'require util/owns';
+'require util/polyfill';
 
 /**
  * Whether to skip the conformance check and simply use the polyfill always.
@@ -32,7 +36,6 @@ $jscomp.polyfill('Map', function(NativeMap) {
       return false;
     }
     // Some implementations don't support constructor arguments.
-    /** @preserveTry */
     try {
       NativeMap = /** @type {function(new: Map, !Iterator=)} */ (NativeMap);
       var key = Object.seal({x: 4});

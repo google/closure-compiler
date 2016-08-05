@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require util/polyfill es6/math/log1p';
+'require util/polyfill';
+'require es6/math/log1p';
 
 $jscomp.polyfill('Math.atanh', function(orig) {
   if (orig) return orig;

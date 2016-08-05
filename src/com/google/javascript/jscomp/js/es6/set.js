@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-'require es6/symbol es6/map util/polyfill';
+'require es6/symbol';
+'require es6/map';
+'require util/polyfill';
 
 /**
  * Whether to skip the conformance check and simply use the polyfill always.

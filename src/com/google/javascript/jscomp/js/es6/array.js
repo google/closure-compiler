@@ -17,6 +17,12 @@
 /**
  * @fileoverview Brings in all ES6 Array polyfills.
  */
-'require es6/array/copywithin es6/array/entries es6/array/fill';
-'require es6/array/find es6/array/findindex es6/array/from';
-'require es6/array/keys es6/array/of es6/array/values';
+'require es6/array/copywithin';
+'require es6/array/entries';
+'require es6/array/fill';
+'require es6/array/find';
+'require es6/array/findindex';
+'require es6/array/from';
+'require es6/array/keys';
+'require es6/array/of';
+'require es6/array/values';

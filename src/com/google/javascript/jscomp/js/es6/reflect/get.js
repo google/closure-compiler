@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require util/finddescriptor util/polyfill';
+'require util/finddescriptor';
+'require util/polyfill';
 
 
 $jscomp.polyfill('Reflect.get', function(orig) {

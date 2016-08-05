@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require util/findinternal util/polyfill';
+'require util/findinternal';
+'require util/polyfill';
 
 $jscomp.polyfill('Array.prototype.find', function(orig) {
   if (orig) return orig;

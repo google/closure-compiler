@@ -17,9 +17,16 @@
 /**
  * @fileoverview Rolls together all ES6 Reflect polyfills.
  */
-'require es6/reflect/apply es6/reflect/construct es6/reflect/defineproperty';
-'require es6/reflect/deleteproperty es6/reflect/get';
-'require es6/reflect/getownpropertydescriptor es6/reflect/getprototypeof';
-'require es6/reflect/has es6/reflect/isextensible es6/reflect/ownkeys';
-'require es6/reflect/preventextensions es6/reflect/set';
+'require es6/reflect/apply';
+'require es6/reflect/construct';
+'require es6/reflect/defineproperty';
+'require es6/reflect/deleteproperty';
+'require es6/reflect/get';
+'require es6/reflect/getownpropertydescriptor';
+'require es6/reflect/getprototypeof';
+'require es6/reflect/has';
+'require es6/reflect/isextensible';
+'require es6/reflect/ownkeys';
+'require es6/reflect/preventextensions';
+'require es6/reflect/set';
 'require es6/reflect/setprototypeof';

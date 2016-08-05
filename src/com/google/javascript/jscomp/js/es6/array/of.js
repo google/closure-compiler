@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require es6/array/from util/polyfill';
+'require es6/array/from';
+'require util/polyfill';
 
 $jscomp.polyfill('Array.of', function(orig) {
   if (orig) return orig;

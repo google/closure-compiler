@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-'require es6/number/constants es6/number/isinteger util/polyfill';
+'require es6/number/constants';
+'require es6/number/isinteger';
+'require util/polyfill';
 
 $jscomp.polyfill('Number.isSafeInteger', function(orig) {
   if (orig) return orig;

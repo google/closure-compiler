@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-'require es6/reflect/isextensible util/finddescriptor util/polyfill';
+'require es6/reflect/isextensible';
+'require util/finddescriptor';
+'require util/polyfill';
 
 
 $jscomp.polyfill('Reflect.set', function(orig) {

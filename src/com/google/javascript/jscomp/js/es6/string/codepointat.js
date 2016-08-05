@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require util/checkstringargs util/polyfill';
+'require util/checkstringargs';
+'require util/polyfill';
 
 $jscomp.polyfill('String.prototype.codePointAt', function(orig) {
   if (orig) return orig;

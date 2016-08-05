@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require util/polyfill es6/object/getownpropertysymbols';
+'require util/polyfill';
+'require es6/object/getownpropertysymbols';
 
 
 $jscomp.polyfill('Reflect.ownKeys', function(orig) {

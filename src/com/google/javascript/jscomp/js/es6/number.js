@@ -17,5 +17,8 @@
 /**
  * @fileoverview Brings in all ES6 Number polyfills.
  */
-'require es6/number/constants es6/number/isfinite es6/number/isinteger';
-'require es6/number/isnan es6/number/issafeinteger';
+'require es6/number/constants';
+'require es6/number/isfinite';
+'require es6/number/isinteger';
+'require es6/number/isnan';
+'require es6/number/issafeinteger';

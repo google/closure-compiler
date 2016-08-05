@@ -34,7 +34,6 @@ $jscomp.polyfill('Reflect.setPrototypeOf', function(orig) {
    * @return {boolean} Whether the prototype was successfully set.
    */
   var polyfill = function(target, proto) {
-    /** @preserveTry */
     try {
       target.__proto__ = proto;
       return target.__proto__ === proto;

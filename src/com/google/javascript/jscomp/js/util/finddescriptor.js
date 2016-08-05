@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require es6/reflect/getownpropertydescriptor es6/reflect/getprototypeof';
+'require es6/reflect/getownpropertydescriptor';
+'require es6/reflect/getprototypeof';
 
 
 /**

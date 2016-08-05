@@ -17,7 +17,19 @@
 /**
  * @fileoverview Brings in all ES6 Math polyfills.
  */
-'require es6/math/acosh es6/math/asinh es6/math/atanh es6/math/cbrt';
-'require es6/math/clz32 es6/math/cosh es6/math/exp1m es6/math/hypot';
-'require es6/math/imul es6/math/log10 es6/math/log1p es6/math/log2';
-'require es6/math/sign es6/math/sinh es6/math/tanh es6/math/trunc';
+'require es6/math/acosh';
+'require es6/math/asinh';
+'require es6/math/atanh';
+'require es6/math/cbrt';
+'require es6/math/clz32';
+'require es6/math/cosh';
+'require es6/math/exp1m';
+'require es6/math/hypot';
+'require es6/math/imul';
+'require es6/math/log10';
+'require es6/math/log1p';
+'require es6/math/log2';
+'require es6/math/sign';
+'require es6/math/sinh';
+'require es6/math/tanh';
+'require es6/math/trunc';

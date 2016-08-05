@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require util/owns util/polyfill';
+'require util/owns';
+'require util/polyfill';
 
 
 $jscomp.polyfill('Reflect.deleteProperty', function(orig) {

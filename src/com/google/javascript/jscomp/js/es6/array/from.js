@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require es6/symbol util/polyfill';
+'require es6/symbol';
+'require util/polyfill';
 
 $jscomp.polyfill('Array.from', function(orig) {
   if (orig) return orig;

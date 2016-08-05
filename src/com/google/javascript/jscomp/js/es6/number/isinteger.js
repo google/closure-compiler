@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require es6/number/isfinite util/polyfill';
+'require es6/number/isfinite';
+'require util/polyfill';
 
 $jscomp.polyfill('Number.isInteger', function(orig) {
   if (orig) return orig;

@@ -17,6 +17,9 @@
 /**
  * @fileoverview Brings in all ES6 String polyfills.
  */
-'require es6/string/codepointat es6/string/endswith';
-'require es6/string/fromcodepoint es6/string/includes';
-'require es6/string/repeat es6/string/startswith';
+'require es6/string/codepointat';
+'require es6/string/endswith';
+'require es6/string/fromcodepoint';
+'require es6/string/includes';
+'require es6/string/repeat';
+'require es6/string/startswith';

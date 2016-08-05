@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-'require es6/util/iteratorfromarray util/polyfill';
+'require es6/util/iteratorfromarray';
+'require util/polyfill';
 
 $jscomp.polyfill('Array.prototype.values', function(orig) {
   if (orig) return orig;
