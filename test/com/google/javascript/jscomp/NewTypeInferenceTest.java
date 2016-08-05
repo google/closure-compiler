@@ -9304,8 +9304,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(LINE_JOINER.join(
         "/** @interface */ function Foo() {}",
         "/** @type {number} */ Foo.prototype.prop;",
-        "function f(/** !Foo */ x) { x['prop']; }"),
-        NewTypeInference.ILLEGAL_PROPERTY_ACCESS);
+        "function f(/** !Foo */ x) { x['prop']; }"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor @struct */ function Foo() {",
@@ -17548,5 +17547,75 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** number */ n = c;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testPropertyCheckingCompatibility() {
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  return x.length + 1;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  return x.prop + 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  return x.prop;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @constructor @implements {Foo} */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  return x.prop;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor @struct */",
+        "function Foo() {}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  return x.prop;",
+        "}"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {!Foo} */",
+        "var E = {",
+        "  A: new Foo,",
+        "  B: new Foo",
+        "};",
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !E */ x) {",
+        "  return x.prop;",
+        "}",
+        "f(E.A);"));
   }
 }

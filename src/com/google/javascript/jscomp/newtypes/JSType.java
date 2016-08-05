@@ -29,6 +29,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1407,6 +1408,16 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     }
     return foundObjWithProp
         ? makeType(NON_SCALAR_MASK, builder.build(), null, NO_ENUMS) : BOTTOM;
+  }
+
+  public boolean isPropDefinedOnSubtype(QualifiedName pname) {
+    Preconditions.checkArgument(pname.isIdentifier());
+    for (ObjectType obj : getObjs()) {
+      if (obj.isPropDefinedOnSubtype(pname)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override

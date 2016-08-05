@@ -364,7 +364,10 @@ final class NewTypeInference implements CompilerPass {
   // To avoid creating warning objects for disabled warnings
   private final boolean reportUnknownTypes;
   private final boolean reportNullDeref;
-  private final boolean inCompatibilityMode;
+
+  // Fields used in the compatibility mode
+  private final boolean joinTypesWhenInstantiatingGenerics;
+  private final boolean allowPropertyOnSubtypes;
 
   // Used only for development
   private static boolean showDebuggingPrints = false;
@@ -383,14 +386,16 @@ final class NewTypeInference implements CompilerPass {
         compiler.getOptions().enables(DiagnosticGroups.REPORT_UNKNOWN_TYPES);
     this.reportNullDeref = compiler.getOptions()
         .enables(DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS);
-    this.inCompatibilityMode =
-        compiler.getOptions().disables(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
     assertionFunctionsMap = new LinkedHashMap<>();
     for (AssertionFunctionSpec assertionFunction : convention.getAssertionFunctions()) {
       assertionFunctionsMap.put(
           assertionFunction.getFunctionName(),
           assertionFunction);
     }
+    boolean inCompatibilityMode =
+        compiler.getOptions().disables(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
+    this.joinTypesWhenInstantiatingGenerics = inCompatibilityMode;
+    this.allowPropertyOnSubtypes = inCompatibilityMode;
   }
 
   @VisibleForTesting // Only used from tests
@@ -2369,7 +2374,7 @@ final class NewTypeInference implements CompilerPass {
               types.toString(),
               funType.toString()));
         }
-        if (inCompatibilityMode) {
+        if (joinTypesWhenInstantiatingGenerics) {
           JSType joinedType = JSType.BOTTOM;
           for (JSType t : types) {
             joinedType = JSType.join(joinedType, t);
@@ -2812,13 +2817,20 @@ final class NewTypeInference implements CompilerPass {
       return false;
     }
 
-    if (recvType.isUnknown() || recvType.isTrueOrTruthy() || recvType.isLoose()) {
+    if (recvType.isUnknown() || recvType.isTrueOrTruthy() || recvType.isLoose()
+        || allowPropertyOnSubtypes && recvType.isInstanceofObject()) {
       if (symbolTable.isPropertyDefined(pname)) {
         return false;
       }
       warnings.add(JSError.make(
           propAccessNode, INEXISTENT_PROPERTY, pname, "any type in the program"));
       return true;
+    }
+
+    if (allowPropertyOnSubtypes && !recvType.isStruct()
+        && (recvType.isInstanceofObject()
+            || recvType.isPropDefinedOnSubtype(propQname))) {
+      return false;
     }
 
     // To avoid giant types in the error message, we use a heuristic:

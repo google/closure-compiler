@@ -1311,6 +1311,13 @@ final class ObjectType implements TypeWithProperties {
         this.objectKind);
   }
 
+  boolean isPropDefinedOnSubtype(QualifiedName pname) {
+    Preconditions.checkArgument(pname.isIdentifier());
+    NominalType nt = getNominalType();
+    Preconditions.checkState(!nt.isBuiltinObject());
+    return nt.isPropDefinedOnSubtype(pname);
+  }
+
   @Override
   public String toString() {
     return appendTo(new StringBuilder()).toString();

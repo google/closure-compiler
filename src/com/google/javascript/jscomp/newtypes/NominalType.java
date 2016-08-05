@@ -515,6 +515,11 @@ public final class NominalType {
     return null;
   }
 
+  boolean isPropDefinedOnSubtype(QualifiedName pname) {
+    Preconditions.checkArgument(pname.isIdentifier());
+    return this.rawType.isPropDefinedOnSubtype(this, pname);
+  }
+
   @Override
   public String toString() {
     return appendTo(new StringBuilder()).toString();

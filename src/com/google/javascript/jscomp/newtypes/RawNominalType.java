@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -55,6 +57,9 @@ public final class RawNominalType extends Namespace {
   // same raw type. You need to instantiate these fields to get the correct
   // type maps, eg, see NominalType#isSubtypeOf.
   private NominalType superclass = null;
+  // Each entry maps an instantiation of this raw type to its subtypes.
+  // We don't store subclasses for Object because there are too many.
+  private final Multimap<NominalType, RawNominalType> subtypes = LinkedHashMultimap.create();
   private ImmutableSet<NominalType> interfaces = null;
   private final Kind kind;
   // Used in GlobalTypeInfo to find type mismatches in the inheritance chain.
@@ -134,14 +139,14 @@ public final class RawNominalType extends Namespace {
       Node defSite, String name, ImmutableList<String> typeParameters) {
     // interfaces are struct by default
     return new RawNominalType(commonTypes, defSite,
-        name, typeParameters, Kind.INTERFACE, ObjectKind.STRUCT);
+        name, typeParameters, Kind.INTERFACE, ObjectKind.UNRESTRICTED);
   }
 
   public static RawNominalType makeStructuralInterface(JSTypes commonTypes,
       Node defSite, String name, ImmutableList<String> typeParameters) {
     // interfaces are struct by default
     return new RawNominalType(commonTypes, defSite,
-        name, typeParameters, Kind.RECORD, ObjectKind.STRUCT);
+        name, typeParameters, Kind.RECORD, ObjectKind.UNRESTRICTED);
   }
 
   private static boolean isBuiltinHelper(
@@ -220,7 +225,27 @@ public final class RawNominalType extends Namespace {
       return false;
     }
     this.superclass = superclass;
+    addSubtypeTo(superclass, this);
     return true;
+  }
+
+  private static void addSubtypeTo(NominalType supertype, RawNominalType subtype) {
+    RawNominalType rawSupertype = supertype.getRawNominalType();
+    Preconditions.checkState(!rawSupertype.isFinalized);
+    if (!rawSupertype.isBuiltinWithName("Object")) {
+      rawSupertype.subtypes.put(supertype, subtype);
+    }
+  }
+
+  boolean isPropDefinedOnSubtype(NominalType thisAsNominal, QualifiedName qname) {
+    Preconditions.checkArgument(qname.isIdentifier());
+    String pname = qname.getLeftmostName();
+    for (RawNominalType subtype : this.subtypes.get(thisAsNominal)) {
+      if (subtype.mayHaveProp(pname)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   boolean hasAncestorInterface(RawNominalType ancestor) {
@@ -276,6 +301,7 @@ public final class RawNominalType extends Namespace {
       if (interf.getRawNominalType().inheritsFromIObjectReflexive()) {
         this.objectKind = ObjectKind.UNRESTRICTED;
       }
+      addSubtypeTo(interf, this);
     }
     this.interfaces = interfaces;
     return true;
