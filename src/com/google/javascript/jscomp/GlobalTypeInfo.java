@@ -121,7 +121,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       DiagnosticType.warning(
           "JSC_NTI_COULD_NOT_INFER_CONST_TYPE",
           "All constants must be typed. The compiler could not infer the type "
-          + "of this constant. Please use an explicit type annotation. "
+          + "of constant {0}. Please use an explicit type annotation. "
           + "For more information, see:\n"
           + "https://github.com/google/closure-compiler/wiki/Using-NTI-(new-type-inference)#warnings-about-uninferred-constants");
 
@@ -1796,7 +1796,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     // This function is called only when the @const has no declared type.
     private JSType inferConstTypeFromRhs(Node constExpr) {
       if (constExpr.isFromExterns()) {
-        warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
+        warnings.add(JSError.make(
+            constExpr, COULD_NOT_INFER_CONST_TYPE,
+            getNodeNameForConstWarning(constExpr)));
         return null;
       }
       Node rhs = NodeUtil.getRValueOfLValue(constExpr);
@@ -1805,10 +1807,20 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           && constExpr.getParent().isVar()
           && !this.currentScope.isEscapedVar(constExpr.getString());
       if ((rhsType == null || rhsType.isUnknown()) && !isUnescapedVar) {
-        warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
+        warnings.add(JSError.make(
+            constExpr, COULD_NOT_INFER_CONST_TYPE,
+            getNodeNameForConstWarning(constExpr)));
         return null;
       }
       return rhsType;
+    }
+
+    private String getNodeNameForConstWarning(Node constExpr) {
+      Preconditions.checkArgument(
+          constExpr.isQualifiedName() || constExpr.isStringKey(),
+          constExpr);
+      return constExpr.isQualifiedName()
+          ? constExpr.getQualifiedName() : constExpr.getString();
     }
 
     private FunctionType simpleInferFunctionType(Node n) {
@@ -1830,7 +1842,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           return decl.getTypeOfSimpleDecl().getFunTypeIfSingletonObj();
         }
       }
-      return null;
+      JSType t = simpleInferExprType(n);
+      return t == null ? null : t.getFunTypeIfSingletonObj();
     }
 
     private JSType simpleInferCallNewType(Node n) {
@@ -1961,23 +1974,25 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (recv.isGetProp() && recv.getLastChild().getString().equals("prototype")) {
         return simpleInferPrototypeProperty(recv.getFirstChild(), pname);
       }
-      if (!recv.isQualifiedName()) {
-        return null;
-      }
-      QualifiedName recvQname = QualifiedName.fromNode(recv);
-      Declaration decl = this.currentScope.getDeclaration(recvQname, false);
       QualifiedName propQname = new QualifiedName(pname);
-      if (decl != null) {
-        EnumType et = decl.getEnum();
-        if (et != null && et.enumLiteralHasKey(pname)) {
-          return et.getEnumeratedType();
-        }
-        Namespace ns = decl.getNamespace();
-        if (ns != null) {
-          return simpleInferDeclaration(ns.getDeclaration(propQname));
+      if (recv.isQualifiedName()) {
+        QualifiedName recvQname = QualifiedName.fromNode(recv);
+        Declaration decl = this.currentScope.getDeclaration(recvQname, false);
+        if (decl != null) {
+          EnumType et = decl.getEnum();
+          if (et != null && et.enumLiteralHasKey(pname)) {
+            return et.getEnumeratedType();
+          }
+          Namespace ns = decl.getNamespace();
+          if (ns != null) {
+            return simpleInferDeclaration(ns.getDeclaration(propQname));
+          }
         }
       }
       JSType recvType = simpleInferExprType(recv);
+      if (recvType != null && recvType.isScalar()) {
+        recvType = recvType.autobox();
+      }
       if (recvType != null && recvType.mayHaveProp(propQname)) {
         return recvType.getProp(propQname);
       }

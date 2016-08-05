@@ -17529,4 +17529,24 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  prop: 'asdf'",
         "};"));
   }
+
+  public void testConstInferenceArbitraryReceivers() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var c = (new Number(123)).toString();",
+        "function f(x) {",
+        "  var /** number */ n = c;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testConstInferenceAutoboxScalars() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var c = (123).toString();",
+        "function f(x) {",
+        "  var /** number */ n = c;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
