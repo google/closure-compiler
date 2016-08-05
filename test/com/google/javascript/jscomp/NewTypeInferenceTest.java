@@ -17510,4 +17510,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @enum */ var myenum = { FOO: 123 };",
         "function f(x) { return x.FOO; }"));
   }
+
+  public void testInferConstTypeWeirdOrderDontCrash() {
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        " /** @const */ var h = g;",
+        " function g(/** number */ x) {}",
+        " return function() { h(); }",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+  }
 }

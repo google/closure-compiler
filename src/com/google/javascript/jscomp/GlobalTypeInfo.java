@@ -2024,8 +2024,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
       NTIScope funScope = (NTIScope) decl.getFunctionScope();
       if (funScope != null) {
-        return commonTypes.fromFunctionType(
-            funScope.getDeclaredFunctionType().toFunctionType());
+        DeclaredFunctionType dft = funScope.getDeclaredFunctionType();
+        if (dft == null) {
+          return null;
+        }
+        return commonTypes.fromFunctionType(dft.toFunctionType());
       }
       return null;
     }
