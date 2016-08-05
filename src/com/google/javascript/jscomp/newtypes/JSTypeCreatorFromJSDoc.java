@@ -923,8 +923,8 @@ public final class JSTypeCreatorFromJSDoc {
       ImmutableList<String> typeParameters,
       DeclaredTypeRegistry registry, FunctionTypeBuilder builder,
       boolean ignoreJsdoc /* for when the jsdoc is malformed */) {
-    JSDocInfo inlineRetJsdoc =
-        ignoreJsdoc ? null : funNode.getFirstChild().getJSDocInfo();
+    JSDocInfo inlineRetJsdoc = ignoreJsdoc || !funNode.isFunction()
+        ? null : funNode.getFirstChild().getJSDocInfo();
     JSTypeExpression retTypeExp = jsdoc == null ? null : jsdoc.getReturnType();
     if (parent.isSetterDef() && retTypeExp == null) {
       // inline returns for getters/setters are not parsed

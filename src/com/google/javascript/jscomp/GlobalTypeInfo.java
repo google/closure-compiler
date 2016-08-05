@@ -727,6 +727,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             visitWindowVar(nameNode);
           } else if (isCtorDefinedByCall(nameNode)) {
             visitNewCtorDefinedByCall(nameNode);
+          } else if (isCtorWithoutFunctionLiteral(nameNode)) {
+            visitNewCtorWithoutFunctionLiteral(nameNode);
           }
           if (!n.isFromExterns()
               && !this.currentScope.isDefinedLocally(varName, false)) {
@@ -757,6 +759,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
               expr = lhs;
               // fall through
             case GETPROP:
+              if (isCtorWithoutFunctionLiteral(expr)) {
+                visitNewCtorWithoutFunctionLiteral(expr);
+                return;
+              }
               if (isPrototypeProperty(expr)
                   || NodeUtil.referencesThis(expr)
                   || !expr.isQualifiedName()) {
@@ -1171,6 +1177,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       Node rhs = NodeUtil.getRValueOfLValue(qnameNode);
       maybeRecordNominalType(rhs, qnameNode, jsdoc, false);
     }
+
+    private void visitNewCtorWithoutFunctionLiteral(Node qnameNode) {
+      Preconditions.checkState(qnameNode.isName() || qnameNode.isGetProp());
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
+      maybeRecordNominalType(qnameNode, qnameNode, jsdoc, false);
+    }
   }
 
   private class ProcessScope extends AbstractShallowCallback {
@@ -1349,6 +1361,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (isCtorDefinedByCall(nameNode)) {
         computeFnDeclaredType(NodeUtil.getBestJSDocInfo(nameNode), name,
             nameNode.getFirstChild(), null, this.currentScope);
+        return;
+      }
+      if (isCtorWithoutFunctionLiteral(nameNode)) {
+        computeFnDeclaredType(NodeUtil.getBestJSDocInfo(nameNode), name,
+            nameNode, null, this.currentScope);
         return;
       }
       if (isDefinedLocally && this.currentScope.isNamespace(name)) {
@@ -1615,6 +1632,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             getProp.getNext(), null, this.currentScope);
         return;
       }
+      if (isCtorWithoutFunctionLiteral(getProp)) {
+        computeFnDeclaredType(
+            NodeUtil.getBestJSDocInfo(getProp),
+            getProp.getQualifiedName(),
+            getProp, null, this.currentScope);
+        return;
+      }
       // Named types have already been crawled in CollectNamedTypes
       if (isNamedType(getProp)) {
         return;
@@ -1729,6 +1753,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     private void visitOtherPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
       Preconditions.checkArgument(getProp.isQualifiedName());
+      if (isCtorWithoutFunctionLiteral(getProp)) {
+        computeFnDeclaredType(
+            NodeUtil.getBestJSDocInfo(getProp),
+            getProp.getQualifiedName(),
+            getProp, null, this.currentScope);
+        return;
+      }
       if (isAnnotatedAsConst(getProp)) {
         warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
       }
@@ -2117,7 +2148,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         JSDocInfo fnDoc, String functionName, Node declNode,
         RawNominalType ownerType, NTIScope parentScope) {
       Preconditions.checkArgument(
-          declNode.isFunction() || declNode.isGetProp() || declNode.isCall());
+          declNode.isFunction() || declNode.isQualifiedName() || declNode.isCall());
 
       // For an unannotated function, check if we can grab a type signature for
       // it from the surrounding code where it appears.
@@ -2129,12 +2160,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         }
       }
       // TODO(dimvar): warn if multiple jsdocs for a fun
-      RawNominalType ctorType =
-          !declNode.isGetProp() ? nominaltypesByNode.get(declNode) : null;
+      RawNominalType ctorType = nominaltypesByNode.get(declNode);
       FunctionAndSlotType result = typeParser.getFunctionType(
           fnDoc, functionName, declNode, ctorType, ownerType, parentScope);
       Node qnameNode;
-      if (declNode.isGetProp()) {
+      if (declNode.isQualifiedName()) {
         qnameNode = declNode;
       } else if (declNode.isFunction()) {
         qnameNode = NodeUtil.getNameNode(declNode);
@@ -2457,6 +2487,23 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
     Node rhs = NodeUtil.getRValueOfLValue(qnameNode);
     return jsdoc != null && jsdoc.isConstructor() && rhs != null && rhs.isCall();
+  }
+
+  private static boolean isCtorWithoutFunctionLiteral(Node qnameNode) {
+    if (!qnameNode.isFromExterns()) {
+      return false;
+    }
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
+    if (jsdoc == null || !jsdoc.isConstructor()) {
+      return false;
+    }
+    if (qnameNode.isName()) {
+      return qnameNode.getParent().isVar() && !qnameNode.hasChildren();
+    }
+    if (qnameNode.isGetProp()) {
+      return qnameNode.getParent().isExprResult();
+    }
+    return false;
   }
 
   // Utility class when analyzing property declarations

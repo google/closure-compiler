@@ -86,10 +86,7 @@ public final class RawNominalType extends Namespace {
       String name, ImmutableList<String> typeParameters, Kind kind, ObjectKind objectKind) {
     super(commonTypes, name, defSite);
     Preconditions.checkNotNull(objectKind);
-    Preconditions.checkState(
-        defSite == null || defSite.isFunction() || defSite.isCall(),
-        "Expected function or call but found %s",
-        defSite.getType());
+    Preconditions.checkState(isValidDefsite(defSite), "Invalid defsite %s", defSite);
     if (typeParameters == null) {
       typeParameters = ImmutableList.of();
     }
@@ -115,6 +112,26 @@ public final class RawNominalType extends Namespace {
     }
     this.wrappedAsJSType = JSType.fromObjectType(objInstance);
     this.wrappedAsNullableJSType = JSType.join(JSType.NULL, this.wrappedAsJSType);
+  }
+
+  private static boolean isValidDefsite(Node defSite) {
+    if (defSite == null) {
+      return false;
+    }
+    if (defSite.isFunction()) {
+      return true;
+    }
+    Node parent = defSite.getParent();
+    if (defSite.isCall()) {
+      return parent.isName() || parent.isAssign();
+    }
+    if (defSite.isName()) {
+      return parent.isVar() && !defSite.hasChildren();
+    }
+    if (defSite.isGetProp()) {
+      return parent.isExprResult();
+    }
+    return false;
   }
 
   public static RawNominalType makeUnrestrictedClass(JSTypes commonTypes,
@@ -558,8 +575,10 @@ public final class RawNominalType extends Namespace {
 
   @Override
   public void finalize() {
-    Preconditions.checkState(!this.isFinalized);
-    Preconditions.checkNotNull(this.ctorFn);
+    Preconditions.checkState(
+        !this.isFinalized, "Raw type not finalized: %s", this.defSite);
+    Preconditions.checkNotNull(
+        this.ctorFn, "Null constructor function for raw type: %s", this.defSite);
     if (this.interfaces == null) {
       this.interfaces = ImmutableSet.of();
     }

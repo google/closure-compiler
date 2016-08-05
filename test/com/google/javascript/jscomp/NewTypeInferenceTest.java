@@ -17618,4 +17618,31 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "f(E.A);"));
   }
+
+  public void testConstructorDeclWithoutFunctionLiteral() {
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "/** @constructor */ var Foo;",
+        "var x = new Foo;");
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/**",
+            " * @constructor",
+            " * @param {number} x",
+            " */",
+            "ns.Foo;"),
+        "var x = new ns.Foo('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // ns is not declared; don't crash
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "/** @constructor */ ns.Foo;",
+        "");
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */ var Foo;",
+        "var x = new Foo;"),
+        NewTypeInference.NOT_CALLABLE);
+  }
 }
