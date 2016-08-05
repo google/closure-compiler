@@ -43,6 +43,7 @@ $jscomp.polyfill('WeakSet', function(NativeWeakSet) {
 
   /**
    * @constructor
+   * @extends {WeakSet<TYPE>}
    * @template TYPE
    * @param {!Iterator<TYPE>|!Array<TYPE>|null=} opt_iterable
    */
@@ -62,27 +63,18 @@ $jscomp.polyfill('WeakSet', function(NativeWeakSet) {
     }
   };
 
-  /**
-   * @param {TYPE} elem
-   * @return {!PolyfillWeakSet<TYPE>}
-   */
+  /** @override */
   PolyfillWeakSet.prototype.add = function(elem) {
     this.map_.set(elem, true);
     return this;
   };
 
-  /**
-   * @param {TYPE} elem
-   * @return {boolean}
-   */
+  /** @override */
   PolyfillWeakSet.prototype.has = function(elem) {
     return this.map_.has(elem);
   };
 
-  /**
-   * @param {TYPE} elem
-   * @return {boolean}
-   */
+  /** @override */
   PolyfillWeakSet.prototype.delete = function(elem) {
     return this.map_.delete(elem);
   };

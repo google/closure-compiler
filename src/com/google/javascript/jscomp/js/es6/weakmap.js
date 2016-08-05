@@ -95,6 +95,7 @@ $jscomp.polyfill('WeakMap', function(NativeWeakMap) {
    * it's not completely secure (particularly in IE8).
    *
    * @constructor
+   * @extends {WeakMap<KEY, VALUE>}
    * @template KEY, VALUE
    * @param {!Iterator<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>|null=}
    *     opt_iterable Optional initial data.
@@ -115,11 +116,7 @@ $jscomp.polyfill('WeakMap', function(NativeWeakMap) {
     }
   };
 
-  /**
-   * @param {KEY} key
-   * @param {VALUE} value
-   * @return {!PolyfillWeakMap}
-   */
+  /** @override */
   PolyfillWeakMap.prototype.set = function(key, value) {
     insert(key);
     if (!$jscomp.owns(key, prop)) {
@@ -136,26 +133,17 @@ $jscomp.polyfill('WeakMap', function(NativeWeakMap) {
     return this;
   };
 
-  /**
-   * @param {KEY} key
-   * @return {VALUE}
-   */
+  /** @override */
   PolyfillWeakMap.prototype.get = function(key) {
     return $jscomp.owns(key, prop) ? key[prop][this.id_] : undefined;
   };
 
-  /**
-   * @param {KEY} key
-   * @return {boolean}
-   */
+  /** @override */
   PolyfillWeakMap.prototype.has = function(key) {
     return $jscomp.owns(key, prop) && $jscomp.owns(key[prop], this.id_);
   };
 
-  /**
-   * @param {KEY} key
-   * @return {boolean}
-   */
+  /** @override */
   PolyfillWeakMap.prototype.delete = function(key) {
     if (!$jscomp.owns(key, prop) ||
         !$jscomp.owns(key[prop], this.id_)) {

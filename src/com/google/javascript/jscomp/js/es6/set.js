@@ -69,6 +69,7 @@ $jscomp.polyfill('Set', function(NativeSet) {
    * Polyfill for the global Map data type.
    * @constructor
    * @struct
+   * @extends {Set<VALUE>}
    * @implements {Iterable<VALUE>}
    * @template KEY, VALUE
    * @param {!Iterable<VALUE>|!Array<VALUE>|null=} opt_iterable
@@ -93,10 +94,7 @@ $jscomp.polyfill('Set', function(NativeSet) {
   };
 
 
-  /**
-   * Adds or updates a value in the set.
-   * @param {VALUE} value
-   */
+  /** @override */
   PolyfillSet.prototype.add = function(value) {
     this.map_.set(value, value);
     this.size = this.map_.size;
@@ -104,11 +102,7 @@ $jscomp.polyfill('Set', function(NativeSet) {
   };
 
 
-  /**
-   * Deletes an element from the set.
-   * @param {VALUE} value
-   * @return {boolean}
-   */
+  /** @override */
   PolyfillSet.prototype.delete = function(value) {
     var result = this.map_.delete(value);
     this.size = this.map_.size;
@@ -116,56 +110,36 @@ $jscomp.polyfill('Set', function(NativeSet) {
   };
 
 
-  /** Clears the set. */
+  /** @override */
   PolyfillSet.prototype.clear = function() {
     this.map_.clear();
     this.size = 0;
   };
 
 
-  /**
-   * Checks whether the given value is in the set.
-   * @param {VALUE} value
-   * @return {boolean} True if the set contains the given value.
-   */
+  /** @override */
   PolyfillSet.prototype.has = function(value) {
     return this.map_.has(value);
   };
 
 
-  /**
-   * Returns an iterator of entries.
-   * @return {!IteratorIterable<!Array<VALUE>>}
-   */
+  /** @override */
   PolyfillSet.prototype.entries = function() {
     return this.map_.entries();
   };
 
 
-  /**
-   * Returns an iterator of entries.
-   * @return {!IteratorIterable<VALUE>}
-   */
-  PolyfillSet.prototype[Symbol.iterator] = function() {
-    return this.map_.values();
-  };
-
-
-  /**
-   * Returns an iterator of values.
-   * @return {!IteratorIterable<VALUE>}
-   */
+  /** @override */
   PolyfillSet.prototype.values = function() {
     return this.map_.values();
   };
 
 
-  /**
-   * Iterates over the set, running the given function on each element.
-   * @param {function(this: THIS, VALUE, VALUE, !PolyfillSet<VALUE>)} callback
-   * @param {THIS=} opt_thisArg
-   * @template THIS
-   */
+  /** @type {?} */ (PolyfillSet.prototype)[Symbol.iterator] =
+      PolyfillSet.prototype.values;
+
+
+  /** @override */
   PolyfillSet.prototype.forEach = function(callback, opt_thisArg) {
     var set = this;
     this.map_.forEach(function(value) {

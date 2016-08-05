@@ -102,6 +102,7 @@ $jscomp.polyfill('Map', function(NativeMap) {
    * Polyfill for the global Map data type.
    * @constructor
    * @struct
+   * @extends {Map<KEY, VALUE>}
    * @implements {Iterable<!Array<KEY|VALUE>>}
    * @template KEY, VALUE
    * @param {!Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>|null=}
@@ -133,11 +134,7 @@ $jscomp.polyfill('Map', function(NativeMap) {
   };
 
 
-  /**
-   * Adds or updates a value in the map.
-   * @param {KEY} key
-   * @param {VALUE} value
-   */
+  /** @override */
   PolyfillMap.prototype.set = function(key, value) {
     var r = maybeGetEntry(this, key);
     if (!r.list) {
@@ -162,11 +159,7 @@ $jscomp.polyfill('Map', function(NativeMap) {
   };
 
 
-  /**
-   * Deletes an element from the map.
-   * @param {KEY} key
-   * @return {boolean} Whether the entry was deleted.
-   */
+  /** @override */
   PolyfillMap.prototype.delete = function(key) {
     var r = maybeGetEntry(this, key);
     if (r.entry && r.list) {
@@ -182,9 +175,7 @@ $jscomp.polyfill('Map', function(NativeMap) {
   };
 
 
-  /**
-   * Clears the map.
-   */
+  /** @override */
   PolyfillMap.prototype.clear = function() {
     this.data_ = {};
     this.head_ = this.head_.previous = createHead();
@@ -192,21 +183,13 @@ $jscomp.polyfill('Map', function(NativeMap) {
   };
 
 
-  /**
-   * Checks whether the given key is in the map.
-   * @param {KEY} key
-   * @return {boolean} True if the map contains the given key.
-   */
+  /** @override */
   PolyfillMap.prototype.has = function(key) {
     return !!(maybeGetEntry(this, key).entry);
   };
 
 
-  /**
-   * Retrieves an element from the map, by key.
-   * @param {KEY} key
-   * @return {VALUE}
-   */
+  /** @override */
   PolyfillMap.prototype.get = function(key) {
     var entry = maybeGetEntry(this, key).entry;
     // NOTE: this cast is a lie, but so is the extern.
@@ -214,41 +197,26 @@ $jscomp.polyfill('Map', function(NativeMap) {
   };
 
 
-  /**
-   * Returns an iterator of entries.
-   * @return {!IteratorIterable<!Array<KEY|VALUE>>}
-   */
+  /** @override */
   PolyfillMap.prototype.entries = function() {
     return makeIterator(
         this, function(entry) { return [entry.key, entry.value]; });
   };
 
 
-  /**
-   * Returns an iterator of keys.
-   * @return {!IteratorIterable<KEY>}
-   */
+  /** @override */
   PolyfillMap.prototype.keys = function() {
     return makeIterator(this, function(entry) { return entry.key; });
   };
 
 
-  /**
-   * Returns an iterator of values.
-   * @return {!IteratorIterable<VALUE>}
-   */
+  /** @override */
   PolyfillMap.prototype.values = function() {
     return makeIterator(this, function(entry) { return entry.value; });
   };
 
 
-  /**
-   * Iterates over the map, running the given function on each element.
-   * @param {function(this: THIS, VALUE, KEY, !PolyfillMap<KEY, VALUE>)}
-   *     callback
-   * @param {THIS=} opt_thisArg
-   * @template THIS
-   */
+  /** @override */
   PolyfillMap.prototype.forEach = function(callback, opt_thisArg) {
     var iter = this.entries();
     var item;
@@ -263,11 +231,8 @@ $jscomp.polyfill('Map', function(NativeMap) {
   };
 
 
-  /**
-   * Returns an iterator of entries.
-   * @return {!IteratorIterable<!Array<KEY|VALUE>>}
-   */
-  PolyfillMap.prototype[Symbol.iterator] = PolyfillMap.prototype.entries;
+  /** @type {?} */ (PolyfillMap.prototype)[Symbol.iterator] =
+      PolyfillMap.prototype.entries;
 
 
   /**
