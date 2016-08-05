@@ -58,6 +58,10 @@ public interface TypeI {
 
   boolean isNoResolvedType();
 
+  // Hacky method to abstract away corner case handling of the way OTI
+  // represents unresolved types.
+  boolean isUnresolvedOrResolvedUnknown();
+
   boolean isConstructor();
 
   boolean isEquivalentTo(TypeI type);

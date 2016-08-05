@@ -1545,6 +1545,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public boolean isUnresolvedOrResolvedUnknown() {
+    return isUnknown();
+  }
+
+  @Override
   public boolean isUnionType() {
     throw new UnsupportedOperationException("isUnionType not implemented yet");
   }

@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.TypeI;
-
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
@@ -161,6 +160,11 @@ public abstract class JSType implements TypeI, Serializable {
   @Override
   public boolean isNoResolvedType() {
     return false;
+  }
+
+  @Override
+  public final boolean isUnresolvedOrResolvedUnknown() {
+    return isNoResolvedType() || isNamedType() && isUnknownType();
   }
 
   public boolean isNoObjectType() {

@@ -23,9 +23,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
-import com.google.javascript.rhino.jstype.JSType;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -76,7 +75,7 @@ public final class TemplateAstMatcher {
   private boolean isLooseMatch = false;
 
   /**
-   * The strategy to use when matching the {@code JSType} of nodes.
+   * The strategy to use when matching the {@code TypeI} of nodes.
    */
   private final TypeMatchingStrategy typeMatchingStrategy;
 
@@ -187,7 +186,7 @@ public final class TemplateAstMatcher {
   private void prepTemplatePlaceholders(Node fn) {
     final List<String> locals = templateLocals;
     final List<String> params = templateParams;
-    final Map<String, JSType> paramTypes = new HashMap<>();
+    final Map<String, TypeI> paramTypes = new HashMap<>();
 
     // drop the function name so it isn't include in the name maps
     String fnName = fn.getFirstChild().getString();
@@ -206,7 +205,7 @@ public final class TemplateAstMatcher {
       Preconditions.checkNotNull(expression,
           "Missing JSDoc for parameter %s of template function %s",
           name, fnName);
-      JSType type = expression.evaluate(null, typeRegistry);
+      TypeI type = typeRegistry.evaluateTypeExpressionInGlobalScope(expression);
       Preconditions.checkNotNull(type);
       params.add(name);
       paramTypes.put(name, type);
@@ -224,7 +223,7 @@ public final class TemplateAstMatcher {
           }
 
           if (params.contains(name)) {
-            JSType type = paramTypes.get(name);
+            TypeI type = paramTypes.get(name);
             replaceNodeInPlace(n,
                 createTemplateParameterNode(params.indexOf(name), type));
           } else if (locals.contains(name)) {
@@ -270,12 +269,12 @@ public final class TemplateAstMatcher {
     return (n.getType() == TEMPLATE_TYPE_PARAM);
   }
 
-  private Node createTemplateParameterNode(int index, JSType type) {
+  private Node createTemplateParameterNode(int index, TypeI type) {
     Preconditions.checkState(index >= 0);
     Preconditions.checkNotNull(type);
     Node n = Node.newNumber(index);
     n.setType(TEMPLATE_TYPE_PARAM);
-    n.setJSType(type);
+    n.setTypeI(type);
     return n;
   }
 
@@ -376,7 +375,7 @@ public final class TemplateAstMatcher {
 
       // Only the types need to match for the template parameters, which allows
       // the template function to express arbitrary expressions.
-      JSType templateType = template.getJSType();
+      TypeI templateType = template.getTypeI();
 
       Preconditions.checkNotNull(templateType, "null template parameter type.");
 
@@ -387,7 +386,7 @@ public final class TemplateAstMatcher {
         return false;
       }
 
-      MatchResult matchResult = typeMatchingStrategy.match(templateType, ast.getJSType());
+      MatchResult matchResult = typeMatchingStrategy.match(templateType, ast.getTypeI());
       isLooseMatch = matchResult.isLooseMatch();
       boolean isMatch = matchResult.isMatch();
       if (isMatch && previousMatch == null) {
@@ -437,18 +436,17 @@ public final class TemplateAstMatcher {
     return true;
   }
 
-  private boolean isUnresolvedType(JSType type) {
+  private boolean isUnresolvedType(TypeI type) {
     // TODO(mknichel): When types are used in templates that do not appear in the
     // compilation unit being processed, the template type will be a named type
     // that resolves to unknown instead of being a no resolved type. This should
     // be fixed in the compiler such that it resolves to a no resolved type, and
     // then this code can be simplified to use that.
-    if (type.isNoResolvedType()
-        || (type.isNamedType() && type.isUnknownType())) {
+    if (type.isUnresolvedOrResolvedUnknown()) {
       return true;
     }
     if (type.isUnionType()) {
-      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
+      for (TypeI alternate : type.getUnionMembers()) {
         if (isUnresolvedType(alternate)) {
           return true;
         }
