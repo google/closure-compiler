@@ -32,6 +32,7 @@ function EventSource(url, opt_eventSourceInitDict) {}
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 EventSource.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
@@ -39,11 +40,15 @@ EventSource.prototype.addEventListener = function(
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 EventSource.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @override
+ * @return {boolean}
+ */
 EventSource.prototype.dispatchEvent = function(evt) {};
 
 /**
@@ -79,14 +84,22 @@ EventSource.prototype.CLOSED = 2;
  */
 EventSource.prototype.readyState;
 
-/** @type {?function(!Event)} */
+/**
+ * @type {?function(!Event)}
+ */
 EventSource.prototype.onopen = function(e) {};
 
-/** @type {?function(!MessageEvent<*>)} */
+/**
+ * @type {?function(!MessageEvent<*>)}
+ */
 EventSource.prototype.onmessage = function(e) {};
 
-/** @type {?function(!Event)} */
+/**
+ * @type {?function(!Event)}
+ */
 EventSource.prototype.onerror = function(e) {};
 
-/** @type {function()} */
+/**
+ * @type {function()}
+ */
 EventSource.prototype.close = function() {};

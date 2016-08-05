@@ -120,16 +120,21 @@ function Node() {}
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 Node.prototype.addEventListener = function(type, listener, opt_useCapture) {};
 
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 Node.prototype.removeEventListener = function(type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @override
+ * @return {boolean}
+ */
 Node.prototype.dispatchEvent = function(evt) {};
 
 /**
@@ -842,17 +847,22 @@ Window.prototype.Window;
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 Window.prototype.addEventListener = function(type, listener, opt_useCapture) {};
 
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 Window.prototype.removeEventListener = function(type, listener, opt_useCapture)
     {};
 
-/** @override */
+/**
+ * @override
+ * @return {boolean}
+ */
 Window.prototype.dispatchEvent = function(evt) {};
 
 /** @type {?function (Event)} */ Window.prototype.onabort;

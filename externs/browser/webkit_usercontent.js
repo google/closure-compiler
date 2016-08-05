@@ -44,6 +44,7 @@ function UserMessageHandler() {}
 
 /**
  * @param {*} message
+ * @return {undefined}
  */
 UserMessageHandler.prototype.postMessage = function(message) {};
 

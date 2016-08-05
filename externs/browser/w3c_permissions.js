@@ -88,6 +88,7 @@ PermissionStatus.prototype.onchange;
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 PermissionStatus.prototype.addEventListener = function(type,
                                                        listener,
@@ -96,11 +97,15 @@ PermissionStatus.prototype.addEventListener = function(type,
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 PermissionStatus.prototype.removeEventListener = function(type,
                                                           listener,
                                                           opt_useCapture) {};
-/** @override */
+/**
+ * @override
+ * @return {boolean}
+ */
 PermissionStatus.prototype.dispatchEvent = function(evt) {};
 
 

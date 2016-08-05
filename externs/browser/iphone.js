@@ -73,6 +73,7 @@ TouchEvent.prototype.rotation;
  * @param {TouchList} changedTouches
  * @param {number} scale
  * @param {number} rotation
+ * @return {undefined}
  */
 TouchEvent.prototype.initTouchEvent = function(type, canBubble, cancelable,
     view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
@@ -135,6 +136,7 @@ GestureEvent.prototype.target;
  * @param {EventTarget} target
  * @param {number} scale
  * @param {number} rotation
+ * @return {undefined}
  */
 GestureEvent.prototype.initGestureEvent = function(type, canBubble, cancelable,
     view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,

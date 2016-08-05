@@ -181,6 +181,7 @@ function CustomEvent(type, opt_eventInitDict) {}
  * @param {boolean} bubbles
  * @param {boolean} cancelable
  * @param {*} detail
+ * @return {undefined}
  */
 CustomEvent.prototype.initCustomEvent = function(
     eventType, bubbles, cancelable, detail) {};

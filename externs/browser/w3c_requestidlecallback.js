@@ -45,6 +45,7 @@ function requestIdleCallback(callback, opt_options) {}
  * Cancels a callback scheduled to run when the browser is idle.
  * @param {number} handle The handle returned by {@code requestIdleCallback} for
  *     the scheduled callback to cancel.
+ * @return {undefined}
  */
 function cancelIdleCallback(handle) {}
 

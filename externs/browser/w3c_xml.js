@@ -69,12 +69,14 @@ function XPathEvaluator() {}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathEvaluator-createExpression
  * @throws XPathException
  * @throws DOMException
+ * @return {undefined}
  */
 XPathEvaluator.prototype.createExpression = function(expr, opt_resolver) {};
 
 /**
  * @param {Node} nodeResolver
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathEvaluator-createNSResolver
+ * @return {undefined}
  */
 XPathEvaluator.prototype.createNSResolver = function(nodeResolver) {};
 
@@ -297,6 +299,7 @@ function XMLHttpRequest() {}
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 XMLHttpRequest.prototype.addEventListener =
     function(type, listener, opt_useCapture) {};
@@ -304,11 +307,15 @@ XMLHttpRequest.prototype.addEventListener =
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 XMLHttpRequest.prototype.removeEventListener =
     function(type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @override
+ * @return {boolean}
+ */
 XMLHttpRequest.prototype.dispatchEvent = function(evt) {};
 
 /**
@@ -421,5 +428,6 @@ function FormData(opt_form) {}
  * @param {string} name
  * @param {Blob|string} value
  * @param {string=} opt_filename
+ * @return {undefined}
  */
 FormData.prototype.append = function(name, value, opt_filename) {};

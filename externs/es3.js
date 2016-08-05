@@ -324,6 +324,7 @@ Object.prototype.constructor = function() {};
  * @param {Function} fun
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineGetter
+ * @return {undefined}
  */
 Object.prototype.__defineGetter__ = function(sprop, fun) {};
 
@@ -336,6 +337,7 @@ Object.prototype.__defineGetter__ = function(sprop, fun) {};
  * @param {Function} fun
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineSetter
+ * @return {undefined}
  */
 Object.prototype.__defineSetter__ = function(sprop, fun) {};
 
@@ -457,6 +459,7 @@ Object.prototype.toString = function() {};
  * Mozilla-only.
  * @param {string} prop The name of a property of the object.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/unwatch
+ * @return {undefined}
  */
 Object.prototype.unwatch = function(prop) {};
 
@@ -474,6 +477,7 @@ Object.prototype.valueOf = function() {};
  * @param {string} prop The name of a property of the object.
  * @param {Function} handler A function to call.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/watch
+ * @return {undefined}
  */
 Object.prototype.watch = function(prop, handler) {};
 
@@ -660,6 +664,8 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
  *     defines the sort order.
  * @this {IArrayLike<T>}
  * @template T
+ * @modifies {this}
+ * @return {!Array<T>}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
  */
 Array.prototype.sort = function(opt_compareFunction) {};
@@ -765,6 +771,7 @@ Array.prototype.filter = function(callback, opt_thisobj) {};
  * @this {IArrayLike<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+ * @return {undefined}
  */
 Array.prototype.forEach = function(callback, opt_thisobj) {};
 
@@ -855,6 +862,7 @@ Array.filter = function(arr, callback, opt_context) {};
  * @param {?function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
  * @template T,S
+ * @return {undefined}
  */
 Array.forEach = function(arr, callback, opt_context) {};
 
@@ -1409,6 +1417,7 @@ Date.prototype.getUTCMilliseconds = function() {};
  * @param {number} dayValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setDate
+ * @return {number}
  */
 Date.prototype.setDate = function(dayValue) {};
 
@@ -1419,6 +1428,7 @@ Date.prototype.setDate = function(dayValue) {};
  * @param {number=} opt_dayValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setMonth
+ * @return {number}
  */
 Date.prototype.setMonth = function(monthValue, opt_dayValue) {};
 
@@ -1430,6 +1440,7 @@ Date.prototype.setMonth = function(monthValue, opt_dayValue) {};
  * @param {number=} opt_dayValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setFullYear
+ * @return {number}
  */
 Date.prototype.setFullYear =
     function(yearValue, opt_monthValue, opt_dayValue) {};
@@ -1441,6 +1452,7 @@ Date.prototype.setFullYear =
  * @deprecated
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setYear
+ * @return {number}
  */
 Date.prototype.setYear = function(yearValue) {};
 
@@ -1453,6 +1465,7 @@ Date.prototype.setYear = function(yearValue) {};
  * @param {number=} opt_msValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setHours
+ * @return {number}
  */
 Date.prototype.setHours = function(hoursValue, opt_minutesValue,
                                    opt_secondsValue, opt_msValue) {};
@@ -1465,6 +1478,7 @@ Date.prototype.setHours = function(hoursValue, opt_minutesValue,
  * @param {number=} opt_msValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setMinutes
+ * @return {number}
  */
 Date.prototype.setMinutes =
     function(minutesValue, opt_secondsValue, opt_msValue) {};
@@ -1476,6 +1490,7 @@ Date.prototype.setMinutes =
  * @param {number=} opt_msValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setSeconds
+ * @return {number}
  */
 Date.prototype.setSeconds = function(secondsValue, opt_msValue) {};
 
@@ -1485,6 +1500,7 @@ Date.prototype.setSeconds = function(secondsValue, opt_msValue) {};
  * @param {number} millisecondsValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setMilliseconds
+ * @return {number}
  */
 Date.prototype.setMilliseconds = function(millisecondsValue) {};
 
@@ -1495,6 +1511,7 @@ Date.prototype.setMilliseconds = function(millisecondsValue) {};
  * @param {number} timeValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setTime
+ * @return {number}
  */
 Date.prototype.setTime = function(timeValue) {};
 
@@ -1504,6 +1521,7 @@ Date.prototype.setTime = function(timeValue) {};
  * @param {number} dayValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCDate
+ * @return {number}
  */
 Date.prototype.setUTCDate = function(dayValue) {};
 
@@ -1514,6 +1532,7 @@ Date.prototype.setUTCDate = function(dayValue) {};
  * @param {number=} opt_dayValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCMonth
+ * @return {number}
  */
 Date.prototype.setUTCMonth = function(monthValue, opt_dayValue) {};
 
@@ -1525,6 +1544,7 @@ Date.prototype.setUTCMonth = function(monthValue, opt_dayValue) {};
  * @param {number=} opt_dayValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCFullYear
+ * @return {number}
  */
 Date.prototype.setUTCFullYear = function(yearValue, opt_monthValue,
                                          opt_dayValue) {};
@@ -1538,6 +1558,7 @@ Date.prototype.setUTCFullYear = function(yearValue, opt_monthValue,
  * @param {number=} opt_msValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCHours
+ * @return {number}
  */
 Date.prototype.setUTCHours = function(hoursValue, opt_minutesValue,
                                       opt_secondsValue, opt_msValue) {};
@@ -1550,6 +1571,7 @@ Date.prototype.setUTCHours = function(hoursValue, opt_minutesValue,
  * @param {number=} opt_msValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCMinutes
+ * @return {number}
  */
 Date.prototype.setUTCMinutes = function(minutesValue, opt_secondsValue,
                                         opt_msValue) {};
@@ -1562,6 +1584,7 @@ Date.prototype.setUTCMinutes = function(minutesValue, opt_secondsValue,
  * @param {number=} opt_msValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCSeconds
+ * @return {number}
  */
 Date.prototype.setUTCSeconds = function(secondsValue, opt_msValue) {};
 
@@ -1571,6 +1594,7 @@ Date.prototype.setUTCSeconds = function(secondsValue, opt_msValue) {};
  * @param {number} millisecondsValue
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCMilliseconds
+ * @return {number}
  */
 Date.prototype.setUTCMilliseconds = function(millisecondsValue) {};
 
@@ -2207,6 +2231,7 @@ Error.stackTraceLimit;
  * @param {Object} error The object to add the stack trace to.
  * @param {Function=} opt_constructor A function in the stack trace
  * @see http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi
+ * @return {undefined}
  */
 Error.captureStackTrace = function(error, opt_constructor){};
 

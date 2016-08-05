@@ -32,6 +32,7 @@
  * @param {string} keyIdentifierArg
  * @param {number} keyLocationArg
  * @param {string} modifiersList
+ * @return {undefined}
  */
 KeyboardEvent.prototype.initKeyboardEvent = function(typeArg, canBubbleArg, cancelableArg, viewArg, keyIdentifierArg, keyLocationArg, modifiersList) {};
 

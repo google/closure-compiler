@@ -31,10 +31,14 @@ function URLSearchParams(init) {}
 /**
  * @param {string} name
  * @param {string} value
+ * @return {undefined}
  */
 URLSearchParams.prototype.append = function(name, value) {};
 
-/** @param {string} name */
+/**
+ * @param {string} name
+ * @return {undefined}
+ */
 URLSearchParams.prototype.delete = function(name) {};
 
 /**
@@ -58,6 +62,7 @@ URLSearchParams.prototype.has = function(name) {};
 /**
  * @param {string} name
  * @param {string} value
+ * @return {undefined}
  */
 URLSearchParams.prototype.set = function(name, value) {};
 
@@ -133,5 +138,6 @@ URL.createObjectURL = function(obj) {};
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-revokeObjectURL
  * @param {string} url
+ * @return {undefined}
  */
 URL.revokeObjectURL = function(url) {};

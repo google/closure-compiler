@@ -47,6 +47,7 @@ HTMLObjectElement.prototype.GetVariable = function(varName) {};
  * Activates the frame number specified by {@code frameNumber} in the current
  * movie.
  * @param {number} frameNumber A non-negative integer frame number.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.GotoFrame = function(frameNumber) {};
 
@@ -60,6 +61,7 @@ HTMLObjectElement.prototype.IsPlaying = function() {};
  * layerNumber}.
  * @param {number} layerNumber The layer number.
  * @param {string} url The movie URL.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.LoadMovie = function(layerNumber, url) {};
 
@@ -71,6 +73,7 @@ HTMLObjectElement.prototype.LoadMovie = function(layerNumber, url) {};
  * @param {number} x The x-coordinate.
  * @param {number} y The y-coordinate.
  * @param {number} mode The mode.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.Pan = function(x, y, mode) {};
 
@@ -82,11 +85,13 @@ HTMLObjectElement.prototype.PercentLoaded = function() {};
 
 /**
  * Starts playing the movie.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.Play = function() {};
 
 /**
  * Goes to the first frame.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.Rewind = function() {};
 
@@ -94,6 +99,7 @@ HTMLObjectElement.prototype.Rewind = function() {};
  * Sets the value of the flash variable.
  * @param {string} variableName The variable name.
  * @param {string} value The value.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.SetVariable = function(variableName, value) {};
 
@@ -104,11 +110,13 @@ HTMLObjectElement.prototype.SetVariable = function(variableName, value) {};
  * @param {number} top The top coordinate.
  * @param {number} right The right coordinate.
  * @param {number} bottom The bottom coordinate.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.SetZoomRect = function(left, top, right, bottom) {};
 
 /**
  * Stops playing the movie.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.StopPlay = function() {};
 
@@ -120,6 +128,7 @@ HTMLObjectElement.prototype.TotalFrames = function() {};
 /**
  * Zooms the view by a relative scale factor.
  * @param {number} percent The percentage scale factor, should be an integer.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.Zoom = function(percent) {};
 
@@ -131,6 +140,7 @@ HTMLObjectElement.prototype.Zoom = function(percent) {};
  * specified frame.
  * @param {string} target The timeline.
  * @param {number} frameNumber The frame number.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.TCallFrame = function(target, frameNumber) {};
 
@@ -139,6 +149,7 @@ HTMLObjectElement.prototype.TCallFrame = function(target, frameNumber) {};
  * specified frame.
  * @param {string} target The timeline.
  * @param {string} label The frame label.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.TCallLabel = function(target, label) {};
 
@@ -179,6 +190,7 @@ HTMLObjectElement.prototype.TGetPropertyAsNumber = function(target, property) {}
  * Goes to the specified frame number in the specified timeline.
  * @param {string} target The timeline.
  * @param {number} frameNumber The frame number.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.TGotoFrame = function(target, frameNumber) {};
 
@@ -186,12 +198,14 @@ HTMLObjectElement.prototype.TGotoFrame = function(target, frameNumber) {};
  * Goes to the specified frame label in the specified timeline.
  * @param {string} target The timeline.
  * @param {string} label The framelabel.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.TGotoLabel = function(target, label) {};
 
 /**
  * Plays the specified timeline.
  * @param {number} target The timeline.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.TPlay = function(target) {};
 
@@ -200,11 +214,13 @@ HTMLObjectElement.prototype.TPlay = function(target) {};
  * @param {number} target The timeline.
  * @param {number} property The integer corresponding to the desired property.
  * @param {string|number} value The value.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.TSetProperty = function(target, property, value) {};
 
 /**
  * Stops the specified timeline.
  * @param {number} target The timeline.
+ * @return {undefined}
  */
 HTMLObjectElement.prototype.TStopPlay = function(target) {};

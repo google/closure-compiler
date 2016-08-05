@@ -140,11 +140,13 @@ ReadableStreamController.prototype.close = function() {};
 
 /**
  * @param {*} chunk
+ * @return {undefined}
  */
 ReadableStreamController.prototype.enqueue = function(chunk) {};
 
 /**
  * @param {*} e
+ * @return {undefined}
  */
 ReadableStreamController.prototype.error = function(e) {};
 
@@ -160,6 +162,7 @@ ReadableStreamReader.prototype.closed;
 
 /**
  * @param {*} reason
+ * @return {undefined}
  */
 ReadableStreamReader.prototype.cancel = function(reason) {};
 
@@ -270,11 +273,13 @@ ReadableByteStreamController.prototype.close = function() {};
 
 /**
  * @param {*} chunk
+ * @return {undefined}
  */
 ReadableByteStreamController.prototype.resolve = function(chunk) {};
 
 /**
  * @param {*} e
+ * @return {undefined}
  */
 ReadableByteStreamController.prototype.error = function(e) {};
 

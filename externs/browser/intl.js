@@ -35,6 +35,7 @@ Intl.v8BreakIterator = function(opt_locales, opt_options) {};
 
 /**
  * @param {string} text
+ * @return {undefined}
  */
 Intl.v8BreakIterator.prototype.adoptText = function(text) {};
 
@@ -71,6 +72,7 @@ Intl.Collator = function(opt_locales, opt_options) {};
 /**
  * @param {Array<string>} locales
  * @param {{localeMatcher: (string|undefined)}=} opt_options
+ * @return {Array<string>}
  */
 Intl.Collator.supportedLocalesOf = function(locales, opt_options) {};
 
@@ -106,6 +108,7 @@ Intl.NumberFormat = function(opt_locales, opt_options) {};
 /**
  * @param {Array<string>} locales
  * @param {{localeMatcher: (string|undefined)}=} opt_options
+ * @return {Array<string>}
  */
 Intl.NumberFormat.supportedLocalesOf = function(locales, opt_options) {};
 
@@ -142,6 +145,7 @@ Intl.DateTimeFormat = function(opt_locales, opt_options) {};
 /**
  * @param {Array<string>} locales
  * @param {{localeMatcher: string}=} opt_options
+ * @return {Array<string>}
  */
 Intl.DateTimeFormat.supportedLocalesOf = function(locales, opt_options) {};
 

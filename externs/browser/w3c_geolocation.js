@@ -30,6 +30,7 @@ function Geolocation() {}
  * @param {function(!GeolocationPosition)} successCallback
  * @param {(function(!GeolocationPositionError)|null)=} opt_errorCallback
  * @param {GeolocationPositionOptions=} opt_options
+ * @return {undefined}
  */
 Geolocation.prototype.getCurrentPosition = function(successCallback,
                                                        opt_errorCallback,
@@ -45,7 +46,10 @@ Geolocation.prototype.watchPosition = function(successCallback,
                                                   opt_errorCallback,
                                                   opt_options) {};
 
-/** @param {number} watchId */
+/**
+ * @param {number} watchId
+ * @return {undefined}
+ */
 Geolocation.prototype.clearWatch = function(watchId) {};
 
 

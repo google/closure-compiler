@@ -48,18 +48,21 @@ FileWriterSync.prototype.length;
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileWriter-write
  * @param {!Blob} blob
+ * @return {undefined}
  */
 FileWriterSync.prototype.write = function(blob) {};
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileWriterSync-seek
  * @param {number} offset
+ * @return {undefined}
  */
 FileWriterSync.prototype.seek = function(offset) {};
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileWriterSync-truncate
  * @param {number} size
+ * @return {undefined}
  */
 FileWriterSync.prototype.truncate = function(size) {};
 
@@ -72,12 +75,14 @@ function FileReaderSync() {}
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-readAsArrayBufferSync
  * @param {!Blob} blob
+ * @return {!ArrayBuffer}
  */
 FileReaderSync.prototype.readAsArrayBuffer = function(blob) {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-readAsBinaryStringSync
  * @param {!Blob} blob
+ * @return {string}
  */
 FileReaderSync.prototype.readAsBinaryString = function(blob) {};
 
@@ -85,12 +90,14 @@ FileReaderSync.prototype.readAsBinaryString = function(blob) {};
  * @see http://www.w3.org/TR/FileAPI/#dfn-readAsTextSync
  * @param {!Blob} blob
  * @param {string=} encoding
+ * @return {string}
  */
 FileReaderSync.prototype.readAsText = function(blob, encoding) {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-readAsDataURLSync
  * @param {!Blob} blob
+ * @return {string}
  */
 FileReaderSync.prototype.readAsDataURL = function(blob) {};
 
@@ -204,6 +211,7 @@ EntrySync.prototype.toURL = function(mimeType) {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-EntrySync-remove
+ * @return {undefined}
  */
 EntrySync.prototype.remove = function() {};
 
@@ -250,6 +258,7 @@ DirectoryEntrySync.prototype.getDirectory = function(path, options) {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntrySync-removeRecursively
+ * @return {undefined}
  */
 DirectoryEntrySync.prototype.removeRecursively = function() {};
 

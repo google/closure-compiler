@@ -59,12 +59,14 @@ Notification.permission;
 
 /**
  * @param {NotificationPermissionCallback=} opt_callback
+ * @return {!Promise<string>}
  */
 Notification.requestPermission = function(opt_callback) {};
 
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 Notification.prototype.addEventListener =
     function(type, listener, opt_useCapture) {};
@@ -72,11 +74,15 @@ Notification.prototype.addEventListener =
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 Notification.prototype.removeEventListener =
     function(type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @override
+ * @return {boolean}
+ */
 Notification.prototype.dispatchEvent = function(evt) {};
 
 /**
@@ -118,18 +124,21 @@ Notification.prototype.dir;
 
 /**
  * Displays the notification.
+ * @return {undefined}
  */
 Notification.prototype.show = function() {};
 
 /**
  * Prevents the notification from being displayed, or closes it if it is already
  * displayed.
+ * @return {undefined}
  */
 Notification.prototype.cancel = function() {};
 
 /**
  * Prevents the notification from being displayed, or closes it if it is already
  * displayed.
+ * @return {undefined}
  */
 Notification.prototype.close = function() {};
 

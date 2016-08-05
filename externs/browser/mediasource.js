@@ -30,6 +30,7 @@ function MediaSource() {}
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 MediaSource.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
@@ -37,11 +38,15 @@ MediaSource.prototype.addEventListener = function(
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 MediaSource.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @override
+ * @return {boolean}
+ */
 MediaSource.prototype.dispatchEvent = function(evt) {};
 
 /** @type {Array<SourceBuffer>} */
@@ -61,6 +66,7 @@ MediaSource.prototype.addSourceBuffer = function(type) {};
 
 /**
  * @param {SourceBuffer} sourceBuffer
+ * @return {undefined}
  */
 MediaSource.prototype.removeSourceBuffer = function(sourceBuffer) {};
 
@@ -82,6 +88,7 @@ MediaSource.prototype.readyState;
 
 /**
  * @param {string=} opt_error
+ * @return {undefined}
  */
 MediaSource.prototype.endOfStream = function(opt_error) {};
 
@@ -101,6 +108,7 @@ function SourceBuffer() {}
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 SourceBuffer.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
@@ -108,11 +116,15 @@ SourceBuffer.prototype.addEventListener = function(
 /**
  * @param {boolean=} opt_useCapture
  * @override
+ * @return {undefined}
  */
 SourceBuffer.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @override
+ * @return {boolean}
+ */
 SourceBuffer.prototype.dispatchEvent = function(evt) {};
 
 /** @type {string} */
@@ -135,21 +147,25 @@ SourceBuffer.prototype.appendWindowEnd;
 
 /**
  * @param {Uint8Array} data
+ * @return {undefined}
  */
 SourceBuffer.prototype.append = function(data) {};
 
 /**
  * @param {ArrayBuffer|ArrayBufferView} data
+ * @return {undefined}
  */
 SourceBuffer.prototype.appendBuffer = function(data) {};
 
 /**
  * Abort the current segment append sequence.
+ * @return {undefined}
  */
 SourceBuffer.prototype.abort = function() {};
 
 /**
  * @param {number} start
  * @param {number} end
+ * @return {undefined}
  */
 SourceBuffer.prototype.remove = function(start, end) {};

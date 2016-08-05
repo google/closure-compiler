@@ -108,11 +108,17 @@ ChromeEvent.prototype.hasListeners = function() {};
 function ChromeStringEvent() {}
 
 
-/** @param {function(string): void} callback */
+/**
+ * @param {function(string): void} callback
+ * @return {undefined}
+ */
 ChromeStringEvent.prototype.addListener = function(callback) {};
 
 
-/** @param {function(string): void} callback */
+/**
+ * @param {function(string): void} callback
+ * @return {undefined}
+ */
 ChromeStringEvent.prototype.removeListener = function(callback) {};
 
 
@@ -138,12 +144,14 @@ function ChromeBooleanEvent() {}
 
 /**
  * @param {function(boolean): void} callback
+ * @return {undefined}
  */
 ChromeBooleanEvent.prototype.addListener = function(callback) {};
 
 
 /**
  * @param {function(boolean): void} callback
+ * @return {undefined}
  */
 ChromeBooleanEvent.prototype.removeListener = function(callback) {};
 
@@ -172,12 +180,14 @@ function ChromeNumberEvent() {}
 
 /**
  * @param {function(number): void} callback
+ * @return {undefined}
  */
 ChromeNumberEvent.prototype.addListener = function(callback) {};
 
 
 /**
  * @param {function(number): void} callback
+ * @return {undefined}
  */
 ChromeNumberEvent.prototype.removeListener = function(callback) {};
 
@@ -205,12 +215,14 @@ function ChromeObjectEvent() {}
 
 /**
  * @param {function(!Object): void} callback Callback.
+ * @return {undefined}
  */
 ChromeObjectEvent.prototype.addListener = function(callback) {};
 
 
 /**
  * @param {function(!Object): void} callback Callback.
+ * @return {undefined}
  */
 ChromeObjectEvent.prototype.removeListener = function(callback) {};
 
@@ -236,11 +248,17 @@ ChromeObjectEvent.prototype.hasListeners = function() {};
 function ChromeStringArrayEvent() {}
 
 
-/** @param {function(!Array<string>): void} callback */
+/**
+ * @param {function(!Array<string>): void} callback
+ * @return {undefined}
+ */
 ChromeStringArrayEvent.prototype.addListener = function(callback) {};
 
 
-/** @param {function(!Array<string>): void} callback */
+/**
+ * @param {function(!Array<string>): void} callback
+ * @return {undefined}
+ */
 ChromeStringArrayEvent.prototype.removeListener = function(callback) {};
 
 
@@ -263,11 +281,17 @@ ChromeStringArrayEvent.prototype.hasListeners = function() {};
 function ChromeStringStringEvent() {}
 
 
-/** @param {function(string, string): void} callback */
+/**
+ * @param {function(string, string): void} callback
+ * @return {undefined}
+ */
 ChromeStringStringEvent.prototype.addListener = function(callback) {};
 
 
-/** @param {function(string, string): void} callback */
+/**
+ * @param {function(string, string): void} callback
+ * @return {undefined}
+ */
 ChromeStringStringEvent.prototype.removeListener = function(callback) {};
 
 
@@ -408,6 +432,7 @@ chrome.webstore = {};
  *     opt_successCallbackOrFailureCallback Either the succcess callback taking
  *     no arg or the failure callback taking an error string arg.
  * @param {function(string, string=)=} opt_failureCallback The failure callback.
+ * @return {undefined}
  */
 chrome.webstore.install = function(
     opt_urlOrSuccessCallbackOrFailureCallback,
@@ -591,5 +616,6 @@ ChromeCsiInfo.prototype.tran;
 /**
  * @param {string|!ArrayBuffer|!Object} message
  * @see https://developers.google.com/native-client/devguide/tutorial
+ * @return {undefined}
  */
 HTMLEmbedElement.prototype.postMessage = function(message) {};

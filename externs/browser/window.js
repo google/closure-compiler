@@ -119,6 +119,7 @@ var sun;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.alert
+ * @return {undefined}
  */
 function alert(x) {}
 
@@ -126,6 +127,7 @@ function alert(x) {}
  * @param {number|undefined|null} immediateID
  * @see https://developer.mozilla.org/en-US/docs/DOM/window.clearImmediate
  * @see http://msdn.microsoft.com/en-us/library/ie/hh924825(v=vs.85).aspx
+ * @return {undefined}
  */
 function clearImmediate(immediateID) {}
 
@@ -133,6 +135,7 @@ function clearImmediate(immediateID) {}
  * @param {number|undefined?} intervalID
  * @see https://developer.mozilla.org/en/DOM/window.clearInterval
  * @suppress {duplicate}
+ * @return {undefined}
  */
 function clearInterval(intervalID) {}
 
@@ -140,6 +143,7 @@ function clearInterval(intervalID) {}
  * @param {number|undefined?} timeoutID
  * @see https://developer.mozilla.org/en/DOM/window.clearTimeout
  * @suppress {duplicate}
+ * @return {undefined}
  */
 function clearTimeout(timeoutID) {}
 
@@ -152,6 +156,8 @@ function confirm(message) {}
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.dump
+ * @param {*} x
+ * @return {undefined}
  */
 function dump(x) {}
 

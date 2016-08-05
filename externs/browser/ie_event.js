@@ -235,6 +235,7 @@ MSGesture.prototype.target;
 
 /**
  * @param {number} pointerId
+ * @return {undefined}
  */
 MSGesture.prototype.addPointer = function(pointerId) {};
 

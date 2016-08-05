@@ -214,11 +214,13 @@ function AudioNode() {}
  * @param {AudioNode|AudioParam} destination
  * @param {number=} output
  * @param {number=} input
+ * @return {undefined}
  */
 AudioNode.prototype.connect = function(destination, output, input) {};
 
 /**
  * @param {number=} output
+ * @return {undefined}
  */
 AudioNode.prototype.disconnect = function(output) {};
 
@@ -293,18 +295,21 @@ AudioParam.prototype.units;
 /**
  * @param {number} value
  * @param {number} startTime
+ * @return {AudioParam}
  */
 AudioParam.prototype.setValueAtTime = function(value, startTime) {};
 
 /**
  * @param {number} value
  * @param {number} endTime
+ * @return {AudioParam}
  */
 AudioParam.prototype.linearRampToValueAtTime = function(value, endTime) {};
 
 /**
  * @param {number} value
  * @param {number} endTime
+ * @return {AudioParam}
  */
 AudioParam.prototype.exponentialRampToValueAtTime = function(value, endTime) {};
 
@@ -312,6 +317,7 @@ AudioParam.prototype.exponentialRampToValueAtTime = function(value, endTime) {};
  * @param {number} target
  * @param {number} startTime
  * @param {number} timeConstant
+ * @return {AudioParam}
  */
 AudioParam.prototype.setTargetAtTime = function(target, startTime,
     timeConstant) {};
@@ -321,6 +327,7 @@ AudioParam.prototype.setTargetAtTime = function(target, startTime,
  * @param {number} target
  * @param {number} startTime
  * @param {number} timeConstant
+ * @return {AudioParam}
  */
 AudioParam.prototype.setTargetValueAtTime = function(target, startTime,
     timeConstant) {};
@@ -329,12 +336,14 @@ AudioParam.prototype.setTargetValueAtTime = function(target, startTime,
  * @param {Float32Array} values
  * @param {number} startTime
  * @param {number} duration
+ * @return {AudioParam}
  */
 AudioParam.prototype.setValueCurveAtTime = function(values, startTime,
     duration) {};
 
 /**
  * @param {number} startTime
+ * @return {AudioParam}
  */
 AudioParam.prototype.cancelScheduledValues = function(startTime) {};
 
@@ -456,18 +465,21 @@ AudioBufferSourceNode.prototype.loopEnd;
  * @param {number} when
  * @param {number=} opt_offset
  * @param {number=} opt_duration
+ * @return {undefined}
  */
 AudioBufferSourceNode.prototype.start = function(when, opt_offset,
     opt_duration) {};
 
 /**
  * @param {number} when
+ * @return {undefined}
  */
 AudioBufferSourceNode.prototype.stop = function(when) {};
 
 /**
  * To be deprecated.
  * @param {number} when
+ * @return {undefined}
  */
 AudioBufferSourceNode.prototype.noteOn = function(when) {};
 
@@ -476,6 +488,7 @@ AudioBufferSourceNode.prototype.noteOn = function(when) {};
  * @param {number} when
  * @param {number} grainOffset
  * @param {number} grainDuration
+ * @return {undefined}
  */
 AudioBufferSourceNode.prototype.noteGrainOn = function(when, grainOffset,
     grainDuration) {};
@@ -483,6 +496,7 @@ AudioBufferSourceNode.prototype.noteGrainOn = function(when, grainOffset,
 /**
  * To be deprecated.
  * @param {number} when
+ * @return {undefined}
  */
 AudioBufferSourceNode.prototype.noteOff = function(when) {};
 
@@ -600,6 +614,7 @@ AudioPannerNode.prototype.panningModel;
  * @param {number} x
  * @param {number} y
  * @param {number} z
+ * @return {undefined}
  */
 AudioPannerNode.prototype.setPosition = function(x, y, z) {};
 
@@ -607,6 +622,7 @@ AudioPannerNode.prototype.setPosition = function(x, y, z) {};
  * @param {number} x
  * @param {number} y
  * @param {number} z
+ * @return {undefined}
  */
 AudioPannerNode.prototype.setOrientation = function(x, y, z) {};
 
@@ -614,6 +630,7 @@ AudioPannerNode.prototype.setOrientation = function(x, y, z) {};
  * @param {number} x
  * @param {number} y
  * @param {number} z
+ * @return {undefined}
  */
 AudioPannerNode.prototype.setVelocity = function(x, y, z) {};
 
@@ -681,6 +698,7 @@ AudioListener.prototype.speedOfSound;
  * @param {number} x
  * @param {number} y
  * @param {number} z
+ * @return {undefined}
  */
 AudioListener.prototype.setPosition = function(x, y, z) {};
 
@@ -691,6 +709,7 @@ AudioListener.prototype.setPosition = function(x, y, z) {};
  * @param {number} xUp
  * @param {number} yUp
  * @param {number} zUp
+ * @return {undefined}
  */
 AudioListener.prototype.setOrientation = function(x, y, z, xUp, yUp, zUp) {};
 
@@ -698,6 +717,7 @@ AudioListener.prototype.setOrientation = function(x, y, z, xUp, yUp, zUp) {};
  * @param {number} x
  * @param {number} y
  * @param {number} z
+ * @return {undefined}
  */
 AudioListener.prototype.setVelocity = function(x, y, z) {};
 
@@ -721,16 +741,19 @@ var AnalyserNode = function() {};
 
 /**
  * @param {Float32Array} array
+ * @return {undefined}
  */
 AnalyserNode.prototype.getFloatFrequencyData = function(array) {};
 
 /**
  * @param {Uint8Array} array
+ * @return {undefined}
  */
 AnalyserNode.prototype.getByteFrequencyData = function(array) {};
 
 /**
  * @param {Uint8Array} array
+ * @return {undefined}
  */
 AnalyserNode.prototype.getByteTimeDomainData = function(array) {};
 
@@ -824,6 +847,7 @@ BiquadFilterNode.prototype.gain;
  * @param {Float32Array} frequencyHz
  * @param {Float32Array} magResponse
  * @param {Float32Array} phaseResponse
+ * @return {undefined}
  */
 BiquadFilterNode.prototype.getFrequencyResponse = function(frequencyHz,
     magResponse, phaseResponse) {};
@@ -949,11 +973,13 @@ function Audio(src) {}
 /**
  * @param {number} channels
  * @param {number} rate
+ * @return {undefined}
  */
 Audio.prototype.mozSetup = function(channels, rate) {};
 
 /**
  * @param {Array|Float32Array} buffer
+ * @return {undefined}
  */
 Audio.prototype.mozWriteAudio = function(buffer) {};
 

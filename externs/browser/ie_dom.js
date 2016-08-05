@@ -88,6 +88,7 @@ XMLDOMDocument.prototype.resolveExternals;
  * @see http://msdn.microsoft.com/en-us/library/ms760290(v=vs.85).aspx
  * @param {string} name
  * @param {*} value
+ * @return {undefined}
  */
 XMLDOMDocument.prototype.setProperty = function(name, value) {};
 
@@ -105,6 +106,7 @@ XMLDOMDocument.prototype.validateOnParse;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms763830(VS.85).aspx
+ * @return {undefined}
  */
 XMLDOMDocument.prototype.abort = function() {};
 
@@ -120,7 +122,7 @@ XMLDOMDocument.prototype.createNode = function(type, name, namespaceURI) {};
 
 /**
  * @param {string} xmlSource
- * @return {boolean}
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms762722(VS.85).aspx
  * @override
  */
@@ -179,6 +181,7 @@ Node.prototype.document;
  *     'afterBegin', 'beforeEnd', 'afterEnd'.
  * @param {string} sText HTML text to insert.
  * @see http://msdn.microsoft.com/en-us/library/ms536452(VS.85).aspx
+ * @return {undefined}
  */
 Node.prototype.insertAdjacentHTML = function(sWhere, sText) {};
 
@@ -253,6 +256,7 @@ Node.prototype.transformNode = function(stylesheet) {};
  * @param {Node} stylesheet XSLT stylesheet.
  * @param {Object} outputObject
  * @see http://msdn.microsoft.com/en-us/library/ms766561(VS.85).aspx
+ * @return {Object}
  */
 Node.prototype.transformNodeToObject =
     function(stylesheet, outputObject) {};
@@ -277,6 +281,7 @@ function ClipboardData() {}
  * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
  * @param {string=} opt_type Type of clipboard data to clear. 'Text' or
  *     'URL' or 'File' or 'HTML' or 'Image'.
+ * @return {undefined}
  */
 ClipboardData.prototype.clearData = function(opt_type) {};
 
@@ -392,6 +397,7 @@ Window.prototype.focus;
  * @param {number} x
  * @param {number} y
  * @see http://msdn.microsoft.com/en-us/library/ms536618(VS.85).aspx
+ * @return {undefined}
  */
 Window.prototype.moveBy = function(x, y) {};
 
@@ -399,6 +405,7 @@ Window.prototype.moveBy = function(x, y) {};
  * @param {number} x
  * @param {number} y
  * @see http://msdn.microsoft.com/en-us/library/ms536626(VS.85).aspx
+ * @return {undefined}
  */
 Window.prototype.moveTo = function(x, y) {};
 
@@ -420,6 +427,7 @@ Window.prototype.open = function(opt_url, opt_windowName, opt_windowFeatures,
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536672(VS.85).aspx
+ * @return {undefined}
  */
 Window.prototype.print = function() {};
 
@@ -427,6 +435,7 @@ Window.prototype.print = function() {};
  * @param {number} width
  * @param {number} height
  * @see http://msdn.microsoft.com/en-us/library/ms536722(VS.85).aspx
+ * @return {undefined}
  */
 Window.prototype.resizeBy = function(width, height) {};
 
@@ -434,6 +443,7 @@ Window.prototype.resizeBy = function(width, height) {};
  * @param {number} width
  * @param {number} height
  * @see http://msdn.microsoft.com/en-us/library/ms536723(VS.85).aspx
+ * @return {undefined}
  */
 Window.prototype.resizeTo = function(width, height) {};
 
@@ -462,6 +472,7 @@ Window.prototype.external;
  * @see http://msdn.microsoft.com/en-us/library/ms535864(VS.85).aspx
  * @param {number|string} delta The number of entries to go back, or
  *     the URL to which to go back. (URL form is supported only in IE)
+ * @return {undefined}
  */
 History.prototype.go = function(delta) {};
 
@@ -469,6 +480,7 @@ History.prototype.go = function(delta) {};
  * @see http://msdn.microsoft.com/en-us/library/ms535864(VS.85).aspx
  * @param {number=} opt_distance The number of entries to go back
  *     (Mozilla doesn't support distance -- use #go instead)
+ * @return {undefined}
  */
 History.prototype.back = function(opt_distance) {};
 
@@ -480,6 +492,7 @@ History.prototype.length;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms535864(VS.85).aspx
+ * @return {undefined}
  */
 History.prototype.forward = function() {};
 
@@ -1011,6 +1024,7 @@ Element.prototype.detachEvent;
 /**
  * @param {string=} opt_action
  * @see http://msdn.microsoft.com/en-us/library/ms536414%28VS.85%29.aspx
+ * @return {undefined}
  */
 Element.prototype.doScroll = function(opt_action) {};
 
@@ -1044,12 +1058,14 @@ Element.prototype.load;
 /**
  * @param {number} pointerId Id of the pointer that is assign to the element.
  * @see http://msdn.microsoft.com/en-us/library/ie/hh771882(v=vs.85).aspx
+ * @return {undefined}
  */
 Element.prototype.msSetPointerCapture = function(pointerId) {};
 
 /**
  * @param {number} pointerId
  * @see http://msdn.microsoft.com/en-us/library/ie/hh771880.aspx
+ * @return {undefined}
  */
 Element.prototype.msReleasePointerCapture = function(pointerId) {};
 
@@ -1085,6 +1101,7 @@ Element.prototype.outerHTML;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536689(VS.85).aspx
+ * @return {undefined}
  */
 Element.prototype.releaseCapture = function() {};
 
@@ -1104,6 +1121,7 @@ Element.prototype.runtimeStyle;
  * @param {string} sStoreName The arbitrary name assigned to a persistent object
  *     in a UserData store.
  * @see http://msdn.microsoft.com/en-us/library/ms531403(v=vs.85).aspx
+ * @return {undefined}
  */
 Element.prototype.save = function(sStoreName) {};
 
@@ -1111,6 +1129,7 @@ Element.prototype.save = function(sStoreName) {};
  * @param {boolean=} opt_bContainerCapture Events originating in a container are
  *     captured by the container. Defaults to true.
  * @see http://msdn.microsoft.com/en-us/library/ms536742(VS.85).aspx
+ * @return {undefined}
  */
 Element.prototype.setCapture = function(opt_bContainerCapture) {};
 
@@ -1151,6 +1170,7 @@ function HTMLFilter() {}
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms532954(v=vs.85).aspx
+ * @return {undefined}
  */
 HTMLFilter.prototype.apply = function() {};
 
@@ -1248,6 +1268,7 @@ Location.prototype.search;
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536342(VS.85).aspx
  * @param {string} url
+ * @return {undefined}
  */
 Location.prototype.assign = function(url) {};
 
@@ -1255,12 +1276,14 @@ Location.prototype.assign = function(url) {};
  * @param {boolean=} opt_forceReload If true, reloads the page from
  *     the server. Defaults to false.
  * @see http://msdn.microsoft.com/en-us/library/ms536691(VS.85).aspx
+ * @return {undefined}
  */
 Location.prototype.reload = function(opt_forceReload) {};
 
 /**
  * @param {string} url
  * @see http://msdn.microsoft.com/en-us/library/ms536712(VS.85).aspx
+ * @return {undefined}
  */
 Location.prototype.replace = function(url) {};
 
@@ -1268,7 +1291,8 @@ Location.prototype.replace = function(url) {};
 // For IE, returns an object representing key-value pairs for all the global
 // variables prefixed with str, e.g. test*
 
-/** @param {*=} opt_str */
+/** @param {*=} opt_str
+ */
 function RuntimeObject(opt_str) {}
 
 
@@ -1292,6 +1316,7 @@ function XDomainRequest() {}
 /**
  * Aborts the request.
  * @see http://msdn.microsoft.com/en-us/library/cc288129(v=vs.85).aspx
+ * @return {undefined}
  */
 XDomainRequest.prototype.abort = function() {};
 
@@ -1300,6 +1325,7 @@ XDomainRequest.prototype.abort = function() {};
  * @param {string} bstrMethod Either "GET" or "POST"
  * @param {string} bstrUrl The target URL
  * @see http://msdn.microsoft.com/en-us/library/cc288168(v=vs.85).aspx
+ * @return {undefined}
  */
 XDomainRequest.prototype.open = function(bstrMethod, bstrUrl) {};
 
@@ -1308,6 +1334,7 @@ XDomainRequest.prototype.open = function(bstrMethod, bstrUrl) {};
  * @param {string=} varBody The POST body to send to the server. If omitted,
  *     the behavior is identical to sending an empty string.
  * @see http://msdn.microsoft.com/en-us/library/cc288207(v=vs.85).aspx
+ * @return {undefined}
  */
 XDomainRequest.prototype.send = function(varBody) {};
 

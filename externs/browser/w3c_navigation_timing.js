@@ -114,6 +114,7 @@ Performance.prototype.webkitClearResourceTimings = function() {};
  * Set the maximum number of PerformanceResourceTiming resources that may be
  * stored in the buffer.
  * @param {number} maxSize
+ * @return {undefined}
  */
 Performance.prototype.setResourceTimingBufferSize = function(maxSize) {};
 
@@ -160,11 +161,13 @@ Performance.prototype.webkitNow = function() {};
 
 /**
  * @param {string} markName
+ * @return {undefined}
  */
 Performance.prototype.mark = function(markName) {};
 
 /**
  * @param {string=} opt_markName
+ * @return {undefined}
  */
 Performance.prototype.clearMarks = function(opt_markName) {};
 
@@ -172,12 +175,14 @@ Performance.prototype.clearMarks = function(opt_markName) {};
  * @param {string} measureName
  * @param {string=} opt_startMark
  * @param {string=} opt_endMark
+ * @return {undefined}
  */
 Performance.prototype.measure =
     function(measureName, opt_startMark, opt_endMark) {};
 
 /**
  * @param {string=} opt_measureName
+ * @return {undefined}
  */
 Performance.prototype.clearMeasures = function(opt_measureName) {};
 

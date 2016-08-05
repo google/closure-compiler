@@ -38,11 +38,13 @@ function Headers(opt_headersInit) {}
 /**
  * @param {string} name
  * @param {string} value
+ * @return {undefined}
  */
 Headers.prototype.append = function(name, value) {};
 
 /**
  * @param {string} name
+ * @return {undefined}
  */
 Headers.prototype.delete = function(name) {};
 
@@ -67,6 +69,7 @@ Headers.prototype.has = function(name) {};
 /**
  * @param {string} name
  * @param {string} value
+ * @return {undefined}
  */
 Headers.prototype.set = function(name, value) {};
 

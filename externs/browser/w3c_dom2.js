@@ -305,6 +305,7 @@ function NodeIterator() {}
 /**
  * Detach and invalidate the NodeIterator.
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeIterator-detach
+ * @return {undefined}
  */
 NodeIterator.prototype.detach = function() {};
 

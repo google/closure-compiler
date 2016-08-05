@@ -32,11 +32,13 @@ function requestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function cancelRequestAnimationFrame(handle) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function cancelAnimationFrame(handle) {};
 
@@ -49,11 +51,13 @@ function webkitRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function webkitCancelRequestAnimationFrame(handle) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function webkitCancelAnimationFrame(handle) {};
 
@@ -67,11 +71,13 @@ function mozRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function mozCancelRequestAnimationFrame(handle) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function mozCancelAnimationFrame(handle) {};
 
@@ -84,11 +90,13 @@ function msRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function msCancelRequestAnimationFrame(handle) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function msCancelAnimationFrame(handle) {};
 
@@ -101,10 +109,12 @@ function oRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function oCancelRequestAnimationFrame(handle) {};
 
 /**
  * @param {number} handle
+ * @return {undefined}
  */
 function oCancelAnimationFrame(handle) {};

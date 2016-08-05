@@ -226,6 +226,7 @@ Window.prototype.window;
 /**
  * @param {*} message
  * @see https://developer.mozilla.org/en/DOM/window.alert
+ * @return {undefined}
  */
 Window.prototype.alert = function(message) {};
 
@@ -239,10 +240,16 @@ Window.prototype.alert = function(message) {};
  */
 function atob(encodedData) {}
 
-/** @see https://developer.mozilla.org/en/DOM/window.back */
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.back
+ * @return {undefined}
+ */
 Window.prototype.back = function() {};
 
-/** @see https://developer.mozilla.org/en/DOM/window.blur */
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.blur
+ * @return {undefined}
+ */
 Window.prototype.blur = function() {};
 
 /**
@@ -256,19 +263,31 @@ function btoa(stringToEncode) {}
 /** @deprecated */
 Window.prototype.captureEvents;
 
-/** @see https://developer.mozilla.org/en/DOM/window.close */
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.close
+ * @return {undefined}
+ */
 Window.prototype.close = function() {};
 
-/** @see https://developer.mozilla.org/en/DOM/window.find */
+/**@see https://developer.mozilla.org/en/DOM/window.find */
 Window.prototype.find;
 
-/** @see https://developer.mozilla.org/en/DOM/window.focus */
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.focus
+ * @return {undefined}
+ */
 Window.prototype.focus = function() {};
 
-/** @see https://developer.mozilla.org/en/DOM/window.forward */
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.forward
+ * @return {undefined}
+ */
 Window.prototype.forward = function() {};
 
-/** @see https://developer.mozilla.org/en/DOM/window.getAttention */
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.getAttention
+ * @return {undefined}
+ */
 Window.prototype.getAttention = function() {};
 
 /**
@@ -278,7 +297,10 @@ Window.prototype.getAttention = function() {};
  */
 Window.prototype.getSelection = function() {};
 
-/** @see https://developer.mozilla.org/en/DOM/window.home */
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.home
+ * @return {undefined}
+ */
 Window.prototype.home = function() {};
 
 Window.prototype.openDialog;
@@ -298,6 +320,7 @@ Window.prototype.sizeToContent;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536769(VS.85).aspx
+ * @return {undefined}
  */
 Window.prototype.stop = function() {};
 
@@ -440,6 +463,7 @@ Document.prototype.vlinkColor;
 // Methods of Document
 /**
  * @see https://developer.mozilla.org/en/DOM/document.clear
+ * @return {undefined}
  */
 Document.prototype.clear = function() {};
 
@@ -475,7 +499,10 @@ Document.prototype.execCommand;
  */
 Document.prototype.getElementsByClassName = function(name) {};
 
-/** @param {string} uri */
+/**
+ * @param {string} uri
+ * @return {undefined}
+ */
 Document.prototype.load = function(uri) {};
 Document.prototype.loadOverlay;
 
@@ -666,6 +693,7 @@ Selection.prototype.containsNode = function(node, partlyContained) {};
 
 /**
  * @see https://developer.mozilla.org/en/DOM/Selection/deleteFromDocument
+ * @return {undefined}
  */
 Selection.prototype.deleteFromDocument = function() {};
 
@@ -673,17 +701,20 @@ Selection.prototype.deleteFromDocument = function() {};
  * @param {Node} parentNode
  * @param {number} offset
  * @see https://developer.mozilla.org/en/DOM/Selection/extend
+ * @return {undefined}
  */
 Selection.prototype.extend = function(parentNode, offset) {};
 
 /**
  * @see https://developer.mozilla.org/en/DOM/Selection/removeAllRanges
+ * @return {undefined}
  */
 Selection.prototype.removeAllRanges = function() {};
 
 /**
  * @param {Range} range
  * @see https://developer.mozilla.org/en/DOM/Selection/removeRange
+ * @return {undefined}
  */
 Selection.prototype.removeRange = function(range) {};
 
@@ -769,6 +800,7 @@ HTMLInputElement.prototype.selectionEnd;
  * @param {number} selectionStart
  * @param {number} selectionEnd
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/editing.html#dom-textarea/input-setselectionrange
+ * @return {undefined}
  */
 HTMLInputElement.prototype.setSelectionRange =
     function(selectionStart, selectionEnd) {};
@@ -783,6 +815,7 @@ HTMLTextAreaElement.prototype.selectionEnd;
  * @param {number} selectionStart
  * @param {number} selectionEnd
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/editing.html#dom-textarea/input-setselectionrange
+ * @return {undefined}
  */
 HTMLTextAreaElement.prototype.setSelectionRange =
     function(selectionStart, selectionEnd) {};
