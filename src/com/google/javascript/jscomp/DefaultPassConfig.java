@@ -230,6 +230,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequiresAndProvidesSorted);
     }
 
+    if (!options.skipNonTranspilationPasses
+        && (options.enables(DiagnosticGroups.MISSING_REQUIRE)
+            || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)
+            || options.enables(DiagnosticGroups.EXTRA_REQUIRE))) {
+      checks.add(checkRequires);
+    }
+
     if (!options.skipNonTranspilationPasses && options.closurePass) {
       checks.add(closureCheckModule);
       checks.add(closureRewriteModule);
@@ -250,14 +257,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (!options.skipNonTranspilationPasses && options.closurePass) {
       checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
-    }
-
-    // TODO(tbreisacher): Move this to before closureCheckModule so that it can operate on the
-    // original source tree, instead of the goog.scope/goog.module-rewritten one.
-    if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
-        || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)
-        || options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
-      checks.add(checkRequires);
     }
 
     if (!options.skipNonTranspilationPasses) {
