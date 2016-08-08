@@ -90,15 +90,6 @@ public final class Config {
   final JsDocParsing parseJsDocDocumentation;
 
   /**
-   * Whether to keep detailed source location information such as the exact length of every node.
-   */
-  public enum SourceLocationInformation {
-    DISCARD,
-    PRESERVE,
-  }
-  final SourceLocationInformation preserveDetailedSourceInfo;
-
-  /**
    * Whether to keep going after encountering a parse error.
    */
   public enum RunMode {
@@ -127,7 +118,6 @@ public final class Config {
     this(
         annotationWhitelist,
         JsDocParsing.TYPES_ONLY,
-        SourceLocationInformation.DISCARD,
         RunMode.STOP_AFTER_ERROR,
         suppressionNames,
         languageMode);
@@ -136,13 +126,11 @@ public final class Config {
   Config(
       Set<String> annotationWhitelist,
       JsDocParsing parseJsDocDocumentation,
-      SourceLocationInformation preserveDetailedSourceInfo,
       RunMode keepGoing,
       Set<String> suppressionNames,
       LanguageMode languageMode) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = parseJsDocDocumentation;
-    this.preserveDetailedSourceInfo = preserveDetailedSourceInfo;
     this.keepGoing = keepGoing;
     this.suppressionNames = ImmutableSet.copyOf(suppressionNames);
     this.languageMode = languageMode;

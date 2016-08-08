@@ -51,7 +51,6 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
     // use-case for replaceScript currently.
     options.setInferTypes(true);
     options.setAllowHotswapReplaceScript(true);
-    options.setPreserveDetailedSourceInfo(true);
     options.setChecksOnly(true);
     options.setContinueAfterErrors(true);
 

@@ -32,7 +32,6 @@ public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
   protected CompilerOptions getOptions(CompilerOptions options) {
     super.getOptions(options);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
-    options.setPreserveDetailedSourceInfo(true);
     return options;
   }
 

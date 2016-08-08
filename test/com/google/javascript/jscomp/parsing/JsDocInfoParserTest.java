@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config.RunMode;
-import com.google.javascript.jscomp.parsing.Config.SourceLocationInformation;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
@@ -4492,7 +4491,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         new Config(
             extraAnnotations,
             JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
-            SourceLocationInformation.PRESERVE,
             RunMode.KEEP_GOING,
             extraSuppressions,
             LanguageMode.ECMASCRIPT3);
@@ -4543,7 +4541,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         new Config(
             extraAnnotations,
             parseDocumentation,
-            SourceLocationInformation.DISCARD,
             RunMode.STOP_AFTER_ERROR,
             extraSuppressions,
             LanguageMode.ECMASCRIPT3);

@@ -3363,7 +3363,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
       return ParserRunner.createConfig(
           mode,
           Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
-          Config.SourceLocationInformation.PRESERVE,
           Config.RunMode.KEEP_GOING,
           null);
     } else {

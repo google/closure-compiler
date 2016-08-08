@@ -2208,9 +2208,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
         ParserRunner.createConfig(
             mode,
             options.isParseJsDocDocumentation(),
-            options.preservesDetailedSourceInfo()
-                ? Config.SourceLocationInformation.PRESERVE
-                : Config.SourceLocationInformation.DISCARD,
             options.canContinueAfterErrors()
                 ? Config.RunMode.KEEP_GOING
                 : Config.RunMode.STOP_AFTER_ERROR,

@@ -216,7 +216,6 @@ public class JsfileParser implements EntryPoint {
             // TODO(sdh): ES6_STRICT, with a non-strict fallback - then give warnings.
             Config.LanguageMode.ECMASCRIPT6,
             Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
-            Config.SourceLocationInformation.PRESERVE,
             Config.RunMode.KEEP_GOING,
             /* extraAnnotationNames */ ImmutableSet.<String>of());
 

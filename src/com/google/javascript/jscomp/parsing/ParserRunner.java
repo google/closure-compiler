@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config.RunMode;
-import com.google.javascript.jscomp.parsing.Config.SourceLocationInformation;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.Parser;
 import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
@@ -59,7 +58,6 @@ public final class ParserRunner {
     return createConfig(
         languageMode,
         JsDocParsing.TYPES_ONLY,
-        SourceLocationInformation.DISCARD,
         RunMode.STOP_AFTER_ERROR,
         extraAnnotationNames);
   }
@@ -67,7 +65,6 @@ public final class ParserRunner {
   public static Config createConfig(
       LanguageMode languageMode,
       JsDocParsing jsdocParsingMode,
-      SourceLocationInformation sourceLocationInfo,
       RunMode runMode,
       Set<String> extraAnnotationNames) {
 
@@ -82,7 +79,6 @@ public final class ParserRunner {
     return new Config(
         effectiveAnnotationNames,
         jsdocParsingMode,
-        sourceLocationInfo,
         runMode,
         suppressionNames,
         languageMode);
@@ -133,7 +129,7 @@ public final class ParserRunner {
       root.setIsSyntheticBlock(true);
       root.putProp(Node.FEATURE_SET, features);
 
-      if (config.preserveDetailedSourceInfo == Config.SourceLocationInformation.PRESERVE) {
+      if (config.parseJsDocDocumentation.shouldParseDescriptions()) {
         comments = p.getComments();
       }
     }

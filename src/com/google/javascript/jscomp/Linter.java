@@ -63,7 +63,6 @@ public class Linter {
     // in LintPassConfig can all handle untranspiled ES6.
     options.setSkipTranspilationAndCrash(true);
 
-    options.setPreserveDetailedSourceInfo(true);
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
     options.setCodingConvention(new GoogleCodingConvention());
 

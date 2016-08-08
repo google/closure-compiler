@@ -787,7 +787,6 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
         ParserRunner.createConfig(
             mode,
             Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
-            Config.SourceLocationInformation.PRESERVE,
             Config.RunMode.KEEP_GOING,
             null);
     Node script = ParserRunner.parse(
