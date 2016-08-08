@@ -24,8 +24,8 @@ import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_AND_PROVIDES;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
 import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
+import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_MODULE_GLOBAL_NAME;
-import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REQUIRE_NOT_AT_TOP_LEVEL;
 
@@ -358,7 +358,7 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "var {doThing} = goog.require('foo.utils');",
             "",
             "exports = function() { return foo.utils.doThing(''); };"),
-        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
+        REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
   }
 
   public void testIllegalImportNoAlias() {
@@ -369,7 +369,7 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "goog.require('foo.utils');",
             "",
             "exports = function() { return foo.utils.doThing(''); };"),
-        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
+        REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
   }
 
   // TODO(johnlenz): Re-enable these tests (they are a bit tricky).
@@ -381,7 +381,7 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "goog.require('foo');",
             "",
             "exports = function() { return foo.doThing(''); };"),
-        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
+        REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
   }
 
   public void disable_testSingleNameImportWithAlias() {
@@ -392,7 +392,7 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "var bar = goog.require('foo');",
             "",
             "exports = function() { return foo.doThing(''); };"),
-        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME);
+        REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
   }
 
   public void testSingleNameImportCrossAlias() {

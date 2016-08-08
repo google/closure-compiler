@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,10 +90,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "JSC_REFERENCE_TO_MODULE_GLOBAL_NAME",
           "References to the global name of a module are not allowed. Perhaps you meant exports?");
 
-  static final DiagnosticType REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME =
+  static final DiagnosticType REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME =
       DiagnosticType.disabled(
-          "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME",
-          "Reference to fully qualified import name ''{0}''. Please use the short name instead.");
+          "JSC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME",
+          "Reference to fully qualified import name ''{0}''."
+              + " Imports in goog.module should use the return value of goog.require instead.");
 
   static final DiagnosticType REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
       DiagnosticType.disabled(
@@ -205,7 +205,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         } else if (shortRequiredNamespaces.containsKey(n.getQualifiedName())) {
           String shortName = shortRequiredNamespaces.get(n.getQualifiedName());
           if (shortName == null) {
-            t.report(n, REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME, n.getQualifiedName());
+            t.report(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, n.getQualifiedName());
           } else {
             t.report(n, REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
                 n.getQualifiedName(), shortName);
