@@ -148,7 +148,10 @@ public final class ModuleLoader {
      * @return The normalized module URI, or {@code null} if not found.
      */
     public ModuleUri resolveEs6Module(String moduleName) {
-      URI resolved = locateNoCheck(moduleName + ".js");
+      // Typically module names don't have the ".js" extension. 
+      // But tolerate this, and support explicit ".jsx" extension:
+      if (!moduleName.endsWith(".js") && !moduleName.endsWith(".jsx")) moduleName += ".js";
+      URI resolved = locateNoCheck(moduleName);
       if (!moduleUris.contains(resolved) && errorHandler != null) {
         errorHandler.report(CheckLevel.WARNING, JSError.make(LOAD_WARNING, moduleName));
       }
