@@ -798,6 +798,7 @@ HTMLSelectElement.prototype.selectedIndex;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-59351919
  */
 HTMLSelectElement.prototype.value;
@@ -944,6 +945,7 @@ HTMLOptionElement.prototype.text;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-6185554
  */
 HTMLOptionElement.prototype.value;
@@ -1059,6 +1061,7 @@ HTMLInputElement.prototype.useMap;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-49531485
  */
 HTMLInputElement.prototype.value;
@@ -1159,6 +1162,7 @@ HTMLTextAreaElement.prototype.type;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-70715579
  */
 HTMLTextAreaElement.prototype.value;

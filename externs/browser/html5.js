@@ -1331,10 +1331,10 @@ HTMLInputElement.prototype.indeterminate;
 /** @type {string} */
 HTMLInputElement.prototype.list;
 
-/** @type {string} */
+/** @implicitCast @type {string} */
 HTMLInputElement.prototype.max;
 
-/** @type {string} */
+/** @implicitCast @type {string} */
 HTMLInputElement.prototype.min;
 
 /** @type {string} */
@@ -1349,7 +1349,7 @@ HTMLInputElement.prototype.placeholder;
 /** @type {boolean} */
 HTMLInputElement.prototype.required;
 
-/** @type {string} */
+/** @implicitCast @type {string} */
 HTMLInputElement.prototype.step;
 
 /** @type {Date} */
