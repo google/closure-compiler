@@ -586,12 +586,13 @@ public final class ConformanceRules {
      * @see TypeCheck#visitParameterList
      */
     static boolean validateCall(
+        AbstractCompiler compiler,
         Node callOrNew,
         FunctionTypeI functionType,
         boolean isCallInvocation) {
       Preconditions.checkState(callOrNew.isCall() || callOrNew.isNew());
 
-      return validateParameterList(callOrNew, functionType, isCallInvocation)
+      return validateParameterList(compiler, callOrNew, functionType, isCallInvocation)
           && validateThis(callOrNew, functionType, isCallInvocation);
     }
 
@@ -618,6 +619,7 @@ public final class ConformanceRules {
     }
 
     private static boolean validateParameterList(
+        AbstractCompiler compiler,
         Node callOrNew,
         FunctionTypeI functionType,
         boolean isCallInvocation) {
@@ -630,7 +632,11 @@ public final class ConformanceRules {
       // Get all the annotated types of the argument nodes
       ImmutableList.Builder<TypeI> argumentTypes = ImmutableList.builder();
       while (arguments.hasNext()) {
-        argumentTypes.add(arguments.next().getTypeI());
+        TypeI argType = arguments.next().getTypeI();
+        if (argType == null) {
+          argType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+        }
+        argumentTypes.add(argType);
       }
       return functionType.acceptsArguments(argumentTypes.build());
     }
@@ -686,13 +692,13 @@ public final class ConformanceRules {
 
           if (n.matchesQualifiedName(r.name)) {
             if (!ConformanceUtil.validateCall(
-                n.getParent(), r.restrictedCallType, false)) {
+                compiler, n.getParent(), r.restrictedCallType, false)) {
               return ConformanceResult.VIOLATION;
             }
           } else if (n.isGetProp() && n.getLastChild().getString().equals("call")
               && n.getFirstChild().matchesQualifiedName(r.name)) {
             if (!ConformanceUtil.validateCall(
-                n.getParent(), r.restrictedCallType, true)) {
+                compiler, n.getParent(), r.restrictedCallType, true)) {
               return ConformanceResult.VIOLATION;
             }
           }
@@ -808,12 +814,12 @@ public final class ConformanceRules {
            || targetType.isEquivalentTo(
                registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
           if (!ConformanceUtil.validateCall(
-              n.getParent(), r.restrictedCallType, isCallInvocation)) {
+              compiler, n.getParent(), r.restrictedCallType, isCallInvocation)) {
             return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
           }
         } else if (targetType.isSubtypeOf(methodClassType)) {
           if (!ConformanceUtil.validateCall(
-              n.getParent(), r.restrictedCallType, isCallInvocation)) {
+              compiler, n.getParent(), r.restrictedCallType, isCallInvocation)) {
             return ConformanceResult.VIOLATION;
           }
         }
