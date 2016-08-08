@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node.NodeMismatch;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -191,21 +193,21 @@ public class NodeTest extends TestCase {
     assertTrue(IR.name("a").isQualifiedName());
     assertTrue(IR.name("$").isQualifiedName());
     assertTrue(IR.name("_").isQualifiedName());
-    assertTrue(IR.getprop(IR.name("a"),IR.string("b")).isQualifiedName());
-    assertTrue(IR.getprop(IR.thisNode(),IR.string("b")).isQualifiedName());
+    assertTrue(IR.getprop(IR.name("a"), IR.string("b")).isQualifiedName());
+    assertTrue(IR.getprop(IR.thisNode(), IR.string("b")).isQualifiedName());
     assertFalse(IR.number(0).isQualifiedName());
     assertFalse(IR.arraylit().isQualifiedName());
     assertFalse(IR.objectlit().isQualifiedName());
     assertFalse(IR.string("").isQualifiedName());
-    assertFalse(IR.getelem(IR.name("a"),IR.string("b")).isQualifiedName());
+    assertFalse(IR.getelem(IR.name("a"), IR.string("b")).isQualifiedName());
     assertFalse( // a[b].c
         IR.getprop(
-            IR.getelem(IR.name("a"),IR.string("b")),
+            IR.getelem(IR.name("a"), IR.string("b")),
             IR.string("c"))
             .isQualifiedName());
     assertFalse( // a.b[c]
         IR.getelem(
-            IR.getprop(IR.name("a"),IR.string("b")),
+            IR.getprop(IR.name("a"), IR.string("b")),
             IR.string("c"))
             .isQualifiedName());
     assertFalse(IR.call(IR.name("a")).isQualifiedName());
@@ -216,7 +218,7 @@ public class NodeTest extends TestCase {
         .isQualifiedName());
     assertFalse( // (a.b)()
         IR.call(
-            IR.getprop(IR.name("a"),IR.string("b")))
+            IR.getprop(IR.name("a"), IR.string("b")))
         .isQualifiedName());
     assertFalse(IR.string("a").isQualifiedName());
     assertFalse(IR.regexp(IR.string("x")).isQualifiedName());
@@ -262,12 +264,12 @@ public class NodeTest extends TestCase {
         IR.string("b")).matchesQualifiedName("a.b"));
     assertFalse( // a[b].c
         IR.getprop(
-            IR.getelem(IR.name("a"),IR.string("b")),
+            IR.getelem(IR.name("a"), IR.string("b")),
             IR.string("c"))
             .matchesQualifiedName("a.b.c"));
     assertFalse( // a.b[c]
         IR.getelem(
-            IR.getprop(IR.name("a"),IR.string("b")),
+            IR.getprop(IR.name("a"), IR.string("b")),
             IR.string("c"))
             .matchesQualifiedName("a.b.c"));
     assertFalse(IR.call(IR.name("a")).matchesQualifiedName("a"));
@@ -278,7 +280,7 @@ public class NodeTest extends TestCase {
         .matchesQualifiedName("a.b"));
     assertFalse( // (a.b)()
         IR.call(
-            IR.getprop(IR.name("a"),IR.string("b")))
+            IR.getprop(IR.name("a"), IR.string("b")))
         .matchesQualifiedName("a.b"));
     assertFalse(IR.string("a").matchesQualifiedName("a"));
     assertFalse(IR.regexp(IR.string("x")).matchesQualifiedName("x"));
@@ -311,12 +313,12 @@ public class NodeTest extends TestCase {
         IR.string("b")).matchesQualifiedName(qname("a.b")));
     assertFalse( // a[b].c
         IR.getprop(
-            IR.getelem(IR.name("a"),IR.string("b")),
+            IR.getelem(IR.name("a"), IR.string("b")),
             IR.string("c"))
             .matchesQualifiedName(qname("a.b.c")));
     assertFalse( // a.b[c]
         IR.getelem(
-            IR.getprop(IR.name("a"),IR.string("b")),
+            IR.getprop(IR.name("a"), IR.string("b")),
             IR.string("c"))
             .matchesQualifiedName("a.b.c"));
     assertFalse(IR.call(IR.name("a")).matchesQualifiedName(qname("a")));
@@ -327,7 +329,7 @@ public class NodeTest extends TestCase {
         .matchesQualifiedName(qname("a.b")));
     assertFalse( // (a.b)()
         IR.call(
-            IR.getprop(IR.name("a"),IR.string("b")))
+            IR.getprop(IR.name("a"), IR.string("b")))
         .matchesQualifiedName(qname("a.b")));
     assertFalse(IR.string("a").matchesQualifiedName(qname("a")));
     assertFalse(IR.regexp(IR.string("x")).matchesQualifiedName(qname("x")));
@@ -363,12 +365,14 @@ public class NodeTest extends TestCase {
 
   public void testCloneAnnontations() {
     Node n = getVarRef("a");
+    n.setLength(1);
     assertFalse(n.getBooleanProp(Node.IS_CONSTANT_NAME));
     n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     assertTrue(n.getBooleanProp(Node.IS_CONSTANT_NAME));
 
     Node nodeClone = n.cloneNode();
     assertTrue(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME));
+    assertThat(nodeClone.getLength()).isEqualTo(1);
   }
 
   public void testSharedProps1() {
@@ -444,7 +448,7 @@ public class NodeTest extends TestCase {
   }
 
   public void testGetIndexOfChild() {
-    Node assign = getAssignExpr("b","c");
+    Node assign = getAssignExpr("b", "c");
     assertEquals(2, assign.getChildCount());
 
     Node firstChild = assign.getFirstChild();
@@ -457,7 +461,7 @@ public class NodeTest extends TestCase {
   }
 
   public void testCopyInformationFrom() {
-    Node assign = getAssignExpr("b","c");
+    Node assign = getAssignExpr("b", "c");
     assign.setSourceEncodedPosition(99);
     assign.setSourceFileForTesting("foo.js");
 
@@ -474,7 +478,7 @@ public class NodeTest extends TestCase {
   }
 
   public void testUseSourceInfoIfMissingFrom() {
-    Node assign = getAssignExpr("b","c");
+    Node assign = getAssignExpr("b", "c");
     assign.setSourceEncodedPosition(99);
     assign.setSourceFileForTesting("foo.js");
 
@@ -491,7 +495,7 @@ public class NodeTest extends TestCase {
   }
 
   public void testUseSourceInfoFrom() {
-    Node assign = getAssignExpr("b","c");
+    Node assign = getAssignExpr("b", "c");
     assign.setSourceEncodedPosition(99);
     assign.setSourceFileForTesting("foo.js");
 

@@ -2070,6 +2070,7 @@ public class Node implements Serializable {
 
   <T extends Node> T copyNodeFields(T dst, boolean cloneTypeExprs) {
     dst.setSourceEncodedPosition(this.sourcePosition);
+    dst.setLength(this.getLength());
     dst.setTypeI(this.typei);
     dst.setPropListHead(this.propListHead);
 
