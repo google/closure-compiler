@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.WarningLevel;
 
 import jsinterop.annotations.JsPackage;
@@ -44,6 +45,9 @@ import java.util.Map;
  * Runner for the GWT-compiled JSCompiler as a single exported method.
  */
 public final class GwtRunner implements EntryPoint {
+
+  private static final CompilationLevel DEFAULT_COMPILATION_LEVEL =
+      CompilationLevel.SIMPLE_OPTIMIZATIONS;
 
   private static final Map<String, CompilationLevel> COMPILATION_LEVEL_MAP =
       ImmutableMap.of(
@@ -72,7 +76,10 @@ public final class GwtRunner implements EntryPoint {
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
   private interface Flags {
     @JsProperty boolean getAngularPass();
+    @JsProperty boolean getAssumeFunctionWrapper();
     @JsProperty String getCompilationLevel();
+    @JsProperty boolean getDartPass();
+    @JsProperty boolean getExportLocalPropertyDefinitions();
     @JsProperty boolean getGenerateExports();
     @JsProperty String getLanguageIn();
     @JsProperty String getLanguageOut();
@@ -80,9 +87,11 @@ public final class GwtRunner implements EntryPoint {
     @JsProperty boolean getNewTypeInf();
     @JsProperty boolean getPolymerPass();
     @JsProperty boolean getPreserveTypeAnnotations();
+    @JsProperty boolean getProcessCommonJSModules();
     @JsProperty String getRenamePrefixNamespace();
-    @JsProperty boolean getRewritePolyfills();
+    @JsProperty boolean getRewritePolyfills();  // default true
     @JsProperty String getWarningLevel();
+    @JsProperty boolean getUseTypesForOptimization();  // default true
 
     // These flags do not match the Java compiler JAR.
     @JsProperty File[] getJsCode();
@@ -91,9 +100,10 @@ public final class GwtRunner implements EntryPoint {
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private interface File {
-    @JsProperty String getName();
-    @JsProperty String getSource();
+  private static class File {
+    @JsProperty String path;
+    @JsProperty String src;
+    @JsProperty String sourceMap;
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
@@ -131,24 +141,31 @@ public final class GwtRunner implements EntryPoint {
   }
 
   private static void applyOptionsFromFlags(CompilerOptions options, Flags flags) {
-    if (flags == null) {
-      return;
-    }
-
+    CompilationLevel level = DEFAULT_COMPILATION_LEVEL;
     if (flags.getCompilationLevel() != null) {
-      CompilationLevel level =
-          COMPILATION_LEVEL_MAP.get(flags.getCompilationLevel().toUpperCase());
-      if (level != null) {
-        level.setOptionsForCompilationLevel(options);
+      level = COMPILATION_LEVEL_MAP.get(flags.getCompilationLevel().toUpperCase());
+      if (level == null) {
+        throw new RuntimeException(
+            "Bad value for compilationLevel: " + flags.getCompilationLevel());
       }
+    }
+    level.setOptionsForCompilationLevel(options);
+    if (flags.getAssumeFunctionWrapper()) {
+      level.setWrappedOutputOptimizations(options);
+    }
+    if (flags.getUseTypesForOptimization()) {
+      level.setTypeBasedOptimizationOptions(options);
     }
 
+    WarningLevel warningLevel = WarningLevel.DEFAULT;
     if (flags.getWarningLevel() != null) {
-      WarningLevel level = WARNING_LEVEL_MAP.get(flags.getWarningLevel().toUpperCase());
-      if (level != null) {
-        level.setOptionsForWarningLevel(options);
+      warningLevel = WARNING_LEVEL_MAP.get(flags.getWarningLevel().toUpperCase());
+      if (warningLevel == null) {
+        throw new RuntimeException(
+            "Bad value for compilationLevel: " + flags.getCompilationLevel());
       }
     }
+    warningLevel.setOptionsForWarningLevel(options);
 
     if (flags.getLanguageIn() != null) {
       LanguageMode languageIn = LanguageMode.fromString(flags.getLanguageIn());
@@ -170,10 +187,13 @@ public final class GwtRunner implements EntryPoint {
 
     options.setAngularPass(flags.getAngularPass());
     options.setChecksOnly(flags.getChecksOnly());
+    options.setDartPass(flags.getDartPass());
+    options.setExportLocalPropertyDefinitions(flags.getExportLocalPropertyDefinitions());
     options.setGenerateExports(flags.getGenerateExports());
     options.setNewTypeInference(flags.getNewTypeInf());
     options.setPolymerPass(flags.getPolymerPass());
     options.setPreserveTypeAnnotations(flags.getPreserveTypeAnnotations());
+    options.setProcessCommonJSModules(flags.getProcessCommonJSModules());
     options.setRenamePrefixNamespace(flags.getRenamePrefixNamespace());
     options.setRewritePolyfills(flags.getRewritePolyfills());
   }
@@ -187,35 +207,54 @@ public final class GwtRunner implements EntryPoint {
     if (src != null) {
       for (int i = 0; i < src.length; ++i) {
         File file = src[i];
-        String name = file.getName();
-        if (name == null) {
-          name = unknownPrefix + i;
+        String path = file.path;
+        if (path == null) {
+          path = unknownPrefix + i;
         }
-        String source = file.getSource();
-        if (source == null) {
-          source = "";
-        }
-        out.add(SourceFile.fromCode(name, source));
+        out.add(SourceFile.fromCode(path, file.src != null ? file.src : ""));
       }
     }
     return ImmutableList.copyOf(out);
+  }
+
+  private static ImmutableMap<String, SourceMapInput> buildSourceMaps(
+      File[] src, String unknownPrefix) {
+    ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps = new ImmutableMap.Builder<>();
+    if (src != null) {
+      for (int i = 0; i < src.length; ++i) {
+        File file = src[i];
+        if (file.sourceMap == null || file.sourceMap.isEmpty()) {
+          continue;
+        }
+        String path = file.path;
+        if (path == null) {
+          path = unknownPrefix + i;
+        }
+        path += ".map";
+        SourceFile sf = SourceFile.fromCode(path, file.sourceMap);
+        inputSourceMaps.put(path, new SourceMapInput(sf));
+      }
+    }
+    return inputSourceMaps.build();
   }
 
   /**
    * Public compiler call. Exposed in {@link #exportCompile}.
    */
   public static ModuleOutput compile(Flags flags) {
+    List<SourceFile> externs = fromFileArray(flags.getExterns(), "Extern_");
+    List<SourceFile> jsCode = fromFileArray(flags.getJsCode(), "Input_");
+    ImmutableMap<String, SourceMapInput> sourceMaps = buildSourceMaps(flags.getJsCode(), "Input_");
+
     CompilerOptions options = new CompilerOptions();
     applyDefaultOptions(options);
     applyOptionsFromFlags(options, flags);
+    options.setInputSourceMaps(sourceMaps);
     disableUnsupportedOptions(options);
 
     NodeErrorManager errorManager = new NodeErrorManager();
     Compiler compiler = new Compiler();
     compiler.setErrorManager(errorManager);
-
-    List<SourceFile> externs = fromFileArray(flags.getExterns(), "Extern_");
-    List<SourceFile> jsCode = fromFileArray(flags.getJsCode(), "Input_");
     compiler.compile(externs, jsCode, options);
 
     ModuleOutput output = new ModuleOutput();
