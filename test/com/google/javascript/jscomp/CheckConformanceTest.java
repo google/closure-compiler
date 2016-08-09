@@ -644,6 +644,27 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  public void testBannedPropertyNonConstantWrite() {
+    configuration =
+        "requirement: {\n" +
+        "  type: BANNED_PROPERTY_NON_CONSTANT_WRITE\n" +
+        "  value: 'C.prototype.p'\n" +
+        "  error_message: 'Assignment of a non-constant value to C.p is not allowed'\n" +
+        "}";
+
+    String declarations =
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {string} */\n" +
+        "C.prototype.p;\n";
+
+    testSame(declarations + "var c = new C(); c.p = 'boo';");
+    testSame(declarations + "var c = new C(); c.p = 'foo' + 'bar';");
+
+    testSame(
+        declarations + "var boo = 'boo'; var c = new C(); c.p = boo;",
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
   public void testBannedPropertyRead() {
     configuration =
         "requirement: {\n" +

@@ -122,8 +122,7 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
-   * (the opposite of whitelist). It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * (the opposite of whitelist).
    * </pre>
    */
   java.util.List<java.lang.String>
@@ -133,8 +132,7 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
-   * (the opposite of whitelist). It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * (the opposite of whitelist).
    * </pre>
    */
   int getOnlyApplyToCount();
@@ -143,8 +141,7 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
-   * (the opposite of whitelist). It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * (the opposite of whitelist).
    * </pre>
    */
   java.lang.String getOnlyApplyTo(int index);
@@ -153,8 +150,7 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
-   * (the opposite of whitelist). It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * (the opposite of whitelist).
    * </pre>
    */
   com.google.protobuf.ByteString
@@ -167,8 +163,6 @@ public interface RequirementOrBuilder extends
    * <pre>
    * Optional: A list of source path regexps that will be checked for
    * the requirement (the opposite of whitelist_regexp).
-   * It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
    * </pre>
    */
   java.util.List<java.lang.String>
@@ -179,8 +173,6 @@ public interface RequirementOrBuilder extends
    * <pre>
    * Optional: A list of source path regexps that will be checked for
    * the requirement (the opposite of whitelist_regexp).
-   * It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
    * </pre>
    */
   int getOnlyApplyToRegexpCount();
@@ -190,8 +182,6 @@ public interface RequirementOrBuilder extends
    * <pre>
    * Optional: A list of source path regexps that will be checked for
    * the requirement (the opposite of whitelist_regexp).
-   * It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
    * </pre>
    */
   java.lang.String getOnlyApplyToRegexp(int index);
@@ -201,8 +191,6 @@ public interface RequirementOrBuilder extends
    * <pre>
    * Optional: A list of source path regexps that will be checked for
    * the requirement (the opposite of whitelist_regexp).
-   * It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
    * </pre>
    */
   com.google.protobuf.ByteString
@@ -298,7 +286,7 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Gives the rule an unique ID that can be used for extending in other rules
-   * through 'extends'. An example of ID is '//javascript/closure:innerHtml'.
+   * through 'extends'. An example of ID is 'closure:innerHtml'.
    * </pre>
    */
   boolean hasRuleId();
@@ -307,7 +295,7 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Gives the rule an unique ID that can be used for extending in other rules
-   * through 'extends'. An example of ID is '//javascript/closure:innerHtml'.
+   * through 'extends'. An example of ID is 'closure:innerHtml'.
    * </pre>
    */
   java.lang.String getRuleId();
@@ -316,7 +304,7 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Gives the rule an unique ID that can be used for extending in other rules
-   * through 'extends'. An example of ID is '//javascript/closure:innerHtml'.
+   * through 'extends'. An example of ID is 'closure:innerHtml'.
    * </pre>
    */
   com.google.protobuf.ByteString
@@ -328,8 +316,8 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Allows extending whitelists of rules with the specified rule_id. If this
-   * field is specified then all fields except whitelist and whitelist_regexp
-   * are ignored.
+   * field is specified then all fields except whitelist, whitelist_regexp,
+   * only_apply_to and only_apply_to_regexp are ignored.
    * </pre>
    */
   boolean hasExtends();
@@ -338,8 +326,8 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Allows extending whitelists of rules with the specified rule_id. If this
-   * field is specified then all fields except whitelist and whitelist_regexp
-   * are ignored.
+   * field is specified then all fields except whitelist, whitelist_regexp,
+   * only_apply_to and only_apply_to_regexp are ignored.
    * </pre>
    */
   java.lang.String getExtends();
@@ -348,8 +336,8 @@ public interface RequirementOrBuilder extends
    *
    * <pre>
    * Allows extending whitelists of rules with the specified rule_id. If this
-   * field is specified then all fields except whitelist and whitelist_regexp
-   * are ignored.
+   * field is specified then all fields except whitelist, whitelist_regexp,
+   * only_apply_to and only_apply_to_regexp are ignored.
    * </pre>
    */
   com.google.protobuf.ByteString

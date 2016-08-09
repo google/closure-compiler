@@ -101,6 +101,11 @@ message Requirement {
     // Unlike BANNED_PROPERTY, this only bans calls to the property
     // i.e. using the property as a value is allowed.
     BANNED_PROPERTY_CALL = 10;
+
+    // A banned write of a non-constant value to an instance property.
+    // Unlike BANNED_PROPERTY_WRITE, this only bans assignments of a
+    // non-constant value.
+    BANNED_PROPERTY_NON_CONSTANT_WRITE = 11;
   }
 
   // Required: The type of requirement.

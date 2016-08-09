@@ -694,6 +694,22 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns true iff the value associated with the node is a JS string literal,
+   * or a concatenation thereof.
+   */
+  static boolean isStringLiteralValue(Node node) {
+    if (node.getType() == Token.STRING) {
+      return true;
+    } else if (node.getType() == Token.ADD) {
+      Preconditions.checkState(node.getChildCount() == 2);
+      Node left = node.getFirstChild();
+      Node right = node.getLastChild();
+      return isStringLiteralValue(left) && isStringLiteralValue(right);
+    }
+    return false;
+  }
+
+  /**
    * Determines whether the given value may be assigned to a define.
    *
    * @param val The value being assigned.
@@ -2940,6 +2956,11 @@ public final class NodeUtil {
         || parent.isCatch()
         || isImportedName(n)
         || isLhsByDestructuring(n);
+  }
+
+  static boolean isLhsOfAssign(Node n) {
+    Node parent = n.getParent();
+    return parent != null && parent.getType() == Token.ASSIGN && parent.getFirstChild() == n;
   }
 
   public static boolean isImportedName(Node n) {

@@ -440,10 +440,12 @@ public final class ConformanceRules {
         throw new InvalidRequirementSpec("missing value");
       }
 
-      Preconditions.checkArgument(requirement.getType() == Type.BANNED_PROPERTY
-          || requirement.getType() == Type.BANNED_PROPERTY_READ
-          || requirement.getType() == Type.BANNED_PROPERTY_WRITE
-          || requirement.getType() == Type.BANNED_PROPERTY_CALL);
+      Preconditions.checkArgument(
+          requirement.getType() == Type.BANNED_PROPERTY
+              || requirement.getType() == Type.BANNED_PROPERTY_READ
+              || requirement.getType() == Type.BANNED_PROPERTY_WRITE
+              || requirement.getType() == Type.BANNED_PROPERTY_NON_CONSTANT_WRITE
+              || requirement.getType() == Type.BANNED_PROPERTY_CALL);
       requirementType = requirement.getType();
 
       ImmutableList.Builder<Property> builder = ImmutableList.builder();
@@ -525,6 +527,16 @@ public final class ConformanceRules {
       if (n.getLastChild().getString().equals(prop.property)) {
         if (requirementType == Type.BANNED_PROPERTY_WRITE) {
           return NodeUtil.isLValue(n);
+        } else if (requirementType == Type.BANNED_PROPERTY_NON_CONSTANT_WRITE) {
+          if (!NodeUtil.isLValue(n)) {
+            return false;
+          }
+          if (NodeUtil.isLhsOfAssign(n)
+              && (NodeUtil.isLiteralValue(n.getNext(), false /* includeFunctions */)
+                  || NodeUtil.isStringLiteralValue(n.getNext()))) {
+            return false;
+          }
+          return true;
         } else if (requirementType == Type.BANNED_PROPERTY_READ) {
           return !NodeUtil.isLValue(n) && NodeUtil.isExpressionResultUsed(n);
         } else if (requirementType == Type.BANNED_PROPERTY_CALL) {

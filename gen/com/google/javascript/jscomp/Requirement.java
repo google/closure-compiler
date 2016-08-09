@@ -295,6 +295,16 @@ public  final class Requirement extends
      * </pre>
      */
     BANNED_PROPERTY_CALL(9, 10),
+    /**
+     * <code>BANNED_PROPERTY_NON_CONSTANT_WRITE = 11;</code>
+     *
+     * <pre>
+     * A banned write of a non-constant value to an instance property.
+     * Unlike BANNED_PROPERTY_WRITE, this only bans assignments of a
+     * non-constant value.
+     * </pre>
+     */
+    BANNED_PROPERTY_NON_CONSTANT_WRITE(10, 11),
     ;
 
     /**
@@ -400,6 +410,16 @@ public  final class Requirement extends
      * </pre>
      */
     public static final int BANNED_PROPERTY_CALL_VALUE = 10;
+    /**
+     * <code>BANNED_PROPERTY_NON_CONSTANT_WRITE = 11;</code>
+     *
+     * <pre>
+     * A banned write of a non-constant value to an instance property.
+     * Unlike BANNED_PROPERTY_WRITE, this only bans assignments of a
+     * non-constant value.
+     * </pre>
+     */
+    public static final int BANNED_PROPERTY_NON_CONSTANT_WRITE_VALUE = 11;
 
 
     public final int getNumber() { return value; }
@@ -416,6 +436,7 @@ public  final class Requirement extends
         case 8: return RESTRICTED_METHOD_CALL;
         case 9: return BANNED_CODE_PATTERN;
         case 10: return BANNED_PROPERTY_CALL;
+        case 11: return BANNED_PROPERTY_NON_CONSTANT_WRITE;
         default: return null;
       }
     }
@@ -633,8 +654,7 @@ public  final class Requirement extends
    *
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
-   * (the opposite of whitelist). It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * (the opposite of whitelist).
    * </pre>
    */
   public java.util.List<java.lang.String>
@@ -646,8 +666,7 @@ public  final class Requirement extends
    *
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
-   * (the opposite of whitelist). It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * (the opposite of whitelist).
    * </pre>
    */
   public int getOnlyApplyToCount() {
@@ -658,8 +677,7 @@ public  final class Requirement extends
    *
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
-   * (the opposite of whitelist). It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * (the opposite of whitelist).
    * </pre>
    */
   public java.lang.String getOnlyApplyTo(int index) {
@@ -670,8 +688,7 @@ public  final class Requirement extends
    *
    * <pre>
    * Optional: A list of source paths that will be checked for the requirement
-   * (the opposite of whitelist). It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * (the opposite of whitelist).
    * </pre>
    */
   public com.google.protobuf.ByteString
@@ -688,8 +705,6 @@ public  final class Requirement extends
    * <pre>
    * Optional: A list of source path regexps that will be checked for
    * the requirement (the opposite of whitelist_regexp).
-   * It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
    * </pre>
    */
   public java.util.List<java.lang.String>
@@ -702,8 +717,6 @@ public  final class Requirement extends
    * <pre>
    * Optional: A list of source path regexps that will be checked for
    * the requirement (the opposite of whitelist_regexp).
-   * It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
    * </pre>
    */
   public int getOnlyApplyToRegexpCount() {
@@ -715,8 +728,6 @@ public  final class Requirement extends
    * <pre>
    * Optional: A list of source path regexps that will be checked for
    * the requirement (the opposite of whitelist_regexp).
-   * It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
    * </pre>
    */
   public java.lang.String getOnlyApplyToRegexp(int index) {
@@ -728,8 +739,6 @@ public  final class Requirement extends
    * <pre>
    * Optional: A list of source path regexps that will be checked for
    * the requirement (the opposite of whitelist_regexp).
-   * It is an error to specify both
-   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
    * </pre>
    */
   public com.google.protobuf.ByteString
@@ -1850,8 +1859,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public java.util.List<java.lang.String>
@@ -1863,8 +1871,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public int getOnlyApplyToCount() {
@@ -1875,8 +1882,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public java.lang.String getOnlyApplyTo(int index) {
@@ -1887,8 +1893,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public com.google.protobuf.ByteString
@@ -1900,8 +1905,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public Builder setOnlyApplyTo(
@@ -1919,8 +1923,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public Builder addOnlyApplyTo(
@@ -1938,8 +1941,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public Builder addAllOnlyApplyTo(
@@ -1954,8 +1956,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public Builder clearOnlyApplyTo() {
@@ -1969,8 +1970,7 @@ public  final class Requirement extends
      *
      * <pre>
      * Optional: A list of source paths that will be checked for the requirement
-     * (the opposite of whitelist). It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * (the opposite of whitelist).
      * </pre>
      */
     public Builder addOnlyApplyToBytes(
@@ -1998,8 +1998,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public java.util.List<java.lang.String>
@@ -2012,8 +2010,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public int getOnlyApplyToRegexpCount() {
@@ -2025,8 +2021,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public java.lang.String getOnlyApplyToRegexp(int index) {
@@ -2038,8 +2032,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public com.google.protobuf.ByteString
@@ -2052,8 +2044,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public Builder setOnlyApplyToRegexp(
@@ -2072,8 +2062,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public Builder addOnlyApplyToRegexp(
@@ -2092,8 +2080,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public Builder addAllOnlyApplyToRegexp(
@@ -2109,8 +2095,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public Builder clearOnlyApplyToRegexp() {
@@ -2125,8 +2109,6 @@ public  final class Requirement extends
      * <pre>
      * Optional: A list of source path regexps that will be checked for
      * the requirement (the opposite of whitelist_regexp).
-     * It is an error to specify both
-     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
      * </pre>
      */
     public Builder addOnlyApplyToRegexpBytes(
