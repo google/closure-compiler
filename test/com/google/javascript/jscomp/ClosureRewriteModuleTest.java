@@ -300,6 +300,27 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         });
   }
 
+  public void testTypeOnlyModuleImportFromLegacyFile() {
+    test(
+        new String[] {
+            LINE_JOINER.join(
+                "goog.module('ns.B');",
+                "/** @constructor */ exports = function() {};"),
+            LINE_JOINER.join(
+                "goog.provide('ns.a');",
+                "",
+                "goog.require('ns.B');",
+                "",
+                "/** @type {ns.B} */ var c;")},
+
+        new String[] {
+            "/** @constructor */ var module$exports$ns$B = function() {};",
+            LINE_JOINER.join(
+                "goog.provide('ns.a');",
+                "",
+                "/** @type {module$exports$ns$B} */ var c;")});
+  }
+
   public void testBundle1() {
     test(
         new String[] {

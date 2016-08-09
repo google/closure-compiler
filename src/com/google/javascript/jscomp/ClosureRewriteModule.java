@@ -209,7 +209,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String contentsPrefix; // "module$contents$a$b$c_
     final Set<String> topLevelNames = new HashSet<>(); // For prefixed content renaming.
     final Deque<ScriptDescription> childScripts = new LinkedList<>(); // For goog.loadModule()
-    final Set<String> googModuleGettedNamespaces = new HashSet<>(); // {"some.goog.module", ...}
     final Map<String, String> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
 
     /**
@@ -700,7 +699,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       unrecognizedRequires.add(
           new UnrecognizedRequire(call, legacyNamespace, false /** mustBeOrderd */));
     }
-    currentScript.googModuleGettedNamespaces.add(legacyNamespace);
 
     String aliasName = null;
     boolean isFillingAnAlias =
@@ -839,8 +837,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     boolean targetIsNonLegacyGoogModule =
         rewriteState.containsModule(legacyNamespace)
             && !rewriteState.isLegacyModule(legacyNamespace);
-    boolean targetIsGoogModuleGetted =
-        currentScript.googModuleGettedNamespaces.contains(legacyNamespaceNode.getString());
     boolean importHasAlias = NodeUtil.isNameDeclaration(statementNode);
     boolean isDestructuring = statementNode.getFirstChild().isDestructuringLhs();
 
@@ -875,7 +871,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
     }
 
-    if (currentScript.isModule || (targetIsNonLegacyGoogModule && targetIsGoogModuleGetted)) {
+    if (currentScript.isModule || targetIsNonLegacyGoogModule) {
       if (isDestructuring) {
         // Delete the goog.require() because we're going to inline its alias later.
         statementNode.detachFromParent();
