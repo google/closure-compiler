@@ -109,6 +109,11 @@ public abstract class PassConfig {
     return Collections.emptyList();
   }
 
+  /** Gets the transpilation passes */
+  protected List<PassFactory> getTranspileOnlyPasses() {
+    return Collections.emptyList();
+  }
+
   /**
    * Gets the checking passes to run.
    *
