@@ -1489,7 +1489,7 @@ class IRFactory {
     Node processNameWithInlineJSDoc(IdentifierToken identifierToken) {
       JSDocInfo info = handleInlineJsDoc(identifierToken);
       maybeWarnReservedKeyword(identifierToken);
-      Node node = newStringNode(Token.NAME, identifierToken.toString());
+      Node node = newStringNode(Token.NAME, identifierToken.value);
       if (info != null) {
         node.setJSDocInfo(info);
       }
@@ -1508,7 +1508,7 @@ class IRFactory {
     }
 
     private void maybeWarnReservedKeyword(IdentifierToken token) {
-      String identifier = token.toString();
+      String identifier = token.value;
       boolean isIdentifier = false;
       if (TokenStream.isKeyword(identifier)) {
         features = features.require(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
@@ -2488,14 +2488,14 @@ class IRFactory {
           switch (param.type) {
             case IDENTIFIER_EXPRESSION:
               requiredParams.put(
-                  param.asIdentifierExpression().identifierToken.toString(),
+                  param.asIdentifierExpression().identifierToken.value,
                   type);
               break;
             case OPTIONAL_PARAMETER:
               maybeWarnTypeSyntax(param, Feature.OPTIONAL_PARAMETER);
               optionalParams.put(
                   param.asOptionalParameter().param.asIdentifierExpression()
-                      .identifierToken.toString(),
+                      .identifierToken.value,
                   type);
               break;
             case REST_PARAMETER:
@@ -2507,7 +2507,7 @@ class IRFactory {
                       .assignmentTarget
                       .asIdentifierExpression()
                       .identifierToken
-                      .toString();
+                      .value;
               restType = type;
               break;
             default:
