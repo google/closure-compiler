@@ -3341,6 +3341,7 @@ public final class NodeUtil {
    * @param basisNode The basis node from which to copy the source file info.
    * @param originalName The original name of the node.
    */
+  @Deprecated
   static void setDebugInformation(Node node, Node basisNode,
                                   String originalName) {
     node.copyInformationFromForTree(basisNode);
@@ -3699,7 +3700,7 @@ public final class NodeUtil {
   static Node newUndefinedNode(Node srcReferenceNode) {
     Node node = IR.voidNode(IR.number(0));
     if (srcReferenceNode != null) {
-        node.copyInformationFromForTree(srcReferenceNode);
+      node.useSourceInfoFromForTree(srcReferenceNode);
     }
     return node;
   }

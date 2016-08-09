@@ -122,7 +122,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       return;
     }
 
-    Node newTarget = IR.name(NodeUtil.JSC_PROPERTY_NAME_FN).copyInformationFrom(nameNode);
+    Node newTarget = IR.name(NodeUtil.JSC_PROPERTY_NAME_FN).useSourceInfoFrom(nameNode);
     newTarget.setOriginalName(nameNode.getOriginalQualifiedName());
 
     callNode.replaceChild(nameNode, newTarget);

@@ -103,7 +103,8 @@ class DeclaredGlobalExternsOnWindow
       newNode.setJSDocInfo(jsDocInfo);
     }
 
-    NodeUtil.setDebugInformation(newNode, node, name);
+    newNode.useSourceInfoFromForTree(node);
+    newNode.setOriginalName(name);
     node.getGrandparent().addChildToBack(IR.exprResult(newNode));
   }
 

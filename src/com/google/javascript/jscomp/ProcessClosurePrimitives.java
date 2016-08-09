@@ -1362,7 +1362,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             assignNode.removeChild(valueNode);
             nameNode.addChildToFront(valueNode);
             Node varNode = IR.var(nameNode);
-            varNode.copyInformationFrom(candidateDefinition);
+            varNode.useSourceInfoFrom(candidateDefinition);
             candidateDefinition.getParent().replaceChild(
                 candidateDefinition, varNode);
             varNode.setJSDocInfo(assignNode.getJSDocInfo());

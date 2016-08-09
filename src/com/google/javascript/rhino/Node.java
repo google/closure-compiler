@@ -2122,6 +2122,7 @@ public class Node implements Serializable {
    * @return this
    */
   // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
+  @Deprecated
   public Node copyInformationFrom(Node other) {
     if (getProp(ORIGINALNAME_PROP) == null) {
       putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
@@ -2141,6 +2142,7 @@ public class Node implements Serializable {
    * @return this
    */
   // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
+  @Deprecated
   public Node copyInformationFromForTree(Node other) {
     copyInformationFrom(other);
     for (Node child = first; child != null; child = child.next) {

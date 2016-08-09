@@ -511,8 +511,8 @@ class ScopedAliases implements HotSwapCompilerPass {
                 value,
                 varDocInfo)
                 .useSourceInfoIfMissingFromForTree(n);
-            NodeUtil.setDebugInformation(
-                newDecl.getFirstFirstChild(), n, name);
+            newDecl.getFirstFirstChild().useSourceInfoFrom(n);
+            newDecl.getFirstFirstChild().setOriginalName(name);
 
             if (isHoisted) {
               grandparent.addChildToFront(newDecl);
