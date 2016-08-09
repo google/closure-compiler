@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp.gwt.client;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Strings.nullToEmpty;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gwt.core.client.EntryPoint;
@@ -31,15 +34,13 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.WarningLevel;
-
-import jsinterop.annotations.JsPackage;
-import jsinterop.annotations.JsProperty;
-import jsinterop.annotations.JsType;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import jsinterop.annotations.JsPackage;
+import jsinterop.annotations.JsProperty;
+import jsinterop.annotations.JsType;
 
 /**
  * Runner for the GWT-compiled JSCompiler as a single exported method.
@@ -211,7 +212,7 @@ public final class GwtRunner implements EntryPoint {
         if (path == null) {
           path = unknownPrefix + i;
         }
-        out.add(SourceFile.fromCode(path, file.src != null ? file.src : ""));
+        out.add(SourceFile.fromCode(path, nullToEmpty(file.src)));
       }
     }
     return ImmutableList.copyOf(out);
@@ -223,7 +224,7 @@ public final class GwtRunner implements EntryPoint {
     if (src != null) {
       for (int i = 0; i < src.length; ++i) {
         File file = src[i];
-        if (file.sourceMap == null || file.sourceMap.isEmpty()) {
+        if (isNullOrEmpty(file.sourceMap)) {
           continue;
         }
         String path = file.path;
