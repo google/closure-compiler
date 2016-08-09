@@ -17508,6 +17508,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(LINE_JOINER.join(
         "/** @enum */ var myenum = { FOO: 123 };",
         "function f(x) { return x.FOO; }"));
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + LINE_JOINER.join(
+            "/** @param {{ myprop: number }} x */",
+            "function f(x) {}"),
+        "function g(x) { return x.myprop; }");
   }
 
   public void testInferConstTypeWeirdOrderDontCrash() {

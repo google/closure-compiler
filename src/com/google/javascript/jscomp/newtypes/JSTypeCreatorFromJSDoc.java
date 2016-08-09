@@ -36,6 +36,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * During GlobalTypeInfo, this class parses type ASTs inside jsdocs and converts them
+ * to JSTypes.
+ *
+ * There isn't a clear distinction which warnings should be signaled here and which
+ * ones in GlobalTypeInfo; we give the warning in whichever class is most convenient.
  *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
@@ -189,6 +194,10 @@ public final class JSTypeCreatorFromJSDoc {
 
   private final CodingConvention convention;
   private final UniqueNameGenerator nameGen;
+  // In GlobalTypeInfo, we collect all property names defined anywhere in the program.
+  // This field is a reference to that set, so that we can add properties from jsdoc
+  // annotations in externs.
+  private final Set<String> allPropertyNames;
 
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
@@ -205,11 +214,12 @@ public final class JSTypeCreatorFromJSDoc {
   private Map<Node, String> unknownTypeNames = new LinkedHashMap<>();
 
   public JSTypeCreatorFromJSDoc(
-      CodingConvention convention, UniqueNameGenerator nameGen) {
+      CodingConvention convention, UniqueNameGenerator nameGen, Set<String> allPropertyNames) {
     this.qmarkFunctionDeclared = new FunctionAndSlotType(
         null, FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration());
     this.convention = convention;
     this.nameGen = nameGen;
+    this.allPropertyNames = allPropertyNames;
   }
 
   private FunctionAndSlotType qmarkFunctionDeclared;
@@ -380,6 +390,9 @@ public final class JSTypeCreatorFromJSDoc {
       String propName = propNameNode.getString();
       if (propName.startsWith("'") || propName.startsWith("\"")) {
         propName = propName.substring(1, propName.length() - 1);
+      }
+      if (n.isFromExterns()) {
+        this.allPropertyNames.add(propName);
       }
       JSType propType = !isPropDeclared
           ? JSType.UNKNOWN

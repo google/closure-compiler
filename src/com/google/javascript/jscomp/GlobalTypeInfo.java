@@ -291,7 +291,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     this.convention = compiler.getCodingConvention();
     this.varNameGen = new UniqueNameGenerator();
     this.funNameGen = new DefaultNameGenerator(ImmutableSet.<String>of(), "", null);
-    this.typeParser = new JSTypeCreatorFromJSDoc(this.convention, this.varNameGen);
+    this.typeParser =
+        new JSTypeCreatorFromJSDoc(this.convention, this.varNameGen, this.allPropertyNames);
     this.allPropertyNames.add("prototype");
     this.commonTypes = JSTypes.make();
     JSType.setCommonTypes(this.commonTypes);
