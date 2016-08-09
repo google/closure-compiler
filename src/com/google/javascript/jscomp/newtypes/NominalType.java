@@ -517,7 +517,7 @@ public final class NominalType {
 
   boolean isPropDefinedOnSubtype(QualifiedName pname) {
     Preconditions.checkArgument(pname.isIdentifier());
-    return this.rawType.isPropDefinedOnSubtype(this, pname);
+    return this.rawType.isPropDefinedOnSubtype(pname.getLeftmostName());
   }
 
   @Override

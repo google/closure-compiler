@@ -1326,7 +1326,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           break;
         case ASSIGN: {
           Node lvalue = n.getFirstChild();
-          if (lvalue.isGetProp() && lvalue.isQualifiedName() && parent.isExprResult()) {
+          if (lvalue.isGetProp() && lvalue.isQualifiedName()) {
             visitPropertyDeclaration(lvalue);
           }
           break;

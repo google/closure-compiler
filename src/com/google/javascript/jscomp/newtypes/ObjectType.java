@@ -1314,8 +1314,9 @@ final class ObjectType implements TypeWithProperties {
   boolean isPropDefinedOnSubtype(QualifiedName pname) {
     Preconditions.checkArgument(pname.isIdentifier());
     NominalType nt = getNominalType();
-    Preconditions.checkState(!nt.isBuiltinObject());
-    return nt.isPropDefinedOnSubtype(pname);
+    // If this type represents an object literal, return false.
+    // NewTypeInference handles the "Object" case.
+    return nt.isBuiltinObject() ? false : nt.isPropDefinedOnSubtype(pname);
   }
 
   @Override

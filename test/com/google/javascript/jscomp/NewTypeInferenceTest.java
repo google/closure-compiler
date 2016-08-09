@@ -17623,6 +17623,52 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return x.prop;",
         "}",
         "f(E.A);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(/** (!Foo | { a: number }) */ x) {",
+        "  return x.myprop;",
+        "}"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @constructor @extends {Bar} */",
+        "function Baz() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  return x.prop + 123;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " * @extends {Foo}",
+        " */",
+        "function Bar() {}",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar<number>}",
+        " */",
+        "function Baz() {}",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar<string>}",
+        " */",
+        "function Qux() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  return x.prop + 234;",
+        "}"));
   }
 
   public void testConstructorDeclWithoutFunctionLiteral() {
@@ -17650,5 +17696,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @constructor */ var Foo;",
         "var x = new Foo;"),
         NewTypeInference.NOT_CALLABLE);
+  }
+
+  public void testAssignmentsThatArentExprResultsDeclareProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = this.b = 123;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  return x.b + 1;",
+        "}"));
   }
 }
