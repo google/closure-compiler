@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
+import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
@@ -2608,8 +2609,12 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           // TODO(johnlenz): make global instrumentation an option
-          return new CoverageInstrumentationPass(
-              compiler, CoverageReach.CONDITIONAL);
+          if (options.instrumentBranchCoverage) {
+            return new CoverageInstrumentationPass(
+                compiler, CoverageReach.CONDITIONAL, InstrumentOption.BRANCH_ONLY);
+          } else {
+            return new CoverageInstrumentationPass(compiler, CoverageReach.CONDITIONAL);
+          }
         }
       };
 

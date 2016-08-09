@@ -996,6 +996,9 @@ public class CompilerOptions {
    */
   public boolean instrumentForCoverage;
 
+  /** Instrument branch coverage data - valid only if instrumentForCoverage is True */
+  public boolean instrumentBranchCoverage;
+
   String instrumentationTemplateFile;
 
   /** List of conformance configs to use in CheckConformance */
@@ -1160,6 +1163,7 @@ public class CompilerOptions {
     // Instrumentation
     instrumentationTemplate = null;  // instrument functions
     instrumentForCoverage = false;  // instrument lines
+    instrumentBranchCoverage = false; // instrument branches
     instrumentationTemplateFile = "";
 
     // Output
@@ -2525,6 +2529,16 @@ public class CompilerOptions {
     this.instrumentForCoverage = instrumentForCoverage;
   }
 
+  /** Set whether to instrument to collect branch coverage */
+  public void setInstrumentBranchCoverage(boolean instrumentBranchCoverage) {
+    if (instrumentForCoverage || !instrumentBranchCoverage) {
+      this.instrumentBranchCoverage = instrumentBranchCoverage;
+    } else {
+      throw new RuntimeException("The option instrumentForCoverage must be set to true for "
+          + "instrumentBranchCoverage to be set to true.");
+    }
+  }
+
   public List<ConformanceConfig> getConformanceConfigs() {
     return conformanceConfigs;
   }
@@ -2640,6 +2654,7 @@ public class CompilerOptions {
             .add("instrumentationTemplateFile", instrumentationTemplateFile)
             .add("instrumentationTemplate", instrumentationTemplate)
             .add("instrumentForCoverage", instrumentForCoverage)
+            .add("instrumentBranchCoverage", instrumentBranchCoverage)
             .add("j2clPassMode", j2clPassMode)
             .add("jqueryPass", jqueryPass)
             .add("labelRenaming", labelRenaming)
