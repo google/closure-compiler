@@ -41,6 +41,12 @@ AudioContext.prototype.currentTime;
 AudioContext.prototype.listener;
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/state
+ */
+AudioContext.prototype.state;
+
+/**
  * @param {number} numberOfChannels
  * @param {number} length
  * @param {number} sampleRate
@@ -181,6 +187,18 @@ AudioContext.prototype.createOscillator = function() {};
  * @return {!PeriodicWave}
  */
 AudioContext.prototype.createPeriodicWave = function(real, imag) {};
+
+/**
+ * @return {!Promise<void>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/resume
+ */
+AudioContext.prototype.resume = function() {};
+
+/**
+ * @return {!Promise<void>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/suspend
+ */
+AudioContext.prototype.suspend = function() {};
 
 /**
  * @param {number} numberOfChannels
