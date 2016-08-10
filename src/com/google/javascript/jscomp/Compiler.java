@@ -735,7 +735,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
     if (options.skipNonTranspilationPasses) {
       // i.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
-      transpile();
+      if (options.lowerFromEs6()) {
+        transpile();
+      }
       return;
     }
 
