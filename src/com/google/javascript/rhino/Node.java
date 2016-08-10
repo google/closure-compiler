@@ -148,8 +148,9 @@ public class Node implements Serializable {
       FEATURE_SET = 89,           // Attaches a FeatureSet to SCRIPT nodes.
       IS_MODULE_NAME = 90,        // Indicates that a STRING node represents a namespace from
                                   // goog.module() or goog.require() call.
-      WAS_PREVIOUSLY_PROVIDED = 91; // Indicates a namespace that was provided at some point in the
+      WAS_PREVIOUSLY_PROVIDED = 91, // Indicates a namespace that was provided at some point in the
                                   // past.
+      IS_ES6_CLASS = 92;          // Indicates that a FUNCTION node is converted from an ES6 class
 
   private static final String propToString(int propType) {
       switch (propType) {
@@ -207,6 +208,7 @@ public class Node implements Serializable {
         case FEATURE_SET:        return "feature_set";
         case IS_MODULE_NAME:     return "is_module_name";
         case WAS_PREVIOUSLY_PROVIDED: return "was_previously_provided";
+        case IS_ES6_CLASS: return "is_es6_class";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

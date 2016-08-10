@@ -707,6 +707,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       throw new IllegalStateException("Unexpected parent node " + parent);
     }
 
+    constructor.putBooleanProp(Node.IS_ES6_CLASS, true);
     compiler.reportCodeChange();
   }
 

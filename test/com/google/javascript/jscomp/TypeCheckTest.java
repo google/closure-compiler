@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.InputId;
@@ -31,6 +32,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -17016,6 +17018,24 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "}"));
   }
 
+  public void testEs5ClassExtendingEs6Class() {
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
+    testTypes(
+        LINE_JOINER.join(
+            "class Foo {}",
+            "/** @constructor @extends {Foo} */ var Bar = function() {};"),
+        "ES5 class Bar cannot extend ES6 class Foo");
+  }
+
+  public void testEs5ClassExtendingEs6Class_noWarning() {
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
+    testTypes(
+        LINE_JOINER.join(
+            "class A {}",
+            "/** @constructor @extends {A} */",
+            "const B = createSubclass(A);"));
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }
@@ -17190,6 +17210,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
+
+    if (compiler.getOptions().getLanguageIn().isEs6OrHigher()) {
+      List<PassFactory> passes = new ArrayList<>();
+      TranspilationPasses.addEs6EarlyPasses(passes);
+      TranspilationPasses.addEs6LatePasses(passes);
+      PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null, null);
+      phaseopt.consume(passes);
+      phaseopt.process(externsNode, n);
+    }
 
     TypedScope s = makeTypeCheck().processForTesting(externsNode, n);
     return new TypeCheckResult(n, s);

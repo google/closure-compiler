@@ -51,7 +51,6 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -166,10 +165,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_CONFLICTING_EXTENDED_TYPE",
           "{1} cannot extend this type; {0}s can only extend {0}s");
 
-  static final DiagnosticType INTERFACE_EXTENDS_LOOP =
+  static final DiagnosticType ES5_CLASS_EXTENDING_ES6_CLASS =
       DiagnosticType.warning(
-          "JSC_INTERFACE_EXTENDS_LOOP",
-          "extends loop involving {0}, loop: {1}");
+          "JSC_ES5_CLASS_EXTENDING_ES6_CLASS", "ES5 class {0} cannot extend ES6 class {1}");
+
+  static final DiagnosticType INTERFACE_EXTENDS_LOOP =
+      DiagnosticType.warning("JSC_INTERFACE_EXTENDS_LOOP", "extends loop involving {0}, loop: {1}");
 
   static final DiagnosticType CONFLICTING_IMPLEMENTED_TYPE =
     DiagnosticType.warning(
@@ -1687,6 +1688,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             t.makeError(n, CONFLICTING_EXTENDED_TYPE,
                         "constructor", functionPrivateName));
       } else {
+        if (baseConstructor != null
+            && baseConstructor.getSource() != null
+            && baseConstructor.getSource().getBooleanProp(Node.IS_ES6_CLASS)
+            && !functionType.getSource().getBooleanProp(Node.IS_ES6_CLASS)) {
+          compiler.report(
+              t.makeError(
+                  n,
+                  ES5_CLASS_EXTENDING_ES6_CLASS,
+                  functionType.getDisplayName(),
+                  baseConstructor.getDisplayName()));
+        }
+
         // All interfaces are properly implemented by a class
         for (JSType baseInterface : functionType.getImplementedInterfaces()) {
           boolean badImplementedType = false;
