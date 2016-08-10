@@ -245,7 +245,7 @@ public final class JSDocInfoPrinter {
       sb.append(")");
     } else if (typeNode.getToken() == Token.ELLIPSIS) {
       sb.append("...");
-      if (typeNode.hasChildren()) {
+      if (typeNode.hasChildren() && !typeNode.getFirstChild().isEmpty()) {
         appendTypeNode(sb, typeNode.getFirstChild());
       }
     } else if (typeNode.getToken() == Token.STAR) {

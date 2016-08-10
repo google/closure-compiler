@@ -104,6 +104,11 @@ public final class JSDocInfoPrinterTest extends TestCase {
     info = builder.buildAndReset();
     assertEquals("/**\n @param {...number} foo\n */\n", JSDocInfoPrinter.print(info));
 
+    builder.recordParameter("foo",
+        new JSTypeExpression(new Node(Token.ELLIPSIS, IR.empty()), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**\n @param {...} foo\n */\n", JSDocInfoPrinter.print(info));
+
     builder.recordParameter("foo", null);
     info = builder.buildAndReset();
     assertEquals("/**\n @param foo\n */\n", JSDocInfoPrinter.print(info));
