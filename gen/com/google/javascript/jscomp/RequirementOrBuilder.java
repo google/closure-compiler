@@ -342,4 +342,38 @@ public interface RequirementOrBuilder extends
    */
   com.google.protobuf.ByteString
       getExtendsBytes();
+
+  // optional bool report_loose_type_violations = 11 [default = true];
+  /**
+   * <code>optional bool report_loose_type_violations = 11 [default = true];</code>
+   *
+   * <pre>
+   * Whether to report possible violations when type information is not exact.
+   * Normally, violations on parent types are reported as possible violations.
+   * This field allows to ignore them and report only violations on exact types.
+   * This changes the balance between the false positives and the false
+   * negatives. With the default value, there might be lots of false positives
+   * (possible violations) but there shouldn't be any false negatives. Without
+   * reporting the loose type violations, there will be less false positives but
+   * there can also be false negatives (an actual violation that is not
+   * reported).
+   * </pre>
+   */
+  boolean hasReportLooseTypeViolations();
+  /**
+   * <code>optional bool report_loose_type_violations = 11 [default = true];</code>
+   *
+   * <pre>
+   * Whether to report possible violations when type information is not exact.
+   * Normally, violations on parent types are reported as possible violations.
+   * This field allows to ignore them and report only violations on exact types.
+   * This changes the balance between the false positives and the false
+   * negatives. With the default value, there might be lots of false positives
+   * (possible violations) but there shouldn't be any false negatives. Without
+   * reporting the loose type violations, there will be less false positives but
+   * there can also be false negatives (an actual violation that is not
+   * reported).
+   * </pre>
+   */
+  boolean getReportLooseTypeViolations();
 }

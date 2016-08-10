@@ -115,6 +115,7 @@ public final class ConformanceRules {
     final ImmutableList<String> onlyApplyTo;
     @Nullable final Pattern whitelistRegexp;
     @Nullable final Pattern onlyApplyToRegexp;
+    final boolean reportLooseTypeViolations;
 
     public AbstractRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -129,6 +130,7 @@ public final class ConformanceRules {
       onlyApplyTo = ImmutableList.copyOf(requirement.getOnlyApplyToList());
       onlyApplyToRegexp = buildPattern(
           requirement.getOnlyApplyToRegexpList());
+      reportLooseTypeViolations = requirement.getReportLooseTypeViolations();
     }
 
     @Nullable
@@ -488,13 +490,15 @@ public final class ConformanceRules {
              || targetType.isAllType()
              || targetType.isEquivalentTo(
                  registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
-            return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
+            if (reportLooseTypeViolations) {
+              return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
+            }
           } else if (targetType.isSubtypeOf(methodClassType)) {
             return ConformanceResult.VIOLATION;
           } else if (methodClassType.isSubtypeOf(targetType)) {
             if (matchesPrototype(methodClassType, targetType)) {
               return ConformanceResult.VIOLATION;
-            } else {
+            } else if (reportLooseTypeViolations) {
               // Access of a banned property through a super class may be a violation
               return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
             }
@@ -825,8 +829,9 @@ public final class ConformanceRules {
            || targetType.isAllType()
            || targetType.isEquivalentTo(
                registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
-          if (!ConformanceUtil.validateCall(
-              compiler, n.getParent(), r.restrictedCallType, isCallInvocation)) {
+          if (reportLooseTypeViolations
+              && !ConformanceUtil.validateCall(
+                  compiler, n.getParent(), r.restrictedCallType, isCallInvocation)) {
             return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
           }
         } else if (targetType.isSubtypeOf(methodClassType)) {
@@ -932,7 +937,7 @@ public final class ConformanceRules {
           }
         }
       }
-      return possibleViolation
+      return possibleViolation && reportLooseTypeViolations
           ? ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES
           : ConformanceResult.CONFORMANCE;
     }

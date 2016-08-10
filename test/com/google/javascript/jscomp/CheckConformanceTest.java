@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
-
 import java.util.List;
 
 /**
@@ -410,6 +409,32 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "anything;",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: testcode is not allowed");
+  }
+
+  public void testReportLooseTypeViolations() {
+    configuration =
+        LINE_JOINER.join(
+            "requirement: {",
+            "  type: BANNED_PROPERTY_WRITE",
+            "  value: 'HTMLScriptElement.prototype.textContent'",
+            "  error_message: 'Setting content of <script> is dangerous.'",
+            "  report_loose_type_violations: false",
+            "}");
+
+    String externs =
+        LINE_JOINER.join(
+            "/** @constructor */ function Element() {}",
+            "/** @type {string} @implicitCast */",
+            "Element.prototype.textContent;",
+            "/** @constructor @extends {Element} */ function HTMLScriptElement() {}\n");
+
+    testSame(
+        externs,
+        "(new HTMLScriptElement).textContent = 'alert(1);'",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: Setting content of <script> is dangerous.");
+
+    testSame(externs, "(new Element).textContent = 'safe'", null);
   }
 
   private void testConformance(String src, DiagnosticType warning) {
