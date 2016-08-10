@@ -1152,6 +1152,11 @@ public class Node implements Serializable {
         sb.append(' ');
         sb.append(lineno);
       }
+      if (length != 0) {
+        sb.append(" [length: ");
+        sb.append(length);
+        sb.append(']');
+      }
     }
 
     if (printAnnotations) {
