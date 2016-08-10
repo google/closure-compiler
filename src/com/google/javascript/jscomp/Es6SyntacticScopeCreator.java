@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
 
 /**
  * <p>The syntactic scope creator scans the parse tree to create a Scope object
- * containing all the variable declarations in that scope. This class adds supported
+ * containing all the variable declarations in that scope. This class adds support
  * for block-level scopes introduced in ECMAScript 6.</p>
  *
  * <p>This implementation is not thread-safe.</p>
