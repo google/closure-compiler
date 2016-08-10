@@ -1477,9 +1477,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      */
     private void setSourceInfo(Node newNode) {
       Node provideStringNode = getProvideStringNode();
-      int offset = getSourceInfoOffset(provideStringNode);
-      Node sourceInfoNode = provideStringNode == null
-          ? firstNode : provideStringNode;
+      int offset = provideStringNode == null ? 0 : getSourceInfoOffset();
+      Node sourceInfoNode = provideStringNode == null ? firstNode : provideStringNode;
       newNode.copyInformationFromForTree(sourceInfoNode);
       if (offset != 0) {
         newNode.setSourceEncodedPositionForTree(
@@ -1490,11 +1489,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     /**
      * Get the offset into the provide node where the symbol appears.
      */
-    private int getSourceInfoOffset(Node provideStringNode) {
-      if (provideStringNode == null) {
-        return 0;
-      }
-
+    private int getSourceInfoOffset() {
       int indexOfLastDot = namespace.lastIndexOf('.');
 
       // +1 for the opening quote
