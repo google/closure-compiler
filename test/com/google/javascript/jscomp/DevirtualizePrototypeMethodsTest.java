@@ -658,7 +658,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     }
 
     public String getNameString(Node n) {
-      Token type = n.getType();
+      Token type = n.getToken();
       if (type == Token.NAME) {
         return n.getString();
       } else if (type == Token.GETPROP) {
@@ -703,7 +703,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
           JSType type = node.getJSType();
           typeInformation.add(
               Joiner.on("")
-                  .join(node.getType(), " ", getNameString(nameNode), " = ", String.valueOf(type)));
+                  .join(
+                      node.getToken(), " ", getNameString(nameNode), " = ", String.valueOf(type)));
         }
 
         if (node.isGetProp()) {
@@ -712,7 +713,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             JSType type = child.getJSType();
             typeInformation.add(
                 Joiner.on("")
-                    .join(child.getType(), " ", child.getString(), " = ", String.valueOf(type)));
+                    .join(child.getToken(), " ", child.getString(), " = ", String.valueOf(type)));
           }
         }
       }

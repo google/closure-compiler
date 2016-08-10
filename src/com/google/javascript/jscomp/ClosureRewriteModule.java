@@ -250,7 +250,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         checkAndSetStrictModeDirective(t, n);
       }
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case CALL:
           if (isCallTo(n, "goog.loadModule") && n.getLastChild().isFunction()) {
             recordGoogLoadModule(n);
@@ -317,7 +317,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private class ScriptUpdater implements Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case CALL:
           if (isCallTo(n, "goog.loadModule") && n.getLastChild().isFunction()) {
             updateGoogLoadModule(n);
@@ -365,7 +365,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case SCRIPT:
           updateEndScript();
           break;

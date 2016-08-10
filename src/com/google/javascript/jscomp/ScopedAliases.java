@@ -229,7 +229,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       Node aliasDefinition = aliasVar.getInitialValue();
       Node replacement = aliasDefinition.cloneTree();
       replacement.useSourceInfoFromForTree(aliasReference);
-      if (aliasReference.getType() == Token.STRING_KEY) {
+      if (aliasReference.getToken() == Token.STRING_KEY) {
         Preconditions.checkState(!aliasReference.hasChildren());
         aliasReference.addChildToFront(replacement);
       } else {
@@ -438,7 +438,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         } else if (v.isBleedingFunction()) {
           // Bleeding functions already get a BAD_PARAMETERS error, so just
           // do nothing.
-        } else if (parent.getType() == Token.PARAM_LIST) {
+        } else if (parent.getToken() == Token.PARAM_LIST) {
           // Parameters of the scope function also get a BAD_PARAMETERS
           // error.
         } else if (isVar || isFunctionDecl || NodeUtil.isClassDeclaration(parent)) {
@@ -624,7 +624,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         return;
       }
 
-      Token type = n.getType();
+      Token type = n.getToken();
       boolean isObjLitShorthand = type == Token.STRING_KEY && !n.hasChildren();
       Var aliasVar = null;
       if (type == Token.NAME || isObjLitShorthand) {

@@ -292,16 +292,17 @@ import java.util.Set;
         // a CFG-based analysis rather than just looking at the AST.
         //
         // TODO(dcc): have nodesHaveSameControlFlow() use a CFG
-        Predicate<Node> isEarlyExitPredicate = new Predicate<Node>() {
-          @Override
-          public boolean apply(Node input) {
-            Token nodeType = input.getType();
+        Predicate<Node> isEarlyExitPredicate =
+            new Predicate<Node>() {
+              @Override
+              public boolean apply(Node input) {
+                Token nodeType = input.getToken();
 
-            return nodeType == Token.RETURN
-                || nodeType == Token.BREAK
-                || nodeType == Token.CONTINUE;
-          }
-        };
+                return nodeType == Token.RETURN
+                    || nodeType == Token.BREAK
+                    || nodeType == Token.CONTINUE;
+              }
+            };
 
         return !NodeUtil.has(node2DeepestControlDependentBlock,
             isEarlyExitPredicate, NOT_FUNCTION_PREDICATE);
@@ -335,7 +336,7 @@ import java.util.Set;
 
     int indexOfChildInParent = siblings.indexOf(child);
 
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case IF:
       case HOOK:
         return (indexOfChildInParent == 1 || indexOfChildInParent == 2);

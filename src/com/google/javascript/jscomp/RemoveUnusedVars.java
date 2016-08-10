@@ -205,7 +205,7 @@ class RemoveUnusedVars
    * and traverse them lazily.
    */
   private void traverseNode(Node n, Node parent, Scope scope) {
-    Token type = n.getType();
+    Token type = n.getToken();
     Var var = null;
     switch (type) {
       case FUNCTION:

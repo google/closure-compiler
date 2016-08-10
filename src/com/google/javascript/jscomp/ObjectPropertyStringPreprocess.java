@@ -108,17 +108,19 @@ final class ObjectPropertyStringPreprocess implements CompilerPass {
 
       Node firstArgument = objectName.getNext();
       if (!firstArgument.isQualifiedName()) {
-        compiler.report(t.makeError(firstArgument,
-            QUALIFIED_NAME_EXPECTED_ERROR,
-            firstArgument.getType().toString()));
+        compiler.report(
+            t.makeError(
+                firstArgument, QUALIFIED_NAME_EXPECTED_ERROR, firstArgument.getToken().toString()));
         return;
       }
 
       Node secondArgument = firstArgument.getNext();
       if (!secondArgument.isString()) {
-        compiler.report(t.makeError(secondArgument,
-            STRING_LITERAL_EXPECTED_ERROR,
-            secondArgument.getType().toString()));
+        compiler.report(
+            t.makeError(
+                secondArgument,
+                STRING_LITERAL_EXPECTED_ERROR,
+                secondArgument.getToken().toString()));
         return;
       }
 

@@ -69,7 +69,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case EXPR_RESULT:
           if (NodeUtil.isExprAssign(n)) {
             Node expr = n.getFirstChild();
@@ -137,7 +137,7 @@ class ConvertToTypedInterface implements CompilerPass {
       if (expr == null) {
         return null;
       }
-      switch (expr.getRoot().getType()) {
+      switch (expr.getRoot().getToken()) {
         case EQUALS:
           if (decl.isDefaultParam()) {
             expr = new JSTypeExpression(expr.getRoot().getFirstChild().cloneTree(), "<synthetic>");
@@ -191,7 +191,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case FUNCTION: {
           if (parent.isCall()) {
             Preconditions.checkState(!parent.getFirstChild().matchesQualifiedName("goog.scope"),
@@ -209,7 +209,7 @@ class ConvertToTypedInterface implements CompilerPass {
         }
         case EXPR_RESULT:
           Node expr = n.getFirstChild();
-          switch (expr.getType()) {
+          switch (expr.getToken()) {
             case NUMBER:
             case STRING:
               n.detachFromParent();
@@ -273,7 +273,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case TRY:
         case DEFAULT_CASE:
           parent.replaceChild(n, n.getFirstChild().detachFromParent());

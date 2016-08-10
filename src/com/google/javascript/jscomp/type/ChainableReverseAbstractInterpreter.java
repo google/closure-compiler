@@ -114,7 +114,7 @@ public abstract class ChainableReverseAbstractInterpreter
    * @return The current type of the node if it can be refined, null otherwise.
    */
   protected JSType getTypeIfRefinable(Node node, FlowScope scope) {
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case NAME:
         StaticTypedSlot<JSType> nameVar = scope.getSlot(node.getString());
         if (nameVar != null) {
@@ -155,7 +155,7 @@ public abstract class ChainableReverseAbstractInterpreter
    * the given scope, as determined by {@link #getTypeIfRefinable}.
    */
   protected void declareNameInScope(FlowScope scope, Node node, JSType type) {
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case NAME:
         scope.inferSlotType(node.getString(), type);
         break;

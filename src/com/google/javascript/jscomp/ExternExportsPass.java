@@ -317,7 +317,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
       Node definition;
 
-      switch (definitionParent.getType()) {
+      switch (definitionParent.getToken()) {
         case ASSIGN:
           definition = definitionParent.getLastChild();
           break;
@@ -475,7 +475,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
 
       case NAME:
       case GETPROP:

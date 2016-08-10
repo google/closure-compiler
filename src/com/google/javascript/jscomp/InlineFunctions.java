@@ -202,7 +202,7 @@ class InlineFunctions implements CompilerPass {
         return;
       }
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
           // Functions expressions in the form of:
           //   var fooFn = function(x) { return ... }
         case VAR:
@@ -237,7 +237,7 @@ class InlineFunctions implements CompilerPass {
      *   (function(a,b,...){...}).call(this,a,b, ...)
      */
     public void findFunctionExpressions(NodeTraversal t, Node n) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         // Functions expressions in the form of:
         //   (function(){})();
         case CALL:
@@ -407,7 +407,7 @@ class InlineFunctions implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         // Function calls
         case CALL:
           Node child = n.getFirstChild();

@@ -415,8 +415,7 @@ class FunctionRewriter implements CompilerPass {
       Node propName = getGetPropertyName(node);
       if (propName != null) {
         if (!propName.isString()) {
-          throw new IllegalStateException(
-              "Expected STRING, got " + propName.getType());
+          throw new IllegalStateException("Expected STRING, got " + propName.getToken());
         }
 
         return buildCallNode(FACTORY_METHOD_NAME, propName, node);
@@ -476,8 +475,7 @@ class FunctionRewriter implements CompilerPass {
       Node propName = getSetPropertyName(node);
       if (propName != null) {
         if (!propName.isString()) {
-          throw new IllegalStateException(
-              "Expected STRING, got " + propName.getType());
+          throw new IllegalStateException("Expected STRING, got " + propName.getToken());
         }
 
         return buildCallNode(FACTORY_METHOD_NAME, propName, node);

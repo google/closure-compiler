@@ -266,7 +266,7 @@ public final class TemplateAstMatcher {
   }
 
   private boolean isTemplateParameterNode(Node n) {
-    return (n.getType() == TEMPLATE_TYPE_PARAM);
+    return (n.getToken() == TEMPLATE_TYPE_PARAM);
   }
 
   private Node createTemplateParameterNode(int index, TypeI type) {
@@ -279,7 +279,7 @@ public final class TemplateAstMatcher {
   }
 
   private boolean isTemplateLocalNameNode(Node n) {
-    return (n.getType() == TEMPLATE_LOCAL_NAME);
+    return (n.getToken() == TEMPLATE_LOCAL_NAME);
   }
 
   private Node createTemplateLocalNameNode(int index) {

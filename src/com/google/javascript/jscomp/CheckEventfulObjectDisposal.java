@@ -806,7 +806,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case CALL:
           visitCall(t, n);
           break;
@@ -1260,7 +1260,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case ASSIGN:
           visitAssign(t, n);
           break;

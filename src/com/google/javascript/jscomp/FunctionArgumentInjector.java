@@ -225,7 +225,7 @@ class FunctionArgumentInjector {
    * @param parent The parent of the node.
    */
   private static boolean canNameValueChange(Node n, Node parent) {
-    Token type = parent.getType();
+    Token type = parent.getToken();
     return (type == Token.VAR || type == Token.INC || type == Token.DEC ||
         (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) ||
         (NodeUtil.isForIn(parent)));
@@ -306,7 +306,7 @@ class FunctionArgumentInjector {
         safe = false;
       } else if (references > 1) {
         // Safe is a misnomer, this is a check for "large".
-        switch (cArg.getType()) {
+        switch (cArg.getToken()) {
           case NAME:
             String name = cArg.getString();
             safe = !(convention.isExported(name));
@@ -346,7 +346,7 @@ class FunctionArgumentInjector {
    */
   static boolean mayHaveConditionalCode(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      switch (c.getType()) {
+      switch (c.getToken()) {
         case FUNCTION:
         case AND:
         case OR:
@@ -481,7 +481,7 @@ class FunctionArgumentInjector {
      */
     private boolean hasNonLocalSideEffect(Node n) {
       boolean sideEffect = false;
-      Token type = n.getType();
+      Token type = n.getToken();
       // Note: Only care about changes to non-local names, specifically
       // ignore VAR declaration assignments.
       if (NodeUtil.isAssignmentOp(n)
@@ -526,7 +526,7 @@ class FunctionArgumentInjector {
       // Don't traverse into inner function scopes;
       return;
     } else if (n.isName()) {
-      switch (n.getParent().getType()) {
+      switch (n.getParent().getToken()) {
         case VAR:
         case CATCH:
           names.add(n.getString());

@@ -125,7 +125,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION:
         visitFunction(t, n, parent);
         break;

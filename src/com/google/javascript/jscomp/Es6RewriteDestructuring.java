@@ -52,7 +52,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case PARAM_LIST:
         visitParamList(n, parent);
         break;
@@ -70,7 +70,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     if (parent != null && parent.isDestructuringLhs()) {
       parent = parent.getParent();
     }
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case ARRAY_PATTERN:
         visitArrayPattern(t, n, parent);
         break;
@@ -292,7 +292,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
       Node newNode;
       if (NodeUtil.isNameDeclaration(parent)) {
-        newNode = IR.declaration(newLHS, newRHS, parent.getType());
+        newNode = IR.declaration(newLHS, newRHS, parent.getToken());
       } else if (parent.isAssign()) {
         newNode = IR.exprResult(IR.assign(newLHS, newRHS));
       } else {
@@ -404,7 +404,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         Node assignment = IR.assign(newLHS, newRHS);
         newNode = IR.exprResult(assignment);
       } else {
-        newNode = IR.declaration(newLHS, newRHS, parent.getType());
+        newNode = IR.declaration(newLHS, newRHS, parent.getToken());
       }
       newNode.useSourceInfoIfMissingFromForTree(arrayPattern);
 
@@ -442,7 +442,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       Node block = forNode.getLastChild();
       declarationNode.replaceChild(
           destructuringLhs, IR.name(tempVarName).useSourceInfoFrom(pattern));
-      Token declarationType = declarationNode.getType();
+      Token declarationType = declarationNode.getToken();
       Node decl = IR.declaration(pattern.detachFromParent(), IR.name(tempVarName), declarationType);
       decl.useSourceInfoIfMissingFromForTree(pattern);
       block.addChildToFront(decl);

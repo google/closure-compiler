@@ -86,7 +86,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case SCRIPT:
         // For now, don't report for requires being out of order if there are
         // "var x = goog.require('goog.x');" style requires.

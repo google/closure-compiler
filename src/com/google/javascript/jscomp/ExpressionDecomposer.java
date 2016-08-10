@@ -165,7 +165,7 @@ class ExpressionDecomposer {
          grandchild = child,
              child = parent,
              parent = child.getParent()) {
-      Token parentType = parent.getType();
+      Token parentType = parent.getToken();
       Preconditions.checkState(
           !isConditionalOp(parent) || child == parent.getFirstChild());
       if (parentType == Token.ASSIGN) {
@@ -183,7 +183,7 @@ class ExpressionDecomposer {
           } else {
             // Alias "next()" in "next().foo"
             Node left = parent.getFirstChild();
-            Token type = left.getType();
+          Token type = left.getToken();
             if (left != child) {
               Preconditions.checkState(NodeUtil.isGet(left));
               if (type == Token.GETELEM) {
@@ -348,7 +348,7 @@ class ExpressionDecomposer {
     Node cond = null;
     Node trueExpr = IR.block().srcref(expr);
     Node falseExpr = IR.block().srcref(expr);
-    switch (expr.getType()) {
+    switch (expr.getToken()) {
       case HOOK:
         // a = x?y:z --> if (x) {a=y} else {a=z}
         cond = first;
@@ -637,7 +637,7 @@ class ExpressionDecomposer {
    * @return Whether the node is a conditional op.
    */
   private static boolean isConditionalOp(Node n) {
-    switch(n.getType()) {
+    switch (n.getToken()) {
       case HOOK:
       case AND:
       case OR:
@@ -655,7 +655,7 @@ class ExpressionDecomposer {
   static Node findExpressionRoot(Node subExpression) {
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
-      Token parentType = parent.getType();
+      Token parentType = parent.getToken();
       switch (parentType) {
         // Supported expression roots:
         // SWITCH and IF can have multiple children, but the CASE, DEFAULT,
@@ -860,7 +860,7 @@ class ExpressionDecomposer {
   private boolean isSafeAssign(Node n, boolean seenSideEffects) {
     if (n.isAssign()) {
       Node lhs = n.getFirstChild();
-      switch (lhs.getType()) {
+      switch (lhs.getToken()) {
         case NAME:
           return true;
         case GETPROP:

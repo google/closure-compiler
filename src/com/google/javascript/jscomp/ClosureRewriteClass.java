@@ -125,7 +125,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     //   namespace.ClassName = googDefineClass
     //   and within an objectlit, used by the goog.defineClass.
     Node parent = n.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case NAME:
         return true;
       case ASSIGN:
@@ -417,8 +417,9 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     cls.constructor.value.setJSDocInfo(null);
     if (NodeUtil.isNameDeclaration(exprRoot)) {
       // example: var ctr = function(){}
-      Node decl = IR.declaration(cls.name.cloneTree(), cls.constructor.value, exprRoot.getType())
-          .srcref(exprRoot);
+      Node decl =
+          IR.declaration(cls.name.cloneTree(), cls.constructor.value, exprRoot.getToken())
+              .srcref(exprRoot);
       JSDocInfo mergedClassInfo = mergeJsDocFor(cls, decl);
       decl.setJSDocInfo(mergedClassInfo);
       block.addChildToBack(decl);

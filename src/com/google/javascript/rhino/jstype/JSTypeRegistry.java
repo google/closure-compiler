@@ -1604,7 +1604,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
   private JSType createFromTypeNodesInternal(Node n, String sourceName,
       StaticTypedScope<JSType> scope) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case LC: // Record type.
         return createRecordTypeFromNodes(
             n.getFirstChild(), sourceName, scope);
@@ -1707,8 +1707,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         JSType thisType = null;
         boolean isConstructor = false;
         Node current = n.getFirstChild();
-        if (current.getType() == Token.THIS ||
-            current.getType() == Token.NEW) {
+        if (current.getToken() == Token.THIS || current.getToken() == Token.NEW) {
           Node contextNode = current.getFirstChild();
 
           JSType candidateThisType = createFromTypeNodesInternal(
@@ -1720,9 +1719,9 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
           if (candidateThisType.isNullType() ||
               candidateThisType.isVoidType()) {
             thisType = candidateThisType;
-          } else if (current.getType() == Token.THIS) {
+          } else if (current.getToken() == Token.THIS) {
             thisType = candidateThisType.restrictByNotNullOrUndefined();
-          } else if (current.getType() == Token.NEW) {
+          } else if (current.getToken() == Token.NEW) {
             thisType = ObjectType.cast(
                 candidateThisType.restrictByNotNullOrUndefined());
             if (thisType == null) {
@@ -1734,16 +1733,16 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
             }
           }
 
-          isConstructor = current.getType() == Token.NEW;
+          isConstructor = current.getToken() == Token.NEW;
           current = current.getNext();
         }
 
         FunctionParamBuilder paramBuilder = new FunctionParamBuilder(this);
 
-        if (current.getType() == Token.PARAM_LIST) {
+        if (current.getToken() == Token.PARAM_LIST) {
           for (Node arg = current.getFirstChild(); arg != null;
                arg = arg.getNext()) {
-            if (arg.getType() == Token.ELLIPSIS) {
+            if (arg.getToken() == Token.ELLIPSIS) {
               if (arg.getChildCount() == 0) {
                 paramBuilder.addVarArgs(getNativeType(UNKNOWN_TYPE));
               } else {
@@ -1754,7 +1753,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
             } else {
               JSType type = createFromTypeNodesInternal(
                   arg, sourceName, scope);
-              if (arg.getType() == Token.EQUALS) {
+              if (arg.getToken() == Token.EQUALS) {
                 boolean addSuccess = paramBuilder.addOptionalParams(type);
                 if (!addSuccess) {
                   reporter.warning(
@@ -1806,7 +1805,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       Node fieldNameNode = fieldTypeNode;
       boolean hasType = false;
 
-      if (fieldTypeNode.getType() == Token.COLON) {
+      if (fieldTypeNode.getToken() == Token.COLON) {
         fieldNameNode = fieldTypeNode.getFirstChild();
         hasType = true;
       }

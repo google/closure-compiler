@@ -1111,7 +1111,7 @@ public final class ConformanceRules {
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       boolean violation;
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
           case GETPROP:
           case GETELEM:
           case NEW:
@@ -1275,7 +1275,7 @@ public final class ConformanceRules {
         if (info != null && info.hasType()) {
           JSTypeExpression expr = info.getType();
           Node typeExprNode = expr.getRoot();
-          if (typeExprNode.getType() == Token.QMARK && !typeExprNode.hasChildren()) {
+          if (typeExprNode.getToken() == Token.QMARK && !typeExprNode.hasChildren()) {
             return true;
           }
         }

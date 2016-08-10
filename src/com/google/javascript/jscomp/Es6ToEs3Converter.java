@@ -113,7 +113,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    */
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case REST:
         visitRestParam(n, parent);
         break;
@@ -140,7 +140,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case NAME:
         if (!n.isFromExterns() && isGlobalSymbol(t, n)) {
           initSymbolBefore(n);
@@ -293,7 +293,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     } else {
       Preconditions.checkState(NodeUtil.isNameDeclaration(variable),
           "Expected var, let, or const. Got %s", variable);
-      declType = variable.getType();
+      declType = variable.getToken();
       variableName = variable.getFirstChild().getQualifiedName();
     }
     Node iterResult = IR.name(ITER_RESULT + variableName);
@@ -361,7 +361,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         type = functionInfo.getParameterType(paramName);
       }
     }
-    if (type != null && type.getRoot().getType() != Token.ELLIPSIS) {
+    if (type != null && type.getRoot().getToken() != Token.ELLIPSIS) {
       compiler.report(JSError.make(restParam, BAD_REST_PARAMETER_ANNOTATION));
     }
 
@@ -385,7 +385,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       Node arrayType = IR.string("Array");
       Node typeNode = type.getRoot();
       Node memberType =
-          typeNode.getType() == Token.ELLIPSIS
+          typeNode.getToken() == Token.ELLIPSIS
               ? typeNode.getFirstChild().cloneTree()
               : typeNode.cloneTree();
       arrayType.addChildToFront(

@@ -74,7 +74,7 @@ class CheckUnusedPrivateProperties
   }
 
   private String getPropName(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case GETPROP:
         return n.getLastChild().getString();
       case MEMBER_FUNCTION_DEF:
@@ -96,7 +96,7 @@ class CheckUnusedPrivateProperties
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-     switch (n.getType()) {
+    switch (n.getToken()) {
        case SCRIPT: {
          // exiting the script, report any privates not used in the file.
          reportUnused(t);

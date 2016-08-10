@@ -273,7 +273,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case NAME:
         checkNameDeprecation(t, n, parent);
         checkNameVisibility(t, n, parent);

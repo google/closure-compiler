@@ -170,7 +170,7 @@ public final class NodeIteratorsTest extends TestCase {
         currentAncestors.get(2));
     List<Token> actualTokens = new ArrayList<>();
     while (moveIt.hasNext()) {
-      actualTokens.add(moveIt.next().getType());
+      actualTokens.add(moveIt.next().getToken());
     }
 
     assertEquals(expectedTokens, actualTokens);

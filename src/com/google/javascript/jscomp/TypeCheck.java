@@ -460,7 +460,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
       this.validator.setSubtypingMode(this.subtypingMode);
     }
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION:
         // normal type checking
         final TypedScope outerScope = t.getTypedScope();
@@ -503,7 +503,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // To be explicitly set to false if the node is not typeable.
     boolean typeable = true;
 
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case CAST:
         Node expr = n.getFirstChild();
         JSType exprType = getJSType(expr);
@@ -607,7 +607,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case BITNOT:
         childType = getJSType(n.getFirstChild());
         if (!childType.matchesInt32Context()) {
-          report(t, n, BIT_OPERATION, NodeUtil.opToStr(n.getType()), childType.toString());
+          report(t, n, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), childType.toString());
         }
         ensureTyped(t, n, NUMBER_TYPE);
         break;
@@ -650,7 +650,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
 
         TernaryValue result = TernaryValue.UNKNOWN;
-        if (n.getType() == Token.EQ || n.getType() == Token.NE) {
+          if (n.getToken() == Token.EQ || n.getToken() == Token.NE) {
           result = leftTypeRestricted.testForEquality(rightTypeRestricted);
           if (n.isNE()) {
             result = result.not();
@@ -658,7 +658,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         } else {
           // SHEQ or SHNE
           if (!leftTypeRestricted.canTestForShallowEqualityWith(rightTypeRestricted)) {
-            result = n.getType() == Token.SHEQ ? TernaryValue.FALSE : TernaryValue.TRUE;
+              result = n.getToken() == Token.SHEQ ? TernaryValue.FALSE : TernaryValue.TRUE;
           }
         }
 
@@ -753,7 +753,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case SUB:
       case ADD:
       case MUL:
-        visitBinaryOperator(n.getType(), t, n);
+        visitBinaryOperator(n.getToken(), t, n);
         break;
 
       case TRUE:
@@ -844,7 +844,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       default:
-        report(t, n, UNEXPECTED_TOKEN, n.getType().toString());
+        report(t, n, UNEXPECTED_TOKEN, n.getToken().toString());
         ensureTyped(t, n);
         break;
     }
@@ -1339,7 +1339,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   static JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
     if (valueType != null) {
-      switch (key.getType()) {
+      switch (key.getToken()) {
         case GETTER_DEF:
           // GET must always return a function type.
           if (valueType.isFunctionType()) {
@@ -1421,7 +1421,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // variable declarations are ignored.
     // TODO(user): remove this short-circuiting in favor of a
     // pre order traversal of the FUNCTION, CATCH, LP and VAR nodes.
-    Token parentNodeType = parent.getType();
+    Token parentNodeType = parent.getToken();
     if (parentNodeType == Token.FUNCTION ||
         parentNodeType == Token.CATCH ||
         parentNodeType == Token.PARAM_LIST ||
@@ -1934,12 +1934,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case ASSIGN_URSH:
       case URSH:
         if (!leftType.matchesInt32Context()) {
-          report(t, left, BIT_OPERATION,
-                   NodeUtil.opToStr(n.getType()), leftType.toString());
+          report(t, left, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), leftType.toString());
         }
         if (!rightType.matchesUint32Context()) {
-          report(t, right, BIT_OPERATION,
-                   NodeUtil.opToStr(n.getType()), rightType.toString());
+          report(t, right, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), rightType.toString());
         }
         break;
 

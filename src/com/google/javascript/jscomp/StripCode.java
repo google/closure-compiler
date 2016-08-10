@@ -108,7 +108,7 @@ class StripCode implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case VAR:
           removeVarDeclarationsByNameOrRvalue(t, n, parent);
           break;
@@ -190,7 +190,7 @@ class StripCode implements CompilerPass {
      */
     void maybeRemoveReferenceToRemovedVariable(NodeTraversal t, Node n,
                                                Node parent) {
-      switch (parent.getType()) {
+      switch (parent.getToken()) {
         case VAR:
           // This is a variable declaration, not a reference.
           break;

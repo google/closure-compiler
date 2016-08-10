@@ -195,7 +195,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     maybeAddJsDocUsages(t, n);
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case ASSIGN:
         maybeAddProvidedName(n);
         break;
@@ -387,7 +387,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       visitRequire(defaultImport.getString(), importNode);
     }
     Node namedImports = defaultImport.getNext();
-    if (namedImports.getType() == Token.IMPORT_SPECS) {
+    if (namedImports.getToken() == Token.IMPORT_SPECS) {
       for (Node importSpec : namedImports.children()) {
         visitRequire(importSpec.getLastChild().getString(), importNode);
       }

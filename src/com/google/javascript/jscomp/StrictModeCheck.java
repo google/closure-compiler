@@ -144,7 +144,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
    * of a variable, function, or argument.
    */
   private static boolean isDeclaration(Node n) {
-    switch (n.getParent().getType()) {
+    switch (n.getParent().getToken()) {
       case LET:
       case CONST:
       case VAR:

@@ -353,7 +353,7 @@ class OptimizeParameters
     // Things that can change value or are inaccessible can't be moved, these
     // are "this", "arguments", local names, and functions that capture local
     // values.
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case THIS:
         return false;
       case FUNCTION:

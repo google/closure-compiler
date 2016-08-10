@@ -2101,11 +2101,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   private JSType findTokenType(final Token type, TypedScope scope) {
-    return findTypeOnMatchedNode(new Predicate<Node>() {
-      @Override public boolean apply(Node n) {
-        return type == n.getType();
-      }
-    }, scope);
+    return findTypeOnMatchedNode(
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node n) {
+            return type == n.getToken();
+          }
+        },
+        scope);
   }
 
   private JSType findTypeOnMatchedNode(Predicate<Node> matcher, TypedScope scope) {

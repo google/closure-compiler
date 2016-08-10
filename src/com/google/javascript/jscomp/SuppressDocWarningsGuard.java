@@ -69,7 +69,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
       for (Node current = node;
            current != null;
            current = current.getParent()) {
-        Token type = current.getType();
+        Token type = current.getToken();
         JSDocInfo info = null;
 
         if (type == Token.FUNCTION) {

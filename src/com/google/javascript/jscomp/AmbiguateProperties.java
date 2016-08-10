@@ -447,7 +447,7 @@ class AmbiguateProperties implements CompilerPass {
   private class ProcessProperties extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case GETPROP: {
           Node propNode = n.getSecondChild();
           JSType jstype = getJSType(n.getFirstChild());

@@ -72,7 +72,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
       return true;
     }
 
-    switch (rhs.getType()) {
+    switch (rhs.getToken()) {
       case ASSIGN:
       case AND:
       case CALL:

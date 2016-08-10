@@ -507,7 +507,7 @@ class IRFactory {
   }
 
   private static boolean isBreakTarget(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FOR:
       case FOR_OF:
       case WHILE:
@@ -520,7 +520,7 @@ class IRFactory {
   }
 
   private static boolean isContinueTarget(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FOR:
       case FOR_OF:
       case WHILE:
@@ -1084,7 +1084,7 @@ class IRFactory {
       if (n == null) {
         return false;
       }
-      Token nType = n.getType();
+      Token nType = n.getToken();
       return nType == Token.EXPR_RESULT &&
           n.getFirstChild().isString() &&
           ALLOWED_DIRECTIVES.contains(n.getFirstChild().getString());
@@ -1161,7 +1161,7 @@ class IRFactory {
       Node initializer = transform(loopNode.initializer);
       ImmutableSet<Token> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
-      if (invalidInitializers.contains(initializer.getType())) {
+      if (invalidInitializers.contains(initializer.getToken())) {
         errorReporter.error("Invalid LHS for a for-in loop", sourceName,
             lineno(loopNode.initializer), charno(loopNode.initializer));
       }
@@ -1177,7 +1177,7 @@ class IRFactory {
       Node initializer = transform(loopNode.initializer);
       ImmutableSet<Token> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
-      if (invalidInitializers.contains(initializer.getType())) {
+      if (invalidInitializers.contains(initializer.getToken())) {
         errorReporter.error("Invalid LHS for a for-of loop", sourceName,
             lineno(loopNode.initializer), charno(loopNode.initializer));
       }
@@ -2399,8 +2399,7 @@ class IRFactory {
       maybeWarnTypeSyntax(tree, Feature.INDEX_SIGNATURE);
       Node name = transform(tree.name);
       Node indexType = name.getDeclaredTypeExpression();
-      if (indexType.getType() != Token.NUMBER_TYPE
-          && indexType.getType() != Token.STRING_TYPE) {
+      if (indexType.getToken() != Token.NUMBER_TYPE && indexType.getToken() != Token.STRING_TYPE) {
         errorReporter.error(
             "Index signature parameter type must be 'string' or 'number'",
             sourceName,
@@ -2457,7 +2456,7 @@ class IRFactory {
                   charno(param));
               good = false;
             }
-            if (type != null && type.getType() != Token.ARRAY_TYPE) {
+            if (type != null && type.getToken() != Token.ARRAY_TYPE) {
               errorReporter.error(
                   "A rest parameter must be of an array type.",
                   sourceName,

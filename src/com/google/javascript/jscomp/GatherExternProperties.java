@@ -58,7 +58,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case GETPROP:
         // Gathers "name" from (someObject.name).
         Node dest = n.getSecondChild();

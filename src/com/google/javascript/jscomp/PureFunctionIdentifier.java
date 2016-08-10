@@ -455,7 +455,7 @@ class PureFunctionIdentifier implements CompilerPass {
           sideEffectInfo.setTaintsReturn();
         }
       } else {
-        throw new IllegalArgumentException("Unhandled side effect node type " + node.getType());
+        throw new IllegalArgumentException("Unhandled side effect node type " + node.getToken());
       }
     }
 
@@ -677,7 +677,7 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   private static boolean isIncDec(Node n) {
-    Token type = n.getType();
+    Token type = n.getToken();
     return (type == Token.INC || type == Token.DEC);
   }
 
@@ -691,7 +691,7 @@ class PureFunctionIdentifier implements CompilerPass {
         new Predicate<Node>() {
           @Override
           public boolean apply(Node value) {
-            switch (value.getType()) {
+            switch (value.getToken()) {
               case ASSIGN:
                 // The assignment might cause an alias, look at the LHS.
                 return false;

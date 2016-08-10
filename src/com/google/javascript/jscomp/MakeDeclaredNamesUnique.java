@@ -112,7 +112,7 @@ class MakeDeclaredNamesUnique
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION: {
         // Add recursive function name, if needed.
         // NOTE: "enterScope" is called after we need to pick up this name.
@@ -163,7 +163,7 @@ class MakeDeclaredNamesUnique
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case NAME:
         String newName = getReplacementName(n.getString());
         if (newName != null) {

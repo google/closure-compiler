@@ -123,8 +123,10 @@ final class CheckSideEffects extends AbstractPostOrderCallback
           if (n.isString() || n.isTemplateLit()) {
             msg = "Is there a missing '+' on the previous line?";
           } else if (isSimpleOp) {
-            msg = "The result of the '" + n.getType().toString().toLowerCase() +
-                "' operator is not being used.";
+            msg =
+                "The result of the '"
+                    + n.getToken().toString().toLowerCase()
+                    + "' operator is not being used.";
           }
 
           t.report(n, USELESS_CODE_ERROR, msg);

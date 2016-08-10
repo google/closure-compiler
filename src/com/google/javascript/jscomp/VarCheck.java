@@ -281,7 +281,7 @@ class VarCheck extends AbstractPostOrderCallback implements
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
-        switch (parent.getType()) {
+        switch (parent.getToken()) {
           case VAR:
           case LET:
           case CONST:

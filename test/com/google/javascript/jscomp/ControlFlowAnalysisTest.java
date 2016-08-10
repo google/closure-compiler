@@ -74,8 +74,10 @@ public final class ControlFlowAnalysisTest extends TestCase {
       DiGraphEdge<Node, Branch> edge = it.next();
       Node startNode = edge.getSource().getValue();
       Node endNode = edge.getDestination().getValue();
-      if (startNode == null || endNode == null ||
-          startNode.getType() != startToken || endNode.getType() != endToken) {
+      if (startNode == null
+          || endNode == null
+          || startNode.getToken() != startToken
+          || endNode.getToken() != endToken) {
         it.remove();
       }
     }
@@ -187,8 +189,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
     for (DiGraphEdge<Node, Branch> edge : edges) {
       Node source = edge.getSource().getValue();
       DiGraphNode<Node, Branch> dest = edge.getDestination();
-      if (source.getType() == startToken &&
-          cfg.isImplicitReturn(dest)) {
+      if (source.getToken() == startToken && cfg.isImplicitReturn(dest)) {
         return;
       }
     }
@@ -206,7 +207,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
     for (DiGraphEdge<Node, Branch> edge : edges) {
       Node source = edge.getSource().getValue();
       DiGraphNode<Node, Branch> dest = edge.getDestination();
-      if (source.getType() == startToken) {
+      if (source.getToken() == startToken) {
         assertFalse("Token " + startToken + " should not have an out going"
             + " edge to the implicit return", cfg.isImplicitReturn(dest));
         return;
@@ -1472,7 +1473,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
         nodeTypes.size(), cfgNodes.size());
     for (int i = 0; i < cfgNodes.size(); i++) {
       Token expectedType = nodeTypes.get(i);
-      Token actualType = cfgNodes.get(i).getValue().getType();
+      Token actualType = cfgNodes.get(i).getValue().getToken();
       assertEquals("node type mismatch at " + i, expectedType, actualType);
     }
   }

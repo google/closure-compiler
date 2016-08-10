@@ -117,7 +117,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   public void validateStatement(Node n, boolean isAmbient) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case LABEL:
         validateLabel(n);
         return;
@@ -155,7 +155,7 @@ public final class AstValidator implements CompilerPass {
       case VAR:
       case LET:
       case CONST:
-        validateNameDeclarationHelper(n.getType(), n);
+        validateNameDeclarationHelper(n.getToken(), n);
         return;
       case EXPR_RESULT:
         validateExprStmt(n);
@@ -204,12 +204,12 @@ public final class AstValidator implements CompilerPass {
         validateNamespace(n, isAmbient);
         return;
       default:
-        violation("Expected statement but was " + n.getType() + ".", n);
+        violation("Expected statement but was " + n.getToken() + ".", n);
     }
   }
 
   public void validateExpression(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       // Childless expressions
       case FALSE:
       case NEW_TARGET:
@@ -351,7 +351,7 @@ public final class AstValidator implements CompilerPass {
         return;
 
       default:
-        violation("Expected expression but was " + n.getType(), n);
+        violation("Expected expression but was " + n.getToken(), n);
     }
   }
 
@@ -389,7 +389,7 @@ public final class AstValidator implements CompilerPass {
     }
 
     Node secondChild = n.getSecondChild();
-    switch (secondChild.getType()) {
+    switch (secondChild.getToken()) {
       case IMPORT_SPECS:
         validateImportSpecifiers(secondChild);
         break;
@@ -429,7 +429,7 @@ public final class AstValidator implements CompilerPass {
       validateExpression(n.getFirstChild());
     } else {
       validateChildCountIn(n, 1, 2);
-      if (n.getFirstChild().getType() == Token.EXPORT_SPECS) {
+      if (n.getFirstChild().getToken() == Token.EXPORT_SPECS) {
         validateExportSpecifiers(n.getFirstChild());
       } else {
         validateStatement(n.getFirstChild(), isAmbient);
@@ -518,7 +518,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateInterfaceMember(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case MEMBER_FUNCTION_DEF:
         validateChildCount(n);
         validateFunctionSignature(n.getFirstChild());
@@ -534,7 +534,7 @@ public final class AstValidator implements CompilerPass {
         validateChildCount(n);
         break;
       default:
-        violation("Interface contained member of invalid type " + n.getType(), n);
+        violation("Interface contained member of invalid type " + n.getToken(), n);
     }
   }
 
@@ -594,7 +594,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateClassMember(Node n, boolean isAmbient) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
       case SETTER_DEF:
@@ -622,7 +622,7 @@ public final class AstValidator implements CompilerPass {
       case EMPTY: // Empty is allowed too.
         break;
       default:
-        violation("Class contained member of invalid type " + n.getType(), n);
+        violation("Class contained member of invalid type " + n.getToken(), n);
     }
   }
 
@@ -739,7 +739,7 @@ public final class AstValidator implements CompilerPass {
     if (n.isArrowFunction()) {
       validateEs6Feature("arrow functions", n);
       validateEmptyName(name);
-      if (body.getType() == Token.BLOCK) {
+      if (body.getToken() == Token.BLOCK) {
         validateBlock(body);
       } else {
         validateExpression(body);
@@ -839,7 +839,7 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.SPREAD, n);
     validateChildCount(n);
     Node parent = n.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case CALL:
       case NEW:
         if (n == parent.getFirstChild()) {
@@ -849,7 +849,7 @@ public final class AstValidator implements CompilerPass {
       case ARRAYLIT:
         break;
       default:
-        violation("SPREAD node should not be the child of a " + parent.getType() + " node.", n);
+        violation("SPREAD node should not be the child of a " + parent.getToken() + " node.", n);
     }
   }
 
@@ -967,7 +967,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateVarOrOptionalExpression(Node n) {
     if (NodeUtil.isNameDeclaration(n)) {
-      validateNameDeclarationHelper(n.getType(), n);
+      validateNameDeclarationHelper(n.getToken(), n);
     } else {
       validateOptionalExpression(n);
     }
@@ -977,7 +977,7 @@ public final class AstValidator implements CompilerPass {
     if (NodeUtil.isNameDeclaration(n)) {
       // Only one NAME can be declared for FOR-IN expressions.
       validateChildCount(n, 1);
-      validateNameDeclarationHelper(n.getType(), n);
+      validateNameDeclarationHelper(n.getToken(), n);
     } else {
       validateAssignmentTarget(n);
     }
@@ -1102,7 +1102,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateSwitchMember(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case CASE:
         validateCase(n);
         return;
@@ -1110,7 +1110,7 @@ public final class AstValidator implements CompilerPass {
         validateDefaultCase(n);
         return;
       default:
-        violation("Expected switch member but was " + n.getType(), n);
+        violation("Expected switch member but was " + n.getToken(), n);
     }
   }
 
@@ -1147,7 +1147,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateAssignmentTarget(Node n) {
     if (!n.isValidAssignmentTarget()) {
-      violation("Expected assignment target expression but was " + n.getType(), n);
+      violation("Expected assignment target expression but was " + n.getToken(), n);
     }
   }
 
@@ -1206,7 +1206,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateObjectLitKey(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case GETTER_DEF:
         validateObjectLitGetKey(n);
         return;
@@ -1226,7 +1226,7 @@ public final class AstValidator implements CompilerPass {
         validateObjectLitComputedPropKey(n);
         return;
       default:
-        violation("Expected object literal key expression but was " + n.getType(), n);
+        violation("Expected object literal key expression but was " + n.getToken(), n);
     }
   }
 
@@ -1322,7 +1322,7 @@ public final class AstValidator implements CompilerPass {
         // Validate that getString doesn't throw
         n.getString();
       } catch (UnsupportedOperationException e) {
-        violation("getString failed for" + n.getType(), n);
+        violation("getString failed for" + n.getToken(), n);
       }
     } else {
       validateNonEmptyString(n);
@@ -1367,11 +1367,11 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateAmbientDeclarationHelper(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case VAR:
       case LET:
       case CONST:
-        validateNameDeclarationHelper(n.getType(), n);
+        validateNameDeclarationHelper(n.getToken(), n);
         break;
       case FUNCTION:
         validateFunctionSignature(n);
@@ -1405,7 +1405,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateNamespaceName(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case NAME:
         validateName(n);
         break;
@@ -1433,13 +1433,13 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateNodeType(Token type, Node n) {
-    if (n.getType() != type) {
-      violation("Expected " + type + " but was " + n.getType(), n);
+    if (n.getToken() != type) {
+      violation("Expected " + type + " but was " + n.getToken(), n);
     }
   }
 
   private void validateChildCount(Node n) {
-    int expectedArity = Token.arity(n.getType());
+    int expectedArity = Token.arity(n.getToken());
     if (expectedArity != -1) {
       validateChildCount(n, expectedArity);
     }

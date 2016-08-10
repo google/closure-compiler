@@ -163,8 +163,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         nativeType, templateTypeMap);
     setPrettyPrint(true);
 
-    Preconditions.checkArgument(source == null ||
-        Token.FUNCTION == source.getType());
+    Preconditions.checkArgument(source == null || Token.FUNCTION == source.getToken());
     Preconditions.checkNotNull(arrowType);
     this.source = source;
     if (isConstructor) {
@@ -191,8 +190,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         false, typeParameters);
     setPrettyPrint(true);
 
-    Preconditions.checkArgument(source == null ||
-        Token.FUNCTION == source.getType());
+    Preconditions.checkArgument(source == null || Token.FUNCTION == source.getToken());
     Preconditions.checkArgument(name != null);
     this.source = source;
     this.call = new ArrowType(registry, new Node(Token.PARAM_LIST), null);

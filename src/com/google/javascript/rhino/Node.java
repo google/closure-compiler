@@ -1872,7 +1872,7 @@ public class Node implements Serializable {
    * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
    */
   public boolean isQualifiedName() {
-    switch (getType()) {
+    switch (this.getToken()) {
       case NAME:
         return !getString().isEmpty();
       case THIS:
@@ -1899,7 +1899,7 @@ public class Node implements Serializable {
   private boolean matchesQualifiedName(String qname, int endIndex) {
     int start = qname.lastIndexOf('.', endIndex - 1) + 1;
 
-    switch (getType()) {
+    switch (this.getToken()) {
       case NAME:
       case MEMBER_FUNCTION_DEF:
         String name = getString();
@@ -1948,7 +1948,7 @@ public class Node implements Serializable {
    * .
    */
   public boolean isUnscopedQualifiedName() {
-    switch (getType()) {
+    switch (this.getToken()) {
       case NAME:
         return !getString().isEmpty();
       case GETPROP:
@@ -1959,7 +1959,7 @@ public class Node implements Serializable {
   }
 
   public boolean isValidAssignmentTarget() {
-    switch (getType()) {
+    switch (this.getToken()) {
       // TODO(tbreisacher): Remove CAST from this list, and disallow
       // the cryptic case from cl/41958159.
       case CAST:
@@ -2517,9 +2517,9 @@ public class Node implements Serializable {
    */
   public void setSideEffectFlags(int flags) {
     Preconditions.checkArgument(
-        getType() == Token.CALL || getType() == Token.NEW,
+        this.getToken() == Token.CALL || this.getToken() == Token.NEW,
         "setIsNoSideEffectsCall only supports CALL and NEW nodes, got %s",
-        getType());
+        this.getToken());
 
     putIntProp(SIDE_EFFECT_FLAGS, flags);
   }

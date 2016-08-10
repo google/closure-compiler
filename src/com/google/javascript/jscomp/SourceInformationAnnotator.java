@@ -58,7 +58,7 @@ class SourceInformationAnnotator extends
     }
 
     // Annotate the original name.
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case GETPROP:
         Node propNode = n.getLastChild();
         setOriginalName(n, propNode.getString());

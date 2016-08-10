@@ -110,7 +110,7 @@ public final class Es6RewriteGenerators
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION:
         if (n.isGeneratorFunction()) {
           generatorCaseCount = 0;
@@ -329,7 +329,7 @@ public final class Es6RewriteGenerators
       visitBlock();
       return false;
     } else if (controlCanExit(currentStatement)) {
-      switch (currentStatement.getType()) {
+      switch (currentStatement.getToken()) {
         case WHILE:
         case DO:
         case FOR:
@@ -379,7 +379,7 @@ public final class Es6RewriteGenerators
           // We never want to copy over an untranslated statement for which control exits.
           throw new RuntimeException(
               "Untranslatable control-exiting statement in generator function: "
-                  + currentStatement.getType());
+                  + currentStatement.getToken());
       }
     }
 
@@ -928,7 +928,7 @@ public final class Es6RewriteGenerators
    * Adds all children of the {@code node} of the given type to given list.
    */
   private void insertAll(Node node, Token type, List<Node> matchingNodes) {
-    if (node.getType() == type) {
+    if (node.getToken() == type) {
       matchingNodes.add(node);
     }
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
@@ -976,7 +976,7 @@ public final class Es6RewriteGenerators
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case YIELD:
           visitYieldExpression(n);
           break;
@@ -1023,7 +1023,7 @@ public final class Es6RewriteGenerators
       Node enclosingBlock = NodeUtil.getEnclosingBlock(n);
       Node guard = null;
       Node incr = null;
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case FOR:
           guard = n.getSecondChild();
           incr = guard.getNext();
@@ -1093,7 +1093,7 @@ public final class Es6RewriteGenerators
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case FUNCTION:
           return false;
         case LABEL:
@@ -1161,7 +1161,7 @@ public final class Es6RewriteGenerators
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case LABEL:
           labels.remove(0);
           break;

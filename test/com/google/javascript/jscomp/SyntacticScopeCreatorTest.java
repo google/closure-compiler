@@ -91,7 +91,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     assertEquals(root, globalScope.getRootNode());
 
     Node fooNode = root.getFirstChild();
-    assertEquals(Token.FUNCTION, fooNode.getType());
+    assertEquals(Token.FUNCTION, fooNode.getToken());
     Scope fooScope = scopeCreator.createScope(fooNode, globalScope);
     assertEquals(fooNode, fooScope.getRootNode());
     assertTrue(fooScope.isDeclared("x", false));

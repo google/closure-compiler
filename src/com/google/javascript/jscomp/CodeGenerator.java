@@ -116,7 +116,7 @@ public class CodeGenerator {
       }
     }
 
-    Token type = n.getType();
+    Token type = n.getToken();
     String opstr = NodeUtil.opToStr(type);
     int childCount = n.getChildCount();
     Node first = n.getFirstChild();
@@ -925,7 +925,7 @@ public class CodeGenerator {
         // to force parentheses. Otherwise, when parsed, NEW will bind to the
         // first viable parentheses (don't traverse into functions).
         if (NodeUtil.containsType(first, Token.CALL, NodeUtil.MATCH_NOT_FUNCTION)) {
-          precedence = NodeUtil.precedence(first.getType()) + 1;
+          precedence = NodeUtil.precedence(first.getToken()) + 1;
         }
         addExpr(first, precedence, Context.OTHER);
 
@@ -1013,7 +1013,7 @@ public class CodeGenerator {
           add(body, Context.PRESERVE_BLOCK);
         } else {
           // This is a field or object literal property.
-          boolean isInClass = n.getParent().getType() == Token.CLASS_MEMBERS;
+          boolean isInClass = n.getParent().getToken() == Token.CLASS_MEMBERS;
           Node initializer = first.getNext();
           if (initializer != null) {
             // Object literal value.
@@ -1382,7 +1382,7 @@ public class CodeGenerator {
       Node n, Token op, String opStr, Context context,
       Context rhsContext, int leftPrecedence, int rightPrecedence) {
     Node firstNonOperator = n.getFirstChild();
-    while (firstNonOperator.getType() == op) {
+    while (firstNonOperator.getToken() == op) {
       firstNonOperator = firstNonOperator.getFirstChild();
     }
 
@@ -1519,7 +1519,7 @@ public class CodeGenerator {
         }
       }
     } else {
-      switch (n.getType()){
+      switch (n.getToken()) {
         case LET:
         case CONST:
         case FUNCTION:
@@ -1552,13 +1552,13 @@ public class CodeGenerator {
       //     UnaryExpression ** ExponentiationExpression
       return true;
     } else {
-      return NodeUtil.precedence(n.getType()) < minPrecedence;
+      return NodeUtil.precedence(n.getToken()) < minPrecedence;
     }
   }
 
   private boolean isFirstOperandOfExponentiationExpression(Node n) {
     Node parent = n.getParent();
-    return parent != null && parent.getType() == Token.EXPONENT && parent.getFirstChild() == n;
+    return parent != null && parent.getToken() == Token.EXPONENT && parent.getFirstChild() == n;
   }
 
   void addList(Node firstInList) {
@@ -1907,7 +1907,7 @@ public class CodeGenerator {
   }
 
   private void processEnd(Node n, Context context) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case CLASS:
       case INTERFACE:
       case ENUM:
@@ -1922,13 +1922,13 @@ public class CodeGenerator {
         }
         break;
       case DECLARE:
-        if (n.getParent().getType() != Token.NAMESPACE_ELEMENTS) {
+        if (n.getParent().getToken() != Token.NAMESPACE_ELEMENTS) {
           processEnd(n.getFirstChild(), context);
         }
         break;
       case EXPORT:
-        if (n.getParent().getType() != Token.NAMESPACE_ELEMENTS
-            && n.getFirstChild().getType() != Token.DECLARE) {
+        if (n.getParent().getToken() != Token.NAMESPACE_ELEMENTS
+            && n.getFirstChild().getToken() != Token.DECLARE) {
           processEnd(n.getFirstChild(), context);
         }
         break;

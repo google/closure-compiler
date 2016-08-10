@@ -70,7 +70,7 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
     if (NodeUtil.isReferenceName(n)) {
       String name = n.getString();
       if (name.equals("RegExp") && t.getScope().getVar(name) == null) {
-        Token parentType = parent.getType();
+        Token parentType = parent.getToken();
         boolean first = (n == parent.getFirstChild());
         if (!((parentType == Token.NEW && first)
             || (parentType == Token.CALL && first)

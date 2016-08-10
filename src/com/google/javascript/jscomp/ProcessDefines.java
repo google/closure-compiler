@@ -129,9 +129,10 @@ class ProcessDefines implements CompilerPass {
         info.initialValueParent.replaceChild(
             info.initialValue, finalValue.cloneTree());
         compiler.addToDebugLog("Overriding @define variable " + defineName);
-        changed = changed ||
-            finalValue.getType() != info.initialValue.getType() ||
-            !finalValue.isEquivalentTo(info.initialValue);
+        changed =
+            changed
+                || finalValue.getToken() != info.initialValue.getToken()
+                || !finalValue.isEquivalentTo(info.initialValue);
       }
     }
 
@@ -377,7 +378,7 @@ class ProcessDefines implements CompilerPass {
      * @param entering True if we're entering the subtree, false otherwise.
      */
     private void updateAssignAllowedStack(Node n, boolean entering) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case CASE:
         case FOR:
         case FUNCTION:

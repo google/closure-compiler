@@ -283,7 +283,7 @@ class TypeInference
                   reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
                       condition,
                       conditionOutcomes.getOutcomeFlowScope(
-                          condition.getType(), branch == Branch.ON_TRUE),
+                          condition.getToken(), branch == Branch.ON_TRUE),
                       branch == Branch.ON_TRUE);
             } else {
               // conditionFlowScope is cached from previous iterations
@@ -308,7 +308,7 @@ class TypeInference
   }
 
   private FlowScope traverse(Node n, FlowScope scope) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case ASSIGN:
         scope = traverseAssign(n, scope);
         break;
@@ -526,7 +526,7 @@ class TypeInference
   private void updateScopeForTypeChange(
       FlowScope scope, Node left, JSType leftType, JSType resultType) {
     Preconditions.checkNotNull(resultType);
-    switch (left.getType()) {
+    switch (left.getToken()) {
       case NAME:
         String varName = left.getString();
         TypedVar var = syntacticScope.getVar(varName);
@@ -1598,10 +1598,9 @@ class TypeInference
 
     // reverse abstract interpret the left node to produce the correct
     // scope in which to verify the right node
-    FlowScope rightScope = reverseInterpreter.
-        getPreciserScopeKnowingConditionOutcome(left,
-            leftOutcome.getOutcomeFlowScope(left.getType(), nIsAnd),
-            nIsAnd);
+    FlowScope rightScope =
+        reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
+            left, leftOutcome.getOutcomeFlowScope(left.getToken(), nIsAnd), nIsAnd);
 
     // type the right node
     BooleanOutcomePair rightOutcome = traverseWithinShortCircuitingBinOp(
@@ -1652,7 +1651,7 @@ class TypeInference
 
   private BooleanOutcomePair traverseWithinShortCircuitingBinOp(
       Node n, FlowScope scope) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case AND:
         return traverseAnd(n, scope);
 

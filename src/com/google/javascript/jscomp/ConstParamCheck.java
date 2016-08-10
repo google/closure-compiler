@@ -78,7 +78,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
    */
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
-    if (node.getType() == Token.CALL) {
+    if (node.getToken() == Token.CALL) {
       Node name = node.getFirstChild();
       Node argument = name.getNext();
       if (argument == null) {
@@ -153,9 +153,9 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
     if (node == null) {
       return false;
     }
-    if (node.getType() == Token.STRING) {
+    if (node.getToken() == Token.STRING) {
       return true;
-    } else if (node.getType() == Token.ADD) {
+    } else if (node.getToken() == Token.ADD) {
       Preconditions.checkState(node.getChildCount() == 2);
       Node left = node.getFirstChild();
       Node right = node.getLastChild();

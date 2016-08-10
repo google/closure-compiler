@@ -71,7 +71,7 @@ public final class JsdocToEs6TypedConverter
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     JSDocInfo bestJSDocInfo = NodeUtil.getBestJSDocInfo(n);
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION:
         if (bestJSDocInfo != null) {
           setTypeExpression(n, bestJSDocInfo.getReturnType());
@@ -97,7 +97,7 @@ public final class JsdocToEs6TypedConverter
             Node attachTypeExpr = n;
             // Modify the primary AST to represent a function parameter as a
             // REST node, if the type indicates it is a rest parameter.
-            if (parameterType.getRoot().getType() == Token.ELLIPSIS) {
+            if (parameterType.getRoot().getToken() == Token.ELLIPSIS) {
               attachTypeExpr = IR.rest(n.getString());
               n.getParent().replaceChild(n, attachTypeExpr);
               compiler.reportCodeChange();
@@ -156,7 +156,7 @@ public final class JsdocToEs6TypedConverter
     // representation directly, and delete this function.
     @Nullable
     public static TypeDeclarationNode convertTypeNodeAST(Node n) {
-      Token token = n.getType();
+      Token token = n.getToken();
       switch (token) {
         case STAR:
         case EMPTY: // for function types that don't declare a return type
@@ -204,7 +204,7 @@ public final class JsdocToEs6TypedConverter
         case LC:
           LinkedHashMap<String, TypeDeclarationNode> properties = new LinkedHashMap<>();
           for (Node field : n.getFirstChild().children()) {
-            boolean isFieldTypeDeclared = field.getType() == Token.COLON;
+            boolean isFieldTypeDeclared = field.getToken() == Token.COLON;
             Node fieldNameNode = isFieldTypeDeclared ? field.getFirstChild() : field;
             String fieldName = fieldNameNode.getString();
             if (fieldName.startsWith("'") || fieldName.startsWith("\"")) {
@@ -240,14 +240,14 @@ public final class JsdocToEs6TypedConverter
               int paramIdx = 1;
               for (Node param : child2.children()) {
                 String paramName = "p" + paramIdx++;
-                if (param.getType() == Token.ELLIPSIS) {
+                if (param.getToken() == Token.ELLIPSIS) {
                   if (param.getFirstChild() != null) {
                     restType = arrayType(convertTypeNodeAST(param.getFirstChild()));
                   }
                   restName = paramName;
                 } else {
                   TypeDeclarationNode paramNode = convertTypeNodeAST(param);
-                  if (paramNode.getType() == Token.OPTIONAL_PARAMETER) {
+                  if (paramNode.getToken() == Token.OPTIONAL_PARAMETER) {
                     optionalParams.put(paramName,
                         (TypeDeclarationNode) paramNode.removeFirstChild());
                   } else {
@@ -271,7 +271,7 @@ public final class JsdocToEs6TypedConverter
           return optionalParam == null ? null : optionalParameter(optionalParam);
         default:
           throw new IllegalArgumentException(
-              "Unsupported node type: " + n.getType() + " " + n.toStringTree());
+              "Unsupported node type: " + n.getToken() + " " + n.toStringTree());
       }
     }
   }

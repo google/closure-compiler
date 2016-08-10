@@ -54,7 +54,7 @@ class MinimizeExitPoints extends AbstractShallowCallback implements CompilerPass
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case LABEL:
         tryMinimizeExits(
             n.getLastChild(), Token.BREAK, n.getFirstChild().getString());
@@ -334,7 +334,7 @@ class MinimizeExitPoints extends AbstractShallowCallback implements CompilerPass
    * @return Whether the node matches the specified block-exit type.
    */
   private static boolean matchingExitNode(Node n, Token type, @Nullable String labelName) {
-    if (n.getType() == type) {
+    if (n.getToken() == type) {
       if (type == Token.RETURN) {
         // only returns without expressions.
         return !n.hasChildren();

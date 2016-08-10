@@ -117,7 +117,7 @@ final class ReplaceMessages extends JsMessageVisitor {
    */
   private Node getNewValueNode(JsMessage message, Node origValueNode)
       throws MalformedException {
-    switch (origValueNode.getType()) {
+    switch (origValueNode.getToken()) {
       case FUNCTION:
         // The message is a function. Modify the function node.
         updateFunctionNode(message, origValueNode);
@@ -138,8 +138,8 @@ final class ReplaceMessages extends JsMessageVisitor {
         return replaceCallNode(message, origValueNode);
       default:
         throw new MalformedException(
-            "Expected FUNCTION, STRING, or ADD node; found: " +
-                origValueNode.getType(), origValueNode);
+            "Expected FUNCTION, STRING, or ADD node; found: " + origValueNode.getToken(),
+            origValueNode);
     }
   }
 
@@ -366,7 +366,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     if (node == null) {
       throw new IllegalArgumentException("Expected a string; found: null");
     }
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case STRING:
         break;
       case ADD:
@@ -375,8 +375,7 @@ final class ReplaceMessages extends JsMessageVisitor {
         checkStringExprNode(c.getNext());
         break;
       default:
-        throw new IllegalArgumentException(
-            "Expected a string; found: " + node.getType());
+        throw new IllegalArgumentException("Expected a string; found: " + node.getToken());
     }
   }
 }

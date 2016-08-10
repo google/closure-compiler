@@ -224,7 +224,7 @@ class CrossModuleCodeMotion implements CompilerPass {
    */
   private static boolean hasConditionalAncestor(Node n) {
     for (Node ancestor : n.getAncestors()) {
-      switch (ancestor.getType()) {
+      switch (ancestor.getToken()) {
         case DO:
         case FOR:
         case HOOK:
@@ -372,7 +372,7 @@ class CrossModuleCodeMotion implements CompilerPass {
     Node name = ref.getNode();
     Node parent = name.getParent();
     Node grandparent = parent.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case VAR:
         if (canMoveValue(collector, ref.getScope(), name.getFirstChild())) {
           return info.addDeclaration(

@@ -2837,14 +2837,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSymbols(false);
     options.addCustomPass(
-            CustomPassExecutionTime.BEFORE_OPTIMIZATIONS, new CompilerPass() {
-              @Override
-              public void process(Node externs, Node root) {
-                Node var = root.getLastChild().getFirstChild();
-                assertEquals(Token.VAR, var.getType());
-                var.detachFromParent();
-              }
-            });
+        CustomPassExecutionTime.BEFORE_OPTIMIZATIONS,
+        new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            Node var = root.getLastChild().getFirstChild();
+            assertEquals(Token.VAR, var.getToken());
+            var.detachFromParent();
+          }
+        });
 
 
     try {

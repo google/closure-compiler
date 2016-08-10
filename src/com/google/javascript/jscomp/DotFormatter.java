@@ -173,7 +173,7 @@ public final class DotFormatter {
       builder.append(INDENT);
       builder.append(formatNodeName(key));
       builder.append(" [label=\"");
-      builder.append(n.getType().toString());
+      builder.append(n.getToken().toString());
       TypeI type = n.getTypeI();
       if (type != null) {
         builder.append(" : ");

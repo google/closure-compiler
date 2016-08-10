@@ -120,7 +120,7 @@ abstract class MethodCompilerPass implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case GETPROP:
         case GETELEM: {
           Node dest = n.getSecondChild();
@@ -176,7 +176,7 @@ abstract class MethodCompilerPass implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case GETPROP:
         case GETELEM:
           Node dest = n.getSecondChild();
@@ -203,7 +203,7 @@ abstract class MethodCompilerPass implements CompilerPass {
 
         case OBJECTLIT:
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            switch(key.getType()) {
+            switch (key.getToken()) {
               case STRING_KEY:
                 addPossibleSignature(key.getString(), key.getFirstChild(), t);
                 break;
@@ -228,7 +228,7 @@ abstract class MethodCompilerPass implements CompilerPass {
      * an assignment (in the case of Foo.prototype = ...).
      */
     private void processPrototypeParent(NodeTraversal t, Node n) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         // Foo.prototype.getBar = function() { ... } or
         // Foo.prototype.getBar = getBaz (where getBaz is a function)
         // parse tree looks like:

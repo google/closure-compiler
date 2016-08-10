@@ -240,7 +240,7 @@ class NodeIterators {
 
       Node nextNode = iterator.next();
       Node nextParent = iterator.currentParent();
-      Token type = nextNode.getType();
+      Token type = nextNode.getToken();
 
       if (valueHasSideEffects) {
         // Reject anything that might read state

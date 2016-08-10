@@ -45,7 +45,7 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch(n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION:
         if (n.isArrowFunction()) {
           maybeSimplifyArrowFunctionBody(n, n.getLastChild());

@@ -427,7 +427,7 @@ class CollapseProperties implements CompilerPass {
     // allow "a = a || {}" or "var a = a || {}"
     Node valParent = getValueParent(ref);
     Node val = valParent.getLastChild();
-    if (val.getType() == Token.OR) {
+    if (val.getToken() == Token.OR) {
       Node maybeName = val.getFirstChild();
       if (ref.node.matchesQualifiedName(maybeName)) {
         return true;
@@ -607,7 +607,7 @@ class CollapseProperties implements CompilerPass {
     // This method has to work for both GETPROP chains and, in rare cases,
     // OBJLIT keys, possibly nested. That's why we check for children before
     // proceeding. In the OBJLIT case, we don't need to do anything.
-    Token nType = n.getType();
+    Token nType = n.getToken();
     boolean isQName = nType == Token.NAME || nType == Token.GETPROP;
     boolean isObjKey = NodeUtil.isObjectLitKey(n);
     Preconditions.checkState(isObjKey || isQName);
@@ -632,7 +632,7 @@ class CollapseProperties implements CompilerPass {
   private void flattenNameRef(String alias, Node n, Node parent,
       String originalName) {
     Preconditions.checkArgument(
-        n.isGetProp(), "Expected GETPROP, found %s. Node: %s", n.getType(), n);
+        n.isGetProp(), "Expected GETPROP, found %s. Node: %s", n.getToken(), n);
 
     // BEFORE:
     //   getprop
@@ -805,7 +805,7 @@ class CollapseProperties implements CompilerPass {
       return;
     }
 
-    switch (decl.node.getParent().getType()) {
+    switch (decl.node.getParent().getToken()) {
       case ASSIGN:
         updateObjLitOrFunctionDeclarationAtAssignNode(
             n, alias, canCollapseChildNames);

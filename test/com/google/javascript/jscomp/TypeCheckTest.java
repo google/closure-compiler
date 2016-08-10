@@ -9258,7 +9258,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
     // goog type on the VAR node
     Node varNode = p.root.getFirstChild();
-    assertEquals(Token.VAR, varNode.getType());
+    assertEquals(Token.VAR, varNode.getToken());
     JSType googNodeType = varNode.getFirstChild().getJSType();
     assertThat(googNodeType).isInstanceOf(ObjectType.class);
 
@@ -9267,7 +9267,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
     // goog type on the left of the GETPROP node (under fist ASSIGN)
     Node getpropFoo1 = varNode.getNext().getFirstFirstChild();
-    assertEquals(Token.GETPROP, getpropFoo1.getType());
+    assertEquals(Token.GETPROP, getpropFoo1.getToken());
     assertEquals("goog", getpropFoo1.getFirstChild().getString());
     JSType googGetpropFoo1Type = getpropFoo1.getFirstChild().getJSType();
     assertThat(googGetpropFoo1Type).isInstanceOf(ObjectType.class);
@@ -9283,7 +9283,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // (under second ASSIGN)
     Node getpropFoo2 = varNode.getNext().getNext()
         .getFirstFirstChild().getFirstChild();
-    assertEquals(Token.GETPROP, getpropFoo2.getType());
+    assertEquals(Token.GETPROP, getpropFoo2.getToken());
     assertEquals("goog", getpropFoo2.getFirstChild().getString());
     JSType googGetpropFoo2Type = getpropFoo2.getFirstChild().getJSType();
     assertThat(googGetpropFoo2Type).isInstanceOf(ObjectType.class);
@@ -9951,8 +9951,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node objectNode = nameNode.getFirstChild();
 
     // node extraction
-    assertEquals(Token.NAME, nameNode.getType());
-    assertEquals(Token.OBJECTLIT, objectNode.getType());
+    assertEquals(Token.NAME, nameNode.getToken());
+    assertEquals(Token.OBJECTLIT, objectNode.getToken());
 
     // value's type
     ObjectType objectType =

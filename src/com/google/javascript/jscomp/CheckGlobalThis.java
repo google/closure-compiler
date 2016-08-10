@@ -105,7 +105,7 @@ final class CheckGlobalThis implements Callback {
       // function a() {} // or
       // a.x = function() {}; // or
       // var a = {x: function() {}};
-      Token pType = parent.getType();
+      Token pType = parent.getToken();
       if (!(pType == Token.BLOCK ||
             pType == Token.SCRIPT ||
             pType == Token.NAME ||

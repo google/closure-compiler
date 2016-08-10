@@ -166,7 +166,7 @@ class MaybeReachingVariableUse extends
 
   private void computeMayUse(
       Node n, Node cfgNode, ReachingUses output, boolean conditional) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
 
       case BLOCK:
       case FUNCTION:

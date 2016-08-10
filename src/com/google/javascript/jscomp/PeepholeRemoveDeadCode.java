@@ -40,7 +40,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node subtree) {
-    switch(subtree.getType()) {
+    switch (subtree.getToken()) {
       case ASSIGN:
         return tryFoldAssignment(subtree);
       case COMMA:
@@ -177,7 +177,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node result = n;
 
     // Simplify the results of conditional expressions
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case HOOK:
         Node trueNode = trySimplifyUnusedResult(n.getSecondChild());
         Node falseNode = trySimplifyUnusedResult(n.getLastChild());
@@ -491,7 +491,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       if (block.hasChildren()) {
         for (Node blockChild : block.children()) {
           // If this is a block with a labelless break, it is useless.
-          switch (blockChild.getType()) {
+          switch (blockChild.getToken()) {
             case BREAK:
               // A case with a single labelless break is useless if it is the default case or if
               // there is no default case. A break to a different control structure isn't useless.
@@ -519,7 +519,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return Whether the node is an obvious control flow exit.
    */
   private static boolean isExit(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case BREAK:
       case CONTINUE:
       case RETURN:
@@ -687,7 +687,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    */
   private static boolean isExprConditional(Node n) {
     if (n.isExprResult()) {
-      switch (n.getFirstChild().getType()) {
+      switch (n.getFirstChild().getToken()) {
         case HOOK:
         case AND:
         case OR:
@@ -719,7 +719,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Preconditions.checkState(n.isIf(), n);
     Node parent = n.getParent();
     Preconditions.checkNotNull(parent);
-    Token type = n.getType();
+    Token type = n.getToken();
     Node cond = n.getFirstChild();
     Node thenBody = cond.getNext();
     Node elseBody = thenBody.getNext();

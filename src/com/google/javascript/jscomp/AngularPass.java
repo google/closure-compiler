@@ -220,7 +220,7 @@ class AngularPass extends AbstractPostOrderCallback
     Node fn = null;
     String name = null;
 
-    switch (n.getType()) {
+    switch (n.getToken()) {
       // handles assignment cases like:
       // a = function() {}
       // a = b = c = function() {}

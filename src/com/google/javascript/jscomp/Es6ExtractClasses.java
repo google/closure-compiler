@@ -113,7 +113,7 @@ public final class Es6ExtractClasses
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case CLASS:
           if (needsInnerNameRewriting(n, parent)) {
             classStack.removeFirst();

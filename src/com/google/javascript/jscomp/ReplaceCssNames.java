@@ -156,7 +156,7 @@ class ReplaceCssNames implements CompilerPass {
               compiler.reportCodeChange();
             } else {
               compiler.report(
-                  t.makeError(n, STRING_LITERAL_EXPECTED_ERROR, first.getType().toString()));
+                  t.makeError(n, STRING_LITERAL_EXPECTED_ERROR, first.getToken().toString()));
             }
             break;
 
@@ -168,7 +168,7 @@ class ReplaceCssNames implements CompilerPass {
 
             if (!second.isString()) {
               compiler.report(
-                  t.makeError(n, STRING_LITERAL_EXPECTED_ERROR, second.getType().toString()));
+                  t.makeError(n, STRING_LITERAL_EXPECTED_ERROR, second.getToken().toString()));
             } else if (first.isString()) {
               compiler.report(t.makeError(
                   n, UNEXPECTED_STRING_LITERAL_ERROR,

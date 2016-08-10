@@ -79,7 +79,7 @@ class MinimizedCondition {
    * minimization.
    */
   static MinimizedCondition fromConditionNode(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case NOT:
       case AND:
       case OR:
@@ -165,7 +165,7 @@ class MinimizedCondition {
    */
   private static MinimizedCondition computeMinimizedCondition(Node n) {
     Preconditions.checkArgument(n.getParent() == null);
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case NOT: {
         MinimizedCondition subtree =
             computeMinimizedCondition(n.getFirstChild().detachFromParent());
@@ -181,7 +181,7 @@ class MinimizedCondition {
       }
       case AND:
       case OR: {
-        Token opType = n.getType();
+          Token opType = n.getToken();
         Token complementType = opType == Token.AND ? Token.OR : Token.AND;
         MinimizedCondition leftSubtree =
             computeMinimizedCondition(n.getFirstChild().detachFromParent());
@@ -273,7 +273,7 @@ class MinimizedCondition {
 
     private MeasuredNode negate() {
       this.change();
-      switch (node.getType()) {
+      switch (node.getToken()) {
         case EQ:
           node.setType(Token.NE);
           return this;
@@ -318,7 +318,7 @@ class MinimizedCondition {
       if (n.isNot()) {
         cost++;  // A negation is needed.
       }
-      int parentPrecedence = NodeUtil.precedence(n.getType());
+      int parentPrecedence = NodeUtil.precedence(n.getToken());
       for (Node child = n.getFirstChild();
           child != null; child = child.getNext()) {
         if (PeepholeMinimizeConditions.isLowerPrecedence(child, parentPrecedence)) {

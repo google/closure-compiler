@@ -143,7 +143,7 @@ class UnreachableCodeElimination implements CompilerPass {
         return;
       }
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case RETURN:
           if (n.hasChildren()) {
             break;
@@ -207,7 +207,7 @@ class UnreachableCodeElimination implements CompilerPass {
         return;
       }
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
         // In the CFG, the only incoming edges the the DO node are from
         // breaks/continues and the condition. The edge from the previous
         // statement connects directly to the body of the DO.

@@ -1551,10 +1551,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node n = parse("var a = {12345678901234567890: 2}");
 
     Node objectLit = n.getFirstChild().getFirstChild().getFirstChild();
-    assertThat(objectLit.getType()).isEqualTo(Token.OBJECTLIT);
+    assertThat(objectLit.getToken()).isEqualTo(Token.OBJECTLIT);
 
     Node number = objectLit.getFirstChild();
-    assertThat(number.getType()).isEqualTo(Token.STRING_KEY);
+    assertThat(number.getToken()).isEqualTo(Token.STRING_KEY);
     assertThat(number.getString()).isEqualTo("12345678901234567000");
   }
 

@@ -86,7 +86,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     JSDocInfo docInfo;
 
-    switch (n.getType()) {
+    switch (n.getToken()) {
       // Infer JSDocInfo on types of all type declarations on variables.
       case NAME:
         if (parent == null) {

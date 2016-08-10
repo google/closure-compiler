@@ -182,7 +182,7 @@ class LiveVariablesAnalysis extends
   private void computeGenKill(Node n, BitSet gen, BitSet kill,
       boolean conditional) {
 
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case SCRIPT:
       case BLOCK:
       case FUNCTION:

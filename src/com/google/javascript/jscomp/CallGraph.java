@@ -225,38 +225,39 @@ public final class CallGraph implements CompilerPass {
     // Create fake function representing global execution
     mainFunction = createFunction(jsRoot);
 
-    NodeTraversal.traverseEs6(compiler, jsRoot, new AbstractPostOrderCallback() {
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        Token nodeType = n.getType();
+    NodeTraversal.traverseEs6(
+        compiler,
+        jsRoot,
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            Token nodeType = n.getToken();
 
-        if (nodeType == Token.CALL || nodeType == Token.NEW) {
-          Callsite callsite = createCallsite(n);
+            if (nodeType == Token.CALL || nodeType == Token.NEW) {
+              Callsite callsite = createCallsite(n);
 
-          Node containingFunctionNode = NodeUtil.getEnclosingFunction(t.getScopeRoot());
-          if (containingFunctionNode == null) {
-            containingFunctionNode = t.getClosestHoistScope().getRootNode();
+              Node containingFunctionNode = NodeUtil.getEnclosingFunction(t.getScopeRoot());
+              if (containingFunctionNode == null) {
+                containingFunctionNode = t.getClosestHoistScope().getRootNode();
+              }
+
+              Function containingFunction = functionsByNode.get(containingFunctionNode);
+
+              if (containingFunction == null) {
+                containingFunction = createFunction(containingFunctionNode);
+              }
+              callsite.containingFunction = containingFunction;
+              containingFunction.addCallsiteInFunction(callsite);
+
+              connectCallsiteToTargets(callsite, provider);
+
+            } else if (n.isFunction()) {
+              if (!functionsByNode.containsKey(n)) {
+                createFunction(n);
+              }
+            }
           }
-
-
-          Function containingFunction =
-              functionsByNode.get(containingFunctionNode);
-
-          if (containingFunction == null) {
-            containingFunction = createFunction(containingFunctionNode);
-          }
-          callsite.containingFunction = containingFunction;
-          containingFunction.addCallsiteInFunction(callsite);
-
-          connectCallsiteToTargets(callsite, provider);
-
-        } else if (n.isFunction()) {
-          if (!functionsByNode.containsKey(n)) {
-            createFunction(n);
-          }
-        }
-      }
-    });
+        });
   }
 
   /**
@@ -361,7 +362,7 @@ public final class CallGraph implements CompilerPass {
    */
   private void updateFunctionForUse(Function function, Node useNode) {
     Node useParent = useNode.getParent();
-    Token parentType = useParent.getType();
+    Token parentType = useParent.getToken();
 
     if ((parentType == Token.CALL || parentType == Token.NEW)
         && useParent.getFirstChild() == useNode) {

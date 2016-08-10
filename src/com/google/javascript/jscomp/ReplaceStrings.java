@@ -187,7 +187,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     // TODO(johnlenz): Determine if it is necessary to support ".call" or
     // ".apply".
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case NEW: // e.g. new Error('msg');
       case CALL: // e.g. Error('msg');
         Node calledFn = n.getFirstChild();
@@ -302,7 +302,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
     Node replacement;
     String key = null;
     String replacementString;
-    switch (expr.getType()) {
+    switch (expr.getToken()) {
       case STRING:
         key = expr.getString();
         replacementString = getReplacement(key);
@@ -385,7 +385,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
    */
   private Node buildReplacement(
       Node expr, Node prefix, StringBuilder keyBuilder) {
-    switch (expr.getType()) {
+    switch (expr.getToken()) {
       case ADD:
         Node left = expr.getFirstChild();
         Node right = left.getNext();

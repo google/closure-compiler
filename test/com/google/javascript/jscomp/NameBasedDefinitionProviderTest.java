@@ -392,7 +392,7 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
         Definition definition = defSite.definition;
         StringBuilder sb = new StringBuilder();
         sb.append("DEF ");
-        sb.append(node.getType());
+        sb.append(node.getToken());
         sb.append(" ");
         sb.append(node.getQualifiedName());
         sb.append(" -> ");
@@ -403,7 +403,7 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
 
         Node rValue = definition.getRValue();
         if (rValue != null) {
-          sb.append(rValue.getType());
+          sb.append(rValue.getToken());
         } else {
           sb.append("<null>");
         }
@@ -423,7 +423,7 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
       if (defs != null) {
         StringBuilder sb = new StringBuilder();
         sb.append("USE ");
-        sb.append(node.getType());
+        sb.append(node.getToken());
         sb.append(" ");
         sb.append(node.getQualifiedName());
         sb.append(" -> ");
@@ -433,7 +433,7 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
 
           Node rValue = def.getRValue();
           if (rValue != null) {
-            defstr = rValue.getType().toString();
+            defstr = rValue.getToken().toString();
           } else {
             defstr = "<null>";
           }

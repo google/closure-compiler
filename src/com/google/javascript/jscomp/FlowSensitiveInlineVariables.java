@@ -355,7 +355,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
           new Predicate<Node>() {
             @Override
             public boolean apply(Node input) {
-              switch (input.getType()) {
+              switch (input.getToken()) {
                 case GETELEM:
                 case GETPROP:
                 case ARRAYLIT:
@@ -445,7 +445,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
-              switch (n.getType()) {
+              switch (n.getToken()) {
                 case NAME:
                   if (n.getString().equals(varName) && n.hasChildren()) {
                     def = n;

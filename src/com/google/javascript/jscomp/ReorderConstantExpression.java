@@ -35,8 +35,8 @@ class ReorderConstantExpression extends AbstractPeepholeOptimization {
     // if the operator is symmetric
     if (NodeUtil.isSymmetricOperation(subtree)
         || NodeUtil.isRelationalOperation(subtree)) {
-      if (NodeUtil.precedence(subtree.getType()) ==
-          NodeUtil.precedence(subtree.getFirstChild().getType())) {
+      if (NodeUtil.precedence(subtree.getToken())
+          == NodeUtil.precedence(subtree.getFirstChild().getToken())) {
         // then flipping would add parens
         return subtree;
       }
@@ -46,7 +46,7 @@ class ReorderConstantExpression extends AbstractPeepholeOptimization {
 
         // if relational, get the inverse operator.
         if (NodeUtil.isRelationalOperation(subtree)){
-          Token inverseOperator = NodeUtil.getInverseOperator(subtree.getType());
+          Token inverseOperator = NodeUtil.getInverseOperator(subtree.getToken());
           subtree.setType(inverseOperator);
         }
 

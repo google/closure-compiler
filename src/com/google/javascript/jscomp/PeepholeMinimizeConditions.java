@@ -59,7 +59,7 @@ class PeepholeMinimizeConditions
   @Override
   @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
-    switch(node.getType()) {
+    switch (node.getToken()) {
       case THROW:
       case RETURN: {
         Node result = tryRemoveRedundantExit(node);
@@ -240,7 +240,7 @@ class PeepholeMinimizeConditions
   }
 
   private static boolean statementMustExitParent(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case THROW:
       case RETURN:
         return true;
@@ -420,7 +420,7 @@ class PeepholeMinimizeConditions
     Node notChild = n.getFirstChild();
     // negative operator of the current one : == -> != for instance.
     Token complementOperator;
-    switch (notChild.getType()) {
+    switch (notChild.getToken()) {
       case EQ:
         complementOperator = Token.NE;
         break;
@@ -648,7 +648,7 @@ class PeepholeMinimizeConditions
     if (thenBranchIsExpressionBlock && elseBranchIsExpressionBlock) {
       Node thenOp = getBlockExpression(thenBranch).getFirstChild();
       Node elseOp = getBlockExpression(elseBranch).getFirstChild();
-      if (thenOp.getType() == elseOp.getType()) {
+      if (thenOp.getToken() == elseOp.getToken()) {
         // if(x)a=1;else a=2; -> a=x?1:2;
         if (NodeUtil.isAssignmentOp(thenOp)) {
           Node lhs = thenOp.getFirstChild();
@@ -669,8 +669,7 @@ class PeepholeMinimizeConditions
 
             Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
                 .srcref(n);
-            Node assign = new Node(thenOp.getType(), assignName, hookNode)
-                              .srcref(thenOp);
+            Node assign = new Node(thenOp.getToken(), assignName, hookNode).srcref(thenOp);
             Node expr = NodeUtil.newExpr(assign);
             parent.replaceChild(n, expr);
             reportCodeChange();
@@ -930,7 +929,7 @@ class PeepholeMinimizeConditions
    */
   private static boolean consumesDanglingElse(Node n) {
     while (true) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case IF:
           if (n.getChildCount() < 3) {
             return true;
@@ -960,7 +959,7 @@ class PeepholeMinimizeConditions
    * Whether the node type has lower precedence than "precedence"
    */
   static boolean isLowerPrecedence(Node n, final int precedence) {
-    return NodeUtil.precedence(n.getType()) < precedence;
+    return NodeUtil.precedence(n.getToken()) < precedence;
   }
 
   /**
@@ -1007,7 +1006,7 @@ class PeepholeMinimizeConditions
       return n;
     }
 
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case OR:
       case AND:
         performCoercionSubstitutions(n.getFirstChild());
@@ -1038,10 +1037,10 @@ class PeepholeMinimizeConditions
     }
 
     Preconditions.checkArgument(
-        n.getType() == Token.EQ
-            || n.getType() == Token.NE
-            || n.getType() == Token.SHEQ
-            || n.getType() == Token.SHNE);
+        n.getToken() == Token.EQ
+            || n.getToken() == Token.NE
+            || n.getToken() == Token.SHEQ
+            || n.getToken() == Token.SHNE);
 
     Node left = n.getFirstChild();
     Node right = n.getLastChild();
@@ -1050,7 +1049,7 @@ class PeepholeMinimizeConditions
       n.detachChildren();
       Node objExpression = booleanCoercability == BooleanCoercability.LEFT ? left : right;
       Node replacement;
-      if (n.getType() == Token.EQ || n.getType() == Token.SHEQ) {
+      if (n.getToken() == Token.EQ || n.getToken() == Token.SHEQ) {
         replacement = IR.not(objExpression);
       } else {
         replacement = booleanResult ? IR.not(IR.not(objExpression)) : objExpression;
@@ -1143,7 +1142,7 @@ class PeepholeMinimizeConditions
   private Node performConditionSubstitutions(Node n) {
     Node parent = n.getParent();
 
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case OR:
       case AND: {
         Node left = n.getFirstChild();
@@ -1173,7 +1172,7 @@ class PeepholeMinimizeConditions
         // the new AST is easier for other passes to handle.
         TernaryValue rightVal = NodeUtil.getPureBooleanValue(right);
         if (NodeUtil.getPureBooleanValue(right) != TernaryValue.UNKNOWN) {
-          Token type = n.getType();
+            Token type = n.getToken();
           Node replacement = null;
           boolean rval = rightVal.toBoolean(true);
 

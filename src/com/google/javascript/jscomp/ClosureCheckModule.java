@@ -152,7 +152,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     if (currentModuleName == null) {
       return;
     }
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case CALL:
         Node callee = n.getFirstChild();
         if (callee.matchesQualifiedName("goog.module")
@@ -251,7 +251,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
 
   private void checkRequireCall(NodeTraversal t, Node callNode, Node parent) {
     Preconditions.checkState(callNode.isCall());
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case EXPR_RESULT:
         checkShortGoogRequireCall(t, callNode, parent);
         return;

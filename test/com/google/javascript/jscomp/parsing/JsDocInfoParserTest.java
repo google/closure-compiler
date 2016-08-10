@@ -1199,7 +1199,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseEnum4() throws Exception {
     JSDocInfo jsdoc = parse(" @enum {Foo} */");
     Node enumTypeNode = jsdoc.getEnumParameterType().getRoot();
-    assertThat(enumTypeNode.getType()).isEqualTo(Token.BANG);
+    assertThat(enumTypeNode.getToken()).isEqualTo(Token.BANG);
   }
 
   public void testParseBadEnumNoCrash() throws Exception {

@@ -91,7 +91,7 @@ class FindExportableNodes extends AbstractPostOrderCallback {
       String export = null;
       Node context = null;
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case FUNCTION:
         case CLASS:
           if (parent.isScript()) {

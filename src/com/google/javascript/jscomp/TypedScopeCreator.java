@@ -377,7 +377,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
-      switch (node.getType()) {
+      switch (node.getToken()) {
         case VAR:
           for (Node child = node.getFirstChild();
                child != null; child = child.getNext()) {
@@ -524,7 +524,7 @@ final class TypedScopeCreator implements ScopeCreator {
       inputId = t.getInputId();
       attachLiteralTypes(n);
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case CALL:
           checkForClassDefiningCalls(n);
           checkForCallingConventionDefiningCalls(n, delegateCallingConventions);
@@ -581,7 +581,7 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     private void attachLiteralTypes(Node n) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case NULL:
           n.setJSType(getNativeType(NULL_TYPE));
           break;
@@ -764,7 +764,7 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     void assertDefinitionNode(Node n, Token type) {
       Preconditions.checkState(sourceName != null);
-      Preconditions.checkState(n.getType() == type, n);
+      Preconditions.checkState(n.getToken() == type, n);
     }
 
     /**
@@ -1883,7 +1883,7 @@ final class TypedScopeCreator implements ScopeCreator {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       super.visit(t, n, parent);
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
 
         case VAR:
           // Handle typedefs.

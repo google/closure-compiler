@@ -146,7 +146,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
       return false;
     }
 
-    switch (value.getType()) {
+    switch (value.getToken()) {
       case ARRAYLIT:
         if (!collectArrayProperty(value, propertyCandidate)) {
           return false;

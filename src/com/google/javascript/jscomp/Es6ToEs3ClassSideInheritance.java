@@ -277,7 +277,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case CALL:
           if (n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.INHERITS)) {
             inheritsCalls.add(n);

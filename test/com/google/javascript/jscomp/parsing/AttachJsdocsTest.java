@@ -85,7 +85,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     Node root = parse("FOO: for (;;) { break /** don't attach */ FOO; }");
     Node forStm = root.getFirstChild().getLastChild();
     Node breakStm = forStm.getChildAtIndex(3).getFirstChild();
-    assertThat(breakStm.getType()).isSameAs(Token.BREAK);
+    assertThat(breakStm.getToken()).isSameAs(Token.BREAK);
     assertThat(breakStm.getJSDocInfo()).isNull();
     assertThat(breakStm.getFirstChild().getJSDocInfo()).isNull();
   }
@@ -165,7 +165,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     Node root = parse("FOO: for (;;) { continue /** don't attach */ FOO; }");
     Node forStm = root.getFirstChild().getLastChild();
     Node cont = forStm.getChildAtIndex(3).getFirstChild();
-    assertThat(cont.getType()).isSameAs(Token.CONTINUE);
+    assertThat(cont.getToken()).isSameAs(Token.CONTINUE);
     assertThat(cont.getJSDocInfo()).isNull();
     assertThat(cont.getFirstChild().getJSDocInfo()).isNull();
   }

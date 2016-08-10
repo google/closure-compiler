@@ -50,7 +50,7 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION:
         if (n.isArrowFunction()) {
           visitArrowFunction(t, n);

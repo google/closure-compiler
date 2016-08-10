@@ -65,7 +65,7 @@ class PeepholeSubstituteAlternateSyntax
   @Override
   @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
-    switch(node.getType()) {
+    switch (node.getToken()) {
       case ASSIGN_SUB:
         return reduceSubstractionAssignment(node);
 
@@ -163,30 +163,27 @@ class PeepholeSubstituteAlternateSyntax
       return n;
     }
     // All commutative operators are also associative
-    Preconditions.checkArgument(NodeUtil.isAssociative(n.getType()));
+    Preconditions.checkArgument(NodeUtil.isAssociative(n.getToken()));
     Node rhs = n.getLastChild();
-    if (n.getType() == rhs.getType()) {
+    if (n.getToken() == rhs.getToken()) {
       // Transform a * (b * c) to a * b * c
       Node first = n.getFirstChild().detachFromParent();
       Node second = rhs.getFirstChild().detachFromParent();
       Node third = rhs.getLastChild().detachFromParent();
-      Node newLhs = new Node(n.getType(), first, second)
-          .useSourceInfoIfMissingFrom(n);
-      Node newRoot = new Node(rhs.getType(), newLhs, third)
-          .useSourceInfoIfMissingFrom(rhs);
+      Node newLhs = new Node(n.getToken(), first, second).useSourceInfoIfMissingFrom(n);
+      Node newRoot = new Node(rhs.getToken(), newLhs, third).useSourceInfoIfMissingFrom(rhs);
       n.getParent().replaceChild(n, newRoot);
       reportCodeChange();
       return newRoot;
-    } else if (NodeUtil.isCommutative(n.getType()) &&
-               !NodeUtil.mayHaveSideEffects(n)) {
+    } else if (NodeUtil.isCommutative(n.getToken()) && !NodeUtil.mayHaveSideEffects(n)) {
       // Transform a * (b / c) to b / c * a
       Node lhs = n.getFirstChild();
-      while (lhs.getType() == n.getType()) {
+      while (lhs.getToken() == n.getToken()) {
         lhs = lhs.getFirstChild();
       }
-      int precedence = NodeUtil.precedence(n.getType());
-      int lhsPrecedence = NodeUtil.precedence(lhs.getType());
-      int rhsPrecedence = NodeUtil.precedence(rhs.getType());
+      int precedence = NodeUtil.precedence(n.getToken());
+      int lhsPrecedence = NodeUtil.precedence(lhs.getToken());
+      int rhsPrecedence = NodeUtil.precedence(rhs.getToken());
       if (rhsPrecedence == precedence && lhsPrecedence != precedence) {
         n.removeChild(rhs);
         lhs.getParent().replaceChild(lhs, rhs);
@@ -349,7 +346,7 @@ class PeepholeSubstituteAlternateSyntax
     Node result = n.getFirstChild();
 
     if (result != null) {
-      switch (result.getType()) {
+      switch (result.getToken()) {
         case VOID:
           Node operand = result.getFirstChild();
           if (!mayHaveSideEffects(operand)) {
@@ -437,7 +434,7 @@ class PeepholeSubstituteAlternateSyntax
     // Object() really refers to the built-in Object constructor
     // and not a user-defined constructor with the same name.
 
-    if (isASTNormalized() && Token.NAME == constructorNameNode.getType()) {
+    if (isASTNormalized() && Token.NAME == constructorNameNode.getToken()) {
 
       String className = constructorNameNode.getString();
 
@@ -493,7 +490,7 @@ class PeepholeSubstituteAlternateSyntax
     } else if (arg.getNext() != null) {
       action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
     } else {
-      switch (arg.getType()) {
+      switch (arg.getToken()) {
         case STRING:
           // "Array('a')" --> "['a']"
           action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
@@ -587,7 +584,7 @@ class PeepholeSubstituteAlternateSyntax
 
   private Node reduceTrueFalse(Node n) {
     if (late) {
-      switch (n.getParent().getType()) {
+      switch (n.getParent().getToken()) {
         case EQ:
         case GT:
         case GE:

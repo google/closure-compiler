@@ -233,7 +233,7 @@ final class MustBeReachingVariableDef extends
    */
   private void computeMustDef(
       Node n, Node cfgNode, MustDef output, boolean conditional) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
 
       case BLOCK:
       case FUNCTION:

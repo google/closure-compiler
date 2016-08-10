@@ -77,50 +77,54 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
             });
 
     for (Node typeRoot : info.getTypeNodes()) {
-      NodeUtil.visitPreOrder(typeRoot, new NodeUtil.Visitor() {
-        @Override
-        public void visit(Node node) {
-          if (!node.isString()) {
-            return;
-          }
-          if (thrownTypes.contains(node)) {
-            return;
-          }
-          Node parent = node.getParent();
-          if (parent != null) {
-            switch (parent.getType()) {
-              case BANG:
-              case QMARK:
-              case THIS:  // The names inside function(this:Foo) and
-              case NEW:   // function(new:Bar) are already non-null.
+      NodeUtil.visitPreOrder(
+          typeRoot,
+          new NodeUtil.Visitor() {
+            @Override
+            public void visit(Node node) {
+              if (!node.isString()) {
                 return;
-              case PIPE: { // Inside a union
-                Node gp = parent.getParent();
-                if (gp != null && gp.getType() == Token.QMARK) {
-                  return; // Inside an explicitly nullable union
-                }
-                for (Node child : parent.children()) {
-                  if (child.isString() && child.getString().equals("null")
-                      || child.getType() == Token.QMARK) {
-                    return; // Inside a union that contains null or nullable type
-                  }
-                }
-                break;
               }
-              default:
-                break;
+              if (thrownTypes.contains(node)) {
+                return;
+              }
+              Node parent = node.getParent();
+              if (parent != null) {
+                switch (parent.getToken()) {
+                  case BANG:
+                  case QMARK:
+                  case THIS: // The names inside function(this:Foo) and
+                  case NEW: // function(new:Bar) are already non-null.
+                    return;
+                  case PIPE:
+                    { // Inside a union
+                      Node gp = parent.getParent();
+                      if (gp != null && gp.getToken() == Token.QMARK) {
+                        return; // Inside an explicitly nullable union
+                      }
+                      for (Node child : parent.children()) {
+                        if (child.isString() && child.getString().equals("null")
+                            || child.getToken() == Token.QMARK) {
+                          return; // Inside a union that contains null or nullable type
+                        }
+                      }
+                      break;
+                    }
+                  default:
+                    break;
+                }
+              }
+              String typeName = node.getString();
+              if (typeName.equals("null") || registry.getType(typeName) == null) {
+                return;
+              }
+              TypeI type = registry.createTypeFromCommentNode(node);
+              if (type.isNullable()) {
+                reportWarning(t, node, typeName);
+              }
             }
-          }
-          String typeName = node.getString();
-          if (typeName.equals("null") || registry.getType(typeName) == null) {
-            return;
-          }
-          TypeI type = registry.createTypeFromCommentNode(node);
-          if (type.isNullable()) {
-            reportWarning(t, node, typeName);
-          }
-        }
-      }, Predicates.<Node>alwaysTrue());
+          },
+          Predicates.<Node>alwaysTrue());
     }
   }
 

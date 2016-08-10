@@ -251,7 +251,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case CALL:
         Node left = n.getFirstChild();
         if (left.isGetProp()) {
@@ -386,7 +386,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   }
 
   static boolean isValidDefineValue(Node val) {
-    switch (val.getType()) {
+    switch (val.getToken()) {
       case STRING:
       case NUMBER:
       case TRUE:
@@ -1144,7 +1144,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    */
   private boolean verifyOfType(NodeTraversal t, Node methodName,
       Node arg, Token desiredType) {
-    if (arg.getType() != desiredType) {
+    if (arg.getToken() != desiredType) {
       compiler.report(
           t.makeError(methodName,
               INVALID_ARGUMENT_ERROR, methodName.getQualifiedName()));
@@ -1336,11 +1336,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           JSTypeExpression expr = info.getType();
           if (expr != null) {
             Node n = expr.getRoot();
-            if (n.getType() == Token.BANG) {
+            if (n.getToken() == Token.BANG) {
               n = n.getFirstChild();
             }
-            if (n.getType() == Token.STRING
-                && !n.hasChildren()  // templated object types are ok.
+            if (n.getToken() == Token.STRING
+                && !n.hasChildren() // templated object types are ok.
                 && n.getString().equals("Object")) {
               compiler.report(
                   JSError.make(candidateDefinition, WEAK_NAMESPACE_TYPE));

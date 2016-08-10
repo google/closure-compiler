@@ -275,7 +275,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (info.containsFunctionDeclaration() && !info.hasType()) {
       // This JSDoc should be attached to a FUNCTION node, or an assignment
       // with a function as the RHS, etc.
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case FUNCTION:
         case VAR:
         case LET:
@@ -324,7 +324,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
 
     if (info.getDescription() != null || info.isHidden() || info.getMeaning() != null) {
       boolean descOkay = false;
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case ASSIGN: {
           Node lhs = n.getFirstChild();
           if (lhs.isName()) {
@@ -357,7 +357,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   private void validateTypeAnnotations(Node n, JSDocInfo info) {
     if (info != null && info.hasType()) {
       boolean valid = false;
-      switch (n.getType()) {
+      switch (n.getToken()) {
         // Function declarations are valid
         case FUNCTION:
           valid = NodeUtil.isFunctionDeclaration(n);
@@ -369,7 +369,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         case ARRAY_PATTERN:
         case OBJECT_PATTERN:
           Node parent = n.getParent();
-          switch (parent.getType()) {
+          switch (parent.getToken()) {
             case GETTER_DEF:
             case SETTER_DEF:
             case CATCH:
@@ -452,7 +452,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         return;
       }
       Node typeNode = typeExpr.getRoot();
-      if (typeNode.getType() != Token.EQUALS) {
+      if (typeNode.getToken() != Token.EQUALS) {
         report(typeNode, DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
       }
     }

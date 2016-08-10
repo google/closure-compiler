@@ -459,7 +459,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       Node root = NodeUtil.getRootOfQualifiedName(ref);
 
       Node n = ref.getParent();
-      switch (n.getType()) {
+      switch (n.getToken()) {
         // Foo.prototype.getBar = function() { ... }
         case GETPROP:
           Node dest = n.getSecondChild();

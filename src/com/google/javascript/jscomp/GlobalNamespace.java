@@ -311,7 +311,7 @@ class GlobalNamespace
       Name.Type type = Name.Type.OTHER;
       boolean isPropAssign = false;
 
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case GETTER_DEF:
         case SETTER_DEF:
         case STRING_KEY:
@@ -327,7 +327,7 @@ class GlobalNamespace
             return;
           }
           isSet = true;
-          switch (n.getType()) {
+          switch (n.getToken()) {
             case MEMBER_FUNCTION_DEF:
             case STRING_KEY:
               type = getValueType(n.getFirstChild());
@@ -345,7 +345,7 @@ class GlobalNamespace
         case NAME:
           // This may be a variable get or set.
           if (parent != null) {
-            switch (parent.getType()) {
+            switch (parent.getToken()) {
               case VAR:
               case LET:
               case CONST:
@@ -392,7 +392,7 @@ class GlobalNamespace
         case GETPROP:
           // This may be a namespaced name get or set.
           if (parent != null) {
-            switch (parent.getType()) {
+            switch (parent.getToken()) {
               case ASSIGN:
                 if (parent.getFirstChild() == n) {
                   isSet = true;
@@ -468,7 +468,7 @@ class GlobalNamespace
 
       Node greatGrandparent = grandparent.getParent();
       String name;
-      switch (grandparent.getType()) {
+      switch (grandparent.getToken()) {
         case NAME:
           // VAR
           //   NAME (grandparent)
@@ -544,7 +544,7 @@ class GlobalNamespace
       if (n == null) {
         return Name.Type.OTHER;
       }
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case CLASS:
           return Name.Type.CLASS;
         case OBJECTLIT:
@@ -679,7 +679,7 @@ class GlobalNamespace
 
       Ref.Type type = Ref.Type.DIRECT_GET;
       if (parent != null) {
-        switch (parent.getType()) {
+        switch (parent.getToken()) {
           case EXPR_RESULT:
           case IF:
           case INSTANCEOF:
@@ -762,7 +762,7 @@ class GlobalNamespace
         JSModule module, Scope scope, Node parent, String name) {
       Node prev = parent;
       for (Node anc : parent.getAncestors()) {
-        switch (anc.getType()) {
+        switch (anc.getToken()) {
           case INSTANCEOF:
           case EXPR_RESULT:
           case VAR:
@@ -1291,7 +1291,7 @@ class GlobalNamespace
           // May happen when inlineAliases removes refs from the AST.
           return null;
         }
-        switch (refParent.getType()) {
+        switch (refParent.getToken()) {
           case FUNCTION:
           case ASSIGN:
           case CLASS:

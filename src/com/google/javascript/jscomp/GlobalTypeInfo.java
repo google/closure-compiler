@@ -707,7 +707,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case FUNCTION: {
           visitFunctionEarly(n);
           break;
@@ -747,7 +747,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         }
         case EXPR_RESULT: {
           Node expr = n.getFirstChild();
-          switch (expr.getType()) {
+            switch (expr.getToken()) {
             case ASSIGN:
               Node lhs = expr.getFirstChild();
               if (isCtorDefinedByCall(lhs)) {
@@ -971,7 +971,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         isRedeclaration = currentScope.isDefinedLocally(nameNode.getString(), false);
       } else {
         Preconditions.checkState(
-            nameNode.isGetProp(), "Expected getprop, found %s", nameNode.getType());
+            nameNode.isGetProp(), "Expected getprop, found %s", nameNode.getToken());
         isRedeclaration = currentScope.isDefined(nameNode);
         if (isRedeclaration && fnDoc != null) {
           nameNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -1276,7 +1276,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case FUNCTION:
           Node grandparent = parent.getParent();
           // We skip property and prototype declarations because if we compute their
@@ -1348,7 +1348,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     private boolean isPropertyAbsentTest(Node propAccessNode) {
       Node parent = propAccessNode.getParent();
-      if (parent.getType() == Token.EQ || parent.getType() == Token.SHEQ) {
+      if (parent.getToken() == Token.EQ || parent.getToken() == Token.SHEQ) {
         Node other = parent.getFirstChild() == propAccessNode
             ? parent.getSecondChild() : parent.getFirstChild();
         return NodeUtil.isUndefined(other);
@@ -1910,7 +1910,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     }
 
     private JSType simpleInferExprType(Node n) {
-      switch (n.getType()) {
+      switch (n.getToken()) {
         case REGEXP:
           return commonTypes.getRegexpType();
         case CAST:
@@ -2467,7 +2467,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         || defSite.isGetterDef() || defSite.isSetterDef()) {
       return defSite;
     }
-    throw new RuntimeException("Unknown defsite: " + defSite.getType());
+    throw new RuntimeException("Unknown defsite: " + defSite.getToken());
   }
 
   private boolean isConst(Node defSite) {

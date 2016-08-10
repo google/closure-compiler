@@ -198,7 +198,7 @@ public final class CallGraphTest extends CompilerTestCase {
     CallGraph.Callsite firstCallsiteInA = callsitesInA.iterator().next();
 
     Node aTargetExpression = firstCallsiteInA.getAstNode().getFirstChild();
-    assertEquals(Token.NAME, aTargetExpression.getType());
+    assertEquals(Token.NAME, aTargetExpression.getToken());
     assertEquals("x", aTargetExpression.getString());
 
     CallGraph.Function functionB =
@@ -212,7 +212,7 @@ public final class CallGraphTest extends CompilerTestCase {
     CallGraph.Callsite firstCallsiteInB = callsitesInB.iterator().next();
 
     Node bTargetExpression = firstCallsiteInB.getAstNode().getFirstChild();
-    assertEquals(Token.FUNCTION, bTargetExpression.getType());
+    assertEquals(Token.FUNCTION, bTargetExpression.getToken());
     assertEquals("C", NodeUtil.getName(bTargetExpression));
 
     CallGraph.Function functionC =
@@ -225,7 +225,7 @@ public final class CallGraphTest extends CompilerTestCase {
     CallGraph.Callsite firstCallsiteInC = callsitesInC.iterator().next();
 
     Node cTargetExpression = firstCallsiteInC.getAstNode().getFirstChild();
-    assertEquals(Token.NAME, aTargetExpression.getType());
+    assertEquals(Token.NAME, aTargetExpression.getToken());
     assertEquals("A", cTargetExpression.getString());
   }
 
@@ -241,10 +241,10 @@ public final class CallGraphTest extends CompilerTestCase {
     assertThat(callsitesInA).hasSize(1);
 
     Node callsiteInA = callsitesInA.iterator().next().getAstNode();
-    assertEquals(Token.NEW, callsiteInA.getType());
+    assertEquals(Token.NEW, callsiteInA.getToken());
 
     Node aTargetExpression = callsiteInA.getFirstChild();
-    assertEquals(Token.NAME, aTargetExpression.getType());
+    assertEquals(Token.NAME, aTargetExpression.getToken());
     assertEquals("x", aTargetExpression.getString());
   }
 
@@ -322,7 +322,7 @@ public final class CallGraphTest extends CompilerTestCase {
     assertThat(allCallsites).hasSize(1);
 
     Node callsiteNode = allCallsites.iterator().next().getAstNode();
-    assertEquals(Token.CALL, callsiteNode.getType());
+    assertEquals(Token.CALL, callsiteNode.getToken());
     assertEquals("A", callsiteNode.getFirstChild().getString());
   }
 
@@ -337,7 +337,7 @@ public final class CallGraphTest extends CompilerTestCase {
     assertThat(allCallsites).hasSize(1);
 
     Node callsiteNode = allCallsites.iterator().next().getAstNode();
-    assertEquals(Token.CALL, callsiteNode.getType());
+    assertEquals(Token.CALL, callsiteNode.getToken());
     assertEquals("A", callsiteNode.getFirstChild().getString());
   }
 
@@ -350,8 +350,8 @@ public final class CallGraphTest extends CompilerTestCase {
     assertThat(allCallsites).hasSize(1);
 
     Node callsiteNode = allCallsites.iterator().next().getAstNode();
-    assertEquals(Token.CALL, callsiteNode.getType());
-    assertEquals(Token.FUNCTION, callsiteNode.getFirstChild().getType());
+    assertEquals(Token.CALL, callsiteNode.getToken());
+    assertEquals(Token.FUNCTION, callsiteNode.getFirstChild().getToken());
   }
 
   public void testGetAllCallsitesContainsConstructorSite() {
@@ -365,7 +365,7 @@ public final class CallGraphTest extends CompilerTestCase {
     assertThat(allCallsites).hasSize(1);
 
     Node callsiteNode = allCallsites.iterator().next().getAstNode();
-    assertEquals(Token.NEW, callsiteNode.getType());
+    assertEquals(Token.NEW, callsiteNode.getToken());
     assertEquals("A", callsiteNode.getFirstChild().getString());
   }
 

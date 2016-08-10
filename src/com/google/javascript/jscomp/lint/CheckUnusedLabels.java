@@ -64,7 +64,7 @@ public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
 
   @Override
   public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case BREAK:
       case CONTINUE:
         if (n.hasChildren()) {

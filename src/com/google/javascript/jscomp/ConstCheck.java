@@ -59,7 +59,7 @@ class ConstCheck extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case NAME:
         if (parent != null &&
             parent.isVar()) {
