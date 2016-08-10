@@ -39,6 +39,10 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
   }
 
+  public void testExternsDefinitionsRespected() {
+    test("/** @type {number} */ var x;", "x = 7;", "", null, null);
+  }
+
   public void testSimpleConstJsdocPropagation() {
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
     test("/** @const */ var x = true;", "/** @const {boolean} */ var x;");
@@ -214,6 +218,70 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
     testEs6(
         "class Foo { method(/** string */ s) { return s.split(','); } }",
         "class Foo { method(/** string */ s) {} }");
+  }
+
+  public void testGoogModules() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "/** @constructor */ function Foo() {};",
+            "",
+            "exports = Foo;"));
+
+    testSame(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('a.b.c');",
+              "/** @constructor */ function Foo() {}",
+              "Foo.prototoype.display = function() {};",
+              "exports = Foo;"),
+          LINE_JOINER.join(
+              "goog.module('x.y.z');",
+              "/** @constructor */ function Foo() {}",
+              "Foo.prototoype.display = function() {};",
+              "exports = Foo;"),
+        });
+
+    testSame(
+        new String[] {
+          LINE_JOINER.join(
+              "/** @constructor */ function Foo() {}",
+              "Foo.prototoype.display = function() {};"),
+          LINE_JOINER.join(
+              "goog.module('x.y.z');",
+              "/** @constructor */ function Foo() {}",
+              "Foo.prototoype.display = function() {};",
+              "exports = Foo;"),
+        });
+
+    test(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('a.b.c');",
+              "/** @constructor */ function Foo() {",
+              "  /** @type {number} */ this.x = 5;",
+              "}",
+              "exports = Foo;"),
+          LINE_JOINER.join(
+              "goog.module('x.y.z');",
+              "/** @constructor */ function Foo() {",
+              "  /** @type {number} */ this.x = 99;",
+              "}",
+              "exports = Foo;"),
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('a.b.c');",
+              "/** @constructor */ function Foo() {}",
+              "/** @type {number} */ Foo.prototype.x;",
+              "exports = Foo;"),
+          LINE_JOINER.join(
+              "goog.module('x.y.z');",
+              "/** @constructor */ function Foo() {}",
+              "/** @type {number} */ Foo.prototype.x;",
+              "exports = Foo;"),
+        });
   }
 
   public void testRemoveCalls() {
