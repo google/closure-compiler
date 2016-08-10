@@ -175,6 +175,16 @@ public final class NominalType {
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     ImmutableMap<String, JSType> resultMap;
     if (!typeMap.isEmpty()) {
+      // This branch is entered when a generic type appears "instantiated"
+      // in some other type, and now we're actually instantiating it to concrete
+      // types rather than to type variables, eg, here we instantiate Array's T to U,
+      // and when we call f, we instantiate U to boolean.
+      // /**
+      //  * @template U
+      //  * @param {!Array<U>} x
+      //  */
+      // function f(x) { return x[0]; }
+      // f([true, false]);
       for (String oldKey : typeMap.keySet()) {
         builder.put(oldKey, typeMap.get(oldKey).substituteGenerics(newTypeMap));
       }
@@ -199,6 +209,11 @@ public final class NominalType {
       }
     }
     return new NominalType(resultMap, this.rawType);
+  }
+
+  NominalType instantiateGenericsWithUnknown() {
+    NominalType thisWithoutTypemap = this.rawType.getAsNominalType();
+    return thisWithoutTypemap.instantiateGenerics(JSType.MAP_TO_UNKNOWN);
   }
 
   public String getName() {
@@ -340,6 +355,11 @@ public final class NominalType {
     return true;
   }
 
+  // Checks for subtyping without taking generics into account
+  boolean isRawSubtypeOf(NominalType other) {
+    return this.rawType.isSubtypeOf(other.rawType);
+  }
+
   boolean isNominalSubtypeOf(NominalType other) {
     RawNominalType thisRaw = this.rawType;
     if (thisRaw == other.rawType) {
@@ -446,7 +466,16 @@ public final class NominalType {
     if (c1.isNominalSubtypeOf(c2)) {
       return c2;
     }
-    return c2.isNominalSubtypeOf(c1) ? c1 : null;
+    if (c1.isRawSubtypeOf(c2)) {
+      return c2.instantiateGenericsWithUnknown();
+    }
+    if (c2.isNominalSubtypeOf(c1)) {
+      return c1;
+    }
+    if (c2.isRawSubtypeOf(c1)) {
+      return c1.instantiateGenericsWithUnknown();
+    }
+    return null;
   }
 
   // A special-case of meet
@@ -518,6 +547,10 @@ public final class NominalType {
   boolean isPropDefinedOnSubtype(QualifiedName pname) {
     Preconditions.checkArgument(pname.isIdentifier());
     return this.rawType.isPropDefinedOnSubtype(pname.getLeftmostName());
+  }
+
+  static boolean equalRawTypes(NominalType n1, NominalType n2) {
+    return n1.rawType.equals(n2.rawType);
   }
 
   @Override

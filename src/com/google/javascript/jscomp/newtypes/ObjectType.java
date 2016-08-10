@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
+import com.google.javascript.jscomp.newtypes.ObjectsBuilder.ResolveConflictsBy;
 import com.google.javascript.rhino.Node;
 
 import java.util.Arrays;
@@ -948,13 +949,14 @@ final class ObjectType implements TypeWithProperties {
     return new ObjectType(resultNomType, props, fn, resultNs, isLoose, ok);
   }
 
-  private static ObjectType join(ObjectType obj1, ObjectType obj2) {
+  static ObjectType join(ObjectType obj1, ObjectType obj2) {
     if (obj1 == TOP_OBJECT || obj2 == TOP_OBJECT) {
       return TOP_OBJECT;
     }
     NominalType nom1 = obj1.nominalType;
     NominalType nom2 = obj2.nominalType;
-    Preconditions.checkState(areRelatedNominalTypes(nom1, nom2));
+    Preconditions.checkState(nom1 == null || nom2 == null
+        || nom1.isRawSubtypeOf(nom2) || nom2.isRawSubtypeOf(nom1));
 
     if (obj1.equals(obj2)) {
       return obj1;
@@ -987,7 +989,7 @@ final class ObjectType implements TypeWithProperties {
     }
     ObjectType[] objs1Arr = objs1.toArray(new ObjectType[0]);
     ObjectType[] keptFrom1 = Arrays.copyOf(objs1Arr, objs1Arr.length);
-    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
+    ObjectsBuilder newObjs = new ObjectsBuilder(ResolveConflictsBy.JOIN);
     for (ObjectType obj2 : objs2) {
       boolean addedObj2 = false;
       for (int i = 0; i < objs1Arr.length; i++) {
@@ -1041,7 +1043,7 @@ final class ObjectType implements TypeWithProperties {
   static ImmutableSet<ObjectType> meetSetsHelper(
       boolean specializeObjs1,
       Set<ObjectType> objs1, Set<ObjectType> objs2) {
-    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
+    ObjectsBuilder newObjs = new ObjectsBuilder(ResolveConflictsBy.MEET);
     for (ObjectType obj2 : objs2) {
       for (ObjectType obj1 : objs1) {
         if (areRelatedNominalTypes(obj1.nominalType, obj2.nominalType)) {

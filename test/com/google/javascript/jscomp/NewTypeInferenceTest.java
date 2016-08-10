@@ -17708,4 +17708,48 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return x.b + 1;",
         "}"));
   }
+
+  public void testOnlyOneInstanceOfEachClassInUnion() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " * @param {T} x",
+        " */",
+        "function Foo(x) {",
+        "  /** @type {T} */",
+        "  this.prop = x;",
+        "}",
+        "function f(x) {",
+        "  var y = x ? new Foo(123) : new Foo('asdf');",
+        // prop is typed ?, no warning
+        "  var /** null */ n = y.prop;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function I1() {}",
+        "/** @interface */",
+        "function I2() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {I1}",
+        " * @implements {I2}",
+        " */",
+        "function C() {}",
+        "function f(/** !I1 */ x, /** !I2 */ y) {",
+        "  var z;",
+        "  if (1<2) {",
+        "    x.p1 = 123;",
+        "    z = x;",
+        "  } else {",
+        "    y.p2 = 234;",
+        "    z = y;",
+        "  }",
+        "  if (z instanceof C) {",
+        "    var /** (number|undefined) */ n = z.p2;",
+        "    var /** !C */ w = z;",
+        "  }",
+        "}"));
+  }
 }

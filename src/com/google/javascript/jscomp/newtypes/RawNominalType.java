@@ -331,6 +331,23 @@ public final class RawNominalType extends Namespace {
     return this.interfaces == null ? ImmutableSet.<NominalType>of() : this.interfaces;
   }
 
+  // Checks for subtyping without taking generics into account
+  boolean isSubtypeOf(RawNominalType other) {
+    if (this == other || other.isBuiltinWithName("Object")) {
+      return true;
+    }
+    if (other.isInterface()) {
+      for (NominalType i : getInterfaces()) {
+        if (i.isRawSubtypeOf(other.getAsNominalType())) {
+          return true;
+        }
+      }
+    }
+    // Note that other can still be an interface here (implemented by a superclass)
+    return isClass() && this.superclass != null
+        && this.superclass.isRawSubtypeOf(other.getAsNominalType());
+  }
+
   Property getOwnProp(String pname) {
     Property p = classProps.get(pname);
     if (p != null) {
