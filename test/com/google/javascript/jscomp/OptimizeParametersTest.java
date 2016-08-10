@@ -30,7 +30,6 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   @Override
   public void setUp() {
     enableNormalize();
-    enableLineNumberCheck(false);
   }
 
   public void testNoRemoval() {

@@ -486,7 +486,7 @@ class OptimizeParameters
     if (varName != null) {
       stmt = NodeUtil.newVarNode(varName.getString(), value);
     } else {
-      stmt = IR.exprResult(value);
+      stmt = IR.exprResult(value).useSourceInfoFrom(value);
     }
     block.addChildToFront(stmt);
     compiler.reportCodeChange();
