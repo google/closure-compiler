@@ -736,18 +736,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
       // i.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
       if (options.lowerFromEs6()) {
-        transpile();
+        transpileAndDontCheck();
       }
-      return;
-    }
+    } else {
+      check(); // check() also includes transpilation
+      if (hasErrors()) {
+        return;
+      }
 
-    check();
-    if (hasErrors()) {
-      return;
-    }
-
-    if (!options.checksOnly && !options.shouldGenerateTypedExterns()) {
-      optimize();
+      if (!options.checksOnly && !options.shouldGenerateTypedExterns()) {
+        optimize();
+      }
     }
 
     if (options.recordFunctionInformation) {
@@ -820,7 +819,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
     }
   }
 
-  public void transpile() {
+  public void transpileAndDontCheck() {
     Tracer t = newTracer("runTranspileOnlyPasses");
     try {
       for (PassFactory pf : getPassConfig().getTranspileOnlyPasses()) {
