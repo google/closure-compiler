@@ -48,6 +48,24 @@ public enum CompilationLevel {
   ADVANCED_OPTIMIZATIONS,
   ;
 
+  public static CompilationLevel fromString(String value) {
+    if (value == null) {
+      return null;
+    }
+    switch (value) {
+      case "WHITESPACE_ONLY":
+      case "WHITESPACE":
+        return CompilationLevel.WHITESPACE_ONLY;
+      case "SIMPLE_OPTIMIZATIONS":
+      case "SIMPLE":
+        return CompilationLevel.SIMPLE_OPTIMIZATIONS;
+      case "ADVANCED_OPTIMIZATIONS":
+      case "ADVANCED":
+        return CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    }
+    return null;
+  }
+
   private CompilationLevel() {}
 
   public void setOptionsForCompilationLevel(CompilerOptions options) {

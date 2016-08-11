@@ -37,7 +37,6 @@ import com.google.javascript.jscomp.WarningLevel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
@@ -46,58 +45,64 @@ import jsinterop.annotations.JsType;
  * Runner for the GWT-compiled JSCompiler as a single exported method.
  */
 public final class GwtRunner implements EntryPoint {
-
   private static final CompilationLevel DEFAULT_COMPILATION_LEVEL =
       CompilationLevel.SIMPLE_OPTIMIZATIONS;
-
-  private static final Map<String, CompilationLevel> COMPILATION_LEVEL_MAP =
-      ImmutableMap.of(
-          "WHITESPACE_ONLY",
-          CompilationLevel.WHITESPACE_ONLY,
-          "SIMPLE",
-          CompilationLevel.SIMPLE_OPTIMIZATIONS,
-          "SIMPLE_OPTIMIZATIONS",
-          CompilationLevel.SIMPLE_OPTIMIZATIONS,
-          "ADVANCED",
-          CompilationLevel.ADVANCED_OPTIMIZATIONS,
-          "ADVANCED_OPTIMIZATIONS",
-          CompilationLevel.ADVANCED_OPTIMIZATIONS);
-
-  private static final Map<String, WarningLevel> WARNING_LEVEL_MAP =
-      ImmutableMap.of(
-          "QUIET",
-          WarningLevel.QUIET,
-          "DEFAULT",
-          WarningLevel.DEFAULT,
-          "VERBOSE",
-          WarningLevel.VERBOSE);
 
   private GwtRunner() {}
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private interface Flags {
-    @JsProperty boolean getAngularPass();
-    @JsProperty boolean getAssumeFunctionWrapper();
-    @JsProperty String getCompilationLevel();
-    @JsProperty boolean getDartPass();
-    @JsProperty boolean getExportLocalPropertyDefinitions();
-    @JsProperty boolean getGenerateExports();
-    @JsProperty String getLanguageIn();
-    @JsProperty String getLanguageOut();
-    @JsProperty boolean getChecksOnly();
-    @JsProperty boolean getNewTypeInf();
-    @JsProperty boolean getPolymerPass();
-    @JsProperty boolean getPreserveTypeAnnotations();
-    @JsProperty boolean getProcessCommonJSModules();
-    @JsProperty String getRenamePrefixNamespace();
-    @JsProperty boolean getRewritePolyfills();  // default true
-    @JsProperty String getWarningLevel();
-    @JsProperty boolean getUseTypesForOptimization();  // default true
+  private static class Flags {
+    boolean angularPass;
+    boolean assumeFunctionWrapper;
+    String compilationLevel;
+    boolean dartPass;
+    boolean exportLocalPropertyDefinitions;
+    boolean generateExports;
+    String languageIn;
+    String languageOut;
+    boolean checksOnly;
+    boolean newTypeInf;
+    boolean polymerPass;
+    boolean preserveTypeAnnotations;
+    boolean processCommonJsModules;
+    public String renamePrefixNamespace;
+    boolean rewritePolyfills;
+    String warningLevel;
+    boolean useTypesForOptimization;
 
     // These flags do not match the Java compiler JAR.
-    @JsProperty File[] getJsCode();
-    @JsProperty File[] getExterns();
-    @JsProperty boolean getCreateSourceMap();  // String in JAR
+    File[] jsCode;
+    File[] externs;
+    boolean createSourceMap;
+  }
+
+  /**
+   * defaultFlags must have a value set for each field. Otherwise, GWT has no way to create the
+   * fields inside Flags (as it's native). If Flags is not-native, GWT eats its field names
+   * anyway.
+   */
+  private static final Flags defaultFlags = new Flags();
+  static {
+    defaultFlags.angularPass = false;
+    defaultFlags.assumeFunctionWrapper = false;
+    defaultFlags.compilationLevel = "SIMPLE";
+    defaultFlags.dartPass = false;
+    defaultFlags.exportLocalPropertyDefinitions = false;
+    defaultFlags.generateExports = false;
+    defaultFlags.languageIn = "ECMASCRIPT6";
+    defaultFlags.languageOut = "ECMASCRIPT5";
+    defaultFlags.checksOnly = false;
+    defaultFlags.newTypeInf = false;
+    defaultFlags.polymerPass = false;
+    defaultFlags.preserveTypeAnnotations = false;
+    defaultFlags.processCommonJsModules = false;
+    defaultFlags.renamePrefixNamespace = null;
+    defaultFlags.rewritePolyfills = true;
+    defaultFlags.warningLevel = "DEFAULT";
+    defaultFlags.useTypesForOptimization = true;
+    defaultFlags.jsCode = null;
+    defaultFlags.externs = null;
+    defaultFlags.createSourceMap = false;
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
@@ -143,60 +148,51 @@ public final class GwtRunner implements EntryPoint {
 
   private static void applyOptionsFromFlags(CompilerOptions options, Flags flags) {
     CompilationLevel level = DEFAULT_COMPILATION_LEVEL;
-    if (flags.getCompilationLevel() != null) {
-      level = COMPILATION_LEVEL_MAP.get(flags.getCompilationLevel().toUpperCase());
+    if (flags.compilationLevel != null) {
+      level = CompilationLevel.fromString(flags.compilationLevel.toUpperCase());
       if (level == null) {
         throw new RuntimeException(
-            "Bad value for compilationLevel: " + flags.getCompilationLevel());
+            "Bad value for compilationLevel: " + flags.compilationLevel);
       }
     }
     level.setOptionsForCompilationLevel(options);
-    if (flags.getAssumeFunctionWrapper()) {
+    if (flags.assumeFunctionWrapper) {
       level.setWrappedOutputOptimizations(options);
     }
-    if (flags.getUseTypesForOptimization()) {
+    if (flags.useTypesForOptimization) {
       level.setTypeBasedOptimizationOptions(options);
     }
 
     WarningLevel warningLevel = WarningLevel.DEFAULT;
-    if (flags.getWarningLevel() != null) {
-      warningLevel = WARNING_LEVEL_MAP.get(flags.getWarningLevel().toUpperCase());
-      if (warningLevel == null) {
-        throw new RuntimeException(
-            "Bad value for compilationLevel: " + flags.getCompilationLevel());
-      }
+    if (flags.warningLevel != null) {
+      warningLevel = WarningLevel.valueOf(flags.warningLevel);
     }
     warningLevel.setOptionsForWarningLevel(options);
 
-    if (flags.getLanguageIn() != null) {
-      LanguageMode languageIn = LanguageMode.fromString(flags.getLanguageIn());
-      if (languageIn != null) {
-        options.setLanguageIn(languageIn);
-      }
+    LanguageMode languageIn = LanguageMode.fromString(flags.languageIn);
+    if (languageIn != null) {
+      options.setLanguageIn(languageIn);
+    }
+    LanguageMode languageOut = LanguageMode.fromString(flags.languageOut);
+    if (languageOut != null) {
+      options.setLanguageOut(languageOut);
     }
 
-    if (flags.getLanguageOut() != null) {
-      LanguageMode languageOut = LanguageMode.fromString(flags.getLanguageOut());
-      if (languageOut != null) {
-        options.setLanguageOut(languageOut);
-      }
-    }
-
-    if (flags.getCreateSourceMap()) {
+    if (flags.createSourceMap) {
       options.setSourceMapOutputPath("%output%");
     }
 
-    options.setAngularPass(flags.getAngularPass());
-    options.setChecksOnly(flags.getChecksOnly());
-    options.setDartPass(flags.getDartPass());
-    options.setExportLocalPropertyDefinitions(flags.getExportLocalPropertyDefinitions());
-    options.setGenerateExports(flags.getGenerateExports());
-    options.setNewTypeInference(flags.getNewTypeInf());
-    options.setPolymerPass(flags.getPolymerPass());
-    options.setPreserveTypeAnnotations(flags.getPreserveTypeAnnotations());
-    options.setProcessCommonJSModules(flags.getProcessCommonJSModules());
-    options.setRenamePrefixNamespace(flags.getRenamePrefixNamespace());
-    options.setRewritePolyfills(flags.getRewritePolyfills());
+    options.setAngularPass(flags.angularPass);
+    options.setChecksOnly(flags.checksOnly);
+    options.setDartPass(flags.dartPass);
+    options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
+    options.setGenerateExports(flags.generateExports);
+    options.setNewTypeInference(flags.newTypeInf);
+    options.setPolymerPass(flags.polymerPass);
+    options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
+    options.setProcessCommonJSModules(flags.processCommonJsModules);
+    options.setRenamePrefixNamespace(flags.renamePrefixNamespace);
+    options.setRewritePolyfills(flags.rewritePolyfills);
   }
 
   private static void disableUnsupportedOptions(CompilerOptions options) {
@@ -240,12 +236,36 @@ public final class GwtRunner implements EntryPoint {
   }
 
   /**
+   * Updates the destination flags (user input) with source flags (the defaults). Returns a list
+   * of flags that are on the destination, but not on the source.
+   */
+  private static native String[] updateFlags(Flags dst, Flags src) /*-{
+    for (var k in src) {
+      if (!(k in dst)) {
+        dst[k] = src[k];
+      }
+    }
+    var unhandled = [];
+    for (var k in dst) {
+      if (!(k in src)) {
+        unhandled.push(k);
+      }
+    }
+    return unhandled;
+  }-*/;
+
+  /**
    * Public compiler call. Exposed in {@link #exportCompile}.
    */
   public static ModuleOutput compile(Flags flags) {
-    List<SourceFile> externs = fromFileArray(flags.getExterns(), "Extern_");
-    List<SourceFile> jsCode = fromFileArray(flags.getJsCode(), "Input_");
-    ImmutableMap<String, SourceMapInput> sourceMaps = buildSourceMaps(flags.getJsCode(), "Input_");
+    String[] unhandled = updateFlags(flags, defaultFlags);
+    if (unhandled.length > 0) {
+      throw new RuntimeException("Unhandled flag: " + unhandled[0]);
+    }
+
+    List<SourceFile> externs = fromFileArray(flags.externs, "Extern_");
+    List<SourceFile> jsCode = fromFileArray(flags.jsCode, "Input_");
+    ImmutableMap<String, SourceMapInput> sourceMaps = buildSourceMaps(flags.jsCode, "Input_");
 
     CompilerOptions options = new CompilerOptions();
     applyDefaultOptions(options);
@@ -263,7 +283,7 @@ public final class GwtRunner implements EntryPoint {
     output.errors = toNativeErrorArray(errorManager.errors);
     output.warnings = toNativeErrorArray(errorManager.warnings);
 
-    if (flags.getCreateSourceMap()) {
+    if (flags.createSourceMap) {
       StringBuilder b = new StringBuilder();
       try {
         compiler.getSourceMap().appendTo(b, "IGNORED");
