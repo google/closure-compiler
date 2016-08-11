@@ -157,9 +157,13 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
-  @Override
   public boolean isNoResolvedType() {
     return false;
+  }
+
+  @Override
+  public final boolean isUnresolved() {
+    return isNoResolvedType();
   }
 
   @Override
@@ -171,7 +175,6 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
-  @Override
   public final boolean isEmptyType() {
     return isNoType() || isNoObjectType() || isNoResolvedType() ||
         (registry.getNativeFunctionType(
@@ -254,9 +257,13 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
-  @Override
   public boolean isAllType() {
     return false;
+  }
+
+  @Override
+  public final boolean isTop() {
+    return isAllType();
   }
 
   @Override
@@ -457,9 +464,13 @@ public abstract class JSType implements TypeI, Serializable {
     return null;
   }
 
-  @Override
   public final boolean isTemplateType() {
     return toMaybeTemplateType() != null;
+  }
+
+  @Override
+  public final boolean isTypeVariable() {
+    return isTemplateType();
   }
 
   /**
@@ -1592,8 +1603,8 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   @Override
-  public boolean isBottom() {
-    return isNoType() || isNoResolvedType() || isNoObjectType();
+  public final boolean isBottom() {
+    return isEmptyType();
   }
 
   @Override

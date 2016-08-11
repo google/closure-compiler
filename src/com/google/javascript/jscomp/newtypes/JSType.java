@@ -29,7 +29,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -272,6 +271,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
       UNDEFINED_MASK | NON_SCALAR_MASK,
       ImmutableSet.of(ObjectType.TOP_OBJECT), null, NO_ENUMS);
 
+  @Override
   public boolean isTop() {
     return TOP_MASK == getMask();
   }
@@ -371,6 +371,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     return (getMask() & NULL_MASK) != 0;
   }
 
+  @Override
   public boolean isTypeVariable() {
     return getMask() == TYPEVAR_MASK;
   }
@@ -1545,13 +1546,9 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     return isUnknown();
   }
 
-  @Override
-  public boolean isAllType() {
-    throw new UnsupportedOperationException("isAllType not implemented yet");
-  }
 
   @Override
-  public boolean isNoResolvedType() {
+  public boolean isUnresolved() {
     throw new UnsupportedOperationException("isUnresolved not implemented yet");
   }
 
@@ -1568,16 +1565,6 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   @Override
   public boolean isVoidable() {
     throw new UnsupportedOperationException("isVoidable not implemented yet");
-  }
-
-  @Override
-  public boolean isEmptyType() {
-    throw new UnsupportedOperationException("isEmpty not implemented yet");
-  }
-
-  @Override
-  public boolean isTemplateType() {
-    throw new UnsupportedOperationException("isGeneric not implemented yet");
   }
 
   @Override

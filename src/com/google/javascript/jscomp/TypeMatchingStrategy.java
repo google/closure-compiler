@@ -65,7 +65,7 @@ public enum TypeMatchingStrategy {
       return new MatchResult(true, false);
     }
 
-    if (type == null || type.isUnknownType() || type.isAllType()) {
+    if (type == null || type.isUnknownType() || type.isTop()) {
       return new MatchResult(allowLooseMatches, allowLooseMatches);
     }
 

@@ -247,8 +247,8 @@ public final class ConformanceRules {
 
     protected boolean isKnown(Node n) {
       return !isUnknown(n)
-          && !isEmptyType(n)
-          && !isTemplateType(n); // TODO(johnlenz): Remove this restriction
+          && !isBottom(n)
+          && !isTypeVariable(n); // TODO(johnlenz): Remove this restriction
     }
 
     protected boolean isNativeObjectType(Node n) {
@@ -256,9 +256,9 @@ public final class ConformanceRules {
       return type.isEquivalentTo(nativeObjectType);
     }
 
-    protected boolean isAllType(Node n) {
+    protected boolean isTop(Node n) {
       TypeI type = n.getTypeI();
-      return type != null && type.isAllType();
+      return type != null && type.isTop();
     }
 
     protected boolean isUnknown(Node n) {
@@ -266,14 +266,14 @@ public final class ConformanceRules {
       return (type == null || type.isUnknownType());
     }
 
-    protected boolean isTemplateType(Node n) {
+    protected boolean isTypeVariable(Node n) {
       TypeI type = n.getTypeI().restrictByNotNullOrUndefined();
-      return type.isTemplateType();
+      return type.isTypeVariable();
     }
 
-    private boolean isEmptyType(Node n) {
+    private boolean isBottom(Node n) {
       TypeI type = n.getTypeI().restrictByNotNullOrUndefined();
-      return type.isEmptyType();
+      return type.isBottom();
     }
 
     protected TypeI union(List<String> typeNames) {
@@ -486,8 +486,8 @@ public final class ConformanceRules {
         if (methodClassType != null && lhs.getTypeI() != null) {
           TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
           if (targetType.isUnknownType()
-             || targetType.isEmptyType()
-             || targetType.isAllType()
+             || targetType.isBottom()
+             || targetType.isTop()
              || targetType.isEquivalentTo(
                  registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
             if (reportLooseTypeViolations) {
@@ -825,8 +825,8 @@ public final class ConformanceRules {
       if (methodClassType != null && lhs.getTypeI() != null) {
         TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
         if (targetType.isUnknownType()
-           || targetType.isNoResolvedType()
-           || targetType.isAllType()
+           || targetType.isUnresolved()
+           || targetType.isTop()
            || targetType.isEquivalentTo(
                registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
           if (reportLooseTypeViolations
@@ -1086,8 +1086,8 @@ public final class ConformanceRules {
         if (thrown != null) {
           // Allow vague types, as is typical of re-throws of exceptions
           if (!thrown.isUnknownType()
-              && !thrown.isAllType()
-              && !thrown.isEmptyType()
+              && !thrown.isTop()
+              && !thrown.isBottom()
               && !thrown.isSubtypeOf(errorObjType)) {
             return ConformanceResult.VIOLATION;
           }
@@ -1191,7 +1191,7 @@ public final class ConformanceRules {
       if (n.isGetProp()
           && isKnownThis(n.getFirstChild()) // not a cascading unknown
           && isUnknown(n)
-          && !isTemplateType(n)
+          && !isTypeVariable(n)
           && isUsed(n) // skip most assignments, etc
           && !isTypeImmediatelyTightened(n)) {
         return ConformanceResult.VIOLATION;
@@ -1235,7 +1235,7 @@ public final class ConformanceRules {
           && isUsed(n) // skip most assignments, etc
           && !isTypeImmediatelyTightened(n)
           && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown
-          && !isTemplateType(n)
+          && !isTypeVariable(n)
           && !isDeclaredUnknown(n)) {
         String propName = n.getLastChild().getString();
         String typeName = n.getFirstChild().getTypeI().toString();
@@ -1247,7 +1247,7 @@ public final class ConformanceRules {
 
     private boolean isCheckablePropertySource(Node n) {
       return isKnown(n)
-          && !isAllType(n)
+          && !isTop(n)
           && isClassType(n)
           && !isNativeObjectType(n)
           && !isWhitelistedType(n);
@@ -1319,7 +1319,7 @@ public final class ConformanceRules {
         }
         return true;
       } else {
-        return !type.isNoResolvedType();
+        return !type.isUnresolved();
       }
     }
   }

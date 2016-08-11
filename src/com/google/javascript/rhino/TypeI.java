@@ -50,13 +50,11 @@ public interface TypeI {
 
   boolean isBottom();
 
-  boolean isAllType();
+  boolean isTop();
 
-  boolean isTemplateType();
+  boolean isTypeVariable();
 
-  boolean isEmptyType();
-
-  boolean isNoResolvedType();
+  boolean isUnresolved();
 
   // Hacky method to abstract away corner case handling of the way OTI
   // represents unresolved types.
