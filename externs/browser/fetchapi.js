@@ -32,6 +32,7 @@ var HeadersInit;
  * @see https://fetch.spec.whatwg.org/#headers
  * @param {HeadersInit=} opt_headersInit
  * @constructor
+ * @implements {Iterable<!Array<string>>}
  */
 function Headers(opt_headersInit) {}
 
@@ -47,6 +48,9 @@ Headers.prototype.append = function(name, value) {};
  * @return {undefined}
  */
 Headers.prototype.delete = function(name) {};
+
+/** @return {!Iterator<!Array<string>>} */
+Headers.prototype.entries = function() {};
 
 /**
  * @param {string} name
@@ -66,12 +70,21 @@ Headers.prototype.getAll = function(name) {};
  */
 Headers.prototype.has = function(name) {};
 
+/** @return {!Iterator<string>} */
+Headers.prototype.keys = function() {};
+
 /**
  * @param {string} name
  * @param {string} value
  * @return {undefined}
  */
 Headers.prototype.set = function(name, value) {};
+
+/** @return {!Iterator<string>} */
+Headers.prototype.values = function() {};
+
+/** @return {!Iterator<!Array<string>>} */
+Headers.prototype[Symbol.iterator] = function() {};
 
 /**
  * @typedef {!Blob|!FormData|string}
