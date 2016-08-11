@@ -167,6 +167,23 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testShortRequireInGoogModule() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var c = goog.require('a.b.c');",
+            "",
+            "alert(a.b.c);"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var c = goog.require('a.b.c');",
+            "",
+            "alert(c);"));
+  }
+
+  @Test
   public void testProvidesSorted1() {
     assertChanges(
         LINE_JOINER.join(

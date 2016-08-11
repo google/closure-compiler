@@ -47,6 +47,8 @@ public final class ErrorToFixMapper {
       Pattern.compile("extra require: '([^']+)'");
   private static final Pattern DUPLICATE_REQUIRE =
       Pattern.compile("'([^']+)' required more than once\\.");
+  private static final Pattern USE_SHORT_NAME =
+      Pattern.compile(".*Please use the short name '(.*)' instead.");
 
   public static List<SuggestedFix> getFixesForJsError(JSError error, AbstractCompiler compiler) {
     SuggestedFix fix = getFixForJsError(error, compiler);
@@ -89,9 +91,23 @@ public final class ErrorToFixMapper {
         return getFixForExtraRequire(error, compiler, DUPLICATE_REQUIRE);
       case "JSC_EXTRA_REQUIRE_WARNING":
         return getFixForExtraRequire(error, compiler, EXTRA_REQUIRE);
+      case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
+        return getFixForReferenceToShortImportByLongName(error, compiler);
       default:
         return null;
     }
+  }
+
+  private static SuggestedFix getFixForReferenceToShortImportByLongName(
+      JSError error, AbstractCompiler compiler) {
+    Matcher m = USE_SHORT_NAME.matcher(error.description);
+    if (m.matches()) {
+      return new SuggestedFix.Builder()
+          .attachMatchedNodeInfo(error.node, compiler)
+          .replace(error.node, NodeUtil.newQName(compiler, m.group(1)), compiler)
+          .build();
+    }
+    return null;
   }
 
   private static List<SuggestedFix> getFixesForImplicitlyNullableJsDoc(
