@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.primitives.UnsignedBytes;
 import com.google.javascript.rhino.Node;
-
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -107,8 +106,13 @@ class FileInstrumentationData {
   String getFileName() {
     return fileName;
   }
+
   int maxInstrumentedLine() {
     return instrumentedBits.length();
+  }
+
+  int maxBranchPresentLine() {
+    return branchPresent.length();
   }
 
   /**

@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -77,12 +76,17 @@ class CoverageInstrumentationPass implements CompilerPass {
   @Override
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
-      NodeTraversal.traverseEs6(
-          compiler,
-          rootNode,
-          new CoverageInstrumentationCallback(
-              compiler, instrumentationData, reach));
-
+      if (instrumentOption == InstrumentOption.BRANCH_ONLY) {
+        NodeTraversal.traverseEs6(
+            compiler,
+            rootNode,
+            new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
+      } else {
+        NodeTraversal.traverseEs6(
+            compiler,
+            rootNode,
+            new CoverageInstrumentationCallback(compiler, instrumentationData, reach));
+      }
       Node firstScript = rootNode.getFirstChild();
       Preconditions.checkState(firstScript.isScript());
       addHeaderCode(firstScript);
@@ -91,12 +95,13 @@ class CoverageInstrumentationPass implements CompilerPass {
 
   private Node createConditionalObjectDecl(String name, Node srcref) {
     String jscovData;
-    if (instrumentOption != InstrumentOption.LINE_ONLY) {
-      jscovData =
-          "{fileNames:[], instrumentedLines: [], executedLines: [],"
-              + "branchPrsent:[], branchesInLine: []}";
-    } else {
+    if (instrumentOption == InstrumentOption.BRANCH_ONLY) {
+      jscovData = "{fileNames:[], branchPresent:[], branchesInLine: []}";
+    } else if (instrumentOption == InstrumentOption.LINE_ONLY) {
       jscovData = "{fileNames:[], instrumentedLines: [], executedLines: []}";
+    } else {
+      jscovData = "{fileNames:[], instrumentedLines: [], executedLines: [],"
+          + " branchPresent:[], branchesInLine: []}";
     }
 
     String jscovDecl =
