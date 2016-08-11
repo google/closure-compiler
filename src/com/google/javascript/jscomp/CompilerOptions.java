@@ -2284,11 +2284,6 @@ public class CompilerOptions {
     this.closurePass = closurePass;
   }
 
-  @Deprecated
-  public void setPreserveGoogRequires(boolean preserveGoogProvidesAndRequires) {
-    setPreserveGoogProvidesAndRequires(preserveGoogProvidesAndRequires);
-  }
-
   public void setPreserveGoogProvidesAndRequires(boolean preserveGoogProvidesAndRequires) {
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
   }

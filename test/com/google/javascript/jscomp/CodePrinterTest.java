@@ -2316,7 +2316,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     compilerOptions.setCheckTypes(true);
     compilerOptions.setClosurePass(true);
     compilerOptions.setIdeMode(true);
-    compilerOptions.setPreserveGoogRequires(true);
+    compilerOptions.setPreserveGoogProvidesAndRequires(true);
     Compiler compiler = new Compiler();
     compiler.disableThreads();
     compiler.compile(
