@@ -683,6 +683,35 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         null, null);
 }
 
+  public void testProtectedAccessForProperties12() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "a.js",
+            LINE_JOINER.join(
+                "goog.provide('A');",
+                "/** @constructor */",
+                "var A = function() {",
+                "  /**",
+                "   * @type {?String}",
+                "   * @protected",
+                "   */",
+                "  this.prop;",
+                "}")),
+        SourceFile.fromCode(
+            "b.js",
+            LINE_JOINER.join(
+                "goog.require('A');",
+                "/**",
+                " * @constructor",
+                " * @extends {A}",
+                " */",
+                "var B = function() {",
+                "  this.prop.length;",
+                "  this.prop.length;",
+                "};"))),
+        null, null);
+  }
+
   public void testNoProtectedAccessForProperties1() {
     test(new String[] {
         "/** @constructor */ function Foo() {} "

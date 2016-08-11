@@ -23,7 +23,6 @@ import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.google.javascript.jscomp.newtypes.ObjectsBuilder.ResolveConflictsBy;
 import com.google.javascript.rhino.Node;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -1104,10 +1103,6 @@ final class ObjectType implements TypeWithProperties {
   }
 
   private Property getLeftmostProp(QualifiedName qname) {
-    return getLeftmostPropHelper(qname, false);
-  }
-
-  private Property getLeftmostPropHelper(QualifiedName qname, boolean ownProp) {
     String pname = qname.getLeftmostName();
     Property p = props.get(pname);
     if (p != null) {
@@ -1120,12 +1115,35 @@ final class ObjectType implements TypeWithProperties {
       }
     }
     if (this.nominalType != null) {
-      return ownProp
-          ? this.nominalType.getOwnProp(pname)
-          : this.nominalType.getProp(pname);
+      return this.nominalType.getProp(pname);
     }
-    if (!ownProp && builtinObject != null) {
+    if (builtinObject != null) {
       return builtinObject.getProp(pname);
+    }
+    return null;
+  }
+
+  // NOTE(aravindpg): This method is currently only used to obtain the defsite of an own prop, and
+  // deliberately does not return the more specialized version of a property if it is already
+  // present on the nominal type. This may be unsuitable from a typing point of view. Revisit if
+  // needed.
+  private Property getLeftmostOwnProp(QualifiedName qname) {
+    String pname = qname.getLeftmostName();
+    Property p = props.get(pname);
+    // Only return the extra/specialized prop p if we know that we don't have this property
+    // on our nominal type.
+    if (p != null
+        && (this.nominalType == null || !this.nominalType.mayHaveProp(pname))) {
+      return p;
+    }
+    if (this.ns != null) {
+      p = this.ns.getNsProp(pname);
+      if (p != null) {
+        return p;
+      }
+    }
+    if (this.nominalType != null) {
+      return this.nominalType.getOwnProp(pname);
     }
     return null;
   }
@@ -1139,7 +1157,8 @@ final class ObjectType implements TypeWithProperties {
   }
 
   Node getPropertyDefSiteHelper(String propertyName, boolean ownProp) {
-    Property p = getLeftmostPropHelper(new QualifiedName(propertyName), ownProp);
+    QualifiedName qname = new QualifiedName(propertyName);
+    Property p = ownProp ? getLeftmostOwnProp(qname) : getLeftmostProp(qname);
     // Try getters and setters specially.
     if (p == null) {
       p = getLeftmostProp(new QualifiedName(JSType.createGetterPropName(propertyName)));
