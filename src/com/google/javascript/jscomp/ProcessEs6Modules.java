@@ -231,7 +231,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       //   export {x, y as z} from 'moduleIdentifier';
       Node moduleIdentifier = export.getLastChild();
       Node importNode = new Node(Token.IMPORT, moduleIdentifier.cloneNode());
-      importNode.copyInformationFrom(export);
+      importNode.useSourceInfoFrom(export);
       parent.addChildBefore(importNode, export);
       visit(t, importNode, parent);
 
