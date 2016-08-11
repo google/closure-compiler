@@ -31,8 +31,8 @@ import com.google.gwt.core.client.JsArrayInteger;
  * one, or zero if there are aren't any.  This may cause the size() method to
  * return a different size than in a true Java VM.
  *
- * TODO(moz): Add this to GWT. Pending changelist at:
- * https://gwt-review.googlesource.com/#/c/5771/
+ * TODO(moz): This is supported in GWT 2.8, remove this file when the compiler
+ * release uses it (b/30793597).
  */
 public class BitSet {
   // To speed up certain operations this class also uses the index properties
