@@ -12122,6 +12122,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "var Foo = Bar;",
             "var /** !Foo */ x;"),
         GlobalTypeInfo.EXPECTED_CONSTRUCTOR);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */ function Foo() {}",
+        "/** @type {string} */ Foo.staticProp = 'asdf';",
+        "/** @const */",
+        "var exports = {",
+        "  /** @const */ Bar: Foo",
+        "};",
+        "function f() { exports.Bar.staticProp - 5; }"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testTypeVariablesVisibleInPrototypeMethods() {
