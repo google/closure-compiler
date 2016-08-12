@@ -295,6 +295,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     this.allPropertyNames.add("prototype");
     this.commonTypes = JSTypes.make();
     JSType.setCommonTypes(this.commonTypes);
+    boolean inCompatibilityMode =
+        compiler.getOptions().disables(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
+    FunctionType.setAllowMethodsAsFunctions(inCompatibilityMode);
   }
 
   Collection<NTIScope> getScopes() {

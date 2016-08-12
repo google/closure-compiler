@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +48,9 @@ public final class FunctionType {
   // non-empty iff this function has an @template annotation
   private final ImmutableList<String> typeParameters;
   private static final boolean DEBUGGING = false;
+  // TODO(dimvar): static field, same issues as the static fields in JSType
+  // and ObjectType. Will fix all of them in a follow-up refactoring CL.
+  private static boolean allowMethodsAsFunctions = false;
 
   private FunctionType(
       ImmutableList<JSType> requiredFormals,
@@ -187,6 +189,10 @@ public final class FunctionType {
       null, JSType.UNKNOWN, JSType.UNKNOWN, null, null, null, null, true);
   private static final FunctionType BOTTOM_FUNCTION = normalized(
       null, null, null, JSType.BOTTOM, null, null, null, null, false);
+
+  public static void setAllowMethodsAsFunctions(boolean allowMethodsAsFunctions) {
+    FunctionType.allowMethodsAsFunctions = allowMethodsAsFunctions;
+  }
 
   public boolean isTopFunction() {
     return this == TOP_FUNCTION || this == LOOSE_TOP_FUNCTION;
@@ -511,8 +517,11 @@ public final class FunctionType {
 
     if (checkThisType) {
       // A function without @this can be a subtype of a function with @this.
-      if (this.receiverType != null && other.receiverType == null
-          || this.receiverType != null && other.receiverType != null
+      if (!FunctionType.allowMethodsAsFunctions
+          && this.receiverType != null && other.receiverType == null) {
+        return false;
+      }
+      if (this.receiverType != null && other.receiverType != null
           // Contravariance for the receiver type
           && !other.receiverType.isSubtypeOf(this.receiverType, subSuperMap)
           // NOTE(dimvar): Covariance for the receiver type.
@@ -712,7 +721,7 @@ public final class FunctionType {
 
   // We may consider true subtyping for deferred checks when the formal
   // parameter has a loose function type.
-  boolean isLooseSubtypeOf(FunctionType f2, SubtypeCache subSuperMap) {
+  boolean isLooseSubtypeOf(FunctionType f2) {
     Preconditions.checkState(this.isLoose() || f2.isLoose());
     if (this.isTopFunction() || f2.isTopFunction()) {
       return true;

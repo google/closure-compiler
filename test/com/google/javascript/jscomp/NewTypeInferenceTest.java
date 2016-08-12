@@ -17809,4 +17809,19 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var /** number */ n = (new Foo('asdf')).getProp();"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testFunctionSubtypingInCompatibilityMode() {
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @this {!Object}",
+        " * @param {number} x",
+        " */",
+        "function f(x) {}",
+        "/** @param {function(number)} x */",
+        "function g(x) {}",
+        "g(f);"));
+  }
 }

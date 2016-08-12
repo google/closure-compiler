@@ -820,7 +820,7 @@ final class ObjectType implements TypeWithProperties {
     } else if (this.fn == null) {
       return isLoose;
     }
-    return fn.isLooseSubtypeOf(other.fn, subSuperMap);
+    return fn.isLooseSubtypeOf(other.fn);
   }
 
   ObjectType specialize(ObjectType other) {
