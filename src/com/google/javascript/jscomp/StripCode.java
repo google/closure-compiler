@@ -274,8 +274,7 @@ class StripCode implements CompilerPass {
         }
         if (ancestor.isAssign()) {
           Node ancParent = ancestor.getParent();
-          ancParent.replaceChild(
-              ancestor, ancestor.getLastChild().detachFromParent());
+          ancParent.replaceChild(ancestor, ancestor.getLastChild().detach());
           break;
         }
         if (!NodeUtil.isGet(ancestor)

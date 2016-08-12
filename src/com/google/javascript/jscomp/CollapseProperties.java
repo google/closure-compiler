@@ -1036,7 +1036,7 @@ class CollapseProperties implements CompilerPass {
       Node refNode = null;
       if (discardKeys) {
         objlit.removeChild(key);
-        value.detachFromParent();
+        value.detach();
       } else {
         // Substitute a reference for the value.
         refNode = IR.name(propAlias);

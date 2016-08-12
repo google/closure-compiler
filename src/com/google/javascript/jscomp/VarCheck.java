@@ -411,7 +411,7 @@ class VarCheck extends AbstractPostOrderCallback implements
     public void removeDuplicates() {
       for (Node n : dupDeclNodes) {
         if (n.getParent() != null) {
-          n.detachFromParent();
+          n.detach();
           compiler.reportCodeChange();
         }
       }

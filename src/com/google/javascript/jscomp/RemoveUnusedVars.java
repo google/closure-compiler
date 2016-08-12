@@ -975,7 +975,7 @@ class RemoveUnusedVars
     void remove() {
       Node parent = assignNode.getParent();
       if (mayHaveSecondarySideEffects) {
-        Node replacement = assignNode.getLastChild().detachFromParent();
+        Node replacement = assignNode.getLastChild().detach();
 
         // Aggregate any expressions in GETELEMs.
         for (Node current = assignNode.getFirstChild();
@@ -983,7 +983,7 @@ class RemoveUnusedVars
              current = current.getFirstChild()) {
           if (current.isGetElem()) {
             replacement = IR.comma(
-                current.getLastChild().detachFromParent(), replacement);
+                current.getLastChild().detach(), replacement);
             replacement.useSourceInfoIfMissingFrom(current);
           }
         }
@@ -995,7 +995,7 @@ class RemoveUnusedVars
           grandparent.removeChild(parent);
         } else {
           parent.replaceChild(assignNode,
-              assignNode.getLastChild().detachFromParent());
+              assignNode.getLastChild().detach());
         }
       }
     }

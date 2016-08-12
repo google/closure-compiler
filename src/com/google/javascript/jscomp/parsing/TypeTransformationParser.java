@@ -449,7 +449,7 @@ public final class TypeTransformationParser {
       return false;
     }
     Node typeExpr = JsDocInfoParser.parseTypeString(typeString.getString());
-    typeString.detachFromParent();
+    typeString.detach();
     expr.addChildToBack(typeExpr);
     return true;
   }

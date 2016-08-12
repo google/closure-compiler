@@ -168,7 +168,7 @@ class MinimizedCondition {
     switch (n.getToken()) {
       case NOT: {
         MinimizedCondition subtree =
-            computeMinimizedCondition(n.getFirstChild().detachFromParent());
+            computeMinimizedCondition(n.getFirstChild().detach());
         ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
             subtree.positive.cloneTree().addNot(),
             subtree.negative.cloneTree());
@@ -184,9 +184,9 @@ class MinimizedCondition {
           Token opType = n.getToken();
         Token complementType = opType == Token.AND ? Token.OR : Token.AND;
         MinimizedCondition leftSubtree =
-            computeMinimizedCondition(n.getFirstChild().detachFromParent());
+            computeMinimizedCondition(n.getFirstChild().detach());
         MinimizedCondition rightSubtree =
-            computeMinimizedCondition(n.getLastChild().detachFromParent());
+            computeMinimizedCondition(n.getLastChild().detach());
         ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
             MeasuredNode.addNode(new Node(opType).srcref(n),
                 leftSubtree.positive.cloneTree(),
@@ -210,9 +210,9 @@ class MinimizedCondition {
         Node thenNode = cond.getNext();
         Node elseNode = thenNode.getNext();
         MinimizedCondition thenSubtree =
-            computeMinimizedCondition(thenNode.detachFromParent());
+            computeMinimizedCondition(thenNode.detach());
         MinimizedCondition elseSubtree =
-            computeMinimizedCondition(elseNode.detachFromParent());
+            computeMinimizedCondition(elseNode.detach());
         MeasuredNode posTree = MeasuredNode.addNode(
             new Node(Token.HOOK, cond.cloneTree()).srcref(n),
             thenSubtree.positive,
@@ -226,7 +226,7 @@ class MinimizedCondition {
       case COMMA: {
         Node lhs = n.getFirstChild();
         MinimizedCondition rhsSubtree =
-            computeMinimizedCondition(lhs.getNext().detachFromParent());
+            computeMinimizedCondition(lhs.getNext().detach());
         MeasuredNode posTree = MeasuredNode.addNode(
             new Node(Token.COMMA, lhs.cloneTree()).srcref(n),
             rhsSubtree.positive);

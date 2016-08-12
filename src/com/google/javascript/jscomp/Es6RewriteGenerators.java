@@ -196,7 +196,7 @@ public final class Es6RewriteGenerators
     enclosingStatement.getParent().addChildBefore(entryDecl, enclosingStatement);
     enclosingStatement.getParent().addChildBefore(loop, enclosingStatement);
     if (parent.isExprResult()) {
-      parent.detachFromParent();
+      parent.detach();
     } else {
       parent.replaceChild(n, elemValue);
     }
@@ -224,32 +224,31 @@ public final class Es6RewriteGenerators
     compiler.ensureLibraryInjected("es6/symbol", false);
     hasTranslatedTry = false;
     Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
-            "function generatorBody() {",
-            "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
-            "  function $jscomp$generator$impl(" + GENERATOR_NEXT_ARG + ", ",
-            "      " + GENERATOR_THROW_ARG + ") {",
-            "    while (1) switch (" + GENERATOR_STATE + ") {",
-            "      case " + generatorCaseCount + ":",
-            "      default:",
-            "        return {value: undefined, done: true};",
-            "    }",
-            "  }",
-            // TODO(tbreisacher): Remove this cast if we start returning an actual Generator object.
-            "  var iterator = /** @type {!Generator<?>} */ ({",
-            "    next: function(arg) { return $jscomp$generator$impl(arg, undefined); },",
-            "    throw: function(arg) { return $jscomp$generator$impl(undefined, arg); },",
-            // TODO(tbreisacher): Implement Generator.return:
-            // http://www.ecma-international.org/ecma-262/6.0/#sec-generator.prototype.return
-            "    return: function(arg) { throw Error('Not yet implemented'); },",
-            "  });",
-            "  $jscomp.initSymbolIterator();",
-            "  /** @this {!Generator<?>} */",
-            "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return iterator;",
-            "}"))
-        .getFirstChild() // function
-        .getLastChild() // function body
-        .detachFromParent();
+        "function generatorBody() {",
+        "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
+        "  function $jscomp$generator$impl(" + GENERATOR_NEXT_ARG + ", ",
+        "      " + GENERATOR_THROW_ARG + ") {",
+        "    while (1) switch (" + GENERATOR_STATE + ") {",
+        "      case " + generatorCaseCount + ":",
+        "      default:",
+        "        return {value: undefined, done: true};",
+        "    }",
+        "  }",
+        // TODO(tbreisacher): Remove this cast if we start returning an actual Generator object.
+        "  var iterator = /** @type {!Generator<?>} */ ({",
+        "    next: function(arg) { return $jscomp$generator$impl(arg, undefined); },",
+        "    throw: function(arg) { return $jscomp$generator$impl(undefined, arg); },",
+        // TODO(tbreisacher): Implement Generator.return:
+        // http://www.ecma-international.org/ecma-262/6.0/#sec-generator.prototype.return
+        "    return: function(arg) { throw Error('Not yet implemented'); },",
+        "  });",
+        "  $jscomp.initSymbolIterator();",
+        "  /** @this {!Generator<?>} */",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
+        "}"))
+    .getFirstChild() // function
+    .getLastChild().detach();
     generatorCaseCount++;
 
     originalGeneratorBody = n.getLastChild();
@@ -433,10 +432,10 @@ public final class Es6RewriteGenerators
           compiler, tryBody, new ControlExitsCheck(finallyName, finallyStartState));
       NodeTraversal.traverseEs6(
           compiler, catchBody, new ControlExitsCheck(finallyName, finallyStartState));
-      originalGeneratorBody.addChildToFront(tryBody.detachFromParent());
+      originalGeneratorBody.addChildToFront(tryBody.detach());
 
       originalGeneratorBody.addChildAfter(finallyStart, catchBody);
-      originalGeneratorBody.addChildAfter(finallyBody.detachFromParent(), finallyStart);
+      originalGeneratorBody.addChildAfter(finallyBody.detach(), finallyStart);
       originalGeneratorBody.addChildAfter(finallyEnd, finallyBody);
       originalGeneratorBody.addChildToFront(IR.var(finallyName.cloneTree()));
 
@@ -455,7 +454,7 @@ public final class Es6RewriteGenerators
       originalGeneratorBody.addChildAfter(catchEnd, catchBody);
       tryBody.addChildToBack(createStateUpdate(catchEndState));
       tryBody.addChildToBack(createSafeBreak());
-      originalGeneratorBody.addChildToFront(tryBody.detachFromParent());
+      originalGeneratorBody.addChildToFront(tryBody.detach());
     }
 
     catchBody.addChildToFront(IR.var(caughtError, IR.name(GENERATOR_ERROR)));
@@ -1037,7 +1036,7 @@ public final class Es6RewriteGenerators
           if (!guard.isEmpty()) {
             Node firstEntry = IR.name(GENERATOR_DO_WHILE_INITIAL);
             enclosingBlock.addChildToFront(IR.var(firstEntry.cloneTree(), IR.trueNode()));
-            guard = IR.or(firstEntry, n.getLastChild().detachFromParent());
+            guard = IR.or(firstEntry, n.getLastChild().detach());
             n.addChildToBack(guard);
           }
           incr = IR.empty();
@@ -1057,7 +1056,7 @@ public final class Es6RewriteGenerators
         container.addChildToBack(guardName.cloneTree());
       }
       if (!incr.isEmpty()) {
-        n.addChildBefore(IR.block(IR.exprResult(incr.detachFromParent())), n.getLastChild());
+        n.addChildBefore(IR.block(IR.exprResult(incr.detach())), n.getLastChild());
       }
       enclosingBlock.addChildToFront(IR.var(guardName));
       compiler.reportCodeChange();

@@ -396,7 +396,7 @@ class ReplaceIdGenerators implements CompilerPass {
           // Prevent standard renaming by marking the key as quoted.
           key.putBooleanProp(Node.QUOTED_PROP, true);
         }
-        arg.detachFromParent();
+        arg.detach();
         parent.replaceChild(n, arg);
         compiler.reportCodeChange();
       } else {

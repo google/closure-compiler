@@ -241,8 +241,8 @@ class CollapseVariableDeclarations implements CompilerPass {
           Node lhs = assign.getFirstChild();
           Preconditions.checkState(lhs.isName());
           Node rhs = assign.getLastChild();
-          lhs.addChildToBack(rhs.detachFromParent());
-          var.addChildToBack(lhs.detachFromParent());
+          lhs.addChildToBack(rhs.detach());
+          var.addChildToBack(lhs.detach());
           redeclaration = true;
         }
         n = next;

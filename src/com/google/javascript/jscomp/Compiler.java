@@ -1103,7 +1103,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
     externs.remove(input);
     Node root = input.getAstRoot(this);
     if (root != null) {
-      root.detachFromParent();
+      root.detach();
     }
   }
 

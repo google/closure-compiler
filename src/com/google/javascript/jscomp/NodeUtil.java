@@ -2637,7 +2637,7 @@ public final class NodeUtil {
       // The CATCH can can only be removed if there is a finally clause.
       Node tryNode = node.getGrandparent();
       Preconditions.checkState(NodeUtil.hasFinally(tryNode));
-      node.detachFromParent();
+      node.detach();
     } else if (isTryCatchNodeContainer(node)) {
       // The container node itself can't be removed, but the contained CATCH
       // can if there is a 'finally' clause

@@ -175,9 +175,9 @@ class ScopedAliases implements HotSwapCompilerPass {
       for (Node aliasDefinition : traversal.getAliasDefinitionsInOrder()) {
         if (NodeUtil.isNameDeclaration(aliasDefinition.getParent())
             && aliasDefinition.getParent().hasOneChild()) {
-          aliasDefinition.getParent().detachFromParent();
+          aliasDefinition.getParent().detach();
         } else {
-          aliasDefinition.detachFromParent();
+          aliasDefinition.detach();
         }
       }
 
@@ -185,7 +185,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       for (Node scopeCall : traversal.getScopeCalls()) {
         Node expressionWithScopeCall = scopeCall.getParent();
         Node scopeClosureBlock = scopeCall.getLastChild().getLastChild();
-        scopeClosureBlock.detachFromParent();
+        scopeClosureBlock.detach();
         expressionWithScopeCall.getParent().replaceChild(
             expressionWithScopeCall,
             scopeClosureBlock);
@@ -497,7 +497,7 @@ class ScopedAliases implements HotSwapCompilerPass {
             if (value != null) {
               // If this is a VAR, we can just detach the expression and
               // the tree will still be valid.
-              value.detachFromParent();
+              value.detach();
             }
             varNode = parent;
           }

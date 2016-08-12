@@ -271,7 +271,7 @@ class DefinitionsRemover {
 
     @Override
     public void performRemove() {
-      function.detachFromParent();
+      function.detach();
     }
   }
 

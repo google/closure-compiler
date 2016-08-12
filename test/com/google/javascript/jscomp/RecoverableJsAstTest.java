@@ -145,7 +145,7 @@ public class RecoverableJsAstTest {
     if (expected != null) {
       expectedRoot = parseExpectedJs(ImmutableList.of(
           SourceFile.fromCode("expected.js", expected)));
-      expectedRoot.detachFromParent();
+      expectedRoot.detach();
     }
 
     if (expectedRoot == null) {

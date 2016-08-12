@@ -173,8 +173,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       }
       ClassDefinition def = extractClassDefinition(target, value);
       if (def != null) {
-        value.detachFromParent();
-        target.detachFromParent();
+        value.detach();
+        target.detach();
         rewriteGoogDefineClass(n, def);
       }
     }
@@ -322,7 +322,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   private static Node maybeDetach(Node node) {
     if (node != null && node.getParent() != null) {
-      node.detachFromParent();
+      node.detach();
     }
     return node;
   }

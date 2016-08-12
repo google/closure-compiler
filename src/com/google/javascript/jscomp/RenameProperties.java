@@ -374,7 +374,7 @@ class RenameProperties implements CompilerPass {
             String name = n.getFirstChild().getString();
               if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)) {
                 if (parent.isExprResult()) {
-                  parent.detachFromParent();
+                  parent.detach();
                 } else {
                   parent.removeChild(n);
                 }
@@ -386,7 +386,7 @@ class RenameProperties implements CompilerPass {
               if (varNode.isVar()) {
                 varNode.removeChild(parent);
                 if (!varNode.hasChildren()) {
-                  varNode.detachFromParent();
+                  varNode.detach();
                 }
                 compiler.reportCodeChange();
               }
@@ -400,7 +400,7 @@ class RenameProperties implements CompilerPass {
               if (exprResult.isExprResult()
                   && NodeUtil.isStatementBlock(exprResult.getParent())
                   && exprResult.getFirstChild().isAssign()) {
-                exprResult.detachFromParent();
+                exprResult.detach();
                 compiler.reportCodeChange();
               }
           }

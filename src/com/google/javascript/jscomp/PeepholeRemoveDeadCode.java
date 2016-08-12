@@ -129,7 +129,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (left.isName()
         && right.isName()
         && left.getString().equals(right.getString())) {
-      subtree.getParent().replaceChild(subtree, right.detachFromParent());
+      subtree.getParent().replaceChild(subtree, right.detach());
       reportCodeChange();
       return right;
     }
@@ -150,7 +150,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         parent.replaceChild(subtree, replacement);
         subtree = replacement;
       } else {
-        subtree.detachFromParent();
+        subtree.detach();
         subtree = null;
       }
     }
@@ -246,7 +246,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
             next = c.getNext();
             c = trySimplifyUnusedResult(c);
             if (c != null) {
-              c.detachFromParent();
+              c.detach();
               if (resultList == null)  {
                 // The first side-effect can be used stand-alone.
                 resultList = c;
@@ -274,7 +274,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       } else {
         // A new COMMA expression may not have an existing parent.
         if (result.getParent() != null) {
-          result.detachFromParent();
+          result.detach();
         }
         n.getParent().replaceChild(n, result);
       }
@@ -298,7 +298,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
   private void removeIfUnnamedBreak(Node maybeBreak) {
     if (maybeBreak != null && maybeBreak.isBreak() && !maybeBreak.hasChildren()) {
-      maybeBreak.detachFromParent();
+      maybeBreak.detach();
       reportCodeChange();
     }
   }
@@ -316,7 +316,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       caseBlock.addChildToFront(IR.exprResult(n.removeFirstChild()).srcref(n));
     }
     caseBlock.setIsSyntheticBlock(false);
-    n.getParent().replaceChild(n, caseBlock.detachFromParent());
+    n.getParent().replaceChild(n, caseBlock.detach());
     reportCodeChange();
     return caseBlock;
   }
@@ -908,7 +908,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (!mayHaveSideEffects(cond)) {
       NodeUtil.removeChild(parent, n);
     } else {
-      Node statement = IR.exprResult(cond.detachFromParent())
+      Node statement = IR.exprResult(cond.detach())
           .useSourceInfoIfMissingFrom(cond);
       if (parent.isLabel()) {
         Node block = IR.block();
@@ -948,7 +948,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node parent =  n.getParent();
     parent.replaceChild(n, block);
     if (mayHaveSideEffects(cond)) {
-      Node condStatement = IR.exprResult(cond.detachFromParent())
+      Node condStatement = IR.exprResult(cond.detach())
           .srcref(cond);
       parent.addChildAfter(condStatement, block);
     }
@@ -969,9 +969,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Node cond = NodeUtil.getConditionExpression(n);
       Node whileNode =
           IR.forNode(IR.empty().srcref(n),
-                     cond.detachFromParent(),
+                     cond.detach(),
                      IR.empty().srcref(n),
-                     body.detachFromParent())
+                     body.detach())
           .srcref(n);
       n.getParent().replaceChild(n, whileNode);
       reportCodeChange();

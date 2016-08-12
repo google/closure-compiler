@@ -111,7 +111,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     @Override
     public void keepSubTree(Node original) {
       if (original.getParent() != null) {
-        original.detachFromParent();
+        original.detach();
       }
       replacements.add(original);
     }
@@ -149,7 +149,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
         Token type = thenHasSideEffects ? Token.AND : Token.OR;
         Node body = thenHasSideEffects ? thenBranch : elseBranch;
         Node simplified = new Node(
-            type, condition.detachFromParent(),
+            type, condition.detach(),
             simplifyShortCircuitBranch(body))
             .useSourceInfoIfMissingFrom(hook);
         keepSubTree(simplified);

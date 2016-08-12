@@ -167,9 +167,9 @@ class PeepholeSubstituteAlternateSyntax
     Node rhs = n.getLastChild();
     if (n.getToken() == rhs.getToken()) {
       // Transform a * (b * c) to a * b * c
-      Node first = n.getFirstChild().detachFromParent();
-      Node second = rhs.getFirstChild().detachFromParent();
-      Node third = rhs.getLastChild().detachFromParent();
+      Node first = n.getFirstChild().detach();
+      Node second = rhs.getFirstChild().detach();
+      Node third = rhs.getLastChild().detach();
       Node newLhs = new Node(n.getToken(), first, second).useSourceInfoIfMissingFrom(n);
       Node newRoot = new Node(rhs.getToken(), newLhs, third).useSourceInfoIfMissingFrom(rhs);
       n.getParent().replaceChild(n, newRoot);
@@ -211,7 +211,7 @@ class PeepholeSubstituteAlternateSyntax
         int paramCount = n.getChildCount() - 1;
         // only handle the single known parameter case
         if (paramCount == 1) {
-          Node value = n.getLastChild().detachFromParent();
+          Node value = n.getLastChild().detach();
           Node replacement;
           if (NodeUtil.isBooleanResult(value)) {
             // If it is already a boolean do nothing.
@@ -238,7 +238,7 @@ class PeepholeSubstituteAlternateSyntax
             NodeUtil.isImmutableValue(value)) {
           Node addition = IR.add(
               IR.string("").srcref(callTarget),
-              value.detachFromParent());
+              value.detach());
           n.getParent().replaceChild(n, addition);
           reportCodeChange();
           return addition;
@@ -261,7 +261,7 @@ class PeepholeSubstituteAlternateSyntax
         .describeFunctionBind(callTarget, false, false);
     if (bind != null) {
       // replace the call target
-      bind.target.detachFromParent();
+      bind.target.detach();
       n.replaceChild(callTarget, bind.target);
       callTarget = bind.target;
 

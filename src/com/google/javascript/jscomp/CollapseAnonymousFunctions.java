@@ -86,7 +86,7 @@ class CollapseAnonymousFunctions implements CompilerPass {
         // Renormalize the code.
         if (!t.inGlobalScope() &&
             NodeUtil.isHoistedFunctionDeclaration(value)) {
-          parent.addChildToFront(value.detachFromParent());
+          parent.addChildToFront(value.detach());
         }
 
         compiler.reportCodeChange();

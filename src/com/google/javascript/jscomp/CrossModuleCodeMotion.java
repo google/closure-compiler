@@ -133,7 +133,7 @@ class CrossModuleCodeMotion implements CompilerPass {
                 "AST not normalized.");
 
             // Remove it
-            declParent.detachFromParent();
+            declParent.detach();
 
             // Add it to the new spot
             destParent.addChildToFront(declParent);

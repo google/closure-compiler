@@ -119,7 +119,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     Node enclosingMemberDef = NodeUtil.getEnclosingClassMemberFunction(node);
     if (enclosingMemberDef.isStaticMember()) {
       Node callTarget;
-      potentialCallee.detachFromParent();
+      potentialCallee.detach();
       if (potentialCallee == node) {
         // of the form super()
         potentialCallee =

@@ -70,7 +70,7 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
           if (argumentsMatch(n, call)
               && returnMatches(call)
               && functionNameMatches(methodName, call)) {
-            parent.getParent().detachFromParent();
+            parent.getParent().detach();
             compiler.reportCodeChange();
           }
         }

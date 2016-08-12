@@ -167,7 +167,7 @@ class CoverageInstrumentationCallback extends
     // convert it to a block so that it can be instrumented.
     if (node.isFunction() && !NodeUtil.getFunctionBody(node).isBlock()) {
       Node returnValue = NodeUtil.getFunctionBody(node);
-      Node body = IR.block(IR.returnNode(returnValue.detachFromParent()));
+      Node body = IR.block(IR.returnNode(returnValue.detach()));
       body.useSourceInfoIfMissingFromForTree(returnValue);
       node.addChildToBack(body);
     }

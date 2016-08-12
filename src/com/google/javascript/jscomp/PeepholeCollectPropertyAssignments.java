@@ -205,7 +205,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
         arrayLiteral.addChildToBack(emptyNode);
         ++maxIndexAssigned;
       }
-      arrayLiteral.addChildToBack(rhs.detachFromParent());
+      arrayLiteral.addChildToBack(rhs.detach());
     } else {
       // An out of order assignment.  Allow it if it's a hole.
       Node currentValue = arrayLiteral.getChildAtIndex(index);
@@ -213,10 +213,10 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
         // We've already collected a value for this index.
         return false;
       }
-      arrayLiteral.replaceChild(currentValue, rhs.detachFromParent());
+      arrayLiteral.replaceChild(currentValue, rhs.detach());
     }
 
-    propertyCandidate.detachFromParent();
+    propertyCandidate.detach();
     return true;
   }
 
@@ -247,7 +247,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     if (lhs.isGetElem()) {
       newProperty.setQuotedString();
     }
-    Node newValue = rhs.detachFromParent();
+    Node newValue = rhs.detach();
     newProperty.addChildToBack(newValue);
     // Check if the new property already exists in the object literal
     // Note: Duplicate keys are invalid in strict mode
@@ -267,7 +267,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
         if (!isCurrentValueSideEffect && !isNewValueSideEffect) {
           objectLiteral.removeChild(currentProperty);
           objectLiteral.addChildToBack(newProperty);
-          propertyCandidate.detachFromParent();
+          propertyCandidate.detach();
           return true;
         }
         // Break the loop if the property exists
@@ -278,7 +278,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     if (!propertyExists) {
       objectLiteral.addChildToBack(newProperty);
     }
-    propertyCandidate.detachFromParent();
+    propertyCandidate.detach();
     return true;
   }
 

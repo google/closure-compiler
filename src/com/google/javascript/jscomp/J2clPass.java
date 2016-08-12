@@ -54,7 +54,7 @@ public class J2clPass implements CompilerPass {
       Node secondExpr = callNode.getLastChild();
 
       if (secondExpr != firstExpr) {
-        secondExpr.detachFromParent();
+        secondExpr.detach();
       } else {
         // There is no secondExpr; default to null.
         secondExpr = IR.nullNode();

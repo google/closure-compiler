@@ -204,7 +204,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       stmt.useSourceInfoIfMissingFromForTree(first.node);
       instance.parent.addChildBefore(stmt, first.node);
       for (PrototypeMemberDeclaration declar : instance.declarations) {
-        block.addChildToBack(declar.node.detachFromParent());
+        block.addChildToBack(declar.node.detach());
       }
     }
     // Go thought each member declaration and replace it with an assignment

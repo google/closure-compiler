@@ -376,7 +376,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case POS:
         if (NodeUtil.isNumericResult(left)) {
           // POS does nothing to numeric values.
-          parent.replaceChild(n, left.detachFromParent());
+          parent.replaceChild(n, left.detach());
           reportCodeChange();
           return left;
         }
@@ -537,7 +537,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     Node newNode = new Node(newType,
-        left.detachFromParent(), newRight.detachFromParent());
+        left.detach(), newRight.detach());
     n.getParent().replaceChild(n, newNode);
 
     reportCodeChange();
@@ -561,8 +561,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Tries to convert x += y -> x = x + y;
     Token op = NodeUtil.getOpFromAssignmentOp(n);
-    Node replacement = IR.assign(left.detachFromParent(),
-        new Node(op, left.cloneTree(), right.detachFromParent())
+    Node replacement = IR.assign(left.detach(),
+        new Node(op, left.cloneTree(), right.detach())
             .srcref(n));
     n.getParent().replaceChild(n, replacement);
     reportCodeChange();
@@ -1169,7 +1169,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       Node srcObj = n.getLastChild();
       if (srcObj.isObjectLit() && !srcObj.hasChildren()) {
         Node parent = n.getParent();
-        Node destObj = n.getSecondChild().detachFromParent();
+        Node destObj = n.getSecondChild().detach();
         parent.replaceChild(n, destObj);
         reportCodeChange();
       }
@@ -1446,7 +1446,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    Node replacement = value.detachFromParent();
+    Node replacement = value.detach();
     if (key.isGetterDef()){
       replacement = IR.call(replacement);
       replacement.putBooleanProp(Node.FREE_CALL, true);

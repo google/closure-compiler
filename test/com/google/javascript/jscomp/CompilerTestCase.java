@@ -1336,7 +1336,7 @@ public abstract class CompilerTestCase extends TestCase {
       Node expectedRoot = null;
       if (expected != null) {
         expectedRoot = parseExpectedJs(expected);
-        expectedRoot.detachFromParent();
+        expectedRoot.detach();
       }
 
       JSError[] stErrors = symbolTableErrorManager.getErrors();
@@ -1621,7 +1621,7 @@ public abstract class CompilerTestCase extends TestCase {
       if (externs.hasMoreThanOneChild()) {
         for (Node c : externs.children()) {
           if (!c.hasChildren()) {
-            c.detachFromParent();
+            c.detach();
           }
         }
       }

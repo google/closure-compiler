@@ -2843,7 +2843,7 @@ public final class IntegrationTest extends IntegrationTestCase {
           public void process(Node externs, Node root) {
             Node var = root.getLastChild().getFirstChild();
             assertEquals(Token.VAR, var.getToken());
-            var.detachFromParent();
+            var.detach();
           }
         });
 

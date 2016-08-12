@@ -416,13 +416,13 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
       Node useParent = use.getParent();
       if (def.isAssign()) {
         Node rhs = def.getLastChild();
-        rhs.detachFromParent();
+        rhs.detach();
         // Oh yes! I have grandparent to remove this.
         Preconditions.checkState(defParent.isExprResult());
         while (defParent.getParent().isLabel()) {
           defParent = defParent.getParent();
         }
-        defParent.detachFromParent();
+        defParent.detach();
         useParent.replaceChild(use, rhs);
       } else if (defParent.isVar()) {
         Node rhs = def.getLastChild();

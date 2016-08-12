@@ -288,7 +288,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
             typedefs.add(name);
           }
         }
-        parent.replaceChild(export, declaration.detachFromParent());
+        parent.replaceChild(export, declaration.detach());
       }
       compiler.reportCodeChange();
     }

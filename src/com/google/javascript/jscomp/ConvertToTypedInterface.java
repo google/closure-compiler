@@ -212,7 +212,7 @@ class ConvertToTypedInterface implements CompilerPass {
           switch (expr.getToken()) {
             case NUMBER:
             case STRING:
-              n.detachFromParent();
+              n.detach();
               compiler.reportCodeChange();
               break;
             case CALL:
@@ -228,7 +228,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 }
               } else if (!callee.matchesQualifiedName("goog.require")
                   && !callee.matchesQualifiedName("goog.module")) {
-                n.detachFromParent();
+                n.detach();
                 compiler.reportCodeChange();
               }
               break;
@@ -244,7 +244,7 @@ class ConvertToTypedInterface implements CompilerPass {
               break;
             default:
               if (expr.getJSDocInfo() == null) {
-                n.detachFromParent();
+                n.detach();
                 compiler.reportCodeChange();
               }
               break;
@@ -276,7 +276,7 @@ class ConvertToTypedInterface implements CompilerPass {
       switch (n.getToken()) {
         case TRY:
         case DEFAULT_CASE:
-          parent.replaceChild(n, n.getFirstChild().detachFromParent());
+          parent.replaceChild(n, n.getFirstChild().detach());
           compiler.reportCodeChange();
           break;
         case IF:
@@ -293,11 +293,11 @@ class ConvertToTypedInterface implements CompilerPass {
         case WHILE:
         case FOR: {
           Node body = NodeUtil.getLoopCodeBlock(n);
-          parent.addChildAfter(body.detachFromParent(), n);
+          parent.addChildAfter(body.detach(), n);
           NodeUtil.removeChild(parent, n);
           Node initializer = n.isFor() ? n.getFirstChild() : IR.empty();
           if (initializer.isVar() && initializer.getChildCount() == 1) {
-            parent.addChildBefore(initializer.detachFromParent(), body);
+            parent.addChildBefore(initializer.detach(), body);
             processName(initializer.getFirstChild(), initializer);
           }
           compiler.reportCodeChange();
@@ -305,7 +305,7 @@ class ConvertToTypedInterface implements CompilerPass {
         }
         case LABEL:
           if (n.getParent() != null) {
-            parent.replaceChild(n, n.getSecondChild().detachFromParent());
+            parent.replaceChild(n, n.getSecondChild().detach());
             compiler.reportCodeChange();
           }
           break;
@@ -427,7 +427,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
     private void removeNode(Node n) {
       if (NodeUtil.isStatement(n)) {
-        n.detachFromParent();
+        n.detach();
       } else {
         n.getParent().replaceChild(n, IR.empty().srcref(n));
       }

@@ -370,7 +370,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return;
       }
 
-      callbackFunction.detachFromParent();
+      callbackFunction.detach();
 
       // Remove the "require" argument from the parameter list.
       callbackFunction.getSecondChild().removeChildren();

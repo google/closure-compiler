@@ -218,7 +218,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       Node currentProp = extendArg.removeFirstChild();
       Node propValue;
       if (currentProp.hasChildren()) {
-        propValue = currentProp.getLastChild().detachFromParent();
+        propValue = currentProp.getLastChild().detach();
       } else {
         propValue = IR.name(currentProp.getString()).srcref(currentProp);
       }
@@ -254,7 +254,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         // This is not commonly used.
         targetVal = objectToExtend.removeFirstChild();
       } else {
-        targetVal = objectToExtend.detachFromParent();
+        targetVal = objectToExtend.detach();
       }
       fncBlock.addChildToBack(IR.returnNode(targetVal).srcref(targetVal));
 
@@ -413,8 +413,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
           if (prop.isString() &&
             NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {
             Node target = ancestorClone.getFirstChild();
-            Node newGetProp = IR.getprop(target.detachFromParent(),
-                prop.detachFromParent());
+            Node newGetProp = IR.getprop(target.detach(),
+                prop.detach());
             newGetProps.add(newGetProp);
             origGetElems.add(ancestor);
             ancestor.getParent().replaceChild(ancestor, newGetProp);
@@ -478,7 +478,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       Node grandparent = parent.getParent();
       Node insertAfter = parent;
       while (expandedBlock.hasChildren()) {
-        Node child = expandedBlock.getFirstChild().detachFromParent();
+        Node child = expandedBlock.getFirstChild().detach();
         grandparent.addChildAfter(child, insertAfter);
         insertAfter = child;
       }
@@ -488,7 +488,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       Node callTarget = n.getFirstChild();
       Node objectToLoopOver = callTarget.getNext();
 
-      objectToLoopOver.detachFromParent();
+      objectToLoopOver.detach();
       Node ret = IR.returnNode(objectToLoopOver).srcref(callTarget);
       expandedBlock.addChildToBack(ret);
 

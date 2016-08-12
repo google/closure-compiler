@@ -221,7 +221,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     for (Node closureRequire : requiresToBeRemoved) {
-      closureRequire.detachFromParent();
+      closureRequire.detach();
       compiler.reportCodeChange();
     }
   }
@@ -233,7 +233,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     Node parent = n.getParent();
     Preconditions.checkState(parent.isExprResult());
     String name = n.getSecondChild().getString();
-    Node value = n.getChildAtIndex(2).detachFromParent();
+    Node value = n.getChildAtIndex(2).detach();
 
     Node replacement = NodeUtil.newQNameDeclaration(
         compiler, name, value, n.getJSDocInfo());
@@ -1108,7 +1108,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     if (typeDeclaration != null) {
       compiler.forwardDeclareType(typeDeclaration);
       // Forward declaration was recorded and we can remove the call.
-      parent.detachFromParent();
+      parent.detach();
       compiler.reportCodeChange();
     }
   }
@@ -1399,7 +1399,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         if (preserveGoogProvidesAndRequires && explicitNode.hasChildren()) {
           return;
         }
-        explicitNode.detachFromParent();
+        explicitNode.detach();
         compiler.reportCodeChange();
       }
     }

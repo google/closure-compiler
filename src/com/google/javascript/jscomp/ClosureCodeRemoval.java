@@ -124,7 +124,7 @@ final class ClosureCodeRemoval implements CompilerPass {
         if (ancestor.isExprResult()) {
           lastAncestor.removeChild(ancestor);
         } else {
-          rhs.detachFromParent();
+          rhs.detach();
           ancestor.replaceChild(last, rhs);
         }
         last = ancestor;
@@ -230,7 +230,7 @@ final class ClosureCodeRemoval implements CompilerPass {
         if (firstArg == null) {
           parent.replaceChild(call, NodeUtil.newUndefinedNode(call));
         } else {
-          Node replacement = firstArg.detachFromParent();
+          Node replacement = firstArg.detach();
           replacement.setJSType(call.getJSType());
           parent.replaceChild(call, replacement);
         }

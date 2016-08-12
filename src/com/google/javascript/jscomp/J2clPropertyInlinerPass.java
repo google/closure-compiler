@@ -86,11 +86,11 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       void remove() {
         Node objectLit = getKey.getParent().getParent().getParent();
         Preconditions.checkArgument(objectLit.isObjectLit());
-        getKey.getParent().getParent().detachFromParent();
+        getKey.getParent().getParent().detach();
         compiler.reportCodeChange();
         if (objectLit.getChildCount() == 0) {
           // Remove the whole Object.defineProperties call if there are no properties left.
-          objectLit.getParent().getParent().detachFromParent();
+          objectLit.getParent().getParent().detach();
         }
       }
     }
@@ -302,7 +302,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
               FunctionInjector injector =
                   new FunctionInjector(
                       compiler, compiler.getUniqueNameIdSupplier(), true, true, true);
-              assignmentValue.detachFromParent();
+              assignmentValue.detach();
               Node functionCall = IR.call(IR.empty(), assignmentValue);
               parent.replaceChild(n, functionCall);
               Reference reference =

@@ -237,7 +237,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
         leftMostChild = leftMostChild.getFirstChild();
       }
       Node parent = leftMostChild.getParent();
-      comma.addChildToBack(leftMostChild.detachFromParent());
+      comma.addChildToBack(leftMostChild.detach());
       parent.addChildToFront(comma);
       return exp2;
     } else {

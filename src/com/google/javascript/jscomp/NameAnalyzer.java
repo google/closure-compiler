@@ -366,7 +366,7 @@ final class NameAnalyzer implements CompilerPass {
       } else {
         // ... name.prototype.foo = function() { ... } ...
         changeProxy.replaceWith(grandparent, parent,
-                                parent.getLastChild().detachFromParent());
+                                parent.getLastChild().detach());
       }
     }
   }
@@ -1811,7 +1811,7 @@ final class NameAnalyzer implements CompilerPass {
         newReplacements.addAll(getSideEffectNodes(replacements.get(i)));
       }
       Node valueExpr = Iterables.getLast(replacements);
-      valueExpr.detachFromParent();
+      valueExpr.detach();
       newReplacements.add(valueExpr);
       changeProxy.replaceWith(
           parent, n, collapseReplacements(newReplacements));
@@ -1822,7 +1822,7 @@ final class NameAnalyzer implements CompilerPass {
       // TODO(user) make the pass smarter about these cases and/or run
       // this pass and RemoveConstantExpressions together in a loop.
       Node replacement = n.getLastChild();
-      replacement.detachFromParent();
+      replacement.detach();
       changeProxy.replaceWith(parent, n, replacement);
     } else {
       replaceTopLevelExpressionWithRhs(parent, n);
@@ -1934,7 +1934,7 @@ final class NameAnalyzer implements CompilerPass {
     for (Node rep : replacements) {
       if (rep.isExprResult()) {
         rep = rep.getFirstChild();
-        rep.detachFromParent();
+        rep.detach();
       }
 
       if (expr == null) {

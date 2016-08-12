@@ -184,7 +184,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     // Normalize: "const i = 0, j = 0;" becomes "/** @const */ var i = 0; /** @const */ var j = 0;"
     while (declarationList.hasMoreThanOneChild()) {
       Node name = declarationList.getLastChild();
-      Node newDeclaration = IR.var(name.detachFromParent()).useSourceInfoFrom(declarationList);
+      Node newDeclaration = IR.var(name.detach()).useSourceInfoFrom(declarationList);
       maybeAddConstJSDoc(declarationList, parent, name, newDeclaration);
       parent.addChildAfter(newDeclaration, declarationList);
     }

@@ -177,7 +177,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         String name = NodeUtil.getName(n);
         n.getFirstChild().setString("");
         Node prev = n.getPrevious();
-        n.detachFromParent();
+        n.detach();
         Node var = NodeUtil.newVarNode(name, n);
         if (prev == null) {
           parent.addChildToFront(var);

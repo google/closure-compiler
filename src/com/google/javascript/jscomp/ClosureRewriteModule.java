@@ -815,7 +815,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     if (!currentScript.declareLegacyNamespace) {
       // Otherwise it's a regular module and the goog.module() line can be removed.
-      NodeUtil.getEnclosingStatement(call).detachFromParent();
+      NodeUtil.getEnclosingStatement(call).detach();
     }
     Node callee = call.getFirstChild();
     Node arg = callee.getNext();
@@ -826,7 +826,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void updateGoogDeclareLegacyNamespace(Node call) {
-    NodeUtil.getEnclosingStatement(call).detachFromParent();
+    NodeUtil.getEnclosingStatement(call).detach();
   }
 
   private void updateGoogRequire(NodeTraversal t, Node call) {
@@ -874,7 +874,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (currentScript.isModule || targetIsNonLegacyGoogModule) {
       if (isDestructuring) {
         // Delete the goog.require() because we're going to inline its alias later.
-        statementNode.detachFromParent();
+        statementNode.detach();
       } else if (targetIsNonLegacyGoogModule) {
         if (!isTopLevel(t, statementNode, ScopeType.EXEC_CONTEXT)) {
           // Rewrite
@@ -885,7 +885,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           call.getParent().replaceChild(call, binaryNamespaceName);
         } else if (importHasAlias || !rewriteState.isLegacyModule(legacyNamespace)) {
           // Delete the goog.require() because we're going to inline its alias later.
-          statementNode.detachFromParent();
+          statementNode.detach();
         }
       } else {
         // Rewrite
@@ -893,7 +893,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         //   "goog.require('B');"
         // because even though we're going to inline the B alias,
         // ProcessClosurePrimitives is going to want to see this legacy require.
-        call.detachFromParent();
+        call.detach();
         statementNode.getParent().replaceChild(statementNode, IR.exprResult(call));
       }
       if (targetIsNonLegacyGoogModule) {
@@ -923,7 +923,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       // In a module each goog.module.get() will have a paired goog.forwardDeclare() and the module
       // alias importing will be handled there so that the alias is available in the entire module
       // scope.
-      NodeUtil.getEnclosingStatement(call).detachFromParent();
+      NodeUtil.getEnclosingStatement(call).detach();
     } else {
       // In a non-module script goog.module.get() is used inside of a goog.scope() and it's
       // imported alias need only be made available within that scope.
@@ -1093,7 +1093,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     Node assignNode = n.getParent();
     if (currentScript.defaultExportName != null) {
-      assignNode.getParent().detachFromParent();
+      assignNode.getParent().detach();
       return;
     }
 
@@ -1105,7 +1105,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       assignNode.replaceChild(n, legacyQname);
       jsdocNode = assignNode;
     } else {
-      rhs.detachFromParent();
+      rhs.detach();
       Node exprResultNode = assignNode.getParent();
       Node binaryNamespaceName = IR.name(currentScript.getBinaryNamespace());
       binaryNamespaceName.putProp(Node.ORIGINALNAME_PROP, currentScript.legacyNamespace);
@@ -1157,7 +1157,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       exportTheEmptyBinaryNamespaceAt(returnStatementNode, AddAt.BEFORE);
     }
 
-    returnStatementNode.detachFromParent();
+    returnStatementNode.detach();
     popScript();
   }
 
@@ -1229,7 +1229,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private void inlineGoogLoadModuleCalls() {
     for (Node loadModuleStatement : loadModuleStatements) {
       Node moduleBlockNode = loadModuleStatement.getFirstChild().getLastChild().getLastChild();
-      moduleBlockNode.detachFromParent();
+      moduleBlockNode.detach();
       loadModuleStatement.getParent().replaceChild(loadModuleStatement, moduleBlockNode);
       NodeUtil.tryMergeBlock(moduleBlockNode);
       compiler.reportCodeChange();
@@ -1267,8 +1267,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node nameNode = rhsNode.getParent();
-    nameNode.detachFromParent();
-    rhsNode.detachFromParent();
+    nameNode.detach();
+    rhsNode.detach();
 
     statementNode.getParent().addChildBefore(IR.var(nameNode, rhsNode), statementNode);
   }
@@ -1321,7 +1321,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
                 legacyNamespace));
         // Remove the require node so this problem isn't reported all over again in
         // ProcessClosurePrimitives.
-        NodeUtil.getEnclosingStatement(requireNode).detachFromParent();
+        NodeUtil.getEnclosingStatement(requireNode).detach();
         continue;
       }
 

@@ -258,7 +258,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    */
   private void visitMemberFunctionDefInObjectLit(Node n, Node parent) {
     String name = n.getString();
-    Node stringKey = IR.stringKey(name, n.getFirstChild().detachFromParent());
+    Node stringKey = IR.stringKey(name, n.getFirstChild().detach());
     stringKey.setJSDocInfo(n.getJSDocInfo());
     parent.replaceChild(n, stringKey);
     compiler.reportCodeChange();
@@ -378,7 +378,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     newBlock.addChildToFront(let);
 
     for (Node child : functionBody.children()) {
-      newBlock.addChildToBack(child.detachFromParent());
+      newBlock.addChildToBack(child.detach());
     }
 
     if (type != null) {
@@ -596,7 +596,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         visitComputedPropInClass(member, metadata);
       } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
-        constructor = member.getFirstChild().detachFromParent();
+        constructor = member.getFirstChild().detach();
         if (!metadata.anonymous) {
           // Turns class Foo { constructor: function() {} } into function Foo() {},
           // i.e. attaches the name to the ctor function.
@@ -814,7 +814,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
             (member.isGetterDef() || member.getBooleanProp(Node.COMPUTED_PROP_GETTER))
                 ? "get"
                 : "set",
-            function.detachFromParent());
+            function.detach());
     stringKey.setJSDocInfo(info.build());
     prop.addChildToBack(stringKey);
     prop.useSourceInfoIfMissingFromForTree(member);
@@ -872,7 +872,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         member,
         NodeUtil.newQName(compiler, metadata.fullClassName),
         NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"));
-    Node method = member.getLastChild().detachFromParent();
+    Node method = member.getLastChild().detach();
 
     Node assign = IR.assign(qualifiedMemberAccess, method);
     assign.useSourceInfoIfMissingFromForTree(member);

@@ -56,7 +56,7 @@ class Es6TemplateLiterals {
             } else if (i == 2 && first.getString().isEmpty()) {
               // So that `${hello} world` gets translated into (hello + " world")
               // instead of ("" + hello + " world").
-              add = add.getSecondChild().detachFromParent();
+              add = add.getSecondChild().detach();
             }
           }
           add = IR.add(add, child.isString() ? child : child.removeFirstChild());

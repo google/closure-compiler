@@ -90,7 +90,7 @@ class FunctionToBlockMutator {
 
     Node newBlock = NodeUtil.getFunctionBody(newFnNode);
     // Make the newBlock insertable .
-    newBlock.detachFromParent();
+    newBlock.detach();
 
     if (hasArgs) {
       Node inlineResult = aliasAndInlineArguments(newBlock,

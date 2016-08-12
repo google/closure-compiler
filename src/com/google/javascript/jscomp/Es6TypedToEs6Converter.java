@@ -336,13 +336,13 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     iObject.addChildToFront(block);
     JSTypeExpression bang = new JSTypeExpression(new Node(Token.BANG, iObject)
         .useSourceInfoIfMissingFromForTree(indexSignature), indexSignature.getSourceFileName());
-    indexSignature.detachFromParent();
+    indexSignature.detach();
     compiler.reportCodeChange();
     return bang;
   }
 
   private Node createPropertyDefinition(Node member, String className) {
-    member.detachFromParent();
+    member.detach();
     className = maybePrependCurrNamespace(className);
     Node nameAccess = NodeUtil.newQName(compiler, className);
     Node prototypeAccess = NodeUtil.newPropertyAccess(compiler, nameAccess, "prototype");
@@ -390,7 +390,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       stringKeys[i] = child;
     }
     for (Node child : stringKeys) {
-      child.detachFromParent();
+      child.detach();
     }
 
     String oldName = name.getString();
@@ -419,9 +419,9 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     if (!name.isEmpty() && overloadStack.peek().containsKey(name)) {
       compiler.report(JSError.make(n, OVERLOAD_NOT_SUPPORTED));
       if (isMemberFunctionDef) {
-        parent.detachFromParent();
+        parent.detach();
       } else {
-        n.detachFromParent();
+        n.detach();
       }
       if (!processedOverloads.contains(overloadStack)) {
         Node original = overloadStack.peek().get(name);
@@ -549,14 +549,14 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         c.setJSDocInfo(builder.build());
       }
 
-      Node toAdd = c.detachFromParent();
+      Node toAdd = c.detach();
       if (insideExport && !toAdd.isExprResult()) {
         // We want to keep the "export" declaration in externs
         toAdd = new Node(Token.EXPORT, toAdd).srcref(parent);
       }
       topLevel.addChildBefore(toAdd, insertionPoint);
     }
-    insertionPoint.detachFromParent();
+    insertionPoint.detach();
     compiler.reportCodeChange();
   }
 
@@ -569,9 +569,9 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         Node toAdd;
         if (!c.isExprResult()) {
           toAdd = n.cloneNode();
-          toAdd.addChildToFront(c.detachFromParent());
+          toAdd.addChildToFront(c.detach());
         } else {
-          toAdd = c.detachFromParent();
+          toAdd = c.detach();
         }
         parent.addChildAfter(toAdd, insertPoint);
         insertPoint = toAdd;
@@ -583,11 +583,11 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   private void replaceWithNodes(Node n, Iterable<Node> replacements) {
     Node insertPoint = n;
     for (Node c : replacements) {
-      Node detached = c.detachFromParent();
+      Node detached = c.detach();
       n.getParent().addChildAfter(detached, insertPoint);
       insertPoint = detached;
     }
-    n.detachFromParent();
+    n.detach();
     compiler.reportCodeChange();
   }
 
@@ -612,7 +612,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         insertPoint = newDec;
       }
 
-      n.detachFromParent();
+      n.detach();
       compiler.reportCodeChange();
     }
   }
@@ -734,7 +734,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
           Node memberType =
               maybeProcessOptionalProperty(member, member.getDeclaredTypeExpression());
           member.setDeclaredTypeExpression(null);
-          colon.addChildToBack(member.detachFromParent());
+          colon.addChildToBack(member.detach());
           colon.addChildToBack(memberType);
           lb.addChildToBack(colon);
         }

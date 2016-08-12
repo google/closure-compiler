@@ -67,7 +67,7 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
     n.makeNonIndexable();
     Node body = n.getLastChild();
     if (!body.isBlock()) {
-      body.detachFromParent();
+      body.detach();
       body = IR.block(IR.returnNode(body)).useSourceInfoIfMissingFromForTree(body);
       n.addChildToBack(body);
     }

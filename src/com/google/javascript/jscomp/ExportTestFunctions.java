@@ -104,7 +104,7 @@ public class ExportTestFunctions implements CompilerPass {
 
     private void rewriteMemberDefInObjLit(Node memberDef, Node objLit) {
       String name = memberDef.getString();
-      Node stringKey = IR.stringKey(name, memberDef.getFirstChild().detachFromParent());
+      Node stringKey = IR.stringKey(name, memberDef.getFirstChild().detach());
       objLit.replaceChild(memberDef, stringKey);
       stringKey.setQuotedString();
       compiler.reportCodeChange();
