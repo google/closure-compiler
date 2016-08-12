@@ -44,7 +44,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.jstype.JSType;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -52,7 +51,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -1043,7 +1041,11 @@ public class Node implements Serializable {
    * child of a CAST node after type checking.
    */
   public JSType getJSTypeBeforeCast() {
-    return (JSType) getProp(TYPE_BEFORE_CAST);
+    return (JSType) getTypeIBeforeCast();
+  }
+
+  public TypeI getTypeIBeforeCast() {
+    return (TypeI) getProp(TYPE_BEFORE_CAST);
   }
 
   // Gets all the property types, in sorted order.

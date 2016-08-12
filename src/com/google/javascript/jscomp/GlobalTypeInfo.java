@@ -50,7 +50,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -2639,12 +2638,17 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   }
 
   @Override
-  public JSType createUnionType(List<? extends TypeI> variants) {
-    throw new UnsupportedOperationException("createUnionType not implemented yet");
+  public TypeI createUnionType(List<? extends TypeI> members) {
+    Preconditions.checkArgument(!members.isEmpty(), "Cannot create union type with no members");
+    JSType result = JSType.BOTTOM;
+    for (TypeI t : members) {
+      result = JSType.join(result, (JSType) t);
+    }
+    return result;
   }
 
   @Override
   public TypeI evaluateTypeExpressionInGlobalScope(JSTypeExpression expr) {
-    throw new UnsupportedOperationException("evaluateInEmptyScope not implemented yet");
+    return createTypeFromCommentNode(expr.getRoot());
   }
 }

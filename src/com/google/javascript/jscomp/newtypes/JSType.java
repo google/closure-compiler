@@ -1541,15 +1541,17 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     return isInterfaceDefinition();
   }
 
+  // TODO(aravindpg): It isn't clear that this needs to check for isLoose as well. Revisit and
+  // settle concretely whether or not it is needed, and if so rename this method to
+  // `isSomeUnknownType`.
   @Override
   public boolean isUnknownType() {
-    return isUnknown();
+    return isUnknown() || (isInstanceofObject() && isLoose());
   }
-
 
   @Override
   public boolean isUnresolved() {
-    throw new UnsupportedOperationException("isUnresolved not implemented yet");
+    return isUnknown();
   }
 
   @Override
@@ -1559,12 +1561,12 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isUnionType() {
-    throw new UnsupportedOperationException("isUnionType not implemented yet");
+    return isUnion();
   }
 
   @Override
   public boolean isVoidable() {
-    throw new UnsupportedOperationException("isVoidable not implemented yet");
+    return (getMask() & UNDEFINED_MASK) != 0;
   }
 
   @Override
@@ -1737,15 +1739,13 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   @Override
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
     Node defsite = this.getOwnPropertyDefSite(propertyName);
-    if (defsite != null) {
-      return NodeUtil.getBestJSDocInfo(defsite);
-    }
-    return null;
+    return defsite == null ? null : NodeUtil.getBestJSDocInfo(defsite);
   }
 
   @Override
   public JSDocInfo getPropertyJSDocInfo(String propertyName) {
-    throw new UnsupportedOperationException("getPropertyJSDocInfo not implemented yet");
+    Node defsite = this.getPropertyDefSite(propertyName);
+    return defsite == null ? null : NodeUtil.getBestJSDocInfo(defsite);
   }
 
   @Override
@@ -1760,9 +1760,14 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     return this.getObjTypeIfSingletonObj().getPropertyDefSite(propertyName);
   }
 
+  /** Returns the names of all the properties directly on this type. */
   @Override
   public Iterable<String> getOwnPropertyNames() {
-    throw new UnsupportedOperationException("getOwnPropertyNames not implemented yet");
+    Preconditions.checkState(this.isSingletonObj());
+    // TODO(aravindpg): this might need to also include the extra properties as stored in the
+    // ObjectType::props. If so, demonstrate a test case that needs it and fix this.
+    Set<String> props = getNominalTypeIfSingletonObj().getAllOwnClassProps();
+    return props;
   }
 
   @Override
@@ -1780,7 +1785,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   @Override
   public boolean isInstanceType() {
     Preconditions.checkState(this.isSingletonObj());
-    return this.getNominalTypeIfSingletonObj().isClass();
+    return this.getNominalTypeIfSingletonObj().isClassy();
   }
 
   @Override
@@ -1792,7 +1797,23 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public Iterable<TypeI> getUnionMembers() {
-    throw new UnsupportedOperationException("getUnionMembers not implemented yet");
+    ImmutableSet.Builder<TypeI> builder = ImmutableSet.builder();
+    JSType[] primitiveTypes = { BOOLEAN, NUMBER, STRING, UNDEFINED, NULL };
+    for (JSType primitiveType : primitiveTypes) {
+      if ((this.getMask() & primitiveType.getMask()) != 0) {
+        builder.add(primitiveType);
+      }
+    }
+    for (ObjectType obj : this.getObjs()) {
+      builder.add(JSType.fromObjectType(obj));
+    }
+    for (EnumType e : this.getEnums()) {
+      builder.add(JSType.fromEnum(e));
+    }
+    if (this.getTypeVar() != null) {
+      builder.add(JSType.fromTypeVar(this.getTypeVar()));
+    }
+    return builder.build();
   }
 }
 

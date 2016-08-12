@@ -23,11 +23,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -255,6 +255,10 @@ public final class NominalType {
 
   public ImmutableSet<String> getAllPropsOfClass() {
     return this.rawType.getAllPropsOfClass();
+  }
+
+  public Set<String> getAllOwnClassProps() {
+    return this.rawType.getAllOwnClassProps();
   }
 
   public NominalType getInstantiatedSuperclass() {

@@ -306,7 +306,7 @@ public final class ConformanceRules {
     }
 
     protected boolean wasCast(Node n) {
-      return n.getJSTypeBeforeCast() != null;
+      return n.getTypeIBeforeCast() != null;
     }
 
     protected boolean isTypeImmediatelyTightened(Node n) {
@@ -486,6 +486,7 @@ public final class ConformanceRules {
         if (methodClassType != null && lhs.getTypeI() != null) {
           TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
           if (targetType.isUnknownType()
+             || targetType.isTypeVariable()
              || targetType.isBottom()
              || targetType.isTop()
              || targetType.isEquivalentTo(
@@ -622,7 +623,7 @@ public final class ConformanceRules {
       }
 
       TypeI thisType = functionType.getTypeOfThis();
-      if (thisType.isUnknownType()) {
+      if (thisType == null || thisType.isUnknownType()) {
         return true;
       }
 

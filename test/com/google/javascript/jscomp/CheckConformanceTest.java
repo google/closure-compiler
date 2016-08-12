@@ -33,17 +33,16 @@ import java.util.List;
  * Tests for {@link CheckConformance}.
  *
  */
-public final class CheckConformanceTest extends CompilerTestCase {
+public final class CheckConformanceTest extends TypeICompilerTestCase {
   private String configuration;
 
   private static final String EXTERNS =
       LINE_JOINER.join(
-          "/** @constructor */ var Window;",
+          DEFAULT_EXTERNS,
+          "/** @constructor */ function Window() {};",
           "/** @type {Window} */ var window;",
-          "var Object;",
-          "/** @constructor */ var Arguments;",
-          "Arguments.prototype.callee;",
-          "Arguments.prototype.caller;",
+          "/** @type {Function} */ Arguments.prototype.callee;",
+          "/** @type {Function} */ Arguments.prototype.caller;",
           "/** @type {Arguments} */ var arguments;",
           "/** @constructor ",
           " * @param {*=} opt_message",
@@ -51,10 +50,9 @@ public final class CheckConformanceTest extends CompilerTestCase {
           " * @param {*=} opt_line",
           " * @return {!Error}",
           "*/",
-          "var Error;",
-          "var alert;",
-          "var unknown;",
-          "/** @constructor */ var ObjectWithNoProps;",
+          "function Error(opt_message, opt_file, opt_line) {};",
+          "function alert(y) {};",
+          "/** @constructor */ function ObjectWithNoProps() {};",
           "function eval() {}");
 
   private static final String DEFAULT_CONFORMANCE =
@@ -87,6 +85,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
     options.setCodingConvention(getCodingConvention());
+    // TODO(aravindpg): many of the test cases can be fixed not to emit these warnings. Fix them.
+    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES, CheckLevel.OFF);
     return options;
   }
 
@@ -370,6 +370,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "var foo = new Foo();\n" +
         "foo.blink();");
 
+    // TODO(aravindpg): Fix in NTI.
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
         EXTERNS,
         "'foo'.blink;",
@@ -423,6 +425,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     String externs =
         LINE_JOINER.join(
+            DEFAULT_EXTERNS,
             "/** @constructor */ function Element() {}",
             "/** @type {string} @implicitCast */",
             "Element.prototype.textContent;",
@@ -434,7 +437,21 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: Setting content of <script> is dangerous.");
 
-    testSame(externs, "(new Element).textContent = 'safe'", null);
+    testSame(
+        externs,
+        "HTMLScriptElement.prototype.textContent = 'alert(1);'",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: Setting content of <script> is dangerous.");
+
+    // NOTE(aravindpg): we define a random extra property on HTMLScriptElement.prototype so
+    // as to differentiate from any old (new Element), otherwise NTI is unable to distinguish them
+    // and treats this case exactly like the case right above.
+    // This limitation is arguably never a problem in practice since we always define/redefine
+    // properties on a subclass.
+    testSame(
+        externs,
+        "HTMLScriptElement.prototype.randomProp; (new Element).textContent = 'safe'",
+        null);
   }
 
   private void testConformance(String src, DiagnosticType warning) {
@@ -649,7 +666,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "}";
 
     String externs =
-        "/** @constructor */ function Element() {}\n" +
+        DEFAULT_EXTERNS
+        + "/** @constructor */ function Element() {}\n" +
         "/** @type {string} @implicitCast */\n" +
         "Element.prototype.innerHTML;\n";
 
@@ -754,10 +772,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testSame(
-        code + "new C().m.call(this, 1);");
+        code + "new C().m.call(new C(), 1);");
 
     testSame(
-        code + "new C().m.call(this, 'str');",
+        code + "new C().m.call(new C(), 'str');",
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
@@ -849,6 +867,9 @@ public final class CheckConformanceTest extends CompilerTestCase {
         + "var maybeB = cond ? new Base() : null;\n"
         + "var maybeS = cond ? new Sub() : null;\n";
 
+    // TODO(aravindpg): Fix in NTI. Make "function(this:Sub)" parse to `function(this:Sub)`
+    // instead of `function(this:?)`.
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(code + "b.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "maybeB.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "s.m(1)");
@@ -873,6 +894,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
         + "var maybeB = cond ? new Base() : null;\n"
         + "var maybeS = cond ? new Sub() : null;";
 
+    // TODO(aravindpg): Fix in NTI.
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(code + "b.m.call(b, 1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "b.m.call(maybeB, 1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "b.m.call(s, 1)");
@@ -1223,12 +1246,23 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
+    String js = "/** @param {ObjectWithNoProps} a */ function f(a) { alert(a.foobar); };";
+
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
         EXTERNS,
-        LINE_JOINER.join(
-            "/** @param {ObjectWithNoProps} a */", "function f(a) { alert(a.foobar); };"),
+        js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"foobar\" on type \"(ObjectWithNoProps|null)\"");
+
+    // TODO(aravindpg): Only difference is we don't add parens at the ends of our union type
+    // string reprs in NTI. Fix them to be the same if possible.
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSame(
+        EXTERNS,
+        js,
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message\nThe property \"foobar\" on type \"ObjectWithNoProps|null\"");
   }
 
   public void testCustomBanUnknownProp3() {
@@ -1477,6 +1511,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
         + "  error_message: 'BanUnresolvedType Message'\n"
         + "}";
 
+    // TODO(aravindpg): In NTI we annotate the node `a` with its inferred type instead of Unknown,
+    // and so this test doesn't recognize `a` as unresolved. Fixing this is undesirable.
+    // However, we do intend to add warnings for unfulfilled forward declares, which essentially
+    // addresses this use case.
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
         EXTERNS,
         "goog.forwardDeclare('Foo');"
@@ -1583,6 +1622,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         EXTERNS,
         "/** @const */ var ns = {};",
         "/** @enum {number} */ ns.Type.State = {OPEN: 0};",
+        // TODO(aravindpg): make this just a namespace, not a typedef
         "/** @typedef {{a:string}} */ ns.Type;",
         "");
 

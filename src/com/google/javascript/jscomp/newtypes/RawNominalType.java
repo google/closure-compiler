@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -440,6 +439,10 @@ public final class RawNominalType extends Namespace {
     ownProps.addAll(classProps.keySet());
     ownProps.addAll(protoProps.keySet());
     return ownProps;
+  }
+
+  public Set<String> getAllOwnClassProps() {
+    return classProps.keySet();
   }
 
   ImmutableSet<String> getAllPropsOfInterface() {

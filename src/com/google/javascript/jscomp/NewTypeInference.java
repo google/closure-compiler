@@ -39,7 +39,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1281,18 +1280,7 @@ final class NewTypeInference implements CompilerPass {
         resultPair = analyzeObjLitFwd(expr, inEnv, requiredType, specializedType);
         break;
       case THIS: {
-        if (!currentScope.hasThis()) {
-          mayWarnAboutGlobalThis(expr, currentScope);
-          resultPair = new EnvTypePair(inEnv, JSType.UNKNOWN);
-        } else {
-          // A trimmed-down version of analyzeNameFwd.
-          JSType inferredType = envGetType(inEnv, THIS_ID);
-          if (!inferredType.isSubtypeOf(requiredType)) {
-            return new EnvTypePair(inEnv, inferredType);
-          }
-          JSType preciseType = inferredType.specialize(specializedType);
-          resultPair = EnvTypePair.addBinding(inEnv, THIS_ID, preciseType);
-        }
+        resultPair = analyzeThisFwd(expr, inEnv, requiredType, specializedType);
         break;
       }
       case NAME:
@@ -2183,6 +2171,7 @@ final class NewTypeInference implements CompilerPass {
       warnings.add(JSError.make(
           expr, INVALID_CAST, fromType.toString(), toType.toString()));
     }
+    expr.getFirstChild().putProp(Node.TYPE_BEFORE_CAST, fromType);
     pair.type = toType;
     return pair;
   }
@@ -2262,6 +2251,21 @@ final class NewTypeInference implements CompilerPass {
     }
     pair.type = specializedType.toBoolean();
     return pair;
+  }
+
+  private EnvTypePair analyzeThisFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    if (!currentScope.hasThis()) {
+      mayWarnAboutGlobalThis(expr, currentScope);
+      return new EnvTypePair(inEnv, JSType.UNKNOWN);
+    }
+    // A trimmed-down version of analyzeNameFwd.
+    JSType inferredType = envGetType(inEnv, THIS_ID);
+    if (!inferredType.isSubtypeOf(requiredType)) {
+      return new EnvTypePair(inEnv, inferredType);
+    }
+    JSType preciseType = inferredType.specialize(specializedType);
+    return EnvTypePair.addBinding(inEnv, THIS_ID, preciseType);
   }
 
   private JSType getTypeFromString(Node typeString) {
