@@ -46,9 +46,13 @@ import javax.annotation.concurrent.NotThreadSafe;
  */
 @NotThreadSafe
 public final class TranspilingClosureBundler extends ClosureBundler {
-
   private static final HashFunction HASH_FUNCTION = Hashing.goodFastHash(64);
-  private static final int CACHE_SIZE = 100;
+  private static final int DEFAULT_CACHE_SIZE = 100;
+  /**
+   * Cache recent transpilations, keyed by the hash code of the input
+   * to avoid storing the whole input.
+   */
+  @VisibleForTesting final Cache<Long, String> cachedTranspilations;
 
   // TODO(sdh): Not all transpilation requires the runtime, only inject if actually needed.
   private final String es6Runtime;
@@ -58,17 +62,26 @@ public final class TranspilingClosureBundler extends ClosureBundler {
     this(getEs6Runtime());
   }
 
-  @VisibleForTesting
-  TranspilingClosureBundler(String es6Runtime) {
-    this.es6Runtime = es6Runtime;
+  /**
+   * Creates a new bundler that transpile the sources from ES6 to ES5.
+   *
+   * @param transpilationCache The cache to use to store already transpiled files
+   */
+  public TranspilingClosureBundler(Cache<Long, String> transpilationCache) {
+    this(getEs6Runtime(), transpilationCache);
   }
 
-  /**
-   * Cache recent transpilations, keyed by the hash code of the input
-   * to avoid storing the whole input.
-   */
-  @VisibleForTesting final Cache<Long, String> cachedTranspilations =
-      CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build();
+  @VisibleForTesting
+  TranspilingClosureBundler(String es6Runtime) {
+    this(es6Runtime,
+        CacheBuilder.newBuilder().maximumSize(DEFAULT_CACHE_SIZE).<Long, String>build());
+  }
+
+  @VisibleForTesting
+  TranspilingClosureBundler(String es6Runtime, Cache<Long, String> transpilationCache) {
+    this.es6Runtime = es6Runtime;
+    this.cachedTranspilations = transpilationCache;
+  }
 
   @Override
   public void appendTo(Appendable out, DependencyInfo info, CharSource content) throws IOException {
