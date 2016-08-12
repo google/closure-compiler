@@ -1158,7 +1158,7 @@ class TypeInference
       Node obj = callTarget.getFirstChild();
       maybeResolveTemplatedType(
           fnType.getTypeOfThis(),
-          getJSType(obj),
+          getJSType(obj).restrictByNotNullOrUndefined(),
           resolvedTypes,
           seenTypes);
     }

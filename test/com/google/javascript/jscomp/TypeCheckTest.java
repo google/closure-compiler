@@ -32,6 +32,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17034,6 +17035,30 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "class A {}",
             "/** @constructor @extends {A} */",
             "const B = createSubclass(A);"));
+  }
+
+  public void testNonNullTemplatedThis() {
+    testTypes(
+       LINE_JOINER.join(
+           "/** @constructor */",
+           "function C() {}",
+           "",
+           "/** ",
+           "  @return {THIS} ",
+           "  @this {THIS}",
+           "  @template THIS",
+           "*/",
+           "C.prototype.method = function() {};",
+           "",
+           "/** @return {C|null} */",
+           "function f() {",
+           "  return x;",
+           "};",
+           "",
+           "/** @type {string} */ var s = f().method();"),
+       "initializing variable\n" +
+       "found   : C\n" +
+       "required: string");
   }
 
   private void testTypes(String js) {
