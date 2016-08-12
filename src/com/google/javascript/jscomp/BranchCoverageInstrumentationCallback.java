@@ -149,7 +149,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
     Preconditions.checkNotNull(data);
 
     String objName = CoverageInstrumentationPass.JS_INSTRUMENTATION_OBJECT_NAME;
-    List<Node> nodes = new ArrayList<Node>();
+    List<Node> nodes = new ArrayList<>();
     nodes.add(newArrayDeclarationNode(traversal));
     nodes.add(
         IR.exprResult(
@@ -174,7 +174,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
   }
 
   private Node newBranchesInLineNode(String name, FileInstrumentationData data) {
-    List<Node> assignments = new ArrayList<Node>();
+    List<Node> assignments = new ArrayList<>();
     assignments.add(IR.var(IR.name(name), IR.arraylit()));
     int lineWithBranch = 0;
     for (int lineIdx = 1; lineIdx <= data.maxBranchPresentLine(); ++lineIdx) {
