@@ -368,6 +368,7 @@ final class NewTypeInference implements CompilerPass {
   // Fields used in the compatibility mode
   private final boolean joinTypesWhenInstantiatingGenerics;
   private final boolean allowPropertyOnSubtypes;
+  private final boolean areTypeVariablesUnknown;
 
   // Used only for development
   private static boolean showDebuggingPrints = false;
@@ -396,6 +397,7 @@ final class NewTypeInference implements CompilerPass {
         compiler.getOptions().disables(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
     this.joinTypesWhenInstantiatingGenerics = inCompatibilityMode;
     this.allowPropertyOnSubtypes = inCompatibilityMode;
+    this.areTypeVariablesUnknown = inCompatibilityMode;
   }
 
   @VisibleForTesting // Only used from tests
@@ -520,8 +522,12 @@ final class NewTypeInference implements CompilerPass {
     }
     for (String name : nonLocals) {
       JSType declType = currentScope.getDeclaredTypeOf(name);
-      JSType initType =
-          declType == null ? envGetType(entryEnv, name) : declType;
+      JSType initType = declType;
+      if (initType == null) {
+        initType = envGetType(entryEnv, name);
+      } else if (this.areTypeVariablesUnknown) {
+        initType = initType.substituteGenericsWithUnknown();
+      }
       println("Adding non-local ", name,
           " with decltype: ", declType,
           " and inittype: ", initType);
@@ -571,7 +577,12 @@ final class NewTypeInference implements CompilerPass {
     for (String varName : varNames) {
       if (!locals.contains(varName) || !currentScope.isFunctionNamespace(varName)) {
         JSType declType = currentScope.getDeclaredTypeOf(varName);
-        env = envPutType(env, varName, declType == null ? JSType.UNKNOWN : declType);
+        if (declType == null) {
+          declType = JSType.UNKNOWN;
+        } else if (areTypeVariablesUnknown) {
+          declType = declType.substituteGenericsWithUnknown();
+        }
+        env = envPutType(env, varName, declType);
       }
     }
     for (String fnName : currentScope.getLocalFunDefs()) {
@@ -899,7 +910,11 @@ final class NewTypeInference implements CompilerPass {
         case RETURN: {
           Node retExp = n.getFirstChild();
           JSType declRetType = currentScope.getDeclaredFunctionType().getReturnType();
-          declRetType = declRetType == null ? JSType.UNKNOWN : declRetType;
+          if (declRetType == null) {
+            declRetType = JSType.UNKNOWN;
+          } else if (this.areTypeVariablesUnknown) {
+            declRetType = declRetType.substituteGenericsWithUnknown();
+          }
           JSType actualRetType;
           if (retExp == null) {
             actualRetType = JSType.UNDEFINED;

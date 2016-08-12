@@ -17762,4 +17762,51 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  }",
         "}"));
   }
+
+  public void testLooseTypeVariablesInCompatibilityMode() {
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} x",
+        " * @return {T}",
+        " * @template T",
+        " */",
+        "function f(x) {",
+        "  var /** null */ n = x;",
+        "  return x;",
+        "}",
+        "var /** number */ n = f('asdf');"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {function(this:THIS, number)} x",
+        " * @template THIS",
+        " */",
+        "function f(x) {",
+        "  x.call(null, 123);",
+        "  x.call(undefined, 'asdf');",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @param {T} x",
+        " * @template T",
+        " */",
+        "function Foo(x) {",
+        "  /** @type {T} */",
+        "  this.prop = x;",
+        "}",
+        "/** @return {T} */",
+        "Foo.prototype.getProp = function() {",
+        "  var /** number */ n = this.prop;",
+        "  return this.prop;",
+        "};",
+        "var /** number */ n = (new Foo('asdf')).getProp();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
