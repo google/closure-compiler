@@ -118,6 +118,9 @@ class ConvertToTypedInterface implements CompilerPass {
         case VOID:
           return getTypeJSDoc(oldJSDoc, "void");
         case OBJECT:
+          if (rhs.isRegExp()) {
+            return getTypeJSDoc(oldJSDoc, new Node(Token.BANG, IR.string("RegExp")));
+          }
           break;
         case UNDETERMINED:
           if (rhs.isName()) {
@@ -139,15 +142,11 @@ class ConvertToTypedInterface implements CompilerPass {
       }
       switch (expr.getRoot().getToken()) {
         case EQUALS:
-          if (decl.isDefaultParam()) {
-            expr = new JSTypeExpression(expr.getRoot().getFirstChild().cloneTree(), "<synthetic>");
-          } else {
-            expr = new JSTypeExpression(
-                new Node(Token.PIPE,
-                    expr.getRoot().getFirstChild().cloneTree(),
-                    IR.string("undefined")),
-                "<synthetic>");
+          Node typeRoot = expr.getRoot().getFirstChild().cloneTree();
+          if (!decl.isDefaultParam()) {
+            typeRoot = new Node(Token.PIPE, typeRoot, IR.string("undefined"));
           }
+          expr = asTypeExpression(typeRoot);
           break;
         case ELLIPSIS:
           {
@@ -156,7 +155,7 @@ class ConvertToTypedInterface implements CompilerPass {
             type.addChildToBack(array);
             Node block = new Node(Token.BLOCK, expr.getRoot().getFirstChild().cloneTree());
             array.addChildToBack(block);
-            expr = new JSTypeExpression(type, "<synthetic>");
+            expr = asTypeExpression(type);
             break;
           }
         default:
@@ -503,7 +502,7 @@ class ConvertToTypedInterface implements CompilerPass {
     JSType type = nameNode.getJSType();
     if (type == null) {
       compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
-      return getTypeJSDoc(oldJSDoc, new JSTypeExpression(new Node(Token.STAR), ""));
+      return getTypeJSDoc(oldJSDoc, new Node(Token.STAR));
     } else {
       return getTypeJSDoc(oldJSDoc, type.toNonNullAnnotationString());
     }
@@ -511,17 +510,25 @@ class ConvertToTypedInterface implements CompilerPass {
 
   private static JSDocInfo getAllTypeJSDoc() {
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-    builder.recordType(new JSTypeExpression(new Node(Token.STAR), ""));
+    builder.recordType(asTypeExpression(new Node(Token.STAR)));
     return builder.build();
+  }
+
+  private static JSTypeExpression asTypeExpression(Node typeAst) {
+    return new JSTypeExpression(typeAst, "<synthetic>");
+  }
+
+  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, String contents) {
+    return getTypeJSDoc(oldJSDoc, Node.newString(contents));
+  }
+
+  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, Node typeAst) {
+    return getTypeJSDoc(oldJSDoc, asTypeExpression(typeAst));
   }
 
   private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, JSTypeExpression newType) {
     JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(oldJSDoc);
     builder.recordType(newType);
     return builder.build();
-  }
-
-  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, String contents) {
-    return getTypeJSDoc(oldJSDoc, new JSTypeExpression(Node.newString(contents), ""));
   }
 }
