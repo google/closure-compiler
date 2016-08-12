@@ -25,13 +25,21 @@ import com.google.javascript.rhino.Node;
 
 public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
 
-  private static final String MATH =
-      "/** @const */ var Math = {};" +
-      "/** @nosideeffects */ Math.random = function(){};" +
-      "/** @nosideeffects */ Math.sin = function(){};";
+  private static final String MATH = LINE_JOINER.join(
+      "/** @const */ var Math = {};",
+      "/** @nosideeffects */ Math.random = function() {};",
+      "/** @nosideeffects */ Math.sin = function() {};");
+
+  private static final String OBJECT =
+      "/** @nosideeffects */ Object.create = function(proto, opt_properties) {};";
+
+  private static final String JQUERY = LINE_JOINER.join(
+      "/** @constructor */ function $() {};",
+      "/** @nosideeffects */ $.prototype.add = function() {};",
+      "$.prototype.addClass = function() {};");
 
   public PeepholeRemoveDeadCodeTest() {
-    super(MATH);
+    super(MATH + OBJECT + JQUERY);
   }
 
   @Override
@@ -958,6 +966,17 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
     testSame("x.a=x.a");
     test("var y=(x=x)", "var y=x");
     test("y=1 + (x=x)", "y=1 + x");
+
+    // GitHub issue #1745: https://github.com/google/closure-compiler/issues/1745
+    test("Object.create({}).prop = 1", "");
+    test("Object.create(proto).foo.bar.baz = 1", "");
+
+    // add() is side-effect free, but addClass() is not
+    test("var jQuery = new $; jQuery.add().add().bar = 1", "var jQuery = new $;");
+    test("var jQuery = new $; jQuery.add().bar.add().baz = 1", "var jQuery = new $;");
+    test("var jQuery = new $; jQuery.bar.add().baz = 1", "var jQuery = new $;");
+    testSame("var jQuery = new $; jQuery.add().addClass().bar = 1");
+    testSame("var jQuery = new $; jQuery.addClass().add().bar = 1");
   }
 
   public void testTryCatchFinally() {
