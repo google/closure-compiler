@@ -1,5 +1,6 @@
-var __jscov = window.top.__jscov || (window.top.__jscov = {fileNames:[], branchPresent:[], branchesInLine:[]});
+var __jscov = window.top.__jscov || (window.top.__jscov = {fileNames:[], branchPresent:[], branchesInLine:[], branchesTaken:[]});
 var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_IfElseBranch_jsdata = [];
+__jscov.branchesTaken.push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_IfElseBranch_jsdata);
 __jscov.branchPresent.push("02");
 var JSCompiler_lcov_branchesInLine = [];
 JSCompiler_lcov_branchesInLine[0] = 2;

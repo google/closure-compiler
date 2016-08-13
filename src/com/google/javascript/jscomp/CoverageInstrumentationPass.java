@@ -96,12 +96,13 @@ class CoverageInstrumentationPass implements CompilerPass {
   private Node createConditionalObjectDecl(String name, Node srcref) {
     String jscovData;
     if (instrumentOption == InstrumentOption.BRANCH_ONLY) {
-      jscovData = "{fileNames:[], branchPresent:[], branchesInLine: []}";
+      jscovData = "{fileNames:[], branchPresent:[], branchesInLine: [], branchesTaken: []}";
     } else if (instrumentOption == InstrumentOption.LINE_ONLY) {
       jscovData = "{fileNames:[], instrumentedLines: [], executedLines: []}";
     } else {
-      jscovData = "{fileNames:[], instrumentedLines: [], executedLines: [],"
-          + " branchPresent:[], branchesInLine: []}";
+      jscovData =
+          "{fileNames:[], instrumentedLines: [], executedLines: [],"
+              + " branchPresent:[], branchesInLine: [], branchesTaken: []}";
     }
 
     String jscovDecl =

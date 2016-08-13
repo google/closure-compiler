@@ -148,20 +148,30 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
     FileInstrumentationData data = instrumentationData.get(fileName);
     Preconditions.checkNotNull(data);
 
+    // var JSCompiler_lcov_branch_data_xx = [];
+    // __jscov.branchesTaken.push(JSCompiler_lcov_branch_data_xx);
     String objName = CoverageInstrumentationPass.JS_INSTRUMENTATION_OBJECT_NAME;
     List<Node> nodes = new ArrayList<>();
     nodes.add(newArrayDeclarationNode(traversal));
     nodes.add(
         IR.exprResult(
             IR.call(
+                NodeUtil.newQName(compiler, objName + ".branchesTaken.push"),
+                IR.name(createArrayName(traversal)))));
+    // __jscov.branchPresent.push(hex-data);
+    nodes.add(
+        IR.exprResult(
+            IR.call(
                 NodeUtil.newQName(compiler, objName + ".branchPresent.push"),
                 IR.string(data.getBranchPresentAsHexString()))));
     nodes.add(newBranchesInLineNode("JSCompiler_lcov_branchesInLine", data));
+    // __jscov.branchesInLine.push(JSCompiler_lcov_branchesInLine);
     nodes.add(
         IR.exprResult(
             IR.call(
                 NodeUtil.newQName(compiler, objName + ".branchesInLine.push"),
                 IR.name("JSCompiler_lcov_branchesInLine"))));
+    // __jscov.fileNames.push(filename);
     nodes.add(
         IR.exprResult(
             IR.call(
@@ -175,11 +185,13 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
 
   private Node newBranchesInLineNode(String name, FileInstrumentationData data) {
     List<Node> assignments = new ArrayList<>();
+    // var JSCompiler_lcov_branchesInLine = [];
     assignments.add(IR.var(IR.name(name), IR.arraylit()));
     int lineWithBranch = 0;
     for (int lineIdx = 1; lineIdx <= data.maxBranchPresentLine(); ++lineIdx) {
       Integer numBranches = data.getNumBranches(lineIdx);
       if (numBranches != null && numBranches > 0) {
+        // JSCompiler_lcov_branchesInLine[<branch-index>] = 2;
         Node assignment =
             IR.exprResult(
                 IR.assign(
