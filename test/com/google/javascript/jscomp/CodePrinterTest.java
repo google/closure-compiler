@@ -2312,11 +2312,52 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "exports.fn = fn;\n";
 
     CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.setClosurePass(true);
+    compilerOptions.setPreserveDetailedSourceInfo(true);
+    compilerOptions.setChecksOnly(true);
+    compilerOptions.setContinueAfterErrors(true);
+    Compiler compiler = new Compiler();
+    compiler.disableThreads();
+    checkWithOriginalName(code, expectedCode, compilerOptions);
+  }
+
+  public void testEs6ArrowFunctionSetsOriginalNameForThis() {
+    String code = "(x)=>{this.foo[0](3);}";
+    String expectedCode = ""
+        + "var $jscomp$this = this;\n" // TODO(tomnguyen): Avoid printing this line.
+        + "(function(x) {\n"  // TODO(tomnguyen): This should print as an => function.
+        + "  this.foo[0](3);\n"
+        + "});\n";
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.skipAllCompilerPasses();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    checkWithOriginalName(code, expectedCode, compilerOptions);
+  }
+
+  public void testEs6ArrowFunctionSetsOriginalNameForArguments() {
+    // With original names in output set, the end result is not correct code, but the "this" is
+    // not rewritten.
+    String code = "(x)=>{arguments[0]();}";
+    String expectedCode = ""
+        + "var $jscomp$arguments = arguments;\n"
+        + "(function(x) {\n"
+        + "  arguments[0]();\n"
+        + "});\n";
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.skipAllCompilerPasses();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    checkWithOriginalName(code, expectedCode, compilerOptions);
+  }
+
+  private void checkWithOriginalName(
+      String code, String expectedCode, CompilerOptions compilerOptions) {
     compilerOptions.setCheckSymbols(true);
     compilerOptions.setCheckTypes(true);
-    compilerOptions.setClosurePass(true);
-    compilerOptions.setIdeMode(true);
+    compilerOptions.setPreserveDetailedSourceInfo(true);
     compilerOptions.setPreserveGoogProvidesAndRequires(true);
+    compilerOptions.setClosurePass(true);
     Compiler compiler = new Compiler();
     compiler.disableThreads();
     compiler.compile(
@@ -2329,10 +2370,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     codePrinterOptions.setPreferSingleQuotes(true);
     codePrinterOptions.setLineLengthThreshold(80);
     codePrinterOptions.setUseOriginalNamesInOutput(true);
-    assertEquals(expectedCode, new CodePrinter.Builder(node)
-        .setCompilerOptions(codePrinterOptions)
-        .setPrettyPrint(true)
-        .setLineBreak(true)
-        .build());
+    assertEquals(
+        expectedCode,
+        new CodePrinter.Builder(node)
+            .setCompilerOptions(codePrinterOptions)
+            .setPrettyPrint(true)
+            .setLineBreak(true)
+            .build());
   }
 }

@@ -72,7 +72,7 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
       n.addChildToBack(body);
     }
 
-    UpdateThisAndArgumentsReferences updater = new UpdateThisAndArgumentsReferences();
+    UpdateThisAndArgumentsReferences updater = new UpdateThisAndArgumentsReferences(compiler);
     NodeTraversal.traverseEs6(compiler, body, updater);
     addVarDecls(t, updater.changedThis, updater.changedArguments);
 
@@ -120,15 +120,26 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
   private static class UpdateThisAndArgumentsReferences implements NodeTraversal.Callback {
     private boolean changedThis = false;
     private boolean changedArguments = false;
+    private final AbstractCompiler compiler;
+
+    public UpdateThisAndArgumentsReferences(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isThis()) {
         Node name = IR.name(THIS_VAR).srcref(n);
+        if (compiler.getOptions().preservesDetailedSourceInfo()) {
+          name.setOriginalName("this");
+        }
         parent.replaceChild(n, name);
         changedThis = true;
       } else if (n.isName() && n.getString().equals("arguments")) {
         Node name = IR.name(ARGUMENTS_VAR).srcref(n);
+        if (compiler.getOptions().preservesDetailedSourceInfo()) {
+          name.setOriginalName("arguments");
+        }
         parent.replaceChild(n, name);
         changedArguments = true;
       }
