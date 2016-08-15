@@ -191,7 +191,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   private Supplier<List<SourceFile>> externsSupplierForTesting = null;
   private Supplier<List<SourceFile>> inputsSupplierForTesting = null;
   private Supplier<List<JSModule>> modulesSupplierForTesting = null;
-  private Function<Integer, Boolean> exitCodeReceiverForTesting = null;
+  private Function<Integer, Void> exitCodeReceiver = SystemExitCodeReceiver.INSTANCE;
   private Map<String, String> rootRelativePathsMap = null;
 
   private Map<String, String> parsedModuleWrappers = null;
@@ -234,14 +234,22 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       Supplier<List<SourceFile>> externsSupplier,
       Supplier<List<SourceFile>> inputsSupplier,
       Supplier<List<JSModule>> modulesSupplier,
-      Function<Integer, Boolean> exitCodeReceiver) {
+      Function<Integer, Void> exitCodeReceiver) {
     Preconditions.checkArgument(
         inputsSupplier == null ^ modulesSupplier == null);
     testMode = true;
     this.externsSupplierForTesting = externsSupplier;
     this.inputsSupplierForTesting = inputsSupplier;
     this.modulesSupplierForTesting = modulesSupplier;
-    this.exitCodeReceiverForTesting = exitCodeReceiver;
+    this.exitCodeReceiver = exitCodeReceiver;
+  }
+
+  /**
+   * @param newExitCodeReceiver receives a non-zero integer to indicate a
+   *    problem during execution or 0i to indicate success.
+   */
+  public void setExitCodeReceiver(Function<Integer, Void> newExitCodeReceiver) {
+    this.exitCodeReceiver = Preconditions.checkNotNull(newExitCodeReceiver);
   }
 
   /**
@@ -540,25 +548,21 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         result = doRun();
       }
     } catch (AbstractCommandLineRunner.FlagUsageException e) {
-      System.err.println(e.getMessage());
+      err.println(e.getMessage());
       result = -1;
     } catch (Throwable t) {
-      t.printStackTrace();
+      t.printStackTrace(err);
       result = -2;
     }
 
-    if (testMode) {
-      exitCodeReceiverForTesting.apply(result);
-    } else {
-      System.exit(result);
-    }
+    exitCodeReceiver.apply(result);
   }
 
   /**
    * Returns the PrintStream for writing errors associated with this
    * AbstractCommandLineRunner.
    */
-  protected PrintStream getErrorPrintStream() {
+  protected final PrintStream getErrorPrintStream() {
     return err;
   }
 
@@ -1533,7 +1537,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (fileName == null) {
       return null;
     }
-    if (testMode) {
+    if (isInTestMode()) {
       return new StringWriter();
     }
 
@@ -1548,7 +1552,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (fileName == null) {
       return null;
     }
-    if (testMode) {
+    if (isInTestMode()) {
       return new StringWriter();
     }
 
@@ -2732,6 +2736,28 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     public int getNumJsFiles() {
       return numJsFiles;
+    }
+  }
+
+
+  static final class SystemExitCodeReceiver implements Function<Integer, Void> {
+    static final SystemExitCodeReceiver INSTANCE = new SystemExitCodeReceiver();
+
+    private SystemExitCodeReceiver() {
+      // singleton
+    }
+
+    @Override
+    public Void apply(Integer exitCode) {
+      int exitCodeValue = Preconditions.checkNotNull(exitCode);
+      // Don't spuriously report success.
+      // Posix conventions only guarantee that 8b are significant.
+      byte exitCodeByte = (byte) exitCodeValue;
+      if (exitCodeByte == 0 && exitCodeValue != 0) {
+        exitCodeByte = (byte) -1;
+      }
+      System.exit(exitCodeByte);
+      return null;
     }
   }
 }

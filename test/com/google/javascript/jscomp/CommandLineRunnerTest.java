@@ -2201,10 +2201,11 @@ public final class CommandLineRunnerTest extends TestCase {
         Suppliers.ofInstance(externs),
         inputsSupplier,
         modulesSupplier,
-        new Function<Integer, Boolean>() {
+        new Function<Integer, Void>() {
           @Override
-          public Boolean apply(Integer code) {
-            return exitCodes.add(code);
+          public Void apply(Integer code) {
+            exitCodes.add(code);
+            return null;
           }
         });
     runner.run();
