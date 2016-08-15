@@ -397,7 +397,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(newTypeInference);
     }
 
-    if (options.processCommonJSModules || options.j2clPassMode.shouldAddJ2clPasses()) {
+    if (!options.allowsHotswapReplaceScript()) {
       checks.add(inlineTypeAliases);
     }
 

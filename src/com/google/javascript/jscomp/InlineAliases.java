@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
+
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -48,24 +49,11 @@ final class InlineAliases implements CompilerPass {
     this.compiler = compiler;
   }
 
-  private boolean shouldInlineAliases() {
-    if (compiler.getOptions().processCommonJSModules) {
-      // TODO(blickly): Remove this case once CommonJS modules are rewritten like goog.modules.
-      return true;
-    }
-    if (J2clSourceFileChecker.shouldSkipExecution(compiler)) {
-      return false;
-    }
-    return true;
-  }
-
   @Override
   public void process(Node externs, Node root) {
-    if (shouldInlineAliases()) {
-      namespace = new GlobalNamespace(compiler, root);
-      NodeTraversal.traverseEs6(compiler, root, new AliasesCollector());
-      NodeTraversal.traverseEs6(compiler, root, new AliasesInliner());
-    }
+    namespace = new GlobalNamespace(compiler, root);
+    NodeTraversal.traverseEs6(compiler, root, new AliasesCollector());
+    NodeTraversal.traverseEs6(compiler, root, new AliasesInliner());
   }
 
   private class AliasesCollector extends AbstractPostOrderCallback {
