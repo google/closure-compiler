@@ -291,7 +291,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f(x) {",
         "  this.p = 123;",
         "}"),
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
 
     typeCheck(LINE_JOINER.join(
         "/** @this {Object} */",
@@ -1891,7 +1891,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(LINE_JOINER.join(
         "var /** undefined */ n;",
         "n.foo = 5;"),
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
 
     typeCheck(LINE_JOINER.join(
         "/** @param {*} x */",
@@ -1951,6 +1951,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function g(/** Foo */ f) {",
         "  f.prop1.prop2 = 'str';",
         "};"),
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT,
         NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
@@ -2189,7 +2190,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(
         "n.foo = 5; var n;",
         // VariableReferenceCheck.EARLY_REFERENCE,
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
   }
 
   public void testAssignmentDoesntFlowWrongInit() {
@@ -5891,7 +5892,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(
         "function f(/** undefined */ n, pname) { n[pname] = 3; }",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
   }
 
   public void testQuestionableUnionJsDoc() {
@@ -8630,7 +8631,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f(/** !Foo */ foo, x) {",
         "  (foo.stuff.prop = x) || false;",
         "};"),
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */ function Foo() {};",
@@ -12570,6 +12571,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var /** number */ n = 123;",
         "n.prop = 0;",
         "n.prop - 5;"),
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT,
         NewTypeInference.INEXISTENT_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
@@ -12582,7 +12584,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  /** @type {number} */",
         "  this.prop = 123;",
         "}",
-        "(new Foo).prop.newprop = 5;"));
+        "(new Foo).prop.newprop = 5;"),
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
 
     typeCheck(LINE_JOINER.join(
         "/** @enum {number} */",
@@ -12610,6 +12613,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var n = Number();",
         "n.prop = 0;",
         "n.prop - 5;"),
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT,
         NewTypeInference.INEXISTENT_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
@@ -17823,5 +17827,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @param {function(number)} x */",
         "function g(x) {}",
         "g(f);"));
+  }
+
+  public void testDontCrashWhenDeclaringFunctionOnScalar() {
+    typeCheck(LINE_JOINER.join(
+        "/** @type {boolean} */",
+        "var b = true;",
+        "if (b) {",
+        "  b.onstatechange = function() {};",
+        "}"),
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
   }
 }

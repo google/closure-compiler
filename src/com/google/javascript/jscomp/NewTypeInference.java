@@ -237,6 +237,11 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_IN_USED_WITH_STRUCT",
           "Cannot use the IN operator with structs");
 
+  static final DiagnosticType ADDING_PROPERTY_TO_NON_OBJECT =
+      DiagnosticType.warning(
+          "JSC_NTI_ADDING_PROPERTY_TO_NON_OBJECT",
+          "Cannot create property {0} on non-object type {1}.");
+
   public static final DiagnosticType INEXISTENT_PROPERTY =
       DiagnosticType.warning(
           "JSC_NTI_INEXISTENT_PROPERTY",
@@ -316,6 +321,7 @@ final class NewTypeInference implements CompilerPass {
   // going after warning, eg, for NOT_UNIQUE_INSTANTIATION, we must instantiate
   // to the join of the types.
   static final DiagnosticGroup NEW_DIAGNOSTICS = new DiagnosticGroup(
+      ADDING_PROPERTY_TO_NON_OBJECT,
       BOTTOM_INDEX_TYPE,
       BOTTOM_PROP,
       CROSS_SCOPE_GOTCHA,
@@ -1125,7 +1131,9 @@ final class NewTypeInference implements CompilerPass {
     } else if (fnNameNode.isQualifiedName()) {
       QualifiedName qname = QualifiedName.fromNode(fnNameNode);
       JSType rootNs = enclosingScope.getDeclaredTypeOf(qname.getLeftmostName());
-      namespaceType = rootNs == null ? null : rootNs.getProp(qname.getAllButLeftmost());
+      if (rootNs != null && rootNs.isSubtypeOf(JSType.TOP_OBJECT)) {
+        namespaceType = rootNs.getProp(qname.getAllButLeftmost());
+      }
     }
     if (namespaceType != null && namespaceType.isNamespace()) {
       // Replace the less-precise declared function type
@@ -4038,9 +4046,12 @@ final class NewTypeInference implements CompilerPass {
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
     EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
         obj, lvalue.type, null, lvalue.env);
-    JSType lvalueType = pair.type.autobox();
+    JSType lvalueType = pair.type;
+    if (lvalueType.isEnumElement()) {
+      lvalueType = lvalueType.getEnumeratedType();
+    }
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
-      warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
+      warnings.add(JSError.make(obj, ADDING_PROPERTY_TO_NON_OBJECT,
               getPropNameForErrorMsg(obj.getParent()), lvalueType.toString()));
     }
     lvalue.type = lvalueType;
