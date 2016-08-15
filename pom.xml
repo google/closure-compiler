@@ -70,6 +70,20 @@
     </license>
   </licenses>
 
+  <!--
+    TODO: test deployment without this parent.
+    http://central.sonatype.org/pages/apache-maven.html#deprecated-oss-parent says
+
+    > In the past all the plugin configuration and other setup was
+    > managed by a Maven parent POM with the latest coordinates of
+    > org.sonatype.oss:oss-parent:9. This project leaked SCM, URL and
+    > other details and its usage is discouraged. Maintenance of the
+    > project has stopped and it no longer works with latest tooling
+    > such as Maven versions or Java versions.
+
+    It may be sufficient to include a <distributionManagement> per
+    http://central.sonatype.org/pages/apache-maven.html#distribution-management-and-authentication
+  -->
   <parent>
     <groupId>org.sonatype.oss</groupId>
     <artifactId>oss-parent</artifactId>
@@ -123,6 +137,8 @@
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <jdk.version>1.7</jdk.version>
     <junit.version>4.11</junit.version>
+    <guava.version>20.0-SNAPSHOT</guava.version>
+    <protobuf.version>2.5.0</protobuf.version>
   </properties>
 
   <build>
@@ -191,6 +207,26 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava-gwt</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <profiles>
     <profile>
