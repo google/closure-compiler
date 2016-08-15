@@ -72,8 +72,88 @@ HTMLCanvasElement.prototype.toDataURL = function(opt_type, var_args) {};
  */
 HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 
+
+/**
+ * @interface
+ * @see https://www.w3.org/TR/2dcontext/#canvaspathmethods
+ */
+function CanvasPathMethods() {};
+
+/**
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.closePath = function() {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.moveTo = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.lineTo = function(x, y) {};
+
+/**
+ * @param {number} cpx
+ * @param {number} cpy
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.quadraticCurveTo = function(cpx, cpy, x, y) {};
+
+/**
+ * @param {number} cp1x
+ * @param {number} cp1y
+ * @param {number} cp2x
+ * @param {number} cp2y
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.bezierCurveTo = function(
+    cp1x, cp1y, cp2x, cp2y, x, y) {};
+
+/**
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
+ * @param {number} radius
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.rect = function(x, y, w, h) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} radius
+ * @param {number} startAngle
+ * @param {number} endAngle
+ * @param {boolean=} opt_anticlockwise
+ * @return {undefined}
+ */
+CanvasPathMethods.prototype.arc = function(
+    x, y, radius, startAngle, endAngle, opt_anticlockwise) {};
+
+
 /**
  * @constructor
+ * @implements {CanvasPathMethods}
  * @see http://www.w3.org/TR/2dcontext/#canvasrenderingcontext2d
  */
 function CanvasRenderingContext2D() {}
@@ -202,6 +282,7 @@ CanvasRenderingContext2D.prototype.beginPath = function() {};
 
 /**
  * @return {undefined}
+ * @override
  */
 CanvasRenderingContext2D.prototype.closePath = function() {};
 
@@ -209,6 +290,7 @@ CanvasRenderingContext2D.prototype.closePath = function() {};
  * @param {number} x
  * @param {number} y
  * @return {undefined}
+ * @override
  */
 CanvasRenderingContext2D.prototype.moveTo = function(x, y) {};
 
@@ -216,6 +298,7 @@ CanvasRenderingContext2D.prototype.moveTo = function(x, y) {};
  * @param {number} x
  * @param {number} y
  * @return {undefined}
+ * @override
  */
 CanvasRenderingContext2D.prototype.lineTo = function(x, y) {};
 
@@ -225,6 +308,7 @@ CanvasRenderingContext2D.prototype.lineTo = function(x, y) {};
  * @param {number} x
  * @param {number} y
  * @return {undefined}
+ * @override
  */
 CanvasRenderingContext2D.prototype.quadraticCurveTo = function(
     cpx, cpy, x, y) {};
@@ -237,6 +321,7 @@ CanvasRenderingContext2D.prototype.quadraticCurveTo = function(
  * @param {number} x
  * @param {number} y
  * @return {undefined}
+ * @override
  */
 CanvasRenderingContext2D.prototype.bezierCurveTo = function(
     cp1x, cp1y, cp2x, cp2y, x, y) {};
@@ -248,6 +333,7 @@ CanvasRenderingContext2D.prototype.bezierCurveTo = function(
  * @param {number} y2
  * @param {number} radius
  * @return {undefined}
+ * @override
  */
 CanvasRenderingContext2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
 
@@ -257,6 +343,7 @@ CanvasRenderingContext2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
  * @param {number} w
  * @param {number} h
  * @return {undefined}
+ * @override
  */
 CanvasRenderingContext2D.prototype.rect = function(x, y, w, h) {};
 
@@ -268,6 +355,7 @@ CanvasRenderingContext2D.prototype.rect = function(x, y, w, h) {};
  * @param {number} endAngle
  * @param {boolean=} opt_anticlockwise
  * @return {undefined}
+ * @override
  */
 CanvasRenderingContext2D.prototype.arc = function(
     x, y, radius, startAngle, endAngle, opt_anticlockwise) {};
