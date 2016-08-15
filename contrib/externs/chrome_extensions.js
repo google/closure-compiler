@@ -849,8 +849,24 @@ chrome.bluetooth.Device.prototype.paired;
 chrome.bluetooth.Device.prototype.connected;
 
 
+/** @type {boolean|undefined} */
+chrome.bluetooth.Device.prototype.connecting;
+
+
+/** @type {boolean|undefined} */
+chrome.bluetooth.Device.prototype.connectable;
+
+
 /** @type {!Array<string>|undefined} */
 chrome.bluetooth.Device.prototype.uuids;
+
+
+/** @type {number|undefined} */
+chrome.bluetooth.Device.prototype.inquiryRssi;
+
+
+/** @type {number|undefined} */
+chrome.bluetooth.Device.prototype.inquiryTxPower;
 
 
 /**
