@@ -1338,16 +1338,14 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testInitSymbol() {
-    test(
-        "alert(Symbol.thimble);",
-        "$jscomp.initSymbol(); alert(Symbol.thimble)");
+    test("let a = alert(Symbol.thimble);", "$jscomp.initSymbol(); var a = alert(Symbol.thimble)");
     assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
 
     test(
         LINE_JOINER.join(
             "function f() {",
-            "  var x = 1;",
-            "  var y = Symbol('nimble');",
+            "  let x = 1;",
+            "  let y = Symbol('nimble');",
             "}"),
         LINE_JOINER.join(
             "function f() {",

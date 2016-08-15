@@ -28,7 +28,6 @@ import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -113,6 +112,10 @@ class ReferenceCollectingCallback implements ScopedCallback,
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverseRoots(compiler, this, externs, root);
+  }
+
+  public void process(Node root) {
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   /**

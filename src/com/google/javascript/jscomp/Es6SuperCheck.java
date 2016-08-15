@@ -38,7 +38,7 @@ final class Es6SuperCheck extends AbstractPostOrderCallback implements CompilerP
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    TranspilationPasses.processCheck(compiler, root, this);
   }
 
   @Override

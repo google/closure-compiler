@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -71,26 +70,52 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
 
+  // If true, the pass will only check code that is at least ES6. Certain errors in block-scoped
+  // variable declarations will prevent correct transpilation, so this pass must be run.
+  private final boolean forTranspileOnly;
+
   // NOTE(nicksantos): It's a lot faster to use a shared Set that
   // we clear after each method call, because the Set never gets too big.
   private final Set<BasicBlock> blocksWithDeclarations = new HashSet<>();
 
   public VariableReferenceCheck(AbstractCompiler compiler) {
+    this(compiler, false);
+  }
+
+  VariableReferenceCheck(AbstractCompiler compiler, boolean forTranspileOnly) {
     this.compiler = compiler;
+    this.forTranspileOnly = forTranspileOnly;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    ReferenceCollectingCallback callback =
-        new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior());
-    callback.process(externs, root);
+    if (forTranspileOnly) {
+      if (!compiler.getOptions().getLanguageIn().isEs6OrHigher()) {
+        return;
+      }
+      for (Node singleRoot : root.children()) {
+        if (TranspilationPasses.isScriptEs6ImplOrHigher(singleRoot)) {
+          new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior())
+              .process(singleRoot);
+        }
+      }
+    } else {
+      new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior()).process(root);
+    }
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    ReferenceCollectingCallback callback =
-        new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior());
-    callback.hotSwapScript(scriptRoot, originalRoot);
+    if (forTranspileOnly) {
+      if (compiler.getOptions().getLanguageIn().isEs6OrHigher()
+          && TranspilationPasses.isScriptEs6ImplOrHigher(scriptRoot)) {
+        new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior())
+            .hotSwapScript(scriptRoot, originalRoot);
+      }
+    } else {
+      new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior())
+          .hotSwapScript(scriptRoot, originalRoot);
+    }
   }
 
   /**

@@ -19,6 +19,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -97,13 +99,39 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, externs, this);
-    NodeTraversal.traverseEs6(compiler, root, this);
+    // TODO(moz): Currently, only .d.ts externs could have ES6 features in them. We should avoid
+    // traversing the externs in the common use case.
+    TranspilationPasses.processTranspile(compiler, externs, this);
+
+    for (Node singleRoot : root.children()) {
+      FeatureSet features = (FeatureSet) singleRoot.getProp(Node.FEATURE_SET);
+      if (features == null) {
+        continue;
+      }
+      // TODO(moz): getter / setter should be processed in a separate pass
+      if (TranspilationPasses.isScriptEs6ImplOrHigher(singleRoot)) {
+        singleRoot.putBooleanProp(Node.TRANSPILED, true);
+        NodeTraversal.traverseEs6(compiler, singleRoot, this);
+      } else if (features.contains(Feature.GETTER)
+          || features.contains(Feature.SETTER)) {
+        NodeTraversal.traverseEs6(compiler, singleRoot, this);
+      }
+    }
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    FeatureSet features = (FeatureSet) scriptRoot.getProp(Node.FEATURE_SET);
+    if (features == null) {
+      return;
+    }
+    if (TranspilationPasses.isScriptEs6ImplOrHigher(scriptRoot)) {
+      scriptRoot.putBooleanProp(Node.TRANSPILED, true);
+      NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    } else if (features.contains(Feature.GETTER)
+        || features.contains(Feature.SETTER)) {
+      NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    }
   }
 
   /**
