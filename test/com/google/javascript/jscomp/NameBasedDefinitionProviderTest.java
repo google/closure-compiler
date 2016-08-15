@@ -22,6 +22,7 @@ import com.google.common.collect.TreeMultiset;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
@@ -377,7 +378,7 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
     private final Compiler compiler;
 
     DefinitionEnumerator(Compiler compiler) {
-      this.passUnderTest = new NameBasedDefinitionProvider(compiler);
+      this.passUnderTest = new NameBasedDefinitionProvider(compiler, true);
       this.compiler = compiler;
     }
 

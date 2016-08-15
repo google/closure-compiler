@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -49,7 +50,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler);
+    NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, false);
     defFinder.process(externs, root);
 
     // Gather the list of function nodes that have @nosideeffects annotations.

@@ -946,6 +946,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   public void testHookOperator2() throws Exception {
+
     checkMarkedCalls("var f = true ? function(){} : externNsef2;\n" +
                      "f()",
                      ImmutableList.<String>of());
@@ -960,7 +961,21 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testHookOperators4() throws Exception {
     checkMarkedCalls("var f = true ? function(){} : function(){};\n" +
                      "f()",
-                     ImmutableList.<String>of());
+                     ImmutableList.<String>of("f"));
+  }
+
+  public void testHookOperators5() throws Exception {
+    checkMarkedCalls(LINE_JOINER.join(
+        "var f = String.prototype.trim ? function(str){return str} : function(){};",
+        "f()"),
+        ImmutableList.<String>of("f"));
+  }
+
+  public void testHookOperators6() throws Exception {
+    checkMarkedCalls(LINE_JOINER.join(
+        "var f = yyy ? function(str){return str} : xxx ? function() {} : function(){};",
+        "f()"),
+        ImmutableList.<String>of("f"));
   }
 
   public void testThrow1() throws Exception {
@@ -1399,7 +1414,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     public void process(Node externs, Node root) {
       compiler.setHasRegExpGlobalReferences(regExpHaveSideEffects);
       compiler.getOptions().setUseTypesForOptimization(true);
-      NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler);
+      NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
       defFinder.process(externs, root);
       PureFunctionIdentifier passUnderTest =
           new PureFunctionIdentifier(compiler, defFinder);

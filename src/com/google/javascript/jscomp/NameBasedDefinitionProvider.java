@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.DefinitionsRemover.UnknownDefinition;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -47,11 +48,14 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
   protected final Multimap<String, Definition> nameDefinitionMultimap = LinkedHashMultimap.create();
   protected final Map<Node, DefinitionSite> definitionNodeByDefinitionSite = new LinkedHashMap<>();
   protected final AbstractCompiler compiler;
+  protected final boolean allowComplexFunctionDefs;
 
   protected boolean hasProcessBeenRun = false;
 
-  public NameBasedDefinitionProvider(AbstractCompiler compiler) {
+
+  public NameBasedDefinitionProvider(AbstractCompiler compiler, boolean allowComplexFunctionDefs) {
     this.compiler = compiler;
+    this.allowComplexFunctionDefs = allowComplexFunctionDefs;
   }
 
   @Override
@@ -112,13 +116,21 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
 
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
-      if (inExterns && node.getJSDocInfo() != null) {
+      if (inExterns) {
+        visitExterns(traversal, node, parent);
+      } else {
+        visitCode(traversal, node);
+      }
+    }
+
+    private void visitExterns(NodeTraversal traversal, Node node, Node parent) {
+      if (node.getJSDocInfo() != null) {
         for (Node typeRoot : node.getJSDocInfo().getTypeNodes()) {
           traversal.traverse(typeRoot);
         }
       }
 
-      Definition def = DefinitionsRemover.getDefinition(node, inExterns);
+      Definition def = DefinitionsRemover.getDefinition(node, true);
       if (def != null) {
         String name = getSimplifiedName(def.getLValue());
         if (name != null) {
@@ -126,27 +138,26 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
           if ((rValue != null) && !NodeUtil.isImmutableValue(rValue) && !rValue.isFunction()) {
 
             // Unhandled complex expression
-            Definition unknownDef = new UnknownDefinition(def.getLValue(), inExterns);
+            Definition unknownDef = new UnknownDefinition(def.getLValue(), true);
             def = unknownDef;
           }
 
           // TODO(johnlenz) : remove this stub dropping code if it becomes
           // illegal to have untyped stubs in the externs definitions.
-          if (inExterns) {
-            // We need special handling of untyped externs stubs here:
-            // the stub should be dropped if the name is provided elsewhere.
 
-            // If there is no qualified name for this, then there will be
-            // no stubs to remove. This will happen if node is an object
-            // literal key.
-            if (node.isQualifiedName()) {
-              for (Definition prevDef : new ArrayList<>(nameDefinitionMultimap.get(name))) {
-                if (prevDef instanceof ExternalNameOnlyDefinition
-                    && !jsdocContainsDeclarations(node)) {
-                  if (node.matchesQualifiedName(prevDef.getLValue())) {
-                    // Drop this stub, there is a real definition.
-                    nameDefinitionMultimap.remove(name, prevDef);
-                  }
+          // We need special handling of untyped externs stubs here:
+          // the stub should be dropped if the name is provided elsewhere.
+
+          // If there is no qualified name for this, then there will be
+          // no stubs to remove. This will happen if node is an object
+          // literal key.
+          if (node.isQualifiedName()) {
+            for (Definition prevDef : new ArrayList<>(nameDefinitionMultimap.get(name))) {
+              if (prevDef instanceof ExternalNameOnlyDefinition
+                  && !jsdocContainsDeclarations(node)) {
+                if (node.matchesQualifiedName(prevDef.getLValue())) {
+                  // Drop this stub, there is a real definition.
+                  nameDefinitionMultimap.remove(name, prevDef);
                 }
               }
             }
@@ -156,11 +167,11 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
           definitionNodeByDefinitionSite.put(
               node,
               new DefinitionSite(
-                  node, def, traversal.getModule(), traversal.inGlobalScope(), inExterns));
+                  node, def, traversal.getModule(), traversal.inGlobalScope(), true));
         }
       }
 
-      if (inExterns && (parent != null) && parent.isExprResult()) {
+      if (parent != null && parent.isExprResult()) {
         String name = getSimplifiedName(node);
         if (name != null) {
 
@@ -189,9 +200,43 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
             definitionNodeByDefinitionSite.put(
                 node,
                 new DefinitionSite(
-                    node, definition, traversal.getModule(), traversal.inGlobalScope(), inExterns));
+                    node, definition, traversal.getModule(), traversal.inGlobalScope(), true));
           }
         }
+      }
+    }
+
+    private void visitCode(NodeTraversal traversal, Node node) {
+      Definition def = DefinitionsRemover.getDefinition(node, false);
+      if (def != null) {
+        String name = getSimplifiedName(def.getLValue());
+        if (name != null) {
+          Node rValue = def.getRValue();
+          if (rValue != null
+              && !NodeUtil.isImmutableValue(rValue)
+              && !isKnownFunctionDefinition(rValue)) {
+            // Unhandled complex expression
+            def = new UnknownDefinition(def.getLValue(), false);
+          }
+          nameDefinitionMultimap.put(name, def);
+          definitionNodeByDefinitionSite.put(
+              node,
+              new DefinitionSite(
+                  node, def, traversal.getModule(), traversal.inGlobalScope(), false));
+        }
+      }
+    }
+
+    boolean isKnownFunctionDefinition(Node n) {
+      switch (n.getToken()) {
+        case FUNCTION:
+          return true;
+        case HOOK:
+          return allowComplexFunctionDefs
+              && isKnownFunctionDefinition(n.getSecondChild())
+              && isKnownFunctionDefinition(n.getLastChild());
+        default:
+          return false;
       }
     }
 

@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.rhino.Node;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -45,7 +46,7 @@ class ChainCalls implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    defFinder = new NameBasedDefinitionProvider(compiler);
+    defFinder = new NameBasedDefinitionProvider(compiler, false);
     defFinder.process(externs, root);
 
     NodeTraversal.traverseEs6(compiler, root, new GatherCallSites());

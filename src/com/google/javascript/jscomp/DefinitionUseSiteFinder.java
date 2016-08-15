@@ -22,6 +22,7 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+
 import java.util.Collection;
 
 /**
@@ -35,7 +36,7 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
   private final Multimap<String, UseSite> nameUseSiteMultimap;
 
   public DefinitionUseSiteFinder(AbstractCompiler compiler) {
-    super(compiler);
+    super(compiler, false);
     this.nameUseSiteMultimap = LinkedHashMultimap.create();
   }
 
