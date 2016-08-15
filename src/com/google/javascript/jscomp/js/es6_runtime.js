@@ -19,6 +19,7 @@
 'require es6/math';
 'require es6/number';
 'require es6/object';
+'require es6/promise';
 'require es6/reflect';
 'require es6/set';
 'require es6/string';

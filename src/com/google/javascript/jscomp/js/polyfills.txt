@@ -35,6 +35,7 @@ Object.assign es6-impl es3 es6/object/assign
 Object.getOwnPropertySymbols es6-impl es5 es6/object/getownpropertysymbols
 Object.is es6-impl es3 es6/object/is
 Object.setPrototypeOf es6 es5 es6/object/setprototypeof
+Promise es6-impl es3 es6/promise
 Proxy es6 es6
 Reflect.apply es6 es3 es6/reflect/apply
 Reflect.construct es6 es5 es6/reflect/construct
