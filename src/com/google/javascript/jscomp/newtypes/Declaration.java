@@ -47,7 +47,7 @@ public class Declaration {
 
   private void checkValid() {
     if (this.simpleType != null) {
-      Preconditions.checkState(this.typedef == null && this.ns == null);
+      Preconditions.checkState(this.typedef == null);
     }
     if (this.typedef != null) {
       Preconditions.checkState(
@@ -56,7 +56,7 @@ public class Declaration {
     if (this.ns != null) {
       // Note: Non-null nominal with null function is allowed,
       // e.g., /** @constructor */ var Bar = Foo;
-      Preconditions.checkState(this.simpleType == null && this.typedef == null);
+      Preconditions.checkState(this.typedef == null);
     }
     if (this.funScope != null) {
       Preconditions.checkState(this.typedef == null);

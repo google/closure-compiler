@@ -867,9 +867,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "var maybeB = cond ? new Base() : null;\n"
         + "var maybeS = cond ? new Sub() : null;\n";
 
-    // TODO(aravindpg): Fix in NTI. Make "function(this:Sub)" parse to `function(this:Sub)`
-    // instead of `function(this:?)`.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(code + "b.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "maybeB.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "s.m(1)");
@@ -894,8 +891,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "var maybeB = cond ? new Base() : null;\n"
         + "var maybeS = cond ? new Sub() : null;";
 
-    // TODO(aravindpg): Fix in NTI.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(code + "b.m.call(b, 1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "b.m.call(maybeB, 1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "b.m.call(s, 1)");

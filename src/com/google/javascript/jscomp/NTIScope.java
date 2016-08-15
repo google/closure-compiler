@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -592,8 +591,15 @@ final class NTIScope implements DeclaredTypeRegistry {
     } else if (externs.containsKey(name)) {
       type = externs.get(name);
     }
+    Namespace ns = null;
+    if (localNamespaces.containsKey(name)) {
+      ns = localNamespaces.get(name);
+    } else if (preservedNamespaces != null) {
+      ns = preservedNamespaces.get(name);
+    }
+
     return new Declaration(type, localTypedefs.get(name),
-        localNamespaces.get(name), localFunDefs.get(name), isTypeVar,
+        ns, localFunDefs.get(name), isTypeVar,
         constVars.contains(name));
   }
 
