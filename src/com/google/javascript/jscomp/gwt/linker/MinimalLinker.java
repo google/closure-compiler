@@ -29,9 +29,11 @@ import com.google.gwt.core.linker.SymbolMapsLinker;
 import com.google.gwt.dev.util.Util;
 
 /**
- * Simple single-script linker that doesn't add any dependence on the browser.
- * This is intended to generate server-side runnable JS.  It doesn't support
- * permutations, nor does it allow late-loading code.
+ * Simple single-script linker that doesn't add any dependencies on the browser.
+ *
+ * This is intended to generate JS for servers, Node, or inside browsers as a module. It doesn't
+ * support permutations, nor does it allow late-loading code. It supports JSInterop, but it does not
+ * automatically add anything to the external scope (see {@code $wnd} below).
  */
 @LinkerOrder(Order.PRIMARY)
 public class MinimalLinker extends AbstractLinker {
@@ -41,10 +43,14 @@ public class MinimalLinker extends AbstractLinker {
    * to invoke the {@code onModuleLoad} methods of loaded modules. The gwtOnLoad method then sets
    * {@code $moduleName} and {@code $moduleBase}, shadow them here so they don't leak into the
    * global scope.
+   *
+   * We also fake {@code $wnd} with an empty object (containg Error, to work around GWT using it
+   * statically in {@code StackTraceCreator}). JSInterop will export its objects here, which are
+   * then discarded at runtime. This is needed to avoid polluting our environments.
    */
   private static final String PREFIX =
-      "(function(){var $wnd=this; var $doc={}; var $moduleName, $moduleBase;";
-  private static final String SUFFIX = "typeof gwtOnLoad==='function'&&gwtOnLoad()})();";
+      "(function(){var $wnd={Error:{}}; var $doc={}; var $moduleName, $moduleBase;";
+  private static final String SUFFIX = "$wnd=this;typeof gwtOnLoad==='function'&&gwtOnLoad()})();";
 
   @Override
   public String getDescription() {

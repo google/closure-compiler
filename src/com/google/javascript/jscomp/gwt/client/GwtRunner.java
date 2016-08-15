@@ -50,70 +50,99 @@ public final class GwtRunner implements EntryPoint {
 
   private GwtRunner() {}
 
-  @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private static class Flags {
-    boolean angularPass;
-    boolean assumeFunctionWrapper;
-    String compilationLevel;
-    boolean dartPass;
-    boolean exportLocalPropertyDefinitions;
-    boolean generateExports;
-    String languageIn;
-    String languageOut;
-    boolean checksOnly;
-    boolean newTypeInf;
-    boolean polymerPass;
-    boolean preserveTypeAnnotations;
-    boolean processCommonJsModules;
+  /**
+   * Specifies flags and their defaults.
+   *
+   * You must specify defaults in the constructor (as of August 2016). Defaults specified
+   * alongside fields will cause falsey values to be optimized and inlined. Fix here-
+   *    https://gwt-review.googlesource.com/#/c/16600/
+   */
+  @JsType(namespace = JsPackage.GLOBAL, name = "Flags")
+  public static class Flags {
+    public boolean angularPass;
+    public boolean assumeFunctionWrapper;
+    public String compilationLevel;
+    public boolean dartPass;
+    public boolean exportLocalPropertyDefinitions;
+    public boolean generateExports;
+    public String languageIn;
+    public String languageOut;
+    public boolean checksOnly;
+    public boolean newTypeInf;
+    public boolean polymerPass;
+    public boolean preserveTypeAnnotations;
+    public boolean processCommonJsModules;
     public String renamePrefixNamespace;
-    boolean rewritePolyfills;
-    String warningLevel;
-    boolean useTypesForOptimization;
+    public boolean rewritePolyfills;
+    public String warningLevel;
+    public boolean useTypesForOptimization;
 
-    // These flags do not match the Java compiler JAR.
-    File[] jsCode;
-    File[] externs;
-    boolean createSourceMap;
+    // These flags do not match the Java jar release.
+    public File[] jsCode;
+    public File[] externs;
+    public boolean createSourceMap;
+
+    /**
+     * Flags constructor. Defaults must be specified here for every field.
+     */
+    public Flags() {
+      this.angularPass = false;
+      this.assumeFunctionWrapper = false;
+      this.compilationLevel = "SIMPLE";
+      this.dartPass = false;
+      this.exportLocalPropertyDefinitions = false;
+      this.generateExports = false;
+      this.languageIn = "ES6";
+      this.languageOut = "ES5";
+      this.checksOnly = false;
+      this.newTypeInf = false;
+      this.polymerPass = false;
+      this.preserveTypeAnnotations = false;
+      this.processCommonJsModules = false;
+      this.renamePrefixNamespace = null;
+      this.rewritePolyfills = true;
+      this.warningLevel = "DEFAULT";
+      this.useTypesForOptimization = true;
+      this.jsCode = null;
+      this.externs = null;
+      this.createSourceMap = false;
+    }
+
+    /**
+     * Updates this {@link Flags} with a raw {@link JavaScriptObject}.
+     *
+     * @param raw The raw flags passed to this program.
+     * @return A list of invalid/unhandled flags.
+     */
+    public native String[] update(JavaScriptObject raw) /*-{
+      var unhandled = [];
+      for (var k in raw) {
+        if (k in this) {
+          this[k] = raw[k];
+        } else {
+          unhandled.push(k);
+        }
+      }
+      return unhandled;
+    }-*/;
   }
 
   /**
-   * defaultFlags must have a value set for each field. Otherwise, GWT has no way to create the
-   * fields inside Flags (as it's native). If Flags is not-native, GWT eats its field names
-   * anyway.
+   * File object matching {@code AbstractCommandLineRunner.JsonFileSpec}. This is marked as the
+   * native {@code Object} type as it's not instantiated anywhere.
    */
-  private static final Flags defaultFlags = new Flags();
-  static {
-    defaultFlags.angularPass = false;
-    defaultFlags.assumeFunctionWrapper = false;
-    defaultFlags.compilationLevel = "SIMPLE";
-    defaultFlags.dartPass = false;
-    defaultFlags.exportLocalPropertyDefinitions = false;
-    defaultFlags.generateExports = false;
-    defaultFlags.languageIn = "ECMASCRIPT6";
-    defaultFlags.languageOut = "ECMASCRIPT5";
-    defaultFlags.checksOnly = false;
-    defaultFlags.newTypeInf = false;
-    defaultFlags.polymerPass = false;
-    defaultFlags.preserveTypeAnnotations = false;
-    defaultFlags.processCommonJsModules = false;
-    defaultFlags.renamePrefixNamespace = null;
-    defaultFlags.rewritePolyfills = true;
-    defaultFlags.warningLevel = "DEFAULT";
-    defaultFlags.useTypesForOptimization = true;
-    defaultFlags.jsCode = null;
-    defaultFlags.externs = null;
-    defaultFlags.createSourceMap = false;
-  }
-
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private static class File {
+  public static class File {
     @JsProperty String path;
     @JsProperty String src;
     @JsProperty String sourceMap;
   }
 
-  @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private static class ModuleOutput {
+  /**
+   * Output type returned to caller.
+   */
+  @JsType(namespace = JsPackage.GLOBAL, name = "ModuleOutput")
+  public static class ModuleOutput {
     @JsProperty String compiledCode;
     @JsProperty String sourceMap;
     @JsProperty JavaScriptObject[] errors;
@@ -170,13 +199,16 @@ public final class GwtRunner implements EntryPoint {
     warningLevel.setOptionsForWarningLevel(options);
 
     LanguageMode languageIn = LanguageMode.fromString(flags.languageIn);
-    if (languageIn != null) {
-      options.setLanguageIn(languageIn);
+    if (languageIn == null) {
+      throw new RuntimeException("Bad value for languageIn: " + flags.languageIn);
     }
+    options.setLanguageIn(languageIn);
+
     LanguageMode languageOut = LanguageMode.fromString(flags.languageOut);
-    if (languageOut != null) {
-      options.setLanguageOut(languageOut);
+    if (languageOut == null) {
+      throw new RuntimeException("Bad value for languageOut: " + flags.languageOut);
     }
+    options.setLanguageOut(languageOut);
 
     if (flags.createSourceMap) {
       options.setSourceMapOutputPath("%output%");
@@ -236,29 +268,14 @@ public final class GwtRunner implements EntryPoint {
   }
 
   /**
-   * Updates the destination flags (user input) with source flags (the defaults). Returns a list
-   * of flags that are on the destination, but not on the source.
-   */
-  private static native String[] updateFlags(Flags dst, Flags src) /*-{
-    for (var k in src) {
-      if (!(k in dst)) {
-        dst[k] = src[k];
-      }
-    }
-    var unhandled = [];
-    for (var k in dst) {
-      if (!(k in src)) {
-        unhandled.push(k);
-      }
-    }
-    return unhandled;
-  }-*/;
-
-  /**
    * Public compiler call. Exposed in {@link #exportCompile}.
+   *
+   * @param raw The passed raw flags from the user.
+   * @return The output from the compile.
    */
-  public static ModuleOutput compile(Flags flags) {
-    String[] unhandled = updateFlags(flags, defaultFlags);
+  public static ModuleOutput compile(JavaScriptObject raw) {
+    Flags flags = new Flags();
+    String[] unhandled = flags.update(raw);
     if (unhandled.length > 0) {
       throw new RuntimeException("Unhandled flag: " + unhandled[0]);
     }
