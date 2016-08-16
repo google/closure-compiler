@@ -486,6 +486,7 @@ public final class ConformanceRules {
         if (methodClassType != null && lhs.getTypeI() != null) {
           TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
           if (targetType.isUnknownType()
+             || targetType.isLooseType()
              || targetType.isTypeVariable()
              || targetType.isBottom()
              || targetType.isTop()

@@ -74,6 +74,8 @@ public interface TypeI {
 
   boolean isUnknownType();
 
+  boolean isLooseType();
+
   boolean isUnionType();
 
   boolean isNullable();

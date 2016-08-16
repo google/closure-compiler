@@ -4009,7 +4009,7 @@ final class NewTypeInference implements CompilerPass {
       }
       if (recvType.isLoose()) {
         // For loose objects, create the inner property if it doesn't exist.
-        recvType = recvType.withProperty(pname, JSType.TOP_OBJECT.withLoose());
+        recvType = recvType.withProperty(pname, JSType.UNKNOWN);
         inEnv = updateLvalueTypeInEnv(inEnv, obj, recvLvalue.ptr, recvType);
       }
     }

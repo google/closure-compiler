@@ -1541,12 +1541,14 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     return isInterfaceDefinition();
   }
 
-  // TODO(aravindpg): It isn't clear that this needs to check for isLoose as well. Revisit and
-  // settle concretely whether or not it is needed, and if so rename this method to
-  // `isSomeUnknownType`.
   @Override
   public boolean isUnknownType() {
-    return isUnknown() || (isInstanceofObject() && isLoose());
+    return isUnknown();
+  }
+
+  @Override
+  public boolean isLooseType() {
+    return isInstanceofObject() && isLoose();
   }
 
   @Override
