@@ -1547,8 +1547,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public boolean isLooseType() {
-    return isInstanceofObject() && isLoose();
+  public boolean isSomeUnknownType() {
+    FunctionType ft = this.getFunTypeIfSingletonObj();
+    return isUnknown()
+        || (isInstanceofObject() && isLoose())
+        || (ft != null && ft.isTopFunction());
   }
 
   @Override

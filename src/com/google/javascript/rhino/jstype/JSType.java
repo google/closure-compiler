@@ -272,7 +272,7 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   @Override
-  public final boolean isLooseType() {
+  public final boolean isSomeUnknownType() {
     // OTI's notion of isUnknownType already accounts for looseness (see override in ObjectType).
     return isUnknownType();
   }

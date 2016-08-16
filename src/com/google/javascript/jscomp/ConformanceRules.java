@@ -485,8 +485,7 @@ public final class ConformanceRules {
         Node lhs = n.getFirstChild();
         if (methodClassType != null && lhs.getTypeI() != null) {
           TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
-          if (targetType.isUnknownType()
-             || targetType.isLooseType()
+          if (targetType.isSomeUnknownType()
              || targetType.isTypeVariable()
              || targetType.isBottom()
              || targetType.isTop()
@@ -1233,7 +1232,7 @@ public final class ConformanceRules {
       }
 
       if (n.isGetProp()
-          && isUnknown(n)
+          && n.getTypeI().isSomeUnknownType()
           && isUsed(n) // skip most assignments, etc
           && !isTypeImmediatelyTightened(n)
           && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown
