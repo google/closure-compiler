@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_NAMESPACE;
+import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCTURING_IMPORT;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_FORWARD_DECLARE_NAMESPACE;
@@ -227,6 +228,41 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
               "var module$contents$ns$a_f = new module$exports$ns$b.Foo;")});
 
   }
+
+  public void testIllegalDestructuringImports() {
+    testErrorEs6(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('p.A');",
+              "/** @constructor */ var A = function() {}",
+              "A.method = function() {}",
+              "exports = A"),
+          LINE_JOINER.join(
+              "goog.module('p.C');",
+              "var {method} = goog.require('p.A');",
+              "function main() {",
+              "  method();",
+              "}")
+        },
+        ILLEGAL_DESTRUCTURING_IMPORT);
+
+    // TODO(blickly): We should warn for this as well, but it's harder to detect.
+    testEs6(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.provide('p.A');",
+              "/** @constructor */ p.A = function() {}",
+              "p.A.method = function() {}"),
+          LINE_JOINER.join(
+              "goog.module('p.C');",
+              "var {method} = goog.require('p.A');",
+              "function main() {",
+              "  method();",
+              "}")
+        },
+        null);
+  }
+
 
   public void testDeclareLegacyNamespace() {
     test("goog.module('ns.a'); goog.module.declareLegacyNamespace();", "goog.provide('ns.a');");

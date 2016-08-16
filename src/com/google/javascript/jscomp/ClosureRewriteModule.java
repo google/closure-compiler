@@ -163,6 +163,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
               + "Either use short import syntax or"
               + " convert module to use goog.module.declareLegacyNamespace.");
 
+  static final DiagnosticType ILLEGAL_DESTRUCTURING_IMPORT =
+      DiagnosticType.error(
+          "JSC_ILLEGAL_DESTRUCTURING_IMPORT",
+          "Destructuring import cannot refer to a module with default export."
+              + " Please use standard (non-destructuring) import instead.");
+
   private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
 
   private static final String MODULE_EXPORTS_PREFIX = "module$exports$";
@@ -859,6 +865,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         recordNameToInline(aliasName, exportedNamespace);
       } else if (lhs.isDestructuringLhs() && lhs.getFirstChild().isObjectPattern()) {
         // `const {Foo}` case
+        maybeWarnForInvalidDestructuring(t, lhs, legacyNamespace);
         for (Node importSpec : lhs.getFirstChild().children()) {
           String importedProperty = importSpec.getString();
           String aliasName =
@@ -906,6 +913,17 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         maybeAddToSymbolTable(createNamespaceNode(arg));
       }
       compiler.reportCodeChange();
+    }
+  }
+
+  private void maybeWarnForInvalidDestructuring(
+      NodeTraversal t, Node importNode, String importedNamespace) {
+    // This restriction is in place to make it easier to migrate goog.modules to ES6 modules,
+    // by structuring the imports/exports in a consistent way.
+    ScriptDescription importedModule =
+        rewriteState.scriptDescriptionsByGoogModuleNamespace.get(importedNamespace);
+    if (importedModule != null && importedModule.defaultExportName != null) {
+      t.report(importNode, ILLEGAL_DESTRUCTURING_IMPORT);
     }
   }
 
