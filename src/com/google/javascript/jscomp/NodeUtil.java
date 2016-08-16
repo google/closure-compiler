@@ -3256,10 +3256,13 @@ public final class NodeUtil {
                      ? name.substring(startPos)
                      : name.substring(startPos, endPos));
       Node propNode = IR.string(part);
+      propNode.setLength(part.length());
       if (compiler.getCodingConvention().isConstantKey(part)) {
         propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
+      int length = node.getLength() + ".".length() + part.length();
       node = IR.getprop(node, propNode);
+      node.setLength(length);
     } while (endPos != -1);
 
     return node;
@@ -3350,6 +3353,7 @@ public final class NodeUtil {
 
   private static Node newName(AbstractCompiler compiler, String name) {
     Node nameNode = IR.name(name);
+    nameNode.setLength(name.length());
     if (compiler.getCodingConvention().isConstant(name)) {
       nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
