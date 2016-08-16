@@ -561,12 +561,6 @@ public class CompilerOptions {
   public boolean devirtualizePrototypeMethods;
 
   /**
-   * Use @nosideeffects annotations, function bodies and name graph
-   * to determine if calls have side effects.  Requires --check_types.
-   */
-  public boolean computeFunctionSideEffects;
-
-  /**
    * Where to save debug report for compute function side effects.
    */
   String debugFunctionSideEffectsPath;
@@ -723,6 +717,12 @@ public class CompilerOptions {
 
   /** Mark no side effect calls */
   public boolean markNoSideEffectCalls;
+
+  /**
+   * Use @nosideeffects annotations, function bodies and name graph
+   * to determine if calls have side effects.
+   */
+  boolean computeFunctionSideEffects;
 
   /** Replacements for @defines. Will be Boolean, Numbers, or Strings */
   private Map<String, Object> defineReplacements;

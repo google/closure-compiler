@@ -961,6 +961,9 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clClinitPrunerPass);
       passes.add(j2clConstantHoisterPass);
       passes.add(j2clEqualitySameRewriterPass);
+      if (options.computeFunctionSideEffects) {
+        passes.add(markPureFunctionsJ2CLLoop);
+      }
     }
 
     assertAllLoopablePasses(passes);
@@ -2078,17 +2081,33 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /**
-   * Look for function calls that are pure, and annotate them
-   * that way.
+   * Look for function calls that are pure, and annotate them that way.
    */
   private final PassFactory markPureFunctions =
       new PassFactory("markPureFunctions", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new PureFunctionIdentifier.Driver(
-          compiler, options.debugFunctionSideEffectsPath);
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new PureFunctionIdentifier.Driver(
+              compiler, options.debugFunctionSideEffectsPath);
+        }
+      };
+
+  /**
+   * Look for function calls that are pure, and annotate them that way.
+   */
+  private final PassFactory markPureFunctionsJ2CLLoop =
+      new PassFactory("markPureFunctions-J2CLLoop", true) {
+        @Override
+        boolean isOneTimePass() {
+          return false;
+        }
+
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new PureFunctionIdentifier.Driver(
+              compiler, options.debugFunctionSideEffectsPath);
+        }
+      };
 
   /**
    * Look for function calls that have no side effects, and annotate them

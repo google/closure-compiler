@@ -2512,8 +2512,6 @@ public class Node implements Serializable {
   public static final int FLAG_NO_THROWS = 8;
   public static final int FLAG_LOCAL_RESULTS = 16;
 
-  public static final int SIDE_EFFECTS_FLAGS_MASK = 31;
-
   public static final int SIDE_EFFECTS_ALL = 0;
   public static final int NO_SIDE_EFFECTS =
     FLAG_GLOBAL_STATE_UNMODIFIED
@@ -2528,7 +2526,7 @@ public class Node implements Serializable {
    */
   public void setSideEffectFlags(int flags) {
     Preconditions.checkArgument(
-        this.getToken() == Token.CALL || this.getToken() == Token.NEW,
+        this.isCall() || this.isNew(),
         "setIsNoSideEffectsCall only supports CALL and NEW nodes, got %s",
         this.getToken());
 
