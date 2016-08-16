@@ -163,11 +163,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
             }
           }
 
-          nameDefinitionMultimap.put(name, def);
-          definitionNodeByDefinitionSite.put(
-              node,
-              new DefinitionSite(
-                  node, def, traversal.getModule(), traversal.inGlobalScope(), true));
+          addDefinition(name, def, node, traversal);
         }
       }
 
@@ -196,11 +192,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
           if (!dropStub) {
             // Incomplete definition
             Definition definition = new ExternalNameOnlyDefinition(node);
-            nameDefinitionMultimap.put(name, definition);
-            definitionNodeByDefinitionSite.put(
-                node,
-                new DefinitionSite(
-                    node, definition, traversal.getModule(), traversal.inGlobalScope(), true));
+            addDefinition(name, definition, node, traversal);
           }
         }
       }
@@ -218,11 +210,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
             // Unhandled complex expression
             def = new UnknownDefinition(def.getLValue(), false);
           }
-          nameDefinitionMultimap.put(name, def);
-          definitionNodeByDefinitionSite.put(
-              node,
-              new DefinitionSite(
-                  node, def, traversal.getModule(), traversal.inGlobalScope(), false));
+          addDefinition(name, def, node, traversal);
         }
       }
     }
@@ -245,6 +233,14 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
       JSDocInfo info = node.getJSDocInfo();
       return (info != null && info.containsDeclaration());
     }
+  }
+
+  private void addDefinition(String name, Definition def, Node node, NodeTraversal traversal) {
+    nameDefinitionMultimap.put(name, def);
+    definitionNodeByDefinitionSite.put(
+        node,
+        new DefinitionSite(
+            node, def, traversal.getModule(), traversal.inGlobalScope(), def.isExtern()));
   }
 
   /**
