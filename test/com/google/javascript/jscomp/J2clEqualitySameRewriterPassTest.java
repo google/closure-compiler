@@ -35,9 +35,11 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions(CompilerOptions options) {
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
     options.useTypesForOptimization = useTypesForOptimization;
-    return super.getOptions(options);
+    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
+    return options;
   }
 
   public void testRewriteEqualitySame() {

@@ -26,6 +26,13 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
     return new InlineAliases(compiler);
   }
 
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
+    return options;
+  }
+
   public void testSimpleAliasInJSDoc() {
     test("function Foo(){}; var /** @const */ alias = Foo; /** @type {alias} */ var x;",
          "function Foo(){}; var /** @const */ alias = Foo; /** @type {Foo} */ var x;");

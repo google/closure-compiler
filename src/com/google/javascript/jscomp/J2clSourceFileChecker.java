@@ -49,10 +49,11 @@ final class J2clSourceFileChecker implements CompilerPass {
   }
 
   /**
-   * Indicates whether it should skip future execution with information from the compiler. For
-   * example, if the compiler's HAS_J2CL annotation is false, it should.
+   * Indicates whether it should run future J2CL passes with information from the compiler.
+   * For example, if the compiler's HAS_J2CL annotation is false, it should.
    */
-  static boolean shouldSkipExecution(AbstractCompiler compiler) {
-    return Boolean.FALSE.equals(compiler.getAnnotation(HAS_J2CL_ANNOTATION_KEY));
+  static boolean shouldRunJ2clPasses(AbstractCompiler compiler) {
+    return compiler.getOptions().j2clPassMode.isExplicitlyOn()
+        || Boolean.TRUE.equals(compiler.getAnnotation(HAS_J2CL_ANNOTATION_KEY));
   }
 }

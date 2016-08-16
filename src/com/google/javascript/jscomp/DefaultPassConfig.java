@@ -397,6 +397,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(newTypeInference);
     }
 
+    if (options.j2clPassMode.equals(CompilerOptions.J2clPassMode.AUTO)) {
+      checks.add(j2clSourceFileChecker);
+    }
+
     if (!options.allowsHotswapReplaceScript()) {
       checks.add(inlineTypeAliases);
     }
@@ -485,10 +489,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.instrumentationTemplate != null ||
         options.recordFunctionInformation) {
       checks.add(computeFunctionNames);
-    }
-
-    if (options.j2clPassMode.equals(CompilerOptions.J2clPassMode.AUTO)) {
-      checks.add(j2clSourceFileChecker);
     }
 
     checks.add(createEmptyPass("afterStandardChecks"));

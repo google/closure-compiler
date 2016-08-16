@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 import java.util.List;
 
 public class J2clPropertyInlinerPassTest extends CompilerTestCase {
@@ -31,6 +30,13 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new J2clPropertyInlinerPass(compiler);
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
+    return options;
   }
 
   @Override

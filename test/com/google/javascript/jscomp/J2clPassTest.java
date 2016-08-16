@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 import java.util.List;
 
 /**
@@ -36,6 +35,13 @@ public class J2clPassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new J2clPass(compiler);
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
+    return options;
   }
 
   public void testUtilGetDefine() {

@@ -40,7 +40,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    if (J2clSourceFileChecker.shouldSkipExecution(compiler)) {
+    if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
       return;
     }
 

@@ -17,7 +17,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 
 /** Tests for {@link J2clSourceFileChecker}. */
 public class J2clSourceFileCheckerTest extends CompilerTestCase {
@@ -48,30 +49,34 @@ public class J2clSourceFileCheckerTest extends CompilerTestCase {
   }
 
   public void testHasJ2cl() {
-    testSame(Lists.newArrayList(NO_J2CL_SOURCE_FILE, J2CL_SOURCE_FILE, NO_J2CL_SOURCE_FILE2));
+    testSame(ImmutableList.of(NO_J2CL_SOURCE_FILE, J2CL_SOURCE_FILE, NO_J2CL_SOURCE_FILE2));
     assertThat(compiler.getAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY))
         .isEqualTo(Boolean.TRUE);
   }
 
   public void testHasNoJ2cl() {
-    testSame(Lists.newArrayList(NO_J2CL_SOURCE_FILE, NO_J2CL_SOURCE_FILE2));
+    testSame(ImmutableList.of(NO_J2CL_SOURCE_FILE, NO_J2CL_SOURCE_FILE2));
     assertThat(compiler.getAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY))
         .isEqualTo(Boolean.FALSE);
   }
 
-  public void testShouldSkipExecutionWithoutJ2cl() {
-    Compiler compiler = new Compiler();
-    assertThat(J2clSourceFileChecker.shouldSkipExecution(compiler)).isFalse();
+  public void testShouldRunJ2clPassesWithoutJ2clSources() {
+    testSame("");
+    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isFalse();
 
-    compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, false);
-    assertThat(J2clSourceFileChecker.shouldSkipExecution(compiler)).isTrue();
+    compiler.getOptions().setJ2clPass(J2clPassMode.ON);
+    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isTrue();
+    compiler.getOptions().setJ2clPass(J2clPassMode.TRUE);
+    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isTrue();
+    compiler.getOptions().setJ2clPass(J2clPassMode.AUTO);
+    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isFalse();
   }
 
-  public void testShouldSkipExecutionWithJ2cl() {
-    Compiler compiler = new Compiler();
-    assertThat(J2clSourceFileChecker.shouldSkipExecution(compiler)).isFalse();
+  public void testShouldRunJ2clPassesWithJ2clSources() {
+    testSame(ImmutableList.of(J2CL_SOURCE_FILE));
+    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isTrue();
 
-    compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, true);
-    assertThat(J2clSourceFileChecker.shouldSkipExecution(compiler)).isFalse();
+    compiler.getOptions().setJ2clPass(J2clPassMode.AUTO);
+    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isTrue();
   }
 }

@@ -1606,12 +1606,12 @@ public class CompilerOptions {
 
   @Deprecated
   public void setJ2clPass(boolean flag) {
-    setJ2clPass(flag ? J2clPassMode.TRUE : J2clPassMode.FALSE);
+    setJ2clPass(flag ? J2clPassMode.ON : J2clPassMode.OFF);
   }
 
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
-    if (j2clPassMode.equals(J2clPassMode.ON) || j2clPassMode.equals(J2clPassMode.TRUE)) {
+    if (j2clPassMode.isExplicitlyOn()) {
       setWarningLevel(DiagnosticGroup.forType(SourceFile.DUPLICATE_ZIP_CONTENTS), CheckLevel.OFF);
     }
   }
@@ -3100,6 +3100,10 @@ public class CompilerOptions {
 
     boolean shouldAddJ2clPasses() {
       return this == TRUE || this == ON || this == AUTO;
+    }
+
+    boolean isExplicitlyOn() {
+      return this == TRUE || this == ON;
     }
   }
 }

@@ -52,7 +52,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    if (J2clSourceFileChecker.shouldSkipExecution(compiler)) {
+    if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
       return;
     }
 

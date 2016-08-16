@@ -22,6 +22,13 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
     return new J2clConstantHoisterPass(compiler);
   }
 
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
+    return options;
+  }
+
   public void testHoistClinitConstantAssignments() {
     test(
         LINE_JOINER.join(

@@ -24,6 +24,13 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
     return new J2clClinitPrunerPass(compiler);
   }
 
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
+    return options;
+  }
+
   public void testRemoveDuplicates() {
     test(
         LINE_JOINER.join(
