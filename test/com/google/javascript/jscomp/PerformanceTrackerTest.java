@@ -36,11 +36,12 @@ import java.util.regex.Pattern;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class PerformanceTrackerTest extends TestCase {
-  private Node emptyScript = new Node(Token.SCRIPT);
+  private Node emptyExternRoot = new Node(Token.BLOCK);
+  private Node emptyJsRoot = new Node(Token.BLOCK);
 
   public void testStatsCalculation() {
     PerformanceTracker tracker =
-        new PerformanceTracker(emptyScript, TracerMode.ALL, null);
+        new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, null);
     CodeChangeHandler handler = tracker.getCodeChangeHandler();
 
     // It's sufficient for this test to assume that a single run of any pass
@@ -106,7 +107,7 @@ public final class PerformanceTrackerTest extends TestCase {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     PrintStream outstream = new PrintStream(output);
     PerformanceTracker tracker =
-        new PerformanceTracker(emptyScript, TracerMode.ALL, outstream);
+        new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, outstream);
     tracker.outputTracerReport();
     outstream.close();
     Pattern p = Pattern.compile(
@@ -122,6 +123,11 @@ public final class PerformanceTrackerTest extends TestCase {
         + "\nEstimated GzReduction\\(bytes\\): [0-9]+"
         + "\nEstimated Size\\(bytes\\): -?[0-9]+"
         + "\nEstimated GzSize\\(bytes\\): -?[0-9]+"
+        + "\n\nInputs:"
+        + "\nJS lines:   [0-9]+"
+        + "\nJS sources: [0-9]+"
+        + "\nExtern lines:   [0-9]+"
+        + "\nExtern sources: [0-9]+"
         + "\n\nLog:\n"
         + "pass,runtime,allocMem,codeChanged,reduction,gzReduction,size,gzSize.*",
         Pattern.DOTALL);

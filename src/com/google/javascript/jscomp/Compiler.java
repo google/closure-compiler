@@ -1403,7 +1403,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
     jsRoot.detachChildren();
 
     if (options.tracer.isOn()) {
-      tracker = new PerformanceTracker(jsRoot, options.tracer, this.outStream);
+      tracker = new PerformanceTracker(externsRoot, jsRoot, options.tracer, this.outStream);
       addChangeHandler(tracker.getCodeChangeHandler());
     }
 

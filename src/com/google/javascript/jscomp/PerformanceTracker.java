@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -58,6 +59,7 @@ public final class PerformanceTracker {
   private final OutputStreamWriter output;
 
   private final Node jsRoot;
+  private final Node externsRoot;
   private final boolean trackSize;
   private final boolean trackGzSize;
 
@@ -74,6 +76,11 @@ public final class PerformanceTracker {
   private int changes = 0;
   private int loopRuns = 0;
   private int loopChanges = 0;
+
+  private int jsLines = 0;
+  private int jsSources = 0;
+  private int externLines = 0;
+  private int externSources = 0;
 
   // The following fields for tracking size changes are just estimates.
   // They do not take into account preserved license blocks, newline padding,
@@ -95,7 +102,8 @@ public final class PerformanceTracker {
   /** Stats for each run of a compiler pass. */
   private final List<Stats> log = new ArrayList<>();
 
-  PerformanceTracker(Node jsRoot, TracerMode mode, PrintStream printStream) {
+  PerformanceTracker(Node externsRoot, Node jsRoot, TracerMode mode, PrintStream printStream) {
+    this.externsRoot = externsRoot;
     this.jsRoot = jsRoot;
     this.printStream = printStream == null ? System.out : printStream;
     this.output = new OutputStreamWriter(this.printStream, UTF_8);
@@ -158,14 +166,17 @@ public final class PerformanceTracker {
     }
 
     // After parsing, initialize codeSize and gzCodeSize
-    if (passName.equals(Compiler.PARSING_PASS_NAME) && trackSize) {
-      CodeSizeEstimatePrinter estimatePrinter = new CodeSizeEstimatePrinter();
-      CodeGenerator.forCostEstimation(estimatePrinter).add(jsRoot);
-      initCodeSize = codeSize = estimatePrinter.calcSize();
-      logStats.size = summaryStats.size = initCodeSize;
-      if (this.trackGzSize) {
-        initGzCodeSize = gzCodeSize = estimatePrinter.calcZippedSize();
-        logStats.gzSize = summaryStats.gzSize = initGzCodeSize;
+    if (passName.equals(Compiler.PARSING_PASS_NAME)) {
+      recordInputCount();
+      if (trackSize) {
+        CodeSizeEstimatePrinter estimatePrinter = new CodeSizeEstimatePrinter();
+        CodeGenerator.forCostEstimation(estimatePrinter).add(jsRoot);
+        initCodeSize = codeSize = estimatePrinter.calcSize();
+        logStats.size = summaryStats.size = initCodeSize;
+        if (this.trackGzSize) {
+          initGzCodeSize = gzCodeSize = estimatePrinter.calcZippedSize();
+          logStats.gzSize = summaryStats.gzSize = initGzCodeSize;
+        }
       }
     }
 
@@ -199,6 +210,27 @@ public final class PerformanceTracker {
         gzCodeSize = summaryStats.gzSize = logStats.gzSize = newSize;
       }
     }
+  }
+
+  private void recordInputCount() {
+    for (Node n : externsRoot.children()) {
+      this.externSources += 1;
+      this.externLines += estimateLines(n);
+    }
+
+    for (Node n : jsRoot.children()) {
+      this.jsSources += 1;
+      this.jsLines += estimateLines(n);
+    }
+  }
+
+  private int estimateLines(Node n) {
+    Preconditions.checkState(n.isScript());
+    StaticSourceFile ssf = n.getStaticSourceFile();
+    if (ssf != null && ssf instanceof SourceFile) {
+      return ((SourceFile) ssf).getNumLines();
+    }
+    return 0;
   }
 
   private int bytesToMB(long bytes) {
@@ -321,7 +353,13 @@ public final class PerformanceTracker {
           + "\n#Changing runs: " + changes + "\n#Loopable runs: " + loopRuns
           + "\n#Changing loopable runs: " + loopChanges + "\nEstimated Reduction(bytes): " + diff
           + "\nEstimated GzReduction(bytes): " + gzDiff + "\nEstimated Size(bytes): " + codeSize
-          + "\nEstimated GzSize(bytes): " + gzCodeSize + "\n\n");
+          + "\nEstimated GzSize(bytes): " + gzCodeSize + "\n");
+
+      this.output.write("\nInputs:"
+          + "\nJS lines:   " + jsLines
+          + "\nJS sources: " + jsSources
+          + "\nExtern lines:   " + externLines
+          + "\nExtern sources: " + externSources + "\n\n");
 
       this.output.write("Log:\n"
           + "pass,runtime,allocMem,codeChanged,reduction,gzReduction,size,gzSize\n");
