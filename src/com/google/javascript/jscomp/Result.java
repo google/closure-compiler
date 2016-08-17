@@ -16,9 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Compilation results
@@ -37,7 +35,6 @@ public class Result {
   public final Map<String, Integer> cssNames;
   public final String externExport;
   public final String idGeneratorMap;
-  public final Set<SourceFile> transpiledFiles;
 
   Result(JSError[] errors, JSError[] warnings, String debugLog,
          VariableMap variableMap, VariableMap propertyMap,
@@ -45,10 +42,9 @@ public class Result {
          VariableMap stringMap,
          FunctionInformationMap functionInformationMap,
          SourceMap sourceMap, String externExport,
-         Map<String, Integer> cssNames, String idGeneratorMap,
-         Set<SourceFile> transpiledFiles) {
+         Map<String, Integer> cssNames, String idGeneratorMap) {
     this.success = errors.length == 0;
-    this.errors  = errors;
+    this.errors = errors;
     this.warnings = warnings;
     this.debugLog = debugLog;
     this.variableMap = variableMap;
@@ -60,10 +56,9 @@ public class Result {
     this.externExport = externExport;
     this.cssNames = cssNames;
     this.idGeneratorMap = idGeneratorMap;
-    this.transpiledFiles = transpiledFiles;
   }
 
-  @VisibleForTesting
+  // Visible for testing only.
   public Result(JSError[] errors, JSError[] warnings, String debugLog,
                 VariableMap variableMap, VariableMap propertyMap,
                 VariableMap namedAnonFunctionMap,
@@ -71,6 +66,6 @@ public class Result {
                 SourceMap sourceMap, String externExport) {
     this(errors, warnings, debugLog, variableMap, propertyMap,
          namedAnonFunctionMap, null, functionInformationMap, sourceMap,
-         externExport, null, null, null);
+         externExport, null, null);
   }
 }

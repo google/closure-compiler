@@ -31,7 +31,6 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   @Override
   protected void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    setLanguageOut(LanguageMode.ECMASCRIPT3);
     disableTypeCheck();
     runTypeCheckAfterProcessing = true;
   }

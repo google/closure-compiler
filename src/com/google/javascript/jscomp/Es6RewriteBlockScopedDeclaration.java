@@ -28,6 +28,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -110,20 +111,16 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void process(Node externs, Node root) {
-    // Since block-scoped function declarations can appear in any language mode, we need to run
-    // this pass unconditionally.
-    NodeTraversal.traverseEs6(compiler, root, new CollectUndeclaredNames());
-    NodeTraversal.traverseEs6(compiler, root, this);
-    // Needed for let / const declarations in .d.ts externs.
-    TranspilationPasses.processTranspile(compiler, externs, this);
-    NodeTraversal.traverseEs6(compiler, root, new Es6RenameReferences(renameMap));
+    NodeTraversal.traverseRootsEs6(compiler, new CollectUndeclaredNames(), externs, root);
+    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+    NodeTraversal.traverseRootsEs6(compiler, new Es6RenameReferences(renameMap), externs, root);
+
     LoopClosureTransformer transformer = new LoopClosureTransformer();
-    NodeTraversal.traverseEs6(compiler, root, transformer);
+    NodeTraversal.traverseRootsEs6(compiler, transformer, externs, root);
     transformer.transformLoopClosure();
     varify();
-    TranspilationPasses.processTranspile(
-        compiler, externs, new RewriteBlockScopedFunctionDeclaration());
-    NodeTraversal.traverseEs6(compiler, root, new RewriteBlockScopedFunctionDeclaration());
+    NodeTraversal.traverseRootsEs6(
+        compiler, new RewriteBlockScopedFunctionDeclaration(), externs, root);
   }
 
   @Override
@@ -131,6 +128,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverseEs6(compiler, scriptRoot, new CollectUndeclaredNames());
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
     NodeTraversal.traverseEs6(compiler, scriptRoot, new Es6RenameReferences(renameMap));
+
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverseEs6(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();

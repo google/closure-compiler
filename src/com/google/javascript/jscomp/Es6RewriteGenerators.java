@@ -26,6 +26,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -97,12 +98,14 @@ public final class Es6RewriteGenerators
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, root, new DecomposeYields(compiler), this);
+    NodeTraversal.traverseEs6(compiler, root, new DecomposeYields(compiler));
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, new DecomposeYields(compiler), this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, new DecomposeYields(compiler));
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   @Override

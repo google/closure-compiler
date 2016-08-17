@@ -195,7 +195,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(checkMissingSuper);
-    passes.add(checkVariableReferencesForTranspileOnly);
+    passes.add(checkVariableReferences);
 
     // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
     // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
@@ -1546,15 +1546,6 @@ public final class DefaultPassConfig extends PassConfig {
               pass.isGlobalRegExpPropertiesUsed());
         }
       };
-    }
-  };
-
-  /** Checks that references to variables look reasonable. */
-  private final HotSwapPassFactory checkVariableReferencesForTranspileOnly =
-      new HotSwapPassFactory("checkVariableReferences", true) {
-    @Override
-    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return new VariableReferenceCheck(compiler, true);
     }
   };
 
