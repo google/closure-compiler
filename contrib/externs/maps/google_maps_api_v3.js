@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for the Google Maps v3 API.
+ * @fileoverview Externs for the Google Maps v3.25 API.
  * @see http://code.google.com/apis/maps/documentation/javascript/reference.html
  * @externs
  */
@@ -526,6 +526,12 @@ google.maps.Data.GeoJsonOptions.prototype.idPropertyName;
 google.maps.Data.Geometry = function() {};
 
 /**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ */
+google.maps.Data.Geometry.prototype.forEachLatLng = function(callback) {};
+
+/**
  * @nosideeffects
  * @return {string}
  */
@@ -537,6 +543,13 @@ google.maps.Data.Geometry.prototype.getType = function() {};
  * @constructor
  */
 google.maps.Data.GeometryCollection = function(elements) {};
+
+/**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ * @override
+ */
+google.maps.Data.GeometryCollection.prototype.forEachLatLng = function(callback) {};
 
 /**
  * @nosideeffects
@@ -571,6 +584,13 @@ google.maps.Data.GeometryCollection.prototype.getType = function() {};
 google.maps.Data.LineString = function(elements) {};
 
 /**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ * @override
+ */
+google.maps.Data.LineString.prototype.forEachLatLng = function(callback) {};
+
+/**
  * @nosideeffects
  * @return {Array<google.maps.LatLng>}
  */
@@ -601,6 +621,13 @@ google.maps.Data.LineString.prototype.getType = function() {};
  * @constructor
  */
 google.maps.Data.LinearRing = function(elements) {};
+
+/**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ * @override
+ */
+google.maps.Data.LinearRing.prototype.forEachLatLng = function(callback) {};
 
 /**
  * @nosideeffects
@@ -646,6 +673,13 @@ google.maps.Data.MouseEvent.prototype.feature;
 google.maps.Data.MultiLineString = function(elements) {};
 
 /**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ * @override
+ */
+google.maps.Data.MultiLineString.prototype.forEachLatLng = function(callback) {};
+
+/**
  * @nosideeffects
  * @return {Array<google.maps.Data.LineString>}
  */
@@ -676,6 +710,13 @@ google.maps.Data.MultiLineString.prototype.getType = function() {};
  * @constructor
  */
 google.maps.Data.MultiPoint = function(elements) {};
+
+/**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ * @override
+ */
+google.maps.Data.MultiPoint.prototype.forEachLatLng = function(callback) {};
 
 /**
  * @nosideeffects
@@ -710,6 +751,13 @@ google.maps.Data.MultiPoint.prototype.getType = function() {};
 google.maps.Data.MultiPolygon = function(elements) {};
 
 /**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ * @override
+ */
+google.maps.Data.MultiPolygon.prototype.forEachLatLng = function(callback) {};
+
+/**
  * @nosideeffects
  * @return {Array<google.maps.Data.Polygon>}
  */
@@ -742,6 +790,13 @@ google.maps.Data.MultiPolygon.prototype.getType = function() {};
 google.maps.Data.Point = function(latLng) {};
 
 /**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ * @override
+ */
+google.maps.Data.Point.prototype.forEachLatLng = function(callback) {};
+
+/**
  * @nosideeffects
  * @return {google.maps.LatLng}
  */
@@ -760,6 +815,13 @@ google.maps.Data.Point.prototype.getType = function() {};
  * @constructor
  */
 google.maps.Data.Polygon = function(elements) {};
+
+/**
+ * @param {function(google.maps.LatLng)} callback
+ * @return {undefined}
+ * @override
+ */
+google.maps.Data.Polygon.prototype.forEachLatLng = function(callback) {};
 
 /**
  * @nosideeffects
@@ -5280,6 +5342,11 @@ google.maps.TrafficLayer.prototype.setOptions = function(options) {};
  * @interface
  */
 google.maps.TrafficLayerOptions = function() {};
+
+/**
+ * @type {boolean}
+ */
+google.maps.TrafficLayerOptions.prototype.autoRefresh;
 
 /**
  * @type {google.maps.Map}
