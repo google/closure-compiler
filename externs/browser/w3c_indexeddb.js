@@ -235,26 +235,15 @@ webkitIDBDatabaseException.prototype.message;
  */
 function IDBRequest() {}
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- * @return {undefined}
- */
+/** @override */
 IDBRequest.prototype.addEventListener =
-    function(type, listener, opt_useCapture) {};
+    function(type, listener, opt_options) {};
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- * @return {undefined}
- */
+/** @override */
 IDBRequest.prototype.removeEventListener =
-    function(type, listener, opt_useCapture) {};
+    function(type, listener, opt_options) {};
 
-/**
- * @override
- * @return {boolean}
- */
+/** @override */
 IDBRequest.prototype.dispatchEvent = function(evt) {};
 
 /**
@@ -420,26 +409,15 @@ IDBDatabase.prototype.onerror = function() {};
  */
 IDBDatabase.prototype.onversionchange = function() {};
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- * @return {undefined}
- */
+/** @override */
 IDBDatabase.prototype.addEventListener =
-    function(type, listener, opt_useCapture) {};
+    function(type, listener, opt_options) {};
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- * @return {undefined}
- */
+/** @override */
 IDBDatabase.prototype.removeEventListener =
-    function(type, listener, opt_useCapture) {};
+    function(type, listener, opt_options) {};
 
-/**
- * @override
- * @return {boolean}
- */
+/** @override */
 IDBDatabase.prototype.dispatchEvent = function(evt) {};
 
 /**
