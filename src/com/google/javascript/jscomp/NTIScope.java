@@ -608,8 +608,6 @@ final class NTIScope implements DeclaredTypeRegistry {
     if (qname.isIdentifier()) {
       return getDeclaration(qname.getLeftmostName(), includeTypes);
     }
-    Preconditions.checkState(!this.isFinalized,
-        "Namespaces are removed from scopes after finalization");
     Namespace ns = getNamespace(qname.getLeftmostName());
     if (ns == null) {
       return maybeGetForwardDeclaration(qname.toString());

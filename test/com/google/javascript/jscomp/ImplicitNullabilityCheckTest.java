@@ -95,6 +95,14 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
         "}"));
   }
 
+  public void testNamespacedTypeDoesntCrash() {
+    warnImplicitlyNullable(LINE_JOINER.join(
+        "/** @const */ var a = {};",
+        "/** @const */ a.b = {};",
+        "/** @constructor */ a.b.Foo = function() {};",
+        "/** @type Array<!a.b.Foo> */ var foos = [];"));
+  }
+
   private void warnImplicitlyNullable(String js) {
     testSame(DEFAULT_EXTERNS, js, ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
   }
