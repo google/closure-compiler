@@ -344,8 +344,8 @@ public class RefasterJsScannerTest {
   @Test
   public void test_returnStatement() throws Exception {
     String externs = "/** @return {string} */ function getFoo() {return 'foo';}";
-    String originalCode = "function() { return getFoo(); }";
-    String expectedCode = "function() { return getBar(); }";
+    String originalCode = "function f() { return getFoo(); }";
+    String expectedCode = "function f() { return getBar(); }";
     String template = ""
         + "function before_template() {\n"
         + "  getFoo();\n"
@@ -355,8 +355,8 @@ public class RefasterJsScannerTest {
         + "}\n";
     assertChanges(externs, originalCode, expectedCode, template);
 
-    originalCode = "function() { return getFoo() == 'foo'; }";
-    expectedCode = "function() { return getBar() == 'foo'; }";
+    originalCode = "function f() { return getFoo() == 'foo'; }";
+    expectedCode = "function f() { return getBar() == 'foo'; }";
     assertChanges(externs, originalCode, expectedCode, template);
   }
 
@@ -734,7 +734,7 @@ public class RefasterJsScannerTest {
   private void compileTestCode(Compiler compiler, String testCode, String externs) {
     CompilerOptions options = RefactoringDriver.getCompilerOptions();
     compiler.compile(
-        ImmutableList.of(SourceFile.fromCode("externs", externs)),
+        ImmutableList.of(SourceFile.fromCode("externs", "function Symbol() {};" + externs)),
         ImmutableList.of(SourceFile.fromCode("test", testCode)),
         options);
   }
@@ -746,7 +746,7 @@ public class RefasterJsScannerTest {
     scanner.loadRefasterJsTemplateFromCode(refasterJsTemplate);
 
     RefactoringDriver driver = new RefactoringDriver.Builder(scanner)
-        .addExternsFromCode(externs)
+        .addExternsFromCode("function Symbol() {};" + externs)
         .addInputsFromCode(originalCode)
         .build();
     List<SuggestedFix> fixes = driver.drive();

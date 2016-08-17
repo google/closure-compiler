@@ -86,6 +86,7 @@ public final class RefactoringDriver {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setSummaryDetailLevel(0);
 
     DependencyOptions deps = new DependencyOptions();
     deps.setDependencySorting(true);
