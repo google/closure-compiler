@@ -1539,6 +1539,15 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "/** @param {Foo} a */ function f(a) {a.foo()};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanUnresolvedType Message");
+
+    this.mode = TypeInferenceMode.BOTH;
+    testSame(LINE_JOINER.join(
+        "/** @suppress {newCheckTypes}",
+        " *  @param {!Object<string, ?>} data",
+        " */",
+        "function foo(data) {",
+        "  data['bar'].baz();",
+        "}"));
   }
 
   public void testMergeRequirements() {

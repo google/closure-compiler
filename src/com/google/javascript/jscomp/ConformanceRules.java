@@ -266,6 +266,11 @@ public final class ConformanceRules {
       return (type == null || type.isUnknownType());
     }
 
+    protected boolean isSomeUnknownType(Node n) {
+      TypeI type = n.getTypeI();
+      return (type == null || type.isSomeUnknownType());
+    }
+
     protected boolean isTypeVariable(Node n) {
       TypeI type = n.getTypeI().restrictByNotNullOrUndefined();
       return type.isTypeVariable();
@@ -1232,7 +1237,7 @@ public final class ConformanceRules {
       }
 
       if (n.isGetProp()
-          && n.getTypeI().isSomeUnknownType()
+          && isSomeUnknownType(n)
           && isUsed(n) // skip most assignments, etc
           && !isTypeImmediatelyTightened(n)
           && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown

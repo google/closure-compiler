@@ -1556,7 +1556,11 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isUnresolved() {
-    return isUnknown();
+    // TODO(aravindpg): This is purely a stub to ensure we never get into a codepath that
+    // depends on us being an unresolved type. We currently do not mark unresolved types as such
+    // in NTI since the main use-case (warning for unfulfilled forward declares) can be
+    // handled differently (by warning after GTI), so we don't want to change the type system.
+    return false;
   }
 
   @Override
