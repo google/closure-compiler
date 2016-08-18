@@ -290,10 +290,11 @@ Response.prototype.clone = function() {};
 
 /**
  * @typedef {{
- *   status : number,
- *   statusText: string,
- *   headers: !HeadersInit
+ *   status : (undefined|number),
+ *   statusText: (undefined|string),
+ *   headers: (undefined|!HeadersInit)
  * }}
+ * @see https://fetch.spec.whatwg.org/#responseinit
  */
 var ResponseInit;
 
