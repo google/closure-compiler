@@ -17838,4 +17838,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
   }
+
+  public void testDontTypeGlobalThisAsUknown() {
+    typeCheck(
+        "var /** null */ x = this;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck("var /** !Window */ x = this;");
+
+    typeCheck(
+        "var y = this.toString();",
+        NewTypeInference.GLOBAL_THIS);
+  }
 }

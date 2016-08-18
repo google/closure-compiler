@@ -418,6 +418,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
       checkAndFinalizeNominalType(rawType);
     }
+    JSType globalThisType;
     if (win != null) {
       // Copy properties from window to Window.prototype, because in rare cases
       // people pass window around rather than using it directly.
@@ -426,7 +427,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         winNs.copyWindowProperties(this.commonTypes, win);
       }
       checkAndFinalizeNominalType(win);
+      // Type the global THIS as window
+      globalThisType = win.getInstanceAsJSType();
+    } else {
+      // Type the global THIS as a loose object
+      globalThisType = JSType.TOP_OBJECT.withLoose();
     }
+    this.globalScope.setDeclaredType(
+        (new FunctionTypeBuilder(this.commonTypes)).
+        addReceiverType(globalThisType).buildDeclaration());
 
     nominaltypesByNode = null;
     propertyDefs = null;

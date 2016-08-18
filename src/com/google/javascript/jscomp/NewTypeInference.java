@@ -550,15 +550,15 @@ final class NewTypeInference implements CompilerPass {
     // For function scopes, add the formal parameters and the free variables
     // from outer scopes to the environment.
     Set<String> nonLocals = new LinkedHashSet<>();
+    if (currentScope.hasThis()) {
+      nonLocals.add(THIS_ID);
+    }
     if (currentScope.isFunction()) {
       if (currentScope.getName() != null) {
         nonLocals.add(currentScope.getName());
       }
       nonLocals.addAll(currentScope.getOuterVars());
       nonLocals.addAll(currentScope.getFormals());
-      if (currentScope.hasThis()) {
-        nonLocals.add(THIS_ID);
-      }
       entryEnv = envPutType(entryEnv, RETVAL_ID, UNDEFINED);
     } else {
       nonLocals.addAll(currentScope.getExterns());
@@ -597,14 +597,14 @@ final class NewTypeInference implements CompilerPass {
     Set<String> locals = currentScope.getLocals();
     varNames.addAll(locals);
     varNames.addAll(currentScope.getExterns());
+    if (currentScope.hasThis()) {
+      varNames.add(THIS_ID);
+    }
     if (currentScope.isFunction()) {
       if (currentScope.getName() != null) {
         varNames.add(currentScope.getName());
       }
       varNames.addAll(currentScope.getFormals());
-      if (currentScope.hasThis()) {
-        varNames.add(THIS_ID);
-      }
       // In the rare case when there is a local variable named "arguments",
       // this entry will be overwritten in the foreach loop below.
       JSType argumentsType;
@@ -2300,8 +2300,8 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeThisFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    mayWarnAboutGlobalThis(expr, currentScope);
     if (!currentScope.hasThis()) {
-      mayWarnAboutGlobalThis(expr, currentScope);
       return new EnvTypePair(inEnv, UNKNOWN);
     }
     // A trimmed-down version of analyzeNameFwd.
@@ -2935,19 +2935,18 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
-  private boolean mayWarnAboutGlobalThis(Node thisExpr, NTIScope currentScope) {
+  private void mayWarnAboutGlobalThis(Node thisExpr, NTIScope currentScope) {
     Preconditions.checkArgument(thisExpr.isThis());
-    Preconditions.checkState(!currentScope.hasThis());
-    Node parent = thisExpr.getParent();
-    if ((parent.isGetProp() || parent.isGetElem())
-        // Don't warn for callbacks. Most of them are not annotated but THIS is
-        // bound to a legitimate object at runtime. They do lose typechecking
-        // for THIS however, but we won't warn.
-        && !NodeUtil.isCallOrNewArgument(currentScope.getRoot())) {
-      warnings.add(JSError.make(thisExpr, GLOBAL_THIS));
-      return true;
+    if (currentScope.isTopLevel() || !currentScope.hasThis()) {
+      Node parent = thisExpr.getParent();
+      if ((parent.isGetProp() || parent.isGetElem())
+          // Don't warn for callbacks. Most of them are not annotated but THIS is
+          // bound to a legitimate object at runtime. They do lose typechecking
+          // for THIS however, but we won't warn.
+          && !NodeUtil.isCallOrNewArgument(currentScope.getRoot())) {
+        warnings.add(JSError.make(thisExpr, GLOBAL_THIS));
+      }
     }
-    return false;
   }
 
   private boolean mayWarnAboutBadIObjectIndex(Node n, JSType iobjectType,
@@ -3902,12 +3901,12 @@ final class NewTypeInference implements CompilerPass {
     LValueResultFwd lvalResult = null;
     switch (expr.getToken()) {
       case THIS: {
+        mayWarnAboutGlobalThis(expr, currentScope);
         if (currentScope.hasThis()) {
           lvalResult = new LValueResultFwd(inEnv, envGetType(inEnv, THIS_ID),
               currentScope.getDeclaredTypeOf(THIS_ID),
               new QualifiedName(THIS_ID));
         } else {
-          mayWarnAboutGlobalThis(expr, currentScope);
           lvalResult = new LValueResultFwd(inEnv, UNKNOWN, null, null);
         }
         break;

@@ -78,8 +78,8 @@ final class NTIScope implements DeclaredTypeRegistry {
   // The set localEnums is used for enum resolution, and then discarded.
   private Set<EnumType> localEnums = new LinkedHashSet<>();
 
-  // declaredType is null for top level, but never null for functions,
-  // even those without jsdoc.
+  // For top level, the DeclaredFunctionType just includes a type for THIS.
+  // For functions, the DeclaredFunctionType is never null, even those without jsdoc.
   // Any inferred parameters or return will be set to null individually.
   private DeclaredFunctionType declaredType;
 
@@ -321,11 +321,8 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   boolean hasThis() {
-    if (!isFunction()) {
-      return false;
-    }
-    DeclaredFunctionType dft = getDeclaredFunctionType();
-    // dft is null for function scopes early during GlobalTypeInfo
+    DeclaredFunctionType dft = this.declaredType;
+    // dft is null early during GlobalTypeInfo
     return dft != null && dft.getThisType() != null;
   }
 
@@ -657,8 +654,8 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   void finalizeScope() {
-    Preconditions.checkState(isTopLevel() || this.declaredType != null,
-        "No declared type for function-scope: %s", this.root);
+    Preconditions.checkNotNull(
+        this.declaredType, "No declared type for scope: %s", this.root);
     unknownTypeNames = ImmutableSet.of();
     // For now, we put types of namespaces directly into the locals.
     // Alternatively, we could move this into NewTypeInference.initEdgeEnvs
