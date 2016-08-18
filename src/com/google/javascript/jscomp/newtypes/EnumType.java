@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 
 /**
@@ -68,6 +67,10 @@ public final class EnumType extends Namespace implements TypeWithProperties {
 
   public boolean isResolved() {
     return this.state == State.RESOLVED;
+  }
+
+  JSTypes getCommonTypes() {
+    return this.commonTypes;
   }
 
   public JSType getEnumeratedType() {
@@ -124,7 +127,7 @@ public final class EnumType extends Namespace implements TypeWithProperties {
           Property.makeConstant(null, enumPropType, enumPropType));
     }
     return JSType.fromObjectType(ObjectType.makeObjectType(
-        null, propMap, null, this, false, ObjectKind.UNRESTRICTED));
+        this.commonTypes, null, propMap, null, this, false, ObjectKind.UNRESTRICTED));
   }
 
   @Override

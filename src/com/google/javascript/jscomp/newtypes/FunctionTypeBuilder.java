@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,11 +52,10 @@ public final class FunctionTypeBuilder {
   // Non-empty iff this function has an @template annotation
   private ImmutableList<String> typeParameters = ImmutableList.of();
 
-  static FunctionTypeBuilder qmarkFunctionBuilder() {
-    FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    builder.addRestFormals(JSType.UNKNOWN);
-    builder.addRetType(JSType.UNKNOWN);
-    return builder;
+  private final JSTypes commonTypes;
+
+  public FunctionTypeBuilder(JSTypes commonTypes) {
+    this.commonTypes = Preconditions.checkNotNull(commonTypes);
   }
 
   /**
@@ -94,7 +92,7 @@ public final class FunctionTypeBuilder {
       optionalFormals.add(null);
     } else {
       Preconditions.checkArgument(!t.isBottom());
-      optionalFormals.add(JSType.join(t, JSType.UNDEFINED));
+      optionalFormals.add(JSType.join(t, this.commonTypes.UNDEFINED));
     }
     return this;
   }
@@ -146,6 +144,7 @@ public final class FunctionTypeBuilder {
     Preconditions.checkState(!loose);
     Preconditions.checkState(outerVars.isEmpty());
     return DeclaredFunctionType.make(
+        this.commonTypes,
         requiredFormals, optionalFormals, restFormals, returnType,
         nominalType, receiverType, typeParameters);
   }
@@ -161,9 +160,10 @@ public final class FunctionTypeBuilder {
         && this.receiverType == null
         && this.typeParameters.isEmpty()
         && this.outerVars.isEmpty()) {
-      return FunctionType.QMARK_FUNCTION;
+      return this.commonTypes.QMARK_FUNCTION;
     }
     FunctionType result = FunctionType.normalized(
+        this.commonTypes,
         requiredFormals, optionalFormals, restFormals, returnType,
         nominalType, receiverType, outerVars, typeParameters, loose);
     result.checkValid();

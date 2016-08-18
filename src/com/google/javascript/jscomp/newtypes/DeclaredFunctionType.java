@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,7 +49,10 @@ public final class DeclaredFunctionType {
   // Non-empty iff this function has an @template annotation
   private final ImmutableList<String> typeParameters;
 
+  private final JSTypes commonTypes;
+
   private DeclaredFunctionType(
+      JSTypes commonTypes,
       List<JSType> requiredFormals,
       List<JSType> optionalFormals,
       JSType restFormals,
@@ -59,6 +61,8 @@ public final class DeclaredFunctionType {
       JSType receiverType,
       ImmutableList<String> typeParameters) {
     Preconditions.checkArgument(retType == null || !retType.isBottom());
+    Preconditions.checkNotNull(commonTypes);
+    this.commonTypes = commonTypes;
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
     this.restFormals = restFormals;
@@ -69,15 +73,15 @@ public final class DeclaredFunctionType {
   }
 
   public FunctionType toFunctionType() {
-    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     for (JSType formal : this.requiredFormals) {
-      builder.addReqFormal(formal == null ? JSType.UNKNOWN : formal);
+      builder.addReqFormal(formal == null ? this.commonTypes.UNKNOWN : formal);
     }
     for (JSType formal : this.optionalFormals) {
-      builder.addOptFormal(formal == null ? JSType.UNKNOWN : formal);
+      builder.addOptFormal(formal == null ? this.commonTypes.UNKNOWN : formal);
     }
     builder.addRestFormals(this.restFormals);
-    builder.addRetType(this.returnType == null ? JSType.UNKNOWN : this.returnType);
+    builder.addRetType(this.returnType == null ? this.commonTypes.UNKNOWN : this.returnType);
     builder.addNominalType(this.nominalType);
     builder.addReceiverType(this.receiverType);
     builder.addTypeParameters(this.typeParameters);
@@ -85,6 +89,7 @@ public final class DeclaredFunctionType {
   }
 
   static DeclaredFunctionType make(
+      JSTypes commonTypes,
       List<JSType> requiredFormals,
       List<JSType> optionalFormals,
       JSType restFormals,
@@ -102,8 +107,16 @@ public final class DeclaredFunctionType {
       typeParameters = ImmutableList.of();
     }
     return new DeclaredFunctionType(
+        commonTypes,
         requiredFormals, optionalFormals, restFormals, retType,
         nominalType, receiverType, typeParameters);
+  }
+
+  static DeclaredFunctionType qmarkFunctionDeclaration(JSTypes commonTypes) {
+    FunctionTypeBuilder builder = new FunctionTypeBuilder(commonTypes);
+    builder.addRestFormals(commonTypes.UNKNOWN);
+    builder.addRetType(commonTypes.UNKNOWN);
+    return builder.buildDeclaration();
   }
 
   // 0-indexed
@@ -203,6 +216,7 @@ public final class DeclaredFunctionType {
 
   public DeclaredFunctionType withReceiverType(JSType newReceiverType) {
     return new DeclaredFunctionType(
+        this.commonTypes,
         this.requiredFormals, this.optionalFormals,
         this.restFormals, this.returnType, this.nominalType,
         newReceiverType, this.typeParameters);
@@ -221,6 +235,7 @@ public final class DeclaredFunctionType {
       NominalType rt = this.receiverType == null
           ? null : this.receiverType.getNominalTypeIfSingletonObj();
       return new DeclaredFunctionType(
+          this.commonTypes,
           superType.requiredFormals, superType.optionalFormals,
           superType.restFormals, superType.returnType,
           nt == null ? null : nt.getInstanceAsJSType(),
@@ -228,7 +243,7 @@ public final class DeclaredFunctionType {
           superType.typeParameters);
     }
 
-    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     int i = 0;
     for (JSType formal : this.requiredFormals) {
       builder.addReqFormal(formal != null ? formal : superType.getFormalType(i));
@@ -279,7 +294,7 @@ public final class DeclaredFunctionType {
       }
       reducedMap = builder.build();
     }
-    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     for (JSType reqFormal : requiredFormals) {
       builder.addReqFormal(reqFormal == null ? null : reqFormal.substituteGenerics(reducedMap));
     }
@@ -317,8 +332,8 @@ public final class DeclaredFunctionType {
     if (f1.equals(f2)) {
       return f1;
     }
-
-    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    JSTypes commonTypes = f1.commonTypes;
+    FunctionTypeBuilder builder = new FunctionTypeBuilder(f1.commonTypes);
     int minRequiredArity = Math.min(
         f1.requiredFormals.size(), f2.requiredFormals.size());
     for (int i = 0; i < minRequiredArity; i++) {
@@ -337,7 +352,7 @@ public final class DeclaredFunctionType {
           nullAcceptingJoin(f1.restFormals, f2.restFormals));
     }
     JSType retType = nullAcceptingMeet(f1.returnType, f2.returnType);
-    if (JSType.BOTTOM.equals(retType)) {
+    if (commonTypes.BOTTOM.equals(retType)) {
       return null;
     }
     builder.addRetType(retType);

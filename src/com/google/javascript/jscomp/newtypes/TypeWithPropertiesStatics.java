@@ -31,15 +31,14 @@ final class TypeWithPropertiesStatics {
     if (types == null) {
       return null;
     }
-    JSType ptype = JSType.BOTTOM;
-    boolean foundProp = false;
+    JSType ptype = null;
     for (TypeWithProperties t : types) {
       if (t.mayHaveProp(qname)) {
-        foundProp = true;
-        ptype = JSType.join(ptype, t.getProp(qname));
+        JSType tmp = t.getProp(qname);
+        ptype = ptype == null ? tmp : JSType.join(ptype, tmp);
       }
     }
-    return foundProp ? ptype : null;
+    return ptype;
   }
 
   static JSType getDeclaredProp(
@@ -47,16 +46,16 @@ final class TypeWithPropertiesStatics {
     if (types == null) {
       return null;
     }
-    JSType ptype = JSType.BOTTOM;
+    JSType ptype = null;
     for (TypeWithProperties t : types) {
       if (t.mayHaveProp(qname)) {
         JSType declType = t.getDeclaredProp(qname);
         if (declType != null) {
-          ptype = JSType.join(ptype, declType);
+          ptype = ptype == null ? declType : JSType.join(ptype, declType);
         }
       }
     }
-    return ptype.isBottom() ? null : ptype;
+    return ptype;
   }
 
   static boolean mayHaveProp(

@@ -100,16 +100,16 @@ public final class RawNominalType extends Namespace {
     ObjectType objInstance;
 
     if (isBuiltinHelper(name, "Function", defSite)) {
-      objInstance = ObjectType.fromFunction(FunctionType.TOP_FUNCTION, this.wrappedAsNominal);
+      objInstance = ObjectType.fromFunction(this.commonTypes.TOP_FUNCTION, this.wrappedAsNominal);
     } else if (isBuiltinHelper(name, "Object", defSite)) {
       // We do this to avoid having two instances of ObjectType that both
       // represent the top JS object.
-      objInstance = ObjectType.TOP_OBJECT;
+      objInstance = this.commonTypes.TOP_OBJECTTYPE;
     } else {
       objInstance = ObjectType.fromNominalType(this.wrappedAsNominal);
     }
     this.wrappedAsJSType = JSType.fromObjectType(objInstance);
-    this.wrappedAsNullableJSType = JSType.join(JSType.NULL, this.wrappedAsJSType);
+    this.wrappedAsNullableJSType = JSType.join(this.commonTypes.NULL, this.wrappedAsJSType);
   }
 
   private static boolean isValidDefsite(Node defSite) {
@@ -162,6 +162,10 @@ public final class RawNominalType extends Namespace {
     // interfaces are struct by default
     return new RawNominalType(commonTypes, defSite,
         name, typeParameters, Kind.RECORD, ObjectKind.UNRESTRICTED);
+  }
+
+  JSTypes getCommonTypes() {
+    return this.commonTypes;
   }
 
   private static boolean isBuiltinHelper(
@@ -489,7 +493,7 @@ public final class RawNominalType extends Namespace {
     }
     if (this.objectKind == ObjectKind.UNRESTRICTED) {
       this.randomProps = this.randomProps.with(
-          pname, Property.make(type == null ? JSType.UNKNOWN : type, type));
+          pname, Property.make(type == null ? this.commonTypes.UNKNOWN : type, type));
     }
   }
 
@@ -499,7 +503,7 @@ public final class RawNominalType extends Namespace {
   public void addClassProperty(String pname, Node defSite, JSType type, boolean isConstant) {
     Preconditions.checkState(!this.isFinalized);
     if (type == null && isConstant) {
-      type = JSType.UNKNOWN;
+      type = this.commonTypes.UNKNOWN;
     }
     this.classProps = this.classProps.with(pname, isConstant
         ? Property.makeConstant(defSite, type, type)
@@ -529,7 +533,7 @@ public final class RawNominalType extends Namespace {
   public void addProtoProperty(String pname, Node defSite, JSType type, boolean isConstant) {
     Preconditions.checkState(!this.isFinalized);
     if (type == null && isConstant) {
-      type = JSType.UNKNOWN;
+      type = this.commonTypes.UNKNOWN;
     }
     if (this.classProps.containsKey(pname)
         && this.classProps.get(pname).getDeclaredType() == null) {
@@ -547,7 +551,7 @@ public final class RawNominalType extends Namespace {
     if (isConstant) {
       newProp = Property.makeConstant(defSite, type, type);
     } else if (isStructuralInterface() && type != null
-        && !type.isUnknown() && JSType.UNDEFINED.isSubtypeOf(type)) {
+        && !type.isUnknown() && this.commonTypes.UNDEFINED.isSubtypeOf(type)) {
       // TODO(dimvar): Handle optional properties on @record of unknown type.
       // See how we do it in jstypecreatorfromjsdoc.
       newProp = Property.makeOptional(defSite, type, type);
@@ -563,7 +567,7 @@ public final class RawNominalType extends Namespace {
     if (!this.protoProps.containsKey(pname)
         || this.protoProps.get(pname).getDeclaredType() == null) {
       this.protoProps = this.protoProps.with(pname,
-          Property.makeWithDefsite(defSite, JSType.UNKNOWN, null));
+          Property.makeWithDefsite(defSite, this.commonTypes.UNKNOWN, null));
       if (this.randomProps.containsKey(pname)) {
         this.randomProps = this.randomProps.without(pname);
       }
@@ -585,7 +589,7 @@ public final class RawNominalType extends Namespace {
   /** Add a new undeclared property to this class's constructor */
   public void addUndeclaredCtorProperty(String pname, Node defSite) {
     Preconditions.checkState(!this.isFinalized);
-    super.addUndeclaredProperty(pname, defSite, JSType.UNKNOWN, false);
+    super.addUndeclaredProperty(pname, defSite, this.commonTypes.UNKNOWN, false);
   }
 
   public JSType getCtorPropDeclaredType(String pname) {
@@ -611,7 +615,7 @@ public final class RawNominalType extends Namespace {
         if (!prop.isDeclared()) {
           this.protoProps = this.protoProps.with(
               entry.getKey(), Property.makeWithDefsite(
-                  prop.getDefSite(), JSType.UNKNOWN, JSType.UNKNOWN));
+                  prop.getDefSite(), this.commonTypes.UNKNOWN, this.commonTypes.UNKNOWN));
         }
       }
     }
@@ -635,7 +639,7 @@ public final class RawNominalType extends Namespace {
     // If in future we decide that it's important to model this property,
     // we'll have to address the subtyping issues.
     JSType protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
-        this.superclass, this.protoProps,
+        this.commonTypes, this.superclass, this.protoProps,
         null, null, false, ObjectKind.UNRESTRICTED));
     addCtorProperty("prototype", null, protoObject, false);
     this.isFinalized = true;
@@ -659,7 +663,7 @@ public final class RawNominalType extends Namespace {
     Preconditions.checkState(this.isFinalized);
     Preconditions.checkState(this.namespaceType == null);
     return JSType.fromObjectType(ObjectType.makeObjectType(
-        this.commonTypes.getFunctionType(), null, this.ctorFn,
+        this.commonTypes, this.commonTypes.getFunctionType(), null, this.ctorFn,
         this, this.ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
   }
 

@@ -66,6 +66,10 @@ public final class NominalType {
         : this.rawType.getInstanceAsJSType();
   }
 
+  JSTypes getCommonTypes() {
+    return this.rawType.getCommonTypes();
+  }
+
   ObjectKind getObjectKind() {
     return this.rawType.getObjectKind();
   }
@@ -81,7 +85,7 @@ public final class NominalType {
     // This type is a subtype of all indexed types it inherits from,
     // and we use contravariance for the key of the index operation,
     // so we join here.
-    JSType result = JSType.BOTTOM;
+    JSType result = getCommonTypes().BOTTOM;
     for (NominalType interf : getInstantiatedIObjectInterfaces()) {
       JSType tmp = interf.getIndexType();
       if (tmp != null) {
@@ -98,7 +102,7 @@ public final class NominalType {
     // This type is a subtype of all indexed types it inherits from,
     // and we use covariance for the value of the index operation,
     // so we meet here.
-    JSType result = JSType.TOP;
+    JSType result = getCommonTypes().TOP;
     // We need this because the index type may explicitly be TOP.
     boolean foundIObject = false;
     for (NominalType interf : getInstantiatedIObjectInterfaces()) {
@@ -213,7 +217,7 @@ public final class NominalType {
 
   NominalType instantiateGenericsWithUnknown() {
     NominalType thisWithoutTypemap = this.rawType.getAsNominalType();
-    return thisWithoutTypemap.instantiateGenerics(JSType.MAP_TO_UNKNOWN);
+    return thisWithoutTypemap.instantiateGenerics(getCommonTypes().MAP_TO_UNKNOWN);
   }
 
   public String getName() {
@@ -302,7 +306,7 @@ public final class NominalType {
     if (this.rawType.name.equals("Array")
         && NUMERIC_PATTERN.matcher(pname).matches()) {
       if (typeMap.isEmpty()) {
-        return Property.make(JSType.UNKNOWN, null);
+        return Property.make(getCommonTypes().UNKNOWN, null);
       }
       Preconditions.checkState(typeMap.size() == 1);
       JSType elmType = Iterables.getOnlyElement(typeMap.values());
@@ -455,7 +459,8 @@ public final class NominalType {
           "Type variable %s not in the domain: %s",
           typeVar, this.typeMap.keySet());
       JSType t = this.typeMap.get(typeVar);
-      if (!t.isUnknown() && !t.equals(JSType.fromTypeVar(typeVar))) {
+      if (!t.isUnknown()
+          && !t.equals(JSType.fromTypeVar(getCommonTypes(), typeVar))) {
         return false;
       }
     }
