@@ -7,6 +7,7 @@ Array.prototype.find es6-impl es3 es6/array/find
 Array.prototype.findIndex es6-impl es3 es6/array/findindex
 Array.prototype.keys es6-impl es3 es6/array/keys
 Array.prototype.values es6 es3 es6/array/values
+JscPromise es6-impl es3 es6/promise
 Map es6-impl es3 es6/map
 Math.acosh es6-impl es3 es6/math/acosh
 Math.asinh es6-impl es3 es6/math/asinh
@@ -35,7 +36,6 @@ Object.assign es6-impl es3 es6/object/assign
 Object.getOwnPropertySymbols es6-impl es5 es6/object/getownpropertysymbols
 Object.is es6-impl es3 es6/object/is
 Object.setPrototypeOf es6 es5 es6/object/setprototypeof
-Promise es6-impl es3 es6/promise
 Proxy es6 es6
 Reflect.apply es6 es3 es6/reflect/apply
 Reflect.construct es6 es5 es6/reflect/construct

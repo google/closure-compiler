@@ -83,7 +83,8 @@ function newAsyncExecutor() {
   // IMPORTANT NOTE: Promise must be used somewhere in this file to trigger
   //     inclusion of the Promise polyfill code, which is where AsyncExecutor
   //     is defined.
-  return /** {!AsyncExecutor} */ (Promise['$jscomp$new$AsyncExecutor']());
+  return /** {!AsyncExecutor} */ (
+      $jscomp_Promise['$jscomp$new$AsyncExecutor']());
 }
 
 testSuite({

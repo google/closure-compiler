@@ -26,7 +26,7 @@
  */
 $jscomp.EXPOSE_ASYNC_EXECUTOR = true;
 
-$jscomp.polyfill('Promise', function(NativePromise) {
+$jscomp.polyfill('JscPromise', function(NativePromise) {
   /**
     * Schedules code to be executed asynchronously.
     * @constructor
@@ -103,7 +103,7 @@ $jscomp.polyfill('Promise', function(NativePromise) {
       this.batch_ = [];
       for (var i = 0; i < executingBatch.length; ++i) {
         var f = executingBatch[i];
-        delete executingBatch[i]; // free memory
+        delete executingBatch[i];  // free memory
         try {
           f();
         } catch (error) {
@@ -125,11 +125,9 @@ $jscomp.polyfill('Promise', function(NativePromise) {
   };
 
   // TODO(bradfordcsmith): Actually implement PolyfillPromise
-  var PolyfillPromise = NativePromise;
+  var PolyfillPromise = {};
 
   if ($jscomp.EXPOSE_ASYNC_EXECUTOR) {
-    // TODO(bradfordcsmith): Remove this once PolyfillPromise is implemented.
-    PolyfillPromise = PolyfillPromise || {};
     // expose AsyncExecutor so it can be tested independently.
     PolyfillPromise['$jscomp$new$AsyncExecutor'] = function() {
       return new AsyncExecutor();
