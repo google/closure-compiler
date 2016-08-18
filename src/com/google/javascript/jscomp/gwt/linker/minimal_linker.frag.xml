@@ -20,4 +20,5 @@ Should be included via the ":minimal_linker" module target.
 -->
 
 <define-linker name="MinimalLinker" class="com.google.javascript.jscomp.gwt.linker.MinimalLinker" />
+<define-property name="linker.minimal.export" values="true,false" />
 <add-linker name="MinimalLinker" />

@@ -25,26 +25,64 @@ import com.google.gwt.core.ext.linker.ArtifactSet;
 import com.google.gwt.core.ext.linker.CompilationResult;
 import com.google.gwt.core.ext.linker.LinkerOrder;
 import com.google.gwt.core.ext.linker.LinkerOrder.Order;
+import com.google.gwt.core.ext.linker.SelectionProperty;
 import com.google.gwt.core.linker.SymbolMapsLinker;
-import com.google.gwt.dev.util.Util;
 
 /**
- * Simple single-script linker that doesn't add any dependence on the browser.
- * This is intended to generate server-side runnable JS.  It doesn't support
- * permutations, nor does it allow late-loading code.
+ * Simple single-script linker that doesn't add any dependencies on the browser.
+ *
+ * This is intended to generate JS for servers, Node, or in a self-contained way inside browsers. It
+ * doesn't support permutations, nor does it allow late-loading code.
  */
 @LinkerOrder(Order.PRIMARY)
 public class MinimalLinker extends AbstractLinker {
 
-  /*
-   * Call gwtLoad as per the normal GWT linker (provided in {@code ModuleUtils}), this is in order
-   * to invoke the {@code onModuleLoad} methods of loaded modules. The gwtOnLoad method then sets
-   * {@code $moduleName} and {@code $moduleBase}, shadow them here so they don't leak into the
-   * global scope.
+  /**
+   * A configuration property indicating whether {@link MinimalLinker} should export via JSInterop.
    */
-  private static final String PREFIX =
-      "(function(){var $wnd=this; var $doc={}; var $moduleName, $moduleBase;";
-  private static final String SUFFIX = "typeof gwtOnLoad==='function'&&gwtOnLoad()})();";
+  private static final String EXPORT_PROPERTY = "linker.minimal.export";
+
+  /**
+   * @param context LinkerContext containing properties
+   * @return Whether to export, default false
+   */
+  private boolean getExportProperty(LinkerContext context) {
+    for (SelectionProperty prop : context.getProperties()) {
+      if (EXPORT_PROPERTY.equals(prop.getName())) {
+        String value = prop.tryGetValue();
+        return value == null ? false : Boolean.parseBoolean(value);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Formats the application's JS code for output.
+   *
+   * @param js Code to format.
+   * @param export Whether to export via JSInterop.
+   * @return Formatted, linked code.
+   */
+  private String formatOutput(String js, boolean export) {
+    StringBuilder output = new StringBuilder();
+
+    // If $wnd is set to this, then JSInterop's normal export will run. If export is false, fake
+    // out $wnd ith an empty object (plus Error to work around StackTraceCreator using it in a
+    // static block).
+    output.append("(function(){var $wnd=").append(export ? "this" : "{'Error':{}}").append(";");
+
+    // Shadow $doc, $moduleName and $moduleBase.
+    output.append("var $doc={},$moduleName,$moduleBase;");
+
+    // Append output JS.
+    output.append(js);
+
+    // Reset $wnd, and call gwtOnLoad if defined. This invokes the onModuleLoad methods of all
+    // loaded modules.
+    output.append("$wnd=this;typeof gwtOnLoad==='function'&&gwtOnLoad()})();");
+
+    return output.toString();
+  }
 
   @Override
   public String getDescription() {
@@ -65,13 +103,14 @@ public class MinimalLinker extends AbstractLinker {
       throws UnableToCompleteException {
     ArtifactSet toReturn = new ArtifactSet(artifacts);
     ArtifactSet writableArtifacts = new ArtifactSet(artifacts);
+    boolean export = getExportProperty(context);
 
     for (CompilationResult result : toReturn.find(CompilationResult.class)) {
       String[] js = result.getJavaScript();
       Preconditions.checkArgument(js.length == 1, "MinimalLinker doesn't support GWT.runAsync");
 
-      byte[] primary = Util.getBytes(PREFIX + js[0] + SUFFIX);
-      toReturn.add(emitBytes(logger, primary, context.getModuleName() + ".js"));
+      String output = formatOutput(js[0], export);
+      toReturn.add(emitString(logger, output, context.getModuleName() + ".js"));
     }
 
     for (SymbolMapsLinker.ScriptFragmentEditsArtifact ea :

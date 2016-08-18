@@ -1,0 +1,7 @@
+<!--
+GWT XML fragment to add the minimal linker with export enabled, so that @JsExport etc are
+respected. Not for OSS.
+Should be included via the ":minimal_linker_export" module target.
+-->
+
+<set-property name="linker.minimal.export" value="true" />
