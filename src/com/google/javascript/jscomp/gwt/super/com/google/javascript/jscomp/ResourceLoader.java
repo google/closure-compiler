@@ -19,14 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.TextResource;
-
 import jsinterop.annotations.JsMethod;
 
 /**
  * GWT compatible replacement for {@code ResourceLoader}
  *
  */
-final class ResourceLoader {
+public final class ResourceLoader {
   static interface Libraries extends ClientBundle {
     Libraries INSTANCE = GWT.create(Libraries.class);
 
@@ -38,15 +37,15 @@ final class ResourceLoader {
 
   private static final JsObject RESOURCES = parse(Libraries.INSTANCE.resources().getText());
 
-  static String loadTextResource(Class<?> clazz, String path) {
+  public static String loadTextResource(Class<?> clazz, String path) {
     String content = get(RESOURCES, path);
     if (content != null) {
       return content;
     }
-    throw new RuntimeException("Resource not found " + path);
+    throw new RuntimeException("Resource not found: " + path);
   }
 
-  static boolean resourceExists(Class<?> clazz, String path) {
+  public static boolean resourceExists(Class<?> clazz, String path) {
     // TODO(sdh): this is supposed to be relative to the given class, but
     // GWT can't handle that - probably better to remove the class argument
     // and just require that paths be relative to c.g.javascript.jscomp.

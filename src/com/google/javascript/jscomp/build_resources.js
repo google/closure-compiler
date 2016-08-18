@@ -22,10 +22,12 @@ const fs = require('fs');
 
 /**
  * @param {string} filename
- * @return {string} The filename relative to com/google/javascript/jscomp.
+ * @return {string} The filename relative to com/google/javascript{/jscomp,}.
  */
 function relativize(filename) {
-  return filename.replace(/.*com\/google\/javascript\/jscomp\//, '');
+  filename = filename.replace(/.*com\/google\/javascript\/jscomp\//, '');
+  filename = filename.replace(/.*com\/google\/javascript\//, '');
+  return filename;
 }
 
 const reads = process.argv.slice(2).map(filename =>

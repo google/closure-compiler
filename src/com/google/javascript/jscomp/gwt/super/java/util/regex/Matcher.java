@@ -58,6 +58,8 @@ public class Matcher {
   }
 
   public boolean find() {
+    // TODO(moz): This doesn't do as per the spec, it just returns whether there's further groups.
+    // It should instead match wholly _again_ after the first match (b/30928818).
     if (maybeExec()) {
       String match = result.getGroup(currIndex);
       currIndex++;
@@ -68,11 +70,10 @@ public class Matcher {
   }
 
   public String group(int index) {
-    if (maybeExec()) {
+    if (hasExecuted) {
       return result.getGroup(index);
-    } else {
-      return null;
     }
+    throw new IllegalStateException("regex not executed yet");
   }
 
   public static String quoteReplacement(String input) {

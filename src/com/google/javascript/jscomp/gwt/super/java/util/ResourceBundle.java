@@ -16,26 +16,51 @@
 
 package java.util;
 
+import com.google.javascript.jscomp.GwtProperties;
+import com.google.javascript.jscomp.ResourceLoader;
+
 /**
- * GWT compatible no-op replacement for {@code ResourceBundle}
- * TODO(moz) Implement a functional GWT version.
- *
- * @author moz@google.com (Michael Zhou)
+ * GWT compatible replacement for {@code ResourceBundle} that defers to {@link ResourceLoader} for
+ * specific known properties files.
  */
 public class ResourceBundle {
-  private ResourceBundle() {
-  }
+  private static final Map<String, ResourceBundle> CACHE = new HashMap<>();
 
-  public static ResourceBundle getBundle(String baseName) {
-    return new ResourceBundle();
-  }
+  private final GwtProperties properties;
 
-  public static ResourceBundle getBundle(String baseName, Locale locale) {
-    return new ResourceBundle();
+  private ResourceBundle(GwtProperties properties) {
+    this.properties = properties;
   }
 
   public String getString(String key) throws MissingResourceException {
-    return "";
+    String value = properties.getProperty(key);
+    if (value == null) {
+      throw new MissingResourceException("no key found", null, key);
+    }
+    return value;
+  }
+
+  public static ResourceBundle getBundle(String baseName) {
+    String resourceName;
+    if ("com.google.javascript.rhino.Messages".equals(baseName)) {
+      resourceName = "rhino/Messages.properties";
+    } else if ("com.google.javascript.jscomp.parsing.ParserConfig".equals(baseName)) {
+      resourceName = "parsing/ParserConfig.properties";
+    } else {
+      throw new RuntimeException("ResourceBundle not available: " + baseName);
+    }
+
+    ResourceBundle bundle = CACHE.get(resourceName);
+    if (bundle == null) {
+      String resource = ResourceLoader.loadTextResource(null, resourceName);
+      bundle = new ResourceBundle(GwtProperties.load(resource));
+      CACHE.put(resourceName, bundle);
+    }
+    return bundle;
+  }
+
+  public static ResourceBundle getBundle(String baseName, Locale locale) {
+    return getBundle(baseName);
   }
 
 }
