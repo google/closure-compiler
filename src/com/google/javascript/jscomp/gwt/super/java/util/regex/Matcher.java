@@ -29,51 +29,50 @@ public class Matcher {
   private final String input;
   private MatchResult result;
   private boolean hasExecuted;
-  private int currIndex;
+  private int findFromIndex;
 
   Matcher(RegExp regExp, String input) {
     this.regExp = regExp;
     this.input = input;
     this.result = null;
-    this.currIndex = 0;
     this.hasExecuted = false;
-  }
-
-  private boolean maybeExec() {
-    if (!hasExecuted) {
-      result = regExp.exec(input);
-      currIndex = 0;
-      hasExecuted = true;
-    }
-    return result != null;
+    this.findFromIndex = 0;
   }
 
   public boolean matches() {
-    if (maybeExec()) {
+    result = regExp.exec(input);
+    hasExecuted = true;
+    findFromIndex = 0;
+
+    if (result != null) {
       String match = result.getGroup(0);
-      return match != null && match.equals(input);
-    } else {
-      return false;
+      if (match.equals(input)) {
+        return true;
+      }
+      result = null;  // matches() needs to match whole string, pretend we didn't match
     }
+    return false;
   }
 
   public boolean find() {
-    // TODO(moz): This doesn't do as per the spec, it just returns whether there's further groups.
-    // It should instead match wholly _again_ after the first match (b/30928818).
-    if (maybeExec()) {
-      String match = result.getGroup(currIndex);
-      currIndex++;
-      return match != null && !match.isEmpty();
-    } else {
-      return false;
+    result = regExp.exec(input.substring(findFromIndex));
+    hasExecuted = true;
+
+    if (result != null) {
+      findFromIndex += result.getGroup(0).length();
+      return true;
     }
+    return false;
   }
 
   public String group(int index) {
-    if (hasExecuted) {
+    if (!hasExecuted) {
+      throw new IllegalStateException("regex not executed yet");
+    } else if (result == null) {
+      throw new IllegalStateException("regex did not match");
+    } else {
       return result.getGroup(index);
     }
-    throw new IllegalStateException("regex not executed yet");
   }
 
   public static String quoteReplacement(String input) {
@@ -86,8 +85,8 @@ public class Matcher {
 
   public Matcher reset() {
     result = null;
-    currIndex = 0;
     hasExecuted = false;
+    findFromIndex = 0;
     return this;
   }
 }
