@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -458,9 +459,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     Node callTarget = node.getFirstChild();
-    if (callTarget.isQualifiedName()
-        && (callTarget.matchesQualifiedName("goog.reflect.cache")
-            || callTarget.matchesQualifiedName("goog$reflect$cache"))) {
+    if (matchesCacheMethodName(callTarget)) {
       int paramCount = node.getChildCount() - 1;
       if (3 <= paramCount && paramCount <= 4) {
         Node cacheObj = callTarget.getNext();
@@ -473,6 +472,18 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     return super.describeCachingCall(node);
+  }
+
+  static final Node googCacheReflect = IR.getprop(
+      IR.name("goog"), IR.string("reflect"), IR.string("cache"));
+
+  private boolean matchesCacheMethodName(Node target) {
+    if (target.isGetProp()) {
+      return target.matchesQualifiedName(googCacheReflect);
+    } else if (target.isName()) {
+      return target.getString().equals("goog$reflect$cache");
+    }
+    return false;
   }
 
   @Override
