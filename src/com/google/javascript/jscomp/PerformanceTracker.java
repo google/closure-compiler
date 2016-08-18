@@ -16,19 +16,16 @@
 
 package com.google.javascript.jscomp;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 
-import java.io.ByteArrayOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -39,24 +36,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * A PerformanceTracker collects statistics about the runtime of each pass, and
  * how much a pass impacts the size of the compiled output, before and after
  * gzip.
- *
- * TODO(moz): Make this GWT compatible.
- *
- * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-@GwtIncompatible("java.io.ByteArrayOutputStream")
 public final class PerformanceTracker {
 
   private static final int DEFAULT_WHEN_SIZE_UNTRACKED = -1;
 
-  private final PrintStream printStream;
-  private final OutputStreamWriter output;
+  private final PrintStream output;
 
   private final Node jsRoot;
   private final Node externsRoot;
@@ -105,8 +95,7 @@ public final class PerformanceTracker {
   PerformanceTracker(Node externsRoot, Node jsRoot, TracerMode mode, PrintStream printStream) {
     this.externsRoot = externsRoot;
     this.jsRoot = jsRoot;
-    this.printStream = printStream == null ? System.out : printStream;
-    this.output = new OutputStreamWriter(this.printStream, UTF_8);
+    this.output = printStream == null ? System.out : printStream;
     switch (mode) {
       case TIMING_ONLY:
         this.trackSize = false;
@@ -169,12 +158,12 @@ public final class PerformanceTracker {
     if (passName.equals(Compiler.PARSING_PASS_NAME)) {
       recordInputCount();
       if (trackSize) {
-        CodeSizeEstimatePrinter estimatePrinter = new CodeSizeEstimatePrinter();
-        CodeGenerator.forCostEstimation(estimatePrinter).add(jsRoot);
-        initCodeSize = codeSize = estimatePrinter.calcSize();
+        PerformanceTrackerCodeSizeEstimator estimator =
+            PerformanceTrackerCodeSizeEstimator.estimate(jsRoot, trackGzSize);
+        initCodeSize = codeSize = estimator.getCodeSize();
         logStats.size = summaryStats.size = initCodeSize;
         if (this.trackGzSize) {
-          initGzCodeSize = gzCodeSize = estimatePrinter.calcZippedSize();
+          initGzCodeSize = gzCodeSize = estimator.getZippedCodeSize();
           logStats.gzSize = summaryStats.gzSize = initGzCodeSize;
         }
       }
@@ -195,16 +184,14 @@ public final class PerformanceTracker {
     // Update fields related to code size
     if (codeChange.hasCodeChanged() && trackSize) {
       int newSize = 0;
-      CodeSizeEstimatePrinter estimatePrinter = new CodeSizeEstimatePrinter();
-      CodeGenerator.forCostEstimation(estimatePrinter).add(jsRoot);
-      if (trackSize) {
-        newSize = estimatePrinter.calcSize();
-        logStats.diff = codeSize - newSize;
-        summaryStats.diff += logStats.diff;
-        codeSize = summaryStats.size = logStats.size = newSize;
-      }
+      PerformanceTrackerCodeSizeEstimator estimator = PerformanceTrackerCodeSizeEstimator.estimate(
+          jsRoot, trackGzSize);
+      newSize = estimator.getCodeSize();
+      logStats.diff = codeSize - newSize;
+      summaryStats.diff += logStats.diff;
+      codeSize = summaryStats.size = logStats.size = newSize;
       if (trackGzSize) {
-        newSize = estimatePrinter.calcZippedSize();
+        newSize = estimator.getZippedCodeSize();
         logStats.gzDiff = gzCodeSize - newSize;
         summaryStats.gzDiff += logStats.gzDiff;
         gzCodeSize = summaryStats.gzSize = logStats.gzSize = newSize;
@@ -323,57 +310,59 @@ public final class PerformanceTracker {
    * and a log, which contains stats for each individual run.
    */
   public void outputTracerReport() {
-    JvmMetrics.maybeWriteJvmMetrics(this.printStream, "verbose:pretty:all");
+    JvmMetrics.maybeWriteJvmMetrics(this.output, "verbose:pretty:all");
+    calcTotalStats();
+
+    ArrayList<Entry<String, Stats>> statEntries = new ArrayList<>();
+    statEntries.addAll(summary.entrySet());
+    Collections.sort(
+        statEntries,
+        new Comparator<Entry<String, Stats>>() {
+          @Override
+          public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
+            return Long.compare(e1.getValue().runtime, e2.getValue().runtime);
+          }
+        });
+
+    this.output.print("Summary:\n"
+        + "pass,runtime,allocMem,runs,changingRuns,reduction,gzReduction\n");
+    for (Entry<String, Stats> entry : statEntries) {
+      String key = entry.getKey();
+      Stats stats = entry.getValue();
+      this.output.print(SimpleFormat.format("%s,%d,%d,%d,%d,%d,%d\n", key, stats.runtime,
+            stats.allocMem, stats.runs, stats.changes, stats.diff, stats.gzDiff));
+    }
+    this.output.print("\nTOTAL:"
+        + "\nRuntime(ms): " + runtime
+        + "\nMax mem usage (measured after each pass)(MB): " + maxMem
+        + "\n#Runs: " + runs
+        + "\n#Changing runs: " + changes + "\n#Loopable runs: " + loopRuns
+        + "\n#Changing loopable runs: " + loopChanges + "\nEstimated Reduction(bytes): " + diff
+        + "\nEstimated GzReduction(bytes): " + gzDiff + "\nEstimated Size(bytes): " + codeSize
+        + "\nEstimated GzSize(bytes): " + gzCodeSize + "\n");
+
+    this.output.print("\nInputs:"
+        + "\nJS lines:   " + jsLines
+        + "\nJS sources: " + jsSources
+        + "\nExtern lines:   " + externLines
+        + "\nExtern sources: " + externSources + "\n\n");
+
+    this.output.print("Log:\n"
+        + "pass,runtime,allocMem,codeChanged,reduction,gzReduction,size,gzSize\n");
+    for (Stats stats : log) {
+      this.output.print(SimpleFormat.format("%s,%d,%d,%b,%d,%d,%d,%d\n",
+          stats.pass, stats.runtime, stats.allocMem, stats.changes == 1,
+          stats.diff, stats.gzDiff, stats.size, stats.gzSize));
+    }
+    this.output.print("\n");
+    // this.output can be System.out, so don't close it to not lose subsequent
+    // error messages. Flush to ensure that you will see the tracer report.
     try {
-      calcTotalStats();
-
-      ArrayList<Entry<String, Stats>> statEntries = new ArrayList<>();
-      statEntries.addAll(summary.entrySet());
-      Collections.sort(
-          statEntries,
-          new Comparator<Entry<String, Stats>>() {
-            @Override
-            public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
-              return Long.compare(e1.getValue().runtime, e2.getValue().runtime);
-            }
-          });
-
-      this.output.write("Summary:\n"
-          + "pass,runtime,allocMem,runs,changingRuns,reduction,gzReduction\n");
-      for (Entry<String, Stats> entry : statEntries) {
-        String key = entry.getKey();
-        Stats stats = entry.getValue();
-        this.output.write(String.format("%s,%d,%d,%d,%d,%d,%d\n", key, stats.runtime,
-              stats.allocMem, stats.runs, stats.changes, stats.diff, stats.gzDiff));
-      }
-      this.output.write("\nTOTAL:"
-          + "\nRuntime(ms): " + runtime
-          + "\nMax mem usage (measured after each pass)(MB): " + maxMem
-          + "\n#Runs: " + runs
-          + "\n#Changing runs: " + changes + "\n#Loopable runs: " + loopRuns
-          + "\n#Changing loopable runs: " + loopChanges + "\nEstimated Reduction(bytes): " + diff
-          + "\nEstimated GzReduction(bytes): " + gzDiff + "\nEstimated Size(bytes): " + codeSize
-          + "\nEstimated GzSize(bytes): " + gzCodeSize + "\n");
-
-      this.output.write("\nInputs:"
-          + "\nJS lines:   " + jsLines
-          + "\nJS sources: " + jsSources
-          + "\nExtern lines:   " + externLines
-          + "\nExtern sources: " + externSources + "\n\n");
-
-      this.output.write("Log:\n"
-          + "pass,runtime,allocMem,codeChanged,reduction,gzReduction,size,gzSize\n");
-      for (Stats stats : log) {
-        this.output.write(String.format("%s,%d,%d,%b,%d,%d,%d,%d\n",
-            stats.pass, stats.runtime, stats.allocMem, stats.changes == 1,
-            stats.diff, stats.gzDiff, stats.size, stats.gzSize));
-      }
-      this.output.write("\n");
-      // this.output can be System.out, so don't close it to not lose subsequent
-      // error messages. Flush to ensure that you will see the tracer report.
-      this.output.flush();
+      // TODO(johnlenz): Remove this cast and try/catch.
+      // This is here to workaround GWT http://b/30943295
+      ((FilterOutputStream) this.output).flush();
     } catch (IOException e) {
-      throw new RuntimeException("Failed to write statistics to output.", e);
+      throw new RuntimeException("Unreachable.");
     }
   }
 
@@ -396,57 +385,5 @@ public final class PerformanceTracker {
     public int gzDiff = 0;
     public int size;
     public int gzSize;
-  }
-
-  /** An object to get a gzsize estimate; it doesn't generate code. */
-  private final class CodeSizeEstimatePrinter extends CodeConsumer {
-    private int size = 0;
-    private char lastChar = '\0';
-    private final ByteArrayOutputStream output = new ByteArrayOutputStream();
-    private final GZIPOutputStream stream;
-
-    private CodeSizeEstimatePrinter() {
-      try {
-        stream = new GZIPOutputStream(output);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    @Override
-    void append(String str) {
-      int len = str.length();
-      if (len > 0) {
-        size += len;
-        lastChar = str.charAt(len - 1);
-        if (trackGzSize) {
-          try {
-            stream.write(str.getBytes(UTF_8));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }
-    }
-
-    @Override
-    char getLastChar() {
-      return lastChar;
-    }
-
-    private int calcSize() {
-      return size;
-    }
-
-    // Called iff trackGzSize is true
-    private int calcZippedSize() {
-      try {
-        stream.finish();
-        stream.close();
-        return output.size();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
   }
 }
