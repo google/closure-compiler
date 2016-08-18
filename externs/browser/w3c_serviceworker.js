@@ -156,9 +156,7 @@ ServiceWorkerRegistration.prototype.unregister = function() {};
 /** @type {?function(!Event)} */
 ServiceWorkerRegistration.prototype.onupdatefound;
 
-/**
- * @type {function()}
- */
+/** @return {!Promise<void>} */
 ServiceWorkerRegistration.prototype.update = function() {};
 
 /**
