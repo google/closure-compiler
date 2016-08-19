@@ -562,8 +562,7 @@ class TypeValidator {
       Node n, Node parent, TypedVar var, String variableName, JSType newType) {
     TypedVar newVar = var;
     boolean allowDupe = false;
-    if (n.isGetProp() ||
-        NodeUtil.isObjectLitKey(n)) {
+    if (n.isGetProp() || NodeUtil.isObjectLitKey(n) || NodeUtil.isNameDeclaration(n.getParent())) {
       JSDocInfo info = n.getJSDocInfo();
       if (info == null) {
         info = parent.getJSDocInfo();
