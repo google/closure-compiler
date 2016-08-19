@@ -303,7 +303,7 @@ public final class NominalType {
   }
 
   Property getProp(String pname) {
-    if (this.rawType.name.equals("Array")
+    if (this.rawType.isBuiltinWithName("Array")
         && NUMERIC_PATTERN.matcher(pname).matches()) {
       if (typeMap.isEmpty()) {
         return Property.make(getCommonTypes().UNKNOWN, null);
@@ -406,7 +406,14 @@ public final class NominalType {
           other, typeVar, this.typeMap.get(typeVar), this);
       JSType thisType = this.typeMap.get(typeVar);
       JSType otherType = other.typeMap.get(typeVar);
-      if (!thisType.isSubtypeOf(otherType)) {
+      JSTypes commonTypes = getCommonTypes();
+      if (commonTypes.bivariantArrayGenerics && this.rawType.isBuiltinWithName("Array")) {
+        thisType = thisType.removeType(commonTypes.NULL_OR_UNDEFINED);
+        otherType = otherType.removeType(commonTypes.NULL_OR_UNDEFINED);
+        if (!thisType.isSubtypeOf(otherType) && !otherType.isSubtypeOf(thisType)) {
+          return false;
+        }
+      } else if (!thisType.isSubtypeOf(otherType)) {
         return false;
       }
     }

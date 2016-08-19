@@ -122,6 +122,7 @@ public final class JSTypes {
 
   final boolean allowMethodsAsFunctions;
   final boolean looseSubtypingForLooseObjects;
+  final boolean bivariantArrayGenerics;
 
   private JSTypes(boolean inCompatibilityMode) {
     Map<String, JSType> types = JSType.createScalars(this);
@@ -168,6 +169,7 @@ public final class JSTypes {
 
     this.allowMethodsAsFunctions = inCompatibilityMode;
     this.looseSubtypingForLooseObjects = inCompatibilityMode;
+    this.bivariantArrayGenerics = inCompatibilityMode;
 
     this.MAP_TO_UNKNOWN = new Map<String, JSType>() {
       @Override

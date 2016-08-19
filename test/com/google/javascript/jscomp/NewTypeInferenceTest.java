@@ -17873,6 +17873,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var y = this.toString();",
         NewTypeInference.GLOBAL_THIS);
   }
+
   public void testDontPropagateRhsInferenceToLhs() {
     typeCheck(LINE_JOINER.join(
         "function f(x) {",
@@ -17921,5 +17922,37 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "f = function(x) {",
         "  var /** !Foo */ y = x.prop;",
         "};"));
+  }
+
+  public void testBivariantArrayGenericsInCompatibilityMode() {
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Array<number>} lhs",
+        " * @param {!Array<(number|string)>} rhs",
+        " */",
+        "function f(lhs, rhs) {",
+        "  lhs = rhs;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Array<(number|string)>} lhs",
+        " * @param {!Array<number>} rhs",
+        " */",
+        "function f(lhs, rhs) {",
+        "  lhs = rhs;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Array<!Object>} lhs",
+        " * @param {!Array<?Function>} rhs",
+        " */",
+        "function f(lhs, rhs) {",
+        "  lhs = rhs;",
+        "}"));
   }
 }
