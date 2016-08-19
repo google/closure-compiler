@@ -21,17 +21,16 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class ProcessDefinesTest extends CompilerTestCase {
+public final class ProcessDefinesTest extends TypeICompilerTestCase {
 
   public ProcessDefinesTest() {
-    super("var externMethod;");
+    super(DEFAULT_EXTERNS + "var externMethod;");
 
     // ProcessDefines emits warnings if the user tries to re-define a constant,
     // but the constant is not defined anywhere in the binary.
@@ -175,12 +174,21 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testSimpleReassign1() {
-    test("/** @define {boolean} */ var DEF = false; DEF = true;",
+    // Here and in other tests where we reassign to @defined values, we @suppress newCheckTypes
+    // to suppress NTI_CONST_REASSIGNED warnings.
+    test(LINE_JOINER.join(
+          "/** @fileoverview @suppress {newCheckTypes} */",
+          "/** @define {boolean} */ var DEF = false;",
+          "DEF = true;"),
         "var DEF=true;true");
   }
 
   public void testSimpleReassign2() {
-    test("/** @define {number|boolean} */ var DEF=false;DEF=true;DEF=3",
+    test(LINE_JOINER.join(
+          "/** @fileoverview @suppress {newCheckTypes} */",
+          "/** @define {number|boolean} */ var DEF=false;",
+          "DEF=true;",
+          "DEF=3"),
         "var DEF=3;true;3");
 
     Name def = namespace.getNameIndex().get("DEF");
@@ -190,7 +198,11 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testSimpleReassign3() {
-    test("/** @define {boolean} */ var DEF = false;var x;x = DEF = true;",
+    test(LINE_JOINER.join(
+          "/** @fileoverview @suppress {newCheckTypes} */",
+          "/** @define {boolean} */ var DEF = false;",
+          "var x;",
+          "x = DEF = true;"),
         "var DEF=true;var x;x=true");
   }
 
@@ -227,9 +239,11 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testReassignAfterNonGlobalRef() {
-    test(
-        "/** @define {boolean} */var DEF=true;" +
-        "var x=function(){var y=DEF}; DEF=false",
+    test(LINE_JOINER.join(
+          "/** @fileoverview @suppress {newCheckTypes} */",
+          "/** @define {boolean} */ var DEF=true;",
+          "var x=function(){var y=DEF};",
+          "DEF=false"),
         "var DEF=false;var x=function(){var y=DEF};false");
 
     Name def = namespace.getNameIndex().get("DEF");

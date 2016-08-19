@@ -2611,6 +2611,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return commonTypes.STRING;
       case NUMBER_TYPE:
         return commonTypes.NUMBER;
+      case NUMBER_STRING_BOOLEAN:
+        return JSType.join(commonTypes.NUMBER_OR_STRING, commonTypes.BOOLEAN);
       case REGEXP_TYPE:
         return commonTypes.getRegexpType();
       case ARRAY_TYPE:
