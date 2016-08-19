@@ -327,14 +327,16 @@ public final class GwtRunner implements EntryPoint {
   /**
    * Exports the {@link #compile} method via JSNI.
    *
-   * This will be placed on {@code module.exports} or {@code this}.
+   * This will be placed on {@code module.exports}, {@code self.compile} or {@code window.compile}.
    */
   public native void exportCompile() /*-{
     var fn = $entry(@com.google.javascript.jscomp.gwt.client.GwtRunner::compile(*));
     if (typeof module !== 'undefined' && module.exports) {
       module.exports = fn;
+    } else if (typeof self === 'object') {
+      self.compile = fn;
     } else {
-      this.compile = fn;
+      window.compile = fn;
     }
   }-*/;
 
