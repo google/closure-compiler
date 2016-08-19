@@ -252,19 +252,19 @@ public final class AliasStringsTest extends CompilerTestCase {
 
     test("a='Antidisestablishmentarianism';" +
          "b='Antidisestablishmentarianism';",
-         "var $$S_Antidisestablishment_506eaf9c=" +
+         "var $$S_Antidisestablishment_e428eaa9=" +
          "  'Antidisestablishmentarianism';"      +
-         "a=$$S_Antidisestablishment_506eaf9c;"   +
-         "b=$$S_Antidisestablishment_506eaf9c");
+         "a=$$S_Antidisestablishment_e428eaa9;"   +
+         "b=$$S_Antidisestablishment_e428eaa9");
 
     // Check that small changes give different hash codes
 
     test("a='AntidisestablishmentarianIsm';" +
          "b='AntidisestablishmentarianIsm';",
-         "var $$S_Antidisestablishment_6823e97c=" +
+         "var $$S_Antidisestablishment_e4287289=" +
          "  'AntidisestablishmentarianIsm';"      +
-         "a=$$S_Antidisestablishment_6823e97c;"   +
-         "b=$$S_Antidisestablishment_6823e97c");
+         "a=$$S_Antidisestablishment_e4287289;"   +
+         "b=$$S_Antidisestablishment_e4287289");
 
     // TODO(user): check that hash code collisions are handled.
   }

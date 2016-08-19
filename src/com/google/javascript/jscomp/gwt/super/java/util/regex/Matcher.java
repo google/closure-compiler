@@ -26,7 +26,7 @@ import com.google.gwt.regexp.shared.RegExp;
  */
 public class Matcher {
   private final RegExp regExp;
-  private final String input;
+  private String input;
   private MatchResult result;
   private boolean hasExecuted;
   private int findFromIndex;
@@ -88,5 +88,10 @@ public class Matcher {
     hasExecuted = false;
     findFromIndex = 0;
     return this;
+  }
+
+  public Matcher reset(String input) {
+    this.input = input;
+    return reset();
   }
 }

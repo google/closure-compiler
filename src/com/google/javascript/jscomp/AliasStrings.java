@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -35,7 +32,6 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.CRC32;
 
 /**
  * A {@link Compiler} pass for aliasing strings. String declarations
@@ -49,7 +45,6 @@ import java.util.zip.CRC32;
  * will probably delete it.
  *
  */
-@GwtIncompatible("java.util.regex")
 class AliasStrings extends AbstractPostOrderCallback
     implements CompilerPass {
 
@@ -87,7 +82,7 @@ class AliasStrings extends AbstractPostOrderCallback
 
   /** package private.  This value is AND-ed with the hash function to allow
    * unit tests to reduce the range of hash values to test collision cases */
-  long unitTestHashReductionMask = ~0L;
+  int unitTestHashReductionMask = ~0;
 
   /**
    * Creates an instance.
@@ -405,11 +400,9 @@ class AliasStrings extends AbstractPostOrderCallback
 
       // The identifier is not unique because we omitted part, so add a
       // checksum as a hashcode.
-      CRC32 crc32 = new CRC32();
-      crc32.update(s.getBytes(UTF_8));
-      long hash = crc32.getValue() & unitTestHashReductionMask;
+      int hash = s.hashCode() & unitTestHashReductionMask;
       sb.append('_');
-      sb.append(Long.toHexString(hash));
+      sb.append(Integer.toHexString(hash));
       String encoded = sb.toString();
       if (!usedHashedAliases.add(encoded)) {
         // A collision has been detected (which is very rare). Use the sequence
