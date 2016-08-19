@@ -17850,4 +17850,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var y = this.toString();",
         NewTypeInference.GLOBAL_THIS);
   }
+
+  public void testDontPropagateRhsInferenceToLhs() {
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (!x || h(x)) { return 123; }",
+        "}",
+        "function h(/** null */ x) {}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }

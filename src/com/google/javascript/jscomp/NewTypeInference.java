@@ -3433,7 +3433,12 @@ final class NewTypeInference implements CompilerPass {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
     EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv);
-    EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env);
+    // The types inferred for variables in the rhs are not always
+    // true for the rest of the function. Eg, in (!x || x.foo(123))
+    // x is non-null only in the rhs, not everywhere.
+    // For this reason, we don't reuse rhsPair.env when analyzing the lhs,
+    // to avoid incorrect propagation of these types.
+    EnvTypePair lhsPair = analyzeExprBwd(lhs, outEnv);
     lhsPair.type = JSType.join(rhsPair.type, lhsPair.type);
     return lhsPair;
   }
