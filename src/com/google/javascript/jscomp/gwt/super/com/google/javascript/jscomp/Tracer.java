@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-/** GWT compatible no-op replacement for {@code Tracer} */
+/** Minimal Tracer replacement */
 final class Tracer {
+  long start = System.currentTimeMillis();
+
   Tracer(String type, String comment) {}
 
   Tracer(String comment) {}
@@ -29,7 +31,7 @@ final class Tracer {
   static void clearCurrentThreadTrace() {}
 
   long stop() {
-    return 0L;
+    return System.currentTimeMillis() + start;
   }
 }
 
