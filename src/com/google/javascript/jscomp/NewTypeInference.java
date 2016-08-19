@@ -4284,8 +4284,7 @@ final class NewTypeInference implements CompilerPass {
           warnings.add(JSError.make(
               argNode, INVALID_ARGUMENT_TYPE,
               Integer.toString(i + 1), calleeScope.getReadableName(),
-              formalType.toString(),
-              argType.toString()));
+              errorMsgWithTypeDiff(formalType, argType)));
         }
         i++;
         argNode = argNode.getNext();
