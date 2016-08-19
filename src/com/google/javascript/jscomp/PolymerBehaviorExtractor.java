@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
@@ -70,7 +71,8 @@ final class PolymerBehaviorExtractor {
             PolymerPassStaticUtils.extractProperties(behaviorName),
             getBehaviorFunctionsToCopy(behaviorName),
             getNonPropertyMembersToCopy(behaviorName),
-            !NodeUtil.isInFunction(behaviorName)));
+            !NodeUtil.isInFunction(behaviorName),
+            (FeatureSet) NodeUtil.getEnclosingScript(behaviorName).getProp(Node.FEATURE_SET)));
         continue;
       }
 
@@ -121,7 +123,8 @@ final class PolymerBehaviorExtractor {
             PolymerPassStaticUtils.extractProperties(behaviorValue),
             getBehaviorFunctionsToCopy(behaviorValue),
             getNonPropertyMembersToCopy(behaviorValue),
-            isGlobalDeclaration));
+            isGlobalDeclaration,
+            (FeatureSet) NodeUtil.getEnclosingScript(behaviorValue).getProp(Node.FEATURE_SET)));
       } else {
         compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
       }
@@ -194,13 +197,20 @@ final class PolymerBehaviorExtractor {
      */
     final boolean isGlobalDeclaration;
 
+    /**
+     * Language features to carry over to the extraction destination.
+     */
+    final FeatureSet features;
+
     BehaviorDefinition(
         List<MemberDefinition> props, List<MemberDefinition> functionsToCopy,
-        List<MemberDefinition> nonPropertyMembersToCopy, boolean isGlobalDeclaration) {
+        List<MemberDefinition> nonPropertyMembersToCopy, boolean isGlobalDeclaration,
+        FeatureSet features) {
       this.props = props;
       this.functionsToCopy = functionsToCopy;
       this.nonPropertyMembersToCopy = nonPropertyMembersToCopy;
       this.isGlobalDeclaration = isGlobalDeclaration;
+      this.features = features;
     }
   }
 }

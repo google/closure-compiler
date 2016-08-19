@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import java.io.ByteArrayOutputStream;
@@ -126,10 +127,8 @@ public final class TranspilingClosureBundler extends ClosureBundler {
               // saved as instance state.
               ByteArrayOutputStream baos = new ByteArrayOutputStream();
               Compiler compiler = new Compiler(new PrintStream(baos));
-              // Threads can't be used in small unit tests.
-              compiler.disableThreads();
               SourceFile sourceFile = SourceFile.fromCode(path, js);
-              compiler.<SourceFile, SourceFile>compile(
+              Result result = compiler.<SourceFile, SourceFile>compile(
                   ImmutableList.<SourceFile>of(),
                   ImmutableList.<SourceFile>of(sourceFile),
                   getOptions());
@@ -141,6 +140,9 @@ public final class TranspilingClosureBundler extends ClosureBundler {
                   throw new RuntimeException(e);
                 }
                 throw new IllegalStateException(message);
+              }
+              if (!result.transpiledFiles.contains(sourceFile)) {
+                return js;
               }
               StringBuilder source = new StringBuilder().append(compiler.toSource());
               StringBuilder sourceMap = new StringBuilder();
@@ -170,8 +172,6 @@ public final class TranspilingClosureBundler extends ClosureBundler {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3); // change .delete to ['delete']
     options.setForceLibraryInjection(ImmutableList.of("es6_runtime"));
     Compiler compiler = new Compiler();
-    // Threads can't be used in small unit tests.
-    compiler.disableThreads();
     SourceFile sourceFile = SourceFile.fromCode("source", "");
     compiler.<SourceFile, SourceFile>compile(
         ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(sourceFile), options);

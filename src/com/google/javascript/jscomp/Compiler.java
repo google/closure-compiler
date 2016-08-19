@@ -998,10 +998,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
    */
   public Result getResult() {
     PassConfig.State state = getPassConfig().getIntermediateState();
+    Set<SourceFile> transpiledFiles = new HashSet<>();
+    if (jsRoot != null) {
+      for (Node scriptNode : jsRoot.children()) {
+        if (scriptNode.getBooleanProp(Node.TRANSPILED)) {
+          transpiledFiles.add(getSourceFileByName(scriptNode.getSourceFileName()));
+        }
+      }
+    }
     return new Result(getErrors(), getWarnings(), debugLog.toString(),
         state.variableMap, state.propertyMap,
         state.anonymousFunctionNameMap, state.stringMap, functionInformationMap,
-        sourceMap, externExports, state.cssNames, state.idGeneratorMap);
+        sourceMap, externExports, state.cssNames, state.idGeneratorMap, transpiledFiles);
   }
 
   /**

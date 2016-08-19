@@ -25,13 +25,13 @@ public final class PolymerPassStaticUtilsTest extends TestCase {
 
   public void testGetPolymerElementType_noNativeElement() {
     PolymerClassDefinition def = new PolymerClassDefinition(
-        null, IR.objectlit(), null, null, null, null, null);
+        null, IR.objectlit(), null, null, null, null, null, null);
     assertThat(PolymerPassStaticUtils.getPolymerElementType(def)).isEqualTo("PolymerElement");
   }
 
   public void testGetPolymerElementType_inputBaseElement() {
     PolymerClassDefinition def = new PolymerClassDefinition(
-        null, IR.objectlit(), null, null, "input", null, null);
+        null, IR.objectlit(), null, null, "input", null, null, null);
     assertThat(PolymerPassStaticUtils.getPolymerElementType(def)).isEqualTo("PolymerInputElement");
   }
 

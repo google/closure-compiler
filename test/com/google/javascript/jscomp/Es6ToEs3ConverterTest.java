@@ -1378,16 +1378,14 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testInitSymbol() {
-    test(
-        "alert(Symbol.thimble);",
-        "$jscomp.initSymbol(); alert(Symbol.thimble)");
+    test("let a = alert(Symbol.thimble);", "$jscomp.initSymbol(); var a = alert(Symbol.thimble)");
     assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
 
     test(
         LINE_JOINER.join(
             "function f() {",
-            "  var x = 1;",
-            "  var y = Symbol('nimble');",
+            "  let x = 1;",
+            "  let y = Symbol('nimble');",
             "}"),
         LINE_JOINER.join(
             "function f() {",
@@ -1544,8 +1542,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
    * ES5 getters and setters should report an error if the languageOut is ES3.
    */
   public void testEs5GettersAndSetters_es3() {
-    testError("var x = { get y() {} };", CANNOT_CONVERT);
-    testError("var x = { set y(value) {} };", CANNOT_CONVERT);
+    testError("let x = { get y() {} };", CANNOT_CONVERT);
+    testError("let x = { set y(value) {} };", CANNOT_CONVERT);
   }
 
   /**

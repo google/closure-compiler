@@ -265,4 +265,9 @@ public final class FeatureSet implements Serializable {
         throw new IllegalArgumentException("No such FeatureSet: " + name);
     }
   }
+
+  public boolean isEs6ImplOrHigher() {
+    String version = version();
+    return !version.equals("es3") && !version.equals("es5");
+  }
 }
