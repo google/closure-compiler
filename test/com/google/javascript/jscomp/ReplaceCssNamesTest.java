@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_WARNIN
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +30,7 @@ import java.util.Set;
  * Tests for ReplaceCssNames.java.
  *
  */
-public final class ReplaceCssNamesTest extends CompilerTestCase {
+public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
   /** Whether to pass the map of replacements as opposed to null */
   boolean useReplacementMap;
 
@@ -63,6 +62,10 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   Map<String, Integer> cssNames;
 
   public ReplaceCssNamesTest() {
+    super(LINE_JOINER.join(
+        DEFAULT_EXTERNS,
+        "Object.prototype.getClass;",
+        "goog.getCssName;"));
   }
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {
@@ -106,7 +109,13 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testDoNotUseReplacementMap() {
+  // NOTE(aravindpg): The ccsNames field is populated by each test method, and then compared
+  // to expected. So, our usual strategy of running both NTI and OTI for each test doesn't work
+  // here. We need to run all three methods in doNotUseReplacementMap with OTI before we can
+  // run them with NTI. That's why we refactored this code to call doNotUseReplacementMap from
+  // two places.
+
+  private void doNotUseReplacementMap() {
     useReplacementMap = false;
     test("var x = goog.getCssName('goog-footer-active')",
          "var x = 'goog-footer-active'");
@@ -126,6 +135,16 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     assertEquals(expected, cssNames);
   }
 
+  public void testDoNotUseReplacementMapOti() {
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    doNotUseReplacementMap();
+  }
+
+  public void testDoNotUseReplacementMapNti() {
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    doNotUseReplacementMap();
+  }
+
   public void testOneArgWithUnknownStringLiterals() {
     test("var x = goog.getCssName('unknown')",
          "var x = 'unknown'", null, UNKNOWN_SYMBOL_WARNING);
@@ -135,7 +154,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
          "setClass('ab')", null, UNKNOWN_SYMBOL_WARNING);
   }
 
-  public void testOneArgWithSimpleStringLiterals() {
+  private void oneArgWithSimpleStringLiterals() {
     test("var x = goog.getCssName('buttonbar')",
          "var x = 'b'");
     test("el.className = goog.getCssName('colorswatch')",
@@ -151,7 +170,17 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     assertEquals(expected, cssNames);
   }
 
-  public void testOneArgWithCompositeClassNames() {
+  public void testOneArgWithSimpleStringLiteralsOti() {
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    oneArgWithSimpleStringLiterals();
+  }
+
+  public void testOneArgWithSimpleStringLiteralsNti() {
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    oneArgWithSimpleStringLiterals();
+  }
+
+  private void oneArgWithCompositeClassNames() {
     test("var x = goog.getCssName('goog-footer-active')",
          "var x = 'g-f-a'");
     test("el.className = goog.getCssName('goog-colorswatch-disabled')",
@@ -168,6 +197,16 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         .put("buttonbar", 1)
         .build();
     assertEquals(expected, cssNames);
+  }
+
+  public void testOneArgWithCompositeClassNamesOti() {
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    oneArgWithCompositeClassNames();
+  }
+
+  public void testoOeArgWithCompositeClassNamesNti() {
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    oneArgWithCompositeClassNames();
   }
 
   public void testOneArgWithCompositeClassNamesFull() {
@@ -206,8 +245,8 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   public void testTwoArsWithVariableFirstArg() {
     test("var x = goog.getCssName(baseClass, 'active')",
          "var x = baseClass + '-a'");
-    test("el.className = goog.getCssName(this.getClass(), 'disabled')",
-         "el.className = this.getClass() + '-d'");
+    test("el.className = goog.getCssName((new Object).getClass(), 'disabled')",
+         "el.className = (new Object).getClass() + '-d'");
     test("setClass(goog.getCssName(BASE_CLASS, 'disabled'))",
          "setClass(BASE_CLASS + '-d')");
   }
