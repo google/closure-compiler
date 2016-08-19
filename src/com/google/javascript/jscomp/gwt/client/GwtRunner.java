@@ -36,6 +36,8 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.WarningLevel;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -302,7 +304,7 @@ public final class GwtRunner implements EntryPoint {
     externs.addAll(createExterns(options.getEnvironment()));
 
     NodeErrorManager errorManager = new NodeErrorManager();
-    Compiler compiler = new Compiler();
+    Compiler compiler = new Compiler(new NodePrintStream());
     compiler.setErrorManager(errorManager);
     compiler.compile(externs, jsCode, options);
 
@@ -363,5 +365,69 @@ public final class GwtRunner implements EntryPoint {
 
     @Override
     public void printSummary() {}
+  }
+
+  // TODO(johnlenz): remove this once GWT has a proper PrintStream implementation
+  private static class NodePrintStream extends PrintStream {
+    private String line = "";
+
+    NodePrintStream() {
+      super((OutputStream) null);
+    }
+
+    @Override
+    public void println(String s) {
+      print(s + "\n");
+    }
+
+    @Override
+    public void print(String s) {
+      if (useStdErr()) {
+        writeToStdErr(s);
+      } else {
+        writeFinishedLinesToConsole(s);
+      }
+    }
+
+    private void writeFinishedLinesToConsole(String s) {
+      line = line + s;
+      int start = 0;
+      int end = 0;
+      while ((end = line.indexOf('\n', start)) != -1) {
+        writeToConsole(line.substring(start, end));
+        start = end + 1;
+      }
+      line = line.substring(start);
+    }
+
+    private static native boolean useStdErr() /*-{
+      return !!(typeof process != "undefined" && process.stderr);
+    }-*/;
+
+    private native boolean writeToStdErr(String s) /*-{
+      process.stderr.write(s);
+    }-*/;
+
+
+    // NOTE: console methods always add a newline following the text.
+    private native void writeToConsole(String s) /*-{
+       console.log(s);
+    }-*/;
+
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public void flush() {
+    }
+
+    @Override
+    public void write(byte[] buffer, int offset, int length) {
+    }
+
+    @Override
+    public void write(int oneByte) {
+    }
   }
 }
