@@ -14,42 +14,21 @@
  * limitations under the License.
  */
 /**
- * @fileoverview Definitions from the Streams API as of 22 June 2015.
- * @see https://streams.spec.whatwg.org/commit-snapshots/b2131ef6460c446817767d7575698f9fcfa554a3/
+ * @fileoverview Streams API definitions
+ *
+ * Based on Living Standard — Last Updated 5 August 2016
+ * https://streams.spec.whatwg.org/commit-snapshots/34ecaadbcce8df9943d7a2cdb7fca4dc25914df4/
+ *
+ * @see https://streams.spec.whatwg.org/
  * @externs
  */
 
-/**
- * @typedef {{ value: (*|undefined), done: boolean }}
- */
+
+/** @typedef {{ value:*, done:boolean }} */
 var IteratorResult;
 
-/**
- * @param {{ highWaterMark: number }} config
- * @constructor
- */
-function ByteLengthQueuingStrategy(config) {}
 
 /**
- * @param {*} chunk
- * @return {number}
- */
-ByteLengthQueuingStrategy.prototype.size = function(chunk) {};
-
-/**
- * @param {{ highWaterMark: number }} config
- * @constructor
- */
-function CountQueuingStrategy(config) {}
-
-/**
- * @param {*} chunk
- * @return {number}
- */
-CountQueuingStrategy.prototype.size = function(chunk) {};
-
-/**
- * The value of {@code highWaterMark} in a custom strategy must be non-negative.
  * @typedef {!CountQueuingStrategy|!ByteLengthQueuingStrategy|{
  *     size: (undefined|function(*): number),
  *     highWaterMark: number
@@ -57,251 +36,430 @@ CountQueuingStrategy.prototype.size = function(chunk) {};
  */
 var QueuingStrategy;
 
+
 /**
- * @typedef {{
- *     writable: !WritableStream,
- *     readable: !ReadableStream
- * }}
+ * @record
  */
-var TransformStream;
+function TransformStream() {};
+
+/** @type {!WritableStream} */
+TransformStream.prototype.writable;
+
+/** @type {!ReadableStream} */
+TransformStream.prototype.readable;
 
 
 /**
- * @typedef {undefined|{
- *     start: (undefined|function(!ReadableStreamController): (!Promise<*>|void)),
- *     pull: (undefined|function(!ReadableStreamController): (!Promise<*>|void)),
- *     cancel: (undefined|function(*): (!Promise<*>|void))
- * }}
+ * @record
  */
-var ReadableStreamSource;
-
-/**
- * @see https://streams.spec.whatwg.org/#rs-class
- * @param {?ReadableStreamSource=} opt_underlyingSource
- * @param {QueuingStrategy=} opt_strategy
- * @constructor
- */
-function ReadableStream(opt_underlyingSource, opt_strategy) {}
+function PipeOptions() {};
 
 /** @type {boolean} */
+PipeOptions.prototype.preventClose;
+
+/** @type {boolean} */
+PipeOptions.prototype.preventAbort;
+
+/** @type {boolean} */
+PipeOptions.prototype.preventCancel;
+
+
+/**
+ * @record
+ */
+function ReadableStreamSource() {};
+
+/**
+ * @type {(undefined|
+ *     function((!ReadableByteStreamController|!ReadableStreamDefaultController)):(!Promise<*>|undefined))}
+ */
+ReadableStreamSource.prototype.start;
+
+/**
+ * @type {(undefined|
+ *     function((!ReadableByteStreamController|!ReadableStreamDefaultController)):(!Promise<*>|undefined))}
+ */
+ReadableStreamSource.prototype.pull;
+
+/** @type {(undefined|function(*):(!Promise<*>|undefined))} */
+ReadableStreamSource.prototype.cancel;
+
+/** @type {(undefined|string)} */
+ReadableStreamSource.prototype.type;
+
+/** @type {(undefined|number)} */
+ReadableStreamSource.prototype.autoAllocateChunkSize;
+
+
+/**
+ * @param {!ReadableStreamSource=} opt_underlyingSource
+ * @param {!QueuingStrategy=} opt_queuingStrategy
+ * @constructor
+ * @see https://streams.spec.whatwg.org/#rs-class
+ */
+function ReadableStream(opt_underlyingSource, opt_queuingStrategy) {};
+
+/**
+ * @type {boolean}
+ * @see https://streams.spec.whatwg.org/#rs-locked
+ */
 ReadableStream.prototype.locked;
 
 /**
  * @param {*} reason
+ * @return {!Promise<void>}
+ * @see https://streams.spec.whatwg.org/#rs-cancel
  */
 ReadableStream.prototype.cancel = function(reason) {};
 
 /**
- * @return {!ReadableStreamReader}
+ * @param {{ mode:(undefined|string) }=} opt_options
+ * @return {(!ReadableStreamDefaultReader|!ReadableStreamBYOBReader)}
+ * @see https://streams.spec.whatwg.org/#rs-get-reader
  */
-ReadableStream.prototype.getReader = function() {};
-
-/**
- * @typedef {{
- *     preventClose: (undefined|boolean),
- *     preventAbort: (undefined|boolean),
- *     preventCancel: (undefined|boolean)
- * }}
- */
-var PipeOptions;
+ReadableStream.prototype.getReader = function(opt_options) {};
 
 /**
  * @param {!TransformStream} transform
- * @param {PipeOptions=} opt_options
+ * @param {!PipeOptions=} opt_options
  * @return {!ReadableStream}
+ * @see https://streams.spec.whatwg.org/#rs-pipe-through
  */
 ReadableStream.prototype.pipeThrough = function(transform, opt_options) {};
 
 /**
  * @param {!WritableStream} dest
- * @param {PipeOptions=} opt_options
- * @return {!Promise<*>}
+ * @param {!PipeOptions=} opt_options
+ * @return {!Promise<void>}
+ * @see https://streams.spec.whatwg.org/#rs-pipe-to
  */
 ReadableStream.prototype.pipeTo = function(dest, opt_options) {};
 
 /**
- * @return {!Array<!ReadableStream>} Two-element array, containing resulting
- *     streams.
+ * @return {!Array<!ReadableStream>}
+ * @see https://streams.spec.whatwg.org/#rs-tee
  */
 ReadableStream.prototype.tee = function() {};
 
+
 /**
- * @see https://streams.spec.whatwg.org/#rs-controller-class
- * @param {!ReadableStream} stream
- * @constructor
+ * The ReadableStreamDefaultReader constructor is generally not meant to be used directly;
+ * instead, a stream’s getReader() method should be used.
+ *
+ * @interface
+ * @see https://streams.spec.whatwg.org/#default-reader-class
  */
-function ReadableStreamController(stream) {}
+function ReadableStreamDefaultReader() {};
 
-/** @type {number} */
-ReadableStreamController.prototype.desiredSize;
+/**
+ * @type {!Promise<void>}
+ * @see https://streams.spec.whatwg.org/#default-reader-closed
+ */
+ReadableStreamDefaultReader.prototype.closed;
 
-/** @return {undefined} */
-ReadableStreamController.prototype.close = function() {};
+/**
+ * @param {*} reason
+ * @return {!Promise<*>}
+ * @see https://streams.spec.whatwg.org/#default-reader-cancel
+ */
+ReadableStreamDefaultReader.prototype.cancel = function(reason) {};
+
+/**
+ * @return {!Promise<!IteratorResult>}
+ * @see https://streams.spec.whatwg.org/#default-reader-read
+ */
+ReadableStreamDefaultReader.prototype.read = function() {};
+
+/**
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#default-reader-release-lock
+ */
+ReadableStreamDefaultReader.prototype.releaseLock = function() {};
+
+
+/**
+ * The ReadableStreamBYOBReader constructor is generally not meant to be used
+ * directly; instead, a stream’s getReader() method should be used.
+ *
+ * @interface
+ * @see https://streams.spec.whatwg.org/#byob-reader-class
+ */
+function ReadableStreamBYOBReader() {};
+
+/**
+ * @type {!Promise<void>}
+ * @see https://streams.spec.whatwg.org/#byob-reader-closed
+ */
+ReadableStreamBYOBReader.prototype.closed;
+
+/**
+ * @param {*} reason
+ * @return {!Promise<*>}
+ * @see https://streams.spec.whatwg.org/#byob-reader-cancel
+ */
+ReadableStreamBYOBReader.prototype.cancel = function(reason) {};
+
+/**
+ * @param {!ArrayBufferView} view
+ * @return {!Promise<!IteratorResult>}
+ * @see https://streams.spec.whatwg.org/#byob-reader-read
+ */
+ReadableStreamBYOBReader.prototype.read = function(view) {};
+
+/**
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#byob-reader-release-lock
+ */
+ReadableStreamBYOBReader.prototype.releaseLock = function() {};
+
+
+/**
+ * The ReadableStreamDefaultController constructor cannot be used directly;
+ * it only works on a ReadableStream that is in the middle of being constructed.
+ *
+ * @interface
+ * @see https://streams.spec.whatwg.org/#rs-default-controller-class
+ */
+function ReadableStreamDefaultController() {};
+
+/**
+ * @type {number}
+ * @see https://streams.spec.whatwg.org/#rs-default-controller-desired-size
+ */
+ReadableStreamDefaultController.prototype.desiredSize;
+
+/**
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#rs-default-controller-close
+ */
+ReadableStreamDefaultController.prototype.close = function() {};
 
 /**
  * @param {*} chunk
  * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#rs-default-controller-enqueue
  */
-ReadableStreamController.prototype.enqueue = function(chunk) {};
+ReadableStreamDefaultController.prototype.enqueue = function(chunk) {};
 
 /**
- * @param {*} e
+ * @param {*} err
  * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#rs-default-controller-error
  */
-ReadableStreamController.prototype.error = function(e) {};
+ReadableStreamDefaultController.prototype.error = function(err) {};
+
 
 /**
- * @see https://streams.spec.whatwg.org/#reader-class
- * @param {!ReadableStream} stream
+ * The ReadableByteStreamController constructor cannot be used directly;
+ * it only works on a ReadableStream that is in the middle of being constructed.
+ *
+ * @interface
+ * @see https://streams.spec.whatwg.org/#rbs-controller-class
+ */
+function ReadableByteStreamController() {};
+
+/**
+ * @type {!ReadableStreamBYOBRequest}
+ * @see https://streams.spec.whatwg.org/#rbs-controller-byob-request
+ */
+ReadableByteStreamController.prototype.byobRequest;
+
+/**
+ * @type {number}
+ * @see https://streams.spec.whatwg.org/#rbs-controller-desired-size
+ */
+ReadableByteStreamController.prototype.desiredSize;
+
+/**
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#rbs-controller-close
+ */
+ReadableByteStreamController.prototype.close = function() {};
+
+/**
+ * @param {!ArrayBufferView} chunk
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#rbs-controller-enqueue
+ */
+ReadableByteStreamController.prototype.enqueue = function(chunk) {};
+
+/**
+ * @param {*} err
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#rbs-controller-error
+ */
+ReadableByteStreamController.prototype.error = function(err) {};
+
+
+/**
+ * @interface
+ * @see https://streams.spec.whatwg.org/#rs-byob-request-class
+ */
+function ReadableStreamBYOBRequest() {};
+
+/**
+ * @type {!ArrayBufferView}
+ * @see https://streams.spec.whatwg.org/#rs-byob-request-view
+ */
+ReadableStreamBYOBRequest.prototype.view;
+
+/**
+ * @param {number} bytesWritten
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#rs-byob-request-respond
+ */
+ReadableStreamBYOBRequest.prototype.respond = function(bytesWritten) {};
+
+/**
+ * @param {!ArrayBufferView} view
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#rs-byob-request-respond-with-new-view
+ */
+ReadableStreamBYOBRequest.prototype.respondWithNewView = function(view) {};
+
+
+/**
+ * @record
+ */
+function WritableStreamSink() {};
+
+/** @type {(undefined|function(!WritableStreamDefaultController):(!Promise<*>|undefined))}*/
+WritableStreamSink.prototype.start;
+
+/** @type {(undefined|function(!WritableStreamDefaultController):(!Promise<*>|undefined))}*/
+WritableStreamSink.prototype.write;
+
+/** @type {(undefined|function():(!Promise<*>|undefined))} */
+WritableStreamSink.prototype.close;
+
+/** @type {(undefined|function(*):(!Promise<*>|undefined))} */
+WritableStreamSink.prototype.abort;
+
+
+/**
+ * @param {!WritableStreamSink=} opt_underlyingSink
+ * @param {!QueuingStrategy=} opt_queuingStrategy
  * @constructor
- */
-function ReadableStreamReader(stream) {}
-
-/** @type {boolean} */
-ReadableStreamReader.prototype.closed;
-
-/**
- * @param {*} reason
- * @return {undefined}
- */
-ReadableStreamReader.prototype.cancel = function(reason) {};
-
-/**
- * @return {!Promise<!IteratorResult>}
- */
-ReadableStreamReader.prototype.read = function() {};
-
-/** @return {undefined} */
-ReadableStreamReader.prototype.releaseLock = function() {};
-
-/**
- * @typedef {(undefined|{
- *     start: (undefined|function(*): (!Promise<*>|void)),
- *     write: (undefined|function(*): (!Promise<*>|void)),
- *     close: (undefined|function(): (!Promise<*>|void)),
- *     abort: (undefined|function(*): (!Promise<*>|void))
- * })}
- */
-var WritableStreamSink;
-
-/**
  * @see https://streams.spec.whatwg.org/#ws-class
- * @param {WritableStreamSink=} opt_underlyingSink
- * @param {QueuingStrategy=} opt_strategy
- * @constructor
  */
-function WritableStream(opt_underlyingSink, opt_strategy) {}
+function WritableStream(opt_underlyingSink, opt_queuingStrategy) {};
 
-/** @type {!Promise<*>} */
-WritableStream.prototype.closed;
-
-/** @type {!Promise<*>} */
-WritableStream.prototype.ready;
-
-/** @type {string} */
-WritableStream.prototype.state;
+/**
+ * @type {boolean}
+ * @see https://streams.spec.whatwg.org/#ws-locked
+ */
+WritableStream.prototype.locked;
 
 /**
  * @param {*} reason
  * @return {!Promise<undefined>}
+ * @see https://streams.spec.whatwg.org/#ws-abort
  */
 WritableStream.prototype.abort = function(reason) {};
 
 /**
- * @return {!Promise<undefined>}
+ * @return {!WritableStreamDefaultWriter}
+ * @see https://streams.spec.whatwg.org/#ws-get-writer
  */
-WritableStream.prototype.close = function() {};
+WritableStream.prototype.getWriter = function() {};
+
 
 /**
- * @return {!Promise<*>}
+ * @interface
+ * @see https://streams.spec.whatwg.org/#default-writer-class
  */
-WritableStream.prototype.write = function(chunk) {};
+function WritableStreamDefaultWriter() {};
 
 /**
- * @see https://streams.spec.whatwg.org/#rbs-class
- * @param {?ReadableStreamSource=} opt_underlyingSource
- * @param {QueuingStrategy=} opt_strategy
- * @constructor
+ * @type {!Promise<undefined>}
+ * @see https://streams.spec.whatwg.org/#default-writer-closed
  */
-function ReadableByteStream(opt_underlyingSource, opt_strategy) {}
+WritableStreamDefaultWriter.prototype.closed;
 
-/** @type {boolean} */
-ReadableByteStream.prototype.locked;
+/**
+ * @type {number}
+ * @see https://streams.spec.whatwg.org/#default-writer-desiredSize
+ */
+WritableStreamDefaultWriter.prototype.desiredSize;
+
+/**
+ * @type {!Promise<number>}
+ * @see https://streams.spec.whatwg.org/#default-writer-ready
+ */
+WritableStreamDefaultWriter.prototype.ready;
 
 /**
  * @param {*} reason
+ * @return {!Promise<undefined>}
+ * @see https://streams.spec.whatwg.org/#default-writer-abort
  */
-ReadableByteStream.prototype.cancel = function(reason) {};
+WritableStreamDefaultWriter.prototype.abort = function(reason) {};
 
 /**
- * @return {!ReadableByteStreamReader}
+ * @return {!Promise<undefined>}
+ * @see https://streams.spec.whatwg.org/#default-writer-close
  */
-ReadableByteStream.prototype.getReader = function() {};
+WritableStreamDefaultWriter.prototype.close = function() {};
 
 /**
- * @param {!TransformStream} transform
- * @param {PipeOptions=} opt_options
- * @return {!ReadableByteStream}
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#default-writer-release-lock
  */
-ReadableByteStream.prototype.pipeThrough = function(transform, opt_options) {};
-
-/**
- * @param {!WritableStream} dest
- * @param {PipeOptions=} opt_options
- * @return {!Promise<*>}
- */
-ReadableByteStream.prototype.pipeTo = function(dest, opt_options) {};
-
-/**
- * @return {!Array<!ReadableByteStream>} Two-element array containing resulting
- *     streams.
- */
-ReadableByteStream.prototype.tee = function() {};
-
-/**
- * @see https://streams.spec.whatwg.org/#rs-controller-class
- * @param {!ReadableByteStream} stream
- * @constructor
- */
-function ReadableByteStreamController(stream) {}
-
-/** @type {number} */
-ReadableByteStreamController.prototype.desiredSize;
-
-/** @return {undefined} */
-ReadableByteStreamController.prototype.close = function() {};
+WritableStreamDefaultWriter.prototype.releaseLock = function() {};
 
 /**
  * @param {*} chunk
- * @return {undefined}
+ * @return {!Promise<undefined>}
+ * @see https://streams.spec.whatwg.org/#default-writer-write
  */
-ReadableByteStreamController.prototype.resolve = function(chunk) {};
+WritableStreamDefaultWriter.prototype.write = function(chunk) {};
+
 
 /**
- * @param {*} e
- * @return {undefined}
+ * The WritableStreamDefaultController constructor cannot be used directly;
+ * it only works on a WritableStream that is in the middle of being constructed.
+ *
+ * @interface
+ * @see https://streams.spec.whatwg.org/#ws-default-controller-class
  */
-ReadableByteStreamController.prototype.error = function(e) {};
+function WritableStreamDefaultController() {};
 
 /**
- * @see https://streams.spec.whatwg.org/#reader-class
- * @param {!ReadableByteStream} stream
+ * @param {*} err
+ * @return {!Promise<undefined>}
+ * @see https://streams.spec.whatwg.org/#ws-default-controller-error
+ */
+WritableStreamDefaultController.prototype.error = function(err) {};
+
+
+/**
+ * @param {{ highWaterMark:number }} config
  * @constructor
+ * @see https://streams.spec.whatwg.org/#blqs-class
  */
-function ReadableByteStreamReader(stream) {}
-
-/** @type {boolean} */
-ReadableByteStreamReader.prototype.closed;
+function ByteLengthQueuingStrategy(config) {}
 
 /**
- * @param {*} reason
+ * If we don't want to be strict we can define chunk as {*}
+ * and return as {number|undefined}
+ *
+ * @param {{ byteLength:number }} chunk
+ * @return {number}
+ * @see https://streams.spec.whatwg.org/#blqs-size
  */
-ReadableByteStreamReader.prototype.cancel = function(reason) {};
+ByteLengthQueuingStrategy.prototype.size = function(chunk) {};
+
 
 /**
- * @return {!Promise<!IteratorResult>}
+ * @param {{ highWaterMark:number }} config
+ * @constructor
+ * @see https://streams.spec.whatwg.org/#cqs-class
  */
-ReadableByteStreamReader.prototype.read = function() {};
+function CountQueuingStrategy(config) {}
 
-/** @return {undefined} */
-ReadableByteStreamReader.prototype.releaseLock = function() {};
+/**
+ * @param {*} chunk
+ * @return {number}
+ * @see https://streams.spec.whatwg.org/#cqs-size
+ */
+CountQueuingStrategy.prototype.size = function(chunk) {};
