@@ -1663,6 +1663,18 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(typedefExterns, code, null);
   }
 
+  public void testCustomBanNullDeref4() {
+    configuration =
+        config(rule("BanNullDeref"), "My rule message");
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @suppress {newCheckTypes} @param {*} x */",
+            "function f(x) {",
+            "  return x.toString();",
+            "}"));
+  }
+
   public void testRequireUseStrict0() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 

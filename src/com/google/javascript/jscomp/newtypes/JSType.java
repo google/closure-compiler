@@ -374,7 +374,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isNullable() {
-    return (getMask() & NULL_MASK) != 0;
+    return !isTop() && (getMask() & NULL_MASK) != 0;
   }
 
   @Override
@@ -1595,7 +1595,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isVoidable() {
-    return (getMask() & UNDEFINED_MASK) != 0;
+    return !isTop() && (getMask() & UNDEFINED_MASK) != 0;
   }
 
   @Override
