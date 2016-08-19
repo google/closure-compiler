@@ -632,6 +632,11 @@ class ScopedAliases implements HotSwapCompilerPass {
         Var lexicalVar = t.getScope().getVar(name);
         if (lexicalVar != null && lexicalVar == aliases.get(name)) {
           aliasVar = lexicalVar;
+          // For nodes that are referencing the aliased type, set the original name so it
+          // can be accessed later in tools such as the CodePrinter or refactoring tools.
+          if (compiler.getOptions().preservesDetailedSourceInfo() && n.isName()) {
+            n.setOriginalName(name);
+          }
         }
       }
 
@@ -693,8 +698,12 @@ class ScopedAliases implements HotSwapCompilerPass {
         if (aliasVar != null) {
           aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode));
         }
+        // For nodes that are referencing the aliased type, set the original name so it
+        // can be accessed later in tools such as the CodePrinter or refactoring tools.
+        if (compiler.getOptions().preservesDetailedSourceInfo()) {
+          typeNode.setOriginalName(name);
+        }
       }
-
       for (Node child = typeNode.getFirstChild(); child != null;
            child = child.getNext()) {
         fixTypeNode(child);

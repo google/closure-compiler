@@ -2351,6 +2351,72 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     checkWithOriginalName(code, expectedCode, compilerOptions);
   }
 
+  public void testGoogScope() {
+    // TODO(mknichel): Function declarations need to be rewritten to match the original source
+    // instead of being assigned to a local variable with duplicate JS Doc.
+    String code = ""
+        + "goog.provide('foo.bar');\n"
+        + "goog.require('baz.qux.Quux');\n"
+        + "goog.require('foo.ScopedType');\n"
+        + "\n"
+        + "goog.scope(function() {\n"
+        + "var Quux = baz.qux.Quux;\n"
+        + "var ScopedType = foo.ScopedType;\n"
+        + "\n"
+        + "var STR = '3';\n"
+        + "/** @param {ScopedType} obj */\n"
+        + "function fn(obj) {\n"
+        + "  alert(STR);\n"
+        + "  alert(Quux.someProperty);\n"
+        + "}\n"
+        + "}); // goog.scope\n";
+    String expectedCode = ""
+        + "/** @const */ var $jscomp = {};\n"
+        + "/** @const */ $jscomp.scope = {};\n"
+        + "/** @const */ var foo = {};\n"
+        + "/** @const */ foo.bar = {};\n"
+        + "goog.provide('foo.bar');\n"
+        + "goog.require('baz.qux.Quux');\n"
+        + "goog.require('foo.ScopedType');\n"
+        + "/**\n"
+        + " @param {ScopedType} obj\n"
+        + " */\n"
+        + "var fn = /**\n"
+        + " @param {ScopedType} obj\n"
+        + " */\n"
+        + "function(obj) {\n"
+        + "  alert(STR);\n"
+        + "  alert(Quux.someProperty);\n"
+        + "};\n"
+        + "var STR = '3';\n";
+
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.setClosurePass(true);
+    compilerOptions.setPreserveDetailedSourceInfo(true);
+    compilerOptions.setChecksOnly(true);
+    compilerOptions.setCheckTypes(true);
+    compilerOptions.setContinueAfterErrors(true);
+    compilerOptions.setPreserveGoogProvidesAndRequires(true);
+    Compiler compiler = new Compiler();
+    compiler.disableThreads();
+    compiler.compile(
+        ImmutableList.<SourceFile>of(), // Externs
+        ImmutableList.of(SourceFile.fromCode("test", code)),
+        compilerOptions);
+    Node node = compiler.getRoot().getLastChild().getFirstChild();
+
+    CompilerOptions codePrinterOptions = new CompilerOptions();
+    codePrinterOptions.setPreferSingleQuotes(true);
+    codePrinterOptions.setLineLengthThreshold(80);
+    codePrinterOptions.setPreserveTypeAnnotations(true);
+    codePrinterOptions.setUseOriginalNamesInOutput(true);
+    assertEquals(expectedCode, new CodePrinter.Builder(node)
+        .setCompilerOptions(codePrinterOptions)
+        .setPrettyPrint(true)
+        .setLineBreak(true)
+        .build());
+  }
+
   private void checkWithOriginalName(
       String code, String expectedCode, CompilerOptions compilerOptions) {
     compilerOptions.setCheckSymbols(true);

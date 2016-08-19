@@ -35,12 +35,14 @@ import java.util.TreeSet;
  */
 class TypedCodeGenerator extends CodeGenerator {
   private final TypeIRegistry registry;
+  private final JSDocInfoPrinter jsDocInfoPrinter;
 
   TypedCodeGenerator(
       CodeConsumer consumer, CompilerOptions options, TypeIRegistry registry) {
     super(consumer, options);
     Preconditions.checkNotNull(registry);
     this.registry = registry;
+    this.jsDocInfoPrinter = new JSDocInfoPrinter(options.getUseOriginalNamesInOutput());
   }
 
   @Override
@@ -55,7 +57,7 @@ class TypedCodeGenerator extends CodeGenerator {
           && n.getFirstChild().isAssign()) {
         Node assign = n.getFirstChild();
         if (NodeUtil.isNamespaceDecl(assign.getFirstChild())) {
-          add(JSDocInfoPrinter.print(assign.getJSDocInfo()));
+          add(jsDocInfoPrinter.print(assign.getJSDocInfo()));
         } else {
           Node rhs = assign.getLastChild();
           add(getTypeAnnotation(rhs));
@@ -63,7 +65,7 @@ class TypedCodeGenerator extends CodeGenerator {
       } else if (n.isVar()
           && n.getFirstFirstChild() != null) {
         if (NodeUtil.isNamespaceDecl(n.getFirstChild())) {
-          add(JSDocInfoPrinter.print(n.getJSDocInfo()));
+          add(jsDocInfoPrinter.print(n.getJSDocInfo()));
         } else {
           add(getTypeAnnotation(n.getFirstFirstChild()));
         }

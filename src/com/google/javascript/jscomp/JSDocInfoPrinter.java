@@ -34,7 +34,14 @@ import java.util.Set;
  *
  */
 public final class JSDocInfoPrinter {
-  public static String print(JSDocInfo info) {
+
+  private final boolean useOriginalName;
+
+  JSDocInfoPrinter(boolean useOriginalName) {
+    this.useOriginalName = useOriginalName;
+  }
+
+  public String print(JSDocInfo info) {
     boolean multiline = false;
 
     List<String> parts = new ArrayList<>();
@@ -193,18 +200,18 @@ public final class JSDocInfoPrinter {
     return sb.toString();
   }
 
-  private static Node stripBang(Node typeNode) {
+  private Node stripBang(Node typeNode) {
     if (typeNode.getToken() == Token.BANG) {
       typeNode = typeNode.getFirstChild();
     }
     return typeNode;
   }
 
-  private static String buildAnnotationWithType(String annotation, JSTypeExpression type) {
+  private String buildAnnotationWithType(String annotation, JSTypeExpression type) {
     return buildAnnotationWithType(annotation, type.getRoot());
   }
 
-  private static String buildAnnotationWithType(String annotation, Node type) {
+  private String buildAnnotationWithType(String annotation, Node type) {
     StringBuilder sb = new StringBuilder();
     sb.append("@");
     sb.append(annotation);
@@ -214,7 +221,7 @@ public final class JSDocInfoPrinter {
     return sb.toString();
   }
 
-  private static String buildParamType(String name, JSTypeExpression type) {
+  private String buildParamType(String name, JSTypeExpression type) {
     if (type != null) {
       return "{" + typeNode(type.getRoot()) + "} " + name;
     } else {
@@ -222,13 +229,17 @@ public final class JSDocInfoPrinter {
     }
   }
 
-  private static String typeNode(Node typeNode) {
+  private String typeNode(Node typeNode) {
     StringBuilder sb = new StringBuilder();
     appendTypeNode(sb, typeNode);
     return sb.toString();
   }
 
-  private static void appendTypeNode(StringBuilder sb, Node typeNode) {
+  private void appendTypeNode(StringBuilder sb, Node typeNode) {
+    if (useOriginalName && typeNode.getOriginalName() != null) {
+      sb.append(typeNode.getOriginalName());
+      return;
+    }
     if (typeNode.getToken() == Token.BANG) {
       sb.append("!");
       appendTypeNode(sb, typeNode.getFirstChild());
@@ -297,7 +308,7 @@ public final class JSDocInfoPrinter {
     }
   }
 
-  private static void appendFunctionNode(StringBuilder sb, Node function) {
+  private void appendFunctionNode(StringBuilder sb, Node function) {
     boolean hasNewOrThis = false;
     sb.append("function(");
     Node first = function.getFirstChild();

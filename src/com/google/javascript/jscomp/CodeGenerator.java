@@ -48,6 +48,7 @@ public class CodeGenerator {
   private final boolean quoteKeywordProperties;
   private final boolean outputAsExterns;
   private final boolean useOriginalName;
+  private final JSDocInfoPrinter jsDocInfoPrinter;
 
   private CodeGenerator(CodeConsumer consumer) {
     cc = consumer;
@@ -58,6 +59,7 @@ public class CodeGenerator {
     quoteKeywordProperties = false;
     outputAsExterns = false;
     useOriginalName = false;
+    this.jsDocInfoPrinter = new JSDocInfoPrinter(false);
   }
 
   static CodeGenerator forCostEstimation(CodeConsumer consumer) {
@@ -76,6 +78,7 @@ public class CodeGenerator {
     this.quoteKeywordProperties = options.quoteKeywordProperties;
     this.outputAsExterns = options.shouldGenerateTypedExterns();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
+    this.jsDocInfoPrinter = new JSDocInfoPrinter(useOriginalName);
   }
 
   public void maybeTagAsExterns() {
@@ -109,7 +112,7 @@ public class CodeGenerator {
     }
 
     if (preserveTypeAnnotations && n.getJSDocInfo() != null) {
-      String jsdocAsString = JSDocInfoPrinter.print(n.getJSDocInfo());
+      String jsdocAsString = jsDocInfoPrinter.print(n.getJSDocInfo());
       // Don't print an empty jsdoc
       if (!jsdocAsString.equals("/** */ ")) {
         add(jsdocAsString);
@@ -720,6 +723,19 @@ public class CodeGenerator {
 
       case GETPROP:
         {
+          // This attempts to convert rewritten aliased code back to the original code,
+          // such as when using goog.scope(). See ScopedAliases.java for the original code.
+          if (useOriginalName && n.getOriginalName() != null) {
+            // The ScopedAliases pass will convert variable assignments and function declarations
+            // to assignments to GETPROP nodes, like $jscomp.scope.SOME_VAR = 3;. This attempts to
+            // rewrite it back to the original code.
+            if (n.getFirstChild().matchesQualifiedName("$jscomp.scope")
+                && n.getParent().isAssign()) {
+              add("var ");
+            }
+            addIdentifier(n.getOriginalName());
+            break;
+          }
           Preconditions.checkState(
               childCount == 2, "Bad GETPROP: expected 2 children, but got %s", childCount);
           Preconditions.checkState(last.isString(), "Bad GETPROP: RHS should be STRING");

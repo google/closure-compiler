@@ -36,23 +36,25 @@ public final class JSDocInfoPrinterTest extends TestCase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private JSDocInfoBuilder builder;
+  private JSDocInfoPrinter jsDocInfoPrinter;
 
   @Override
   protected void setUp() {
     builder = new JSDocInfoBuilder(true);
+    jsDocInfoPrinter = new JSDocInfoPrinter(false);
   }
 
   public void testBasic() {
     builder.recordConstancy();
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/** @const */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @const */ ", jsDocInfoPrinter.print(info));
     builder.recordConstructor();
     info = builder.buildAndReset();
-    assertEquals("/** @constructor */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @constructor */ ", jsDocInfoPrinter.print(info));
     builder.recordSuppressions(ImmutableSet.of("globalThis", "uselessCode"));
     info = builder.buildAndReset();
     assertEquals("/**\n @suppress {globalThis,uselessCode}\n */\n",
-        JSDocInfoPrinter.print(info));
+        jsDocInfoPrinter.print(info));
   }
 
   public void testDontCrashWhenNoThrowType() {
@@ -60,13 +62,13 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordThrowType(null);
     builder.recordThrowDescription(null, "TypeNameWithoutBraces");
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/** */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** */ ", jsDocInfoPrinter.print(info));
   }
 
   public void testFinal() {
     builder.recordFinality();
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/** @final */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @final */ ", jsDocInfoPrinter.print(info));
   }
 
   /**
@@ -75,14 +77,14 @@ public final class JSDocInfoPrinterTest extends TestCase {
   public void testRecordTag() {
     builder.recordImplicitMatch();
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/** @record */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @record */ ", jsDocInfoPrinter.print(info));
   }
 
   public void testTemplate() {
     builder.recordTemplateTypeName("T");
     builder.recordTemplateTypeName("U");
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**\n @template T,U\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @template T,U\n */\n", jsDocInfoPrinter.print(info));
   }
 
   public void testParam() {
@@ -92,143 +94,143 @@ public final class JSDocInfoPrinterTest extends TestCase {
         new JSTypeExpression(JsDocInfoParser.parseTypeString("string"), ""));
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/**\n @param {number} foo\n @param {string} bar\n */\n",
-        JSDocInfoPrinter.print(info));
+        jsDocInfoPrinter.print(info));
 
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.EQUALS, IR.string("number")), ""));
     info = builder.buildAndReset();
-    assertEquals("/**\n @param {number=} foo\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @param {number=} foo\n */\n", jsDocInfoPrinter.print(info));
 
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.ELLIPSIS, IR.string("number")), ""));
     info = builder.buildAndReset();
-    assertEquals("/**\n @param {...number} foo\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @param {...number} foo\n */\n", jsDocInfoPrinter.print(info));
 
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.ELLIPSIS, IR.empty()), ""));
     info = builder.buildAndReset();
-    assertEquals("/**\n @param {...} foo\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @param {...} foo\n */\n", jsDocInfoPrinter.print(info));
 
     builder.recordParameter("foo", null);
     info = builder.buildAndReset();
-    assertEquals("/**\n @param foo\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @param foo\n */\n", jsDocInfoPrinter.print(info));
   }
 
   public void testRecordTypes() {
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("{foo: number}"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/** @type {{foo:number}} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {{foo:number}} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("{foo}"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {{foo}} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {{foo}} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("{foo, bar}"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {{foo,bar}} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {{foo,bar}} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("{foo: number, bar}"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {{foo:number,bar}} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {{foo:number,bar}} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("{foo, bar: number}"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {{foo,bar:number}} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {{foo,bar:number}} */ ", jsDocInfoPrinter.print(info));
   }
 
   public void testTypes() {
     builder.recordReturnType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("number|string"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**\n @return {(number|string)}\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @return {(number|string)}\n */\n", jsDocInfoPrinter.print(info));
 
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.ELLIPSIS, IR.string("number")), ""));
     info = builder.buildAndReset();
-    assertEquals("/**\n @param {...number} foo\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @param {...number} foo\n */\n", jsDocInfoPrinter.print(info));
     builder.recordThrowType(new JSTypeExpression(new Node(Token.STAR), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @throws {*} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @throws {*} */ ", jsDocInfoPrinter.print(info));
     builder.recordTypedef(new JSTypeExpression(new Node(Token.QMARK), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @typedef {?} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @typedef {?} */ ", jsDocInfoPrinter.print(info));
     builder.recordType(new JSTypeExpression(new Node(Token.VOID), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {void} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {void} */ ", jsDocInfoPrinter.print(info));
 
     // Object types
     builder.recordEnumParameterType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("{foo:number,bar:string}"), ""));
     info = builder.buildAndReset();
     assertEquals(
-        "/** @enum {{foo:number,bar:string}} */ ", JSDocInfoPrinter.print(info));
+        "/** @enum {{foo:number,bar:string}} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordEnumParameterType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("{foo:(number|string)}"), ""));
     info = builder.buildAndReset();
     assertEquals(
-        "/** @enum {{foo:(number|string)}} */ ", JSDocInfoPrinter.print(info));
+        "/** @enum {{foo:(number|string)}} */ ", jsDocInfoPrinter.print(info));
 
     // Nullable/non-nullable types.
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("?Object"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {?Object} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {?Object} */ ", jsDocInfoPrinter.print(info));
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("!Object"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {!Object} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {!Object} */ ", jsDocInfoPrinter.print(info));
 
     // Array types
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("!Array<(number|string)>"), ""));
     info = builder.buildAndReset();
     assertEquals(
-        "/** @type {!Array<(number|string)>} */ ", JSDocInfoPrinter.print(info));
+        "/** @type {!Array<(number|string)>} */ ", jsDocInfoPrinter.print(info));
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("Array"), ""));
     builder.recordInlineType();
     info = builder.buildAndReset();
-    assertEquals("/** Array */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** Array */ ", jsDocInfoPrinter.print(info));
 
     // Other template types
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("!Set<number|string>"), ""));
     info = builder.buildAndReset();
     assertEquals(
-        "/** @type {!Set<(number|string)>} */ ", JSDocInfoPrinter.print(info));
+        "/** @type {!Set<(number|string)>} */ ", jsDocInfoPrinter.print(info));
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("!Map<!Foo, !Bar<!Baz|string>>"), ""));
     info = builder.buildAndReset();
     assertEquals(
-        "/** @type {!Map<!Foo,!Bar<(!Baz|string)>>} */ ", JSDocInfoPrinter.print(info));
+        "/** @type {!Map<!Foo,!Bar<(!Baz|string)>>} */ ", jsDocInfoPrinter.print(info));
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("Map"), ""));
     builder.recordInlineType();
     info = builder.buildAndReset();
-    assertEquals("/** Map */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** Map */ ", jsDocInfoPrinter.print(info));
   }
 
   public void testInheritance() {
     builder.recordImplementedInterface(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("Foo"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**\n @implements {Foo}\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @implements {Foo}\n */\n", jsDocInfoPrinter.print(info));
 
     builder.recordImplementedInterface(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("!Foo"), ""));
     info = builder.buildAndReset();
-    assertEquals("/**\n @implements {Foo}\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @implements {Foo}\n */\n", jsDocInfoPrinter.print(info));
 
     builder.recordBaseType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("Foo"), ""));
     info = builder.buildAndReset();
-    assertEquals("/**\n @extends {Foo}\n */\n", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n @extends {Foo}\n */\n", jsDocInfoPrinter.print(info));
 
     builder.recordBaseType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("!Foo"), ""));
@@ -239,7 +241,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     info = builder.buildAndReset();
     assertEquals(
         "/**\n @extends {Foo}\n @implements {Bar}\n @implements {Bar.Baz}\n */\n",
-        JSDocInfoPrinter.print(info));
+        jsDocInfoPrinter.print(info));
   }
 
   public void testInterfaceInheritance() {
@@ -250,69 +252,69 @@ public final class JSDocInfoPrinterTest extends TestCase {
         new JSTypeExpression(JsDocInfoParser.parseTypeString("Bar"), ""));
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/**\n @interface\n @extends {Foo}\n @extends {Bar}\n */\n",
-        JSDocInfoPrinter.print(info));
+        jsDocInfoPrinter.print(info));
   }
 
   public void testFunctions() {
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function()"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/** @type {function()} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {function()} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function(foo,bar)"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {function(foo,bar)} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {function(foo,bar)} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function(foo):number"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {function(foo):number} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {function(foo):number} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function(new:goog,number)"), ""));
     info = builder.buildAndReset();
     assertEquals("/** @type {function(new:goog,number)} */ ",
-        JSDocInfoPrinter.print(info));
+        jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function(this:number,...)"), ""));
     info = builder.buildAndReset();
     assertEquals("/** @type {function(this:number,...)} */ ",
-        JSDocInfoPrinter.print(info));
+        jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function(...number)"), ""));
     info = builder.buildAndReset();
     assertEquals("/** @type {function(...number)} */ ",
-        JSDocInfoPrinter.print(info));
+        jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function():void"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {function():void} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {function():void} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function():number"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {function():number} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {function():number} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function(string):number"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {function(string):number} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {function(string):number} */ ", jsDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function(this:foo):?"), ""));
     info = builder.buildAndReset();
-    assertEquals("/** @type {function(this:foo):?} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @type {function(this:foo):?} */ ", jsDocInfoPrinter.print(info));
   }
 
   public void testDefines() {
     builder.recordDefineType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("string"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/** @define {string} */ ", JSDocInfoPrinter.print(info));
+    assertEquals("/** @define {string} */ ", jsDocInfoPrinter.print(info));
   }
 
   public void testDeprecated() {
@@ -327,7 +329,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
         " @deprecated See {@link otherClass} for more info.",
         " */",
         ""),
-        JSDocInfoPrinter.print(info));
+        jsDocInfoPrinter.print(info));
   }
 
   public void testExport() {
@@ -343,6 +345,6 @@ public final class JSDocInfoPrinterTest extends TestCase {
     String contents = input.substring("/**".length());
     JSDocInfo info = JsDocInfoParser.parseJsdoc(contents);
     assertNotNull("Parse error on parsing JSDoc: " + input, info);
-    assertThat(JSDocInfoPrinter.print(info)).isEqualTo(output);
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo(output);
   }
 }
