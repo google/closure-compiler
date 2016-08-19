@@ -22,7 +22,7 @@ import com.google.gwt.resources.client.TextResource;
 import jsinterop.annotations.JsMethod;
 
 /**
- * GWT compatible replacement for {@code ResourceLoader}
+ * GWT compatible replacement for {@code ResourceLoader}.
  *
  */
 public final class ResourceLoader {
@@ -52,6 +52,10 @@ public final class ResourceLoader {
     return get(RESOURCES, path) != null;
   }
 
+  public static String[] resourceList(Class<?> clazz) {
+    return keys(RESOURCES);
+  }
+
   public static class JsObject {
     public JsObject() {}
   }
@@ -62,4 +66,7 @@ public final class ResourceLoader {
 
   @JsMethod(namespace = "JSON")
   private static native JsObject parse(String json);
+
+  @JsMethod(namespace = "Object")
+  private static native String[] keys(JsObject obj);
 }

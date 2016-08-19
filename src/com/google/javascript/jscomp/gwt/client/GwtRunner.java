@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.gwt.client;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -29,14 +28,18 @@ import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.DefaultExterns;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.ResourceLoader;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.WarningLevel;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
@@ -48,6 +51,8 @@ public final class GwtRunner implements EntryPoint {
   private static final CompilationLevel DEFAULT_COMPILATION_LEVEL =
       CompilationLevel.SIMPLE_OPTIMIZATIONS;
 
+  private static final String EXTERNS_PREFIX = "externs/";
+
   private GwtRunner() {}
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
@@ -56,6 +61,7 @@ public final class GwtRunner implements EntryPoint {
     boolean assumeFunctionWrapper;
     String compilationLevel;
     boolean dartPass;
+    String env;
     boolean exportLocalPropertyDefinitions;
     boolean generateExports;
     String languageIn;
@@ -87,6 +93,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.assumeFunctionWrapper = false;
     defaultFlags.compilationLevel = "SIMPLE";
     defaultFlags.dartPass = false;
+    defaultFlags.env = "BROWSER";
     defaultFlags.exportLocalPropertyDefinitions = false;
     defaultFlags.generateExports = false;
     defaultFlags.languageIn = "ECMASCRIPT6";
@@ -139,6 +146,19 @@ public final class GwtRunner implements EntryPoint {
     return out;
   }
 
+  private static List<SourceFile> createExterns(CompilerOptions.Environment environment) {
+    String[] resources = ResourceLoader.resourceList(GwtRunner.class);
+    Map<String, SourceFile> all = new HashMap<>();
+    for (String res : resources) {
+      if (res.startsWith(EXTERNS_PREFIX)) {
+        String filename = res.substring(EXTERNS_PREFIX.length());
+        all.put(filename, SourceFile.fromCode("externs.zip//" + res,
+              ResourceLoader.loadTextResource(GwtRunner.class, res)));
+      }
+    }
+    return DefaultExterns.prepareExterns(environment, all);
+  }
+
   private static void applyDefaultOptions(CompilerOptions options) {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
@@ -168,6 +188,12 @@ public final class GwtRunner implements EntryPoint {
       warningLevel = WarningLevel.valueOf(flags.warningLevel);
     }
     warningLevel.setOptionsForWarningLevel(options);
+
+    CompilerOptions.Environment environment = CompilerOptions.Environment.BROWSER;
+    if (flags.env != null) {
+      environment = CompilerOptions.Environment.valueOf(flags.env.toUpperCase());
+    }
+    options.setEnvironment(environment);
 
     LanguageMode languageIn = LanguageMode.fromString(flags.languageIn);
     if (languageIn != null) {
@@ -211,7 +237,7 @@ public final class GwtRunner implements EntryPoint {
         out.add(SourceFile.fromCode(path, nullToEmpty(file.src)));
       }
     }
-    return ImmutableList.copyOf(out);
+    return out;
   }
 
   private static ImmutableMap<String, SourceMapInput> buildSourceMaps(
@@ -263,7 +289,6 @@ public final class GwtRunner implements EntryPoint {
       throw new RuntimeException("Unhandled flag: " + unhandled[0]);
     }
 
-    List<SourceFile> externs = fromFileArray(flags.externs, "Extern_");
     List<SourceFile> jsCode = fromFileArray(flags.jsCode, "Input_");
     ImmutableMap<String, SourceMapInput> sourceMaps = buildSourceMaps(flags.jsCode, "Input_");
 
@@ -272,6 +297,9 @@ public final class GwtRunner implements EntryPoint {
     applyOptionsFromFlags(options, flags);
     options.setInputSourceMaps(sourceMaps);
     disableUnsupportedOptions(options);
+
+    List<SourceFile> externs = fromFileArray(flags.externs, "Extern_");
+    externs.addAll(createExterns(options.getEnvironment()));
 
     NodeErrorManager errorManager = new NodeErrorManager();
     Compiler compiler = new Compiler();
