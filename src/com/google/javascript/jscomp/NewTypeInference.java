@@ -2466,7 +2466,8 @@ final class NewTypeInference implements CompilerPass {
       // number vs string.
       // In this case, don't warn here; we'll show invalid-arg-type later.
       JSType afterInstantiation = genericType.substituteGenericsWithUnknown();
-      if (!genericType.equals(afterInstantiation)
+      if (!concreteType.isLoose()
+          && !genericType.equals(afterInstantiation)
           && concreteType.isSubtypeOf(afterInstantiation)) {
         warnings.add(JSError.make(toWarnOn, FAILED_TO_UNIFY,
                 genericType.toString(), concreteType.toString()));

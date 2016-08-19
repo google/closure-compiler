@@ -121,6 +121,7 @@ public final class JSTypes {
   private RawNominalType iObject;
 
   final boolean allowMethodsAsFunctions;
+  final boolean looseSubtypingForLooseObjects;
 
   private JSTypes(boolean inCompatibilityMode) {
     Map<String, JSType> types = JSType.createScalars(this);
@@ -166,6 +167,7 @@ public final class JSTypes {
     JSType.initObjects(this);
 
     this.allowMethodsAsFunctions = inCompatibilityMode;
+    this.looseSubtypingForLooseObjects = inCompatibilityMode;
 
     this.MAP_TO_UNKNOWN = new Map<String, JSType>() {
       @Override

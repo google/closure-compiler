@@ -6574,6 +6574,29 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function g(x) { return f(x); }",
         "g(123) < 'asdf';"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // Here, we infer the type of y to be a loose object with a truthy property prop.
+    // This type doesn't unify with Foo<T>, because they don't have the same structure.
+    // We are testing here that the failed unification doesn't produce a warning.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @param {T} x",
+        " * @template T",
+        " */",
+        "function Foo(x) {",
+        "  this.prop = x;",
+        "}",
+        "/**",
+        " * @param {!Foo<T>} x",
+        " * @template T",
+        " */",
+        "function f(x) {}",
+        "function g(y) {",
+        "  if (y.prop) {",
+        "    f(y);",
+        "  }",
+        "}"));
   }
 
   public void testUnifyObjects() {
@@ -17850,7 +17873,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var y = this.toString();",
         NewTypeInference.GLOBAL_THIS);
   }
-
   public void testDontPropagateRhsInferenceToLhs() {
     typeCheck(LINE_JOINER.join(
         "function f(x) {",
@@ -17858,5 +17880,46 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "function h(/** null */ x) {}"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testLooseTypingOfLooseObjectsInCompatibilityMode() {
+    compilerOptions.setWarningLevel(
+        DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Super() {}",
+        "/** @constructor @implements {Super} */",
+        "function Sub() {}",
+        "function f(x) {",
+        "  var /** !Sub */ y = x.prop;",
+        "}",
+        "function g(/** !Super */ obj) {",
+        "  f({ prop: obj });",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {(number|string)} */",
+        "Foo.prototype.prop;",
+        "/** @type {function(!Foo):?} */",
+        "var f;",
+        "f = function(x) {",
+        "  var /** number */ y = x.prop;",
+        "};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/** @type {?Object} */",
+        "Bar.prototype.prop;",
+        "/** @type {function(?Bar):?} */",
+        "var f;",
+        "f = function(x) {",
+        "  var /** !Foo */ y = x.prop;",
+        "};"));
   }
 }

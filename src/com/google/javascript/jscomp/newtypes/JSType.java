@@ -1111,7 +1111,9 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     }
     JSType type2 = (JSType) other;
     if (isLoose() || type2.isLoose()) {
-      return autobox().isSubtypeOfHelper(true, type2.autobox(), subSuperMap, null);
+      return this.commonTypes.looseSubtypingForLooseObjects
+          ? haveCommonSubtype(autobox(), type2.autobox())
+          : autobox().isSubtypeOfHelper(true, type2.autobox(), subSuperMap, null);
     } else {
       return isSubtypeOfHelper(true, type2, subSuperMap, null);
     }
@@ -1428,7 +1430,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     }
     return foundObjWithProp
         ? makeType(this.commonTypes, NON_SCALAR_MASK, builder.build(), null, NO_ENUMS)
-            : this.commonTypes.BOTTOM;
+        : this.commonTypes.BOTTOM;
   }
 
   public boolean isPropDefinedOnSubtype(QualifiedName pname) {
