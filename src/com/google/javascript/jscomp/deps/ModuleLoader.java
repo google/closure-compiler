@@ -240,7 +240,7 @@ public final class ModuleLoader {
       }
     },
 
-    @GwtIncompatible // Paths.get, Path.toRealPath
+    @GwtIncompatible("Paths.get, Path.toAbsolutePath")
     ABSOLUTE {
       @Override
       public String apply(String path) {
