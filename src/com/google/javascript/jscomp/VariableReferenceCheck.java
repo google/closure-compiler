@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.rhino.Node;
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -134,34 +133,30 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       }
     }
 
-    /**
-     * Do a shallow check since cases like:
-     *   function f(y = () => x, x = 5) { return y(); }
-     * is legal. We are going to miss cases like:
-     *   function f(y = (() => x)(), x = 5) { return y(); }
-     * but this should be rare.
-     */
-    private class ShallowReferenceCollector extends AbstractShallowCallback {
-      private final Set<Node> currParamReferences = new LinkedHashSet<>();
-
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (!NodeUtil.isReferenceName(n)) {
-          return;
-        }
-        currParamReferences.add(n);
-      }
-    }
-
-    private void checkDefaultParam(Var param, Scope scope, Set<String> varsInFunctionBody) {
-      ShallowReferenceCollector check = new ShallowReferenceCollector();
-      NodeTraversal.traverseEs6(compiler, param.getParentNode().getSecondChild(), check);
-      for (Node ref : check.currParamReferences) {
-        String refName = ref.getString();
-        if (varsInFunctionBody.contains(refName) && !scope.isDeclared(refName, true)) {
-          compiler.report(JSError.make(ref, EARLY_REFERENCE_ERROR, refName));
-        }
-      }
+    private void checkDefaultParam(
+        Var param, final Scope scope, final Set<String> varsInFunctionBody) {
+      NodeTraversal.traverseEs6(
+          compiler,
+          param.getParentNode().getSecondChild(),
+          /**
+           * Do a shallow check since cases like:
+           *   function f(y = () => x, x = 5) { return y(); }
+           * is legal. We are going to miss cases like:
+           *   function f(y = (() => x)(), x = 5) { return y(); }
+           * but this should be rare.
+           */
+          new AbstractShallowCallback() {
+            @Override
+            public void visit(NodeTraversal t, Node n, Node parent) {
+              if (!NodeUtil.isReferenceName(n)) {
+                return;
+              }
+              String refName = n.getString();
+              if (varsInFunctionBody.contains(refName) && !scope.isDeclared(refName, true)) {
+                compiler.report(JSError.make(n, EARLY_REFERENCE_ERROR, refName));
+              }
+            }
+          });
     }
 
     private void checkShadowParam(Var v, Scope functionScope, List<Reference> references) {
@@ -169,7 +164,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       if (maybeParam != null && maybeParam.isParam() && maybeParam.getScope() == functionScope) {
         for (Reference r : references) {
           if ((r.isVarDeclaration() || r.isHoistedFunction())
-              && !r.getNode().equals(v.getNameNode())) {
+              && r.getNode() != v.getNameNode()) {
             compiler.report(JSError.make(r.getNode(), REDECLARED_VARIABLE, v.name));
           }
         }
