@@ -19,14 +19,14 @@ package java.lang;
 /** GWT compatible no-op replacement for {@code Runtime} */
 public class Runtime {
   public static Runtime getRuntime() {
-    throw new UnsupportedOperationException("Runtime.getRuntime not implemented");
+    return new Runtime();
   }
 
   public long totalMemory() {
-    throw new UnsupportedOperationException("Runtime.totalMemory not implemented");
+    return 0;
   }
 
   public long freeMemory() {
-    throw new UnsupportedOperationException("Runtime.freeMemory not implemented");
+    return 0;
   }
 }
