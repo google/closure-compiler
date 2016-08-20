@@ -31,7 +31,7 @@ final class Tracer {
   static void clearCurrentThreadTrace() {}
 
   long stop() {
-    return System.currentTimeMillis() + start;
+    return System.currentTimeMillis() - start;
   }
 }
 
