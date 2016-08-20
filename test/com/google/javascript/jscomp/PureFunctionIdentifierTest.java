@@ -476,11 +476,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         ImmutableList.of("o.propWithStubAfter"));
   }
 
-  public void testAnnotationInExternStubs2b() throws Exception {
-    checkMarkedCalls("o.propWithStubAfter('a');",
-        ImmutableList.of("o.propWithStubAfter"));
-  }
-
   public void testAnnotationInExternStubs3() throws Exception {
     checkMarkedCalls("propWithAnnotatedStubAfter('a');",
         ImmutableList.<String>of());
