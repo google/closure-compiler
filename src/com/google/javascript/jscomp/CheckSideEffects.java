@@ -92,8 +92,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     // I've been unable to think of any cases where this indicates a bug,
     // and apparently some people like keeping these semicolons around,
     // so we'll allow it.
-    if (n.isEmpty() ||
-        n.isComma()) {
+    if (n.isEmpty() || n.isComma()) {
       return;
     }
 
@@ -242,9 +241,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isFunction()) {
-        String name = NodeUtil.getName(n);
         JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
         if (jsDoc != null && jsDoc.isNoSideEffects()) {
+          String name = NodeUtil.getName(n);
           noSideEffectExterns.put(name, null);
         }
       }
