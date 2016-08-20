@@ -97,13 +97,13 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, this);
-    TranspilationPasses.processTranspile(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, externs, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   /**

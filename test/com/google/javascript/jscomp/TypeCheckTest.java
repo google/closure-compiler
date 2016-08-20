@@ -17021,7 +17021,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testEs5ClassExtendingEs6Class() {
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
-    compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class Foo {}",
@@ -17031,7 +17030,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testEs5ClassExtendingEs6Class_noWarning() {
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
-    compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class A {}",
@@ -17244,7 +17242,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       TranspilationPasses.addEs6LatePasses(passes);
       PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null, null);
       phaseopt.consume(passes);
-      phaseopt.process(externsNode, externAndJsRoot);
+      phaseopt.process(externsNode, n);
     }
 
     TypedScope s = makeTypeCheck().processForTesting(externsNode, n);

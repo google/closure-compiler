@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -127,7 +126,7 @@ final class PolymerClassRewriter {
     // types declared inside IIFEs or any non-global scope. We should revisit this decision after
     // moving to the new type inference system which should be able to infer these types better.
     if (!isInGlobalScope && !cls.target.isGetProp()) {
-      Node scriptNode = NodeUtil.getEnclosingScript(parent);
+      Node scriptNode = NodeUtil.getEnclosingScript(exprRoot);
       scriptNode.addChildrenToFront(statements);
     } else {
       Node beforeRoot = exprRoot.getPrevious();
@@ -136,15 +135,6 @@ final class PolymerClassRewriter {
       } else {
         parent.addChildrenAfter(statements, beforeRoot);
       }
-    }
-
-    // Since behavior files might contain more language features than the class file, we need to
-    // update the feature sets.
-    FeatureSet newFeatures = cls.features;
-    if (newFeatures != null) {
-      Node scriptNode = NodeUtil.getEnclosingScript(parent);
-      FeatureSet oldFeatures = (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
-      scriptNode.putProp(Node.FEATURE_SET, oldFeatures.union(newFeatures));
     }
 
     if (NodeUtil.isNameDeclaration(exprRoot)) {

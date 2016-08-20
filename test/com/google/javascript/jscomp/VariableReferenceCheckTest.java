@@ -88,7 +88,6 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testCorrectEarlyReference() {
     assertNoWarning("var goog = goog || {}");
-    assertNoWarning("var google = google || window['google'] || {}");
     assertNoWarning("function f() { a = 2; } var a = 2;");
   }
 

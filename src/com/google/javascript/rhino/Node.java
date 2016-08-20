@@ -148,8 +148,7 @@ public class Node implements Serializable {
                                   // goog.module() or goog.require() call.
       WAS_PREVIOUSLY_PROVIDED = 91, // Indicates a namespace that was provided at some point in the
                                   // past.
-      IS_ES6_CLASS = 92,          // Indicates that a FUNCTION node is converted from an ES6 class
-      TRANSPILED = 93;            // Indicates that a SCRIPT represents a transpiled file
+      IS_ES6_CLASS = 92;          // Indicates that a FUNCTION node is converted from an ES6 class
 
   private static final String propToString(int propType) {
       switch (propType) {
@@ -208,7 +207,6 @@ public class Node implements Serializable {
         case IS_MODULE_NAME:     return "is_module_name";
         case WAS_PREVIOUSLY_PROVIDED: return "was_previously_provided";
         case IS_ES6_CLASS: return "is_es6_class";
-        case TRANSPILED:   return "transpiled";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
