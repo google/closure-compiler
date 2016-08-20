@@ -22,7 +22,6 @@ import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.MustBeReachingVariableDef.Definition;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -52,8 +51,7 @@ import java.util.Set;
  * this pass does not operate on the global scope due to compilation time.
  *
  */
-class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
-    implements CompilerPass, ScopedCallback {
+class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
   /**
    * Implementation:
@@ -113,6 +111,11 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
     this.compiler = compiler;
+  }
+
+  @Override
+  public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    return !n.isScript() || !t.getInput().isExtern();
   }
 
   @Override
