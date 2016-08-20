@@ -20,6 +20,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import com.google.common.base.Ascii;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -30,8 +31,10 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DefaultExterns;
+import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.ResourceLoader;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
@@ -72,6 +75,8 @@ public final class GwtRunner implements EntryPoint {
     String compilationLevel;
     boolean dartPass;
     JsMap defines;
+    String dependencyMode;
+    String[] entryPoint;
     String env;
     boolean exportLocalPropertyDefinitions;
     boolean generateExports;
@@ -108,6 +113,8 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.compilationLevel = "SIMPLE";
     defaultFlags.dartPass = false;
     defaultFlags.defines = null;
+    defaultFlags.dependencyMode = null;
+    defaultFlags.entryPoint = null;
     defaultFlags.env = "BROWSER";
     defaultFlags.exportLocalPropertyDefinitions = false;
     defaultFlags.generateExports = false;
@@ -141,6 +148,19 @@ public final class GwtRunner implements EntryPoint {
     @JsProperty JavaScriptObject[] errors;
     @JsProperty JavaScriptObject[] warnings;
   }
+
+  /**
+   * Reliably returns a string array from the flags/key combo.
+   */
+  private static native String[] getStringArray(Flags flags, String key) /*-{
+    var value = flags[key];
+    if (value == null) {
+      return [];
+    } else if (Array.isArray(value)) {
+      return value;
+    }
+    return [value];
+  }-*/;
 
   /**
    * Wraps a generic JS object used as a map.
@@ -244,6 +264,42 @@ public final class GwtRunner implements EntryPoint {
     return DefaultExterns.prepareExterns(environment, all);
   }
 
+  private static List<ModuleIdentifier> createEntryPoints(String[] entryPoints) {
+    ImmutableList.Builder<ModuleIdentifier> builder = new ImmutableList.Builder<>();
+    for (String entryPoint : entryPoints) {
+      if (entryPoint.startsWith("goog:")) {
+        builder.add(ModuleIdentifier.forClosure(entryPoint));
+      } else {
+        builder.add(ModuleIdentifier.forFile(entryPoint));
+      }
+    }
+    return builder.build();
+  }
+
+  private static DependencyOptions createDependencyOptions(
+      CompilerOptions.DependencyMode dependencyMode,
+      List<ModuleIdentifier> entryPoints) {
+    // Copied from from AbstractCommandLineRunner.java.
+    if (dependencyMode == CompilerOptions.DependencyMode.STRICT) {
+      if (entryPoints.isEmpty()) {
+        throw new RuntimeException(
+            "When dependencyMode=STRICT, you must specify at least one entry point");
+      }
+      return new DependencyOptions()
+          .setDependencyPruning(true)
+          .setDependencySorting(true)
+          .setMoocherDropping(true)
+          .setEntryPoints(entryPoints);
+    } else if (dependencyMode == CompilerOptions.DependencyMode.LOOSE || !entryPoints.isEmpty()) {
+      return new DependencyOptions()
+          .setDependencyPruning(true)
+          .setDependencySorting(true)
+          .setMoocherDropping(false)
+          .setEntryPoints(entryPoints);
+    }
+    return null;
+  }
+
   private static void applyDefaultOptions(CompilerOptions options) {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
@@ -279,6 +335,17 @@ public final class GwtRunner implements EntryPoint {
       environment = CompilerOptions.Environment.valueOf(Ascii.toUpperCase(flags.env));
     }
     options.setEnvironment(environment);
+
+    CompilerOptions.DependencyMode dependencyMode = CompilerOptions.DependencyMode.NONE;
+    if (flags.dependencyMode != null) {
+      dependencyMode =
+          CompilerOptions.DependencyMode.valueOf(Ascii.toUpperCase(flags.dependencyMode));
+    }
+    List<ModuleIdentifier> entryPoints = createEntryPoints(getStringArray(flags, "entryPoint"));
+    DependencyOptions dependencyOptions = createDependencyOptions(dependencyMode, entryPoints);
+    if (dependencyOptions != null) {
+      options.setDependencyOptions(dependencyOptions);
+    }
 
     LanguageMode languageIn = LanguageMode.fromString(flags.languageIn);
     if (languageIn != null) {

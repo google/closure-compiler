@@ -3130,7 +3130,8 @@ public class CompilerOptions {
     BOTH
   }
 
-  static enum DependencyMode {
+  /** How compiler should prune files based on the provide-require dependency graph */
+  public static enum DependencyMode {
     /**
      * All files will be included in the compilation
      */
