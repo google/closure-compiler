@@ -110,11 +110,13 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
       if (scope.getParent() != null) {
         inputId = NodeUtil.getInputId(n);
       }
-      scanVars(n);
+      boolean scanInnerBlocks =
+          n.isSyntheticBlock() || NodeUtil.isFunctionBlock(n) || n.isModuleBody();
+      scanVars(n, scanInnerBlocks, true);
     } else {
       // n is the global SCRIPT node
       Preconditions.checkState(scope.getParent() == null);
-      scanVars(n);
+      scanVars(n, true, true);
     }
   }
 
@@ -125,9 +127,13 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   }
 
   /**
-    * Scans and gather variables declarations under a Node
-    */
-  private void scanVars(Node n) {
+   * Scans and gather variables declarations under a Node
+   *
+   * @param n The node
+   * @param scanInnerBlockScopes Whether the inner block scopes should be scanned for "var"s
+   * @param firstScan Whether it is the first time a scan is performed from the current scope
+   */
+  private void scanVars(Node n, boolean scanInnerBlockScopes, boolean firstScan) {
     switch (n.getType()) {
       case VAR:
         declareLHS(scope.getClosestHoistScope(), n);
@@ -177,7 +183,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         // A new scope is not created for this BLOCK because there is a scope
         // created for the BLOCK above the CATCH
         final Node block = n.getSecondChild();
-        scanVars(block);
+        scanVars(block, scanInnerBlockScopes, false);
         return;  // only one child to scan
 
       case SCRIPT:
@@ -188,13 +194,17 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         break;
     }
 
+    if (!scanInnerBlockScopes && !firstScan && NodeUtil.createsBlockScope(n)) {
+      return;
+    }
+
     // Variables can only occur in statement-level nodes, so
     // we only need to traverse children in a couple special cases.
     if (NodeUtil.isControlStructure(n) || NodeUtil.isStatementBlock(n)) {
       for (Node child = n.getFirstChild();
            child != null;) {
         Node next = child.getNext();
-        scanVars(child);
+        scanVars(child, scanInnerBlockScopes, false);
         child = next;
       }
     }
