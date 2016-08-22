@@ -26,7 +26,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -68,14 +67,12 @@ public final class Es6ExtractClasses
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
-    NodeTraversal.traverseRootsEs6(compiler, new SelfReferenceRewriter(), externs, root);
+    TranspilationPasses.processTranspile(compiler, root, this, new SelfReferenceRewriter());
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, new SelfReferenceRewriter());
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this, new SelfReferenceRewriter());
   }
 
   @Override

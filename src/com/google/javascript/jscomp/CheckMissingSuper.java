@@ -36,15 +36,12 @@ final class CheckMissingSuper extends AbstractPostOrderCallback implements HotSw
 
   @Override
   public void process(Node externs, Node root) {
-    if (!compiler.getOptions().getLanguageIn().isEs6OrHigher()) {
-      return;
-    }
-    NodeTraversal.traverseEs6(compiler, root, this);
+    TranspilationPasses.processCheck(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    process(null, scriptRoot);
+    TranspilationPasses.hotSwapCheck(compiler, scriptRoot, this);
   }
 
   @Override
