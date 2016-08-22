@@ -671,6 +671,12 @@ public class Node implements Serializable {
     return child.getPrevious(first);
   }
 
+  /**
+   * Gets the ith child, note that this is O(N) where N is the number of children.
+   *
+   * @param i The index
+   * @return The ith child
+   */
   public Node getChildAtIndex(int i) {
     Node n = first;
     while (i > 0) {
@@ -680,6 +686,12 @@ public class Node implements Serializable {
     return n;
   }
 
+  /**
+   * Gets the index of a child, note that this is O(N) where N is the number of children.
+   *
+   * @param child The child
+   * @return The index of the child
+   */
   public int getIndexOfChild(Node child) {
     Node n = first;
     int i = 0;
