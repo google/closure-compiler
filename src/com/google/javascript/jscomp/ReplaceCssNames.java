@@ -81,7 +81,7 @@ import javax.annotation.Nullable;
  */
 class ReplaceCssNames implements CompilerPass {
 
-  static final String GET_CSS_NAME_FUNCTION = "goog.getCssName";
+  static final Node GET_CSS_NAME_FUNCTION = IR.getprop(IR.name("goog"), IR.string("getCssName"));
 
   static final DiagnosticType INVALID_NUM_ARGUMENTS_ERROR =
       DiagnosticType.error("JSC_GETCSSNAME_NUM_ARGS",
@@ -112,7 +112,7 @@ class ReplaceCssNames implements CompilerPass {
 
   private final Set<String> whitelist;
 
-  private final TypeI nativeStringType;
+  private TypeI nativeStringType;
 
   ReplaceCssNames(AbstractCompiler compiler,
       @Nullable Map<String, Integer> cssNames,
@@ -120,9 +120,16 @@ class ReplaceCssNames implements CompilerPass {
     this.compiler = compiler;
     this.cssNames = cssNames;
     this.whitelist = whitelist;
-    this.nativeStringType =
-        compiler.getTypeIRegistry().getNativeType(STRING_TYPE);
   }
+
+  private TypeI getNativeStringType() {
+    if (nativeStringType == null) {
+      nativeStringType =
+        compiler.getTypeIRegistry().getNativeType(STRING_TYPE);
+    }
+    return nativeStringType;
+  }
+
 
   @Override
   public void process(Node externs, Node root) {
@@ -180,7 +187,7 @@ class ReplaceCssNames implements CompilerPass {
                   IR.string("-" + second.getString())
                       .useSourceInfoIfMissingFrom(second))
                   .useSourceInfoIfMissingFrom(n);
-              replacement.setTypeI(nativeStringType);
+              replacement.setTypeI(getNativeStringType());
               parent.replaceChild(n, replacement);
               compiler.reportCodeChange();
             }
