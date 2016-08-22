@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
+import com.google.javascript.jscomp.J2clSourceFileChecker.J2clChangeTracker;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
@@ -958,9 +959,15 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      if (!options.limitJ2clOptimization) {
+        j2clChangeTracker.setDisabled();
+      }
+
       passes.add(j2clClinitPrunerPass);
       passes.add(j2clConstantHoisterPass);
       passes.add(j2clEqualitySameRewriterPass);
+
+      j2clChangeTracker.reset();
     }
 
     assertAllLoopablePasses(passes);
@@ -2713,12 +2720,14 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
+  private final J2clChangeTracker j2clChangeTracker = new J2clChangeTracker();
+
   /** Rewrites J2CL constructs to be more optimizable. */
   private final PassFactory j2clClinitPrunerPass =
       new PassFactory("j2clClinitPrunerPass", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new J2clClinitPrunerPass(compiler);
+          return new J2clClinitPrunerPass(compiler, j2clChangeTracker);
         }
       };
 
@@ -2727,7 +2736,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("j2clConstantHoisterPass", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new J2clConstantHoisterPass(compiler);
+          return new J2clConstantHoisterPass(compiler, j2clChangeTracker);
         }
       };
 
@@ -2736,7 +2745,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("j2clEqualitySameRewriterPass", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new J2clEqualitySameRewriterPass(compiler);
+          return new J2clEqualitySameRewriterPass(compiler, j2clChangeTracker);
         }
       };
 
@@ -2762,6 +2771,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("j2clSourceFileChecker", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
+          j2clChangeTracker.ensureRegistered(compiler);
           return new J2clSourceFileChecker(compiler);
         }
       };

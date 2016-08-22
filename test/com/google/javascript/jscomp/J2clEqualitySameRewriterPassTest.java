@@ -31,7 +31,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new J2clEqualitySameRewriterPass(compiler);
+    return new J2clEqualitySameRewriterPass(compiler, null);
   }
 
   @Override
