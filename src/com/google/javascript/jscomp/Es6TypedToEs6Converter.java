@@ -380,8 +380,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     Node members = n.getLastChild();
     double nextValue = 0;
     Node[] stringKeys = new Node[members.getChildCount()];
-    for (int i = 0; i < members.getChildCount(); i++) {
-      Node child = members.getChildAtIndex(i);
+    int i = 0;
+    for (Node child = members.getFirstChild(); child != null; child = child.getNext(), i++) {
       if (child.hasChildren()) {
         nextValue = child.getFirstChild().getDouble() + 1;
       } else {
@@ -389,9 +389,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       }
       stringKeys[i] = child;
     }
-    for (Node child : stringKeys) {
-      child.detach();
-    }
+    members.detachChildren();
 
     String oldName = name.getString();
     String qName = maybePrependCurrNamespace(oldName);

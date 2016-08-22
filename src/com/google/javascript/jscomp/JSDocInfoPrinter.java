@@ -248,11 +248,13 @@ public final class JSDocInfoPrinter {
       sb.append("=");
     } else if (typeNode.getToken() == Token.PIPE) {
       sb.append("(");
-      for (int i = 0; i < typeNode.getChildCount() - 1; i++) {
-        appendTypeNode(sb, typeNode.getChildAtIndex(i));
-        sb.append("|");
+      Node lastChild = typeNode.getLastChild();
+      for (Node child = typeNode.getFirstChild(); child != null; child = child.getNext()) {
+        appendTypeNode(sb, child);
+        if (child != lastChild) {
+          sb.append("|");
+        }
       }
-      appendTypeNode(sb, typeNode.getLastChild());
       sb.append(")");
     } else if (typeNode.getToken() == Token.ELLIPSIS) {
       sb.append("...");
@@ -271,22 +273,17 @@ public final class JSDocInfoPrinter {
     } else if (typeNode.getToken() == Token.LC) {
       sb.append("{");
       Node lb = typeNode.getFirstChild();
-      for (int i = 0; i < lb.getChildCount() - 1; i++) {
-        Node colon = lb.getChildAtIndex(i);
+      Node lastColon = lb.getLastChild();
+      for (Node colon = lb.getFirstChild(); colon != null; colon = colon.getNext()) {
         if (colon.hasChildren()) {
           sb.append(colon.getFirstChild().getString()).append(":");
           appendTypeNode(sb, colon.getLastChild());
         } else {
           sb.append(colon.getString());
         }
-        sb.append(",");
-      }
-      Node lastColon = lb.getLastChild();
-      if (lastColon.hasChildren()) {
-        sb.append(lastColon.getFirstChild().getString()).append(":");
-        appendTypeNode(sb, lastColon.getLastChild());
-      } else {
-        sb.append(lastColon.getString());
+        if (colon != lastColon) {
+          sb.append(",");
+        }
       }
       sb.append("}");
     } else if (typeNode.getToken() == Token.VOID) {
@@ -296,10 +293,12 @@ public final class JSDocInfoPrinter {
         sb.append(typeNode.getString())
             .append("<");
         Node child = typeNode.getFirstChild();
-        appendTypeNode(sb, child.getFirstChild());
-        for (int i = 1; i < child.getChildCount(); i++) {
-          sb.append(",");
-          appendTypeNode(sb, child.getChildAtIndex(i));
+        Node last = child.getLastChild();
+        for (Node type = child.getFirstChild(); type != null; type = type.getNext()) {
+          appendTypeNode(sb, type);
+          if (type != last) {
+            sb.append(",");
+          }
         }
         sb.append(">");
       } else {

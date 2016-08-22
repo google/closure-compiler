@@ -159,16 +159,15 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
       if (paramList.getChildCount() + numExtraCallChildren != call.getChildCount()) {
         return false;
       }
+
       if (!call.getSecondChild().isThis()) {
         return false;
       }
-      // The param list should exactly match the remaining arguments to CALL
-      for (int i = 0; i < paramList.getChildCount(); i++) {
-        Node callArg = call.getChildAtIndex(i + numExtraCallChildren);
-        if (!callArg.isName()) {
-          return false;
-        }
-        if (!paramList.getChildAtIndex(i).matchesQualifiedName(callArg.getString())) {
+
+      Node callArg = call.getChildAtIndex(numExtraCallChildren);
+      Node param = paramList.getFirstChild();
+      for (; param != null; param = param.getNext(), callArg = callArg.getNext()) {
+        if (!callArg.isName() || !param.matchesQualifiedName(callArg)) {
           return false;
         }
       }

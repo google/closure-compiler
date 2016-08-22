@@ -87,8 +87,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   private void visitParamList(Node paramList, Node function) {
     Node insertSpot = null;
     Node body = function.getLastChild();
-    for (int i = 0; i < paramList.getChildCount(); i++) {
-      Node param = paramList.getChildAtIndex(i);
+    int i = 0;
+    Node next = null;
+    for (Node param = paramList.getFirstChild(); param != null; param = next, i++) {
+      next = param.getNext();
       if (param.isDefaultValue()) {
         JSDocInfo jsDoc = param.getJSDocInfo();
         Node nameOrPattern = param.removeFirstChild();

@@ -262,13 +262,13 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         //    export function Foo() {}
         // etc.
         Node declaration = export.getFirstChild();
-        for (int i = 0; i < declaration.getChildCount(); i++) {
-          Node maybeName = declaration.getChildAtIndex(i);
+        Node first = declaration.getFirstChild();
+        for (Node maybeName = first; maybeName != null; maybeName = maybeName.getNext()) {
           if (!maybeName.isName()) {
             break;
           }
           // Break out on "B" in "class A extends B"
-          if (declaration.isClass() && i > 0) {
+          if (declaration.isClass() && maybeName != first) {
             break;
           }
           String name = maybeName.getString();
