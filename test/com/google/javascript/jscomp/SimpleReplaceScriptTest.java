@@ -251,6 +251,19 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     runRedefinedVarsTest(ImmutableList.of(src), 0, src, 0, errorLines);
   }
 
+  public void testParseErrorDoesntCrashCompilation() {
+    CompilerOptions options = getOptions();
+    Compiler compiler = new Compiler();
+    // Regression test for b/30957755.
+    List<SourceFile> inputs = ImmutableList.of(
+        SourceFile.fromCode("in", "bad!()"));
+    try {
+      Result result = compiler.compile(EXTERNS, inputs, options);
+    } catch (RuntimeException e) {
+      fail("replaceScript threw a RuntimeException on a parse error.");
+    }
+  }
+
   /**
    * Test that two previously common problems don't happen in inc-compile:
    * (i) require is not defined on goog
