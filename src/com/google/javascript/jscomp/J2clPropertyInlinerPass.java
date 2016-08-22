@@ -124,7 +124,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
           || !multiExpression.getSecondChild().isGetProp()) {
         return false;
       }
-      Node clinitFunction = multiExpression.getFirstChild().getFirstChild();
+      Node clinitFunction = multiExpression.getFirstFirstChild();
       Node internalProp = multiExpression.getSecondChild();
       if (!clinitFunction.matchesQualifiedName(className + ".$clinit")) {
         return false;
@@ -158,14 +158,14 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       Node setBlock = setFunction.getLastChild();
       if (!setBlock.hasChildren()
           || !setBlock.getFirstChild().isExprResult()
-          || !setBlock.getFirstChild().getFirstChild().isComma()) {
+          || !setBlock.getFirstFirstChild().isComma()) {
         return false;
       }
-      Node multiExpression = setBlock.getFirstChild().getFirstChild();
+      Node multiExpression = setBlock.getFirstFirstChild();
       if (multiExpression.getChildCount() != 2 || !multiExpression.getSecondChild().isAssign()) {
         return false;
       }
-      Node clinitFunction = multiExpression.getFirstChild().getFirstChild();
+      Node clinitFunction = multiExpression.getFirstFirstChild();
       if (!clinitFunction.matchesQualifiedName(className + ".$clinit")) {
         return false;
       }

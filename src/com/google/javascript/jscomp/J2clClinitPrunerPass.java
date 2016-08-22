@@ -272,7 +272,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
         return false;
       }
 
-      Node lhs = node.getFirstChild().getFirstChild();
+      Node lhs = node.getFirstFirstChild();
       Node rhs = node.getFirstChild().getLastChild();
       return NodeUtil.isEmptyFunctionExpression(rhs) && lhs.matchesQualifiedName(enclosingFnName);
     }

@@ -949,7 +949,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     if (member.isComputedProp()) {
       return IR.getelem(context, member.removeFirstChild());
     } else {
-      Node methodName = member.getFirstChild().getFirstChild();
+      Node methodName = member.getFirstFirstChild();
       return IR.getprop(context, IR.string(member.getString()).useSourceInfoFrom(methodName));
     }
   }
