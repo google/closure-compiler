@@ -148,7 +148,11 @@ public final class ModuleLoader {
      * @return The normalized module URI, or {@code null} if not found.
      */
     public ModuleUri resolveEs6Module(String moduleName) {
-      URI resolved = locateNoCheck(moduleName + ".js");
+      // Allow module names with or without the ".js" extension.
+      if (!moduleName.endsWith(".js")) {
+        moduleName += ".js";
+      }
+      URI resolved = locateNoCheck(moduleName);
       if (!moduleUris.contains(resolved) && errorHandler != null) {
         errorHandler.report(CheckLevel.WARNING, JSError.make(LOAD_WARNING, moduleName));
       }

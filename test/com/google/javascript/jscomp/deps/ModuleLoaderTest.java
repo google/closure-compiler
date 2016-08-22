@@ -34,6 +34,13 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("js/b.js", loader.resolve("js\\a.js").resolveEs6Module("./b"));
   }
 
+  public void testJsExtension() {
+    ModuleLoader loader =
+        new ModuleLoader(null, ImmutableList.of("."), inputs("js/a.js", "js/b.js"));
+    assertUri("js/a.js", loader.resolve("js/a.js"));
+    assertUri("js/b.js", loader.resolve("js/a.js").resolveEs6Module("./b"));
+  }
+
   public void testLocateCommonJs() throws Exception {
     ModuleLoader loader = new ModuleLoader(
         null, ImmutableList.of("."), inputs("A/index.js", "B/index.js", "app.js"));
