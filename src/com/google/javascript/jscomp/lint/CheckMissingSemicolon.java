@@ -57,6 +57,7 @@ public final class CheckMissingSemicolon extends AbstractPostOrderCallback imple
         || statement.isClass()
         || statement.isBlock()
         || statement.isLabelName()
+        || statement.isModuleBody()
         || (NodeUtil.isControlStructure(statement) && !statement.isDo())) {
       return false;
     }

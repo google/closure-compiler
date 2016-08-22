@@ -1026,7 +1026,7 @@ class IRFactory {
       }
       parseDirectives(scriptNode);
       if (isGoogModuleFile(scriptNode)) {
-        Node moduleNode = new Node(Token.MODULE_BODY);
+        Node moduleNode = newNode(Token.MODULE_BODY);
         setSourceInfo(moduleNode, rootNode);
         moduleNode.addChildrenToBack(scriptNode.removeChildren());
         scriptNode.addChildToBack(moduleNode);

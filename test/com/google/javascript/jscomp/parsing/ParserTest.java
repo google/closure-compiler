@@ -3184,6 +3184,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("export * from './someModule'");
   }
 
+  public void testGoogModule() {
+    Node tree = parse("goog.module('example');");
+    assertNode(tree).hasType(Token.SCRIPT);
+    assertThat(tree.getStaticSourceFile()).isNotNull();
+    assertNode(tree.getFirstChild()).hasType(Token.MODULE_BODY);
+    assertThat(tree.getFirstChild().getStaticSourceFile()).isNotNull();
+  }
+
   public void testShebang() {
     parse("#!/usr/bin/node\n var x = 1;");
     parseError("var x = 1; \n #!/usr/bin/node",
