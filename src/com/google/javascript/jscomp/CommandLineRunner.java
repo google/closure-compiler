@@ -303,6 +303,13 @@ public class CommandLineRunner extends
         "(i.e. input-file-path|input-source-map)")
     private List<String> sourceMapInputs = new ArrayList<>();
 
+    @Option(name = "--apply_input_source_maps",
+        handler = BooleanOptionHandler.class,
+        hidden = true,
+        usage = "Whether to apply input source maps to the output source map, " +
+        "i.e. have the result map back to original inputs")
+    private boolean applyInputSourceMaps = true;
+
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(
@@ -1273,6 +1280,7 @@ public class CommandLineRunner extends
     List<FlagEntry<JsSourceType>> mixedSources = null;
     List<LocationMapping> mappings = null;
     ImmutableMap<String, String> sourceMapInputs = null;
+    boolean applyInputSourceMaps = false;
     try {
       flags.parse(processedArgs);
 
@@ -1285,6 +1293,7 @@ public class CommandLineRunner extends
       mixedSources = flags.getMixedJsSources();
       mappings = flags.getSourceMapLocationMappings();
       sourceMapInputs = flags.getSourceMapInputs();
+      applyInputSourceMaps = flags.applyInputSourceMaps;
     } catch (CmdLineException e) {
       reportError(e.getMessage());
     } catch (IOException ioErr) {
@@ -1419,6 +1428,7 @@ public class CommandLineRunner extends
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
           .setSourceMapInputFiles(sourceMapInputs)
+          .setApplyInputSourceMaps(applyInputSourceMaps)
           .setWarningGuards(Flags.guardLevels)
           .setDefine(flags.define)
           .setCharset(flags.charset)

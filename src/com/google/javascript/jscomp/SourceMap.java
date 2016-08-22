@@ -21,6 +21,7 @@ import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapFormat;
 import com.google.debugging.sourcemap.SourceMapGenerator;
 import com.google.debugging.sourcemap.SourceMapGeneratorFactory;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Collects information mapping the generated (compiled) source back to
@@ -113,6 +115,13 @@ public final class SourceMap {
   private List<LocationMapping> prefixMappings = Collections.emptyList();
   private final Map<String, String> sourceLocationFixupCache =
        new HashMap<>();
+  /**
+   * A mapping derived from input source maps. Maps back to input sources that inputs to this
+   * compilation job have been generated from, and used to create a source map that maps all the way
+   * back to original inputs. {@code null} if no such mapping is wanted.
+   */
+  @Nullable
+  private SourceFileMapping mapping;
 
   private SourceMap(SourceMapGenerator generator) {
     this.generator = generator;
@@ -131,6 +140,17 @@ public final class SourceMap {
       return;
     }
 
+    int lineNo = node.getLineno();
+    int charNo = node.getCharno();
+    if (mapping != null) {
+      OriginalMapping sourceMapping = mapping.getSourceMapping(sourceFile, lineNo, charNo);
+      if (sourceMapping != null) {
+        sourceFile = sourceMapping.getOriginalFile();
+        lineNo = sourceMapping.getLineNumber();
+        charNo = sourceMapping.getColumnPosition();
+      }
+    }
+
     sourceFile = fixupSourceLocation(sourceFile);
 
     String originalName = node.getOriginalName();
@@ -141,7 +161,7 @@ public final class SourceMap {
 
     generator.addMapping(
         sourceFile, originalName,
-        new FilePosition(node.getLineno() - lineBaseOffset, node.getCharno()),
+        new FilePosition(lineNo - lineBaseOffset, charNo),
         outputStartPosition, outputEndPosition);
   }
 
@@ -211,5 +231,9 @@ public final class SourceMap {
    */
   public void setPrefixMappings(List<LocationMapping> sourceMapLocationMappings) {
      this.prefixMappings = sourceMapLocationMappings;
+  }
+
+  public void setSourceFileMapping(SourceFileMapping mapping) {
+    this.mapping = mapping;
   }
 }

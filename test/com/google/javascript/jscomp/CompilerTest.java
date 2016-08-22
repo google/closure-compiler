@@ -23,6 +23,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.FilePosition;
+import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.rhino.InputId;
@@ -34,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -196,6 +198,36 @@ public final class CompilerTest extends TestCase {
         return null;
       }
     };
+  }
+
+  public void testApplyInputSourceMaps() throws Exception {
+    FilePosition originalSourcePosition = new FilePosition(17, 25);
+    ImmutableMap<String, SourceMapInput> inputSourceMaps = ImmutableMap.of(
+        "input.js",
+        sourcemap(
+            "input.js.map",
+            "input.ts",
+            originalSourcePosition));
+
+    CompilerOptions options = new CompilerOptions();
+    options.sourceMapOutputPath = "fake/source_map_path.js.map";
+    options.inputSourceMaps = inputSourceMaps;
+    options.applyInputSourceMaps = true;
+    Compiler compiler = new Compiler();
+    compiler.compile(EMPTY_EXTERNS.get(0),
+        SourceFile.fromCode("input.js", "// Unmapped line\nvar x = 1;\nalert(x);"), options);
+    assertThat(compiler.toSource()).isEqualTo("var x=1;alert(x);");
+    SourceMap sourceMap = compiler.getSourceMap();
+    StringWriter out = new StringWriter();
+    sourceMap.appendTo(out, "source.js.map");
+    SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
+    consumer.parse(out.toString());
+    // Column 5 contains the first actually mapped code ('x').
+    OriginalMapping mapping = consumer.getMappingForLine(1, 5);
+    assertThat(mapping.getOriginalFile()).isEqualTo("input.ts");
+    // FilePosition above is 0-based, whereas OriginalMapping is 1-based, thus 18 & 26.
+    assertThat(mapping.getLineNumber()).isEqualTo(18);
+    assertThat(mapping.getColumnPosition()).isEqualTo(26);
   }
 
   private Compiler initCompilerForCommonJS(
