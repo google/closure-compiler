@@ -2633,14 +2633,24 @@ public class Parser {
     // Case ( )
     if (peek(TokenType.CLOSE_PAREN)) {
       eat(TokenType.CLOSE_PAREN);
-      return new FormalParameterListTree(getTreeLocation(start), ImmutableList.<ParseTree>of());
+      if (peek(TokenType.ARROW)) {
+        return new FormalParameterListTree(getTreeLocation(start), ImmutableList.<ParseTree>of());
+      } else {
+        reportError("invalid parenthesized expression");
+        return new MissingPrimaryExpressionTree(getTreeLocation(start));
+      }
     }
     // Case ( ... BindingIdentifier )
     if (peek(TokenType.SPREAD)) {
-      ParseTree result = new FormalParameterListTree(
-          getTreeLocation(start), ImmutableList.of(parseParameter(ParamContext.IMPLEMENTATION)));
+      ImmutableList<ParseTree> params = ImmutableList.of(
+          parseParameter(ParamContext.IMPLEMENTATION));
       eat(TokenType.CLOSE_PAREN);
-      return result;
+      if (peek(TokenType.ARROW)) {
+        return new FormalParameterListTree(getTreeLocation(start), params);
+      } else {
+        reportError("invalid parenthesized expression");
+        return new MissingPrimaryExpressionTree(getTreeLocation(start));
+      }
     }
     // For either of the two remaining cases:
     //     ( Expression )
@@ -2795,9 +2805,6 @@ public class Parser {
     ParseTree left = parseConditional(expressionIn);
     if (peek(TokenType.ARROW)) {
       return completeAssignmentExpressionParseAtArrow(left, expressionIn);
-    }
-    if (left.type == ParseTreeType.FORMAL_PARAMETER_LIST) {
-      reportError("invalid paren expression");
     }
 
     if (peekAssignmentOperator()) {

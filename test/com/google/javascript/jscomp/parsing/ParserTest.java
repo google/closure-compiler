@@ -2634,13 +2634,32 @@ public final class ParserTest extends BaseJSTypeTestCase {
         getRequiresEs6Message(Feature.REST_PARAMETERS));
   }
 
-  public void testExpressionsThatLookLikeParameters() {
+  public void testExpressionsThatLookLikeParameters1() {
     mode = LanguageMode.ECMASCRIPT6;
-    parseError("();", "invalid paren expression");
+    parseError("();", "invalid parenthesized expression");
     expectFeatures(Feature.REST_PARAMETERS);
-    parseError("(...xs);", "invalid paren expression");
+    parseError("(...xs);", "invalid parenthesized expression");
     parseError("(x, ...xs);", "A rest parameter must be in a parameter list.");
     parseError("(a, b, c, ...xs);", "A rest parameter must be in a parameter list.");
+  }
+
+  public void testExpressionsThatLookLikeParameters2() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("!()", "invalid parenthesized expression");
+    parseError("().method", "invalid parenthesized expression");
+    parseError("() || a", "invalid parenthesized expression");
+    parseError("() && a", "invalid parenthesized expression");
+    parseError("x = ()", "invalid parenthesized expression");
+  }
+
+  public void testExpressionsThatLookLikeParameters3() {
+    expectFeatures(Feature.REST_PARAMETERS);
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("!(...x)", "invalid parenthesized expression");
+    parseError("(...x).method", "invalid parenthesized expression");
+    parseError("(...x) || a", "invalid parenthesized expression");
+    parseError("(...x) && a", "invalid parenthesized expression");
+    parseError("x = (...x)", "invalid parenthesized expression");
   }
 
   public void testDefaultParametersWithRestParameters() {
@@ -2778,7 +2797,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
         getRequiresEs6Message(Feature.ARROW_FUNCTIONS));
   }
 
-  public void testArrowInvalid() {
+  public void testArrowInvalid1() {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("*()=>1;", "primary expression expected");
     expectFeatures(Feature.ARROW_FUNCTIONS);
