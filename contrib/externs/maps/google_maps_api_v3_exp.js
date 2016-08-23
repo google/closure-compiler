@@ -2718,7 +2718,7 @@ google.maps.LatLng.prototype.toUrlValue = function(opt_precision) {};
 google.maps.LatLngBounds = function(opt_sw, opt_ne) {};
 
 /**
- * @param {google.maps.LatLng} latLng
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} latLng
  * @return {boolean}
  */
 google.maps.LatLngBounds.prototype.contains = function(latLng) {};
@@ -2730,7 +2730,7 @@ google.maps.LatLngBounds.prototype.contains = function(latLng) {};
 google.maps.LatLngBounds.prototype.equals = function(other) {};
 
 /**
- * @param {google.maps.LatLng} point
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} point
  * @return {google.maps.LatLngBounds}
  */
 google.maps.LatLngBounds.prototype.extend = function(point) {};
@@ -3500,54 +3500,9 @@ google.maps.MapTypeStyle.prototype.elementType;
 google.maps.MapTypeStyle.prototype.featureType;
 
 /**
- * @type {Array<google.maps.MapTypeStyler>}
+ * @type {Array<Object>}
  */
 google.maps.MapTypeStyle.prototype.stylers;
-
-/**
- * @interface
- */
-google.maps.MapTypeStyler = function() {};
-
-/**
- * @type {string}
- */
-google.maps.MapTypeStyler.prototype.color;
-
-/**
- * @type {number}
- */
-google.maps.MapTypeStyler.prototype.gamma;
-
-/**
- * @type {string}
- */
-google.maps.MapTypeStyler.prototype.hue;
-
-/**
- * @type {boolean}
- */
-google.maps.MapTypeStyler.prototype.invert_lightness;
-
-/**
- * @type {number}
- */
-google.maps.MapTypeStyler.prototype.lightness;
-
-/**
- * @type {number}
- */
-google.maps.MapTypeStyler.prototype.saturation;
-
-/**
- * @type {string}
- */
-google.maps.MapTypeStyler.prototype.visibility;
-
-/**
- * @type {number}
- */
-google.maps.MapTypeStyler.prototype.weight;
 
 /**
  * @constructor
