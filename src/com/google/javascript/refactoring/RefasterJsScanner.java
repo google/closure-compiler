@@ -140,7 +140,8 @@ public final class RefasterJsScanner extends Scanner {
     // If the template is a multiline template, make sure to delete the same number of sibling nodes
     // as the template has.
     Node n = match.getNode().getNext();
-    for (int i = 1; i < matchedTemplate.beforeTemplate.getLastChild().getChildCount(); i++) {
+    int count = matchedTemplate.beforeTemplate.getLastChild().getChildCount();
+    for (int i = 1; i < count; i++) {
       Preconditions.checkNotNull(
           n, "Found mismatched sibling count between before template and matched node.\n"
           + "Template: %s\nMatch: %s",
