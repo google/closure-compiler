@@ -101,6 +101,17 @@ public final class RhinoErrorReporterTest extends TestCase {
     assertEquals(4, error.getCharno());
   }
 
+  public void testMissingCurlyBraceWarning() {
+    reportLintWarnings = false;
+    assertNoWarningOrError("/** @type string */ var x;");
+
+    reportLintWarnings = true;
+    assertWarning(
+        "/** @type string */ var x;",
+        RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
+        "Bad type annotation. Type annotations should have curly braces.");
+  }
+
   /**
    * Verifies that the compiler emits an error for the given code.
    */
