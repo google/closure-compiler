@@ -67,6 +67,7 @@ public class Protocol {
     ANGULAR_PASS("angular_pass"),
     GENERATE_EXPORTS("generate_exports"),
     DISABLE_PROPERTY_RENAMING("disable_property_renaming"),
+    REWRITE_POLYFILLS("rewrite_polyfills"),
 
     // Old ROBOCOMP urls.
     RAWJS("rawjs"),
