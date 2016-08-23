@@ -3191,17 +3191,19 @@ final class NewTypeInference implements CompilerPass {
       Node callNode, TypeEnv outEnv, JSType retType) {
     Preconditions.checkArgument(callNode.isCall() || callNode.isNew());
     Preconditions.checkNotNull(retType);
+
     Node callee = callNode.getFirstChild();
     TypeEnv tmpEnv = outEnv;
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    for (int i = callNode.getChildCount() - 2; i >= 0; i--) {
-      Node arg = callNode.getChildAtIndex(i + 1);
+    Node target = callNode.getFirstChild();
+    for (Node arg = callNode.getLastChild(); arg != target; arg = arg.getPrevious()) {
       EnvTypePair pair = analyzeExprBwd(arg, tmpEnv);
       JSType argType = pair.type;
       tmpEnv = pair.env;
       // May wait until FWD to get more precise argument types.
       builder.addReqFormal(isImpreciseType(argType) ? BOTTOM : argType);
     }
+
     JSType looseRetType = retType.isUnknown() ? BOTTOM : retType;
     JSType looseFunctionType = commonTypes.fromFunctionType(
         builder.addRetType(looseRetType).addLoose().buildFunction());
@@ -3553,14 +3555,16 @@ final class NewTypeInference implements CompilerPass {
     }
     TypeEnv tmpEnv = envAfterCallee;
     // In bwd direction, analyze arguments in reverse
-    for (int i = expr.getChildCount() - 2; i >= 0; i--) {
+    Node target = expr.getFirstChild();
+    int i = expr.getChildCount() - 1;
+    for (Node arg = expr.getLastChild(); arg != target; arg = arg.getPrevious()) {
+      i--;
       JSType formalType = funType.getFormalType(i);
       // The type of a formal can be BOTTOM as the result of a join.
       // Don't use this as a requiredType.
       if (formalType.isBottom()) {
         formalType = UNKNOWN;
       }
-      Node arg = expr.getChildAtIndex(i + 1);
       tmpEnv = analyzeExprBwd(arg, tmpEnv, formalType).env;
       // We don't need deferred checks for args in BWD
     }
@@ -3603,9 +3607,8 @@ final class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeArrayLitBwd(Node expr, TypeEnv outEnv) {
     TypeEnv env = outEnv;
     JSType elementType = BOTTOM;
-    for (int i = expr.getChildCount() - 1; i >= 0; i--) {
-      Node arrayElm = expr.getChildAtIndex(i);
-      EnvTypePair pair = analyzeExprBwd(arrayElm, env);
+    for (Node elm = expr.getLastChild(); elm != null; elm = elm.getPrevious()) {
+      EnvTypePair pair = analyzeExprBwd(elm, env);
       env = pair.env;
       elementType = JSType.join(elementType, pair.type);
     }
@@ -3618,8 +3621,8 @@ final class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeCallNodeArgumentsBwd(
       Node callNode, TypeEnv outEnv) {
     TypeEnv env = outEnv;
-    for (int i = callNode.getChildCount() - 1; i > 0; i--) {
-      Node arg = callNode.getChildAtIndex(i);
+    Node target = callNode.getFirstChild();
+    for (Node arg = callNode.getLastChild(); arg != target; arg = arg.getPrevious()) {
       env = analyzeExprBwd(arg, env).env;
     }
     return new EnvTypePair(env, UNKNOWN);
