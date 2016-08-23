@@ -943,6 +943,14 @@ Boolean.prototype.toSource = function() {};
 Boolean.prototype.toString = function() {};
 
 /**
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean/valueOf
+ * @override
+ */
+Boolean.prototype.valueOf = function() {};
+
+/**
  * @constructor
  * @param {*=} opt_value
  * @return {number}
