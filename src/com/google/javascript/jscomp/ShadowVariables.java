@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.RenameVars.Assignment;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -73,7 +72,7 @@ class ShadowVariables implements CompilerPass {
   private final Multimap<Node, String> scopeUpRefMap = HashMultimap.create();
 
   // Maps each local variable to all of its referencing NAME nodes in any scope.
-  private final Multimap<Var, Node> varToNameUsage = HashMultimap.create();
+  private final Multimap<Var, Reference> varToNameUsage = HashMultimap.create();
 
   private final AbstractCompiler compiler;
 
@@ -113,8 +112,8 @@ class ShadowVariables implements CompilerPass {
     //    variable usage frequency map.
     //
     // 3. Updates the pseudo naming map if needed.
-    NodeTraversal.traverse(compiler, root, new GatherReferenceInfo());
-    NodeTraversal.traverse(compiler, root, new DoShadowVariables());
+    NodeTraversal.traverseEs6(compiler, root, new GatherReferenceInfo());
+    NodeTraversal.traverseEs6(compiler, root, new DoShadowVariables());
 
     if (oldPseudoNameMap != null) {
       oldPseudoNameMap.putAll(deltaPseudoNameMap);
@@ -137,7 +136,8 @@ class ShadowVariables implements CompilerPass {
         return;
       }
 
-      Var var = t.getScope().getVar(n.getString());
+      Scope scope = t.getScope();
+      Var var = scope.getVar(n.getString());
       if (var == null) {
         // extern name or undefined name.
         return;
@@ -149,19 +149,16 @@ class ShadowVariables implements CompilerPass {
       }
 
       // Using the definition of upward referencing, fill in the map.
-      if (var.getScope() != t.getScope()) {
-        for (Scope s = t.getScope();
-            s != var.getScope() && s.isLocal(); s = s.getParent()) {
+      if (var.getScope() != scope) {
+        for (Scope s = scope; s != var.getScope() && s.isLocal(); s = s.getParent()) {
           scopeUpRefMap.put(s.getRootNode(), var.name);
         }
-      }
-
-      if (var.getScope() == t.getScope()) {
+      } else {
         scopeUpRefMap.put(t.getScopeRoot(), var.name);
       }
 
       // Find in the usage map that tracks a var and all of its usage.
-      varToNameUsage.put(var, n);
+      varToNameUsage.put(var, new Reference(n, scope));
     }
   }
 
@@ -170,20 +167,34 @@ class ShadowVariables implements CompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
-      Scope s = t.getScope();
-      if (!s.isLocal()) {
+      if (t.inGlobalScope()) {
         return;
       }
 
       // Since we don't shadow global, there is nothing to be done in the
       // first immediate local scope as well.
-      if (s.getParent().isGlobal()) {
+      if ((t.getScopeRoot().isFunction()
+              && NodeUtil.getEnclosingFunction(t.getScopeRoot().getParent()) == null)
+          || (NodeUtil.isFunctionBlock(t.getScopeRoot())
+              && NodeUtil.getEnclosingFunction(t.getScopeRoot().getGrandparent()) == null)) {
         return;
       }
 
+      // Make sure that we don't shadow function parameters or function names from a function block
+      // scope, eg.:
+      // function f(a) { ... var a; ... } // Unsafe
+      Scope s = t.getScope();
+      if (s.isFunctionBlockScope()) {
+        for (Var var : s.getParent().getVarIterable()) {
+          scopeUpRefMap.put(s.getRootNode(), var.name);
+        }
+      }
+
       for (Var var : s.getVarIterable()) {
-        // Don't shadow variables that is bleed-out to fix an IE bug.
-        if (var.isBleedingFunction()) {
+        // When languageOut is ES3, don't shadow variables that is bleed-out functions or caught
+        // exceptions to avoid IE8 bugs.
+        if (!compiler.getOptions().getLanguageOut().isEs5OrHigher()
+            && (var.isBleedingFunction() || var.isCatch())) {
           continue;
         }
 
@@ -193,7 +204,7 @@ class ShadowVariables implements CompilerPass {
         }
 
         // Try to look for the best shadow for the current candidate.
-        Assignment bestShadow = findBestShadow(s);
+        Assignment bestShadow = findBestShadow(s, var);
         if (bestShadow == null) {
           continue;
         }
@@ -212,8 +223,8 @@ class ShadowVariables implements CompilerPass {
         if (oldPseudoNameMap != null) {
           String targetPseudoName =
             oldPseudoNameMap.get(s.getVar(bestShadow.oldName).nameNode);
-          for (Node use : varToNameUsage.get(var)) {
-            deltaPseudoNameMap.put(use, targetPseudoName);
+          for (Reference use : varToNameUsage.get(var)) {
+            deltaPseudoNameMap.put(use.nameNode, targetPseudoName);
           }
         }
       }
@@ -229,13 +240,18 @@ class ShadowVariables implements CompilerPass {
      * @return An assignment that can be used as a shadow for a local variable
      *     in the scope defined by curScopeRoot.
      */
-    private Assignment findBestShadow(Scope curScope) {
+    private Assignment findBestShadow(Scope curScope, Var var) {
       // Search for the candidate starting from the most used local.
       for (Assignment assignment : varsByFrequency) {
         if (assignment.oldName.startsWith(RenameVars.LOCAL_VAR_PREFIX)) {
           if (!scopeUpRefMap.containsEntry(curScope.getRootNode(), assignment.oldName)) {
             if (curScope.isDeclared(assignment.oldName, true)) {
-              return assignment;
+              // Don't shadow if the scopes are the same eg.:
+              // function f() { var a = 1; { var a = 2; } } // Unsafe
+              Var toShadow = curScope.getVar(assignment.oldName);
+              if (var.getScope() != toShadow.getScope()) {
+                return assignment;
+              }
             }
           }
         }
@@ -247,7 +263,7 @@ class ShadowVariables implements CompilerPass {
       Scope s = var.getScope();
       // We are now shadowing 'bestShadow' with localAssignment.
       // All of the reference NAME node of this variable.
-      Collection<Node> references = varToNameUsage.get(var);
+      Collection<Reference> references = varToNameUsage.get(var);
 
       // First remove both assignments from the sorted list since they need
       // to be re-sorted.
@@ -268,23 +284,44 @@ class ShadowVariables implements CompilerPass {
       // declaring scope of the best shadow variable.
       Var shadowed = s.getVar(toShadow.oldName);
       if (shadowed != null) {
-        for (Scope curScope = s; curScope != shadowed.scope;
-            curScope = curScope.getParent()) {
+        if (s.isFunctionScope() && s.getRootNode().getLastChild().isBlock()) {
+          scopeUpRefMap.put(s.getRootNode().getLastChild(), toShadow.oldName);
+          scopeUpRefMap.remove(s.getRootNode().getLastChild(), original.oldName);
+        }
+        for (Scope curScope = s; curScope != shadowed.scope; curScope = curScope.getParent()) {
           scopeUpRefMap.put(curScope.getRootNode(), toShadow.oldName);
+          scopeUpRefMap.remove(curScope.getRootNode(), original.oldName);
         }
       }
 
       // Mark all the references as shadowed.
-      for (Node n : references) {
+      for (Reference ref : references) {
+        Node n = ref.nameNode;
         n.setString(toShadow.oldName);
-        Node cur = n;
-        while (cur != s.getRootNode()) {
-          cur = cur.getParent();
-          if (cur.isFunction()) {
-            scopeUpRefMap.put(cur, toShadow.oldName);
+        if (ref.scope.getRootNode() == s.getRootNode()) {
+          if (var.getNameNode() != ref.nameNode) {
+            scopeUpRefMap.put(s.getRootNode(), toShadow.oldName);
+            scopeUpRefMap.remove(s.getRootNode(), original.oldName);
+          }
+        } else {
+          for (Scope curScope = ref.scope;
+              curScope.getRootNode() != s.getRootNode();
+              curScope = curScope.getParent()) {
+            scopeUpRefMap.put(curScope.getRootNode(), toShadow.oldName);
+            scopeUpRefMap.remove(curScope.getRootNode(), original.oldName);
           }
         }
       }
+    }
+  }
+
+  private static final class Reference {
+    private final Node nameNode;
+    private final Scope scope;
+
+    private Reference(Node nameNode, Scope scope) {
+      this.nameNode = nameNode;
+      this.scope = scope;
     }
   }
 }

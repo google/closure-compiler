@@ -16,12 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Unit tests for {@link ShadowVariables}.
  *
- *
  */
-public final class ShadowVariablesTest extends CompilerTestCase{
+public final class ShadowVariablesTest extends Es6CompilerTestCase {
   // Use pseudo names to make test easier to read.
   private boolean generatePseudoNames = false;
   private RenameVars pass = null;
@@ -87,12 +88,44 @@ public final class ShadowVariablesTest extends CompilerTestCase{
 
   public void testNoShadowReferencedVariables() {
     generatePseudoNames = true;
-    test("function  f1  () { var  x  ; x  ; x  ; x  ;" +
-         "  return function  f2  ( y  ) {" +
-         "    return function  f3  () { x  } }}",
-         "function $f1$$() { var $x$$;$x$$;$x$$;$x$$;" +
-         "  return function $f2$$($y$$) {" +
-         "    return function $f3$$() {$x$$} }}");
+    // Unsafe to shadow function names on IE8
+    test(LINE_JOINER.join(
+        "function f1() {",
+        "  var x; x; x; x;",
+        "  return function f2(y) {",
+        "    return function f3() {",
+        "      x;",
+        "    };",
+        "  };",
+        "}"),
+        LINE_JOINER.join(
+        "function $f1$$() {",
+        "  var $x$$; $x$$; $x$$; $x$$;",
+        "  return function $f2$$($y$$) {",
+        "    return function $f3$$() {",
+        "      $x$$;",
+        "    };",
+        "  };",
+        "}"), LanguageMode.ECMASCRIPT3);
+
+    test(LINE_JOINER.join(
+        "function f1() {",
+        "  var x; x; x; x;",
+        "  return function f2(y) {",
+        "    return function f3() {",
+        "      x;",
+        "    };",
+        "  };",
+        "}"),
+        LINE_JOINER.join(
+        "function $f1$$() {",
+        "  var $x$$; $x$$; $x$$; $x$$;",
+        "  return function $f2$$($y$$) {",
+        "    return function $f2$$() {",
+        "      $x$$;",
+        "    };",
+        "  };",
+        "}"));
   }
 
   public void testNoShadowGlobalVariables() {
@@ -270,26 +303,127 @@ public final class ShadowVariablesTest extends CompilerTestCase{
     // why we can't update the pseudo name map on-the-fly.
 
     generatePseudoNames = true;
-    test("function f(x) {" +
-         "  x;x;x;" +
-         "  return function (y) { y; x };" +
-         "  return function (y) {" +
-         "    y;" +
-         "    return function (m, n) {" +
-         "       m;m;m;" +
-         "    };" +
-         "  };" +
-         "}",
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x;x;x;",
+            "  return function (y) { y; x };",
+            "  return function (y) {",
+            "    y;",
+            "    return function (m, n) {",
+            "       m;m;m;",
+            "    };",
+            "  };",
+            "}"),
+        LINE_JOINER.join(
+            "function $f$$($x$$) {",
+            "  $x$$;$x$$;$x$$;",
+            "  return function ($y$$) { $y$$; $x$$ };",
+            "  return function ($x$$) {",
+            "    $x$$;",
+            "    return function ($x$$, $y$$) {",
+            "       $x$$;$x$$;$x$$;",
+            "    };",
+            "  };",
+            "}"));
+  }
 
-         "function $f$$($x$$) {" +
-         "  $x$$;$x$$;$x$$;" +
-         "  return function ($y$$) { $y$$; $x$$ };" +
-         "  return function ($x$$) {" +
-         "    $x$$;" +
-         "    return function ($x$$, $y$$) {" +
-         "       $x$$;$x$$;$x$$;" +
-         "    };" +
-         "  };" +
-         "}");
+  public void testBlocks() {
+    // Unsafe to shadow nested "var"s
+    test(LINE_JOINER.join(
+        "function f() {",
+        "  var x = 1;",
+        "  {",
+        "    var y = 2;",
+        "    {",
+        "      var z = 3;",
+        "    }",
+        "  }",
+        "}"),
+        LINE_JOINER.join(
+        "function a() {",
+        "  var b = 1;",
+        "  {",
+        "    var c = 2;",
+        "    {",
+        "      var d = 3;",
+        "    }",
+        "  }",
+        "}"));
+
+    // Safe to shadow nested "let"s
+    testEs6(LINE_JOINER.join(
+        "function f() {",
+        "  let x = 1;",
+        "  {",
+        "    let y = 2;",
+        "    {",
+        "      let z = 3;",
+        "    }",
+        "  }",
+        "}"),
+        LINE_JOINER.join(
+        "function b() {",
+        "  let a = 1;",
+        "  {",
+        "    let a = 2;",
+        "      {",
+        "        let a = 3;",
+        "      }",
+        "  }",
+        "}"));
+
+    testEs6(LINE_JOINER.join(
+        "function f() {",
+        "  let x = 1;",
+        "  {",
+        "    let y = x;",
+        "    {",
+        "      let z = y;",
+        "      let w = x;",
+        "    }",
+        "  }",
+        "}"),
+        LINE_JOINER.join(
+        "function c() {",
+        "  let a = 1;",
+        "  {",
+        "    let b = a;",
+        "    {",
+        "      let d = b;",
+        "      let e = a;",
+        "    }",
+        "  }",
+        "}"));
+  }
+
+  public void testCatch() {
+    // Unsafe to shadow caught exceptions on IE8 since they are not block scoped
+    test(LINE_JOINER.join(
+        "function f(a) {",
+        "  try {",
+        "  } catch (e) {",
+        "  }",
+        "}"),
+        LINE_JOINER.join(
+        "function a(b) {",
+        "  try {",
+        "  } catch (c) {",
+        "  }",
+        "}"),
+        LanguageMode.ECMASCRIPT3);
+
+    test(LINE_JOINER.join(
+        "function f(a) {",
+        "  try {",
+        "  } catch (e) {",
+        "  }",
+        "}"),
+        LINE_JOINER.join(
+        "function b(a) {",
+        "  try {",
+        "  } catch (a) {",
+        "  }",
+        "}"));
   }
 }
