@@ -1073,15 +1073,19 @@ class TypeInference
   private void updateTypeOfParameters(Node n, FunctionType fnType) {
     int i = 0;
     int childCount = n.getChildCount();
+    Node iArgument = n.getFirstChild();
     for (Node iParameter : fnType.getParameters()) {
       if (i + 1 >= childCount) {
         // TypeCheck#visitParametersList will warn so we bail.
         return;
       }
 
-      JSType iParameterType = getJSType(iParameter);
-      Node iArgument = n.getChildAtIndex(i + 1);
+      // NOTE: the first child of the call node is the call target, which we want to skip, so
+      // it is correct to call getNext on the first iteration.
+      iArgument = iArgument.getNext();
       JSType iArgumentType = getJSType(iArgument);
+
+      JSType iParameterType = getJSType(iParameter);
       inferPropertyTypesToMatchConstraint(iArgumentType, iParameterType);
 
       // If the parameter to the call is a function expression, propagate the
