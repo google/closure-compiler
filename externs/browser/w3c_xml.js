@@ -414,6 +414,36 @@ XMLHttpRequest.prototype.onreadystatechange;
 XMLHttpRequest.prototype.onerror;
 
 /**
+ * @type {number}
+ * @see https://www.w3.org/TR/XMLHttpRequest/#states
+ */
+XMLHttpRequest.UNSENT;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/XMLHttpRequest/#states
+ */
+XMLHttpRequest.OPENED;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/XMLHttpRequest/#states
+ */
+XMLHttpRequest.HEADERS_RECEIVED;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/XMLHttpRequest/#states
+ */
+XMLHttpRequest.LOADING;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/XMLHttpRequest/#states
+ */
+XMLHttpRequest.DONE;
+
+/**
  * The FormData object represents an ordered collection of entries. Each entry
  * has a name and value.
  *
