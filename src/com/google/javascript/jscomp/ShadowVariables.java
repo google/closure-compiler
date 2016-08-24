@@ -211,6 +211,9 @@ class ShadowVariables implements CompilerPass {
 
         // The name assignment being shadowed.
         Assignment localAssignment = assignments.get(var.getName());
+        if (localAssignment == null) {
+          continue;
+        }
 
         // Only shadow if this increases the number of occurrences of the
         // shadowed variable.
