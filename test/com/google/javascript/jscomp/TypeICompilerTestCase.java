@@ -27,6 +27,7 @@ import java.util.List;
 public abstract class TypeICompilerTestCase extends CompilerTestCase {
 
   protected static enum TypeInferenceMode {
+    NEITHER,
     OTI_ONLY,
     NTI_ONLY,
     BOTH;
@@ -37,6 +38,10 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
 
     boolean runsNTI() {
       return this == NTI_ONLY || this == BOTH;
+    }
+
+    boolean runsNeither() {
+      return this == NEITHER;
     }
   }
 
@@ -85,6 +90,9 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       super.test(externs, js, expected, error, warning, description);
       disableNewTypeInference();
     }
+    if (this.mode.runsNeither()) {
+      super.test(externs, js, expected, error, warning, description);
+    }
   }
 
   @Override
@@ -103,6 +111,9 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       enableNewTypeInference();
       super.test(inputs, expected, error, warning, description);
       disableNewTypeInference();
+    }
+    if (this.mode.runsNeither()) {
+      super.test(inputs, expected, error, warning, description);
     }
   }
 
@@ -123,6 +134,9 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       super.test(js, expected, error, warning, description);
       disableNewTypeInference();
     }
+    if (this.mode.runsNeither()) {
+      super.test(js, expected, error, warning, description);
+    }
   }
 
   @Override
@@ -137,6 +151,9 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       enableNewTypeInference();
       super.test(compiler, expected, error, warning);
       disableNewTypeInference();
+    }
+    if (this.mode.runsNeither()) {
+      super.test(compiler, expected, error, warning);
     }
   }
 }
