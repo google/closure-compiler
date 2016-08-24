@@ -723,7 +723,7 @@ public final class DefaultPassConfig extends PassConfig {
       // After inlining some of the variable uses, some variables are unused.
       // Re-run remove unused vars to clean it up.
       if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-        passes.add(getRemoveUnusedVars("removeUnusedVars", false));
+        passes.add(lastRemoveUnusedVars());
       }
     }
 
@@ -2285,10 +2285,18 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
+  private PassFactory getRemoveUnusedVars(String name, final boolean modifyCallSites) {
+    return getRemoveUnusedVars(name, modifyCallSites, false /* isOneTimePass */);
+  }
+
+  private PassFactory lastRemoveUnusedVars() {
+    return getRemoveUnusedVars("removeUnusedVars", false, true /* isOneTimePass */);
+  }
+
   private PassFactory getRemoveUnusedVars(
-      String name, final boolean modifyCallSites) {
+      String name, final boolean modifyCallSites, boolean isOneTimePass) {
     /** Removes variables that are never used. */
-    return new PassFactory(name, false) {
+    return new PassFactory(name, isOneTimePass) {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
         boolean removeOnlyLocals = options.removeUnusedLocalVars
