@@ -643,8 +643,13 @@ public class Node implements Serializable {
     return first;
   }
 
+  /**
+   * Get the first child of the first child. This method assumes that the first child exists.
+   *
+   * @return The first child of the first child.
+   */
   public Node getFirstFirstChild() {
-    return first == null ? null : first.first;
+    return first.first;
   }
 
   public Node getSecondChild() {
