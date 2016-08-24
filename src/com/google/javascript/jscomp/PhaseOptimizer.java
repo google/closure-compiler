@@ -93,15 +93,16 @@ class PhaseOptimizer implements CompilerPass {
   // future, we should write new code to do it.
   @VisibleForTesting
   static final List<String> OPTIMAL_ORDER = ImmutableList.of(
-     "deadAssignmentsElimination",
      "inlineFunctions",
-     "removeUnusedPrototypeProperties",
-     "removeUnreachableCode",
-     "removeUnusedVars",
-     "minimizeExitPoints",
      "inlineVariables",
+     "deadAssignmentsElimination",
      "collapseObjectLiterals",
-     "peepholeOptimizations");
+     "removeUnusedVars",
+     "removeUnusedPrototypeProperties",
+     "removeUnusedClassProperties",
+     "peepholeOptimizations",
+     "minimizeExitPoints",
+     "removeUnreachableCode");
 
   static final int MAX_LOOPS = 100;
   static final String OPTIMIZE_LOOP_ERROR =
