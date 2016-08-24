@@ -10066,3 +10066,477 @@ chrome.wallpaper.WallpaperLayout = {
  * @see https://goo.gl/7dvJFW#method-setWallpaper
  */
 chrome.wallpaper.setWallpaper = function(details, callback) {};
+
+
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/downloads
+ */
+chrome.downloads = {};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/downloads#type-FilenameConflictAction
+ */
+chrome.downloads.FilenameConflictAction = {
+  UNIQUIFY: '',
+  OVERWRITE: '',
+  PROMPT: ''
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/downloads#type-InterruptReason
+ */
+chrome.downloads.InterruptReason = {
+  FILE_FAILED: '',
+  FILE_ACCESS_DENIED: '',
+  FILE_NO_SPACE: '',
+  FILE_NAME_TOO_LONG: '',
+  FILE_TOO_LARGE: '',
+  FILE_VIRUS_INFECTED: '',
+  FILE_TRANSIENT_ERROR: '',
+  FILE_BLOCKED: '',
+  FILE_SECURITY_CHECK_FAILED: '',
+  FILE_TOO_SHORT: '',
+  FILE_HASH_MISMATCH: '',
+  NETWORK_FAILED: '',
+  NETWORK_TIMEOUT: '',
+  NETWORK_DISCONNECTED: '',
+  NETWORK_SERVER_DOWN: '',
+  NETWORK_INVALID_REQUEST: '',
+  SERVER_FAILED: '',
+  SERVER_NO_RANGE: '',
+  SERVER_BAD_CONTENT: '',
+  SERVER_UNAUTHORIZED: '',
+  SERVER_CERT_PROBLEM: '',
+  SERVER_FORBIDDEN: '',
+  SERVER_UNREACHABLE: '',
+  USER_CANCELED: '',
+  USER_SHUTDOWN: '',
+  CRASH: '',
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/downloads#type-DangerType
+ */
+chrome.downloads.DangerType = {
+  FILE: '',
+  URL: '',
+  CONTENT: '',
+  UNCOMMON: '',
+  HOST: '',
+  UNWANTED: '',
+  SAFE: '',
+  ACCEPTED: ''
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/downloads#type-State
+ */
+chrome.downloads.State = {
+  IN_PROGRESS: '',
+  INTERRUPTED: '',
+  COMPLETE: '',
+};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/downloads#type-DownloadItem
+ */
+chrome.downloads.DownloadItem = function() {};
+
+
+/** @type {number} */
+chrome.downloads.DownloadItem.prototype.id;
+
+
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.url;
+
+
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.finalUrl;
+
+
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.referrer;
+
+
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.filename;
+
+
+/** @type {boolean} */
+chrome.downloads.DownloadItem.prototype.incognito;
+
+
+/** @type {!chrome.downloads.DangerType|string} */
+chrome.downloads.DownloadItem.prototype.dangerType;
+
+
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.mime;
+
+
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.startTime;
+
+
+/** @type {?string} */
+chrome.downloads.DownloadItem.prototype.endTime;
+
+
+/** @type {?string} */
+chrome.downloads.DownloadItem.prototype.estimatedEndTime;
+
+
+/** @type {!chrome.downloads.State|string} */
+chrome.downloads.DownloadItem.prototype.state;
+
+
+/** @type {boolean} */
+chrome.downloads.DownloadItem.prototype.paused;
+
+
+/** @type {boolean} */
+chrome.downloads.DownloadItem.prototype.canResume;
+
+
+/** @type {!chrome.downloads.InterruptReason|string|undefined} */
+chrome.downloads.DownloadItem.prototype.error;
+
+
+/** @type {number} */
+chrome.downloads.DownloadItem.prototype.bytesReceived;
+
+
+/** @type {number} */
+chrome.downloads.DownloadItem.prototype.totalBytes;
+
+
+/** @type {number} */
+chrome.downloads.DownloadItem.prototype.fileSize;
+
+
+/** @type {boolean} */
+chrome.downloads.DownloadItem.prototype.exists;
+
+
+/** @type {?string} */
+chrome.downloads.DownloadItem.prototype.byExtensionId;
+
+
+/** @type {?string} */
+chrome.downloads.DownloadItem.prototype.byExtensionName;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/downloads#type-StringDelta
+ */
+chrome.downloads.StringDelta = function() {};
+
+
+/** @type {?string} */
+chrome.downloads.StringDelta.prototype.previous;
+
+
+/** @type {?string} */
+chrome.downloads.StringDelta.prototype.current;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/downloads#type-DoubleDelta
+ */
+chrome.downloads.DoubleDelta = function() {};
+
+
+/** @type {?number} */
+chrome.downloads.DoubleDelta.prototype.previous;
+
+
+/** @type {?number} */
+chrome.downloads.DoubleDelta.prototype.current;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/downloads#type-BooleanDelta
+ */
+chrome.downloads.BooleanDelta = function() {};
+
+
+/** @type {?boolean} */
+chrome.downloads.BooleanDelta.prototype.previous;
+
+
+/** @type {?boolean} */
+chrome.downloads.BooleanDelta.prototype.current;
+
+
+/**
+ * @param {{
+ *    url: string,
+ *    filename: (string|undefined),
+ *    conflictAction:
+ *        (!chrome.downloads.FilenameConflictAction|string|undefined),
+ *    saveAs: (boolean|undefined),
+ *    method: (string|undefined),
+ *    headers: (!Array<{name:string, value:string}>|undefined),
+ *    body: (string|undefined)
+ *  }} details
+ * @param {function(number)=} opt_callback
+ * @see https://developer.chrome.com/extensions/downloads#method-download
+ */
+chrome.downloads.download = function(details, opt_callback) {};
+
+
+/**
+ * @typedef {?{
+ *    query: (!Array<string>|undefined),
+ *    startedBefore: (string|undefined),
+ *    startedAfter: (string|undefined),
+ *    endedBefore: (string|undefined),
+ *    endedAfter: (string|undefined),
+ *    totalBytesGreater: (number|undefined),
+ *    totalBytesLess: (number|undefined),
+ *    filenameRegex: (string|undefined),
+ *    urlRegex: (string|undefined),
+ *    finalUrlRegex: (string|undefined),
+ *    limit: (number|undefined),
+ *    orderedBy: (!Array<string>|undefined),
+ *    id: (number|undefined),
+ *    url: (string|undefined),
+ *    finalUrl: (string|undefined),
+ *    filename: (string|undefined),
+ *    danger: (!chrome.downloads.DangerType|string|undefined),
+ *    mime: (string|undefined),
+ *    startTime: (string|undefined),
+ *    endTime: (string|undefined),
+ *    state: (!chrome.downloads.State|string|undefined),
+ *    paused: (boolean|undefined),
+ *    error: (!chrome.downloads.InterruptReason|string|undefined),
+ *    bytesReceived: (number|undefined),
+ *    totalBytes: (number|undefined),
+ *    fileSize: (number|undefined),
+ *    exists: (boolean|undefined)
+ *  }}
+ */
+chrome.downloads.Query;
+
+
+/**
+ * @param {!chrome.downloads.Query} query
+ * @param {function(!Array<!chrome.downloads.DownloadItem>)} callback
+ * @see https://developer.chrome.com/extensions/downloads#method-search
+ */
+chrome.downloads.search = function(query, callback) {};
+
+
+/**
+ * @param {number} id
+ * @param {function()=} opt_callback
+ *
+ * @see https://developer.chrome.com/extensions/downloads#method-pause
+ */
+chrome.downloads.pause = function(id, opt_callback) {};
+
+
+/**
+ * @param {string} id
+ * @param {function()=} opt_callback
+ *
+ * @see https://developer.chrome.com/extensions/downloads#method-resume
+ */
+chrome.downloads.resume = function(id, opt_callback) {};
+
+
+/**
+ * @param {number} id
+ * @param {function()=} opt_callback
+ *
+ * @see https://developer.chrome.com/extensions/downloads#method-cancel
+ */
+chrome.downloads.cancel = function(id, opt_callback) {};
+
+
+/**
+ * @param {number} id
+ * @param {{size:(number|undefined)}|function(string)} optionsOrCallback
+ * @param {function(string)=} opt_callback
+ *
+ * @see https://developer.chrome.com/extensions/downloads#method-getFileIcon
+ */
+chrome.downloads.getFileIcon = function(id, optionsOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} id
+ * @see https://developer.chrome.com/extensions/downloads#method-open
+ */
+chrome.downloads.open = function(id) {};
+
+
+/**
+ * @param {number} id
+ * @see https://developer.chrome.com/extensions/downloads#method-show
+ */
+chrome.downloads.show = function(id) {};
+
+
+/** @see https://developer.chrome.com/extensions/downloads#method-showDefaultFolder */
+chrome.downloads.showDefaultFolder = function() {};
+
+
+/**
+ * @param {!chrome.downloads.Query} query
+ * @param {function(!Array<number>)} callback
+ * @see https://developer.chrome.com/extensions/downloads#method-erase
+ */
+chrome.downloads.erase = function(query, callback) {};
+
+
+/**
+ * @param {number} id
+ * @param {function()=} opt_callback
+ *
+ * @see https://developer.chrome.com/extensions/downloads#method-removeFile
+ */
+chrome.downloads.removeFile = function(id, opt_callback) {};
+
+
+/**
+ * @param {number} id
+ * @param {function()=} opt_callback
+ *
+ * @see https://developer.chrome.com/extensions/downloads#method-acceptDanger
+ */
+chrome.downloads.acceptDanger = function(id, opt_callback) {};
+
+
+/**
+ * @param {number} id
+ *
+ * @see https://developer.chrome.com/extensions/downloads#method-drag
+ */
+chrome.downloads.drag = function(id) {};
+
+
+/**
+ * @param {boolean} enabled
+ *
+ * @see https://developer.chrome.com/extensions/downloads#method-setShelfEnabled
+ */
+chrome.downloads.setShelfEnabled = function(enabled) {};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/downloads#event-onCreated
+ */
+chrome.downloads.CreatedEvent = function() {};
+
+
+/** @param {function(!chrome.downloads.DownloadItem)} callback */
+chrome.downloads.CreatedEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(!chrome.downloads.DownloadItem)} callback */
+chrome.downloads.CreatedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.downloads.DownloadItem)} callback
+ * @return {boolean}
+ */
+chrome.downloads.CreatedEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+chrome.downloads.CreatedEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @type {!chrome.downloads.CreatedEvent}
+ * https://developer.chrome.com/extensions/downloads#event-onCreated
+ */
+chrome.downloads.onCreated;
+
+
+/**
+ * @type {!ChromeNumberEvent}
+ * https://developer.chrome.com/extensions/downloads#event-onErased
+ */
+chrome.downloads.onErased;
+
+
+/**
+ * @type {!ChromeObjectEvent}
+ * https://developer.chrome.com/extensions/downloads#event-onChanged
+ */
+chrome.downloads.onChanged;
+
+
+/**
+ * @typedef {?{
+ *  filename: string,
+ *  conflictAction: (!chrome.downloads.FilenameConflictAction|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/downloads#event-onDeterminingFilename
+ */
+chrome.downloads.FilenameSuggestion;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/downloads#event-onDeterminingFilename
+ */
+chrome.downloads.DeterminingFilenameEvent = function() {};
+
+
+/**
+ * @param {function(
+ *     !chrome.downloads.DownloadItem,
+ *     function(!chrome.downloads.FilenameSuggestion=))} callback */
+chrome.downloads.DeterminingFilenameEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(
+ *     !chrome.downloads.DownloadItem,
+ *     function(!chrome.downloads.FilenameSuggestion=))} callback */
+chrome.downloads.DeterminingFilenameEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(
+ *     !chrome.downloads.DownloadItem,
+ *     function(!chrome.downloads.FilenameSuggestion=))} callback
+ * @return {boolean}
+ */
+chrome.downloads.DeterminingFilenameEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.downloads.DeterminingFilenameEvent.prototype.hasListeners =
+    function() {};
+
+
+/**
+ * @type {!chrome.downloads.DeterminingFilenameEvent}
+ * https://developer.chrome.com/extensions/downloads#event-onDeterminingFilename
+ */
+chrome.downloads.onDeterminingFilename;
