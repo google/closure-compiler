@@ -2154,7 +2154,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("removeUnreachableCode", false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new UnreachableCodeElimination(compiler, false);
+      return new UnreachableCodeElimination(compiler, true);
     }
   };
 

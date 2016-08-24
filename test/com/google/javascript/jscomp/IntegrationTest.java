@@ -1130,7 +1130,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testMarkPureCalls() {
     String testCode = "function foo() {} foo();";
     CompilerOptions options = createCompilerOptions();
-    options.setFoldConstants(true);
+    options.setRemoveDeadCode(true);
 
     testSame(options, testCode);
 
@@ -1141,7 +1141,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testMarkNoSideEffects() {
     String testCode = "noSideEffects();";
     CompilerOptions options = createCompilerOptions();
-    options.setFoldConstants(true);
+    options.setRemoveDeadCode(true);
 
     testSame(options, testCode);
 
