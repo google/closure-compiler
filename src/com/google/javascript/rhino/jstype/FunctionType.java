@@ -956,29 +956,40 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   boolean checkFunctionEquivalenceHelper(
       FunctionType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    if (isConstructor()) {
-      if (that.isConstructor()) {
-        return this == that;
-      }
+    if (this == that) {
+      return true;
+    }
+    if (kind != that.kind) {
       return false;
     }
-    if (isInterface()) {
-      if (that.isInterface()) {
+    switch (kind) {
+      case CONSTRUCTOR:
+        return false;  // constructors use identity semantics, which we already checked for above.
+      case INTERFACE:
         return getReferenceName().equals(that.getReferenceName());
-      }
-      return false;
+      case ORDINARY:
+        return typeOfThis.checkEquivalenceHelper(that.typeOfThis, eqMethod, eqCache)
+            && call.checkArrowEquivalenceHelper(that.call, eqMethod, eqCache);
+      default:
+        throw new AssertionError();
     }
-    if (that.isInterface()) {
-      return false;
-    }
-
-    return typeOfThis.checkEquivalenceHelper(that.typeOfThis, eqMethod, eqCache) &&
-        call.checkArrowEquivalenceHelper(that.call, eqMethod, eqCache);
   }
 
   @Override
   public int hashCode() {
-    return isInterface() ? getReferenceName().hashCode() : call.hashCode();
+    int hc = kind.hashCode();
+    switch (kind) {
+      case CONSTRUCTOR:
+        return 31 * hc + System.identityHashCode(this);  // constructors use identity semantics
+      case INTERFACE:
+        return 31 * hc + getReferenceName().hashCode();
+      case ORDINARY:
+        hc =  31 * hc + typeOfThis.hashCode();
+        hc =  31 * hc + call.hashCode();
+        return hc;
+      default:
+        throw new AssertionError();
+    }
   }
 
   public boolean hasEqualCallType(FunctionType otherType) {

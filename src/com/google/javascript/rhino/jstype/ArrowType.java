@@ -224,16 +224,11 @@ final class ArrowType extends JSType {
     if (returnType != null) {
       hashCode += returnType.hashCode();
     }
-    if (returnTypeInferred) {
-      hashCode += 1;
-    }
     if (parameters != null) {
       Node param = parameters.getFirstChild();
       while (param != null) {
         JSType paramType = param.getJSType();
-        if (paramType != null) {
-          hashCode += paramType.hashCode();
-        }
+        hashCode = hashCode * 31 + (paramType == null ? 0 : paramType.hashCode());
         param = param.getNext();
       }
     }
