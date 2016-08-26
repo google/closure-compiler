@@ -70,7 +70,7 @@ URLSearchParams.prototype.set = function(name, value) {};
  * @see https://url.spec.whatwg.org
  * @constructor
  * @param {string} url
- * @param {string=} base
+ * @param {(string|!URL)=} base
  */
 function URL(url, base) {}
 
