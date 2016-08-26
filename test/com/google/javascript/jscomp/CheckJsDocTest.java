@@ -319,20 +319,20 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
   }
 
   public void testArrowFuncAsConstructor() {
-    testErrorEs6("/** @constructor */ var a = ()=>{}; var b = a();",
+    testWarningEs6("/** @constructor */ var a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
-    testErrorEs6("var a = /** @constructor */ ()=>{}; var b = a();",
+    testWarningEs6("var a = /** @constructor */ ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
-    testErrorEs6("/** @constructor */ let a = ()=>{}; var b = a();",
+    testWarningEs6("/** @constructor */ let a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
-    testErrorEs6("/** @constructor */ const a = ()=>{}; var b = a();",
+    testWarningEs6("/** @constructor */ const a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
-    testErrorEs6("var a; /** @constructor */ a = ()=>{}; var b = a();",
+    testWarningEs6("var a; /** @constructor */ a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
   }
 
   public void testDefaultParam() {
-    testErrorEs6("function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
+    testWarningEs6("function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
     testSameEs6("function f(/** number= */ x=0) {}");
   }
 
@@ -394,30 +394,30 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
   }
 
   public void testInvalidAnnotation1() throws Exception {
-    testError("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testWarning("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation2() throws Exception {
-    testError("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testWarning("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation3() throws Exception {
-    testError("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testWarning("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation4() throws Exception {
-    testError(
+    testWarning(
         "var f = function() {};" + "/** @nosideeffects */ f.x = function() {}",
         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation5() throws Exception {
-    testError(
+    testWarning(
         "var f = function() {};" + "f.x = /** @nosideeffects */ function() {}",
         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidModifiesAnnotation() throws Exception {
-    testError("/** @modifies {this} */ var f = function() {};", INVALID_MODIFIES_ANNOTATION);
+    testWarning("/** @modifies {this} */ var f = function() {};", INVALID_MODIFIES_ANNOTATION);
   }
 }
