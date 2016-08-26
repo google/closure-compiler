@@ -560,6 +560,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         //    (removing infinite loops), empty try blocks.  What else?
         n.removeChild(c);
         reportCodeChange();
+      } else if (isExit(c)) {
+        removeFollowingNodes(c);
+        break;
       } else {
         tryOptimizeConditionalAfterAssign(c);
       }
@@ -577,6 +580,17 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     return n;
+  }
+
+  private void removeFollowingNodes(Node n) {
+    if (n.getParent().getLastChild() != n) {
+      reportCodeChange();
+      while (n.getNext() != null) {
+        Node dead = n.getNext();
+        NodeUtil.redeclareVarsInsideBranch(dead);
+        dead.detach();
+      }
+    }
   }
 
   /**

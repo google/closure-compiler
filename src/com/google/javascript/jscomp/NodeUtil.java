@@ -2648,8 +2648,7 @@ public final class NodeUtil {
       // Simply empty the block.  This maintains source location and
       // "synthetic"-ness.
       node.detachChildren();
-    } else if (isStatementBlock(parent)
-        || isSwitchCase(node)) {
+    } else if (isStatementBlock(parent) || isSwitchCase(node)) {
       // A statement in a block can simply be removed.
       parent.removeChild(node);
     } else if (parent.isVar() || parent.isExprResult()) {
@@ -3174,6 +3173,10 @@ public final class NodeUtil {
    * scope that redeclares them, if necessary.
    */
   static void redeclareVarsInsideBranch(Node branch) {
+    if (!canDeclareVars(branch)) {
+      return;
+    }
+
     Collection<Node> vars = getVarsDeclaredInBranch(branch);
     if (vars.isEmpty()) {
       return;
@@ -3188,6 +3191,25 @@ public final class NodeUtil {
       copyNameAnnotations(nameNode, var.getFirstChild());
       parent.addChildToFront(var);
     }
+  }
+
+  static boolean canDeclareVars(Node n) {
+    if (NodeUtil.isStatement(n)) {
+      switch(n.getToken()) {
+        case EXPR_RESULT:
+        case RETURN:
+        case THROW:
+        case BREAK:
+        case CONTINUE:
+        case EMPTY:
+        case DEBUGGER:
+          return false;
+        default:
+          // assume anything else can
+          break;
+      }
+    }
+    return true;
   }
 
   /**
