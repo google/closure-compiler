@@ -157,6 +157,13 @@ class ShadowVariables implements CompilerPass {
         scopeUpRefMap.put(t.getScopeRoot(), var.name);
       }
 
+      // Make sure that we don't shadow function parameters or function names from a function block
+      // scope, eg.:
+      // function f(a) { ... var a; ... } // Unsafe
+      if (scope.isFunctionScope() && var.getScope() == scope) {
+        scopeUpRefMap.put(scope.getRootNode().getLastChild(), var.name);
+      }
+
       // Find in the usage map that tracks a var and all of its usage.
       varToNameUsage.put(var, new Reference(n, scope));
     }
@@ -180,21 +187,12 @@ class ShadowVariables implements CompilerPass {
         return;
       }
 
-      // Make sure that we don't shadow function parameters or function names from a function block
-      // scope, eg.:
-      // function f(a) { ... var a; ... } // Unsafe
       Scope s = t.getScope();
-      if (s.isFunctionBlockScope()) {
-        for (Var var : s.getParent().getVarIterable()) {
-          scopeUpRefMap.put(s.getRootNode(), var.name);
-        }
-      }
-
       for (Var var : s.getVarIterable()) {
-        // When languageOut is ES3, don't shadow variables that is bleed-out functions or caught
-        // exceptions to avoid IE8 bugs.
-        if (!compiler.getOptions().getLanguageOut().isEs5OrHigher()
-            && (var.isBleedingFunction() || var.isCatch())) {
+        // Don't shadow variables that are bleed-out functions or caught exceptions to workaround
+        // IE8 bugs.
+        // TODO(moz): Gate this behind languageMode=ES3.
+        if (var.isBleedingFunction() || var.isCatch()) {
           continue;
         }
 

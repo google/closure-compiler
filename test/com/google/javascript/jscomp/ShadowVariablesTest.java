@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * Unit tests for {@link ShadowVariables}.
  *
@@ -103,25 +101,6 @@ public final class ShadowVariablesTest extends Es6CompilerTestCase {
         "  var $x$$; $x$$; $x$$; $x$$;",
         "  return function $f2$$($y$$) {",
         "    return function $f3$$() {",
-        "      $x$$;",
-        "    };",
-        "  };",
-        "}"), LanguageMode.ECMASCRIPT3);
-
-    test(LINE_JOINER.join(
-        "function f1() {",
-        "  var x; x; x; x;",
-        "  return function f2(y) {",
-        "    return function f3() {",
-        "      x;",
-        "    };",
-        "  };",
-        "}"),
-        LINE_JOINER.join(
-        "function $f1$$() {",
-        "  var $x$$; $x$$; $x$$; $x$$;",
-        "  return function $f2$$($y$$) {",
-        "    return function $f2$$() {",
         "      $x$$;",
         "    };",
         "  };",
@@ -409,20 +388,6 @@ public final class ShadowVariablesTest extends Es6CompilerTestCase {
         "function a(b) {",
         "  try {",
         "  } catch (c) {",
-        "  }",
-        "}"),
-        LanguageMode.ECMASCRIPT3);
-
-    test(LINE_JOINER.join(
-        "function f(a) {",
-        "  try {",
-        "  } catch (e) {",
-        "  }",
-        "}"),
-        LINE_JOINER.join(
-        "function b(a) {",
-        "  try {",
-        "  } catch (a) {",
         "  }",
         "}"));
   }
