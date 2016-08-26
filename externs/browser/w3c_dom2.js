@@ -2256,7 +2256,7 @@ HTMLTableElement.prototype.deleteTHead = function() {};
 /**
  * @param {number=} opt_index
  * @return {HTMLElement}
- * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-39872903
+ * @see https://www.w3.org/TR/html5/tabular-data.html#htmltableelement
  */
 HTMLTableElement.prototype.insertRow = function(opt_index) {};
 
@@ -2362,11 +2362,11 @@ HTMLTableSectionElement.prototype.vAlign;
 HTMLTableSectionElement.prototype.deleteRow = function(index) {};
 
 /**
- * @param {number} index
+ * @param {number=} opt_index
  * @return {HTMLElement}
- * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-93995626
+ * @see https://www.w3.org/TR/html5/tabular-data.html#htmltablesectionelement
  */
-HTMLTableSectionElement.prototype.insertRow = function(index) {};
+HTMLTableSectionElement.prototype.insertRow = function(opt_index) {};
 
 /**
  * @constructor
