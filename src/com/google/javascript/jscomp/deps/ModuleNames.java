@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
-import java.net.URI;
+import com.google.common.base.Joiner;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
@@ -28,18 +29,21 @@ public class ModuleNames {
   /** According to the spec, the forward slash should be the delimiter on all platforms. */
   static final String MODULE_SLASH = "/";
 
+  /** To join together normalized module names. */
+  private static final Joiner MODULE_JOINER = Joiner.on(MODULE_SLASH);
+
   /** Returns a module name for an absolute path, with no resolution or checking. */
   public static String fileToModuleName(String path) {
-    return ModuleNames.toModuleName(ModuleNames.escapeUri(path));
+    return toModuleName(escapePath(path));
   }
 
   /** Returns a module name for an absolute path, with no resolution or checking. */
   public static String fileToJsIdentifier(String path) {
-    return ModuleNames.toJSIdentifier(ModuleNames.escapeUri(path));
+    return toJSIdentifier(escapePath(path));
   }
 
-  /** Creates a URI for the given input path. */
-  static URI escapeUri(String input) {
+  /** Escapes the given input path. */
+  static String escapePath(String input) {
     // Handle special characters
     String encodedInput = input.replace(':', '-')
         .replace('\\', '/')
@@ -49,11 +53,11 @@ public class ModuleNames {
         .replace("<", "%3C")
         .replace(">", "%3E");
 
-    return URI.create(encodedInput).normalize();
+    return canonicalizePath(encodedInput);
   }
 
-  static String toJSIdentifier(URI uri) {
-    return stripJsExtension(uri.toString())
+  static String toJSIdentifier(String path) {
+    return stripJsExtension(path)
         .replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
         .replace(MODULE_SLASH, "$")
         .replace('\\', '$')
@@ -64,8 +68,8 @@ public class ModuleNames {
         .replace("%20", "_");
   }
 
-  static String toModuleName(URI uri) {
-    return "module$" + toJSIdentifier(uri);
+  static String toModuleName(String path) {
+    return "module$" + toJSIdentifier(path);
   }
 
   private static String stripJsExtension(String fileName) {
@@ -73,5 +77,43 @@ public class ModuleNames {
       return fileName.substring(0, fileName.length() - ".js".length());
     }
     return fileName;
+  }
+
+  /**
+   * Canonicalize a given path, removing segments containing "." and consuming segments for "..".
+   *
+   * If no segment could be consumed for "..", retains the segment.
+   */
+  static String canonicalizePath(String path) {
+    String[] parts = path.split(Pattern.quote(MODULE_SLASH));
+    String[] buffer = new String[parts.length];
+    int position = 0;
+    int available = 0;
+
+    for (String part : parts) {
+      if (part.equals(".")) {
+        continue;
+      }
+
+      if (part.equals("..")) {
+        if (available > 0) {
+          // Consume the previous segment.
+          --position;
+          --available;
+          buffer[position] = null;
+        } else {
+          // Retain "..", as it can't be consumed on the left.
+          buffer[position] = part;
+          ++position;
+        }
+        continue;
+      }
+
+      buffer[position] = part;
+      ++position;
+      ++available;
+    }
+
+    return MODULE_JOINER.join(Arrays.copyOfRange(buffer, 0, position));
   }
 }

@@ -96,7 +96,7 @@ public final class JsFileParser extends JsFileLineParser {
   private List<String> requires;
   private boolean fileHasProvidesOrRequires;
   private ModuleLoader loader = ModuleLoader.EMPTY;
-  private ModuleLoader.ModuleUri fileUri;
+  private ModuleLoader.ModulePath file;
 
   private enum ModuleType {
     NON_MODULE,
@@ -169,14 +169,14 @@ public final class JsFileParser extends JsFileLineParser {
     this.provides = new ArrayList<>();
     this.requires = new ArrayList<>();
     this.fileHasProvidesOrRequires = false;
-    this.fileUri = loader.resolve(filePath);
+    this.file = loader.resolve(filePath);
     this.moduleType = ModuleType.NON_MODULE;
 
     logger.fine("Parsing Source: " + filePath);
     doParse(filePath, fileContents);
 
     if (moduleType == ModuleType.ES6_MODULE) {
-      provides.add(fileUri.toModuleName());
+      provides.add(file.toModuleName());
     }
 
     Map<String, String> loadFlags = new LinkedHashMap<>();
@@ -201,7 +201,7 @@ public final class JsFileParser extends JsFileLineParser {
     if (moduleType != type && moduleType != ModuleType.NON_MODULE) {
       // TODO(sdh): should this be an error?
       errorManager.report(
-          CheckLevel.WARNING, JSError.make(ModuleLoader.MODULE_CONFLICT, fileUri.toString()));
+          CheckLevel.WARNING, JSError.make(ModuleLoader.MODULE_CONFLICT, file.toString()));
     }
     moduleType = type;
   }
@@ -277,7 +277,7 @@ public final class JsFileParser extends JsFileLineParser {
           if (arg.startsWith("goog:")) {
             requires.add(arg.substring(5)); // cut off the "goog:" prefix
           } else {
-            requires.add(fileUri.resolveEs6Module(arg).toModuleName());
+            requires.add(file.resolveEs6Module(arg).toModuleName());
           }
         }
       }

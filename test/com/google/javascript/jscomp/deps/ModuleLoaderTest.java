@@ -69,8 +69,19 @@ public final class ModuleLoaderTest extends TestCase {
       new ModuleLoader(null, ImmutableList.of("a", "b"), inputs("a/f.js", "b/f.js"));
       fail("Expected error");
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).contains("Duplicate module URI");
+      assertThat(e.getMessage()).contains("Duplicate module path");
     }
+  }
+
+  public void testCanonicalizePath() throws Exception {
+    assertEquals("a/b/c", ModuleNames.canonicalizePath("a/b/c"));
+    assertEquals("a/c", ModuleNames.canonicalizePath("a/b/../c"));
+    assertEquals("b/c", ModuleNames.canonicalizePath("a/b/../../b/c"));
+    assertEquals("c", ModuleNames.canonicalizePath("a/b/../../c"));
+    assertEquals("", ModuleNames.canonicalizePath("/a/b/c/../../../.."));
+    assertEquals("../a", ModuleNames.canonicalizePath("../a/b/.."));
+    assertEquals("../b", ModuleNames.canonicalizePath("/a/../../../b"));
+    assertEquals("", ModuleNames.canonicalizePath("/a/b/c/../../.."));
   }
 
   ImmutableList<CompilerInput> inputs(String... names) {
@@ -85,7 +96,7 @@ public final class ModuleLoaderTest extends TestCase {
     return new CompilerInput(SourceFile.fromCode(name, ""), false);
   }
 
-  private static void assertUri(String expected, ModuleLoader.ModuleUri actual) {
+  private static void assertUri(String expected, ModuleLoader.ModulePath actual) {
     assertEquals(expected, actual.toString());
   }
 }

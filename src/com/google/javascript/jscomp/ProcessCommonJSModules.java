@@ -22,7 +22,7 @@ import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.jscomp.deps.ModuleLoader.ModuleUri;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -321,13 +321,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
       String requireName = require.getSecondChild().getString();
-      ModuleUri moduleUri = t.getInput().getUri().resolveCommonJsModule(requireName);
-      if (moduleUri == null) {
+      ModulePath modulePath = t.getInput().getPath().resolveCommonJsModule(requireName);
+      if (modulePath == null) {
         compiler.report(t.makeError(require, LOAD_ERROR, requireName));
         return;
       }
 
-      String moduleName = moduleUri.toModuleName();
+      String moduleName = modulePath.toModuleName();
       Node script = getCurrentScriptNode(parent);
 
       // When require("name") is used as a standalone statement (the result isn't used)
@@ -390,7 +390,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           "ProcessCommonJSModules supports only one invocation per " +
           "CompilerInput / script node");
 
-      String moduleName = t.getInput().getUri().toModuleName();;
+      String moduleName = t.getInput().getPath().toModuleName();;
 
       boolean hasExports = !(moduleExportRefs.isEmpty() && exportRefs.isEmpty());
 
@@ -714,13 +714,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
 
           String moduleName = name.substring(0, endIndex);
-          ModuleUri moduleUri = t.getInput().getUri().resolveCommonJsModule(moduleName);
-          if (moduleUri == null) {
+          ModulePath modulePath = t.getInput().getPath().resolveCommonJsModule(moduleName);
+          if (modulePath == null) {
             t.makeError(typeNode, LOAD_ERROR, moduleName);
             return;
           }
 
-          String globalModuleName = moduleUri.toModuleName();
+          String globalModuleName = modulePath.toModuleName();
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
         } else if (fullRewrite) {

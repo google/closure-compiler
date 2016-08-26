@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.JsFileParser;
-import com.google.javascript.jscomp.deps.ModuleLoader.ModuleUri;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
@@ -61,7 +61,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   // An AbstractCompiler for doing parsing.
   // We do not want to persist this across serialized state.
   private transient AbstractCompiler compiler;
-  private transient ModuleUri moduleUri;
+  private transient ModulePath modulePath;
 
   public CompilerInput(SourceAst ast) {
     this(ast, ast.getSourceFile().getName(), false);
@@ -388,12 +388,12 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     return ImmutableSet.<T>builder().addAll(first).addAll(second).build();
   }
 
-  ModuleUri getUri() {
-    if (moduleUri == null) {
+  ModulePath getPath() {
+    if (modulePath == null) {
       // Note: this method will not be called until ProcessEs6Modules
       // (and similar), after Compiler.moduleLoader is already set.
-      this.moduleUri = compiler.getModuleLoader().resolve(getName());
+      this.modulePath = compiler.getModuleLoader().resolve(getName());
     }
-    return moduleUri;
+    return modulePath;
   }
 }
