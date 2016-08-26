@@ -603,6 +603,13 @@ PolymerElement.prototype.importHref = function(href, onload, onerror) {};
 PolymerElement.prototype.isLightDescendant = function(node) {};
 
 /**
+ * Checks whether an element is in this element's local DOM tree.
+ * @param {?Node} node The element to be checked.
+ * @return {boolean} true if node is in this element's local DOM tree.
+ */
+PolymerElement.prototype.isLocalDescendant = function(node) {};
+
+/**
  * Delete an element from an array.
  * @param {!Array|string} array Path to array from which to remove the item (or
  *     the array itself).
@@ -644,6 +651,14 @@ PolymerElement.prototype.customStyle;
  * @return {string} the computed value
  */
 PolymerElement.prototype.getComputedStyleValue = function(property) {};
+
+/**
+ * Convenience method for creating an element and configuring it.
+ * @param {string} tag HTML element tag to create.
+ * @param {Object} props Object of properties to configure on the instance.
+ * @return {Element} Created and configured element.
+ */
+PolymerElement.prototype.create = function(tag, props) {};
 
 /**
  * Logs a message to the console.
