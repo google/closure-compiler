@@ -1734,7 +1734,6 @@ public final class DefaultPassConfig extends PassConfig {
                   .add(new CheckPrimitiveAsObject(compiler))
                   .add(new CheckPrototypeProperties(compiler))
                   .add(new CheckUnusedLabels(compiler))
-                  .add(new CheckUnusedPrivateProperties(compiler))
                   .add(new CheckUselessBlocks(compiler));
           return combineChecks(compiler, callbacks.build());
         }
@@ -1747,6 +1746,7 @@ public final class DefaultPassConfig extends PassConfig {
       ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder()
           .add(new CheckNullableReturn(compiler))
           .add(new CheckArrayWithGoogObject(compiler))
+          .add(new CheckUnusedPrivateProperties(compiler))
           .add(new ImplicitNullabilityCheck(compiler));
       return combineChecks(compiler, callbacks.build());
     }
