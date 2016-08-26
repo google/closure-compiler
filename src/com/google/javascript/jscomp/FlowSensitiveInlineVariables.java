@@ -125,15 +125,20 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       return; // Don't even brother. All global variables are likely escaped.
     }
 
-    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE <
-        t.getScope().getVarCount()) {
+    Preconditions.checkState(t.getScopeRoot().isFunction());
+    Node scopeRoot = t.getScopeRoot();
+    if (!isCandidateFunction(scopeRoot)) {
+      return;
+    }
+
+    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE < t.getScope().getVarCount()) {
       return;
     }
 
     // Compute the forward reaching definition.
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
+
     // Process the body of the function.
-    Preconditions.checkState(t.getScopeRoot().isFunction());
     cfa.process(null, t.getScopeRoot());
     cfg = cfa.getCfg();
     reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler);
@@ -174,6 +179,43 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     }
   }
 
+  private boolean isCandidateFunction(Node fn) {
+    Node fnBody = fn.getLastChild();
+    if (containsCandidateExpressions(fnBody)) {
+      return true;
+    }
+    return false;
+  }
+
+  private static boolean containsCandidateExpressions(Node n) {
+    if (n.isFunction()) {
+      // don't recurse into inner functions or into expressions the can't contain declarations.
+      return false;
+    }
+
+    if (NodeUtil.isNameDeclaration(n) || isAssignmentToName(n)) {
+      // if it is a simple assignment
+      if (n.getFirstChild().isName()) {
+        return true;
+      }
+    }
+
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      if (containsCandidateExpressions(c)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isAssignmentToName(Node n) {
+    if (NodeUtil.isAssignmentOp(n) || n.isDec() || n.isInc()) {
+      // if it is a simple assignment
+      return (n.getFirstChild().isName());
+    }
+    return false;
+  }
+
   @Override
   public void exitScope(NodeTraversal t) {}
 
@@ -191,6 +233,45 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     // time.
   }
 
+  private class GatherCandiatesCfgNodeCallback extends AbstractCfgNodeTraversalCallback {
+    Node cfgNode = null;
+
+    public void setCfgNode(Node cfgNode) {
+      this.cfgNode = cfgNode;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName()) {
+
+        // n.getParent() isn't null. This just the case where n is the root
+        // node that gatherCb started at.
+        if (parent == null) {
+          return;
+        }
+
+        // Make sure that the name node is purely a read.
+        if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
+            || parent.isVar() || parent.isInc() || parent.isDec()
+            || parent.isParamList() || parent.isCatch()) {
+          return;
+        }
+
+        String name = n.getString();
+        if (compiler.getCodingConvention().isExported(name)) {
+          return;
+        }
+
+        Definition def = reachingDef.getDef(name, cfgNode);
+        // TODO(nicksantos): We need to add some notion of @const outer
+        // scope vars. We can inline those just fine.
+        if (def != null && !reachingDef.dependsOnOuterScopeVars(def)) {
+          candidates.add(new Candidate(name, def, n, cfgNode));
+        }
+      }
+    }
+  };
+
   /**
    * Gathers a list of possible candidates for inlining based only on
    * information from {@link MustBeReachingVariableDef}. The list will be stored
@@ -199,6 +280,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
    * {@link MaybeReachingVariableUse} has been performed.
    */
   private class GatherCandiates extends AbstractShallowCallback {
+    final GatherCandiatesCfgNodeCallback gatherCb = new GatherCandiatesCfgNodeCallback();
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       DiGraphNode<Node, Branch> graphNode = cfg.getDirectedGraphNode(n);
@@ -207,42 +290,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         return;
       }
       final Node cfgNode = n;
-      AbstractCfgNodeTraversalCallback gatherCb =
-          new AbstractCfgNodeTraversalCallback() {
 
-        @Override
-        public void visit(NodeTraversal t, Node n, Node parent) {
-          if (n.isName()) {
-
-            // n.getParent() isn't null. This just the case where n is the root
-            // node that gatherCb started at.
-            if (parent == null) {
-              return;
-            }
-
-            // Make sure that the name node is purely a read.
-            if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-                || parent.isVar() || parent.isInc() || parent.isDec() ||
-                parent.isParamList() || parent.isCatch()) {
-              return;
-            }
-
-            String name = n.getString();
-            if (compiler.getCodingConvention().isExported(name)) {
-              return;
-            }
-
-            Definition def = reachingDef.getDef(name, cfgNode);
-            // TODO(nicksantos): We need to add some notion of @const outer
-            // scope vars. We can inline those just fine.
-            if (def != null &&
-                !reachingDef.dependsOnOuterScopeVars(def)) {
-              candidates.add(new Candidate(name, def, n, cfgNode));
-            }
-          }
-        }
-      };
-
+      gatherCb.setCfgNode(cfgNode);
       NodeTraversal.traverseEs6(compiler, cfgNode, gatherCb);
     }
   }

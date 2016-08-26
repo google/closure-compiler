@@ -25,10 +25,10 @@ import com.google.javascript.rhino.Node;
 
 public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
-  public static final String EXTERN_FUNCTIONS = "" +
-      "var print;\n" +
-      "/** @nosideeffects */ function noSFX() {} \n" +
-      "                      function hasSFX() {} \n";
+  public static final String EXTERN_FUNCTIONS = LINE_JOINER.join(
+      "var print;",
+      "/** @nosideeffects */ function noSFX() {}",
+      "                      function hasSFX() {}");
 
   @Override
   public void setUp() {
