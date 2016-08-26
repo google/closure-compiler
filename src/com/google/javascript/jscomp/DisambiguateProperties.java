@@ -67,8 +67,8 @@ import java.util.regex.Pattern;
  * <p> will become
  *
  * <pre>
- *   Foo.a$Foo;
- *   Bar.a$Bar;
+ *   Foo.Foo$a;
+ *   Bar.Bar$a;
  * </pre>
  *
  * NOTE(dimvar): For every property, this pass groups together the types that
