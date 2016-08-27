@@ -303,6 +303,12 @@ public class CommandLineRunner extends
         + "(i.e. input-file-path|input-source-map)")
     private List<String> sourceMapInputs = new ArrayList<>();
 
+    @Option(name = "--parse_inline_source_maps",
+        handler = BooleanOptionHandler.class,
+        hidden = true,
+        usage = "Parse inline source maps (//# sourceMappingURL=data:...)")
+    private Boolean parseInlineSourceMaps = true;
+
     @Option(name = "--apply_input_source_maps",
         handler = BooleanOptionHandler.class,
         hidden = true,
@@ -1280,6 +1286,7 @@ public class CommandLineRunner extends
     List<FlagEntry<JsSourceType>> mixedSources = null;
     List<LocationMapping> mappings = null;
     ImmutableMap<String, String> sourceMapInputs = null;
+    boolean parseInlineSourceMaps = false;
     boolean applyInputSourceMaps = false;
     try {
       flags.parse(processedArgs);
@@ -1293,6 +1300,7 @@ public class CommandLineRunner extends
       mixedSources = flags.getMixedJsSources();
       mappings = flags.getSourceMapLocationMappings();
       sourceMapInputs = flags.getSourceMapInputs();
+      parseInlineSourceMaps = flags.parseInlineSourceMaps;
       applyInputSourceMaps = flags.applyInputSourceMaps;
     } catch (CmdLineException e) {
       reportError(e.getMessage());
@@ -1428,6 +1436,7 @@ public class CommandLineRunner extends
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
           .setSourceMapInputFiles(sourceMapInputs)
+          .setParseInlineSourceMaps(parseInlineSourceMaps)
           .setApplyInputSourceMaps(applyInputSourceMaps)
           .setWarningGuards(Flags.guardLevels)
           .setDefine(flags.define)

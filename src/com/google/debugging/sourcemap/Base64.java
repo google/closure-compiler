@@ -16,6 +16,7 @@
 
 package com.google.debugging.sourcemap;
 
+import com.google.common.io.BaseEncoding;
 import java.util.Arrays;
 
 /**
@@ -64,6 +65,14 @@ public final class Base64 {
     int result = BASE64_DECODE_MAP[c];
     assert (result != -1) : "invalid char";
     return BASE64_DECODE_MAP[c];
+  }
+
+  /**
+   * @param str A base64 encoded String.
+   * @return The decoded byte array.
+   */
+  public static byte[] fromBase64(String str) {
+    return BaseEncoding.base64Url().decode(str);
   }
 
   /**

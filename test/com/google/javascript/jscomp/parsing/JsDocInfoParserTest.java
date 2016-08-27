@@ -4640,7 +4640,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
             RunMode.KEEP_GOING,
             extraSuppressions,
-            LanguageMode.ECMASCRIPT3);
+            LanguageMode.ECMASCRIPT3,
+            true);
 
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("source", false), code, config, testErrorReporter);
@@ -4690,7 +4691,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             parseDocumentation,
             RunMode.STOP_AFTER_ERROR,
             extraSuppressions,
-            LanguageMode.ECMASCRIPT3);
+            LanguageMode.ECMASCRIPT3,
+            true);
 
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
 

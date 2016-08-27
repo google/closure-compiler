@@ -153,6 +153,12 @@ public class JsAst implements SourceAst {
       if (compiler.getOptions().preservesDetailedSourceInfo()) {
         compiler.addComments(sourceFile.getName(), result.comments);
       }
+      if (result.sourceMap != null) {
+        String sourceMapName = sourceFile.getName() + ".inline.map";
+        SourceMapInput sourceMapInput =
+            new SourceMapInput(SourceFile.fromCode(sourceMapName, result.sourceMap));
+        compiler.addInputSourceMap(sourceFile.getName(), sourceMapInput);
+      }
     } catch (IOException e) {
       compiler.report(
           JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
