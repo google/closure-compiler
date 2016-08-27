@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.parsing;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-
 import java.util.Set;
 
 /**
@@ -114,13 +113,19 @@ public final class Config {
    */
   final LanguageMode languageMode;
 
+  /**
+   * Parse inline source maps (//# sourceMappingURL=data:...).
+   */
+  final boolean parseInlineSourceMaps;
+
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames, LanguageMode languageMode) {
     this(
         annotationWhitelist,
         JsDocParsing.TYPES_ONLY,
         RunMode.STOP_AFTER_ERROR,
         suppressionNames,
-        languageMode);
+        languageMode,
+        false);
   }
 
   Config(
@@ -128,7 +133,9 @@ public final class Config {
       JsDocParsing parseJsDocDocumentation,
       RunMode keepGoing,
       Set<String> suppressionNames,
-      LanguageMode languageMode) {
+      LanguageMode languageMode,
+      boolean parseInlineSourceMaps) {
+    this.parseInlineSourceMaps = parseInlineSourceMaps;
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = parseJsDocDocumentation;
     this.keepGoing = keepGoing;

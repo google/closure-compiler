@@ -22,6 +22,9 @@ import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.debugging.sourcemap.SourceMapConsumerV3;
+import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -3303,6 +3306,26 @@ public final class ParserTest extends BaseJSTypeTestCase {
     }
   }
 
+  public void testParseInlineSourceMap() {
+    String code = "var X = (function () {\n"
+        + "    function X(input) {\n"
+        + "        this.y = input;\n"
+        + "    }\n"
+        + "    return X;\n"
+        + "}());\n"
+        + "console.log(new X(1));\n"
+        + "//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz"
+        + "Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU"
+        + "FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7"
+        + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
+        + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+    ParseResult result = doParse(code);
+    assertThat(result.sourceMap).named("inline source map").isNotNull();
+    SourceMapInput input = new SourceMapInput(SourceFile.fromCode("test.js.map", result.sourceMap));
+    SourceMapConsumerV3 sourceMap = input.getSourceMap();
+    assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+  }
+
   private String getRequiresEs6Message(Feature feature) {
     return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT6, feature);
   }
@@ -3358,6 +3381,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
    * @return The parse tree.
    */
   private Node parseWarning(String string, String... warnings) {
+    return doParse(string, warnings).ast;
+  }
+
+  private ParserRunner.ParseResult doParse(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     StaticSourceFile file = new SimpleSourceFile("input", false);
     ParserRunner.ParseResult result = ParserRunner.parse(
@@ -3365,7 +3392,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
         string,
         createConfig(),
         testErrorReporter);
-    Node script = result.ast;
 
     // check expected features if specified
     if (expectedFeatures != null) {
@@ -3375,8 +3401,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // verifying that all warnings were seen
     testErrorReporter.assertHasEncounteredAllErrors();
     testErrorReporter.assertHasEncounteredAllWarnings();
-
-    return script;
+    return result;
   }
 
   /**
@@ -3393,7 +3418,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
           mode,
           Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
           Config.RunMode.KEEP_GOING,
-          null);
+          null,
+          true);
     } else {
       return ParserRunner.createConfig(mode, null);
     }

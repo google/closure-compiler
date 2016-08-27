@@ -166,6 +166,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private ConcurrentHashMap<String, SourceFile> sourceMapOriginalSources
       = new ConcurrentHashMap<>();
 
+  /** Configured {@link SourceMapInput}s, plus any source maps discovered in source files. */
+  private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps =
+      new ConcurrentHashMap<>();
+
   // Map from filenames to lists of all the comments in each file.
   private Map<String, List<Comment>> commentsPerFile = new HashMap<>();
 
@@ -483,6 +487,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Do any initialization that is dependent on the compiler options.
    */
   private void initBasedOnOptions() {
+    inputSourceMaps.putAll(options.inputSourceMaps);
     // Create the source map if necessary.
     if (options.sourceMapOutputPath != null) {
       sourceMap = options.sourceMapFormat.getInstance();
@@ -1740,6 +1745,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   Node parseTestCode(String js) {
     initCompilerOptionsIfTesting();
+    initBasedOnOptions();
     CompilerInput input = new CompilerInput(
         SourceFile.fromCode("[testcode]", js));
     if (inputsById == null) {
@@ -2253,7 +2259,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             options.canContinueAfterErrors()
                 ? Config.RunMode.KEEP_GOING
                 : Config.RunMode.STOP_AFTER_ERROR,
-            options.extraAnnotationNames);
+            options.extraAnnotationNames,
+            options.parseInlineSourceMaps);
     return config;
   }
 
@@ -2376,9 +2383,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  public void addInputSourceMap(String sourceFileName, SourceMapInput inputSourceMap) {
+    inputSourceMaps.put(sourceFileName, inputSourceMap);
+  }
+
+  @Override
   public OriginalMapping getSourceMapping(String sourceName, int lineNumber,
       int columnNumber) {
-    SourceMapInput sourceMap = options.inputSourceMaps.get(sourceName);
+    if (sourceName == null) {
+      return null;
+    }
+    SourceMapInput sourceMap = inputSourceMaps.get(sourceName);
     if (sourceMap == null) {
       return null;
     }

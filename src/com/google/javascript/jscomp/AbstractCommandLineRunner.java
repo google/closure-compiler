@@ -43,7 +43,6 @@ import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.Closeable;
@@ -71,7 +70,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
 import javax.annotation.Nullable;
 
 /**
@@ -382,6 +380,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
     options.sourceMapFormat = config.sourceMapFormat;
     options.sourceMapLocationMappings = config.sourceMapLocationMappings;
+    options.parseInlineSourceMaps = config.parseInlineSourceMaps;
     options.applyInputSourceMaps = config.applyInputSourceMaps;
 
     ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps
@@ -2061,6 +2060,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     public CommandLineConfig setSourceMapInputFiles(
         Map<String, String> sourceMapInputFiles) {
       this.sourceMapInputFiles = sourceMapInputFiles;
+      return this;
+    }
+
+    private boolean parseInlineSourceMaps = false;
+
+    public CommandLineConfig setParseInlineSourceMaps(
+        boolean parseInlineSourceMaps) {
+      this.parseInlineSourceMaps = parseInlineSourceMaps;
       return this;
     }
 

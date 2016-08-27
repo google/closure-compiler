@@ -955,6 +955,11 @@ public class CompilerOptions {
       SourceMap.Format.DEFAULT;
 
   /**
+   * Whether to parse inline source maps.
+   */
+  boolean parseInlineSourceMaps = true;
+
+  /**
    * Whether to apply input source maps to the output, i.e. map back to original inputs from
    * input files that have source maps applied to them.
    */

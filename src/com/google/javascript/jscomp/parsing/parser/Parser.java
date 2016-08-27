@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.BaseEncoding;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArgumentListTree;
@@ -121,11 +122,14 @@ import com.google.javascript.jscomp.parsing.parser.util.LookaheadErrorReporter.P
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.jscomp.parsing.parser.util.Timer;
-
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * Parses a javascript file.
@@ -170,16 +174,19 @@ public class Parser {
   private final Scanner scanner;
   private final ErrorReporter errorReporter;
   private final Config config;
+  private final boolean parseInlineSourceMaps;
   private final CommentRecorder commentRecorder = new CommentRecorder();
   private final ArrayDeque<Boolean> inGeneratorContext = new ArrayDeque<>();
   private FeatureSet features = FeatureSet.ES3;
   private SourcePosition lastSourcePosition;
+  @Nullable
+  private String inlineSourceMap;
 
-  public Parser(
-      Config config, ErrorReporter errorReporter,
-      SourceFile source, int offset, boolean initialGeneratorContext) {
+  public Parser(Config config, ErrorReporter errorReporter, SourceFile source, int offset,
+      boolean initialGeneratorContext, boolean parseInlineSourceMaps) {
     this.config = config;
     this.errorReporter = errorReporter;
+    this.parseInlineSourceMaps = parseInlineSourceMaps;
     this.scanner = new Scanner(errorReporter, commentRecorder, source, offset);
     this.inGeneratorContext.add(initialGeneratorContext);
     lastSourcePosition = scanner.getPosition();
@@ -188,7 +195,7 @@ public class Parser {
   public Parser(
       Config config, ErrorReporter errorReporter,
       SourceFile source, int offset) {
-    this(config, errorReporter, source, offset, false);
+    this(config, errorReporter, source, offset, false, true);
   }
 
   public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
@@ -240,12 +247,27 @@ public class Parser {
     }
   }
 
-  private static class CommentRecorder implements Scanner.CommentRecorder{
+  private static final Pattern SOURCE_MAPPING_URL_PATTERN =
+      Pattern.compile("^//#\\s*sourceMappingURL=");
+  private static final String BASE64_URL_PREFIX = "data:application/json;base64,";
+
+  private class CommentRecorder implements Scanner.CommentRecorder {
     private ImmutableList.Builder<Comment> comments =
         ImmutableList.builder();
     @Override
     public void recordComment(
         Comment.Type type, SourceRange range, String value) {
+      if (parseInlineSourceMaps) {
+        Matcher matcher = SOURCE_MAPPING_URL_PATTERN.matcher(value);
+        if (matcher.find()) {
+          String url = value.substring(matcher.group(0).length());
+          if (url.startsWith(BASE64_URL_PREFIX)) {
+            byte[] data = BaseEncoding.base64().decode(url.substring(BASE64_URL_PREFIX.length()));
+            String source = new String(data, StandardCharsets.UTF_8);
+            inlineSourceMap = source;
+          }
+        }
+      }
       comments.add(new Comment(value, range, type));
     }
 
@@ -260,6 +282,15 @@ public class Parser {
 
   public FeatureSet getFeatures() {
     return features;
+  }
+
+  /**
+   * Returns the decoded JSON source of an inline source map comment if any was found, or
+   * {@code null} otherwise.
+   */
+  @Nullable
+  public String getInlineSourceMap() {
+    return inlineSourceMap;
   }
 
   // 14 Program
@@ -4028,7 +4059,8 @@ public class Parser {
         new LookaheadErrorReporter(),
         this.scanner.getFile(),
         this.scanner.getOffset(),
-        inGeneratorContext());
+        inGeneratorContext(),
+        true);
   }
 
   /**

@@ -33,11 +33,11 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /** parser runner */
 public final class ParserRunner {
@@ -59,14 +59,16 @@ public final class ParserRunner {
         languageMode,
         JsDocParsing.TYPES_ONLY,
         RunMode.STOP_AFTER_ERROR,
-        extraAnnotationNames);
+        extraAnnotationNames,
+        true);
   }
 
   public static Config createConfig(
       LanguageMode languageMode,
       JsDocParsing jsdocParsingMode,
       RunMode runMode,
-      Set<String> extraAnnotationNames) {
+      Set<String> extraAnnotationNames,
+      boolean parseInlineSourceMaps) {
 
     initResourceConfig();
     Set<String> effectiveAnnotationNames;
@@ -81,7 +83,8 @@ public final class ParserRunner {
         jsdocParsingMode,
         runMode,
         suppressionNames,
-        languageMode);
+        languageMode,
+        parseInlineSourceMaps);
   }
 
   public static Set<String> getReservedVars() {
@@ -133,7 +136,7 @@ public final class ParserRunner {
         comments = p.getComments();
       }
     }
-    return new ParseResult(root, comments, features);
+    return new ParseResult(root, comments, features, p.getInlineSourceMap());
   }
 
   // TODO(sdh): this is less useful if we end up needing the node for library version detection
@@ -212,11 +215,14 @@ public final class ParserRunner {
     public final Node ast;
     public final List<Comment> comments;
     public final FeatureSet features;
+    @Nullable
+    public final String sourceMap;
 
-    public ParseResult(Node ast, List<Comment> comments, FeatureSet features) {
+    public ParseResult(Node ast, List<Comment> comments, FeatureSet features, String sourceMap) {
       this.ast = ast;
       this.comments = comments;
       this.features = features;
+      this.sourceMap = sourceMap;
     }
   }
 }
