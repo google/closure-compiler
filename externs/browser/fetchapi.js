@@ -28,7 +28,7 @@
 
 /**
  * @enum {string}
- * @see https://fetch.spec.whatwg.org/#referrerpolicy
+ * @see https://w3c.github.io/webappsec-referrer-policy/#enumdef-referrerpolicy
  */
 var ReferrerPolicy = {
   NONE: '',
