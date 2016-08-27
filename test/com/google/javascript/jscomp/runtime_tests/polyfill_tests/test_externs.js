@@ -19,7 +19,74 @@
  */
 
 /**
- * Temporary home for Promise polyfill so we can work on it a bit at a time
- * without affecting existing Promise implementations.
+ * @param {function(
+ *             function((TYPE|IThenable<TYPE>|Thenable|null)=),
+ *             function(*=))} executor
+ * @constructor
+ * @implements {IThenable<TYPE>}
+ * @template TYPE
  */
-var $jscomp_Promise;
+function $jscomp_Promise(executor) {}
+
+/** @override */
+$jscomp_Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
+
+/**
+ * @param {function(*): RESULT} onRejected
+ * @return {!$jscomp_Promise<RESULT>}
+ * @template RESULT
+ */
+$jscomp_Promise.prototype.catch = function(onRejected) {};
+
+/**
+ * @param {VALUE=} opt_value
+ * @return {RESULT}
+ * @template VALUE
+ * @template RESULT := type('$jscomp_Promise',
+ *     cond(isUnknown(VALUE), unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'Thenable'),
+ *              unknown(),
+ *              V)))))
+ * =:
+ */
+$jscomp_Promise.resolve = function(opt_value) {};
+
+
+/**
+ * @param {*=} opt_error
+ * @return {!$jscomp_Promise<?>}
+ */
+$jscomp_Promise.reject = function(opt_error) {};
+
+
+/**
+ * @param {!Iterable<VALUE>} iterable
+ * @return {!$jscomp_Promise<!Array<RESULT>>}
+ * @template VALUE
+ * @template RESULT := mapunion(VALUE, (V) =>
+ *     cond(isUnknown(V),
+ *         unknown(),
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *             templateTypeOf(V, 0),
+ *             cond(sub(V, 'Thenable'), unknown(), V))))
+ * =:
+ */
+$jscomp_Promise.all = function(iterable) {};
+
+
+/**
+ * @param {!Iterable<VALUE>} iterable
+ * @return {!$jscomp_Promise<RESULT>}
+ * @template VALUE
+ * @template RESULT := mapunion(VALUE, (V) =>
+ *     cond(isUnknown(V),
+ *         unknown(),
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *             templateTypeOf(V, 0),
+ *             cond(sub(V, 'Thenable'), unknown(), V))))
+ * =:
+ */
+$jscomp_Promise.race = function(iterable) {};

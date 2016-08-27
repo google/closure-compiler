@@ -1,3 +1,4 @@
+$jscomp_Promise es6-impl es3 es6/promise
 Array.from es6-impl es3 es6/array/from
 Array.of es6-impl es3 es6/array/of
 Array.prototype.copyWithin es6-impl es3 es6/array/copywithin
@@ -7,7 +8,6 @@ Array.prototype.find es6-impl es3 es6/array/find
 Array.prototype.findIndex es6-impl es3 es6/array/findindex
 Array.prototype.keys es6-impl es3 es6/array/keys
 Array.prototype.values es6 es3 es6/array/values
-JscPromise es6-impl es3 es6/promise
 Map es6-impl es3 es6/map
 Math.acosh es6-impl es3 es6/math/acosh
 Math.asinh es6-impl es3 es6/math/asinh

@@ -26,7 +26,23 @@
  */
 $jscomp.EXPOSE_ASYNC_EXECUTOR = true;
 
-$jscomp.polyfill('JscPromise', function(NativePromise) {
+/**
+ * Should we unconditionally override a native Promise implementation with our
+ * own?
+ * @define {boolean}
+ */
+$jscomp.FORCE_POLYFILL_PROMISE = false;
+
+
+$jscomp.polyfill('$jscomp_Promise', function(NativePromise) {
+  // TODO(bradfordcsmith): Do we need to add checks for standards conformance?
+  //     e.g. The version of FireFox we currently use for testing has a Promise
+  //     that fails to reject attempts to fulfill it with itself, but that
+  //     isn't reasonably testable here.
+  if (NativePromise && !$jscomp.FORCE_POLYFILL_PROMISE) {
+    return NativePromise;
+  }
+
   /**
     * Schedules code to be executed asynchronously.
     * @constructor
@@ -124,8 +140,368 @@ $jscomp.polyfill('JscPromise', function(NativePromise) {
     this.asyncExecuteFunction(function() { throw exception; });
   };
 
-  // TODO(bradfordcsmith): Actually implement PolyfillPromise
-  var PolyfillPromise = {};
+  /**
+   * @enum {number}
+   */
+  var PromiseState = {
+    /** The Promise is waiting for resolution. */
+    PENDING: 0,
+
+    /** The Promise has been resolved with a fulfillment value. */
+    FULFILLED: 1,
+
+    /** The Promise has been resolved with a rejection reason. */
+    REJECTED: 2
+  };
+
+
+  /**
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+   * @param {function(
+   *             function((TYPE|IThenable<TYPE>|Thenable|null)=),
+   *             function(*=))} executor
+   * @constructor
+   * @extends {Promise<TYPE>}
+   * @template TYPE
+   */
+  var PolyfillPromise = function(executor) {
+    /** @private {PromiseState} */
+    this.state_ = PromiseState.PENDING;
+
+    /**
+     * The settled result of the Promise. Immutable once set with either a
+     * fulfillment value or rejection reason.
+     * @private {*}
+     */
+    this.result_ = undefined;
+
+    /**
+     * These functions must be executed when this promise settles.
+     * @private {Array<function()>}
+     */
+    this.onSettledCallbacks_ = [];
+
+    var resolveAndReject = this.createResolveAndReject_();
+    try {
+      executor(resolveAndReject.resolve, resolveAndReject.reject);
+    } catch (e) {
+      resolveAndReject.reject(e);
+    }
+  };
+
+
+  /**
+   * Create a pair of functions for resolving or rejecting this Promise.
+   *
+   * <p>After the resolve or reject function has been called once, later calls
+   * do nothing.
+   * @private
+   * @return {{
+   *     resolve: function((TYPE|IThenable<TYPE>|Thenable|null)=),
+   *     reject:  function(*=)
+   * }}
+   */
+  PolyfillPromise.prototype.createResolveAndReject_ = function() {
+    var thisPromise = this;
+    var alreadyCalled = false;
+    /**
+     * @param {function(this:PolyfillPromise<TYPE>, T)} method
+     * @return {function(T)}
+     * @template T
+     */
+    function firstCallWins(method) {
+      return function(x) {
+        if (!alreadyCalled) {
+          alreadyCalled = true;
+          method.call(thisPromise, x);
+        }
+      };
+    }
+    return {
+      resolve: firstCallWins(this.resolveTo_),
+      reject: firstCallWins(this.reject_)
+    };
+  };
+
+
+  /**
+   * @private
+   * @param {*} value
+   */
+  PolyfillPromise.prototype.resolveTo_ = function(value) {
+    if (value === this) {
+      this.reject_(new TypeError('A Promise cannot resolve to itself'));
+    } else if (value instanceof PolyfillPromise) {
+      this.settleSameAsPromise_(/** @type {!PolyfillPromise} */ (value));
+    } else if (isObject(value)) {
+      this.resolveToNonPromiseObj_(/** @type {!Object} */ (value));
+    } else {
+      this.fulfill_(value);
+    }
+  };
+
+
+  /**
+   * @private
+   * @param {!Object} obj
+   */
+  PolyfillPromise.prototype.resolveToNonPromiseObj_ = function(obj) {
+    var thenMethod = undefined;
+
+    try {
+      thenMethod = obj.then;
+    } catch (error) {
+      this.reject_(error);
+      return;
+    }
+    if (typeof thenMethod == 'function') {
+      this.settleSameAsThenable_(thenMethod, /** @type {!Thenable} */ (obj));
+    } else {
+      this.fulfill_(obj);
+    }
+  };
+
+
+  /**
+   * @param {*} value anything
+   * @return {boolean}
+   */
+  function isObject(value) {
+    switch (typeof value) {
+      case 'object':
+        return value != null;
+      case 'function':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Reject this promise for the given reason.
+   * @private
+   * @param {*} reason
+   * @throws {!Error} if this promise is already fulfilled or rejected.
+   */
+  PolyfillPromise.prototype.reject_ = function(reason) {
+    this.settle_(PromiseState.REJECTED, reason);
+  };
+
+  /**
+   * Fulfill this promise with the given value.
+   * @private
+   * @param {!TYPE} value
+   * @throws {!Error} when this promise is already fulfilled or rejected.
+   */
+  PolyfillPromise.prototype.fulfill_ = function(value) {
+    this.settle_(PromiseState.FULFILLED, value);
+  };
+
+  /**
+   * Fulfill or reject this promise with the given value/reason.
+   * @private
+   * @param {!PromiseState} settledState (FULFILLED or REJECTED)
+   * @param {*} valueOrReason
+   * @throws {!Error} when this promise is already fulfilled or rejected.
+   */
+  PolyfillPromise.prototype.settle_ = function(settledState, valueOrReason) {
+    if (this.state_ != PromiseState.PENDING) {
+      throw new Error(
+          'Cannot settle(' + settledState + ', ' + valueOrReason |
+          '): Promise already settled in state' + this.state_);
+    }
+    this.state_ = settledState;
+    this.result_ = valueOrReason;
+    this.executeOnSettledCallbacks_();
+  };
+
+  PolyfillPromise.prototype.executeOnSettledCallbacks_ = function() {
+    if (this.onSettledCallbacks_ != null) {
+      // Allow nulls in callbacks so we can free memory
+      var /** !Array<?function()> */ callbacks = this.onSettledCallbacks_;
+
+      for (var i = 0; i < callbacks.length; ++i) {
+        (/** @type {function()} */ (callbacks[i])).call();
+        callbacks[i] = null;  // free memory
+      }
+      this.onSettledCallbacks_ = null;  // free memory
+    }
+  };
+
+  /**
+   * All promise async execution is managed by a single executor for the
+   * sake of efficiency.
+   * @const {!AsyncExecutor}
+   */
+  var asyncExecutor = new AsyncExecutor();
+
+  /**
+   * Arrange to settle this promise in the same way as the given thenable.
+   * @private
+   * @param {!PolyfillPromise} promise
+   */
+  PolyfillPromise.prototype.settleSameAsPromise_ = function(promise) {
+    var methods = this.createResolveAndReject_();
+
+    // Calling then() would create an unnecessary extra promise.
+    promise.callWhenSettled_(methods.resolve, methods.reject);
+  };
+
+  /**
+   * Arrange to settle this promise in the same way as the given thenable.
+   * @private
+   * @param {!function(
+   *     function((TYPE|IThenable<TYPE>|Thenable|null)=),
+   *     function(*=))
+   * } thenMethod
+   * @param {!Thenable} thenable
+   */
+  PolyfillPromise.prototype.settleSameAsThenable_ = function(
+      thenMethod, thenable) {
+    var methods = this.createResolveAndReject_();
+
+    // Don't trust an unknown thenable implementation not to throw exceptions.
+    try {
+      thenMethod.call(thenable, methods.resolve, methods.reject);
+    } catch (error) {
+      methods.reject(error);
+    }
+  };
+
+  /** @override */
+  PolyfillPromise.prototype.then = function(onFulfilled, onRejected) {
+    var resolveChild;
+    var rejectChild;
+    var childPromise = new PolyfillPromise(function(resolve, reject) {
+      resolveChild = resolve;
+      rejectChild = reject;
+    });
+    function createCallback(paramF, defaultF) {
+      // The spec says to ignore non-function values for onFulfilled and
+      // onRejected
+      if (typeof paramF == 'function') {
+        return function(x) {
+          try {
+            resolveChild(paramF(x));
+          } catch (error) {
+            rejectChild(error);
+          }
+        };
+      } else {
+        return defaultF;
+      }
+    }
+
+    this.callWhenSettled_(
+        createCallback(onFulfilled, resolveChild),
+        createCallback(onRejected, rejectChild));
+    return childPromise;
+  };
+
+  /** @override */
+  PolyfillPromise.prototype.catch = function(onRejected) {
+    return this.then(undefined, onRejected);
+  };
+
+
+  PolyfillPromise.prototype.callWhenSettled_ = function(
+      onFulfilled, onRejected) {
+    var thisPromise = this;
+    function callback() {
+      switch (thisPromise.state_) {
+        case PromiseState.FULFILLED:
+          onFulfilled(thisPromise.result_);
+          break;
+        case PromiseState.REJECTED:
+          onRejected(thisPromise.result_);
+          break;
+        default:
+          throw new Error('Unexpected state: ' + thisPromise.state_);
+      }
+    }
+    if (this.onSettledCallbacks_ == null) {
+      // we've already settled
+      asyncExecutor.asyncExecute(callback);
+    } else {
+      this.onSettledCallbacks_.push(function() {
+        asyncExecutor.asyncExecute(callback);
+      });
+    }
+  };
+
+  /**
+   * Returns a PolyfillPromise that resolves to the given value.
+   *
+   * <p>If the type of {@code opt_value} (VALUE) is a {@code Thenable<T>},
+   * the RESULT type will be {@code T}.
+   * Otherwise, the RESULT type will be the same as VALUE.
+   *
+   * <p>NOTE: The RESULT template expression is the same as the one used for
+   * {@code goog.IThenable.prototype.then()}.
+   *
+   * <p>TODO(bradfordcsmith): The spec actually requires {@code resolve} to
+   * use its {@code this} value as the constructor for building the promise to
+   * return. Right now we're always using the {@link PolyfillPromise}
+   * constructor.
+   * @param {VALUE=} opt_value
+   * @return {RESULT}
+   * @template VALUE
+   * @template RESULT := type('PolyfillPromise',
+   *     cond(isUnknown(VALUE), unknown(),
+   *       mapunion(VALUE, (V) =>
+   *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+   *           templateTypeOf(V, 0),
+   *           cond(sub(V, 'Thenable'),
+   *              unknown(),
+   *              V)))))
+   * =:
+   */
+  PolyfillPromise.resolve = function(opt_value) {
+    if (opt_value instanceof PolyfillPromise) {
+      return opt_value;
+    } else {
+      return new PolyfillPromise(function(resolve, reject) {
+        resolve(opt_value);
+      });
+    }
+  };
+
+
+  /**
+   * @param {*=} opt_reason
+   * @return {!Promise<?>}
+   */
+  PolyfillPromise.reject = function(opt_reason) {
+    return new PolyfillPromise(function(resolve, reject) {
+      reject(opt_reason);
+    });
+  };
+
+
+  /**
+   * @export
+   * @param {!Array<(TYPE|!IThenable<TYPE>)>} thenablesOrValues
+   * @return {!Promise<TYPE>} A Promise that receives the result of the
+   *     first Promise (or Promise-like) input to settle immediately after it
+   *     settles.
+   * @template TYPE
+   */
+  PolyfillPromise.race = function(thenablesOrValues) {
+    return new PolyfillPromise(function(resolve, reject) {
+      var iterator =
+          $jscomp.makeIterator(thenablesOrValues);
+      for (var /** !IIterableResult<*> */ iterRec = iterator.next();
+           !iterRec.done;
+           iterRec = iterator.next()) {
+        // Using Promise.resolve() alows us to treat all elements the same way.
+        // NOTE: Promise.resolve(promise) always returns the argument unchanged.
+        // Using .callWhenSettled_() instead of .then() avoids creating an
+        // unnecessary extra promise.
+        PolyfillPromise.resolve(iterRec.value)
+            .callWhenSettled_(resolve, reject);
+      }
+    });
+  };
 
   if ($jscomp.EXPOSE_ASYNC_EXECUTOR) {
     // expose AsyncExecutor so it can be tested independently.
