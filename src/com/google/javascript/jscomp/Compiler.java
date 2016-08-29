@@ -2619,6 +2619,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
   }
 
   private void processNewScript(JsAst ast, Node originalRoot) {
+    languageMode = options.getLanguageIn();
+
     Node js = ast.getAstRoot(this);
     Preconditions.checkNotNull(js);
 
