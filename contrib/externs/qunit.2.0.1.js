@@ -1,5 +1,11 @@
 /* created using http://blog.dotnetwise.com/2009/11/closure-compiler-externs-extractor.html */
 
+/**
+ * @fileoverview Externs for QUnit
+ * @see http://qunitjs.com/
+ * @externs
+ */
+
 var QUnit = {
     "isLocal": {},
     "version": {},
