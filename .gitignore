@@ -6,3 +6,6 @@ target/
 *~
 .checkstyle
 .settings
+.classpath
+.project
+/bin
