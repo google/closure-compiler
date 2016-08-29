@@ -1717,17 +1717,6 @@ TextTrackList.prototype.getTrackById = function(id) {};
 
 
 /**
- * @enum {string}
- * @see https://html.spec.whatwg.org/multipage/embedded-content.html#texttrackmode
- */
-var TextTrackMode = {
-  DISABLED: 'disabled',
-  HIDDEN: 'hidden',
-  SHOWING: 'showing'
-};
-
-
-/**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrack
  * @constructor
  * @implements {EventTarget}
@@ -1757,7 +1746,7 @@ TextTrack.prototype.activeCues;
 TextTrack.prototype.cues;
 
 /**
- * @type {TextTrackMode}
+ * @type {string}
  */
 TextTrack.prototype.mode;
 
