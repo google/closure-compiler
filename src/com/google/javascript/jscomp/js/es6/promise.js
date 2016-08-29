@@ -493,7 +493,7 @@ $jscomp.polyfill('$jscomp_Promise', function(NativePromise) {
       for (var /** !IIterableResult<*> */ iterRec = iterator.next();
            !iterRec.done;
            iterRec = iterator.next()) {
-        // Using Promise.resolve() alows us to treat all elements the same way.
+        // Using Promise.resolve() allows us to treat all elements the same way.
         // NOTE: Promise.resolve(promise) always returns the argument unchanged.
         // Using .callWhenSettled_() instead of .then() avoids creating an
         // unnecessary extra promise.
@@ -501,6 +501,50 @@ $jscomp.polyfill('$jscomp_Promise', function(NativePromise) {
             .callWhenSettled_(resolve, reject);
       }
     });
+  };
+
+
+  /**
+   * @template T
+   * @param {!Array<T|!Promise<T>>|!Iterable<T|!Promise<T>>} thenablesOrValues
+   * @return {!Promise<!Array<T>>}
+   */
+  PolyfillPromise.all = function(thenablesOrValues) {
+    var iterator = $jscomp.makeIterator(thenablesOrValues);
+    var /** !IIterableResult<*> */ iterRec = iterator.next();
+
+    if (iterRec.done) {
+      return PolyfillPromise.resolve([]);
+    } else {
+      return new PolyfillPromise(function(resolveAll, rejectAll) {
+        var resultsArray = [];
+        var unresolvedCount = 0;
+
+        function onFulfilled(i) {
+          return function(ithResult) {
+            resultsArray[i] = ithResult;
+            unresolvedCount--;
+            if (unresolvedCount == 0) {
+              resolveAll(resultsArray);
+            }
+          };
+        }
+
+        do {
+          resultsArray.push(undefined);
+          unresolvedCount++;
+          // Using Promise.resolve() allows us to treat all elements the same
+          // way.
+          // NOTE: Promise.resolve(promise) always returns the argument
+          // unchanged. Using .callWhenSettled_() instead of .then() avoids
+          // creating an unnecessary extra promise.
+          PolyfillPromise.resolve(iterRec.value)
+              .callWhenSettled_(
+                  onFulfilled(resultsArray.length - 1), rejectAll);
+          iterRec = iterator.next();
+        } while (!iterRec.done);
+      });
+    }
   };
 
   if ($jscomp.EXPOSE_ASYNC_EXECUTOR) {
