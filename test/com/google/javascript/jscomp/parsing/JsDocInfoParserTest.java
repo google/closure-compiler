@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -70,168 +71,172 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     extraSuppressions.add("z");
   }
 
-  public void testParseTypeViaStatic1() throws Exception {
+  public void testParseTypeViaStatic1() {
     Node typeNode = parseType("null");
     assertTypeEquals(NULL_TYPE, typeNode);
   }
 
-  public void testParseTypeViaStatic2() throws Exception {
+  public void testParseTypeViaStatic2() {
     Node typeNode = parseType("string");
     assertTypeEquals(STRING_TYPE, typeNode);
   }
 
-  public void testParseTypeViaStatic3() throws Exception {
+  public void testParseTypeViaStatic3() {
     Node typeNode = parseType("!Date");
     assertTypeEquals(DATE_TYPE, typeNode);
   }
 
-  public void testParseTypeViaStatic4() throws Exception {
+  public void testParseTypeViaStatic4() {
     Node typeNode = parseType("boolean|string");
     assertTypeEquals(createUnionType(BOOLEAN_TYPE, STRING_TYPE), typeNode);
   }
 
-  public void testParseInvalidTypeViaStatic() throws Exception {
+  public void testParseInvalidTypeViaStatic() {
     Node typeNode = parseType("sometype.<anothertype");
     assertThat(typeNode).isNull();
   }
 
-  public void testParseInvalidTypeViaStatic2() throws Exception {
+  public void testParseInvalidTypeViaStatic2() {
     Node typeNode = parseType("");
     assertThat(typeNode).isNull();
   }
 
-  public void testParseNamedType1() throws Exception {
+  public void testParseNamedType1() {
     assertThat(parse("@type {null}", "Unexpected end of file")).isNull();
   }
 
-  public void testParseNamedType2() throws Exception {
+  public void testParseNamedType2() {
     JSDocInfo info =
-        parse("@type null*/", "Bad type annotation. Type annotations should have curly braces.");
+        parse(
+            "@type null*/",
+            "Bad type annotation. Type annotations should have curly braces." + BAD_TYPE_WIKI_LINK);
     assertTypeEquals(NULL_TYPE, info.getType());
   }
 
-  public void testParseNamedType3() throws Exception {
+  public void testParseNamedType3() {
     JSDocInfo info = parse("@type {string}*/");
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testParseNamedType4() throws Exception {
+  public void testParseNamedType4() {
     // Multi-line @type.
     JSDocInfo info = parse("@type \n {string}*/");
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testParseNamedType5() throws Exception {
+  public void testParseNamedType5() {
     JSDocInfo info = parse("@type {!goog.\nBar}*/");
     assertTypeEquals(
         registry.createNamedType("goog.Bar", null, -1, -1),
         info.getType());
   }
 
-  public void testParseNamedType6() throws Exception {
+  public void testParseNamedType6() {
     JSDocInfo info = parse("@type {!goog.\n * Bar.\n * Baz}*/");
     assertTypeEquals(
         registry.createNamedType("goog.Bar.Baz", null, -1, -1),
         info.getType());
   }
 
-  public void testParseNamedTypeError1() throws Exception {
+  public void testParseNamedTypeError1() {
     // To avoid parsing ambiguities, type names must end in a '.' to
     // get the continuation behavior.
-    parse("@type {!goog\n * .Bar} */",
-        "Bad type annotation. expected closing }");
+    parse(
+        "@type {!goog\n * .Bar} */",
+        "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseNamedTypeError2() throws Exception {
-    parse("@type {!goog.\n * Bar\n * .Baz} */",
-        "Bad type annotation. expected closing }");
+  public void testParseNamedTypeError2() {
+    parse(
+        "@type {!goog.\n * Bar\n * .Baz} */",
+        "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseNamespaceType1() throws Exception {
+  public void testParseNamespaceType1() {
     JSDocInfo info = parse("@type {goog.}*/");
     assertTypeEquals(
         registry.createNamedType("goog.", null, -1, -1),
         info.getType());
   }
 
-  public void testTypedefType1() throws Exception {
+  public void testTypedefType1() {
     JSDocInfo info = parse("@typedef {string} */");
     assertThat(info.hasTypedefType()).isTrue();
     assertTypeEquals(STRING_TYPE, info.getTypedefType());
   }
 
-  public void testTypedefType2() throws Exception {
+  public void testTypedefType2() {
     JSDocInfo info = parse("@typedef \n {string}*/");
     assertThat(info.hasTypedefType()).isTrue();
     assertTypeEquals(STRING_TYPE, info.getTypedefType());
   }
 
-  public void testTypedefType3() throws Exception {
+  public void testTypedefType3() {
     JSDocInfo info = parse("@typedef \n {(string|number)}*/");
     assertThat(info.hasTypedefType()).isTrue();
     assertTypeEquals(createUnionType(NUMBER_TYPE, STRING_TYPE), info.getTypedefType());
   }
 
-  public void testParseStringType1() throws Exception {
+  public void testParseStringType1() {
     assertTypeEquals(STRING_TYPE, parse("@type {string}*/").getType());
   }
 
-  public void testParseStringType2() throws Exception {
+  public void testParseStringType2() {
     assertTypeEquals(STRING_OBJECT_TYPE, parse("@type {!String}*/").getType());
   }
 
-  public void testParseBooleanType1() throws Exception {
+  public void testParseBooleanType1() {
     assertTypeEquals(BOOLEAN_TYPE, parse("@type {boolean}*/").getType());
   }
 
-  public void testParseBooleanType2() throws Exception {
+  public void testParseBooleanType2() {
     assertTypeEquals(
         BOOLEAN_OBJECT_TYPE, parse("@type {!Boolean}*/").getType());
   }
 
-  public void testParseNumberType1() throws Exception {
+  public void testParseNumberType1() {
     assertTypeEquals(NUMBER_TYPE, parse("@type {number}*/").getType());
   }
 
-  public void testParseNumberType2() throws Exception {
+  public void testParseNumberType2() {
     assertTypeEquals(NUMBER_OBJECT_TYPE, parse("@type {!Number}*/").getType());
   }
 
-  public void testParseNullType1() throws Exception {
+  public void testParseNullType1() {
     assertTypeEquals(NULL_TYPE, parse("@type {null}*/").getType());
   }
 
-  public void testParseNullType2() throws Exception {
+  public void testParseNullType2() {
     assertTypeEquals(NULL_TYPE, parse("@type {Null}*/").getType());
   }
 
-  public void testParseAllType1() throws Exception {
+  public void testParseAllType1() {
     testParseType("*");
   }
 
-  public void testParseAllType2() throws Exception {
+  public void testParseAllType2() {
     testParseType("*?", "*");
   }
 
-  public void testParseObjectType() throws Exception {
+  public void testParseObjectType() {
     assertTypeEquals(OBJECT_TYPE, parse("@type {!Object}*/").getType());
   }
 
-  public void testParseDateType() throws Exception {
+  public void testParseDateType() {
     assertTypeEquals(DATE_TYPE, parse("@type {!Date}*/").getType());
   }
 
-  public void testParseFunctionType() throws Exception {
+  public void testParseFunctionType() {
     assertTypeEquals(
         createNullableType(U2U_CONSTRUCTOR_TYPE),
         parse("@type {Function}*/").getType());
   }
 
-  public void testParseRegExpType() throws Exception {
+  public void testParseRegExpType() {
     assertTypeEquals(REGEXP_TYPE, parse("@type {!RegExp}*/").getType());
   }
 
-  public void testParseErrorTypes() throws Exception {
+  public void testParseErrorTypes() {
     assertTypeEquals(ERROR_TYPE, parse("@type {!Error}*/").getType());
     assertTypeEquals(URI_ERROR_TYPE, parse("@type {!URIError}*/").getType());
     assertTypeEquals(EVAL_ERROR_TYPE, parse("@type {!EvalError}*/").getType());
@@ -244,38 +249,38 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         SYNTAX_ERROR_TYPE, parse("@type {!SyntaxError}*/").getType());
   }
 
-  public void testParseUndefinedType1() throws Exception {
+  public void testParseUndefinedType1() {
     assertTypeEquals(VOID_TYPE, parse("@type {undefined}*/").getType());
   }
 
-  public void testParseUndefinedType2() throws Exception {
+  public void testParseUndefinedType2() {
     assertTypeEquals(VOID_TYPE, parse("@type {Undefined}*/").getType());
   }
 
-  public void testParseUndefinedType3() throws Exception {
+  public void testParseUndefinedType3() {
     assertTypeEquals(VOID_TYPE, parse("@type {void}*/").getType());
   }
 
-  public void testParseTemplatizedTypeAlternateSyntax() throws Exception {
+  public void testParseTemplatizedTypeAlternateSyntax() {
     JSDocInfo info = parse("@type {!Array<number>} */");
     assertTypeEquals(createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
-  public void testParseTemplatizedType1() throws Exception {
+  public void testParseTemplatizedType1() {
     JSDocInfo info =
         parse(
             "@type !Array.<number> */",
-            "Bad type annotation. Type annotations should have curly braces.");
+            "Bad type annotation. Type annotations should have curly braces." + BAD_TYPE_WIKI_LINK);
     assertTypeEquals(createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
-  public void testParseTemplatizedType2() throws Exception {
+  public void testParseTemplatizedType2() {
     JSDocInfo info = parse("@type {!Array.<number>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
-  public void testParseTemplatizedType4() throws Exception {
+  public void testParseTemplatizedType4() {
     JSDocInfo info = parse("@type {!Array.<(number|null)>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE,
@@ -283,7 +288,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseTemplatizedType5() throws Exception {
+  public void testParseTemplatizedType5() {
     JSDocInfo info = parse("@type {!Array.<Array.<(number|null)>>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE,
@@ -293,7 +298,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseTemplatizedType6() throws Exception {
+  public void testParseTemplatizedType6() {
     JSDocInfo info = parse("@type {!Array.<!Array.<(number|null)>>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE,
@@ -302,7 +307,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseTemplatizedType7() throws Exception {
+  public void testParseTemplatizedType7() {
     JSDocInfo info = parse("@type {!Array.<function():Date>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE,
@@ -311,7 +316,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseTemplatizedType8() throws Exception {
+  public void testParseTemplatizedType8() {
     JSDocInfo info = parse("@type {!Array.<function():!Date>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE,
@@ -319,7 +324,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseTemplatizedType9() throws Exception {
+  public void testParseTemplatizedType9() {
     JSDocInfo info = parse("@type {!Array.<Date|number>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE,
@@ -327,7 +332,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseTemplatizedType10() throws Exception {
+  public void testParseTemplatizedType10() {
     JSDocInfo info = parse("@type {!Array.<Date|number|boolean>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE,
@@ -335,7 +340,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseTemplatizedType11() throws Exception {
+  public void testParseTemplatizedType11() {
     JSDocInfo info = parse("@type {!Object.<number>}*/");
     assertTypeEquals(
         createTemplatizedType(
@@ -345,7 +350,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         registry.getObjectElementKey(), NUMBER_TYPE, info.getType());
   }
 
-  public void testParseTemplatizedType12() throws Exception {
+  public void testParseTemplatizedType12() {
     JSDocInfo info = parse("@type {!Object.<string,number>}*/");
     assertTypeEquals(
         createTemplatizedType(
@@ -357,172 +362,175 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         registry.getObjectIndexKey(), STRING_TYPE, info.getType());
   }
 
-  public void testParseTemplatizedType13() throws Exception {
+  public void testParseTemplatizedType13() {
     JSDocInfo info = parse("@type {!Array.<?>} */");
     assertTypeEquals(createTemplatizedType(ARRAY_TYPE, UNKNOWN_TYPE), info.getType());
   }
 
-  public void testParseUnionType2() throws Exception {
+  public void testParseUnionType2() {
     JSDocInfo info = parse("@type {boolean|null}*/");
     assertTypeEquals(createUnionType(BOOLEAN_TYPE, NULL_TYPE), info.getType());
   }
 
-  public void testParseUnionType6() throws Exception {
+  public void testParseUnionType6() {
     JSDocInfo info = parse("@type {Array.<boolean>|null}*/");
     assertTypeEquals(createUnionType(
         createTemplatizedType(
             ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
-  public void testParseUnionType7() throws Exception {
+  public void testParseUnionType7() {
     JSDocInfo info = parse("@type {null|Array.<boolean>}*/");
     assertTypeEquals(createUnionType(
         createTemplatizedType(
             ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
-  public void testParseUnionType10() throws Exception {
-    parse("@type {string|}*/",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseUnionType10() {
+    parse(
+        "@type {string|}*/",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseUnionType12() throws Exception {
-    parse("@type {()}*/",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseUnionType12() {
+    parse(
+        "@type {()}*/",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseUnionType13() throws Exception {
+  public void testParseUnionType13() {
     testParseType("(function(this:Date)|function(this:String):number)", "Function");
   }
 
-  public void testParseUnionType14() throws Exception {
+  public void testParseUnionType14() {
     testParseType(
         "(function(...(function(number):boolean)):number)|function(this:String, string):number",
         "Function");
   }
 
-  public void testParseUnionType15() throws Exception {
+  public void testParseUnionType15() {
     testParseType("*|number", "*");
   }
 
-  public void testParseUnionType16() throws Exception {
+  public void testParseUnionType16() {
     testParseType("number|*", "*");
   }
 
-  public void testParseUnionType17() throws Exception {
+  public void testParseUnionType17() {
     testParseType("string|number|*", "*");
   }
 
-  public void testParseUnionType19() throws Exception {
+  public void testParseUnionType19() {
     JSDocInfo info = parse("@type {(?)} */");
     assertTypeEquals(UNKNOWN_TYPE, info.getType());
   }
 
-  public void testParseUnionTypeError2() throws Exception {
-    parse("@type {string||number} */",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseUnionTypeError2() {
+    parse(
+        "@type {string||number} */",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseUnknownType1() throws Exception {
+  public void testParseUnknownType1() {
     testParseType("?");
   }
 
-  public void testParseUnknownType2() throws Exception {
+  public void testParseUnknownType2() {
     testParseType("(?|number)", "?");
   }
 
-  public void testParseUnknownType3() throws Exception {
+  public void testParseUnknownType3() {
     testParseType("(number|?)", "?");
   }
 
-  public void testParseFunctionalType1() throws Exception {
+  public void testParseFunctionalType1() {
     testParseType("function (): number");
   }
 
-  public void testParseFunctionalType2() throws Exception {
+  public void testParseFunctionalType2() {
     testParseType("function (number, string): boolean");
   }
 
-  public void testParseFunctionalType3() throws Exception {
+  public void testParseFunctionalType3() {
     testParseType(
         "function(this:Array)", "function (this:Array): ?");
   }
 
-  public void testParseFunctionalType4() throws Exception {
+  public void testParseFunctionalType4() {
     testParseType("function (...number): boolean");
   }
 
-  public void testParseFunctionalType5() throws Exception {
+  public void testParseFunctionalType5() {
     testParseType("function (number, ...string): boolean");
   }
 
-  public void testParseFunctionalType6() throws Exception {
+  public void testParseFunctionalType6() {
     testParseType(
         "function (this:Date, number): (boolean|number|string)");
   }
 
-  public void testParseFunctionalType7() throws Exception {
+  public void testParseFunctionalType7() {
     testParseType("function()", "function (): ?");
   }
 
-  public void testParseFunctionalType9() throws Exception {
+  public void testParseFunctionalType9() {
     testParseType(
         "function(this:Array,!Date,...(boolean?))",
         "function (this:Array, Date, ...(boolean|null)): ?");
   }
 
-  public void testParseFunctionalType10() throws Exception {
+  public void testParseFunctionalType10() {
     testParseType(
         "function(...(Object?)):boolean?",
         "function (...(Object|null)): (boolean|null)");
   }
 
-  public void testParseFunctionalType12() throws Exception {
+  public void testParseFunctionalType12() {
     testParseType(
         "function(...)",
         "function (...?): ?");
   }
 
-  public void testParseFunctionalType13() throws Exception {
+  public void testParseFunctionalType13() {
     testParseType(
         "function(...): void",
         "function (...?): undefined");
   }
 
-  public void testParseFunctionalType14() throws Exception {
+  public void testParseFunctionalType14() {
     testParseType("function (*, string, number): boolean");
   }
 
-  public void testParseFunctionalType15() throws Exception {
+  public void testParseFunctionalType15() {
     testParseType("function (?, string): boolean");
   }
 
-  public void testParseFunctionalType16() throws Exception {
+  public void testParseFunctionalType16() {
     testParseType("function (string, ?): ?");
   }
 
-  public void testParseFunctionalType17() throws Exception {
+  public void testParseFunctionalType17() {
     testParseType("(function (?): ?|number)");
   }
 
-  public void testParseFunctionalType18() throws Exception {
+  public void testParseFunctionalType18() {
     testParseType("function (?): (?|number)", "function (?): ?");
   }
 
-  public void testParseFunctionalType19() throws Exception {
+  public void testParseFunctionalType19() {
     testParseType(
         "function(...?): void",
         "function (...?): undefined");
   }
 
-  public void testStructuralConstructor() throws Exception {
+  public void testStructuralConstructor() {
     JSType type = testParseType(
         "function (new:Object)", "function (new:Object): ?");
     assertThat(type.isConstructor()).isTrue();
     assertThat(type.isNominalConstructor()).isFalse();
   }
 
-  public void testStructuralConstructor2() throws Exception {
+  public void testStructuralConstructor2() {
     JSType type = testParseType(
         "function (new:?)",
         // toString skips unknowns, but isConstructor reveals the truth.
@@ -531,133 +539,147 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(type.isNominalConstructor()).isFalse();
   }
 
-  public void testStructuralConstructor3() throws Exception {
+  public void testStructuralConstructor3() {
     resolve(parse("@type {function (new:*)} */").getType(),
         "constructed type must be an object type");
   }
 
-  public void testNominalConstructor() throws Exception {
+  public void testNominalConstructor() {
     ObjectType type = testParseType("Array", "(Array|null)").dereference();
     assertThat(type.getConstructor().isNominalConstructor()).isTrue();
   }
 
-  public void testBug1419535() throws Exception {
+  public void testBug1419535() {
     parse("@type {function(Object, string, *)?} */");
     parse("@type {function(Object, string, *)|null} */");
   }
 
-  public void testIssue477() throws Exception {
-    parse("@type {function} */", "Bad type annotation. missing opening (");
+  public void testIssue477() {
+    parse("@type {function} */", "Bad type annotation. missing opening (" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testMalformedThisAnnotation() throws Exception {
+  public void testMalformedThisAnnotation() {
     parse(
         "@this */",
-        "Bad type annotation. Type annotations should have curly braces.",
-        "Bad type annotation. type not recognized due to syntax error");
+        "Bad type annotation. Type annotations should have curly braces." + BAD_TYPE_WIKI_LINK,
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError1() throws Exception {
-    parse("@type {function number):string}*/",
-        "Bad type annotation. missing opening (");
+  public void testParseFunctionalTypeError1() {
+    parse(
+        "@type {function number):string}*/",
+        "Bad type annotation. missing opening (" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError2() throws Exception {
-    parse("@type {function( number}*/",
-        "Bad type annotation. missing closing )");
+  public void testParseFunctionalTypeError2() {
+    parse(
+        "@type {function( number}*/",
+        "Bad type annotation. missing closing )" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError3() throws Exception {
-    parse("@type {function(...[number], string)}*/",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseFunctionalTypeError3() {
+    parse(
+        "@type {function(...[number], string)}*/",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError4() throws Exception {
-    parse("@type {function(string, ...number, boolean):string}*/",
-        "Bad type annotation. variable length argument must be last");
+  public void testParseFunctionalTypeError4() {
+    parse(
+        "@type {function(string, ...number, boolean):string}*/",
+        "Bad type annotation. variable length argument must be last." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError5() throws Exception {
-    parse("@type {function (thi:Array)}*/",
-        "Bad type annotation. missing closing )");
+  public void testParseFunctionalTypeError5() {
+    parse(
+        "@type {function (thi:Array)}*/",
+        "Bad type annotation. missing closing )" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError6() throws Exception {
+  public void testParseFunctionalTypeError6() {
     resolve(parse("@type {function (this:number)}*/").getType(),
         "this type must be an object type");
   }
 
-  public void testParseFunctionalTypeError7() throws Exception {
-    parse("@type {function(...[number)}*/",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseFunctionalTypeError7() {
+    parse(
+        "@type {function(...[number)}*/",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError8() throws Exception {
-    parse("@type {function(...number])}*/",
-        "Bad type annotation. missing closing )");
+  public void testParseFunctionalTypeError8() {
+    parse(
+        "@type {function(...number])}*/",
+        "Bad type annotation. missing closing )" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError9() throws Exception {
-    parse("@type {function (new:Array, this:Object)} */",
-        "Bad type annotation. missing closing )");
+  public void testParseFunctionalTypeError9() {
+    parse(
+        "@type {function (new:Array, this:Object)} */",
+        "Bad type annotation. missing closing )" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError10() throws Exception {
-    parse("@type {function (this:Array, new:Object)} */",
-        "Bad type annotation. missing closing )");
+  public void testParseFunctionalTypeError10() {
+    parse(
+        "@type {function (this:Array, new:Object)} */",
+        "Bad type annotation. missing closing )" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError11() throws Exception {
-    parse("@type {function (Array, new:Object)} */",
-        "Bad type annotation. missing closing )");
+  public void testParseFunctionalTypeError11() {
+    parse(
+        "@type {function (Array, new:Object)} */",
+        "Bad type annotation. missing closing )" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError12() throws Exception {
+  public void testParseFunctionalTypeError12() {
     resolve(parse("@type {function (new:number)}*/").getType(),
         "constructed type must be an object type");
   }
 
-  public void testParseFunctionalTypeError13() throws Exception {
-    parse("@type {function (...[number]): boolean} */",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseFunctionalTypeError13() {
+    parse(
+        "@type {function (...[number]): boolean} */",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalTypeError14() throws Exception {
-    parse("@type {function (number, ...[string]): boolean} */",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseFunctionalTypeError14() {
+    parse(
+        "@type {function (number, ...[string]): boolean} */",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFunctionalType8() throws Exception {
-    parse("@type {function(this:Array,...[boolean])} */",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseFunctionalType8() {
+    parse(
+        "@type {function(this:Array,...[boolean])} */",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseArrayTypeError1() throws Exception {
-    parse("@type {[number}*/",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseArrayTypeError1() {
+    parse(
+        "@type {[number}*/",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseArrayTypeError2() throws Exception {
-    parse("@type {number]}*/",
-        "Bad type annotation. expected closing }");
+  public void testParseArrayTypeError2() {
+    parse("@type {number]}*/", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseArrayTypeError3() throws Exception {
-    parse("@type {[(number,boolean,Object?])]}*/",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseArrayTypeError3() {
+    parse(
+        "@type {[(number,boolean,Object?])]}*/",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseArrayTypeError5() throws Exception {
-    parse("@type {[Object]}*/",
-        "Bad type annotation. type not recognized due to syntax error");
+  public void testParseArrayTypeError5() {
+    parse(
+        "@type {[Object]}*/",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  private JSType testParseType(String type) throws Exception {
+  private JSType testParseType(String type) {
     return testParseType(type, type);
   }
 
-  private JSType testParseType(
-      String type, String typeExpected) throws Exception {
+  private JSType testParseType(String type, String typeExpected) {
     JSDocInfo info = parse("@type {" + type + "}*/");
 
     assertThat(info).isNotNull();
@@ -668,12 +690,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     return actual;
   }
 
-  public void testParseNullableModifiers1() throws Exception {
+  public void testParseNullableModifiers1() {
     JSDocInfo info = parse("@type {string?}*/");
     assertTypeEquals(createNullableType(STRING_TYPE), info.getType());
   }
 
-  public void testParseNullableModifiers2() throws Exception {
+  public void testParseNullableModifiers2() {
     JSDocInfo info = parse("@type {!Array.<string?>}*/");
     assertTypeEquals(
         createTemplatizedType(
@@ -681,28 +703,28 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseNullableModifiers3() throws Exception {
+  public void testParseNullableModifiers3() {
     JSDocInfo info = parse("@type {Array.<boolean>?}*/");
     assertTypeEquals(
         createNullableType(createTemplatizedType(ARRAY_TYPE, BOOLEAN_TYPE)),
         info.getType());
   }
 
-  public void testParseNullableModifiers7() throws Exception {
+  public void testParseNullableModifiers7() {
     JSDocInfo info = parse("@type {string?|boolean}*/");
     assertTypeEquals(
         createUnionType(createNullableType(STRING_TYPE), BOOLEAN_TYPE),
         info.getType());
   }
 
-  public void testParseNullableModifiers8() throws Exception {
+  public void testParseNullableModifiers8() {
     JSDocInfo info = parse("@type {string|boolean?}*/");
     assertTypeEquals(
         createUnionType(STRING_TYPE, createNullableType(BOOLEAN_TYPE)),
         info.getType());
   }
 
-  public void testParseNullableModifiers9() throws Exception {
+  public void testParseNullableModifiers9() {
     JSDocInfo info = parse("@type {foo.Hello.World?}*/");
     assertTypeEquals(
         createNullableType(
@@ -711,7 +733,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseOptionalModifier() throws Exception {
+  public void testParseOptionalModifier() {
     JSDocInfo info = parse("@type {function(number=)}*/");
     assertTypeEquals(
         registry.createFunctionType(
@@ -719,23 +741,23 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseNewline1() throws Exception {
+  public void testParseNewline1() {
     JSDocInfo info = parse("@type {string\n* }\n*/");
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testParseNewline2() throws Exception {
+  public void testParseNewline2() {
     JSDocInfo info = parse("@type {!Array.<\n* number\n* >} */");
     assertTypeEquals(createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
-  public void testParseNewline4() throws Exception {
+  public void testParseNewline4() {
     JSDocInfo info = parse("@type {!Array.<(number|\n* null)>}*/");
     assertTypeEquals(
         createTemplatizedType(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)), info.getType());
   }
 
-  public void testParseNewline5() throws Exception {
+  public void testParseNewline5() {
     JSDocInfo info = parse("@type {!Array.<function(\n* )\n* :\n* Date>}*/");
     assertTypeEquals(
         createTemplatizedType(
@@ -743,7 +765,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void testParseReturnType1() throws Exception {
+  public void testParseReturnType1() {
     JSDocInfo info =
         parse("@return {null|string|Array.<boolean>}*/");
     assertTypeEquals(
@@ -752,7 +774,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getReturnType());
   }
 
-  public void testParseReturnType2() throws Exception {
+  public void testParseReturnType2() {
     JSDocInfo info = parse("@returns {null|(string|Array.<boolean>)}*/");
     assertTypeEquals(
         createUnionType(createTemplatizedType(ARRAY_TYPE, BOOLEAN_TYPE),
@@ -760,7 +782,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getReturnType());
   }
 
-  public void testParseReturnType3() throws Exception {
+  public void testParseReturnType3() {
     JSDocInfo info = parse("@return {((null|Array.<boolean>|string)|boolean)}*/");
     assertTypeEquals(
         createUnionType(createTemplatizedType(ARRAY_TYPE, BOOLEAN_TYPE),
@@ -768,7 +790,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getReturnType());
   }
 
-  public void testParseThisType1() throws Exception {
+  public void testParseThisType1() {
     JSDocInfo info =
         parse("@this {goog.foo.Bar}*/");
     assertTypeEquals(
@@ -776,74 +798,75 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getThisType());
   }
 
-  public void testParseThisType2() throws Exception {
+  public void testParseThisType2() {
     JSDocInfo info =
         parse(
             "@this goog.foo.Bar*/",
-            "Bad type annotation. Type annotations should have curly braces.");
+            "Bad type annotation. Type annotations should have curly braces." + BAD_TYPE_WIKI_LINK);
     assertTypeEquals(registry.createNamedType("goog.foo.Bar", null, -1, -1), info.getThisType());
   }
 
-  public void testParseThisType3() throws Exception {
+  public void testParseThisType3() {
     parse(
         "@type {number}\n@this {goog.foo.Bar}*/",
-        "Bad type annotation. type annotation incompatible " + "with other annotations");
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseThisType4() throws Exception {
+  public void testParseThisType4() {
     resolve(parse("@this {number}*/").getThisType(), "@this must specify an object type");
   }
 
-  public void testParseThisType5() throws Exception {
+  public void testParseThisType5() {
     parse("@this {Date|Error}*/");
   }
 
-  public void testParseThisType6() throws Exception {
+  public void testParseThisType6() {
     resolve(parse("@this {Date|number}*/").getThisType(),
         "@this must specify an object type");
   }
 
-  public void testParseParam1() throws Exception {
+  public void testParseParam1() {
     JSDocInfo info = parse("@param {number} index*/");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
   }
 
-  public void testParseParam2() throws Exception {
+  public void testParseParam2() {
     JSDocInfo info = parse("@param index*/",
         MISSING_TYPE_DECL_WARNING_TEXT);
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertThat(info.getParameterType("index")).isNull();
   }
 
-  public void testParseParam3() throws Exception {
+  public void testParseParam3() {
     JSDocInfo info = parse("@param {number} index useful comments*/");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
   }
 
-  public void testParseParam4() throws Exception {
+  public void testParseParam4() {
     JSDocInfo info = parse("@param index useful comments*/",
         MISSING_TYPE_DECL_WARNING_TEXT);
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertThat(info.getParameterType("index")).isNull();
   }
 
-  public void testParseParam5() throws Exception {
+  public void testParseParam5() {
     // Test for multi-line @param.
     JSDocInfo info = parse("@param {number} \n index */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
   }
 
-  public void testParseParam6() throws Exception {
+  public void testParseParam6() {
     // Test for multi-line @param.
     JSDocInfo info = parse("@param {number} \n * index */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
   }
 
-  public void testParseParam7() throws Exception {
+  public void testParseParam7() {
     // Optional @param
     JSDocInfo info = parse("@param {number=} index */");
     assertTypeEquals(
@@ -851,7 +874,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getParameterType("index"));
   }
 
-  public void testParseParam8() throws Exception {
+  public void testParseParam8() {
     // Var args @param
     JSDocInfo info = parse("@param {...number} index */");
     assertTypeEquals(
@@ -859,23 +882,25 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getParameterType("index"));
   }
 
-  public void testParseParam9() throws Exception {
-    parse("@param {...number=} index */",
-        "Bad type annotation. expected closing }",
-        "Bad type annotation. expecting a variable name in a @param tag");
+  public void testParseParam9() {
+    parse(
+        "@param {...number=} index */",
+        "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK,
+        "Bad type annotation. expecting a variable name in a @param tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseParam10() throws Exception {
-    parse("@param {...number index */",
-        "Bad type annotation. expected closing }");
+  public void testParseParam10() {
+    parse(
+        "@param {...number index */",
+        "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseParam11() throws Exception {
-    parse("@param {number= index */",
-        "Bad type annotation. expected closing }");
+  public void testParseParam11() {
+    parse(
+        "@param {number= index */", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseParam12() throws Exception {
+  public void testParseParam12() {
     JSDocInfo info = parse("@param {...number|string} index */");
     assertTypeEquals(
         registry.createOptionalType(
@@ -883,7 +908,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getParameterType("index"));
   }
 
-  public void testParseParam13() throws Exception {
+  public void testParseParam13() {
     JSDocInfo info = parse("@param {...(number|string)} index */");
     assertTypeEquals(
         registry.createOptionalType(
@@ -891,241 +916,251 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getParameterType("index"));
   }
 
-  public void testParseParam14() throws Exception {
+  public void testParseParam14() {
     JSDocInfo info = parse("@param {string} [index] */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(registry.createOptionalType(STRING_TYPE), info.getParameterType("index"));
   }
 
-  public void testParseParam15() throws Exception {
-    JSDocInfo info = parse("@param {string} [index */",
-        "Bad type annotation. missing closing ]");
+  public void testParseParam15() {
+    JSDocInfo info =
+        parse(
+            "@param {string} [index */",
+            "Bad type annotation. missing closing ]" + BAD_TYPE_WIKI_LINK);
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(STRING_TYPE, info.getParameterType("index"));
   }
 
-  public void testParseParam16() throws Exception {
+  public void testParseParam16() {
     JSDocInfo info = parse("@param {string} index] */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(STRING_TYPE, info.getParameterType("index"));
   }
 
-  public void testParseParam17() throws Exception {
+  public void testParseParam17() {
     JSDocInfo info = parse("@param {string=} [index] */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(registry.createOptionalType(STRING_TYPE), info.getParameterType("index"));
   }
 
-  public void testParseParam18() throws Exception {
+  public void testParseParam18() {
     JSDocInfo info = parse("@param {...string} [index] */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(registry.createOptionalType(STRING_TYPE), info.getParameterType("index"));
   }
 
-  public void testParseParam19() throws Exception {
+  public void testParseParam19() {
     JSDocInfo info = parse("@param {...} [index] */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(registry.createOptionalType(UNKNOWN_TYPE), info.getParameterType("index"));
     assertThat(info.getParameterType("index").isVarArgs()).isTrue();
   }
 
-  public void testParseParam20() throws Exception {
+  public void testParseParam20() {
     JSDocInfo info = parse("@param {?=} index */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(UNKNOWN_TYPE, info.getParameterType("index"));
   }
 
-  public void testParseParam21() throws Exception {
+  public void testParseParam21() {
     JSDocInfo info = parse("@param {...?} index */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(UNKNOWN_TYPE, info.getParameterType("index"));
     assertThat(info.getParameterType("index").isVarArgs()).isTrue();
   }
 
-  public void testParseParam22() throws Exception {
+  public void testParseParam22() {
     JSDocInfo info = parse("@param {string} .index */", "invalid param name \".index\"");
     assertThat(info).isNull();
   }
 
-  public void testParseParam23() throws Exception {
+  public void testParseParam23() {
     JSDocInfo info = parse("@param {string} index. */", "invalid param name \"index.\"");
     assertThat(info).isNull();
   }
 
-  public void testParseParam24() throws Exception {
+  public void testParseParam24() {
     JSDocInfo info = parse("@param {string} foo.bar */", "invalid param name \"foo.bar\"");
     assertThat(info).isNull();
   }
 
-  public void testParseParam25() throws Exception {
+  public void testParseParam25() {
     JSDocInfo info = parse(
         "@param {string} foo.bar\n * @param {string} baz */", "invalid param name \"foo.bar\"");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(STRING_TYPE, info.getParameterType("baz"));
   }
 
-  public void testParseParam26() throws Exception {
-    JSDocInfo info = parse(
-        "@param {{a: number, b: number}} {a, b}\n*/",
-        "Bad type annotation. expecting a variable name in a @param tag");
+  public void testParseParam26() {
+    JSDocInfo info =
+        parse(
+            "@param {{a: number, b: number}} {a, b}\n*/",
+            "Bad type annotation. expecting a variable name in a @param tag." + BAD_TYPE_WIKI_LINK);
     assertThat(info).isNull();
   }
 
-  public void testParseParam27() throws Exception {
+  public void testParseParam27() {
     JSDocInfo info = parse(
         "@param {{a: number, b: number}} '{a, b}'\n*/", "invalid param name \"'\"");
     assertThat(info).isNull();
   }
 
-  public void testParseParam28() throws Exception {
+  public void testParseParam28() {
     JSDocInfo info = parse("@param {...} index */");
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertTypeEquals(registry.createOptionalType(UNKNOWN_TYPE), info.getParameterType("index"));
     assertThat(info.getParameterType("index").isVarArgs()).isTrue();
   }
 
-  public void testParseThrows1() throws Exception {
+  public void testParseThrows1() {
     JSDocInfo info = parse("@throws {number} Some number */");
     assertThat(info.getThrownTypes()).hasSize(1);
     assertTypeEquals(NUMBER_TYPE, info.getThrownTypes().get(0));
   }
 
-  public void testParseThrows2() throws Exception {
+  public void testParseThrows2() {
     JSDocInfo info = parse("@throws {number} Some number\n "
                            + "*@throws {String} A string */");
     assertThat(info.getThrownTypes()).hasSize(2);
     assertTypeEquals(NUMBER_TYPE, info.getThrownTypes().get(0));
   }
 
-  public void testParseRecordType1() throws Exception {
+  public void testParseRecordType1() {
     parseFull("/** @param {{x}} n\n*/");
   }
 
-  public void testParseRecordType2() throws Exception {
+  public void testParseRecordType2() {
     parseFull("/** @param {{z, y}} n\n*/");
   }
 
-  public void testParseRecordType3() throws Exception {
+  public void testParseRecordType3() {
     parseFull("/** @param {{z, y, x, q, hello, thisisatest}} n\n*/");
   }
 
-  public void testParseRecordType4() throws Exception {
+  public void testParseRecordType4() {
     parseFull("/** @param {{a, 'a', 'hello', 2, this, do, while, for}} n\n*/");
   }
 
-  public void testParseRecordType5() throws Exception {
+  public void testParseRecordType5() {
     parseFull("/** @param {{x : hello}} n\n*/");
   }
 
-  public void testParseRecordType6() throws Exception {
+  public void testParseRecordType6() {
     parseFull("/** @param {{'x' : hello}} n\n*/");
   }
 
-  public void testParseRecordType7() throws Exception {
+  public void testParseRecordType7() {
     parseFull("/** @param {{'x' : !hello}} n\n*/");
   }
 
-  public void testParseRecordType8() throws Exception {
+  public void testParseRecordType8() {
     parseFull("/** @param {{'x' : !hello, y : bar}} n\n*/");
   }
 
-  public void testParseRecordType9() throws Exception {
+  public void testParseRecordType9() {
     parseFull("/** @param {{'x' : !hello, y : {z : bar, 3 : meh}}} n\n*/");
   }
 
-  public void testParseRecordType10() throws Exception {
+  public void testParseRecordType10() {
     parseFull("/** @param {{__proto__ : moo}} n\n*/");
   }
 
-  public void testParseRecordType11() throws Exception {
-    parseFull("/** @param {{a : b} n\n*/",
-              "Bad type annotation. expected closing }");
+  public void testParseRecordType11() {
+    parseFull(
+        "/** @param {{a : b} n\n*/",
+        "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseRecordType12() throws Exception {
-    parseFull("/** @param {{!hello : hey}} n\n*/",
-              "Bad type annotation. type not recognized due to syntax error");
+  public void testParseRecordType12() {
+    parseFull(
+        "/** @param {{!hello : hey}} n\n*/",
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseRecordType13() throws Exception {
+  public void testParseRecordType13() {
     parseFull("/** @param {{x}|number} n\n*/");
   }
 
-  public void testParseRecordType14() throws Exception {
+  public void testParseRecordType14() {
     parseFull("/** @param {{x : y}|number} n\n*/");
   }
 
-  public void testParseRecordType15() throws Exception {
+  public void testParseRecordType15() {
     parseFull("/** @param {{'x' : y}|number} n\n*/");
   }
 
-  public void testParseRecordType16() throws Exception {
+  public void testParseRecordType16() {
     parseFull("/** @param {{x, y}|number} n\n*/");
   }
 
-  public void testParseRecordType17() throws Exception {
+  public void testParseRecordType17() {
     parseFull("/** @param {{x : hello, 'y'}|number} n\n*/");
   }
 
-  public void testParseRecordType18() throws Exception {
+  public void testParseRecordType18() {
     parseFull("/** @param {number|{x : hello, 'y'}} n\n*/");
   }
 
-  public void testParseRecordType19() throws Exception {
+  public void testParseRecordType19() {
     parseFull("/** @param {?{x : hello, 'y'}} n\n*/");
   }
 
-  public void testParseRecordType20() throws Exception {
+  public void testParseRecordType20() {
     parseFull("/** @param {!{x : hello, 'y'}} n\n*/");
   }
 
-  public void testParseRecordType21() throws Exception {
+  public void testParseRecordType21() {
     parseFull("/** @param {{x : hello, 'y'}|boolean} n\n*/");
   }
 
-  public void testParseRecordType22() throws Exception {
+  public void testParseRecordType22() {
     parseFull("/** @param {{x : hello, 'y'}|function()} n\n*/");
   }
 
-  public void testParseRecordType23() throws Exception {
+  public void testParseRecordType23() {
     parseFull("/** @param {{x : function(), 'y'}|function()} n\n*/");
   }
 
-  public void testParseRecordType24() throws Exception {
+  public void testParseRecordType24() {
     parseFull("/** @param {{a : b, c,}} n\n*/");
   }
 
-  public void testParseParamError1() throws Exception {
-    parseFull("/** @param\n*/",
-        "Bad type annotation. expecting a variable name in a @param tag");
+  public void testParseParamError1() {
+    parseFull(
+        "/** @param\n*/",
+        "Bad type annotation. expecting a variable name in a @param tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseParamError2() throws Exception {
-    parseFull("/** @param {Number}*/",
-        "Bad type annotation. expecting a variable name in a @param tag");
+  public void testParseParamError2() {
+    parseFull(
+        "/** @param {Number}*/",
+        "Bad type annotation. expecting a variable name in a @param tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseParamError3() throws Exception {
-    parseFull("/** @param {Number}\n*/",
-        "Bad type annotation. expecting a variable name in a @param tag");
+  public void testParseParamError3() {
+    parseFull(
+        "/** @param {Number}\n*/",
+        "Bad type annotation. expecting a variable name in a @param tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseParamError4() throws Exception {
-    parseFull("/** @param {Number}\n* * num */",
-        "Bad type annotation. expecting a variable name in a @param tag");
+  public void testParseParamError4() {
+    parseFull(
+        "/** @param {Number}\n* * num */",
+        "Bad type annotation. expecting a variable name in a @param tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseParamError5() throws Exception {
-    parse("@param {number} x \n * @param {string} x */",
-        "Bad type annotation. duplicate variable name \"x\"");
+  public void testParseParamError5() {
+    parse(
+        "@param {number} x \n * @param {string} x */",
+        "Bad type annotation. duplicate variable name \"x\"" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseExtends1() throws Exception {
+  public void testParseExtends1() {
     assertTypeEquals(STRING_OBJECT_TYPE,
                      parse("@extends String*/").getBaseType());
   }
 
-  public void testParseExtends2() throws Exception {
+  public void testParseExtends2() {
     JSDocInfo info = parse("@extends com.google.Foo.Bar.Hello.World*/");
     assertTypeEquals(
         registry.createNamedType(
@@ -1133,7 +1168,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getBaseType());
   }
 
-  public void testParseExtendsGenerics() throws Exception {
+  public void testParseExtendsGenerics() {
     JSDocInfo info =
         parse("@extends com.google.Foo.Bar.Hello.World.<Boolean,number>*/");
     assertTypeEquals(
@@ -1142,7 +1177,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getBaseType());
   }
 
-  public void testParseImplementsGenerics() throws Exception {
+  public void testParseImplementsGenerics() {
     // For types that are not templatized, <> annotations are ignored.
     List<JSTypeExpression> interfaces =
         parse("@implements {SomeInterface.<*>} */")
@@ -1151,24 +1186,25 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(registry.createNamedType("SomeInterface", null, -1, -1), interfaces.get(0));
   }
 
-  public void testParseExtends4() throws Exception {
+  public void testParseExtends4() {
     assertTypeEquals(STRING_OBJECT_TYPE,
         parse("@extends {String}*/").getBaseType());
   }
 
-  public void testParseExtends5() throws Exception {
-    assertTypeEquals(STRING_OBJECT_TYPE,
-        parse("@extends {String*/",
-              "Bad type annotation. expected closing }").getBaseType());
+  public void testParseExtends5() {
+    assertTypeEquals(
+        STRING_OBJECT_TYPE,
+        parse("@extends {String*/", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK)
+            .getBaseType());
   }
 
-  public void testParseExtends6() throws Exception {
+  public void testParseExtends6() {
     // Multi-line extends
     assertTypeEquals(STRING_OBJECT_TYPE,
         parse("@extends \n * {String}*/").getBaseType());
   }
 
-  public void testParseExtendsInvalidName() throws Exception {
+  public void testParseExtendsInvalidName() {
     // This looks bad, but for the time being it should be OK, as
     // we will not find a type with this name in the JS parsed tree.
     // If this is fixed in the future, change this test to check for a
@@ -1178,203 +1214,230 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         parse("@extends {some_++#%$%_UglyString} */").getBaseType());
   }
 
-  public void testParseExtendsNullable1() throws Exception {
-    parse("@extends {Base?} */", "Bad type annotation. expected closing }");
+  public void testParseExtendsNullable1() {
+    parse("@extends {Base?} */", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseExtendsNullable2() throws Exception {
-    parse("@extends Base? */",
-        "Bad type annotation. expected end of line or comment");
+  public void testParseExtendsNullable2() {
+    parse(
+        "@extends Base? */",
+        "Bad type annotation. expected end of line or comment." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseEnum1() throws Exception {
+  public void testParseEnum1() {
     assertTypeEquals(NUMBER_TYPE, parse("@enum*/").getEnumParameterType());
   }
 
-  public void testParseEnum2() throws Exception {
+  public void testParseEnum2() {
     assertTypeEquals(STRING_TYPE,
         parse("@enum {string}*/").getEnumParameterType());
   }
 
-  public void testParseEnum3() throws Exception {
+  public void testParseEnum3() {
     assertTypeEquals(
         STRING_TYPE,
-        parse("@enum string*/", "Bad type annotation. Type annotations should have curly braces.")
+        parse(
+                "@enum string*/",
+                "Bad type annotation. Type annotations should have curly braces."
+                    + BAD_TYPE_WIKI_LINK)
             .getEnumParameterType());
   }
 
-  public void testParseEnum4() throws Exception {
+  public void testParseEnum4() {
     JSDocInfo jsdoc = parse(" @enum {Foo} */");
     Node enumTypeNode = jsdoc.getEnumParameterType().getRoot();
     assertThat(enumTypeNode.getToken()).isEqualTo(Token.BANG);
   }
 
-  public void testParseBadEnumNoCrash() throws Exception {
+  public void testParseBadEnumNoCrash() {
     assertTypeEquals(
         NUMBER_TYPE,
-        parse("@enum {@enum {string}}*/",
-            "Bad type annotation. type not recognized due to syntax error",
-            "Bad type annotation. type annotation incompatible with other annotations")
-        .getEnumParameterType());
+        parse(
+                "@enum {@enum {string}}*/",
+                "Bad type annotation. type not recognized due to syntax error."
+                    + BAD_TYPE_WIKI_LINK,
+                "Bad type annotation. type annotation incompatible with other annotations."
+                    + BAD_TYPE_WIKI_LINK)
+            .getEnumParameterType());
   }
 
-  public void testParseJsDocAfterEnum() throws Exception {
+  public void testParseJsDocAfterEnum() {
     JSDocInfo info = parse("@enum {string} @suppress {x} */");
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
   }
 
-  public void testParseDesc1() throws Exception {
+  public void testParseDesc1() {
     assertThat(parse("@desc hello world!*/").getDescription()).isEqualTo("hello world!");
   }
 
-  public void testParseDesc2() throws Exception {
+  public void testParseDesc2() {
     assertThat(parse("@desc hello world!\n*/").getDescription()).isEqualTo("hello world!");
   }
 
-  public void testParseDesc3() throws Exception {
+  public void testParseDesc3() {
     assertThat(parse("@desc*/").getDescription()).isEmpty();
   }
 
-  public void testParseDesc4() throws Exception {
+  public void testParseDesc4() {
     assertThat(parse("@desc\n*/").getDescription()).isEmpty();
   }
 
-  public void testParseDesc5() throws Exception {
+  public void testParseDesc5() {
     assertThat(parse("@desc hello\nworld!\n*/").getDescription()).isEqualTo("hello world!");
   }
 
-  public void testParseDesc6() throws Exception {
+  public void testParseDesc6() {
     assertThat(parse("@desc hello\n* world!\n*/").getDescription()).isEqualTo("hello world!");
   }
 
-  public void testParseDesc7() throws Exception {
+  public void testParseDesc7() {
     assertThat(parse("@desc a\n\nb\nc*/").getDescription()).isEqualTo("a b c");
   }
 
-  public void testParseDesc8() throws Exception {
+  public void testParseDesc8() {
     assertThat(parse("@desc a\n      *b\n\n  *c\n\nd*/").getDescription()).isEqualTo("a b c d");
   }
 
-  public void testParseDesc9() throws Exception {
+  public void testParseDesc9() {
     String comment = "@desc\n.\n,\n{\n)\n}\n|\n.<\n>\n<\n?\n~\n+\n-\n;\n:\n*/";
 
     assertThat(parse(comment).getDescription()).isEqualTo(". , { ) } | < > < ? ~ + - ; :");
   }
 
-  public void testParseDesc10() throws Exception {
+  public void testParseDesc10() {
     String comment = "@desc\n?\n?\n?\n?*/";
 
     assertThat(parse(comment).getDescription()).isEqualTo("? ? ? ?");
   }
 
-  public void testParseDesc11() throws Exception {
+  public void testParseDesc11() {
     String comment = "@desc :[]*/";
 
     assertThat(parse(comment).getDescription()).isEqualTo(":[]");
   }
 
-  public void testParseDesc12() throws Exception {
+  public void testParseDesc12() {
     String comment = "@desc\n:\n[\n]\n...*/";
 
     assertThat(parse(comment).getDescription()).isEqualTo(": [ ] ...");
   }
 
-  public void testParseMeaning1() throws Exception {
+  public void testParseMeaning1() {
     assertThat(parse("@meaning tigers   */").getMeaning()).isEqualTo("tigers");
   }
 
-  public void testParseMeaning2() throws Exception {
+  public void testParseMeaning2() {
     assertThat(parse("@meaning tigers\n * and lions\n * and bears */").getMeaning())
         .isEqualTo("tigers and lions and bears");
   }
 
-  public void testParseMeaning3() throws Exception {
+  public void testParseMeaning3() {
     JSDocInfo info =
         parse("@meaning  tigers\n * and lions\n * @desc  and bears */");
     assertThat(info.getMeaning()).isEqualTo("tigers and lions");
     assertThat(info.getDescription()).isEqualTo("and bears");
   }
 
-  public void testParseMeaning4() throws Exception {
+  public void testParseMeaning4() {
     parse("@meaning  tigers\n * @meaning and lions  */",
         "extra @meaning tag");
   }
 
-  public void testParseLends1() throws Exception {
+  public void testParseLends1() {
     JSDocInfo info = parse("@lends {name} */");
     assertThat(info.getLendsName()).isEqualTo("name");
   }
 
-  public void testParseLends2() throws Exception {
+  public void testParseLends2() {
     JSDocInfo info = parse("@lends   foo.bar  */");
     assertThat(info.getLendsName()).isEqualTo("foo.bar");
   }
 
-  public void testParseLends3() throws Exception {
-    parse("@lends {name */", "Bad type annotation. expected closing }");
+  public void testParseLends3() {
+    parse("@lends {name */", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseLends4() throws Exception {
-    parse("@lends {} */",
-        "Bad type annotation. missing object name in @lends tag");
+  public void testParseLends4() {
+    parse(
+        "@lends {} */",
+        "Bad type annotation. missing object name in @lends tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseLends5() throws Exception {
-    parse("@lends } */",
-        "Bad type annotation. missing object name in @lends tag");
+  public void testParseLends5() {
+    parse(
+        "@lends } */",
+        "Bad type annotation. missing object name in @lends tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseLends6() throws Exception {
-    parse("@lends {string} \n * @lends {string} */",
-        "Bad type annotation. @lends tag incompatible with other annotations");
+  public void testParseLends6() {
+    parse(
+        "@lends {string} \n * @lends {string} */",
+        "Bad type annotation. @lends tag incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseLends7() throws Exception {
-    parse("@type {string} \n * @lends {string} */",
-        "Bad type annotation. @lends tag incompatible with other annotations");
+  public void testParseLends7() {
+    parse(
+        "@type {string} \n * @lends {string} */",
+        "Bad type annotation. @lends tag incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseAbstract() throws Exception {
+  public void testParseAbstract() {
     JSDocInfo info = parse("@abstract */");
     assertThat(info.isAbstract()).isTrue();
   }
 
-  public void testParseAbstract_alreadyAbstract() throws Exception {
-    parse("@abstract \n * @abstract */",
-        "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseAbstract_alreadyAbstract() {
+    parse(
+        "@abstract \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseAbstract_typedefBeforeAbstract() throws Exception {
-    parse("@typedef {Object<T,T>} \n * @abstract */",
-        "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseAbstract_typedefBeforeAbstract() {
+    parse(
+        "@typedef {Object<T,T>} \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseAbstract_typeBeforeAbstract() throws Exception {
-    parse("* @type {Object<T,T>} \n * @abstract */",
-        "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseAbstract_typeBeforeAbstract() {
+    parse(
+        "* @type {Object<T,T>} \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseAbstract_interfaceBeforeAbstract() throws Exception {
-    parse("* @interface \n * @abstract */",
-        "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseAbstract_interfaceBeforeAbstract() {
+    parse(
+        "* @interface \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseAbstract_abstractBeforeTypedef() throws Exception {
-    parse("@abstract \n * @typedef {Object<T,T>} */",
-        "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseAbstract_abstractBeforeTypedef() {
+    parse(
+        "@abstract \n * @typedef {Object<T,T>} */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseAbstract_abstractBeforeType() throws Exception {
-    parse("* @abstract \n * @type {Object<T,T>} */",
-        "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseAbstract_abstractBeforeType() {
+    parse(
+        "* @abstract \n * @type {Object<T,T>} */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseAbstract_abstractBeforeInterface() throws Exception {
-    parse("* @abstract \n * @interface */",
-        "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseAbstract_abstractBeforeInterface() {
+    parse(
+        "* @abstract \n * @interface */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseAbstract_abstractAndNotPrivate() throws Exception {
+  public void testParseAbstract_abstractAndNotPrivate() {
     JSDocInfo info1 = parse("* @public \n * @abstract */");
     assertTrue(info1.isAbstract());
 
@@ -1385,45 +1448,47 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTrue(info3.isAbstract());
   }
 
-  public void testParseAbstract_abstractAndPrivate() throws Exception {
-    parse("* @private \n * @abstract */",
-        "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseAbstract_abstractAndPrivate() {
+    parse(
+        "* @private \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testStackedAnnotation() throws Exception {
+  public void testStackedAnnotation() {
     JSDocInfo info = parse("@const @type {string}*/");
     assertThat(info.isConstant()).isTrue();
     assertThat(info.hasType()).isTrue();
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testStackedAnnotation2() throws Exception {
+  public void testStackedAnnotation2() {
     JSDocInfo info = parse("@type {string} @const */");
     assertThat(info.isConstant()).isTrue();
     assertThat(info.hasType()).isTrue();
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testStackedAnnotation3() throws Exception {
+  public void testStackedAnnotation3() {
     JSDocInfo info = parse("@const @see {string}*/");
     assertThat(info.isConstant()).isTrue();
     assertThat(info.hasType()).isFalse();
   }
 
-  public void testStackedAnnotation4() throws Exception {
+  public void testStackedAnnotation4() {
     JSDocInfo info = parse("@constructor @extends {Foo} @implements {Bar}*/");
     assertThat(info.isConstructor()).isTrue();
     assertThat(info.hasBaseType()).isTrue();
     assertThat(info.getImplementedInterfaceCount()).isEqualTo(1);
   }
 
-  public void testStackedAnnotation5() throws Exception {
+  public void testStackedAnnotation5() {
     JSDocInfo info = parse("@param {number} x @constructor */");
     assertThat(info.hasParameterType("x")).isTrue();
     assertThat(info.isConstructor()).isTrue();
   }
 
-  public void testStackedAnnotation6() throws Exception {
+  public void testStackedAnnotation6() {
     JSDocInfo info = parse("@return {number} @constructor */", true);
     assertThat(info.hasReturnType()).isTrue();
     assertThat(info.isConstructor()).isTrue();
@@ -1433,13 +1498,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isConstructor()).isTrue();
   }
 
-  public void testStackedAnnotation7() throws Exception {
+  public void testStackedAnnotation7() {
     JSDocInfo info = parse("@return @constructor */", MISSING_TYPE_DECL_WARNING_TEXT);
     assertThat(info.hasReturnType()).isTrue();
     assertThat(info.isConstructor()).isTrue();
   }
 
-  public void testStackedAnnotation8() throws Exception {
+  public void testStackedAnnotation8() {
     JSDocInfo info = parse("@throws {number} @constructor */", true);
     assertThat(info.getThrownTypes()).isNotEmpty();
     assertThat(info.isConstructor()).isTrue();
@@ -1449,14 +1514,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isConstructor()).isTrue();
   }
 
-  public void testStackedAnnotation9() throws Exception {
+  public void testStackedAnnotation9() {
     JSDocInfo info = parse("@const @private {string} */", true);
     assertThat(info.isConstant()).isTrue();
     assertThat(info.hasType()).isTrue();
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testStackedAnnotation10() throws Exception {
+  public void testStackedAnnotation10() {
     JSDocInfo info = parse("@private @const {string} */", true);
     assertThat(info.getVisibility()).isEqualTo(Visibility.PRIVATE);
     assertThat(info.hasType()).isTrue();
@@ -1464,33 +1529,33 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isConstant()).isTrue();
   }
 
-  public void testStackedAnnotation11() throws Exception {
+  public void testStackedAnnotation11() {
     JSDocInfo info = parse("@private @const */", true);
     assertThat(info.hasType()).isFalse();
     assertThat(info.getVisibility()).isEqualTo(Visibility.PRIVATE);
     assertThat(info.isConstant()).isTrue();
   }
 
-  public void testStackedAnnotation12() throws Exception {
+  public void testStackedAnnotation12() {
     JSDocInfo info = parse("@const @private */", true);
     assertThat(info.hasType()).isFalse();
     assertThat(info.getVisibility()).isEqualTo(Visibility.PRIVATE);
     assertThat(info.isConstant()).isTrue();
   }
 
-  public void testStackedAnnotation13() throws Exception {
+  public void testStackedAnnotation13() {
     JSDocInfo info = parse("@final @constructor */", true);
     assertThat(info.isConstructor()).isTrue();
     assertThat(info.isFinal()).isTrue();
   }
 
-  public void testStackedAnnotation14() throws Exception {
+  public void testStackedAnnotation14() {
     JSDocInfo info = parse("@constructor @final */", true);
     assertThat(info.isConstructor()).isTrue();
     assertThat(info.isFinal()).isTrue();
   }
 
-  public void testParsePreserve() throws Exception {
+  public void testParsePreserve() {
     this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@preserve Foo\nBar\n\nBaz*/";
     parse(comment);
@@ -1498,7 +1563,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
   }
 
-  public void testParseLicense() throws Exception {
+  public void testParseLicense() {
     this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@license Foo\nBar\n\nBaz*/";
     parse(comment);
@@ -1506,7 +1571,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
   }
 
-  public void testParseLicenseAscii() throws Exception {
+  public void testParseLicenseAscii() {
     this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@license Foo\n *   Bar\n\n  Baz*/";
     parse(comment);
@@ -1514,7 +1579,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getLicense()).isEqualTo(" Foo\n   Bar\n\n  Baz");
   }
 
-  public void testParseLicenseWithAnnotation() throws Exception {
+  public void testParseLicenseWithAnnotation() {
     this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@license Foo \n * @author Charlie Brown */";
     parse(comment);
@@ -1522,34 +1587,35 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getLicense()).isEqualTo(" Foo \n @author Charlie Brown ");
   }
 
-  public void testParseDefine1() throws Exception {
+  public void testParseDefine1() {
     assertTypeEquals(STRING_TYPE,
         parse("@define {string}*/").getType());
   }
 
-  public void testParseDefine2() throws Exception {
-    assertTypeEquals(STRING_TYPE,
-        parse("@define {string*/",
-              "Bad type annotation. expected closing }").getType());
+  public void testParseDefine2() {
+    assertTypeEquals(
+        STRING_TYPE,
+        parse("@define {string*/", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK)
+            .getType());
   }
 
-  public void testParseDefine3() throws Exception {
+  public void testParseDefine3() {
     JSDocInfo info = parse("@define {boolean}*/");
     assertThat(info.isConstant()).isTrue();
     assertThat(info.isDefine()).isTrue();
     assertTypeEquals(BOOLEAN_TYPE, info.getType());
   }
 
-  public void testParseDefine4() throws Exception {
+  public void testParseDefine4() {
     assertTypeEquals(NUMBER_TYPE, parse("@define {number}*/").getType());
   }
 
-  public void testParseDefine5() throws Exception {
+  public void testParseDefine5() {
     assertTypeEquals(createUnionType(NUMBER_TYPE, BOOLEAN_TYPE),
         parse("@define {number|boolean}*/").getType());
   }
 
-  public void testParseDefineDescription() throws Exception {
+  public void testParseDefineDescription() {
     JSDocInfo doc = parse(
         "@define {string} description of element \n next line*/", true);
     Marker defineMarker = doc.getMarkers().iterator().next();
@@ -1558,7 +1624,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
-  public void testParsePrivateDescription() throws Exception {
+  public void testParsePrivateDescription() {
     JSDocInfo doc =
         parse("@private {string} description \n next line*/", true);
     Marker defineMarker = doc.getMarkers().iterator().next();
@@ -1567,7 +1633,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
-  public void testParsePackagePrivateDescription() throws Exception {
+  public void testParsePackagePrivateDescription() {
     JSDocInfo doc = parse("@package {string} description \n next line */", true);
     Marker defineMarker = doc.getMarkers().iterator().next();
     assertThat(defineMarker.getAnnotation().getItem()).isEqualTo("package");
@@ -1575,7 +1641,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
-  public void testParseProtectedDescription() throws Exception {
+  public void testParseProtectedDescription() {
     JSDocInfo doc =
         parse("@protected {string} description \n next line*/", true);
     Marker defineMarker = doc.getMarkers().iterator().next();
@@ -1584,134 +1650,140 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
-  public void testParseDefineErrors1() throws Exception {
+  public void testParseDefineErrors1() {
     parse("@enum {string}\n @define {string} */", "conflicting @define tag");
   }
 
-  public void testParseDefineErrors2() throws Exception {
-    parse("@define {string}\n @enum {string} */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testParseDefineErrors2() {
+    parse(
+        "@define {string}\n @enum {string} */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseDefineErrors3() throws Exception {
+  public void testParseDefineErrors3() {
     parse("@const\n @define {string} */", "conflicting @define tag");
   }
 
-  public void testParseDefineErrors4() throws Exception {
+  public void testParseDefineErrors4() {
     parse("@type {string} \n @define {string} */", "conflicting @define tag");
   }
 
-  public void testParseDefineErrors5() throws Exception {
+  public void testParseDefineErrors5() {
     parse("@return {string}\n @define {string} */", "conflicting @define tag");
   }
 
-  public void testParseDefineErrors7() throws Exception {
+  public void testParseDefineErrors7() {
     parse("@define {string}\n @const */", "conflicting @const tag");
   }
 
-  public void testParseDefineErrors8() throws Exception {
+  public void testParseDefineErrors8() {
     parse(
         "@define {string}\n @type {string} */",
-        "Bad type annotation. " + "type annotation incompatible with other annotations");
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFinal1() throws Exception {
+  public void testParseFinal1() {
     assertThat(parse("@final*/").isFinal()).isTrue();
   }
 
-  public void testParseFinal2() throws Exception {
-    parse("@final\n@final*/", "Bad type annotation. extra @final tag");
+  public void testParseFinal2() {
+    parse("@final\n@final*/", "Bad type annotation. extra @final tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseFinal3() throws Exception {
+  public void testParseFinal3() {
     assertThat(parse("@final*/").isConstant()).isTrue();
   }
 
-  public void testParseOverride1() throws Exception {
+  public void testParseOverride1() {
     assertThat(parse("@override*/").isOverride()).isTrue();
   }
 
-  public void testParseOverride2() throws Exception {
-    parse("@override\n@override*/",
-        "Bad type annotation. extra @override/@inheritDoc tag");
+  public void testParseOverride2() {
+    parse(
+        "@override\n@override*/",
+        "Bad type annotation. extra @override/@inheritDoc tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseInheritDoc1() throws Exception {
+  public void testParseInheritDoc1() {
     assertThat(parse("@inheritDoc*/").isOverride()).isTrue();
   }
 
-  public void testParseInheritDoc2() throws Exception {
-    parse("@override\n@inheritDoc*/",
-        "Bad type annotation. extra @override/@inheritDoc tag");
+  public void testParseInheritDoc2() {
+    parse(
+        "@override\n@inheritDoc*/",
+        "Bad type annotation. extra @override/@inheritDoc tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseInheritDoc3() throws Exception {
-    parse("@inheritDoc\n@inheritDoc*/",
-        "Bad type annotation. extra @override/@inheritDoc tag");
+  public void testParseInheritDoc3() {
+    parse(
+        "@inheritDoc\n@inheritDoc*/",
+        "Bad type annotation. extra @override/@inheritDoc tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseNoAlias1() throws Exception {
+  public void testParseNoAlias1() {
     assertThat(parse("@noalias*/").isNoAlias()).isTrue();
   }
 
-  public void testParseNoAlias2() throws Exception {
+  public void testParseNoAlias2() {
     parse("@noalias\n@noalias*/", "extra @noalias tag");
   }
 
-  public void testParseDeprecated1() throws Exception {
+  public void testParseDeprecated1() {
     assertThat(parse("@deprecated*/").isDeprecated()).isTrue();
   }
 
-  public void testParseDeprecated2() throws Exception {
+  public void testParseDeprecated2() {
     parse("@deprecated\n@deprecated*/", "extra @deprecated tag");
   }
 
-  public void testParseExport1() throws Exception {
+  public void testParseExport1() {
     assertThat(parse("@export*/").isExport()).isTrue();
   }
 
-  public void testParseExport2() throws Exception {
+  public void testParseExport2() {
     parse("@export\n@export*/", "extra @export tag");
   }
 
-  public void testParseExpose1() throws Exception {
+  public void testParseExpose1() {
     assertThat(parse("@expose*/").isExpose()).isTrue();
   }
 
-  public void testParseExpose2() throws Exception {
+  public void testParseExpose2() {
     parse("@expose\n@expose*/", "extra @expose tag");
   }
 
-  public void testParseExterns1() throws Exception {
+  public void testParseExterns1() {
     assertThat(parseFileOverview("@externs*/").isExterns()).isTrue();
   }
 
-  public void testParseExterns2() throws Exception {
+  public void testParseExterns2() {
     parseFileOverview("@externs\n@externs*/", "extra @externs tag");
   }
 
-  public void testParseExterns3() throws Exception {
+  public void testParseExterns3() {
     assertThat(parse("@externs*/")).isNull();
   }
 
-  public void testParseNoCompile1() throws Exception {
+  public void testParseNoCompile1() {
     assertThat(parseFileOverview("@nocompile*/").isNoCompile()).isTrue();
   }
 
-  public void testParseNoCompile2() throws Exception {
+  public void testParseNoCompile2() {
     parseFileOverview("@nocompile\n@nocompile*/", "extra @nocompile tag");
   }
 
-  public void testBugAnnotation() throws Exception {
+  public void testBugAnnotation() {
     parse("@bug */");
   }
 
-  public void testDescriptionAnnotation() throws Exception {
+  public void testDescriptionAnnotation() {
     parse("@description */");
   }
 
-  public void testRegression1() throws Exception {
+  public void testRegression1() {
     String comment =
         " * @param {number} index the index of blah\n" +
         " * @return {boolean} whatever\n" +
@@ -1725,7 +1797,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getVisibility()).isEqualTo(Visibility.PRIVATE);
   }
 
-  public void testRegression2() throws Exception {
+  public void testRegression2() {
     String comment =
         " * @return {boolean} whatever\n" +
         " * but important\n" +
@@ -1746,7 +1818,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getVisibility()).isEqualTo(Visibility.PROTECTED);
   }
 
-  public void testRegression3() throws Exception {
+  public void testRegression3() {
     String comment =
         " * @param mediaTag this specified whether the @media tag is ....\n" +
         " *\n" +
@@ -1765,7 +1837,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isConstant()).isTrue();
   }
 
-  public void testRegression4() throws Exception {
+  public void testRegression4() {
     String comment =
         " * @const\n" +
         " * @hidden\n" +
@@ -1779,7 +1851,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isHidden()).isTrue();
   }
 
-  public void testRegression5() throws Exception {
+  public void testRegression5() {
     String comment = "@const\n@enum {string}\n@public*/";
 
     JSDocInfo info = parse(comment);
@@ -1789,7 +1861,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getVisibility()).isEqualTo(Visibility.PUBLIC);
   }
 
-  public void testRegression6() throws Exception {
+  public void testRegression6() {
     String comment = "@hidden\n@enum\n@public*/";
 
     JSDocInfo info = parse(comment);
@@ -1798,7 +1870,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getVisibility()).isEqualTo(Visibility.PUBLIC);
   }
 
-  public void testRegression7() throws Exception {
+  public void testRegression7() {
     String comment =
         " * @desc description here\n" +
         " * @param {boolean} flag and some more description\n" +
@@ -1811,7 +1883,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getDescription()).isEqualTo("description here");
   }
 
-  public void testRegression8() throws Exception {
+  public void testRegression8() {
     String comment =
         " * @name random tag here\n" +
         " * @desc description here\n" +
@@ -1826,7 +1898,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getDescription()).isEqualTo("description here");
   }
 
-  public void testRegression9() throws Exception {
+  public void testRegression9() {
     JSDocInfo jsdoc = parse(
         " * @param {string} p0 blah blah blah\n" +
         " */");
@@ -1843,7 +1915,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getVisibility()).isEqualTo(Visibility.INHERITED);
   }
 
-  public void testRegression10() throws Exception {
+  public void testRegression10() {
     JSDocInfo jsdoc = parse(
         " * @param {!String} p0 blah blah blah\n" +
         " * @param {boolean} p1 fobar\n" +
@@ -1863,7 +1935,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getVisibility()).isEqualTo(Visibility.INHERITED);
   }
 
-  public void testRegression11() throws Exception {
+  public void testRegression11() {
     JSDocInfo jsdoc = parse(
         " * @constructor\n" +
         " */");
@@ -1879,7 +1951,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getVisibility()).isEqualTo(Visibility.INHERITED);
   }
 
-  public void testRegression12() throws Exception {
+  public void testRegression12() {
     JSDocInfo jsdoc = parse(
         " * @extends FooBar\n" +
         " */");
@@ -1896,7 +1968,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getVisibility()).isEqualTo(Visibility.INHERITED);
   }
 
-  public void testRegression13() throws Exception {
+  public void testRegression13() {
     JSDocInfo jsdoc = parse(
         " * @type {!RegExp}\n" +
         " * @protected\n" +
@@ -1913,7 +1985,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getVisibility()).isEqualTo(Visibility.PROTECTED);
   }
 
-  public void testRegression14() throws Exception {
+  public void testRegression14() {
     JSDocInfo jsdoc = parse(
         " * @const\n" +
         " * @private\n" +
@@ -1930,7 +2002,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getVisibility()).isEqualTo(Visibility.PRIVATE);
   }
 
-  public void testRegression15() throws Exception {
+  public void testRegression15() {
     JSDocInfo jsdoc = parse(
         " * @desc Hello,\n" +
         " * World!\n" +
@@ -1948,7 +2020,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isExport()).isFalse();
   }
 
-  public void testRegression16() throws Exception {
+  public void testRegression16() {
     JSDocInfo jsdoc = parse(
         " Email is plp@foo.bar\n" +
         " @type {string}\n" +
@@ -1963,85 +2035,90 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getVisibility()).isEqualTo(Visibility.INHERITED);
   }
 
-  public void testRegression17() throws Exception {
+  public void testRegression17() {
     // verifying that if no @desc is present the description is empty
     assertThat(parse("@private*/").getDescription()).isNull();
   }
 
-  public void testFullRegression1() throws Exception {
-    parseFull("/** @param (string,number) foo*/function bar(foo){}",
-        "Bad type annotation. expecting a variable name in a @param tag");
+  public void testFullRegression1() {
+    parseFull(
+        "/** @param (string,number) foo*/function bar(foo){}",
+        "Bad type annotation. expecting a variable name in a @param tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testFullRegression2() throws Exception {
-    parseFull("/** @param {string,number) foo*/function bar(foo){}",
-        "Bad type annotation. expected closing }",
-        "Bad type annotation. expecting a variable name in a @param tag");
+  public void testFullRegression2() {
+    parseFull(
+        "/** @param {string,number) foo*/function bar(foo){}",
+        "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK,
+        "Bad type annotation. expecting a variable name in a @param tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testFullRegression3() throws Exception {
+  public void testFullRegression3() {
     parseFull("/**..\n*/");
   }
 
-  public void testBug907488() throws Exception {
-    parse("@type {number,null} */",
-        "Bad type annotation. expected closing }");
+  public void testBug907488() {
+    parse("@type {number,null} */", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testBug907494() throws Exception {
-    parse("@return {Object,undefined} */",
-        "Bad type annotation. expected closing }");
+  public void testBug907494() {
+    parse(
+        "@return {Object,undefined} */",
+        "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testBug909468() throws Exception {
-    parse("@extends {(x)}*/",
-        "Bad type annotation. expecting a type name");
+  public void testBug909468() {
+    parse("@extends {(x)}*/", "Bad type annotation. expecting a type name." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseInterface() throws Exception {
+  public void testParseInterface() {
     assertThat(parse("@interface*/").isInterface()).isTrue();
   }
 
-  public void testParseImplicitCast1() throws Exception {
+  public void testParseImplicitCast1() {
     assertThat(parse("@type {string} \n * @implicitCast*/").isImplicitCast()).isTrue();
   }
 
-  public void testParseImplicitCast2() throws Exception {
+  public void testParseImplicitCast2() {
     assertThat(parse("@type {string}*/").isImplicitCast()).isFalse();
   }
 
-  public void testParseDuplicateImplicitCast() throws Exception {
-    parse("@type {string} \n * @implicitCast \n * @implicitCast*/",
-          "Bad type annotation. extra @implicitCast tag");
-  }
-
-  public void testParseInterfaceDoubled() throws Exception {
+  public void testParseDuplicateImplicitCast() {
     parse(
-        "* @interface\n" +
-        "* @interface\n" +
-        "*/",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+        "@type {string} \n * @implicitCast \n * @implicitCast*/",
+        "Bad type annotation. extra @implicitCast tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testInvalidTemplatedTypedef1() throws Exception {
-    parse("@template T \n * @typedef {Object<T,T>} */",
-          "Bad type annotation. type annotation incompatible with other annotations");
+  public void testParseInterfaceDoubled() {
+    parse(
+        "* @interface\n" + "* @interface\n" + "*/",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testInvalidTemplatedTypedef2() throws Exception {
-    parse("@typedef {Array<T>} \n * @template T */",
-          "Bad type annotation. Type name(s) for @template annotation declared twice");
+  public void testInvalidTemplatedTypedef1() {
+    parse(
+        "@template T \n * @typedef {Object<T,T>} */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseImplements() throws Exception {
+  public void testInvalidTemplatedTypedef2() {
+    parse(
+        "@typedef {Array<T>} \n * @template T */",
+        "Bad type annotation. Type name(s) for @template annotation declared twice."
+            + BAD_TYPE_WIKI_LINK);
+  }
+
+  public void testParseImplements() {
     List<JSTypeExpression> interfaces = parse("@implements {SomeInterface}*/")
         .getImplementedInterfaces();
     assertThat(interfaces).hasSize(1);
     assertTypeEquals(registry.createNamedType("SomeInterface", null, -1, -1), interfaces.get(0));
   }
 
-  public void testParseImplementsTwo() throws Exception {
+  public void testParseImplementsTwo() {
     List<JSTypeExpression> interfaces =
         parse(
             "* @implements {SomeInterface1}\n" +
@@ -2054,34 +2131,32 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         interfaces.get(1));
   }
 
-  public void testParseImplementsSameTwice() throws Exception {
+  public void testParseImplementsSameTwice() {
     parse(
-        "* @implements {Smth}\n" +
-        "* @implements {Smth}\n" +
-        "*/",
-        "Bad type annotation. duplicate @implements tag");
+        "* @implements {Smth}\n" + "* @implements {Smth}\n" + "*/",
+        "Bad type annotation. duplicate @implements tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseImplementsNoName() throws Exception {
-    parse("* @implements {} */",
-        "Bad type annotation. expecting a type name");
+  public void testParseImplementsNoName() {
+    parse(
+        "* @implements {} */", "Bad type annotation. expecting a type name." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseImplementsMissingRC() throws Exception {
-    parse("* @implements {Smth */",
-        "Bad type annotation. expected closing }");
+  public void testParseImplementsMissingRC() {
+    parse("* @implements {Smth */", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseImplementsNullable1() throws Exception {
-    parse("@implements {Base?} */", "Bad type annotation. expected closing }");
+  public void testParseImplementsNullable1() {
+    parse("@implements {Base?} */", "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseImplementsNullable2() throws Exception {
-    parse("@implements Base? */",
-        "Bad type annotation. expected end of line or comment");
+  public void testParseImplementsNullable2() {
+    parse(
+        "@implements Base? */",
+        "Bad type annotation. expected end of line or comment." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testInterfaceExtends() throws Exception {
+  public void testInterfaceExtends() {
      JSDocInfo jsdoc = parse(
          " * @interface \n" +
          " * @extends {Extended} */");
@@ -2092,7 +2167,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         types.get(0));
   }
 
-  public void testInterfaceMultiExtends1() throws Exception {
+  public void testInterfaceMultiExtends1() {
     JSDocInfo jsdoc = parse(
         " * @interface \n" +
         " * @extends {Extended1} \n" +
@@ -2107,7 +2182,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         types.get(1));
   }
 
-  public void testInterfaceMultiExtends2() throws Exception {
+  public void testInterfaceMultiExtends2() {
     JSDocInfo jsdoc = parse(
         " * @extends {Extended1} \n" +
         " * @interface \n" +
@@ -2125,86 +2200,92 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         types.get(2));
   }
 
-  public void testBadClassMultiExtends() throws Exception {
-    parse(" * @extends {Extended1} \n" +
-        " * @constructor \n" +
-        " * @extends {Extended2} */",
-        "Bad type annotation. type annotation incompatible with other " +
-        "annotations");
+  public void testBadClassMultiExtends() {
+    parse(
+        " * @extends {Extended1} \n" + " * @constructor \n" + " * @extends {Extended2} */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testBadExtendsWithNullable() throws Exception {
-    JSDocInfo jsdoc = parse("@constructor\n * @extends {Object?} */",
-        "Bad type annotation. expected closing }");
+  public void testBadExtendsWithNullable() {
+    JSDocInfo jsdoc =
+        parse(
+            "@constructor\n * @extends {Object?} */",
+            "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
     assertThat(jsdoc.isConstructor()).isTrue();
     assertTypeEquals(OBJECT_TYPE, jsdoc.getBaseType());
   }
 
-  public void testBadImplementsWithNullable() throws Exception {
-  JSDocInfo jsdoc = parse("@implements {Disposable?}\n * @constructor */",
-      "Bad type annotation. expected closing }");
+  public void testBadImplementsWithNullable() {
+    JSDocInfo jsdoc =
+        parse(
+            "@implements {Disposable?}\n * @constructor */",
+            "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   assertThat(jsdoc.isConstructor()).isTrue();
   assertTypeEquals(
       registry.createNamedType("Disposable", null, -1, -1),
       jsdoc.getImplementedInterfaces().get(0));
   }
 
-  public void testBadTypeDefInterfaceAndConstructor1() throws Exception {
-    JSDocInfo jsdoc = parse("@interface\n@constructor*/",
-        "Bad type annotation. cannot be both an interface and a constructor");
+  public void testBadTypeDefInterfaceAndConstructor1() {
+    JSDocInfo jsdoc =
+        parse(
+            "@interface\n@constructor*/",
+            "Bad type annotation. cannot be both an interface and a constructor."
+                + BAD_TYPE_WIKI_LINK);
     assertThat(jsdoc.isInterface()).isTrue();
   }
 
-  public void testBadTypeDefInterfaceAndConstructor2() throws Exception {
-    JSDocInfo jsdoc = parse("@constructor\n@interface*/",
-        "Bad type annotation. cannot be both an interface and a constructor");
+  public void testBadTypeDefInterfaceAndConstructor2() {
+    JSDocInfo jsdoc =
+        parse(
+            "@constructor\n@interface*/",
+            "Bad type annotation. cannot be both an interface and a constructor."
+                + BAD_TYPE_WIKI_LINK);
     assertThat(jsdoc.isConstructor()).isTrue();
   }
 
-  /**
-   * test structural interface matching
-   */
-  public void testBadTypeDefInterfaceAndStructuralTyping1() throws Exception {
-    JSDocInfo jsdoc = parse("@constructor\n@record*/",
-        "Bad type annotation. conflicting @record tag");
+  /** test structural interface matching */
+  public void testBadTypeDefInterfaceAndStructuralTyping1() {
+    JSDocInfo jsdoc =
+        parse(
+            "@constructor\n@record*/",
+            "Bad type annotation. conflicting @record tag." + BAD_TYPE_WIKI_LINK);
     assertThat(jsdoc.isInterface()).isFalse();
   }
 
-  /**
-   * test structural interface matching
-   */
-  public void testBadTypeDefInterfaceAndStructuralTyping2() throws Exception {
-    JSDocInfo jsdoc = parse("@type{number}\n@record*/",
-        "Bad type annotation. conflicting @record tag");
+  /** test structural interface matching */
+  public void testBadTypeDefInterfaceAndStructuralTyping2() {
+    JSDocInfo jsdoc =
+        parse(
+            "@type{number}\n@record*/",
+            "Bad type annotation. conflicting @record tag." + BAD_TYPE_WIKI_LINK);
     assertThat(jsdoc.isInterface()).isFalse();
   }
 
-  /**
-   * test structural interface matching
-   */
-  public void testBadTypeDefInterfaceAndStructuralTyping3() throws Exception {
-    JSDocInfo jsdoc = parse("@type{{x:number}}\n@record*/",
-        "Bad type annotation. conflicting @record tag");
+  /** test structural interface matching */
+  public void testBadTypeDefInterfaceAndStructuralTyping3() {
+    JSDocInfo jsdoc =
+        parse(
+            "@type{{x:number}}\n@record*/",
+            "Bad type annotation. conflicting @record tag." + BAD_TYPE_WIKI_LINK);
     assertThat(jsdoc.isInterface()).isFalse();
   }
 
-  /**
-   * test structural interface matching
-   */
-  public void testBadTypeDefInterfaceAndStructuralTyping4() throws Exception {
-    parse("@interface\n@record*/",
-        "Bad type annotation. conflicting @record tag");
+  /** test structural interface matching */
+  public void testBadTypeDefInterfaceAndStructuralTyping4() {
+    parse(
+        "@interface\n@record*/",
+        "Bad type annotation. conflicting @record tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  /**
-   * test structural interface matching
-   */
-  public void testBadTypeDefInterfaceAndStructuralTyping5() throws Exception {
+  /** test structural interface matching */
+  public void testBadTypeDefInterfaceAndStructuralTyping5() {
     JSDocInfo jsdoc = parse("@record*/");
     assertThat(jsdoc.isInterface()).isTrue();
   }
 
-  public void testDocumentationParameter() throws Exception {
+  public void testDocumentationParameter() {
     JSDocInfo jsdoc
         = parse("@param {Number} number42 This is a description.*/", true);
 
@@ -2212,7 +2293,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getDescriptionForParameter("number42")).isEqualTo("This is a description.");
   }
 
-  public void testMultilineDocumentationParameter() throws Exception {
+  public void testMultilineDocumentationParameter() {
     JSDocInfo jsdoc
         = parse("@param {Number} number42 This is a description"
                 + "\n* on multiple \n* lines.*/", true);
@@ -2222,7 +2303,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         .isEqualTo("This is a description on multiple lines.");
   }
 
-  public void testDocumentationMultipleParameter() throws Exception {
+  public void testDocumentationMultipleParameter() {
     JSDocInfo jsdoc
         = parse("@param {Number} number42 This is a description."
                 + "\n* @param {Integer} number87 This is another description.*/"
@@ -2236,7 +2317,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         .isEqualTo("This is another description.");
   }
 
-  public void testDocumentationMultipleParameter2() throws Exception {
+  public void testDocumentationMultipleParameter2() {
     JSDocInfo jsdoc
         = parse("@param {number} delta = 0 results in a redraw\n" +
                 "  != 0 ..... */", true);
@@ -2246,7 +2327,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
 
-  public void testAuthors() throws Exception {
+  public void testAuthors() {
     JSDocInfo jsdoc
         = parse("@param {Number} number42 This is a description."
                 + "\n* @param {Integer} number87 This is another description."
@@ -2265,76 +2346,76 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertContains(authors, "c@google.com (C Person)");
   }
 
-  public void testSuppress1() throws Exception {
+  public void testSuppress1() {
     JSDocInfo info = parse("@suppress {x} */");
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
   }
 
-  public void testSuppress2() throws Exception {
+  public void testSuppress2() {
     JSDocInfo info = parse("@suppress {x|y|x|z} */");
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
   }
 
-  public void testSuppress3() throws Exception {
+  public void testSuppress3() {
     JSDocInfo info = parse("@suppress {x,y} */");
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y"));
   }
 
-  public void testJsDocAfterSuppress() throws Exception {
+  public void testJsDocAfterSuppress() {
     JSDocInfo info = parse("@suppress {x,y} @const {string} */");
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testBadSuppress1() throws Exception {
+  public void testBadSuppress1() {
     parse("@suppress {} */", "malformed @suppress tag");
   }
 
-  public void testBadSuppress2() throws Exception {
+  public void testBadSuppress2() {
     parse("@suppress {x|} */", "malformed @suppress tag");
   }
 
-  public void testBadSuppress3() throws Exception {
+  public void testBadSuppress3() {
     parse("@suppress {|x} */", "malformed @suppress tag");
   }
 
-  public void testBadSuppress4() throws Exception {
+  public void testBadSuppress4() {
     parse("@suppress {x|y */", "malformed @suppress tag");
   }
 
-  public void testBadSuppress6() throws Exception {
+  public void testBadSuppress6() {
     parse("@suppress {x} \n * @suppress {y} */", "duplicate @suppress tag");
   }
 
-  public void testBadSuppress7() throws Exception {
+  public void testBadSuppress7() {
     parse("@suppress {impossible} */",
           "unknown @suppress parameter: impossible");
   }
 
-  public void testBadSuppress8() throws Exception {
+  public void testBadSuppress8() {
     parse("@suppress */", "malformed @suppress tag");
   }
 
-  public void testModifies1() throws Exception {
+  public void testModifies1() {
     JSDocInfo info = parse("@modifies {this} */");
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("this"));
   }
 
-  public void testModifies2() throws Exception {
+  public void testModifies2() {
     JSDocInfo info = parse("@modifies {arguments} */");
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("arguments"));
   }
 
-  public void testModifies3() throws Exception {
+  public void testModifies3() {
     JSDocInfo info = parse("@modifies {this|arguments} */");
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("this", "arguments"));
   }
 
-  public void testModifies4() throws Exception {
+  public void testModifies4() {
     JSDocInfo info = parse("@param {*} x\n * @modifies {x} */");
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("x"));
   }
 
-  public void testModifies5() throws Exception {
+  public void testModifies5() {
     JSDocInfo info = parse(
         "@param {*} x\n"
         + " * @param {*} y\n"
@@ -2342,7 +2423,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("x"));
   }
 
-  public void testModifies6() throws Exception {
+  public void testModifies6() {
     JSDocInfo info = parse(
         "@param {*} x\n"
         + " * @param {*} y\n"
@@ -2351,62 +2432,62 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
 
-  public void testBadModifies1() throws Exception {
+  public void testBadModifies1() {
     parse("@modifies {} */", "malformed @modifies tag");
   }
 
-  public void testBadModifies2() throws Exception {
+  public void testBadModifies2() {
     parse("@modifies {this|} */", "malformed @modifies tag");
   }
 
-  public void testBadModifies3() throws Exception {
+  public void testBadModifies3() {
     parse("@modifies {|this} */", "malformed @modifies tag");
   }
 
-  public void testBadModifies4() throws Exception {
+  public void testBadModifies4() {
     parse("@modifies {this|arguments */", "malformed @modifies tag");
   }
 
-  public void testBadModifies5() throws Exception {
+  public void testBadModifies5() {
     parse("@modifies {this,arguments} */", "malformed @modifies tag");
   }
 
-  public void testBadModifies6() throws Exception {
+  public void testBadModifies6() {
     parse("@modifies {this} \n * @modifies {this} */",
         "conflicting @modifies tag");
   }
 
-  public void testBadModifies7() throws Exception {
+  public void testBadModifies7() {
     parse("@modifies {impossible} */",
           "unknown @modifies parameter: impossible");
   }
 
-  public void testBadModifies8() throws Exception {
+  public void testBadModifies8() {
     parse("@modifies {this}\n"
         + "@nosideeffects */", "conflicting @nosideeffects tag");
   }
 
-  public void testBadModifies9() throws Exception {
+  public void testBadModifies9() {
     parse("@nosideeffects @modifies {this} */", "conflicting @modifies tag");
   }
 
-  //public void testNoParseFileOverview() throws Exception {
+  //public void testNoParseFileOverview() {
   //  JSDocInfo jsdoc = parseFileOverviewWithoutDoc("@fileoverview Hi mom! */");
   //  assertNull(jsdoc.getFileOverview());
   //  assertTrue(jsdoc.hasFileOverview());
   //}
 
-  public void testFileOverviewSingleLine() throws Exception {
+  public void testFileOverviewSingleLine() {
     JSDocInfo jsdoc = parseFileOverview("@fileoverview Hi mom! */");
     assertThat(jsdoc.getFileOverview()).isEqualTo("Hi mom!");
   }
 
-  public void testFileOverviewMultiLine() throws Exception {
+  public void testFileOverviewMultiLine() {
     JSDocInfo jsdoc = parseFileOverview("@fileoverview Pie is \n * good! */");
     assertThat(jsdoc.getFileOverview()).isEqualTo("Pie is\ngood!");
   }
 
-  public void testFileOverviewDuplicate() throws Exception {
+  public void testFileOverviewDuplicate() {
     parseFileOverview(
         "@fileoverview Pie \n * @fileoverview Cake */",
         "extra @fileoverview tag");
@@ -2438,7 +2519,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "private visibility not allowed in @fileoverview block");
   }
 
-  public void testReferences() throws Exception {
+  public void testReferences() {
     JSDocInfo jsdoc
         = parse("@see A cool place!"
                 + "\n* @see The world."
@@ -2457,7 +2538,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertContains(references, "A boring test case");
   }
 
-  public void testSingleTags() throws Exception {
+  public void testSingleTags() {
     JSDocInfo jsdoc
         = parse("@version Some old version"
                 + "\n* @deprecated In favor of the new one!"
@@ -2470,14 +2551,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getReturnDescription()).isEqualTo("The most important object :-)");
   }
 
-  public void testSingleTags2() throws Exception {
+  public void testSingleTags2() {
     JSDocInfo jsdoc = parse(
         "@param {SomeType} a The most important object :-)*/", true);
 
     assertThat(jsdoc.getDescriptionForParameter("a")).isEqualTo("The most important object :-)");
   }
 
-  public void testSingleTagsReordered() throws Exception {
+  public void testSingleTagsReordered() {
     JSDocInfo jsdoc
         = parse("@deprecated In favor of the new one!"
                 + "\n * @return {SomeType} The most important object :-)"
@@ -2490,28 +2571,28 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getReturnDescription()).isEqualTo("The most important object :-)");
   }
 
-  public void testVersionDuplication() throws Exception {
+  public void testVersionDuplication() {
     parse("* @version Some old version"
           + "\n* @version Another version*/", true,
           "conflicting @version tag");
   }
 
-  public void testVersionMissing() throws Exception {
+  public void testVersionMissing() {
     parse("* @version */", true,
           "@version tag missing version information");
   }
 
-  public void testAuthorMissing() throws Exception {
+  public void testAuthorMissing() {
     parse("* @author */", true,
           "@author tag missing author");
   }
 
-  public void testSeeMissing() throws Exception {
+  public void testSeeMissing() {
     parse("* @see */", true,
           "@see tag missing description");
   }
 
-  public void testParseBlockComment() throws Exception {
+  public void testParseBlockComment() {
     JSDocInfo jsdoc = parse("this is a nice comment\n "
                             + "* that is multiline \n"
                             + "* @author abc@google.com */", true);
@@ -2522,7 +2603,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         assertAnnotationMarker(jsdoc, "author", 2, 2), "abc@google.com", 9, 2, 23);
   }
 
-  public void testParseBlockComment2() throws Exception {
+  public void testParseBlockComment2() {
     JSDocInfo jsdoc = parse("this is a nice comment\n "
                             + "* that is *** multiline \n"
                             + "* @author abc@google.com */", true);
@@ -2534,7 +2615,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         assertAnnotationMarker(jsdoc, "author", 2, 2), "abc@google.com", 9, 2, 23);
   }
 
-  public void testParseBlockComment3() throws Exception {
+  public void testParseBlockComment3() {
     JSDocInfo jsdoc = parse("\n "
                             + "* hello world \n"
                             + "* @author abc@google.com */", true);
@@ -2545,7 +2626,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         assertAnnotationMarker(jsdoc, "author", 2, 2), "abc@google.com", 9, 2, 23);
   }
 
-  public void testParseWithMarkers1() throws Exception {
+  public void testParseWithMarkers1() {
     JSDocInfo jsdoc = parse("@author abc@google.com */", true);
 
     assertDocumentationInMarker(
@@ -2553,7 +2634,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "abc@google.com", 7, 0, 21);
   }
 
-  public void testParseWithMarkers2() throws Exception {
+  public void testParseWithMarkers2() {
     JSDocInfo jsdoc = parse("@param {Foo} somename abc@google.com */", true);
 
     assertDocumentationInMarker(
@@ -2561,7 +2642,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "abc@google.com", 21, 0, 37);
   }
 
-  public void testParseWithMarkers3() throws Exception {
+  public void testParseWithMarkers3() {
     JSDocInfo jsdoc =
         parse("@return {Foo} some long \n * multiline" +
               " \n * description */", true);
@@ -2574,7 +2655,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(returnDoc.getType().getPositionOnEndLine()).isEqualTo(12);
   }
 
-  public void testParseWithMarkers4() throws Exception {
+  public void testParseWithMarkers4() {
     JSDocInfo jsdoc =
         parse("@author foobar \n * @param {Foo} somename abc@google.com */",
               true);
@@ -2583,7 +2664,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertAnnotationMarker(jsdoc, "param", 1, 3);
   }
 
-  public void testParseWithMarkers5() throws Exception {
+  public void testParseWithMarkers5() {
     JSDocInfo jsdoc =
         parse("@return some long \n * multiline" +
               " \n * description */", true, MISSING_TYPE_DECL_WARNING_TEXT);
@@ -2593,7 +2674,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "some long multiline description", 8, 2, 15);
   }
 
-  public void testParseWithMarkers6() throws Exception {
+  public void testParseWithMarkers6() {
     JSDocInfo jsdoc =
         parse("@param x some long \n * multiline" +
               " \n * description */", true, MISSING_TYPE_DECL_WARNING_TEXT);
@@ -2603,7 +2684,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "some long multiline description", 8, 2, 15);
   }
 
-  public void testParseWithMarkerNames1() throws Exception {
+  public void testParseWithMarkerNames1() {
     JSDocInfo jsdoc = parse("@param {SomeType} name somedescription */", true);
 
     assertNameInMarker(
@@ -2611,7 +2692,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "name", 0, 18);
   }
 
-  public void testParseWithMarkerNames2() throws Exception {
+  public void testParseWithMarkerNames2() {
     JSDocInfo jsdoc = parse("@param {SomeType} name somedescription \n" +
                             "* @param {AnotherType} anothername des */", true);
 
@@ -2628,7 +2709,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "AnotherType", 1, 9, 1, 21, true);
   }
 
-  public void testParseWithMarkerNames3() throws Exception {
+  public void testParseWithMarkerNames3() {
     JSDocInfo jsdoc = parse(
         "@param {Some.Long.Type.\n *  Name} name somedescription */", true);
 
@@ -2640,12 +2721,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @SuppressWarnings("deprecation")
-  public void testParseWithoutMarkerName() throws Exception {
+  public void testParseWithoutMarkerName() {
     JSDocInfo jsdoc = parse("@author helloworld*/", true);
     assertThat(assertAnnotationMarker(jsdoc, "author", 0, 0).getName()).isNull();
   }
 
-  public void testParseWithMarkerType() throws Exception {
+  public void testParseWithMarkerType() {
     JSDocInfo jsdoc = parse("@extends {FooBar}*/", true);
 
     assertTypeInMarker(
@@ -2653,7 +2734,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "FooBar", 0, 9, 0, 16, true);
   }
 
-  public void testParseWithMarkerType2() throws Exception {
+  public void testParseWithMarkerType2() {
     JSDocInfo jsdoc = parse("@extends FooBar*/", true);
 
     assertTypeInMarker(
@@ -2661,99 +2742,123 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "FooBar", 0, 9, 0, 15, false);
   }
 
-  public void testTypeTagConflict1() throws Exception {
-    parse("@constructor \n * @constructor */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict1() {
+    parse(
+        "@constructor \n * @constructor */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict2() throws Exception {
-    parse("@interface \n * @interface */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict2() {
+    parse(
+        "@interface \n * @interface */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict3() throws Exception {
-    parse("@constructor \n * @interface */",
-        "Bad type annotation. cannot be both an interface and a constructor");
+  public void testTypeTagConflict3() {
+    parse(
+        "@constructor \n * @interface */",
+        "Bad type annotation. cannot be both an interface and a constructor." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict4() throws Exception {
-    parse("@interface \n * @constructor */",
-        "Bad type annotation. cannot be both an interface and a constructor");
+  public void testTypeTagConflict4() {
+    parse(
+        "@interface \n * @constructor */",
+        "Bad type annotation. cannot be both an interface and a constructor." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict5() throws Exception {
-    parse("@interface \n * @type {string} */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict5() {
+    parse(
+        "@interface \n * @type {string} */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict6() throws Exception {
-    parse("@typedef {string} \n * @type {string} */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict6() {
+    parse(
+        "@typedef {string} \n * @type {string} */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict7() throws Exception {
-    parse("@typedef {string} \n * @constructor */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict7() {
+    parse(
+        "@typedef {string} \n * @constructor */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict8() throws Exception {
-    parse("@typedef {string} \n * @return {boolean} */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict8() {
+    parse(
+        "@typedef {string} \n * @return {boolean} */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict9() throws Exception {
-    parse("@enum {string} \n * @return {boolean} */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict9() {
+    parse(
+        "@enum {string} \n * @return {boolean} */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict10() throws Exception {
-    parse("@this {Object} \n * @enum {boolean} */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict10() {
+    parse(
+        "@this {Object} \n * @enum {boolean} */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict11() throws Exception {
-    parse("@param {Object} x \n * @type {boolean} */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict11() {
+    parse(
+        "@param {Object} x \n * @type {boolean} */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict12() throws Exception {
-    parse("@typedef {boolean} \n * @param {Object} x */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict12() {
+    parse(
+        "@typedef {boolean} \n * @param {Object} x */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict13() throws Exception {
-    parse("@typedef {boolean} \n * @extends {Object} */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict13() {
+    parse(
+        "@typedef {boolean} \n * @extends {Object} */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict14() throws Exception {
-    parse("@return {?} x \n * @return {?} y */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict14() {
+    parse(
+        "@return {?} x \n * @return {?} y */",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict15() throws Exception {
-    parse("/**\n" +
-          " * @struct\n" +
-          " * @struct\n" +
-          " */\n" +
-          "function StrStr() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+  public void testTypeTagConflict15() {
+    parse(
+        "/**\n" + " * @struct\n" + " * @struct\n" + " */\n" + "function StrStr() {}",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict16() throws Exception {
+  public void testTypeTagConflict16() {
     parse("/**\n" +
           " * @struct\n" +
           " * @interface\n" +
@@ -2761,7 +2866,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "function StrIntf() {}");
   }
 
-  public void testTypeTagConflict17() throws Exception {
+  public void testTypeTagConflict17() {
     parse("/**\n" +
           " * @interface\n" +
           " * @struct\n" +
@@ -2769,17 +2874,15 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "function StrIntf() {}");
   }
 
-  public void testTypeTagConflict18() throws Exception {
-    parse("/**\n" +
-          " * @dict\n" +
-          " * @dict\n" +
-          " */\n" +
-          "function DictDict() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+  public void testTypeTagConflict18() {
+    parse(
+        "/**\n" + " * @dict\n" + " * @dict\n" + " */\n" + "function DictDict() {}",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict19() throws Exception {
+  public void testTypeTagConflict19() {
     parse("/**\n" +
           " * @dict\n" +
           " * @interface\n" +
@@ -2787,7 +2890,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "function DictDict() {}");
   }
 
-  public void testTypeTagConflict20() throws Exception {
+  public void testTypeTagConflict20() {
     parse("/**\n" +
           " * @interface\n" +
           " * @dict\n" +
@@ -2795,87 +2898,97 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "function DictDict() {}");
   }
 
-  public void testTypeTagConflict21() throws Exception {
-    parse("/**\n" +
-          " * @private {string}\n" +
-          " * @type {number}\n" +
-          " */\n" +
-          "function DictDict() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+  public void testTypeTagConflict21() {
+    parse(
+        "/**\n"
+            + " * @private {string}\n"
+            + " * @type {number}\n"
+            + " */\n"
+            + "function DictDict() {}",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict22() throws Exception {
-    parse("/**\n" +
-          " * @protected {string}\n" +
-          " * @param {string} x\n" +
-          " */\n" +
-          "function DictDict(x) {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+  public void testTypeTagConflict22() {
+    parse(
+        "/**\n"
+            + " * @protected {string}\n"
+            + " * @param {string} x\n"
+            + " */\n"
+            + "function DictDict(x) {}",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict23() throws Exception {
-    parse("/**\n" +
-          " * @public {string}\n" +
-          " * @return {string} x\n" +
-          " */\n" +
-          "function DictDict() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+  public void testTypeTagConflict23() {
+    parse(
+        "/**\n"
+            + " * @public {string}\n"
+            + " * @return {string} x\n"
+            + " */\n"
+            + "function DictDict() {}",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict24() throws Exception {
-    parse("/**\n" +
-          " * @const {string}\n" +
-          " * @return {string} x\n" +
-          " */\n" +
-          "function DictDict() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+  public void testTypeTagConflict24() {
+    parse(
+        "/**\n"
+            + " * @const {string}\n"
+            + " * @return {string} x\n"
+            + " */\n"
+            + "function DictDict() {}",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testTypeTagConflict25() throws Exception {
-    parse("/**\n" +
-        " * @package {string}\n" +
-        " * @return {string} x\n" +
-        " */\n" +
-        "function DictDict() {}",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+  public void testTypeTagConflict25() {
+    parse(
+        "/**\n"
+            + " * @package {string}\n"
+            + " * @return {string} x\n"
+            + " */\n"
+            + "function DictDict() {}",
+        "Bad type annotation. "
+            + "type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testPackageType() throws Exception {
+  public void testPackageType() {
     JSDocInfo jsdoc = parse("@package {string} */");
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
-  public void testPrivateType() throws Exception {
+  public void testPrivateType() {
     JSDocInfo jsdoc = parse("@private {string} */");
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
-  public void testProtectedType() throws Exception {
+  public void testProtectedType() {
     JSDocInfo jsdoc = parse("@protected {string} */");
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
-  public void testPublicType() throws Exception {
+  public void testPublicType() {
     JSDocInfo jsdoc = parse("@public {string} */");
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
-  public void testConstType() throws Exception {
+  public void testConstType() {
     JSDocInfo jsdoc = parse("@const {string} */");
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
-  public void testFinalType() throws Exception {
+  public void testFinalType() {
     JSDocInfo jsdoc = parse("@final {string} */");
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
-  public void testExportType() throws Exception {
+  public void testExportType() {
     JSDocInfo jsdoc = parse("@export {string} descr\n next line */", true);
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
 
@@ -2887,7 +3000,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
-  public void testMixedVisibility() throws Exception {
+  public void testMixedVisibility() {
     parse("@public @private */", "extra visibility tag");
     parse("@public @protected */", "extra visibility tag");
     parse("@export @protected */", "extra visibility tag");
@@ -2895,7 +3008,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@export {string}\n * @public */", "extra visibility tag");
   }
 
-  public void testStableIdGenerator() throws Exception {
+  public void testStableIdGenerator() {
     JSDocInfo info = parse("/**\n"
         + " * @stableIdGenerator\n"
         + " */\n"
@@ -2903,7 +3016,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isStableIdGenerator()).isTrue();
   }
 
-  public void testStableIdGeneratorConflict() throws Exception {
+  public void testStableIdGeneratorConflict() {
     parse("/**\n"
         + " * @stableIdGenerator\n"
         + " * @stableIdGenerator\n"
@@ -2912,7 +3025,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "extra @stableIdGenerator tag");
   }
 
-  public void testXidGenerator() throws Exception {
+  public void testXidGenerator() {
     JSDocInfo info = parse("/**\n"
         + " * @idGenerator {xid}\n"
         + " */\n"
@@ -2920,7 +3033,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isXidGenerator()).isTrue();
   }
 
-  public void testXidGeneratorConflict() throws Exception {
+  public void testXidGeneratorConflict() {
     parse("/**\n"
         + " * @idGenerator {xid}\n"
         + " * @idGenerator {xid}\n"
@@ -2929,7 +3042,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "extra @idGenerator tag");
   }
 
-  public void testIdGenerator() throws Exception {
+  public void testIdGenerator() {
     JSDocInfo info = parse("/**\n"
         + " * @idGenerator\n"
         + " */\n"
@@ -2937,7 +3050,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.isIdGenerator()).isTrue();
   }
 
-  public void testIdGeneratorConflict() throws Exception {
+  public void testIdGeneratorConflict() {
     parse("/**\n"
         + " * @idGenerator\n"
         + " * @idGenerator\n"
@@ -2946,47 +3059,48 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "extra @idGenerator tag");
   }
 
-  public void testIdGenerator1() throws Exception {
+  public void testIdGenerator1() {
     JSDocInfo info = parse("@idGenerator {unique} */");
     assertThat(info.isIdGenerator()).isTrue();
   }
 
-  public void testIdGenerator2() throws Exception {
+  public void testIdGenerator2() {
     JSDocInfo info = parse("@idGenerator {consistent} */");
     assertThat(info.isConsistentIdGenerator()).isTrue();
   }
 
-  public void testIdGenerator3() throws Exception {
+  public void testIdGenerator3() {
     JSDocInfo info = parse("@idGenerator {stable} */");
     assertThat(info.isStableIdGenerator()).isTrue();
   }
 
-  public void testIdGenerator4() throws Exception {
+  public void testIdGenerator4() {
     JSDocInfo info = parse("@idGenerator {xid} */");
     assertThat(info.isXidGenerator()).isTrue();
   }
 
-  public void testIdGenerator5() throws Exception {
+  public void testIdGenerator5() {
     JSDocInfo info = parse("@idGenerator {mapped} */");
     assertThat(info.isMappedIdGenerator()).isTrue();
   }
 
-  public void testBadIdGenerator1() throws Exception {
+  public void testBadIdGenerator1() {
     parse("@idGenerator {} */", "malformed @idGenerator tag");
   }
 
-  public void testBadIdGenerator2() throws Exception {
+  public void testBadIdGenerator2() {
     parse("@idGenerator {impossible} */",
         "unknown @idGenerator parameter: impossible");
   }
 
-  public void testBadIdGenerator3() throws Exception {
+  public void testBadIdGenerator3() {
     parse("@idGenerator {unique */", "malformed @idGenerator tag");
   }
 
   public void testParserWithTemplateTypeNameMissing() {
-    parse("@template */",
-        "Bad type annotation. @template tag missing type name");
+    parse(
+        "@template */",
+        "Bad type annotation. @template tag missing type name." + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithTwoTemplates() {
@@ -2994,13 +3108,15 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithInvalidTemplateType() {
-    parse("@template {T} */",
-        "Bad type annotation. Invalid type name(s) for @template annotation");
+    parse(
+        "@template {T} */",
+        "Bad type annotation. Invalid type name(s) for @template annotation." + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithValidAndInvalidTemplateType() {
-    parse("@template S, {T} */",
-        "Bad type annotation. Invalid type name(s) for @template annotation");
+    parse(
+        "@template S, {T} */",
+        "Bad type annotation. Invalid type name(s) for @template annotation." + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithTemplateDuplicated() {
@@ -3016,38 +3132,47 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTemplateTypeNameDeclaredTwice() {
-    parse("@template T\n@template T */",
-        "Bad type annotation. Type name(s) for "
-        + "@template annotation declared twice");
+    parse(
+        "@template T\n@template T */",
+        "Bad type annotation. Type name(s) for @template annotation declared twice."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithTemplateTypeNameDeclaredTwice2() {
-    parse("@template T := S =: \n @template T := R =:*/",
-        "Bad type annotation. Type name(s) for "
-        + "@template annotation declared twice");
+    parse(
+        "@template T := S =: \n @template T := R =:*/",
+        "Bad type annotation. Type name(s) for @template annotation declared twice."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithTemplateTypeNameDeclaredTwice3() {
-    parse("@template T \n @template T := R =:*/",
+    parse(
+        "@template T \n @template T := R =:*/",
         "Bad type annotation. Type name(s) for "
-        + "@template annotation declared twice");
+            + "@template annotation declared twice."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithTemplateTypeNameDeclaredTwice4() {
-    parse("@template T := R =: \n @template T*/",
+    parse(
+        "@template T := R =: \n @template T*/",
         "Bad type annotation. Type name(s) for "
-        + "@template annotation declared twice");
+            + "@template annotation declared twice."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithDoubleTemplateDeclaration2() {
-    parse("@template T,T */",
+    parse(
+        "@template T,T */",
         "Bad type annotation. Type name(s) for "
-        + "@template annotation declared twice");
+            + "@template annotation declared twice."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithTemplateDuplicatedTypeNameMissing() {
-    parse("@template T,R\n@template */",
-        "Bad type annotation. @template tag missing type name");
+    parse(
+        "@template T,R\n@template */",
+        "Bad type annotation. @template tag missing type name." + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithTypeTransformationNewline() {
@@ -3064,20 +3189,25 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTypeTransformationMultipleNames() {
-    parse("@template T, R := 'string' =:*/",
+    parse(
+        "@template T, R := 'string' =:*/",
         "Bad type annotation. "
-        + "Type transformation must be associated to a single type name");
+            + "Type transformation must be associated to a single type name."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithMissingTypeTransformationExpression() {
-    parse("@template T := */",
+    parse(
+        "@template T := */",
         "Bad type annotation. "
-        + "Expected end delimiter for a type transformation");
+            + "Expected end delimiter for a type transformation."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testParserWithMissingTypeTransformationExpression2() {
-    parse("@template T := =:*/",
-        "Bad type annotation. Missing type transformation expression");
+    parse(
+        "@template T := =:*/",
+        "Bad type annotation. Missing type transformation expression." + BAD_TYPE_WIKI_LINK);
   }
 
   public void testBug16129690() {
@@ -4088,7 +4218,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(sourceFile.getColumnOfOffset(jsdoc.getOriginalCommentPosition())).isEqualTo(2);
   }
 
-  public void testGetOriginalCommentString() throws Exception {
+  public void testGetOriginalCommentString() {
     String comment = "* @desc This is a comment */";
     JSDocInfo info = parse(comment);
     assertThat(info.getOriginalCommentString()).isNull();
@@ -4096,107 +4226,117 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getOriginalCommentString()).isEqualTo(comment);
   }
 
-  public void testParseNgInject1() throws Exception {
+  public void testParseNgInject1() {
     assertThat(parse("@ngInject*/").isNgInject()).isTrue();
   }
 
-  public void testParseNgInject2() throws Exception {
+  public void testParseNgInject2() {
     parse("@ngInject \n@ngInject*/", "extra @ngInject tag");
   }
 
-  public void testParseJaggerInject() throws Exception {
+  public void testParseJaggerInject() {
     assertThat(parse("@jaggerInject*/").isJaggerInject()).isTrue();
   }
 
-  public void testParseJaggerInjectExtra() throws Exception {
+  public void testParseJaggerInjectExtra() {
     parse("@jaggerInject \n@jaggerInject*/", "extra @jaggerInject tag");
   }
 
-  public void testParseJaggerModule() throws Exception {
+  public void testParseJaggerModule() {
     assertThat(parse("@jaggerModule*/").isJaggerModule()).isTrue();
   }
 
-  public void testParseJaggerModuleExtra() throws Exception {
+  public void testParseJaggerModuleExtra() {
     parse("@jaggerModule \n@jaggerModule*/", "extra @jaggerModule tag");
   }
 
-  public void testParseJaggerProvide() throws Exception {
+  public void testParseJaggerProvide() {
     assertThat(parse("@jaggerProvide*/").isJaggerProvide()).isTrue();
   }
 
-  public void testParseJaggerProvideExtra() throws Exception {
+  public void testParseJaggerProvideExtra() {
     parse("@jaggerProvide \n@jaggerProvide*/", "extra @jaggerProvide tag");
   }
 
-  public void testParseJaggerProvidePromise() throws Exception {
+  public void testParseJaggerProvidePromise() {
     assertThat(parse("@jaggerProvidePromise*/").isJaggerProvidePromise()).isTrue();
   }
 
-  public void testParseJaggerProvidePromiseExtra() throws Exception {
+  public void testParseJaggerProvidePromiseExtra() {
     parse("@jaggerProvidePromise \n@jaggerProvidePromise*/", "extra @jaggerProvidePromise tag");
   }
 
-  public void testParsePolymerBehavior() throws Exception {
+  public void testParsePolymerBehavior() {
     assertThat(parse("@polymerBehavior*/").isPolymerBehavior()).isTrue();
   }
 
-  public void testParsePolymerBehaviorExtra() throws Exception {
+  public void testParsePolymerBehaviorExtra() {
     parse("@polymerBehavior \n@polymerBehavior*/", "extra @polymerBehavior tag");
   }
 
-  public void testParseWizaction1() throws Exception {
+  public void testParseWizaction1() {
     assertThat(parse("@wizaction*/").isWizaction()).isTrue();
   }
 
-  public void testParseWizaction2() throws Exception {
+  public void testParseWizaction2() {
     parse("@wizaction \n@wizaction*/", "extra @wizaction tag");
   }
 
-  public void testParseDisposes1() throws Exception {
+  public void testParseDisposes1() {
     assertThat(parse("@param {?} x \n * @disposes x */").isDisposes()).isTrue();
   }
 
-  public void testParseDisposes2() throws Exception {
-    parse("@param {?} x \n * @disposes */",
-        true, "Bad type annotation. @disposes tag missing parameter name");
+  public void testParseDisposes2() {
+    parse(
+        "@param {?} x \n * @disposes */",
+        true,
+        "Bad type annotation. @disposes tag missing parameter name." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseDisposes3() throws Exception {
+  public void testParseDisposes3() {
     assertThat(parse("@param {?} x \n @param {?} y\n * @disposes x, y */").isDisposes()).isTrue();
   }
 
-  public void testParseDisposesUnknown() throws Exception {
-    parse("@param {?} x \n * @disposes x,y */",
+  public void testParseDisposesUnknown() {
+    parse(
+        "@param {?} x \n * @disposes x,y */",
         true,
-        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
+        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseDisposesMultiple() throws Exception {
-    parse("@param {?} x \n * @disposes x,x */",
+  public void testParseDisposesMultiple() {
+    parse(
+        "@param {?} x \n * @disposes x,x */",
         true,
-        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
+        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times."
+            + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseDisposesAll1() throws Exception {
+  public void testParseDisposesAll1() {
     assertThat(parse("@param {?} x \n * @disposes * */").isDisposes()).isTrue();
   }
 
-  public void testParseDisposesAll2() throws Exception {
+  public void testParseDisposesAll2() {
     assertThat(parse("@param {?} x \n * @disposes x,* */").isDisposes()).isTrue();
   }
 
-  public void testParseDisposesAll3() throws Exception {
-    parse("@param {?} x \n * @disposes *, * */",
+  public void testParseDisposesAll3() {
+    parse(
+        "@param {?} x \n * @disposes *, * */",
         true,
-        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
+        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testTextExtents() {
-    parse("@return {@code foo} bar \n *    baz. */",
-        true, "Bad type annotation. type not recognized due to syntax error");
+    parse(
+        "@return {@code foo} bar \n *    baz. */",
+        true,
+        "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseDuplicateNoCollapse() throws Exception {
+  public void testParseDuplicateNoCollapse() {
     parse("@nocollapse \n * @nocollapse \n * @type {Object}*/",
         "extra @nocollapse tag");
   }
@@ -4279,7 +4419,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + "     formatting\n");
   }
 
-  public void testPreserveWhitespace6() throws Exception {
+  public void testPreserveWhitespace6() {
     JSDocInfo info = preserveWhitespaceParse(
         "This is the typedef description\n"
             + " *     with multiple lines\n"

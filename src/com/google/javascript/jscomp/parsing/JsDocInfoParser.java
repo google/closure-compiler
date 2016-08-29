@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -47,6 +48,10 @@ import java.util.Set;
 // TODO(nicksantos): Unify all the JSDocInfo stuff into one package, instead of
 // spreading it across multiple packages.
 public final class JsDocInfoParser {
+  @VisibleForTesting
+  public static final String BAD_TYPE_WIKI_LINK =
+      " See https://github.com/google/closure-compiler/wiki/Bad-Type-Annotation for"
+            + " more information.";
 
   private final JsDocTokenStream stream;
   private final JSDocInfoBuilder jsdocBuilder;
@@ -82,7 +87,8 @@ public final class JsDocInfoParser {
 
   private void addTypeWarning(String messageId, String messageArg, int lineno, int charno) {
     errorReporter.warning(
-        "Bad type annotation. " + SimpleErrorReporter.getMessage1(messageId, messageArg),
+        "Bad type annotation. " + SimpleErrorReporter.getMessage1(messageId, messageArg)
+            + BAD_TYPE_WIKI_LINK,
         getSourceName(),
         lineno,
         charno);
@@ -94,7 +100,8 @@ public final class JsDocInfoParser {
 
   private void addTypeWarning(String messageId, int lineno, int charno) {
     errorReporter.warning(
-        "Bad type annotation. " + SimpleErrorReporter.getMessage0(messageId),
+        "Bad type annotation. " + SimpleErrorReporter.getMessage0(messageId)
+            + BAD_TYPE_WIKI_LINK,
         getSourceName(),
         lineno,
         charno);

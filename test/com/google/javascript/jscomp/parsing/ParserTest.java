@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -32,7 +33,6 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
-
 import java.util.List;
 
 public final class ParserTest extends BaseJSTypeTestCase {
@@ -43,7 +43,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
       "Trailing comma is not legal in an ECMA-262 object initializer";
 
   private static final String MISSING_GT_MESSAGE =
-      "Bad type annotation. missing closing >";
+      "Bad type annotation. missing closing >" + BAD_TYPE_WIKI_LINK;
 
 
   private static final String UNLABELED_BREAK = "unlabelled break must be inside loop or switch";
@@ -885,10 +885,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testIncorrectJSDocDoesNotAlterJSParsing6() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parseWarning("/** @param {bool!*%E$} */" +
-            "C.prototype.say=function(nums) {alert(nums.join(','));};",
-            "Bad type annotation. expected closing }",
-            "Bad type annotation. expecting a variable name in a @param tag"));
+        parseWarning(
+            "/** @param {bool!*%E$} */"
+                + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK,
+            "Bad type annotation. expecting a variable name in a @param tag."
+                + BAD_TYPE_WIKI_LINK));
   }
 
   public void testIncorrectJSDocDoesNotAlterJSParsing7() throws Exception {

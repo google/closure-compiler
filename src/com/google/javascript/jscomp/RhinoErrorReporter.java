@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.SimpleErrorReporter;
-
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
@@ -120,7 +119,7 @@ class RhinoErrorReporter {
         ImmutableMap.<Pattern, DiagnosticType>builder()
             // Trailing comma
             .put(
-                replacePlaceHolders(
+                Pattern.compile(
                     "Trailing comma is not legal in an ECMA-262 object initializer"),
                 TRAILING_COMMA)
 
@@ -149,11 +148,11 @@ class RhinoErrorReporter {
 
             // Type annotation warnings.
             .put(
-                replacePlaceHolders(
-                    "Bad type annotation. Type annotations should have curly braces."),
+                Pattern.compile(
+                    "^Bad type annotation\\. Type annotations should have curly braces.*"),
                 JSDOC_MISSING_BRACES_WARNING)
 
-            .put(replacePlaceHolders("Missing type declaration."), JSDOC_MISSING_TYPE_WARNING)
+            .put(Pattern.compile("Missing type declaration\\."), JSDOC_MISSING_TYPE_WARNING)
 
             // Type annotation errors.
             .put(
@@ -162,7 +161,7 @@ class RhinoErrorReporter {
                 TYPE_PARSE_ERROR)
 
             // Parse tree too deep.
-            .put(replacePlaceHolders("Too deep recursion while parsing"), PARSE_TREE_TOO_DEEP)
+            .put(Pattern.compile("Too deep recursion while parsing"), PARSE_TREE_TOO_DEEP)
 
             // Octal literals
             .put(Pattern.compile("^Octal .*literal.*"), INVALID_OCTAL_LITERAL)
