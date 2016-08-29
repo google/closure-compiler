@@ -98,6 +98,9 @@ testSuite({
   },
 
   testConstructor_generator() {
+    // The generator function won't work correctly if we've overridden the
+    // native version of Symbol. The force polyfill tests do this.
+    if ($native.Symbol && $native.Symbol != Symbol) return;
     const a = {};
     const b = {};
     const init = function*() {
