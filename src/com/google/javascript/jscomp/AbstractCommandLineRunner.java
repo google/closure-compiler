@@ -382,6 +382,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
     options.sourceMapFormat = config.sourceMapFormat;
     options.sourceMapLocationMappings = config.sourceMapLocationMappings;
+    options.applyInputSourceMaps = config.applyInputSourceMaps;
 
     ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps
         = new ImmutableMap.Builder<>();
@@ -2242,6 +2243,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         List<SourceMap.LocationMapping> locationMappings) {
 
       this.sourceMapLocationMappings = ImmutableList.copyOf(locationMappings);
+      return this;
+    }
+
+    private boolean applyInputSourceMaps = false;
+
+    /**
+     * Whether to apply input source maps to the output, i.e. map back to original inputs from
+     * input files that have source maps applied to them.
+     */
+    public CommandLineConfig setApplyInputSourceMaps(boolean applyInputSourceMaps) {
+      this.applyInputSourceMaps = applyInputSourceMaps;
       return this;
     }
 

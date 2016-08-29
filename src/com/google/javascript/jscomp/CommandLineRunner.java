@@ -186,11 +186,11 @@ public class CommandLineRunner extends
 
     @Option(name = "--js",
         handler = JsOptionHandler.class,
-        usage = "The JavaScript filename. You may specify multiple. " +
-            "The flag name is optional, because args are interpreted as files by default. " +
-            "You may also use minimatch-style glob patterns. For example, use " +
-            "--js='**.js' --js='!**_test.js' to recursively include all " +
-            "js files that do not end in _test.js")
+        usage = "The JavaScript filename. You may specify multiple. "
+        + "The flag name is optional, because args are interpreted as files by default. "
+        + "You may also use minimatch-style glob patterns. For example, use "
+        + "--js='**.js' --js='!**_test.js' to recursively include all "
+        + "js files that do not end in _test.js")
     private List<String> js = new ArrayList<>();
 
     @Option(name = "--jszip",
@@ -200,8 +200,8 @@ public class CommandLineRunner extends
     private List<String> jszip = new ArrayList<>();
 
     @Option(name = "--js_output_file",
-        usage = "Primary output filename. If not specified, output is " +
-        "written to stdout")
+        usage = "Primary output filename. If not specified, output is "
+        + "written to stdout")
     private String jsOutputFile = "";
 
     @Option(name = "--module",
@@ -279,29 +279,36 @@ public class CommandLineRunner extends
     private String moduleOutputPathPrefix = "./";
 
     @Option(name = "--create_source_map",
-        usage = "If specified, a source map file mapping the generated " +
-        "source files back to the original source file will be " +
-        "output to the specified path. The %outname% placeholder will " +
-        "expand to the name of the output file that the source map " +
-        "corresponds to.")
+        usage = "If specified, a source map file mapping the generated "
+        + "source files back to the original source file will be "
+        + "output to the specified path. The %outname% placeholder will "
+        + "expand to the name of the output file that the source map "
+        + "corresponds to.")
     private String createSourceMap = "";
 
     @Option(name = "--source_map_format",
         hidden = true,
-        usage = "The source map format to produce. " +
-        "Options are V3 and DEFAULT, which are equivalent.")
+        usage = "The source map format to produce. "
+        + "Options are V3 and DEFAULT, which are equivalent.")
     private SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
 
     @Option(name = "--source_map_location_mapping",
-        usage = "Source map location mapping separated by a '|' " +
-        "(i.e. filesystem-path|webserver-path)")
+        usage = "Source map location mapping separated by a '|' "
+        + "(i.e. filesystem-path|webserver-path)")
     private List<String> sourceMapLocationMapping = new ArrayList<>();
 
     @Option(name = "--source_map_input",
         hidden = true,
-        usage = "Source map locations for input files, separated by a '|', " +
-        "(i.e. input-file-path|input-source-map)")
+        usage = "Source map locations for input files, separated by a '|', "
+        + "(i.e. input-file-path|input-source-map)")
     private List<String> sourceMapInputs = new ArrayList<>();
+
+    @Option(name = "--apply_input_source_maps",
+        handler = BooleanOptionHandler.class,
+        hidden = true,
+        usage = "Whether to apply input source maps to the output source map, "
+        + "i.e. have the result map back to original inputs")
+    private boolean applyInputSourceMaps = false;
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
@@ -338,24 +345,24 @@ public class CommandLineRunner extends
 
     @Option(name = "--define",
         aliases = {"--D", "-D"},
-        usage = "Override the value of a variable annotated @define. " +
-        "The format is <name>[=<val>], where <name> is the name of a @define " +
-        "variable and <val> is a boolean, number, or a single-quoted string " +
-        "that contains no single quotes. If [=<val>] is omitted, " +
-        "the variable is marked true")
+        usage = "Override the value of a variable annotated @define. "
+        + "The format is <name>[=<val>], where <name> is the name of a @define "
+        + "variable and <val> is a boolean, number, or a single-quoted string "
+        + "that contains no single quotes. If [=<val>] is omitted, "
+        + "the variable is marked true")
     private List<String> define = new ArrayList<>();
 
     @Option(name = "--charset",
-        usage = "Input and output charset for all files. By default, we " +
-                "accept UTF-8 as input and output US_ASCII")
+        usage = "Input and output charset for all files. By default, we "
+                + "accept UTF-8 as input and output US_ASCII")
     private String charset = "";
 
     @Option(name = "--compilation_level",
         aliases = {"-O"},
-        usage = "Specifies the compilation level to use. Options: " +
-            "WHITESPACE_ONLY, " +
-            "SIMPLE, " +
-            "ADVANCED")
+        usage = "Specifies the compilation level to use. Options: "
+            + "WHITESPACE_ONLY, "
+            + "SIMPLE, "
+            + "ADVANCED")
     private String compilationLevel = "SIMPLE";
     private CompilationLevel compilationLevelParsed = null;
 
@@ -367,9 +374,9 @@ public class CommandLineRunner extends
 
     @Option(name = "--use_types_for_optimization",
         handler = BooleanOptionHandler.class,
-        usage = "Enable or disable the optimizations " +
-        "based on available type information. Inaccurate type annotations " +
-        "may result in incorrect results.")
+        usage = "Enable or disable the optimizations "
+        + "based on available type information. Inaccurate type annotations "
+        + "may result in incorrect results.")
     private boolean useTypesForOptimization = true;
 
     @Option(name = "--assume_function_wrapper",
@@ -382,8 +389,8 @@ public class CommandLineRunner extends
 
     @Option(name = "--warning_level",
         aliases = {"-W"},
-        usage = "Specifies the warning level to use. Options: " +
-        "QUIET, DEFAULT, VERBOSE")
+        usage = "Specifies the warning level to use. Options: "
+        + "QUIET, DEFAULT, VERBOSE")
     private WarningLevel warningLevel = WarningLevel.DEFAULT;
 
     @Option(name = "--debug",
@@ -542,9 +549,9 @@ public class CommandLineRunner extends
 
     @Option(name = "--translations_project",
         hidden = true,
-        usage = "Scopes all translations to the specified project." +
-        "When specified, we will use different message ids so that messages " +
-        "in different projects can have different translations.")
+        usage = "Scopes all translations to the specified project."
+        + "When specified, we will use different message ids so that messages "
+        + "in different projects can have different translations.")
     private String translationsProject = null;
 
     @Option(name = "--flagfile",
@@ -553,9 +560,9 @@ public class CommandLineRunner extends
     private String flagFile = "";
 
     @Option(name = "--warnings_whitelist_file",
-        usage = "A file containing warnings to suppress. Each line should be " +
-            "of the form\n" +
-            "<file-name>:<line-number>?  <warning-description>")
+        usage = "A file containing warnings to suppress. Each line should be "
+            + "of the form\n"
+            + "<file-name>:<line-number>?  <warning-description>")
     private String warningsWhitelistFile = "";
 
     @Option(name = "--hide_warnings_for",
@@ -569,8 +576,8 @@ public class CommandLineRunner extends
 
     @Option(name = "--tracer_mode",
         hidden = true,
-        usage = "Shows the duration of each compiler pass and the impact to " +
-        "the compiled output size. Options: ALL, RAW_SIZE, TIMING_ONLY, OFF")
+        usage = "Shows the duration of each compiler pass and the impact to "
+        + "the compiled output size. Options: ALL, RAW_SIZE, TIMING_ONLY, OFF")
     private CompilerOptions.TracerMode tracerMode =
         CompilerOptions.TracerMode.OFF;
 
@@ -1273,6 +1280,7 @@ public class CommandLineRunner extends
     List<FlagEntry<JsSourceType>> mixedSources = null;
     List<LocationMapping> mappings = null;
     ImmutableMap<String, String> sourceMapInputs = null;
+    boolean applyInputSourceMaps = false;
     try {
       flags.parse(processedArgs);
 
@@ -1285,6 +1293,7 @@ public class CommandLineRunner extends
       mixedSources = flags.getMixedJsSources();
       mappings = flags.getSourceMapLocationMappings();
       sourceMapInputs = flags.getSourceMapInputs();
+      applyInputSourceMaps = flags.applyInputSourceMaps;
     } catch (CmdLineException e) {
       reportError(e.getMessage());
     } catch (IOException ioErr) {
@@ -1419,6 +1428,7 @@ public class CommandLineRunner extends
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
           .setSourceMapInputFiles(sourceMapInputs)
+          .setApplyInputSourceMaps(applyInputSourceMaps)
           .setWarningGuards(Flags.guardLevels)
           .setDefine(flags.define)
           .setCharset(flags.charset)

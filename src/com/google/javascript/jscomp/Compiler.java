@@ -80,7 +80,7 @@ import java.util.regex.Matcher;
  * window, document.
  *
  */
-public class Compiler extends AbstractCompiler implements ErrorHandler {
+public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFileMapping {
   static final String SINGLETON_MODULE_NAME = "$singleton$";
 
   static final DiagnosticType MODULE_DEPENDENCY_ERROR =
@@ -487,6 +487,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler {
     if (options.sourceMapOutputPath != null) {
       sourceMap = options.sourceMapFormat.getInstance();
       sourceMap.setPrefixMappings(options.sourceMapLocationMappings);
+      if (options.applyInputSourceMaps) {
+        sourceMap.setSourceFileMapping(this);
+      }
     }
   }
 

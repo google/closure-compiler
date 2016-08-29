@@ -99,6 +99,7 @@ public final class CompileTask
   private String sourceMapFormat;
   private File sourceMapOutputFile;
   private String sourceMapLocationMapping;
+  private boolean applyInputSourceMaps;
 
   public CompileTask() {
     this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT6;
@@ -486,6 +487,8 @@ public final class CompileTask
       LocationMapping lm = new LocationMapping(tokens[0], tokens[1]);
       options.setSourceMapLocationMappings(Arrays.asList(lm));
     }
+
+    options.setApplyInputSourceMaps(applyInputSourceMaps);
 
     if (sourceMapOutputFile != null) {
       File parentFile = sourceMapOutputFile.getParentFile();
