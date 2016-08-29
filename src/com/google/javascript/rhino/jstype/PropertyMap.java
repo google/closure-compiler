@@ -39,10 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -60,13 +58,6 @@ class PropertyMap implements Serializable {
 
   private static final PropertyMap EMPTY_MAP = new PropertyMap(
       ImmutableMap.<String, Property>of());
-
-  private static final Function<ObjectType, PropertyMap> PROP_MAP_FROM_TYPE =
-      new Function<ObjectType, PropertyMap>() {
-    @Override public PropertyMap apply(ObjectType t) {
-      return t.getPropertyMap();
-    }
-  };
 
   // A place to get the inheritance structure.
   // Because the extended interfaces are resolved dynamically, this gets
@@ -108,35 +99,29 @@ class PropertyMap implements Serializable {
    * Returns the secondary parents of this property map, for interfaces that
    * need multiple inheritance.
    */
-  Iterable<PropertyMap> getSecondaryParents() {
+  private Iterable<ObjectType> getSecondaryParentObjects() {
     if (parentSource == null) {
       return ImmutableList.of();
     }
-    Iterable<ObjectType> extendedInterfaces =
-        parentSource.getCtorExtendedInterfaces();
-
-    // Most of the time, this will be empty.
-    if (Iterables.isEmpty(extendedInterfaces)) {
-      return ImmutableList.of();
-    }
-
-    return Iterables.transform(extendedInterfaces, PROP_MAP_FROM_TYPE);
+    return parentSource.getCtorExtendedInterfaces();
   }
 
   Property getSlot(String name) {
-    if (properties.containsKey(name)) {
-      return properties.get(name);
+    Property prop = properties.get(name);
+    if (prop != null) {
+      return prop;
     }
     PropertyMap primaryParent = getPrimaryParent();
     if (primaryParent != null) {
-      Property prop = primaryParent.getSlot(name);
+      prop = primaryParent.getSlot(name);
       if (prop != null) {
         return prop;
       }
     }
-    for (PropertyMap p : getSecondaryParents()) {
+    for (ObjectType o : getSecondaryParentObjects()) {
+      PropertyMap p = o.getPropertyMap();
       if (p != null) {
-        Property prop = p.getSlot(name);
+        prop = p.getSlot(name);
         if (prop != null) {
           return prop;
         }
@@ -172,21 +157,20 @@ class PropertyMap implements Serializable {
   // Use cache to avoid stack overflow.
   private void collectPropertyNamesHelper(
       Set<String> props, Set<PropertyMap> cache) {
-    if (cache.contains(this)) {
+    if (!cache.add(this)) {
       return;
     }
-    cache.add(this);
     props.addAll(properties.keySet());
     PropertyMap primaryParent = getPrimaryParent();
     if (primaryParent != null) {
       primaryParent.collectPropertyNamesHelper(props, cache);
     }
-    for (PropertyMap p : getSecondaryParents()) {
+    for (ObjectType o : getSecondaryParentObjects()) {
+      PropertyMap p = o.getPropertyMap();
       if (p != null) {
         p.collectPropertyNamesHelper(props, cache);
       }
     }
-    cache.remove(this);
   }
 
 
