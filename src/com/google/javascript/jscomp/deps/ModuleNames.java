@@ -90,6 +90,13 @@ public class ModuleNames {
     int position = 0;
     int available = 0;
 
+    boolean absolutePath = (parts.length > 1 && parts[0].isEmpty());
+    if (absolutePath) {
+      // If the path starts with "/" (so the left side, index zero, is empty), then the path will
+      // always remain absolute. Make the first segment unavailable to touch.
+      --available;
+    }
+
     for (String part : parts) {
       if (part.equals(".")) {
         continue;
@@ -101,8 +108,8 @@ public class ModuleNames {
           --position;
           --available;
           buffer[position] = null;
-        } else {
-          // Retain "..", as it can't be consumed on the left.
+        } else if (!absolutePath) {
+          // If this is a relative path, retain "..", as it can't be consumed on the left.
           buffer[position] = part;
           ++position;
         }
@@ -114,6 +121,9 @@ public class ModuleNames {
       ++available;
     }
 
+    if (absolutePath && position == 1) {
+      return MODULE_SLASH;  // special-case single absolute segment as joining [""] doesn't work
+    }
     return MODULE_JOINER.join(Arrays.copyOfRange(buffer, 0, position));
   }
 }

@@ -78,10 +78,10 @@ public final class ModuleLoaderTest extends TestCase {
     assertEquals("a/c", ModuleNames.canonicalizePath("a/b/../c"));
     assertEquals("b/c", ModuleNames.canonicalizePath("a/b/../../b/c"));
     assertEquals("c", ModuleNames.canonicalizePath("a/b/../../c"));
-    assertEquals("", ModuleNames.canonicalizePath("/a/b/c/../../../.."));
     assertEquals("../a", ModuleNames.canonicalizePath("../a/b/.."));
-    assertEquals("../b", ModuleNames.canonicalizePath("/a/../../../b"));
-    assertEquals("", ModuleNames.canonicalizePath("/a/b/c/../../.."));
+    assertEquals("/", ModuleNames.canonicalizePath("/a/b/../../.."));
+    assertEquals("/b", ModuleNames.canonicalizePath("/a/../../../b"));
+    assertEquals("/", ModuleNames.canonicalizePath("/a/.."));
   }
 
   ImmutableList<CompilerInput> inputs(String... names) {
