@@ -47,12 +47,15 @@ import java.util.ArrayDeque;
  * Uses a TemplateTypeMap to replace TemplateTypes with their associated JSType
  * values.
  *
+ * <p>Equality checks in this file are done with reference equality on purpose.
+ *
  * @author izaakr@google.com (Izaak Rubin)
  */
 public class TemplateTypeMapReplacer extends ModificationVisitor {
   private final TemplateTypeMap replacements;
   private ArrayDeque<TemplateType> visitedTypes;
   private TemplateType keyType = null;
+  private boolean replaceMissingTypesWithUnknown = false;
 
   public TemplateTypeMapReplacer(
       JSTypeRegistry registry, TemplateTypeMap replacements) {
@@ -61,18 +64,32 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
     this.visitedTypes = new ArrayDeque<>();
   }
 
+  public TemplateTypeMapReplacer(
+      JSTypeRegistry registry,
+      TemplateTypeMap replacements,
+      boolean replaceMissingTypesWithUnknown) {
+    this(registry, replacements);
+    this.replaceMissingTypesWithUnknown = replaceMissingTypesWithUnknown;
+  }
+
   void setKeyType(TemplateType keyType) {
     this.keyType = keyType;
   }
 
   @Override
+  @SuppressWarnings("ReferenceEquality")
   public JSType caseTemplateType(TemplateType type) {
     if (replacements.hasTemplateKey(type)) {
-      if (hasVisitedType(type) || !replacements.hasTemplateType(type)) {
+      if (hasVisitedType(type)) {
         // If we have already encountered this TemplateType during replacement
-        // (i.e. there is a reference loop), or there is no JSType substitution
-        // for the TemplateType, return the TemplateType type itself.
+        // (i.e. there is a reference loop) then return the TemplateType type itself.
         return type;
+      } else if (!replacements.hasTemplateType(type)) {
+        // If there is no JSType substitution for the TemplateType, return either the
+        // UNKNOWN_TYPE or the TemplateType type itself, depending on configuration.
+        return replaceMissingTypesWithUnknown
+            ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)
+            : type;
       } else {
         JSType replacement = replacements.getUnresolvedOriginalTemplateType(type);
         if (replacement == keyType || isRecursive(type, replacement)) {
@@ -115,6 +132,7 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
     return false;
   }
 
+  @SuppressWarnings("ReferenceEquality")
   private boolean isSameType(TemplateType currentType, TemplateType replacementType) {
     return currentType == replacementType
         || currentType == replacements.getUnresolvedOriginalTemplateType(replacementType);
@@ -124,6 +142,7 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
    * Checks if the specified type has already been visited during the Visitor's
    * traversal of a JSType.
    */
+  @SuppressWarnings("ReferenceEquality")
   private boolean hasVisitedType(TemplateType type) {
     for (TemplateType visitedType : visitedTypes) {
       if (visitedType == type) {

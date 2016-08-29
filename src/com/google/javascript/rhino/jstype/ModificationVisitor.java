@@ -55,7 +55,7 @@ import java.util.Set;
  */
 public class ModificationVisitor implements Visitor<JSType> {
 
-  private final JSTypeRegistry registry;
+  final JSTypeRegistry registry;
   private final boolean visitProperties;
   private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
 

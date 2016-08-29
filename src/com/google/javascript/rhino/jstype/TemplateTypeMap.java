@@ -81,8 +81,11 @@ public class TemplateTypeMap implements Serializable {
 
     // Iteratively resolve any JSType values that refer to the TemplateType keys
     // of this TemplateTypeMap.
-    TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(registry, this);
+    TemplateTypeMapReplacer replacer =
+        new TemplateTypeMapReplacer(registry, this, /* replaceMissingTypesWithUnknown */ true);
 
+    // TODO: fully populate the resolvedTemplateValues *including* UNKNOWN_TYPEs, so that the
+    // addUnknowns() method becomes redundant.
     int nValues = this.templateValues.size();
     JSType[] resolvedValues = null;
     if (nValues > 0) {
@@ -183,10 +186,13 @@ public class TemplateTypeMap implements Serializable {
    * JSType value is associated, returns UNKNOWN_TYPE.
    */
   public JSType getResolvedTemplateType(TemplateType key) {
-    TemplateTypeMap resolvedMap = this.addUnknownValues();
-    int index = resolvedMap.getTemplateTypeIndex(key);
-    return (index == -1) ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) :
-         resolvedMap.resolvedTemplateValues[index];
+    // Do NOT call addUnknownValues() as a shortcut for safely looking up keys that might
+    // correspond with an UNKNOWN_TYPE value. Doing so becomes exponentially costly with nested
+    // template types.
+    int index = getTemplateTypeIndex(key);
+    return (index == -1 || index >= templateValues.size())
+        ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)
+        : resolvedTemplateValues[index];
   }
 
   /**
