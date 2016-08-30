@@ -806,8 +806,21 @@ Window.prototype.openDatabase =
 
 /**
  * @type {boolean}
+ * @see https://www.w3.org/TR/html5/embedded-content-0.html#dom-img-complete
  */
 HTMLImageElement.prototype.complete;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/html5/embedded-content-0.html#dom-img-naturalwidth
+ */
+HTMLImageElement.prototype.naturalWidth;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/html5/embedded-content-0.html#dom-img-naturalheight
+ */
+HTMLImageElement.prototype.naturalHeight;
 
 /**
  * @type {string}
