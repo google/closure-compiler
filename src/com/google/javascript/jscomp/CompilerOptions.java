@@ -948,6 +948,12 @@ public class CompilerOptions {
   public SourceMap.Format sourceMapFormat =
       SourceMap.Format.DEFAULT;
 
+  /**
+   * Whether to apply input source maps to the output, i.e. map back to original inputs from
+   * input files that have source maps applied to them.
+   */
+  public boolean applyInputSourceMaps = false;
+
   public List<SourceMap.LocationMapping> sourceMapLocationMappings =
       Collections.emptyList();
 
