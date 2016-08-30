@@ -201,6 +201,12 @@ AudioContext.prototype.resume = function() {};
 AudioContext.prototype.suspend = function() {};
 
 /**
+ * @return {!Promise<void>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/close
+ */
+AudioContext.prototype.close = function() {};
+
+/**
  * @param {number} numberOfChannels
  * @param {number} length
  * @param {number} sampleRate
