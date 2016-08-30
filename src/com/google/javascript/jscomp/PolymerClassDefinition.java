@@ -24,10 +24,8 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
 /**
@@ -136,7 +134,8 @@ final class PolymerClassDefinition {
     for (BehaviorDefinition behavior : behaviors) {
       overwriteMembersIfPresent(allProperties, behavior.props);
     }
-    overwriteMembersIfPresent(allProperties, PolymerPassStaticUtils.extractProperties(descriptor));
+    overwriteMembersIfPresent(
+        allProperties, PolymerPassStaticUtils.extractProperties(descriptor, compiler));
 
     FeatureSet newFeatures = null;
     if (!behaviors.isEmpty()) {

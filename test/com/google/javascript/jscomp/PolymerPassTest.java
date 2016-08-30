@@ -566,6 +566,19 @@ public class PolymerPassTest extends Es6CompilerTestCase {
             "});"));
   }
 
+  public void testPropertiesObjLitShorthand() {
+    disableTypeCheck();
+    testErrorEs6(
+        LINE_JOINER.join(
+            "var XElem = Polymer({",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    name,",
+            "  },",
+            "});"),
+        POLYMER_SHORTHAND_NOT_SUPPORTED);
+  }
+
   public void testPropertiesDefaultValueFunctions() {
     test(
         LINE_JOINER.join(

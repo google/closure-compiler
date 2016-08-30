@@ -25,7 +25,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -171,7 +170,7 @@ final class PolymerClassRewriter {
     }
 
     // Add @this and @return to default property values.
-    for (MemberDefinition property : PolymerPassStaticUtils.extractProperties(objLit)) {
+    for (MemberDefinition property : PolymerPassStaticUtils.extractProperties(objLit, compiler)) {
       if (!property.value.isObjectLit()) {
         continue;
       }
@@ -262,7 +261,7 @@ final class PolymerClassRewriter {
    * Remove all JSDocs from properties of a class definition
    */
   private void removePropertyDocs(final Node objLit) {
-    for (MemberDefinition prop : PolymerPassStaticUtils.extractProperties(objLit)) {
+    for (MemberDefinition prop : PolymerPassStaticUtils.extractProperties(objLit, compiler)) {
       prop.name.removeProp(Node.JSDOC_INFO_PROP);
     }
   }

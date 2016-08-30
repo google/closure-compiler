@@ -59,10 +59,10 @@ final class PolymerPassErrors {
       "JSC_POLYMER_UNANNOTATED_BEHAVIOR",
       "Behavior declarations must be annotated with @polymerBehavior.");
 
-  static final DiagnosticType POLYMER_SHORTHAND_NOT_SUPPORTED = DiagnosticType.error(
-      "JSC_POLYMER_SHORTHAND_NOT_SUPPORTED",
-      "Shorthand assignment in object literal is not allowed in "
-      + "Polymer call arguments");
+  static final DiagnosticType POLYMER_SHORTHAND_NOT_SUPPORTED =
+      DiagnosticType.error(
+          "JSC_POLYMER_SHORTHAND_NOT_SUPPORTED",
+          "Shorthand assignment in object literal is not allowed in Polymer call arguments");
 
   private PolymerPassErrors() {}
 }

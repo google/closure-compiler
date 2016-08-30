@@ -80,7 +80,8 @@ final class PolymerPassStaticUtils {
    * Extracts a list of {@link MemberDefinition}s for the {@code properties} block of the given
    * descriptor Object literal.
    */
-  static ImmutableList<MemberDefinition> extractProperties(Node descriptor) {
+  static ImmutableList<MemberDefinition> extractProperties(
+      Node descriptor, AbstractCompiler compiler) {
     Node properties = NodeUtil.getFirstPropMatchingKey(descriptor, "properties");
     if (properties == null) {
       return ImmutableList.of();
@@ -88,6 +89,10 @@ final class PolymerPassStaticUtils {
 
     ImmutableList.Builder<MemberDefinition> members = ImmutableList.builder();
     for (Node keyNode : properties.children()) {
+      if (!keyNode.hasChildren()) {
+        compiler.report(JSError.make(keyNode, PolymerPassErrors.POLYMER_SHORTHAND_NOT_SUPPORTED));
+        continue;
+      }
       members.add(new MemberDefinition(NodeUtil.getBestJSDocInfo(keyNode), keyNode,
           keyNode.getFirstChild()));
     }

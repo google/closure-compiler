@@ -19,7 +19,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-
 import java.util.List;
 
 /**
@@ -81,15 +80,17 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
     return value.getJSDocInfo() != null && value.getJSDocInfo().isPolymerBehavior();
   }
 
-  private static void stripPropertyTypes(Node behaviorValue) {
-    List<MemberDefinition> properties = PolymerPassStaticUtils.extractProperties(behaviorValue);
+  private void stripPropertyTypes(Node behaviorValue) {
+    List<MemberDefinition> properties =
+        PolymerPassStaticUtils.extractProperties(behaviorValue, compiler);
     for (MemberDefinition property : properties) {
       property.name.removeProp(Node.JSDOC_INFO_PROP);
     }
   }
 
-  private static void suppressDefaultValues(Node behaviorValue) {
-    for (MemberDefinition property : PolymerPassStaticUtils.extractProperties(behaviorValue)) {
+  private void suppressDefaultValues(Node behaviorValue) {
+    for (MemberDefinition property :
+        PolymerPassStaticUtils.extractProperties(behaviorValue, compiler)) {
       if (!property.value.isObjectLit()) {
         continue;
       }
@@ -107,7 +108,7 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
     }
   }
 
-  private static void addBehaviorSuppressions(Node behaviorValue) {
+  private void addBehaviorSuppressions(Node behaviorValue) {
     for (Node keyNode : behaviorValue.children()) {
       if (keyNode.getFirstChild().isFunction()) {
         keyNode.removeProp(Node.JSDOC_INFO_PROP);
