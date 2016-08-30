@@ -60,6 +60,7 @@ public final class GwtRunner implements EntryPoint {
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
   private static class Flags {
     boolean angularPass;
+    boolean applyInputSourceMaps;
     boolean assumeFunctionWrapper;
     String compilationLevel;
     boolean dartPass;
@@ -92,6 +93,7 @@ public final class GwtRunner implements EntryPoint {
   private static final Flags defaultFlags = new Flags();
   static {
     defaultFlags.angularPass = false;
+    defaultFlags.applyInputSourceMaps = false;
     defaultFlags.assumeFunctionWrapper = false;
     defaultFlags.compilationLevel = "SIMPLE";
     defaultFlags.dartPass = false;
@@ -211,6 +213,7 @@ public final class GwtRunner implements EntryPoint {
     }
 
     options.setAngularPass(flags.angularPass);
+    options.setApplyInputSourceMaps(flags.applyInputSourceMaps);
     options.setChecksOnly(flags.checksOnly);
     options.setDartPass(flags.dartPass);
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
