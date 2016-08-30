@@ -573,6 +573,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
       int size = references.size();
       return size > 0 && references.get(0).isInitializingDeclaration();
     }
+
+    @Override
+    public String toString() {
+      return "<ReferenceCollection for " + getInitializingReference() + ">";
+    }
   }
 
   /**
