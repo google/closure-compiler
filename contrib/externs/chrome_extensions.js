@@ -2501,6 +2501,16 @@ chrome.tabs = {};
 
 
 /**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/tabs#type-TabStatus
+ */
+chrome.tabs.TabStatus = {
+  COMPLETE: '',
+  LOADING: '',
+};
+
+
+/**
  * @typedef {?{
  *   code: (string|undefined),
  *   file: (string|undefined),
@@ -2699,7 +2709,7 @@ chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
  *   highlighted: (boolean|undefined),
  *   currentWindow: (boolean|undefined),
  *   lastFocusedWindow: (boolean|undefined),
- *   status: (string|undefined),
+ *   status: (!chrome.tabs.TabStatus|undefined),
  *   title: (string|undefined),
  *   url: (!Array<string>|string|undefined),
  *   windowId: (number|undefined),
