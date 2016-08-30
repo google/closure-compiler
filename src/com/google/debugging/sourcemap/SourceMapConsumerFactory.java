@@ -48,7 +48,7 @@ public final class SourceMapConsumerFactory {
       throw new SourceMapParseException(
           "This appears to be a V1 SourceMap, which is not supported.");
     } else if (contents.startsWith("{")){
-      SourceMapObject sourceMapObject = new SourceMapObject(contents);
+      SourceMapObject sourceMapObject = SourceMapObjectParser.parse(contents);
 
       // Check basic assertions about the format.
       switch (sourceMapObject.getVersion()) {

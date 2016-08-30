@@ -21,6 +21,7 @@
   <source path="javascript/jscomp" excludes=".svn,.git,**/ant/**,**/refactoring/**,**/webservice/**,**/testing/**,**/linker/**"/>
   <source path="javascript/rhino" excludes=".svn,.git,**/testing/**"/>
   <super-source path="javascript/jscomp/gwt/super"/>
+  <super-source path="debugging/sourcemap/super"/>
   <set-property name="user.agent" value="safari"/>
   <set-configuration-property name="user.agent.runtimeWarning" value="false"/>
   <set-property name="gwt.logging.enabled" value="TRUE"/>

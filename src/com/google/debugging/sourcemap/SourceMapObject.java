@@ -16,22 +16,11 @@
 
 package com.google.debugging.sourcemap;
 
-import com.google.common.collect.ImmutableList;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-
-import java.util.Collections;
 import java.util.List;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Wraps a {@link JsonObject} to provide a V3 source map.
- */
-public final class SourceMapObject {
+/** Wraps a JsonObject to provide a V3 source map. */
+public class SourceMapObject {
   private final int version;
   private final int lineCount;
   private final String sourceRoot;
@@ -42,43 +31,25 @@ public final class SourceMapObject {
   private final List<SourceMapSection> sections;
   private final Map<String, Object> extensions;
 
-  /**
-   * Construct a new {@link SourceMapObject} from the source JSON.
-   */
-  public SourceMapObject(String contents) throws SourceMapParseException {
-    try {
-      JsonObject sourceMapRoot = new Gson().fromJson(contents, JsonObject.class);
-
-      version = sourceMapRoot.get("version").getAsInt();
-      file = getStringOrNull(sourceMapRoot, "file");
-      lineCount = sourceMapRoot.has("lineCount")
-          ? sourceMapRoot.get("lineCount").getAsInt() : -1;
-      mappings = getStringOrNull(sourceMapRoot, "mappings");
-      sourceRoot = getStringOrNull(sourceMapRoot, "sourceRoot");
-
-      if (sourceMapRoot.has("sections")) {
-        ImmutableList.Builder<SourceMapSection> builder = ImmutableList.builder();
-        for (JsonElement each : sourceMapRoot.get("sections").getAsJsonArray()) {
-          builder.add(buildSection(each.getAsJsonObject()));
-        }
-        sections = builder.build();
-      } else {
-        sections = null;
-      }
-
-      sources = getJavaStringArray(sourceMapRoot.get("sources"));
-      names = getJavaStringArray(sourceMapRoot.get("names"));
-
-      Map<String, Object> extensions = new LinkedHashMap<>();
-      for (Map.Entry<String, JsonElement> entry : sourceMapRoot.entrySet()) {
-        if (entry.getKey().startsWith("x_")) {
-          extensions.put(entry.getKey(), entry.getValue());
-        }
-      }
-      this.extensions = Collections.unmodifiableMap(extensions);
-    } catch (JsonParseException ex) {
-      throw new SourceMapParseException("JSON parse exception: " + ex);
-    }
+  private SourceMapObject(
+      int version,
+      int lineCount,
+      String sourceRoot,
+      String file,
+      String mappings,
+      String[] sources,
+      String[] names,
+      List<SourceMapSection> sections,
+      Map<String, Object> extensions) {
+    this.version = version;
+    this.lineCount = lineCount;
+    this.sourceRoot = sourceRoot;
+    this.file = file;
+    this.mappings = mappings;
+    this.sources = sources;
+    this.names = names;
+    this.sections = sections;
+    this.extensions = extensions;
   }
 
   public int getVersion() {
@@ -117,39 +88,69 @@ public final class SourceMapObject {
     return extensions;
   }
 
-  private static SourceMapSection buildSection(JsonObject section)
-      throws JsonParseException, SourceMapParseException {
-    JsonObject offset = section.get("offset").getAsJsonObject();
-    int line = offset.get("line").getAsInt();
-    int column = offset.get("column").getAsInt();
-
-    if (section.has("map") && section.has("url")) {
-      throw new SourceMapParseException(
-          "Invalid map format: section may not have both 'map' and 'url'");
-    } else if (section.has("url")) {
-      return SourceMapSection.forURL(section.get("url").getAsString(), line, column);
-    } else if (section.has("map")) {
-      return SourceMapSection.forMap(section.get("map").toString(), line, column);
-    }
-
-    throw new SourceMapParseException(
-        "Invalid map format: section must have either 'map' or 'url'");
+  static Builder builder() {
+    return new Builder();
   }
 
-  private static String getStringOrNull(JsonObject object, String key) {
-    return object.has(key) ? object.get(key).getAsString() : null;
-  }
+  static class Builder {
+    private int version;
+    private int lineCount;
+    private String sourceRoot;
+    private String file;
+    private String mappings;
+    private String[] sources;
+    private String[] names;
+    private List<SourceMapSection> sections;
+    private Map<String, Object> extensions;
 
-  private static String[] getJavaStringArray(JsonElement element) throws JsonParseException {
-    if (element == null) {
-      return null;
+    public Builder setVersion(int version) {
+      this.version = version;
+      return this;
     }
-    JsonArray array = element.getAsJsonArray();
-    int len = array.size();
-    String[] result = new String[len];
-    for (int i = 0; i < len; i++) {
-      result[i] = array.get(i).getAsString();
+
+    public Builder setLineCount(int lineCount) {
+      this.lineCount = lineCount;
+      return this;
     }
-    return result;
+
+    public Builder setSourceRoot(String sourceRoot) {
+      this.sourceRoot = sourceRoot;
+      return this;
+    }
+
+    public Builder setFile(String file) {
+      this.file = file;
+      return this;
+    }
+
+    public Builder setMappings(String mappings) {
+      this.mappings = mappings;
+      return this;
+    }
+
+    public Builder setSources(String[] sources) {
+      this.sources = sources;
+      return this;
+    }
+
+    public Builder setNames(String[] names) {
+      this.names = names;
+      return this;
+    }
+
+    public Builder setSections(List<SourceMapSection> sections) {
+      this.sections = sections;
+      return this;
+    }
+
+    public Builder setExtensions(Map<String, Object> extensions) {
+      this.extensions = extensions;
+      return this;
+    }
+
+    public SourceMapObject build() {
+      return new SourceMapObject(
+          version, lineCount, sourceRoot, file, mappings, sources, names, sections, extensions);
+    }
   }
 }

@@ -128,6 +128,12 @@
       <artifactId>gwt-dev</artifactId>
       <version>2.8.0-rc1</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.google.jsinterop</groupId>
+      <artifactId>jsinterop-annotations</artifactId>
+      <version>1.0.0</version>
+    </dependency>
   </dependencies>
 
   <repositories>
@@ -240,6 +246,7 @@
             <exclude>**/gwt/client/**</exclude>
             <exclude>**/gwt/public/**</exclude>
             <exclude>**/gwt/super/**</exclude>
+            <exclude>**/super/**</exclude>
             <exclude>**/testing/**</exclude>
             <exclude>**/webservice/**</exclude>
           </excludes>
