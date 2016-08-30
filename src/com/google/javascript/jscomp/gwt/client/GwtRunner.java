@@ -138,7 +138,7 @@ public final class GwtRunner implements EntryPoint {
    * Convert a list of {@link JSError} instances to a JS array containing plain objects.
    */
   private static JavaScriptObject[] toNativeErrorArray(List<JSError> errors) {
-    JavaScriptObject out[] = new JavaScriptObject[errors.size()];
+    JavaScriptObject[] out = new JavaScriptObject[errors.size()];
     for (int i = 0; i < errors.size(); ++i) {
       JSError error = errors.get(i);
       DiagnosticType type = error.getType();
