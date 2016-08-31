@@ -194,6 +194,41 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     declarationList.setType(Token.VAR);
   }
 
+  private static void extractInlineJSDoc(Node srcDeclaration, Node srcName, Node destDeclaration) {
+    JSDocInfo existingInfo = srcDeclaration.getJSDocInfo();
+    if (existingInfo == null) {
+      // Extract inline JSDoc from "src" and add it to the "dest" node.
+      existingInfo = srcName.getJSDocInfo();
+      srcName.setJSDocInfo(null);
+    }
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(existingInfo);
+    destDeclaration.setJSDocInfo(builder.build());
+  }
+
+  private static void maybeAddConstJSDoc(Node srcDeclaration, Node srcParent, Node srcName,
+      Node destDeclaration) {
+    if (srcDeclaration.isConst()
+        // Don't add @const for the left side of a for/in. If we do we get warnings from the NTI.
+        && !(NodeUtil.isForIn(srcParent) && srcDeclaration == srcParent.getFirstChild())) {
+      extractInlineJSDoc(srcDeclaration, srcName, destDeclaration);
+      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(destDeclaration.getJSDocInfo());
+      builder.recordConstancy();
+      destDeclaration.setJSDocInfo(builder.build());
+    }
+  }
+
+  private static void handleDeclarationList(Node declarationList, Node parent) {
+    // Normalize: "const i = 0, j = 0;" becomes "/** @const */ var i = 0; /** @const */ var j = 0;"
+    while (declarationList.hasMoreThanOneChild()) {
+      Node name = declarationList.getLastChild();
+      Node newDeclaration = IR.var(name.detachFromParent()).useSourceInfoFrom(declarationList);
+      maybeAddConstJSDoc(declarationList, parent, name, newDeclaration);
+      parent.addChildAfter(newDeclaration, declarationList);
+    }
+    maybeAddConstJSDoc(declarationList, parent, declarationList.getFirstChild(), declarationList);
+    declarationList.setType(Token.VAR);
+  }
+
   private void varify() {
     if (!letConsts.isEmpty()) {
       for (Node n : letConsts) {
