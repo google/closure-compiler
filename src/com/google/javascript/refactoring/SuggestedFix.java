@@ -601,6 +601,7 @@ public final class SuggestedFix {
             }
           }
         } else if (NodeUtil.isNameDeclaration(child)
+            && child.getFirstFirstChild() != null
             && Matchers.googRequire().matches(child.getFirstFirstChild(), metadata)) {
           if (shortName.compareTo(child.getFirstChild().getString()) < 0) {
             nodeToInsertBefore = child;

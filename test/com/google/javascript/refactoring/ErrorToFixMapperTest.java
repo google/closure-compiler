@@ -595,6 +595,24 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testStandaloneVarDoesntCrashMissingRequire() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var x;",
+            "",
+            "class Cat extends goog.Animal {}"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "const Animal = goog.require('goog.Animal');",
+            "",
+            "var x;",
+            "",
+            "class Cat extends Animal {}"));
+  }
+
+  @Test
   public void testSwitchToShorthand_JSDoc1() {
     assertChanges(
         LINE_JOINER.join(
