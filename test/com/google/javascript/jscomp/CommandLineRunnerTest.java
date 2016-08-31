@@ -2132,12 +2132,12 @@ public final class CommandLineRunnerTest extends TestCase {
 
   /**
    * Helper for compiling js files and checking output string, using a single --js flag.
+   *
    * @param expectedOutput string representation of expected output.
    * @param entries entries of flags for js files containing source to compile.
    */
   @SafeVarargs
-  private final void compileJsFiles(String expectedOutput, FlagEntry<JsSourceType>... entries)
-      throws FlagUsageException {
+  private final void compileJsFiles(String expectedOutput, FlagEntry<JsSourceType>... entries) {
     args.add("--js");
     for (FlagEntry<JsSourceType> entry : entries) {
       args.add(entry.getValue());
@@ -2145,8 +2145,7 @@ public final class CommandLineRunnerTest extends TestCase {
     compileArgs(expectedOutput, null);
   }
 
-  private void compileArgs(String expectedOutput, DiagnosticType expectedError)
-      throws FlagUsageException {
+  private void compileArgs(String expectedOutput, DiagnosticType expectedError) {
     String[] argStrings = args.toArray(new String[] {});
 
     CommandLineRunner runner =

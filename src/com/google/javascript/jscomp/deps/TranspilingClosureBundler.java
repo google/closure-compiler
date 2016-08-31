@@ -122,16 +122,17 @@ public final class TranspilingClosureBundler extends ClosureBundler {
           hashCode,
           new Callable<String>() {
             @Override
-            public String call() throws IOException, UnsupportedEncodingException {
+            public String call() throws IOException {
               // Neither the compiler nor the options is thread safe, so they can't be
               // saved as instance state.
               ByteArrayOutputStream baos = new ByteArrayOutputStream();
               Compiler compiler = new Compiler(new PrintStream(baos));
               SourceFile sourceFile = SourceFile.fromCode(path, js);
-              Result result = compiler.<SourceFile, SourceFile>compile(
-                  ImmutableList.<SourceFile>of(),
-                  ImmutableList.<SourceFile>of(sourceFile),
-                  getOptions());
+              Result result =
+                  compiler.<SourceFile, SourceFile>compile(
+                      ImmutableList.<SourceFile>of(),
+                      ImmutableList.of(sourceFile),
+                      getOptions());
               if (compiler.getErrorManager().getErrorCount() > 0) {
                 String message;
                 try {

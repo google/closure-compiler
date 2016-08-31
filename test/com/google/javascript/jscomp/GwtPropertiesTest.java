@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 
 /**
@@ -25,7 +27,7 @@ public final class GwtPropertiesTest extends TestCase {
 
   public void testLoadEmpty() {
     GwtProperties p = GwtProperties.load("");
-    assertTrue(p.propertyNames().isEmpty());
+    assertThat(p.propertyNames()).isEmpty();
   }
 
   public void testLoadWithComments() {

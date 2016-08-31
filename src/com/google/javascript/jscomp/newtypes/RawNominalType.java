@@ -648,7 +648,7 @@ public final class RawNominalType extends Namespace {
   StringBuilder appendTo(StringBuilder builder) {
     builder.append(name);
     if (!this.typeParameters.isEmpty()) {
-      builder.append("<" + Joiner.on(",").join(this.typeParameters) + ">");
+      builder.append("<").append(Joiner.on(",").join(this.typeParameters)).append(">");
     }
     return builder;
   }

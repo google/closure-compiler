@@ -69,8 +69,7 @@ public class SourceMapObjectParser {
     return builder.build();
   }
 
-  private static SourceMapSection buildSection(JsonObject section)
-      throws JsonParseException, SourceMapParseException {
+  private static SourceMapSection buildSection(JsonObject section) throws SourceMapParseException {
     JsonObject offset = section.get("offset").getAsJsonObject();
     int line = offset.get("line").getAsInt();
     int column = offset.get("column").getAsInt();
@@ -92,7 +91,7 @@ public class SourceMapObjectParser {
     return object.has(key) ? object.get(key).getAsString() : null;
   }
 
-  private static String[] getJavaStringArray(JsonElement element) throws JsonParseException {
+  private static String[] getJavaStringArray(JsonElement element) {
     if (element == null) {
       return null;
     }

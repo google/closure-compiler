@@ -1266,7 +1266,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   private DiagnosticType outputModuleBinaryAndSourceMaps(List<JSModule> modules, B options)
-      throws FlagUsageException, IOException {
+      throws IOException {
     parsedModuleWrappers = parseModuleWrappers(
         config.moduleWrapper, modules);
     maybeCreateDirsForPath(config.moduleOutputPathPrefix);
@@ -1318,12 +1318,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return null;
   }
 
-  /**
-   * Given an output module, convert it to a JSONFileSpec with associated
-   * sourcemap
-   */
-  private JsonFileSpec createJsonFileFromModule(JSModule module) throws
-      FlagUsageException, IOException{
+  /** Given an output module, convert it to a JSONFileSpec with associated sourcemap */
+  private JsonFileSpec createJsonFileFromModule(JSModule module) throws IOException {
     compiler.getSourceMap().reset();
 
     StringBuilder output = new StringBuilder();

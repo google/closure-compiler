@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -271,7 +270,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertThat(results).isEmpty();
   }
 
-  public void testToJson() throws JsonParseException {
+  public void testToJson() {
     JsonArray modules = graph.toJson();
     assertEquals(6, modules.size());
     for (int i = 0; i < modules.size(); i++) {

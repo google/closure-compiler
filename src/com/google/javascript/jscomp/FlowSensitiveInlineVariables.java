@@ -181,10 +181,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
   private boolean isCandidateFunction(Node fn) {
     Node fnBody = fn.getLastChild();
-    if (containsCandidateExpressions(fnBody)) {
-      return true;
-    }
-    return false;
+    return containsCandidateExpressions(fnBody);
   }
 
   private static boolean containsCandidateExpressions(Node n) {

@@ -183,10 +183,9 @@ public final class PerformanceTracker {
 
     // Update fields related to code size
     if (codeChange.hasCodeChanged() && trackSize) {
-      int newSize = 0;
       PerformanceTrackerCodeSizeEstimator estimator = PerformanceTrackerCodeSizeEstimator.estimate(
           jsRoot, trackGzSize);
-      newSize = estimator.getCodeSize();
+      int newSize = estimator.getCodeSize();
       logStats.diff = codeSize - newSize;
       summaryStats.diff += logStats.diff;
       codeSize = summaryStats.size = logStats.size = newSize;
@@ -214,7 +213,7 @@ public final class PerformanceTracker {
   private int estimateLines(Node n) {
     Preconditions.checkState(n.isScript());
     StaticSourceFile ssf = n.getStaticSourceFile();
-    if (ssf != null && ssf instanceof SourceFile) {
+    if (ssf instanceof SourceFile) {
       return ((SourceFile) ssf).getNumLines();
     }
     return 0;

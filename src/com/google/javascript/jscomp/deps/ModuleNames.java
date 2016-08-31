@@ -124,6 +124,6 @@ public class ModuleNames {
     if (absolutePath && position == 1) {
       return MODULE_SLASH;  // special-case single absolute segment as joining [""] doesn't work
     }
-    return MODULE_JOINER.join(Arrays.copyOfRange(buffer, 0, position));
+    return MODULE_JOINER.join(Arrays.copyOf(buffer, position));
   }
 }
