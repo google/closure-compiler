@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Builds a global namespace of all the objects and their properties in
@@ -616,9 +617,9 @@ class GlobalNamespace
       // Heed the annotations only if they're sensibly used.
       return info != null
           && valueNode != null
-          && (info.isConstructor() && valueNode.isFunction()
-              || info.isInterface() && valueNode.isFunction()
-              || info.hasEnumParameterType() && valueNode.isObjectLit());
+          && ((info.isConstructor() && valueNode.isFunction())
+              || (info.isInterface() && valueNode.isFunction())
+              || (info.hasEnumParameterType() && valueNode.isObjectLit()));
     }
 
     /**
@@ -667,55 +668,56 @@ class GlobalNamespace
         return;
       }
 
-      Ref.Type type = Ref.Type.DIRECT_GET;
-      if (parent != null) {
-        switch (parent.getToken()) {
-          case EXPR_RESULT:
-          case IF:
-          case INSTANCEOF:
-          case TYPEOF:
-          case VOID:
-          case NOT:
-          case BITNOT:
-          case POS:
-          case NEG:
-            break;
-          case CALL:
-            if (n == parent.getFirstChild()) {
-              // It is a call target
-              type = Ref.Type.CALL_GET;
-            } else if (isClassDefiningCall(parent)) {
-              type = Ref.Type.DIRECT_GET;
-            } else {
-              type = Ref.Type.ALIASING_GET;
-            }
-            break;
-          case NEW:
-            type = n == parent.getFirstChild() ? Ref.Type.DIRECT_GET : Ref.Type.ALIASING_GET;
-            break;
-          case OR:
-          case AND:
-            // This node is x or y in (x||y) or (x&&y). We only know that an
-            // alias is not getting created for this name if the result is used
-            // in a boolean context or assigned to the same name
-            // (e.g. var a = a || {}).
-            type = determineGetTypeForHookOrBooleanExpr(module, scope, parent, name);
-            break;
-          case HOOK:
-            if (n != parent.getFirstChild()) {
-              // This node is y or z in (x?y:z). We only know that an alias is
-              // not getting created for this name if the result is assigned to
-              // the same name (e.g. var a = a ? a : {}).
-              type = determineGetTypeForHookOrBooleanExpr(module, scope, parent, name);
-            }
-            break;
-          case DELPROP:
-            type = Ref.Type.DELETE_PROP;
-            break;
-          default:
+      Ref.Type type;
+      switch (parent.getToken()) {
+        case EXPR_RESULT:
+        case IF:
+        case INSTANCEOF:
+        case TYPEOF:
+        case VOID:
+        case NOT:
+        case BITNOT:
+        case POS:
+        case NEG:
+          type = Ref.Type.DIRECT_GET;
+          break;
+        case CALL:
+          if (n == parent.getFirstChild()) {
+            // It is a call target
+            type = Ref.Type.CALL_GET;
+          } else if (isClassDefiningCall(parent)) {
+            type = Ref.Type.DIRECT_GET;
+          } else {
             type = Ref.Type.ALIASING_GET;
-            break;
-        }
+          }
+          break;
+        case NEW:
+          type = n == parent.getFirstChild() ? Ref.Type.DIRECT_GET : Ref.Type.ALIASING_GET;
+          break;
+        case OR:
+        case AND:
+          // This node is x or y in (x||y) or (x&&y). We only know that an
+          // alias is not getting created for this name if the result is used
+          // in a boolean context or assigned to the same name
+          // (e.g. var a = a || {}).
+          type = determineGetTypeForHookOrBooleanExpr(module, scope, parent, name);
+          break;
+        case HOOK:
+          if (n != parent.getFirstChild()) {
+            // This node is y or z in (x?y:z). We only know that an alias is
+            // not getting created for this name if the result is assigned to
+            // the same name (e.g. var a = a ? a : {}).
+            type = determineGetTypeForHookOrBooleanExpr(module, scope, parent, name);
+          } else {
+            type = Ref.Type.DIRECT_GET;
+          }
+          break;
+        case DELPROP:
+          type = Ref.Type.DELETE_PROP;
+          break;
+        default:
+          type = Ref.Type.ALIASING_GET;
+          break;
       }
 
       handleGet(module, scope, n, parent, name, type);
@@ -927,6 +929,9 @@ class GlobalNamespace
 
     private final String baseName;
     final Name parent;
+
+    // The children of this name. Must be null if there are no children.
+    @Nullable
     List<Name> props;
 
     /** The first global assignment to a name. */
@@ -1161,10 +1166,10 @@ class GlobalNamespace
           && !isGetOrSetDefinition()
           && !isCollapsingExplicitlyDenied()
           && (declaredType
-              || (parent == null || parent.canCollapseUnannotatedChildNames())
+              || ((parent == null || parent.canCollapseUnannotatedChildNames())
                   && (globalSets > 0 || localSets > 0)
                   && localSetsWithNoCollapse == 0
-                  && deleteProps == 0);
+                  && deleteProps == 0));
     }
 
     boolean isGetOrSetDefinition() {
