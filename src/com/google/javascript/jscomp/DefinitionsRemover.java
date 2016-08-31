@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.Set;
 
 /**
@@ -155,6 +154,10 @@ class DefinitionsRemover {
      */
     public boolean isExtern() {
       return isExtern;
+    }
+
+    public String toString() {
+      return getLValue().getQualifiedName() + " = " + getRValue().toString();
     }
   }
 

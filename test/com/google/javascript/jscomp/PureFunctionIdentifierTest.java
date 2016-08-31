@@ -23,7 +23,6 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -668,6 +667,37 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
                      ImmutableList.of("f.call"));
   }
 
+  public void testApplyToUnknownDefinition() throws Exception {
+    checkMarkedCalls(
+        "var dict = {'func': function() {}};"
+            + "function f() { var s = dict['func'];}"
+            + "f.apply()",
+        ImmutableList.of("f.apply"));
+
+    // Not marked becuase the definition cannot be found so unknown side effects.
+    checkMarkedCalls(
+        "var dict = {'func': function() {}};"
+            + "function f() { var s = dict['func'].apply();}"
+            + "f.apply()",
+        ImmutableList.<String>of());
+
+    // Not marked becuase the definition cannot be found so unknown side effects.
+    checkMarkedCalls(
+        "var pure = function() {};"
+            + "var dict = {'func': function() {}};"
+            + "function f() { var s = (dict['func'] || pure)();}"
+            + "f()",
+        ImmutableList.<String>of());
+
+    // Not marked becuase the definition cannot be found so unknown side effects.
+    checkMarkedCalls(
+        "var pure = function() {};"
+            + "var dict = {'func': function() {}};"
+            + "function f() { var s = (condition ? dict['func'] : pure)();}"
+            + "f()",
+        ImmutableList.<String>of());
+  }
+
   public void testInference1() throws Exception {
     checkMarkedCalls("function f() {return g()}" +
                      "function g() {return 42}" +
@@ -1036,6 +1066,51 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     checkMarkedCalls(source, ImmutableList.of("goog.inherits", "I", "A"));
   }
 
+  public void testAmbiguousDefinitions() throws Exception {
+    String s =
+        "var globalVar = 1;"
+            + "A.f = function() {globalVar = 2;};"
+            + "A.f = function() {};"
+            + "function sideEffectCaller() { A.f() };"
+            + "sideEffectCaller();";
+    // Can't tell which f is being called so it assumes both.
+    checkMarkedCalls(s, ImmutableList.<String>of());
+  }
+
+  public void testAmbiguousDefinitionsCall() throws Exception {
+    String s =
+        "var globalVar = 1;"
+            + "A.f = function() {globalVar = 2;};"
+            + "A.f = function() {};"
+            + "function sideEffectCaller() { A.f.call(null); };"
+            + "sideEffectCaller();";
+    // Can't tell which f is being called so it assumes both.
+    checkMarkedCalls(s, ImmutableList.<String>of());
+  }
+
+  public void testAmbiguousDefinitionsAllPropagationTypes() throws Exception {
+    String s =
+        "var globalVar = 1;"
+            + "/**@constructor*/A.f = function() { this.x = 5; };"
+            + "/**@constructor*/B.f = function() {};"
+            + "function sideEffectCaller() { new C.f() };"
+            + "sideEffectCaller();";
+    // Can't tell which f is being called so it assumes both.
+    checkMarkedCalls(s, ImmutableList.<String>of("C.f", "sideEffectCaller"));
+  }
+
+  public void testAmbiguousDefinitionsCallWithThis() throws Exception {
+    String s =
+        "var globalVar = 1;"
+            + "A.modifiesThis = function() { this.x = 5; };"
+            + "/**@constructor*/function Constructor() { Constructor.modifiesThis.call(this); };"
+            + "Constructor.prototype.modifiesThis = function() {};"
+            + "new Constructor();"
+            + "A.modifiesThis();";
+    // Can't tell which modifiesThis is being called so it assumes both.
+    checkMarkedCalls(s, ImmutableList.<String>of("Constructor"));
+  }
+
   public void testCallBeforeDefinition() throws Exception {
     checkMarkedCalls("f(); function f(){}",
                      ImmutableList.of("f"));
@@ -1199,7 +1274,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     checkMarkedCalls(source, ImmutableList.of("(f : (g || h))", "i"));
   }
 
-  public void testCallFunctionFOrGWithSideEffects() throws Exception {
+  public void testCallFunctionForGWithSideEffects() throws Exception {
     String source = "var x = 0;\n" +
         "function f(){x = 10}\n" +
         "function g(){}\n" +
