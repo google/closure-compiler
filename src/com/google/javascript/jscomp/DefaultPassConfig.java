@@ -802,7 +802,7 @@ public final class DefaultPassConfig extends PassConfig {
       // that can be removed, rerun the peephole optimizations to clean them
       // up.
       if (options.foldConstants) {
-        passes.add(peepholeOptimizations);
+        passes.add(peepholeOptimizationsOnce);
       }
     }
 
@@ -1489,18 +1489,33 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /** Various peephole optimizations. */
+  private static CompilerPass createPeepholeOptimizationsPass(AbstractCompiler compiler) {
+    final boolean late = false;
+    final boolean useTypesForOptimization =  compiler.getOptions().useTypesForOptimization;
+    return new PeepholeOptimizationsPass(compiler,
+          new PeepholeMinimizeConditions(late, useTypesForOptimization),
+          new PeepholeSubstituteAlternateSyntax(late),
+          new PeepholeReplaceKnownMethods(late),
+          new PeepholeRemoveDeadCode(),
+          new PeepholeFoldConstants(late, useTypesForOptimization),
+          new PeepholeCollectPropertyAssignments());
+  };
+
+  /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizations =
-      new PassFactory("peepholeOptimizations", false) {
+      new PassFactory("peepholeOptimizations", false /* oneTimePass */) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      final boolean late = false;
-      return new PeepholeOptimizationsPass(compiler,
-            new PeepholeMinimizeConditions(late, options.useTypesForOptimization),
-            new PeepholeSubstituteAlternateSyntax(late),
-            new PeepholeReplaceKnownMethods(late),
-            new PeepholeRemoveDeadCode(),
-            new PeepholeFoldConstants(late, options.useTypesForOptimization),
-            new PeepholeCollectPropertyAssignments());
+      return createPeepholeOptimizationsPass(compiler);
+    }
+  };
+
+  /** Various peephole optimizations. */
+  private final PassFactory peepholeOptimizationsOnce =
+      new PassFactory("peepholeOptimizations", true /* oneTimePass */) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return createPeepholeOptimizationsPass(compiler);
     }
   };
 
