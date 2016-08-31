@@ -341,6 +341,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private int unknownCount = 0;
   private boolean inExterns;
 
+  private boolean shouldExpectAbstractMethodsImplemented = true;
+
   private static final class SuggestionPair {
     private final String suggestion;
     final int distance;
@@ -457,6 +459,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       String filename = n.getSourceFileName();
       if (filename != null && filename.endsWith(".java.js")) {
         this.subtypingMode = SubtypingMode.IGNORE_NULL_UNDEFINED;
+        // TODO(moz): Remove the bypass for J2CL once b/30481839 is fixed
+        this.shouldExpectAbstractMethodsImplemented = false;
       } else {
         this.subtypingMode = SubtypingMode.NORMAL;
       }
@@ -1721,6 +1725,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         // check properties
         validator.expectAllInterfaceProperties(t, n, functionType);
+        if (!functionType.isAbstract() && shouldExpectAbstractMethodsImplemented) {
+          validator.expectAbstractMethodsImplemented(n, functionType);
+        }
       }
     } else if (functionType.isInterface()) {
       // Interface must extend only interfaces

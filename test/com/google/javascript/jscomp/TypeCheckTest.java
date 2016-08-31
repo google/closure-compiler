@@ -1270,6 +1270,25 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @override */ B.prototype.foo = function() {};"));
   }
 
+  public void testConcreteMethodInAbstractClass1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};"));
+  }
+
+  public void testConcreteMethodInAbstractClass2() throws Exception {
+    // Currently goog.abstractMethod are not considered abstract, so no warning is given when a
+    // concrete subclass fails to implement it.
+    testTypes(
+        LINE_JOINER.join(
+            CLOSURE_DEFS,
+            "/** @abstract @constructor */ var A = function() {};",
+            "A.prototype.foo = goog.abstractMethod;",
+            "/** @constructor @extends {A} */ var B = function() {};"));
+  }
+
   public void testAbstractMethodInInterface() throws Exception {
     // TODO(moz): There's no need to tag methods with @abstract in interfaces, maybe give a warning
     // on this.
@@ -1277,6 +1296,92 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "/** @interface */ var I = function() {};",
             "/** @abstract */ I.prototype.foo = function() {};"));
+  }
+
+  public void testAbstractMethodNotImplemented1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};"),
+        "property foo on abstract class A is not implemented by type B");
+  }
+
+  public void testAbstractMethodNotImplemented2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @abstract */ A.prototype.bar = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() {};"),
+        "property bar on abstract class A is not implemented by type B");
+  }
+
+  public void testAbstractMethodNotImplemented3() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @abstract @constructor @extends {A} */ var B = function() {};",
+            "/** @abstract @override */ B.prototype.foo = function() {};",
+            "/** @constructor @extends {B} */ var C = function() {};"),
+        "property foo on abstract class B is not implemented by type C");
+  }
+
+  public void testAbstractMethodNotImplemented4() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @abstract @constructor @extends {A} */ var B = function() {};",
+            "/** @constructor @extends {B} */ var C = function() {};"),
+        "property foo on abstract class A is not implemented by type C");
+  }
+
+  public void testAbstractMethodNotImplemented5() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @interface */ var I = function() {};",
+            "I.prototype.foo = function() {};",
+            "/** @abstract @constructor @implements {I} */ var A = function() {};",
+            "/** @abstract @override */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};"),
+        "property foo on abstract class A is not implemented by type B");
+  }
+
+  public void testAbstractMethodNotImplemented6() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override @type {number} */ B.prototype.foo;"),
+        "property foo on abstract class A is not implemented by type B");
+  }
+
+  public void testAbstractMethodImplemented1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @abstract */ A.prototype.bar = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() {};",
+            "/** @override */ B.prototype.bar = function() {};",
+            "/** @constructor @extends {B} */ var C = function() {};"));
+  }
+
+  public void testAbstractMethodImplemented2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract @constructor */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @abstract */ A.prototype.bar = function() {};",
+            "/** @abstract @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() {};",
+            "/** @constructor @extends {B} */ var C = function() {};",
+            "/** @override */ C.prototype.bar = function() {};"));
   }
 
   public void testPropertyUsedBeforeDefinition1() throws Exception {
@@ -8235,6 +8340,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @constructor @abstract */ function A() {};",
             "/** @abstract */ A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ function B() {};",
+            "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "abstractMethod.call(new B);"),
         "Abstract method A.prototype.foo cannot be called");
@@ -8265,6 +8371,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @constructor @abstract */ function A() {};",
             "/** @abstract */ A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ function B() {};",
+            "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "(0, abstractMethod).call(new B);"),
         "Abstract method A.prototype.foo cannot be called");
@@ -8276,6 +8383,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @constructor @abstract */ function A() {};",
             "/** @abstract */ A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ function B() {};",
+            "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "(abstractMethod = abstractMethod).call(new B);"),
         "Abstract method A.prototype.foo cannot be called");

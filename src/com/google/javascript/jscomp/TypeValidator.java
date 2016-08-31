@@ -42,13 +42,13 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.UnknownType;
-
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 /**
@@ -128,6 +128,11 @@ class TypeValidator {
         "of the property it overrides from interface {1}\n" +
         "original: {2}\n" +
         "override: {3}");
+
+  static final DiagnosticType ABSTRACT_METHOD_NOT_IMPLEMENTED =
+      DiagnosticType.warning(
+          "JSC_ABSTRACT_METHOD_NOT_IMPLEMENTED",
+          "property {0} on abstract class {1} is not implemented by type {2}");
 
   static final DiagnosticType UNKNOWN_TYPEOF_VALUE =
       DiagnosticType.warning("JSC_UNKNOWN_TYPEOF_VALUE", "unknown type: {0}");
@@ -700,10 +705,56 @@ class TypeValidator {
   }
 
   /**
-   * Report a type mismatch
+   * For a concrete class, expect that all abstract methods that haven't been implemented by any of
+   * the super classes on the inheritance chain are implemented.
    */
-  private void mismatch(NodeTraversal t, Node n,
-                        String msg, JSType found, JSType required) {
+  void expectAbstractMethodsImplemented(Node n, FunctionType ctorType) {
+    Preconditions.checkArgument(ctorType.isConstructor());
+
+    Map<String, ObjectType> abstractMethodSuperTypeMap = new LinkedHashMap<>();
+    FunctionType currSuperCtor = ctorType.getSuperClassConstructor();
+    if (currSuperCtor == null || !currSuperCtor.isAbstract()) {
+      return;
+    }
+
+    while (currSuperCtor != null && currSuperCtor.isAbstract()) {
+      ObjectType superType = currSuperCtor.getInstanceType();
+      for (String prop :
+          currSuperCtor.getInstanceType().getImplicitPrototype().getOwnPropertyNames()) {
+        FunctionType maybeAbstractMethod = superType.findPropertyType(prop).toMaybeFunctionType();
+        if (maybeAbstractMethod != null
+            && maybeAbstractMethod.isAbstract()
+            && !abstractMethodSuperTypeMap.containsKey(prop)) {
+          abstractMethodSuperTypeMap.put(prop, superType);
+        }
+      }
+      currSuperCtor = currSuperCtor.getSuperClassConstructor();
+    }
+
+    ObjectType instance = ctorType.getInstanceType();
+    for (Map.Entry<String, ObjectType> entry : abstractMethodSuperTypeMap.entrySet()) {
+      String method = entry.getKey();
+      ObjectType superType = entry.getValue();
+      FunctionType abstractMethod = instance.findPropertyType(method).toMaybeFunctionType();
+      if (abstractMethod == null || abstractMethod.isAbstract()) {
+        String sourceName = n.getSourceFileName();
+        sourceName = nullToEmpty(sourceName);
+        registerMismatch(
+            instance,
+            superType,
+            report(
+                JSError.make(
+                    n,
+                    ABSTRACT_METHOD_NOT_IMPLEMENTED,
+                    method,
+                    superType.toString(),
+                    instance.toString())));
+      }
+    }
+  }
+
+  /** Report a type mismatch */
+  private void mismatch(NodeTraversal t, Node n, String msg, JSType found, JSType required) {
     mismatch(n, msg, found, required);
   }
 
