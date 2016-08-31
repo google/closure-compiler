@@ -747,6 +747,70 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  public void testLoopClosureWithNestedInnerFunctions() {
+    test(LINE_JOINER.join(
+        "for (let i = 0; i < 10; i++) {",
+        "  later(function(ctr) {",
+        "    (function() { return use(i); })();",
+        "  });",
+        "}"),
+        LINE_JOINER.join(
+        "var $jscomp$loop$0 = {};",
+        "$jscomp$loop$0.i = 0;",
+        "for (; $jscomp$loop$0.i < 10;",
+        "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
+        "  later((function($jscomp$loop$0) {",
+        "    return function(ctr) {",
+        "      (function() { return use($jscomp$loop$0.i); })();",
+        "    };",
+        "  })($jscomp$loop$0));",
+        "}"));
+
+    test(LINE_JOINER.join(
+        "for (let i = 0; i < 10; i++) {",
+        "  var f = function() {",
+        "    return function() {",
+        "      return i;",
+        "    };",
+        "  };",
+        "}"),
+        LINE_JOINER.join(
+        "var $jscomp$loop$0 = {};",
+        "$jscomp$loop$0.i = 0;",
+        "for (; $jscomp$loop$0.i < 10;",
+        "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
+        "  var f = function($jscomp$loop$0) {",
+        "    return function() {",
+        "      return function() {",
+        "        return $jscomp$loop$0.i;",
+        "      };",
+        "    };",
+        "  }($jscomp$loop$0);",
+        "}"));
+
+    test(LINE_JOINER.join(
+        "use(function() {",
+        "  later(function(ctr) {",
+        "    for (let i = 0; i < 10; i++) {",
+        "      (function() { return use(i); })();",
+        "    }",
+        "  });",
+        "});"),
+        LINE_JOINER.join(
+        "use(function() {",
+        "  later(function(ctr) {",
+        "    var $jscomp$loop$0 = {};",
+        "    $jscomp$loop$0.i = 0;",
+        "    for (; $jscomp$loop$0.i < 10;",
+        "        $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
+        "        (function($jscomp$loop$0) {",
+        "          return function() { return use($jscomp$loop$0.i); }",
+        "        })($jscomp$loop$0)();",
+        "    }",
+        "  });",
+        "});"));
+  }
+
   public void testNestedLoop() {
     test(
         LINE_JOINER.join(

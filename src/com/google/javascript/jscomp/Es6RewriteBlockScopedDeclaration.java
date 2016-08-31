@@ -286,25 +286,30 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
       // Traverse scopes from reference scope to declaration scope.
       // If we hit a function - loop closure detected.
-      for (Scope s = referencedIn; s != declaredIn; s = s.getParent()) {
-        if (s.isFunctionBlockScope()) {
-          Node function = s.getRootNode().getParent();
-          if (functionHandledMap.containsEntry(function, name)) {
-            return;
-          }
-          functionHandledMap.put(function, name);
+      Scope outerMostFunctionScope = null;
+      for (Scope s = referencedIn; s != declaredIn && s.getRootNode() != loopNode;
+          s = s.getParent()) {
+        if (s.isFunctionScope()) {
+          outerMostFunctionScope = s;
+        }
+      }
 
-          if (!loopObjectMap.containsKey(loopNode)) {
-            loopObjectMap.put(loopNode,
-                new LoopObject(
-                    LOOP_OBJECT_NAME + "$" + compiler.getUniqueNameIdSupplier().get()));
-          }
-          LoopObject object = loopObjectMap.get(loopNode);
-          object.vars.add(var);
-
-          functionLoopObjectsMap.put(function,  object);
+      if (outerMostFunctionScope != null) {
+        Node function = outerMostFunctionScope.getRootNode();
+        if (functionHandledMap.containsEntry(function, name)) {
           return;
         }
+        functionHandledMap.put(function, name);
+
+        if (!loopObjectMap.containsKey(loopNode)) {
+          loopObjectMap.put(loopNode,
+              new LoopObject(
+                  LOOP_OBJECT_NAME + "$" + compiler.getUniqueNameIdSupplier().get()));
+        }
+        LoopObject object = loopObjectMap.get(loopNode);
+        object.vars.add(var);
+
+        functionLoopObjectsMap.put(function,  object);
       }
     }
 
