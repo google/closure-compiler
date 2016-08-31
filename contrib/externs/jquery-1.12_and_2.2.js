@@ -184,14 +184,9 @@ jQueryAjaxTransport.send = function(headers, completeCallback) {};
 function jQuery(arg1, arg2) {};
 
 /**
- * @constructor
- * @param {(jQuerySelector|Object|jQuery|string|function())=} arg1
- * @param {(Element|jQuery|Document|
- *     Object<string, (string|function(!jQuery.Event))>)=} arg2
- * @return {!jQuery}
- * @extends {jQuery}
+ * @const
  */
-function $(arg1, arg2) {};
+var $ = jQuery;
 
 /**
  * @param {(jQuerySelector|Array<Element>|string|jQuery)} arg1
