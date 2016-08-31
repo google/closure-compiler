@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
@@ -638,8 +639,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       previous = cur;
     }
     Node iter = cur;
-    if (cur.getChildCount() == 4) {
-      iter = cur.getSecondChild().getNext();
+    if (NodeUtil.isVanillaFor(cur)) {
+      // the increment expression happens after the continue
+      iter = cur.getChildAtIndex(2);
     }
 
     if (lastJump == node) {
@@ -747,9 +749,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         } else {
           return computeFollowNode(fromNode, parent, cfa);
         }
-      case FOR:
       case FOR_OF:
-        if (parent.isForOf() || NodeUtil.isForIn(parent)) {
+        return parent;
+      case FOR:
+        if (NodeUtil.isForIn(parent)) {
           return parent;
         } else {
           return parent.getSecondChild().getNext();
