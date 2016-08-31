@@ -193,7 +193,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return;
     }
 
-    if (NodeUtil.getFunctionBody(functionNode).hasChildren()) {
+    if (!info.isConstructor() && NodeUtil.getFunctionBody(functionNode).hasChildren()) {
       // @abstract annotation on a function with a non-empty body
       report(n, MISPLACED_ANNOTATION, "@abstract",
           "function with a non-empty body cannot be abstract");
