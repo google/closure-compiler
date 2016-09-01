@@ -275,7 +275,7 @@ class PureFunctionIdentifier implements CompilerPass {
           //  * One or more definitions are not functions.
           //  * One or more definitions are complex.
           //    (e.i. return value of a call that returns a function).
-          functionInfo.setTaintsUnknown();
+          functionInfo.setTaintsGlobalState();
           break;
         }
 
@@ -548,7 +548,7 @@ class PureFunctionIdentifier implements CompilerPass {
           if (sideEffectInfo.taintedLocals().contains(v)) {
             // If the function has global side-effects
             // don't bother with the local side-effects.
-            sideEffectInfo.setTaintsUnknown();
+            sideEffectInfo.setTaintsGlobalState();
             sideEffectInfo.resetLocalVars();
             break;
           }
@@ -614,7 +614,7 @@ class PureFunctionIdentifier implements CompilerPass {
             var = scope.getVar(objectNode.getString());
           }
           if (varDeclaredInDifferentFunction(var, scope)) {
-            sideEffectInfo.setTaintsUnknown();
+            sideEffectInfo.setTaintsGlobalState();
           } else {
             // Maybe a local object modification.  We won't know for sure until
             // we exit the scope and can validate the value of the local.
@@ -630,7 +630,7 @@ class PureFunctionIdentifier implements CompilerPass {
         // throw new IllegalStateException(
         //     "Unexpected LHS expression:" + lhs.toStringTree()
         //    + ", parent: " + op.toStringTree() );
-        sideEffectInfo.setTaintsUnknown();
+        sideEffectInfo.setTaintsGlobalState();
       }
     }
 
@@ -864,7 +864,6 @@ class PureFunctionIdentifier implements CompilerPass {
     private static final int TAINTS_GLOBAL_STATE_MASK = 1 << 3;
     private static final int TAINTS_THIS_MASK = 1 << 4;
     private static final int TAINTS_ARGUMENTS_MASK = 1 << 5;
-    private static final int TAINTS_UNKNOWN_MASK = 1 << 6;
     private static final int TAINTS_RETURN_MASK = 1 << 7;
 
     private void setMask(int mask, boolean value) {
@@ -893,10 +892,6 @@ class PureFunctionIdentifier implements CompilerPass {
 
     private boolean taintsThis() {
       return getMask(TAINTS_THIS_MASK);
-    }
-
-    private boolean taintsUnknown() {
-      return getMask(TAINTS_UNKNOWN_MASK);
     }
 
     private boolean taintsReturn() {
@@ -962,8 +957,7 @@ class PureFunctionIdentifier implements CompilerPass {
           FUNCTION_THROWS_MASK
               | TAINTS_GLOBAL_STATE_MASK
               | TAINTS_THIS_MASK
-              | TAINTS_ARGUMENTS_MASK
-              | TAINTS_UNKNOWN_MASK);
+              | TAINTS_ARGUMENTS_MASK);
     }
 
     /**
@@ -1014,15 +1008,6 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /**
-     * Marks the function as having "complex" side effects that are
-     * not otherwise explicitly tracked.
-     */
-    void setTaintsUnknown() {
-      setMask(TAINTS_UNKNOWN_MASK, true);
-      checkInvariant();
-    }
-
-    /**
      * Marks the function as having non-local return result.
      */
     void setTaintsReturn() {
@@ -1035,7 +1020,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Returns true if function mutates global state.
      */
     boolean mutatesGlobalState() {
-      return getMask(TAINTS_GLOBAL_STATE_MASK | TAINTS_UNKNOWN_MASK);
+      return getMask(TAINTS_GLOBAL_STATE_MASK);
     }
 
 
@@ -1043,7 +1028,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Returns true if function mutates its arguments.
      */
     boolean mutatesArguments() {
-      return getMask(TAINTS_GLOBAL_STATE_MASK | TAINTS_ARGUMENTS_MASK | TAINTS_UNKNOWN_MASK);
+      return getMask(TAINTS_GLOBAL_STATE_MASK | TAINTS_ARGUMENTS_MASK);
     }
 
     /**
@@ -1105,10 +1090,6 @@ class PureFunctionIdentifier implements CompilerPass {
 
       if (functionThrows()) {
         status.add("throw");
-      }
-
-      if (taintsUnknown()) {
-        status.add("complex");
       }
 
       return "Side effects: " + status;
