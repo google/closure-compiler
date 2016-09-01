@@ -114,13 +114,19 @@ public final class Config {
    */
   final LanguageMode languageMode;
 
+  /**
+   * Parse inline source maps (//# sourceMappingURL=data:...).
+   */
+  final boolean parseInlineSourceMaps;
+
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames, LanguageMode languageMode) {
     this(
         annotationWhitelist,
         JsDocParsing.TYPES_ONLY,
         RunMode.STOP_AFTER_ERROR,
         suppressionNames,
-        languageMode);
+        languageMode,
+        false);
   }
 
   Config(
@@ -128,7 +134,9 @@ public final class Config {
       JsDocParsing parseJsDocDocumentation,
       RunMode keepGoing,
       Set<String> suppressionNames,
-      LanguageMode languageMode) {
+      LanguageMode languageMode,
+      boolean parseInlineSourceMaps) {
+    this.parseInlineSourceMaps = parseInlineSourceMaps;
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = parseJsDocDocumentation;
     this.keepGoing = keepGoing;

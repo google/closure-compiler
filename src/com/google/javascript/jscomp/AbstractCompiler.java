@@ -470,6 +470,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract Set<String> getExternProperties();
 
+  /**
+   * Adds a {@link SourceMapInput} for the given {@code sourceFileName}, to be used for error
+   * reporting and source map combining.
+   */
+  public abstract void addInputSourceMap(String name, SourceMapInput sourceMap);
+
   abstract void addComments(String filename, List<Comment> comments);
 
   /**

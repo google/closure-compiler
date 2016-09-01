@@ -382,6 +382,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
     options.sourceMapFormat = config.sourceMapFormat;
     options.sourceMapLocationMappings = config.sourceMapLocationMappings;
+    options.parseInlineSourceMaps = config.parseInlineSourceMaps;
     options.applyInputSourceMaps = config.applyInputSourceMaps;
 
     ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps
@@ -2064,6 +2065,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    private boolean parseInlineSourceMaps = false;
+
+    public CommandLineConfig setParseInlineSourceMaps(
+        boolean parseInlineSourceMaps) {
+      this.parseInlineSourceMaps = parseInlineSourceMaps;
+      return this;
+    }
+    
     private String variableMapInputFile = "";
 
     /**

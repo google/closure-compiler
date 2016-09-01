@@ -217,7 +217,8 @@ public class JsfileParser implements EntryPoint {
             Config.LanguageMode.ECMASCRIPT6,
             Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
             Config.RunMode.KEEP_GOING,
-            /* extraAnnotationNames */ ImmutableSet.<String>of());
+            /* extraAnnotationNames */ ImmutableSet.<String>of(),
+            /* parseInlineSourceMaps */ true);
 
     SourceFile source = SourceFile.fromCode(filename, code);
     FileInfo info = new FileInfo(errorReporter);
