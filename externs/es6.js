@@ -306,6 +306,14 @@ ArrayBuffer.prototype.byteLength;
  */
 ArrayBuffer.prototype.slice = function(begin, opt_end) {};
 
+/**
+ * @param {*} arg
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/isView
+ */
+ArrayBuffer.isView = function(arg) {};
+
 
 /**
  * @constructor
