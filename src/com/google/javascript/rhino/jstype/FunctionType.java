@@ -1145,7 +1145,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   @Override
   public ObjectType getInstanceType() {
-    Preconditions.checkState(hasInstanceType());
+    Preconditions.checkState(hasInstanceType(), "Expected a constructor; got %s", this);
     return typeOfThis.toObjectType();
   }
 
