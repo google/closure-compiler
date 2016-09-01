@@ -1322,14 +1322,46 @@ class GlobalNamespace
     // Note: we are more aggressive about collapsing @enum and @constructor
     // declarations than implied here, see Name#canCollapse
     enum Type {
+      /** Set in the global scope: a.b.c = 0; */
       SET_FROM_GLOBAL,
+
+      /** Set in a local scope: function f() { a.b.c = 0; } */
       SET_FROM_LOCAL,
+
+      /** Get a name's prototype: a.b.c.prototype */
       PROTOTYPE_GET,
-      ALIASING_GET,     // Prevents a name's properties from being collapsed
-      DIRECT_GET,       // Prevents a name from being completely eliminated
-      CALL_GET,         // Prevents a name from being collapsed if never set
-      DELETE_PROP,      // Prevents a name from being collapsed at all.
+
+      /**
+       * Includes all uses that prevent a name's properties from being collapsed:
+       *   var x = a.b.c
+       *   f(a.b.c)
+       *   new Foo(a.b.c)
+       */
+      ALIASING_GET,
+
+      /**
+       * Includes all uses that prevent a name from being completely eliminated:
+       *   goog.inherits(anotherName, a.b.c)
+       *   new a.b.c()
+       *   x instanceof a.b.c
+       *   void a.b.c
+       *   if (a.b.c) {}
+       */
+      DIRECT_GET,
+
+      /**
+       * Calling a name: a.b.c();
+       * Prevents a name from being collapsed if never set.
+       */
+      CALL_GET,
+
+      /**
+       * Deletion of a property: delete a.b.c;
+       * Prevents a name from being collapsed at all.
+       */
+      DELETE_PROP,
     }
+
 
     Node node;
     final JSModule module;
