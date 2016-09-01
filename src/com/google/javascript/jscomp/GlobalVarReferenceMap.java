@@ -218,7 +218,7 @@ class GlobalVarReferenceMap implements ReferenceMap {
   public void updateReferencesWithGlobalScope(Scope globalScope) {
     for (ReferenceCollection collection : refMap.values()) {
       List<Reference> newRefs = new ArrayList<>(collection.references.size());
-      for (Reference ref : collection.references) {
+      for (Reference ref : collection) {
         if (ref.getScope() != globalScope) {
           newRefs.add(ref.cloneWithNewScope(globalScope));
         } else {
