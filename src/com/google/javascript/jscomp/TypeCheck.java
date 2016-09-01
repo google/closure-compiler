@@ -463,6 +463,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         this.shouldExpectAbstractMethodsImplemented = false;
       } else {
         this.subtypingMode = SubtypingMode.NORMAL;
+        this.shouldExpectAbstractMethodsImplemented = true;
       }
       this.validator.setSubtypingMode(this.subtypingMode);
     }
