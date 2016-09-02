@@ -273,7 +273,7 @@ public final class TemplateAstMatcher {
     Preconditions.checkState(index >= 0);
     Preconditions.checkNotNull(type);
     Node n = Node.newNumber(index);
-    n.setType(TEMPLATE_TYPE_PARAM);
+    n.setToken(TEMPLATE_TYPE_PARAM);
     n.setTypeI(type);
     return n;
   }
@@ -285,7 +285,7 @@ public final class TemplateAstMatcher {
   private Node createTemplateLocalNameNode(int index) {
     Preconditions.checkState(index >= 0);
     Node n = Node.newNumber(index);
-    n.setType(TEMPLATE_LOCAL_NAME);
+    n.setToken(TEMPLATE_LOCAL_NAME);
     return n;
   }
 

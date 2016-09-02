@@ -44,10 +44,12 @@ final class PolymerPassStaticUtils {
             new NodeUtil.Visitor() {
               @Override
               public void visit(Node n) {
-                if (n.isString() && n.getString().equals("$") && n.getParent().isGetProp()
+                if (n.isString()
+                    && n.getString().equals("$")
+                    && n.getParent().isGetProp()
                     && n.getGrandparent().isGetProp()) {
                   Node dollarChildProp = n.getGrandparent();
-                  dollarChildProp.setType(Token.GETELEM);
+                  dollarChildProp.setToken(Token.GETELEM);
                   compiler.reportCodeChange();
                 }
               }

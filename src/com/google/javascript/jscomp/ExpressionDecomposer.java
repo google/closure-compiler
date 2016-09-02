@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.Set;
 
 /**
@@ -477,7 +476,7 @@ class ExpressionDecomposer {
 
       Node rightOperand = parent.getLastChild();
 
-      parent.setType(Token.ASSIGN);
+      parent.setToken(Token.ASSIGN);
       parent.replaceChild(rightOperand, opNode);
       opNode.addChildToFront(replacementValueNode);
       opNode.addChildToBack(rightOperand);

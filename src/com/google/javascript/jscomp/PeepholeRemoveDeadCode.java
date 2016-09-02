@@ -23,7 +23,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
 import javax.annotation.Nullable;
 
 /**
@@ -188,10 +187,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         //    x() ? 1 : 1 --> x()
         //    x ? 1 : 1 --> null
         if (trueNode == null && falseNode != null) {
-          n.setType(Token.OR);
+          n.setToken(Token.OR);
           Preconditions.checkState(n.getChildCount() == 2, n);
         } else if (trueNode != null && falseNode == null) {
-          n.setType(Token.AND);
+          n.setToken(Token.AND);
           Preconditions.checkState(n.getChildCount() == 2, n);
         } else if (trueNode == null && falseNode == null) {
           result = trySimplifyUnusedResult(n.getFirstChild());

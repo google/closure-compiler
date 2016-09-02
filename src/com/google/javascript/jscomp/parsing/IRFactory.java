@@ -152,7 +152,6 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -614,7 +613,7 @@ class IRFactory {
     Node irNode = transform(node);
     if (!irNode.isBlock()) {
       if (irNode.isEmpty()) {
-        irNode.setType(Token.BLOCK);
+        irNode.setToken(Token.BLOCK);
       } else {
         Node newBlock = newNode(Token.BLOCK, irNode);
         setSourceInfo(newBlock, irNode);
@@ -1640,7 +1639,7 @@ class IRFactory {
 
     Node processGetAccessor(GetAccessorTree tree) {
       Node key = processObjectLitKeyAsString(tree.propertyName);
-      key.setType(Token.GETTER_DEF);
+      key.setToken(Token.GETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = IR.name("");
       setSourceInfo(dummyName, tree.body);
@@ -1656,7 +1655,7 @@ class IRFactory {
 
     Node processSetAccessor(SetAccessorTree tree) {
       Node key = processObjectLitKeyAsString(tree.propertyName);
-      key.setType(Token.SETTER_DEF);
+      key.setToken(Token.SETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = IR.name("");
       setSourceInfo(dummyName, tree.propertyName);
@@ -1676,7 +1675,7 @@ class IRFactory {
       // so that it's clear we don't support annotations like
       //   function f({x: /** string */ y}) {}
       Node key = processObjectLitKeyAsString(tree.name);
-      key.setType(Token.STRING_KEY);
+      key.setToken(Token.STRING_KEY);
       if (tree.value != null) {
         key.addChildToFront(transform(tree.value));
       }
@@ -2217,11 +2216,11 @@ class IRFactory {
 
     Node processExportSpec(ExportSpecifierTree tree) {
       Node importedName = processName(tree.importedName, true);
-      importedName.setType(Token.NAME);
+      importedName.setToken(Token.NAME);
       Node exportSpec = newNode(Token.EXPORT_SPEC, importedName);
       if (tree.destinationName != null) {
         Node destinationName = processName(tree.destinationName, true);
-        destinationName.setType(Token.NAME);
+        destinationName.setToken(Token.NAME);
         exportSpec.addChildToBack(destinationName);
       }
       return exportSpec;
@@ -2242,7 +2241,7 @@ class IRFactory {
 
     Node processImportSpec(ImportSpecifierTree tree) {
       Node importedName = processName(tree.importedName, true);
-      importedName.setType(Token.NAME);
+      importedName.setToken(Token.NAME);
       Node importSpec = newNode(Token.IMPORT_SPEC, importedName);
       if (tree.destinationName != null) {
         importSpec.addChildToBack(processName(tree.destinationName));

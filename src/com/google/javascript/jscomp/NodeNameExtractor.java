@@ -44,7 +44,7 @@ class NodeNameExtractor {
    * looking like "a$b$$c" if this.delimiter = '$'.)
    */
   String getName(Node node) {
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case CLASS:
       case FUNCTION:
         return NodeUtil.getName(node);

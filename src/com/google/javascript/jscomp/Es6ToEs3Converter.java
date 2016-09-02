@@ -537,7 +537,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           propdef.addChildToBack(name);
         }
         Node val = propdef.removeFirstChild();
-        propdef.setType(Token.STRING);
+        propdef.setToken(Token.STRING);
         Token type = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
         Node access = new Node(type, IR.name(objName), propdef);
         result = IR.comma(IR.assign(access, val), result);

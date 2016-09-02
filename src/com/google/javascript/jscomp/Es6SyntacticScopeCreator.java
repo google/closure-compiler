@@ -134,7 +134,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
    * @param firstScan Whether it is the first time a scan is performed from the current scope
    */
   private void scanVars(Node n, boolean scanInnerBlockScopes, boolean firstScan) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case VAR:
         declareLHS(scope.getClosestHoistScope(), n);
         return;

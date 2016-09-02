@@ -103,7 +103,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
           keyNode = IR.string(NodeUtil.getStringValue(keyNode))
               .srcref(keyNode);
         }
-        keyNode.setType(Token.STRING_KEY);
+        keyNode.setToken(Token.STRING_KEY);
         keyNode.setQuotedString();
         objNode.addChildToBack(IR.propdef(keyNode, valueNode));
       }
@@ -171,7 +171,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
           keyNode = IR.string(NodeUtil.getStringValue(keyNode))
               .srcref(keyNode);
         }
-        keyNode.setType(Token.STRING_KEY);
+        keyNode.setToken(Token.STRING_KEY);
         keyNode.setQuotedString();
         objNode.addChildToBack(IR.propdef(keyNode, valueNode));
       }

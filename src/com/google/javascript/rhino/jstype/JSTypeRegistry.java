@@ -1442,8 +1442,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * Creates a constructor function type.
    *
    * @param name the function's name or {@code null} to indicate that the function is anonymous.
-   * @param source the node defining this function. Its type ({@link Node#getType()}) must be {@link
-   *     Token#FUNCTION}.
+   * @param source the node defining this function. Its type ({@link Node#getToken()} ()}) must be
+   *     {@link Token#FUNCTION}.
    * @param parameters the function's parameters or {@code null} to indicate that the parameter
    *     types are unknown.
    * @param returnType the function's return type or {@code null} to indicate that the return type
@@ -1473,13 +1473,14 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
   /**
    * Creates an interface function type.
+   *
    * @param name the function's name
-   * @param source the node defining this function. Its type
-   *     ({@link Node#getType()}) must be {@link Token#FUNCTION}.
+   * @param source the node defining this function. Its type ({@link Node#getToken()}) must be
+   *     {@link Token#FUNCTION}.
    * @param templateKeys the templatized types for the interface.
    */
-  public FunctionType createInterfaceType(String name, Node source,
-      ImmutableList<TemplateType> templateKeys, boolean struct) {
+  public FunctionType createInterfaceType(
+      String name, Node source, ImmutableList<TemplateType> templateKeys, boolean struct) {
     FunctionType fn = FunctionType.forInterface(this, name, source,
         createTemplateTypeMap(templateKeys, null));
     if (struct) {

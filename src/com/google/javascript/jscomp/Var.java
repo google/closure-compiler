@@ -24,7 +24,6 @@ import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
-
 import java.util.Set;
 
 /**
@@ -218,8 +217,8 @@ public class Var implements StaticSlot, StaticRef {
         Token.PARAM_LIST);
     for (Node current = nameNode; current != null;
          current = current.getParent()) {
-      if (types.contains(current.getType())) {
-        return current.getType();
+      if (types.contains(current.getToken())) {
+        return current.getToken();
       }
     }
     throw new IllegalStateException("The nameNode for " + this + " must be a descendant"

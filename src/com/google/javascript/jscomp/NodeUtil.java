@@ -37,7 +37,6 @@ import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,7 +45,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -89,7 +87,7 @@ public final class NodeUtil {
    * for expressions with side-effects.
    */
   static TernaryValue getImpureBooleanValue(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case ASSIGN:
       case COMMA:
         // For ASSIGN and COMMA the value is the value of the RHS.
@@ -138,7 +136,7 @@ public final class NodeUtil {
    * getImpureBooleanValue if you don't care about side-effects.
    */
   static TernaryValue getPureBooleanValue(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case TEMPLATELIT:
         if (n.hasOneChild()) {
           return TernaryValue.forBoolean(!n.getFirstChild().getString().isEmpty());
@@ -203,7 +201,7 @@ public final class NodeUtil {
    */
   public static String getStringValue(Node n) {
     // TODO(user): regex literals as well.
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case STRING:
       case STRING_KEY:
         return n.getString();
@@ -293,7 +291,7 @@ public final class NodeUtil {
    * @return The value of a node as a Number, or null if it cannot be converted.
    */
   static Double getNumberValue(Node n, boolean useType) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case TRUE:
         return 1.0;
 
@@ -450,7 +448,7 @@ public final class NodeUtil {
   public static Node getNameNode(Node n) {
     Preconditions.checkState(n.isFunction() || n.isClass());
     Node parent = n.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case NAME:
         // var name = function() ...
         // var name2 = function name1() ...
@@ -503,7 +501,7 @@ public final class NodeUtil {
 
     // Check for the form { 'x' : function() { }} and {x() {}}
     Node parent = n.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case MEMBER_FUNCTION_DEF:
       case SETTER_DEF:
       case GETTER_DEF:
@@ -537,7 +535,7 @@ public final class NodeUtil {
     // This should only be used to say the value is immuable and
     // hasSideEffects and canBeSideEffected should be used for the other case.
 
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case STRING:
       case NUMBER:
       case NULL:
@@ -565,7 +563,7 @@ public final class NodeUtil {
    * Returns true if the operator on this node is symmetric
    */
   static boolean isSymmetricOperation(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case EQ: // equal
       case NE: // not equal
       case SHEQ: // exactly equal
@@ -584,7 +582,7 @@ public final class NodeUtil {
    * the returned set does not include the equalities.
    */
   static boolean isRelationalOperation(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case GT: // equal
       case GE: // not equal
       case LT: // exactly equal
@@ -652,7 +650,7 @@ public final class NodeUtil {
    *     treated as literals.
    */
   public static boolean isLiteralValue(Node n, boolean includeFunctions) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case CAST:
         return isLiteralValue(n.getFirstChild(), includeFunctions);
 
@@ -698,9 +696,9 @@ public final class NodeUtil {
    * or a concatenation thereof.
    */
   static boolean isStringLiteralValue(Node node) {
-    if (node.getType() == Token.STRING) {
+    if (node.getToken() == Token.STRING) {
       return true;
-    } else if (node.getType() == Token.ADD) {
+    } else if (node.getToken() == Token.ADD) {
       Preconditions.checkState(node.getChildCount() == 2);
       Node left = node.getFirstChild();
       Node right = node.getLastChild();
@@ -716,7 +714,7 @@ public final class NodeUtil {
    * @param defines The list of names of existing defines.
    */
   static boolean isValidDefineValue(Node val, Set<String> defines) {
-    switch (val.getType()) {
+    switch (val.getToken()) {
       case STRING:
       case NUMBER:
       case TRUE:
@@ -792,7 +790,7 @@ public final class NodeUtil {
   }
 
   static boolean isBinaryOperator(Node n) {
-    return isBinaryOperatorType(n.getType());
+    return isBinaryOperatorType(n.getToken());
   }
 
   /**
@@ -836,7 +834,7 @@ public final class NodeUtil {
   }
 
   static boolean isUnaryOperator(Node n) {
-    return isUnaryOperatorType(n.getType());
+    return isUnaryOperatorType(n.getToken());
   }
 
   /**
@@ -860,7 +858,7 @@ public final class NodeUtil {
   }
 
   static boolean isUpdateOperator(Node n) {
-    return isUpdateOperatorType(n.getType());
+    return isUpdateOperatorType(n.getToken());
   }
 
   static boolean isUpdateOperatorType(Token type) {
@@ -875,7 +873,7 @@ public final class NodeUtil {
   }
 
   static boolean isSimpleOperator(Node n) {
-    return isSimpleOperatorType(n.getType());
+    return isSimpleOperatorType(n.getToken());
   }
 
   /**
@@ -1046,7 +1044,7 @@ public final class NodeUtil {
       Node n, boolean checkForNewObjects, AbstractCompiler compiler) {
     // Rather than id which ops may have side effects, id the ones
     // that we know to be safe
-    switch (n.getType()) {
+    switch (n.getToken()) {
       // other side-effect free statements and expressions
       // Throws are by definition side effects, and yields are similar.
       case THROW:
@@ -1218,7 +1216,7 @@ public final class NodeUtil {
    * @param callNode - constructor call node
    */
   static boolean constructorCallHasSideEffects(Node callNode) {
-    Preconditions.checkArgument(callNode.isNew(), "Expected NEW node, got %s", callNode.getType());
+    Preconditions.checkArgument(callNode.isNew(), "Expected NEW node, got %s", callNode.getToken());
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
@@ -1420,7 +1418,7 @@ public final class NodeUtil {
       return true;
     }
 
-    switch(n.getType()) {
+    switch (n.getToken()) {
       case DELPROP:
       case DEC:
       case INC:
@@ -1468,7 +1466,7 @@ public final class NodeUtil {
   // scope with InferConsts.
   static boolean canBeSideEffected(
       Node n, Set<String> knownConstants, Scope scope) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case YIELD:
       case CALL:
       case NEW:
@@ -1629,7 +1627,7 @@ public final class NodeUtil {
   }
 
   public static boolean isUndefined(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case VOID:
         return true;
       case NAME:
@@ -1660,7 +1658,7 @@ public final class NodeUtil {
    * all possible result Nodes of the expression.
    */
   static boolean allResultsMatch(Node n, Predicate<Node> p) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case CAST:
         return allResultsMatch(n.getFirstChild(), p);
       case ASSIGN:
@@ -1730,7 +1728,7 @@ public final class NodeUtil {
    * all possible result Nodes of the expression.
    */
   static ValueType getKnownValueType(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case CAST:
         return getKnownValueType(n.getFirstChild());
       case ASSIGN:
@@ -2009,7 +2007,7 @@ public final class NodeUtil {
   }
 
   public static boolean isAssignmentOp(Node n) {
-    switch (n.getType()){
+    switch (n.getToken()) {
       case ASSIGN:
       case ASSIGN_BITOR:
       case ASSIGN_BITXOR:
@@ -2035,7 +2033,7 @@ public final class NodeUtil {
   }
 
   static Token getOpFromAssignmentOp(Node n) {
-    switch (n.getType()){
+    switch (n.getToken()) {
       case ASSIGN_BITOR:
         return Token.BITOR;
       case ASSIGN_BITXOR:
@@ -2067,7 +2065,7 @@ public final class NodeUtil {
   }
 
   static Token getAssignOpFromOp(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case BITOR:
         return Token.ASSIGN_BITOR;
       case BITXOR:
@@ -2098,7 +2096,7 @@ public final class NodeUtil {
   }
 
   static boolean hasCorrespondingAssignmentOp(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case BITOR:
       case BITXOR:
       case BITAND:
@@ -2128,12 +2126,14 @@ public final class NodeUtil {
    * Gets the closest ancestor to the given node of the provided type.
    */
   static Node getEnclosingType(Node n, final Token type) {
-    return getEnclosingNode(n, new Predicate<Node>() {
-      @Override
-      public boolean apply(Node n) {
-        return n.getType() == type;
-      }
-    });
+    return getEnclosingNode(
+        n,
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node n) {
+            return n.getToken() == type;
+          }
+        });
   }
 
   /**
@@ -2268,7 +2268,7 @@ public final class NodeUtil {
    */
   static boolean isBlockScopedDeclaration(Node n) {
     if (n.isName()) {
-      switch (n.getParent().getType()) {
+      switch (n.getParent().getToken()) {
         case LET:
         case CONST:
         case CATCH:
@@ -2373,7 +2373,7 @@ public final class NodeUtil {
    * Determines whether the given node is a FOR, DO, or WHILE node.
    */
   static boolean isLoopStructure(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FOR:
       case FOR_OF:
       case DO:
@@ -2390,7 +2390,7 @@ public final class NodeUtil {
    * the code BLOCK, null otherwise.
    */
   static Node getLoopCodeBlock(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FOR:
       case FOR_OF:
       case WHILE:
@@ -2423,7 +2423,7 @@ public final class NodeUtil {
    * Determines whether the given node is a FOR, DO, WHILE, WITH, or IF node.
    */
   public static boolean isControlStructure(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FOR:
       case FOR_OF:
       case DO:
@@ -2447,7 +2447,7 @@ public final class NodeUtil {
    * WHILE, WITH, or IF node.
    */
   static boolean isControlStructureCodeBlock(Node parent, Node n) {
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case DO:
         return parent.getFirstChild() == n;
       case TRY:
@@ -2477,7 +2477,7 @@ public final class NodeUtil {
    * @return the condition node or null if the condition is not obviously a node
    */
   static Node getConditionExpression(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case IF:
       case WHILE:
         return n.getFirstChild();
@@ -2512,7 +2512,7 @@ public final class NodeUtil {
    * @return Whether the node creates a block scope.
    */
   static boolean createsBlockScope(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case BLOCK:
         // Don't create block scope for synthetic blocks, or the one contained in a CATCH.
         if (n.isSyntheticBlock()
@@ -2533,7 +2533,7 @@ public final class NodeUtil {
   }
 
   static boolean isValidCfgRoot(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION:
       case SCRIPT:
       case MODULE_BODY:
@@ -2567,7 +2567,7 @@ public final class NodeUtil {
     // or not if it is not part of the AST.  A FUNCTION node can be
     // either part of an expression or a statement.
     Preconditions.checkState(parent != null);
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case SCRIPT:
       case MODULE_BODY:
       case BLOCK:
@@ -2580,7 +2580,7 @@ public final class NodeUtil {
   }
 
   private static boolean isDeclarationParent(Node parent) {
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case DECLARE:
       case EXPORT:
         return true;
@@ -2762,7 +2762,7 @@ public final class NodeUtil {
     }
     Node current = n.getParent();
     while (current != null) {
-      switch (current.getType()) {
+      switch (current.getToken()) {
         case BLOCK:
           return !current.getParent().isFunction();
         case FUNCTION:
@@ -2960,7 +2960,7 @@ public final class NodeUtil {
 
   static boolean isLhsOfAssign(Node n) {
     Node parent = n.getParent();
-    return parent != null && parent.getType() == Token.ASSIGN && parent.getFirstChild() == n;
+    return parent != null && parent.getToken() == Token.ASSIGN && parent.getFirstChild() == n;
   }
 
   public static boolean isImportedName(Node n) {
@@ -2989,7 +2989,7 @@ public final class NodeUtil {
    * @param node A node
    */
   static boolean isObjectLitKey(Node node) {
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
@@ -3007,7 +3007,7 @@ public final class NodeUtil {
    * @param key A node
    */
   static String getObjectLitKeyName(Node key) {
-    switch (key.getType()) {
+    switch (key.getToken()) {
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
@@ -3026,7 +3026,7 @@ public final class NodeUtil {
    * @param node A node
    */
   static boolean isGetOrSetKey(Node node) {
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case GETTER_DEF:
       case SETTER_DEF:
         return true;
@@ -3209,7 +3209,7 @@ public final class NodeUtil {
     Node addingRoot = null;
     Node ancestor = n;
     crawl_ancestors: while (null != (ancestor = ancestor.getParent())) {
-      switch (ancestor.getType()) {
+      switch (ancestor.getToken()) {
         case SCRIPT:
         case MODULE_BODY:
           addingRoot = ancestor;
@@ -3493,7 +3493,7 @@ public final class NodeUtil {
   }
 
   private static void getLhsNodesHelper(Node n, List<Node> lhsNodes) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case VAR:
       case CONST:
       case LET:
@@ -3629,7 +3629,7 @@ public final class NodeUtil {
    */
   static boolean isPropertyTest(AbstractCompiler compiler, Node propAccess) {
     Node parent = propAccess.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case CALL:
         return parent.getFirstChild() != propAccess
             && compiler.getCodingConvention().isPropertyTestFunction(parent);
@@ -3751,7 +3751,7 @@ public final class NodeUtil {
 
     @Override
     public boolean apply(Node n) {
-      return n.getType() == type;
+      return n.getToken() == type;
     }
   }
 
@@ -4021,7 +4021,7 @@ public final class NodeUtil {
       return true;
     }
 
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case NAME:
         return NodeUtil.isConstantByConvention(convention, node);
       case GETPROP:
@@ -4117,7 +4117,7 @@ public final class NodeUtil {
    *     outside the expression scope.
    */
   static boolean evaluatesToLocalValue(Node value, Predicate<Node> locals) {
-    switch (value.getType()) {
+    switch (value.getToken()) {
       case CAST:
         return evaluatesToLocalValue(value.getFirstChild(), locals);
       case ASSIGN:
@@ -4324,7 +4324,7 @@ public final class NodeUtil {
   /** Gets the r-value (or intializer) of a node returned by getBestLValue. */
   static Node getRValueOfLValue(Node n) {
     Node parent = n.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case ASSIGN:
       case ASSIGN_BITOR:
       case ASSIGN_BITXOR:
@@ -4391,7 +4391,7 @@ public final class NodeUtil {
   static boolean isExpressionResultUsed(Node expr) {
     // TODO(johnlenz): consider sharing some code with trySimpleUnusedResult.
     Node parent = expr.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case BLOCK:
       case EXPR_RESULT:
         return false;
@@ -4440,7 +4440,7 @@ public final class NodeUtil {
   static boolean isExecutedExactlyOnce(Node n) {
     inspect: do {
       Node parent = n.getParent();
-      switch (parent.getType()) {
+      switch (parent.getToken()) {
         case IF:
         case HOOK:
         case AND:
@@ -4513,9 +4513,12 @@ public final class NodeUtil {
   }
 
   static boolean isNaN(Node n) {
-    return (n.isName() && n.getString().equals("NaN")) || (n.getType() == Token.DIV
-               && n.getFirstChild().isNumber() && n.getFirstChild().getDouble() == 0
-               && n.getLastChild().isNumber() && n.getLastChild().getDouble() == 0);
+    return (n.isName() && n.getString().equals("NaN"))
+        || (n.getToken() == Token.DIV
+            && n.getFirstChild().isNumber()
+            && n.getFirstChild().getDouble() == 0
+            && n.getLastChild().isNumber()
+            && n.getLastChild().getDouble() == 0);
   }
 
   /**

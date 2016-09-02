@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -232,7 +231,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         newProp = IR.getelem(objectToExtend.cloneTree(),
             childOfcompProp).srcref(currentProp);
       } else {
-        currentProp.setType(Token.STRING);
+        currentProp.setToken(Token.STRING);
         newProp = IR.getprop(objectToExtend.cloneTree(),
             currentProp).srcref(currentProp);
       }

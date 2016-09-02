@@ -25,13 +25,11 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
 /**
@@ -188,7 +186,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     boolean isVar;
     Node msgNode;
 
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case NAME:
         // var MSG_HELLO = 'Message'
         if ((parent != null) && (NodeUtil.isNameDeclaration(parent))) {
@@ -412,7 +410,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
     // Determine the message's value
     Node valueNode = nameNode.getFirstChild();
-    switch (valueNode.getType()) {
+    switch (valueNode.getToken()) {
       case STRING:
       case ADD:
         maybeInitMetaDataFromJsDocOrHelpVar(builder, parentNode,
@@ -546,7 +544,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
    */
   private static String extractStringFromStringExprNode(Node node)
       throws MalformedException {
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case STRING:
         return node.getString();
       case ADD:
@@ -556,7 +554,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         }
         return sb.toString();
       default:
-        throw new MalformedException("STRING or ADD node expected; found: " + node.getType(), node);
+        throw new MalformedException(
+            "STRING or ADD node expected; found: " + node.getToken(), node);
     }
   }
 
@@ -589,7 +588,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     Set<String> phNames = new HashSet<>();
 
     for (Node fnChild : node.children()) {
-      switch (fnChild.getType()) {
+      switch (fnChild.getToken()) {
         case NAME:
           // This is okay. The function has a name, but it is empty.
           break;
@@ -612,7 +611,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
           Node returnNode = fnChild.getFirstChild();
           if (!returnNode.isReturn()) {
             throw new MalformedException(
-                "RETURN node expected; found: " + returnNode.getType(), returnNode);
+                "RETURN node expected; found: " + returnNode.getToken(), returnNode);
           }
           for (Node child : returnNode.children()) {
             extractFromReturnDescendant(builder, child);
@@ -630,7 +629,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
           break;
         default:
           throw new MalformedException(
-              "NAME, LP, or BLOCK node expected; found: " + node.getType(), fnChild);
+              "NAME, LP, or BLOCK node expected; found: " + node.getToken(), fnChild);
       }
     }
   }
@@ -646,7 +645,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
   private static void extractFromReturnDescendant(Builder builder, Node node)
       throws MalformedException {
 
-    switch (node.getType()) {
+    switch (node.getToken()) {
       case STRING:
         builder.appendStringPart(node.getString());
         break;
@@ -660,7 +659,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         break;
       default:
         throw new MalformedException(
-            "STRING, NAME, or ADD node expected; found: " + node.getType(), node);
+            "STRING, NAME, or ADD node expected; found: " + node.getToken(), node);
     }
   }
 
@@ -938,9 +937,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       throw new MalformedException(
           "Expected node type " + type + "; found: null", node);
     }
-    if (node.getType() != type) {
+    if (node.getToken() != type) {
       throw new MalformedException(
-          "Expected node type " + type + "; found: " + node.getType(), node);
+          "Expected node type " + type + "; found: " + node.getToken(), node);
     }
   }
 

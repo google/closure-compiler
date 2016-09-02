@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -94,7 +93,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
 
     @Override
     public final String getName(Node node) {
-      switch (node.getType()) {
+      switch (node.getToken()) {
         case NAME:
         case STRING:
         case STRING_KEY:

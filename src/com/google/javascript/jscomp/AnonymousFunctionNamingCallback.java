@@ -65,7 +65,7 @@ class AnonymousFunctionNamingCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case FUNCTION:
         // this handles functions that are assigned to variables or
         // properties
@@ -133,7 +133,7 @@ class AnonymousFunctionNamingCallback
         // concatenate the context and key name to get a new qualified name.
         String name = namer.getCombinedName(context, namer.getName(keyNode));
 
-        Token type = valueNode.getType();
+        Token type = valueNode.getToken();
         if (type == Token.FUNCTION) {
           // set name if function is anonymous
           Node functionNameNode = valueNode.getFirstChild();

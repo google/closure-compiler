@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.CodingConvention.Bind;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.regex.Pattern;
 
 /**
@@ -386,7 +385,7 @@ class PeepholeSubstituteAlternateSyntax
     Preconditions.checkState(n.isNew());
 
     if (canFoldStandardConstructors(n)) {
-      n.setType(Token.CALL);
+      n.setToken(Token.CALL);
       n.putBooleanProp(Node.FREE_CALL, true);
       reportCodeChange();
     }

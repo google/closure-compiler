@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
-
 import java.util.Comparator;
 
 /**
@@ -147,7 +146,7 @@ public class ControlFlowGraph<N> extends
    */
   public static boolean isEnteringNewCfgNode(Node n) {
     Node parent = n.getParent();
-    switch (parent.getType()) {
+    switch (parent.getToken()) {
       case BLOCK:
       case SCRIPT:
       case TRY:

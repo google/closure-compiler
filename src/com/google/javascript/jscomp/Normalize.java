@@ -24,7 +24,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -376,7 +375,7 @@ class Normalize implements CompilerPass {
         case WHILE:
           if (CONVERT_WHILE_TO_FOR) {
             Node expr = n.getFirstChild();
-            n.setType(Token.FOR);
+            n.setToken(Token.FOR);
             Node empty = IR.empty();
             empty.useSourceInfoIfMissingFrom(n);
             n.addChildBefore(empty, expr);
@@ -688,7 +687,7 @@ class Normalize implements CompilerPass {
     private void normalizeAssignShorthand(Node shorthand) {
       if (shorthand.getFirstChild().isName()) {
         Node name = shorthand.getFirstChild();
-        shorthand.setType(NodeUtil.getOpFromAssignmentOp(shorthand));
+        shorthand.setToken(NodeUtil.getOpFromAssignmentOp(shorthand));
         Node parent = shorthand.getParent();
         Node insertPoint = IR.empty();
         parent.replaceChild(shorthand, insertPoint);

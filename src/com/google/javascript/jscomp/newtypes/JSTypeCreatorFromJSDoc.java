@@ -299,7 +299,7 @@ public final class JSTypeCreatorFromJSDoc {
     if (typeParameters == null) {
       typeParameters = ImmutableList.of();
     }
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case LC:
         return getRecordTypeHelper(n, registry, typeParameters);
       case EMPTY: // for function types that don't declare a return type
@@ -361,20 +361,19 @@ public final class JSTypeCreatorFromJSDoc {
         return getFunTypeHelper(n, registry, typeParameters);
       default:
         throw new IllegalArgumentException(
-            "Unsupported type exp: " + n.getType() + " " + n.toStringTree());
+            "Unsupported type exp: " + n.getToken() + " " + n.toStringTree());
     }
   }
 
   // Looks at the type AST without evaluating it
   private boolean isUnionWithUndefined(Node n) {
-    if (n == null || n.getType() != Token.PIPE) {
+    if (n == null || n.getToken() != Token.PIPE) {
       return false;
     }
     for (Node child : n.children()) {
-      if (child.getType() == Token.VOID
-          || child.getType() == Token.STRING
-          && (child.getString().equals("void")
-              || child.getString().equals("undefined"))) {
+      if (child.getToken() == Token.VOID
+          || child.getToken() == Token.STRING
+              && (child.getString().equals("void") || child.getString().equals("undefined"))) {
         return true;
       }
     }
@@ -387,7 +386,7 @@ public final class JSTypeCreatorFromJSDoc {
     for (Node propNode = n.getFirstFirstChild();
          propNode != null;
          propNode = propNode.getNext()) {
-      boolean isPropDeclared = propNode.getType() == Token.COLON;
+      boolean isPropDeclared = propNode.getToken() == Token.COLON;
       Node propNameNode = isPropDeclared ? propNode.getFirstChild() : propNode;
       String propName = propNameNode.getString();
       if (propName.startsWith("'") || propName.startsWith("\"")) {
@@ -613,13 +612,13 @@ public final class JSTypeCreatorFromJSDoc {
       ImmutableList<String> typeParameters, FunctionTypeBuilder builder)
       throws UnknownTypeException {
     Node child = jsdocNode.getFirstChild();
-    if (child.getType() == Token.THIS) {
+    if (child.getToken() == Token.THIS) {
       if (ownerType == null) {
         builder.addReceiverType(
             getThisOrNewType(child.getFirstChild(), registry, typeParameters));
       }
       child = child.getNext();
-    } else if (child.getType() == Token.NEW) {
+    } else if (child.getToken() == Token.NEW) {
       Node newTypeNode = child.getFirstChild();
       JSType t = getThisOrNewType(newTypeNode, registry, typeParameters);
       if (!t.isSubtypeOf(this.commonTypes.TOP_OBJECT)
@@ -630,10 +629,10 @@ public final class JSTypeCreatorFromJSDoc {
       builder.addNominalType(t);
       child = child.getNext();
     }
-    if (child.getType() == Token.PARAM_LIST) {
+    if (child.getToken() == Token.PARAM_LIST) {
       for (Node arg = child.getFirstChild(); arg != null; arg = arg.getNext()) {
         try {
-          switch (arg.getType()) {
+          switch (arg.getToken()) {
             case EQUALS:
               builder.addOptFormal(getTypeFromCommentHelper(
                   arg.getFirstChild(), registry, typeParameters));
@@ -878,7 +877,7 @@ public final class JSTypeCreatorFromJSDoc {
 
     if (jsdoc.hasThisType()) {
       Node thisRoot = jsdoc.getThisType().getRoot();
-      Preconditions.checkState(thisRoot.getType() == Token.BANG);
+      Preconditions.checkState(thisRoot.getToken() == Token.BANG);
       builder.addReceiverType(
           getThisOrNewType(thisRoot.getFirstChild(), registry, typeParameters));
     }
@@ -1040,7 +1039,7 @@ public final class JSTypeCreatorFromJSDoc {
     }
     JSTypeExpression texp = funJsdoc.getParameterType(formalParamName);
     Node jsdocNode = texp == null ? null : texp.getRoot();
-    return jsdocNode != null && jsdocNode.getType() == Token.ELLIPSIS;
+    return jsdocNode != null && jsdocNode.getToken() == Token.ELLIPSIS;
   }
 
   private ParameterType parseParameter(
@@ -1058,7 +1057,7 @@ public final class JSTypeCreatorFromJSDoc {
     if (jsdoc == null) {
       return null;
     }
-    switch (jsdoc.getType()) {
+    switch (jsdoc.getToken()) {
       case EQUALS:
         p = ParameterKind.OPTIONAL;
         jsdoc = jsdoc.getFirstChild();

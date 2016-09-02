@@ -191,7 +191,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       parent.addChildAfter(newDeclaration, declarationList);
     }
     maybeAddConstJSDoc(declarationList, parent, declarationList.getFirstChild(), declarationList);
-    declarationList.setType(Token.VAR);
+    declarationList.setToken(Token.VAR);
   }
 
   private void varify() {
@@ -200,7 +200,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         if (n.isConst()) {
           handleDeclarationList(n, n.getParent());
         }
-        n.setType(Token.VAR);
+        n.setToken(Token.VAR);
       }
       compiler.reportCodeChange();
     }

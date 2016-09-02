@@ -438,7 +438,7 @@ class PeepholeMinimizeConditions
         return n;
     }
     Node newOperator = n.removeFirstChild();
-    newOperator.setType(complementOperator);
+    newOperator.setToken(complementOperator);
     parent.replaceChild(n, newOperator);
     reportCodeChange();
     return newOperator;

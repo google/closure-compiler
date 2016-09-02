@@ -296,7 +296,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   private static boolean isBlockBoundary(Node n, Node parent) {
     if (parent != null) {
-      switch (parent.getType()) {
+      switch (parent.getToken()) {
         case DO:
         case FOR:
         case FOR_OF:
@@ -688,7 +688,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
         return node == parent.getFirstChild();
       }
 
-      return DECLARATION_PARENTS.contains(parent.getType());
+      return DECLARATION_PARENTS.contains(parent.getToken());
     }
 
     boolean isVarDeclaration() {
@@ -759,7 +759,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
      */
     boolean isLvalue() {
       Node parent = getParent();
-      Token parentType = parent.getType();
+      Token parentType = parent.getToken();
       return (parentType == Token.VAR && nameNode.getFirstChild() != null)
           || (parentType == Token.LET && nameNode.getFirstChild() != null)
           || (parentType == Token.CONST && nameNode.getFirstChild() != null)
@@ -809,7 +809,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       this.isFunction = root.isFunction();
 
       if (root.getParent() != null) {
-        Token pType = root.getParent().getType();
+        Token pType = root.getParent().getToken();
         this.isLoop = pType == Token.DO ||
             pType == Token.WHILE ||
             pType == Token.FOR;

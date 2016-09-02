@@ -125,7 +125,7 @@ class SyntacticScopeCreator implements ScopeCreator {
    * Scans and gather variables declarations under a Node
    */
   private void scanVars(Node n) {
-    switch (n.getType()) {
+    switch (n.getToken()) {
       case VAR:
         // Declare all variables. e.g. var x = 1, y, z;
         for (Node child = n.getFirstChild();

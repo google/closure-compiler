@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.Collections;
 import java.util.Comparator;
 
@@ -275,16 +274,16 @@ class MinimizedCondition {
       this.change();
       switch (node.getToken()) {
         case EQ:
-          node.setType(Token.NE);
+          node.setToken(Token.NE);
           return this;
         case NE:
-          node.setType(Token.EQ);
+          node.setToken(Token.EQ);
           return this;
         case SHEQ:
-          node.setType(Token.SHNE);
+          node.setToken(Token.SHNE);
           return this;
         case SHNE:
-          node.setType(Token.SHEQ);
+          node.setToken(Token.SHEQ);
           return this;
         default:
           return this.addNot();

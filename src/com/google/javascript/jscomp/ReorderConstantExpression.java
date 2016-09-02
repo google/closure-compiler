@@ -47,7 +47,7 @@ class ReorderConstantExpression extends AbstractPeepholeOptimization {
         // if relational, get the inverse operator.
         if (NodeUtil.isRelationalOperation(subtree)){
           Token inverseOperator = NodeUtil.getInverseOperator(subtree.getToken());
-          subtree.setType(inverseOperator);
+          subtree.setToken(inverseOperator);
         }
 
         // swap them
