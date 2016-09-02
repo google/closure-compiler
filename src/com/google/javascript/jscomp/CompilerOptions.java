@@ -880,14 +880,20 @@ public class CompilerOptions {
     trustedStrings = yes;
   }
 
-  String reportPath;
-
-  // Should only be used when debugging compiler bugs using small JS inputs.
+  // Should only be used when debugging compiler bugs.
   boolean printSourceAfterEachPass;
+  // Used to narrow down the printed source when overall input size is large.
+  String fileToPrintAfterEachPass;
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
   }
+
+  public void setFileToPrintAfterEachPass(String filename) {
+    this.fileToPrintAfterEachPass = filename;
+  }
+
+  String reportPath;
 
   /** Where to save a report of global name usage */
   public void setReportPath(String reportPath) {

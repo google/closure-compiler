@@ -966,7 +966,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   final void afterPass(String passName) {
     if (options.printSourceAfterEachPass) {
-      String currentJsSource = toSource();
+      String currentJsSource = getCurrentJsSource();
       if (!currentJsSource.equals(this.lastJsSource)) {
         System.out.println();
         System.out.println("// " + passName + " yields:");
@@ -975,6 +975,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         lastJsSource = currentJsSource;
       }
     }
+  }
+
+  final String getCurrentJsSource() {
+    String filename = options.fileToPrintAfterEachPass;
+    if (filename == null) {
+      return toSource();
+    } else {
+      Node script = getScriptNode(filename);
+      return script != null ? toSource(script) : ("File '" + filename + "' not found");
+    }
+  }
+
+  final Node getScriptNode(String filename) {
+    for (Node file : jsRoot.children()) {
+      if (file.getSourceFileName() != null && file.getSourceFileName().endsWith(filename)) {
+        return file;
+      }
+    }
+    return null;
   }
 
   /**
