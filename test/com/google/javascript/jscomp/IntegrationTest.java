@@ -449,9 +449,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "/** @typedef {number} */ foo.Bar.Type;",
             "foo.Bar = function() {};"),
         LINE_JOINER.join(
-            "/** @typedef {number} */",
-            "foo$Bar.Type;",
-            "var foo$Bar = function(){}"));
+            "var foo$Bar$Type;",
+            "var foo$Bar = function() {};"));
   }
 
   public void testExportedNames() {
