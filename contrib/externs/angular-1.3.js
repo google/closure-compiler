@@ -23,7 +23,6 @@
  *     $cookieStore
  *     $document
  *     $httpBackend
- *     $locale
  *     $rootElement
  *     $rootScope
  *     $rootScopeProvider
@@ -1670,6 +1669,20 @@ angular.$interval_;
  * @type {function(!angular.$q.Promise):boolean}
  */
 angular.$interval_.cancel = function(promise) {};
+
+/******************************************************************************
+ * $locale Service
+ *****************************************************************************/
+
+/**
+ * @interface
+ */
+angular.$locale = function() {};
+
+/**
+ * @type {string}
+ */
+angular.$locale.prototype.id;
 
 /******************************************************************************
  * $location Service
