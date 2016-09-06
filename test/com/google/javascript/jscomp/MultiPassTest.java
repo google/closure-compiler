@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,6 +27,7 @@ import java.util.List;
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
+
 public final class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;
 
@@ -49,6 +49,13 @@ public final class MultiPassTest extends CompilerTestCase {
         });
     compiler.setPhaseOptimizer(phaseopt);
     return phaseopt;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setPrintSourceAfterEachPass(true);
+    return options;
   }
 
   public void testInlineVarsAndPeephole() {

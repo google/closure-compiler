@@ -563,7 +563,7 @@ public class NodeTraversal {
         new AbstractPreOrderCallback() {
           @Override
           public final boolean shouldTraverse(NodeTraversal t, Node n, Node p) {
-            if ((n == jsRoot || n.isFunction()) && comp.hasScopeChanged(n)) {
+            if ((n.isScript() || n.isFunction()) && comp.hasScopeChanged(n)) {
               cb.enterFunction(comp, n);
             }
             return true;

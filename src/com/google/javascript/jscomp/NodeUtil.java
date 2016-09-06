@@ -4621,9 +4621,9 @@ public final class NodeUtil {
     Node thisChild = thisNode.getFirstChild();
     Node thatChild = thatNode.getFirstChild();
     while (thisChild != null && thatChild != null) {
-      if (thisChild.isFunction()) {
+      if (thisChild.isFunction() || thisChild.isScript()) {
         //  don't compare function name, parameters or bodies.
-        return thatChild.isFunction();
+        return thatChild.getToken() == thisChild.getToken();
       }
       if (!isEquivalentToExcludingFunctions(thisChild, thatChild)) {
         return false;

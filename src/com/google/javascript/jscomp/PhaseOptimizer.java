@@ -20,7 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -336,9 +335,9 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   private Node getEnclosingScope(Node n) {
-    while (n != jsRoot && n.getParent() != null) {
+    while (n.getParent() != null) {
       n = n.getParent();
-      if (n.isFunction()) {
+      if (n.isFunction() || n.isScript()) {
         return n;
       }
     }
