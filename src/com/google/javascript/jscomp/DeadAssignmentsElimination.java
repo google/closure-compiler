@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
@@ -25,6 +24,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * Removes local variable assignments that are useless based on information from {@link
@@ -37,37 +38,16 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
   private final AbstractCompiler compiler;
   private LiveVariablesAnalysis liveness;
+  private final Deque<BailoutInformation> functionStack;
 
-  private static final class BailoutDetector implements NodeUtil.Visitor, Predicate<Node> {
+  private static final class BailoutInformation {
     boolean containsFunction;
     boolean containsRemovableAssign;
-
-    // shouldTraverse
-    @Override
-    public boolean apply(Node n) {
-      // Skip traversing inside functions, since we already know we will bailout for those.
-      return !containsFunction;
-    }
-
-    @Override
-    public void visit(Node n) {
-      if (n.isFunction()) {
-        containsFunction = true;
-      } else if (isRemovableAssign(n)) {
-        containsRemovableAssign = true;
-      }
-    }
-
-    // Matches all assignment operators and increment/decrement operators.
-    // Does *not* match VAR initialization, since RemoveUnusedVariables
-    // will already remove variables that are initialized but unused.
-    boolean isRemovableAssign(Node n) {
-      return (NodeUtil.isAssignmentOp(n) && n.getFirstChild().isName()) || n.isInc() || n.isDec();
-    }
-  };
+  }
 
   public DeadAssignmentsElimination(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.functionStack = new ArrayDeque<>();
   }
 
   @Override
@@ -78,25 +58,52 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
   }
 
   @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (functionStack.isEmpty()) {
+      return;
+    }
+    if (n.isFunction()) {
+      functionStack.peekFirst().containsFunction = true;
+    } else if (isRemovableAssign(n)) {
+      functionStack.peekFirst().containsRemovableAssign = true;
+    }
+  }
+
+  @Override
   public void enterScope(NodeTraversal t) {
-    // Only do dead assignment elimination in function block scopes.
-    if (!t.inFunctionBlockScope()) {
+    if (t.inFunctionBlockScope()) {
+      functionStack.addFirst(new BailoutInformation());
+    }
+  }
+
+  @Override
+  public void exitScope(NodeTraversal t) {
+    if (t.inFunctionBlockScope()) {
+      eliminateDeadAssignments(t);
+      functionStack.removeFirst();
+    }
+  }
+
+  private void eliminateDeadAssignments(NodeTraversal t) {
+    Preconditions.checkArgument(t.inFunctionBlockScope());
+    Preconditions.checkState(!functionStack.isEmpty());
+
+    // Skip unchanged functions (note that the scope root is the function block, not the function).
+    if (!compiler.hasScopeChanged(t.getScopeRoot().getParent())) {
       return;
     }
 
-    BailoutDetector bailoutDetector = new BailoutDetector();
-    NodeUtil.visitPreOrder(t.getScopeRoot(), bailoutDetector, bailoutDetector);
-
+    BailoutInformation currentFunction = functionStack.peekFirst();
     // We are not going to do any dead assignment elimination in when there is
     // at least one inner function because in most browsers, when there is a
     // closure, ALL the variables are saved (escaped).
-    if (bailoutDetector.containsFunction) {
+    if (currentFunction.containsFunction) {
       return;
     }
 
     // We don't do any dead assignment elimination if there are no assigns
     // to eliminate. :)
-    if (!bailoutDetector.containsRemovableAssign) {
+    if (!currentFunction.containsRemovableAssign) {
       return;
     }
 
@@ -121,8 +128,13 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     tryRemoveDeadAssignments(t, cfg);
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+
+
+  // Matches all assignment operators and increment/decrement operators.
+  // Does *not* match VAR initialization, since RemoveUnusedVariables
+  // will already remove variables that are initialized but unused.
+  boolean isRemovableAssign(Node n) {
+    return (NodeUtil.isAssignmentOp(n) && n.getFirstChild().isName()) || n.isInc() || n.isDec();
   }
 
   /**
