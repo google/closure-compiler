@@ -529,7 +529,8 @@ CanvasRenderingContext2D.prototype.setLineDash;
 CanvasRenderingContext2D.prototype.fillColor;
 
 /**
- * @type {string}
+ * @type {string|!CanvasGradient|!CanvasPattern}
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#fill-and-stroke-styles:dom-context-2d-fillstyle
  * @implicitCast
  */
 CanvasRenderingContext2D.prototype.fillStyle;
@@ -568,7 +569,8 @@ CanvasRenderingContext2D.prototype.shadowOffsetX;
 CanvasRenderingContext2D.prototype.shadowOffsetY;
 
 /**
- * @type {string}
+ * @type {string|!CanvasGradient|!CanvasPattern}
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#fill-and-stroke-styles:dom-context-2d-strokestyle
  * @implicitCast
  */
 CanvasRenderingContext2D.prototype.strokeStyle;
