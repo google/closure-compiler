@@ -3895,6 +3895,11 @@ public final class NodeUtil {
     void visit(Node node);
   }
 
+  /** A pre-order traversal, calling Visitor.visit for each decendent. */
+  public static void visitPreOrder(Node node, Visitor visitor) {
+    visitPreOrder(node, visitor, Predicates.<Node>alwaysTrue());
+  }
+
   /**
    * A pre-order traversal, calling Visitor.visit for each child matching
    * the predicate.

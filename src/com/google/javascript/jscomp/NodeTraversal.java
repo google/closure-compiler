@@ -870,6 +870,14 @@ public class NodeTraversal {
     return getScopeDepth() == 0;
   }
 
+  /** Determines whether the traversal is currently in the scope of the block of a function. */
+  public boolean inFunctionBlockScope() {
+    Node scopeRoot = getScopeRoot();
+    return scopeRoot.isBlock()
+        && scopeRoot.getParent() != null
+        && scopeRoot.getParent().isFunction();
+  }
+
   /**
    * Determines whether the hoist scope of the current traversal is global.
    */

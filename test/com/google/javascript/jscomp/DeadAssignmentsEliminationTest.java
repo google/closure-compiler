@@ -54,6 +54,14 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var a; a=function f(){}");
   }
 
+  public void testArguments() {
+    test("function f(a){ a=1; }", "function f(a){ 1; }");
+    test("function f(a){ a=1+1; }", "function f(a){ 1+1; }");
+    test("function f(a){ a=foo(); }", "function f(a){ foo(); }");
+    test("function f(a){ a=1; a=foo(); }", "function f(a){ 1; foo(); }");
+  }
+
+
   public void testLoops() {
     inFunction("for(var a=0; a<10; a++) {}");
     inFunction("var x; for(var a=0; a<10; a++) {x=a}; a(x)");
