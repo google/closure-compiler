@@ -34,6 +34,7 @@ import java.util.List;
 
 public final class PureFunctionIdentifierTest extends CompilerTestCase {
   private static final List<String> NO_PURE_CALLS = ImmutableList.<String>of();
+
   List<String> noSideEffectCalls = new ArrayList<>();
   List<String> localResultCalls = new ArrayList<>();
 
@@ -1171,6 +1172,67 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     );
     // Can't tell which modifiesThis is being called so it assumes both.
     assertPureCallsMarked(source, ImmutableList.<String>of("Constructor"));
+  }
+
+  public void testAmbiguousDefinitionsBothCallThis() throws Exception {
+    String source =
+        LINE_JOINER.join(
+            "B.f = function() {",
+            "  this.x = 1;",
+            "}",
+            "/** @constructor */ function C() {",
+            "  this.f.apply(this);",
+            "}",
+            "C.prototype.f = function() {",
+            "  this.x = 2;",
+            "}",
+            "new C();");
+    assertPureCallsMarked(source, ImmutableList.of("C"));
+  }
+
+  public void testAmbiguousDefinitionsAllCallThis() throws Exception {
+    String source =
+        LINE_JOINER.join(
+            "A.f = function() { this.y = 1 };",
+            "C.f = function() { };",
+            "var g = function() {D.f()};",
+            "/** @constructor */ var h = function() {E.f.apply(this)};",
+            "var i = function() {F.f.apply({})};", // it can't tell {} is local.
+            "g();",
+            "new h();",
+            "i();" // With better locals tracking i could be identified as pure
+            );
+    assertPureCallsMarked(source, ImmutableList.of("F.f.apply", "h"));
+  }
+
+  public void testAmbiguousDefinitionsMutatesGlobalArgument() throws Exception {
+    String source =
+        LINE_JOINER.join(
+            "// Mutates argument",
+            "A.a = function(argument) {",
+            "  argument.x = 2;",
+            "};",
+            "// No side effects",
+            "B.a = function() {};",
+            "var b = function(x) {C.a(x)};",
+            "b({});");
+    assertPureCallsMarked(source, NO_PURE_CALLS);
+  }
+
+  public void testAmbiguousDefinitionsMutatesLocalArgument() throws Exception {
+    String source =
+        LINE_JOINER.join(
+            "// Mutates argument",
+            "A.a = function(argument) {",
+            "  argument.x = 2;",
+            "};",
+            "// No side effects",
+            "B.a = function() {};",
+            "var b = function() {",
+            "  C.a({});",
+            "};",
+            "b();");
+    assertPureCallsMarked(source, ImmutableList.of("C.a", "b"));
   }
 
   public void testCallBeforeDefinition() throws Exception {

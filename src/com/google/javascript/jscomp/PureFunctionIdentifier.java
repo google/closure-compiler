@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.CodingConvention.Cache;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -35,7 +36,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,7 +78,7 @@ class PureFunctionIdentifier implements CompilerPass {
   public PureFunctionIdentifier(AbstractCompiler compiler, DefinitionProvider definitionProvider) {
     this.compiler = compiler;
     this.definitionProvider = definitionProvider;
-    this.functionSideEffectMap = new HashMap<>();
+    this.functionSideEffectMap = new LinkedHashMap<>();
     this.allFunctionCalls = new ArrayList<>();
     this.externs = null;
     this.root = null;
@@ -137,9 +138,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
       Set<String> depFunctionNames = new HashSet<>();
       for (Node callSite : functionInfo.getCallsInFunctionBody()) {
-        Collection<Definition> defs =
-            getCallableDefinitions(definitionProvider,
-                                   callSite.getFirstChild());
+        Collection<Definition> defs = getFunctionDefinitions(definitionProvider, callSite);
 
         if (defs == null) {
           depFunctionNames.add("<null def list>");
@@ -147,8 +146,7 @@ class PureFunctionIdentifier implements CompilerPass {
         }
 
         for (Definition def : defs) {
-          depFunctionNames.add(
-              functionNames.getFunctionName(def.getRValue()));
+          depFunctionNames.add(functionNames.getFunctionName(def.getRValue()));
         }
       }
 
@@ -164,97 +162,201 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   /**
-   * Query the DefinitionProvider for the list of definitions that
-   * correspond to a given qualified name subtree.  Return null if
-   * DefinitionProvider does not contain an entry for a given name,
-   * one or more of the values returned by getDeclarations is not
-   * callable, or the "name" node is not a GETPROP or NAME.
+   * Query the DefinitionProvider for the list of definitions that correspond to a given qualified
+   * name subtree. Return null if DefinitionProvider does not contain an entry for a given name, one
+   * or more of the values returned by getDeclarations is not callable;
    *
    * @param definitionProvider The name reference graph
-   * @param name Query node
+   * @param call The call site. A CALL or NEW node.
    * @return non-empty definition list or null
    */
-  private Collection<Definition> getCallableDefinitions(
-      DefinitionProvider definitionProvider, Node name) {
-    if (name.isGetProp() || name.isName()) {
-      List<Definition> result = new ArrayList<>();
+  private Collection<Definition> getFunctionDefinitions(
+      DefinitionProvider definitionProvider, Node call) {
+    Preconditions.checkArgument(call.isCall() || call.isNew(), call);
 
-      Collection<Definition> decls =
-          definitionProvider.getDefinitionsReferencedAt(name);
-      if (decls == null) {
+    Iterable<Node> expanded;
+    Cache cacheCall = compiler.getCodingConvention().describeCachingCall(call);
+    if (cacheCall != null) {
+      expanded = getGoogCacheCallableExpression(cacheCall);
+    } else {
+      Node callee = call.getFirstChild();
+      expanded = unwrapCallableExpression(callee);
+    }
+    if (expanded == null) {
+      return null;
+    }
+
+    List<Definition> defs = new ArrayList<>();
+    for (Node exp : expanded) {
+      Collection<Definition> values = getCallableDefinitionsByExpression(definitionProvider, exp);
+      if (values == null) {
         return null;
       }
+      defs.addAll(values);
+    }
+    return defs;
+  }
 
-      for (Definition current : decls) {
-        Node rValue = current.getRValue();
-        if (rValue != null && isSupportedFunctionDefinition(rValue)) {
-          result.add(current);
+  /**
+   * Unwraps a complicated expression to reveal directly callable nodes that correspond to
+   * definitions. For example: (a.c || b) or (x ? a.c : b) are turned into [a.c, b]. Since when you
+   * call
+   *
+   * <pre>
+   *   var result = (a.c || b)(some, parameters);
+   * </pre>
+   *
+   * either a.c or b are called.
+   *
+   * @param exp A possibly complicated expression.
+   * @return A list of GET_PROP NAME and function expression nodes (all of which can be called). Or
+   *     null if any of the callable nodes are of an unsupported type. e.g. x['asdf'](param);
+   */
+  private static Iterable<Node> unwrapCallableExpression(Node exp) {
+    switch (exp.getToken()) {
+      case GETPROP:
+        String propName = exp.getLastChild().getString();
+        if (propName.equals("apply") || propName.equals("call")) {
+          return unwrapCallableExpression(exp.getFirstChild());
+        }
+        return ImmutableList.of(exp);
+      case FUNCTION:
+      case NAME:
+        return ImmutableList.of(exp);
+      case OR:
+      case HOOK:
+        Node firstVal;
+        if (exp.isHook()) {
+          firstVal = exp.getSecondChild();
         } else {
+          firstVal = exp.getFirstChild();
+        }
+        Iterable<Node> firstCallable = unwrapCallableExpression(firstVal);
+        Iterable<Node> secondCallable = unwrapCallableExpression(firstVal.getNext());
+
+        if (firstCallable == null || secondCallable == null) {
           return null;
         }
-      }
-
-      return result;
-    } else if (name.isOr() || name.isHook()) {
-      Node firstVal;
-      if (name.isHook()) {
-        firstVal = name.getSecondChild();
-      } else {
-        firstVal = name.getFirstChild();
-      }
-
-      Collection<Definition> defs1 = getCallableDefinitions(definitionProvider, firstVal);
-      Collection<Definition> defs2 = getCallableDefinitions(definitionProvider, firstVal.getNext());
-      if (defs1 != null && defs2 != null) {
-        defs1.addAll(defs2);
-        return defs1;
-      } else {
-        return null;
-      }
-    } else if (NodeUtil.isFunctionExpression(name)) {
-      // The anonymous function reference is also the definition.
-      // TODO(user) Change DefinitionUseSiteFinder so it is possible to query for
-      // function expressions by function node.
-
-      // isExtern is false in the call to the constructor for the
-      // FunctionExpressionDefinition below because we know that
-      // getCallableDefinitions() will only be called on the first
-      // child of a call and thus the function expression
-      // definition will never be an extern.
-      return ImmutableList.of(
-          (Definition) new DefinitionsRemover.FunctionExpressionDefinition(name, false));
-    } else {
-      return null;
+        return Iterables.concat(firstCallable, secondCallable);
+      default:
+        return null; // Unsupported call type.
     }
   }
 
-  boolean isSupportedFunctionDefinition(Node n) {
-    switch (n.getToken()) {
+  /**
+   * Queries the definitionProvider and returns all possible definitions for the given expression.
+   */
+  private static Collection<Definition> getCallableDefinitionsByExpression(
+      DefinitionProvider definitionProvider, Node exp) {
+    Preconditions.checkArgument(
+        exp.isGetProp() || exp.isName() || NodeUtil.isFunctionExpression(exp), exp);
+    if (NodeUtil.isFunctionExpression(exp)) {
+      Definition def = new DefinitionsRemover.FunctionExpressionDefinition(exp, false);
+      return ImmutableList.of(def);
+    }
+    Collection<Definition> declarations = definitionProvider.getDefinitionsReferencedAt(exp);
+    if (declarations == null) {
+      return null;
+    }
+
+    for (Definition current : declarations) {
+      if (!isSupportedFunctionDefinition(current.getRValue())) {
+        return null;
+      }
+    }
+    return declarations;
+  }
+
+  private static boolean isSupportedFunctionDefinition(Node definitionRValue) {
+    if (definitionRValue == null) {
+      return false;
+    }
+    switch (definitionRValue.getToken()) {
       case FUNCTION:
         return true;
       case HOOK:
-        return isSupportedFunctionDefinition(n.getSecondChild())
-            && isSupportedFunctionDefinition(n.getLastChild());
+        return isSupportedFunctionDefinition(definitionRValue.getSecondChild())
+            && isSupportedFunctionDefinition(definitionRValue.getLastChild());
       default:
         return false;
     }
   }
 
+  private Iterable<Node> getGoogCacheCallableExpression(Cache cacheCall) {
+    Preconditions.checkNotNull(cacheCall);
+
+    if (cacheCall.keyFn == null) {
+      return unwrapCallableExpression(cacheCall.valueFn);
+    }
+    return Iterables.concat(
+        unwrapCallableExpression(cacheCall.valueFn), unwrapCallableExpression(cacheCall.keyFn));
+  }
+
+  private List<FunctionInformation> getSideEffectsForCall(
+      Node call,
+      DefinitionProvider definitionProvider,
+      Map<String, FunctionInformation> representativeNodes) {
+    Preconditions.checkArgument(call.isCall() || call.isNew());
+
+    Iterable<Node> expanded;
+    Cache cacheCall = compiler.getCodingConvention().describeCachingCall(call);
+    if (cacheCall != null) {
+      expanded = getGoogCacheCallableExpression(cacheCall);
+    } else {
+      expanded = unwrapCallableExpression(call.getFirstChild());
+    }
+    if (expanded == null) {
+      return null;
+    }
+    List<FunctionInformation> results = new ArrayList<>();
+    for (Node expression : expanded) {
+      if (NodeUtil.isFunctionExpression(expression)) {
+        // isExtern is false in the call to the constructor for the
+        // FunctionExpressionDefinition below because we know that
+        // getFunctionDefinitions() will only be called on the first
+        // child of a call and thus the function expression
+        // definition will never be an extern.
+        results.add(Preconditions.checkNotNull(functionSideEffectMap.get(expression)));
+      }
+
+      String name = NameBasedDefinitionProvider.getSimplifiedName(expression);
+      if (name != null && representativeNodes.containsKey(name)) {
+        results.add(representativeNodes.get(name));
+      } else {
+        Collection<Definition> definitions =
+            getCallableDefinitionsByExpression(definitionProvider, expression);
+        if (definitions == null) {
+          return null;
+        }
+        // Note that there is a single possible definition since otherwise there would be a
+        // representaive node.
+        Preconditions.checkState(definitions.size() == 1, definitions);
+        Preconditions.checkNotNull((definitions.iterator().next().getLValue()));
+        FunctionInformation dep =
+            functionSideEffectMap.get(definitions.iterator().next().getRValue());
+        Preconditions.checkNotNull(dep, definitions.iterator().next());
+        results.add(dep);
+      }
+    }
+    return results;
+  }
+
   /**
-   * Propagate side effect information by building a graph based on
-   * call site information stored in FunctionInformation and the
-   * DefinitionProvider and then running GraphReachability to
-   * determine the set of functions that have side effects.
+   * Propagate side effect information by building a graph based on call site information stored in
+   * FunctionInformation and the DefinitionProvider and then running GraphReachability to determine
+   * the set of functions that have side effects.
    */
   private void propagateSideEffects() {
     // Nodes are function declarations; Edges are function call sites.
-    LinkedDirectedGraph<FunctionInformation, Node> sideEffectGraph =
+    LinkedDirectedGraph<FunctionInformation, CallSitePropagationInfo> sideEffectGraph =
         LinkedDirectedGraph.createWithoutAnnotations();
 
     // create graph nodes
     for (FunctionInformation functionInfo : functionSideEffectMap.values()) {
       functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
     }
+
+    Map<String, FunctionInformation> reps = generateRepresentativeNodes(sideEffectGraph);
 
     // add connections to called functions and side effect root.
     for (FunctionInformation functionInfo : functionSideEffectMap.values()) {
@@ -263,31 +365,32 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       for (Node callSite : functionInfo.getCallsInFunctionBody()) {
-        Node callee = callSite.getFirstChild();
-        Cache cacheCall = compiler.getCodingConvention().describeCachingCall(callSite);
-        Collection<Definition> defs = cacheCall != null
-            ? getGoogCacheCallableDefinitions(definitionProvider, cacheCall)
-            : getCallableDefinitions(definitionProvider, callee);
-        if (defs == null) {
-          // Definition set is not complete or eligible.  Possible
-          // causes include:
-          //  * "callee" is not of type NAME or GETPROP.
-          //  * One or more definitions are not functions.
-          //  * One or more definitions are complex.
-          //    (e.i. return value of a call that returns a function).
+        List<FunctionInformation> possibleSideEffects =
+            getSideEffectsForCall(callSite, definitionProvider, reps);
+        if (possibleSideEffects == null) {
           functionInfo.setTaintsGlobalState();
           break;
         }
 
-        for (Definition def : defs) {
-          Node defValue = def.getRValue();
-          connectDefs(sideEffectGraph, defValue, callSite, functionInfo.graphNode);
+        for (FunctionInformation sideEffectNode : possibleSideEffects) {
+          Preconditions.checkNotNull(sideEffectNode);
+          CallSitePropagationInfo edge = CallSitePropagationInfo.computePropagationType(callSite);
+          sideEffectGraph.connect(sideEffectNode.graphNode, edge, functionInfo.graphNode);
         }
       }
     }
 
     // Propagate side effect information to a fixed point.
-    FixedPointGraphTraversal.newTraversal(new SideEffectPropagationCallback())
+    FixedPointGraphTraversal.newTraversal(
+            new EdgeCallback<FunctionInformation, CallSitePropagationInfo>() {
+              @Override
+              public boolean traverseEdge(
+                  FunctionInformation source,
+                  CallSitePropagationInfo edge,
+                  FunctionInformation destination) {
+                return edge.propagate(source, destination);
+              }
+            })
         .computeFixedPoint(sideEffectGraph);
 
     // Mark remaining functions "pure".
@@ -298,34 +401,85 @@ class PureFunctionIdentifier implements CompilerPass {
     }
   }
 
-  private void connectDefs(
-      LinkedDirectedGraph<FunctionInformation, Node> sideEffectGraph, Node def, Node callSite,
-      DiGraphNode<FunctionInformation, Node> graphNode) {
-    switch(def.getToken()) {
-      case FUNCTION:
-        FunctionInformation info = functionSideEffectMap.get(def);
-        Preconditions.checkNotNull(info);
-        sideEffectGraph.connect(info.graphNode, callSite, graphNode);
-        break;
-      case HOOK:
-        connectDefs(sideEffectGraph, def.getSecondChild(), callSite, graphNode);
-        connectDefs(sideEffectGraph, def.getLastChild(), callSite, graphNode);
-        break;
-      default:
-        throw new IllegalStateException("Unexpect definition node " + def);
+  /**
+   * When propagating side effects we construct a graph from every function definition A to every
+   * function definition B that calls A(). Since the definition provider cannot always provide a
+   * unique defintion for a name, there may be many possible definitions for a given call site.
+   *
+   * <p>Given a call f(), let F be the set of function definitions s.t each definition is named "f".
+   * Let G be the set of functions that call f(). If we link each definition in F to every caller of
+   * f() we have a potential for O(|F|* |G|) number of edges.
+   *
+   * <p>Instead, for each set of definitions F, we synthesize a "representative" side effect node f'
+   * that gathers the side effects for every node in F; all definitions in F have an edge to f'.
+   * Now, instead of creating an edge from every definition in F to every caller of f(), we can
+   * simply create an edge from f' -> f() and the appropriate side effects will be propagated from
+   * all definitions F -> f' -> f().
+   *
+   * <p>Note that we skip creating f' for F of size 1.
+   *
+   * @param sideEffectGraph
+   * @return A map from function names to FunctionInformation nodes (f').
+   */
+  private Map<String, FunctionInformation> generateRepresentativeNodes(
+      LinkedDirectedGraph<FunctionInformation, CallSitePropagationInfo> sideEffectGraph) {
+
+    Map<String, FunctionInformation> reps = new HashMap<>();
+    Set<String> visitedFunctionNames = new HashSet<>(); // Names that already have rep nodes.
+
+    for (Node call : allFunctionCalls) {
+      Iterable<Node> expressions = unwrapCallableExpression(call.getFirstChild());
+      if (expressions == null) {
+        continue;
+      }
+
+      for (Node getOrName : expressions) {
+        String name = NameBasedDefinitionProvider.getSimplifiedName(getOrName);
+        if (visitedFunctionNames.contains(name)) {
+          continue;
+        }
+        Collection<Definition> defs =
+            getCallableDefinitionsByExpression(definitionProvider, getOrName);
+        if (defs == null) {
+          continue;
+        }
+        visitedFunctionNames.add(name);
+
+        // Expand the definitions to include the functions inside HOOK definitions.
+        List<FunctionInformation> expandedDefinitions = new ArrayList<>();
+        for (Definition definition : defs) {
+          // Note this is safe to unwrap since this value passed isSupportedFunctionDefinition
+          for (Node function : unwrapCallableExpression(definition.getRValue())) {
+            Preconditions.checkState(function.getToken() == Token.FUNCTION);
+            expandedDefinitions.add(functionSideEffectMap.get(function));
+          }
+        }
+
+        if (expandedDefinitions.size() > 1) {
+          // No representative node yet.  Need to synthesize one.
+          FunctionInformation representativeNode = new FunctionInformation(false);
+          representativeNode.graphNode = sideEffectGraph.createNode(representativeNode);
+          reps.put(name, representativeNode);
+          for (FunctionInformation definition : expandedDefinitions) {
+            if (definition.mutatesArguments()) {
+              representativeNode.setTaintsArguments();
+            }
+            Preconditions.checkNotNull(definition);
+
+            sideEffectGraph.connect(
+                definition.graphNode, CallSitePropagationInfo.PROPAGATE_ALL,
+                representativeNode.graphNode);
+          }
+        }
+      }
     }
+    return reps;
   }
 
-  /**
-   * Set no side effect property at pure-function call sites.
-   */
+  /** Set no side effect property at pure-function call sites. */
   private void markPureFunctionCalls() {
     for (Node callNode : allFunctionCalls) {
-      Node name = callNode.getFirstChild();
-      Cache cacheCall = compiler.getCodingConvention().describeCachingCall(callNode);
-      Collection<Definition> defs = cacheCall != null
-          ? getGoogCacheCallableDefinitions(definitionProvider, cacheCall)
-          : getCallableDefinitions(definitionProvider, name);
+      Collection<Definition> defs = getFunctionDefinitions(definitionProvider, callNode);
       // Default to side effects, non-local results
       Node.SideEffectFlags flags = new Node.SideEffectFlags();
       if (defs == null) {
@@ -373,9 +527,8 @@ class PureFunctionIdentifier implements CompilerPass {
     }
   }
 
-  private void updateFlagsForDef(Node callNode, Node defNode, Node.SideEffectFlags flags) {
-    FunctionInformation functionInfo =
-        functionSideEffectMap.get(defNode);
+  private void updateFlagsForDef(Node callNode, Node functionNode, Node.SideEffectFlags flags) {
+    FunctionInformation functionInfo = functionSideEffectMap.get(functionNode);
     Preconditions.checkNotNull(functionInfo);
     if (functionInfo.mutatesGlobalState()) {
       flags.setMutatesGlobalState();
@@ -389,7 +542,7 @@ class PureFunctionIdentifier implements CompilerPass {
       flags.setThrows();
     }
 
-    if (!callNode.isNew()) {
+    if (callNode.isCall()) {
       if (functionInfo.taintsThis()) {
         // A FunctionInfo for "f" maps to both "f()" and "f.call()" nodes.
         if (isCallOrApply(callNode)) {
@@ -403,29 +556,6 @@ class PureFunctionIdentifier implements CompilerPass {
     if (functionInfo.taintsReturn()) {
       flags.setReturnsTainted();
     }
-  }
-
-  private Collection<Definition> getGoogCacheCallableDefinitions(
-      DefinitionProvider definitionProvider, Cache cacheCall) {
-    Preconditions.checkNotNull(cacheCall);
-    Preconditions.checkNotNull(definitionProvider);
-
-    List<Definition> defs = new ArrayList<>();
-    Collection<Definition> valueFnDefs =
-        getCallableDefinitions(definitionProvider, cacheCall.valueFn);
-    if (valueFnDefs != null) {
-      defs.addAll(valueFnDefs);
-    }
-
-    if (cacheCall.keyFn != null) {
-      Collection<Definition> keyFnDefs =
-          getCallableDefinitions(definitionProvider, cacheCall.keyFn);
-      if (keyFnDefs != null) {
-        defs.addAll(keyFnDefs);
-      }
-    }
-
-    return defs;
   }
 
   /**
@@ -442,10 +572,10 @@ class PureFunctionIdentifier implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
       // Functions need to be processed as part of pre-traversal so that an entry for the function
-      // exists in the FunctionInformation map when processing assignments and calls within the
+      // exists in the functionSideEffectMap map when processing assignments and calls within the
       // body.
       if (node.isFunction()) {
-        visitFunction(node, parent);
+        functionSideEffectMap.put(node, createFunctionInfo(node, parent));
       }
 
       return true;
@@ -521,16 +651,16 @@ class PureFunctionIdentifier implements CompilerPass {
       FunctionInformation sideEffectInfo = functionSideEffectMap.get(function);
       Preconditions.checkNotNull(sideEffectInfo, "%s has no side effect info.", function);
 
-      if (sideEffectInfo.mutatesGlobalState()){
+      if (sideEffectInfo.mutatesGlobalState()) {
         sideEffectInfo.resetLocalVars();
         return;
       }
 
       for (Var v : t.getScope().getVarIterable()) {
         boolean param = v.getParentNode().isParamList();
-        if (param &&
-            !sideEffectInfo.blacklisted().contains(v) &&
-            sideEffectInfo.taintedLocals().contains(v)) {
+        if (param
+            && !sideEffectInfo.blacklisted().contains(v)
+            && sideEffectInfo.taintedLocals().contains(v)) {
           sideEffectInfo.setTaintsArguments();
           continue;
         }
@@ -634,9 +764,7 @@ class PureFunctionIdentifier implements CompilerPass {
       }
     }
 
-    /**
-     * Record information about a call site.
-     */
+    /** Record information about a call site. */
     private void visitCall(FunctionInformation sideEffectInfo, Node node) {
       // Handle special cases (Math, RegExp)
       if (node.isCall() && !NodeUtil.functionCallHasSideEffects(node, compiler)) {
@@ -652,12 +780,11 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /** Record function and check for @nosideeffects annotations. */
-    private void visitFunction(Node node, Node parent) {
+    private FunctionInformation createFunctionInfo(Node node, Node parent) {
       Preconditions.checkArgument(node.isFunction());
       Preconditions.checkState(!functionSideEffectMap.containsKey(node));
 
       FunctionInformation sideEffectInfo = new FunctionInformation(inExterns);
-      functionSideEffectMap.put(node, sideEffectInfo);
 
       JSDocInfo info = getJSDocInfoForFunction(node, parent);
       if (inExterns) {
@@ -688,6 +815,7 @@ class PureFunctionIdentifier implements CompilerPass {
           }
         }
       }
+      return sideEffectInfo;
     }
 
     /**
@@ -762,139 +890,169 @@ class PureFunctionIdentifier implements CompilerPass {
     return NodeUtil.evaluatesToLocalValue(value, taintingPredicate);
   }
 
-  /**
-   * Callback that propagates side effect information across call sites.
-   */
-  private static class SideEffectPropagationCallback
-      implements EdgeCallback<FunctionInformation, Node> {
-    @Override
-    public boolean traverseEdge(FunctionInformation callee,
-                                Node callSite,
-                                FunctionInformation caller) {
-      Preconditions.checkArgument(callSite.isCall() ||
-                                  callSite.isNew());
+  private static boolean isCallOrApply(Node callSite) {
+    return NodeUtil.isFunctionObjectCall(callSite) || NodeUtil.isFunctionObjectApply(callSite);
+  }
 
+  /**
+   * This class stores all the information about a call site needed to propagate side effects from
+   * one instance of {@link FunctionInformation} to another.
+   */
+  private static class CallSitePropagationInfo {
+
+    static final CallSitePropagationInfo PROPAGATE_ALL = new CallSitePropagationInfo(true, true,
+        Token.CALL);
+
+    private CallSitePropagationInfo(
+        boolean allArgsUnescapedLocal, boolean calleeThisEqualsCallerThis, Token callType) {
+      Preconditions.checkArgument(callType == Token.CALL || callType == Token.NEW);
+      this.allArgsUnescapedLocal = allArgsUnescapedLocal;
+      this.calleeThisEqualsCallerThis = calleeThisEqualsCallerThis;
+      this.callType = callType;
+    }
+
+    // If all the arguments values are local to the scope in which the call site occurs.
+    private final boolean allArgsUnescapedLocal;
+    /**
+     * If you call a function with apply or call, one of the arguments at the call site will be used
+     * as 'this' inside the implementation. If this is pass into apply like so: function.apply(this,
+     * ...) then 'this' in the caller is tainted.
+     */
+    private final boolean calleeThisEqualsCallerThis;
+    // Whether this represents CALL (not a NEW node).
+    private final Token callType;
+
+    /**
+     * Propagate the side effects from the callee to the caller.
+     *
+     * @param callee propagate from
+     * @param caller propagate to
+     * @return Returns true if the propagation changed the side effects on the caller.
+     */
+    boolean propagate(FunctionInformation callee, FunctionInformation caller) {
+      CallSitePropagationInfo propagationType = this;
       boolean changed = false;
-      if (!caller.mutatesGlobalState() && callee.mutatesGlobalState()) {
+      // If the callee modifies global state then so does that caller.
+      if (callee.mutatesGlobalState() && !caller.mutatesGlobalState()) {
         caller.setTaintsGlobalState();
         changed = true;
       }
-
-      if (!caller.functionThrows() && callee.functionThrows()) {
+      // If the callee throws an exception then so does the caller.
+      if (callee.functionThrows() && !caller.functionThrows()) {
         caller.setFunctionThrows();
         changed = true;
       }
-
-      if (!caller.mutatesGlobalState() && callee.mutatesArguments() &&
-          !NodeUtil.allArgsUnescapedLocal(callSite)) {
-        // TODO(nicksantos): We should track locals in the caller
-        // and using that to be more precise. See testMutatesArguments3.
+      // If the callee mutates its input arguments and the arguments escape the caller then it has
+      // unbounded side effects.
+      if (callee.mutatesArguments()
+          && !propagationType.allArgsUnescapedLocal
+          && !caller.mutatesGlobalState()) {
         caller.setTaintsGlobalState();
         changed = true;
       }
+      if (callee.mutatesThis() && propagationType.calleeThisEqualsCallerThis) {
+        if (!caller.mutatesThis()) {
+          caller.setTaintsThis();
+          changed = true;
+        }
+      } else if (callee.mutatesThis() && propagationType.callType != Token.NEW) {
+        // NEW invocations of a constructor that modifies "this" don't cause side effects.
+        if (!caller.mutatesGlobalState()) {
+          caller.setTaintsGlobalState();
+          changed = true;
+        }
+      }
+      return changed;
+    }
 
-      if (callee.mutatesThis()) {
+    static CallSitePropagationInfo computePropagationType(Node callSite) {
+      Preconditions.checkArgument(callSite.isCall() || callSite.isNew());
+
+      boolean thisIsOuterThis = false;
+      if (callSite.isCall()) {
         // Side effects only propagate via regular calls.
         // Calling a constructor that modifies "this" has no side effects.
-        if (!callSite.isNew()) {
-          // Notice that we're using "mutatesThis" from the callee
-          // FunctionInfo. If the call site is actually a .call or .apply, then
-          // the "this" is going to be one of its arguments.
-          boolean isCallOrApply = isCallOrApply(callSite);
-          Node objectNode = isCallOrApply ?
-              callSite.getSecondChild() :
-              callSite.getFirstFirstChild();
-          if (objectNode != null && objectNode.isName()
-              && !isCallOrApply) {
-            // Exclude ".call" and ".apply" as the value may still be
-            // null or undefined. We don't need to worry about this with a
-            // direct method call because null and undefined don't have any
-            // properties.
+        // Notice that we're using "mutatesThis" from the callee
+        // FunctionInfo. If the call site is actually a .call or .apply, then
+        // the "this" is going to be one of its arguments.
+        boolean isCallOrApply = isCallOrApply(callSite);
+        Node objectNode = isCallOrApply ? callSite.getSecondChild() : callSite.getFirstFirstChild();
+        if (objectNode != null && objectNode.isName() && !isCallOrApply) {
+          // Exclude ".call" and ".apply" as the value may still be
+          // null or undefined. We don't need to worry about this with a
+          // direct method call because null and undefined don't have any
+          // properties.
 
-            // TODO(nicksantos): Turn this back on when locals-tracking
-            // is fixed. See testLocalizedSideEffects11.
-            //if (!caller.knownLocals.contains(name)) {
-              if (!caller.mutatesGlobalState()) {
-                caller.setTaintsGlobalState();
-                changed = true;
-              }
-            //}
-          } else if (objectNode != null && objectNode.isThis()) {
-            if (!caller.mutatesThis()) {
-              caller.setTaintsThis();
-              changed = true;
-            }
-          } else if (objectNode != null
-              && NodeUtil.evaluatesToLocalValue(objectNode)
-              && !isCallOrApply) {
-            // Modifying 'this' on a known local object doesn't change any
-            // significant state.
-            // TODO(johnlenz): We can improve this by including literal values
-            // that we know for sure are not null.
-          } else if (!caller.mutatesGlobalState()) {
-            caller.setTaintsGlobalState();
-            changed = true;
-          }
+          // TODO(nicksantos): Turn this back on when locals-tracking
+          // is fixed. See testLocalizedSideEffects11.
+          //if (!caller.knownLocals.contains(name)) {
+          //}
+        } else if (objectNode != null && objectNode.isThis()) {
+          thisIsOuterThis = true;
         }
       }
 
-      return changed;
+      boolean argsUnescapedLocal = NodeUtil.allArgsUnescapedLocal(callSite);
+      return new CallSitePropagationInfo(argsUnescapedLocal, thisIsOuterThis, callSite.getToken());
     }
   }
 
-  private static boolean isCallOrApply(Node callSite) {
-    return NodeUtil.isFunctionObjectCall(callSite) ||
-      NodeUtil.isFunctionObjectApply(callSite);
-  }
-
   /**
-   * Keeps track of a function's known side effects by type and the
-   * list of calls that appear in a function's body.
+   * Keeps track of a function's known side effects by type and the list of calls that appear in a
+   * function's body.
    */
   private static class FunctionInformation {
-    private DiGraphNode<FunctionInformation, Node> graphNode;
     private List<Node> callsInFunctionBody = null;
     private Set<Var> blacklisted = null;
     private Set<Var> taintedLocals = null;
+    DiGraphNode<FunctionInformation, CallSitePropagationInfo> graphNode;
     private int bitmask = 0;
 
     private static final int EXTERN_MASK = 1 << 0;
     private static final int PURE_FUNCTION_MASK = 1 << 1;
+
+    // Side effect types:
     private static final int FUNCTION_THROWS_MASK = 1 << 2;
     private static final int TAINTS_GLOBAL_STATE_MASK = 1 << 3;
+
+    // Function metatdata
     private static final int TAINTS_THIS_MASK = 1 << 4;
     private static final int TAINTS_ARGUMENTS_MASK = 1 << 5;
     private static final int TAINTS_RETURN_MASK = 1 << 7;
 
-    private void setMask(int mask, boolean value) {
-      if (value) {
-        bitmask |= mask;
-      } else {
-        bitmask &= ~mask;
+    FunctionInformation(boolean extern) {
+      if (extern) {
+        setMask(EXTERN_MASK);
       }
     }
 
-    private boolean getMask(int mask) {
+    void setMask(int mask) {
+      bitmask |= mask;
+      checkInvariant();
+    }
+
+    boolean getMask(int mask) {
       return (bitmask & mask) != 0;
     }
 
-    private boolean extern() {
-      return getMask(EXTERN_MASK);
-    }
-
-    private boolean pureFunction() {
+    boolean pureFunction() {
       return getMask(PURE_FUNCTION_MASK);
     }
 
-    private boolean taintsGlobalState() {
+    boolean taintsGlobalState() {
       return getMask(TAINTS_GLOBAL_STATE_MASK);
     }
 
-    private boolean taintsThis() {
+    boolean taintsThis() {
       return getMask(TAINTS_THIS_MASK);
     }
 
-    private boolean taintsReturn() {
+    /**
+     * @return Whether the function returns something that is not affected by global state. In this
+     *     case, only true if return value is a literal or primative since locals are not tracked
+     *     correctly.
+     */
+    boolean taintsReturn() {
       return getMask(TAINTS_RETURN_MASK);
     }
 
@@ -903,50 +1061,6 @@ class PureFunctionIdentifier implements CompilerPass {
      */
     boolean functionThrows() {
       return getMask(FUNCTION_THROWS_MASK);
-    }
-
-    FunctionInformation(boolean extern) {
-      this.setMask(EXTERN_MASK, extern);
-      checkInvariant();
-    }
-
-    public Set<Var> taintedLocals() {
-      if (taintedLocals == null) {
-        return Collections.emptySet();
-      }
-      return taintedLocals;
-    }
-
-    /**
-     * @param var
-     */
-    void addTaintedLocalObject(Var var) {
-      if (taintedLocals == null) {
-        taintedLocals = new HashSet<>();
-      }
-      taintedLocals.add(var);
-    }
-
-    void resetLocalVars() {
-      blacklisted = Collections.emptySet();
-      taintedLocals = Collections.emptySet();
-    }
-
-    public Set<Var> blacklisted() {
-      if (blacklisted == null) {
-        return Collections.emptySet();
-      }
-      return blacklisted;
-    }
-
-    /**
-     * @param var
-     */
-    public void blacklistLocal(Var var) {
-      if (blacklisted == null) {
-        blacklisted = new HashSet<>();
-      }
-      blacklisted.add(var);
     }
 
     /**
@@ -971,48 +1085,42 @@ class PureFunctionIdentifier implements CompilerPass {
      * Mark the function as being pure.
      */
     void setIsPure() {
-      this.setMask(PURE_FUNCTION_MASK, true);
-      checkInvariant();
+      this.setMask(PURE_FUNCTION_MASK);
     }
 
     /**
      * Marks the function as having "modifies globals" side effects.
      */
     void setTaintsGlobalState() {
-      setMask(TAINTS_GLOBAL_STATE_MASK, true);
-      checkInvariant();
+      setMask(TAINTS_GLOBAL_STATE_MASK);
     }
 
     /**
      * Marks the function as having "modifies this" side effects.
      */
     void setTaintsThis() {
-      setMask(TAINTS_THIS_MASK, true);
-      checkInvariant();
+      setMask(TAINTS_THIS_MASK);
     }
 
     /**
      * Marks the function as having "modifies arguments" side effects.
      */
     void setTaintsArguments() {
-      setMask(TAINTS_ARGUMENTS_MASK, true);
-      checkInvariant();
+      setMask(TAINTS_ARGUMENTS_MASK);
     }
 
     /**
      * Marks the function as having "throw" side effects.
      */
     void setFunctionThrows() {
-      setMask(FUNCTION_THROWS_MASK, true);
-      checkInvariant();
+      setMask(FUNCTION_THROWS_MASK);
     }
 
     /**
      * Marks the function as having non-local return result.
      */
     void setTaintsReturn() {
-      setMask(TAINTS_RETURN_MASK, true);
-      checkInvariant();
+      setMask(TAINTS_RETURN_MASK);
     }
 
 
@@ -1049,10 +1157,48 @@ class PureFunctionIdentifier implements CompilerPass {
       }
     }
 
-    /**
-     * Add a CALL or NEW node to the list of calls this function makes.
-     */
+    private boolean extern() {
+      return getMask(EXTERN_MASK);
+    }
+
+    public Set<Var> taintedLocals() {
+      if (taintedLocals == null) {
+        return Collections.emptySet();
+      }
+      return taintedLocals;
+    }
+
+    /** @param var */
+    void addTaintedLocalObject(Var var) {
+      if (taintedLocals == null) {
+        taintedLocals = new HashSet<>();
+      }
+      taintedLocals.add(var);
+    }
+
+    void resetLocalVars() {
+      blacklisted = Collections.emptySet();
+      taintedLocals = Collections.emptySet();
+    }
+
+    public Set<Var> blacklisted() {
+      if (blacklisted == null) {
+        return Collections.emptySet();
+      }
+      return blacklisted;
+    }
+
+    /** @param var */
+    public void blacklistLocal(Var var) {
+      if (blacklisted == null) {
+        blacklisted = new HashSet<>();
+      }
+      blacklisted.add(var);
+    }
+
+    /** Add a CALL or NEW node to the list of calls this function makes. */
     void appendCall(Node callNode) {
+      Preconditions.checkArgument(callNode.isCall() || callNode.isNew());
       if (callsInFunctionBody == null) {
         callsInFunctionBody = new ArrayList<>();
       }
