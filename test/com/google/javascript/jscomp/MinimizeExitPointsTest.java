@@ -22,7 +22,7 @@ package com.google.javascript.jscomp;
 public final class MinimizeExitPointsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new MinimizeExitPoints(compiler);
+    return new MinimizeExitPoints(compiler).asCompilerPass();
   }
 
   @Override

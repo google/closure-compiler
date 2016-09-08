@@ -43,13 +43,13 @@ public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
       public void process(Node externs, Node js) {
         new CreateSyntheticBlocks(compiler, START_MARKER, END_MARKER).process(
             externs, js);
-        new MinimizeExitPoints(compiler).process(externs, js);
+        new MinimizeExitPoints(compiler).asCompilerPass().process(externs, js);
         new PeepholeOptimizationsPass(compiler,
             new PeepholeRemoveDeadCode(),
             new PeepholeMinimizeConditions(true /* late */, false /* useTypes */),
             new PeepholeFoldConstants(true, false))
             .process(externs, js);
-        new MinimizeExitPoints(compiler).process(externs, js);
+        new MinimizeExitPoints(compiler).asCompilerPass().process(externs, js);
         new Denormalize(compiler).process(externs, js);
       }
     };

@@ -941,8 +941,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.foldConstants) {
-      // These used to be one pass.
-      passes.add(minimizeExitPoints);
       passes.add(peepholeOptimizations);
     }
 
@@ -1493,6 +1491,7 @@ public final class DefaultPassConfig extends PassConfig {
     final boolean late = false;
     final boolean useTypesForOptimization =  compiler.getOptions().useTypesForOptimization;
     return new PeepholeOptimizationsPass(compiler,
+          new MinimizeExitPoints(compiler),
           new PeepholeMinimizeConditions(late, useTypesForOptimization),
           new PeepholeSubstituteAlternateSyntax(late),
           new PeepholeReplaceKnownMethods(late),
@@ -2153,17 +2152,6 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new InlineVariables(
           compiler, InlineVariables.Mode.CONSTANTS_ONLY, true);
-    }
-  };
-
-  /**
-   * Perform local control flow optimizations.
-   */
-  private final PassFactory minimizeExitPoints =
-      new PassFactory("minimizeExitPoints", false) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new MinimizeExitPoints(compiler);
     }
   };
 
