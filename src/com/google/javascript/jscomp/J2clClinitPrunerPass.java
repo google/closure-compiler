@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.javascript.jscomp.J2clSourceFileChecker.J2clChangeTracker;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
@@ -30,21 +29,14 @@ import java.util.Set;
 public class J2clClinitPrunerPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
-  private final J2clChangeTracker j2clChangeTracker;
 
-  J2clClinitPrunerPass(AbstractCompiler compiler, J2clChangeTracker j2clChangeTracker) {
+  J2clClinitPrunerPass(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.j2clChangeTracker = j2clChangeTracker;
   }
 
   @Override
   public void process(Node externs, Node root) {
     if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
-      return;
-    }
-    if (j2clChangeTracker != null
-        && j2clChangeTracker.isEnabled()
-        && !j2clChangeTracker.hasChanged()) {
       return;
     }
 

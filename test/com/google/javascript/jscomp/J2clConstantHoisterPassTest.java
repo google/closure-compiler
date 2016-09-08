@@ -19,7 +19,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new J2clConstantHoisterPass(compiler, null);
+    return new J2clConstantHoisterPass(compiler);
   }
 
   @Override

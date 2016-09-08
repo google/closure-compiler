@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.J2clSourceFileChecker.J2clChangeTracker;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -32,21 +31,14 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
   }
 
   private final AbstractCompiler compiler;
-  private final J2clChangeTracker j2clChangeTracker;
 
-  J2clEqualitySameRewriterPass(AbstractCompiler compiler, J2clChangeTracker j2clChangeTracker) {
+  J2clEqualitySameRewriterPass(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.j2clChangeTracker = j2clChangeTracker;
   }
 
   @Override
   public void process(Node externs, Node root) {
     if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
-      return;
-    }
-    if (j2clChangeTracker != null
-        && j2clChangeTracker.isEnabled()
-        && !j2clChangeTracker.hasChanged()) {
       return;
     }
 

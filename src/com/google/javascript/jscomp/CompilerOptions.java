@@ -693,9 +693,6 @@ public class CompilerOptions {
   /** Processes the output of J2CL */
   J2clPassMode j2clPassMode;
 
-  /** J2CL can't extend the optimization loop. */
-  boolean limitJ2clOptimization = false;
-
   /** Remove methods that only make a super call without changing the arguments. */
   boolean removeAbstractMethods;
 
@@ -1634,10 +1631,6 @@ public class CompilerOptions {
     if (j2clPassMode.isExplicitlyOn()) {
       setWarningLevel(DiagnosticGroup.forType(SourceFile.DUPLICATE_ZIP_CONTENTS), CheckLevel.OFF);
     }
-  }
-
-  public void setLimitJ2clOptimization(boolean limitJ2clOptimization) {
-    this.limitJ2clOptimization = limitJ2clOptimization;
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {

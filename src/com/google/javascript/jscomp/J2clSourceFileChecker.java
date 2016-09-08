@@ -24,47 +24,6 @@ import com.google.javascript.rhino.Node;
  */
 final class J2clSourceFileChecker implements CompilerPass {
 
-  /**
-   * Listens to changes in the optimization loops so that J2CL passes can decide whether or not to
-   * run.
-   */
-  public static class J2clChangeTracker implements CodeChangeHandler {
-
-    private boolean enabled = true;
-    private boolean registered = false;
-    private boolean changed = true;
-
-    @Override
-    public void reportChange() {
-      changed = true;
-    }
-
-    public void reset() {
-      changed = false;
-    }
-
-    public boolean hasChanged() {
-      return changed;
-    }
-
-    public void setDisabled() {
-      enabled = false;
-    }
-
-    public boolean isEnabled() {
-      return enabled;
-    }
-
-    public void ensureRegistered(AbstractCompiler compiler) {
-      if (!registered) {
-        return;
-      }
-
-      registered = true;
-      compiler.addChangeHandler(this);
-    }
-  }
-
   private AbstractCompiler compiler;
   // The Annotation value type should be Boolean.
   static final String HAS_J2CL_ANNOTATION_KEY = "HAS_J2CL";
