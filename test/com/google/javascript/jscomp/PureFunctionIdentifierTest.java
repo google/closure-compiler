@@ -590,51 +590,68 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testResultLocalitySimple() throws Exception {
     String prefix = "var g; function f(){";
     String suffix = "} f()";
-    List<String> expected = ImmutableList.of("f");
+    final List<String> fReturnsLocal = ImmutableList.of("f");
+    final List<String> fReturnsNonLocal = ImmutableList.<String>of();
 
     // no return
-    checkLocalityOfMarkedCalls(
-        prefix + "" + suffix, expected);
+    checkLocalityOfMarkedCalls(prefix + "" + suffix, fReturnsLocal);
     // simple return expressions
-    checkLocalityOfMarkedCalls(
-        prefix + "return 1" + suffix, expected);
-    checkLocalityOfMarkedCalls(
-        prefix + "return 1 + 2" + suffix, expected);
+    checkLocalityOfMarkedCalls(prefix + "return 1" + suffix, fReturnsLocal);
+    checkLocalityOfMarkedCalls(prefix + "return 1 + 2" + suffix, fReturnsLocal);
 
     // global result
-    checkLocalityOfMarkedCalls(
-        prefix + "return g" + suffix, NO_PURE_CALLS);
+    checkLocalityOfMarkedCalls(prefix + "return g" + suffix, fReturnsNonLocal);
 
     // multiple returns
-    checkLocalityOfMarkedCalls(
-        prefix + "return 1; return 2" + suffix, expected);
-    checkLocalityOfMarkedCalls(
-        prefix + "return 1; return g" + suffix, NO_PURE_CALLS);
+    checkLocalityOfMarkedCalls(prefix + "return 1; return 2" + suffix, fReturnsLocal);
+    checkLocalityOfMarkedCalls(prefix + "return 1; return g" + suffix, fReturnsNonLocal);
 
-    // local var, not yet.
-    checkLocalityOfMarkedCalls(
-        prefix + "var a = 1; return a" + suffix, NO_PURE_CALLS);
+    // local var, not yet. Note we do not handle locals properly here.
+    checkLocalityOfMarkedCalls(prefix + "var a = 1; return a" + suffix, fReturnsNonLocal);
 
-    // mutate local var, not yet.
-    checkLocalityOfMarkedCalls(
-        prefix + "var a = 1; a = 2; return a" + suffix, NO_PURE_CALLS);
-    checkLocalityOfMarkedCalls(
-        prefix + "var a = 1; a = 2; return a + 1" + suffix, expected);
+    // mutate local var, not yet. Note we do not handle locals properly here.
+    checkLocalityOfMarkedCalls(prefix + "var a = 1; a = 2; return a" + suffix, fReturnsNonLocal);
+    checkLocalityOfMarkedCalls(prefix + "var a = 1; a = 2; return a + 1" + suffix, fReturnsLocal);
 
     // read from obj literal
+    checkLocalityOfMarkedCalls(prefix + "return {foo : 1}.foo" + suffix, fReturnsNonLocal);
     checkLocalityOfMarkedCalls(
-        prefix + "return {foo : 1}.foo" + suffix,
-        NO_PURE_CALLS);
-    checkLocalityOfMarkedCalls(
-        prefix + "var a = {foo : 1}; return a.foo" + suffix,
-        NO_PURE_CALLS);
+        prefix + "var a = {foo : 1}; return a.foo" + suffix, fReturnsNonLocal);
 
     // read from extern
-    checkLocalityOfMarkedCalls(
-        prefix + "return externObj" + suffix, NO_PURE_CALLS);
+    checkLocalityOfMarkedCalls(prefix + "return externObj" + suffix, NO_PURE_CALLS);
     checkLocalityOfMarkedCalls(
         "function inner(x) { x.foo = 3; }" /* to suppress missing property */ +
         prefix + "return externObj.foo" + suffix, NO_PURE_CALLS);
+  }
+
+  /**
+   * Note that this works because object literals are always seen as local according to {@link
+   * NodeUtil#evaluatesToLocalValue}
+   */
+  public void testReturnLocalityTaintLiteralWithGlobal() {
+    // return empty object literal.  This is completely local
+    String source = LINE_JOINER.join(
+        "function f() { return {} }",
+        "f();"
+    );
+    checkLocalityOfMarkedCalls(source, ImmutableList.of("f"));
+    // return obj literal with global taint.
+    source = LINE_JOINER.join(
+            "var global = new Object();",
+            "function f() { return {'asdf': global} }",
+            "f();"
+        );
+    checkLocalityOfMarkedCalls(source, ImmutableList.of("f"));
+  }
+
+  public void testReturnLocalityMultipleDefinitionsSameName() {
+    String source = LINE_JOINER.join(
+            "var global = new Object();",
+            "A.func = function() {return global}", // return global (taintsReturn)
+            "B.func = function() {return 1; }", // returns local
+            "C.func();");
+    checkLocalityOfMarkedCalls(source, ImmutableList.<String>of());
   }
 
   public void testExternCalls() throws Exception {
@@ -1636,12 +1653,13 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
       compiler.getOptions().setUseTypesForOptimization(true);
       NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
       defFinder.process(externs, root);
-      PureFunctionIdentifier passUnderTest =
+
+      PureFunctionIdentifier pureFunctionIdentifier =
           new PureFunctionIdentifier(compiler, defFinder);
-      passUnderTest.process(externs, root);
+      pureFunctionIdentifier.process(externs, root);
 
       // Ensure that debug report computation doesn't crash.
-      passUnderTest.getDebugReport();
+      pureFunctionIdentifier.getDebugReport();
 
       NodeTraversal.traverseEs6(compiler, externs, this);
       NodeTraversal.traverseEs6(compiler, root, this);

@@ -75,13 +75,19 @@ class PureFunctionIdentifier implements CompilerPass {
   // List of all function call sites; used to iterate in markPureFunctionCalls.
   private final List<Node> allFunctionCalls;
 
+  /**
+   * Map of function names to side effect gathering representative nodes. See {@link
+   * PureFunctionIdentifier#generateRepresentativeNodes(LinkedDirectedGraph)}
+   */
+  private Map<String, FunctionInformation> representativeNodesByName;
+
   // Externs and ast tree root, for use in getDebugReport.  These two
   // fields are null until process is called.
   private Node externs;
   private Node root;
 
   public PureFunctionIdentifier(AbstractCompiler compiler, DefinitionProvider definitionProvider) {
-    this.compiler = compiler;
+    this.compiler = Preconditions.checkNotNull(compiler);
     this.definitionProvider = definitionProvider;
     this.functionSideEffectMap = new LinkedHashMap<>();
     this.allFunctionCalls = new ArrayList<>();
@@ -361,7 +367,7 @@ class PureFunctionIdentifier implements CompilerPass {
       functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
     }
 
-    Map<String, FunctionInformation> reps = generateRepresentativeNodes(sideEffectGraph);
+    representativeNodesByName = generateRepresentativeNodes(sideEffectGraph);
 
     // add connections to called functions and side effect root.
     for (FunctionInformation functionInfo : functionSideEffectMap.values()) {
@@ -371,7 +377,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
       for (Node callSite : functionInfo.getCallsInFunctionBody()) {
         List<FunctionInformation> possibleSideEffects =
-            getSideEffectsForCall(callSite, definitionProvider, reps);
+            getSideEffectsForCall(callSite, definitionProvider, representativeNodesByName);
         if (possibleSideEffects == null) {
           functionInfo.setTaintsGlobalState();
           break;
@@ -469,6 +475,9 @@ class PureFunctionIdentifier implements CompilerPass {
             if (definition.mutatesArguments()) {
               representativeNode.setTaintsArguments();
             }
+            if (definition.taintsReturn()) {
+              representativeNode.setTaintsReturn();
+            }
             Preconditions.checkNotNull(definition);
 
             sideEffectGraph.connect(
@@ -484,26 +493,50 @@ class PureFunctionIdentifier implements CompilerPass {
   /** Set no side effect property at pure-function call sites. */
   private void markPureFunctionCalls() {
     for (Node callNode : allFunctionCalls) {
-      Collection<Definition> defs = getFunctionDefinitions(definitionProvider, callNode);
+      List<FunctionInformation> possibleSideEffects =
+          getSideEffectsForCall(callNode, definitionProvider, representativeNodesByName);
       // Default to side effects, non-local results
       Node.SideEffectFlags flags = new Node.SideEffectFlags();
-      if (defs == null) {
+      if (possibleSideEffects == null) {
         flags.setMutatesGlobalState();
         flags.setThrows();
         flags.setReturnsTainted();
       } else {
         flags.clearAllFlags();
-        for (Definition def : defs) {
-          updateFlagsForDefs(callNode, def.getRValue(), flags);
-          if (flags.areAllFlagsSet()) {
-            break;
+
+        for (FunctionInformation functionInfo : possibleSideEffects) {
+          Preconditions.checkNotNull(functionInfo);
+          if (functionInfo.mutatesGlobalState()) {
+            flags.setMutatesGlobalState();
+          }
+
+          if (functionInfo.mutatesArguments()) {
+            flags.setMutatesArguments();
+          }
+
+          if (functionInfo.functionThrows()) {
+            flags.setThrows();
+          }
+
+          if (callNode.isCall()) {
+            if (functionInfo.taintsThis()) {
+              // A FunctionInfo for "f" maps to both "f()" and "f.call()" nodes.
+              if (isCallOrApply(callNode)) {
+                flags.setMutatesArguments();
+              } else {
+                flags.setMutatesThis();
+              }
+            }
+          }
+
+          if (functionInfo.taintsReturn()) {
+            flags.setReturnsTainted();
           }
         }
       }
 
       // Handle special cases (Math, RegExp)
       if (callNode.isCall()) {
-        Preconditions.checkState(compiler != null);
         if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
           flags.clearSideEffectFlags();
         }
@@ -515,51 +548,6 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       callNode.setSideEffectFlags(flags.valueOf());
-    }
-  }
-
-  private void updateFlagsForDefs(Node callNode, Node defNode, Node.SideEffectFlags flags) {
-    switch(defNode.getToken()) {
-      case FUNCTION:
-        updateFlagsForDef(callNode, defNode, flags);
-        break;
-      case HOOK:
-        updateFlagsForDefs(callNode, defNode.getSecondChild(), flags);
-        updateFlagsForDefs(callNode, defNode.getLastChild(), flags);
-        break;
-      default:
-        throw new IllegalStateException("Unexpect definition node " + defNode);
-    }
-  }
-
-  private void updateFlagsForDef(Node callNode, Node functionNode, Node.SideEffectFlags flags) {
-    FunctionInformation functionInfo = functionSideEffectMap.get(functionNode);
-    Preconditions.checkNotNull(functionInfo);
-    if (functionInfo.mutatesGlobalState()) {
-      flags.setMutatesGlobalState();
-    }
-
-    if (functionInfo.mutatesArguments()) {
-      flags.setMutatesArguments();
-    }
-
-    if (functionInfo.functionThrows()) {
-      flags.setThrows();
-    }
-
-    if (callNode.isCall()) {
-      if (functionInfo.taintsThis()) {
-        // A FunctionInfo for "f" maps to both "f()" and "f.call()" nodes.
-        if (isCallOrApply(callNode)) {
-          flags.setMutatesArguments();
-        } else {
-          flags.setMutatesThis();
-        }
-      }
-    }
-
-    if (functionInfo.taintsReturn()) {
-      flags.setReturnsTainted();
     }
   }
 
