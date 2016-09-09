@@ -230,6 +230,19 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
   }
 
+  public void testBug31301233() {
+    String source = LINE_JOINER.join(
+        "function Foo() {",
+        "  var x = window.document.location;",
+        "  goog.string.Const.from(x);",
+        "};");
+
+    CompilerOptions options = createCompilerOptions();
+    options.setSmartNameRemoval(true);
+    options.setExtraSmartNameRemoval(true);
+    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+  }
+
   public void testBug2410122() {
     CompilerOptions options = createCompilerOptions();
     options.setGenerateExports(true);

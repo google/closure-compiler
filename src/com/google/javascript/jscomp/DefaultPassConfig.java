@@ -573,6 +573,12 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(initNameAnalyzeReport);
     }
 
+    // TODO(mlourenco): Ideally this would be in getChecks() instead of getOptimizations(). But
+    // for that it needs to understand constant properties as well. See b/31301233#10.
+    // Needs to happen after inferConsts and collapseProperties. Detects whether invocations of
+    // the method goog.string.Const.from are done with an argument which is a string literal.
+    passes.add(checkConstParams);
+
     // Running smart name removal before disambiguate properties allows disambiguate properties
     // to be more effective if code that would prevent disambiguation can be removed.
     if (options.extraSmartNameRemoval && options.smartNameRemoval) {
@@ -627,10 +633,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.chainCalls) {
       passes.add(chainCalls);
     }
-
-    // Detects whether invocations of the method goog.string.Const.from are done
-    // with an argument which is a string literal.
-    passes.add(checkConstParams);
 
     assertAllOneTimePasses(passes);
 
