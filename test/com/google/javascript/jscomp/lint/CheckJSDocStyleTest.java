@@ -26,7 +26,6 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDO
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL;
-import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS;
 
 import com.google.javascript.jscomp.CheckLevel;
@@ -554,8 +553,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "/**",
             " * @param {number=} n",
             " */",
-            "function f(n) {}"),
-        OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME);
+            "function f(n) {}"));
 
     testSame(
         LINE_JOINER.join(

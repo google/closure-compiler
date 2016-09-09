@@ -80,10 +80,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       DiagnosticType.disabled("JSC_OPTIONAL_PARAM_NOT_MARKED_OPTIONAL",
           "Parameter {0} is optional so its type must end with =");
 
-  public static final DiagnosticType OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME =
-      DiagnosticType.disabled("JSC_OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME",
-          "Optional parameter name {0} must be prefixed with opt_");
-
   public static final DiagnosticType WRONG_NUMBER_OF_PARAMS =
       DiagnosticType.disabled("JSC_WRONG_NUMBER_OF_PARAMS", "Wrong number of @param annotations");
 
@@ -106,7 +102,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           MUST_BE_PRIVATE,
           MUST_HAVE_TRAILING_UNDERSCORE,
           OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
-          OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
           WRONG_NUMBER_OF_PARAMS,
           INCORRECT_PARAM_NAME,
           EXTERNS_FILES_SHOULD_BE_ANNOTATED);
@@ -375,9 +370,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     boolean jsDocOptional = paramType != null && paramType.isOptionalArg();
     if (nameOptional && !jsDocOptional) {
       t.report(nodeToCheck, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, name);
-      return true;
-    } else if (!nameOptional && jsDocOptional) {
-      t.report(nodeToCheck, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, name);
       return true;
     }
     return false;
