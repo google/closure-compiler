@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -56,7 +55,13 @@ import java.util.Set;
  *
  * <p>Date.now is an example of a function that has no side effects but is not pure.
  *
+ * <p>TODO: This pass could be greatly improved by proper tracking of locals within function bodies.
+ * Every instance of the call to {@link NodeUtil#evaluatesToLocalValue(Node)} and
+ * {@link NodeUtil#allArgsUnescapedLocal(Node)} do not actually take into account local variables.
+ * They only assume literals, primatives, and operations on primatives are local.
+ *
  * @author johnlenz@google.com (John Lenz)
+ * @author tdeegan@google.com (Thomas Deegan)
  *     <p>We will prevail, in peace and freedom from fear, and in true health, through the purity
  *     and essence of our natural... fluids. - General Turgidson
  */
@@ -849,45 +854,6 @@ class PureFunctionIdentifier implements CompilerPass {
   private static boolean isIncDec(Node n) {
     Token type = n.getToken();
     return (type == Token.INC || type == Token.DEC);
-  }
-
-  /**
-   * @return Whether the node is known to be a value that is not a reference
-   *     outside the local scope.
-   */
-  @SuppressWarnings("unused")
-  private static boolean isKnownLocalValue(final Node value) {
-    Predicate<Node> taintingPredicate =
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node value) {
-            switch (value.getToken()) {
-              case ASSIGN:
-                // The assignment might cause an alias, look at the LHS.
-                return false;
-              case THIS:
-                // TODO(johnlenz): maybe redirect this to be a tainting list for 'this'.
-                return false;
-              case NAME:
-                // TODO(johnlenz): add to local tainting list, if the NAME
-                // is known to be a local.
-                return false;
-              case GETELEM:
-              case GETPROP:
-                // There is no information about the locality of object properties.
-                return false;
-              case CALL:
-                // TODO(johnlenz): add to local tainting list, if the call result
-                // is not known to be a local result.
-                return false;
-              default:
-                break;
-            }
-            return false;
-          }
-        };
-
-    return NodeUtil.evaluatesToLocalValue(value, taintingPredicate);
   }
 
   private static boolean isCallOrApply(Node callSite) {
