@@ -307,6 +307,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           ILLEGAL_OBJLIT_KEY,
           NON_STRINGIFIABLE_OBJECT_KEY,
           ABSTRACT_METHOD_IN_CONCRETE_CLASS,
+          ABSTRACT_METHOD_NOT_CALLABLE,
           ES5_CLASS_EXTENDING_ES6_CLASS,
           RhinoErrorReporter.TYPE_PARSE_ERROR,
           TypedScopeCreator.UNKNOWN_LENDS,

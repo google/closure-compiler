@@ -142,6 +142,7 @@ class TypeValidator {
                              "Cannot do {0} access on a {1}");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      ABSTRACT_METHOD_NOT_IMPLEMENTED,
       INVALID_CAST,
       TYPE_MISMATCH_WARNING,
       MISSING_EXTENDS_TAG_WARNING,
