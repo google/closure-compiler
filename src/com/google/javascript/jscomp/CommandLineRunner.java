@@ -314,7 +314,7 @@ public class CommandLineRunner extends
         hidden = true,
         usage = "Whether to apply input source maps to the output source map, "
         + "i.e. have the result map back to original inputs")
-    private boolean applyInputSourceMaps = false;
+    private boolean applyInputSourceMaps = true;
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
