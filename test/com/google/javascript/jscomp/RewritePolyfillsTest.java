@@ -62,6 +62,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.rewritePolyfills = true;
+    options.setWarningLevel(DiagnosticGroups.MISSING_POLYFILL, CheckLevel.WARNING);
     return options;
   }
 

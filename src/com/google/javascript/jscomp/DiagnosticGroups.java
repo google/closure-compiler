@@ -101,8 +101,8 @@ public class DiagnosticGroups {
       + "conformanceViolations, const, constantProperty, deprecated, "
       + "deprecatedAnnotations, duplicateMessage, es3, "
       + "es5Strict, externsValidation, fileoverviewTags, globalThis, "
-      + "internetExplorerChecks, invalidCasts, "
-      + "misplacedTypeAnnotation, missingGetCssName, missingProperties, "
+      + "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, "
+      + "missingGetCssName, missingPolyfill, missingProperties, "
       + "missingProvide, missingRequire, missingReturn, msgDescriptions, "
       + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, "
       + "suspiciousCode, strictModuleDepCheck, typeInvalidation, "
@@ -593,6 +593,11 @@ public class DiagnosticGroups {
           "lateProvide", // undocumented
           ProcessClosurePrimitives.LATE_PROVIDE_ERROR,
           ClosureRewriteModule.LATE_PROVIDE_ERROR);
+
+  public static final DiagnosticGroup MISSING_POLYFILL =
+      DiagnosticGroups.registerGroup(
+          "missingPolyfill",
+          RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
 
   // For internal use only, so there are no constants for these groups.
   static {

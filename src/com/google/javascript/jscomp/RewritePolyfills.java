@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public class RewritePolyfills implements HotSwapCompilerPass {
 
-  static final DiagnosticType INSUFFICIENT_OUTPUT_VERSION_ERROR = DiagnosticType.warning(
+  static final DiagnosticType INSUFFICIENT_OUTPUT_VERSION_ERROR = DiagnosticType.disabled(
       "JSC_INSUFFICIENT_OUTPUT_VERSION",
       "Built-in ''{0}'' not supported in output version {1}: set --language_out to at least {2}");
 
