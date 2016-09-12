@@ -261,6 +261,40 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "var /** !Rec */ r = { f : function() {} };");
   }
 
+  public void testAbstract1() {
+    // @abstract is preserved
+    enableTypeCheck();
+    testRewriteWarning(
+        LINE_JOINER.join(
+        "var x = goog.defineClass(null, {",
+        "  /** @abstract */",
+        "  constructor: function() {}",
+        "});",
+        "new x();"),
+        LINE_JOINER.join(
+        "/** @abstract @struct @constructor */",
+        "var x = function() {};",
+        "new x();"),
+        TypeCheck.INSTANTIATE_ABSTRACT_CLASS);
+  }
+
+  public void testAbstract2() {
+    // @abstract is preserved, at the class level too
+    enableTypeCheck();
+    testRewriteWarning(
+        LINE_JOINER.join(
+        "/** @abstract */",
+        "var x = goog.defineClass(null, {",
+        "  constructor: function() {}",
+        "});",
+        "new x();"),
+        LINE_JOINER.join(
+        "/** @abstract @struct @constructor */",
+        "var x = function() {};",
+        "new x();"),
+        TypeCheck.INSTANTIATE_ABSTRACT_CLASS);
+  }
+
   public void testInnerClass1() {
     testRewrite(
         "var x = goog.defineClass(some.Super, {\n"

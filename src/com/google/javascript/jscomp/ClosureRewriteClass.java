@@ -477,7 +477,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
                       def.value)
                   .setJSDocInfo(def.info));
       exprResult.useSourceInfoIfMissingFromForTree(def.name);
-      
+
       // The length needs to be set explicitly to include the string key node and the function node.
       // If we just used the length of def.name or def.value alone, then refactorings which try to
       // delete the method would not work correctly.
@@ -600,6 +600,10 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     Visibility visibility = classInfo.getVisibility();
     if (visibility != null && visibility != JSDocInfo.Visibility.INHERITED) {
       mergedInfo.recordVisibility(classInfo.getVisibility());
+    }
+
+    if (classInfo.isAbstract()) {
+      mergedInfo.recordAbstract();
     }
 
     if (classInfo.isConstant()) {
