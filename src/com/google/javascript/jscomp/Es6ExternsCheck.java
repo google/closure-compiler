@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -33,11 +34,24 @@ final class Es6ExternsCheck extends AbstractPreOrderCallback implements Compiler
     this.compiler = compiler;
   }
 
+  private boolean hasEs6Syntax(Node root) {
+    Preconditions.checkState(root.isBlock());
+    for (Node script : root.children()) {
+      Preconditions.checkState(script.isScript());
+      if (TranspilationPasses.isScriptEs6ImplOrHigher(script)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, externs, this);
-    if (!hasSymbolExterns) {
-      compiler.report(JSError.make(MISSING_ES6_EXTERNS));
+    if (hasEs6Syntax(root)) {
+      NodeTraversal.traverseEs6(compiler, externs, this);
+      if (!hasSymbolExterns) {
+        compiler.report(JSError.make(MISSING_ES6_EXTERNS));
+      }
     }
   }
 
