@@ -427,7 +427,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *   name: (string|undefined),
  *   priority: (number|undefined),
  *   replace: (boolean|undefined),
- *   require: (string|Array.<string>|undefined),
+ *   require: (string|Array.<string>|!Object<string, string>|undefined),
  *   restrict: (string|undefined),
  *   scope: (boolean|Object.<string, string>|undefined),
  *   template: (string|
