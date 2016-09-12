@@ -70,7 +70,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
     }
 
     // "--use_types_for_optimization" must be on to enable the following type check.
-    if (!compiler.getOptions().useTypesForOptimization) {
+    if (!compiler.getOptions().useTypesForLocalOptimization) {
       return;
     }
 

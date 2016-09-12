@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
+
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -491,7 +492,7 @@ public class CompilerOptions {
   boolean chainCalls;
 
   /** Use type information to enable additional optimization opportunities. */
-  boolean useTypesForOptimization;
+  boolean useTypesForLocalOptimization;
 
   //--------------------------------
   // Renaming
@@ -1516,7 +1517,7 @@ public class CompilerOptions {
   }
 
   boolean shouldInlineProperties() {
-    return useTypesForOptimization || inlineProperties;
+    return inlineProperties;
   }
 
   /**
@@ -2145,8 +2146,17 @@ public class CompilerOptions {
     this.convertToDottedProperties = convertToDottedProperties;
   }
 
+  public void setUseTypesForLocalOptimization(boolean useTypesForLocalOptimization) {
+    this.useTypesForLocalOptimization = useTypesForLocalOptimization;
+  }
+
   public void setUseTypesForOptimization(boolean useTypesForOptimization) {
-    this.useTypesForOptimization = useTypesForOptimization;
+    if (useTypesForOptimization) {
+      this.disambiguateProperties = useTypesForOptimization;
+      this.ambiguateProperties = useTypesForOptimization;
+      this.inlineProperties = useTypesForOptimization;
+      this.useTypesForLocalOptimization = useTypesForOptimization;
+    }
   }
 
   public void setRewriteFunctionExpressions(boolean rewriteFunctionExpressions) {
@@ -2241,7 +2251,7 @@ public class CompilerOptions {
   }
 
   boolean shouldDisambiguateProperties() {
-    return this.useTypesForOptimization || this.disambiguateProperties;
+    return this.disambiguateProperties;
   }
 
   public void setAmbiguateProperties(boolean ambiguateProperties) {
@@ -2249,7 +2259,7 @@ public class CompilerOptions {
   }
 
   boolean shouldAmbiguateProperties() {
-    return this.useTypesForOptimization || this.ambiguateProperties;
+    return this.ambiguateProperties;
   }
 
   public void setAnonymousFunctionNaming(
@@ -2771,7 +2781,7 @@ public class CompilerOptions {
             .add("tweakReplacements", getTweakReplacements())
             .add("useDebugLog", useDebugLog)
             .add("useNewTypeInference", getNewTypeInference())
-            .add("useTypesForOptimization", useTypesForOptimization)
+            .add("useTypesForLocalOptimization", useTypesForLocalOptimization)
             .add("variableRenaming", variableRenaming)
             .add("warningsGuard", getWarningsGuard())
             .add("wrapGoogModulesForWhitespaceOnly", wrapGoogModulesForWhitespaceOnly)

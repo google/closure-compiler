@@ -45,13 +45,13 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass = new PeepholeOptimizationsPass(compiler,
-          new PeepholeFoldConstants(late, compiler.getOptions().useTypesForOptimization));
+          new PeepholeFoldConstants(late, compiler.getOptions().useTypesForLocalOptimization));
     return peepholePass;
   }
 
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
-    options.useTypesForOptimization = true;
+    options.useTypesForLocalOptimization = true;
     return super.getOptions(options);
   }
 

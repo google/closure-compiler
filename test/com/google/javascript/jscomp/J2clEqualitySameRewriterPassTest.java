@@ -37,7 +37,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.useTypesForOptimization = useTypesForOptimization;
+    options.useTypesForLocalOptimization = useTypesForOptimization;
     options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
     return options;
   }

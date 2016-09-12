@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -83,7 +84,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     // These passes should make the code easier to analyze.
     // Passes, such as StatementFusion, are omitted for this reason.
     final boolean late = false;
-    boolean useTypesForOptimization = compiler.getOptions().useTypesForOptimization;
+    boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
     this.peepholePasses = new PeepholeOptimizationsPass(compiler,
         new PeepholeMinimizeConditions(late, useTypesForOptimization),
         new PeepholeSubstituteAlternateSyntax(late),

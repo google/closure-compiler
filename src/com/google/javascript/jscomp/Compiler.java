@@ -326,11 +326,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     reconcileOptionsWithGuards();
 
+    // TODO(johnlenz): generally, the compiler should not be changing the options object
+    // provided by the user.  This should be handled a different way.
+
     // Turn off type-based optimizations when type checking is off
     if (!options.checkTypes) {
       options.setDisambiguateProperties(false);
       options.setAmbiguateProperties(false);
       options.setInlineProperties(false);
+      options.setUseTypesForLocalOptimization(false);
       options.setUseTypesForOptimization(false);
     }
 

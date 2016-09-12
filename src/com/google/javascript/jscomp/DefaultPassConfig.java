@@ -47,6 +47,7 @@ import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1482,7 +1483,7 @@ public final class DefaultPassConfig extends PassConfig {
   /** Various peephole optimizations. */
   private static CompilerPass createPeepholeOptimizationsPass(AbstractCompiler compiler) {
     final boolean late = false;
-    final boolean useTypesForOptimization =  compiler.getOptions().useTypesForOptimization;
+    final boolean useTypesForOptimization =  compiler.getOptions().useTypesForLocalOptimization;
     return new PeepholeOptimizationsPass(compiler,
           new MinimizeExitPoints(compiler),
           new PeepholeMinimizeConditions(late, useTypesForOptimization),
@@ -1520,10 +1521,10 @@ public final class DefaultPassConfig extends PassConfig {
       return new PeepholeOptimizationsPass(compiler,
             new StatementFusion(options.aggressiveFusion),
             new PeepholeRemoveDeadCode(),
-            new PeepholeMinimizeConditions(late, options.useTypesForOptimization),
+            new PeepholeMinimizeConditions(late, options.useTypesForLocalOptimization),
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(late),
-            new PeepholeFoldConstants(late, options.useTypesForOptimization),
+            new PeepholeFoldConstants(late, options.useTypesForLocalOptimization),
             new ReorderConstantExpression());
     }
   };
