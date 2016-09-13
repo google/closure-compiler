@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -3214,6 +3215,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@param {T} x\n"
         + "@template T\n"
         + "random documentation text*/");
+  }
+
+  public void testTTLLineNumber() {
+    JSDocInfo info = parse(LINE_JOINER.join(
+        "Some text on line 1",
+        "More text! This is line 2",
+        "@template T := foo =:*/"));
+    assertThat(info.getTypeTransformations()).hasSize(1);
+    Node n = info.getTypeTransformations().get("T");
+    assertNode(n).hasLineno(3);
   }
 
   public void testParserWithTTLInvalidOperation() {

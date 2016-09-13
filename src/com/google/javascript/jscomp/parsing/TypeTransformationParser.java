@@ -276,7 +276,7 @@ public final class TypeTransformationParser {
 
   private void fixLineNumbers(Node expr) {
     // TODO(tbreisacher): Also fix column numbers.
-    expr.setLineno(expr.getLineno() + templateLineno - 1);
+    expr.setLineno(expr.getLineno() + templateLineno);
     for (Node child : expr.children()) {
       fixLineNumbers(child);
     }
