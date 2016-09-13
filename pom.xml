@@ -92,7 +92,6 @@
 
   <modules>
     <module>externs/pom.xml</module>
-    <module>pom-gwt.xml</module>
     <module>pom-main.xml</module>
   </modules>
 
@@ -137,7 +136,7 @@
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <jdk.version>1.7</jdk.version>
     <junit.version>4.11</junit.version>
-    <guava.version>20.0-SNAPSHOT</guava.version>
+    <guava.version>19.0</guava.version>
     <protobuf.version>2.5.0</protobuf.version>
   </properties>
 
