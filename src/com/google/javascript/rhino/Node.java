@@ -623,16 +623,8 @@ public class Node implements Serializable {
     return token;
   }
 
-  public Token getType() {
-    return getToken();
-  }
-
   public void setToken(Token token) {
     this.token = token;
-  }
-
-  public void setType(Token token) {
-    setToken(token);
   }
 
   public boolean hasChildren() {
