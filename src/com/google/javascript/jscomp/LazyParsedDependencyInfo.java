@@ -47,7 +47,7 @@ public class LazyParsedDependencyInfo implements DependencyInfo {
     if (loadFlags == null) {
       Map<String, String> loadFlagsBuilder = new TreeMap<>();
       loadFlagsBuilder.putAll(delegate.getLoadFlags());
-      FeatureSet features = ((JsAst) ast).getFeatures(compiler);
+      FeatureSet features = ast.getFeatures(compiler);
       if (features.hasEs6Modules()) {
         String previousModule = loadFlagsBuilder.get("module");
         if (previousModule != null && !previousModule.equals("es6")) {

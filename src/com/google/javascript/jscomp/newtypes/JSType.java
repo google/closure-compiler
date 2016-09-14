@@ -1537,7 +1537,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
         } else if (tags == FALSY_MASK) {
           return builder.append("falsy");
         } else {
-          return builder.append("Unrecognized type: " + tags);
+          return builder.append("Unrecognized type: ").append(tags);
         }
     }
   }

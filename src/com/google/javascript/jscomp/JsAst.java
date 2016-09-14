@@ -180,7 +180,7 @@ public class JsAst implements SourceAst {
       compiler.prepareAst(root);
     }
 
-    if (reporter.errors.size() > 0 || reporter.warnings.size() > 0) {
+    if (!reporter.errors.isEmpty() || !reporter.warnings.isEmpty()) {
       ParseResult result = new ParseResult(
           ImmutableList.copyOf(reporter.errors),
           ImmutableList.copyOf(reporter.warnings));
