@@ -50,6 +50,7 @@ public final class DeclaredFunctionType {
   private final ImmutableList<String> typeParameters;
 
   private final JSTypes commonTypes;
+  private final boolean isAbstract;
 
   private DeclaredFunctionType(
       JSTypes commonTypes,
@@ -59,7 +60,8 @@ public final class DeclaredFunctionType {
       JSType retType,
       JSType nominalType,
       JSType receiverType,
-      ImmutableList<String> typeParameters) {
+      ImmutableList<String> typeParameters,
+      boolean isAbstract) {
     Preconditions.checkArgument(retType == null || !retType.isBottom());
     Preconditions.checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
@@ -70,6 +72,7 @@ public final class DeclaredFunctionType {
     this.nominalType = nominalType;
     this.receiverType = receiverType;
     this.typeParameters = typeParameters;
+    this.isAbstract = isAbstract;
   }
 
   public FunctionType toFunctionType() {
@@ -85,6 +88,7 @@ public final class DeclaredFunctionType {
     builder.addNominalType(this.nominalType);
     builder.addReceiverType(this.receiverType);
     builder.addTypeParameters(this.typeParameters);
+    builder.addAbstract(this.isAbstract);
     return builder.buildFunction();
   }
 
@@ -96,7 +100,8 @@ public final class DeclaredFunctionType {
       JSType retType,
       JSType nominalType,
       JSType receiverType,
-      ImmutableList<String> typeParameters) {
+      ImmutableList<String> typeParameters,
+      boolean isAbstract) {
     if (requiredFormals == null) {
       requiredFormals = new ArrayList<>();
     }
@@ -109,7 +114,7 @@ public final class DeclaredFunctionType {
     return new DeclaredFunctionType(
         commonTypes,
         requiredFormals, optionalFormals, restFormals, retType,
-        nominalType, receiverType, typeParameters);
+        nominalType, receiverType, typeParameters, isAbstract);
   }
 
   static DeclaredFunctionType qmarkFunctionDeclaration(JSTypes commonTypes) {
@@ -190,6 +195,10 @@ public final class DeclaredFunctionType {
     return typeParameters;
   }
 
+  public boolean isAbstract() {
+    return this.isAbstract;
+  }
+
   public boolean isTypeVariableDefinedLocally(String tvar) {
     return getTypeVariableDefinedLocally(tvar) != null;
   }
@@ -219,7 +228,7 @@ public final class DeclaredFunctionType {
         this.commonTypes,
         this.requiredFormals, this.optionalFormals,
         this.restFormals, this.returnType, this.nominalType,
-        newReceiverType, this.typeParameters);
+        newReceiverType, this.typeParameters, this.isAbstract);
   }
 
   public DeclaredFunctionType withTypeInfoFromSuper(
@@ -240,7 +249,7 @@ public final class DeclaredFunctionType {
           superType.restFormals, superType.returnType,
           nt == null ? null : nt.getInstanceAsJSType(),
           rt == null ? null : rt.getInstanceAsJSType(),
-          superType.typeParameters);
+          superType.typeParameters, false);
     }
 
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);

@@ -40,6 +40,7 @@ public final class FunctionType {
   private final JSType restFormals;
   private final JSType returnType;
   private final boolean isLoose;
+  private final boolean isAbstract;
   private final ImmutableMap<String, JSType> outerVarPreconditions;
   // If this FunctionType is a constructor/interface, this field stores the
   // type of the instance.
@@ -61,7 +62,8 @@ public final class FunctionType {
       JSType receiverType,
       ImmutableMap<String, JSType> outerVars,
       ImmutableList<String> typeParameters,
-      boolean isLoose) {
+      boolean isLoose,
+      boolean isAbstract) {
     Preconditions.checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.requiredFormals = requiredFormals;
@@ -73,6 +75,7 @@ public final class FunctionType {
     this.outerVarPreconditions = outerVars;
     this.typeParameters = typeParameters;
     this.isLoose = isLoose;
+    this.isAbstract = isAbstract;
     checkValid();
   }
 
@@ -89,6 +92,7 @@ public final class FunctionType {
     this.outerVarPreconditions = null;
     this.typeParameters = ImmutableList.of();
     this.isLoose = isLoose;
+    this.isAbstract = false;
   }
 
   void checkValid() {
@@ -131,7 +135,11 @@ public final class FunctionType {
     return new FunctionType(
         this.commonTypes,
         requiredFormals, optionalFormals, restFormals, returnType, nominalType,
-        receiverType, outerVarPreconditions, typeParameters, true);
+        receiverType, outerVarPreconditions, typeParameters, true, isAbstract);
+  }
+
+  public boolean isAbstract() {
+    return isAbstract;
   }
 
   static FunctionType normalized(
@@ -144,7 +152,8 @@ public final class FunctionType {
       JSType receiverType,
       Map<String, JSType> outerVars,
       ImmutableList<String> typeParameters,
-      boolean isLoose) {
+      boolean isLoose,
+      boolean isAbstract) {
     if (requiredFormals == null) {
       requiredFormals = ImmutableList.of();
     }
@@ -174,7 +183,8 @@ public final class FunctionType {
         restFormals, retType, nominalType, receiverType,
         ImmutableMap.copyOf(outerVars),
         typeParameters,
-        isLoose);
+        isLoose,
+        isAbstract);
   }
 
   static Map<String, FunctionType> createInitialFunctionTypes(JSTypes commonTypes) {
@@ -183,11 +193,12 @@ public final class FunctionType {
         "QMARK_FUNCTION",
         FunctionType.normalized(
             commonTypes, null, null, commonTypes.UNKNOWN, commonTypes.UNKNOWN,
-            null, null, null, null, true));
+            null, null, null, null, true, false));
     functions.put(
         "BOTTOM_FUNCTION",
         FunctionType.normalized(
-            commonTypes, null, null, null, commonTypes.BOTTOM, null, null, null, null, false));
+            commonTypes, null, null, null, commonTypes.BOTTOM, null, null, null, null, false,
+            false));
     functions.put("TOP_FUNCTION", new FunctionType(commonTypes, false));
     functions.put("LOOSE_TOP_FUNCTION", new FunctionType(commonTypes, true));
     return functions;
@@ -322,6 +333,7 @@ public final class FunctionType {
     builder.addRestFormals(this.restFormals);
     builder.addRetType(this.returnType);
     builder.addTypeParameters(this.typeParameters);
+    builder.addAbstract(this.isAbstract);
     return builder.buildFunction();
   }
 
@@ -340,6 +352,7 @@ public final class FunctionType {
     builder.addOptFormal(JSType.join(
         this.commonTypes.getArrayInstance(), this.commonTypes.getArgumentsArrayType()));
     builder.addRetType(this.returnType);
+    builder.addAbstract(this.isAbstract);
     return builder.buildFunction();
   }
 
@@ -375,6 +388,7 @@ public final class FunctionType {
     builder.addRetType(this.returnType);
     builder.addNominalType(this.nominalType);
     builder.addReceiverType(this.receiverType);
+    builder.addAbstract(this.isAbstract);
     return builder.buildDeclaration();
   }
 

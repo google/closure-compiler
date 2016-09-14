@@ -17955,4 +17955,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  lhs = rhs;",
         "}"));
   }
+
+  public void testInstantiateAbstractClass() {
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract @constructor */",
+        "function C() {}",
+        "new C;"),
+        NewTypeInference.INSTANTIATE_ABSTRACT_CLASS);
+  }
 }

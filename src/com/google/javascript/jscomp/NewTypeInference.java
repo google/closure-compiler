@@ -169,6 +169,11 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_NOT_A_CONSTRUCTOR",
           "Expected a constructor but found type {0}.");
 
+  static final DiagnosticType INSTANTIATE_ABSTRACT_CLASS =
+      DiagnosticType.warning(
+          "JSC_NTI_INSTANTIATE_ABSTRACT_CLASS",
+          "Cannot instantiate abstract class {0}.");
+
   static final DiagnosticType ASSERT_FALSE =
       DiagnosticType.warning(
           "JSC_NTI_ASSERT_FALSE",
@@ -303,6 +308,7 @@ final class NewTypeInference implements CompilerPass {
       ILLEGAL_PROPERTY_CREATION,
       IN_USED_WITH_STRUCT,
       INEXISTENT_PROPERTY,
+      INSTANTIATE_ABSTRACT_CLASS,
       INVALID_ARGUMENT_TYPE,
       INVALID_CAST,
       INVALID_INDEX_TYPE,
@@ -1123,6 +1129,7 @@ final class NewTypeInference implements CompilerPass {
 
     builder.addNominalType(declType.getNominalType());
     builder.addReceiverType(declType.getReceiverType());
+    builder.addAbstract(declType.isAbstract());
     JSType declRetType = declType.getReturnType();
     JSType actualRetType = Preconditions.checkNotNull(envGetType(exitEnv, RETVAL_ID));
 
@@ -1894,11 +1901,14 @@ final class NewTypeInference implements CompilerPass {
             || funType.getReturnType().isUndefined())) {
       warnings.add(JSError.make(expr, CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
       return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
-    } else if (expr.isNew()
-        && (!funType.isSomeConstructorOrInterface()
-            || funType.isInterfaceDefinition())) {
-      warnings.add(JSError.make(expr, NOT_A_CONSTRUCTOR, funType.toString()));
-      return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
+    } else if (expr.isNew()) {
+      if (!funType.isSomeConstructorOrInterface() || funType.isInterfaceDefinition()) {
+        warnings.add(JSError.make(expr, NOT_A_CONSTRUCTOR, funType.toString()));
+        return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
+      } else if (funType.isAbstract()) {
+        warnings.add(JSError.make(expr, INSTANTIATE_ABSTRACT_CLASS, funType.toString()));
+        return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
+      }
     }
     int maxArity = funType.getMaxArity();
     int minArity = funType.getMinArity();
