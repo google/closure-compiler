@@ -25,11 +25,12 @@ import com.google.javascript.jscomp.DefinitionsRemover.UnknownDefinition;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Simple name-based definition gatherer that implements {@link DefinitionProvider}.
@@ -47,6 +48,7 @@ import java.util.Map;
 public class NameBasedDefinitionProvider implements DefinitionProvider, CompilerPass {
   protected final Multimap<String, Definition> nameDefinitionMultimap = LinkedHashMultimap.create();
   protected final Map<Node, DefinitionSite> definitionNodeByDefinitionSite = new LinkedHashMap<>();
+  protected final Set<Node> definitionNodes = new HashSet<>();
   protected final AbstractCompiler compiler;
   protected final boolean allowComplexFunctionDefs;
 
@@ -64,14 +66,60 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
     this.hasProcessBeenRun = true;
 
     NodeTraversal.traverseEs6(compiler, externs, new DefinitionGatheringCallback(true));
+    dropUntypedExterns();
+
     NodeTraversal.traverseEs6(compiler, source, new DefinitionGatheringCallback(false));
+  }
+
+  /** @return Whether the node has a JSDoc that actually declares something. */
+  private boolean jsdocContainsDeclarations(Node node) {
+    JSDocInfo info = node.getJSDocInfo();
+    return (info != null && info.containsDeclaration());
+  }
+
+  /**
+   * Drop untyped stub definitions (ExternalNameOnlyDefinition) in externs if a typed extern of the
+   * same qualified name also exists and has type annotations.
+   *
+   * <p>TODO: This hack is mostly for the purpose of preventing untyped stubs from showing up in the
+   * {@link PureFunctionIdentifier} and causing unkown side effects from propagating everywhere.
+   * This should probably be solved in one of the following ways instead:
+   *
+   * <p>a) Have a pass ealier in the compiler that goes in and removes these stub definitions.
+   *
+   * <p>b) Fix all extern files so that there are no untyped stubs mixed with typed ones and add a
+   * restriction to the compiler to prevent this.
+   *
+   * <p>c) Drop these stubs in the {@link PureFunctionIdentifier} instead. This "DefinitionProvider"
+   * should not have to drop definitions itself.
+   */
+  private void dropUntypedExterns() {
+    for (String externName : nameDefinitionMultimap.keys()) {
+      for (Definition def : new ArrayList<Definition>(nameDefinitionMultimap.get(externName))) {
+        if (def instanceof ExternalNameOnlyDefinition) {
+          Node node = def.getLValue();
+          if (!jsdocContainsDeclarations(node)) {
+            for (Definition prevDef : nameDefinitionMultimap.get(externName)) {
+              if (prevDef != def && node.matchesQualifiedName(prevDef.getLValue())) {
+                nameDefinitionMultimap.remove(externName, def);
+                // Since it's a stub we know its keyed by the name/getProp node.
+                Preconditions.checkState(
+                    definitionNodeByDefinitionSite.containsKey(def.getLValue()));
+                definitionNodeByDefinitionSite.remove(def.getLValue());
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   @Override
   public Collection<Definition> getDefinitionsReferencedAt(Node useSite) {
     Preconditions.checkState(hasProcessBeenRun, "The process was not run");
     Preconditions.checkArgument(useSite.isGetProp() || useSite.isName());
-    if (definitionNodeByDefinitionSite.containsKey(useSite)) {
+    if (definitionNodes.contains(useSite)) {
       return null;
     }
 
@@ -136,70 +184,18 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
         if (name != null) {
           Node rValue = def.getRValue();
           if ((rValue != null) && !NodeUtil.isImmutableValue(rValue) && !rValue.isFunction()) {
-
             // Unhandled complex expression
             Definition unknownDef = new UnknownDefinition(def.getLValue(), true);
             def = unknownDef;
           }
-
-          // TODO(johnlenz) : remove this stub dropping code if it becomes
-          // illegal to have untyped stubs in the externs definitions.
-
-          // We need special handling of untyped externs stubs here:
-          // the stub should be dropped if the name is provided elsewhere.
-
-          // If there is no qualified name for this, then there will be
-          // no stubs to remove. This will happen if node is an object
-          // literal key.
-          if (node.isQualifiedName()) {
-            for (Definition prevDef : new ArrayList<>(nameDefinitionMultimap.get(name))) {
-              if (prevDef instanceof ExternalNameOnlyDefinition
-                  && !jsdocContainsDeclarations(node)) {
-                if (node.matchesQualifiedName(prevDef.getLValue())) {
-                  // Drop this stub, there is a real definition.
-                  nameDefinitionMultimap.remove(name, prevDef);
-                }
-              }
-            }
-          }
-
           addDefinition(name, def, node, traversal);
-        }
-      }
-
-      if (parent != null && parent.isExprResult()) {
-        String name = getSimplifiedName(node);
-        if (name != null) {
-
-          // TODO(johnlenz) : remove this code if it becomes illegal to have
-          // stubs in the externs definitions.
-
-          // We need special handling of untyped externs stubs here:
-          //    the stub should be dropped if the name is provided elsewhere.
-          // We can't just drop the stub now as it needs to be used as the
-          //    externs definition if no other definition is provided.
-
-          boolean dropStub = false;
-          if (!jsdocContainsDeclarations(node) && node.isQualifiedName()) {
-            for (Definition prevDef : nameDefinitionMultimap.get(name)) {
-              if (node.matchesQualifiedName(prevDef.getLValue())) {
-                dropStub = true;
-                break;
-              }
-            }
-          }
-
-          if (!dropStub) {
-            // Incomplete definition
-            Definition definition = new ExternalNameOnlyDefinition(node);
-            addDefinition(name, definition, node, traversal);
-          }
         }
       }
     }
 
     private void visitCode(NodeTraversal traversal, Node node) {
       Definition def = DefinitionsRemover.getDefinition(node, false);
+
       if (def != null) {
         String name = getSimplifiedName(def.getLValue());
         if (name != null) {
@@ -227,15 +223,10 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
           return false;
       }
     }
-
-    /** @return Whether the node has a JSDoc that actually declares something. */
-    private boolean jsdocContainsDeclarations(Node node) {
-      JSDocInfo info = node.getJSDocInfo();
-      return (info != null && info.containsDeclaration());
-    }
   }
 
   private void addDefinition(String name, Definition def, Node node, NodeTraversal traversal) {
+    definitionNodes.add(def.getLValue());
     nameDefinitionMultimap.put(name, def);
     definitionNodeByDefinitionSite.put(
         node,

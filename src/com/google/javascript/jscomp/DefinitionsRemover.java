@@ -30,14 +30,12 @@ import java.util.Set;
 class DefinitionsRemover {
 
   /**
-   * @return an {@link Definition} object if the node contains a definition or
-   *     {@code null} otherwise.
+   * This logic must match {@link isDefinitionNode}.
+   *
+   * @return an {@link Definition} object if the node contains a definition or {@code null}
+   *     otherwise.
    */
   static Definition getDefinition(Node n, boolean isExtern) {
-    // TODO(user): Since we have parent pointers handy. A lot of constructors
-    // can be simplified.
-
-    // This logic must match #isDefinitionNode
     Node parent = n.getParent();
     if (parent == null) {
       return null;
@@ -54,8 +52,7 @@ class DefinitionsRemover {
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n)) {
-      return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(),
-          isExtern);
+      return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(), isExtern);
     } else if (parent.isParamList()) {
       Node function = parent.getParent();
       return new FunctionArgumentDefinition(function, n, isExtern);
@@ -64,15 +61,18 @@ class DefinitionsRemover {
       Preconditions.checkState(grandparent.getToken() == Token.LB);
       Preconditions.checkState(grandparent.getParent().getToken() == Token.LC);
       return new RecordTypePropertyDefinition(n);
+    } else if (isExtern && n.isGetProp() && parent.isExprResult() && n.isQualifiedName()) {
+      return new ExternalNameOnlyDefinition(n);
     }
     return null;
   }
 
   /**
+   * This logic must match {@link getDefinition}.
+   *
    * @return Whether a definition object can be created.
    */
   static boolean isDefinitionNode(Node n) {
-    // This logic must match #getDefinition
     Node parent = n.getParent();
     if (parent == null) {
       return false;
@@ -98,6 +98,8 @@ class DefinitionsRemover {
       Node grandparent = parent.getParent();
       Preconditions.checkState(grandparent.getToken() == Token.LB);
       Preconditions.checkState(grandparent.getParent().getToken() == Token.LC);
+      return true;
+    } else if (n.isFromExterns() && parent.isExprResult() && n.isGetProp() && n.isQualifiedName()) {
       return true;
     }
     return false;
@@ -156,8 +158,9 @@ class DefinitionsRemover {
       return isExtern;
     }
 
+    @Override
     public String toString() {
-      return getLValue().getQualifiedName() + " = " + getRValue().toString();
+      return getLValue().getQualifiedName() + " = " + getRValue();
     }
   }
 

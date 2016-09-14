@@ -231,6 +231,51 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
 
   }
 
+  public void testDropStubDefinitions() {
+    String externs =
+        LINE_JOINER.join(
+            "obj.prototype.stub;",
+            "/**",
+            " * @param {string} s id.",
+            " * @return {string}",
+            " * @nosideeffects",
+            " */",
+            "obj.prototype.stub = function(s) {};");
+
+    checkDefinitionsInExterns(
+        externs, ImmutableSet.of("DEF GETPROP obj.prototype.stub -> EXTERN FUNCTION"));
+  }
+
+  public void testNoDropStub1() {
+    String externs =
+        LINE_JOINER.join(
+            "var name;",
+            "/**",
+            " * @param {string} s id.",
+            " * @return {string}",
+            " * @nosideeffects",
+            " */",
+            "var name = function(s) {};");
+
+    checkDefinitionsInExterns(
+        externs, ImmutableSet.of("DEF NAME name -> EXTERN <null>",
+                                 "DEF NAME name -> EXTERN FUNCTION"));
+  }
+
+  public void testNoDropStub2() {
+    String externs =
+        LINE_JOINER.join(
+            "f().name;", // These are not recongnized as stub definitions
+            "/**",
+            " * @param {string} s id.",
+            " * @return {string}",
+            " * @nosideeffects",
+            " */",
+            "f().name;");
+
+    checkDefinitionsInExterns(externs, ImmutableSet.<String>of());
+  }
+
   public void testDefinitionInExterns() {
     String externs = "var a = 1";
 
@@ -334,19 +379,25 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
   }
 
   public void testCallInExterns() {
+    String externs = LINE_JOINER.join(
+            "var goog = {};",
+            "/** @constructor */",
+            "goog.Response = function() {};",
+            "goog.Response.prototype.get;",
+            "goog.Response.prototype.get().get;");
     checkDefinitionsInExterns(
-        "var goog = {};" +
-        "/** @constructor */ goog.Response = function() {};" +
-        "goog.Response.prototype.get;" +
-        "goog.Response.prototype.get().get;",
+        externs,
         ImmutableSet.of(
+            "DEF NAME goog -> EXTERN <null>",
             "DEF GETPROP goog.Response -> EXTERN FUNCTION",
             "DEF GETPROP goog.Response.prototype.get -> EXTERN <null>",
-            "DEF GETPROP null -> EXTERN <null>",
-            "DEF NAME goog -> EXTERN <null>",
+            "USE NAME goog -> [EXTERN <null>]",
             "USE GETPROP goog.Response -> [EXTERN FUNCTION]",
-            "USE GETPROP goog.Response.prototype.get -> [EXTERN <null> x 2]",
-            "USE NAME goog -> [EXTERN <null>]"));
+            "USE GETPROP goog.Response.prototype.get -> [EXTERN <null>]",
+            // This one refers to the get prop goog.Response.prototype.get().get which doesn't have
+            // a qualified name but does refer to the definition goog.Response.prototype.get since
+            // it only compares the last component.
+            "USE GETPROP null -> [EXTERN <null>]"));
   }
 
   void checkDefinitionsInExterns(String externs, Set<String> expected) {
