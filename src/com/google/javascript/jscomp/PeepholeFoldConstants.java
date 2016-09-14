@@ -46,11 +46,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           "JSC_NEGATING_A_NON_NUMBER_ERROR",
           "Can''t negate non-numeric value: {0}");
 
-  static final DiagnosticType BITWISE_OPERAND_OUT_OF_RANGE =
-      DiagnosticType.warning(
-          "JSC_BITWISE_OPERAND_OUT_OF_RANGE",
-          "Operand out of range, bitwise operation will lose information: {0}");
-
   static final DiagnosticType SHIFT_AMOUNT_OUT_OF_BOUNDS =
       DiagnosticType.warning(
           "JSC_SHIFT_AMOUNT_OUT_OF_BOUNDS",
@@ -411,19 +406,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case BITNOT:
         try {
           double val = left.getDouble();
-          if (val >= Integer.MIN_VALUE && val <= Integer.MAX_VALUE) {
-            int intVal = (int) val;
-            if (intVal == val) {
-              Node notIntValNode = IR.number(~intVal);
-              parent.replaceChild(n, notIntValNode);
-              reportCodeChange();
-              return notIntValNode;
-            } else {
-              report(FRACTIONAL_BITWISE_OPERAND, left);
-              return n;
-            }
+          if (Math.floor(val) == val) {
+            int intVal = jsConvertDoubleToBits(val);
+            Node notIntValNode = IR.number(~intVal);
+            parent.replaceChild(n, notIntValNode);
+            reportCodeChange();
+            return notIntValNode;
           } else {
-            report(BITWISE_OPERAND_OUT_OF_RANGE, left);
+            report(FRACTIONAL_BITWISE_OPERAND, left);
             return n;
           }
         } catch (UnsupportedOperationException ex) {
@@ -435,6 +425,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         default:
           return n;
     }
+  }
+
+  /**
+   * Uses a method for treating a double as 32bits that is equivalent to
+   * how JavaScript would convert a number before applying a bit operation.
+   */
+  private int jsConvertDoubleToBits(double d) {
+    return (int) (((long) Math.floor(d)) & 0xffffffff);
   }
 
   /**
@@ -876,12 +874,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       double lval = left.getDouble();
       double rval = right.getDouble();
 
-      // check ranges.  We do not do anything that would clip the double to
-      // a 32-bit range, since the user likely does not intend that.
-      if (lval < Integer.MIN_VALUE) {
-        report(BITWISE_OPERAND_OUT_OF_RANGE, left);
-        return n;
-      }
       // only the lower 5 bits are used when shifting, so don't do anything
       // if the shift amount is outside [0,32)
       if (!(rval >= 0 && rval < 32)) {
@@ -895,40 +887,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return n;
       }
 
+      if (Math.floor(lval) != lval) {
+        report(FRACTIONAL_BITWISE_OPERAND, left);
+        return n;
+      }
+
+      int bits = jsConvertDoubleToBits(lval);
+
       switch (n.getToken()) {
         case LSH:
+          result = bits << rvalInt;
+          break;
         case RSH:
-          // Convert the numbers to ints
-          if (lval > Integer.MAX_VALUE) {
-            report(BITWISE_OPERAND_OUT_OF_RANGE, left);
-            return n;
-          }
-          int lvalInt = (int) lval;
-          if (lvalInt != lval) {
-            report(FRACTIONAL_BITWISE_OPERAND, left);
-            return n;
-          }
-          if (n.getToken() == Token.LSH) {
-            result = lvalInt << rvalInt;
-          } else {
-            result = lvalInt >> rvalInt;
-          }
+          result = bits >> rvalInt;
           break;
         case URSH:
-          // JavaScript handles zero shifts on signed numbers differently than
-          // Java as an Java int can not represent the unsigned 32-bit number
-          // where JavaScript can so use a long here.
-          long maxUint32 = 0xffffffffL;
-          if (lval > maxUint32) {
-            report(BITWISE_OPERAND_OUT_OF_RANGE, left);
-            return n;
-          }
-          long lvalLong = (long) lval;
-          if (lvalLong != lval) {
-            report(FRACTIONAL_BITWISE_OPERAND, left);
-            return n;
-          }
-          result = (lvalLong & maxUint32) >>> rvalInt;
+          // JavaScript always treats the result of >>> as unsigned.
+          // We must force Java to do the same here.
+          result = 0xffffffffL & (bits >>> rvalInt);
           break;
         default:
           throw new AssertionError("Unknown shift operator: " + n.getToken());

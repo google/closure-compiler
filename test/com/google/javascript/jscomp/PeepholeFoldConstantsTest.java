@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -478,10 +477,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("a=+-7", "a=-7");
     fold("a=+.5", "a=.5");
 
-    fold("a=~0x100000000", "a=~0x100000000",
-         PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
-    fold("a=~-0x100000000", "a=~-0x100000000",
-         PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
+    fold("a=~0xffffffff", "a=0");
+    fold("a=~~0xffffffff", "a=-1");
     testSame("a=~.5", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
@@ -684,16 +681,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = -2 >>> 0", "x = 4294967294"); // 0xfffffffe
     fold("x = 0x90000000 >>> 28", "x = 9");
 
-    testSame("3000000000 << 1",
-         PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
+    fold("x = 0xffffffff << 0", "x = -1");
+    fold("x = 0xffffffff << 4", "x = -16");
     testSame("1 << 32",
         PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
     testSame("1 << -1",
         PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
-    testSame("3000000000 >> 1",
-        PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
-    testSame("0x90000000 >> 28",
-        PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
     testSame("1 >> 32",
         PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
     testSame("1.5 << 0",
