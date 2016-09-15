@@ -45,7 +45,7 @@ Note: The Closure Compiler requires [Java 7 or higher](http://www.java.com/).
 unit tests too).
 
     This will produce a jar file called `target/closure-compiler-1.0-SNAPSHOT.jar`.
-    Running `mvn -DskipTests -pl "!pom-gwt.xml"` will skip building the GWT
+    Running `mvn -DskipTests -pl "\!pom-gwt.xml"` will skip building the GWT
     version of the compiler. This can speed up the build process significantly.
 
 ### Using [Eclipse](http://www.eclipse.org/)
