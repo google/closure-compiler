@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
@@ -64,6 +65,7 @@ public final class GwtRunner implements EntryPoint {
     boolean assumeFunctionWrapper;
     String compilationLevel;
     boolean dartPass;
+    JsMap defines;
     String env;
     boolean exportLocalPropertyDefinitions;
     boolean generateExports;
@@ -97,6 +99,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.assumeFunctionWrapper = false;
     defaultFlags.compilationLevel = "SIMPLE";
     defaultFlags.dartPass = false;
+    defaultFlags.defines = null;
     defaultFlags.env = "BROWSER";
     defaultFlags.exportLocalPropertyDefinitions = false;
     defaultFlags.generateExports = false;
@@ -130,6 +133,45 @@ public final class GwtRunner implements EntryPoint {
     @JsProperty JavaScriptObject[] errors;
     @JsProperty JavaScriptObject[] warnings;
   }
+
+  /**
+   * Wraps a generic JS object used as a map.
+   */
+  private static final class JsMap extends JavaScriptObject {
+    protected JsMap() {}
+
+    /**
+     * @return This {@code JsMap} as a {@link Map}.
+     */
+    Map<String, Object> asMap() {
+      ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
+      for (String key : keys(this)) {
+        builder.put(key, get(key));
+      }
+      return builder.build();
+    }
+
+    /**
+     * Validates that the values of this {@code JsMap} are primitives: either number, string or
+     * boolean. Note that {@code typeof null} is object.
+     */
+    private native void validatePrimitiveTypes() /*-{
+      var valid = {'number': '', 'string': '', 'boolean': ''};
+      Object.keys(this).forEach(function(key) {
+        var type = typeof this[key];
+        if (!(type in valid)) {
+          throw new TypeError('Type of define `' + key + '` unsupported: ' + type);
+        }
+      }, this);
+    }-*/;
+
+    private native Object get(String key) /*-{
+      return this[key];
+    }-*/;
+  }
+
+  @JsMethod(name = "keys", namespace = "Object")
+  private static native String[] keys(Object o);
 
   private static native JavaScriptObject createError(String file, String description, String type,
         int lineNo, int charNo) /*-{
@@ -210,6 +252,13 @@ public final class GwtRunner implements EntryPoint {
 
     if (flags.createSourceMap) {
       options.setSourceMapOutputPath("%output%");
+    }
+
+    if (flags.defines != null) {
+      // CompilerOptions also validates types, but uses Preconditions and therefore won't generate
+      // a useful exception.
+      flags.defines.validatePrimitiveTypes();
+      options.setDefineReplacements(flags.defines.asMap());
     }
 
     options.setAngularPass(flags.angularPass);
