@@ -227,16 +227,29 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     String name = n.getString();
     // Because of how we scan the variables, it is possible to encounter
     // the same var declared name node twice. Bail out in this case.
-    if (s.getVar(name) != null && s.getVar(name).getNode() == n) {
+    // TODO(johnlenz): hash lookups are not free and
+    // building scopes are already expensive
+    // restructure the scope building to avoid this check.
+    Var v = s.getOwnSlot(name);
+    if (v != null && v.getNode() == n) {
       return;
     }
 
     CompilerInput input = compiler.getInput(inputId);
-    if (s.isDeclared(name, false) || (s.isLocal() && name.equals(ARGUMENTS))) {
+    if (v != null || isShadowingDisallowed(s, name) || (s.isLocal() && name.equals(ARGUMENTS))) {
       redeclarationHandler.onRedeclaration(s, name, n, input);
     } else {
       s.declare(name, n, input);
     }
+  }
+
+  // Function body declarations are not allowed to shadow
+  // function parameters.
+  private static boolean isShadowingDisallowed(Scope s, String name) {
+    if (s.isFunctionBlockScope()) {
+      return s.getParent().getOwnSlot(name) != null;
+    }
+    return false;
   }
 
   /**
