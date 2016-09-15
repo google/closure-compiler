@@ -75,11 +75,14 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_FUNCTION_ARGUMENTS_PROP_FORBIDDEN",
       "A function''s \"arguments\" property cannot be used in ES5 strict mode");
 
+
+
   static final DiagnosticType DELETE_VARIABLE = DiagnosticType.warning(
       "JSC_DELETE_VARIABLE",
-      "variables, functions, and arguments cannot be deleted in ES5 strict mode");
+      "variables, functions, and arguments cannot be deleted in "
+      + "ES5 strict mode");
 
-  static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.error(
+  static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.warning(
       "JSC_DUPLICATE_OBJECT_KEY",
       "object literals cannot contain duplicate keys in ES5 strict mode");
 

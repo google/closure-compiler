@@ -444,7 +444,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkGlobalNames);
     }
 
-    checks.add(checkStrictMode);
+    if (options.enables(DiagnosticGroups.ES5_STRICT)) {
+      checks.add(checkStrictMode);
+    }
 
     // NOTE(dimvar): This will move later into the checks as we convert checks
     // to handle types from the new type inference

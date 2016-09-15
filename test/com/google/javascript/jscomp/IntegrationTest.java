@@ -2882,8 +2882,9 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE,
+        CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
-    options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
     test(options,
         "goog.require('x'); /** @constructor */ function f() { var arguments; }",
         CheckProvides.MISSING_PROVIDE_WARNING);
@@ -3542,6 +3543,34 @@ public final class IntegrationTest extends IntegrationTestCase {
         "}," +
         "FOO = 1," +
         "BAR = !0" +
+        "";
+
+    test(options, code, result);
+  }
+
+  public void testClosureDefinesDuplicates2() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    WarningLevel warnings = WarningLevel.DEFAULT;
+    warnings.setOptionsForWarningLevel(options);
+    options.setDefineToNumberLiteral("FOO", 3);
+
+    String code = "" +
+        "var CLOSURE_DEFINES = {\n" +
+        "  'FOO': 1,\n" +
+        "  'FOO': 2\n" +
+        "};\n" +
+        "\n" +
+        "/** @define {number} */ var FOO = 0;\n" +
+        "";
+
+    String result = "" +
+        "var CLOSURE_DEFINES = {\n" +
+        "  FOO: 1,\n" +
+        "  FOO: 2\n" +
+        "}," +
+        "FOO = 3" +
         "";
 
     test(options, code, result);
