@@ -16,6 +16,7 @@
 <module rename-to="jscomp">
   <inherits name="com.google.common.base.Base"/>
   <inherits name="com.google.common.collect.Collect"/>
+  <inherits name="com.google.common.escape.Escape"/>
   <inherits name="com.google.common.io.Io"/>
   <inherits name="com.google.gwt.json.JSON"/>
   <source path="debugging/sourcemap"/>

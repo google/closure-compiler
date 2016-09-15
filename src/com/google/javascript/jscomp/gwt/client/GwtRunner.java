@@ -33,8 +33,10 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.ResourceLoader;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.WarningLevel;
+import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -53,6 +55,9 @@ import jsinterop.annotations.JsType;
 public final class GwtRunner implements EntryPoint {
   private static final CompilationLevel DEFAULT_COMPILATION_LEVEL =
       CompilationLevel.SIMPLE_OPTIMIZATIONS;
+
+  private static final String OUTPUT_MARKER = "%output%";
+  private static final String OUTPUT_MARKER_JS_STRING = "%output|jsstring%";
 
   private static final String EXTERNS_PREFIX = "externs/";
 
@@ -73,6 +78,7 @@ public final class GwtRunner implements EntryPoint {
     String languageOut;
     boolean checksOnly;
     boolean newTypeInf;
+    String outputWrapper;
     boolean polymerPass;
     boolean preserveTypeAnnotations;
     boolean processCommonJsModules;
@@ -97,6 +103,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.angularPass = false;
     defaultFlags.applyInputSourceMaps = false;
     defaultFlags.assumeFunctionWrapper = false;
+    defaultFlags.checksOnly = false;
     defaultFlags.compilationLevel = "SIMPLE";
     defaultFlags.dartPass = false;
     defaultFlags.defines = null;
@@ -105,8 +112,8 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.generateExports = false;
     defaultFlags.languageIn = "ECMASCRIPT6";
     defaultFlags.languageOut = "ECMASCRIPT5";
-    defaultFlags.checksOnly = false;
     defaultFlags.newTypeInf = false;
+    defaultFlags.outputWrapper = null;
     defaultFlags.polymerPass = false;
     defaultFlags.preserveTypeAnnotations = false;
     defaultFlags.processCommonJsModules = false;
@@ -190,6 +197,37 @@ public final class GwtRunner implements EntryPoint {
           error.lineNumber, error.getCharno());
     }
     return out;
+  }
+
+  /**
+   * Generates the output code, taking into account the passed {@code outputWrapper}.
+   */
+  private static String writeOutput(Compiler compiler, String outputWrapper) {
+    String code = compiler.toSource();
+    if (outputWrapper == null) {
+      return code;
+    }
+
+    String marker;
+    int pos = outputWrapper.indexOf(OUTPUT_MARKER_JS_STRING);
+    if (pos != -1) {
+      // With jsstring, run SourceCodeEscapers (as per AbstractCommandLineRunner).
+      code = SourceCodeEscapers.javascriptEscaper().escape(code);
+      marker = OUTPUT_MARKER_JS_STRING;
+    } else {
+      pos = outputWrapper.indexOf(OUTPUT_MARKER);
+      if (pos == -1) {
+        return code;  // neither marker could be found, just return code
+      }
+      marker = OUTPUT_MARKER;
+    }
+
+    String prefix = outputWrapper.substring(0, pos);
+    SourceMap sourceMap = compiler.getSourceMap();
+    if (sourceMap != null) {
+      sourceMap.setWrapperPrefix(prefix);
+    }
+    return prefix + code + outputWrapper.substring(pos + marker.length());
   }
 
   private static List<SourceFile> createExterns(CompilerOptions.Environment environment) {
@@ -361,7 +399,7 @@ public final class GwtRunner implements EntryPoint {
     compiler.compile(externs, jsCode, options);
 
     ModuleOutput output = new ModuleOutput();
-    output.compiledCode = compiler.toSource();
+    output.compiledCode = writeOutput(compiler, flags.outputWrapper);
     output.errors = toNativeErrorArray(errorManager.errors);
     output.warnings = toNativeErrorArray(errorManager.warnings);
 
