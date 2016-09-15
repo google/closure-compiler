@@ -618,7 +618,8 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   }
 
   FilePosition count(String js) {
-    int line = 0, column = 0;
+    int line = 0;
+    int column = 0;
     for (int i = 0; i < js.length(); i++) {
       if (js.charAt(i) == '\n') {
         line++;
