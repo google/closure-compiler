@@ -17963,4 +17963,20 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "new C;"),
         NewTypeInference.INSTANTIATE_ABSTRACT_CLASS);
   }
+
+  public void testSpecializeRhsWhenCastInLhs() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */ function Foo() {}",
+        "/** @return {!Foo} */",
+        "function foo(/** !Object */ x) {",
+        "  return /** @type {?Foo} */ (x);",
+        "}"),
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function foo(/** ?Object */ x) {",
+        "  var /** !Object */ n;",
+        "  return /** @type {*} */ (x) && (n = x);",
+        "}"));
+  }
 }
