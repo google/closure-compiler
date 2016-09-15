@@ -203,13 +203,13 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
     testSame("var o = {a: 1, b: 2, c: 3};");
     testSame("var x = { get a() {}, set a(p) {} };");
 
-    testSame("var o = {a: 1, b: 2, a: 3};",
+    testError("var o = {a: 1, b: 2, a: 3};",
         StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testSame("var x = { get a() {}, get a() {} };",
+    testError("var x = { get a() {}, get a() {} };",
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testSame("var x = { get a() {}, a: 1 };",
+    testError("var x = { get a() {}, a: 1 };",
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testSame("var x = { set a(p) {}, a: 1 };",
+    testError("var x = { set a(p) {}, a: 1 };",
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
     testSame(
@@ -222,9 +222,9 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
 
     disableTypeCheck();
     this.useNTI = false;
-    testWarningEs6("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testWarningEs6("var x = {a, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testWarningEs6("var x = {a(){}, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testErrorEs6("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testErrorEs6("var x = {a, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testErrorEs6("var x = {a(){}, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
   }
 
   public void testFunctionDecl() {
@@ -288,7 +288,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
         "}"));
 
     // Duplicate obj literal key in classes
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method() {",
         "    var obj = {a : 1, a : 2}",

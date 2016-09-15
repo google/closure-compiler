@@ -1497,7 +1497,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testES5ChecksByDefault() {
-    testSame("var x = 3; delete x;");
+    test("var x = 3; delete x;", StrictModeCheck.DELETE_VARIABLE);
   }
 
   public void testES5ChecksInVerbose() {
