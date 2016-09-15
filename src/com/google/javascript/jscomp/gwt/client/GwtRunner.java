@@ -368,7 +368,7 @@ public final class GwtRunner implements EntryPoint {
     if (flags.createSourceMap) {
       StringBuilder b = new StringBuilder();
       try {
-        compiler.getSourceMap().appendTo(b, "IGNORED");
+        compiler.getSourceMap().appendTo(b, "");
       } catch (IOException e) {
         // ignore
       }
