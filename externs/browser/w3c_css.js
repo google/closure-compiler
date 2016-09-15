@@ -2504,10 +2504,10 @@ var FontFaceDescriptors;
  * @constructor
  * @param {string} fontFamily
  * @param {(string|ArrayBuffer|ArrayBufferView)} source
- * @param {!FontFaceDescriptors} descriptors
+ * @param {!FontFaceDescriptors=} opt_descriptors
  * @see http://dev.w3.org/csswg/css-font-loading/#font-face-constructor
  */
-function FontFace(fontFamily, source, descriptors) {}
+function FontFace(fontFamily, source, opt_descriptors) {}
 
 /**
  * @type {string}
