@@ -1612,6 +1612,16 @@ public class Node implements Serializable {
   }
 
   /**
+   * Check for zero or one child more efficiently than by iterating over all the
+   * children as is done with Node.getChildCount().
+   *
+   * @return Whether the node has no children or exactly one child.
+   */
+  public boolean hasZeroOrOneChild() {
+    return first == getLastChild();
+  }
+
+  /**
    * Check for more than one child more efficiently than by iterating over all
    * the children as is done with Node.getChildCount().
    *
