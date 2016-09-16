@@ -101,7 +101,7 @@ public final class GwtRunner implements EntryPoint {
   private static final Flags defaultFlags = new Flags();
   static {
     defaultFlags.angularPass = false;
-    defaultFlags.applyInputSourceMaps = false;
+    defaultFlags.applyInputSourceMaps = true;
     defaultFlags.assumeFunctionWrapper = false;
     defaultFlags.checksOnly = false;
     defaultFlags.compilationLevel = "SIMPLE";
