@@ -1855,25 +1855,10 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     templateTypes.clear();
   }
 
-  private boolean isNonNullable(JSType type) {
-    // TODO(lpino): Verify that nonNullableTypeNames is correct
-    for (String s : nonNullableTypeNames) {
-      JSType that = getType(s);
-      if (that != null && type.isEquivalentTo(that)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /**
-   * Checks whether the input type can be templatized. It must be an
-   * {@code Object} type which is not a {@code NamespaceType} and is not a
-   * non-nullable type.
+   * @return Whether the type can be provided type arguements.
    */
   public boolean isTemplatizable(JSType type) {
-    return (type instanceof ObjectType)
-        && !(type instanceof NamespaceType)
-        && !isNonNullable(type);
+    return type.getTemplateTypeMap().hasUnfilledTemplateKeys();
   }
 }

@@ -137,6 +137,10 @@ public class TemplateTypeMap implements Serializable {
     return templateKeys.size() - templateValues.size();
   }
 
+  boolean hasUnfilledTemplateKeys() {
+    return numUnfilledTemplateKeys() > 0;
+  }
+
   /**
    * Returns a list of template keys in this map that do not have corresponding
    * JSType values.
