@@ -886,6 +886,30 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  public void testLabelBeforeLoop() {
+    test(
+        LINE_JOINER.join(
+            "label1:",
+            "label2:",
+            "for (let x = 1;;) {",
+            "  function f() {",
+            "    return x;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "label1:",
+            "label2:",
+            "var $jscomp$loop$0 = {};",
+            "$jscomp$loop$0.x = 1;",
+            "for (;; $jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
+            "  var f = function($jscomp$loop$0) {",
+            "    return function f() {",
+            "      return $jscomp$loop$0.x;",
+            "    }",
+            "  }($jscomp$loop$0);",
+            "}"));
+  }
+
   public void testForInAndForOf() {
     test(
         LINE_JOINER.join(

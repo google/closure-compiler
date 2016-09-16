@@ -194,6 +194,20 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     declarationList.setToken(Token.VAR);
   }
 
+  private static void addNodeBeforeLoop(Node newNode, Node loopNode) {
+    if (loopNode.getParent().isLabel()) {
+      Node innerMostLabel = loopNode.getParent();
+      Node outerMostLabel = innerMostLabel;
+      while (outerMostLabel.getParent().isLabel()) {
+        outerMostLabel = outerMostLabel.getParent();
+      }
+      innerMostLabel.replaceChild(loopNode, newNode);
+      outerMostLabel.getParent().addChildAfter(loopNode, outerMostLabel);
+    } else {
+      loopNode.getParent().addChildBefore(newNode, loopNode);
+    }
+  }
+
   private void varify() {
     if (!letConsts.isEmpty()) {
       for (Node n : letConsts) {
@@ -334,7 +348,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         Node updateLoopObject = IR.assign(IR.name(object.name), objectLitNextIteration);
         Node objectLit =
             IR.var(IR.name(object.name), IR.objectlit()).useSourceInfoFromForTree(loopNode);
-        loopNode.getParent().addChildBefore(objectLit, loopNode);
+        addNodeBeforeLoop(objectLit, loopNode);
         if (NodeUtil.isVanillaFor(loopNode)) { // For
           // The initializer is pulled out and placed prior to the loop.
           Node initializer = loopNode.getFirstChild();
@@ -343,7 +357,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
             if (!NodeUtil.isNameDeclaration(initializer)) {
               initializer = IR.exprResult(initializer).useSourceInfoFrom(initializer);
             }
-            loopNode.getParent().addChildBefore(initializer, loopNode);
+            addNodeBeforeLoop(initializer, loopNode);
           }
 
           Node increment = loopNode.getChildAtIndex(2);
