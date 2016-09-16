@@ -448,13 +448,25 @@ public class SuggestedFixTest {
   }
 
   @Test
-  public void testInsertArguments_castInArguments() {
+  public void testInsertArguments_beforeCastInArguments() {
     String originalCode = "goog.dom.classes.add(foo, /** @type {String} */ (bar));";
     String expectedCode = "goog.dom.classes.add(foo, baz, /** @type {String} */ (bar));";
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
     SuggestedFix fix = new SuggestedFix.Builder()
         .insertArguments(root.getFirstFirstChild(), 1, "baz")
+        .build();
+    assertChanges(fix, "", originalCode, expectedCode);
+  }
+
+  @Test
+  public void testInsertArguments_afterCastInArguments() {
+    String originalCode = "goog.dom.classes.add(foo, /** @type {String} */ (bar));";
+    String expectedCode = "goog.dom.classes.add(foo, /** @type {String} */ (bar), baz);";
+    Compiler compiler = getCompiler(originalCode);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .insertArguments(root.getFirstFirstChild(), 2, "baz")
         .build();
     assertChanges(fix, "", originalCode, expectedCode);
   }
