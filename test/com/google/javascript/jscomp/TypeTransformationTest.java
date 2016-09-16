@@ -32,11 +32,12 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
   private ImmutableMap<String, String> nameVars;
   private static JSType recordTypeTest, nestedRecordTypeTest, asynchRecord;
 
-  static final String EXTRA_TYPE_DEFS =
-      "/** @constructor */\n"
-          + "function Bar() {}"
-          + "/** @type {number} */"
-          + "var n = 10;";
+  static final String EXTRA_TYPE_DEFS = LINE_JOINER.join(
+      "/** @constructor */",
+      "function Bar() {}",
+      "",
+      "/** @type {number} */",
+      "var n = 10;");
 
   @Override
   public void setUp() throws Exception {
