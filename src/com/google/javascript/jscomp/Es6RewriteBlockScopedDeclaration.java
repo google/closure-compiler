@@ -195,17 +195,11 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   }
 
   private static void addNodeBeforeLoop(Node newNode, Node loopNode) {
-    if (loopNode.getParent().isLabel()) {
-      Node innerMostLabel = loopNode.getParent();
-      Node outerMostLabel = innerMostLabel;
-      while (outerMostLabel.getParent().isLabel()) {
-        outerMostLabel = outerMostLabel.getParent();
-      }
-      innerMostLabel.replaceChild(loopNode, newNode);
-      outerMostLabel.getParent().addChildAfter(loopNode, outerMostLabel);
-    } else {
-      loopNode.getParent().addChildBefore(newNode, loopNode);
+    Node insertSpot = loopNode;
+    while (insertSpot.getParent().isLabel()) {
+      insertSpot = insertSpot.getParent();
     }
+    insertSpot.getParent().addChildBefore(newNode, insertSpot);
   }
 
   private void varify() {

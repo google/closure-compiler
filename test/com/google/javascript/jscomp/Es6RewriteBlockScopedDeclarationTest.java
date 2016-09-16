@@ -886,7 +886,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
-  public void testLabelBeforeLoop() {
+  public void testLabeledLoop() {
     test(
         LINE_JOINER.join(
             "label1:",
@@ -897,10 +897,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  }",
             "}"),
         LINE_JOINER.join(
-            "label1:",
-            "label2:",
             "var $jscomp$loop$0 = {};",
             "$jscomp$loop$0.x = 1;",
+            "label1:",
+            "label2:",
             "for (;; $jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
             "  var f = function($jscomp$loop$0) {",
             "    return function f() {",

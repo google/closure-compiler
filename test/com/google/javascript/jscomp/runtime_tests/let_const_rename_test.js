@@ -302,3 +302,13 @@ function testForInCapturedLet() {
   assertEquals(2, arr[4]());  // i = 2
   assertEquals(3, arr[5]());  // i = 2 + 1
 }
+
+function testLabeledLoop() {
+  const arr = [];
+  label:
+  for (let i = 0; i < 3; i++) {
+    arr.push(() => i);
+    continue label;
+  }
+  assertArrayEquals([0, 1, 2], [arr[0](), arr[1](), arr[2]()]);
+}
