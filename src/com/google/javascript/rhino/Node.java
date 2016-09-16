@@ -619,7 +619,7 @@ public class Node implements Serializable {
     return new StringNode(token, str, lineno, charno);
   }
 
-  public Token getToken() {
+  public final Token getToken() {
     return token;
   }
 
@@ -652,11 +652,11 @@ public class Node implements Serializable {
     return first != null ? first.previous : null;
   }
 
-  public Node getNext() {
+  public final Node getNext() {
     return next;
   }
 
-  public Node getPrevious() {
+  public final Node getPrevious() {
     return this == parent.first ? null : previous;
   }
 
