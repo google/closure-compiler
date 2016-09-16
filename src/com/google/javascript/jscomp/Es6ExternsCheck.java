@@ -47,11 +47,12 @@ final class Es6ExternsCheck extends AbstractPreOrderCallback implements Compiler
 
   @Override
   public void process(Node externs, Node root) {
-    if (hasEs6Syntax(root)) {
-      NodeTraversal.traverseEs6(compiler, externs, this);
-      if (!hasSymbolExterns) {
+    NodeTraversal.traverseEs6(compiler, externs, this);
+    if (!hasSymbolExterns) {
+      if (hasEs6Syntax(root)) {
         compiler.report(JSError.make(MISSING_ES6_EXTERNS));
       }
+      VarCheck.createSynthesizedExternVar(compiler, "Symbol");
     }
   }
 

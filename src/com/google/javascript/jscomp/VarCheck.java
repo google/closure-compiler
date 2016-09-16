@@ -254,7 +254,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    * Create a new variable in a synthetic script. This will prevent
    * subsequent compiler passes from crashing.
    */
-  private void createSynthesizedExternVar(String varName) {
+  static void createSynthesizedExternVar(AbstractCompiler compiler, String varName) {
     Node nameNode = IR.name(varName);
 
     // Mark the variable as constant if it matches the coding convention
@@ -267,10 +267,17 @@ class VarCheck extends AbstractPostOrderCallback implements
       nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
 
-    getSynthesizedExternsRoot().addChildToBack(
-        IR.var(nameNode));
-    varsToDeclareInExterns.remove(varName);
+    getSynthesizedExternsRoot(compiler).addChildToBack(IR.var(nameNode));
     compiler.reportCodeChange();
+  }
+
+  /**
+   * Create a new variable in a synthetic script. This will prevent
+   * subsequent compiler passes from crashing.
+   */
+  private void createSynthesizedExternVar(String varName) {
+    createSynthesizedExternVar(compiler, varName);
+    varsToDeclareInExterns.remove(varName);
   }
 
   /**
@@ -419,7 +426,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   }
 
   /** Lazily create a "new" externs root for undeclared variables. */
-  private Node getSynthesizedExternsRoot() {
+  private static Node getSynthesizedExternsRoot(AbstractCompiler compiler) {
     return  compiler.getSynthesizedExternsInput().getAstRoot(compiler);
   }
 }

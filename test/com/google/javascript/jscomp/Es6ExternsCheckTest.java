@@ -45,6 +45,7 @@ public final class Es6ExternsCheckTest extends CompilerTestCase {
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
+    allowExternsChanges(false);
   }
 
   @Override
@@ -63,6 +64,7 @@ public final class Es6ExternsCheckTest extends CompilerTestCase {
   }
 
   public void testEs6ONoEs6() {
+    allowExternsChanges(true);  // adding Symbol
     // Don't report the missing externs if the project does not includes files with ES6 syntax.
     testSame("var x = {};");
   }
