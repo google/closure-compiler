@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -177,7 +176,7 @@ public abstract class Namespace {
       String pname, Node defSite, JSType type, boolean isConstant) {
     Preconditions.checkState(this.namespaceType == null);
     if (type == null && isConstant) {
-      type = JSType.UNKNOWN;
+      type = this.commonTypes.UNKNOWN;
     }
     otherProps = otherProps.with(pname, isConstant
         ? Property.makeConstant(defSite, type, type)

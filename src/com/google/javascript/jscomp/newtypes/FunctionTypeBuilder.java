@@ -66,9 +66,9 @@ public final class FunctionTypeBuilder {
     if (restFormals != null) {
       // Nothing to do here, since there is no way to add a placeholder.
     } else if (!optionalFormals.isEmpty()) {
-      optionalFormals.add(JSType.UNKNOWN);
+      optionalFormals.add(this.commonTypes.UNKNOWN);
     } else {
-      requiredFormals.add(JSType.UNKNOWN);
+      requiredFormals.add(this.commonTypes.UNKNOWN);
     }
     return this;
   }

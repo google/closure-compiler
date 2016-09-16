@@ -29,7 +29,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -403,13 +402,10 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public Collection<AssertionFunctionSpec> getAssertionFunctions() {
     return ImmutableList.of(
-        new AssertionFunctionSpec("goog.asserts.assert", JSType.TRUTHY),
-        new AssertionFunctionSpec("goog.asserts.assertNumber",
-            JSType.NUMBER, JSTypeNative.NUMBER_TYPE),
-        new AssertionFunctionSpec("goog.asserts.assertString",
-            JSType.STRING, JSTypeNative.STRING_TYPE),
-        new AssertionFunctionSpec("goog.asserts.assertObject",
-            JSType.TOP_OBJECT, JSTypeNative.OBJECT_TYPE),
+        new AssertionFunctionSpec("goog.asserts.assert", JSTypeNative.TRUTHY),
+        new AssertionFunctionSpec("goog.asserts.assertNumber", JSTypeNative.NUMBER_TYPE),
+        new AssertionFunctionSpec("goog.asserts.assertString", JSTypeNative.STRING_TYPE),
+        new AssertionFunctionSpec("goog.asserts.assertObject", JSTypeNative.OBJECT_TYPE),
         new AssertFunctionByTypeName("goog.asserts.assertFunction", "Function"),
         new AssertFunctionByTypeName("goog.asserts.assertArray", "Array"),
         new AssertFunctionByTypeName("goog.asserts.assertElement", "Element"),
@@ -504,7 +500,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
    */
   public static class AssertInstanceofSpec extends AssertionFunctionSpec {
     public AssertInstanceofSpec(String functionName) {
-      super(functionName, JSType.TOP_OBJECT, JSTypeNative.OBJECT_TYPE);
+      super(functionName, JSTypeNative.OBJECT_TYPE);
     }
 
     /**
@@ -549,7 +545,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
           }
         }
       }
-      return JSType.UNKNOWN;
+      return scope.getCommonTypes().UNKNOWN;
     }
   }
 

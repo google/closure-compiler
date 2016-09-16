@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -165,8 +166,6 @@ public final class JSTypes {
         Preconditions.checkNotNull(objects.get("TOP_DICT")));
     this.BOTTOM_OBJECT = Preconditions.checkNotNull(objects.get("BOTTOM_OBJECT"));
 
-    JSType.initObjects(this);
-
     this.allowMethodsAsFunctions = inCompatibilityMode;
     this.looseSubtypingForLooseObjects = inCompatibilityMode;
     this.bivariantArrayGenerics = inCompatibilityMode;
@@ -184,7 +183,7 @@ public final class JSTypes {
 
       @Override
       public boolean containsValue(Object v) {
-        return v == JSType.UNKNOWN;
+        return v == UNKNOWN;
       }
 
       @Override
@@ -194,7 +193,7 @@ public final class JSTypes {
 
       @Override
       public JSType get(Object k) {
-        return JSType.UNKNOWN;
+        return UNKNOWN;
       }
 
       @Override
@@ -229,7 +228,7 @@ public final class JSTypes {
 
       @Override
       public Collection<JSType> values() {
-        return ImmutableSet.of(JSType.UNKNOWN);
+        return ImmutableSet.of(UNKNOWN);
       }
 
       @Override
@@ -349,6 +348,40 @@ public final class JSTypes {
 
   public JSType getArgumentsArrayType() {
     return getArgumentsArrayType(this.UNKNOWN);
+  }
+
+  public JSType getNativeType(JSTypeNative typeId) {
+    // NOTE(aravindpg): not all JSTypeNative variants are handled here; add more as-needed.
+    switch (typeId) {
+      case ALL_TYPE:
+        return TOP;
+      case NO_TYPE:
+        return BOTTOM;
+      case UNKNOWN_TYPE:
+        return UNKNOWN;
+      case VOID_TYPE:
+        return UNDEFINED;
+      case NULL_TYPE:
+        return NULL;
+      case BOOLEAN_TYPE:
+        return BOOLEAN;
+      case STRING_TYPE:
+        return STRING;
+      case NUMBER_TYPE:
+        return NUMBER;
+      case NUMBER_STRING_BOOLEAN:
+        return JSType.join(NUMBER_OR_STRING, BOOLEAN);
+      case REGEXP_TYPE:
+        return getRegexpType();
+      case ARRAY_TYPE:
+        return getArrayInstance();
+      case OBJECT_TYPE:
+        return TOP_OBJECT;
+      case TRUTHY:
+        return TRUTHY;
+      default:
+        throw new RuntimeException("Native type " + typeId.name() + " not found");
+    }
   }
 
   public void setArgumentsType(RawNominalType arguments) {

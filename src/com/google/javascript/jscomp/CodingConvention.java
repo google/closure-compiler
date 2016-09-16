@@ -25,7 +25,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -478,24 +477,15 @@ public interface CodingConvention extends Serializable {
    */
   public class AssertionFunctionSpec {
     protected final String functionName;
-    // Old type system type
     protected final JSTypeNative assertedType;
-    // New type system type
-    protected final JSType assertedNewType;
 
     @Deprecated
     public AssertionFunctionSpec(String functionName) {
-      this(functionName, JSType.UNKNOWN, null);
+      this(functionName, null);
     }
 
-    public AssertionFunctionSpec(String functionName, JSType assertedNewType) {
-      this(functionName, assertedNewType, null);
-    }
-
-    public AssertionFunctionSpec(String functionName,
-        JSType assertedNewType, JSTypeNative assertedType) {
+    public AssertionFunctionSpec(String functionName, JSTypeNative assertedType) {
       this.functionName = functionName;
-      this.assertedNewType = assertedNewType;
       this.assertedType = assertedType;
     }
 
@@ -527,7 +517,8 @@ public interface CodingConvention extends Serializable {
      * @param call The asserting call
      */
     public JSType getAssertedNewType(Node call, DeclaredTypeRegistry scope) {
-      return assertedNewType;
+      return assertedType != null
+          ? scope.getCommonTypes().getNativeType(assertedType) : null;
     }
   }
 }

@@ -122,6 +122,11 @@ final class NTIScope implements DeclaredTypeRegistry {
     return name;
   }
 
+  @Override
+  public JSTypes getCommonTypes() {
+    return this.commonTypes;
+  }
+
   void setDeclaredType(DeclaredFunctionType declaredType) {
     Preconditions.checkNotNull(declaredType);
     this.declaredType = declaredType;

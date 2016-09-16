@@ -431,7 +431,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       globalThisType = win.getInstanceAsJSType();
     } else {
       // Type the global THIS as a loose object
-      globalThisType = JSType.TOP_OBJECT.withLoose();
+      globalThisType = this.commonTypes.TOP_OBJECT.withLoose();
     }
     this.globalScope.setDeclaredType(
         (new FunctionTypeBuilder(this.commonTypes)).
@@ -2593,35 +2593,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   @Override
   public JSType getNativeType(JSTypeNative typeId) {
-    // NOTE(aravindpg): not all JSTypeNative variants are handled here; add more as-needed.
-    switch (typeId) {
-      case ALL_TYPE:
-        return commonTypes.TOP;
-      case NO_TYPE:
-        return commonTypes.BOTTOM;
-      case UNKNOWN_TYPE:
-        return commonTypes.UNKNOWN;
-      case VOID_TYPE:
-        return commonTypes.UNDEFINED;
-      case NULL_TYPE:
-        return commonTypes.NULL;
-      case BOOLEAN_TYPE:
-        return commonTypes.BOOLEAN;
-      case STRING_TYPE:
-        return commonTypes.STRING;
-      case NUMBER_TYPE:
-        return commonTypes.NUMBER;
-      case NUMBER_STRING_BOOLEAN:
-        return JSType.join(commonTypes.NUMBER_OR_STRING, commonTypes.BOOLEAN);
-      case REGEXP_TYPE:
-        return commonTypes.getRegexpType();
-      case ARRAY_TYPE:
-        return commonTypes.getArrayInstance();
-      case OBJECT_TYPE:
-        return commonTypes.TOP_OBJECT;
-      default:
-        throw new RuntimeException("Native type " + typeId.name() + " not found");
-    }
+    return this.commonTypes.getNativeType(typeId);
   }
 
   @Override

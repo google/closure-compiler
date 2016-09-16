@@ -232,13 +232,6 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     return ((getMask() & TYPEVAR_MASK) != 0) == (getTypeVar() != null);
   }
 
-  // TODO(dimvar): used in coding conventions. Delete in follow-up CL
-  public static JSType NUMBER;
-  public static JSType STRING;
-  public static JSType TRUTHY;
-  public static JSType UNKNOWN;
-  public static JSType TOP_OBJECT;
-
   static Map<String, JSType> createScalars(JSTypes commonTypes) {
     LinkedHashMap<String, JSType> types = new LinkedHashMap<>();
 
@@ -265,16 +258,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     types.put("NULL_OR_UNDEFINED", new MaskType(commonTypes, NULL_MASK | UNDEFINED_MASK));
     types.put("NUMBER_OR_STRING", new MaskType(commonTypes, NUMBER_MASK | STRING_MASK));
 
-    NUMBER = types.get("NUMBER");
-    STRING = types.get("STRING");
-    TRUTHY = types.get("TRUTHY");
-    UNKNOWN = types.get("UNKNOWN");
-
     return types;
-  }
-
-  static void initObjects(JSTypes commonTypes) {
-    TOP_OBJECT = commonTypes.TOP_OBJECT;
   }
 
   @Override
@@ -563,7 +547,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
       return commonTypes.TOP;
     }
     if (lhs.isUnknown() || rhs.isUnknown()) {
-      return UNKNOWN;
+      return commonTypes.UNKNOWN;
     }
     if (lhs.isBottom()) {
       return rhs;
@@ -573,12 +557,12 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     }
     if (lhs.hasTruthyMask() || lhs.hasFalsyMask()
         || rhs.hasTruthyMask() || rhs.hasFalsyMask()) {
-      return UNKNOWN;
+      return commonTypes.UNKNOWN;
     }
     if (lhs.getTypeVar() != null && rhs.getTypeVar() != null
         && !lhs.getTypeVar().equals(rhs.getTypeVar())) {
       // For now return ? when joining two type vars. This is probably uncommon.
-      return UNKNOWN;
+      return commonTypes.UNKNOWN;
     }
 
     int newMask = lhs.getMask() | rhs.getMask();
@@ -1019,7 +1003,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
       return this;
     }
     if (this.isUnknown()) {
-      return TRUTHY;
+      return this.commonTypes.TRUTHY;
     }
     return makeType(this.commonTypes,
         getMask() & ~NULL_MASK & ~FALSE_MASK & ~UNDEFINED_MASK,
@@ -1038,12 +1022,13 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
   }
 
   public static JSType plus(JSType lhs, JSType rhs) {
-    if (!lhs.isUnknown() && !lhs.isBottom() && lhs.isSubtypeOf(STRING)
-        || !rhs.isUnknown() && !rhs.isBottom() && rhs.isSubtypeOf(STRING)) {
-      return STRING;
+    JSTypes commonTypes = lhs.commonTypes;
+    if (!lhs.isUnknown() && !lhs.isBottom() && lhs.isSubtypeOf(commonTypes.STRING)
+        || !rhs.isUnknown() && !rhs.isBottom() && rhs.isSubtypeOf(commonTypes.STRING)) {
+      return commonTypes.STRING;
     }
     if (lhs.isUnknown() || lhs.isTop() || rhs.isUnknown() || rhs.isTop()) {
-      return UNKNOWN;
+      return commonTypes.UNKNOWN;
     }
     // If either has string, string in the result.
     int newtype = (lhs.getMask() | rhs.getMask()) & STRING_MASK;
@@ -1063,9 +1048,9 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     if (isTrueOrTruthy()) {
       return this.commonTypes.FALSY;
     } else if (isFalseOrFalsy()) {
-      return TRUTHY;
+      return this.commonTypes.TRUTHY;
     }
-    return UNKNOWN;
+    return this.commonTypes.UNKNOWN;
   }
 
   public JSType toBoolean() {
@@ -1164,8 +1149,9 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     JSTypes commonTypes = found.commonTypes;
     if (commonTypes.NUMBER.isSubtypeOf(found) && !commonTypes.NUMBER.isSubtypeOf(expected)) {
       boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(commonTypes.NUMBER);
-    } else if (STRING.isSubtypeOf(found) && !STRING.isSubtypeOf(expected)) {
-      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(STRING);
+    } else if (commonTypes.STRING.isSubtypeOf(found)
+        && !commonTypes.STRING.isSubtypeOf(expected)) {
+      boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(commonTypes.STRING);
     } else if (commonTypes.BOOLEAN.isSubtypeOf(found)
         && !commonTypes.BOOLEAN.isSubtypeOf(expected)) {
       boxedInfo[0] = MismatchInfo.makeUnionTypeMismatch(commonTypes.BOOLEAN);
@@ -1304,7 +1290,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   public JSType getProp(QualifiedName qname) {
     if (isBottom() || isUnknown() || hasTruthyMask()) {
-      return UNKNOWN;
+      return this.commonTypes.UNKNOWN;
     }
     Preconditions.checkState(!getObjs().isEmpty() || !getEnums().isEmpty(),
         "Can't getProp %s of type %s", qname, this);
@@ -1315,7 +1301,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
 
   public JSType getDeclaredProp(QualifiedName qname) {
     if (isUnknown()) {
-      return UNKNOWN;
+      return this.commonTypes.UNKNOWN;
     }
     Preconditions.checkState(!getObjs().isEmpty() || !getEnums().isEmpty());
     return nullAcceptingJoin(
@@ -1378,7 +1364,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
       QualifiedName qname, JSType type, boolean isConstant) {
     Preconditions.checkState(!getObjs().isEmpty());
     if (type == null && isConstant) {
-      type = JSType.UNKNOWN;
+      type = this.commonTypes.UNKNOWN;
     }
     return makeType(this.commonTypes,
         getMask(),
@@ -1405,7 +1391,7 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
     // If it has enums, return bottom.
     if (this.commonTypes.NUMBER.isSubtypeOf(this)
         && this.commonTypes.getNumberInstance().mayHaveProp(pname)
-        || STRING.isSubtypeOf(this)
+        || this.commonTypes.STRING.isSubtypeOf(this)
         && this.commonTypes.getNumberInstance().mayHaveProp(pname)
         || this.commonTypes.BOOLEAN.isSubtypeOf(this)
         && this.commonTypes.getBooleanInstance().mayHaveProp(pname)) {

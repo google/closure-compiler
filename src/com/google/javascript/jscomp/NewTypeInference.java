@@ -2220,12 +2220,12 @@ final class NewTypeInference implements CompilerPass {
   // logical operators.
   private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv, JSType specializedType) {
     Node parent = expr.getParent();
-    JSType newSpecType = JSType.UNKNOWN;
+    JSType newSpecType = this.commonTypes.UNKNOWN;
     if ((parent.isOr() || parent.isAnd()) && expr == parent.getFirstChild()) {
       newSpecType = specializedType;
     }
     EnvTypePair pair =
-        analyzeExprFwd(expr.getFirstChild(), inEnv, JSType.UNKNOWN, newSpecType);
+        analyzeExprFwd(expr.getFirstChild(), inEnv, this.commonTypes.UNKNOWN, newSpecType);
     JSType fromType = pair.type;
     JSType toType = symbolTable.getCastType(expr);
     if (!fromType.isInterfaceInstance()
