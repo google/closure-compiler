@@ -17963,4 +17963,35 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "new C;"),
         NewTypeInference.INSTANTIATE_ABSTRACT_CLASS);
   }
+
+  public void testMaybeSpecializeInCast() {
+    // In this case, we're explicitly using the cast to "protect" arr from the
+    // context, so it's not correct to infer that arr has type !Array<!Sub>
+    // just because g takes a !Array<!Sub>.
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Super() {}",
+        "/** @constructor @extends {Super} */",
+        "function Sub() {}",
+        "function g(/** !Array<!Sub> */ x) {}",
+        "function f(/** function(!Array<!Super>) */ x) {}",
+        "function h(arr) {",
+        "  g(/** @type {!Array<!Sub>} */ (arr));",
+        "}",
+        "f(h);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */ function Foo() {}",
+        "/** @return {!Foo} */",
+        "function foo(/** !Object */ x) {",
+        "  return /** @type {?Foo} */ (x);",
+        "}"),
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function foo(/** ?Object */ x) {",
+        "  var /** !Object */ n;",
+        "  return /** @type {*} */ (x) && (n = x);",
+        "}"));
+  }
 }

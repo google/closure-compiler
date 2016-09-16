@@ -1471,7 +1471,7 @@ final class NewTypeInference implements CompilerPass {
         resultPair = analyzeArrayLitFwd(expr, inEnv);
         break;
       case CAST:
-        resultPair = analyzeCastFwd(expr, inEnv);
+        resultPair = analyzeCastFwd(expr, inEnv, specializedType);
         break;
       case CASE:
         // For a statement of the form: switch (exp1) { ... case exp2: ... }
@@ -2215,8 +2215,17 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(env, commonTypes.getArrayInstance(elementType));
   }
 
-  private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv) {
-    EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+  // Because of the cast, expr doesn't need to have the required type of the context.
+  // However, we still pass along the specialized type, to specialize types when using
+  // logical operators.
+  private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv, JSType specializedType) {
+    Node parent = expr.getParent();
+    JSType newSpecType = JSType.UNKNOWN;
+    if ((parent.isOr() || parent.isAnd()) && expr == parent.getFirstChild()) {
+      newSpecType = specializedType;
+    }
+    EnvTypePair pair =
+        analyzeExprFwd(expr.getFirstChild(), inEnv, JSType.UNKNOWN, newSpecType);
     JSType fromType = pair.type;
     JSType toType = symbolTable.getCastType(expr);
     if (!fromType.isInterfaceInstance()
