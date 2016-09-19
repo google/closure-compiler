@@ -1303,6 +1303,12 @@ angular.$compileProvider.prototype.aHrefSanitizationWhitelist = function(
 angular.$compileProvider.prototype.imgSrcSanitizationWhitelist = function(
     opt_expression) {};
 
+/**
+ * @param {string} name
+ * @param {!angular.Component} options
+ */
+angular.$compileProvider.prototype.component = function(name, options) {};
+
 /******************************************************************************
  * $cacheFactory Service
  *****************************************************************************/
