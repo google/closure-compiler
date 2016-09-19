@@ -134,12 +134,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          "var a$b = {get c() { return 3; },set c(d) {}};");
   }
 
-  public void testObjLitDeclarationWithDuplicateKeys() {
-    disableNormalize();
-    test("var a = {b: 0, b: 1}; var c = a.b;",
-         "var a$b = 0; var a$b = 1; var c = a$b;");
-  }
-
   public void testObjLitAssignmentDepth1() {
     test("var a = {b: {}, c: {}}; var d = 1; var e = 1; d = a.b; e = a.c",
          "var a$b = {}; var a$c = {}; var d = 1; var e = 1; d = a$b; e = a$c");
