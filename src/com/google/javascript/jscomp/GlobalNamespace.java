@@ -1365,7 +1365,6 @@ class GlobalNamespace
 
     Node node;
     final JSModule module;
-    final StaticSourceFile source;
     final Name name;
     final Type type;
     final Scope scope;
@@ -1387,7 +1386,6 @@ class GlobalNamespace
       this.node = node;
       this.name = name;
       this.module = module;
-      this.source = node.getStaticSourceFile();
       this.type = type;
       this.scope = scope;
       this.preOrderIndex = index;
@@ -1397,7 +1395,6 @@ class GlobalNamespace
       this.node = original.node;
       this.name = original.name;
       this.module = original.module;
-      this.source = original.source;
       this.type = type;
       this.scope = original.scope;
       this.preOrderIndex = index;
@@ -1406,7 +1403,6 @@ class GlobalNamespace
     private Ref(Type type, int index) {
       this.type = type;
       this.module = null;
-      this.source = null;
       this.scope = null;
       this.name = null;
       this.preOrderIndex = index;
@@ -1419,7 +1415,7 @@ class GlobalNamespace
 
     @Override
     public StaticSourceFile getSourceFile() {
-      return source;
+      return node != null ? node.getStaticSourceFile() : null;
     }
 
     @Override

@@ -593,7 +593,6 @@ class ReferenceCollectingCallback implements ScopedCallback,
     private final BasicBlock basicBlock;
     private final Scope scope;
     private final InputId inputId;
-    private final StaticSourceFile sourceFile;
 
     Reference(Node nameNode, NodeTraversal t,
         BasicBlock basicBlock) {
@@ -622,7 +621,6 @@ class ReferenceCollectingCallback implements ScopedCallback,
       this.basicBlock = basicBlock;
       this.scope = scope;
       this.inputId = inputId;
-      this.sourceFile = nameNode.getStaticSourceFile();
     }
 
     /**
@@ -648,7 +646,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     @Override
     public StaticSourceFile getSourceFile() {
-      return sourceFile;
+      return nameNode.getStaticSourceFile();
     }
 
     boolean isDeclaration() {

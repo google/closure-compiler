@@ -188,7 +188,7 @@ class CheckGlobalNames implements CompilerPass {
                     NAME_DEFINED_LATE_WARNING,
                     refName,
                     owner.getFullName(),
-                    owner.getDeclaration().source.getName(),
+                    owner.getDeclaration().getSourceFile().getName(),
                     String.valueOf(owner.getDeclaration().node.getLineno())));
           }
         }
