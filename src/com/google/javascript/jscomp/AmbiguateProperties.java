@@ -463,8 +463,8 @@ class AmbiguateProperties implements CompilerPass {
             String renameFunctionName = target.getOriginalQualifiedName();
             if (renameFunctionName != null
                 && compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
-
-              if (n.getChildCount() != 2 && n.getChildCount() != 3) {
+              int childCount = n.getChildCount();
+              if (childCount != 2 && childCount != 3) {
                 compiler.report(
                     JSError.make(
                         n,

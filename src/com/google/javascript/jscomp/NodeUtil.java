@@ -336,7 +336,7 @@ public final class NodeUtil {
         return null;
 
       case NEG:
-        if (n.getChildCount() == 1 && n.getFirstChild().isName()
+        if (n.hasOneChild() && n.getFirstChild().isName()
             && n.getFirstChild().getString().equals("Infinity")) {
           return Double.NEGATIVE_INFINITY;
         }
@@ -698,7 +698,7 @@ public final class NodeUtil {
    * or a concatenation thereof.
    */
   static boolean isStringLiteralValue(Node node) {
-    if (node.getToken() == Token.STRING) {
+    if (node.isString()) {
       return true;
     } else if (node.getToken() == Token.ADD) {
       Preconditions.checkState(node.getChildCount() == 2);

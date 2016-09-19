@@ -644,7 +644,7 @@ public final class Es6RewriteGenerators
    * Lifts all children to the body of the original generator to flatten the block.
    */
   private void visitBlock() {
-    if (currentStatement.getChildCount() == 0) {
+    if (!currentStatement.hasChildren()) {
       return;
     }
     Node insertionPoint = currentStatement.removeFirstChild();

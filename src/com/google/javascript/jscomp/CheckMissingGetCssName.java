@@ -65,7 +65,7 @@ class CheckMissingGetCssName
 
       for (blacklist.reset(s); blacklist.find();) {
         if (parent.isTemplateLit()) {
-          if (parent.getChildCount() > 1) {
+          if (parent.hasMoreThanOneChild()) {
             // Ignore template string with substitutions
             continue;
           } else {

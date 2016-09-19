@@ -60,7 +60,7 @@ final class InlineAliases implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case VAR:
-          if (n.getChildCount() == 1 && t.inGlobalScope()) {
+          if (n.hasOneChild() && t.inGlobalScope()) {
             visitAliasDefinition(n.getFirstChild(), NodeUtil.getBestJSDocInfo(n.getFirstChild()));
           }
           break;

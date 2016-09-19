@@ -199,7 +199,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
         case CONST:
         case LET:
         case VAR:
-          return n.getChildCount() == 1 ? getCallOrNewNode(n.getFirstFirstChild()) : null;
+          return n.hasOneChild() ? getCallOrNewNode(n.getFirstFirstChild()) : null;
         default:
           return null;
       }

@@ -2408,7 +2408,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     Node varNode = nameNode.getParent();
     JSType varType =
         getDeclaredTypeOfNode(varNode.getJSDocInfo(), currentScope);
-    if (varNode.getChildCount() > 1 && varType != null) {
+    if (varNode.hasMoreThanOneChild() && varType != null) {
       warnings.add(JSError.make(varNode, ONE_TYPE_FOR_MANY_VARS));
     }
     String varName = nameNode.getString();

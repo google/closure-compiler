@@ -549,7 +549,8 @@ class DisambiguateProperties implements CompilerPass {
 
     private void handlePropertyRenameFunctionCall(
         NodeTraversal t, Node call, String renameFunctionName) {
-      if (call.getChildCount() != 2 && call.getChildCount() != 3) {
+      int childCount = call.getChildCount();
+      if (childCount != 2 && childCount != 3) {
         compiler.report(
             JSError.make(
                 call,

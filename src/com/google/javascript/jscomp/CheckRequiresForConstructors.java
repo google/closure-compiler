@@ -594,7 +594,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
    */
   private void maybeAddGoogScopeUsage(NodeTraversal t, Node n, Node parent) {
     Preconditions.checkState(NodeUtil.isNameDeclaration(n));
-    if (n.getChildCount() == 1 && parent == googScopeBlock) {
+    if (n.hasOneChild() && parent == googScopeBlock) {
       Node rhs = n.getFirstFirstChild();
       if (rhs != null && rhs.isQualifiedName()) {
         Node root = NodeUtil.getRootOfQualifiedName(rhs);

@@ -79,7 +79,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case VAR:
         case CONST:
         case LET:
-          if (n.getChildCount() == 1) {
+          if (n.hasOneChild()) {
             propagateJsdocAtName(t, n.getFirstChild());
           }
           break;
@@ -252,7 +252,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case VAR:
         case CONST:
         case LET:
-          if (n.getChildCount() == 1 && NodeUtil.isStatement(n)) {
+          if (n.hasOneChild() && NodeUtil.isStatement(n)) {
             processName(n.getFirstChild(), n);
           }
           break;
@@ -295,7 +295,7 @@ class ConvertToTypedInterface implements CompilerPass {
           parent.addChildAfter(body.detach(), n);
           NodeUtil.removeChild(parent, n);
           Node initializer = n.isFor() ? n.getFirstChild() : IR.empty();
-          if (initializer.isVar() && initializer.getChildCount() == 1) {
+          if (initializer.isVar() && initializer.hasOneChild()) {
             parent.addChildBefore(initializer.detach(), body);
             processName(initializer.getFirstChild(), initializer);
           }

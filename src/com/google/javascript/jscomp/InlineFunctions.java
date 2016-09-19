@@ -149,8 +149,8 @@ class InlineFunctions implements CompilerPass {
     Preconditions.checkArgument(fn.isFunction());
     Node body = NodeUtil.getFunctionBody(fn);
     int numOfStmsInBody = body.getChildCount();
-    return numOfStmsInBody == 0
-        || numOfStmsInBody == 1 && body.getFirstChild().isReturn();
+    return (!body.hasChildren())
+        || (body.hasOneChild() && body.getFirstChild().isReturn());
   }
 
   private boolean targetSizeAfterInlineExceedsLimit(

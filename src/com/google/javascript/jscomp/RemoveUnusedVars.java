@@ -856,13 +856,12 @@ class RemoveUnusedVars
         // If this is a single var declaration, we can at least remove the
         // declaration itself and just leave the value, e.g.,
         // var a = foo(); => foo();
-        if (toRemove.getChildCount() == 1) {
+        if (toRemove.hasOneChild()) {
           compiler.reportChangeToEnclosingScope(toRemove);
           parent.replaceChild(toRemove,
               IR.exprResult(nameNode.removeFirstChild()));
         }
-      } else if (toRemove.isVar() &&
-          toRemove.getChildCount() > 1) {
+      } else if (toRemove.isVar() && toRemove.hasMoreThanOneChild()) {
         // For var declarations with multiple names (i.e. var a, b, c),
         // only remove the unreferenced name
         compiler.reportChangeToEnclosingScope(toRemove);
