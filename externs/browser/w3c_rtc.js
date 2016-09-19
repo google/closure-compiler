@@ -18,6 +18,7 @@
  * @fileoverview Definitions for components of the WebRTC browser API.
  * @see http://dev.w3.org/2011/webrtc/editor/webrtc.html
  * @see http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-01
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API
  * @see http://www.w3.org/TR/mediacapture-streams/
  *
  * @externs
@@ -502,6 +503,13 @@ function MediaDevices() {}
  * @return {!Promise<!Array<!MediaDeviceInfo>>}
  */
 MediaDevices.prototype.enumerateDevices = function() {};
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+ * @param {!MediaStreamConstraints} constraints
+ * @return {!Promise<!MediaStream>}
+ */
+MediaDevices.prototype.getUserMedia = function(constraints) {}
 
 /** @const {!MediaDevices} */
 Navigator.prototype.mediaDevices;
