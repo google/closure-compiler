@@ -151,11 +151,16 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       new Predicate<Node>() {
         @Override
         public boolean apply(Node n) {
-          return n.getToken() == Token.WHILE
-              || n.getToken() == Token.FOR
-              || n.getToken() == Token.FOR_OF
-              || n.getToken() == Token.DO
-              || n.getToken() == Token.FUNCTION;
+          switch(n.getToken()) {
+            case WHILE:
+            case FOR:
+            case FOR_OF:
+            case DO:
+            case FUNCTION:
+              return true;
+            default:
+              return false;
+          }
         }
       };
 

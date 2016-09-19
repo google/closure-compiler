@@ -461,7 +461,7 @@ class PureFunctionIdentifier implements CompilerPass {
         for (Definition definition : defs) {
           // Note this is safe to unwrap since this value passed isSupportedFunctionDefinition
           for (Node function : unwrapCallableExpression(definition.getRValue())) {
-            Preconditions.checkState(function.getToken() == Token.FUNCTION);
+            Preconditions.checkState(function.isFunction());
             expandedDefinitions.add(functionSideEffectMap.get(function));
           }
         }

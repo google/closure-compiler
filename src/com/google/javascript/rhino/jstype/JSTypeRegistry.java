@@ -1704,7 +1704,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         JSType thisType = null;
         boolean isConstructor = false;
         Node current = n.getFirstChild();
-        if (current.getToken() == Token.THIS || current.getToken() == Token.NEW) {
+        if (current.isThis() || current.isNew()) {
           Node contextNode = current.getFirstChild();
 
           JSType candidateThisType = createFromTypeNodesInternal(
@@ -1716,9 +1716,9 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
           if (candidateThisType.isNullType() ||
               candidateThisType.isVoidType()) {
             thisType = candidateThisType;
-          } else if (current.getToken() == Token.THIS) {
+          } else if (current.isThis()) {
             thisType = candidateThisType.restrictByNotNullOrUndefined();
-          } else if (current.getToken() == Token.NEW) {
+          } else if (current.isNew()) {
             thisType = ObjectType.cast(
                 candidateThisType.restrictByNotNullOrUndefined());
             if (thisType == null) {
