@@ -4398,15 +4398,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(
         "/** @interface @extends {gibberish} */ function Foo(){};",
-        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
+        JSTypeCreatorFromJSDoc.EXTENDS_NON_INTERFACE);
 
     typeCheck(
         "/** @constructor @implements {gibberish} */ function Foo(){};",
-        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
+        JSTypeCreatorFromJSDoc.IMPLEMENTS_NON_INTERFACE);
 
     typeCheck(
         "/** @constructor @extends {gibberish} */ function Foo() {};",
-        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
+        JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT);
   }
 
   public void testCircularDependencies() {
@@ -11034,7 +11037,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " */",
         "function f(x) {",
         "  /** @enum {function(T):number} */",
-        "  var E = { ONE: x };",
+        "  var E = { ONE: /** @type {?} */ (x) };",
         "}"),
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
 
@@ -14605,6 +14608,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "goog.Emoticons.COMMAND = '+emoticon';",
         "goog.Emoticons.prototype.getTrogClassId = goog.Emoticons.COMMAND;"),
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
+        JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT,
         NewTypeInference.INEXISTENT_PROPERTY,
         NewTypeInference.INEXISTENT_PROPERTY);
 

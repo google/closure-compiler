@@ -2644,7 +2644,7 @@ final class NewTypeInference implements CompilerPass {
       if (!pair.type.isSubtypeOf(enumeratedType)) {
         warnings.add(JSError.make(
             prop, INVALID_OBJLIT_PROPERTY_TYPE,
-            enumeratedType.toString(), pair.type.toString()));
+            errorMsgWithTypeDiff(enumeratedType, pair.type)));
       }
       env = pair.env;
     }
