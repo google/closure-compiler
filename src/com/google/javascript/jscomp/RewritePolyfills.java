@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
-
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -25,7 +23,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -190,9 +187,6 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    if (languageOutIsAtLeast(ES6) || !compiler.getOptions().rewritePolyfills) {
-      return; // no rewriting in this case.
-    }
     hotSwapScript(root, null);
   }
 

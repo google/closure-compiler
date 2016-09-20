@@ -1571,7 +1571,7 @@ public class CommandLineRunner extends
 
     options.setPreventLibraryInjection(!flags.injectLibraries);
 
-    options.rewritePolyfills = flags.rewritePolyfills;
+    options.rewritePolyfills = flags.rewritePolyfills && options.getLanguageIn().isEs6OrHigher();
 
     if (!flags.translationsFile.isEmpty()) {
       try {
