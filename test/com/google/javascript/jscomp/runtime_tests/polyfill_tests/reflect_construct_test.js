@@ -26,13 +26,7 @@ const noCheck = testing.noCheck;
 testSuite({
   shouldRunTests() {
     // Not polyfilled to ES3
-    const isOldIe = !userAgent.IE || userAgent.isVersionOrHigher(9);
-    // Also, our Reflect.construct() implementation won't work
-    // when we've overridden the native implementation, as the
-    // force-polyfill tests do.
-    const hasOverriddenNativeReflect =
-        $native.Reflect && $native.Reflect != Reflect;
-    return !isOldIe && !hasOverriddenNativeReflect;
+    return !userAgent.IE || userAgent.isVersionOrHigher(9);
   },
 
   testConstruct() {

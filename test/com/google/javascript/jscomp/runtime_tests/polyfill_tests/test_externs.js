@@ -18,11 +18,6 @@
  * @fileoverview Externs needed for testing of polyfills
  */
 
-// save_natives.js saves symbols here before force_polyfills deletes them.
-var $native = {};
-$native.Symbol;
-$native.Reflect;
-
 /**
  * @param {function(
  *             function((TYPE|IThenable<TYPE>|Thenable|null)=),
