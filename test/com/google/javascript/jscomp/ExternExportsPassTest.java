@@ -21,10 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
-
-import junit.framework.TestCase;
-
+import java.util.ArrayList;
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link ExternExportsPass}.
@@ -694,9 +693,77 @@ public final class ExternExportsPassTest extends TestCase {
             ""));
   }
 
+  public void testDependencyOrderingOfExterns() throws Exception {
+    compileAndCheck(ImmutableList.of(
+        // Source files:
+        Joiner.on("\n").join(
+            "goog.provide('ns.a');",
+            "goog.require('ns.b');",
+            "/**",
+            " * @param {ns.b} b",
+            " * @return {number}",
+            " */",
+            "ns.a = function(b) {",
+            "  return b.x + b.y.length;",
+            "};",
+            "goog.exportSymbol('ns.a', ns.a);"),
+        Joiner.on("\n").join(
+            "goog.provide('ns.b');",
+            "/** @constructor */",
+            "ns.b = function() {",
+            "  /** @type {number} */ this.x = 5;",
+            "  /** @type {string} */ this.y = 'foo';",
+            "};",
+            "goog.exportSymbol('ns.b', ns.b);"),
+        Joiner.on("\n").join(
+            "goog.provide('ns.c');",
+            "goog.require('ns.b');",
+            "/**",
+            " * @param {ns.b} b",
+            " * @return {string}",
+            " */",
+            "ns.c = function(b) {",
+            "  return 'b: {x: ' + b.x + ', y: \"' + b.y + '\"}';",
+            "};",
+            "goog.exportSymbol('ns.c', ns.c);")),
+        // Expected externs, with b (required by a and c) first:
+        Joiner.on("\n").join(
+            "/**",
+            " @const",
+            " @suppress {const,duplicate}",
+            " */",
+            "var ns = {};",
+            "/**",
+            " * @constructor",
+            " */",
+            "ns.b = function() {",
+            "};",
+            "/**",
+            " * @param {(ns.b|null)} b",
+            " * @return {number}",
+            " */",
+            "ns.a = function(b) {",
+            "};",
+            "/**",
+            " * @param {(ns.b|null)} b",
+            " * @return {string}",
+            " */",
+            "ns.c = function(b) {",
+            "};",
+            ""));
+  }
+
   private void compileAndCheck(String js, String expected) {
     Result result = compileAndExportExterns(js);
+    checkResult(result, expected);
+  }
 
+  private void compileAndCheck(List<String> jsList, String expected) {
+    Result result = compileAndExportExterns(jsList);
+    checkResult(result, expected);
+  }
+
+  private void checkResult(Result result, String expected) {
     String fileoverview = Joiner.on("\n").join(
         "/**",
         " * @fileoverview Generated externs.",
@@ -729,15 +796,24 @@ public final class ExternExportsPassTest extends TestCase {
     return compileAndExportExterns(js, "");
   }
 
+  private Result compileAndExportExterns(List<String> jsList) {
+    return compileAndExportExterns(jsList, "");
+  }
+
+  private Result compileAndExportExterns(String js, String externs) {
+    List<String> jsList = ImmutableList.of(js);
+    return compileAndExportExterns(jsList, externs);
+  }
+
   /**
-   * Compiles the passed in JavaScript with the passed in externs and returns
+   * Compiles the passed in list of JavaScript sources with the passed in externs and returns
    * the new externs exported by the this pass.
    *
-   * @param js the source to be compiled
+   * @param jsList the source to be compiled
    * @param externs the externs the {@code js} source needs
    * @return the externs generated from {@code js}
    */
-  private Result compileAndExportExterns(String js, String externs) {
+  private Result compileAndExportExterns(List<String> jsList, String externs) {
     Compiler compiler = new Compiler();
     BlackHoleErrorManager.silence(compiler);
     CompilerOptions options = new CompilerOptions();
@@ -750,11 +826,27 @@ public final class ExternExportsPassTest extends TestCase {
     options.setCheckSymbols(true);
     options.setCheckTypes(runCheckTypes);
 
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode(
-        "testcode",
+    /* Perform the closure pass so we can use goog.provide and goog.require in tests, and order
+     * sources by their provide/require calls.
+     */
+    options.setClosurePass(true);
+    options.getDependencyOptions().setDependencySorting(true);
+
+    List<SourceFile> inputs = new ArrayList<SourceFile>();
+    // Dummy closure definitions first.
+    inputs.add(SourceFile.fromCode(
+        "goog",
         "var goog = {};"
         + "goog.exportSymbol = function(a, b) {}; "
-        + "goog.exportProperty = function(a, b, c) {}; " + js));
+        + "goog.exportProperty = function(a, b, c) {};"));
+    // Then all the sources from the test.
+    for (int i = 0; i < jsList.size(); ++i) {
+      String name = "source" + i;
+      String code = jsList.get(i);
+      inputs.add(SourceFile.fromCode(name, code));
+    }
+    // Now make the list immutable.
+    inputs = ImmutableList.copyOf(inputs);
 
     List<SourceFile> externFiles = ImmutableList.of(
         SourceFile.fromCode("externs", externs));
