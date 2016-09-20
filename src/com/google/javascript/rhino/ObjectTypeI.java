@@ -78,4 +78,15 @@ public interface ObjectTypeI extends TypeI {
   boolean hasProperty(String propertyName);
 
   Iterable<String> getOwnPropertyNames();
+
+  /**
+   * Works around the OTI distinction between prototype-object types and other objects.
+   *
+   * This method is a hack and can be deleted, either
+   * - when NTI treats objects in .prototype properties specially, or
+   * - when OTI is deleted.
+   * Currently, if Foo extends Bar, for the Bar instance pointed to by Foo.prototype,
+   * this method returns a Foo in OTI and a Bar in NTI.
+   */
+  ObjectTypeI normalizeObjectForCheckAccessControls();
 }

@@ -712,6 +712,53 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         null, null);
   }
 
+  // FYI: Java warns for the b1.method access in c.js.
+  // Instead of following that in NTI, we chose to follow the behavior of
+  // the old JSCompiler type checker, to make migration easier.
+  public void testProtectedAccessForProperties13() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "a.js",
+            LINE_JOINER.join(
+                "goog.provide('A');",
+                "/** @constructor */",
+                "var A = function() {}",
+                "/** @protected */",
+                "A.prototype.method = function() {};")),
+        SourceFile.fromCode(
+            "b1.js",
+            LINE_JOINER.join(
+                "goog.require('A');",
+                "goog.provide('B1');",
+                "/** @constructor @extends {A} */",
+                "var B1 = function() {};",
+                "/** @override */",
+                "B1.prototype.method = function() {};")),
+        SourceFile.fromCode(
+            "b2.js",
+            LINE_JOINER.join(
+                "goog.require('A');",
+                "goog.provide('B2');",
+                "/** @constructor @extends {A} */",
+                "var B2 = function() {};",
+                "/** @override */",
+                "B2.prototype.method = function() {};")),
+        SourceFile.fromCode(
+            "c.js",
+            LINE_JOINER.join(
+                "goog.require('B1');",
+                "goog.require('B2');",
+                "/**",
+                " * @param {!B1} b1",
+                " * @constructor",
+                " * @extends {B2}",
+                " */",
+                "var C = function(b1) {",
+                "  var x = b1.method();",
+                "};"))),
+        null, null);
+  }
+
   public void testNoProtectedAccessForProperties1() {
     test(new String[] {
         "/** @constructor */ function Foo() {} "

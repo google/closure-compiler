@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
@@ -29,9 +28,7 @@ import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import javax.annotation.Nullable;
 
@@ -255,12 +252,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return type;
     } else if (type.isConstructor() || type.isInterface()) {
       return type.toMaybeFunctionType().getInstanceType();
-    } else if (type.isPrototypeObject()) {
-      // newtypes.JSType should never enter this codepath
-      Preconditions.checkState(type instanceof ObjectType);
-      FunctionType owner = ((ObjectType) type).getOwnerFunction();
-      if (owner.isConstructor()) {
-        return owner.getInstanceType();
+    } else {
+      ObjectTypeI obj = type.toMaybeObjectType();
+      if (obj != null) {
+        return obj.normalizeObjectForCheckAccessControls();
       }
     }
     return type;

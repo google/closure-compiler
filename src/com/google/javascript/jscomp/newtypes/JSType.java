@@ -42,7 +42,7 @@ import java.util.TreeSet;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public abstract class JSType implements FunctionTypeI, ObjectTypeI {
+public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   // NOTE(dimvar): the masks that are protected are used from the subclasses
   // of JSType in this file. Unfortunately, protected fields are also package visible;
   // but the masks should not be used outside this file.
@@ -1836,6 +1836,17 @@ public abstract class JSType implements FunctionTypeI, ObjectTypeI {
       builder.add(JSType.fromTypeVar(this.commonTypes, getTypeVar()));
     }
     return builder.build();
+  }
+
+  @Override
+  public ObjectTypeI normalizeObjectForCheckAccessControls() {
+    if (isSingletonObj()) {
+      FunctionTypeI ctor = getConstructor();
+      if (ctor != null) {
+        return ctor.getInstanceType();
+      }
+    }
+    return this;
   }
 }
 

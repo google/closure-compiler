@@ -51,7 +51,6 @@ import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -744,6 +743,17 @@ public abstract class ObjectType
 
   /** Sets the owner function. By default, does nothing. */
   void setOwnerFunction(FunctionType type) {}
+
+  @Override
+  public ObjectType normalizeObjectForCheckAccessControls() {
+    if (this.isFunctionPrototypeType()) {
+      FunctionType owner = this.getOwnerFunction();
+      if (owner.hasInstanceType()) {
+        return owner.getInstanceType();
+      }
+    }
+    return this;
+  }
 
   /**
    * Gets the interfaces implemented by the ctor associated with this type.
