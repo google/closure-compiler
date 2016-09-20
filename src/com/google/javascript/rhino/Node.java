@@ -1841,21 +1841,22 @@ public class Node implements Serializable {
    *         of the name and properties.
    */
   public String getQualifiedName() {
-    if (token == Token.NAME || getBooleanProp(IS_MODULE_NAME)) {
-      String name = getString();
-      return name.isEmpty() ? null : name;
-    } else if (token == Token.GETPROP) {
-      String left = getFirstChild().getQualifiedName();
-      if (left == null) {
+    switch (token) {
+      case NAME:
+        String name = getString();
+        return name.isEmpty() ? null : name;
+      case GETPROP:
+        String left = getFirstChild().getQualifiedName();
+        if (left == null) {
+          return null;
+        }
+        return left + "." + getLastChild().getString();
+      case THIS:
+        return "this";
+      case SUPER:
+        return "super";
+      default:
         return null;
-      }
-      return left + "." + getLastChild().getString();
-    } else if (token == Token.THIS) {
-      return "this";
-    } else if (token == Token.SUPER) {
-      return "super";
-    } else {
-      return null;
     }
   }
 

@@ -90,7 +90,7 @@ final class PreprocessorSymbolTable
   }
 
   void addReference(Node node) {
-    String name = node.getQualifiedName();
+    String name = getQualifiedName(node);
     Preconditions.checkNotNull(name);
 
     if (!symbols.containsKey(name)) {
@@ -98,6 +98,23 @@ final class PreprocessorSymbolTable
     }
 
     refs.put(name, new Reference(symbols.get(name), node));
+  }
+
+  /**
+   * This variant of Node#getQualifiedName is adds special support for
+   * IS_MODULE_NAME.
+   */
+  public String getQualifiedName(Node n) {
+    if (n.getBooleanProp(Node.IS_MODULE_NAME)) {
+      return n.getString();
+    } else if (n.isGetProp()) {
+      String left = getQualifiedName(n.getFirstChild());
+      if (left == null) {
+        return null;
+      }
+      return left + "." + n.getLastChild().getString();
+    }
+    return n.getQualifiedName();
   }
 
   static final class Reference extends SimpleReference<SimpleSlot> {
