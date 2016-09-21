@@ -1581,10 +1581,17 @@ public abstract class JSType implements TypeI, Serializable {
     return toStringHelper(true);
   }
 
+  public final String toNonNullString(boolean forAnnotations) {
+    if (forAnnotations) {
+      return toNonNullAnnotationString();
+    } else {
+      return toStringHelper(false);
+    }
+  }
+
   public final String toNonNullAnnotationString() {
-    return !isUnknownType() && !isTemplateType() && !isRecordType() && isObject()
-        ? "!" + toAnnotationString()
-        : toAnnotationString();
+    return !isUnknownType() && !isTemplateType() && !isRecordType() && !isFunctionType()
+        && isObject() ? "!" + toAnnotationString() : toAnnotationString();
   }
 
   /**

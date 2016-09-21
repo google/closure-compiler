@@ -311,7 +311,7 @@ public class PrototypeObjectType extends ObjectType {
 
         sb.append(property);
         sb.append(": ");
-        sb.append(getPropertyType(property).toStringHelper(forAnnotations));
+        sb.append(getPropertyType(property).toNonNullString(forAnnotations));
 
         ++i;
         if (!forAnnotations && i == MAX_PRETTY_PRINTED_PROPERTIES) {

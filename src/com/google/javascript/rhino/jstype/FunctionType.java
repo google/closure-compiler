@@ -1029,7 +1029,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       }
     }
     b.append("): ");
-    b.append(call.returnType.toStringHelper(forAnnotations));
+    b.append(call.returnType.toNonNullString(forAnnotations));
 
     setPrettyPrint(true);
     return b.toString();
@@ -1042,7 +1042,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     } else if (p.isOptionalArg()) {
       appendOptionalArgString(b, p.getJSType(), forAnnotations);
     } else {
-      b.append(p.getJSType().toStringHelper(forAnnotations));
+      b.append(p.getJSType().toNonNullString(forAnnotations));
     }
   }
 
@@ -1055,7 +1055,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
     builder.append("...").append(
-        paramType.toStringHelper(forAnnotations));
+        paramType.toNonNullString(forAnnotations));
   }
 
   /** Gets the string representation of an optional param. */
@@ -1066,7 +1066,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       paramType = paramType.toMaybeUnionType().getRestrictedUnion(
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
-    builder.append(paramType.toStringHelper(forAnnotations)).append("=");
+    builder.append(paramType.toNonNullString(forAnnotations)).append("=");
   }
 
   /**
