@@ -194,7 +194,7 @@ angular.module = function(name, opt_requires, opt_configFn) {};
 angular.noop = function() {};
 
 /**
- * @param {Object|Array|Date|string|number} obj
+ * @param {Object|Array|Date|string|number|boolean} obj
  * @param {boolean=} opt_pretty
  * @return {string}
  */
