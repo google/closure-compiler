@@ -509,6 +509,18 @@ md.$toast.preset.prototype.parent = function(parent) {};
  */
 md.$toast.preset.prototype.position = function(position) {};
 
+/**
+ * @param {string} className
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.highlightClass = function(className) {};
+
+/**
+ * @param {string} className
+ * @return {!md.$toast.preset}
+ */
+md.$toast.preset.prototype.toastClass = function(className) {};
+
 
 /**
  * @return {!md.$toast.preset}
