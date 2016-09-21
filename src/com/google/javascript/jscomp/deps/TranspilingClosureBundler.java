@@ -38,6 +38,8 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -58,6 +60,12 @@ public final class TranspilingClosureBundler extends ClosureBundler {
   // TODO(sdh): Not all transpilation requires the runtime, only inject if actually needed.
   private final String es6Runtime;
   private boolean needToBundleEs6Runtime = true;
+  // Whether to inline source map info directly into the output, in a "// #sourceMappingUrl"
+  // comment. This bloats the size of the transpiled output, but it allows the server to avoid
+  // serving the source map separately.
+  private final boolean inlineSourceMap;
+  // Map of source paths to generated source map paths.
+  private final Map<String, String> sourceMapCache = new HashMap<>();
 
   public TranspilingClosureBundler() {
     this(getEs6Runtime());
@@ -68,20 +76,25 @@ public final class TranspilingClosureBundler extends ClosureBundler {
    *
    * @param transpilationCache The cache to use to store already transpiled files
    */
-  public TranspilingClosureBundler(Cache<Long, String> transpilationCache) {
-    this(getEs6Runtime(), transpilationCache);
+  public TranspilingClosureBundler(
+      Cache<Long, String> transpilationCache, boolean inlineSourceMap) {
+    this(getEs6Runtime(), transpilationCache, inlineSourceMap);
   }
 
   @VisibleForTesting
   TranspilingClosureBundler(String es6Runtime) {
-    this(es6Runtime,
-        CacheBuilder.newBuilder().maximumSize(DEFAULT_CACHE_SIZE).<Long, String>build());
+    this(
+        es6Runtime,
+        CacheBuilder.newBuilder().maximumSize(DEFAULT_CACHE_SIZE).<Long, String>build(),
+        true);
   }
 
   @VisibleForTesting
-  TranspilingClosureBundler(String es6Runtime, Cache<Long, String> transpilationCache) {
+  TranspilingClosureBundler(
+      String es6Runtime, Cache<Long, String> transpilationCache, boolean inlineSourceMap) {
     this.es6Runtime = es6Runtime;
     this.cachedTranspilations = transpilationCache;
+    this.inlineSourceMap = inlineSourceMap;
   }
 
   @Override
@@ -130,9 +143,7 @@ public final class TranspilingClosureBundler extends ClosureBundler {
               SourceFile sourceFile = SourceFile.fromCode(path, js);
               Result result =
                   compiler.<SourceFile, SourceFile>compile(
-                      ImmutableList.<SourceFile>of(),
-                      ImmutableList.of(sourceFile),
-                      getOptions());
+                      ImmutableList.<SourceFile>of(), ImmutableList.of(sourceFile), getOptions());
               if (compiler.getErrorManager().getErrorCount() > 0) {
                 String message;
                 try {
@@ -148,11 +159,13 @@ public final class TranspilingClosureBundler extends ClosureBundler {
               StringBuilder source = new StringBuilder().append(compiler.toSource());
               StringBuilder sourceMap = new StringBuilder();
               compiler.getSourceMap().appendTo(sourceMap, path);
-              return source
-                  .append("\n//# sourceMappingURL=data:,")
-                  .append(URLEncoder.encode(sourceMap.toString(), "UTF-8").replace("+", "%20"))
-                  .append("\n")
-                  .toString();
+              sourceMapCache.put(path, sourceMap.toString());
+              if (inlineSourceMap) {
+                source
+                    .append("\n//# sourceMappingURL=data:,")
+                    .append(URLEncoder.encode(sourceMap.toString(), "UTF-8").replace("+", "%20"));
+              }
+              return source.append("\n").toString();
             }
           });
     } catch (ExecutionException | UncheckedExecutionException e) {
@@ -165,6 +178,11 @@ public final class TranspilingClosureBundler extends ClosureBundler {
         throw Throwables.propagate(e);
       }
     }
+  }
+
+  @Override
+  public String getSourceMap(final String path) {
+    return sourceMapCache.get(path);
   }
 
   /** Generates the runtime by requesting the "es6_runtime" library from the compiler. */

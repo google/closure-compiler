@@ -85,6 +85,14 @@ public class ClosureBundler {
     }
   }
 
+  /**
+   * Subclasses that need to provide a source map for any transformed input can return it with this
+   * method.
+   */
+  public String getSourceMap(String path) {
+    return "";
+  }
+
   private void appendTraditional(Appendable out, CharSource contents)
       throws IOException {
     if (useEval) {
