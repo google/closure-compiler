@@ -856,6 +856,13 @@ PolymerDomApi.prototype.classList;
 PolymerDomApi.prototype.queryDistributedElements = function(selector) {};
 
 /**
+ * Returns a list of effective child nodes for this element.
+ *
+ * @return {!Array<!HTMLElement>}
+ */
+PolymerDomApi.prototype.getEffectiveChildNodes = function() {};
+
+/**
  * A Polymer Event API.
  *
  * @constructor
