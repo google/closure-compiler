@@ -214,7 +214,7 @@ final class InlineProperties implements CompilerPass {
       String propName = n.getLastChild().getString();
 
       Node value = parent.getLastChild();
-      if (src.isThis()) {
+      if (NodeUtil.isThisOrAlias(src)) {
         // This is a simple assignment like:
         //    this.foo = 1;
         if (inConstructor(t)) {

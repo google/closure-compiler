@@ -344,7 +344,7 @@ class ConvertToTypedInterface implements CompilerPass {
               if (n.isExprResult()) {
                 Node expr = n.getFirstChild();
                 Node name = expr.isAssign() ? expr.getFirstChild() : expr;
-                if (!name.isGetProp() || !name.getFirstChild().isThis()) {
+                if (!name.isGetProp() || !NodeUtil.isThisOrAlias(name.getFirstChild())) {
                   return;
                 }
                 String pname = name.getLastChild().getString();

@@ -481,7 +481,7 @@ class DisambiguateProperties implements CompilerPass {
           && propertiesToErrorFor.containsKey(name)) {
         String suggestion = "";
         if (type.isAllType() || type.isUnknownType()) {
-          if (n.getFirstChild().isThis()) {
+          if (NodeUtil.isThisOrAlias(n.getFirstChild())) {
             suggestion = "The \"this\" object is unknown in the function, consider using @this";
           } else {
             String qName = n.getFirstChild().getQualifiedName();
@@ -589,7 +589,7 @@ class DisambiguateProperties implements CompilerPass {
           && propertiesToErrorFor.containsKey(propName)) {
         String suggestion = "";
         if (type.isAllType() || type.isUnknownType()) {
-          if (obj.isThis()) {
+          if (NodeUtil.isThisOrAlias(obj)) {
             suggestion = "The \"this\" object is unknown in the function, consider using @this";
           } else {
             String qName = obj.getQualifiedName();

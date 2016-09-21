@@ -172,7 +172,7 @@ class CheckUnusedPrivateProperties
   private boolean isCandidatePropertyDefinition(Node n) {
     Preconditions.checkState(n.isGetProp(), n);
     Node target = n.getFirstChild();
-    return target.isThis()
+    return NodeUtil.isThisOrAlias(target)
         || (isConstructor(target))
         || (target.isGetProp()
             && target.getLastChild().getString().equals("prototype"));

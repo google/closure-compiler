@@ -987,7 +987,7 @@ final class TypedScopeCreator implements ScopeCreator {
             builder.inferThisType(
                 info, ownerType.getOwnerFunction().getInstanceType());
             searchedForThisType = true;
-          } else if (ownerNode != null && ownerNode.isThis()) {
+          } else if (ownerNode != null && NodeUtil.isThisOrAlias(ownerNode)) {
             // If we have a 'this' node, use the scope type.
             builder.inferThisType(info, scope.getTypeOfThis());
             searchedForThisType = true;
@@ -2033,7 +2033,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // if the member expression is not of the form: this.someProperty.
       if (info == null ||
           !member.isGetProp() ||
-          !member.getFirstChild().isThis()) {
+          !NodeUtil.isThisOrAlias(member.getFirstChild())) {
         return;
       }
 

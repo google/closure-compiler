@@ -263,7 +263,7 @@ class FunctionToBlockMutator {
             // has side effects.
 
             Node value = entry.getValue();
-            if (!value.isThis()
+            if (!NodeUtil.isThisOrAlias(value)
                 && (referencesThis
                     || NodeUtil.mayHaveSideEffects(value, compiler))) {
               String newName = getUniqueThisName();

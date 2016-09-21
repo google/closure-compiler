@@ -566,7 +566,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   private void handleExportDefinition(NodeTraversal t, Node definitionNode) {
     // For now, only handle properties defined on this inside of a constructor
     if (!definitionNode.isGetProp()
-        || !definitionNode.getFirstChild().isThis()) {
+        || !NodeUtil.isThisOrAlias(definitionNode.getFirstChild())) {
       // Not a property on THIS
       return;
     }

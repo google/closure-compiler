@@ -984,7 +984,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           return;
         }
 
-        if (NodeUtil.getRootOfQualifiedName(lvalue).isThis() &&
+        if (NodeUtil.isThisOrAlias(NodeUtil.getRootOfQualifiedName(lvalue)) &&
             t.getTypedScope() != var.getScope()) {
           // Don't look at "this.foo" variables from other scopes.
           return;

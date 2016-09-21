@@ -627,7 +627,7 @@ class TypeInference
     JSType nodeType = getJSType(obj);
     ObjectType objectType = ObjectType.cast(
         nodeType.restrictByNotNullOrUndefined());
-    boolean propCreationInConstructor = obj.isThis() &&
+    boolean propCreationInConstructor = NodeUtil.isThisOrAlias(obj) &&
         getJSType(syntacticScope.getRootNode()).isConstructor();
 
     if (objectType == null) {
@@ -980,7 +980,7 @@ class TypeInference
   }
 
   private FlowScope narrowScope(FlowScope scope, Node node, JSType narrowed) {
-    if (node.isThis()) {
+    if (NodeUtil.isThisOrAlias(node)) {
       // "this" references don't need to be modeled in the control flow graph.
       return scope;
     }

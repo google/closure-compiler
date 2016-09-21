@@ -131,7 +131,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     }
 
     Node leftChild = expectedGetprop.getFirstChild();
-    if (!leftChild.isThis() &&
+    if (!NodeUtil.isThisOrAlias(leftChild) &&
         !isPropertyTree(leftChild)) {
       return false;
     }
@@ -146,7 +146,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    */
   private static void replaceThis(Node expectedGetprop, Node replacement) {
     Node leftChild = expectedGetprop.getFirstChild();
-    if (leftChild.isThis()) {
+    if (NodeUtil.isThisOrAlias(leftChild)) {
       expectedGetprop.replaceChild(leftChild, replacement);
     } else {
       replaceThis(leftChild, replacement);

@@ -224,7 +224,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     Preconditions.checkArgument(qnameNode.isQualifiedName());
     if (qnameNode.isName()) {
       return isDefinedLocally(qnameNode.getString(), false);
-    } else if (qnameNode.isThis()) {
+    } else if (NodeUtil.isThisOrAlias(qnameNode)) {
       return true;
     }
     QualifiedName qname = QualifiedName.fromNode(qnameNode);
