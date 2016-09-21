@@ -987,12 +987,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   final String getCurrentJsSource() {
-    String filename = options.fileToPrintAfterEachPass;
-    if (filename == null) {
+    List<String> filenames = options.filesToPrintAfterEachPass;
+    if (filenames.isEmpty()) {
       return toSource();
     } else {
-      Node script = getScriptNode(filename);
-      return script != null ? toSource(script) : ("File '" + filename + "' not found");
+      StringBuilder builder = new StringBuilder();
+      for (String filename : filenames) {
+        Node script = getScriptNode(filename);
+        String source = script != null
+            ? "// " + script.getSourceFileName() + "\n" + toSource(script)
+            : "File '" + filename + "' not found";
+        builder.append(source);
+      }
+      return builder.toString();
     }
   }
 

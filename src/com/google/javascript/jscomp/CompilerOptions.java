@@ -880,15 +880,16 @@ public class CompilerOptions {
 
   // Should only be used when debugging compiler bugs.
   boolean printSourceAfterEachPass;
-  // Used to narrow down the printed source when overall input size is large.
-  String fileToPrintAfterEachPass;
+  // Used to narrow down the printed source when overall input size is large. If this is empty,
+  // the entire source is printed.
+  List<String> filesToPrintAfterEachPass = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
   }
 
-  public void setFileToPrintAfterEachPass(String filename) {
-    this.fileToPrintAfterEachPass = filename;
+  public void setFilesToPrintAfterEachPass(List<String> filenames) {
+    this.filesToPrintAfterEachPass = filenames;
   }
 
   String reportPath;
