@@ -85,19 +85,28 @@ md.$dialog = function() {};
  * @typedef {{
  *   templateUrl: (string|undefined),
  *   template: (string|undefined),
+ *   contentElement: (string|Element|undefined),
+ *   autoWrap: (boolean|undefined),
  *   targetEvent: (Object|undefined),
+ *   openFrom: (string|!Element|!Object|undefined),
+ *   closeTo: (string|!Element|!Object|undefined),
+ *   scope: (!angular.Scope|undefined),
+ *   preserveScope: (boolean|undefined),
+ *   disableParentScroll: (boolean|undefined),
  *   hasBackdrop: (boolean|undefined),
  *   clickOutsideToClose: (boolean|undefined),
  *   escapeToClose: (boolean|undefined),
+ *   focusOnOpen: (boolean|undefined),
  *   controller: (Function|string|undefined),
  *   locals: (Object|undefined),
+ *   bindToController: (boolean|undefined),
  *   resolve: (Object|undefined),
  *   controllerAs: (string|undefined),
  *   parent: (angular.JQLite|Element|undefined),
  *   onShowing: (Function|undefined),
  *   onComplete: (Function|undefined),
  *   onRemoving: (Function|undefined),
- *   contentElement: string
+ *   fullscreen: (boolean|undefined)
  * }}
  */
 md.$dialog.options;
