@@ -926,8 +926,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f(x, y) {",
         "  var z = 1 < 2 ? x : y;",
         "  return new z();",
-        "}"),
-        NewTypeInference.NOT_A_CONSTRUCTOR);
+        "}"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -17481,10 +17480,10 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(js,
         GlobalTypeInfo.ANONYMOUS_NOMINAL_TYPE,
         GlobalTypeInfo.ANONYMOUS_NOMINAL_TYPE,
-        NewTypeInference.NOT_A_CONSTRUCTOR);
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
     compilerOptions.setWarningLevel(
         DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
-    typeCheck(js, NewTypeInference.NOT_A_CONSTRUCTOR);
+    typeCheck(js, NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testPrototypeMethodInDifferentScopeCompatibility() {

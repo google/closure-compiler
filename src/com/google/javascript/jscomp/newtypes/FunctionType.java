@@ -570,7 +570,9 @@ public final class FunctionType {
     NominalType n2 = getNominalTypeIfSingletonObj(nt2);
     if (n1 != null && n2 != null) {
       NominalType tmp = NominalType.pickSuperclass(n1, n2);
-      return tmp == null ? null : tmp.getInstanceAsJSType();
+      if (tmp != null) {
+        return tmp.getInstanceAsJSType();
+      }
     }
     // One of the nominal types is non-standard; can't avoid the join
     return JSType.join(nt1, nt2);
