@@ -218,18 +218,13 @@ system have been added.</td>
 
 <table>
   <tr>
-    <td>Code Path</td>
-    <td><code>lib/args4j.jar</code></td>
-  </tr>
-
-  <tr>
     <td>URL</td>
     <td>https://args4j.dev.java.net/</td>
   </tr>
 
   <tr>
     <td>Version</td>
-    <td>2.0.26</td>
+    <td>2.33</td>
   </tr>
 
   <tr>
@@ -252,11 +247,6 @@ options/arguments in your CUI application.</td>
 ### Guava Libraries
 
 <table>
-  <tr>
-    <td>Code Path</td>
-    <td><code>lib/guava.jar</code></td>
-  </tr>
-
   <tr>
     <td>URL</td>
     <td>https://github.com/google/guava</td>
@@ -287,13 +277,8 @@ options/arguments in your CUI application.</td>
 
 <table>
   <tr>
-    <td>Code Path</td>
-    <td><code>lib/jsr305.jar</code></td>
-  </tr>
-
-  <tr>
     <td>URL</td>
-    <td>http://code.google.com/p/jsr-305/</td>
+    <td>https://github.com/findbugsproject/findbugs</td>
   </tr>
 
   <tr>
@@ -321,18 +306,13 @@ options/arguments in your CUI application.</td>
 
 <table>
   <tr>
-    <td>Code Path</td>
-    <td><code>lib/junit.jar</code></td>
-  </tr>
-
-  <tr>
     <td>URL</td>
     <td>http://sourceforge.net/projects/junit/</td>
   </tr>
 
   <tr>
     <td>Version</td>
-    <td>4.11</td>
+    <td>4.12</td>
   </tr>
 
   <tr>
@@ -355,18 +335,13 @@ options/arguments in your CUI application.</td>
 
 <table>
   <tr>
-    <td>Code Path</td>
-    <td><code>lib/protobuf-java.jar</code></td>
-  </tr>
-
-  <tr>
     <td>URL</td>
     <td>https://github.com/google/protobuf</td>
   </tr>
 
   <tr>
     <td>Version</td>
-    <td>2.5.0</td>
+    <td>3.0.2</td>
   </tr>
 
   <tr>
@@ -390,18 +365,13 @@ an encoding of structured data.</td>
 
 <table>
   <tr>
-    <td>Code Path</td>
-    <td><code>lib/truth.jar</code></td>
-  </tr>
-
-  <tr>
     <td>URL</td>
     <td>https://github.com/google/truth</td>
   </tr>
 
   <tr>
     <td>Version</td>
-    <td>0.24</td>
+    <td>0.30</td>
   </tr>
 
   <tr>
@@ -424,20 +394,13 @@ an encoding of structured data.</td>
 
 <table>
   <tr>
-    <td>Code Path</td>
-    <td>
-      <code>lib/ant.jar</code>, <code>lib/ant-launcher.jar</code>
-    </td>
-  </tr>
-
-  <tr>
     <td>URL</td>
     <td>http://ant.apache.org/bindownload.cgi</td>
   </tr>
 
   <tr>
     <td>Version</td>
-    <td>1.8.1</td>
+    <td>1.9.7</td>
   </tr>
 
   <tr>
@@ -461,18 +424,13 @@ without make's wrinkles and with the full portability of pure java code.</td>
 
 <table>
   <tr>
-    <td>Code Path</td>
-    <td><code>lib/gson.jar</code></td>
-  </tr>
-
-  <tr>
     <td>URL</td>
     <td>https://github.com/google/gson</td>
   </tr>
 
   <tr>
     <td>Version</td>
-    <td>2.2.4</td>
+    <td>2.7</td>
   </tr>
 
   <tr>
