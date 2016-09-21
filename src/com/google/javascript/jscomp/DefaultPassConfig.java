@@ -207,6 +207,9 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
+      if (options.rewritePolyfills) {
+        TranspilationPasses.addRewritePolyfillPass(passes);
+      }
       passes.add(markTranspilationDone);
     }
 
@@ -372,6 +375,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6LatePasses(checks);
+      if (options.rewritePolyfills) {
+        TranspilationPasses.addRewritePolyfillPass(checks);
+      }
       checks.add(markTranspilationDone);
     }
 

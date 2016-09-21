@@ -2534,6 +2534,10 @@ public class CompilerOptions {
     this.rewritePolyfills = rewritePolyfills;
   }
 
+  public boolean getRewritePolyfills() {
+    return this.rewritePolyfills;
+  }
+
   /**
    * Sets list of libraries to always inject, even if not needed.
    */

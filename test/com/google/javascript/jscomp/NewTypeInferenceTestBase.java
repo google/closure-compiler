@@ -249,6 +249,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         && !compilerOptions.getLanguageOut().isEs6OrHigher()) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
+      TranspilationPasses.addRewritePolyfillPass(passes);
     }
     passes.add(makePassFactory("GlobalTypeInfo", compiler.getSymbolTable()));
     passes.add(makePassFactory("NewTypeInference", new NewTypeInference(compiler)));

@@ -1515,6 +1515,7 @@ public abstract class CompilerTestCase extends TestCase {
     List<PassFactory> factories = new ArrayList<>();
     TranspilationPasses.addEs6EarlyPasses(factories);
     TranspilationPasses.addEs6LatePasses(factories);
+    TranspilationPasses.addRewritePolyfillPass(factories);
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);
     }

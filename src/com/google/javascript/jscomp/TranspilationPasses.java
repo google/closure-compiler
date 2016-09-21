@@ -57,6 +57,12 @@ public class TranspilationPasses {
     passes.add(convertEs6ToEs3);
     passes.add(rewriteBlockScopedDeclaration);
     passes.add(rewriteGenerators);
+  }
+
+  /**
+   * Adds the pass to inject ES6 polyfills, which goes after the late ES6 passes.
+   */
+  public static void addRewritePolyfillPass(List<PassFactory> passes) {
     passes.add(rewritePolyfills);
   }
 

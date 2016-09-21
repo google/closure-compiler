@@ -34,8 +34,8 @@ import java.util.Set;
  */
 public abstract class PassConfig {
 
-  // Used by subclasses in this package.
-  final CompilerOptions options;
+  // Used by the subclasses.
+  protected final CompilerOptions options;
 
   /**
    * A memoized version of scopeCreator. It must be memoized so that

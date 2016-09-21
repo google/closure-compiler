@@ -17350,6 +17350,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       List<PassFactory> passes = new ArrayList<>();
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
+      TranspilationPasses.addRewritePolyfillPass(passes);
       PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null, null);
       phaseopt.consume(passes);
       phaseopt.process(externsNode, externAndJsRoot);
