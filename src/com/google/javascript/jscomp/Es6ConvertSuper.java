@@ -30,6 +30,12 @@ import com.google.javascript.rhino.Token;
  * {@link Es6ToEs3Converter} pass.
  */
 public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerPass {
+  static final DiagnosticType NO_SUPERTYPE = DiagnosticType.error(
+      "JSC_NO_SUPERTYPE",
+      "The super keyword may only appear in classes with an extends clause.");
+
+  private static final String SUPER_THIS = "$jscomp$super$this";
+
   private final AbstractCompiler compiler;
 
   public Es6ConvertSuper(AbstractCompiler compiler) {
@@ -45,6 +51,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
           member = member.getNext()) {
         if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
           hasConstructor = true;
+          break;
         }
       }
       if (!hasConstructor) {
@@ -75,11 +82,12 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
       }
       Node body = IR.block();
       if (!classNode.isFromExterns()) {
-        Node exprResult = IR.exprResult(IR.call(
+        Node baseCall = IR.call(
             IR.getprop(superClass.cloneTree(), IR.string("apply")),
             IR.thisNode(),
-            IR.name("arguments")));
-        body.addChildToFront(exprResult);
+            IR.name("arguments"));
+
+        body.addChildToFront(IR.returnNode(IR.or(baseCall, IR.thisNode())));
       }
       Node constructor = IR.function(
           IR.name(""),
@@ -97,9 +105,13 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     classMembers.addChildToFront(memberDef);
   }
 
-  private void visitSuper(Node node, Node parent) {
+  /**
+   * @return Whether this is a 'super' node that we know how to handle.
+   */
+  private boolean validateSuper(Node superNode, Node parent) {
+    Preconditions.checkArgument(superNode.isSuper());
     Node enclosingCall = parent;
-    Node potentialCallee = node;
+    Node potentialCallee = superNode;
     if (!parent.isCall()) {
       enclosingCall = parent.getParent();
       potentialCallee = parent;
@@ -107,38 +119,62 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     if (!enclosingCall.isCall()
         || enclosingCall.getFirstChild() != potentialCallee
         || enclosingCall.getFirstChild().isGetElem()) {
-      compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
-          "Only calls to super or to a method of super are supported."));
-      return;
+      compiler.report(
+          JSError.make(
+              superNode,
+              CANNOT_CONVERT_YET,
+              "Only calls to super or to a method of super are supported."));
+      return false;
     }
-    Node clazz = NodeUtil.getEnclosingClass(node);
+
+    Node clazz = NodeUtil.getEnclosingClass(superNode);
+    if (clazz == null) {
+      compiler.report(JSError.make(superNode, NO_SUPERTYPE));
+      return false;
+    }
     if (NodeUtil.getNameNode(clazz) == null) {
       // Unnamed classes of the form:
       //   f(class extends D { ... });
       // will be rejected when the class is processed.
-      return;
+      return false;
     }
 
     Node superName = clazz.getSecondChild();
     if (!superName.isQualifiedName()) {
       // This will be reported as an error in Es6ToEs3Converter.
-      return;
+      return false;
     }
 
-    Node enclosingMemberDef = NodeUtil.getEnclosingClassMemberFunction(node);
+    return true;
+  }
+
+  private void visitSuper(Node superNode, Node parent) {
+    if (!validateSuper(superNode, parent)) {
+      return;
+    }
+    Node enclosingCall = parent;
+    Node callee = superNode;
+    if (!parent.isCall()) {
+      enclosingCall = parent.getParent();
+      callee = parent;
+    }
+    Node clazz = NodeUtil.getEnclosingClass(superNode);
+    String className = NodeUtil.getName(clazz);
+    Node superName = clazz.getSecondChild();
+
+    Node enclosingMemberDef = NodeUtil.getEnclosingClassMemberFunction(superNode);
     if (enclosingMemberDef.isStaticMember()) {
       Node callTarget;
-      potentialCallee.detach();
-      if (potentialCallee == node) {
+      callee.detachFromParent();
+      if (callee == superNode) {
         // of the form super()
-        potentialCallee =
-            IR.getprop(superName.cloneTree(), IR.string(enclosingMemberDef.getString()));
+        callee = IR.getprop(superName.cloneTree(), IR.string(enclosingMemberDef.getString()));
         enclosingCall.putBooleanProp(Node.FREE_CALL, false);
       } else {
         // of the form super.method()
-        potentialCallee.replaceChild(node, superName.cloneTree());
+        callee.replaceChild(superNode, superName.cloneTree());
       }
-      callTarget = IR.getprop(potentialCallee, IR.string("call"));
+      callTarget = IR.getprop(callee, IR.string("call"));
       enclosingCall.addChildToFront(callTarget);
       enclosingCall.addChildAfter(IR.thisNode(), callTarget);
       enclosingCall.useSourceInfoIfMissingFromForTree(enclosingCall);
@@ -148,16 +184,54 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
 
     String methodName;
     Node callName = enclosingCall.removeFirstChild();
+    Node superThis = IR.name(SUPER_THIS);
+    superThis.setOriginalName("this");
     if (callName.isSuper()) {
       methodName = enclosingMemberDef.getString();
+      if (methodName.equals("constructor")) {
+        Node ctorFunction = enclosingMemberDef.getFirstChild();
+        Node body = NodeUtil.getFunctionBody(ctorFunction);
+        NodeTraversal.traverseEs6(compiler, body, new UpdateThisReferences());
+        body.addChildToBack(IR.returnNode(superThis.cloneNode()));
+      }
     } else {
       methodName = callName.getLastChild().getString();
     }
+
     Node baseCall = baseCall(
         superName.getQualifiedName(), methodName, enclosingCall.removeChildren());
+    Node nodeToReplace = enclosingCall;
+    if (methodName.equals("constructor")) {
+      baseCall = IR.var(
+          superThis.cloneNode(),
+          IR.or(baseCall, IR.thisNode()));
+      JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+      info.recordType(new JSTypeExpression(
+          new Node(Token.BANG, IR.string(className)), clazz.getSourceFileName()));
+      info.recordConstancy();
+      baseCall.setJSDocInfo(info.build());
+      nodeToReplace = enclosingCall.getParent();
+      Preconditions.checkState(nodeToReplace.isExprResult());
+    }
     baseCall.useSourceInfoIfMissingFromForTree(enclosingCall);
-    enclosingCall.getParent().replaceChild(enclosingCall, baseCall);
+    nodeToReplace.getParent().replaceChild(nodeToReplace, baseCall);
     compiler.reportCodeChange();
+  }
+
+  private static class UpdateThisReferences implements NodeTraversal.Callback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isThis()) {
+        Node name = IR.name(SUPER_THIS).srcref(n);
+        name.setOriginalName("this");
+        parent.replaceChild(n, name);
+      }
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return !n.isFunction() || n.isArrowFunction();
+    }
   }
 
   private Node baseCall(String baseClass, String methodName, Node arguments) {

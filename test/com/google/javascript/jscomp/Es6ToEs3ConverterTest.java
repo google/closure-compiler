@@ -261,7 +261,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {D}",
             " * @param {...?} var_args",
             " */",
-            "var testcode$classdecl$var0 = function(var_args) { D.apply(this,arguments); };",
+            "var testcode$classdecl$var0 = function(var_args) {",
+            "  return D.apply(this,arguments) || this;",
+            "};",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
             "testcode$classdecl$var0.prototype.f = function() {super.g(); };",
             "f(testcode$classdecl$var0)"));
@@ -549,7 +551,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {D}",
             " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) { D.apply(this, arguments); };",
+            "var C = function(var_args) {",
+            "  return D.apply(this, arguments) || this;",
+            "};",
             "$jscomp.inherits(C, D);"));
     assertThat(getLastCompiler().injected).containsExactly("es6/util/inherits");
 
@@ -560,7 +564,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function() {};",
             "/** @constructor @struct @extends {D} */",
             "var C = function() {",
-            "  D.call(this);",
+            "  /** @const @type {!C} */",
+            "  var $jscomp$super$this = D.call(this) || this;",
+            "  return $jscomp$super$this;",
             "}",
             "$jscomp.inherits(C, D);"));
 
@@ -571,7 +577,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function() {};",
             "/** @constructor @struct @extends {D} */",
             "var C = function(str) { ",
-            "  D.call(this, str);",
+            "  /** @const @type {!C} */",
+            "  var $jscomp$super$this = D.call(this, str) || this;",
+            "  return $jscomp$super$this;",
             "}",
             "$jscomp.inherits(C, D);"));
 
@@ -582,7 +590,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {ns.D}",
             " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) { ns.D.apply(this, arguments); };",
+            "var C = function(var_args) {",
+            "  return ns.D.apply(this, arguments) || this;",
+            "};",
             "$jscomp.inherits(C, ns.D);"));
 
     // Don't inject $jscomp.inherits() or apply() for externs
@@ -624,7 +634,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @struct @interface",
             " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) { D.apply(this, arguments); };",
+            "var C = function(var_args) {",
+            "  return D.apply(this, arguments) || this;",
+            "}",
             "C.prototype.g = function() {};"));
   }
 
@@ -656,7 +668,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function() {};",
             "/** @constructor @struct @extends {D} */",
             "var C = function() {",
-            "  D.call(this);",
+            "  /** @const @type {!C} */",
+            "  var $jscomp$super$this = D.call(this) || this;",
+            "  return $jscomp$super$this;",
             "}",
             "$jscomp.inherits(C, D);"));
 
@@ -667,7 +681,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function() {}",
             "/** @constructor @struct @extends {D} */",
             "var C = function(str) {",
-            "  D.call(this,str);",
+            "  /** @const @type {!C} */",
+            "  var $jscomp$super$this = D.call(this, str) || this;",
+            "  return $jscomp$super$this;",
             "}",
             "$jscomp.inherits(C, D);"));
 
@@ -713,7 +729,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.method = function() {",
             "  /** @constructor @struct @extends{C} */",
             "  var D = function() {",
-            "    C.call(this);",
+            "    /** @const @type {!D} */",
+            "    var $jscomp$super$this = C.call(this) || this;",
+            "    return $jscomp$super$this;",
             "  }",
             "  $jscomp.inherits(D, C);",
             "};"));
@@ -784,7 +802,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor @struct",
             " * @param {...?} var_args",
             " * @extends{C} */",
-            "  var D = function(var_args) { C.apply(this, arguments); };",
+            "  var D = function(var_args) {",
+            "    return C.apply(this, arguments) || this;",
+            "  };",
             "  $jscomp.inherits(D, C);",
             "};"));
   }
@@ -836,7 +856,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function(){};",
             "/** @constructor @struct @extends {D} */",
             "var C=function(args) {",
-            "  D.call.apply(D, [].concat([this], $jscomp.arrayFromIterable(args)));",
+            "  /** @const @type {!C} */",
+            "  var $jscomp$super$this = D.call.apply(D, [].concat([this], $jscomp.arrayFromIterable(args))) || this;",
+            "  return $jscomp$super$this;",
             "};",
             "$jscomp.inherits(C,D);"));
     assertThat(getLastCompiler().injected)
@@ -852,7 +874,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {B}",
             " * @param {...?} var_args",
             " */",
-            "var S = function(var_args) { B.apply(this, arguments); };",
+            "var S = function(var_args) {",
+            "  return B.apply(this, arguments) || this;",
+            "};",
             "$jscomp.inherits(S, B);",
             "/** @this {?} */",
             "S.f=function() { B.f.call(this) }"));
@@ -864,7 +888,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {B}",
             " * @param {...?} var_args",
             " */",
-            "var S = function(var_args) { B.apply(this, arguments); };",
+            "var S = function(var_args) {",
+            "  return B.apply(this, arguments) || this;",
+            "};",
             "$jscomp.inherits(S, B);",
             "S.prototype.f=function() {",
             "  B.prototype.f.call(this);",
@@ -973,7 +999,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var CodeClass = function(var_args) {",
-            "  ExternsClass.apply(this,arguments)",
+            "  return ExternsClass.apply(this, arguments) || this;",
             "};",
             "$jscomp.inherits(CodeClass,ExternsClass)"),
         null, null);
@@ -1027,7 +1053,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {Foo}",
             " * @param {...?} var_args",
             " */",
-            "var Sub=function(var_args) { Foo.apply(this, arguments); }",
+            "var Sub = function(var_args) {",
+            "  return Foo.apply(this, arguments) || this;",
+            "};",
             "$jscomp.inherits(Sub, Foo);",
             "(new Sub).f();"));
 
@@ -1054,7 +1082,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {Foo}",
             " * @param {...?} var_args",
             " */",
-            "var Sub = function(var_args) { Foo.apply(this, arguments); };",
+            "var Sub = function(var_args) {",
+            "  return Foo.apply(this, arguments) || this;",
+            "};",
             "$jscomp.inherits(Sub, Foo);"));
   }
 
@@ -1193,7 +1223,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {C}",
             " * @param {...?} var_args",
             " */",
-            "var D = function(var_args) { C.apply(this,arguments); };",
+            "var D = function(var_args) {",
+            "  return C.apply(this, arguments) || this;",
+            "};",
             "/** @nocollapse @type {?} */",
             "D.value;",
             "$jscomp.inherits(D, C);",
@@ -1353,7 +1385,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var Sub = function(var_args) {",
-            "  C.apply(this, arguments);",
+            "  return C.apply(this, arguments) || this;",
             "};",
             "$jscomp.inherits(Sub, C)"));
   }

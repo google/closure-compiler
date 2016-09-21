@@ -3045,6 +3045,10 @@ public class Node implements Serializable {
   }
 
   public boolean isThis() {
+    // ES6 class transpilation creates aliases for the "this" keyword
+    if (this.token == Token.NAME) {
+      return "this".equals(this.getOriginalName());
+    }
     return this.token == Token.THIS;
   }
 
