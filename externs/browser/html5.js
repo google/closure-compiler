@@ -3837,7 +3837,60 @@ HTMLDataListElement.prototype.options;
  */
 function HTMLOutputElement() {}
 
-// TODO(jakubvrana): Add HTMLOutputElement properties.
+/**
+ * @const {!DOMTokenList}
+ */
+HTMLOutputElement.prototype.htmlFor;
+
+/**
+ * @type {HTMLFormElement}
+ */
+HTMLOutputElement.prototype.form;
+
+/**
+ * @type {string}
+ */
+HTMLOutputElement.prototype.name;
+
+/**
+ * @const {string}
+ */
+HTMLOutputElement.prototype.type;
+
+/**
+ * @type {string}
+ */
+HTMLOutputElement.prototype.defaultValue;
+
+/**
+ * @type {string}
+ */
+HTMLOutputElement.prototype.value;
+
+/**
+ * @const {NodeList<!HTMLLabelElement>}
+ */
+HTMLOutputElement.prototype.labels;
+
+/** @type {string} */
+HTMLOutputElement.prototype.validationMessage;
+
+/**
+ * @const {ValidityState}
+ */
+HTMLOutputElement.prototype.validity;
+
+/** @type {boolean} */
+HTMLOutputElement.prototype.willValidate;
+
+/** @return {boolean} */
+HTMLOutputElement.prototype.checkValidity = function() {};
+
+/** @return {boolean} */
+HTMLOutputElement.prototype.reportValidity = function() {};
+
+/** @param {string} message */
+HTMLOutputElement.prototype.setCustomValidity = function(message) {};
 
 
 
