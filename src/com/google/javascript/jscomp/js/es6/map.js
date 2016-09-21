@@ -193,7 +193,8 @@ $jscomp.polyfill('Map', function(NativeMap) {
   PolyfillMap.prototype.get = function(key) {
     var entry = maybeGetEntry(this, key).entry;
     // NOTE: this cast is a lie, but so is the extern.
-    return /** @type {VALUE} */ (entry && entry.value);
+    return /** @type {VALUE} */ (entry &&
+      /** @type {VALUE} */ (entry.value));
   };
 
 
