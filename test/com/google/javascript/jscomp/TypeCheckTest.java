@@ -4693,6 +4693,32 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Banana.prototype.peel = f;");
   }
 
+  public void testSetprop16() throws Exception {
+    // Create property on an ES6 transpiled class
+    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    compiler.getOptions().setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    testTypes(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "Object.prototype.getOwnPropertyDescriptor = function() {};",
+            "Object.prototype.defineProperty = function() {};"),
+        LINE_JOINER.join(
+            "class A { }",
+            "class B extends A {",
+            "  constructor() {",
+            "    super()",
+            "    /** @type {number} */",
+            "    this.foo = 0;",
+            "  }",
+            "}",
+            "(new B()).foo = 'foo';"),
+        LINE_JOINER.join(
+            "assignment to property foo of B",
+            "found   : string",
+            "required: number"),
+        false);
+  }
+
   public void testGetpropDict1() throws Exception {
     testTypes("/**\n" +
               " * @constructor\n" +
