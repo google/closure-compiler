@@ -3616,6 +3616,27 @@ public final class IntegrationTest extends IntegrationTestCase {
             "(new function(){this.abc = 1}));");
   }
 
+  public void testGatherExternPropsWithNTI() {
+    CompilerOptions options = new CompilerOptions();
+    options.setNewTypeInference(true);
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+
+    testSame(options,
+        LINE_JOINER.join(
+            "(function exportedTokensFromTemplate() {",
+            "  function unusedFn(a) {}",
+            "  var UNUSED = 1;",
+            "  unusedFn({ /** @export */ foo: UNUSED });",
+            "})();",
+            "/** @constructor */",
+            "function Bar() {",
+            "  // Should not be renamed",
+            "  this.foo = 1;",
+            "}"));
+  }
+
   public void testRmUnusedProtoPropsInExternsUsage() {
     CompilerOptions options = new CompilerOptions();
     options.setRemoveUnusedPrototypePropertiesInExterns(true);
