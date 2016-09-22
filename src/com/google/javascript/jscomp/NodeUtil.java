@@ -2786,7 +2786,7 @@ public final class NodeUtil {
   }
 
   /**
-   * Is a FUNCTION node an function expression? An function expression is one
+   * Is a FUNCTION node a function expression? A function expression is one
    * that has either no name or a name that is not added to the current scope.
    *
    * <p>Some examples of function expressions:
@@ -4544,7 +4544,8 @@ public final class NodeUtil {
     if (main.isFunction()) {
       map.put(main, clone);
     }
-    Node mchild = main.getFirstChild(), cchild = clone.getFirstChild();
+    Node mchild = main.getFirstChild();
+    Node cchild = clone.getFirstChild();
     while (mchild != null) {
       mtocHelper(map, mchild, cchild);
       mchild = mchild.getNext();
