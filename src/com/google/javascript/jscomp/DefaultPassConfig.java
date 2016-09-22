@@ -522,11 +522,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Gather property names in externs so they can be queried by the
     // optimizing passes.
-    // In NTI, we collect extern properties during GlobalTypeInfo,
-    // so we don't repeat that here.
-    if (!options.getNewTypeInference()) {
-      passes.add(gatherExternProperties);
-    }
+    // TODO(dimvar): NTI collects these properties, so we shouldn't
+    // need to run this pass.
+    passes.add(gatherExternProperties);
 
     passes.add(garbageCollectChecks);
 
