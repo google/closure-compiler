@@ -283,7 +283,7 @@ options/arguments in your CUI application.</td>
 
   <tr>
     <td>Version</td>
-    <td>svn revision 47</td>
+    <td>3.0.1</td>
   </tr>
 
   <tr>
