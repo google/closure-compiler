@@ -118,15 +118,15 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     // Parameter has side-effects.
     helperMutate(
         "function foo(a){return a+a;}; foo(x++);",
-        "{var a$$inline_0 = x++;" +
-            "a$$inline_0 + a$$inline_0;}",
+        "{var a$jscomp$inline_0 = x++;" +
+            "a$jscomp$inline_0 + a$jscomp$inline_0;}",
         "foo", null);
   }
 
   public void testMutateInitializeUninitializedVars1() {
     helperMutate(
         "function foo(a){var b;return a;}; foo(1);",
-        "{var b$$inline_1=void 0;1}",
+        "{var b$jscomp$inline_1=void 0;1}",
         "foo", null, false, true);
   }
 
@@ -135,7 +135,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "function foo(a){for(var b in c)return a;}; foo(1);",
         "{JSCompiler_inline_label_foo_2:" +
           "{" +
-            "for(var b$$inline_1 in c){" +
+            "for(var b$jscomp$inline_1 in c){" +
                 "1;break JSCompiler_inline_label_foo_2" +
              "}" +
           "}" +
@@ -148,14 +148,14 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     boolean callInLoop = false;
     helperMutate(
         "function foo(a){var B = bar(); a;}; foo(1);",
-        "{var B$$inline_1=bar(); 1;}",
+        "{var B$jscomp$inline_1=bar(); 1;}",
         "foo", null, false, callInLoop);
     // ... in a loop, the constant-ness is removed.
     // TODO(johnlenz): update this test to look for the const annotation.
     callInLoop = true;
     helperMutate(
         "function foo(a){var B = bar(); a;}; foo(1);",
-        "{var B$$inline_1 = bar(); 1;}",
+        "{var B$jscomp$inline_1 = bar(); 1;}",
         "foo", null, false, callInLoop);
   }
 
@@ -164,7 +164,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
      // expressions
      helperMutate(
         "function foo(a){function g(){}}; foo(1);",
-        "{var g$$inline_1=function(){};}",
+        "{var g$jscomp$inline_1=function(){};}",
         "foo", null);
   }
 

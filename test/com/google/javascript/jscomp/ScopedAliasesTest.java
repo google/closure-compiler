@@ -233,7 +233,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
          "});",
          "var goog={};" +
          "goog.bar={};" +
-         "goog.bar.newMethod=function(goog$$1){return goog$$1 + goog.bar}");
+         "goog.bar.newMethod=function(goog$jscomp$1){return goog$jscomp$1 + goog.bar}");
   }
 
   public void testShadowedScopedVarTwoScopes() {
@@ -249,8 +249,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
          "});",
          "var goog={};" +
          "goog.bar={};" +
-         "goog.bar.newMethod=function(goog$$1, a){return goog.bar + a};" +
-         "goog.bar.newMethod2=function(goog$$1, b){return goog.bar + b};");
+         "goog.bar.newMethod=function(goog$jscomp$1, a){return goog.bar + a};" +
+         "goog.bar.newMethod2=function(goog$jscomp$1, b){return goog.bar + b};");
   }
 
   public void testFunctionDeclarationInScope() {

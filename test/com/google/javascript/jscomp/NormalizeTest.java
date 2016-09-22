@@ -221,7 +221,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("function f() {}");
     testSame("var f = function () {}");
     test("var f = function f() {}",
-         "var f = function f$$1() {}");
+         "var f = function f$jscomp$1() {}");
     testSame("var f = function g() {}");
     test("a:function g() {}",
          "a:{ var g = function () {} }");
@@ -264,25 +264,25 @@ public final class NormalizeTest extends CompilerTestCase {
 
     // Local names are made unique.
     test("var a;function foo(a){var b;a}",
-         "var a;function foo(a$$1){var b;a$$1}");
+         "var a;function foo(a$jscomp$1){var b;a$jscomp$1}");
     test("var a;function foo(){var b;a}function boo(){var b;a}",
-         "var a;function foo(){var b;a}function boo(){var b$$1;a}");
+         "var a;function foo(){var b;a}function boo(){var b$jscomp$1;a}");
     test("function foo(a){var b}" +
          "function boo(a){var b}",
          "function foo(a){var b}" +
-         "function boo(a$$1){var b$$1}");
+         "function boo(a$jscomp$1){var b$jscomp$1}");
 
     // Verify function expressions are renamed.
     test("var a = function foo(){foo()};var b = function foo(){foo()};",
-         "var a = function foo(){foo()};var b = function foo$$1(){foo$$1()};");
+         "var a = function foo(){foo()};var b = function foo$jscomp$1(){foo$jscomp$1()};");
 
     // Verify catch exceptions names are made unique
     test("try { } catch(e) {e;}",
          "try { } catch(e) {e;}");
     test("try { } catch(e) {e;}; try { } catch(e) {e;}",
-         "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}");
+         "try { } catch(e) {e;}; try { } catch(e$jscomp$1) {e$jscomp$1;}");
     test("try { } catch(e) {e; try { } catch(e) {e;}};",
-         "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
+         "try { } catch(e) {e; try { } catch(e$jscomp$1) {e$jscomp$1;} }; ");
 
     // Verify the 1st global redefinition of extern definition is not removed.
     testSame("/** @suppress {duplicate} */ var window;");
@@ -293,7 +293,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
     // Verify local masking extern made unique.
     test("function f() {var window}",
-         "function f() {var window$$1}");
+         "function f() {var window$jscomp$1}");
   }
 
   public void testRemoveDuplicateVarDeclarations1() {
@@ -302,7 +302,7 @@ public final class NormalizeTest extends CompilerTestCase {
     test("function f() { var a = 1; var a = 2 }",
          "function f() { var a = 1; a = 2 }");
     test("var a = 1; function f(){ var a = 2 }",
-         "var a = 1; function f(){ var a$$1 = 2 }");
+         "var a = 1; function f(){ var a$jscomp$1 = 2 }");
     test("function f() { var a = 1; lable1:var a = 2 }",
          "function f() { var a = 1; lable1:{a = 2}}");
     test("function f() { var a = 1; lable1:var a }",
@@ -313,7 +313,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public void testRemoveDuplicateVarDeclarations2() {
     test("var e = 1; function f(){ try {} catch (e) {} var e = 2 }",
-         "var e = 1; function f(){ try {} catch (e$$2) {} var e$$1 = 2 }");
+         "var e = 1; function f(){ try {} catch (e$jscomp$2) {} var e$jscomp$1 = 2 }");
   }
 
   public void testRemoveDuplicateVarDeclarations3() {
@@ -390,7 +390,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public void testIssue166e() {
     test("var e = 2; try { throw 1 } catch(e) {}",
-         "var e = 2; try { throw 1 } catch(e$$1) {}");
+         "var e = 2; try { throw 1 } catch(e$jscomp$1) {}");
   }
 
   public void testIssue166f() {
@@ -398,7 +398,7 @@ public final class NormalizeTest extends CompilerTestCase {
          "var e = 2; try { throw 1 } catch(e) {}" +
          "}",
          "function a() {" +
-         "var e = 2; try { throw 1 } catch(e$$1) {}" +
+         "var e = 2; try { throw 1 } catch(e$jscomp$1) {}" +
          "}");
   }
 
@@ -416,7 +416,7 @@ public final class NormalizeTest extends CompilerTestCase {
     Node ast = compiler.parseSyntheticCode(code);
     Normalize.normalizeSyntheticCode(compiler, ast, "prefix_");
     assertEquals(
-        "function f(x$$prefix_0){}function g(x$$prefix_1){}",
+        "function f(x$jscomp$prefix_0){}function g(x$jscomp$prefix_1){}",
         compiler.toSource(ast));
   }
 

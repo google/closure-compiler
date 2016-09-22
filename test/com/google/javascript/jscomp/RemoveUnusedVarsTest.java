@@ -235,7 +235,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRecursiveFunction2() {
     test("var x = 3; (function x() { return x(); })();",
-         "(function x$$1(){return x$$1()})()");
+         "(function x$jscomp$1(){return x$jscomp$1()})()");
   }
 
   public void testFunctionWithName1() {
