@@ -1590,6 +1590,12 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   public final String toNonNullAnnotationString() {
+    // Generated externs for an enum will call this for the EnumType and get e.g. "@enum {number}".
+    // Generated externs for use of an enum will call this for the EnumElementType and get e.g.
+    // "@param {NameOfEnumType}" instead of "@param {number}".
+    if (isEnumElementType()) {
+      return toMaybeEnumElementType().getReferenceName();
+    }
     return !isUnknownType() && !isTemplateType() && !isRecordType() && !isFunctionType()
         && isObject() ? "!" + toAnnotationString() : toAnnotationString();
   }

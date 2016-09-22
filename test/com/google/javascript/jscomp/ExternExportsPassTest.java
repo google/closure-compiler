@@ -408,17 +408,51 @@ public final class ExternExportsPassTest extends TestCase {
   /**
    * Enums are not currently handled.
    */
-   public void testExportEnum() {
-     // We don't care what the values of the object properties are.
-     // They're ignored by the type checker, and even if they weren't, it'd
-     // be incomputable to get them correct in all cases
-     // (think complex objects).
-     compileAndCheck(
-         "/** @enum {string}\n @export */ var E = {A:8, B:9};" +
-         "goog.exportSymbol('E', E);",
-         "/** @enum {string} */\n" +
-         "var E = {A:1, B:2};\n");
-   }
+  public void testExportEnum() {
+    // We don't care what the values of the object properties are.
+    // They're ignored by the type checker, and even if they weren't, it'd
+    // be incomputable to get them correct in all cases
+    // (think complex objects).
+    compileAndCheck(
+        Joiner.on("\n").join(
+            "/**",
+            " * @enum {string}",
+            " * @export",
+            "*/",
+            "var E = {A:8, B:9};",
+            "goog.exportSymbol('E', E);"),
+        Joiner.on("\n").join(
+            "/** @enum {string} */",
+            "var E = {A:1, B:2};",
+            ""));
+  }
+
+  /**
+   * Exported enums should still be enums as function parameters.
+   */
+  public void testExportEnumFunctionParameter() {
+    compileAndCheck(
+        Joiner.on("\n").join(
+            "/**",
+            " * @enum {number}",
+            " * @export",
+            "*/",
+            "var E = {A:8, B:9};",
+            "goog.exportSymbol('E', E);",
+            "/** @param {E} e */",
+            "function f(e) {}",
+            "goog.exportSymbol('f', f);"),
+        Joiner.on("\n").join(
+            "/** @enum {number} */",
+            "var E = {A:1, B:2};",
+            "/**",
+            " * @param {E} e",
+            " * @return {undefined}",
+            " */",
+            "var f = function(e) {",
+            "};",
+            ""));
+  }
 
   /** If we export a property with "prototype" as a path component, there
     * is no need to emit the initializer for prototype because every namespace
@@ -613,55 +647,57 @@ public final class ExternExportsPassTest extends TestCase {
 
   public void testExportParamWithSymbolDefinedInFunction() throws Exception {
     compileAndCheck(
-        "var id = function() {return 'id'};\n" +
-        "var ft = function() {\n" +
-        "  var id;\n" +
-        "  return 1;\n" +
-        "};\n" +
-        "goog.exportSymbol('id', id);\n",
-        "/**\n" +
-        " * @return {?}\n" +
-        " */\n" +
-        "var id = function() {\n" +
-        "};\n");
+        "var id = function() {return 'id'};\n"
+        + "var ft = function() {\n"
+        + "  var id;\n"
+        + "  return 1;\n"
+        + "};\n"
+        + "goog.exportSymbol('id', id);\n",
+        "/**\n"
+        + " * @return {?}\n"
+        + " */\n"
+        + "var id = function() {\n"
+        + "};\n");
   }
 
   public void testExportSymbolWithFunctionDefinedAsFunction() {
 
-    compileAndCheck("/**\n" +
-                    " * @param {string} param1\n" +
-                    " * @return {string}\n" +
-                    " */\n" +
-                    "function internalName(param1) {" +
-                      "return param1" +
-                    "};" +
-                    "goog.exportSymbol('externalName', internalName)",
-                    "/**\n" +
-                    " * @param {string} param1\n" +
-                    " * @return {string}\n" +
-                    " */\n" +
-                    "var externalName = function(param1) {\n};\n");
+    compileAndCheck(
+        "/**\n"
+        + " * @param {string} param1\n"
+        + " * @return {string}\n"
+        + " */\n"
+        + "function internalName(param1) {"
+        + "  return param1"
+        + "};"
+        + "goog.exportSymbol('externalName', internalName)",
+        "/**\n"
+        + " * @param {string} param1\n"
+        + " * @return {string}\n"
+        + " */\n"
+        + "var externalName = function(param1) {\n};\n");
   }
 
   public void testExportSymbolWithFunctionAlias() {
 
-    compileAndCheck("/**\n" +
-                    " * @param {string} param1\n" +
-                    " */\n" +
-                    "var y = function(param1) {" +
-                    "};" +
-                    "/**\n" +
-                    " * @param {string} param1\n" +
-                    " * @param {string} param2\n" +
-                    " */\n" +
-                    "var x = function y(param1, param2) {" +
-                    "};" +
-                    "goog.exportSymbol('externalName', y)",
-                    "/**\n" +
-                    " * @param {string} param1\n" +
-                    " * @return {undefined}\n" +
-                    " */\n" +
-                    "var externalName = function(param1) {\n};\n");
+    compileAndCheck(
+        "/**\n"
+        + " * @param {string} param1\n"
+        + " */\n"
+        + "var y = function(param1) {"
+        + "};"
+        + "/**\n"
+        + " * @param {string} param1\n"
+        + " * @param {string} param2\n"
+        + " */\n"
+        + "var x = function y(param1, param2) {"
+        + "};"
+        + "goog.exportSymbol('externalName', y)",
+        "/**\n"
+        + " * @param {string} param1\n"
+        + " * @return {undefined}\n"
+        + " */\n"
+        + "var externalName = function(param1) {\n};\n");
   }
 
   public void testNamespaceDefinitionInExterns() throws Exception {
@@ -815,14 +851,14 @@ public final class ExternExportsPassTest extends TestCase {
   public void testDontWarnOnExportFunctionWithUnknownParameterTypes() {
     /* This source is missing types for the b and c parameters */
     String librarySource =
-      "/**\n" +
-      " * @param {number} a\n" +
-      " * @return {number}" +
-      " */\n " +
-      "var InternalName = function(a,b,c) {" +
-      "  return 6;" +
-      "};" +
-      "goog.exportSymbol('ExternalName', InternalName)";
+        "/**\n"
+        + " * @param {number} a\n"
+        + " * @return {number}\n"
+        + " */\n "
+        + "var InternalName = function(a,b,c) {\n"
+        + "  return 6;\n"
+        + "};\n"
+        + "goog.exportSymbol('ExternalName', InternalName)";
 
       Result libraryCompileResult = compileAndExportExterns(librarySource);
 
