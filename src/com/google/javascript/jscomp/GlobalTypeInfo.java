@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
@@ -282,6 +283,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   // For a property access on ?, we can warn if the property isn't defined;
   // same for Object in compatibility mode.
   private Set<String> allPropertyNames = new LinkedHashSet<>();
+  // All property names that appear in externs. This means that with NTI,
+  // we don't need to run GatherExternProperties, which uses the OTI-specific
+  // Visitor interface.
+  private final Set<String> externPropertyNames = new LinkedHashSet<>();
 
   GlobalTypeInfo(AbstractCompiler compiler, Set<String> unknownTypeNames) {
     // TODO(dimvar): it's bad style to refer to DiagnosticGroups after DefaultPassConfig.
@@ -297,8 +302,16 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     this.varNameGen = new UniqueNameGenerator();
     this.funNameGen = new DefaultNameGenerator(ImmutableSet.<String>of(), "", null);
     this.commonTypes = JSTypes.init(inCompatibilityMode);
+    Function<String, Void> callback = new Function<String, Void>() {
+      @Override
+      public Void apply(String pname) {
+        allPropertyNames.add(pname);
+        externPropertyNames.add(pname);
+        return null;
+      }
+    };
     this.typeParser = new JSTypeCreatorFromJSDoc(
-        this.commonTypes, this.convention, this.varNameGen, this.allPropertyNames);
+        this.commonTypes, this.convention, this.varNameGen, callback);
     this.allPropertyNames.add("prototype");
   }
 
@@ -326,6 +339,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   boolean isPropertyDefined(String pname) {
     return this.allPropertyNames.contains(pname);
+  }
+
+  void recordPropertyName(String pname, Node defSite) {
+    allPropertyNames.add(pname);
+    if (defSite.isFromExterns()) {
+      externPropertyNames.add(pname);
+    }
   }
 
   // Differs from the similar method in NTIScope class on how it treats qnames.
@@ -460,6 +480,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     // The type inference relies on this fact to process deeper scopes
     // before shallower scopes.
     Collections.reverse(scopes);
+
+    this.compiler.setExternProperties(ImmutableSet.copyOf(this.externPropertyNames));
   }
 
   private Collection<PropertyDef> getPropDefsFromInterface(
@@ -981,7 +1003,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         if (propNames.contains(pname)) {
           warnings.add(JSError.make(qnameNode, DUPLICATE_PROP_IN_ENUM, pname));
         }
-        allPropertyNames.add(pname);
+        recordPropertyName(pname, qnameNode);
         propNames.add(pname);
       }
       currentScope.addNamespace(qnameNode,
@@ -1351,7 +1373,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             // on them. So, we warn even if x has foo. Then, to avoid spurious warnings,
             // we consider property tests as definition sites, otherwise we would warn
             // for code like this: function f(x) { if (x.foo) { return x.foo + 1; } }
-            allPropertyNames.add(n.getLastChild().getString());
+            recordPropertyName(n.getLastChild().getString(), n);
           }
           if (parent.isExprResult() && n.isQualifiedName()) {
             visitPropertyDeclaration(n);
@@ -1438,14 +1460,14 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (NodeUtil.isNamespaceDecl(maybeLvalue)
           && currentScope.isNamespace(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
-          allPropertyNames.add(prop.getString());
+          recordPropertyName(prop.getString(), prop);
           visitNamespacePropertyDeclaration(
               prop, maybeLvalue, prop.getString());
         }
       } else if (!NodeUtil.isEnumDecl(maybeLvalue)
           && !NodeUtil.isPrototypeAssignment(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
-          allPropertyNames.add(prop.getString());
+          recordPropertyName(prop.getString(), prop);
           if (prop.getJSDocInfo() != null) {
             declaredObjLitProps.put(prop,
                 getDeclaredTypeOfNode(
@@ -1475,7 +1497,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     }
 
     private void visitPropertyDeclaration(Node getProp) {
-      allPropertyNames.add(getProp.getLastChild().getString());
+      recordPropertyName(getProp.getLastChild().getString(), getProp);
       // Class property
       if (isClassPropertyDeclaration(getProp, currentScope)) {
         visitClassPropertyDeclaration(getProp);

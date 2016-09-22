@@ -47,7 +47,6 @@ import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -522,19 +521,22 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Gather property names in externs so they can be queried by the
-    // optimising passes.
-    passes.add(gatherExternProperties);
+    // optimizing passes.
+    // In NTI, we collect extern properties during GlobalTypeInfo,
+    // so we don't repeat that here.
+    if (!options.getNewTypeInference()) {
+      passes.add(gatherExternProperties);
+    }
 
     passes.add(garbageCollectChecks);
-
-    // TODO(nicksantos): The order of these passes makes no sense, and needs
-    // to be re-arranged.
 
     if (options.instrumentForCoverage) {
       passes.add(instrumentForCodeCoverage);
     }
 
-    if (options.runtimeTypeCheck) {
+    // TODO(dimvar): convert this pass to use NTI. Low priority since it's
+    // mostly unused. Converting it shouldn't block switching to NTI.
+    if (options.runtimeTypeCheck && !options.getNewTypeInference()) {
       passes.add(runtimeTypeCheck);
     }
 

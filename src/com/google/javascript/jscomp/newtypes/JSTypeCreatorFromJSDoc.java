@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -194,10 +195,9 @@ public final class JSTypeCreatorFromJSDoc {
   private final CodingConvention convention;
   private final UniqueNameGenerator nameGen;
   private final JSTypes commonTypes;
-  // In GlobalTypeInfo, we collect all property names defined anywhere in the program.
-  // This field is a reference to that set, so that we can add properties from jsdoc
-  // annotations in externs.
-  private final Set<String> allPropertyNames;
+
+  // Callback passed by GlobalTypeInfo to record property names
+  private final Function<String, Void> recordPropertyName;
 
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
@@ -207,14 +207,15 @@ public final class JSTypeCreatorFromJSDoc {
   private Map<Node, String> unknownTypeNames = new LinkedHashMap<>();
 
   public JSTypeCreatorFromJSDoc(JSTypes commonTypes,
-      CodingConvention convention, UniqueNameGenerator nameGen, Set<String> allPropertyNames) {
+      CodingConvention convention, UniqueNameGenerator nameGen,
+      Function<String, Void> recordPropertyName) {
     Preconditions.checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.qmarkFunctionDeclared = new FunctionAndSlotType(
         null, DeclaredFunctionType.qmarkFunctionDeclaration(commonTypes));
     this.convention = convention;
     this.nameGen = nameGen;
-    this.allPropertyNames = allPropertyNames;
+    this.recordPropertyName = recordPropertyName;
   }
 
   private FunctionAndSlotType qmarkFunctionDeclared;
@@ -373,7 +374,7 @@ public final class JSTypeCreatorFromJSDoc {
         propName = propName.substring(1, propName.length() - 1);
       }
       if (n.isFromExterns()) {
-        this.allPropertyNames.add(propName);
+        this.recordPropertyName.apply(propName);
       }
       JSType propType = !isPropDeclared
           ? this.commonTypes.UNKNOWN
