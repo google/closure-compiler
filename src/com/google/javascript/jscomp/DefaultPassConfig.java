@@ -505,6 +505,10 @@ public final class DefaultPassConfig extends PassConfig {
       addOldTypeCheckerPasses(checks, options);
     }
 
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      checks.add(j2clChecksPass);
+    }
+
     checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
@@ -2789,6 +2793,14 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new J2clSourceFileChecker(compiler);
+        }
+      };
+
+  private final PassFactory j2clChecksPass =
+      new PassFactory("j2clChecksPass", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new J2clChecksPass(compiler);
         }
       };
 

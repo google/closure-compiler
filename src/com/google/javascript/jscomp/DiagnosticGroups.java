@@ -195,6 +195,10 @@ public class DiagnosticGroups {
           TypeCheck.INEXISTENT_PROPERTY_WITH_SUGGESTION,
           TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
+  public static final DiagnosticGroup J2CL_CHECKS =
+      DiagnosticGroups.registerGroup("j2clChecks",
+          J2clChecksPass.J2CL_REFERENCE_EQUALITY);
+
   public static final DiagnosticGroup MISSING_RETURN =
       DiagnosticGroups.registerGroup("missingReturn",
           CheckMissingReturn.MISSING_RETURN_STATEMENT);
