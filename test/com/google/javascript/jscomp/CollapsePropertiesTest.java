@@ -2232,18 +2232,25 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testInlineCtorInObjLit() {
-    test(
-        "/** @constructor */\n"
-        + "function Foo() {}\n"
-        + "/** @constructor */\n"
-        + "var Bar = Foo;\n"
-        + "var objlit = {\n"
-        + "  'prop' : Bar\n"
-        + "};",
+    compareJsDoc = true;
 
-        "function Foo() {}\n"
-        + "var Bar = null;\n"
-        + "var objlit$prop = Foo;");
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "",
+            "/** @constructor */",
+            "var Bar = Foo;",
+            "",
+            "var objlit = {",
+            "  'prop' : Bar",
+            "};"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @constructor */",
+            "var Bar = null;",
+            "var objlit$prop = Foo;"));
   }
 
   public void testNoCollapseExportedNode() {
