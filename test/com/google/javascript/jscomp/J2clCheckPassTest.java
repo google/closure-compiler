@@ -48,8 +48,8 @@ public class J2clCheckPassTest extends CompilerTestCase {
   }
 
   public void testReferenceEquality_noWarning_null() {
-    for (String typeName : REFERENCE_EQUALITY_TYPE_PATTERNS.keySet()) {
-      setFilename(REFERENCE_EQUALITY_TYPE_PATTERNS.get(typeName));
+    for (String value : REFERENCE_EQUALITY_TYPE_PATTERNS.values()) {
+      setFilename(value);
       testNoWarning(
           LINE_JOINER.join(
               "/** @constructor */",
@@ -60,8 +60,8 @@ public class J2clCheckPassTest extends CompilerTestCase {
   }
 
   public void testReferenceEquality_noWarning_undefined() {
-    for (String typeName : REFERENCE_EQUALITY_TYPE_PATTERNS.keySet()) {
-      setFilename(REFERENCE_EQUALITY_TYPE_PATTERNS.get(typeName));
+    for (String value : REFERENCE_EQUALITY_TYPE_PATTERNS.values()) {
+      setFilename(value);
       testNoWarning(
           LINE_JOINER.join(
               "/** @constructor */",
@@ -72,8 +72,8 @@ public class J2clCheckPassTest extends CompilerTestCase {
   }
 
   public void testReferenceEquality_warning() {
-    for (String typeName : REFERENCE_EQUALITY_TYPE_PATTERNS.keySet()) {
-      setFilename(REFERENCE_EQUALITY_TYPE_PATTERNS.get(typeName));
+    for (String value : REFERENCE_EQUALITY_TYPE_PATTERNS.values()) {
+      setFilename(value);
       testWarning(
           LINE_JOINER.join(
               "/** @constructor */",
