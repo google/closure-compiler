@@ -43,6 +43,9 @@ import java.util.TreeSet;
 final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
 
+  /** The exports found. */
+  private final List<Export> exports;
+
   /** A map of all assigns to their parent nodes. */
   private final Map<String, Node> definitionMap;
 
@@ -57,9 +60,6 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
   /** A list of exported paths. */
   private final Set<String> alreadyExportedPaths;
-
-  /** The exports found so far; reset between scripts. */
-  private List<Export> exports;
 
   /** A list of function names used to export symbols. */
   private List<String> exportSymbolFunctionNames;
@@ -437,6 +437,23 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, root, this);
+
+    // Sort by path length to ensure that the longer
+    // paths (which may depend on the shorter ones)
+    // come later.
+    Set<Export> sorted =
+        new TreeSet<>(new Comparator<Export>() {
+          @Override
+          public int compare(Export e1, Export e2) {
+            return e1.getExportedPath().compareTo(e2.getExportedPath());
+          }
+        });
+
+    sorted.addAll(exports);
+
+    for (Export export : sorted) {
+      export.generateExterns();
+    }
   }
 
   /**
@@ -459,12 +476,6 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case SCRIPT:
-        // Once we are done with a script, sort and process the exports we've seen so far.
-        // By sorting one script at a time and not sorting symbols between scripts, we do not
-        // disturb the dependency order between scripts.
-        sortAndProcessExports();
-        break;
 
       case NAME:
       case GETPROP:
@@ -500,29 +511,6 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       default:
         break;
     }
-  }
-
-  private void sortAndProcessExports() {
-    // For the exports we have so far, sort by path to ensure that the longer paths come later.
-    // This is needed when, for example, we finish visiting "this.x" inside a constructor before
-    // we finish visiting the constructor itself.
-    // This is called once per script to avoid changing the dependency order between scripts.
-    Set<Export> sorted =
-        new TreeSet<>(new Comparator<Export>() {
-          @Override
-          public int compare(Export e1, Export e2) {
-            return e1.getExportedPath().compareTo(e2.getExportedPath());
-          }
-        });
-
-    sorted.addAll(exports);
-
-    for (Export export : sorted) {
-      export.generateExterns();
-    }
-
-    // Clear the list so the next script can be processed without interference from this one.
-    exports = new ArrayList<>();
   }
 
   private void handleSymbolExportCall(Node parent) {

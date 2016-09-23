@@ -667,12 +667,7 @@ public class CommandLineRunner extends
     @Option(name = "--print_source_after_each_pass",
         hidden = true,
         usage = "Whether to iteratively print resulting JS source per pass.")
-    private boolean printSourceAfterEachPass = false;
-
-    @Option(name = "--create_externs_from_exports",
-        usage = "Create an externs file from @export annotations, and store it in the specified "
-            + "output file.")
-    private String createExternsFromExports;
+        private boolean printSourceAfterEachPass = false;
 
     @Argument
     private List<String> arguments = new ArrayList<>();
@@ -1626,8 +1621,6 @@ public class CommandLineRunner extends
     }
 
     options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
-
-    options.setExternExportsPath(flags.createExternsFromExports);
 
     return options;
   }

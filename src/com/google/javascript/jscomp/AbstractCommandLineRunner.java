@@ -1425,10 +1425,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (!exPath.contains(File.separator)) {
       File outputFile = new File(path);
-      String parent = outputFile.getParent();
-      if (parent != null) {
-        exPath = parent + File.separatorChar + exPath;
-      }
+      exPath = outputFile.getParent() + File.separatorChar + exPath;
     }
 
     return fileNameToOutputWriter2(exPath);
