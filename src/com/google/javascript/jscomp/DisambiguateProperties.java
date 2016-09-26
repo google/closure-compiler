@@ -35,7 +35,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -715,9 +714,9 @@ class DisambiguateProperties implements CompilerPass {
             ++instancesSkipped;
 
             CheckLevel checkLevelForProp = propertiesToErrorFor.get(prop.name);
-            if (checkLevelForProp != null &&
-                checkLevelForProp != CheckLevel.OFF &&
-                !reported.contains(prop.name)) {
+            if (checkLevelForProp != null
+                && checkLevelForProp != CheckLevel.OFF
+                && !reported.contains(prop.name)) {
               reported.add(prop.name);
               compiler.report(JSError.make(
                   node,
@@ -807,8 +806,9 @@ class DisambiguateProperties implements CompilerPass {
    * references to any object.
    */
   private boolean isInvalidatingType(JSType type) {
-    if (type == null || invalidatingTypes.contains(type) ||
-        type.isUnknownType() /* unresolved types */) {
+    if (type == null
+        || invalidatingTypes.contains(type)
+        || type.isUnknownType() /* unresolved types */) {
       return true;
     }
     ObjectType objType = ObjectType.cast(type);
@@ -868,9 +868,9 @@ class DisambiguateProperties implements CompilerPass {
       return type.toMaybeUnionType().getAlternatesWithoutStructuralTyping();
     } else {
       ObjectType objType = type.toObjectType();
-      if (objType != null &&
-          objType.getConstructor() != null &&
-          objType.getConstructor().isInterface()) {
+      if (objType != null
+          && objType.getConstructor() != null
+          && objType.getConstructor().isInterface()) {
         List<JSType> list = new ArrayList<>();
         for (FunctionType impl
                  : registry.getDirectImplementors(objType)) {
