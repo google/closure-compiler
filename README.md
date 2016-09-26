@@ -46,8 +46,8 @@ unit tests too).
 
     This will produce a jar file called `target/closure-compiler-1.0-SNAPSHOT.jar`.
 
-    Running `mvn -DskipTests -pl externs/pom.xml,pom-main.xml` will skip building the GWT
-    version of the compiler. This can speed up the build process significantly.
+    Running `mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml`
+    will skip building the GWT version of the compiler. This can speed up the build process significantly.
 
 ### Using [Eclipse](http://www.eclipse.org/)
 
