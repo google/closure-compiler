@@ -38,9 +38,9 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -65,7 +65,7 @@ public final class TranspilingClosureBundler extends ClosureBundler {
   // serving the source map separately.
   private final boolean inlineSourceMap;
   // Map of source paths to generated source map paths.
-  private final Map<String, String> sourceMapCache = new HashMap<>();
+  private final Map<String, String> sourceMapCache = new ConcurrentHashMap<>();
 
   public TranspilingClosureBundler() {
     this(getEs6Runtime());
