@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -1711,8 +1710,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("var x = - (2);", "var x=-2");
   }
 
-  public void testStrict() {
-    String result = new CodePrinter.Builder(parse("var x", true))
+  private CodePrinter.Builder defaultBuilder(Node jsRoot) {
+    return new CodePrinter.Builder(jsRoot)
         .setCompilerOptions(newCompilerOptions(new CompilerOptionBuilder() {
           @Override
           void setOptions(CompilerOptions options) {
@@ -1722,10 +1721,17 @@ public final class CodePrinterTest extends CodePrinterTestBase {
           }
         }))
         .setOutputTypes(false)
-        .setTypeRegistry(lastCompiler.getTypeIRegistry())
-        .setTagAsStrict(true)
-        .build();
+        .setTypeRegistry(lastCompiler.getTypeIRegistry());
+  }
+
+  public void testStrict() {
+    String result = defaultBuilder(parse("var x", true)).setTagAsStrict(true).build();
     assertEquals("'use strict';var x", result);
+  }
+
+  public void testExterns() {
+    String result = defaultBuilder(parse("var x", true)).setTagAsExterns(true).build();
+    assertEquals("/** @externs */\nvar x", result);
   }
 
   public void testArrayLiteral() {

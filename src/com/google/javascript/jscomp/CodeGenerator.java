@@ -22,7 +22,6 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +45,6 @@ public class CodeGenerator {
   private final boolean preserveTypeAnnotations;
   private final boolean trustedStrings;
   private final boolean quoteKeywordProperties;
-  private final boolean outputAsExterns;
   private final boolean useOriginalName;
   private final JSDocInfoPrinter jsDocInfoPrinter;
 
@@ -57,7 +55,6 @@ public class CodeGenerator {
     trustedStrings = true;
     preserveTypeAnnotations = false;
     quoteKeywordProperties = false;
-    outputAsExterns = false;
     useOriginalName = false;
     this.jsDocInfoPrinter = new JSDocInfoPrinter(false);
   }
@@ -76,15 +73,15 @@ public class CodeGenerator {
     this.trustedStrings = options.trustedStrings;
     this.preserveTypeAnnotations = options.preserveTypeAnnotations;
     this.quoteKeywordProperties = options.quoteKeywordProperties;
-    this.outputAsExterns = options.shouldGenerateTypedExterns();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
     this.jsDocInfoPrinter = new JSDocInfoPrinter(useOriginalName);
   }
 
-  public void maybeTagAsExterns() {
-    if (this.outputAsExterns) {
-      add("/** @externs */\n");
-    }
+  /**
+   * Insert a top-level @externs comment.
+   */
+  public void tagAsExterns() {
+    add("/** @externs */\n");
   }
 
   /**
