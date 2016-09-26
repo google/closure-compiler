@@ -443,7 +443,7 @@ class MakeDeclaredNamesUnique
 
     private final Renamer hoistRenamer;
 
-    static final String UNIQUE_ID_SEPARATOR = "$jscomp$";
+    static final String UNIQUE_ID_SEPARATOR = "$$";
 
     ContextualRenamer() {
       global = true;

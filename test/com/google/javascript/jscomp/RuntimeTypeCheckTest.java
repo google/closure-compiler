@@ -138,8 +138,8 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
         "  inner.prototype['instance_of__inner'] = true;" +
         "}" +
         "function g() {" +
-        "  /** @constructor */ function inner$jscomp$1() {}" +
-        "  inner$jscomp$1.prototype['instance_of__inner$jscomp$1'] = true;" +
+        "  /** @constructor */ function inner$$1() {}" +
+        "  inner$$1.prototype['instance_of__inner$$1'] = true;" +
         "}");
   }
 

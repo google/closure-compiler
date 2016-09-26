@@ -118,10 +118,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testObjLitDeclarationWithSet2() {
     test("var a = {b: {}, set c(a){}}; var d = a.b; var e = a.c",
-         "var a = {set c(a$jscomp$1){}}; var d=null; var e = a.c");
+         "var a = {set c(a$$1){}}; var d=null; var e = a.c");
 
     test("var a = {b: {}, set c(a){}}; var d = a.b; var e = a.c; use(d);",
-         "var a$b = {}; var a = {set c(a$jscomp$1){}}; var d=null; var e = a.c; use(a$b);");
+         "var a$b = {}; var a = {set c(a$$1){}}; var d=null; var e = a.c; use(a$b);");
   }
 
   public void testObjLitDeclarationWithSet3() {
@@ -1536,12 +1536,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testReferenceInAnonymousObject3() {
-    test("function CreateClass(a$jscomp$1) {}"
+    test("function CreateClass(a$$1) {}"
          + "var a = {};"
          + "a.b = function(){};"
          + "a.b.prototype.c = function(){};"
          + "a.d = CreateClass({c: a.b.prototype.c});",
-         "function CreateClass(a$jscomp$1) {}"
+         "function CreateClass(a$$1) {}"
          + "var a$b = function(){};"
          + "a$b.prototype.c = function(){};"
          + "var a$d = CreateClass({c: a$b.prototype.c});");
@@ -1552,7 +1552,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          + "var a = {};"
          + "a.b = CreateClass({c: function() {}});"
          + "a.d = CreateClass({c: a.b.c});",
-         "function CreateClass(a$jscomp$1) {}"
+         "function CreateClass(a$$1) {}"
          + "var a$b = CreateClass({c: function() {}});"
          + "var a$d = CreateClass({c: a$b.c});");
   }
@@ -1562,7 +1562,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          + "var a = {};"
          + "a.b = CreateClass({c: function() {}});"
          + "a.d = CreateClass({c: a.b.prototype.c});",
-         "function CreateClass(a$jscomp$1) {}"
+         "function CreateClass(a$$1) {}"
          + "var a$b = CreateClass({c: function() {}});"
          + "var a$d = CreateClass({c: a$b.prototype.c});");
   }
