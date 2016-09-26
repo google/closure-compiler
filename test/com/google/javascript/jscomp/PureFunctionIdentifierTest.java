@@ -1650,7 +1650,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     @Override
     public void process(Node externs, Node root) {
       compiler.setHasRegExpGlobalReferences(regExpHaveSideEffects);
-      compiler.getOptions().setUseTypesForOptimization(true);
+      compiler.getOptions().setUseTypesForLocalOptimization(true);
       NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
       defFinder.process(externs, root);
 

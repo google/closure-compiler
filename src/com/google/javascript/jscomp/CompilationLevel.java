@@ -208,7 +208,6 @@ public enum CompilationLevel {
         options.setAmbiguateProperties(true);
         options.setInlineProperties(true);
         options.setUseTypesForLocalOptimization(true);
-        options.setUseTypesForOptimization(true);
         break;
       case SIMPLE_OPTIMIZATIONS:
       case WHITESPACE_ONLY:
