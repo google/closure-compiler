@@ -215,9 +215,7 @@ public final class CodePrinter {
     }
   }
 
-  static class PrettyCodePrinter
-      extends MappedCodePrinter {
-    // The number of characters after which we insert a line break in the code
+  static class PrettyCodePrinter extends MappedCodePrinter {
     static final String INDENT = "  ";
 
     private int indent = 0;
