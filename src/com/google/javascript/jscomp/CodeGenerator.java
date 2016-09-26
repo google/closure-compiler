@@ -218,10 +218,8 @@ public class CodeGenerator {
         break;
 
       case VAR:
-        if (first != null) {
-          add("var ");
-          addList(first, false, getContextForNoInOperator(context), ",");
-        }
+        add("var ");
+        addList(first, false, getContextForNoInOperator(context), ",");
         break;
 
       case CONST:
@@ -631,7 +629,8 @@ public class CodeGenerator {
           for (Node c = first; c != null; c = c.getNext()) {
             add(c, Context.STATEMENT);
 
-            // VAR doesn't include ';' since it gets used in expressions
+            // VAR/LET/CONST don't include ';' since they get used in expressions like
+            // for (var x of y) {...}
             if (NodeUtil.isNameDeclaration(c)) {
               cc.endStatement();
             }
