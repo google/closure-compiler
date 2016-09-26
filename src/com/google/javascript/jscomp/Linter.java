@@ -29,6 +29,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 /**
  * Minimal binary that just runs the "lint" checks which can be run on a single file at a time.
@@ -36,14 +40,27 @@ import java.util.List;
  * type information.
  */
 public class Linter {
-  public static void main(String[] args) throws IOException {
-    for (String filename : args) {
-      // TODO(tbreisacher): Add a command line flag that causes this
-      // to call fix() instead of lint().
-      lint(filename);
-    }
+  @Option(name = "--fix", usage = "Fix lint warnings automatically")
+  private boolean fix = false;
+
+  @Argument private final List<String> files = new ArrayList<String>();
+
+  public static void main(String[] args) throws IOException, CmdLineException {
+    new Linter().run(args);
   }
 
+  private void run(String[] args) throws IOException, CmdLineException {
+    CmdLineParser parser = new CmdLineParser(this);
+    parser.parseArgument(args);
+
+    for (String filename : files) {
+      if (fix) {
+        fix(filename);
+      } else {
+        lint(filename);
+      }
+    }
+  }
 
   static void lint(String filename) throws IOException {
     lint(Paths.get(filename), false);
