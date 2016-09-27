@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.refactoring.ApplySuggestedFixes;
 import com.google.javascript.refactoring.ErrorToFixMapper;
 import com.google.javascript.refactoring.SuggestedFix;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,7 +42,7 @@ public class Linter {
   @Option(name = "--fix", usage = "Fix lint warnings automatically")
   private boolean fix = false;
 
-  @Argument private final List<String> files = new ArrayList<String>();
+  @Argument private final List<String> files = new ArrayList<>();
 
   public static void main(String[] args) throws IOException, CmdLineException {
     new Linter().run(args);
