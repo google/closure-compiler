@@ -1611,10 +1611,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     FunctionType fnType = type.toMaybeFunctionType();
-    if (fnType != null && fnType.isAbstract()) {
-      report(t, n, INSTANTIATE_ABSTRACT_CLASS);
-    }
     if (fnType != null && fnType.hasInstanceType()) {
+      FunctionType ctorType = fnType.getInstanceType().getConstructor();
+      if (ctorType != null && ctorType.isAbstract()) {
+        report(t, n, INSTANTIATE_ABSTRACT_CLASS);
+      }
       visitParameterList(t, n, fnType);
       ensureTyped(t, n, fnType.getInstanceType());
     } else {

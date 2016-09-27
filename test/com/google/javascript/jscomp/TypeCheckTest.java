@@ -8058,6 +8058,17 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         INSTANTIATE_ABSTRACT_CLASS);
   }
 
+  public void testNew20() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @constructor @abstract */",
+        "function Bar() {};",
+        "/** @return {function(new:Bar)} */",
+        "function foo() {}",
+        "var Foo = foo();",
+        "var f = new Foo;"),
+        INSTANTIATE_ABSTRACT_CLASS);
+  }
+
   public void testName1() throws Exception {
     assertTypeEquals(VOID_TYPE, testNameNode("undefined"));
   }
