@@ -22,7 +22,6 @@ import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.Collection;
 
 /**
@@ -87,6 +86,9 @@ class DevirtualizePrototypeMethods
   private static boolean isCall(UseSite site) {
     Node node = site.node;
     Node parent = node.getParent();
+    if (parent == null) {
+      return false;
+    }
     return (parent.getFirstChild() == node) && parent.isCall();
   }
 
@@ -275,7 +277,7 @@ class DevirtualizePrototypeMethods
       // Multiple definitions prevent rewrite.
       Collection<Definition> singleSiteDefinitions =
           defFinder.getDefinitionsReferencedAt(nameNode);
-      if (singleSiteDefinitions.size() > 1) {
+      if (!allDefinitionsEquivalent(singleSiteDefinitions)) {
         return false;
       }
       Preconditions.checkState(!singleSiteDefinitions.isEmpty());
@@ -292,6 +294,30 @@ class DevirtualizePrototypeMethods
       }
     }
 
+    return true;
+  }
+
+  /** Given a set of method definitions, verify they are the same. */
+  boolean allDefinitionsEquivalent(Collection<Definition> definitions) {
+    if (definitions.size() <= 1) {
+      return true;
+    }
+
+    Definition first = null;
+    for (Definition definition : definitions) {
+      if (definition.getRValue() == null) {
+        return false; // We can't tell if they're all the same.
+      }
+
+      if (first == null) {
+        first = definition;
+        continue;
+      }
+
+      if (!compiler.areNodesEqualForInlining(first.getRValue(), definition.getRValue())) {
+        return false;
+      }
+    }
     return true;
   }
 
