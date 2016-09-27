@@ -185,106 +185,106 @@ public final class ExpressionDecomposerTest extends TestCase {
         "getDomServices_",
         "HangoutStarter.prototype.launchHangout = function() {" +
         "  var self = a.b;" +
-        "  var temp_const$$0 = goog.Uri;" +
-        "  var myUrl = new temp_const$$0(getDomServices_(self)." +
+        "  var temp_const$jscomp$0 = goog.Uri;" +
+        "  var myUrl = new temp_const$jscomp$0(getDomServices_(self)." +
         "      getDomHelper().getWindow().location.href)}");
 
     // Verify the results can be properly moved.
     helperMoveExpression(
         "HangoutStarter.prototype.launchHangout = function() {" +
         "  var self = a.b;" +
-        "  var temp_const$$0 = goog.Uri;" +
-        "  var myUrl = new temp_const$$0(getDomServices_(self)." +
+        "  var temp_const$jscomp$0 = goog.Uri;" +
+        "  var myUrl = new temp_const$jscomp$0(getDomServices_(self)." +
         "      getDomHelper().getWindow().location.href)}",
         "getDomServices_",
         "HangoutStarter.prototype.launchHangout = function() {" +
         "  var self=a.b;" +
-        "  var temp_const$$0=goog.Uri;" +
-        "  var result$$0=getDomServices_(self);" +
-        "  var myUrl=new temp_const$$0(result$$0.getDomHelper()." +
+        "  var temp_const$jscomp$0=goog.Uri;" +
+        "  var result$jscomp$0=getDomServices_(self);" +
+        "  var myUrl=new temp_const$jscomp$0(result$jscomp$0.getDomHelper()." +
         "      getWindow().location.href)}");
   }
 
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
-    helperMoveExpression("foo()", "foo", "var result$$0 = foo(); result$$0;");
+    helperMoveExpression("foo()", "foo", "var result$jscomp$0 = foo(); result$jscomp$0;");
   }
 
   public void testMoveExpression2() {
     helperMoveExpression(
         "x = foo()",
         "foo",
-        "var result$$0 = foo(); x = result$$0;");
+        "var result$jscomp$0 = foo(); x = result$jscomp$0;");
   }
 
   public void testMoveExpression3() {
     helperMoveExpression(
         "var x = foo()",
         "foo",
-        "var result$$0 = foo(); var x = result$$0;");
+        "var result$jscomp$0 = foo(); var x = result$jscomp$0;");
   }
 
   public void testMoveExpression4() {
     helperMoveExpression(
         "const x = foo()",
         "foo",
-        "var result$$0 = foo(); const x = result$$0;");
+        "var result$jscomp$0 = foo(); const x = result$jscomp$0;");
   }
 
     public void testMoveExpression5() {
     helperMoveExpression(
         "let x = foo()",
         "foo",
-        "var result$$0 = foo(); let x = result$$0;");
+        "var result$jscomp$0 = foo(); let x = result$jscomp$0;");
   }
 
   public void testMoveExpression6() {
     helperMoveExpression(
         "if(foo()){}",
         "foo",
-        "var result$$0 = foo(); if (result$$0);");
+        "var result$jscomp$0 = foo(); if (result$jscomp$0);");
   }
 
   public void testMoveExpression7() {
     helperMoveExpression(
         "switch(foo()){}",
         "foo",
-        "var result$$0 = foo(); switch(result$$0){}");
+        "var result$jscomp$0 = foo(); switch(result$jscomp$0){}");
   }
 
   public void testMoveExpression8() {
     helperMoveExpression(
         "switch(1 + foo()){}",
         "foo",
-        "var result$$0 = foo(); switch(1 + result$$0){}");
+        "var result$jscomp$0 = foo(); switch(1 + result$jscomp$0){}");
   }
 
   public void testMoveExpression9() {
     helperMoveExpression(
         "function f(){ return foo();}",
         "foo",
-        "function f(){ var result$$0 = foo(); return result$$0;}");
+        "function f(){ var result$jscomp$0 = foo(); return result$jscomp$0;}");
   }
 
   public void testMoveExpression10() {
     helperMoveExpression(
         "x = foo() && 1",
         "foo",
-        "var result$$0 = foo(); x = result$$0 && 1");
+        "var result$jscomp$0 = foo(); x = result$jscomp$0 && 1");
   }
 
   public void testMoveExpression11() {
     helperMoveExpression(
         "x = foo() || 1",
         "foo",
-        "var result$$0 = foo(); x = result$$0 || 1");
+        "var result$jscomp$0 = foo(); x = result$jscomp$0 || 1");
   }
 
   public void testMoveExpression12() {
     helperMoveExpression(
         "x = foo() ? 0 : 1",
         "foo",
-        "var result$$0 = foo(); x = result$$0 ? 0 : 1");
+        "var result$jscomp$0 = foo(); x = result$jscomp$0 ? 0 : 1");
   }
 
   /* Decomposition tests. */
@@ -293,38 +293,38 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "x = 0 && foo()",
         "foo",
-        "var temp$$0; if (temp$$0 = 0) temp$$0 = foo(); x = temp$$0;");
+        "var temp$jscomp$0; if (temp$jscomp$0 = 0) temp$jscomp$0 = foo(); x = temp$jscomp$0;");
   }
 
   public void testExposeExpression2() {
     helperExposeExpression(
         "x = 1 || foo()",
         "foo",
-        "var temp$$0; if (temp$$0 = 1); else temp$$0 = foo(); x = temp$$0;");
+        "var temp$jscomp$0; if (temp$jscomp$0 = 1); else temp$jscomp$0=foo(); x = temp$jscomp$0;");
   }
 
   public void testExposeExpression3() {
     helperExposeExpression(
         "var x = 1 ? foo() : 0",
         "foo",
-        "var temp$$0;" +
-        " if (1) temp$$0 = foo(); else temp$$0 = 0;var x = temp$$0;");
+        "var temp$jscomp$0;" +
+        " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;var x = temp$jscomp$0;");
   }
 
   public void testExposeExpression4() {
     helperExposeExpression(
         "const x = 1 ? foo() : 0",
         "foo",
-        "var temp$$0;" +
-        " if (1) temp$$0 = foo(); else temp$$0 = 0;const x = temp$$0;");
+        "var temp$jscomp$0;" +
+        " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;const x = temp$jscomp$0;");
   }
 
   public void testExposeExpression5() {
     helperExposeExpression(
         "let x = 1 ? foo() : 0",
         "foo",
-        "var temp$$0;" +
-        " if (1) temp$$0 = foo(); else temp$$0 = 0;let x = temp$$0;");
+        "var temp$jscomp$0;" +
+        " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;let x = temp$jscomp$0;");
   }
 
   public void testExposeExpression6() {
@@ -338,57 +338,57 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "x = goo() && foo()",
         "foo",
-        "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo(); x = temp$$0;");
+        "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo(); x = temp$jscomp$0;");
   }
 
   public void testExposeExpression8() {
     helperExposeExpression(
         "var x = 1 + (goo() && foo())",
         "foo",
-        "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo();" +
-        "var x = 1 + temp$$0;");
+        "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();" +
+        "var x = 1 + temp$jscomp$0;");
   }
 
   public void testExposeExpression9() {
     helperExposeExpression(
         "const x = 1 + (goo() && foo())",
         "foo",
-        "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo();" +
-        "const x = 1 + temp$$0;");
+        "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();" +
+        "const x = 1 + temp$jscomp$0;");
   }
 
   public void testExposeExpression10() {
     helperExposeExpression(
         "let x = 1 + (goo() && foo())",
         "foo",
-        "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo();" +
-        "let x = 1 + temp$$0;");
+        "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();" +
+        "let x = 1 + temp$jscomp$0;");
   }
 
   public void testExposeExpression11() {
     helperExposeExpression(
         "if(goo() && foo());",
         "foo",
-        "var temp$$0;" +
-        "if (temp$$0 = goo()) temp$$0 = foo();" +
-        "if(temp$$0);");
+        "var temp$jscomp$0;" +
+        "if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();" +
+        "if(temp$jscomp$0);");
   }
 
   public void testExposeExpression12() {
     helperExposeExpression(
         "switch(goo() && foo()){}",
         "foo",
-        "var temp$$0;" +
-        "if (temp$$0 = goo()) temp$$0 = foo();" +
-        "switch(temp$$0){}");
+        "var temp$jscomp$0;" +
+        "if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();" +
+        "switch(temp$jscomp$0){}");
   }
 
   public void testExposeExpression13() {
     helperExposeExpression(
         "switch(1 + goo() + foo()){}",
         "foo",
-        "var temp_const$$0 = 1 + goo();" +
-        "switch(temp_const$$0 + foo()){}");
+        "var temp_const$jscomp$0 = 1 + goo();" +
+        "switch(temp_const$jscomp$0 + foo()){}");
   }
 
   public void testExposeExpression14() {
@@ -396,8 +396,8 @@ public final class ExpressionDecomposerTest extends TestCase {
         "function f(){ return goo() && foo();}",
         "foo",
         "function f(){" +
-          "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo();" +
-          "return temp$$0;" +
+          "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();" +
+          "return temp$jscomp$0;" +
          "}");
   }
 
@@ -407,18 +407,18 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "if (goo(1, goo(2), (1 ? foo() : 0)));",
         "foo",
-        "var temp_const$$1 = goo;" +
-        "var temp_const$$0 = goo(2);" +
-        "var temp$$2;" +
-        "if (1) temp$$2 = foo(); else temp$$2 = 0;" +
-        "if (temp_const$$1(1, temp_const$$0, temp$$2));");
+        "var temp_const$jscomp$1 = goo;" +
+        "var temp_const$jscomp$0 = goo(2);" +
+        "var temp$jscomp$2;" +
+        "if (1) temp$jscomp$2 = foo(); else temp$jscomp$2 = 0;" +
+        "if (temp_const$jscomp$1(1, temp_const$jscomp$0, temp$jscomp$2));");
   }
 
   public void testExposeExpression16() {
     helperExposeExpression(
         "throw bar() && foo();",
         "foo",
-        "var temp$$0; if (temp$$0 = bar()) temp$$0 = foo(); throw temp$$0;");
+        "var temp$jscomp$0; if (temp$jscomp$0 = bar()) temp$jscomp$0=foo(); throw temp$jscomp$0;");
   }
 
   public void testExposeYieldExpression1() {
@@ -426,8 +426,8 @@ public final class ExpressionDecomposerTest extends TestCase {
         "function *f() { return { a: yield 1, c: foo(yield 2, yield 3) }; }",
         "yield",
         "function *f() {" +
-        "  var result$$0 = yield 1;" +
-        "  return { a: result$$0, c: foo(yield 2, yield 3) };" +
+        "  var result$jscomp$0 = yield 1;" +
+        "  return { a: result$jscomp$0, c: foo(yield 2, yield 3) };" +
         "}");
 
     helperMoveExpression(
@@ -436,8 +436,8 @@ public final class ExpressionDecomposerTest extends TestCase {
         "}",
         "yield",
         "function *f() {" +
-        "  var result$$0 = yield 2;" +
-        "  return { a: 0, c: foo(result$$0, yield 3) };" +
+        "  var result$jscomp$0 = yield 2;" +
+        "  return { a: 0, c: foo(result$jscomp$0, yield 3) };" +
         "}");
 
     helperMoveExpression(
@@ -446,8 +446,8 @@ public final class ExpressionDecomposerTest extends TestCase {
         "}",
         "yield",
         "function *f() {" +
-        "  var result$$0 = yield 3;" +
-        "  return { a: 0, c: foo(1, result$$0) };" +
+        "  var result$jscomp$0 = yield 3;" +
+        "  return { a: 0, c: foo(1, result$jscomp$0) };" +
         "}");
   }
 
@@ -456,8 +456,8 @@ public final class ExpressionDecomposerTest extends TestCase {
         "function *f() { return (yield 1) || (yield 2); }",
         "yield",
         "function *f() {" +
-        "  var result$$0 = yield 1;" +
-        "  return result$$0 || (yield 2);" +
+        "  var result$jscomp$0 = yield 1;" +
+        "  return result$jscomp$0 || (yield 2);" +
         "}");
 
     helperExposeExpression(
@@ -466,9 +466,9 @@ public final class ExpressionDecomposerTest extends TestCase {
         "}",
         "yield",
         "function *f(x) {" +
-        "  var temp$$0;" +
-        "  if (temp$$0=x); else temp$$0 = yield 2;" +
-        "  return temp$$0" +
+        "  var temp$jscomp$0;" +
+        "  if (temp$jscomp$0=x); else temp$jscomp$0 = yield 2;" +
+        "  return temp$jscomp$0" +
         "}");
   }
 
@@ -477,14 +477,14 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "var x = 0; x += foo() + 1",
         "foo",
-        "var x = 0; var temp_const$$0 = x;" +
-        "x = temp_const$$0 + (foo() + 1);");
+        "var x = 0; var temp_const$jscomp$0 = x;" +
+        "x = temp_const$jscomp$0 + (foo() + 1);");
 
     helperExposeExpression(
         "var x = 0; y = (x += foo()) + x",
         "foo",
-        "var x = 0; var temp_const$$0 = x;" +
-        "y = (x = temp_const$$0 + foo()) + x");
+        "var x = 0; var temp_const$jscomp$0 = x;" +
+        "y = (x = temp_const$jscomp$0 + foo()) + x");
   }
 
   // Structure on LHS of assignment-op.
@@ -492,16 +492,16 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "var x = {}; x.a += foo() + 1",
         "foo",
-        "var x = {}; var temp_const$$0 = x;" +
-        "var temp_const$$1 = temp_const$$0.a;" +
-        "temp_const$$0.a = temp_const$$1 + (foo() + 1);");
+        "var x = {}; var temp_const$jscomp$0 = x;" +
+        "var temp_const$jscomp$1 = temp_const$jscomp$0.a;" +
+        "temp_const$jscomp$0.a = temp_const$jscomp$1 + (foo() + 1);");
 
     helperExposeExpression(
         "var x = {}; y = (x.a += foo()) + x.a",
         "foo",
-        "var x = {}; var temp_const$$0 = x;" +
-        "var temp_const$$1 = temp_const$$0.a;" +
-        "y = (temp_const$$0.a = temp_const$$1 + foo()) + x.a");
+        "var x = {}; var temp_const$jscomp$0 = x;" +
+        "var temp_const$jscomp$1 = temp_const$jscomp$0.a;" +
+        "y = (temp_const$jscomp$0.a = temp_const$jscomp$1 + foo()) + x.a");
   }
 
   // Constant object on LHS of assignment-op.
@@ -510,14 +510,14 @@ public final class ExpressionDecomposerTest extends TestCase {
         "/** @const */ var XX = {};\n" +
         "XX.a += foo() + 1",
         "foo",
-        "var XX = {}; var temp_const$$0 = XX.a;" +
-        "XX.a = temp_const$$0 + (foo() + 1);");
+        "var XX = {}; var temp_const$jscomp$0 = XX.a;" +
+        "XX.a = temp_const$jscomp$0 + (foo() + 1);");
 
     helperExposeExpression(
         "var XX = {}; y = (XX.a += foo()) + XX.a",
         "foo",
-        "var XX = {}; var temp_const$$0 = XX.a;" +
-        "y = (XX.a = temp_const$$0 + foo()) + XX.a");
+        "var XX = {}; var temp_const$jscomp$0 = XX.a;" +
+        "y = (XX.a = temp_const$jscomp$0 + foo()) + XX.a");
   }
 
   // Function all on LHS of assignment-op.
@@ -526,17 +526,17 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var x = {}; goo().a += foo() + 1",
         "foo",
         "var x = {};" +
-        "var temp_const$$0 = goo();" +
-        "var temp_const$$1 = temp_const$$0.a;" +
-        "temp_const$$0.a = temp_const$$1 + (foo() + 1);");
+        "var temp_const$jscomp$0 = goo();" +
+        "var temp_const$jscomp$1 = temp_const$jscomp$0.a;" +
+        "temp_const$jscomp$0.a = temp_const$jscomp$1 + (foo() + 1);");
 
     helperExposeExpression(
         "var x = {}; y = (goo().a += foo()) + goo().a",
         "foo",
         "var x = {};" +
-        "var temp_const$$0 = goo();" +
-        "var temp_const$$1 = temp_const$$0.a;" +
-        "y = (temp_const$$0.a = temp_const$$1 + foo()) + goo().a");
+        "var temp_const$jscomp$0 = goo();" +
+        "var temp_const$jscomp$1 = temp_const$jscomp$0.a;" +
+        "y = (temp_const$jscomp$0.a = temp_const$jscomp$1 + foo()) + goo().a");
   }
 
   // Test multiple levels
@@ -545,17 +545,17 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var x = {}; goo().a.b += foo() + 1",
         "foo",
         "var x = {};" +
-        "var temp_const$$0 = goo().a;" +
-        "var temp_const$$1 = temp_const$$0.b;" +
-        "temp_const$$0.b = temp_const$$1 + (foo() + 1);");
+        "var temp_const$jscomp$0 = goo().a;" +
+        "var temp_const$jscomp$1 = temp_const$jscomp$0.b;" +
+        "temp_const$jscomp$0.b = temp_const$jscomp$1 + (foo() + 1);");
 
     helperExposeExpression(
         "var x = {}; y = (goo().a.b += foo()) + goo().a",
         "foo",
         "var x = {};" +
-        "var temp_const$$0 = goo().a;" +
-        "var temp_const$$1 = temp_const$$0.b;" +
-        "y = (temp_const$$0.b = temp_const$$1 + foo()) + goo().a");
+        "var temp_const$jscomp$0 = goo().a;" +
+        "var temp_const$jscomp$1 = temp_const$jscomp$0.b;" +
+        "y = (temp_const$jscomp$0.b = temp_const$jscomp$1 + foo()) + goo().a");
   }
 
   public void testExposeObjectLit1() {
@@ -566,12 +566,12 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperMoveExpression(
         "var x = {get a() {}, b: foo()};",
         "foo",
-        "var result$$0=foo();var x = {get a() {}, b: result$$0};");
+        "var result$jscomp$0=foo();var x = {get a() {}, b: result$jscomp$0};");
 
     helperMoveExpression(
         "var x = {set a(p) {}, b: foo()};",
         "foo",
-        "var result$$0=foo();var x = {set a(p) {}, b: result$$0};");
+        "var result$jscomp$0=foo();var x = {set a(p) {}, b: result$jscomp$0};");
   }
 
   /** Test case helpers. */

@@ -118,20 +118,20 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
     invert = true;
     test(
-        "var a;function foo(){var a$$inline_1; a = 1}",
-        "var a;function foo(){var a$$0; a = 1}");
+        "var a;function foo(){var a$jscomp$inline_1; a = 1}",
+        "var a;function foo(){var a$jscomp$0; a = 1}");
     test(
-        "var a;function foo(){var a$$inline_1;}",
+        "var a;function foo(){var a$jscomp$inline_1;}",
         "var a;function foo(){var a;}");
 
     testEs6(
-        "let a;function foo(){let a$$inline_1; a = 1}",
-        "let a;function foo(){let a$$0; a = 1}");
+        "let a;function foo(){let a$jscomp$inline_1; a = 1}",
+        "let a;function foo(){let a$jscomp$0; a = 1}");
     testEs6(
-        "const a = 1;function foo(){let a$$inline_1;}",
+        "const a = 1;function foo(){let a$jscomp$inline_1;}",
         "const a = 1;function foo(){let a;}");
     testEs6(
-        "class A {} function foo(){class A$$inline_1 {}}",
+        "class A {} function foo(){class A$jscomp$inline_1 {}}",
         "class A {} function foo(){class A {}}");
   }
 
@@ -149,34 +149,34 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     // Local names are made unique.
     testWithInversion(
         "var a;function foo(a){var b;a}",
-        "var a;function foo(a$$1){var b;a$$1}");
+        "var a;function foo(a$jscomp$1){var b;a$jscomp$1}");
     testWithInversion(
         "var a;function foo(){var b;a}function boo(){var b;a}",
-        "var a;function foo(){var b;a}function boo(){var b$$1;a}");
+        "var a;function foo(){var b;a}function boo(){var b$jscomp$1;a}");
     testWithInversion(
         "function foo(a){var b}"
         + "function boo(a){var b}",
         "function foo(a){var b}"
-        + "function boo(a$$1){var b$$1}");
+        + "function boo(a$jscomp$1){var b$jscomp$1}");
     testWithInversionEs6(
         "let a;function foo(a){let b;a}",
-        "let a;function foo(a$$1){let b;a$$1}");
+        "let a;function foo(a$jscomp$1){let b;a$jscomp$1}");
     testWithInversionEs6(
         "let a;function foo(){let b;a}function boo(){let b;a}",
-        "let a;function foo(){let b;a}function boo(){let b$$1;a}");
+        "let a;function foo(){let b;a}function boo(){let b$jscomp$1;a}");
     testWithInversionEs6(
         "function foo(a){let b}"
         + "function boo(a){let b}",
         "function foo(a){let b}"
-        + "function boo(a$$1){let b$$1}");
+        + "function boo(a$jscomp$1){let b$jscomp$1}");
 
     // Verify functions expressions are renamed.
     testWithInversion(
         "var a = function foo(){foo()};var b = function foo(){foo()};",
-        "var a = function foo(){foo()};var b = function foo$$1(){foo$$1()};");
+        "var a = function foo(){foo()};var b = function foo$jscomp$1(){foo$jscomp$1()};");
     testWithInversionEs6(
         "let a = function foo(){foo()};let b = function foo(){foo()};",
-        "let a = function foo(){foo()};let b = function foo$$1(){foo$$1()};");
+        "let a = function foo(){foo()};let b = function foo$jscomp$1(){foo$jscomp$1()};");
 
     // Verify catch exceptions names are made unique
     testWithInversion(
@@ -186,10 +186,10 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     // Inversion does not handle exceptions correctly.
     test(
         "try { } catch(e) {e;}; try { } catch(e) {e;}",
-        "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}");
+        "try { } catch(e) {e;}; try { } catch(e$jscomp$1) {e$jscomp$1;}");
     test(
         "try { } catch(e) {e; try { } catch(e) {e;}};",
-        "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
+        "try { } catch(e) {e; try { } catch(e$jscomp$1) {e$jscomp$1;} }; ");
   }
 
   public void testMakeLocalNamesUniqueWithContext3() {
@@ -212,31 +212,31 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     // Inversion does not handle exceptions correctly.
     testInFunction(
         "var e; try { } catch(e) {e;}; try { } catch(e) {e;}",
-        "var e; try { } catch(e$$1) {e$$1;}; try { } catch(e$$2) {e$$2;}");
+        "var e; try { } catch(e$jscomp$1) {e$jscomp$1;}; try { } catch(e$jscomp$2) {e$jscomp$2;}");
     testInFunction(
         "var e; try { } catch(e) {e; try { } catch(e) {e;}}",
-        "var e; try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} }");
+        "var e; try { } catch(e$jscomp$1) {e$jscomp$1; try { } catch(e$jscomp$2) {e$jscomp$2;} }");
     testInFunction(
         "try { } catch(e) {e;}; try { } catch(e) {e;} var e;",
-        "try { } catch(e$$1) {e$$1;}; try { } catch(e$$2) {e$$2;} var e;");
+        "try { } catch(e$jscomp$1) {e$jscomp$1;}; try { } catch(e$jscomp$2) {e$jscomp$2;} var e;");
     testInFunction(
         "try { } catch(e) {e; try { } catch(e) {e;}} var e;",
-        "try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} } var e;");
+        "try { } catch(e$jscomp$1) {e$jscomp$1; try { } catch(e$jscomp$2) {e$jscomp$2;} } var e;");
 
     invert = true;
 
     testInFunctionEs6(
-        "var e; try { } catch(e$$0) {e$$0;}; try { } catch(e$$1) {e$$1;}",
+        "var e; try { } catch(e$jscomp$0) {e$jscomp$0;}; try { } catch(e$jscomp$1) {e$jscomp$1;}",
         "var e; try { } catch(e) {e;}; try { } catch(e) {e;}");
     testInFunctionEs6(
-        "var e; try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} };",
-        "var e; try { } catch(e$$0) {e$$0; try { } catch(e) {e;} };");
+        "var e; try { } catch(e$jscomp$1) {e$jscomp$1; try { } catch(e$jscomp$2) {e$jscomp$2;} };",
+        "var e; try { } catch(e$jscomp$0) {e$jscomp$0; try { } catch(e) {e;} };");
     testInFunctionEs6(
-        "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;};var e$$2;",
-        "try { } catch(e) {e;}; try { } catch(e) {e;};var e$$0;");
+        "try { } catch(e) {e;}; try { } catch(e$jscomp$1) {e$jscomp$1;};var e$jscomp$2;",
+        "try { } catch(e) {e;}; try { } catch(e) {e;};var e$jscomp$0;");
     testInFunctionEs6(
-        "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} };var e$$2;",
-        "try { } catch(e) {e; try { } catch(e) {e;} };var e$$0;");
+        "try { } catch(e) {e; try { } catch(e$jscomp$1) {e$jscomp$1;} };var e$jscomp$2;",
+        "try { } catch(e) {e; try { } catch(e) {e;} };var e$jscomp$0;");
   }
 
   public void testMakeLocalNamesUniqueWithContext5() {
@@ -245,23 +245,23 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
     testWithInversion(
         "function f(){var f; f = 1}",
-        "function f(){var f$$1; f$$1 = 1}");
+        "function f(){var f$jscomp$1; f$jscomp$1 = 1}");
     testWithInversion(
         "function f(f){f = 1}",
-        "function f(f$$1){f$$1 = 1}");
+        "function f(f$jscomp$1){f$jscomp$1 = 1}");
     testWithInversion(
         "function f(f){var f; f = 1}",
-        "function f(f$$1){var f$$1; f$$1 = 1}");
+        "function f(f$jscomp$1){var f$jscomp$1; f$jscomp$1 = 1}");
 
     test(
         "var fn = function f(){var f; f = 1}",
-        "var fn = function f(){var f$$1; f$$1 = 1}");
+        "var fn = function f(){var f$jscomp$1; f$jscomp$1 = 1}");
     test(
         "var fn = function f(f){f = 1}",
-        "var fn = function f(f$$1){f$$1 = 1}");
+        "var fn = function f(f$jscomp$1){f$jscomp$1 = 1}");
     test(
         "var fn = function f(f){var f; f = 1}",
-        "var fn = function f(f$$1){var f$$1; f$$1 = 1}");
+        "var fn = function f(f$jscomp$1){var f$jscomp$1; f$jscomp$1 = 1}");
   }
 
   public void testArguments() {
@@ -276,8 +276,8 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
     // Don't introduce new references to arguments, it is special.
     test(
-        "function foo(){var arguments$$1;}",
-        "function foo(){var arguments$$0;}");
+        "function foo(){var arguments$jscomp$1;}",
+        "function foo(){var arguments$jscomp$0;}");
   }
 
   public void testMakeLocalNamesUniqueWithoutContext() {
@@ -285,9 +285,9 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     this.useDefaultRenamer = false;
 
     test("var a;",
-         "var a$$unique_0");
+         "var a$jscomp$unique_0");
     testEs6("let a;",
-            "let a$$unique_0");
+            "let a$jscomp$unique_0");
 
     // Verify undeclared names are untouched.
     testSame("a;");
@@ -295,43 +295,45 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     // Local names are made unique.
     test("var a;"
          + "function foo(a){var b;a}",
-         "var a$$unique_0;" +
-         "function foo$$unique_1(a$$unique_2){var b$$unique_3;a$$unique_2}");
+         "var a$jscomp$unique_0;"
+         + "function foo$jscomp$unique_1(a$jscomp$unique_2){"
+         + "  var b$jscomp$unique_3;a$jscomp$unique_2}");
     test("var a;"
          + "function foo(){var b;a}"
          + "function boo(){var b;a}",
-         "var a$$unique_0;" +
-         "function foo$$unique_1(){var b$$unique_3;a$$unique_0}"
-         + "function boo$$unique_2(){var b$$unique_4;a$$unique_0}");
+         "var a$jscomp$unique_0;" +
+         "function foo$jscomp$unique_1(){var b$jscomp$unique_3;a$jscomp$unique_0}"
+         + "function boo$jscomp$unique_2(){var b$jscomp$unique_4;a$jscomp$unique_0}");
 
     testEs6("let a;"
             + "function foo(a){let b;a}",
-            "let a$$unique_0;"
-            + "function foo$$unique_1(a$$unique_2){let b$$unique_3;a$$unique_2}");
+            "let a$jscomp$unique_0;"
+            + "function foo$jscomp$unique_1(a$jscomp$unique_2){" +
+            "  let b$jscomp$unique_3;a$jscomp$unique_2}");
     testEs6("let a;"
             + "function foo(){let b;a}"
             + "function boo(){let b;a}",
-            "let a$$unique_0;"
-            + "function foo$$unique_1(){let b$$unique_3;a$$unique_0}"
-            + "function boo$$unique_2(){let b$$unique_4;a$$unique_0}");
+            "let a$jscomp$unique_0;"
+            + "function foo$jscomp$unique_1(){let b$jscomp$unique_3;a$jscomp$unique_0}"
+            + "function boo$jscomp$unique_2(){let b$jscomp$unique_4;a$jscomp$unique_0}");
 
     // Verify function expressions are renamed.
     test("var a = function foo(){foo()};",
-         "var a$$unique_0 = function foo$$unique_1(){foo$$unique_1()};");
+         "var a$jscomp$unique_0 = function foo$jscomp$unique_1(){foo$jscomp$unique_1()};");
     testEs6("const a = function foo(){foo()};",
-            "const a$$unique_0 = function foo$$unique_1(){foo$$unique_1()};");
+            "const a$jscomp$unique_0 = function foo$jscomp$unique_1(){foo$jscomp$unique_1()};");
 
     // Verify catch exceptions names are made unique
     test("try { } catch(e) {e;}",
-         "try { } catch(e$$unique_0) {e$$unique_0;}");
+         "try { } catch(e$jscomp$unique_0) {e$jscomp$unique_0;}");
     test("try { } catch(e) {e;};"
          + "try { } catch(e) {e;}",
-         "try { } catch(e$$unique_0) {e$$unique_0;};"
-         + "try { } catch(e$$unique_1) {e$$unique_1;}");
+         "try { } catch(e$jscomp$unique_0) {e$jscomp$unique_0;};"
+         + "try { } catch(e$jscomp$unique_1) {e$jscomp$unique_1;}");
     test("try { } catch(e) {e; "
          + "try { } catch(e) {e;}};",
-         "try { } catch(e$$unique_0) {e$$unique_0; "
-         + "try { } catch(e$$unique_1) {e$$unique_1;} }; ");
+         "try { } catch(e$jscomp$unique_0) {e$jscomp$unique_0; "
+         + "try { } catch(e$jscomp$unique_1) {e$jscomp$unique_1;} }; ");
   }
 
   public void testMakeLocalNamesUniqueWithoutContext2() {
@@ -339,39 +341,39 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     this.useDefaultRenamer = false;
 
     test("var _a;",
-         "var JSCompiler__a$$unique_0");
+         "var JSCompiler__a$jscomp$unique_0");
     test("var _a = function _b(_c) { var _d; };",
-         "var JSCompiler__a$$unique_0 = function JSCompiler__b$$unique_1(" +
-             "JSCompiler__c$$unique_2) { var JSCompiler__d$$unique_3; };");
+         "var JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_1(" +
+             "JSCompiler__c$jscomp$unique_2) { var JSCompiler__d$jscomp$unique_3; };");
 
     testEs6("let _a;",
-        "let JSCompiler__a$$unique_0");
+        "let JSCompiler__a$jscomp$unique_0");
     testEs6("const _a = function _b(_c) { let _d; };",
-        "const JSCompiler__a$$unique_0 = function JSCompiler__b$$unique_1(" +
-            "JSCompiler__c$$unique_2) { let JSCompiler__d$$unique_3; };");
+        "const JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_1(" +
+            "JSCompiler__c$jscomp$unique_2) { let JSCompiler__d$jscomp$unique_3; };");
   }
 
   public void testOnlyInversion() {
     invert = true;
-    test("function f(a, a$$1) {}",
-         "function f(a, a$$0) {}");
-    test("function f(a$$1, b$$2) {}",
+    test("function f(a, a$jscomp$1) {}",
+         "function f(a, a$jscomp$0) {}");
+    test("function f(a$jscomp$1, b$jscomp$2) {}",
          "function f(a, b) {}");
-    test("function f(a$$1, a$$2) {}",
-         "function f(a, a$$0) {}");
-    testEs6("try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ",
+    test("function f(a$jscomp$1, a$jscomp$2) {}",
+         "function f(a, a$jscomp$0) {}");
+    testEs6("try { } catch(e) {e; try { } catch(e$jscomp$1) {e$jscomp$1;} }; ",
             "try { } catch(e) {e; try { } catch(e) {e;} }; ");
-    testSame("var a$$1;");
-    testSame("function f() { var $$; }");
+    testSame("var a$jscomp$1;");
+    testSame("function f() { var $jscomp$; }");
     test("var CONST = 3; var b = CONST;",
          "var CONST = 3; var b = CONST;");
-    test("function f() {var CONST = 3; var ACONST$$1 = 2;}",
+    test("function f() {var CONST = 3; var ACONST$jscomp$1 = 2;}",
          "function f() {var CONST = 3; var ACONST = 2;}");
   }
 
   public void testOnlyInversion2() {
     invert = true;
-    testEs6("function f() {try { } catch(e) {e;}; try { } catch(e$$0) {e$$0;}}",
+    testEs6("function f() {try { } catch(e) {e;}; try { } catch(e$jscomp$0) {e$jscomp$0;}}",
             "function f() {try { } catch(e) {e;}; try { } catch(e) {e;}}");
   }
 
@@ -379,17 +381,17 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     invert = true;
     test(LINE_JOINER.join(
         "function x1() {",
-        "  var a$$1;",
+        "  var a$jscomp$1;",
         "  function x2() {",
-        "    var a$$2;",
+        "    var a$jscomp$2;",
         "  }",
         "  function x3() {",
-        "    var a$$3;",
+        "    var a$jscomp$3;",
         "  }",
         "}"),
         LINE_JOINER.join(
         "function x1() {",
-        "  var a$$0;",
+        "  var a$jscomp$0;",
         "  function x2() {",
         "    var a;",
         "  }",
@@ -403,38 +405,41 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     invert = true;
     test(LINE_JOINER.join(
         "function x1() {",
-        "  var a$$0;",
+        "  var a$jscomp$0;",
         "  function x2() {",
-        "    var a;a$$0++",
+        "    var a;a$jscomp$0++",
         "  }",
         "}"),
         LINE_JOINER.join(
         "function x1() {",
-        "  var a$$1;",
+        "  var a$jscomp$1;",
         "  function x2() {",
-        "    var a;a$$1++",
+        "    var a;a$jscomp$1++",
         "  }",
         "}"));
   }
 
   public void testConstRemovingRename1() {
     removeConst = true;
-    test("(function () {var CONST = 3; var ACONST$$1 = 2;})",
-         "(function () {var CONST$$unique_0 = 3; var ACONST$$unique_1 = 2;})");
+    test("(function () {var CONST = 3; var ACONST$jscomp$1 = 2;})",
+         "(function () {var CONST$jscomp$unique_0 = 3; var ACONST$jscomp$unique_1 = 2;})");
   }
 
   public void testConstRemovingRename2() {
     removeConst = true;
     test("var CONST = 3; var b = CONST;",
-         "var CONST$$unique_0 = 3; var b$$unique_1 = CONST$$unique_0;");
+         "var CONST$jscomp$unique_0 = 3; var b$jscomp$unique_1 = CONST$jscomp$unique_0;");
   }
 
   public void testVarParamSameName() {
     test("function f(x) { if (!x) var x = 6; }",
-         "function f$$unique_0(x$$unique_1) { if (!x$$unique_1) var x$$unique_1 = 6; }");
+         "function f$jscomp$unique_0(x$jscomp$unique_1) {"
+         + "  if (!x$jscomp$unique_1) var x$jscomp$unique_1 = 6; }");
     test("function f(x) { if (!x) x = 6; }",
-         "function f$$unique_0(x$$unique_1) { if (!x$$unique_1) x$$unique_1 = 6; }");
+         "function f$jscomp$unique_0(x$jscomp$unique_1) {"
+         + "  if (!x$jscomp$unique_1) x$jscomp$unique_1 = 6; }");
     testEs6("function f(x) { if (!x) { let x = 6; } }",
-            "function f$$unique_0(x$$unique_1) { if (!x$$unique_1) { let x$$unique_2 = 6; } }");
+            "function f$jscomp$unique_0(x$jscomp$unique_1) {"
+            + "  if (!x$jscomp$unique_1) { let x$jscomp$unique_2 = 6; } }");
   }
 }

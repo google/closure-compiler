@@ -893,9 +893,9 @@ public final class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(x++);",
         "function foo(a){return a+a;}; " +
-            "{var a$$inline_0=x++;" +
-            " a$$inline_0+" +
-            "a$$inline_0;}",
+            "{var a$jscomp$inline_0=x++;" +
+            " a$jscomp$inline_0+" +
+            "a$jscomp$inline_0;}",
         "foo", INLINE_BLOCK);
   }
 
@@ -904,9 +904,9 @@ public final class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(new Date());",
         "function foo(a){return a+a;}; " +
-            "{var a$$inline_0=new Date();" +
-            " a$$inline_0+" +
-            "a$$inline_0;}",
+            "{var a$jscomp$inline_0=new Date();" +
+            " a$jscomp$inline_0+" +
+            "a$jscomp$inline_0;}",
         "foo", INLINE_BLOCK);
   }
 
@@ -915,9 +915,9 @@ public final class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(function(){});",
         "function foo(a){return a+a;}; " +
-            "{var a$$inline_0=function(){};" +
-            " a$$inline_0+" +
-            "a$$inline_0;}",
+            "{var a$jscomp$inline_0=function(){};" +
+            " a$jscomp$inline_0+" +
+            "a$jscomp$inline_0;}",
         "foo", INLINE_BLOCK);
   }
 
@@ -926,7 +926,7 @@ public final class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){return true;}; foo(goo());",
         "function foo(a){return true;};" +
-            "{var a$$inline_0=goo();true}",
+            "{var a$jscomp$inline_0=goo();true}",
         "foo", INLINE_BLOCK);
   }
 
@@ -936,8 +936,8 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){var b;return a;}; " +
             "function x() { foo(goo()); }",
             "function foo(a){var b;return a;}; " +
-            "function x() {{var a$$inline_0=goo();" +
-                "var b$$inline_1;a$$inline_0}}",
+            "function x() {{var a$jscomp$inline_0=goo();" +
+                "var b$jscomp$inline_1;a$jscomp$inline_0}}",
         "foo", INLINE_BLOCK);
   }
 
@@ -950,9 +950,9 @@ public final class FunctionInjectorTest extends TestCase {
         "var x = 1; var y = 2;" +
         "function foo(a,b){x = b; y = a;}; " +
         "function bar() {" +
-           "{var a$$inline_0=x;" +
+           "{var a$jscomp$inline_0=x;" +
             "x = y;" +
-            "y = a$$inline_0;}" +
+            "y = a$jscomp$inline_0;}" +
         "}",
         "foo", INLINE_BLOCK);
   }
@@ -965,9 +965,9 @@ public final class FunctionInjectorTest extends TestCase {
         "var x = 1; var y = 2;" +
         "function foo(a,b){y = a; x = b;}; " +
         "function bar() {" +
-           "{var b$$inline_1=y;" +
+           "{var b$jscomp$inline_1=y;" +
             "y = x;" +
-            "x = b$$inline_1;}" +
+            "x = b$jscomp$inline_1;}" +
         "}",
         "foo", INLINE_BLOCK);
   }
@@ -978,7 +978,7 @@ public final class FunctionInjectorTest extends TestCase {
         "for(;1;){ foo(1); }",
         "function foo(a){var b;return a;}; " +
         "for(;1;){ {" +
-            "var b$$inline_1=void 0;1}}",
+            "var b$jscomp$inline_1=void 0;1}}",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
@@ -986,7 +986,7 @@ public final class FunctionInjectorTest extends TestCase {
         "do{ foo(1); } while(1)",
         "function foo(a){var b;return a;}; " +
         "do{ {" +
-            "var b$$inline_1=void 0;1}}while(1)",
+            "var b$jscomp$inline_1=void 0;1}}while(1)",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
@@ -994,7 +994,7 @@ public final class FunctionInjectorTest extends TestCase {
         "for(;1;){ foo(1); }",
         "function foo(a){var b;for(b in c)return a;}; " +
         "for(;1;){ {JSCompiler_inline_label_foo_2:{" +
-            "var b$$inline_1=void 0;for(b$$inline_1 in c){" +
+            "var b$jscomp$inline_1=void 0;for(b$jscomp$inline_1 in c){" +
               "1;break JSCompiler_inline_label_foo_2" +
             "}}}}",
         "foo", INLINE_BLOCK);
@@ -1032,7 +1032,7 @@ public final class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(){return function() {var a; return true;}}; foo();",
         "function foo(){return function() {var a; return true;}};" +
-            "{(function() {var a$$inline_0; return true;});}",
+            "{(function() {var a$jscomp$inline_0; return true;});}",
         "foo", INLINE_BLOCK);
   }
 
@@ -1041,8 +1041,8 @@ public final class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(){function x() {var a; return true;} return x}; foo();",
         "function foo(){function x(){var a;return true}return x};" +
-            "{var x$$inline_0 = function(){" +
-            "var a$$inline_1;return true};x$$inline_0}",
+            "{var x$jscomp$inline_0 = function(){" +
+            "var a$jscomp$inline_1;return true};x$jscomp$inline_0}",
         "foo", INLINE_BLOCK);
   }
 
@@ -1052,9 +1052,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { if (foo(1)) throw 'test'; }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$$0; " +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "if (JSCompiler_inline_result$$0) throw 'test'; }",
+        "function x() { var JSCompiler_inline_result$jscomp$0; " +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "if (JSCompiler_inline_result$jscomp$0) throw 'test'; }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1064,9 +1064,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { return foo(1); }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$$0; " +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "return JSCompiler_inline_result$$0; }",
+        "function x() { var JSCompiler_inline_result$jscomp$0; " +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "return JSCompiler_inline_result$jscomp$0; }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1076,9 +1076,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { switch(foo(1)) { default:break; } }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$$0; " +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "switch(JSCompiler_inline_result$$0) { default:break; } }",
+        "function x() { var JSCompiler_inline_result$jscomp$0; " +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "switch(JSCompiler_inline_result$jscomp$0) { default:break; } }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1088,9 +1088,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1)?0:1 }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$$0; " +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "JSCompiler_inline_result$$0?0:1 }",
+        "function x() { var JSCompiler_inline_result$jscomp$0; " +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "JSCompiler_inline_result$jscomp$0?0:1 }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1100,9 +1100,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1)&&1 }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$$0; " +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "JSCompiler_inline_result$$0&&1 }",
+        "function x() { var JSCompiler_inline_result$jscomp$0; " +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "JSCompiler_inline_result$jscomp$0&&1 }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1112,9 +1112,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {1 + foo(1) }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$$0; " +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "1 + JSCompiler_inline_result$$0 }",
+        "function x() { var JSCompiler_inline_result$jscomp$0; " +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "1 + JSCompiler_inline_result$jscomp$0 }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1124,9 +1124,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1) && 1 }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$$0; " +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "JSCompiler_inline_result$$0&&1 }",
+        "function x() { var JSCompiler_inline_result$jscomp$0; " +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "JSCompiler_inline_result$jscomp$0&&1 }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1136,9 +1136,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {1 + foo(1) }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$$0;" +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "1 + JSCompiler_inline_result$$0 }",
+        "function x() { var JSCompiler_inline_result$jscomp$0;" +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "1 + JSCompiler_inline_result$jscomp$0 }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1149,9 +1149,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function x() {var b = 1 + foo(1)}",
         "function foo(a){return true;}; " +
         "function x() { " +
-        "var JSCompiler_inline_result$$0;" +
-        "{JSCompiler_inline_result$$0=true;}" +
-        "var b = 1 + JSCompiler_inline_result$$0 " +
+        "var JSCompiler_inline_result$jscomp$0;" +
+        "{JSCompiler_inline_result$jscomp$0=true;}" +
+        "var b = 1 + JSCompiler_inline_result$jscomp$0 " +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1164,9 +1164,9 @@ public final class FunctionInjectorTest extends TestCase {
 //         "function x() {var b; b += 1 + foo(1) }",
 //         "function foo(a){return true;}; " +
 //         "function x() {var b;" +
-//         "{var JSCompiler_inline_result$$0; " +
-//         "JSCompiler_inline_result$$0=true;}" +
-//         "b += 1 + JSCompiler_inline_result$$0 }",
+//         "{var JSCompiler_inline_result$jscomp$0; " +
+//         "JSCompiler_inline_result$jscomp$0=true;}" +
+//         "b += 1 + JSCompiler_inline_result$jscomp$0 }",
 //         "foo", INLINE_BLOCK);
 //   }
 
@@ -1178,9 +1178,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {" +
         "  a:{" +
-        "    var JSCompiler_inline_result$$0; " +
-        "    {JSCompiler_inline_result$$0=true;}" +
-        "    JSCompiler_inline_result$$0?0:1 " +
+        "    var JSCompiler_inline_result$jscomp$0; " +
+        "    {JSCompiler_inline_result$jscomp$0=true;}" +
+        "    JSCompiler_inline_result$jscomp$0?0:1 " +
         "  }" +
         "}",
         "foo", INLINE_BLOCK, true);
@@ -1206,14 +1206,14 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { goo() + (1?foo(1):1) }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_temp_const$$0=goo();" +
-            "var JSCompiler_temp$$1;" +
+        "function x() { var JSCompiler_temp_const$jscomp$0=goo();" +
+            "var JSCompiler_temp$jscomp$1;" +
             "if(1) {" +
-            "  {JSCompiler_temp$$1=true;} " +
+            "  {JSCompiler_temp$jscomp$1=true;} " +
             "} else {" +
-            "  JSCompiler_temp$$1=1;" +
+            "  JSCompiler_temp$jscomp$1=1;" +
             "}" +
-            "JSCompiler_temp_const$$0 + JSCompiler_temp$$1" +
+            "JSCompiler_temp_const$jscomp$0 + JSCompiler_temp$jscomp$1" +
             "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1227,13 +1227,13 @@ public final class FunctionInjectorTest extends TestCase {
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
-            "var JSCompiler_temp_const$$0=z;" +
-            "var JSCompiler_inline_result$$1;" +
+            "var JSCompiler_temp_const$jscomp$0=z;" +
+            "var JSCompiler_inline_result$jscomp$1;" +
             "{" +
              "z= {};" +
-             "JSCompiler_inline_result$$1 = true;" +
+             "JSCompiler_inline_result$jscomp$1 = true;" +
             "}" +
-            "JSCompiler_temp_const$$0.gack = JSCompiler_inline_result$$1;" +
+            "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1247,13 +1247,13 @@ public final class FunctionInjectorTest extends TestCase {
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
-            "var JSCompiler_temp_const$$0=z;" +
-            "var JSCompiler_inline_result$$1;" +
+            "var JSCompiler_temp_const$jscomp$0=z;" +
+            "var JSCompiler_inline_result$jscomp$1;" +
             "{" +
              "z= {};" +
-             "JSCompiler_inline_result$$1 = true;" +
+             "JSCompiler_inline_result$jscomp$1 = true;" +
             "}" +
-            "JSCompiler_temp_const$$0.gack = JSCompiler_inline_result$$1;" +
+            "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1267,15 +1267,15 @@ public final class FunctionInjectorTest extends TestCase {
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
-            "var JSCompiler_temp_const$$1=z;" +
-            "var JSCompiler_temp_const$$0=bar();" +
-            "var JSCompiler_inline_result$$2;" +
+            "var JSCompiler_temp_const$jscomp$1=z;" +
+            "var JSCompiler_temp_const$jscomp$0=bar();" +
+            "var JSCompiler_inline_result$jscomp$2;" +
             "{" +
              "z= {};" +
-             "JSCompiler_inline_result$$2 = true;" +
+             "JSCompiler_inline_result$jscomp$2 = true;" +
             "}" +
-            "JSCompiler_temp_const$$1[JSCompiler_temp_const$$0] = " +
-                "JSCompiler_inline_result$$2;" +
+            "JSCompiler_temp_const$jscomp$1[JSCompiler_temp_const$jscomp$0] = " +
+                "JSCompiler_inline_result$jscomp$2;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1289,13 +1289,13 @@ public final class FunctionInjectorTest extends TestCase {
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
-            "var JSCompiler_temp_const$$0=z.y.x;" +
-            "var JSCompiler_inline_result$$1;" +
+            "var JSCompiler_temp_const$jscomp$0=z.y.x;" +
+            "var JSCompiler_inline_result$jscomp$1;" +
             "{" +
              "z= {};" +
-             "JSCompiler_inline_result$$1 = true;" +
+             "JSCompiler_inline_result$jscomp$1 = true;" +
             "}" +
-            "JSCompiler_temp_const$$0.gack = JSCompiler_inline_result$$1;" +
+            "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1307,9 +1307,9 @@ public final class FunctionInjectorTest extends TestCase {
         "function foo(){return _g;}; " +
         "function x() {1 + foo()() }",
         "function foo(){return _g;}; " +
-        "function x() { var JSCompiler_inline_result$$0;" +
-        "{JSCompiler_inline_result$$0=_g;}" +
-        "1 + JSCompiler_inline_result$$0() }",
+        "function x() { var JSCompiler_inline_result$jscomp$0;" +
+        "{JSCompiler_inline_result$jscomp$0=_g;}" +
+        "1 + JSCompiler_inline_result$jscomp$0() }",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1319,9 +1319,9 @@ public final class FunctionInjectorTest extends TestCase {
 //         "/** @nosideeffects */ function foo(){return true;}; " +
 //         "function x() {1 + _g(foo()) }",
 //         "function foo(){return true;}; " +
-//         "function x() { {var JSCompiler_inline_result$$0; " +
-//         "JSCompiler_inline_result$$0=true;}" +
-//         "1 + _g(JSCompiler_inline_result$$0) }",
+//         "function x() { {var JSCompiler_inline_result$jscomp$0; " +
+//         "JSCompiler_inline_result$jscomp$0=true;}" +
+//         "1 + _g(JSCompiler_inline_result$jscomp$0) }",
 //         "foo", INLINE_BLOCK, true);
 //   }
 
@@ -1333,9 +1333,9 @@ public final class FunctionInjectorTest extends TestCase {
 
         "function foo(){return _g;}; " +
         "function x() {" +
-        "  var JSCompiler_inline_result$$0;" +
-        "  {JSCompiler_inline_result$$0=_g;}" +
-        "  var CONSTANT_RESULT = JSCompiler_inline_result$$0;" +
+        "  var JSCompiler_inline_result$jscomp$0;" +
+        "  {JSCompiler_inline_result$jscomp$0=_g;}" +
+        "  var CONSTANT_RESULT = JSCompiler_inline_result$jscomp$0;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1343,18 +1343,18 @@ public final class FunctionInjectorTest extends TestCase {
   public void testBug1897706() {
     helperInlineReferenceToFunction(
         "function foo(a){}; foo(x())",
-        "function foo(a){}; {var a$$inline_0=x()}",
+        "function foo(a){}; {var a$jscomp$inline_0=x()}",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
         "function foo(a){bar()}; foo(x())",
-        "function foo(a){bar()}; {var a$$inline_0=x();bar()}",
+        "function foo(a){bar()}; {var a$jscomp$inline_0=x();bar()}",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
         "function foo(a,b){bar()}; foo(x(),y())",
         "function foo(a,b){bar()};" +
-        "{var a$$inline_0=x();var b$$inline_1=y();bar()}",
+        "{var a$jscomp$inline_0=x();var b$jscomp$inline_1=y();bar()}",
         "foo", INLINE_BLOCK);
   }
 

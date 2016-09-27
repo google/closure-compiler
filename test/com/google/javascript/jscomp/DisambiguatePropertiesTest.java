@@ -954,8 +954,8 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @constructor @extends {Foo} */ function Bar() {}\n"
         + "Bar.prototype.Bar_prototype$a;\n"
         + "/** @param {Foo} foo */\n"
-        + "function foo(foo$$1) {\n"
-        + "  var x = foo$$1.Bar_prototype$a;\n"
+        + "function foo(foo$jscomp$1) {\n"
+        + "  var x = foo$jscomp$1.Bar_prototype$a;\n"
         + "}\n";
     testSets(externs, js, result, "{a=[[Bar.prototype]]}");
   }
