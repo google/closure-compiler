@@ -217,16 +217,25 @@ public class CodeGenerator {
       case VAR:
         add("var ");
         addList(first, false, getContextForNoInOperator(context), ",");
+        if (n.getParent() == null || NodeUtil.isStatement(n)) {
+          cc.endStatement();
+        }
         break;
 
       case CONST:
         add("const ");
         addList(first, false, getContextForNoInOperator(context), ",");
+        if (n.getParent() == null || NodeUtil.isStatement(n)) {
+          cc.endStatement();
+        }
         break;
 
       case LET:
         add("let ");
         addList(first, false, getContextForNoInOperator(context), ",");
+        if (n.getParent() == null || NodeUtil.isStatement(n)) {
+          cc.endStatement();
+        }
         break;
 
       case LABEL_NAME:
@@ -625,12 +634,6 @@ public class CodeGenerator {
                       && n.getParent().isScript());
           for (Node c = first; c != null; c = c.getNext()) {
             add(c, Context.STATEMENT);
-
-            // VAR/LET/CONST don't include ';' since they get used in expressions like
-            // for (var x of y) {...}
-            if (NodeUtil.isNameDeclaration(c)) {
-              cc.endStatement();
-            }
 
             if (c.isFunction() || c.isClass()) {
               cc.maybeLineBreak();
@@ -1500,12 +1503,6 @@ public class CodeGenerator {
       cc.endStatement(true);
     } else {
       add(nodeToProcess, context);
-
-      // VAR doesn't include ';' since it gets used in expressions - so any
-      // VAR in a statement context needs a call to endStatement() here.
-      if (nodeToProcess.isVar()) {
-        cc.endStatement();
-      }
     }
   }
 

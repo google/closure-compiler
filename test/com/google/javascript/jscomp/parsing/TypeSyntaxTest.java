@@ -670,7 +670,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   public void testIndexSignature() {
     parse("interface I {\n  [foo: number]: number;\n}");
-    parse("var i: {[foo: number]: number;};");
+    parse("var i: {[foo: number]: number;\n};");
     parse("class C {\n  [foo: number]: number;\n}");
 
     expectErrors("Parse error. ':' expected");
@@ -686,7 +686,7 @@ public final class TypeSyntaxTest extends TestCase {
   public void testCallSignature() {
     parse("interface I {\n  (foo: number): number;\n}");
     parse("interface I {\n  <T>(foo: number): number;\n}");
-    parse("var i: {(foo: number): number;};");
+    parse("var i: {(foo: number): number;\n};");
 
     testNotEs6Typed("interface I { (foo); }", "interface", "call signature");
   }
@@ -694,7 +694,7 @@ public final class TypeSyntaxTest extends TestCase {
   public void testConstructSignature() {
     parse("interface I {\n  new (foo: number): number;\n}");
     parse("interface I {\n  new <T>(foo: number): number;\n}");
-    parse("var i: {new (foo: number): number;};");
+    parse("var i: {new (foo: number): number;\n};");
 
     testNotEs6Typed("interface I { new (foo); }", "interface", "constructor signature");
   }
@@ -747,7 +747,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("declare namespace foo {\n  class I {\n    static async bar();\n  }\n}");
     parse("declare namespace foo {\n  enum E {\n  }\n}");
     parse("declare namespace foo {\n  function f();\n}");
-    parse("declare namespace foo {\n  var foo\n}");
+    parse("declare namespace foo {\n  var foo;\n}");
     parse("declare namespace foo {\n  namespace bar {\n  }\n}");
     parse("declare namespace foo {\n  interface I {\n  }\n  class C {\n  }\n}");
 

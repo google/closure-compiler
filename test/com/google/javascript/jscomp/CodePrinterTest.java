@@ -823,7 +823,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrint("function foo() { return \"foo\"; }",
         "function foo() {\n  return \"foo\";\n}\n");
     assertPrettyPrint("throw \"foo\";",
-        "throw \"foo\";");
+        "throw \"foo\";\n");
 
     // Test that loops properly have spaces inserted.
     assertPrettyPrint("do{ alert(); } while(true);",
@@ -978,6 +978,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "var f = function() {\n" +
             "  return --b;\n" +
             "};\n");
+  }
+
+  public void testPrettyPrinter_varLetConst() throws Exception {
+    assertPrettyPrint("var x=0;", "var x = 0;\n");
+
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    assertPrettyPrint("const x=0;", "const x = 0;\n");
+    assertPrettyPrint("let x=0;", "let x = 0;\n");
   }
 
   public void testTypeAnnotations() {
@@ -2203,7 +2212,21 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "  var f = () => {",
             "    alert(1);",
             "    alert(2);",
-            "  }",
+            "  };",
+            "}",
+            ""));
+  }
+
+  public void testPrettyPrint_switch() throws Exception {
+    assertPrettyPrint("switch(something){case 0:alert(0);break;case 1:alert(1);break}",
+        LINE_JOINER.join(
+            "switch(something) {",
+            "  case 0:",
+            "    alert(0);",
+            "    break;",
+            "  case 1:",
+            "    alert(1);",
+            "    break;",
             "}",
             ""));
   }

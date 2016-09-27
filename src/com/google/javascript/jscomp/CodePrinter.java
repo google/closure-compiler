@@ -330,7 +330,6 @@ public final class CodePrinter {
     void endCaseBody() {
       super.endCaseBody();
       indent--;
-      endStatement();
     }
 
     @Override
@@ -402,6 +401,13 @@ public final class CodePrinter {
         }
       }
       return true;
+    }
+
+    @Override
+    void endStatement(boolean needsSemicolon) {
+      append(";");
+      endLine();
+      statementNeedsEnded = false;
     }
 
     @Override

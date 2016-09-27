@@ -741,6 +741,24 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testGenerateCode_var1() {
+    String code = "var x;\nvar y;\n";
+    Compiler compiler = getCompiler(code);
+    Node node = compileToScriptRoot(compiler);
+    String generated = new SuggestedFix.Builder().generateCode(compiler, node);
+    assertEquals(code, generated);
+  }
+
+  @Test
+  public void testGenerateCode_var2() {
+    String code = "var x = 0;\nvar y = 1;\n";
+    Compiler compiler = getCompiler(code);
+    Node node = compileToScriptRoot(compiler);
+    String generated = new SuggestedFix.Builder().generateCode(compiler, node);
+    assertEquals(code, generated);
+  }
+
+  @Test
   public void testAttachMatchedNodeInfo() {
     String before = "/** @fileoverview blah */\n\n"
         + "goog.provide('js.Foo');\n\n";
