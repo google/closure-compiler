@@ -1682,7 +1682,8 @@ public class CodeGenerator {
   }
 
   private String jsString(String s, boolean useSlashV) {
-    int singleq = 0, doubleq = 0;
+    int singleq = 0;
+    int doubleq = 0;
 
     // could count the quotes and pick the optimal quote character
     for (int i = 0; i < s.length(); i++) {
@@ -1692,7 +1693,8 @@ public class CodeGenerator {
       }
     }
 
-    String doublequote, singlequote;
+    String doublequote;
+    String singlequote;
     char quote;
     if (preferSingleQuotes ?
         (singleq <= doubleq) : (singleq < doubleq)) {
