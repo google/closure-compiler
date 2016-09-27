@@ -232,59 +232,50 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     testSame(source);
   }
 
-  /**
-   * Inputs for multiple definition tests.
-   */
-  private static class NoRewriteMultipleDefinitionTestInput {
-    static final String TEMPLATE = ".prototype.foo = function() {}";
-    static final String SOURCE_A = "a" + TEMPLATE;
-    static final String SOURCE_B = "b" + TEMPLATE;
-    static final String CALL = "o.foo()";
+  public void testRewriteIfDuplicates() throws Exception {
+    test(
+        "function A(){}; A.prototype.getFoo = function() { return 1; }; " +
+        "function B(){}; B.prototype.getFoo = function() { return 1; }; " +
+        "var x = Math.random() ? new A() : new B();" +
+        "alert(x.getFoo());",
 
-    static final String SINGLE_DEFINITION_EXPECTED =
-        "var JSCompiler_StaticMethods_foo = " +
-        "  function(JSCompiler_StaticMethods_foo$self) {};" +
-        "JSCompiler_StaticMethods_foo(o)";
-
-    private NoRewriteMultipleDefinitionTestInput() {}
+        "function A(){}; " +
+        "var JSCompiler_StaticMethods_getFoo=function(JSCompiler_StaticMethods_getFoo$self){return 1};" +
+        "function B(){};" +
+        "B.prototype.getFoo=function(){return 1};" +
+        "var x = Math.random() ? new A() : new B();" +
+        "alert(JSCompiler_StaticMethods_getFoo(x));");
   }
 
-  public void testRewriteSingleDefinition1() throws Exception {
-    test(semicolonJoin(NoRewriteMultipleDefinitionTestInput.SOURCE_A,
-                       NoRewriteMultipleDefinitionTestInput.CALL),
-         NoRewriteMultipleDefinitionTestInput.SINGLE_DEFINITION_EXPECTED);
+  public void testRewriteIfDuplicatesWithThis() throws Exception {
+    test(
+        "function A(){}; A.prototype.getFoo = function() { return this._foo + 1; }; " +
+        "function B(){}; B.prototype.getFoo = function() { return this._foo + 1; }; " +
+        "var x = Math.random() ? new A() : new B();" +
+        "alert(x.getFoo());",
+
+        "function A(){}; " +
+        "var JSCompiler_StaticMethods_getFoo=function(JSCompiler_StaticMethods_getFoo$self){return JSCompiler_StaticMethods_getFoo$self._foo + 1};" +
+        "function B(){};" +
+        "B.prototype.getFoo=function(){return this._foo + 1};" +
+        "var x = Math.random() ? new A() : new B();" +
+        "alert(JSCompiler_StaticMethods_getFoo(x));");
   }
 
-  public void testRewriteSingleDefinition2() throws Exception {
-    test(semicolonJoin(NoRewriteMultipleDefinitionTestInput.SOURCE_B,
-                       NoRewriteMultipleDefinitionTestInput.CALL),
-         NoRewriteMultipleDefinitionTestInput.SINGLE_DEFINITION_EXPECTED);
-  }
-
-  public void testNoRewriteMultipleDefinition1() throws Exception {
-    testSame(semicolonJoin(NoRewriteMultipleDefinitionTestInput.SOURCE_A,
-                           NoRewriteMultipleDefinitionTestInput.SOURCE_A,
-                           NoRewriteMultipleDefinitionTestInput.CALL));
-  }
-
-  public void testNoRewriteMultipleDefinition2() throws Exception {
-    testSame(semicolonJoin(NoRewriteMultipleDefinitionTestInput.SOURCE_B,
-                           NoRewriteMultipleDefinitionTestInput.SOURCE_B,
-                           NoRewriteMultipleDefinitionTestInput.CALL));
-  }
-
-  public void testNoRewriteMultipleDefinition3() throws Exception {
-    testSame(semicolonJoin(NoRewriteMultipleDefinitionTestInput.SOURCE_A,
-                           NoRewriteMultipleDefinitionTestInput.SOURCE_B,
-                           NoRewriteMultipleDefinitionTestInput.CALL));
+  public void testNoRewriteIfDuplicates() throws Exception {
+    testSame(
+        "function A(){}; A.prototype.getFoo = function() { return 1; }; " +
+        "function B(){}; B.prototype.getFoo = function() { return 2; }; " +
+        "var x = Math.random() ? new A() : new B();" +
+        "alert(x.getFoo());");
   }
 
   /**
    * Inputs for object literal tests.
    */
   private static class NoRewritePrototypeObjectLiteralsTestInput {
-    static final String REGULAR = "b.prototype.foo = function() {}";
-    static final String OBJ_LIT = "a.prototype = {foo : function() {}}";
+    static final String REGULAR = "b.prototype.foo = function() { return 1; }";
+    static final String OBJ_LIT = "a.prototype = {foo : function() { return 2; }}";
     static final String CALL = "o.foo()";
 
     private NoRewritePrototypeObjectLiteralsTestInput() {}
@@ -294,7 +285,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     test(semicolonJoin(NoRewritePrototypeObjectLiteralsTestInput.REGULAR,
                        NoRewritePrototypeObjectLiteralsTestInput.CALL),
          "var JSCompiler_StaticMethods_foo = " +
-         "function(JSCompiler_StaticMethods_foo$self) {};" +
+         "function(JSCompiler_StaticMethods_foo$self) { return 1; };" +
          "JSCompiler_StaticMethods_foo(o)");
   }
 
@@ -303,7 +294,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
                        NoRewritePrototypeObjectLiteralsTestInput.CALL),
          "a.prototype={};" +
          "var JSCompiler_StaticMethods_foo=" +
-         "function(JSCompiler_StaticMethods_foo$self){};" +
+         "function(JSCompiler_StaticMethods_foo$self){ return 2; };" +
          "JSCompiler_StaticMethods_foo(o)");
   }
 
