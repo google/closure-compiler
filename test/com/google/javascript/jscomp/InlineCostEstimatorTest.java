@@ -16,13 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
-
 /**
  * Unit test for {@link InlineCostEstimator}.
+ *
  * @author johnlenz@google.com (John Lenz)
  */
 public final class InlineCostEstimatorTest extends TestCase {
@@ -30,7 +32,7 @@ public final class InlineCostEstimatorTest extends TestCase {
   static Node parse(String js) {
     Compiler compiler = new Compiler();
     Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrors()).isEmpty();
     return n;
   }
 
@@ -66,9 +68,9 @@ public final class InlineCostEstimatorTest extends TestCase {
   private void checkCost(String source, String example) {
 
     // The example string should have been minified already.
-    assertEquals(minimize(example), example);
+    assertThat(example).isEqualTo(minimize(example));
 
     // cost estimate should be the same as the length of the example string.
-    assertEquals(example.length(), cost(source));
+    assertThat(cost(source)).isEqualTo(example.length());
   }
 }
