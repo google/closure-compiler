@@ -116,8 +116,10 @@ var A = class {
   static h() { return 'A.h'; }
 }
 
+/** @const */
 var module$test = {};
-/** @constructor */ module$test.A = A;
+
+/** @const */ module$test.A = A;
 
 /** @constructor */ var B = A;
 
