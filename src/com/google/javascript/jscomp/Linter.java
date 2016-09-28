@@ -73,7 +73,7 @@ public class Linter {
     SourceFile file = SourceFile.fromFile(path.toString());
     Compiler compiler = new Compiler(System.out);
     CompilerOptions options = new CompilerOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguage(LanguageMode.ECMASCRIPT8);
 
     // For a full compile, this would cause a crash, as the method name implies. But the passes
     // in LintPassConfig can all handle untranspiled ES6.
