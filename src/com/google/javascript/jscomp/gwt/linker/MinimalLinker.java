@@ -79,7 +79,8 @@ public class MinimalLinker extends AbstractLinker {
 
     // Reset $wnd, and call gwtOnLoad if defined. This invokes the onModuleLoad methods of all
     // loaded modules.
-    output.append("$wnd=this;typeof gwtOnLoad==='function'&&gwtOnLoad()})();");
+    output.append(
+        "this['$gwtExport']=$wnd;$wnd=this;typeof gwtOnLoad==='function'&&gwtOnLoad()})();");
 
     return output.toString();
   }
