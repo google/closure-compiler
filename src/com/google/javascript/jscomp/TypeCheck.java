@@ -52,6 +52,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -2136,7 +2137,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkTypeContainsObjectWithBadKey(NodeTraversal t, Node n, JSTypeExpression type) {
     if (type != null && type.getRoot().getJSType() != null) {
       JSType realType = type.getRoot().getJSType();
-      JSType objectWithBadKey = findObjectWithNonStringifiableKey(realType);
+      JSType objectWithBadKey = findObjectWithNonStringifiableKey(realType, new HashSet<JSType>());
       if (objectWithBadKey != null){
         compiler.report(t.makeError(n, NON_STRINGIFIABLE_OBJECT_KEY, objectWithBadKey.toString()));
       }
@@ -2231,13 +2232,20 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    *
    * @return non-stringifiable type which is used as key or null if all there are no such types.
    */
-  private JSType findObjectWithNonStringifiableKey(JSType type) {
+  private JSType findObjectWithNonStringifiableKey(JSType type, Set<JSType> alreadyCheckedTypes) {
+    if (alreadyCheckedTypes.contains(type)) {
+      // This can happen in recursive types. Current type already being checked earlier in
+      // stacktrace so now we just skip it.
+      return null;
+    } else {
+      alreadyCheckedTypes.add(type);
+    }
     if (isObjectTypeWithNonStringifiableKey(type)) {
       return type;
     }
     if (type.isUnionType()) {
       for (JSType alternateType : type.toMaybeUnionType().getAlternates()) {
-        JSType result = findObjectWithNonStringifiableKey(alternateType);
+        JSType result = findObjectWithNonStringifiableKey(alternateType, alreadyCheckedTypes);
         if (result != null) {
           return result;
         }
@@ -2245,7 +2253,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
     if (type.isTemplatizedType()) {
       for (JSType templateType : type.toMaybeTemplatizedType().getTemplateTypes()) {
-        JSType result = findObjectWithNonStringifiableKey(templateType);
+        JSType result = findObjectWithNonStringifiableKey(templateType, alreadyCheckedTypes);
         if (result != null) {
           return result;
         }
@@ -2254,12 +2262,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (type.isOrdinaryFunction()) {
       FunctionType function = type.toMaybeFunctionType();
       for (Node parameter : function.getParameters()) {
-        JSType result = findObjectWithNonStringifiableKey(parameter.getJSType());
+        JSType result =
+            findObjectWithNonStringifiableKey(parameter.getJSType(), alreadyCheckedTypes);
         if (result != null) {
           return result;
         }
       }
-      return findObjectWithNonStringifiableKey(function.getReturnType());
+      return findObjectWithNonStringifiableKey(function.getReturnType(), alreadyCheckedTypes);
     }
     return null;
   }

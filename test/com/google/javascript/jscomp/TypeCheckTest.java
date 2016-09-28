@@ -13988,6 +13988,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "var PseudoId;");
   }
 
+  public void testCheckObjectKeyRecursiveType() throws Exception {
+    testTypes(
+        "/** @typedef {!Object<string, !Predicate>} */ var Schema;\n" +
+        "/** @typedef {function(*): boolean|!Schema} */ var Predicate;\n" +
+        "/** @type {!Schema} */ var k;");
+  }
+
   public void testDontOverrideNativeScalarTypes() throws Exception {
     testTypes(
         "string = 123;\n"
