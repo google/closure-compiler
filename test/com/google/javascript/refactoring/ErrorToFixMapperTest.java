@@ -25,12 +25,13 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.SourceFile;
-import java.util.Collection;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Collection;
 
 /**
  * Test case for {@link ErrorToFixMapper}.
@@ -51,7 +52,6 @@ public class ErrorToFixMapperTest {
     errorManager.setCompiler(compiler);
 
     options = RefactoringDriver.getCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, ERROR);
     options.setWarningLevel(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT, ERROR);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, ERROR);
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, ERROR);
@@ -67,125 +67,6 @@ public class ErrorToFixMapperTest {
     String expectedCode = LINE_JOINER.join(
         "function f() {",
         "  ",
-        "}");
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRedeclaration() {
-    String code = "function f() { var x; var x; }";
-    String expectedCode = "function f() { var x; }";
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRedeclaration_multipleVars1() {
-    String code = "function f() { var x; var x, y; }";
-    String expectedCode = "function f() { var x; var y; }";
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRedeclaration_multipleVars2() {
-    String code = "function f() { var x; var y, x; }";
-    String expectedCode = "function f() { var x; var y; }";
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRedeclaration_withValue() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var x = 0;",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  x = 0;",
-        "}");
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRedeclaration_multipleVars_withValue1() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var x = 0, y;",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  x = 0;",
-        "var y;",
-        "}");
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRedeclaration_multipleVars_withValue2() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var y, x = 0;",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var y;",
-        "x = 0;",
-        "}");
-    assertChanges(code, expectedCode);
-  }
-
-  // Make sure the vars stay in the same order, so that in case the get*
-  // functions have side effects, we don't change the order they're called in.
-  @Test
-  public void testRedeclaration_multipleVars_withValue3() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var y;",
-        "  var x = getX(), y = getY(), z = getZ();",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var y;",
-        "  var x = getX();",
-        "y = getY();",
-        "var z = getZ();",
-        "}");
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRedeclaration_multipleVars_withValue4() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  var x = getX(), y = getY(), z = getZ();",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var x;",
-        "  x = getX();",
-        "var y = getY(), z = getZ();",
-        "}");
-    assertChanges(code, expectedCode);
-  }
-
-  @Test
-  public void testRedeclaration_multipleVars_withValue5() {
-    String code = LINE_JOINER.join(
-        "function f() {",
-        "  var z;",
-        "  var x = getX(), y = getY(), z = getZ();",
-        "}");
-    String expectedCode = LINE_JOINER.join(
-        "function f() {",
-        "  var z;",
-        "  var x = getX(), y = getY();",
-        "z = getZ();",
         "}");
     assertChanges(code, expectedCode);
   }

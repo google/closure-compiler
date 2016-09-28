@@ -46,8 +46,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
     return ImmutableList.of(
         earlyLintChecks,
         closureRewriteClass,
-        lateLintChecks,
-        checkVariableReferences);
+        lateLintChecks);
   }
 
   @Override protected List<PassFactory> getOptimizations() {
@@ -98,12 +97,4 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckPrototypeProperties(compiler)));
         }
       };
-
-  private final PassFactory checkVariableReferences =
-      new PassFactory("checkVariableReferences", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new VariableReferenceCheck(compiler);
-    }
-  };
 }

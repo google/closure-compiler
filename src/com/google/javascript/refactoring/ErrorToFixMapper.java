@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
@@ -70,8 +69,6 @@ public final class ErrorToFixMapper {
    */
   public static SuggestedFix getFixForJsError(JSError error, AbstractCompiler compiler) {
     switch (error.getType().key) {
-      case "JSC_REDECLARED_VARIABLE":
-        return getFixForRedeclaration(error, compiler);
       case "JSC_MISSING_SEMICOLON":
         return getFixForMissingSemicolon(error, compiler);
       case "JSC_REQUIRES_NOT_SORTED":
@@ -99,66 +96,6 @@ public final class ErrorToFixMapper {
       default:
         return null;
     }
-  }
-
-  private static SuggestedFix getFixForRedeclaration(JSError error, AbstractCompiler compiler) {
-    Node name = error.node;
-    Preconditions.checkState(name.isName(), name);
-    Node parent = name.getParent();
-    Preconditions.checkState(NodeUtil.isNameDeclaration(parent), parent);
-
-    SuggestedFix.Builder fix = new SuggestedFix.Builder().attachMatchedNodeInfo(name, compiler);
-
-    if (!name.hasChildren()) {
-      Node nodeToDelete = parent.hasOneChild() ? parent : error.node;
-      return fix.delete(nodeToDelete).build();
-    }
-
-    Node assign = IR.exprResult(
-        IR.assign(name.cloneNode(), name.getFirstChild().cloneTree()));
-    if (parent.hasOneChild()) {
-      return fix.replace(parent, assign, compiler).build();
-    }
-
-    // Split the var statement into an assignment and up to two var statements.
-    // var a = 0,
-    //     b = 1,  // This is the one we're removing.
-    //     c = 2;
-    //
-    // becomes
-    //
-    // var a = 0;  // This is the "added" var statement.
-    // b = 1;
-    // var c = 2;  // This is the original var statement.
-    List<Node> childrenOfAddedVarStatement = new ArrayList<>();
-    for (Node n : parent.children()) {
-      if (n == name) {
-        break;
-      }
-      childrenOfAddedVarStatement.add(n);
-    }
-
-    if (!childrenOfAddedVarStatement.isEmpty()) {
-      Node var = new Node(parent.getToken());
-      for (Node n : childrenOfAddedVarStatement) {
-        var.addChildToBack(n.cloneTree());
-      }
-      fix.insertBefore(parent, var, compiler);
-    }
-
-    if (name.getNext() != null) {
-      // Keep the original var statement, just remove the names that will be put in the added one.
-      for (Node n : childrenOfAddedVarStatement) {
-        fix.delete(n);
-      }
-      fix.delete(name);
-      fix.insertBefore(parent, assign, compiler);
-    } else {
-      // Remove the original var statement.
-      fix.replace(parent, assign, compiler);
-    }
-
-    return fix.build();
   }
 
   private static SuggestedFix getFixForReferenceToShortImportByLongName(
