@@ -30,13 +30,6 @@ const asyncAssertPromiseRejected = promiseTesting.asyncAssertPromiseRejected;
 
 const testSuite = goog.require('goog.testing.testSuite');
 
-// TODO(bradfordcsmith): Remove this when we really start polyfilling Promise.
-let Promise;
-try {
-  Promise = $jscomp_Promise;
-} catch (ignore) {
-}
-
 /**
  * Handles boilerplate code for managing an asynchronous test case.
  *
@@ -117,15 +110,6 @@ function getResolvedTestData() {
 }
 
 testSuite({
-  shouldRunTests() {
-    try {
-      Promise.resolve();  // throws an exception if Promise not defined.
-      return true;
-    } catch (ignored) {
-      return false;
-    }
-  },
-
   testBadThis() {
     let voidFunction = () => undefined;
     function testWithThis(testThis) {

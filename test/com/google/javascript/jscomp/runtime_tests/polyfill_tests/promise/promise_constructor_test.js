@@ -32,25 +32,7 @@ const userAgent = goog.require('goog.userAgent');
 
 const testSuite = goog.require('goog.testing.testSuite');
 
-// TODO(bradfordcsmith): Remove this alias when the Promise polyfill is fully
-//     implemented and enabled.
-let Promise;
-try {
-  Promise = $jscomp_Promise;
-} catch (ignore) {
-}
-
 testSuite({
-  shouldRunTests() {
-    try {
-      // throws an exception if Promise not defined.
-      new Promise(resolve => resolve());
-      return true;
-    } catch (ignored) {
-      return false;
-    }
-  },
-
   testResolve() {
     let fulfilledValue = 'fulfilled value';
     let promise =

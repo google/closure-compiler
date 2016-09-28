@@ -21,14 +21,6 @@
 goog.module('jscomp.runtime_tests.polyfill_tests.promise_testing');
 goog.setTestOnly();
 
-// TODO(bradfordcsmith): Remove this when we really start polyfilling Promise.
-var Promise;
-
-try {
-  Promise = $jscomp_Promise;
-} catch (ignore) {
-}
-
 /**
  * Fail the test unless the promise is fulfilled with the given value.
  * @param {!IThenable} promise

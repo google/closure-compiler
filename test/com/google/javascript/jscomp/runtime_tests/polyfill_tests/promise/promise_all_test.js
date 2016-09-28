@@ -20,15 +20,6 @@
 goog.module('jscomp.runtime_tests.polyfill_tests.promise_all_test');
 goog.setTestOnly();
 
-// TODO(bradfordcsmith): Remove this alias when the Promise polyfill is fully
-//     implemented and enabled.
-let Promise;
-try {
-  Promise = $jscomp_Promise;
-} catch (ignore) {
-}
-
-
 const testSuite = goog.require('goog.testing.testSuite');
 const FakeThenable = goog.require('jscomp.runtime_tests.polyfill_tests.FakeThenable');
 
@@ -42,15 +33,6 @@ function newPromiseCapability() {
 }
 
 testSuite({
-  shouldRunTests() {
-    try {
-      Promise.resolve();  // throws an exception if Promise not defined.
-      return true;
-    } catch (ignored) {
-      return false;
-    }
-  },
-
   testEmpty() {
     return Promise.all([
       Promise.all([]).then(r => assertArrayEquals([], r)),

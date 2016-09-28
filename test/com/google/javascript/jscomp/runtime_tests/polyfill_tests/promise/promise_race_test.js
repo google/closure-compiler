@@ -23,24 +23,7 @@ goog.setTestOnly();
 const testSuite = goog.require('goog.testing.testSuite');
 const FakeThenable = goog.require('jscomp.runtime_tests.polyfill_tests.FakeThenable');
 
-// TODO(bradfordcsmith): Remove this alias when the Promise polyfill is fully
-//     implemented and enabled.
-let Promise;
-try {
-  Promise = $jscomp_Promise;
-} catch (ignore) {
-}
-
 testSuite({
-  shouldRunTests() {
-    try {
-      Promise.resolve();  // throws an exception if Promise not defined.
-      return true;
-    } catch (ignored) {
-      return false;
-    }
-  },
-
   // NOTE: Promise.race([]) returns a Promise that will never resolve.
 
   testSingleNonThenable() {
@@ -81,9 +64,7 @@ testSuite({
     const expectedResult = {};
     let resolveDelayed;
     const delayedPromise = new Promise(r => resolveDelayed = r);
-    const proxiedPromise = new Promise(r => r(Promise.resolve('proxy')));
     const values = [
-      proxiedPromise,
       delayedPromise,
       Promise.resolve(expectedResult),
       Promise.reject('promise rejected'),
@@ -121,9 +102,7 @@ testSuite({
     const expectedReason = new Error('expected reason');
     let resolveDelayed;
     const delayedPromise = new Promise(r => resolveDelayed = r);
-    const proxiedPromise = new Promise(r => r(Promise.resolve('proxy')));
     const values = [
-      proxiedPromise,
       delayedPromise,
       Promise.reject(expectedReason),
       Promise.reject('later reject'),

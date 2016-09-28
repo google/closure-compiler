@@ -35,7 +35,7 @@ $jscomp.EXPOSE_ASYNC_EXECUTOR = true;
 $jscomp.FORCE_POLYFILL_PROMISE = false;
 
 
-$jscomp.polyfill('$jscomp_Promise', function(NativePromise) {
+$jscomp.polyfill('Promise', function(NativePromise) {
   // TODO(bradfordcsmith): Do we need to add checks for standards conformance?
   //     e.g. The version of FireFox we currently use for testing has a Promise
   //     that fails to reject attempts to fulfill it with itself, but that
