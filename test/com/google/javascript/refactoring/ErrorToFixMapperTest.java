@@ -191,6 +191,20 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testEarlyReference() {
+    String code = "if (x < 0) alert(1);\nvar x;";
+    String expectedCode = "var x;\n" + code;
+    assertChanges(code, expectedCode);
+  }
+
+  @Test
+  public void testEarlyReferenceInFunction() {
+    String code = "function f() {\n  if (x < 0) alert(1);\nvar x;\n}";
+    String expectedCode = "function f() {\n  var x;\nif (x < 0) alert(1);\nvar x;\n}";
+    assertChanges(code, expectedCode);
+  }
+
+  @Test
   public void testInsertSemicolon1() {
     String code = "var x = 3";
     String expectedCode = "var x = 3;";

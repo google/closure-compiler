@@ -42,6 +42,8 @@ public final class ErrorToFixMapper {
   private ErrorToFixMapper() {} // All static
 
   private static final Pattern DID_YOU_MEAN = Pattern.compile(".*Did you mean (.*)\\?");
+  private static final Pattern EARLY_REF =
+      Pattern.compile("Variable referenced before declaration: (.*)");
   private static final Pattern MISSING_REQUIRE =
       Pattern.compile("missing require: '([^']+)'");
   private static final Pattern EXTRA_REQUIRE =
@@ -72,6 +74,8 @@ public final class ErrorToFixMapper {
     switch (error.getType().key) {
       case "JSC_REDECLARED_VARIABLE":
         return getFixForRedeclaration(error, compiler);
+      case "JSC_REFERENCE_BEFORE_DECLARE":
+        return getFixForEarlyReference(error, compiler);
       case "JSC_MISSING_SEMICOLON":
         return getFixForMissingSemicolon(error, compiler);
       case "JSC_REQUIRES_NOT_SORTED":
@@ -159,6 +163,24 @@ public final class ErrorToFixMapper {
     }
 
     return fix.build();
+  }
+
+  /**
+   * This fix is not ideal. It trades one warning (JSC_REFERENCE_BEFORE_DECLARE) for another
+   * (JSC_REDECLARED_VARIABLE). But after running the fixer once, you can then run it again and
+   * #getFixForRedeclaration will take care of the JSC_REDECLARED_VARIABLE warning.
+   */
+  private static SuggestedFix getFixForEarlyReference(JSError error, AbstractCompiler compiler) {
+    Matcher m = EARLY_REF.matcher(error.description);
+    if (m.matches()) {
+      String name = m.group(1);
+      Node stmt = NodeUtil.getEnclosingStatement(error.node);
+      return new SuggestedFix.Builder()
+          .attachMatchedNodeInfo(error.node, compiler)
+          .insertBefore(stmt, "var " + name + ";\n")
+          .build();
+    }
+    return null;
   }
 
   private static SuggestedFix getFixForReferenceToShortImportByLongName(
