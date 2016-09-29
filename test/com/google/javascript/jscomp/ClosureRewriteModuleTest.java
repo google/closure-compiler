@@ -246,6 +246,20 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         },
         ILLEGAL_DESTRUCTURING_IMPORT);
 
+    testErrorEs6(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('p.A');",
+              "/** @constructor */ exports = class { static method() {} }"),
+          LINE_JOINER.join(
+              "goog.module('p.C');",
+              "var {method} = goog.require('p.A');",
+              "function main() {",
+              "  method();",
+              "}")
+        },
+        ILLEGAL_DESTRUCTURING_IMPORT);
+
     // TODO(blickly): We should warn for this as well, but it's harder to detect.
     testEs6(
         new String[] {

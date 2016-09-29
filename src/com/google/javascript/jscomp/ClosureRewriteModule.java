@@ -222,7 +222,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
      */
     boolean willCreateExportsObject;
     boolean hasCreatedExportObject;
-    String defaultExportName;
+    Node defaultExportRhs;
+    String defaultExportLocalName;
 
     // The root of the module. The SCRIPT node (or for goog.loadModule, the body of the
     // function) that contains the module contents. For recognizing top level names. Changes when
@@ -764,16 +765,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return;
     }
 
-    Preconditions.checkState(currentScript.defaultExportName == null);
-    Node defaultExportRhs = n.getNext();
-    if (defaultExportRhs.isName() && !currentScript.declareLegacyNamespace) {
-      String exportedName = defaultExportRhs.getString();
+    Preconditions.checkState(currentScript.defaultExportLocalName == null);
+    currentScript.defaultExportRhs = n.getNext();
+    if (currentScript.defaultExportRhs.isName() && !currentScript.declareLegacyNamespace) {
+      String exportedName = currentScript.defaultExportRhs.getString();
       Var var = t.getScope().getVar(exportedName);
       // If rhs is the short name from an import, then we can't do the uninlining.
       if (var != null
           && var.getInitialValue() != null
           && !isCallTo(var.getInitialValue(), "goog.require")) {
-        currentScript.defaultExportName = exportedName;
+        currentScript.defaultExportLocalName = exportedName;
         recordNameToInline(exportedName, currentScript.getBinaryNamespace());
       }
     }
@@ -922,7 +923,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // by structuring the imports/exports in a consistent way.
     ScriptDescription importedModule =
         rewriteState.scriptDescriptionsByGoogModuleNamespace.get(importedNamespace);
-    if (importedModule != null && importedModule.defaultExportName != null) {
+    if (importedModule != null
+        && importedModule.defaultExportRhs != null
+        && !importedModule.defaultExportRhs.isObjectLit()) {
       t.report(importNode, ILLEGAL_DESTRUCTURING_IMPORT);
     }
   }
@@ -1008,7 +1011,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
     }
 
-    boolean nameIsExported = name.equals(currentScript.defaultExportName);
+    boolean nameIsExported = name.equals(currentScript.defaultExportLocalName);
     if (nameIsExported) {
       safeSetString(nameNode, currentScript.getBinaryNamespace());
       currentScript.hasCreatedExportObject = true;
@@ -1110,7 +1113,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node assignNode = n.getParent();
-    if (currentScript.defaultExportName != null) {
+    if (currentScript.defaultExportLocalName != null) {
       assignNode.getParent().detach();
       return;
     }
