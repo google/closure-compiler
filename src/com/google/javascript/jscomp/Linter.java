@@ -42,7 +42,7 @@ public class Linter {
   @Option(name = "--fix", usage = "Fix lint warnings automatically")
   private boolean fix = false;
 
-  @Argument private final List<String> files = new ArrayList<>();
+  @Argument private List<String> files = new ArrayList<>();
 
   public static void main(String[] args) throws IOException, CmdLineException {
     new Linter().run(args);
