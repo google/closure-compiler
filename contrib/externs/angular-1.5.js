@@ -430,13 +430,9 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *   require: (string|Array.<string>|!Object<string, string>|undefined),
  *   restrict: (string|undefined),
  *   scope: (boolean|Object.<string, string>|undefined),
- *   template: (string|
- *       function(!angular.JQLite=,!angular.Attributes=): string|
- *       undefined),
+ *   template: (string|!angular.Injectable|undefined),
  *   templateNamespace: (string|undefined),
- *   templateUrl: (string|
- *       function(!angular.JQLite=,!angular.Attributes=)|
- *       undefined),
+ *   templateUrl: (string|!angular.Injectable|undefined),
  *   terminal: (boolean|undefined),
  *   transclude: (boolean|string|!Object.<string, string>|undefined)
  *   }}
@@ -487,16 +483,12 @@ angular.Component.prototype.controller;
 angular.Component.prototype.controllerAs;
 
 /**
- * @type {string|
- *        function(!angular.JQLite=,!angular.Attributes=)|
- *        undefined}
+ * @type {string|!angular.Injectable|undefined}
  */
 angular.Component.prototype.template;
 
 /**
- * @type {string|
- *        function(!angular.JQLite=,!angular.Attributes=)|
- *        undefined}
+ * @type {string|!angular.Injectable|undefined}
  */
 angular.Component.prototype.templateUrl;
 
