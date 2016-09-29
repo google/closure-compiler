@@ -49,7 +49,9 @@ public final class ReplaceStringsTest extends CompilerTestCase {
       "goog.debug.Logger.prototype.info(?)",
       "goog.log.getLogger(?)",
       "goog.log.info(,?)",
-      "goog.log.multiString(,?,?,)"
+      "goog.log.multiString(,?,?,)",
+      "Excluded(?):!testcode",
+      "NotExcluded(?):!unmatchable"
       );
 
   private ImmutableList<String> functionsToInspect;
@@ -544,6 +546,11 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         new String[] {
             "a", "replaced with a",
             "b", "replaced with b"});
+  }
+
+  public void testExcludedFile() {
+    testDebugStrings("Excluded('xyz');", "Excluded('xyz');", new String[0]);
+    testDebugStrings("NotExcluded('xyz');", "NotExcluded('a');", (new String[] { "a", "xyz" }));
   }
 
   private void testDebugStrings(String js, String expected,

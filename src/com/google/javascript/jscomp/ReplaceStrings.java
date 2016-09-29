@@ -49,12 +49,14 @@ import java.util.Set;
  */
 class ReplaceStrings extends AbstractPostOrderCallback
     implements CompilerPass {
+
   static final DiagnosticType BAD_REPLACEMENT_CONFIGURATION =
       DiagnosticType.warning(
           "JSC_BAD_REPLACEMENT_CONFIGURATION",
           "Bad replacement configuration.");
 
   private static final String DEFAULT_PLACEHOLDER_TOKEN = "`";
+  public static final String EXCLUSION_PREFIX = ":!";
   private final String placeholderToken;
   private static final String REPLACE_ONE_MARKER = "?";
   private static final String REPLACE_ALL_MARKER = "*";
@@ -77,11 +79,15 @@ class ReplaceStrings extends AbstractPostOrderCallback
     // classes.
     final String name;
     final List<Integer> parameters;
+    final ImmutableSet<String> excludedFilenameSuffixes;
+
     static final int REPLACE_ALL_VALUE = 0;
 
-    Config(String name, List<Integer> replacementParameters) {
+    Config(String name, List<Integer> replacementParameters, ImmutableSet<String>
+        excludedFilenameSuffixes) {
       this.name = name;
       this.parameters = replacementParameters;
+      this.excludedFilenameSuffixes = excludedFilenameSuffixes;
     }
 
     public boolean isReplaceAll() {
@@ -109,13 +115,16 @@ class ReplaceStrings extends AbstractPostOrderCallback
    * @param placeholderToken Separator to use between string parts. Used to replace
    *     non-static string content.
    * @param functionsToInspect A list of function configurations in the form of
-   *     function($,,,)
+   *     function($,,,):exclued_filename_suffix1,excluded_filename_suffix2,...
    *   or
-   *     class.prototype.method($,,,)
+   *     class.prototype.method($,,,):exclued_filename_suffix1,excluded_filename_suffix2,...
    * @param blacklisted A set of names that should not be used as replacement
    *     strings.  Useful to prevent unwanted strings for appearing in the
    *     final output.
    * where '$' is used to indicate which parameter should be replaced.
+   *
+   * excluded_filename_suffix is a list of files whose callsites for a given function
+   * pattern should be ignored.
    */
   ReplaceStrings(
       AbstractCompiler compiler, String placeholderToken,
@@ -195,7 +204,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
         // Look for calls to static functions.
         String name = calledFn.getOriginalQualifiedName();
         if (name != null) {
-          Config config = findMatching(name);
+          Config config = findMatching(name, n.getSourceFileName());
           if (config != null) {
             doSubstitutions(t, config, n);
             return;
@@ -235,13 +244,21 @@ class ReplaceStrings extends AbstractPostOrderCallback
 
   /**
    * @param name The function name to find.
+   * @param callsiteSourceFileName the filename containing the callsite
    * @return The Config object for the name or null if no match was found.
    */
-  private Config findMatching(String name) {
+  private Config findMatching(String name, String callsiteSourceFileName) {
     Config config = functions.get(name);
     if (config == null) {
       name = name.replace('$', '.');
       config = functions.get(name);
+    }
+    if (config != null) {
+      for (String excludedSuffix : config.excludedFilenameSuffixes) {
+        if (callsiteSourceFileName.endsWith(excludedSuffix)) {
+          return null;
+        }
+      }
     }
     return config;
   }
@@ -454,6 +471,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
     // Looks like this function_name(,$,)
     int first = function.indexOf('(');
     int last = function.indexOf(')');
+    int colon = function.indexOf(EXCLUSION_PREFIX);
 
     // TODO(johnlenz): Make parsing precondition checks JSErrors reports.
     Preconditions.checkState(first != -1 && last != -1);
@@ -481,7 +499,14 @@ class ReplaceStrings extends AbstractPostOrderCallback
     }
 
     Preconditions.checkState(!replacementParameters.isEmpty());
-    return new Config(name, replacementParameters);
+
+    return new Config(
+        name,
+        replacementParameters,
+        colon == -1
+            ? ImmutableSet.<String>of()
+            : ImmutableSet.copyOf(
+                function.substring(colon + EXCLUSION_PREFIX.length()).split(",")));
   }
 
   /**
