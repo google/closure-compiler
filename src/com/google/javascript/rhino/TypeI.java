@@ -82,6 +82,10 @@ public interface TypeI {
 
   boolean isVoidable();
 
+  boolean isNullType();
+
+  boolean isVoidType();
+
   boolean isPrototypeObject();
 
   boolean isInstanceofObject();

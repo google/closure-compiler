@@ -1587,6 +1587,16 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public boolean isNullType() {
+    return equals(this.commonTypes.NULL);
+  }
+
+  @Override
+  public boolean isVoidType() {
+    return equals(this.commonTypes.UNDEFINED);
+  }
+
+  @Override
   public TypeI restrictByNotNullOrUndefined() {
     return this.removeType(this.commonTypes.NULL_OR_UNDEFINED);
   }

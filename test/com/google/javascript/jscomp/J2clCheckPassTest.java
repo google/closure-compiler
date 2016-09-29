@@ -18,9 +18,10 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.J2clChecksPass.J2CL_REFERENCE_EQUALITY;
 import static com.google.javascript.jscomp.J2clChecksPass.REFERENCE_EQUALITY_TYPE_PATTERNS;
 
-public class J2clCheckPassTest extends CompilerTestCase {
+public class J2clCheckPassTest extends TypeICompilerTestCase {
 
   public J2clCheckPassTest() {
+    super(DEFAULT_EXTERNS);
     enableTypeCheck();
   }
 

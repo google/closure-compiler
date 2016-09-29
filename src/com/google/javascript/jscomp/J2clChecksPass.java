@@ -17,10 +17,10 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.TypeI;
 import java.util.Map;
 
 /**
@@ -61,8 +61,8 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
         || n.getToken() == Token.EQ
         || n.getToken() == Token.SHNE
         || n.getToken() == Token.NE) {
-      JSType firstJsType = n.getFirstChild().getJSType();
-      JSType lastJsType = n.getLastChild().getJSType();
+      TypeI firstJsType = n.getFirstChild().getTypeI();
+      TypeI lastJsType = n.getLastChild().getTypeI();
       boolean hasType = isType(firstJsType, fileName) || isType(lastJsType, fileName);
       boolean hasNullType = isNullType(firstJsType) || isNullType(lastJsType);
       if (hasType && !hasNullType) {
@@ -71,14 +71,14 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
     }
   }
 
-  private boolean isNullType(JSType jsType) {
+  private boolean isNullType(TypeI jsType) {
     if (jsType == null) {
       return false;
     }
     return jsType.isNullType() || jsType.isVoidType();
   }
 
-  private boolean isType(JSType jsType, String fileName) {
+  private boolean isType(TypeI jsType, String fileName) {
     if (jsType == null) {
       return false;
     }
@@ -90,8 +90,8 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
     return sourceName != null && sourceName.endsWith(fileName);
   }
 
-  private String getSourceName(JSType jsType) {
-    FunctionType constructor = jsType.toMaybeObjectType().getConstructor();
+  private String getSourceName(TypeI jsType) {
+    FunctionTypeI constructor = jsType.toMaybeObjectType().getConstructor();
     if (constructor == null) {
       return "";
     }

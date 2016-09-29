@@ -489,6 +489,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(computeFunctionNames);
     }
 
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      checks.add(j2clChecksPass);
+    }
+
     // NOTE(dimvar): Tried to move this into the optimizations, but had to back off
     // because the very first pass, normalization, rewrites the code in a way that
     // causes loss of type information.
@@ -496,14 +500,10 @@ public final class DefaultPassConfig extends PassConfig {
     // in unit tests, not full builds. Once all passes are converted, then
     // drop the OTI-after-NTI altogether.
     // In addition, I will probably have a local edit of the repo that retains both
-    // types on Nodes, so I can test full builds on my machine. We can't check such
-    // a change in because it would greatly increase memory usage.
+    // types on Nodes, so I can test full builds on my machine. We can't check in such
+    // a change because it would greatly increase memory usage.
     if (options.getNewTypeInference()) {
       addOldTypeCheckerPasses(checks, options);
-    }
-
-    if (options.j2clPassMode.shouldAddJ2clPasses()) {
-      checks.add(j2clChecksPass);
     }
 
     checks.add(createEmptyPass("afterStandardChecks"));
