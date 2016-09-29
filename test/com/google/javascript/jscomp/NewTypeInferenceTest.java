@@ -12158,6 +12158,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "};",
         "function f() { exports.Bar.staticProp - 5; }"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheckCustomExterns(LINE_JOINER.join(
+        DEFAULT_EXTERNS,
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @const */",
+        "var Bar = Foo;"),
+        "");
   }
 
   public void testTypeVariablesVisibleInPrototypeMethods() {

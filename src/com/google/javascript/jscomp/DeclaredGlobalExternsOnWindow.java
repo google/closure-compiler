@@ -21,7 +21,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -93,6 +92,12 @@ class DeclaredGlobalExternsOnWindow
       } else {
         if (NodeUtil.isNamespaceDecl(node)) {
           newNode = IR.assign(getprop, IR.name(name));
+        } else {
+          Node rhs = NodeUtil.getRValueOfLValue(node);
+          // Type-aliasing definition
+          if (oldJSDocInfo.hasConstAnnotation() && rhs != null && rhs.isQualifiedName()) {
+            newNode = IR.assign(getprop, rhs.cloneNode());
+          }
         }
         builder = JSDocInfoBuilder.copyFrom(oldJSDocInfo);
       }

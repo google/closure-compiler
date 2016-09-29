@@ -98,6 +98,27 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
             "/** @suppress {const,duplicate} @const */ window.ns = ns;"));
   }
 
+  public void testNamespaceAliasing() {
+    testExternChanges(
+        LINE_JOINER.join(
+            "var window;",
+            "/** @const */",
+            "var ns = {};",
+            "/** @const */",
+            "var ns2 = ns;"),
+        "",
+        LINE_JOINER.join(
+            "var window;",
+            "/** @const */",
+            "var ns = {};",
+            "/** @const */",
+            "var ns2 = ns;",
+            "/** @suppress {const,duplicate} @const */",
+            "window.ns = ns;",
+            "/** @suppress {const,duplicate} @const */",
+            "window.ns2 = ns;"));
+  }
+
   public void testWindowProperty8() {
     testExternChanges("var window; /** @constructor */ function Foo() {}", "",
         LINE_JOINER.join(
