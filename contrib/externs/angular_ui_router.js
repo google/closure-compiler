@@ -326,6 +326,13 @@ ui.router.$urlMatcherFactory = function() {};
 
 
 /**
+ * @param {boolean} value
+ * @return {boolean}
+ */
+ui.router.$urlMatcherFactory.prototype.strictMode = function(value) {};
+
+
+/**
  * @interface
  * @param {!ui.router.$urlMatcherFactory} $urlMatcherFactory
  */
