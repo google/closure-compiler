@@ -821,6 +821,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   public void whitespaceOnlyPasses() {
+    runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
+
     Tracer t = newTracer("runWhitespaceOnlyPasses");
     try {
       for (PassFactory pf : getPassConfig().getWhitespaceOnlyPasses()) {
