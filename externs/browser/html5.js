@@ -1320,6 +1320,21 @@ HTMLElement.prototype.hidden;
 HTMLElement.prototype.spellcheck;
 
 /**
+ * @see https://dom.spec.whatwg.org/#dictdef-getrootnodeoptions
+ * @typedef {{
+ *   composed: boolean
+ * }}
+ */
+var GetRootNodeOptions;
+
+/**
+ * @see https://dom.spec.whatwg.org/#dom-node-getrootnode
+ * @param {GetRootNodeOptions=} opt_options
+ * @return {?Node}
+ */
+Node.prototype.getRootNode = function(opt_options) {};
+
+/**
  * @see http://www.w3.org/TR/components-intro/
  * @return {!ShadowRoot}
  */
