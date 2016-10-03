@@ -766,7 +766,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
       FunctionInformation sideEffectInfo = new FunctionInformation(inExterns);
 
-      JSDocInfo info = getJSDocInfoForFunction(node, parent);
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(node);
       if (inExterns) {
         // Handle externs.
         JSType jstype = node.getJSType();
@@ -808,21 +808,6 @@ class PureFunctionIdentifier implements CompilerPass {
       // If the type includes anything related to a object type, don't assume
       // anything about the locality of the value.
       return subtype.isNoType();
-    }
-
-    /** Get the doc info associated with the function. */
-    private JSDocInfo getJSDocInfoForFunction(Node node, Node parent) {
-      JSDocInfo info = node.getJSDocInfo();
-      if (info != null) {
-        return info;
-      } else if (parent.isName()) {
-        Node grandparent = parent.getParent();
-        return grandparent.hasOneChild() ? grandparent.getJSDocInfo() : null;
-      } else if (parent.isAssign()) {
-        return parent.getJSDocInfo();
-      } else {
-        return null;
-      }
     }
   }
 
