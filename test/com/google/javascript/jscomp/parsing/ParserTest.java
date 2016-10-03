@@ -2834,6 +2834,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testInvalidAsyncFunction() {
     mode = LanguageMode.ECMASCRIPT8;
+    expectFeatures(Feature.ASYNC_FUNCTIONS);
     parseError("async function *f(){}", "async functions cannot be generators");
     parseError("f = async function *(){}", "async functions cannot be generators");
   }
@@ -2907,6 +2908,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("f = async(p)=>await p");
     parse("class C{async m(p){await p}}");
     parse("class C{static async m(p){await p}}");
+    // await must have an operand
+    parseError("async function f() { await; }", "primary expression expected");
   }
 
   public void testFor_ES5() {

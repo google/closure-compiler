@@ -969,7 +969,7 @@ public class Parser {
   }
 
   private ParseTree parseAsyncMethod(PartialClassElement partial) {
-    features.require(Feature.ASYNC_FUNCTIONS);
+    features = features.require(Feature.ASYNC_FUNCTIONS);
     eatPredefinedString(ASYNC);
     if (peekIdOrKeyword()) {
       IdentifierToken name = eatIdOrKeywordAsId();
@@ -1197,7 +1197,7 @@ public class Parser {
   }
 
   private boolean peekFunctionTypeExpression() {
-    if (config.parseTypeSyntax && peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
+    if ((config.parseTypeSyntax && peek(TokenType.OPEN_PAREN)) || peek(TokenType.OPEN_ANGLE)) {
       // TODO(blickly): determine if we can parse this without the
       // overhead of forking the parser.
       Parser p = createLookaheadParser();
@@ -1242,7 +1242,7 @@ public class Parser {
 
   private ParseTree parseAsyncFunctionDeclaration() {
     SourcePosition start = getTreeStartLocation();
-    features.require(Feature.ASYNC_FUNCTIONS);
+    features = features.require(Feature.ASYNC_FUNCTIONS);
     eatAsyncFunctionStart();
 
     if (peek(TokenType.STAR)) {
@@ -1262,7 +1262,7 @@ public class Parser {
 
   private ParseTree parseAsyncFunctionExpression() {
     SourcePosition start = getTreeStartLocation();
-    features.require(Feature.ASYNC_FUNCTIONS);
+    features = features.require(Feature.ASYNC_FUNCTIONS);
     eatAsyncFunctionStart();
 
     if (peek(TokenType.STAR)) {
