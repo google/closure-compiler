@@ -455,7 +455,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
         if (expandedDefinitions.size() > 1) {
           // No representative node yet.  Need to synthesize one.
-          FunctionInformation representativeNode = new FunctionInformation(false);
+          FunctionInformation representativeNode = new FunctionInformation();
           representativeNode.graphNode = sideEffectGraph.createNode(representativeNode);
           reps.put(name, representativeNode);
           for (FunctionInformation definition : expandedDefinitions) {
@@ -764,7 +764,7 @@ class PureFunctionIdentifier implements CompilerPass {
       Preconditions.checkArgument(node.isFunction());
       Preconditions.checkState(!functionSideEffectMap.containsKey(node));
 
-      FunctionInformation sideEffectInfo = new FunctionInformation(inExterns);
+      FunctionInformation sideEffectInfo = new FunctionInformation();
 
       JSDocInfo info = NodeUtil.getBestJSDocInfo(node);
       if (inExterns) {
@@ -934,8 +934,6 @@ class PureFunctionIdentifier implements CompilerPass {
     DiGraphNode<FunctionInformation, CallSitePropagationInfo> graphNode;
     private int bitmask = 0;
 
-    private static final int EXTERN_MASK = 1 << 0;
-
     // Side effect types:
     private static final int FUNCTION_THROWS_MASK = 1 << 2;
     private static final int TAINTS_GLOBAL_STATE_MASK = 1 << 3;
@@ -944,12 +942,6 @@ class PureFunctionIdentifier implements CompilerPass {
     private static final int TAINTS_THIS_MASK = 1 << 4;
     private static final int TAINTS_ARGUMENTS_MASK = 1 << 5;
     private static final int TAINTS_RETURN_MASK = 1 << 7;
-
-    FunctionInformation(boolean extern) {
-      if (extern) {
-        setMask(EXTERN_MASK);
-      }
-    }
 
     void setMask(int mask) {
       bitmask |= mask;
@@ -1052,10 +1044,6 @@ class PureFunctionIdentifier implements CompilerPass {
       return taintsThis();
     }
 
-    private boolean extern() {
-      return getMask(EXTERN_MASK);
-    }
-
     public Set<Var> taintedLocals() {
       if (taintedLocals == null) {
         return Collections.emptySet();
@@ -1113,10 +1101,6 @@ class PureFunctionIdentifier implements CompilerPass {
     @Override
     public String toString() {
       List<String> status = new ArrayList<>();
-      if (extern()) {
-        status.add("extern");
-      }
-
       if (taintsThis()) {
         status.add("this");
       }
