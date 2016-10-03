@@ -134,9 +134,7 @@ class PureFunctionIdentifier implements CompilerPass {
       Node function = entry.getKey();
       FunctionInformation functionInfo = entry.getValue();
 
-      boolean isPure =
-          functionInfo.mayBePure() && !functionInfo.mayHaveSideEffects();
-      if (isPure) {
+      if (functionInfo.isPure()) {
         sb.append("  ").append(functionNames.getFunctionName(function)).append("\n");
       }
     }
@@ -371,10 +369,6 @@ class PureFunctionIdentifier implements CompilerPass {
 
     // add connections to called functions and side effect root.
     for (FunctionInformation functionInfo : functionSideEffectMap.values()) {
-      if (!functionInfo.mayHaveSideEffects()) {
-        continue;
-      }
-
       for (Node callSite : functionInfo.getCallsInFunctionBody()) {
         List<FunctionInformation> possibleSideEffects =
             getSideEffectsForCall(callSite, definitionProvider, representativeNodesByName);
@@ -403,13 +397,6 @@ class PureFunctionIdentifier implements CompilerPass {
               }
             })
         .computeFixedPoint(sideEffectGraph);
-
-    // Mark remaining functions "pure".
-    for (FunctionInformation functionInfo : functionSideEffectMap.values()) {
-      if (functionInfo.mayBePure()) {
-        functionInfo.setIsPure();
-      }
-    }
   }
 
   /**
@@ -802,7 +789,7 @@ class PureFunctionIdentifier implements CompilerPass {
           } else if (!info.getThrownTypes().isEmpty()) {
             sideEffectInfo.setFunctionThrows();
           } else if (info.isNoSideEffects()) {
-            sideEffectInfo.setIsPure();
+            // Do nothing.
           } else {
             sideEffectInfo.setTaintsGlobalState();
           }
@@ -963,7 +950,6 @@ class PureFunctionIdentifier implements CompilerPass {
     private int bitmask = 0;
 
     private static final int EXTERN_MASK = 1 << 0;
-    private static final int PURE_FUNCTION_MASK = 1 << 1;
 
     // Side effect types:
     private static final int FUNCTION_THROWS_MASK = 1 << 2;
@@ -982,15 +968,10 @@ class PureFunctionIdentifier implements CompilerPass {
 
     void setMask(int mask) {
       bitmask |= mask;
-      checkInvariant();
     }
 
     boolean getMask(int mask) {
       return (bitmask & mask) != 0;
-    }
-
-    boolean pureFunction() {
-      return getMask(PURE_FUNCTION_MASK);
     }
 
     boolean taintsGlobalState() {
@@ -1020,26 +1001,12 @@ class PureFunctionIdentifier implements CompilerPass {
     /**
      * @return false if function known to have side effects.
      */
-    boolean mayBePure() {
+    boolean isPure() {
       return !getMask(
           FUNCTION_THROWS_MASK
               | TAINTS_GLOBAL_STATE_MASK
               | TAINTS_THIS_MASK
               | TAINTS_ARGUMENTS_MASK);
-    }
-
-    /**
-     * @return false if function known to be pure.
-     */
-    boolean mayHaveSideEffects() {
-      return !pureFunction();
-    }
-
-    /**
-     * Mark the function as being pure.
-     */
-    void setIsPure() {
-      this.setMask(PURE_FUNCTION_MASK);
     }
 
     /**
@@ -1098,17 +1065,6 @@ class PureFunctionIdentifier implements CompilerPass {
      */
     boolean mutatesThis() {
       return taintsThis();
-    }
-
-    /**
-     * Verify internal consistency.  Should be called at the end of
-     * every method that mutates internal state.
-     */
-    private void checkInvariant() {
-      boolean invariant = mayBePure() || mayHaveSideEffects();
-      if (!invariant) {
-        throw new IllegalStateException("Invariant failed.  " + this);
-      }
     }
 
     private boolean extern() {
@@ -1174,10 +1130,6 @@ class PureFunctionIdentifier implements CompilerPass {
       List<String> status = new ArrayList<>();
       if (extern()) {
         status.add("extern");
-      }
-
-      if (pureFunction()) {
-        status.add("pure");
       }
 
       if (taintsThis()) {
