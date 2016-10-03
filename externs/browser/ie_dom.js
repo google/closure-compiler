@@ -1405,6 +1405,22 @@ Navigator.prototype.msMaxTouchPoints;
 Navigator.prototype.msPointerEnabled;
 
 /**
+ * @param {(!File|!Blob)} blob
+ * @param {string=} opt_defaultName
+ * @return {boolean}
+ * @see https://msdn.microsoft.com/en-us/library/hh772331(v=vs.85).aspx
+ */
+Navigator.prototype.msSaveBlob = function(blob, opt_defaultName) {};
+
+/**
+ * @param {(!File|!Blob)} blob
+ * @param {string=} opt_defaultName
+ * @return {boolean}
+ * @see https://msdn.microsoft.com/en-us/library/hh772332(v=vs.85).aspx
+ */
+Navigator.prototype.msSaveOrOpenBlob = function(blob, opt_defaultName) {};
+
+/**
  * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/ms533721(v=vs.85).aspx
  */
