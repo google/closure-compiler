@@ -98,6 +98,7 @@ public class DiagnosticGroups {
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, "
       + "checkRegExp, checkTypes, checkVars, "
+      + "commonJsModuleLoad, "
       + "conformanceViolations, const, constantProperty, deprecated, "
       + "deprecatedAnnotations, duplicateMessage, es3, "
       + "es5Strict, externsValidation, fileoverviewTags, globalThis, "
@@ -109,6 +110,10 @@ public class DiagnosticGroups {
       + "undefinedNames, undefinedVars, unknownDefines, "
       + "unusedLocalVariables, unusedPrivateMembers, uselessCode, "
       + "useOfGoogBase, underscore, visibility";
+
+  public static final DiagnosticGroup COMMON_JS_MODULE_LOAD =
+      DiagnosticGroups.registerGroup(
+          "commonJsModuleLoad", ProcessCommonJSModules.COMMON_JS_MODULE_LOAD_ERROR);
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
