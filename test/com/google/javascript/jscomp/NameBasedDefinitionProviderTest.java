@@ -400,6 +400,19 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
             "USE GETPROP null -> [EXTERN <null>]"));
   }
 
+  public void testDoubleNamedFunction() {
+    String source = LINE_JOINER.join(
+        "A.f = function f_d() { f_d(); };",
+        "A.f();");
+    checkDefinitionsInJs(
+        source,
+        ImmutableSet.of(
+            "DEF GETPROP A.f -> FUNCTION",
+            "DEF NAME f_d -> FUNCTION",
+            "USE GETPROP A.f -> [FUNCTION]",
+            "USE NAME f_d -> [FUNCTION]"));
+  }
+
   void checkDefinitionsInExterns(String externs, Set<String> expected) {
     checkDefinitions(externs, "", expected);
   }
