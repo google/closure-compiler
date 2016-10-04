@@ -188,3 +188,9 @@ Performance.prototype.clearMeasures = function(opt_measureName) {};
 
 /** @type {Performance} */
 Window.prototype.performance;
+
+/**
+ * @type {!Performance}
+ * @suppress {duplicate}
+ */
+var performance;
