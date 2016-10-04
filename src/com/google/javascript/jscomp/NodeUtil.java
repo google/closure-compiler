@@ -1584,6 +1584,7 @@ public final class NodeUtil {
       case FALSE:
       case FUNCTION:
       case CLASS:
+      case INTERFACE:
       case NAME:
       case NULL:
       case NUMBER:
