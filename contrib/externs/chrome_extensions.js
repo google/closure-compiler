@@ -9914,6 +9914,32 @@ chrome.bluetoothPrivate.setAdapterState = function(adapterState, callback) {};
 chrome.bluetoothPrivate.setPairingResponse = function(options, callback) {};
 
 
+/**
+ * @param {string} deviceAddress
+ * @param {function():void=} callback
+ * @return {undefined}
+ */
+chrome.bluetoothPrivate.forgetDevice = function(deviceAddress, callback) {};
+
+
+/**
+ * @typedef {{
+ *   transport: (!chrome.bluetoothPrivate.TransportType|undefined),
+ *   uuids: ((string|!Array<string>)|undefined),
+ *   rssi: (number|undefined),
+ *   pathloss: (number|undefined)
+ * }}
+ */
+chrome.bluetoothPrivate.DiscoveryFilter;
+
+
+/**
+ * Set or clear discovery filter.
+ * @param {!chrome.bluetoothPrivate.DiscoveryFilter} discoveryFilter
+ * @param {function():void=} callback
+ */
+chrome.bluetoothPrivate.setDiscoveryFilter = function(discoveryFilter, callback) {};
+
 
 /**
  * Event whose listeners take a PairingEvent parameter.
