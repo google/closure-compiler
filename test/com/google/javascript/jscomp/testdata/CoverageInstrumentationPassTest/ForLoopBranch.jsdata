@@ -1,0 +1,8 @@
+function IsPostive(x){
+  for (var i = 0; i < x; i++) {
+    return true;
+  }
+  {
+    return false;
+  }
+}

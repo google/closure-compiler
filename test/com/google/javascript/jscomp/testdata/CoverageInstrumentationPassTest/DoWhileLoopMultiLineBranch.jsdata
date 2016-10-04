@@ -1,0 +1,10 @@
+function AlwaysTrue(x){
+  var i = 0;
+  do {
+    i++;
+    i++;
+    i++;
+    return true;
+  } while (i < x);
+  return false;
+}

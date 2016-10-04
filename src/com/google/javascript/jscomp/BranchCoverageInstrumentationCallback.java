@@ -63,7 +63,10 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
       for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : cfg.getOutEdges(node)) {
         if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
           Node destination = outEdge.getDestination().getValue();
-          if (destination.isBlock() && destination.getParent().isIf()) {
+          if (destination != null
+              && destination.isBlock()
+              && destination.getParent() != null
+              && destination.getParent().isIf()) {
             hasDefaultBlock = true;
           }
           break;
@@ -76,8 +79,38 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
         instrumentationData.put(
             fileName, new FileInstrumentationData(fileName, createArrayName(traversal)));
       }
-      processBranchInfo(node, instrumentationData.get(fileName));
+      processBranchInfo(node, instrumentationData.get(fileName), getChildrenBlocks(node));
+    } else if (node.isFor() || node.isWhile() || node.isDo()) {
+      List<Node> blocks = getChildrenBlocks(node);
+      ControlFlowGraph<Node> cfg = traversal.getControlFlowGraph();
+      for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : cfg.getOutEdges(node)) {
+        if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
+          Node destination = outEdge.getDestination().getValue();
+          if (destination.isBlock()) {
+            blocks.add(destination);
+          } else {
+            Node exitBlock = IR.block();
+            destination.getParent().addChildBefore(exitBlock, destination);
+            blocks.add(exitBlock);
+          }
+        }
+      }
+      if (!instrumentationData.containsKey(fileName)) {
+        instrumentationData.put(
+            fileName, new FileInstrumentationData(fileName, createArrayName(traversal)));
+      }
+      processBranchInfo(node, instrumentationData.get(fileName), blocks);
     }
+  }
+
+  private List<Node> getChildrenBlocks(Node node) {
+    List<Node> blocks = new ArrayList<>();
+    for (Node child : node.children()) {
+      if (child.isBlock()) {
+        blocks.add(child);
+      }
+    }
+    return blocks;
   }
 
   /**
@@ -103,7 +136,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
   /**
    * Create an assignment to the branch coverage data for the given index into the array.
    *
-   * @return the newly constructed assingment node.
+   * @return the newly constructed assignment node.
    */
   private Node newBranchInstrumentationNode(NodeTraversal traversal, Node node, int idx) {
     String arrayName = createArrayName(traversal);
@@ -120,18 +153,16 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
     return exprNode.useSourceInfoIfMissingFromForTree(node);
   }
 
-  /** Add branch instrumentation information for each children block. */
-  private void processBranchInfo(Node node, FileInstrumentationData data) {
-    int lineNumber = node.getLineno();
+  /** Add branch instrumentation information for each block. */
+  private void processBranchInfo(Node branchNode, FileInstrumentationData data, List<Node> blocks) {
+    int lineNumber = branchNode.getLineno();
     data.setBranchPresent(lineNumber);
 
-    // Instrument for each childern
+    // Instrument for each block
     int numBranches = 0;
-    for (Node child : node.children()) {
-      if (child.isBlock()) {
-        data.putBranchNode(lineNumber, numBranches + 1, child);
-        numBranches++;
-      }
+    for (Node child : blocks) {
+      data.putBranchNode(lineNumber, numBranches + 1, child);
+      numBranches++;
     }
     data.addBranches(lineNumber, numBranches);
   }

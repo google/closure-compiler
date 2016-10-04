@@ -1,0 +1,7 @@
+function IsPostive(x){
+  var i = 0;
+  while(i < x) {
+    return true;
+  }
+  return false;
+}
