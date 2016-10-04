@@ -36,6 +36,7 @@ public class TranspilationPasses {
    * transpile them, even if the output language is also ES6.
    */
   public static void addEs6EarlyPasses(List<PassFactory> passes) {
+    passes.add(rewriteAsyncFunctions);
     passes.add(es6SuperCheck);
     passes.add(es6ConvertSuper);
     passes.add(es6RewriteArrowFunction);
@@ -65,6 +66,14 @@ public class TranspilationPasses {
   public static void addRewritePolyfillPass(List<PassFactory> passes) {
     passes.add(rewritePolyfills);
   }
+
+  private static final PassFactory rewriteAsyncFunctions =
+      new PassFactory("rewriteAsyncFunctions", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new RewriteAsyncFunctions(compiler);
+        }
+      };
 
   private static final PassFactory es6SuperCheck =
       new PassFactory("es6SuperCheck", true) {
