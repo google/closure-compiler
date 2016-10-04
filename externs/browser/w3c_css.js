@@ -1969,6 +1969,15 @@ CSSProperties.prototype.justifyContent;
  */
 CSSProperties.prototype.order;
 
+// Externs for CSS Will Change Module Level 1
+// http://www.w3.org/TR/css-will-change/
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css-will-change-1/#will-change
+ */
+CSSProperties.prototype.willChange;
+
 
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
