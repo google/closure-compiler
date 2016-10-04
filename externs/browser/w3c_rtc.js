@@ -1016,7 +1016,7 @@ RTCPeerConnection.prototype.updateIce = function(configuration, constraints) {};
 
 /**
  * @param {!RTCIceCandidate} candidate
- * @return {undefined}
+ * @return {!Promise}
  */
 RTCPeerConnection.prototype.addIceCandidate = function(candidate) {};
 
