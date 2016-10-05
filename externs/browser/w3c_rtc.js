@@ -1015,8 +1015,9 @@ RTCPeerConnection.prototype.signalingState;
 RTCPeerConnection.prototype.updateIce = function(configuration, constraints) {};
 
 /**
+ * Void in Chrome for now, a promise that you can then/catch in Firefox.
  * @param {!RTCIceCandidate} candidate
- * @return {!Promise}
+ * @return {!Promise|undefined}
  */
 RTCPeerConnection.prototype.addIceCandidate = function(candidate) {};
 
