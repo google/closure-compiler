@@ -37,7 +37,6 @@ import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,7 +45,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -4605,11 +4603,15 @@ public final class NodeUtil {
         },
         new Predicate<Node>() {
           @Override
-            public boolean apply(Node n) {
+          public boolean apply(Node n) {
             return wrappedSize[0] < limit;
           }
         });
     return wrappedSize[0];
+  }
+
+  static int countAstSize(Node n) {
+    return countAstSizeUpToLimit(n, Integer.MAX_VALUE);
   }
 
   /**

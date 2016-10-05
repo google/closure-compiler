@@ -441,6 +441,18 @@ class PhaseOptimizer implements CompilerPass {
       State state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
       boolean lastIterMadeChanges;
       int count = 0;
+      int astSize = NodeUtil.countAstSize(root);
+      int previousAstSize = astSize;
+
+      // The loop starts at state RUN_PASSES_NOT_RUN_IN_PREV_ITER and runs all passes.
+      // After that, it goes to state RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER, and
+      // runs several iterations in that state, until there are no longer any changes
+      // to the AST, and then it goes back to RUN_PASSES_NOT_RUN_IN_PREV_ITER.
+      // We call one sequence of RUN_PASSES_NOT_RUN_IN_PREV_ITER followed by
+      // RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER a batch.
+      // At the end of every loop batch, if the batch made so few changes that the
+      // changed percentage of the AST is below some threshold, we stop the loop
+      // without waiting to reach a fixpoint.
 
       try {
         while (true) {
@@ -479,6 +491,17 @@ class PhaseOptimizer implements CompilerPass {
             }
           } else { // state == State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER
             if (!lastIterMadeChanges) {
+              previousAstSize = astSize;
+              astSize = NodeUtil.countAstSize(root);
+              float percentChange = Math.abs(astSize - previousAstSize) / (float) previousAstSize;
+              // If this loop batch made the code less than 0.1% smaller than the previous loop
+              // batch, stop before the fixpoint.
+              // This threshold is based on the following heuristic: 1% size difference matters
+              // to our users. 0.1% size difference is borderline relevant. 0.1% difference
+              // between loop batches is smaller than 0.1% total difference, so it's unimportant.
+              if (percentChange < 0.001) {
+                return;
+              }
               state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
             }
           }
