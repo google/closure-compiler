@@ -58,13 +58,20 @@ Geolocation.prototype.clearWatch = function(watchId) {};
  * @see http://www.w3.org/TR/geolocation-API/#coordinates
  */
 function GeolocationCoordinates() {}
-/** @type {number} */ GeolocationCoordinates.prototype.latitude;
-/** @type {number} */ GeolocationCoordinates.prototype.longitude;
-/** @type {number} */ GeolocationCoordinates.prototype.accuracy;
-/** @type {number} */ GeolocationCoordinates.prototype.altitude;
-/** @type {number} */ GeolocationCoordinates.prototype.altitudeAccuracy;
-/** @type {number} */ GeolocationCoordinates.prototype.heading;
-/** @type {number} */ GeolocationCoordinates.prototype.speed;
+/** @type {number} */
+GeolocationCoordinates.prototype.latitude;
+/** @type {number} */
+GeolocationCoordinates.prototype.longitude;
+/** @type {number} */
+GeolocationCoordinates.prototype.accuracy;
+/** @type {number} */
+GeolocationCoordinates.prototype.altitude;
+/** @type {number} */
+GeolocationCoordinates.prototype.altitudeAccuracy;
+/** @type {number} */
+GeolocationCoordinates.prototype.heading;
+/** @type {number} */
+GeolocationCoordinates.prototype.speed;
 
 
 /**
@@ -74,18 +81,21 @@ function GeolocationCoordinates() {}
 function GeolocationPosition() {}
 /** @type {GeolocationCoordinates} */
 GeolocationPosition.prototype.coords;
-/** @type {Date} */ GeolocationPosition.prototype.timestamp;
+/** @type {Date} */
+GeolocationPosition.prototype.timestamp;
 
 
 /**
- * @constructor
+ * @record
  * @see http://www.w3.org/TR/geolocation-API/#position-options
  */
 function GeolocationPositionOptions() {}
-/** @type {boolean} */
+/** @type {boolean|undefined} */
 GeolocationPositionOptions.prototype.enableHighAccuracy;
-/** @type {number} */ GeolocationPositionOptions.prototype.maximumAge;
-/** @type {number} */ GeolocationPositionOptions.prototype.timeout;
+/** @type {number|undefined} */
+GeolocationPositionOptions.prototype.maximumAge;
+/** @type {number|undefined} */
+GeolocationPositionOptions.prototype.timeout;
 
 
 /**
@@ -93,13 +103,18 @@ GeolocationPositionOptions.prototype.enableHighAccuracy;
  * @see http://www.w3.org/TR/geolocation-API/#position-error
  */
 function GeolocationPositionError() {}
-/** @type {number} */ GeolocationPositionError.prototype.code;
-/** @type {string} */ GeolocationPositionError.prototype.message;
-/** @type {number} */ GeolocationPositionError.prototype.UNKNOWN_ERROR;
-/** @type {number} */ GeolocationPositionError.prototype.PERMISSION_DENIED;
+/** @type {number} */
+GeolocationPositionError.prototype.code;
+/** @type {string} */
+GeolocationPositionError.prototype.message;
+/** @type {number} */
+GeolocationPositionError.prototype.UNKNOWN_ERROR;
+/** @type {number} */
+GeolocationPositionError.prototype.PERMISSION_DENIED;
 /** @type {number} */
 GeolocationPositionError.prototype.POSITION_UNAVAILABLE;
-/** @type {number} */ GeolocationPositionError.prototype.TIMEOUT;
+/** @type {number} */
+GeolocationPositionError.prototype.TIMEOUT;
 
 /** @type {Geolocation} */
 Navigator.prototype.geolocation;
