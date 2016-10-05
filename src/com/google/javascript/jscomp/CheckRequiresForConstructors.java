@@ -473,30 +473,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
   private void visitQualifiedName(Node n) {
     Preconditions.checkState(n.isName() || n.isGetProp() || n.isStringKey(), n);
-
-    if (n.isName() && n.getString() != null) {
-      // If the referenced thing is a goog.require as desugared from goog.module().
-      if (n.getBooleanProp(Node.GOOG_MODULE_REQUIRE)) {
-        Node declStatement = NodeUtil.getEnclosingStatement(n);
-        if (NodeUtil.isNameDeclaration(declStatement)) {
-          for (Node varChild : declStatement.children()) {
-            // Normal declaration.
-            if (varChild.isName()) {
-              requires.put(varChild.getString(), n);
-            }
-            // Object destructuring declaration.
-            if (varChild.isObjectPattern()) {
-              for (Node objectChild : varChild.children()) {
-                if (objectChild.isStringKey()) {
-                  requires.put(objectChild.getString(), n);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
     String qualifiedName = n.isStringKey() ? n.getString() : n.getQualifiedName();
     addWeakUsagesOfAllPrefixes(qualifiedName);
   }
@@ -528,9 +504,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     String name = root.getString();
     Var var = t.getScope().getVar(name);
     if (var != null
-        && (var.isExtern()
-            || var.getSourceFile() == newNode.getStaticSourceFile()
-            || ClosureRewriteModule.isModuleExport(name))) {
+        && (var.isExtern() || var.getSourceFile() == newNode.getStaticSourceFile())) {
       return;
     }
     usages.put(qNameNode.getQualifiedName(), newNode);
@@ -572,8 +546,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     if (root.isName()) {
       String rootName = root.getString();
       Var var = t.getScope().getVar(rootName);
-      if (var != null
-          && (var.isLocal() || var.isExtern() || ClosureRewriteModule.isModuleExport(rootName))) {
+      if (var != null && (var.isLocal() || var.isExtern())) {
         // "require" not needed for these
       } else {
         usages.put(extendClass.getQualifiedName(), extendClass);
@@ -705,8 +678,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
               }
               String rootName = Splitter.on('.').split(typeString).iterator().next();
               Var var = t.getScope().getVar(rootName);
-              if ((var == null || !var.isExtern())
-                  && !ClosureRewriteModule.isModuleExport(rootName)) {
+              if (var == null || !var.isExtern()) {
                 if (markStrongUsages) {
                   usages.put(typeString, n);
                 } else {
