@@ -464,6 +464,8 @@ angular.ComponentController.prototype.$postLink = function() {};
 /** @param {!Object<!angular.Change>} changesObj */
 angular.ComponentController.prototype.$onChanges = function(changesObj) {};
 
+angular.ComponentController.prototype.$doCheck = function() {};
+
 angular.ComponentController.prototype.$onDestroy = function() {};
 
 
