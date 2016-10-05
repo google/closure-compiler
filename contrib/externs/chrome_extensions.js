@@ -2104,6 +2104,16 @@ chrome.enterprise.platformKeys.removeCertificate =
 chrome.extension = {};
 
 
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/extension#type-ViewType
+ */
+chrome.extension.ViewType = {
+  TAB: '',
+  POPUP: '',
+};
+
+
 /** @type {!Object|undefined} */
 chrome.extension.lastError = {};
 
@@ -2147,8 +2157,16 @@ chrome.extension.getURL = function(path) {};
 
 
 /**
- * @param {Object=} opt_fetchProperties An object with optional 'type' and
- *     optional 'windowId' keys.
+ * @typedef {?{
+ *   type: (!chrome.extension.ViewType|string|undefined),
+ *   windowId: (number|undefined),
+ *   tabId: (number|undefined)
+ * }}
+ */
+chrome.extension.ViewInfo;
+
+/**
+ * @param {?chrome.extension.ViewInfo=} opt_fetchProperties
  * @return {Array<Window>} The global JS objects for each content view.
  */
 chrome.extension.getViews = function(opt_fetchProperties) {};
