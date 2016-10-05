@@ -42,7 +42,7 @@ public final class JSErrorSubject extends Subject<JSErrorSubject, JSError> {
   }
 
   public void hasType(DiagnosticType type) {
-    String message = "Expected an error of type " + type + " but got: " + getSubject();
-    assertEquals(message, type, getSubject().getType());
+    String message = "Expected an error of type " + type + " but got: " + actual();
+    assertEquals(message, type, actual().getType());
   }
 }

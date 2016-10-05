@@ -42,26 +42,26 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
   }
 
   public void isEqualTo(Node node) {
-    String treeDiff = node.checkTreeEquals(getSubject());
+    String treeDiff = node.checkTreeEquals(actual());
     if (treeDiff != null) {
       failWithRawMessage("%s", treeDiff);
     }
   }
 
   public void hasType(Token type) {
-    String message = "Node is of type " + getSubject().getToken() + " not of type " + type;
-    assertEquals(message, type, getSubject().getToken());
+    String message = "Node is of type " + actual().getToken() + " not of type " + type;
+    assertEquals(message, type, actual().getToken());
   }
 
   public void hasCharno(int charno) {
-    assertEquals(charno, getSubject().getCharno());
+    assertEquals(charno, actual().getCharno());
   }
 
   public void hasLineno(int lineno) {
-    assertEquals(lineno, getSubject().getLineno());
+    assertEquals(lineno, actual().getLineno());
   }
 
   public void hasLength(int length) {
-    assertEquals(length, getSubject().getLength());
+    assertEquals(length, actual().getLength());
   }
 }
