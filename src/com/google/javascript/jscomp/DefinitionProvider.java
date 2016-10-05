@@ -35,4 +35,6 @@ interface DefinitionProvider {
    * @return non-empty definition collection, or null.
    */
   Collection<Definition> getDefinitionsReferencedAt(Node useSite);
+
+  Collection<DefinitionSite> getDefinitionSites();
 }
