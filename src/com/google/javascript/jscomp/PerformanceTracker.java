@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -60,6 +59,8 @@ public final class PerformanceTracker {
   private int initCodeSize = DEFAULT_WHEN_SIZE_UNTRACKED;
   private int initGzCodeSize = DEFAULT_WHEN_SIZE_UNTRACKED;
 
+  private final long startTime;
+  private long endTime;
   private int runtime = 0;
   private int maxMem = 0;
   private int runs = 0;
@@ -93,6 +94,7 @@ public final class PerformanceTracker {
   private final List<Stats> log = new ArrayList<>();
 
   PerformanceTracker(Node externsRoot, Node jsRoot, TracerMode mode, PrintStream printStream) {
+    this.startTime = System.currentTimeMillis();
     this.externsRoot = externsRoot;
     this.jsRoot = jsRoot;
     this.output = printStream == null ? System.out : printStream;
@@ -285,6 +287,7 @@ public final class PerformanceTracker {
     if (summaryCopy != null) {
       return;
     }
+    this.endTime = System.currentTimeMillis();
     summaryCopy = ImmutableMap.copyOf(summary);
     for (Entry<String, Stats> entry : summary.entrySet()) {
       Stats stats = entry.getValue();
@@ -332,7 +335,8 @@ public final class PerformanceTracker {
             stats.allocMem, stats.runs, stats.changes, stats.diff, stats.gzDiff));
     }
     this.output.print("\nTOTAL:"
-        + "\nRuntime(ms): " + runtime
+        + "\nWall time(ms): " + (this.endTime - this.startTime)
+        + "\nPasses runtime(ms): " + runtime
         + "\nMax mem usage (measured after each pass)(MB): " + maxMem
         + "\n#Runs: " + runs
         + "\n#Changing runs: " + changes + "\n#Loopable runs: " + loopRuns

@@ -23,12 +23,10 @@ import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PerformanceTracker.Stats;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.regex.Pattern;
+import junit.framework.TestCase;
 
 /**
  * Unit tests for PerformanceTracker.
@@ -113,7 +111,8 @@ public final class PerformanceTrackerTest extends TestCase {
     Pattern p = Pattern.compile(
         ".*Summary:\npass,runtime,allocMem,runs,changingRuns,reduction,gzReduction"
         + ".*TOTAL:"
-        + "\nRuntime\\(ms\\): [0-9]+"
+        + "\nWall time\\(ms\\): [0-9]+"
+        + "\nPasses runtime\\(ms\\): [0-9]+"
         + "\nMax mem usage \\(measured after each pass\\)\\(MB\\): -?[0-9]+"
         + "\n#Runs: [0-9]+"
         + "\n#Changing runs: [0-9]+"
