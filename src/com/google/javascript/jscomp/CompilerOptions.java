@@ -2945,8 +2945,9 @@ public class CompilerOptions {
 
   /** How much tracing we want to do */
   public static enum TracerMode {
-    ALL,  // Collect all timing and size metrics.
-    RAW_SIZE, // Collect all timing and size metrics, except gzipped size.
+    ALL, // Collect all timing and size metrics. Very slow.
+    RAW_SIZE, // Collect all timing and size metrics, except gzipped size. Slow.
+    AST_SIZE, // For size data, don't serialize the AST, just count the number of nodes.
     TIMING_ONLY, // Collect timing metrics only.
     OFF;  // Collect no timing and size metrics.
 

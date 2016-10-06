@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PerformanceTracker.Stats;
@@ -108,27 +109,31 @@ public final class PerformanceTrackerTest extends TestCase {
         new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, outstream);
     tracker.outputTracerReport();
     outstream.close();
-    Pattern p = Pattern.compile(
-        ".*Summary:\npass,runtime,allocMem,runs,changingRuns,reduction,gzReduction"
-        + ".*TOTAL:"
-        + "\nWall time\\(ms\\): [0-9]+"
-        + "\nPasses runtime\\(ms\\): [0-9]+"
-        + "\nMax mem usage \\(measured after each pass\\)\\(MB\\): -?[0-9]+"
-        + "\n#Runs: [0-9]+"
-        + "\n#Changing runs: [0-9]+"
-        + "\n#Loopable runs: [0-9]+"
-        + "\n#Changing loopable runs: [0-9]+"
-        + "\nEstimated Reduction\\(bytes\\): [0-9]+"
-        + "\nEstimated GzReduction\\(bytes\\): [0-9]+"
-        + "\nEstimated Size\\(bytes\\): -?[0-9]+"
-        + "\nEstimated GzSize\\(bytes\\): -?[0-9]+"
-        + "\n\nInputs:"
-        + "\nJS lines:   [0-9]+"
-        + "\nJS sources: [0-9]+"
-        + "\nExtern lines:   [0-9]+"
-        + "\nExtern sources: [0-9]+"
-        + "\n\nLog:\n"
-        + "pass,runtime,allocMem,codeChanged,reduction,gzReduction,size,gzSize.*",
+    Pattern p = Pattern.compile(Joiner.on("\n").join(
+        ".*Summary:",
+        "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction",
+        ".*TOTAL:",
+        "Wall time\\(ms\\): [0-9]+",
+        "Passes runtime\\(ms\\): [0-9]+",
+        "Max mem usage \\(measured after each pass\\)\\(MB\\): -?[0-9]+",
+        "#Runs: [0-9]+",
+        "#Changing runs: [0-9]+",
+        "#Loopable runs: [0-9]+",
+        "#Changing loopable runs: [0-9]+",
+        "Estimated AST reduction\\(#nodes\\): [0-9]+",
+        "Estimated Reduction\\(bytes\\): [0-9]+",
+        "Estimated GzReduction\\(bytes\\): [0-9]+",
+        "Estimated AST size\\(#nodes\\): -?[0-9]+",
+        "Estimated Size\\(bytes\\): -?[0-9]+",
+        "Estimated GzSize\\(bytes\\): -?[0-9]+\n",
+        "Inputs:",
+        "JS lines:   [0-9]+",
+        "JS sources: [0-9]+",
+        "Extern lines:   [0-9]+",
+        "Extern sources: [0-9]+\n",
+        "Log:",
+        "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize",
+        ".*"),
         Pattern.DOTALL);
     String outputString = output.toString();
     assertThat(outputString).matches(p);
