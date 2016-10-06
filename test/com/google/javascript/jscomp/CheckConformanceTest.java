@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -27,6 +26,7 @@ import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
+import com.google.protobuf.TextFormat.ParseException;
 import java.util.List;
 
 /**
@@ -101,8 +101,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
     try {
       TextFormat.merge(configuration, builder);
-    } catch (Exception e) {
-      Throwables.propagate(e);
+    } catch (ParseException e) {
+      throw new RuntimeException(e);
     }
     return new CheckConformance(compiler, ImmutableList.of(builder.build()));
   }
