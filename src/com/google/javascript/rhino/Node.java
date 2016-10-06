@@ -2596,10 +2596,6 @@ public class Node implements Serializable {
       return this;
     }
 
-    public boolean areAllFlagsSet() {
-      return value == Node.SIDE_EFFECTS_ALL;
-    }
-
     /**
      * Preserve the return result flag, but clear the others:
      *   no global state change, no throws, no this change, no arguments change
@@ -2638,6 +2634,31 @@ public class Node implements Serializable {
 
     private void removeFlag(int flag) {
       value &= ~flag;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder builder = new StringBuilder("Side effects: ");
+      if ((value & Node.FLAG_THIS_UNMODIFIED) == 0) {
+        builder.append("this ");
+      }
+
+      if ((value & Node.FLAG_GLOBAL_STATE_UNMODIFIED) == 0) {
+        builder.append("global ");
+      }
+
+      if ((value & Node.FLAG_NO_THROWS) == 0) {
+        builder.append("throw ");
+      }
+
+      if ((value & Node.FLAG_ARGUMENTS_UNMODIFIED) == 0) {
+        builder.append("args ");
+      }
+
+      if ((value & Node.FLAG_LOCAL_RESULTS) == 0) {
+        builder.append("return ");
+      }
+      return builder.toString();
     }
   }
 
