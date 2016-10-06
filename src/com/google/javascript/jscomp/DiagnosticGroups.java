@@ -96,20 +96,50 @@ public class DiagnosticGroups {
   // If a group is suppressible on a per-file basis, it should be added
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
-      "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, "
-      + "checkRegExp, checkTypes, checkVars, "
-      + "commonJsModuleLoad, "
-      + "conformanceViolations, const, constantProperty, deprecated, "
-      + "deprecatedAnnotations, duplicateMessage, es3, "
-      + "es5Strict, externsValidation, fileoverviewTags, globalThis, "
-      + "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, "
-      + "missingGetCssName, missingPolyfill, missingProperties, "
-      + "missingProvide, missingRequire, missingReturn, msgDescriptions, "
-      + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, "
-      + "suspiciousCode, strictModuleDepCheck, typeInvalidation, "
-      + "undefinedNames, undefinedVars, unknownDefines, "
-      + "unusedLocalVariables, unusedPrivateMembers, uselessCode, "
-      + "useOfGoogBase, underscore, visibility";
+      "accessControls, "
+          + "ambiguousFunctionDecl, "
+          + "checkEventfulObjectDisposal, "
+          + "checkRegExp, "
+          + "checkTypes, "
+          + "checkVars, "
+          + "commonJsModuleLoad, "
+          + "conformanceViolations, "
+          + "const, "
+          + "constantProperty, "
+          + "deprecated, "
+          + "deprecatedAnnotations, "
+          + "duplicateMessage, "
+          + "es3, "
+          + "es5Strict, "
+          + "externsValidation, "
+          + "fileoverviewTags, "
+          + "functionParams, "
+          + "globalThis, "
+          + "internetExplorerChecks, "
+          + "invalidCasts, "
+          + "misplacedTypeAnnotation, "
+          + "missingGetCssName, "
+          + "missingPolyfill, "
+          + "missingProperties, "
+          + "missingProvide, "
+          + "missingRequire, "
+          + "missingReturn, "
+          + "msgDescriptions, "
+          + "newCheckTypes, "
+          + "nonStandardJsDocs, "
+          + "reportUnknownTypes, "
+          + "suspiciousCode, "
+          + "strictModuleDepCheck, "
+          + "typeInvalidation, "
+          + "undefinedNames, "
+          + "undefinedVars, "
+          + "unknownDefines, "
+          + "unusedLocalVariables, "
+          + "unusedPrivateMembers, "
+          + "uselessCode, "
+          + "useOfGoogBase, "
+          + "underscore, "
+          + "visibility";
 
   public static final DiagnosticGroup COMMON_JS_MODULE_LOAD =
       DiagnosticGroups.registerGroup(
@@ -501,6 +531,10 @@ public class DiagnosticGroups {
           CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND,
           CheckSuspiciousCode.SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR,
           TypeCheck.DETERMINISTIC_TEST);
+
+  public static final DiagnosticGroup FUNCTION_PARAMS =
+      DiagnosticGroups.registerGroup(
+          "functionParams", FunctionTypeBuilder.OPTIONAL_ARG_AT_END);
 
   public static final DiagnosticGroup DEPRECATED_ANNOTATIONS =
       DiagnosticGroups.registerGroup("deprecatedAnnotations",
