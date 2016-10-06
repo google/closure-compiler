@@ -111,7 +111,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
       "externNsefConstructor.prototype.externShared = ",
       "  /**@nosideeffects*/function(){};",
 
-      "/**@constructor@nosideeffects*/function externNsefConstructor2(){}",
+      "/**@constructor @nosideeffects*/function externNsefConstructor2(){}",
       "externNsefConstructor2.prototype.externShared = ",
       "  /**@nosideeffects*/function(){};",
 
@@ -168,7 +168,14 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
       " */",
       "externObj4.prototype.propWithStubAfterWithJSDoc;",
       "var goog = {reflect: {}};",
-      "goog.reflect.cache = function(a, b, c, opt_d) {};"
+      "goog.reflect.cache = function(a, b, c, opt_d) {};",
+
+
+      "/** @nosideeffects */",
+      "externObj.prototype.duplicateExternFunc = function() {}",
+      "externObj2.prototype.duplicateExternFunc = function() {}",
+
+      "externObj.prototype['weirdDefinition'] = function() {}"
   );
 
   public PureFunctionIdentifierTest() {
@@ -1250,6 +1257,74 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "};",
             "b();");
     assertPureCallsMarked(source, ImmutableList.of("C.a", "b"));
+  }
+
+  public void testAmbiguousExternDefinitions() {
+    assertPureCallsMarked("x.duplicateExternFunc()", NO_PURE_CALLS);
+
+    // nsef1 is defined as no side effect in the externs.
+    String source = LINE_JOINER.join(
+        "var global = 1;",
+        // Overwrite the @nosideeffects with this side effect
+        "A.nsef1 = function () {global = 2;};",
+        "externObj.nsef1();"
+    );
+    assertPureCallsMarked(source, NO_PURE_CALLS);
+  }
+
+  /**
+   * Test bug where the FunctionInformation for "A.x" and "a" were separate causing
+   * .x() calls to appear pure because the global side effect was only registed for the function
+   * linked to "a".
+   */
+  public void testAmbiguousDefinitionsDoubleDefinition() {
+    String source = LINE_JOINER.join(
+        "var global = 1;",
+        "A.x = function a() { global++; }",
+        "B.x = function() {}",
+        "B.x();"
+    );
+    assertPureCallsMarked(source, NO_PURE_CALLS);
+  }
+
+  public void testAmbiguousDefinitionsDoubleDefinition2() {
+    String source = LINE_JOINER.join(
+        "var global = 1;",
+        "A.x = function a() { global++; }",
+        "a = function() {}",
+        "B.x(); a();"
+    );
+    assertPureCallsMarked(source, NO_PURE_CALLS);
+  }
+
+  public void testAmbiguousDefinitionsDoubleDefinition3() {
+    String source = LINE_JOINER.join(
+        "var global = 1;",
+        "A.x = function a() {}",
+        "a = function() { global++; }",
+        "B.x(); a();"
+    );
+    assertPureCallsMarked(source, ImmutableList.of("B.x"));
+  }
+
+  public void testAmbiguousDefinitionsDoubleDefinition4() {
+    String source = LINE_JOINER.join(
+        "var global = 1;",
+        "A.x = function a() {}",
+        "B.x = function() { global++; }",
+        "B.x(); a();"
+    );
+    assertPureCallsMarked(source, ImmutableList.of("a"));
+  }
+
+  public void testAmbiguousDefinitionsDoubleDefinition5() {
+    String source = LINE_JOINER.join(
+        "var global = 1;",
+        "A.x = cond ? function a() { global++ } : function b() {}",
+        "B.x = function() { global++; }",
+        "B.x(); a(); b();"
+    );
+    assertPureCallsMarked(source, ImmutableList.of("b"));
   }
 
   public void testCallBeforeDefinition() throws Exception {
