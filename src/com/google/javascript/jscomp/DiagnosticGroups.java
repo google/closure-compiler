@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -119,6 +118,7 @@ public class DiagnosticGroups {
           + "invalidCasts, "
           + "misplacedTypeAnnotation, "
           + "missingGetCssName, "
+          + "missingOverride, "
           + "missingPolyfill, "
           + "missingProperties, "
           + "missingProvide, "
@@ -223,6 +223,12 @@ public class DiagnosticGroups {
           ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING,
           ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING,
           ProcessTweaks.UNKNOWN_TWEAK_WARNING);
+
+  public static final DiagnosticGroup MISSING_OVERRIDE =
+      DiagnosticGroups.registerGroup(
+          "missingOverride",
+          TypeCheck.HIDDEN_INTERFACE_PROPERTY,
+          TypeCheck.HIDDEN_SUPERCLASS_PROPERTY);
 
   public static final DiagnosticGroup MISSING_PROPERTIES =
       DiagnosticGroups.registerGroup("missingProperties",

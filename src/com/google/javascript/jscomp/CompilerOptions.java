@@ -197,16 +197,6 @@ public class CompilerOptions {
   /** Checks types on expressions */
   public boolean checkTypes;
 
-  public CheckLevel reportMissingOverride;
-
-  /**
-   * Flags a warning if a property is missing the @override annotation, but it
-   * overrides a base class property.
-   */
-  public void setReportMissingOverride(CheckLevel level) {
-    reportMissingOverride = level;
-  }
-
   public CheckLevel checkGlobalNamesLevel;
 
   /**
@@ -1066,7 +1056,6 @@ public class CompilerOptions {
     checkSymbols = false;
     checkSuspiciousCode = false;
     checkTypes = false;
-    reportMissingOverride = CheckLevel.OFF;
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
     checkGlobalThisLevel = CheckLevel.OFF;
@@ -2755,7 +2744,6 @@ public class CompilerOptions {
             .add("replaceStringsInputMap", replaceStringsInputMap)
             .add("replaceStringsPlaceholderToken", replaceStringsPlaceholderToken)
             .add("replaceStringsReservedStrings", replaceStringsReservedStrings)
-            .add("reportMissingOverride", reportMissingOverride)
             .add("reportOTIErrorsUnderNTI", reportOTIErrorsUnderNTI)
             .add("reportPath", reportPath)
             .add("reserveRawExports", reserveRawExports)

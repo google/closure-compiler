@@ -60,6 +60,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    // Enable missing override checks that are disabled by default.
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
   }
 
   public void testInitialTypingScope() throws Exception {
@@ -11812,7 +11814,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     new TypeCheck(
         compiler,
         new SemanticReverseAbstractInterpreter(registry),
-        registry, topScope, scopeCreator, CheckLevel.WARNING)
+        registry, topScope, scopeCreator)
         .process(null, second);
 
     assertEquals(1, compiler.getWarningCount());

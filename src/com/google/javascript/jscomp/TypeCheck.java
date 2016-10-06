@@ -184,17 +184,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_IMPLEMENTS_NON_INTERFACE",
           "can only implement interfaces");
 
+  // disabled by default.
   static final DiagnosticType HIDDEN_SUPERCLASS_PROPERTY =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_HIDDEN_SUPERCLASS_PROPERTY",
-          "property {0} already defined on superclass {1}; " +
-          "use @override to override it");
+          "property {0} already defined on superclass {1}; " + "use @override to override it");
 
+  // disabled by default.
   static final DiagnosticType HIDDEN_INTERFACE_PROPERTY =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_HIDDEN_INTERFACE_PROPERTY",
-          "property {0} already defined on interface {1}; " +
-          "use @override to override it");
+          "property {0} already defined on interface {1}; " + "use @override to override it");
 
   static final DiagnosticType HIDDEN_SUPERCLASS_PROPERTY_MISMATCH =
       DiagnosticType.warning("JSC_HIDDEN_SUPERCLASS_PROPERTY_MISMATCH",
@@ -293,8 +293,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           CONFLICTING_EXTENDED_TYPE,
           CONFLICTING_IMPLEMENTED_TYPE,
           BAD_IMPLEMENTED_TYPE,
-          HIDDEN_SUPERCLASS_PROPERTY,
-          HIDDEN_INTERFACE_PROPERTY,
           HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
           UNKNOWN_OVERRIDE,
           INTERFACE_METHOD_OVERRIDE,
@@ -327,7 +325,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private MemoizedScopeCreator scopeCreator;
 
-  private final CheckLevel reportMissingOverride;
   private final boolean reportUnknownTypes;
   private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
 
@@ -354,19 +351,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  public TypeCheck(AbstractCompiler compiler,
+  public TypeCheck(
+      AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry,
       TypedScope topScope,
-      MemoizedScopeCreator scopeCreator,
-      CheckLevel reportMissingOverride) {
+      MemoizedScopeCreator scopeCreator) {
     this.compiler = compiler;
     this.validator = compiler.getTypeValidator();
     this.reverseInterpreter = reverseInterpreter;
     this.typeRegistry = typeRegistry;
     this.topScope = topScope;
     this.scopeCreator = scopeCreator;
-    this.reportMissingOverride = reportMissingOverride;
     this.reportUnknownTypes = ((Compiler) compiler).getOptions().enables(
         DiagnosticGroups.REPORT_UNKNOWN_TYPES);
     this.inferJSDocInfo = new InferJSDocInfo(compiler);
@@ -374,17 +370,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   public TypeCheck(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
-      JSTypeRegistry typeRegistry,
-      CheckLevel reportMissingOverride) {
-    this(compiler, reverseInterpreter, typeRegistry, null, null,
-        reportMissingOverride);
-  }
-
-  TypeCheck(AbstractCompiler compiler,
-      ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry) {
-    this(compiler, reverseInterpreter, typeRegistry, null, null,
-         CheckLevel.WARNING);
+    this(compiler, reverseInterpreter, typeRegistry, null, null);
   }
 
   /** Turn on the missing property check. Returns this for easy chaining. */
@@ -1220,15 +1207,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             interfaceType.getPrototype().hasProperty(propertyName);
         foundInterfaceProperty = foundInterfaceProperty ||
             interfaceHasProperty;
-        if (reportMissingOverride.isOn()
-            && !declaredOverride
-            && interfaceHasProperty
-            && !"__proto__".equals(propertyName)) {
+        if (!declaredOverride && interfaceHasProperty && !"__proto__".equals(propertyName)) {
           // @override not present, but the property does override an interface
           // property
-          compiler.report(t.makeError(n, reportMissingOverride,
-              HIDDEN_INTERFACE_PROPERTY, propertyName,
-              interfaceType.getTopMostDefiningType(propertyName).toString()));
+          compiler.report(
+              t.makeError(
+                  n,
+                  HIDDEN_INTERFACE_PROPERTY,
+                  propertyName,
+                  interfaceType.getTopMostDefiningType(propertyName).toString()));
         }
       }
     }
@@ -1246,16 +1233,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ctorType.isConstructor() &&
         (ctorType.getPrototype().hasOwnProperty(propertyName) ||
          ctorType.getInstanceType().hasOwnProperty(propertyName));
-    if (reportMissingOverride.isOn()
-        && !declaredOverride
+    if (!declaredOverride
         && superClassHasDeclaredProperty
         && declaredLocally
         && !"__proto__".equals(propertyName)) {
       // @override not present, but the property does override a superclass
       // property
-      compiler.report(t.makeError(n, reportMissingOverride,
-          HIDDEN_SUPERCLASS_PROPERTY, propertyName,
-          topInstanceType.toString()));
+      compiler.report(
+          t.makeError(n, HIDDEN_SUPERCLASS_PROPERTY, propertyName, topInstanceType.toString()));
     }
 
     // @override is present and we have to check that it is ok

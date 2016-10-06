@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -190,8 +189,8 @@ enum CompilationParam {
   CHECK_REPORT_MISSING_OVERRIDE {
     @Override
     void apply(CompilerOptions options, boolean value) {
-      options.setReportMissingOverride(value ?
-          CheckLevel.WARNING : CheckLevel.OFF);
+      options.setWarningLevel(
+          DiagnosticGroups.MISSING_OVERRIDE, value ? CheckLevel.WARNING : CheckLevel.OFF);
     }
     @Override
     String getJavaInfo() {

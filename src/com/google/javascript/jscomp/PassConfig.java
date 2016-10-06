@@ -185,14 +185,13 @@ public abstract class PassConfig {
    */
   final TypeCheck makeTypeCheck(AbstractCompiler compiler) {
     return new TypeCheck(
-        compiler,
-        compiler.getReverseAbstractInterpreter(),
-        compiler.getTypeRegistry(),
-        topScope,
-        typedScopeCreator,
-        options.reportMissingOverride)
-        .reportMissingProperties(!options.disables(
-            DiagnosticGroup.forType(TypeCheck.INEXISTENT_PROPERTY)));
+            compiler,
+            compiler.getReverseAbstractInterpreter(),
+            compiler.getTypeRegistry(),
+            topScope,
+            typedScopeCreator)
+        .reportMissingProperties(
+            !options.disables(DiagnosticGroup.forType(TypeCheck.INEXISTENT_PROPERTY)));
   }
 
   /**
