@@ -29,13 +29,10 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
 import junit.framework.TestCase;
-
 
 /**
  * Tests for NodeUtil
@@ -1021,6 +1018,27 @@ public final class NodeUtilTest extends TestCase {
     expected = "for(a in ack);";
     difference = parse(expected).checkTreeEquals(actual);
     assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
+  private static void replaceDeclChild(String js, int declarationChild, String expected) {
+    Node actual = parse(js);
+    Node declarationNode = actual.getFirstChild();
+    Node nameNode = declarationNode.getChildAtIndex(declarationChild);
+
+    NodeUtil.replaceDeclarationChild(nameNode, IR.block());
+    String difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
+  public void testReplaceDeclarationName() {
+    replaceDeclChild("var x;", 0, "{}");
+    replaceDeclChild("var x, y;", 0, "{} var y;");
+    replaceDeclChild("var x, y;", 1, "var x; {}");
+    replaceDeclChild("let x, y, z;", 0, "{} let y, z;");
+    replaceDeclChild("let x, y, z;", 1, "let x; {} let z;");
+    replaceDeclChild("let x, y, z;", 2, "let x, y; {}");
+    replaceDeclChild("const x = 1, y = 2, z = 3;", 1, "const x = 1; {} const z = 3;");
+    replaceDeclChild("const x =1, y = 2, z = 3, w = 4;", 1, "const x = 1; {} const z = 3, w = 4;");
   }
 
   public void testMergeBlock1() {

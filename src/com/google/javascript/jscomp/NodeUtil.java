@@ -2680,6 +2680,40 @@ public final class NodeUtil {
   }
 
   /**
+   * Replace the child of a var/let/const declaration (usually a name) with a new statement.
+   * Preserves the order of side effects for all the other declaration children.
+   *
+   * @param declChild The name node to be replaced.
+   * @param newStatement The statement to replace with.
+   */
+  public static void replaceDeclarationChild(Node declChild, Node newStatement) {
+    Preconditions.checkArgument(isNameDeclaration(declChild.getParent()));
+    Preconditions.checkArgument(null == newStatement.getParent());
+
+    Node decl = declChild.getParent();
+    Node declParent = decl.getParent();
+    if (decl.hasOneChild()) {
+      declParent.replaceChild(decl, newStatement);
+    } else if (declChild.getNext() == null) {
+      decl.removeChild(declChild);
+      declParent.addChildAfter(newStatement, decl);
+    } else if (declChild.getPrevious() == null) {
+      decl.removeChild(declChild);
+      declParent.addChildBefore(newStatement, decl);
+    } else {
+      Preconditions.checkState(decl.hasMoreThanOneChild());
+      Node newDecl = new Node(decl.getToken()).srcref(decl);
+      for (Node after = declChild.getNext(), next; after != null; after = next) {
+        next = after.getNext();
+        newDecl.addChildToBack(after.detach());
+      }
+      decl.removeChild(declChild);
+      declParent.addChildAfter(newStatement, decl);
+      declParent.addChildAfter(newDecl, newStatement);
+    }
+  }
+
+  /**
    * Add a finally block if one does not exist.
    */
   static void maybeAddFinally(Node tryNode) {
