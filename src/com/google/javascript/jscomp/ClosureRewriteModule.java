@@ -163,11 +163,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
               + "Either use short import syntax or"
               + " convert module to use goog.module.declareLegacyNamespace.");
 
-  static final DiagnosticType ILLEGAL_DESTRUCTURING_IMPORT =
+  static final DiagnosticType ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT =
       DiagnosticType.error(
-          "JSC_ILLEGAL_DESTRUCTURING_IMPORT",
+          "JSC_ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT",
           "Destructuring import cannot refer to a module with default export."
               + " Please use standard (non-destructuring) import instead.");
+
+  static final DiagnosticType ILLEGAL_DESTRUCTURING_NOT_EXPORTED =
+      DiagnosticType.error(
+          "JSC_ILLEGAL_DESTRUCTURING_NOT_EXPORTED",
+          "Destructuring import reference to name \"{0}\" was not exported in module {1}");
 
   private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
 
@@ -224,6 +229,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     boolean hasCreatedExportObject;
     Node defaultExportRhs;
     String defaultExportLocalName;
+    Set<String> namedExports = new HashSet<>();
 
     // The root of the module. The SCRIPT node (or for goog.loadModule, the body of the
     // function) that contains the module contents. For recognizing top level names. Changes when
@@ -294,6 +300,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         case VAR:
           if (isTopLevel(t, n, n.isVar() ? ScopeType.EXEC_CONTEXT : ScopeType.BLOCK)) {
             recordTopLevelVarNames(n);
+          }
+          break;
+
+        case GETPROP:
+          if (isExportPropertyAssignment(n)) {
+            recordExportsPropertyAssignment(n);
           }
           break;
 
@@ -759,16 +771,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void maybeRecordExportDeclaration(NodeTraversal t, Node n) {
     if (!currentScript.isModule
-        || currentScript.declareLegacyNamespace
         || !n.getString().equals("exports")
         || !isAssignTarget(n)) {
       return;
     }
 
     Preconditions.checkState(currentScript.defaultExportLocalName == null);
-    currentScript.defaultExportRhs = n.getNext();
-    if (currentScript.defaultExportRhs.isName() && !currentScript.declareLegacyNamespace) {
-      String exportedName = currentScript.defaultExportRhs.getString();
+    Node exportRhs = n.getNext();
+    if (exportRhs.isName() && !currentScript.declareLegacyNamespace) {
+      String exportedName = exportRhs.getString();
       Var var = t.getScope().getVar(exportedName);
       // If rhs is the short name from an import, then we can't do the uninlining.
       if (var != null
@@ -777,8 +788,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         currentScript.defaultExportLocalName = exportedName;
         recordNameToInline(exportedName, currentScript.getBinaryNamespace());
       }
+    } else if (exportRhs.isObjectLit()) {
+      for (Node key = exportRhs.getFirstChild(); key != null; key = key.getNext()) {
+        if (key.isStringKey()) {
+          String exportName = key.getString();
+          currentScript.namedExports.add(exportName);
+        }
+      }
     }
 
+    currentScript.defaultExportRhs = exportRhs;
     currentScript.willCreateExportsObject = true;
     return;
   }
@@ -866,7 +885,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         recordNameToInline(aliasName, exportedNamespace);
       } else if (lhs.isDestructuringLhs() && lhs.getFirstChild().isObjectPattern()) {
         // `const {Foo}` case
-        maybeWarnForInvalidDestructuring(t, lhs, legacyNamespace);
+        maybeWarnForInvalidDestructuring(t, lhs.getParent(), legacyNamespace);
         for (Node importSpec : lhs.getFirstChild().children()) {
           String importedProperty = importSpec.getString();
           String aliasName =
@@ -917,16 +936,27 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
+  // These restrictions are in place to make it easier to migrate goog.modules to ES6 modules,
+  // by structuring the imports/exports in a consistent way.
   private void maybeWarnForInvalidDestructuring(
       NodeTraversal t, Node importNode, String importedNamespace) {
-    // This restriction is in place to make it easier to migrate goog.modules to ES6 modules,
-    // by structuring the imports/exports in a consistent way.
+    Preconditions.checkArgument(importNode.getFirstChild().isDestructuringLhs());
     ScriptDescription importedModule =
         rewriteState.scriptDescriptionsByGoogModuleNamespace.get(importedNamespace);
-    if (importedModule != null
-        && importedModule.defaultExportRhs != null
-        && !importedModule.defaultExportRhs.isObjectLit()) {
-      t.report(importNode, ILLEGAL_DESTRUCTURING_IMPORT);
+    if (importedModule == null) {
+      // Don't know enough to give a good warning here.
+      return;
+    }
+    if (importedModule.defaultExportRhs != null && !importedModule.defaultExportRhs.isObjectLit()) {
+      t.report(importNode, ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT);
+      return;
+    }
+    Node objPattern = importNode.getFirstFirstChild();
+    for (Node key = objPattern.getFirstChild(); key != null; key = key.getNext()) {
+      String exportName = key.getString();
+      if (!importedModule.namedExports.contains(exportName)) {
+        t.report(importNode, ILLEGAL_DESTRUCTURING_NOT_EXPORTED, exportName, importedNamespace);
+      }
     }
   }
 
@@ -955,6 +985,21 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       call.getParent().replaceChild(call, exportedNamespaceName);
     }
     compiler.reportCodeChange();
+  }
+
+  private void recordExportsPropertyAssignment(Node getpropNode) {
+    if (!currentScript.isModule) {
+      return;
+    }
+
+    Node parent = getpropNode.getParent();
+    Preconditions.checkState(parent.isAssign() || parent.isExprResult(), parent);
+
+    Node exportsNameNode = getpropNode.getFirstChild();
+    Preconditions.checkState(exportsNameNode.getString().equals("exports"));
+
+    String exportName = getpropNode.getLastChild().getString();
+    currentScript.namedExports.add(exportName);
   }
 
   private void updateExportsPropertyAssignment(Node getpropNode) {

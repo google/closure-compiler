@@ -17,7 +17,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCTURING_IMPORT;
+import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT;
+import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCTURING_NOT_EXPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_FORWARD_DECLARE_NAMESPACE;
@@ -227,6 +228,57 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
               "/** @type {module$exports$ns$b.Foo} */",
               "var module$contents$ns$a_f = new module$exports$ns$b.Foo;")});
 
+    // TODO(blickly): We don't want any module$contents variables for this definition of Foo
+    testEs6(
+        new String[] {
+          "goog.module('modA'); class Foo {} exports = {Foo};",
+          LINE_JOINER.join(
+              "goog.module('modB');",
+              "",
+              "var {Foo} = goog.require('modA');",
+              "",
+              "/** @type {Foo} */",
+              "var f = new Foo;")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "class module$contents$modA_Foo {}",
+              "/** @const */ var module$exports$modA = {",
+              "    /** @const */ Foo: module$contents$modA_Foo",
+              "};"),
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modB = {}",
+              "/** @type {module$exports$modA.Foo} */",
+              "var module$contents$modB_f = new module$exports$modA.Foo;")});
+
+    testEs6(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('modA');",
+              "goog.module.declareLegacyNamespace();",
+              "",
+              "class Foo {}",
+              "exports = {Foo};"),
+          LINE_JOINER.join(
+              "goog.module('modB');",
+              "",
+              "var {Foo} = goog.require('modA');",
+              "",
+              "/** @type {Foo} */",
+              "var f = new Foo;")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "goog.provide('modA');",
+              "class module$contents$modA_Foo {}",
+              "/** @const */ modA = {",
+              "    /** @const */ Foo: module$contents$modA_Foo",
+              "};"),
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modB = {}",
+              "/** @type {modA.Foo} */",
+              "var module$contents$modB_f = new modA.Foo;")});
+
   }
 
   public void testIllegalDestructuringImports() {
@@ -244,7 +296,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
               "  method();",
               "}")
         },
-        ILLEGAL_DESTRUCTURING_IMPORT);
+        ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT);
 
     testErrorEs6(
         new String[] {
@@ -258,7 +310,21 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
               "  method();",
               "}")
         },
-        ILLEGAL_DESTRUCTURING_IMPORT);
+        ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT);
+
+    testErrorEs6(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('p.A');",
+              "",
+              "/** @constructor */ exports.Foo = class {};",
+              "/** @constructor */ exports.Bar = class {};"),
+          LINE_JOINER.join(
+              "goog.module('p.C');",
+              "",
+              "var {Baz} = goog.require('p.A');")
+        },
+        ILLEGAL_DESTRUCTURING_NOT_EXPORTED);
 
     // TODO(blickly): We should warn for this as well, but it's harder to detect.
     testEs6(
@@ -1683,8 +1749,8 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         },
         new String[] {
             LINE_JOINER.join(
-              "/** @const */ var module$exports$base = {};",
-              "/** @constructor */ module$exports$base.Foo = function() {};"),
+                "/** @const */ var module$exports$base = {};",
+                "/** @constructor */ module$exports$base.Foo = function() {};"),
             "/** @const */ var module$exports$FooWrapper = module$exports$base.Foo;",
         });
   }
