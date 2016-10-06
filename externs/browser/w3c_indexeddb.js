@@ -392,7 +392,8 @@ IDBDatabase.prototype.deleteObjectStore = function(name) {};
 IDBDatabase.prototype.setVersion = function(version) {};
 
 /**
- * @param {Array<string>} storeNames The stores to open in this transaction.
+ * @param {string|Array<string>} storeNames The stores to open in this
+ *     transaction.
  * @param {(number|string)=} mode The mode for opening the object stores.
  * @return {!IDBTransaction} The IDBRequest object.
  */
