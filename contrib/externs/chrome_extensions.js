@@ -8309,7 +8309,7 @@ chrome.usb.TransferResultInfo.prototype.data;
 
 /**
  * @typedef {?{
- *   deviceId: number,
+ *   vendorId: number,
  *   productId: number,
  *   interfaceId: (number|undefined)
  * }}
