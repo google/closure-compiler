@@ -583,7 +583,8 @@ public class CommandLineRunner extends
     @Option(name = "--tracer_mode",
         hidden = true,
         usage = "Shows the duration of each compiler pass and the impact to "
-        + "the compiled output size. Options: ALL, RAW_SIZE, TIMING_ONLY, OFF")
+        + "the compiled output size. "
+        + "Options: ALL, AST_SIZE, RAW_SIZE, TIMING_ONLY, OFF")
     private CompilerOptions.TracerMode tracerMode =
         CompilerOptions.TracerMode.OFF;
 
