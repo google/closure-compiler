@@ -2583,6 +2583,7 @@ var FontFaceSetLoadStatus = {
 
 /**
  * @interface
+ * @extends {EventTarget}
  * @see http://dev.w3.org/csswg/css-font-loading/#FontFaceSet-interface
  */
 function FontFaceSet() {}
