@@ -161,6 +161,15 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "exports = ClassName;"),
         ClosureCheckModule.AT_EXPORT_IN_GOOG_MODULE);
 
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('foo.example.ClassName');",
+            "",
+            "/** @export */ class ClassName {}",
+            "",
+            "exports = ClassName;"),
+        ClosureCheckModule.AT_EXPORT_IN_GOOG_MODULE);
+
     testError(
         LINE_JOINER.join(
             "goog.module('foo.example.ClassName');",

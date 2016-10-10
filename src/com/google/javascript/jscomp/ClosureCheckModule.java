@@ -181,7 +181,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       case VAR:
       case LET:
       case CONST:
-        if (t.inModuleHoistScope() && NodeUtil.getEnclosingClass(n) == null
+        if (t.inModuleHoistScope() && (n.isClass() || NodeUtil.getEnclosingClass(n) == null)
             && NodeUtil.getEnclosingType(n, Token.OBJECTLIT) == null) {
           JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
           if (jsdoc != null && jsdoc.isExport()) {
