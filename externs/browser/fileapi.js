@@ -127,6 +127,19 @@ WebKitBlobBuilder.prototype.getBlob = function(contentType) {};
 
 
 /**
+ * @record
+ * @see https://dev.w3.org/2009/dap/file-system/file-dir-sys.html#the-flags-dictionary
+ */
+function FileSystemFlags() {};
+
+/** @type {(undefined|boolean)} */
+FileSystemFlags.prototype.create;
+
+/** @type {(undefined|boolean)} */
+FileSystemFlags.prototype.exclusive;
+
+
+/**
  * @see http://www.w3.org/TR/file-system-api/#the-directoryentry-interface
  * @constructor
  * @extends {Entry}
@@ -142,7 +155,7 @@ DirectoryEntry.prototype.createReader = function() {};
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-getFile
  * @param {string} path
- * @param {Object=} options
+ * @param {!FileSystemFlags=} options
  * @param {function(!FileEntry)=} successCallback
  * @param {function(!FileError)=} errorCallback
  * @return {undefined}
@@ -153,7 +166,7 @@ DirectoryEntry.prototype.getFile = function(path, options, successCallback,
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-getDirectory
  * @param {string} path
- * @param {Object=} options
+ * @param {!FileSystemFlags=} options
  * @param {function(!DirectoryEntry)=} successCallback
  * @param {function(!FileError)=} errorCallback
  * @return {undefined}
