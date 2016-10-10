@@ -64,7 +64,7 @@ public class J2clPassTest extends CompilerTestCase {
     test(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Arrays.impl.js",
+                "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Arrays = function() {};",
@@ -79,7 +79,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert(Arrays.$castTo());"))),
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Arrays.impl.js",
+                "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Arrays = function() {};",
@@ -97,7 +97,7 @@ public class J2clPassTest extends CompilerTestCase {
     test(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Casts.impl.js",
+                "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",
@@ -106,7 +106,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert(Casts.to());"))),
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Casts.impl.js",
+                "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",
@@ -118,7 +118,7 @@ public class J2clPassTest extends CompilerTestCase {
     test(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "name/doesnt/matter/Foo.impl.js",
+                "name/doesnt/matter/Foo.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var FooInterface = function() {};",
@@ -130,7 +130,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "FooInterface.$markImplementor(Foo);"))),
         Lists.newArrayList(
             SourceFile.fromCode(
-                "name/doesnt/matter/Foo.impl.js",
+                "name/doesnt/matter/Foo.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var FooInterface = function() {};",
@@ -147,7 +147,7 @@ public class J2clPassTest extends CompilerTestCase {
     test(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Arrays.impl.js",
+                "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var $jscomp = {};",
@@ -164,7 +164,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert($jscomp.scope.Arrays.$castTo());"))),
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Arrays.impl.js",
+                "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var $jscomp = {};",
@@ -184,7 +184,7 @@ public class J2clPassTest extends CompilerTestCase {
     test(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Casts.impl.js",
+                "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",
@@ -193,7 +193,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert(Casts.to());"))),
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Casts.impl.js",
+                "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",
@@ -205,7 +205,7 @@ public class J2clPassTest extends CompilerTestCase {
     test(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "name/doesnt/matter/Foo.impl.js",
+                "name/doesnt/matter/Foo.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var $jscomp = {};",
@@ -219,7 +219,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "$jscomp.scope.FooInterface.$markImplementor($jscomp.scope.Foo);"))),
         Lists.newArrayList(
             SourceFile.fromCode(
-                "name/doesnt/matter/Foo.impl.js",
+                "name/doesnt/matter/Foo.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var $jscomp = {};",
@@ -238,7 +238,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Arrays.impl.js",
+                "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Arrays = function() {};",
@@ -250,7 +250,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Casts.impl.js",
+                "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",
@@ -267,7 +267,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Arrays.impl.js",
+                "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var $create = function() { return 1; }",
@@ -284,7 +284,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "j2cl/transpiler/vmbootstrap/Casts.impl.js",
+                "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var to = function() { return 1; }", "", "alert(to());"))));
@@ -293,7 +293,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "name/doesnt/matter/Foo.impl.js",
+                "name/doesnt/matter/Foo.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var $markImplementor = function(classDef) {",
@@ -309,7 +309,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "Arrays.impl.js",
+                "Arrays.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Arrays = function() {};",
@@ -327,7 +327,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "Casts.impl.js",
+                "Casts.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",
