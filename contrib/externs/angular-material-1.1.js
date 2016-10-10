@@ -36,7 +36,7 @@ md.$bottomSheet = function() {};
 
 /**
  * @typedef {{
- *   templateUrl: (string|undefined),
+ *   templateUrl: (string|!Object|undefined),
  *   template: (string|undefined),
  *   scope: (!Object|undefined),
  *   preserveScope: (boolean|undefined),
@@ -83,7 +83,7 @@ md.$dialog = function() {};
 
 /**
  * @typedef {{
- *   templateUrl: (string|undefined),
+ *   templateUrl: (string|!Object|undefined),
  *   template: (string|undefined),
  *   contentElement: (string|Element|undefined),
  *   autoWrap: (boolean|undefined),
@@ -417,7 +417,7 @@ md.$toast = function() {};
 
 /**
  * @typedef {{
- *   templateUrl: (string|undefined),
+ *   templateUrl: (string|!Object|undefined),
  *   template: (string|undefined),
  *   hideDelay: (number|undefined),
  *   position: (string|undefined),
@@ -683,7 +683,7 @@ md.$mdIconProvider = function() {};
 
 /**
  * @param {string} id
- * @param {string} url
+ * @param {string|!Object} url
  * @param {number=} opt_iconSize
  * @return {!md.$mdIconProvider}
  */
@@ -691,14 +691,14 @@ md.$mdIconProvider.prototype.icon = function(id, url, opt_iconSize) {};
 
 /**
  * @param {string} id
- * @param {string} url
+ * @param {string|!Object} url
  * @param {number=} opt_iconSize
  * @return {!md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.iconSet = function(id, url, opt_iconSize) {};
 
 /**
- * @param {string} url
+ * @param {string|!Object} url
  * @param {number=} opt_iconSize
  * @return {!md.$mdIconProvider}
  */
@@ -881,7 +881,7 @@ md.$panel = function() {};
 /**
  * @typedef {{
  *   template: (string|undefined),
- *   templateUrl: (string|undefined),
+ *   templateUrl: (string|!Object|undefined),
  *   controller: (Function|string|undefined),
  *   controllerAs: (string|undefined),
  *   locals: (!Object|undefined),

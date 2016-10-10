@@ -2282,7 +2282,7 @@ angular.$routeProvider.prototype.when = function(path, route) {};
  *   controller: (angular.Injectable|string|undefined),
  *   controllerAs: (string|undefined),
  *   template: (string|undefined),
- *   templateUrl: (string|function(!Object.<string,string>=)|undefined),
+ *   templateUrl: (string|!Object|function(!Object.<string,string>=)|undefined),
  *   resolve: (Object.<string, (
  *       string|angular.Injectable|!angular.$q.Promise
  *       )>|undefined),
@@ -2302,7 +2302,7 @@ angular.$routeProvider.Params.controllerAs;
 /** @type {string} */
 angular.$routeProvider.Params.template;
 
-/** @type {string|function(!Object.<string,string>=)} */
+/** @type {string|!Object|function(!Object.<string,string>=)} */
 angular.$routeProvider.Params.templateUrl;
 
 /** @type {Object.<string, (string|angular.Injectable|!angular.$q.Promise)>} */
