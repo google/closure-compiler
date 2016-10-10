@@ -452,7 +452,7 @@ angular.JQLite.prototype.append = function(element) {};
 
 /**
  * @param {string} name
- * @param {(string|boolean)=} opt_value
+ * @param {(string|boolean|null)=} opt_value
  * @return {!angular.JQLite|string|boolean}
  */
 angular.JQLite.prototype.attr = function(name, opt_value) {};
