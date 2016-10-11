@@ -210,6 +210,14 @@ public final class Matchers {
     };
   }
 
+  public static Matcher googRequire() {
+    return functionCall("goog.require");
+  }
+
+  public static Matcher googModuleOrProvide() {
+    return anyOf(functionCall("goog.module"), functionCall("goog.provide"));
+  }
+
   /**
    * Returns a Matcher that matches any property access.
    */

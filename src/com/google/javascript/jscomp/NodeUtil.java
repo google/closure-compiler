@@ -2346,7 +2346,7 @@ public final class NodeUtil {
    * @return True if {@code n} is EXPR_RESULT and {@code n}'s
    *     first child is CALL
    */
-  static boolean isExprCall(Node n) {
+  public static boolean isExprCall(Node n) {
     return n.isExprResult()
         && n.getFirstChild().isCall();
   }

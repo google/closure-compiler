@@ -279,7 +279,7 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  public void testRequiresInGoogModule() {
+  public void testSortRequiresInGoogModule() {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('m');",
@@ -297,6 +297,22 @@ public class ErrorToFixMapperTest {
             "goog.require('a.c');",
             "",
             "alert(1);"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModule() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "alert(new a.b.C());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            // TODO(tbreisacher): Add the shorthand form instead: var C = goog.require('a.b.C');
+            "goog.require('a.b.C');",
+            "",
+            // TODO(tbreisacher): Also change this to use the shorthand: alert(new C());
+            "alert(new a.b.C());"));
   }
 
   @Test

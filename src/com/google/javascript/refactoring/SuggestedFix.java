@@ -562,18 +562,21 @@ public final class SuggestedFix {
       if (script == null) {
         return this;
       }
-      Node lastGoogProvideNode = null;
+      if (script.getFirstChild().isModuleBody()) {
+        script = script.getFirstChild();
+      }
+      Node lastModuleOrProvideNode = null;
       Node lastGoogRequireNode = null;
       Node nodeToInsertBefore = null;
       Node child = script.getFirstChild();
       while (child != null) {
-        if (child.isExprResult() && child.getFirstChild().isCall()) {
+        if (NodeUtil.isExprCall(child)) {
           // TODO(mknichel): Replace this logic with a function argument
           // Matcher when it exists.
           Node grandchild = child.getFirstChild();
-          if (Matchers.functionCall("goog.provide").matches(grandchild, metadata)) {
-            lastGoogProvideNode = grandchild;
-          } else if (Matchers.functionCall("goog.require").matches(grandchild, metadata)) {
+          if (Matchers.googModuleOrProvide().matches(grandchild, metadata)) {
+            lastModuleOrProvideNode = grandchild;
+          } else if (Matchers.googRequire().matches(grandchild, metadata)) {
             lastGoogRequireNode = grandchild;
             if (grandchild.getLastChild().isString()
                 && namespace.compareTo(grandchild.getLastChild().getString()) < 0) {
@@ -587,9 +590,9 @@ public final class SuggestedFix {
       if (nodeToInsertBefore == null) {
         // The file has goog.provide or goog.require nodes but they come before
         // the new goog.require node alphabetically.
-        if (lastGoogProvideNode != null || lastGoogRequireNode != null) {
+        if (lastModuleOrProvideNode != null || lastGoogRequireNode != null) {
           Node nodeToInsertAfter =
-              lastGoogRequireNode != null ? lastGoogRequireNode : lastGoogProvideNode;
+              lastGoogRequireNode != null ? lastGoogRequireNode : lastModuleOrProvideNode;
           int startPosition =
               nodeToInsertAfter.getSourceOffset() + nodeToInsertAfter.getLength() + 2;
           replacements.put(nodeToInsertAfter.getSourceFileName(), new CodeReplacement(
@@ -635,7 +638,7 @@ public final class SuggestedFix {
             // TODO(mknichel): Replace this logic with a function argument
             // Matcher when it exists.
             Node grandchild = child.getFirstChild();
-            if (Matchers.functionCall("goog.require").matches(child.getFirstChild(), metadata)
+            if (Matchers.googRequire().matches(child.getFirstChild(), metadata)
                 && grandchild.getLastChild().isString()
                 && namespace.equals(grandchild.getLastChild().getString())) {
               return child;
@@ -685,7 +688,7 @@ public final class SuggestedFix {
       Node child = script.getFirstChild();
       while (child != null) {
         if (child.isExprResult() && child.getFirstChild().isCall()) {
-          if (Matchers.functionCall("goog.require").matches(child.getFirstChild(), metadata)) {
+          if (Matchers.googRequire().matches(child.getFirstChild(), metadata)) {
             return true;
           }
           // goog.require or goog.module.
