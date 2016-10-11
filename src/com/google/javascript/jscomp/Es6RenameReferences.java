@@ -16,11 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
-import java.util.Map;
 
 /**
  * Renames references in code and JSDoc when necessary.
@@ -29,10 +28,10 @@ import java.util.Map;
  */
 final class Es6RenameReferences extends AbstractPostOrderCallback {
 
-  private final Map<Node, Map<String, String>> renameMap;
+  private final Table<Node, String, String> renameTable;
 
-  Es6RenameReferences(Map<Node, Map<String, String>> renameMap) {
-    this.renameMap = renameMap;
+  Es6RenameReferences(Table<Node, String, String> renameTable) {
+    this.renameTable = renameTable;
   }
 
   @Override
@@ -57,26 +56,19 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
   }
 
   private void renameReference(NodeTraversal t, Node n) {
-    Scope referencedIn = t.getScope();
     String oldName = n.getString();
-    Scope current = referencedIn;
-    boolean doRename = false;
-    String newName = null;
+    Scope current = t.getScope();
     while (current != null) {
-      Map<String, String> renamesAtCurrentLevel = renameMap.get(current.getRootNode());
-      if (renamesAtCurrentLevel != null && renamesAtCurrentLevel.containsKey(oldName)) {
-        doRename = true;
-        newName = renamesAtCurrentLevel.get(oldName);
-        break;
+      String newName = renameTable.get(current.getRootNode(), oldName);
+      if (newName != null) {
+        n.setString(newName);
+        t.getCompiler().reportCodeChange();
+        return;
       } else if (current.isDeclared(oldName, false)) {
         return;
       } else {
         current = current.getParent();
       }
-    }
-    if (doRename) {
-      n.setString(newName);
-      t.getCompiler().reportCodeChange();
     }
   }
 }

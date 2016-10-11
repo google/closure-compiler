@@ -17,9 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.rhino.IR;
@@ -29,7 +31,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -47,8 +49,11 @@ import java.util.Set;
 public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
+  private static final Set<Token> LOOP_TOKENS =
+      EnumSet.of(Token.WHILE, Token.FOR, Token.FOR_OF, Token.DO, Token.FUNCTION);
+
   private final AbstractCompiler compiler;
-  private final Map<Node, Map<String, String>> renameMap = new LinkedHashMap<>();
+  private final Table<Node, String, String> renameTable = HashBasedTable.create();
   private final Set<Node> letConsts = new HashSet<>();
   private final Set<String> undeclaredNames = new HashSet<>();
 
@@ -85,8 +90,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     Scope hoistScope = scope.getClosestHoistScope();
     boolean doRename = false;
     if (scope != hoistScope) {
-      doRename = hoistScope.isDeclared(oldName, true)
-          || undeclaredNames.contains(oldName);
+      doRename = hoistScope.isDeclared(oldName, true) || undeclaredNames.contains(oldName);
       String newName = doRename
           ? oldName + "$" + compiler.getUniqueNameIdSupplier().get()
           : oldName;
@@ -96,11 +100,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       if (doRename) {
         nameNode.setString(newName);
         Node scopeRoot = scope.getRootNode();
-        if (!renameMap.containsKey(scopeRoot)) {
-          renameMap.put(scopeRoot, new HashMap<String, String>());
-        }
-
-        renameMap.get(scopeRoot).put(oldName, newName);
+        renameTable.put(scopeRoot, oldName, newName);
       }
     }
     if (doRename) {
@@ -116,7 +116,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverseEs6(compiler, root, this);
     // Needed for let / const declarations in .d.ts externs.
     TranspilationPasses.processTranspile(compiler, externs, this);
-    NodeTraversal.traverseEs6(compiler, root, new Es6RenameReferences(renameMap));
+    NodeTraversal.traverseEs6(compiler, root, new Es6RenameReferences(renameTable));
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverseEs6(compiler, root, transformer);
     transformer.transformLoopClosure();
@@ -130,7 +130,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     NodeTraversal.traverseEs6(compiler, scriptRoot, new CollectUndeclaredNames());
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, new Es6RenameReferences(renameMap));
+    NodeTraversal.traverseEs6(compiler, scriptRoot, new Es6RenameReferences(renameTable));
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverseEs6(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
@@ -147,22 +147,12 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     return enclosingNode != null && enclosingNode.getToken() != Token.FUNCTION;
   }
 
-  private static final Predicate<Node> loopPredicate =
-      new Predicate<Node>() {
-        @Override
-        public boolean apply(Node n) {
-          switch(n.getToken()) {
-            case WHILE:
-            case FOR:
-            case FOR_OF:
-            case DO:
-            case FUNCTION:
-              return true;
-            default:
-              return false;
-          }
-        }
-      };
+  private static final Predicate<Node> loopPredicate = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return LOOP_TOKENS.contains(n.getToken());
+    }
+  };
 
   private static void extractInlineJSDoc(Node srcDeclaration, Node srcName, Node destDeclaration) {
     JSDocInfo existingInfo = srcDeclaration.getJSDocInfo();
@@ -219,9 +209,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
   }
 
-  private class RewriteBlockScopedFunctionDeclaration extends
-      AbstractPostOrderCallback {
-
+  private class RewriteBlockScopedFunctionDeclaration extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isFunction() && NormalizeStatements.maybeNormalizeFunctionDeclaration(n)) {
@@ -231,7 +219,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   }
 
   /**
-   * Record undeclared names and aggressively rename possible references to them.
+   * Records undeclared names and aggressively rename possible references to them.
    * Eg: In "{ let inner; } use(inner);", we rename the let declared variable.
    */
   private class CollectUndeclaredNames extends AbstractPostOrderCallback {
