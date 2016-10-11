@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_DESCRIPTOR_NOT_VALID;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DECLARATION;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
@@ -25,6 +26,10 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNANNOTATED
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNEXPECTED_PARAMS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+
+import com.google.javascript.jscomp.NodeUtil.Visitor;
+import com.google.javascript.rhino.Node;
 
 /**
  * Unit tests for PolymerPass
@@ -1135,6 +1140,25 @@ public class PolymerPassTest extends Es6CompilerTestCase {
             "  },",
             "  behaviors: [ FunBehavior ],",
             "});"));
+
+    // The original doSomethingFun definition in FunBehavior is on line 21, so make sure that
+    // line number is preserved when it's copied into the Polymer() call.
+    Node root = getLastCompiler().getRoot();
+    DoSomethingFunFinder visitor = new DoSomethingFunFinder();
+    NodeUtil.visitPreOrder(root, visitor);
+    assertThat(visitor.found).isTrue();
+  }
+
+  private class DoSomethingFunFinder implements Visitor {
+    boolean found = false;
+
+    @Override
+    public void visit(Node n) {
+      if (n.matchesQualifiedName("A.prototype.doSomethingFun")) {
+        assertNode(n).hasLineno(21);
+        found = true;
+      }
+    }
   }
 
   /**

@@ -288,6 +288,7 @@ final class PolymerClassRewriter {
         Node fnValue = behaviorFunction.value.cloneTree();
         Node exprResult = IR.exprResult(
             IR.assign(NodeUtil.newQName(compiler, qualifiedPath + fnName), fnValue));
+        exprResult.useSourceInfoIfMissingFromForTree(behaviorFunction.name);
         JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(behaviorFunction.info);
 
         // Behaviors whose declarations are not in the global scope may contain references to
@@ -411,6 +412,6 @@ final class PolymerClassRewriter {
     Node assign = IR.assign(
         var.getFirstChild().cloneNode(),
         var.getFirstChild().removeFirstChild());
-    return IR.exprResult(assign).useSourceInfoFromForTree(var);
+    return IR.exprResult(assign).useSourceInfoIfMissingFromForTree(var);
   }
 }
