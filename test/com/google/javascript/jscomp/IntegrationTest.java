@@ -3716,6 +3716,21 @@ public final class IntegrationTest extends IntegrationTestCase {
         "console.a('good');");
   }
 
+  // GitHub issue #2079: https://github.com/google/closure-compiler/issues/2079
+  public void testStrictEqualityComparisonAgainstUndefined() {
+    CompilerOptions options = createCompilerOptions();
+    options.setFoldConstants(true);
+    options.setCheckTypes(true);
+    options.setUseTypesForLocalOptimization(true);
+    test(
+        options,
+        LINE_JOINER.join(
+            "if (/** @type {Array|undefined} */ (window['c']) === null) {",
+            "  window['d'] = 12;",
+            "}"),
+            "null===window['c']&&(window['d']=12)");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
