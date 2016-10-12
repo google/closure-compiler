@@ -48,6 +48,7 @@ public final class JSDocInfoPrinter {
 
     // order:
     //   export|public|private|package|protected
+    //   lends
     //   const
     //   final
     //   dict|struct|unrestricted
@@ -70,6 +71,10 @@ public final class JSDocInfoPrinter {
     } else if (info.getVisibility() != null
         && info.getVisibility() != Visibility.INHERITED) {
       parts.add("@" + info.getVisibility().toString().toLowerCase());
+    }
+
+    if (info.getLendsName() != null) {
+      parts.add("@lends {" + info.getLendsName() + "}");
     }
 
     if (info.isConstant() && !info.isDefine() && !info.isFinal()) {
