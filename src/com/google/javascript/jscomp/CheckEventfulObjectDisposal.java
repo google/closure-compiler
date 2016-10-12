@@ -62,7 +62,7 @@ import java.util.Stack;
  *
  *
  */
- // TODO(tbreisacher): Find out if anyone is still using this pass. Delete if not.
+ // TODO(tbreisacher): Find out if this pass is still actually useful. Delete it if not.
  // TODO(user): Pass needs to be updated for listenable interfaces.
 public final class CheckEventfulObjectDisposal implements CompilerPass {
 
