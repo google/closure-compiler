@@ -743,6 +743,9 @@ public class Node implements Serializable {
   }
 
   public void addChildrenToFront(Node children) {
+    if (children == null) {
+      return; // removeChildren() returns null when there are none
+    }
     for (Node child = children; child != null; child = child.next) {
       Preconditions.checkArgument(child.parent == null);
       child.parent = this;
@@ -805,6 +808,9 @@ public class Node implements Serializable {
    * Add all children after 'node'.
    */
   public void addChildrenAfter(Node children, Node node) {
+    if (children == null) {
+      return; // removeChildren() returns null when there are none
+    }
     Preconditions.checkArgument(node == null || node.parent == this);
     Preconditions.checkState(children.previous != null);
     if (node == null) {
