@@ -226,17 +226,17 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
   }
 
   public void testRefToDescendantOfUndefinedPropertyGivesCorrectWarning() {
-    testSameNoExterns(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
+    testWarning(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("a.x"));
 
-    testSameNoExternsEs6(LET_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
+    testWarningEs6(LET_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("a.x"));
-    testSameNoExternsEs6(CONST_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
+    testWarningEs6(CONST_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("a.x"));
 
-    testSameNoExternsEs6(CLASS_DECLARATION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING,
+    testWarningEs6(CLASS_DECLARATION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("A.x"));
-    testSameNoExternsEs6(CLASS_EXPRESSION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING,
+    testWarningEs6(CLASS_EXPRESSION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("A.x"));
   }
 

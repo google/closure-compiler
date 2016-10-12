@@ -247,11 +247,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    testSame("", "/** @desc d */\n" +
-         "var MSG_E = goog.getMsg('');", MESSAGE_TREE_MALFORMED,
-         "Message parse tree malformed. "
-         + "Empty placeholder value map for a translated message "
-         + "with placeholders.", true);
+    testError(
+        "/** @desc d */\nvar MSG_E = goog.getMsg('');",
+        MESSAGE_TREE_MALFORMED,
+        "Message parse tree malformed. "
+            + "Empty placeholder value map for a translated message "
+            + "with placeholders.");
   }
 
 

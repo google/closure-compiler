@@ -177,22 +177,6 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param js Input and output
    * @param warning Expected warning, or null if no warning is expected
    */
-  @Override
-  public void testSame(String externs, String js, DiagnosticType warning) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    super.testSame(externs, js, warning);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-    super.testSame(externs, js, warning);
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued, under both ES5 and ES6 modes.
-   *
-   * @param externs Externs input
-   * @param js Input and output
-   * @param warning Expected warning, or null if no warning is expected
-   */
   public void testSameEs6(String externs, String js, DiagnosticType warning) {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     super.testSame(externs, js, warning);
@@ -211,41 +195,6 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   public void testSameEs6(String externs, String js, DiagnosticType diag, boolean error) {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testSame(externs, js, diag, error);
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued, under both ES5 and ES6 modes
-   *
-   * @param js Input and output
-   * @param warning Expected warning, or null if no warning is expected
-   * @param description The description of the expected warning,
-   *      or null if no warning is expected or if the warning's description
-   *      should not be examined
-   */
-  @Override
-  public void testSameNoExterns(String js, DiagnosticType warning, String description) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    super.testSameNoExterns(js, warning, description);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-    super.testSameNoExterns(js, warning, description);
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued, under only ES6 mode.
-   * Usually this implies that the input contains ES6 features.
-   *
-   * @param js Input and output
-   * @param warning Expected warning, or null if no warning is expected
-   * @param description The description of the expected warning,
-   *      or null if no warning is expected or if the warning's description
-   *      should not be examined
-   */
-  public void testSameNoExternsEs6(String js, DiagnosticType warning, String description) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    super.testSameNoExterns(js, warning, description);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
   /**
@@ -388,6 +337,14 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
     super.test(js, expected, null, warning);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.test(js, expected, null, warning);
+  }
+
+  /**
+   * Verifies that the compiler generates the given warning for the given input, under just ES6.
+   */
+  public void testWarningEs6(String js, DiagnosticType warning, String warningMessage) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    super.testWarning(js, warning, warningMessage);
   }
 
   /**

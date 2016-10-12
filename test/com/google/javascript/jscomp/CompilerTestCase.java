@@ -1009,20 +1009,6 @@ public abstract class CompilerTestCase extends TestCase {
    * Verifies that the compiler pass's JS output is the same as its input
    * and (optionally) that an expected warning is issued.
    *
-   * @param js Input and output
-   * @param warning Expected warning, or null if no warning is expected
-   * @param description The description of the expected warning,
-   *      or null if no warning is expected or if the warning's description
-   *      should not be examined
-   */
-  public void testSameNoExterns(String js, DiagnosticType warning, String description) {
-    testSame("", js, warning, description, false);
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued.
-   *
    * @param externs Externs input
    * @param js Input and output
    * @param diag Expected error or warning, or null if none is expected
@@ -1064,7 +1050,7 @@ public abstract class CompilerTestCase extends TestCase {
    * @param error Whether the "type" parameter represents an error.
    *   (false indicated the type is a warning). Ignored if type is null.
    */
-  public void testSame(
+  private void testSame(
       String externs, String js, DiagnosticType type, String description, boolean error) {
     List<SourceFile> externsInputs = ImmutableList.of(SourceFile.fromCode("externs", externs));
     if (error) {
