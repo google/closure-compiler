@@ -3209,6 +3209,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("export {default as default, class as class} from './someModule'");
     parse("export {class} from './someModule'");
     parse("export * from './someModule'");
+
+    expectFeatures();
+    parseError("export * as s from './someModule';", "'from' expected");
   }
 
   public void testGoogModule() {

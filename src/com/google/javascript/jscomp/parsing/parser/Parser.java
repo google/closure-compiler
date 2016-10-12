@@ -574,10 +574,9 @@ public class Parser {
     }
 
     LiteralToken moduleSpecifier = null;
-    if (isExportAll ||
-        (isExportSpecifier && peekPredefinedString(PredefinedName.FROM))) {
+    if (isExportAll || (isExportSpecifier && peekPredefinedString(PredefinedName.FROM))) {
       eatPredefinedString(PredefinedName.FROM);
-      moduleSpecifier = eat(TokenType.STRING).asLiteral();
+      moduleSpecifier = (LiteralToken) eat(TokenType.STRING);
     } else if (isExportSpecifier) {
       for (ParseTree tree : exportSpecifierList) {
         IdentifierToken importedName = tree.asExportSpecifier().importedName;
