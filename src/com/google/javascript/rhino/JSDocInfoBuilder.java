@@ -307,6 +307,11 @@ public final class JSDocInfoBuilder {
     }
   }
 
+  public void overwriteVisibility(Visibility visibility) {
+    populated = true;
+    currentInfo.setVisibility(visibility);
+  }
+
   /**
    * Records a typed parameter.
    *

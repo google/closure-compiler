@@ -161,6 +161,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
     super.setUp();
     allowExternsChanges(true);
     enableTypeCheck();
+    enableCheckAccessControls(false);
     runTypeCheckAfterProcessing = true;
     parseTypeInfo = true;
   }
@@ -1149,7 +1150,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
     assertThat(visitor.found).isTrue();
   }
 
-  private class DoSomethingFunFinder implements Visitor {
+  private static class DoSomethingFunFinder implements Visitor {
     boolean found = false;
 
     @Override
@@ -1159,6 +1160,80 @@ public class PolymerPassTest extends Es6CompilerTestCase {
         found = true;
       }
     }
+  }
+
+  /** If a behavior method is {@code @protected} there is no visibility warning. */
+  public void testBehaviorWithProtectedMethod() {
+    enableCheckAccessControls(true);
+    test(
+        new String[] {
+          LINE_JOINER.join(
+              "/** @polymerBehavior */",
+              "var FunBehavior = {",
+              "  /** @protected */",
+              "  doSomethingFun: function() {},",
+              "};"),
+          LINE_JOINER.join(
+              "var A = Polymer({",
+              "  is: 'x-element',",
+              "  callBehaviorMethod: function() {",
+              "    this.doSomethingFun();",
+              "  },",
+              "  behaviors: [ FunBehavior ],",
+              "});"),
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "/** @polymerBehavior @nocollapse */",
+              "var FunBehavior = {",
+              "  /**",
+              "   * @suppress {checkTypes|globalThis}",
+              "   */",
+              "  doSomethingFun: function() {},",
+              "};"),
+          LINE_JOINER.join(
+              "/**",
+              " * @constructor",
+              " * @extends {PolymerElement}",
+              " * @implements {PolymerAInterface}",
+              " */",
+              "var A = function() {};",
+              "",
+              "/**",
+              " * @public",
+              " */",
+              "A.prototype.doSomethingFun = function(){};",
+              "",
+              "A = Polymer(/** @lends {A.prototype} */ {",
+              "  is: 'x-element',",
+              "  /** @this {A} */",
+              "  callBehaviorMethod: function(){ this.doSomethingFun(); },",
+              "  behaviors: [FunBehavior],",
+              "})"),
+        });
+  }
+
+  /** If a behavior method is {@code @private} there is a visibility warning. */
+  public void testBehaviorWithPrivateMethod() {
+    enableCheckAccessControls(true);
+    testWarning(
+        new String[] {
+          LINE_JOINER.join(
+              "/** @polymerBehavior */",
+              "var FunBehavior = {",
+              "  /** @private */",
+              "  doSomethingFun: function() {},",
+              "};"),
+          LINE_JOINER.join(
+              "var A = Polymer({",
+              "  is: 'x-element',",
+              "  callBehaviorMethod: function() {",
+              "    this.doSomethingFun();",
+              "  },",
+              "  behaviors: [ FunBehavior ],",
+              "});"),
+        },
+        CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   /**

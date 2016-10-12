@@ -112,6 +112,9 @@ public abstract class CompilerTestCase extends TestCase {
   /** Whether we run InferConsts before checking. */
   private boolean enableInferConsts = false;
 
+  /** Whether we run CheckAccessControls after the pass being tested. */
+  private boolean checkAccessControls = false;
+
   /** Whether to check that all line number information is preserved. */
   private boolean checkLineNumbers = true;
 
@@ -378,6 +381,13 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
+   * Whether to run CheckAccessControls after the pass being tested (and checking types).
+   */
+  protected void enableCheckAccessControls(boolean enable) {
+    this.checkAccessControls = enable;
+  }
+
+  /**
    * Whether to allow externs changes.
    */
   protected void allowExternsChanges(boolean allowExternsChanges) {
@@ -589,6 +599,14 @@ public abstract class CompilerTestCase extends TestCase {
    * @param warning Expected warning
    */
   public void testWarning(String js, DiagnosticType warning) {
+    assertNotNull(warning);
+    test(js, null, null, warning);
+  }
+
+  /**
+   * Verifies that the compiler generates the given warning for the given input.
+   */
+  public void testWarning(String[] js, DiagnosticType warning) {
     assertNotNull(warning);
     test(js, null, null, warning);
   }
@@ -1310,6 +1328,10 @@ public abstract class CompilerTestCase extends TestCase {
             && this.newTypeInferenceEnabled
             && i == 0) {
           runNewTypeInference(compiler, externsRoot, mainRoot);
+        }
+
+        if (checkAccessControls) {
+          (new CheckAccessControls(compiler, false)).process(externsRoot, mainRoot);
         }
 
         hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();

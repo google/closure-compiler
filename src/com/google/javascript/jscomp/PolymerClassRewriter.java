@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -290,6 +291,14 @@ final class PolymerClassRewriter {
             IR.assign(NodeUtil.newQName(compiler, qualifiedPath + fnName), fnValue));
         exprResult.useSourceInfoIfMissingFromForTree(behaviorFunction.name);
         JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(behaviorFunction.info);
+
+        // If the function in the behavior is @protected, switch it to @public so that
+        // we don't get a visibility warning. This is a bit of a hack but easier than
+        // making the type system understand that methods are "inherited" from behaviors.
+        if (behaviorFunction.info != null
+            && behaviorFunction.info.getVisibility() == Visibility.PROTECTED) {
+          info.overwriteVisibility(Visibility.PUBLIC);
+        }
 
         // Behaviors whose declarations are not in the global scope may contain references to
         // symbols which do not exist in the element's scope. Only copy a function stub.
