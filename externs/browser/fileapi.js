@@ -27,7 +27,7 @@
 
 /**
  * @see http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob
- * @param {Array<ArrayBufferView|Blob|string>=} opt_blobParts
+ * @param {Array<ArrayBuffer|ArrayBufferView|Blob|string>=} opt_blobParts
  * @param {Object=} opt_options
  * @constructor
  * @nosideeffects
