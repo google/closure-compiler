@@ -200,17 +200,15 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  whitelist_regexp: '('\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: invalid regex pattern\n" +
-        "Requirement spec:\n" +
-        "error_message: \"placeholder\"\n" +
-        "whitelist_regexp: \"(\"\n" +
-        "type: BANNED_NAME\n" +
-        "value: \"eval\"\n",
-        true /* error */);
+        "Invalid requirement. Reason: invalid regex pattern\n"
+            + "Requirement spec:\n"
+            + "error_message: \"placeholder\"\n"
+            + "whitelist_regexp: \"(\"\n"
+            + "type: BANNED_NAME\n"
+            + "value: \"eval\"\n");
   }
 
   public void testViolationWhitelisted1() {
@@ -411,11 +409,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'testcode is not allowed'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
-        "anything;",
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: testcode is not allowed");
+    testWarning(
+        "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: testcode is not allowed");
   }
 
   public void testReportLooseTypeViolations() {
@@ -912,15 +907,13 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'placeholder'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: missing java_class\n" +
-        "Requirement spec:\n" +
-        "error_message: \"placeholder\"\n" +
-        "type: CUSTOM\n",
-        true /* error */);
+        "Invalid requirement. Reason: missing java_class\n"
+            + "Requirement spec:\n"
+            + "error_message: \"placeholder\"\n"
+            + "type: CUSTOM\n");
   }
 
   public void testCustom2() {
@@ -932,16 +925,14 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'placeholder'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: JavaClass not found.\n" +
-        "Requirement spec:\n" +
-        "error_message: \"placeholder\"\n" +
-        "type: CUSTOM\n" +
-        "java_class: \"MissingClass\"\n",
-        true /* error */);
+        "Invalid requirement. Reason: JavaClass not found.\n"
+            + "Requirement spec:\n"
+            + "error_message: \"placeholder\"\n"
+            + "type: CUSTOM\n"
+            + "java_class: \"MissingClass\"\n");
   }
 
   public void testCustom3() {
@@ -953,17 +944,14 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'placeholder'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: JavaClass is not a rule.\n" +
-        "Requirement spec:\n" +
-        "error_message: \"placeholder\"\n" +
-        "type: CUSTOM\n" +
-        "java_class: \"com.google.javascript.jscomp.CheckConformanceTest\"\n" +
-        "",
-        true /* error */);
+        "Invalid requirement. Reason: JavaClass is not a rule.\n"
+            + "Requirement spec:\n"
+            + "error_message: \"placeholder\"\n"
+            + "type: CUSTOM\n"
+            + "java_class: \"com.google.javascript.jscomp.CheckConformanceTest\"\n");
   }
 
   // A custom rule missing a callable constructor.
@@ -1030,18 +1018,15 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'placeholder'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: No valid class constructors found.\n" +
-        "Requirement spec:\n" +
-        "error_message: \"placeholder\"\n" +
-        "type: CUSTOM\n" +
-        "java_class: \"com.google.javascript.jscomp.CheckConformanceTest$" +
-        "CustomRuleMissingPublicConstructor\"\n" +
-        "",
-        true /* error */);
+        "Invalid requirement. Reason: No valid class constructors found.\n"
+            + "Requirement spec:\n"
+            + "error_message: \"placeholder\"\n"
+            + "type: CUSTOM\n"
+            + "java_class: \"com.google.javascript.jscomp.CheckConformanceTest$"
+            + "CustomRuleMissingPublicConstructor\"\n");
   }
 
 
@@ -1054,17 +1039,14 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'placeholder'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: missing value\n" +
-        "Requirement spec:\n" +
-        "error_message: \"placeholder\"\n" +
-        "type: CUSTOM\n" +
-        "java_class: \"com.google.javascript.jscomp.CheckConformanceTest$CustomRule\"\n" +
-        "",
-        true /* error */);
+        "Invalid requirement. Reason: missing value\n"
+            + "Requirement spec:\n"
+            + "error_message: \"placeholder\"\n"
+            + "type: CUSTOM\n"
+            + "java_class: \"com.google.javascript.jscomp.CheckConformanceTest$CustomRule\"\n");
   }
 
   public void testCustom6() {
@@ -1091,11 +1073,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'CustomRule Message'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
-        "anything;",
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: CustomRule Message");
+    testWarning(
+        "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: CustomRule Message");
   }
 
   public void testCustomBanExpose() {
@@ -1106,8 +1085,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'BanExpose Message'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "/** @expose */ var x;",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanExpose Message");
@@ -1121,8 +1099,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'BanThrowOfNonErrorTypes Message'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "throw 'blah';",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanThrowOfNonErrorTypes Message");
@@ -1147,8 +1124,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'BanUnknownThis Message'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "function f() {alert(this);}",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanUnknownThis Message");
@@ -1214,10 +1190,9 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   public void testCustomBanUnknownThisProp1() {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "/** @constructor */ function f() {}; f.prototype.prop;"
-        + "f.prototype.method = function() { alert(this.prop); }",
+            + "f.prototype.method = function() { alert(this.prop); }",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
   }
@@ -1226,18 +1201,15 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testSame(
-        EXTERNS,
         "/** @constructor */ function f() {}; f.prototype.prop;"
-        + "f.prototype.method = function() { this.prop = foo; };",
-        null);
+            + "f.prototype.method = function() { this.prop = foo; };");
   }
 
   public void testCustomBanUnknownProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "/** @constructor */ function f() {}; f.prototype.prop;"
             + "f.prototype.method = function() { alert(this.prop); }",
         CheckConformance.CONFORMANCE_VIOLATION,
@@ -1254,8 +1226,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "function f(a) { alert(a.foobar); };");
 
     this.mode = TypeInferenceMode.OTI_ONLY;
-    testSame(
-        EXTERNS,
+    testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"foobar\" on type \"(ObjectWithNoProps|null)\"");
@@ -1263,8 +1234,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     // TODO(aravindpg): Only difference is we don't add parens at the ends of our union type
     // string reprs in NTI. Fix them to be the same if possible.
     this.mode = TypeInferenceMode.NTI_ONLY;
-    testSame(
-        EXTERNS,
+    testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"foobar\" on type \"ObjectWithNoProps|null\"");
@@ -1275,10 +1245,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testSame(
-        EXTERNS,
         "/** @constructor */ function f() {}"
-            + "f.prototype.method = function() { this.prop = foo; };",
-        null);
+            + "f.prototype.method = function() { this.prop = foo; };");
   }
 
   public void testCustomBanUnknownProp4() {
@@ -1286,19 +1254,16 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testSame(
-        EXTERNS,
         LINE_JOINER.join(
             "/** @constructor */ function f() { /** @type {?} */ this.prop = null; };",
-            "f.prototype.method = function() { alert(this.prop); }"),
-        null);
+            "f.prototype.method = function() { alert(this.prop); }"));
   }
 
   public void testCustomBanUnknownProp5() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
-    testSame(
-        EXTERNS,
+    testWarning(
         LINE_JOINER.join(
             "/** @typedef {?} */ var Unk;",
             "/** @constructor */ function f() { /** @type {?Unk} */ this.prop = null; };",
@@ -1311,25 +1276,24 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
-    String js =  LINE_JOINER.join(
-        "/** @interface */ function I() {}",
-        "I.prototype.method = function() {};",
-        "I.prototype.gak;",
-        "/** @param {!I} a */",
-        "function f(a) {",
-        "  a.gak();",
-        "}");
+    String js =
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}",
+            "I.prototype.method = function() {};",
+            "I.prototype.gak;",
+            "/** @param {!I} a */",
+            "function f(a) {",
+            "  a.gak();",
+            "}");
 
     this.mode = TypeInferenceMode.OTI_ONLY;
-    testSame(
-        EXTERNS,
+    testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"gak\" on type \"I\"");
 
     this.mode = TypeInferenceMode.NTI_ONLY;
-    testSame(
-        EXTERNS,
+    testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"gak\" on type \"I{gak:TOP_FUNCTION}\"");
@@ -1340,14 +1304,12 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testSame(
-        EXTERNS,
         LINE_JOINER.join(
             "/** @interface */ function I() {}",
             "I.prototype.method = function() {};",
             "/** @param {I} a */ function f(a) {",
             "  a.method();",
-            "}"),
-        null);
+            "}"));
   }
 
   public void testCustomBanGlobalVars1() {
@@ -1387,14 +1349,12 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             + "}";
 
     testSame(
-        EXTERNS,
         "goog.scope(function() {\n"
             + "  var x = {y: 'y'}\n"
             + "  var z = {\n"
             + "     [x.y]: 2\n"
             + "  }\n"
-            + "});",
-        null);
+            + "});");
   }
 
   public void testRequireFileoverviewVisibility() {
@@ -1406,27 +1366,18 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'RequireFileoverviewVisibility Message'\n" +
         "}";
 
-    testSame(
-        EXTERNS,
+    testWarning(
         "var foo = function() {};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: RequireFileoverviewVisibility Message");
 
-    testSame(
-        EXTERNS,
-        "/**\n" +
-        "  * @fileoverview\n" +
-        "  */\n" +
-        "var foo = function() {};",
+    testWarning(
+        "/**\n" + "  * @fileoverview\n" + "  */\n" + "var foo = function() {};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: RequireFileoverviewVisibility Message");
 
-    testSame(
-        EXTERNS,
-        "/**\n" +
-        "  * @package\n" +
-        "  */\n" +
-        "var foo = function() {};",
+    testWarning(
+        "/**\n" + "  * @package\n" + "  */\n" + "var foo = function() {};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: RequireFileoverviewVisibility Message");
 
@@ -1533,10 +1484,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     // However, we do intend to add warnings for unfulfilled forward declares, which essentially
     // addresses this use case.
     this.mode = TypeInferenceMode.OTI_ONLY;
-    testSame(
-        EXTERNS,
-        "goog.forwardDeclare('Foo');"
-        + "/** @param {Foo} a */ function f(a) {a.foo()};",
+    testWarning(
+        "goog.forwardDeclare('Foo');" + "/** @param {Foo} a */ function f(a) {a.foo()};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanUnresolvedType Message");
 
@@ -1678,48 +1627,35 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   public void testRequireUseStrict0() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
-    testSame(
-        EXTERNS,
-        "anything;",
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: My rule message");
+    testWarning("anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: My rule message");
   }
 
   public void testRequireUseStrict1() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
-    testSame(
-        EXTERNS,
-        "'use strict';",
-        null);
+    testSame("'use strict';");
   }
 
   public void testRequireUseStrict2() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
-    test(
-        EXTERNS,
-        "goog.module('foo');",
-        "'use strict'; /** @const */ var module$exports$foo={};",
-        null, null);
+    test("goog.module('foo');", "'use strict'; /** @const */ var module$exports$foo={};");
   }
 
   public void testRequireUseStrict3() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
     test(
-        EXTERNS,
         "export var x = 2;",
         LINE_JOINER.join(
-          "/**",
-          " * @fileoverview",
-          " * @suppress {missingProvide,missingRequire}",
-          " */",
-          "",
-          "'use strict';",
-          "/** @const */ var module$testcode = {};",
-          "var x$$module$testcode=2;",
-          "module$testcode.x = x$$module$testcode;"),
-        null, null);
+            "/**",
+            " * @fileoverview",
+            " * @suppress {missingProvide,missingRequire}",
+            " */",
+            "",
+            "'use strict';",
+            "/** @const */ var module$testcode = {};",
+            "var x$$module$testcode=2;",
+            "module$testcode.x = x$$module$testcode;"));
   }
 }
