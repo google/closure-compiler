@@ -1151,6 +1151,16 @@ DomRepeatElement.prototype.keyForElement = function(el) {};
 DomRepeatElement.prototype.indexForElement = function(el) {};
 
 
+/**
+ * Count of currently rendered items after `filter` (if any) has been applied.
+ * If "chunking mode" is enabled, `renderedItemCount` is updated each time a
+ * set of template instances is rendered.
+ *
+ * @type {number}
+ */
+DomRepeatElement.prototype.renderedItemCount;
+
+
 
 /**
  * @see https://github.com/Polymer/polymer/blob/master/src/lib/template/array-selector.html
