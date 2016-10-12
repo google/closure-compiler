@@ -24,11 +24,9 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
-
 import javax.annotation.Nullable;
 
 /**
@@ -217,6 +215,10 @@ class RuntimeTypeCheck implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      if (NodeUtil.isInSyntheticScript(n)) {
+        return;
+      }
+
       if (n.isFunction()) {
         visitFunction(n);
       } else if (n.isReturn()) {
@@ -358,6 +360,8 @@ class RuntimeTypeCheck implements CompilerPass {
                         "interfaceChecker" : "classChecker"),
                 IR.string(refName));
 
+      } else if (type.isFunctionType()) {
+        return IR.call(jsCode("valueChecker"), IR.string("function"));
       } else {
         // We don't check this type (e.g. unknown & all types).
         return null;

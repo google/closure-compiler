@@ -118,6 +118,44 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
         "}");
   }
 
+  public void testFunctionObjectParam() {
+    testChecks(
+        "/** @param {!Function} x */ function f(x) {}",
+        "function f(x) {"
+            + "  $jscomp.typecheck.checkType(x, "
+            + "      [$jscomp.typecheck.externClassChecker('Function')]);"
+            + "}");
+  }
+
+  public void testFunctionTypeParam() {
+    testChecks(
+        "/** @param {function()} x */ function f(x) {}",
+        "function f(x) {"
+            + "  $jscomp.typecheck.checkType(x, "
+            + "      [$jscomp.typecheck.valueChecker('function')]);"
+            + "}");
+  }
+
+  // Closure collapses {function()|!Function} into {!Function}
+  public void testFunctionTypeOrFunctionObjectParam() {
+    testChecks(
+        "/** @param {function()|!Function} x */ function f(x) {}",
+        "function f(x) {"
+            + "  $jscomp.typecheck.checkType(x, "
+            + "      [$jscomp.typecheck.externClassChecker('Function')]);"
+            + "}");
+  }
+
+  // Closure collapses {!Function|!Object} into {!Object}
+  public void testFunctionObjectOrObjectParam() {
+    testChecks(
+        "/** @param {!Function|!Object} x */ function f(x) {}",
+        "function f(x) {"
+            + "  $jscomp.typecheck.checkType(x, "
+            + "      [$jscomp.typecheck.objectChecker]);"
+            + "}");
+  }
+
   public void testQualifiedClass() {
     testChecks("var goog = {}; /** @constructor */goog.Foo = function() {};" +
         "/** @param {!goog.Foo} x */ function f(x) {}",

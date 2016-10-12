@@ -406,7 +406,7 @@ $jscomp.typecheck.ObjectChecker_ = function() {};
 
 /** @inheritDoc */
 $jscomp.typecheck.ObjectChecker_.prototype.check = function(expr) {
-  return typeof(expr) == 'object' && !!expr;
+  return (typeof(expr) == 'object' || typeof(expr) == 'function') && !!expr;
 };
 
 
