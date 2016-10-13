@@ -2698,9 +2698,39 @@ XMLHttpRequest.prototype.withCredentials;
 
 /**
  * @type {?function(!ProgressEvent): void}
+ * @see https://xhr.spec.whatwg.org/#handler-xhr-onloadstart
+ */
+XMLHttpRequest.prototype.onloadstart;
+
+/**
+ * @type {?function(!ProgressEvent): void}
  * @see https://dvcs.w3.org/hg/xhr/raw-file/tip/Overview.html#handler-xhr-onprogress
  */
 XMLHttpRequest.prototype.onprogress;
+
+/**
+ * @type {?function(!ProgressEvent): void}
+ * @see https://xhr.spec.whatwg.org/#handler-xhr-onabort
+ */
+XMLHttpRequest.prototype.onabort;
+
+/**
+ * @type {?function(!ProgressEvent): void}
+ * @see https://xhr.spec.whatwg.org/#handler-xhr-onload
+ */
+XMLHttpRequest.prototype.onload;
+
+/**
+ * @type {?function(!ProgressEvent): void}
+ * @see https://xhr.spec.whatwg.org/#handler-xhr-ontimeout
+ */
+XMLHttpRequest.prototype.ontimeout;
+
+/**
+ * @type {?function(!ProgressEvent): void}
+ * @see https://xhr.spec.whatwg.org/#handler-xhr-onloadend
+ */
+XMLHttpRequest.prototype.onloadend;
 
 /**
  * @type {XMLHttpRequestUpload}
