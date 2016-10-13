@@ -53,7 +53,7 @@ class RewriteBindThis extends AbstractPostOrderCallback implements CompilerPass{
     return parentNode.isGetProp()
         && functionNode.getNext().getString().equals("bind")
         && parentNode.getParent().isCall()
-        && parentNode.getNext().isThis();
+        && NodeUtil.isThisOrAlias(parentNode.getNext());
   }
 
   private boolean canRewriteBinding(Node functionNode) {

@@ -230,7 +230,7 @@ class FunctionInjector {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
         if (!assumeStrictThis) {
           Node thisValue = callNode.getSecondChild();
-          if (thisValue == null || !thisValue.isThis()) {
+          if (thisValue == null || !NodeUtil.isThisOrAlias(thisValue)) {
             return false;
           }
         }
@@ -731,7 +731,7 @@ class FunctionInjector {
     if (!callNode.getFirstChild().isName()) {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
         // TODO(johnlenz): Support replace this with a value.
-        if (cArg == null || !cArg.isThis()) {
+        if (cArg == null || !NodeUtil.isThisOrAlias(cArg)) {
           return CanInlineResult.NO;
         }
         cArg = cArg.getNext();

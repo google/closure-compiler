@@ -605,7 +605,7 @@ class PureFunctionIdentifier implements CompilerPass {
           }
         }
       } else if (NodeUtil.isGet(lhs)) {
-        if (lhs.getFirstChild().isThis()) {
+        if (NodeUtil.isThisOrAlias(lhs.getFirstChild())) {
           sideEffectInfo.setTaintsThis();
         } else {
           Var var = null;
@@ -760,7 +760,7 @@ class PureFunctionIdentifier implements CompilerPass {
           // is fixed. See testLocalizedSideEffects11.
           //if (!caller.knownLocals.contains(name)) {
           //}
-        } else if (objectNode != null && objectNode.isThis()) {
+        } else if (objectNode != null && NodeUtil.isThisOrAlias(objectNode)) {
           thisIsOuterThis = true;
         }
       }

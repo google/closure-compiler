@@ -361,7 +361,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
        * global variable.
        */
       Node base = getBase(n);
-      if (base != null && base.isThis()) {
+      if (base != null && NodeUtil.isThisOrAlias(base)) {
         if (base.getJSType().isUnknownType()) {
           // Handle anonymous function created in constructor:
           //

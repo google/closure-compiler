@@ -4801,4 +4801,15 @@ public final class NodeUtil {
     String keyName = propNode.getString();
     return keyName.equals("get") || keyName.equals("set");
   }
+
+  /**
+   * Is this node the this keyword or a
+   * compiler-created alias for it?
+   *
+   * @param n The node
+   * @return True if {@code n} is THIS or a NAME that was originally "this"
+   */
+  public static boolean isThisOrAlias(Node n) {
+    return n.isName() ? "this".equals(n.getOriginalName()) : n.isThis();
+  }
 }

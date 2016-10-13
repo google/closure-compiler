@@ -1162,7 +1162,7 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (n.isThis()) {
+      if (NodeUtil.isThisOrAlias(n)) {
         TypeI type = n.getTypeI();
         if (type != null && type.isUnknownType() && !isTypeImmediatelyTightened(n)) {
           Node root = t.getScopeRoot();
@@ -1206,7 +1206,7 @@ public final class ConformanceRules {
     }
 
     private boolean isKnownThis(Node n) {
-      return n.isThis() && !isUnknown(n);
+      return NodeUtil.isThisOrAlias(n) && !isUnknown(n);
     }
   }
 

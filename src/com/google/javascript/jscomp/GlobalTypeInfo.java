@@ -2449,7 +2449,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   private DeclaredFunctionType getDeclaredFunctionTypeOfCalleeIfAny(
       Node fn, NTIScope currentScope) {
     Preconditions.checkArgument(fn.getParent().isCall());
-    if (fn.isThis() || !fn.isFunction() && !fn.isQualifiedName()) {
+    if (NodeUtil.isThisOrAlias(fn) || !fn.isFunction() && !fn.isQualifiedName()) {
       return null;
     }
     if (fn.isFunction()) {
@@ -2474,7 +2474,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   private static boolean isClassPropertyDeclaration(Node n, NTIScope s) {
     Node parent = n.getParent();
-    return n.isGetProp() && n.getFirstChild().isThis()
+    return n.isGetProp() && NodeUtil.isThisOrAlias(n.getFirstChild())
         && (parent.isAssign() && parent.getFirstChild().equals(n)
             || parent.isExprResult())
         && (s.isConstructor() || s.isPrototypeMethod());
