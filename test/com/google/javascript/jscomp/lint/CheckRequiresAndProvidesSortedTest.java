@@ -69,11 +69,22 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   public void testWarning_requireWithJSDoc() {
-    // TODO(tbreisacher): Preserve the @suppress comment.
-    testWarning("goog.require('a.c');\n/** @suppress {extraRequire} */\ngoog.require('a.b')",
+    testWarning(
+        LINE_JOINER.join(
+            "goog.require('a.c');",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.b')"),
         REQUIRES_NOT_SORTED,
-        "goog.require() statements are not sorted. The correct order is:\n\n"
-        + "goog.require('a.b');\ngoog.require('a.c');\n\n");
+        LINE_JOINER.join(
+            "goog.require() statements are not sorted. The correct order is:",
+            "",
+            "/**",
+            " @suppress {extraRequire}",
+            " */",
+            "goog.require('a.b');",
+            "goog.require('a.c');",
+            "",
+            ""));
   }
 
   public void testWarning_provide() {
