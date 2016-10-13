@@ -32,7 +32,8 @@ message Requirement {
   // and contacts.
   optional string error_message = 1;
 
-  // Optional: A list of source paths that are exempt from the requirement.
+  // Optional: A list of source path prefixes that are exempt from the
+  // requirement.
   repeated string whitelist = 2;
 
   // Optional: A list of source paths regexs that are exempt from the
