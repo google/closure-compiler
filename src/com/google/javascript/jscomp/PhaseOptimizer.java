@@ -103,6 +103,9 @@ class PhaseOptimizer implements CompilerPass {
      "minimizeExitPoints",
      "removeUnreachableCode");
 
+  static final List<String> CODE_MOTION_PASSES = ImmutableList.of(
+      Compiler.CROSS_MODULE_CODE_MOTION_NAME, Compiler.CROSS_MODULE_METHOD_MOTION_NAME);
+
   static final int MAX_LOOPS = 100;
   static final String OPTIMIZE_LOOP_ERROR =
       "Fixed point loop exceeded the maximum number of iterations.";
@@ -423,6 +426,7 @@ class PhaseOptimizer implements CompilerPass {
       Preconditions.checkState(!inLoop, "Nested loops are forbidden");
       inLoop = true;
       optimizePasses();
+      boolean isCodeMotionLoop = isCodeMotionLoop();
 
       // Set up function-change tracking
       scopeHandler = new ScopedChangeHandler();
@@ -496,10 +500,13 @@ class PhaseOptimizer implements CompilerPass {
               float percentChange = Math.abs(astSize - previousAstSize) / (float) previousAstSize;
               // If this loop batch made the code less than 0.1% smaller than the previous loop
               // batch, stop before the fixpoint.
+              // Use this criterion only for loops that remove code; the code-motion loop may
+              // move code around but not remove code, so this criterion is not correct for
+              // stopping early.
               // This threshold is based on the following heuristic: 1% size difference matters
               // to our users. 0.1% size difference is borderline relevant. 0.1% difference
               // between loop batches is smaller than 0.1% total difference, so it's unimportant.
-              if (percentChange < 0.001) {
+              if (!isCodeMotionLoop && percentChange < 0.001) {
                 return;
               }
               state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
@@ -532,6 +539,15 @@ class PhaseOptimizer implements CompilerPass {
 
       myPasses.removeAll(optimalPasses);
       myPasses.addAll(optimalPasses);
+    }
+
+    private boolean isCodeMotionLoop() {
+      for (NamedPass pass : this.myPasses) {
+        if (CODE_MOTION_PASSES.contains(pass.name)) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 
