@@ -547,12 +547,8 @@ public final class DefaultPassConfig extends PassConfig {
     passes.add(createEmptyPass("beforeStandardOptimizations"));
 
     // Inline aliases so that following optimizations don't have to understand alias chains.
-    if (options.j2clPassMode.shouldAddJ2clPasses() || options.collapseProperties) {
-      if (options.collapseProperties) {
-        passes.add(aggressiveInlineAliases);
-      } else {
-        passes.add(j2clAggressiveInlineAliases);
-      }
+    if (options.collapseProperties) {
+      passes.add(aggressiveInlineAliases);
     }
 
     if (options.replaceIdGenerators) {
@@ -581,7 +577,8 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
     // from desugaring) don't block class stripping.
-    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+    if (options.j2clPassMode.shouldAddJ2clPasses() && options.collapseProperties) {
+      // Relies on collapseProperties-triggered aggressive alias inlining.
       passes.add(j2clPropertyInlinerPass);
     }
 
@@ -1375,30 +1372,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new AggressiveInlineAliases(compiler);
-        }
-      };
-
-  /**
-   * Inlines type aliases if they are explicitly or effectively const, but only if there are J2CL
-   * files in the compile.
-   */
-  private final PassFactory j2clAggressiveInlineAliases =
-      new PassFactory("j2clAggressiveInlineAliases", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new CompilerPass() {
-
-            private AggressiveInlineAliases wrapped = new AggressiveInlineAliases(compiler);
-
-            @Override
-            public void process(Node externs, Node root) {
-              if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
-                return;
-              }
-
-              wrapped.process(externs, root);
-            }
-          };
         }
       };
 
