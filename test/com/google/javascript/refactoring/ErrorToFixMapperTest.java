@@ -15,6 +15,7 @@
  */
 package com.google.javascript.refactoring;
 
+import static com.google.common.collect.ObjectArrays.concat;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
 import org.junit.Before;
@@ -390,7 +392,11 @@ public class ErrorToFixMapperTest {
         ImmutableList.<SourceFile>of(), // Externs
         ImmutableList.of(SourceFile.fromCode("test", originalCode)),
         options);
+    JSError[] warningsAndErrors =
+        concat(compiler.getWarnings(), compiler.getErrors(), JSError.class);
+    assertThat(warningsAndErrors).named("warnings/errors").isNotEmpty();
     Collection<SuggestedFix> fixes = errorManager.getAllFixes();
+    assertThat(fixes).named("fixes").isNotEmpty();
     String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
         fixes, ImmutableMap.of("test", originalCode)).get("test");
     assertThat(newCode).isEqualTo(expectedCode);
