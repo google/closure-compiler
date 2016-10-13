@@ -29,9 +29,14 @@ import java.util.Set;
 /**
  * Inline aliases created by exports of modules before type checking.
  *
- * The old type inference doesn't deal as well with aliased types as with unaliased ones,
- * such as in extends clauses (@extends {alias}) and templated types (alias<T>).
- * This pass inlines these aliases to make type checking's job easier.
+ * <p>The old type inference doesn't deal as well with aliased types as with unaliased ones, such as
+ * in extends clauses (@extends {alias}) and templated types (alias<T>). This pass inlines these
+ * aliases to make type checking's job easier.
+ *
+ * <p>This alias inliner is not very aggressive. It will only inline explicitly const aliases but
+ * not effectively const ones (for example ones that are only ever assigned a value once). This is
+ * done to be conservative since it's not a good idea to be making dramatic AST changes before type
+ * checking. There is a more aggressive alias inliner that runs at the start of optimization.
  *
  * @author blickly@gmail.com (Ben Lickly)
  */

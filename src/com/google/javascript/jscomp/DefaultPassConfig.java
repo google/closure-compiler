@@ -538,16 +538,22 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Inlines functions that perform dynamic accesses to static properties of parameters that are
-    // typed as {Function}.
-    //
-    // Inlining these functions turns a dynamic access to a static property of a class definition
+    // typed as {Function}. This turns a dynamic access to a static property of a class definition
     // into a fully qualified access and in so doing enables better dead code stripping.
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clPass);
-      passes.add(j2clPropertyInlinerPass);
     }
 
     passes.add(createEmptyPass("beforeStandardOptimizations"));
+
+    // Inline aliases so that following optimizations don't have to understand alias chains.
+    if (options.j2clPassMode.shouldAddJ2clPasses() || options.collapseProperties) {
+      if (options.collapseProperties) {
+        passes.add(aggressiveInlineAliases);
+      } else {
+        passes.add(j2clAggressiveInlineAliases);
+      }
+    }
 
     if (options.replaceIdGenerators) {
       passes.add(replaceIdGenerators);
@@ -571,6 +577,12 @@ public final class DefaultPassConfig extends PassConfig {
     // properties.
     if (options.disambiguatePrivateProperties) {
       passes.add(disambiguatePrivateProperties);
+    }
+
+    // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
+    // from desugaring) don't block class stripping.
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      passes.add(j2clPropertyInlinerPass);
     }
 
     // Collapsing properties can undo constant inlining, so we do this before
@@ -1356,6 +1368,39 @@ public final class DefaultPassConfig extends PassConfig {
       return new InlineAliases(compiler);
     }
   };
+
+  /** Inlines type aliases if they are explicitly or effectively const. */
+  private final PassFactory aggressiveInlineAliases =
+      new PassFactory("aggressiveInlineAliases", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new AggressiveInlineAliases(compiler);
+        }
+      };
+
+  /**
+   * Inlines type aliases if they are explicitly or effectively const, but only if there are J2CL
+   * files in the compile.
+   */
+  private final PassFactory j2clAggressiveInlineAliases =
+      new PassFactory("j2clAggressiveInlineAliases", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new CompilerPass() {
+
+            private AggressiveInlineAliases wrapped = new AggressiveInlineAliases(compiler);
+
+            @Override
+            public void process(Node externs, Node root) {
+              if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
+                return;
+              }
+
+              wrapped.process(externs, root);
+            }
+          };
+        }
+      };
 
   private final PassFactory convertToTypedES6 =
       new PassFactory("ConvertToTypedES6", true) {

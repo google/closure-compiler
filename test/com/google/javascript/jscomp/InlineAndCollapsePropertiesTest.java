@@ -21,11 +21,11 @@ import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_W
 import com.google.javascript.rhino.Node;
 
 /**
- * Tests for {@link CollapseProperties}.
+ * Tests for {@link AggressiveInlineAliases} plus {@link CollapseProperties}.
  *
  */
 
-public final class CollapsePropertiesTest extends CompilerTestCase {
+public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "var window;\n"
@@ -34,12 +34,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
       + "/** @constructor */ function String() {};\n"
       + "var arguments";
 
-  public CollapsePropertiesTest() {
+  public InlineAndCollapsePropertiesTest() {
     super(EXTERNS);
   }
 
-  @Override public CompilerPass getProcessor(Compiler compiler) {
-    return new CollapseProperties(compiler);
+  @Override
+  public CompilerPass getProcessor(final Compiler compiler) {
+    return new CompilerPass() {
+      AggressiveInlineAliases aggressiveInlineAliases = new AggressiveInlineAliases(compiler);
+      CollapseProperties collapseProperties = new CollapseProperties(compiler);
+
+      @Override
+      public void process(Node externs, Node root) {
+        aggressiveInlineAliases.process(externs, root);
+        collapseProperties.process(externs, root);
+      }
+    };
   }
 
   @Override
@@ -1568,8 +1578,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testCommaOperator() {
-    test("var a = {}; a.b = function() {},a.b();",
-         "var a$b; a$b=function() {},a$b();");
+    test("var a = {}; a.b = function() {}, a.b();",
+         "var a$b; a$b=function() {}, a$b();");
 
     test(
         "var ns = {};\n"
@@ -2094,7 +2104,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         + "    alert(b.staticProp);\n"
         + "  }\n"
         + "}",
-        null, CollapseProperties.UNSAFE_CTOR_ALIASING);
+        null, AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   public void test_b19179602_declareOutsideLoop() {
@@ -2167,7 +2177,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         + "  }\n"
         + "  return x.staticProp;\n"
         + "}",
-        null, CollapseProperties.UNSAFE_CTOR_ALIASING);
+        null, AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   public void testExpressionResultReferenceWontPreventCollapse() {
