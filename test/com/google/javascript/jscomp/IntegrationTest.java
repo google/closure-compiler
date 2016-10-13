@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
-import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -2250,38 +2249,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "Array.prototype.internalGo = function (){this.x = 2};";
 
     test(options, code, optimized);
-  }
-
-  public void testFoldJ2clClinits() {
-    testFoldJ2clClinits(J2clPassMode.ON);
-  }
-
-  public void testJ2clPassAuto() {
-    inputFileNamePrefix = "jar:file//foo.js.zip!";
-    inputFileNameSuffix = ".java.js";
-    testFoldJ2clClinits(J2clPassMode.AUTO);
-  }
-
-  private void testFoldJ2clClinits(J2clPassMode j2clPassMode) {
-    CompilerOptions options = createCompilerOptions();
-
-    String code =
-        LINE_JOINER.join(
-            "function InternalWidget(){}",
-            "InternalWidget.$clinit = function () {",
-            "  InternalWidget.$clinit = function() {};",
-            "  InternalWidget.$clinit();",
-            "};",
-            "InternalWidget.$clinit();");
-
-    options.setJ2clPass(j2clPassMode);
-    options.setFoldConstants(true);
-    options.setComputeFunctionSideEffects(true);
-    options.setCollapseProperties(true);
-    options.setRemoveUnusedVariables(Reach.ALL);
-    options.setInlineFunctions(true);
-
-    test(options, code, "");
   }
 
   public void testVarDeclarationsIntoFor() {

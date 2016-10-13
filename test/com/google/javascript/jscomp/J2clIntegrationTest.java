@@ -48,6 +48,19 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
         "function b(a){return'a'<a[0]?b(a+a):a}b('a');alert('hello')");
   }
 
+  public void testFoldJ2clClinits() {
+    String code =
+        LINE_JOINER.join(
+            "function InternalWidget(){}",
+            "InternalWidget.$clinit = function () {",
+            "  InternalWidget.$clinit = function() {};",
+            "  InternalWidget.$clinit();",
+            "};",
+            "InternalWidget.$clinit();");
+
+    test(createCompilerOptions(), code, "");
+  }
+
   @Override
   CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
