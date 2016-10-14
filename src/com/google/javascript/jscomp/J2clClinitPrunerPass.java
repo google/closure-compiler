@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.PureFunctionIdentifier.Driver;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,6 +30,7 @@ import java.util.Set;
 public class J2clClinitPrunerPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
+  private boolean madeChange = false;
 
   J2clClinitPrunerPass(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -43,12 +45,19 @@ public class J2clClinitPrunerPass implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, new RedundantClinitPruner());
     NodeTraversal.traverseEs6(compiler, root, new LookAheadRedundantClinitPruner());
     NodeTraversal.traverseEs6(compiler, root, new EmptyClinitPruner());
+
+    if (madeChange) {
+      compiler.reportCodeChange();
+      Driver findPureFunction = new Driver(compiler, null);
+      findPureFunction.process(externs, root);
+    }
   }
 
   /**
    * Removes redundant clinit calls inside method body if it is guaranteed to be called earlier.
    */
-  private static final class RedundantClinitPruner implements Callback {
+  private final class RedundantClinitPruner implements Callback {
+
     private HierarchicalSet<String> clinitsCalledAtBranch = new HierarchicalSet<>(null);
 
     @Override
@@ -95,9 +104,10 @@ public class J2clClinitPrunerPass implements CompilerPass {
       // Replacing with '0' is a simple way of removing without introducing invalid AST.
       parent.replaceChild(node, Node.newNumber(0).useSourceInfoIfMissingFrom(node));
       t.getCompiler().reportCodeChange();
+      madeChange = true;
     }
 
-    private static boolean isNewControlBranch(Node n) {
+    private boolean isNewControlBranch(Node n) {
       return n != null
           && (NodeUtil.isControlStructure(n)
               || n.isHook()
@@ -113,7 +123,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
    * Prunes clinit calls which immediately precede calls to a static function which calls the same
    * clinit. e.g. "Foo.clinit(); return new Foo()" -> "return new Foo()"
    */
-  private static final class LookAheadRedundantClinitPruner extends AbstractPostOrderCallback {
+  private final class LookAheadRedundantClinitPruner extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
@@ -151,7 +161,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       Node staticFnNode = var.getInitialValue();
       if (callsClinit(staticFnNode, clinitName) && hasSafeArguments(t, callOrNewNode)) {
         parent.removeChild(node);
-        t.getCompiler().reportCodeChange();
+        madeChange = true;
       }
     }
 
@@ -221,7 +231,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
   /**
    * A traversal callback that removes the body of empty clinits.
    */
-  private static final class EmptyClinitPruner extends AbstractPostOrderCallback {
+  private final class EmptyClinitPruner extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
@@ -256,10 +266,10 @@ public class J2clClinitPrunerPass implements CompilerPass {
       }
 
       body.removeChild(firstExpr);
-      compiler.reportCodeChange();
+      madeChange = true;
     }
 
-    private static boolean isAssignToEmptyFn(Node node, String enclosingFnName) {
+    private boolean isAssignToEmptyFn(Node node, String enclosingFnName) {
       if (!NodeUtil.isExprAssign(node)) {
         return false;
       }

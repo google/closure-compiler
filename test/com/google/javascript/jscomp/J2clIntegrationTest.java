@@ -42,10 +42,7 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
             "  }",
             "}",
             "Main.main();");
-    // TODO(tdeegan): Change to just "alert('hello') when we can determine check() is
-    // pure and can be stripped.
-    test(createCompilerOptions(), source,
-        "function b(a){return'a'<a[0]?b(a+a):a}b('a');alert('hello')");
+    test(createCompilerOptions(), source, "alert('hello')");
   }
 
   public void testFoldJ2clClinits() {
