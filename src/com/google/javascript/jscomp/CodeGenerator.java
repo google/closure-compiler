@@ -1560,6 +1560,10 @@ public class CodeGenerator {
       // ExponentiationExpression cannot expand to
       //     UnaryExpression ** ExponentiationExpression
       return true;
+    } else if (n.isObjectLit() && n.getParent().isArrowFunction()) {
+      // If the body of an arrow function is an object literal, the braces are treated as a
+      // statement block with higher precedence, which we avoid with parentheses.
+      return true;
     } else {
       return NodeUtil.precedence(n.getToken()) < minPrecedence;
     }

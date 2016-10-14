@@ -2133,6 +2133,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("(()=>a),b", "()=>a,b");
     assertPrint("()=>(a=b)", "()=>a=b");
     assertPrintSame("[1,2].forEach((x)=>y)");
+    assertPrintSame("()=>({a:1})");
+    assertPrintSame("()=>{return 1}");
   }
 
   public void testAsyncFunction() {
