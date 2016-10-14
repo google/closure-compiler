@@ -2291,7 +2291,7 @@ public final class NodeUtil {
    * @return True if {@code n} is VAR, LET or CONST
    */
   public static boolean isNameDeclaration(Node n) {
-    return n.isVar() || n.isLet() || n.isConst();
+    return n != null && (n.isVar() || n.isLet() || n.isConst());
   }
 
   /**

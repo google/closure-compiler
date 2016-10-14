@@ -280,8 +280,11 @@ public class ErrorToFixMapperTest {
             "alert(1);"));
   }
 
+  /**
+   * Using this form in a goog.module is a violation of the style guide, but still fairly common.
+   */
   @Test
-  public void testSortRequiresInGoogModule() {
+  public void testSortRequiresInGoogModule_standalone() {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('m');",
@@ -290,7 +293,9 @@ public class ErrorToFixMapperTest {
             "goog.require('a.b.d');",
             "goog.require('a.b.c');",
             "",
-            "alert(1);"),
+            "alert(a.c());",
+            "alert(a.b.d());",
+            "alert(a.b.c());"),
         LINE_JOINER.join(
             "goog.module('m');",
             "",
@@ -298,7 +303,34 @@ public class ErrorToFixMapperTest {
             "goog.require('a.b.d');",
             "goog.require('a.c');",
             "",
-            "alert(1);"));
+            "alert(a.c());",
+            "alert(a.b.d());",
+            "alert(a.b.c());"));
+  }
+
+  @Test
+  public void testSortRequiresInGoogModule_shorthand() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var c2 = goog.require('a.c');",
+            "var d = goog.require('a.b.d');",
+            "var c1 = goog.require('a.b.c');",
+            "",
+            "alert(c1());",
+            "alert(d());",
+            "alert(c2());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var c1 = goog.require('a.b.c');",
+            "var c2 = goog.require('a.c');",
+            "var d = goog.require('a.b.d');",
+            "",
+            "alert(c1());",
+            "alert(d());",
+            "alert(c2());"));
   }
 
   @Test
@@ -310,11 +342,75 @@ public class ErrorToFixMapperTest {
             "alert(new a.b.C());"),
         LINE_JOINER.join(
             "goog.module('m');",
-            // TODO(tbreisacher): Add the shorthand form instead: var C = goog.require('a.b.C');
-            "goog.require('a.b.C');",
+            "var C = goog.require('a.b.C');",
             "",
-            // TODO(tbreisacher): Also change this to use the shorthand: alert(new C());
+            // TODO(tbreisacher): Change this to use the shorthand: alert(new C());
             "alert(new a.b.C());"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModule_insertedInCorrectOrder() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var A = goog.require('a.A');",
+            "var C = goog.require('c.C');",
+            "",
+            "alert(new A(new x.B(new C())));"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            // Requires are sorted by the short name, not the full namespace.
+            "var A = goog.require('a.A');",
+            "var B = goog.require('x.B');",
+            "var C = goog.require('c.C');",
+            "",
+            // TODO(tbreisacher): Change this to use B instead of x.B.
+            "alert(new A(new x.B(new C())));"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModule_alwaysInsertsVar() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const A = goog.require('a.A');",
+            "const C = goog.require('c.C');",
+            "",
+            "alert(new A(new x.B(new C())));"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const A = goog.require('a.A');",
+            // TODO(tbreisacher): Switch to const once ES6+ is on by default everywhere.
+            "var B = goog.require('x.B');",
+            "const C = goog.require('c.C');",
+            "",
+            "alert(new A(new x.B(new C())));"));
+  }
+
+  @Test
+  public void testSortShorthandRequiresInGoogModule() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var B = goog.require('x.B');",
+            "var A = goog.require('a.A');",
+            "var C = goog.require('c.C');",
+            "",
+            "alert(new A(new B(new C())));"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            // Requires are sorted by the short name, not the full namespace.
+            "var A = goog.require('a.A');",
+            "var B = goog.require('x.B');",
+            "var C = goog.require('c.C');",
+            "",
+            "alert(new A(new B(new C())));"));
   }
 
   @Test

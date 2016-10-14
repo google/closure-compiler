@@ -106,30 +106,47 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   /**
-   * If a goog.module uses the "var x = goog.require('x')" form, don't warn.
+   * Contains both the standalone and the shorthand style of goog.require: No warning.
    */
-  public void testGoogModuleWithShorthand() {
-    testSame(
+  public void testGoogModule_bothStyles() {
+    testSameEs6(
         LINE_JOINER.join(
             "goog.module('m');",
             "",
             "goog.require('a.c');",
-            "var d = goog.require('a.b.d');",
+            "const d = goog.require('a.b.d');",
             "goog.require('a.b.c');",
             "",
             "alert(1);"));
 
-    testSame(
+  }
+
+  public void testGoogModule_shorthand() {
+    testWarning(
         LINE_JOINER.join(
             "goog.module('m');",
             "",
             "var d = goog.require('a.b.d');",
             "var c = goog.require('a.c');",
             "",
-            "alert(1);"));
+            "alert(1);"),
+        REQUIRES_NOT_SORTED);
   }
 
-  public void testGoogModuleNoShorthand() {
+  public void testGoogModule_shorthand_destructuring() {
+    testWarningEs6(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var a = goog.require('a.b.d');",
+            "var {b} = goog.require('a.a.a');",
+            "var c = goog.require('a.c');",
+            "",
+            "alert(1);"),
+        REQUIRES_NOT_SORTED);
+  }
+
+  public void testGoogModule_standalone() {
     testWarning(
         LINE_JOINER.join(
             "goog.module('m');",

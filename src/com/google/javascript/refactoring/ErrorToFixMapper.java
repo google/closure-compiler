@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -310,11 +311,6 @@ public final class ErrorToFixMapper {
     return fix.replaceRange(first, last, newContent).build();
   }
 
-  private static String getNamespaceFromClosureNode(Node exprResult) {
-    Preconditions.checkState(exprResult.isExprResult());
-    return exprResult.getFirstChild().getLastChild().getString();
-  }
-
   private static class RequireProvideSorter extends NodeTraversal.AbstractShallowCallback
       implements Comparator<Node> {
     private final String closureFunction;
@@ -330,6 +326,9 @@ public final class ErrorToFixMapper {
           && parent.isExprResult()
           && n.getFirstChild().matchesQualifiedName(closureFunction)) {
         calls.add(parent);
+      } else if (NodeUtil.isNameDeclaration(parent)
+          && n.getFirstFirstChild().matchesQualifiedName(closureFunction)) {
+        calls.add(parent);
       }
     }
 
@@ -339,8 +338,8 @@ public final class ErrorToFixMapper {
 
     @Override
     public int compare(Node n1, Node n2) {
-      String namespace1 = getNamespaceFromClosureNode(n1);
-      String namespace2 = getNamespaceFromClosureNode(n2);
+      String namespace1 = CheckRequiresAndProvidesSorted.getSortKey.apply(n1);
+      String namespace2 = CheckRequiresAndProvidesSorted.getSortKey.apply(n2);
       return namespace1.compareTo(namespace2);
     }
   }

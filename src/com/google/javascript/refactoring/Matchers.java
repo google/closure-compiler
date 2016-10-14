@@ -210,6 +210,17 @@ public final class Matchers {
     };
   }
 
+  public static Matcher googRequire(final String namespace) {
+    return new Matcher() {
+      @Override
+      public boolean matches(Node node, NodeMetadata metadata) {
+        return functionCall("goog.require").matches(node, metadata)
+            && node.getSecondChild().isString()
+            && node.getSecondChild().getString().equals(namespace);
+      }
+    };
+  }
+
   public static Matcher googRequire() {
     return functionCall("goog.require");
   }

@@ -53,6 +53,7 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
 
   private List<Node> requires;
   private List<Node> provides;
+  private boolean containsStandaloneRequire = false;
   private boolean containsShorthandRequire = false;
 
   private final AbstractCompiler compiler;
@@ -73,30 +74,45 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
-  private final Function<Node, String> getNamespace =
+  public static final Function<Node, String> getSortKey =
       new Function<Node, String>() {
         @Override
         public String apply(Node n) {
-          Preconditions.checkState(n.isCall(), n);
-          return n.getLastChild().getString();
+          if (n.isExprResult()) {
+            // Case 1: goog.require('a.b.c');
+            return n.getFirstChild().getLastChild().getString();
+          } else if (NodeUtil.isNameDeclaration(n)) {
+            if (n.getFirstChild().isName()) {
+              // Case 2: var x = goog.require('w.x');
+              return n.getFirstChild().getString();
+            } else if (n.getFirstChild().isDestructuringLhs()) {
+              // Case 3: var {y} = goog.require('w.x');
+              // All case 3 nodes should come after all case 2 nodes.
+              Node pattern = n.getFirstFirstChild();
+              Preconditions.checkState(pattern.isObjectPattern(), pattern);
+              return "{" + pattern.getFirstChild().getString();
+            }
+          }
+          throw new IllegalArgumentException("Unexpected node " + n);
         }
       };
 
-  private final Ordering<Node> alphabetical = Ordering.natural().onResultOf(getNamespace);
+  private final Ordering<Node> alphabetical = Ordering.natural().onResultOf(getSortKey);
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case SCRIPT:
-        // For now, don't report for requires being out of order if there are
-        // "var x = goog.require('goog.x');" style requires.
-        if (!containsShorthandRequire) {
-          reportIfOutOfOrder(requires, REQUIRES_NOT_SORTED);
+        // For now, don't report for requires being out of order if there both
+        // "const x = goog.require('goog.x');" and "goog.require('goog.y')" style requires.
+        // TODO(tbreisacher): Put all the shorthand ones first, and then all the standalone ones.
+        if (containsShorthandRequire && containsStandaloneRequire) {
+          return;
         }
+
+        reportIfOutOfOrder(requires, REQUIRES_NOT_SORTED);
         reportIfOutOfOrder(provides, PROVIDES_NOT_SORTED);
-        requires.clear();
-        provides.clear();
-        containsShorthandRequire = false;
+        reset();
         break;
       case CALL:
         Node callee = n.getFirstChild();
@@ -112,18 +128,20 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
             return;
           }
           if (callee.matchesQualifiedName("goog.require")) {
-            requires.add(n);
+            requires.add(parent);
+            containsStandaloneRequire = true;
           } else {
             if (!requires.isEmpty()) {
               t.report(n, PROVIDES_AFTER_REQUIRES);
             }
             if (callee.matchesQualifiedName("goog.provide")) {
-              provides.add(n);
+              provides.add(parent);
             }
           }
         } else if (NodeUtil.isNameDeclaration(parent.getParent())
             && callee.matchesQualifiedName("goog.require")) {
           containsShorthandRequire = true;
+          requires.add(parent.getParent());
         }
         break;
       default:
@@ -145,5 +163,12 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
       compiler.report(
           JSError.make(requiresOrProvides.get(0), warning, Joiner.on('\n').join(correctOrder)));
     }
+  }
+
+  private void reset() {
+    requires.clear();
+    provides.clear();
+    containsShorthandRequire = false;
+    containsStandaloneRequire = false;
   }
 }

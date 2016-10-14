@@ -553,9 +553,6 @@ public final class SuggestedFix {
       if (existingNode != null) {
         return this;
       }
-      Node googRequireNode = IR.exprResult(IR.call(
-          IR.getprop(IR.name("goog"), IR.string("require")),
-          IR.string(namespace)));
 
       // Find the right goog.require node to insert this after.
       Node script = NodeUtil.getEnclosingScript(node);
@@ -565,6 +562,21 @@ public final class SuggestedFix {
       if (script.getFirstChild().isModuleBody()) {
         script = script.getFirstChild();
       }
+
+      Node googRequireNode = IR.call(
+          IR.getprop(IR.name("goog"), IR.string("require")),
+          IR.string(namespace));
+
+      // The name that will be used on the LHS, if the require is added using the shorthand form.
+      String shortName = namespace.substring(namespace.lastIndexOf('.') + 1);
+
+      if (script.isModuleBody()) {
+        // TODO(tbreisacher): Switch to IR.const() once ES6+ is on by default everywhere.
+        googRequireNode = IR.var(IR.name(shortName), googRequireNode);
+      } else {
+        googRequireNode = IR.exprResult(googRequireNode);
+      }
+
       Node lastModuleOrProvideNode = null;
       Node lastGoogRequireNode = null;
       Node nodeToInsertBefore = null;
@@ -583,6 +595,12 @@ public final class SuggestedFix {
               nodeToInsertBefore = child;
               break;
             }
+          }
+        } else if (NodeUtil.isNameDeclaration(child)
+            && Matchers.googRequire().matches(child.getFirstFirstChild(), metadata)) {
+          if (shortName.compareTo(child.getFirstChild().getString()) < 0) {
+            nodeToInsertBefore = child;
+            break;
           }
         }
         child = child.getNext();
@@ -630,19 +648,19 @@ public final class SuggestedFix {
 
     private Node findGoogRequireNode(Node n, NodeMetadata metadata, String namespace) {
       Node script = NodeUtil.getEnclosingScript(n);
+      if (script.getFirstChild().isModuleBody()) {
+        script = script.getFirstChild();
+      }
 
       if (script != null) {
         Node child = script.getFirstChild();
         while (child != null) {
-          if (child.isExprResult() && child.getFirstChild().isCall()) {
-            // TODO(mknichel): Replace this logic with a function argument
-            // Matcher when it exists.
-            Node grandchild = child.getFirstChild();
-            if (Matchers.googRequire().matches(child.getFirstChild(), metadata)
-                && grandchild.getLastChild().isString()
-                && namespace.equals(grandchild.getLastChild().getString())) {
-              return child;
-            }
+          if ((NodeUtil.isExprCall(child)
+                  && Matchers.googRequire(namespace).matches(child.getFirstChild(), metadata))
+              || (NodeUtil.isNameDeclaration(child)
+                  && Matchers.googRequire(namespace)
+                      .matches(child.getFirstFirstChild(), metadata))) {
+            return child;
           }
           child = child.getNext();
         }
@@ -687,7 +705,7 @@ public final class SuggestedFix {
 
       Node child = script.getFirstChild();
       while (child != null) {
-        if (child.isExprResult() && child.getFirstChild().isCall()) {
+        if (NodeUtil.isExprCall(child)) {
           if (Matchers.googRequire().matches(child.getFirstChild(), metadata)) {
             return true;
           }
