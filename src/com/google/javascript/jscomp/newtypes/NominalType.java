@@ -60,6 +60,14 @@ public final class NominalType {
     return this.rawType;
   }
 
+  // NOTE(dimvar): we need this to get access to the static properties of the class.
+  // It'd be good if these properties were on the type returned by getConstructorFunction,
+  // but there are some circularity issues when we're computing the namespace types.
+  // Maybe revisit in the future to improve this.
+  public JSType getNamespaceType() {
+    return this.rawType.toJSType();
+  }
+
   public JSType getInstanceAsJSType() {
     return (this.rawType.isGeneric() && !typeMap.isEmpty())
         ? JSType.fromObjectType(ObjectType.fromNominalType(this))
@@ -156,7 +164,10 @@ public final class NominalType {
   }
 
   public FunctionType getConstructorFunction() {
-    return this.rawType.getConstructorFunction();
+    if (this.typeMap.isEmpty()) {
+      return this.rawType.getConstructorFunction();
+    }
+    return this.rawType.getConstructorFunction().instantiateGenerics(this.typeMap);
   }
 
   NominalType instantiateGenerics(List<JSType> types) {

@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.MismatchInfo;
+import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.TypeEnv;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
@@ -607,6 +608,15 @@ final class NewTypeInference implements CompilerPass {
       varNames.add(THIS_ID);
     }
     if (currentScope.isFunction()) {
+      Node fn = currentScope.getRoot();
+      if (!currentScope.hasThis() && NodeUtil.referencesSuper(fn)) {
+        // This function is a static method on some class. To do lookups of the
+        // class name, we add the root of the qualified name to the environment.
+        Node funNameNode = NodeUtil.getBestLValue(fn);
+        Node qnameRoot = NodeUtil.getRootOfQualifiedName(funNameNode);
+        Preconditions.checkState(qnameRoot.isName());
+        varNames.add(qnameRoot.getString());
+      }
       if (currentScope.getName() != null) {
         varNames.add(currentScope.getName());
       }
@@ -1335,6 +1345,10 @@ final class NewTypeInference implements CompilerPass {
         resultPair = analyzeThisFwd(expr, inEnv, requiredType, specializedType);
         break;
       }
+      case SUPER: {
+        resultPair = analyzeSuperFwd(expr, inEnv);
+        break;
+      }
       case NAME:
         resultPair = analyzeNameFwd(expr, inEnv, requiredType, specializedType);
         break;
@@ -1895,7 +1909,7 @@ final class NewTypeInference implements CompilerPass {
       return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
     } else if (funType.isLoose()) {
       return analyzeLooseCallNodeFwd(expr, envAfterCallee, requiredType);
-    } else if (expr.isCall()
+    } else if (!isConstructorCall(expr)
         && funType.isSomeConstructorOrInterface()
         && (funType.getReturnType().isUnknown()
             || funType.getReturnType().isUndefined())) {
@@ -1947,7 +1961,11 @@ final class NewTypeInference implements CompilerPass {
           println("Updating deferred check with ret: ", expectedRetType,
               " and args: ", argTypes);
           DeferredCheck dc;
-          if (expr.isCall()) {
+          if (isConstructorCall(expr)) {
+            dc = new DeferredCheck(expr, null,
+                currentScope, currentScope.getScope(calleeName));
+            deferredChecks.put(expr, dc);
+          } else {
             dc = deferredChecks.get(expr);
             if (dc != null) {
               dc.updateReturn(expectedRetType);
@@ -1960,10 +1978,6 @@ final class NewTypeInference implements CompilerPass {
                   "No deferred check created in backward direction for %s",
                   expr);
             }
-          } else { // call to constructor
-            dc = new DeferredCheck(expr, null,
-                currentScope, currentScope.getScope(calleeName));
-            deferredChecks.put(expr, dc);
           }
           if (dc != null) {
             dc.updateArgTypes(argTypes);
@@ -1976,6 +1990,11 @@ final class NewTypeInference implements CompilerPass {
       retType = retType.specialize(specializedType);
     }
     return new EnvTypePair(tmpEnv, retType);
+  }
+
+  private boolean isConstructorCall(Node expr) {
+    return expr.isNew()
+        || (expr.isCall() && currentScope.isConstructor() && expr.getFirstChild().isSuper());
   }
 
   private EnvTypePair analyzeFunctionBindFwd(Node call, TypeEnv inEnv) {
@@ -2331,6 +2350,28 @@ final class NewTypeInference implements CompilerPass {
     }
     JSType preciseType = inferredType.specialize(specializedType);
     return EnvTypePair.addBinding(inEnv, THIS_ID, preciseType);
+  }
+
+  private EnvTypePair analyzeSuperFwd(Node expr, TypeEnv inEnv) {
+    Preconditions.checkArgument(expr.isSuper());
+    if (currentScope.hasThis()) {
+      NominalType thisClass = Preconditions.checkNotNull(
+          envGetType(inEnv, THIS_ID).getNominalTypeIfSingletonObj());
+      NominalType superClass = Preconditions.checkNotNull(thisClass.getInstantiatedSuperclass());
+      if (currentScope.isConstructor()) {
+        JSType superCtor = commonTypes.fromFunctionType(superClass.getConstructorFunction());
+        return new EnvTypePair(inEnv, superCtor);
+      }
+      return new EnvTypePair(inEnv, superClass.getInstanceAsJSType());
+    }
+    // Use of super in a static method.
+    Node funName = NodeUtil.getBestLValue(currentScope.getRoot());
+    Node classNameNode = funName.getFirstChild();
+    JSType thisClassAsJstype = analyzeExprFwd(classNameNode, inEnv).type;
+    FunctionType thisCtor = thisClassAsJstype.getFunTypeIfSingletonObj();
+    NominalType thisClass = thisCtor.getThisType().getNominalTypeIfSingletonObj();
+    NominalType superClass = Preconditions.checkNotNull(thisClass.getInstantiatedSuperclass());
+    return new EnvTypePair(inEnv, superClass.getNamespaceType());
   }
 
   private JSType getTypeFromString(Node typeString) {
@@ -3273,6 +3314,10 @@ final class NewTypeInference implements CompilerPass {
         JSType thisType = currentScope.getDeclaredTypeOf(THIS_ID);
         return new EnvTypePair(outEnv, thisType);
       }
+      case SUPER:
+        // NOTE(dimvar): analyzing SUPER in the backward direction doesn't give
+        // us anything useful at the moment.
+        return new EnvTypePair(outEnv, UNKNOWN);
       case NAME:
         return analyzeNameBwd(expr, outEnv, requiredType);
       case INC:
