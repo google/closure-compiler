@@ -57,6 +57,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -494,8 +495,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     JSType childType;
-    JSType leftType, rightType;
-    Node left, right;
+    JSType leftType;
+    JSType rightType;
+    Node left;
+    Node right;
     // To be explicitly set to false if the node is not typeable.
     boolean typeable = true;
 
@@ -1646,9 +1649,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         JSType oPropType = oType.getPropertyType(name);
         if (thisPropType.isSubtype(oPropType, this.subtypingMode)
             || oPropType.isSubtype(thisPropType, this.subtypingMode)
-            || thisPropType.isFunctionType() && oPropType.isFunctionType()
-               && thisPropType.toMaybeFunctionType().hasEqualCallType(
-                  oPropType.toMaybeFunctionType())) {
+            || (thisPropType.isFunctionType()
+                && oPropType.isFunctionType()
+                && thisPropType
+                    .toMaybeFunctionType()
+                    .hasEqualCallType(oPropType.toMaybeFunctionType()))) {
           continue;
         }
         compiler.report(
@@ -1675,9 +1680,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     String functionPrivateName = n.getFirstChild().getString();
     if (functionType.isConstructor()) {
       FunctionType baseConstructor = functionType.getSuperClassConstructor();
-      if (baseConstructor != getNativeType(OBJECT_FUNCTION_TYPE) &&
-          baseConstructor != null &&
-          baseConstructor.isInterface()) {
+      if (!Objects.equals(baseConstructor, getNativeType(OBJECT_FUNCTION_TYPE))
+          && baseConstructor != null
+          && baseConstructor.isInterface()) {
         compiler.report(
             t.makeError(n, CONFLICTING_EXTENDED_TYPE,
                         "constructor", functionPrivateName));
@@ -1857,9 +1862,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     int ordinal = 0;
     Node parameter = null;
     Node argument = null;
-    while (arguments.hasNext() &&
-           (parameters.hasNext() ||
-            parameter != null && parameter.isVarArgs())) {
+    while (arguments.hasNext()
+        && (parameters.hasNext() || (parameter != null && parameter.isVarArgs()))) {
       // If there are no parameters left in the list, then the while loop
       // above implies that this must be a var_args function.
       if (parameters.hasNext()) {

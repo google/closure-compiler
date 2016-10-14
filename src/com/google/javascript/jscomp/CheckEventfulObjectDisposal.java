@@ -169,7 +169,8 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
    */
   private void addDisposeCall(String functionOrMethodName,
       List<Integer> argumentsThatAreDisposed) {
-    String potentiallyTypeName, propertyName;
+    String potentiallyTypeName;
+    String propertyName;
     JSType objectType = null;
 
     int lastPeriod = functionOrMethodName.lastIndexOf('.');
@@ -470,7 +471,9 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     /*
      * Perform topological sort
      */
-    int white = 0, gray = 1, black = 2;
+    int white = 0;
+    int gray = 1;
+    int black = 2;
     int last = eventizes.keySet().size() - 1;
     Map<String, Integer> color = new HashMap<>();
     Stack<String> dfsStack = new Stack<>();

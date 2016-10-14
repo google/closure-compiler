@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -118,7 +119,7 @@ class DisambiguateProperties implements CompilerPass {
    * for disambiguation. It has to be Object because of the generic nature of
    * this pass.
    */
-  private Multimap<Object, JSError> invalidationMap;
+  private final Multimap<Object, JSError> invalidationMap;
 
   /**
    * In practice any large code base will have thousands and thousands of
@@ -320,7 +321,7 @@ class DisambiguateProperties implements CompilerPass {
     }
   }
 
-  private Map<String, Property> properties = new HashMap<>();
+  private final Map<String, Property> properties = new HashMap<>();
 
   DisambiguateProperties(
       AbstractCompiler compiler, Map<String, CheckLevel> propertiesToErrorFor) {
@@ -688,8 +689,11 @@ class DisambiguateProperties implements CompilerPass {
 
   /** Renames all properties with references on more than one type. */
   void renameProperties() {
-    int propsRenamed = 0, propsSkipped = 0, instancesRenamed = 0,
-        instancesSkipped = 0, singleTypeProps = 0;
+    int propsRenamed = 0;
+    int propsSkipped = 0;
+    int instancesRenamed = 0;
+    int instancesSkipped = 0;
+    int singleTypeProps = 0;
 
     Set<String> reported = new HashSet<>();
     for (Property prop : properties.values()) {
@@ -935,7 +939,7 @@ class DisambiguateProperties implements CompilerPass {
         foundType = topInterface.getConstructor().getPrototype();
       }
     } else {
-      while (objType != null && objType.getImplicitPrototype() != objType) {
+      while (objType != null && !Objects.equals(objType.getImplicitPrototype(), objType)) {
         if (objType.hasOwnProperty(field)) {
           foundType = objType;
         }

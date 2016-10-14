@@ -213,7 +213,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     }
     if (includeTypes) {
       return unknownTypeNames.contains(name)
-          || declaredType != null && declaredType.isTypeVariableDefinedLocally(name);
+          || (declaredType != null && declaredType.isTypeVariableDefinedLocally(name));
     }
     return false;
   }
@@ -262,8 +262,7 @@ final class NTIScope implements DeclaredTypeRegistry {
       return false;
     }
     JSType simpleType = decl.getTypeOfSimpleDecl();
-    return decl.getNamespace() != null
-        || simpleType != null && simpleType.isNamespace();
+    return decl.getNamespace() != null || (simpleType != null && simpleType.isNamespace());
   }
 
   boolean isVisibleInScope(String name) {

@@ -922,8 +922,8 @@ public final class NodeUtil {
 
   static boolean isTypedefDecl(Node n) {
     if (n.isVar()
-        || n.isName() && n.getParent().isVar()
-        || n.isGetProp() && n.getParent().isExprResult()) {
+        || (n.isName() && n.getParent().isVar())
+        || (n.isGetProp() && n.getParent().isExprResult())) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       return jsdoc != null && jsdoc.hasTypedefType();
     }
@@ -932,9 +932,8 @@ public final class NodeUtil {
 
   static boolean isEnumDecl(Node n) {
     if (n.isVar()
-        || n.isName() && n.getParent().isVar()
-        || (n.isGetProp() && n.getParent().isAssign()
-            && n.getGrandparent().isExprResult())
+        || (n.isName() && n.getParent().isVar())
+        || (n.isGetProp() && n.getParent().isAssign() && n.getGrandparent().isExprResult())
         || (n.isAssign() && n.getParent().isExprResult())) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       return jsdoc != null && jsdoc.hasEnumParameterType();
@@ -3000,8 +2999,7 @@ public final class NodeUtil {
 
   public static boolean isImportedName(Node n) {
     Node parent = n.getParent();
-    return parent.isImport()
-        || parent.isImportSpec() && parent.getLastChild() == n;
+    return parent.isImport() || (parent.isImportSpec() && parent.getLastChild() == n);
   }
 
   public static boolean isLhsByDestructuring(Node n) {

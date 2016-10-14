@@ -257,7 +257,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   private final List<NTIScope> scopes = new ArrayList<>();
   private NTIScope globalScope;
   private WarningReporter warnings;
-  private JSTypeCreatorFromJSDoc typeParser;
+  private final JSTypeCreatorFromJSDoc typeParser;
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
   private final Map<Node, String> anonFunNames = new LinkedHashMap<>();
@@ -274,15 +274,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   private HashBasedTable<RawNominalType, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
   // TODO(dimvar): Eventually attach these to nodes, like the current types.
-  private Map<Node, JSType> castTypes = new LinkedHashMap<>();
-  private Map<Node, JSType> declaredObjLitProps = new LinkedHashMap<>();
+  private final Map<Node, JSType> castTypes = new LinkedHashMap<>();
+  private final Map<Node, JSType> declaredObjLitProps = new LinkedHashMap<>();
 
   private final JSTypes commonTypes;
   private final Set<String> unknownTypeNames;
   // It's useful to know all properties defined anywhere in the program.
   // For a property access on ?, we can warn if the property isn't defined;
   // same for Object in compatibility mode.
-  private Set<String> allPropertyNames = new LinkedHashSet<>();
+  private final Set<String> allPropertyNames = new LinkedHashSet<>();
   // All property names that appear in externs. This means that with NTI,
   // we don't need to run GatherExternProperties, which uses the OTI-specific
   // Visitor interface.
@@ -724,8 +724,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       return false;
     }
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(pd.defSite);
-    return jsdoc == null
-        || jsdoc.isOverride() && !jsdoc.containsFunctionDeclaration();
+    return jsdoc == null || (jsdoc.isOverride() && !jsdoc.containsFunctionDeclaration());
   }
 
   /**
@@ -1359,8 +1358,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             currentScope.addOuterVar(name);
           } else if (// Typedef variables can't be referenced in the source.
               currentScope.getTypedef(name) != null
-              || !name.equals(currentScope.getName())
-              && !currentScope.isDefinedLocally(name, false)) {
+              || (!name.equals(currentScope.getName())
+                  && !currentScope.isDefinedLocally(name, false))) {
           }
           break;
         }
@@ -1729,9 +1728,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
         if (ns.hasSubnamespace(new QualifiedName(pname))
-            || ns.hasProp(pname)
-            && previousPropType != null
-            && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType)) {
+            || (ns.hasProp(pname)
+                && previousPropType != null
+                && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType))) {
           warnings.add(JSError.make(
               declNode, REDECLARED_PROPERTY, pname, "namespace " + ns));
           declNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -2163,8 +2162,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return true;
       }
       Node parent = getProp.getParent();
-      return (parent.isAssign() && getProp == parent.getFirstChild()
-          || parent.isExprResult())
+      return ((parent.isAssign() && getProp == parent.getFirstChild()) || parent.isExprResult())
           && currentScope.isConstructor();
     }
 
@@ -2284,8 +2282,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (reqArity == optArity && !hasRestFormals) {
         return numFormals == reqArity ? declType : null;
       }
-      if (numFormals == optArity && !hasRestFormals
-          || numFormals == (optArity + 1) && hasRestFormals) {
+      if ((numFormals == optArity && !hasRestFormals)
+          || (numFormals == (optArity + 1) && hasRestFormals)) {
         return declType;
       }
       return null;
@@ -2449,7 +2447,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   private DeclaredFunctionType getDeclaredFunctionTypeOfCalleeIfAny(
       Node fn, NTIScope currentScope) {
     Preconditions.checkArgument(fn.getParent().isCall());
-    if (fn.isThis() || !fn.isFunction() && !fn.isQualifiedName()) {
+    if (fn.isThis() || (!fn.isFunction() && !fn.isQualifiedName())) {
       return null;
     }
     if (fn.isFunction()) {
@@ -2474,9 +2472,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   private static boolean isClassPropertyDeclaration(Node n, NTIScope s) {
     Node parent = n.getParent();
-    return n.isGetProp() && n.getFirstChild().isThis()
-        && (parent.isAssign() && parent.getFirstChild().equals(n)
-            || parent.isExprResult())
+    return n.isGetProp()
+        && n.getFirstChild().isThis()
+        && ((parent.isAssign() && parent.getFirstChild().equals(n)) || parent.isExprResult())
         && (s.isConstructor() || s.isPrototypeMethod());
   }
 
