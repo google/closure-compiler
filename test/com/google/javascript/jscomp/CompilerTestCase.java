@@ -1250,7 +1250,7 @@ public abstract class CompilerTestCase extends TestCase {
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
           new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
-              .process(null, mainRoot);
+              .process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
@@ -1574,7 +1574,8 @@ public abstract class CompilerTestCase extends TestCase {
     }
 
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
-      new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false).process(null, mainRoot);
+      new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
+          .process(externsRoot, mainRoot);
     }
 
     if (rewriteClosureCode) {
