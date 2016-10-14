@@ -376,12 +376,29 @@ class ConvertToTypedInterface implements CompilerPass {
       REMOVE_ALL,
     }
 
+    private static boolean isImportRhs(Node rhs) {
+      if (!rhs.isCall()) {
+        return false;
+      }
+      Node callee = rhs.getFirstChild();
+      return callee.matchesQualifiedName("goog.require")
+          || callee.matchesQualifiedName("goog.forwardDeclare");
+    }
+
+    private static boolean isExportLhs(Node lhs) {
+      return (lhs.isName() && lhs.matchesQualifiedName("exports"))
+          || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
+    }
+
     private RemovalType shouldRemove(Node nameNode) {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
       if (rhs == null
           || rhs.isFunction()
+          || rhs.isClass()
+          || isImportRhs(rhs)
+          || isExportLhs(nameNode)
           || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
           || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"))
           || (rhs.isObjectLit()

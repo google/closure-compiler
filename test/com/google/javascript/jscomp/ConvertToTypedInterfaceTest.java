@@ -444,4 +444,25 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     test("var x = 4; x = 7;", "/** @type {*} */ var x;");
   }
+
+  public void testDontRemoveGoogModuleContents() {
+    testSame("goog.module('x.y.z'); var C = goog.require('a.b.C'); exports = new C;");
+
+    testSameEs6("goog.module('x.y.z.Foo'); exports = class {};");
+
+    testSameEs6("goog.module('x.y.z'); exports.Foo = class {};");
+
+    testSameEs6("goog.module('x.y.z.Foo'); class Foo {}; exports = Foo;");
+
+    testSameEs6("goog.module('x.y.z'); class Foo {}; exports.Foo = Foo;");
+
+    testSameEs6("goog.module('x.y.z'); class Foo {}; exports = {Foo};");
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "const C = goog.require('a.b.C');",
+            "class Foo extends C {}",
+            "exports = Foo;"));
+  }
 }
