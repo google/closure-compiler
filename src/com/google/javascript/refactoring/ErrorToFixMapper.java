@@ -110,7 +110,9 @@ public final class ErrorToFixMapper {
     Node name = error.node;
     Preconditions.checkState(name.isName(), name);
     Node parent = name.getParent();
-    Preconditions.checkState(NodeUtil.isNameDeclaration(parent), parent);
+    if (!NodeUtil.isNameDeclaration(parent)) {
+      return null;
+    }
 
     SuggestedFix.Builder fix = new SuggestedFix.Builder().attachMatchedNodeInfo(name, compiler);
 

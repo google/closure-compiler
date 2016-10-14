@@ -193,6 +193,16 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testRedeclarationOfParam() {
+    assertChanges("function f(x) { var x = 3; }", "function f(x) { x = 3; }");
+  }
+
+  @Test
+  public void testRedeclaration_params() {
+    assertNoChanges("function f(x, x) {}");
+  }
+
+  @Test
   public void testEarlyReference() {
     String code = "if (x < 0) alert(1);\nvar x;";
     String expectedCode = "var x;\n" + code;
@@ -496,5 +506,14 @@ public class ErrorToFixMapperTest {
     String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
         fixes, ImmutableMap.of("test", originalCode)).get("test");
     assertThat(newCode).isEqualTo(expectedCode);
+  }
+
+  protected void assertNoChanges(String originalCode) {
+    compiler.compile(
+        ImmutableList.<SourceFile>of(), // Externs
+        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
+        options);
+    Collection<SuggestedFix> fixes = errorManager.getAllFixes();
+    assertThat(fixes).isEmpty();
   }
 }
