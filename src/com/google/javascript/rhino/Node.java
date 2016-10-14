@@ -1618,6 +1618,15 @@ public class Node implements Serializable {
   }
 
   /**
+   * Check for two children more efficiently than {@code getChildCount() == 2}
+   *
+   * @return Whether the node has exactly two children.
+   */
+  public boolean hasTwoChildren() {
+    return first != null && first.next != null && first.next == getLastChild();
+  }
+
+  /**
    * Check for zero or one child more efficiently than by iterating over all the
    * children as is done with Node.getChildCount().
    *
@@ -1635,6 +1644,19 @@ public class Node implements Serializable {
    */
   public boolean hasMoreThanOneChild() {
     return first != null && first.next != null;
+  }
+
+  /**
+   * Check for has exactly the number of specified children.
+   *
+   * @return Whether the node has exactly the number of children specified.
+   */
+  public boolean hasXChildren(int x) {
+    int c = 0;
+    for (Node n = first; n != null && c <= x; n = n.next) {
+      c++;
+    }
+    return c == x;
   }
 
   public int getChildCount() {
