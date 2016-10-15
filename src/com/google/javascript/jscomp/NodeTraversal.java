@@ -694,7 +694,7 @@ public class NodeTraversal {
       traverseBranch(className, n);
     }
 
-    final Node extendsClause = className.getNext();
+    final Node extendsClause = n.getSecondChild();
     final Node body = extendsClause.getNext();
 
     // Extends
