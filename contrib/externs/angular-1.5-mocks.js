@@ -20,7 +20,6 @@
  *
  * TODO: Remaining Mocks:
  *     $browser
- *     $exceptionHandler
  *     $log
  *     angular.mock.TzDate
  *     angular.mock.dump
@@ -265,3 +264,19 @@ angular.mock.$controller;
 
 /** @param {!Array|!Function} injectable */
 angular.mock.inject = function(injectable) {};
+
+
+/** @interface */
+angular.mock.$exceptionHandler = function() {};
+
+
+/** @type {!Array<?>} */
+angular.mock.$exceptionHandler.prototype.errors;
+
+
+/** @interface */
+angular.mock.$exceptionHandlerProvider = function() {};
+
+
+/** @param {string} mode */
+angular.mock.$exceptionHandlerProvider.prototype.mode = function(mode) {};
