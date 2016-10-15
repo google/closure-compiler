@@ -398,10 +398,10 @@ public final class ProcessCommonJSModules implements CompilerPass {
       // If there are no exports, we still need to rewrite type annotations which
       // are module paths
       NodeTraversal.traverseEs6(compiler, script,
-          new SuffixVarsCallback(moduleName, hasExports));
+          new SuffixVarsCallback(moduleName, hasExports && allowFullRewrite));
 
       // If the script has no exports, we don't want to output a goog.provide statement
-      if (!hasExports) {
+      if (!hasExports || !allowFullRewrite) {
         return;
       }
 
