@@ -866,8 +866,18 @@ public final class SimpleFormat {
   }
 
   private void transformF(StringBuilder result) {
-    // Removed all the actual logic...
-    result.append(arg);
+    int precision = formatToken.getPrecision();
+
+    String s = arg.toString();
+    if (!s.contains(".")) {
+      result.append(s);
+    } else {
+      int i = s.indexOf('.');
+      if (i + precision < s.length()) {
+        s = s.substring(0, i + precision + 1);
+      }
+      result.append(s);
+    }
   }
 
   private void transformA() {

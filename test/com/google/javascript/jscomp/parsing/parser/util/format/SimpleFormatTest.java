@@ -44,6 +44,8 @@ public final class SimpleFormatTest extends TestCase {
   public void testPrecision() {
     assertEquals("003", SimpleFormat.format("%03d", 3));
     assertEquals("+3", SimpleFormat.format("%+d", 3));
-    assertEquals("0.12", SimpleFormat.format("%.1f", 0.12)); // Unsupported yet
+    assertEquals("0.1", SimpleFormat.format("%.1f", 0.123456));
+    assertEquals("0.12", SimpleFormat.format("%.2f", 0.123456));
+    assertEquals("0.123", SimpleFormat.format("%.3f", 0.123456));
   }
 }
