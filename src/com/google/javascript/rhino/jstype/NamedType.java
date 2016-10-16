@@ -400,6 +400,14 @@ public class NamedType extends ProxyObjectType {
   }
 
   @Override
+  public boolean isObject() {
+    if (isEnumElementType()) {
+      return toMaybeEnumElementType().isObject();
+    }
+    return super.isObject();
+  }
+
+  @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseNamedType(this);
   }

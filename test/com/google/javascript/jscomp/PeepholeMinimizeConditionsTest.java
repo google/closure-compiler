@@ -832,6 +832,36 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     testSame("var x = /** @type {?number} */ (1); if (x != 0) throw 'a';");
     testSame("var x = /** @type {?string} */ (''); if (x != null) throw 'a';");
     testSame("var x = /** @type {?boolean} */ (true); if (x != null) throw 'a';");
+    testSame(LINE_JOINER.join(
+        "/** @enum {string} */",
+        "var E = { F: '1' };",
+        "/** @param {?E} x */",
+        "function f(x) {",
+        "  if (x != null) throw 'a';",
+        "}"));
+    testSame(LINE_JOINER.join(
+        "/** @enum {number} */",
+        "var E1 = { F: 1 };",
+        "/** @enum {number} */",
+        "var E2 = { F: 1 };",
+        "/** @param {?E1|?E2} x */",
+        "function f(x) {",
+        "  if (x != null) throw 'a';",
+        "}"));
+    test(LINE_JOINER.join(
+        "/** @enum {Object} */",
+        "var E = { F: {} };",
+        "/** @param {?E} x */",
+        "function f(x) {",
+        "  if (x != null) throw 'a';",
+        "}"),
+        LINE_JOINER.join(
+        "/** @enum {Object} */",
+        "var E = { F: {} };",
+        "/** @param {?E} x */",
+        "function f(x) {",
+        "  if (x) throw 'a';",
+        "}"));
     test(
         "if (/** @type {Array|undefined} */ (window['c']) == null) {}",
         "if (!/** @type {Array|undefined} */ (window['c'])) {}");
