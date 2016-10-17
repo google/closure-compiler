@@ -1850,11 +1850,12 @@ public final class CommandLineRunnerTest extends TestCase {
     String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
     args.add("--json_streams=IN");
 
-    CommandLineRunner runner = new CommandLineRunner(
-        args.toArray(new String[]{}),
-        new ByteArrayInputStream(inputString.getBytes()),
-        new PrintStream(outReader),
-        new PrintStream(errReader));
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outReader),
+            new PrintStream(errReader));
 
     lastCompiler = runner.getCompiler();
     try {
@@ -1871,11 +1872,12 @@ public final class CommandLineRunnerTest extends TestCase {
     String inputString = "alert('foo');";
     args.add("--json_streams=OUT");
 
-    CommandLineRunner runner = new CommandLineRunner(
-        args.toArray(new String[]{}),
-        new ByteArrayInputStream(inputString.getBytes()),
-        new PrintStream(outReader),
-        new PrintStream(errReader));
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outReader),
+            new PrintStream(errReader));
 
     lastCompiler = runner.getCompiler();
     try {
@@ -1898,11 +1900,12 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--json_streams=BOTH");
     args.add("--js_output_file=bar.js");
 
-    CommandLineRunner runner = new CommandLineRunner(
-        args.toArray(new String[]{}),
-        new ByteArrayInputStream(inputString.getBytes()),
-        new PrintStream(outReader),
-        new PrintStream(errReader));
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outReader),
+            new PrintStream(errReader));
 
     lastCompiler = runner.getCompiler();
     try {
@@ -1925,11 +1928,12 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--json_streams=BOTH");
     args.add("--module=foo--bar.baz:1");
 
-    CommandLineRunner runner = new CommandLineRunner(
-        args.toArray(new String[]{}),
-        new ByteArrayInputStream(inputString.getBytes()),
-        new PrintStream(outReader),
-        new PrintStream(errReader));
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outReader),
+            new PrintStream(errReader));
 
     lastCompiler = runner.getCompiler();
     try {
