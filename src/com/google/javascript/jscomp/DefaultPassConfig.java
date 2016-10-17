@@ -545,6 +545,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(createEmptyPass("beforeStandardOptimizations"));
+    assertAllOneTimePasses(passes);
 
     // Inline aliases so that following optimizations don't have to understand alias chains.
     if (options.collapseProperties) {
@@ -656,8 +657,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.chainCalls) {
       passes.add(chainCalls);
     }
-
-    assertAllOneTimePasses(passes);
 
     if (options.smartNameRemoval || options.reportPath != null) {
       passes.addAll(getCodeRemovingPasses());
@@ -1368,7 +1367,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Inlines type aliases if they are explicitly or effectively const. */
   private final PassFactory aggressiveInlineAliases =
-      new PassFactory("aggressiveInlineAliases", true) {
+      new PassFactory("aggressiveInlineAliases", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new AggressiveInlineAliases(compiler);
