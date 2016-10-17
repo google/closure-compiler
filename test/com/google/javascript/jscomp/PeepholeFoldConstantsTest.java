@@ -68,10 +68,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test(js, expected);
   }
 
-  private void fold(String js, String expected, DiagnosticType warning) {
-    test(js, expected, null, warning);
-  }
-
   public void testUndefinedComparison1() {
     fold("undefined == undefined", "true");
     fold("undefined == null", "true");
