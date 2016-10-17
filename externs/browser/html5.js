@@ -58,6 +58,15 @@ HTMLCanvasElement.prototype.width;
 HTMLCanvasElement.prototype.height;
 
 /**
+ * @see https://www.w3.org/TR/html5/scripting-1.html#dom-canvas-toblob
+ * @param {function(!Blob)} callback
+ * @param {string=} opt_type
+ * @param {...*} var_args
+ * @throws {Error}
+ */
+HTMLCanvasElement.prototype.toBlob = function(callback, opt_type, var_args) {};
+
+/**
  * @param {string=} opt_type
  * @param {...*} var_args
  * @return {string}
