@@ -199,9 +199,8 @@ public final class JsFileParser extends JsFileLineParser {
 
   private void setModuleType(ModuleType type) {
     if (moduleType != type && moduleType != ModuleType.NON_MODULE) {
-      // TODO(sdh): should this be an error?
       errorManager.report(
-          CheckLevel.WARNING, JSError.make(ModuleLoader.MODULE_CONFLICT, file.toString()));
+          CheckLevel.ERROR, JSError.make(ModuleLoader.MODULE_CONFLICT, file.toString()));
     }
     moduleType = type;
   }
