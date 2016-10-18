@@ -24,12 +24,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
-
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.List;
 
 /**
  * Unit tests for {RefasterJsScanner}.
@@ -46,6 +48,11 @@ import java.util.List;
 
 @RunWith(JUnit4.class)
 public class RefasterJsScannerTest {
+
+  @BeforeClass
+  public static void noLogSpam() {
+    Logger.getLogger("com.google").setLevel(Level.OFF);
+  }
 
   @Test
   public void testInitialize_missingTemplates() throws Exception {
