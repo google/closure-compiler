@@ -120,6 +120,31 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, before, after);
   }
 
+  public void testMultipleAliasesInlined_bug31437418() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCollapseProperties(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    test(
+        options,
+        LINE_JOINER.join(
+            "class A { static z() {} }",
+            "const B = {};",
+            " B.A = A;",
+            " const C = {};",
+            " C.A = B.A; ",
+            "const D = {};",
+            " D.A = C.A;",
+            " D.A.z();"),
+        LINE_JOINER.join(
+            "var A = function(){};",
+            "var A$z = function(){};",
+            "var B$A = null;",
+            "var C$A = null;",
+            "var D$A = null;",
+            "A$z();"));
+  }
+
   public void testBug1949424() {
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
