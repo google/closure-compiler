@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Maps a JSError to a SuggestedFix.
+ * Maps a {@code JSError} to a list of {@code SuggestedFix}es, if possible.
  * TODO(tbreisacher): Move this into the compiler itself (i.e. into the jscomp package). This will
  *     make it easier for people adding new warnings to also add fixes for them.
  */
@@ -94,10 +94,10 @@ public final class ErrorToFixMapper {
       case "JSC_MISSING_REQUIRE_WARNING":
       case "JSC_MISSING_REQUIRE_CALL_WARNING":
         return getFixForMissingRequire(error, compiler);
-      case "JSC_DUPLICATE_REQUIRE_WARNING":
-        return getFixForExtraRequire(error, compiler, DUPLICATE_REQUIRE);
+      case "JSC_DUPLICATE_REQUIRE":
+        return getFixForDuplicateRequire(error, compiler);
       case "JSC_EXTRA_REQUIRE_WARNING":
-        return getFixForExtraRequire(error, compiler, EXTRA_REQUIRE);
+        return getFixForExtraRequire(error, compiler);
       case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
         return getFixForReferenceToShortImportByLongName(error, compiler);
       default:
@@ -273,9 +273,24 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static SuggestedFix getFixForExtraRequire(
-      JSError error, AbstractCompiler compiler, Pattern pattern) {
-    Matcher regexMatcher = pattern.matcher(error.description);
+  private static SuggestedFix getFixForDuplicateRequire(JSError error, AbstractCompiler compiler) {
+    if (!error.node.isExprResult()) {
+      return null;
+    }
+    Matcher regexMatcher = DUPLICATE_REQUIRE.matcher(error.description);
+    Preconditions.checkState(
+        regexMatcher.matches(), "Unexpected error description: %s", error.description);
+    String namespace = regexMatcher.group(1);
+    NodeMetadata metadata = new NodeMetadata(compiler);
+    Match match = new Match(error.node, metadata);
+    return new SuggestedFix.Builder()
+        .attachMatchedNodeInfo(error.node, compiler)
+        .removeGoogRequire(match, namespace)
+        .build();
+  }
+
+  private static SuggestedFix getFixForExtraRequire(JSError error, AbstractCompiler compiler) {
+    Matcher regexMatcher = EXTRA_REQUIRE.matcher(error.description);
     Preconditions.checkState(regexMatcher.matches(),
         "Unexpected error description: %s", error.description);
     String namespace = regexMatcher.group(1);

@@ -29,13 +29,11 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -104,10 +102,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
   static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");
-
-  static final DiagnosticType DUPLICATE_REQUIRE_WARNING = DiagnosticType.disabled(
-      "JSC_DUPLICATE_REQUIRE_WARNING",
-      "''{0}'' required more than once.");
 
   private static final Set<String> DEFAULT_EXTRA_NAMESPACES = ImmutableSet.of(
       "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");
@@ -365,10 +359,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     compiler.report(JSError.make(call, EXTRA_REQUIRE_WARNING, require));
   }
 
-  private void reportDuplicateRequireWarning(Node call, String require) {
-    compiler.report(JSError.make(call, DUPLICATE_REQUIRE_WARNING, require));
-  }
-
   /**
    * @param localName The name that should be used in this file.
    *
@@ -382,9 +372,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
    * </pre>
    */
   private void visitRequire(String localName, Node node) {
-    if (requires.containsKey(localName)) {
-      reportDuplicateRequireWarning(node, localName);
-    } else {
+    if (!requires.containsKey(localName)) {
       requires.put(localName, node);
     }
   }

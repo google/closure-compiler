@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.DUPLICATE_REQUIRE;
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES;
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED;
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED;
@@ -183,5 +184,29 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "",
             "alert(1);"),
         REQUIRES_NOT_SORTED);
+  }
+
+  public void testDuplicate() {
+    testWarning(
+        LINE_JOINER.join(
+            "goog.require('Bar');",
+            "goog.require('Bar');"),
+        DUPLICATE_REQUIRE);
+  }
+
+  public void testDuplicate_shorthand() {
+    testWarningEs6(
+        LINE_JOINER.join(
+            "const Bar1 = goog.require('Bar');",
+            "const Bar2 = goog.require('Bar');"),
+        DUPLICATE_REQUIRE);
+  }
+
+  public void testDuplicate_destructuring() {
+    testWarningEs6(
+        LINE_JOINER.join(
+            "const Bar = goog.require('Bar');",
+            "const {Foo} = goog.require('Bar');"),
+        DUPLICATE_REQUIRE);
   }
 }

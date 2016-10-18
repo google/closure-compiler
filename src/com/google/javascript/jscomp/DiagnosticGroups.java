@@ -484,7 +484,6 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire",
-          CheckRequiresForConstructors.DUPLICATE_REQUIRE_WARNING,
           CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING);
 
   @GwtIncompatible("java.util.regex")
@@ -575,11 +574,11 @@ public class DiagnosticGroups {
 
               // TODO(tbreisacher): Make this an error once all Google projects are fixed.
               ClosureCheckModule.AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE,
-
               CheckMissingSemicolon.MISSING_SEMICOLON,
               CheckPrimitiveAsObject.NEW_PRIMITIVE_OBJECT,
               CheckPrimitiveAsObject.PRIMITIVE_OBJECT_DECLARATION,
               CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
+              CheckRequiresAndProvidesSorted.DUPLICATE_REQUIRE,
               CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
               CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
               CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,

@@ -50,6 +50,7 @@ public class ErrorToFixMapperTest {
   public void setUp() {
     errorManager = new FixingErrorManager();
     compiler = new Compiler(errorManager);
+    compiler.disableThreads();
     errorManager.setCompiler(compiler);
 
     options = RefactoringDriver.getCompilerOptions();
@@ -550,6 +551,19 @@ public class ErrorToFixMapperTest {
             "goog.require('goog.string');",
             "",
             "alert(goog.string.parseInt('7'));"));
+  }
+
+  @Test
+  public void testDuplicateRequire_shorthand() {
+    // We could provide a fix here, eliminating the later require. But then we'd need to switch
+    // str to googString in the last line. Probably not worth it.
+    assertNoChanges(
+        LINE_JOINER.join(
+            "const googString = goog.require('goog.string');",
+            "const str = goog.require('goog.string');",
+            "",
+            "alert(googString.parseInt('7'));",
+            "alert(str.parseInt('8'));"));
   }
 
   private void assertChanges(String originalCode, String expectedCode) {

@@ -30,7 +30,9 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Checks that goog.require() and goog.provide() calls are sorted alphabetically.
@@ -49,6 +51,9 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
       DiagnosticType.warning(
           "JSC_PROVIDES_AFTER_REQUIRES",
           "goog.provide() statements should be before goog.require() statements.");
+
+  public static final DiagnosticType DUPLICATE_REQUIRE =
+      DiagnosticType.warning("JSC_DUPLICATE_REQUIRE", "''{0}'' required more than once.");
 
   private final List<Node> requires;
   private final List<Node> provides;
@@ -96,12 +101,30 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
         }
       };
 
+  private static final String getNamespace(Node requireStatement) {
+    if (requireStatement.isExprResult()) {
+      // goog.require('a.b.c');
+      return requireStatement.getFirstChild().getLastChild().getString();
+    } else if (NodeUtil.isNameDeclaration(requireStatement)) {
+      if (requireStatement.getFirstChild().isName()) {
+        // const x = goog.require('a.b.c');
+        return requireStatement.getFirstFirstChild().getLastChild().getString();
+      } else if (requireStatement.getFirstChild().isDestructuringLhs()) {
+        // const {x} = goog.require('a.b.c');
+        return requireStatement.getFirstChild().getLastChild().getLastChild().getString();
+      }
+    }
+    throw new IllegalArgumentException("Unexpected node " + requireStatement);
+  }
+
   private final Ordering<Node> alphabetical = Ordering.natural().onResultOf(getSortKey);
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case SCRIPT:
+        // Duplicate provides are already checked in ProcessClosurePrimitives.
+        checkForDuplicates(requires);
         reportIfOutOfOrder(requires, REQUIRES_NOT_SORTED);
         reportIfOutOfOrder(provides, PROVIDES_NOT_SORTED);
         reset();
@@ -152,6 +175,16 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
       }
       compiler.report(
           JSError.make(requiresOrProvides.get(0), warning, Joiner.on('\n').join(correctOrder)));
+    }
+  }
+
+  private void checkForDuplicates(List<Node> requires) {
+    Set<String> namespaces = new HashSet<>();
+    for (Node require : requires) {
+      String namespace = getNamespace(require);
+      if (!namespaces.add(namespace)) {
+        compiler.report(JSError.make(require, DUPLICATE_REQUIRE, namespace));
+      }
     }
   }
 
