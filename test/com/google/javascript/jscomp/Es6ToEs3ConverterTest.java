@@ -143,9 +143,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     optimizer.addOneTimePass(
         makePassFactory("Es6RewriteBlockScopedDeclaration",
             new Es6RewriteBlockScopedDeclaration(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
     return optimizer;
   }
 
@@ -266,7 +263,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " */",
             "var testcode$classdecl$var0 = function(var_args) { D.apply(this,arguments); };",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
-            "testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };",
+            "testcode$classdecl$var0.prototype.f = function() {super.g(); };",
             "f(testcode$classdecl$var0)"));
   }
 
@@ -839,7 +836,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function(){};",
             "/** @constructor @struct @extends {D} */",
             "var C=function(args) {",
-            "  D.apply(this, [].concat($jscomp.arrayFromIterable(args)));",
+            "  D.call.apply(D, [].concat([this], $jscomp.arrayFromIterable(args)));",
             "};",
             "$jscomp.inherits(C,D);"));
     assertThat(getLastCompiler().injected)

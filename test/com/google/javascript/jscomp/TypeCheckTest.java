@@ -3981,55 +3981,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function Base() {}");
   }
 
-  public void testGoodSuperCall() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
-    testTypes(
-        LINE_JOINER.join(
-            "class A {",
-            "  /**",
-            "   * @param {string} a",
-            "   */",
-            "  constructor(a) {",
-            "    this.a = a;",
-            "  }",
-            "}",
-            "class B extends A {",
-            "  constructor() {",
-            "    super('b');",
-            "  }",
-            "}",
-            ""));
-  }
-
-  public void testBadSuperCall() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
-    testTypes(
-        LINE_JOINER.join(
-            "class A {",
-            "  /**",
-            "   * @param {string} a",
-            "   */",
-            "  constructor(a) {",
-            "    this.a = a;",
-            "  }",
-            "}",
-            "class B extends A {",
-            "  constructor() {",
-            "    super(5);",
-            "  }",
-            "}"),
-        LINE_JOINER.join(
-            "actual parameter 1 of function does not match formal parameter",
-            "found   : number",
-            "required: string"));
-  }
-
-  private void setLanguageInAndOut(LanguageMode languageIn, LanguageMode languageOut) {
-    CompilerOptions options = compiler.getOptions();
-    options.setLanguageIn(languageIn);
-    options.setLanguageOut(languageOut);
-  }
-
   public void testDirectPrototypeAssignment1() throws Exception {
     testTypes(
         "/** @constructor */ function Base() {}" +
@@ -17197,7 +17148,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEs5ClassExtendingEs6Class() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class Foo {}",
@@ -17206,7 +17158,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEs5ClassExtendingEs6Class_noWarning() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class A {}",

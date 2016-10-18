@@ -533,10 +533,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, t.getTypedScope().getTypeOfThis());
         break;
 
-      case SUPER:
-        ensureTyped(t, n);
-        break;
-
       case NULL:
         ensureTyped(t, n, NULL_TYPE);
         break;

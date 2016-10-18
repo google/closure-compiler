@@ -131,14 +131,6 @@ public class TranspilationPasses {
         }
       };
 
-  static final HotSwapPassFactory es6ConvertSuperConstructorCalls =
-      new HotSwapPassFactory("es6ConvertSuperConstructorCalls", true) {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6ConvertSuperConstructorCalls(compiler);
-        }
-      };
-
   static final HotSwapPassFactory es6ConvertSuper =
       new HotSwapPassFactory("es6ConvertSuper", true) {
     @Override
@@ -261,9 +253,5 @@ public class TranspilationPasses {
         }
       }
     }
-  }
-
-  public static void addPostCheckPasses(List<PassFactory> passes) {
-    passes.add(es6ConvertSuperConstructorCalls);
   }
 }

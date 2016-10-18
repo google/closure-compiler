@@ -206,7 +206,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
-      TranspilationPasses.addPostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
@@ -378,6 +377,7 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(checks);
       }
+      checks.add(markTranspilationDone);
     }
 
     if (options.raiseToEs6Typed()) {
@@ -388,22 +388,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(injectRuntimeLibraries);
     }
 
-    if (!options.skipNonTranspilationPasses) {
-      addNonTranspilationCheckPasses(checks);
+    if (options.skipNonTranspilationPasses) {
+      return checks;
     }
 
-    if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
-      TranspilationPasses.addPostCheckPasses(checks);
-      checks.add(markTranspilationDone);
-    }
-
-    assertAllOneTimePasses(checks);
-    assertValidOrder(checks);
-
-    return checks;
-  }
-
-  private void addNonTranspilationCheckPasses(List<PassFactory> checks) {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
@@ -519,6 +507,10 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(createEmptyPass("afterStandardChecks"));
+
+    assertAllOneTimePasses(checks);
+    assertValidOrder(checks);
+    return checks;
   }
 
   @Override

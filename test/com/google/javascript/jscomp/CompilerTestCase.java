@@ -240,26 +240,6 @@ public abstract class CompilerTestCase extends TestCase {
           "function Arguments() {}",
           "/** @type {number} */",
           "Arguments.prototype.length;",
-          "/**",
-          " * @constructor",
-          " */",
-          // TODO(bradfordcsmith): Copy fields for this from es5.js this when we have test cases
-          //     that depend on them.
-          "function ObjectPropertyDescriptor() {}",
-          "/**",
-          " * @param {!Object} obj",
-          " * @param {string} prop",
-          " * @return {!ObjectPropertyDescriptor|undefined}",
-          " * @nosideeffects",
-          " */",
-          "Object.getOwnPropertyDescriptor = function(obj, prop) {};",
-          "/**",
-          " * @param {!Object} obj",
-          " * @param {string} prop",
-          " * @param {!Object} descriptor",
-          " * @return {!Object}",
-          " */",
-          "Object.defineProperty = function(obj, prop, descriptor) {};",
           "/** @type {?} */ var unknown;", // For producing unknowns in tests.
           ACTIVE_X_OBJECT_DEF);
 
