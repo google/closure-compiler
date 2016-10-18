@@ -1512,7 +1512,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "    x(5);",
         "  }",
         "}"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        NewTypeInference.INVALID_ARGUMENT_TYPE, NewTypeInference.INCOMPATIBLE_STRICT_COMPARISON);
 
     typeCheck(LINE_JOINER.join(
         "function f(/** function(string) */ x, y) {",
@@ -5666,11 +5666,10 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    // TODO(dimvar): warn for type mismatch between label and condition
     typeCheck(LINE_JOINER.join(
         "function f(/** number */ x, /** string */ y) {",
         "  switch (y) { case x: ; }",
-        "}"));
+        "}"), NewTypeInference.INCOMPATIBLE_STRICT_COMPARISON);
   }
 
   public void testForIn() {
@@ -11842,6 +11841,59 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "ns.E.Foo = function(x) {};",
         "function f() { ns.E.Foo(); }"),
         NewTypeInference.CONSTRUCTOR_NOT_CALLABLE);
+  }
+
+  public void testIncompatibleEnums() {
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {string} */",
+        "var Color = { RED: 'red' };",
+        "/** @enum {string} */",
+        "var Shape = { SQUARE: 'square' };",
+        "/** @param {Shape} shape */",
+        "function f(shape) {",
+        "  switch (shape) {",
+        "    case Color.RED:",
+        "  }",
+        "}"),
+        NewTypeInference.INCOMPATIBLE_STRICT_COMPARISON);
+  }
+
+  public void testStrictEquality() {
+    typeCheck(LINE_JOINER.join(
+        "var a = 1;",
+        "var b = 'two';",
+        "a === b;"),
+        NewTypeInference.INCOMPATIBLE_STRICT_COMPARISON);
+
+    typeCheck(LINE_JOINER.join(
+        "var a = 1;",
+        "var b = 'two';",
+        "a !== b;"),
+        NewTypeInference.INCOMPATIBLE_STRICT_COMPARISON);
+
+    typeCheck(LINE_JOINER.join(
+        "var a = 1;",
+        "var b = 2;",
+        "a !== b;"));
+
+    typeCheck(LINE_JOINER.join(
+        "var a = 1;",
+        "var b = 2;",
+        "a === b;"));
+
+    typeCheck(LINE_JOINER.join(
+        "var a = 1;",
+        "var b;",
+        "a === /** @type {?} */ (b);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {string|number} a",
+        " * @param {number} b",
+        " */",
+        "function f(a, b) {",
+        "  a === b;",
+        "}"));
   }
 
   public void testStringMethods() {

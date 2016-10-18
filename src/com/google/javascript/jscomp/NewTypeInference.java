@@ -280,6 +280,13 @@ final class NewTypeInference implements CompilerPass {
           "Cannot determine the type of namespace property {0}. "
           + "Maybe a prefix of the property name has been redefined?");
 
+  static final DiagnosticType INCOMPATIBLE_STRICT_COMPARISON =
+      DiagnosticType.warning(
+          "JSC_INCOMPATIBLE_STRICT_COMPARISON",
+          "Cannot perform strict equality / inequality comparisons on incompatible types:\n"
+          + "left : {0}\n"
+          + "right: {1}");
+
   // Not part of ALL_DIAGNOSTICS because it should not be enabled with
   // --jscomp_error=newCheckTypes. It should only be enabled explicitly.
 
@@ -333,6 +340,7 @@ final class NewTypeInference implements CompilerPass {
       BOTTOM_PROP,
       CROSS_SCOPE_GOTCHA,
       FORIN_EXPECTS_OBJECT,
+      INCOMPATIBLE_STRICT_COMPARISON,
       INVALID_INFERRED_RETURN_TYPE,
       INVALID_OPERAND_TYPE,
       INVALID_THIS_TYPE_IN_BIND,
@@ -2287,6 +2295,12 @@ final class NewTypeInference implements CompilerPass {
 
     EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+
+    if (!rhsPair.type.isNullOrUndef() && !JSType.haveCommonSubtype(lhsPair.type, rhsPair.type)) {
+      warnings.add(JSError.make(
+          lhs, INCOMPATIBLE_STRICT_COMPARISON, lhsPair.type.toString(), rhsPair.type.toString()));
+    }
+
     // This env may contain types that have been tightened after nullable deref.
     TypeEnv preciseEnv = rhsPair.env;
 
