@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
@@ -123,17 +122,15 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
 
   public void testModuleConflict() {
     Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
-    compiler.initOptions(options);
+    compiler.initOptions(new CompilerOptions());
     JsAst ast = new JsAst(SourceFile.fromCode("file.js", "export let foo = 42;"));
     SimpleDependencyInfo delegate =
         new SimpleDependencyInfo("", "my/js.js", EMPTY, EMPTY, ImmutableMap.of("module", "goog"));
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
-    assertThat(Arrays.asList(compiler.getErrorManager().getErrors())).isEmpty();
+    assertThat(Arrays.asList(compiler.getErrorManager().getWarnings())).isEmpty();
     assertThat(info.getLoadFlags()).containsExactly("module", "es6", "lang", "es6");
-    assertThat(Arrays.asList(compiler.getErrorManager().getErrors()))
+    assertThat(Arrays.asList(compiler.getErrorManager().getWarnings()))
         .containsExactly(JSError.make(ModuleLoader.MODULE_CONFLICT, "my/js.js"));
   }
 
