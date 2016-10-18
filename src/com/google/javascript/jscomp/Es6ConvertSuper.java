@@ -26,8 +26,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * Converts {@code super} nodes. This has to run before the main
- * {@link Es6ToEs3Converter} pass.
+ * Converts {@code super.method()} calls and adds constructors to any classes that lack them.
+ *
+ * <p>This has to run before the main {@link Es6ToEs3Converter} pass. The super() constructor calls
+ * are not converted here, but rather in {@link Es6ConvertSuperConstructorCalls}, which runs later.
  */
 public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
@@ -45,6 +47,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
           member = member.getNext()) {
         if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
           hasConstructor = true;
+          break;
         }
       }
       if (!hasConstructor) {
@@ -112,13 +115,6 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
       return;
     }
     Node clazz = NodeUtil.getEnclosingClass(node);
-    if (NodeUtil.getNameNode(clazz) == null) {
-      // Unnamed classes of the form:
-      //   f(class extends D { ... });
-      // will be rejected when the class is processed.
-      return;
-    }
-
     Node superName = clazz.getSecondChild();
     if (!superName.isQualifiedName()) {
       // This will be reported as an error in Es6ToEs3Converter.
@@ -126,11 +122,19 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     }
 
     Node enclosingMemberDef = NodeUtil.getEnclosingClassMemberFunction(node);
+    if (enclosingMemberDef.getString().equals("constructor")
+        && parent.isCall()
+        && parent.getFirstChild() == node) {
+      // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls later.
+      return;
+    }
     if (enclosingMemberDef.isStaticMember()) {
       Node callTarget;
       potentialCallee.detach();
       if (potentialCallee == node) {
         // of the form super()
+        // TODO(bradfordcsmith): This should report an error since this is not allowed by the
+        //     current spec.
         potentialCallee =
             IR.getprop(superName.cloneTree(), IR.string(enclosingMemberDef.getString()));
         enclosingCall.putBooleanProp(Node.FREE_CALL, false);
@@ -149,6 +153,8 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     String methodName;
     Node callName = enclosingCall.removeFirstChild();
     if (callName.isSuper()) {
+      // TODO(bradfordcsmith): This should report an error since this is not allowed by the
+      //     current spec.
       methodName = enclosingMemberDef.getString();
     } else {
       methodName = callName.getLastChild().getString();
@@ -164,11 +170,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     Preconditions.checkNotNull(baseClass);
     Preconditions.checkNotNull(methodName);
     String baseMethodName;
-    if (methodName.equals("constructor")) {
-      baseMethodName = baseClass + ".call";
-    } else {
-      baseMethodName = Joiner.on('.').join(baseClass, "prototype", methodName, "call");
-    }
+    baseMethodName = Joiner.on('.').join(baseClass, "prototype", methodName, "call");
     Node methodCall = NodeUtil.newQName(compiler, baseMethodName);
     Node callNode = IR.call(methodCall, IR.thisNode());
     if (arguments != null) {
