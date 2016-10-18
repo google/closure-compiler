@@ -1044,7 +1044,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           String sourceMapPath = jsonFile.getPath() + ".map";
           SourceFile sourceMap = SourceFile.fromCode(sourceMapPath,
               jsonFile.getSourceMap());
-          inputSourceMaps.put(sourceMapPath, new SourceMapInput(sourceMap));
+          inputSourceMaps.put(jsonFile.getPath(), new SourceMapInput(sourceMap));
           foundJsonInputSourceMap = true;
         }
       }
