@@ -86,6 +86,9 @@ public final class SuggestedFix {
   }
 
   @Override public String toString() {
+    if (replacements.isEmpty()) {
+      return "<no-op SuggestedFix>";
+    }
     StringBuilder sb = new StringBuilder();
     for (Map.Entry<String, Collection<CodeReplacement>> entry : replacements.asMap().entrySet()) {
       sb.append("Replacements for file: ").append(entry.getKey()).append("\n");
