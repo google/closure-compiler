@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.ProcessCommonJSModules.FindGoogProvideOrGoogModule;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -27,7 +26,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -104,6 +102,43 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     this.forceRewrite = forceRewrite;
     isEs6Module = forceRewrite;
     NodeTraversal.traverseEs6(compiler, root, this);
+  }
+
+  /**
+   * Avoid processing if we find the appearance of goog.provide or goog.module.
+   *
+   * <p>TODO(moz): Let ES6, CommonJS and goog.provide live happily together.
+   */
+  static class FindGoogProvideOrGoogModule extends NodeTraversal.AbstractPreOrderCallback {
+
+    private boolean found;
+
+    boolean isFound() {
+      return found;
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      if (found) {
+        return false;
+      }
+      // Shallow traversal, since we don't need to inspect within functions or expressions.
+      if (parent == null
+          || NodeUtil.isControlStructure(parent)
+          || NodeUtil.isStatementBlock(parent)) {
+        if (n.isExprResult()) {
+          Node maybeGetProp = n.getFirstFirstChild();
+          if (maybeGetProp != null
+              && (maybeGetProp.matchesQualifiedName("goog.provide")
+                  || maybeGetProp.matchesQualifiedName("goog.module"))) {
+            found = true;
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
+    }
   }
 
   @Override

@@ -16,9 +16,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multiset;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableCollection.Builder;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -28,7 +28,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Rewrites a CommonJS module http://wiki.commonjs.org/wiki/Modules/1.1.1
@@ -46,6 +48,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
   public static final DiagnosticType COMMON_JS_MODULE_LOAD_ERROR = DiagnosticType.error(
       "JSC_COMMONJS_MODULE_LOAD_ERROR",
       "Failed to load module \"{0}\"");
+
+  public static final DiagnosticType UNKNOWN_REQUIRE_ENSURE =
+      DiagnosticType.warning(
+          "JSC_COMMONJS_UNKNOWN_REQUIRE_ENSURE_ERROR", "Unrecognized require.ensure call: {0}");
+
+  public static final DiagnosticType SUSPICIOUS_EXPORTS_ASSIGNMENT =
+      DiagnosticType.warning(
+          "JSC_COMMONJS_SUSPICIOUS_EXPORTS_ASSIGNMENT",
+          "Suspicious re-assignment of \"exports\" variable."
+              + " Did you actually intend to export something?");
 
   private final Compiler compiler;
   private final boolean reportDependencies;
@@ -76,248 +88,525 @@ public final class ProcessCommonJSModules implements CompilerPass {
     this.reportDependencies = reportDependencies;
   }
 
+
+  /**
+   * Module rewriting is done a on per-file basis prior to main compilation. The pass must handle
+   * ES6+ syntax and the root node for each file is a SCRIPT - not the typical jsRoot of other
+   * passes.
+   */
   @Override
   public void process(Node externs, Node root) {
-    FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
+    Preconditions.checkState(root.isScript());
+    FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
-    NodeTraversal
-        .traverseEs6(compiler, root, new ProcessCommonJsModulesCallback(!finder.found));
-  }
 
-  /**
-   * Avoid processing if we find the appearance of goog.provide or goog.module.
-   *
-   * TODO(moz): Let ES6, CommonJS and goog.provide live happily together.
-   */
-  static class FindGoogProvideOrGoogModule extends AbstractPreOrderCallback {
+    Builder<Node> exports = ImmutableList.builder();
+    if (finder.isCommonJsModule()) {
+      finder.reportModuleErrors();
+      finder.replaceUmdPatterns();
 
-    private boolean found;
-
-    boolean isFound() {
-      return found;
-    }
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      if (found) {
-        return false;
-      }
-      // Shallow traversal, since we don't need to inspect within functions or expressions.
-      if (parent == null
-          || NodeUtil.isControlStructure(parent)
-          || NodeUtil.isStatementBlock(parent)) {
-        if (n.isExprResult()) {
-          Node maybeGetProp = n.getFirstFirstChild();
-          if (maybeGetProp != null
-              && (maybeGetProp.matchesQualifiedName("goog.provide")
-                  || maybeGetProp.matchesQualifiedName("goog.module"))) {
-            found = true;
-            return false;
-          }
+      //UMD pattern replacement can leave detached export references - don't include those
+      for (Node export : finder.getModuleExports()) {
+        if (NodeUtil.getEnclosingScript(export) != null) {
+          exports.add(export);
         }
-        return true;
       }
-      return false;
+      for (Node export : finder.getExports()) {
+        if (NodeUtil.getEnclosingScript(export) != null) {
+          exports.add(export);
+        }
+      }
+
+      finder.addGoogProvide();
+      compiler.reportCodeChange();
     }
+
+    NodeTraversal.traverseEs6(
+        compiler, root, new RewriteModule(finder.isCommonJsModule(), exports.build()));
   }
 
   /**
-   * This class detects the UMD pattern by checking if a node includes
-   * a "module.exports" or "exports" statement.
+   * Information on a Universal Module Definition A UMD is an IF statement and a reference to which
+   * branch contains the commonjs export
    */
-  static class FindModuleExportStatements extends AbstractPreOrderCallback {
+  static class UmdPattern {
+    final Node ifRoot;
+    final Node activeBranch;
 
-    private boolean found;
+    UmdPattern(Node ifRoot, Node activeBranch) {
+      this.ifRoot = ifRoot;
+      this.activeBranch = activeBranch;
+    }
+  }
 
-    boolean isFound() {
-      return found;
+  private Node getBaseQualifiedNameNode(Node n) {
+    Node refParent = n;
+    while (refParent.getParent() != null && refParent.getParent().isQualifiedName()) {
+      refParent = refParent.getParent();
+    }
+
+    return refParent;
+  }
+
+  /**
+   * Traverse the script. Find all references to CommonJS require (import) and module.exports or
+   * export statements. Add goog.require statements for any require statements. Rewrites any require
+   * calls to reference the rewritten module name.
+   */
+  class FindImportsAndExports extends AbstractPreOrderCallback {
+    private boolean hasGoogProvideOrModule = false;
+    private Node script = null;
+
+    boolean isCommonJsModule() {
+      return (exports.size() > 0 || moduleExports.size() > 0) && !hasGoogProvideOrModule;
+    }
+
+    List<UmdPattern> umdPatterns = new ArrayList<>();
+    List<Node> moduleExports = new ArrayList<>();
+    List<Node> exports = new ArrayList<>();
+    Set<String> imports = new HashSet<>();
+    List<JSError> errors = new ArrayList<>();
+
+    public List<Node> getModuleExports() {
+      return ImmutableList.copyOf(moduleExports);
+    }
+
+    public List<Node> getExports() {
+      return ImmutableList.copyOf(exports);
     }
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      if ((n.isGetProp() &&
-           "module.exports".equals(n.getQualifiedName())) ||
-          (n.isName() &&
-           EXPORTS.equals(n.getString()))) {
-        found = true;
+      if (n.isScript()) {
+        Preconditions.checkState(this.script == null);
+        this.script = n;
       }
-
       return true;
-    }
-  }
-
-  /**
-   * This class detects the UMD pattern by checking if a node includes
-   * a "define.amd" statement.
-   */
-  static class FindDefineAmdStatements extends AbstractPreOrderCallback {
-
-    private boolean found;
-
-    boolean isFound() {
-      return found;
-    }
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      if (n.isGetProp() &&
-          "define.amd".equals(n.getQualifiedName())) {
-        found = true;
-      }
-
-      return true;
-    }
-  }
-
-  /**
-   * Visits require, every "script" and special module.exports assignments.
-   */
-  private class ProcessCommonJsModulesCallback extends
-      AbstractPostOrderCallback {
-
-    private int scriptNodeCount = 0;
-    private List<Node> moduleExportRefs = new ArrayList<>();
-    private List<Node> exportRefs = new ArrayList<>();
-    Multiset<String> propertyExportRefCount = HashMultiset.create();
-    private final boolean allowFullRewrite;
-
-    public ProcessCommonJsModulesCallback(boolean allowFullRewrite) {
-      this.allowFullRewrite = allowFullRewrite;
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isCall() && n.getChildCount() == 2 &&
-          n.getFirstChild().matchesQualifiedName("require") &&
-          n.getSecondChild().isString()) {
-        visitRequireCall(t, n, parent);
-      }
-
-      // Finds calls to require.ensure which is a method to allow async loading of
-      // CommonJS modules:
-      //
-      // require.ensure(['/path/to/module1', '/path/to/module2'], function(require) {
-      //    var module1 = require('/path/to/module1');
-      //    var module2 = require('/path/to/module2');
-      // });
-      //
-      // will be rewritten as an IIFE
-      //
-      // (function() {
-      //   var module1 = require('/path/to/module1');
-      //   var module2 = require('/path/to/module2');
-      // })()
-      //
-      // See http://wiki.commonjs.org/wiki/Modules/Async/A
-      //     http://www.injectjs.com/docs/0.7.x/cjs/require.ensure.html
-      if (n.isCall()
-          && n.getChildCount() == 3
-          && n.getFirstChild().matchesQualifiedName("require.ensure")) {
-        visitRequireEnsureCall(n);
-      }
-
-      // Detects UMD pattern, by checking for CommonJS exports and AMD define
-      // statements in if-conditions and rewrites the if-then-else block as
-      // follows to make sure the CommonJS exports can be reached:
-      // 1. When detecting a CommonJS exports statement, it removes the
-      // if-condition and the else-branch and adds the then-branch directly
-      // to the current parent node:
-      //
-      // if (typeof module == "object" && module.exports) {
-      //   module.exports = foobar;
-      // } else if (typeof define === "function" && define.amd) {...}
-      //
-      // will be rewritten to:
-      //
-      // module.exports = foobar;
-      //
-      // 2. When detecting an AMD define statement, it removes the if-condition and
-      // the then-branch and adds the else-branch directly to the current parent node:
-      //
-      // if (typeof define === "function" && define.amd) {
-      // ...} else if (typeof module == "object" && module.exports) {...}
-      //
-      // will be rewritten to:
-      //
-      // if (typeof module == "object" && module.exports) {...}
-      if (allowFullRewrite && n.isIf()) {
-        FindModuleExportStatements commonjsFinder = new FindModuleExportStatements();
-        Node condition = n.getFirstChild();
-        NodeTraversal.traverseEs6(compiler, condition, commonjsFinder);
-
-        if (commonjsFinder.isFound()) {
-          visitCommonJSIfStatement(n);
-        } else {
-          FindDefineAmdStatements amdFinder = new FindDefineAmdStatements();
-          NodeTraversal.traverseEs6(compiler, condition, amdFinder);
-
-          if (amdFinder.isFound()) {
-            visitAMDIfStatement(n);
+      if (t.inGlobalScope()) {
+        // Check for goog.provide or goog.module statements
+        if (parent == null
+            || NodeUtil.isControlStructure(parent)
+            || NodeUtil.isStatementBlock(parent)) {
+          if (n.isExprResult()) {
+            Node maybeGetProp = n.getFirstFirstChild();
+            if (maybeGetProp != null
+                && (maybeGetProp.matchesQualifiedName("goog.provide")
+                    || maybeGetProp.matchesQualifiedName("goog.module"))) {
+              hasGoogProvideOrModule = true;
+            }
           }
         }
       }
 
-      if (n.isScript()) {
-        scriptNodeCount++;
-        visitScript(t, n);
+      // Find require.ensure calls
+      if (n.isCall() && n.getFirstChild().matchesQualifiedName("require.ensure")) {
+        visitRequireEnsureCall(t, n);
       }
 
-      if (allowFullRewrite &&  n.isGetProp() &&
-          "module.exports".equals(n.getQualifiedName())) {
+      if (n.matchesQualifiedName("module.exports")) {
         Var v = t.getScope().getVar(MODULE);
         // only rewrite "module.exports" if "module" is a free variable,
         // meaning it is not defined in the current scope as a local
         // variable or function parameter
         if (v == null) {
-          moduleExportRefs.add(n);
-          maybeAddReferenceCount(n);
+          moduleExports.add(n);
+
+          // If the module.exports statement is nested in the then branch of an if statement,
+          // assume the if statement is an UMD pattern with a common js export in the then branch
+          // This seems fragile but has worked well for a long time.
+          // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
+          Node ifAncestor = getOutermostIfAncestor(parent);
+          if (ifAncestor != null && !umdPatternsContains(umdPatterns, ifAncestor)) {
+            umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getSecondChild()));
+          }
+        }
+      } else if (n.matchesQualifiedName("define.amd")) {
+        // If a define.amd statement is nested in the then branch of an if statement,
+        // assume the if statement is an UMD pattern with a common js export
+        // in the else branch
+        // This seems fragile but has worked well for a long time.
+        // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
+        Node ifAncestor = getOutermostIfAncestor(parent);
+        if (ifAncestor != null && !umdPatternsContains(umdPatterns, ifAncestor)) {
+          umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getChildAtIndex(2)));
         }
       }
 
-      if (allowFullRewrite && n.isName() && EXPORTS.equals(n.getString())) {
-        Var v = t.getScope().getVar(n.getString());
+      if (n.isName() && EXPORTS.equals(n.getString())) {
+        Var v = t.getScope().getVar(EXPORTS);
         if (v == null || v.isGlobal()) {
-          exportRefs.add(n);
-          maybeAddReferenceCount(n);
+          Node qNameRoot = getBaseQualifiedNameNode(n);
+          if (qNameRoot != null
+              && EXPORTS.equals(qNameRoot.getQualifiedName())
+              && NodeUtil.isLValue(qNameRoot)) {
+            if (!this.hasGoogProvideOrModule) {
+              errors.add(t.makeError(qNameRoot, SUSPICIOUS_EXPORTS_ASSIGNMENT));
+            }
+          } else {
+            exports.add(n);
+
+            // If the exports statement is nested in the then branch of an if statement,
+            // assume the if statement is an UMD pattern with a common js export in the then branch
+            // This seems fragile but has worked well for a long time.
+            // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
+            Node ifAncestor = getOutermostIfAncestor(parent);
+            if (ifAncestor != null && !umdPatternsContains(umdPatterns, ifAncestor)) {
+              umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getSecondChild()));
+            }
+          }
         }
       }
+
+      if (n.isCall()
+          && n.getChildCount() == 2
+          && n.getFirstChild().matchesQualifiedName("require")
+          && n.getSecondChild().isString()) {
+        visitRequireCall(t, n, parent);
+      }
     }
 
-    private Node getBaseQualifiedNameNode(Node n) {
-      Node refParent = n;
-      while (refParent.getParent() != null && refParent.getParent().isQualifiedName()) {
-        refParent = refParent.getParent();
-      }
-
-      if (refParent == null || !refParent.getParent().isAssign()) {
-        return null;
-      }
-
-      return refParent;
-    }
-
-    private void maybeAddReferenceCount(Node n) {
-      Node refParent = getBaseQualifiedNameNode(n);
-
-      if (refParent == null) {
+    /** Visit require calls. Emit corresponding goog.require call. */
+    private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
+      String requireName = require.getSecondChild().getString();
+      ModulePath modulePath = t.getInput().getPath().resolveCommonJsModule(requireName);
+      if (modulePath == null) {
+        compiler.report(t.makeError(require, COMMON_JS_MODULE_LOAD_ERROR, requireName));
         return;
       }
 
-      String qName = refParent.getQualifiedName();
-      if (qName.startsWith("module.exports.")) {
-        qName = qName.substring("module.exports.".length());
-      } else if (qName.startsWith("exports.")) {
-        qName = qName.substring("exports.".length());
-      } else {
-        return;
+
+      String moduleName = modulePath.toModuleName();
+
+      // When require("name") is used as a standalone statement (the result isn't used)
+      // it indicates that a module is being loaded for the side effects it produces.
+      // In this case the require statement should just be removed as the goog.require
+      // call inserted will import the module.
+      if (!NodeUtil.isExpressionResultUsed(require)
+          && parent.isExprResult()
+          && NodeUtil.isStatementBlock(parent.getParent())) {
+        parent.getParent().removeChild(parent);
       }
 
-      propertyExportRefCount.add(qName);
+      if (imports.add(moduleName)) {
+        if (reportDependencies) {
+          t.getInput().addRequire(moduleName);
+        }
+        this.script.addChildToFront(
+            IR.exprResult(
+                    IR.call(
+                        IR.getprop(IR.name("goog"), IR.string("require")), IR.string(moduleName)))
+                .useSourceInfoIfMissingFromForTree(require));
+        compiler.reportCodeChange();
+      }
     }
 
     /**
-     * Visit require calls. Emit corresponding goog.require and rewrite require
-     * to be a direct reference to name of require module.
+     * Visit require.ensure calls. Replace the call with an IIFE. Require.ensure must always be of
+     * the form:
+     *
+     * <p>require.ensure(['module1', ...], function(require) {})
+     */
+    private void visitRequireEnsureCall(NodeTraversal t, Node call) {
+      if (call.getChildCount() != 3) {
+        compiler.report(
+            t.makeError(
+                call,
+                UNKNOWN_REQUIRE_ENSURE,
+                "Expected the function to have 2 arguments but instead found {0}",
+                "" + call.getChildCount()));
+        return;
+      }
+
+      Node dependencies = call.getSecondChild();
+      if (!dependencies.isArrayLit()) {
+        compiler.report(
+            t.makeError(
+                dependencies,
+                UNKNOWN_REQUIRE_ENSURE,
+                "The first argument must be an array literal of string literals."));
+        return;
+      }
+
+      for (Node dep : dependencies.children()) {
+        if (!dep.isString()) {
+          compiler.report(
+              t.makeError(
+                  dep,
+                  UNKNOWN_REQUIRE_ENSURE,
+                  "The first argument must be an array literal of string literals."));
+          return;
+        }
+      }
+      Node callback = dependencies.getNext();
+      if (!(callback.isFunction()
+          && callback.getSecondChild().getChildCount() == 1
+          && callback.getSecondChild().getFirstChild().isName()
+          && "require".equals(callback.getSecondChild().getFirstChild().getString()))) {
+        compiler.report(
+            t.makeError(
+                callback,
+                UNKNOWN_REQUIRE_ENSURE,
+                "The second argument must be a function"
+                    + " whose first argument is named \"require\"."));
+        return;
+      }
+
+      callback.detach();
+
+      // Remove the "require" argument from the parameter list.
+      callback.getSecondChild().removeChildren();
+      call.removeChildren();
+      call.putBooleanProp(Node.FREE_CALL, true);
+      call.addChildToFront(callback);
+
+      compiler.reportCodeChange();
+    }
+
+    void reportModuleErrors() {
+      for (JSError error : errors) {
+        compiler.report(error);
+      }
+    }
+
+    /**
+     * Add a goog.provide statement for the module. If the export is directly assigned more than
+     * once, or the assignments are not global, declare the module name variable.
+     *
+     * <p>If all of the assignments are simply property assignments, initialize the module name
+     * variable as a namespace.
+     */
+    void addGoogProvide() {
+      CompilerInput ci = compiler.getInput(this.script.getInputId());
+      ModulePath modulePath = ci.getPath();
+      if (modulePath == null) {
+        return;
+      }
+
+      String moduleName = modulePath.toModuleName();
+
+      // Add goog.provide calls.
+      if (reportDependencies) {
+        ci.addProvide(moduleName);
+      }
+      this.script.addChildToFront(
+          IR.exprResult(
+                  IR.call(IR.getprop(IR.name("goog"), IR.string("provide")), IR.string(moduleName)))
+              .useSourceInfoIfMissingFromForTree(this.script));
+
+      // The default declaration for the goog.provide is a constant so
+      // we need to declare the variable if we have more than one
+      // assignment to module.exports or those assignments are not
+      // at the top level.
+      //
+      // If we assign to the variable more than once or all the assignments
+      // are properties, initialize the variable as well.
+      int directAssignmentsAtTopLevel = 0;
+      int directAssignments = 0;
+      for (Node export : moduleExports) {
+        if (NodeUtil.getEnclosingScript(export) == null) {
+          continue;
+        }
+
+        Node base = getBaseQualifiedNameNode(export);
+        if (base == export && export.getParent().isAssign()) {
+          Node rValue = NodeUtil.getRValueOfLValue(export);
+          if (rValue == null || !rValue.isObjectLit()) {
+            directAssignments++;
+            if (export.getParent().getParent().isExprResult()
+                && NodeUtil.isTopLevel(export.getParent().getParent().getParent())) {
+              directAssignmentsAtTopLevel++;
+            }
+          }
+        }
+      }
+
+      if (directAssignmentsAtTopLevel > 1
+          || (directAssignmentsAtTopLevel == 0 && directAssignments > 0)
+          || directAssignments == 0) {
+        int totalExportStatements = this.moduleExports.size() + this.exports.size();
+        Node initModule = IR.var(IR.name(moduleName));
+        if (directAssignments < totalExportStatements) {
+          initModule.getFirstChild().addChildToFront(IR.objectlit());
+
+          // If all the assignments are property exports, initialize the
+          // module as a namespace
+          if (directAssignments == 0) {
+            JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+            builder.recordConstancy();
+            initModule.setJSDocInfo(builder.build());
+          }
+        }
+        initModule.useSourceInfoIfMissingFromForTree(this.script);
+
+        Node refChild = this.script.getFirstChild();
+        while (refChild.getNext() != null & refChild.getNext().isExprResult()
+            && refChild.getNext().getFirstChild().isCall()
+            && (refChild.getNext().getFirstFirstChild().matchesQualifiedName("goog.require")
+                || refChild.getNext().getFirstFirstChild().matchesQualifiedName("goog.provide"))) {
+          refChild = refChild.getNext();
+        }
+        this.script.addChildAfter(initModule, refChild);
+      }
+    }
+
+    /** Find the outermost if node ancestor for a node without leaving the function scope */
+    private Node getOutermostIfAncestor(Node n) {
+      if (n == null || NodeUtil.isTopLevel(n) || n.isFunction()) {
+        return null;
+      }
+      Node parent = n.getParent();
+      if (parent == null) {
+        return null;
+      }
+
+      if (parent.isIf() && parent.getFirstChild() == n) {
+        Node outerIf = getOutermostIfAncestor(parent);
+        if (outerIf != null) {
+          return outerIf;
+        }
+
+        return parent;
+      }
+
+      return getOutermostIfAncestor(parent);
+    }
+
+    /** Remove a Universal Module Definition and leave just the commonjs export statement */
+    void replaceUmdPatterns() {
+      for (UmdPattern umdPattern : umdPatterns) {
+        Node p = umdPattern.ifRoot.getParent();
+        Node newNode = umdPattern.activeBranch;
+
+        if (newNode == null) {
+          p.removeChild(umdPattern.ifRoot);
+          return;
+        }
+
+        // Remove redundant block node. Not strictly necessary, but makes tests more legible.
+        if (umdPattern.activeBranch.isBlock() && umdPattern.activeBranch.getChildCount() == 1) {
+          newNode = umdPattern.activeBranch.getFirstChild();
+          umdPattern.activeBranch.detachChildren();
+        } else {
+          umdPattern.ifRoot.detachChildren();
+        }
+        p.replaceChild(umdPattern.ifRoot, newNode);
+      }
+    }
+  }
+
+  private static boolean umdPatternsContains(List<UmdPattern> umdPatterns, Node n) {
+    for (UmdPattern umd : umdPatterns) {
+      if (umd.ifRoot == n) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Traverse a file and rewrite all references to imported names directly to the targeted module
+   * name.
+   *
+   * <p>If a file is a CommonJS module, rewrite export statements. Typically exports create an alias
+   * - the rewriting tries to avoid such aliases.
+   */
+  private class RewriteModule extends AbstractPostOrderCallback {
+    private final boolean allowFullRewrite;
+    private final ImmutableCollection<Node> exports;
+    private final List<Node> imports = new ArrayList<>();
+    private final List<Node> rewrittenClassExpressions = new ArrayList<>();
+
+    public RewriteModule(boolean allowFullRewrite, ImmutableCollection<Node> exports) {
+      this.allowFullRewrite = allowFullRewrite;
+      this.exports = exports;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case SCRIPT:
+          // Class names can't be changed during the middle of a traversal. Unlike functions,
+          // the name can be the EMPTY token rather than just a zero length string.
+          for (Node clazz : rewrittenClassExpressions) {
+            clazz.replaceChild(
+                clazz.getFirstChild(), IR.empty().useSourceInfoFrom(clazz.getFirstChild()));
+            compiler.reportCodeChange();
+          }
+
+          for (Node export : exports) {
+            visitExport(t, export);
+          }
+
+          for (Node require : imports) {
+            visitRequireCall(t, require, require.getParent());
+          }
+
+          break;
+
+        case CALL:
+          if (n.getChildCount() == 2
+              && n.getFirstChild().matchesQualifiedName("require")
+              && n.getSecondChild().isString()) {
+            imports.add(n);
+          }
+          break;
+
+        case NAME:
+          {
+            String qName = n.getQualifiedName();
+            if (qName == null) {
+              break;
+            }
+            Var nameDeclaration = t.getScope().getVar(qName);
+            if (nameDeclaration != null
+                && nameDeclaration.getNode() != null
+                && nameDeclaration.getNode().getInputId() == n.getInputId()) {
+              maybeUpdateName(t, n, nameDeclaration);
+            }
+
+            break;
+          }
+
+          // ES6 object literal shorthand notation can refer to renamed variables
+        case STRING_KEY:
+          {
+            if (n.hasChildren()
+                || n.isQuotedString()
+                || n.getParent().getParent().isDestructuringLhs()) {
+              break;
+            }
+            Var nameDeclaration = t.getScope().getVar(n.getString());
+            if (nameDeclaration == null) {
+              break;
+            }
+            String importedName = getModuleImportName(t, nameDeclaration.getNode());
+            if (nameDeclaration.isGlobal() || importedName != null) {
+              Node value = IR.name(n.getString()).useSourceInfoFrom(n);
+              n.addChildToBack(value);
+              maybeUpdateName(t, value, nameDeclaration);
+            }
+            break;
+          }
+
+        default:
+          break;
+      }
+
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null) {
+        for (Node typeNode : info.getTypeNodes()) {
+          fixTypeNode(t, typeNode);
+        }
+      }
+    }
+
+    /**
+     * Visit require calls. Rewrite require statements to be a direct reference to name of require
+     * module. By this point all references to the import alias should have already been renamed.
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
       String requireName = require.getSecondChild().getString();
@@ -328,381 +617,491 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       String moduleName = modulePath.toModuleName();
-      Node script = getCurrentScriptNode(parent);
-
-      // When require("name") is used as a standalone statement (the result isn't used)
-      // it indicates that a module is being loaded for the side effects it produces.
-      // In this case the require statement should just be removed as the goog.require
-      // call inserted will import the module.
-      if (!NodeUtil.isExpressionResultUsed(require)
-          && parent.isExprResult()
-          && NodeUtil.isStatementBlock(parent.getParent())) {
-        parent.getParent().removeChild(parent);
-      } else {
-        Node moduleRef = IR.name(moduleName).srcref(require);
-        parent.replaceChild(require, moduleRef);
-      }
-      if (reportDependencies) {
-        t.getInput().addRequire(moduleName);
-      }
-      // Rewrite require("name").
-      script.addChildToFront(IR.exprResult(
-          IR.call(IR.getprop(IR.name("goog"), IR.string("require")),
-              IR.string(moduleName))).useSourceInfoIfMissingFromForTree(require));
-      compiler.reportCodeChange();
-    }
-
-    /**
-     * Visit require.ensure calls. Replace the call with an IIFE.
-     */
-    private void visitRequireEnsureCall(Node n) {
-      Preconditions.checkState(n.getChildCount() == 3);
-      Node callbackFunction = n.getChildAtIndex(2);
-
-      // We only support the form where the first argument is an array literal and
-      // the the second a callback function which has a single argument
-      // with the name "require".
-      if (!(n.getSecondChild().isArrayLit()
-          && callbackFunction.isFunction()
-          && callbackFunction.getChildCount() == 3
-          && callbackFunction.getSecondChild().getChildCount() == 1
-          && callbackFunction.getSecondChild().getFirstChild().matchesQualifiedName("require"))) {
-        return;
-      }
-
-      callbackFunction.detach();
-
-      // Remove the "require" argument from the parameter list.
-      callbackFunction.getSecondChild().removeChildren();
-      n.removeChildren();
-      n.putBooleanProp(Node.FREE_CALL, true);
-      n.addChildToFront(callbackFunction);
+      Node moduleRef = IR.name(moduleName).srcref(require);
+      parent.replaceChild(require, moduleRef);
 
       compiler.reportCodeChange();
     }
 
     /**
-     * Emit goog.provide and add suffix to all global vars to avoid conflicts
-     * with other modules.
+     * Visit export statements. Export statements can be either a direct assignment: module.exports
+     * = foo or a property assignment: module.exports.foo = foo; exports.foo = foo;
      */
-    private void visitScript(NodeTraversal t, Node script) {
-      Preconditions.checkArgument(scriptNodeCount == 1,
-          "ProcessCommonJSModules supports only one invocation per " +
-          "CompilerInput / script node");
+    private void visitExport(NodeTraversal t, Node export) {
+      Node root = getBaseQualifiedNameNode(export);
+      Node rValue = NodeUtil.getRValueOfLValue(root);
 
-      String moduleName = t.getInput().getPath().toModuleName();;
-
-      boolean hasExports = !(moduleExportRefs.isEmpty() && exportRefs.isEmpty());
-
-      // Rename vars to not conflict in global scope - but only if the script exports something.
-      // If there are no exports, we still need to rewrite type annotations which
-      // are module paths
-      NodeTraversal.traverseEs6(compiler, script,
-          new SuffixVarsCallback(moduleName, hasExports));
-
-      // If the script has no exports, we don't want to output a goog.provide statement
-      if (!hasExports) {
-        return;
-      }
-
-      // Replace all refs to module.exports and exports
-      processExports(script, moduleName);
-      moduleExportRefs.clear();
-      exportRefs.clear();
-
-      // Add goog.provide calls.
-      if (reportDependencies) {
-        CompilerInput ci = t.getInput();
-        ci.addProvide(moduleName);
-      }
-      script.addChildToFront(IR.exprResult(
-          IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
-              IR.string(moduleName))).useSourceInfoIfMissingFromForTree(script));
-
-      compiler.reportCodeChange();
-    }
-
-    /**
-     * Rewrites CommonJS part of UMD pattern by removing the if-condition and the
-     * else-branch and adds the then-branch directly to the current parent node.
-     */
-    private void visitCommonJSIfStatement(Node n) {
-      Node p = n.getParent();
-      if (p != null) {
-        // pull out then-branch
-        replaceIfStatementWithBranch(n, n.getSecondChild());
-      }
-    }
-
-    /**
-     * Rewrites AMD part of UMD pattern by removing the if-condition and the
-     * then-branch and adds the else-branch directly to the current parent node.
-     */
-    private void visitAMDIfStatement(Node n) {
-      Node p = n.getParent();
-      if (p != null) {
-        if (n.getChildCount() == 3) {
-          // pull out else-branch
-          replaceIfStatementWithBranch(n, n.getChildAtIndex(2));
-        } else {
-          // remove entire if-statement if it doesn't have an else-branch
-          p.removeChild(n);
-        }
-      }
-    }
-
-    private void replaceIfStatementWithBranch(Node ifStatement, Node branch) {
-      Node p = ifStatement.getParent();
-      Node newNode = branch;
-      // Remove redundant block node. Not strictly necessary, but makes tests more legible.
-      if (branch.isBlock() && branch.getChildCount() == 1) {
-        newNode = branch.getFirstChild();
-        branch.detachChildren();
-      } else {
-        ifStatement.detachChildren();
-      }
-      p.replaceChild(ifStatement, newNode);
-    }
-
-    /**
-     * Process all references to module.exports and exports.
-     *
-     * In CommonJS systems, module.exports and exports point to
-     * the same object, unless one of them is re-assigned.
-     *
-     * We handle 2 special forms:
-     * 1) Exactly 1 top-level assign to module.exports.
-     *    module.exports = ...;
-     * 2) Direct reads of exports and module.exports.
-     *    This includes assignments to properties of exports,
-     *    because these only read the slot itself.
-     *    module.exports.prop = ...; // 1 or more times.
-     *
-     * We do this so that these forms type-check better.
-     *
-     * All other forms are handled by a more general algorithm.
-     */
-    private void processExports(Node script, String moduleName) {
-      if (hasOneTopLevelModuleExportAssign()) {
-        // One top-level assign: transform to
-        // moduleName = rhs
-        Node ref = moduleExportRefs.get(0);
-        Node newName = IR.name(moduleName).srcref(ref);
-        newName.setOriginalName(ref.getQualifiedName());
-        Node rhsValue = ref.getNext();
-
-        if (rhsValue.isObjectLit()) {
-          addConstToObjLitKeys(rhsValue);
-        }
-
-        Node assign = ref.getParent();
-        assign.replaceChild(ref, newName);
-        JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
-        builder.recordConstancy();
-        JSDocInfo info = builder.build();
-        assign.setJSDocInfo(info);
-        return;
-      }
-
-      Iterable<Node> exports;
-      boolean hasLValues = hasExportLValues();
-      if (hasLValues) {
-        exports = moduleExportRefs;
-      } else {
-        exports = Iterables.concat(moduleExportRefs, exportRefs);
-      }
-
-      // Transform to:
+      // For object literal assignments to module.exports, convert them to
+      // individual property assignments.
       //
-      // moduleName.prop0 = 0; // etc.
-      boolean declaredModuleExports = false;
-      for (Node ref : exports) {
-        // If there is a module exports assignment at this point, we need to
-        // add a variable declaration for the module name, because otherwise
-        // the default declaration for the goog.provide is a constant and the
-        // assignment would violate that constant.
-        // Note that the hasOneTopLevelModuleExportAssign() case handles the
-        // more common case of assigning to module.exports on the top level,
-        // but CommonJS code also sometimes assigns to module.exports inside
-        // of more complex expressions.
-        if (ref.getParent().isAssign()
-            && !ref.getGrandparent().isExprResult()
-            && !declaredModuleExports) {
-          // Adds "var moduleName" to front of the current file.
-          script.addChildToFront(
-              IR.var(IR.name(moduleName))
-                  .useSourceInfoIfMissingFromForTree(ref));
-          declaredModuleExports = true;
+      //     module.exports = { foo: bar};
+      //
+      // becomes
+      //
+      //     module.exports = {};
+      //     module.exports.foo = bar;
+      if ("module.exports".equals(root.getQualifiedName())) {
+        if (rValue != null
+            && rValue.isObjectLit()
+            && root.getParent().isAssign()
+            && root.getParent().getParent().isExprResult()) {
+          expandObjectLitAssignment(t, root);
+          return;
+        }
+      }
+
+      // If this is an assignment to module.exports or exports, renaming
+      // has already handled this case. Remove the export.
+      Var rValueVar = null;
+      if (rValue != null && rValue.isQualifiedName()) {
+        rValueVar = t.getScope().getVar(rValue.getQualifiedName());
+      }
+
+      if (root.getParent().isAssign()
+          && (root.getNext().isName() || root.getNext().isGetProp())
+          && root.getParent().getParent().isExprResult()
+          && rValueVar != null) {
+        root.getParent().getParent().detachFromParent();
+        compiler.reportCodeChange();
+        return;
+      }
+
+      ModulePath modulePath = t.getInput().getPath();
+      String moduleName = modulePath.toModuleName();
+      Node updatedExport =
+          NodeUtil.newName(compiler, moduleName, export, export.getQualifiedName());
+
+      // Ensure that direct assignments to "module.exports" have var definitions
+      if ("module.exports".equals(root.getQualifiedName())
+          && rValue != null
+          && t.getScope().getVar("module.exports") == null
+          && root.getParent().isAssign()
+          && root.getParent().getParent().isExprResult()) {
+        Node parent = root.getParent();
+        Node var = IR.var(updatedExport, rValue.detach()).useSourceInfoFrom(root.getParent());
+        parent.getParent().getParent().replaceChild(parent.getParent(), var);
+      } else {
+        export.getParent().replaceChild(export, updatedExport);
+      }
+      compiler.reportCodeChange();
+    }
+
+    /**
+     * Since CommonJS modules may have only a single export, it's common to see the export be an
+     * object literal. We want to expand this to individual property assignments. If any individual
+     * property assignment has been renamed, it will be removed.
+     *
+     * <p>We need to keep assignments which aren't names
+     *
+     * <p>module.exports = { foo: bar, baz: function() {} }
+     *
+     * <p>becomes
+     *
+     * <p>module.exports.foo = bar; // removed later module.exports.baz = function() {};
+     */
+    private void expandObjectLitAssignment(NodeTraversal t, Node export) {
+      Preconditions.checkState(export.getParent().isAssign());
+      Node insertionRef = export.getParent().getParent();
+      Preconditions.checkState(insertionRef.isExprResult());
+      Node insertionParent = insertionRef.getParent();
+      Preconditions.checkNotNull(insertionParent);
+
+      Node rValue = NodeUtil.getRValueOfLValue(export);
+      Node key = rValue.getFirstChild();
+      while (key != null) {
+        Node lhs;
+        if (key.isQuotedString()) {
+          lhs = IR.getelem(export.cloneTree(), IR.string(key.getString()));
+        } else {
+          lhs = IR.getprop(export.cloneTree(), IR.string(key.getString()));
         }
 
-        String qName = null;
-        if (ref.isQualifiedName()) {
-          Node baseName = getBaseQualifiedNameNode(ref);
-          if (baseName != null) {
-            qName = baseName.getQualifiedName();
-            if (qName.startsWith("module.exports.")) {
-              qName = qName.substring("module.exports.".length());
+        Node value = null;
+        if (key.isStringKey()) {
+          if (key.hasChildren()) {
+            value = key.getFirstChild().detachFromParent();
+          } else {
+            value = IR.name(key.getString());
+          }
+        } else if (key.isMemberFunctionDef()) {
+          value = key.getFirstChild().detach();
+        }
+
+        Node expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
+
+        insertionParent.addChildAfter(expr, insertionRef);
+        visitExport(t, lhs.getFirstChild());
+
+        // Export statements can be removed in visitExport
+        if (expr.getParent() != null) {
+          insertionRef = expr;
+        }
+
+        key = key.getNext();
+      }
+
+      export.getParent().getParent().detach();
+    }
+
+    /**
+     * Given a name reference, check to see if it needs renamed.
+     *
+     * <p>We handle 3 main cases: 1. References to an import alias. These are replaced with a direct
+     * reference to the imported module. 2. Names which are exported. These are rewritten to be the
+     * export assignment directly. 3. Global names: If a name is global to the script, add a suffix
+     * so it doesn't collide with any other global.
+     *
+     * <p>Rewriting case 1 is safe to perform on all files. Cases 2 and 3 can only be done if this
+     * file is a commonjs module.
+     */
+    private void maybeUpdateName(NodeTraversal t, Node n, Var var) {
+      Preconditions.checkNotNull(var);
+      Preconditions.checkState(n.isName() || n.isGetProp());
+      Preconditions.checkState(n.getParent() != null);
+      String importedModuleName = getModuleImportName(t, var.getNode());
+      String originalName = n.getOriginalQualifiedName();
+
+      // Check if the name refers to a alias for a require('foo') import.
+      if (importedModuleName != null && n != var.getNode()) {
+        // Reference the imported name directly, rather than the alias
+        updateNameReference(t, n, originalName, importedModuleName, false);
+
+      } else if (allowFullRewrite) {
+        String exportedName = getExportedName(t, n, var);
+
+        // We need to exclude the alias created by the require import. We assume dead
+        // code elimination will remove these later.
+        if ((n != var.getNode() || n.getParent().isClass()) && exportedName == null) {
+          // The name is actually the export reference itself.
+          // This will be handled later by visitExports.
+          if (n.getParent().isClass() && n.getParent().getFirstChild() == n) {
+            rewrittenClassExpressions.add(n.getParent());
+          }
+
+          return;
+        }
+
+        // Check if the name is used as an export
+        if (importedModuleName == null
+            && exportedName != null
+            && !exportedName.equals(originalName)) {
+          updateNameReference(t, n, originalName, exportedName, true);
+
+          // If it's a global name, rename it to prevent conflicts with other scripts
+        } else if (var.isGlobal()) {
+          ModulePath modulePath = t.getInput().getPath();
+          String currentModuleName = modulePath.toModuleName();
+
+          if (currentModuleName.equals(originalName)) {
+            return;
+          }
+
+          // refs to 'exports' are handled separately.
+          if (EXPORTS.equals(originalName)) {
+            return;
+          }
+
+          // closure_test_suite looks for test*() functions
+          if (compiler.getOptions().exportTestFunctions && currentModuleName.startsWith("test")) {
+            return;
+          }
+
+          String newName = originalName + "$$" + currentModuleName;
+          updateNameReference(t, n, originalName, newName, false);
+        }
+      }
+    }
+
+    /**
+     * @param nameRef the qualified name node
+     * @param originalName of nameRef
+     * @param newName for nameRef
+     * @param requireFunctionExpressions Whether named class or functions should be rewritten to
+     *     variable assignments
+     */
+    private void updateNameReference(
+        NodeTraversal t,
+        Node nameRef,
+        String originalName,
+        String newName,
+        boolean requireFunctionExpressions) {
+      Node parent = nameRef.getParent();
+      Preconditions.checkNotNull(parent);
+      Preconditions.checkNotNull(newName);
+      boolean newNameIsQualified = newName.indexOf('.') >= 0;
+
+      Var newNameDeclaration = t.getScope().getVar(newName);
+
+      switch (parent.getToken()) {
+        case CLASS:
+          if (parent.getIndexOfChild(nameRef) == 0
+              && (newNameIsQualified || requireFunctionExpressions)) {
+            // Refactor a named class to a class expression
+            // We can't remove the class name during a traversal, so save it for later
+            rewrittenClassExpressions.add(parent);
+
+            Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            Node grandparent = parent.getParent();
+
+            Node expr;
+            if (!newNameIsQualified && newNameDeclaration == null) {
+              expr = IR.let(newNameRef, IR.nullNode()).useSourceInfoIfMissingFromForTree(nameRef);
             } else {
-              qName = qName.substring("exports.".length());
+              expr =
+                  IR.exprResult(IR.assign(newNameRef, IR.nullNode()))
+                      .useSourceInfoIfMissingFromForTree(nameRef);
+            }
+            grandparent.replaceChild(parent, expr);
+            if (expr.isLet()) {
+              expr.getFirstChild().replaceChild(expr.getFirstChild().getFirstChild(), parent);
+            } else {
+              expr.getFirstChild().replaceChild(expr.getFirstChild().getSecondChild(), parent);
+            }
+          } else if (parent.getIndexOfChild(nameRef) == 1) {
+            Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            parent.replaceChild(nameRef, newNameRef);
+          } else {
+            nameRef.setString(newName);
+            nameRef.setOriginalName(originalName);
+          }
+          break;
+
+        case FUNCTION:
+          if (newNameIsQualified || requireFunctionExpressions) {
+            // Refactor a named function to a function expression
+            Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            Node grandparent = parent.getParent();
+            nameRef.setString("");
+
+            Node expr;
+            if (!newNameIsQualified && newNameDeclaration == null) {
+              expr = IR.var(newNameRef, IR.nullNode()).useSourceInfoIfMissingFromForTree(nameRef);
+            } else {
+              expr =
+                  IR.exprResult(IR.assign(newNameRef, IR.nullNode()))
+                      .useSourceInfoIfMissingFromForTree(nameRef);
+            }
+            grandparent.replaceChild(parent, expr);
+            if (expr.isVar()) {
+              expr.getFirstChild().replaceChild(expr.getFirstChild().getFirstChild(), parent);
+            } else {
+              expr.getFirstChild().replaceChild(expr.getFirstChild().getSecondChild(), parent);
+            }
+          } else {
+            nameRef.setString(newName);
+            nameRef.setOriginalName(originalName);
+          }
+          break;
+
+        case VAR:
+        case LET:
+        case CONST:
+          if (newNameIsQualified) {
+            // Refactor a var declaration to a getprop assignment
+            Node getProp = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            if (nameRef.hasChildren()) {
+              Node expr =
+                  IR.exprResult(IR.assign(getProp, nameRef.getFirstChild().detachFromParent()))
+                      .useSourceInfoIfMissingFromForTree(nameRef);
+              parent.getParent().replaceChild(parent, expr);
+            } else {
+              parent.getParent().replaceChild(parent, getProp);
+            }
+          } else if (newNameDeclaration != null) {
+            // Variable is already defined. Convert this to an assignment.
+            Node name = NodeUtil.newName(compiler, newName, nameRef, originalName);
+            parent
+                .getParent()
+                .replaceChild(
+                    parent,
+                    IR.exprResult(IR.assign(name, nameRef.getFirstChild().detachFromParent()))
+                        .useSourceInfoFromForTree(nameRef));
+          } else {
+            nameRef.setString(newName);
+            nameRef.setOriginalName(originalName);
+          }
+          break;
+
+        case GETPROP:
+          {
+            Node name =
+                newNameIsQualified
+                    ? NodeUtil.newQName(compiler, newName, nameRef, originalName)
+                    : NodeUtil.newName(compiler, newName, nameRef, originalName);
+            parent.replaceChild(nameRef, name);
+            moveChildrenToNewNode(nameRef, name);
+
+            break;
+        }
+        default:
+          {
+            Node name =
+                newNameIsQualified
+                    ? NodeUtil.newQName(compiler, newName, nameRef, originalName)
+                    : NodeUtil.newName(compiler, newName, nameRef, originalName);
+            parent.replaceChild(nameRef, name);
+            moveChildrenToNewNode(nameRef, name);
+            break;
+          }
+      }
+
+      compiler.reportCodeChange();
+    }
+
+    private void moveChildrenToNewNode(Node oldNode, Node newNode) {
+      while (oldNode.hasChildren()) {
+        newNode.addChildToBack(oldNode.getFirstChild().detachFromParent());
+      }
+    }
+
+    /**
+     * Determine whether the given name Node n is referenced in an export
+     *
+     * @return string - If the name is not used in an export, return it's own name If the name node
+     *     is actually the export target itself, return null;
+     */
+    private String getExportedName(NodeTraversal t, Node n, Var var) {
+      if (var == null || var.getNode().getInputId() != n.getInputId()) {
+        return n.getQualifiedName();
+      }
+
+      String moduleName = t.getInput().getPath().toModuleName();
+
+      for (Node export : this.exports) {
+        Node qNameBase = getBaseQualifiedNameNode(export);
+        Node rValue = NodeUtil.getRValueOfLValue(qNameBase);
+        if (rValue == null) {
+          continue;
+        }
+
+        // We don't want to handle the export itself
+        if (rValue == n || (rValue.isClass() && rValue.getFirstChild() == n)) {
+          return null;
+        }
+
+        String exportedNameBase = qNameBase.getQualifiedName();
+
+        if (rValue.isObjectLit()) {
+          if (!"module.exports".equals(exportedNameBase)) {
+            return n.getQualifiedName();
+          }
+
+          Node key = rValue.getFirstChild();
+          Var exportVar = null;
+          while (key != null) {
+            if (key.isStringKey()
+                && !key.isQuotedString()
+                && NodeUtil.isValidPropertyName(compiler.getLanguageMode(), key.getString())) {
+              if (key.hasChildren()) {
+                if (key.getFirstChild().isQualifiedName()) {
+                  if (key.getFirstChild() == n) {
+                    return null;
+                  }
+
+                  Var valVar = t.getScope().getVar(key.getFirstChild().getQualifiedName());
+                  if (valVar != null && valVar.getNode() == var.getNode()) {
+                    exportVar = valVar;
+                    break;
+                  }
+                }
+              } else {
+                if (key == n) {
+                  return null;
+                }
+
+                // Handle ES6 object lit shorthand assignments
+                Var valVar = t.getScope().getVar(key.getString());
+                if (valVar != null && valVar.getNode() == var.getNode()) {
+                  exportVar = valVar;
+                  break;
+                }
+              }
+            }
+
+            key = key.getNext();
+          }
+          if (key != null && exportVar != null) {
+            return moduleName + "." + key.getString();
+          }
+        } else {
+          String qName;
+          if (rValue.isClass()) {
+            qName = rValue.getFirstChild().getQualifiedName();
+          } else {
+            qName = rValue.getQualifiedName();
+          }
+          if (qName != null) {
+            Var exportVar = t.getScope().getVar(qName);
+            if (exportVar != null && exportVar.getNode() == var.getNode()) {
+              String exportPrefix =
+                  exportedNameBase.startsWith(MODULE) ? "module.exports" : EXPORTS;
+
+              if (exportedNameBase.length() == exportPrefix.length()) {
+                return moduleName;
+              }
+
+              return moduleName + exportedNameBase.substring(exportPrefix.length());
             }
           }
         }
+      }
+      return n.getQualifiedName();
+    }
 
-        Node rhsValue = ref.getNext();
-        Node newName = IR.name(moduleName).srcref(ref);
-        newName.setOriginalName(qName);
+    /**
+     * Determine if the given Node n is an alias created by a module import.
+     *
+     * @return null if it's not an alias or the imported module name
+     */
+    private String getModuleImportName(NodeTraversal t, Node n) {
+      Node rValue;
+      String propSuffix = "";
+      if (n.isStringKey()
+          && n.getParent().isObjectPattern()
+          && n.getParent().getParent().isDestructuringLhs()) {
+        rValue = n.getParent().getNext();
+        propSuffix = "." + n.getString();
+      } else {
+        rValue = NodeUtil.getRValueOfLValue(n);
+      }
 
-        Node parent = ref.getParent();
-        parent.replaceChild(ref, newName);
+      if (rValue == null) {
+        return null;
+      }
 
-        // If the property was assigned to exactly once, add an @const annotation
-        if (parent.isAssign() && qName != null &&  propertyExportRefCount.count(qName) == 1) {
-          if (rhsValue != null && rhsValue.isObjectLit()) {
-            addConstToObjLitKeys(rhsValue);
+      if (rValue.isCall()) {
+        // var foo = require('bar');
+        if (rValue.getChildCount() == 2
+            && rValue.getFirstChild().matchesQualifiedName("require")
+            && rValue.getSecondChild().isString()
+            && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {
+          String requireName = rValue.getSecondChild().getString();
+          ModulePath modulePath = t.getInput().getPath().resolveCommonJsModule(requireName);
+          if (modulePath == null) {
+            return null;
           }
+          return modulePath.toModuleName() + propSuffix;
+        }
+        return null;
 
-          JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
-          builder.recordConstancy();
-          JSDocInfo info = builder.build();
-          parent.setJSDocInfo(info);
+      } else if (rValue.isGetProp()) {
+        // var foo = require('bar').foo;
+        String moduleName = getModuleImportName(t, rValue.getFirstChild());
+        if (moduleName != null) {
+          return moduleName + "." + n.getSecondChild().getString() + propSuffix;
         }
       }
 
-      if(!hasLValues) {
-        return;
-      }
-
-      // Transform exports to exports$$moduleName and set to point
-      // to module namespace: exports$$moduleName = moduleName;
-      if (!exportRefs.isEmpty()) {
-        String aliasName = "exports$$" + moduleName;
-        Node aliasNode = IR.var(IR.name(aliasName), IR.name(moduleName))
-            .useSourceInfoIfMissingFromForTree(script);
-        script.addChildToFront(aliasNode);
-
-        for (Node ref : exportRefs) {
-          ref.setOriginalName(ref.getString());
-          ref.setString(aliasName);
-        }
-      }
+      return null;
     }
 
     /**
-     * Add an @const annotation to each key of an object literal
-     */
-    private void addConstToObjLitKeys(Node n) {
-      Preconditions.checkState(n.isObjectLit());
-      for (Node key = n.getFirstChild();
-           key != null; key = key.getNext()) {
-        if (key.getJSDocInfo() == null) {
-          JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
-          builder.recordConstancy();
-          JSDocInfo info = builder.build();
-          key.setJSDocInfo(info);
-        }
-      }
-    }
-
-    /**
-     * Recognize export pattern [1] (see above).
-     */
-    private boolean hasOneTopLevelModuleExportAssign() {
-      return moduleExportRefs.size() == 1 &&
-          exportRefs.isEmpty() &&
-          isTopLevelAssignLhs(moduleExportRefs.get(0));
-    }
-
-    private boolean isTopLevelAssignLhs(Node n) {
-      Node parent = n.getParent();
-      return parent.isAssign() && n == parent.getFirstChild() &&
-          parent.getParent().isExprResult() &&
-          parent.getGrandparent().isScript();
-    }
-
-    /**
-     * Recognize the opposite of export pattern [2] (see above).
-     */
-    private boolean hasExportLValues() {
-      for (Node ref : Iterables.concat(moduleExportRefs, exportRefs)) {
-        if (NodeUtil.isLValue(ref)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    /**
-     * Returns next script node in parents.
-     */
-    private Node getCurrentScriptNode(Node n) {
-      while (true) {
-        if (n.isScript()) {
-          return n;
-        }
-        n = n.getParent();
-      }
-    }
-  }
-
-  /**
-   * Traverses a node tree and appends a suffix to all global variable names.
-   */
-  private class SuffixVarsCallback extends AbstractPostOrderCallback {
-    private final String suffix;
-    private final boolean fullRewrite;
-
-    SuffixVarsCallback(String suffix, boolean fullRewrite) {
-      this.suffix = suffix;
-      this.fullRewrite = fullRewrite;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      JSDocInfo info = n.getJSDocInfo();
-      if (info != null) {
-        for (Node typeNode : info.getTypeNodes()) {
-          fixTypeNode(t, typeNode);
-        }
-      }
-
-      boolean isShorthandObjLitKey = n.isStringKey() && !n.hasChildren();
-      if (fullRewrite && n.isName() || isShorthandObjLitKey) {
-        String name = n.getString();
-        if (suffix.equals(name)) {
-          // TODO(moz): Investigate whether we need to return early in this unlikely situation.
-          return;
-        }
-
-        // refs to 'exports' are handled separately.
-        if (EXPORTS.equals(name)) {
-          return;
-        }
-
-        // closure_test_suite looks for test*() functions
-        if (compiler.getOptions().exportTestFunctions && name.startsWith("test")) {
-          return;
-        }
-
-        Var var = t.getScope().getVar(name);
-        if (var != null && var.isGlobal()) {
-          String newName = name + "$$" + suffix;
-          if (isShorthandObjLitKey) {
-            // Change {a} to {a: a$$module$foo}
-            n.addChildToBack(IR.name(newName).useSourceInfoIfMissingFrom(n));
-          } else {
-            n.setString(newName);
-            n.setOriginalName(name);
-          }
-        }
-      }
-    }
-
-    /**
-     * Replace type name references.
+     * Update any type references in JSDoc annotations to account for all the rewriting we've done.
      */
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
       if (typeNode.isString()) {
         String name = typeNode.getString();
+        // Type nodes can be module paths.
         if (ModuleLoader.isRelativeIdentifier(name) || ModuleLoader.isAbsoluteIdentifier(name)) {
           int lastSlash = name.lastIndexOf('/');
           int endIndex = name.indexOf('.', lastSlash);
@@ -723,16 +1122,67 @@ public final class ProcessCommonJSModules implements CompilerPass {
           String globalModuleName = modulePath.toModuleName();
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
-        } else if (fullRewrite) {
-          int endIndex = name.indexOf('.');
-          if (endIndex == -1) {
-            endIndex = name.length();
+
+        } else {
+          // A type node can be a getprop. Any portion of the getprop
+          // can be either an import alias or export alias. Check each
+          // segment.
+          boolean wasRewritten = false;
+          int endIndex = -1;
+          while (endIndex < name.length()) {
+            endIndex = name.indexOf('.', endIndex + 1);
+            if (endIndex == -1) {
+              endIndex = name.length();
+            }
+            String baseName = name.substring(0, endIndex);
+            String suffix = endIndex < name.length() ? name.substring(endIndex) : "";
+            Var typeDeclaration = t.getScope().getVar(baseName);
+
+            // Make sure we can find a variable declaration (and it's in this file)
+            if (typeDeclaration != null
+                && typeDeclaration.getNode().getInputId() == typeNode.getInputId()) {
+              String importedModuleName = getModuleImportName(t, typeDeclaration.getNode());
+
+              // If the name is an import alias, rewrite it to be a reference to the
+              // module name directly
+              if (importedModuleName != null) {
+                typeNode.setString(importedModuleName + suffix);
+                typeNode.setOriginalName(name);
+                wasRewritten = true;
+                break;
+              } else if (this.allowFullRewrite) {
+                // Names referenced in export statements can only be rewritten in
+                // commonjs modules.
+                String exportedName = getExportedName(t, typeNode, typeDeclaration);
+                if (exportedName != null && !exportedName.equals(name)) {
+                  typeNode.setString(exportedName + suffix);
+                  typeNode.setOriginalName(name);
+                  wasRewritten = true;
+                  break;
+                }
+              }
+            }
           }
-          String baseName = name.substring(0, endIndex);
-          Var var = t.getScope().getVar(baseName);
-          if (var != null && var.isGlobal()) {
-            typeNode.setString(baseName + "$$" + suffix + name.substring(endIndex));
-            typeNode.setOriginalName(name);
+
+          // If the name was neither an import alias or referenced in an export,
+          // We still may need to rename it if it's global
+          if (!wasRewritten && this.allowFullRewrite) {
+            endIndex = name.indexOf('.');
+            if (endIndex == -1) {
+              endIndex = name.length();
+            }
+            String baseName = name.substring(0, endIndex);
+            Var typeDeclaration = t.getScope().getVar(baseName);
+            if (typeDeclaration != null && typeDeclaration.isGlobal()) {
+              String moduleName = t.getInput().getPath().toModuleName();
+              String newName = baseName + "$$" + moduleName;
+              if (endIndex < name.length()) {
+                newName += name.substring(endIndex);
+              }
+
+              typeNode.setString(newName);
+              typeNode.setOriginalName(name);
+            }
           }
         }
       }
