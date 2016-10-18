@@ -334,6 +334,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("[[[[a]]]]=[[[[1]]]]");
   }
 
+  public void testPrettyPrintArrayPattern() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrettyPrint("let [a,b,c]=foo();", "let [a, b, c] = foo();\n");
+  }
+
   public void testPrintObjectPatternVar() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("var {a}=foo()");
@@ -375,6 +380,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("({a:b=2}=foo())");
     assertPrintSame("({a,b:{c=2}}=foo())");
     assertPrintSame("({a:{b=2},c}=foo())");
+  }
+
+  public void testPrettyPrintObjectPattern() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrettyPrint("const {a,b,c}=foo();", "const {a, b, c} = foo();\n");
   }
 
   public void testPrintMixedDestructuring() {

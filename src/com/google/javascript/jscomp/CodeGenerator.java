@@ -1626,7 +1626,7 @@ public class CodeGenerator {
     add("{");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child != n.getFirstChild()) {
-        add(",");
+        cc.listSeparator();
       }
 
       add(child);
