@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -329,7 +328,8 @@ public final class ErrorToFixMapper {
           && n.getFirstChild().matchesQualifiedName(closureFunction)) {
         calls.add(parent);
       } else if (NodeUtil.isNameDeclaration(parent)
-          && n.getFirstFirstChild().matchesQualifiedName(closureFunction)) {
+          && n.getLastChild().getFirstChild().matchesQualifiedName(closureFunction)) {
+        Preconditions.checkState(n.isName() || n.isDestructuringLhs());
         calls.add(parent);
       }
     }

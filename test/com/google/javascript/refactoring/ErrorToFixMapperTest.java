@@ -344,6 +344,65 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testSortRequiresInGoogModule_destructuring() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const {fooBar} = goog.require('x');",
+            "const {foo, bar} = goog.require('y');"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const {foo, bar} = goog.require('y');",
+            "const {fooBar} = goog.require('x');"));
+  }
+
+  @Test
+  public void testSortRequiresInGoogModule_shorthandAndStandalone() {
+    assertChanges(
+        LINE_JOINER.join(
+            "/** @fileoverview @suppress {extraRequire} */",
+            "goog.module('m');",
+            "",
+            "const shorthand2 = goog.require('a');",
+            "goog.require('standalone.two');",
+            "goog.require('standalone.one');",
+            "const shorthand1 = goog.require('b');"),
+        LINE_JOINER.join(
+            "/** @fileoverview @suppress {extraRequire} */",
+            "goog.module('m');",
+            "",
+            "const shorthand1 = goog.require('b');",
+            "const shorthand2 = goog.require('a');",
+            "goog.require('standalone.one');",
+            "goog.require('standalone.two');"));
+  }
+
+  @Test
+  public void testSortRequiresInGoogModule_allThreeStyles() {
+    assertChanges(
+        LINE_JOINER.join(
+            "/** @fileoverview @suppress {extraRequire} */",
+            "goog.module('m');",
+            "",
+            "const shorthand2 = goog.require('a');",
+            "goog.require('standalone.two');",
+            "const {destructuring} = goog.require('c');",
+            "goog.require('standalone.one');",
+            "const shorthand1 = goog.require('b');"),
+        LINE_JOINER.join(
+            "/** @fileoverview @suppress {extraRequire} */",
+            "goog.module('m');",
+            "",
+            "const shorthand1 = goog.require('b');",
+            "const shorthand2 = goog.require('a');",
+            "const {destructuring} = goog.require('c');",
+            "goog.require('standalone.one');",
+            "goog.require('standalone.two');"));
+  }
+
+  @Test
   public void testMissingRequireInGoogModule() {
     assertChanges(
         LINE_JOINER.join(

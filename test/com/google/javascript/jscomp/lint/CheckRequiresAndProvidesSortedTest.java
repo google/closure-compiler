@@ -105,11 +105,8 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "}"));
   }
 
-  /**
-   * Contains both the standalone and the shorthand style of goog.require: No warning.
-   */
-  public void testGoogModule_bothStyles() {
-    testSameEs6(
+  public void testGoogModule_shorthandAndStandalone() {
+    testWarningEs6(
         LINE_JOINER.join(
             "goog.module('m');",
             "",
@@ -117,8 +114,37 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "const d = goog.require('a.b.d');",
             "goog.require('a.b.c');",
             "",
-            "alert(1);"));
+            "alert(1);"),
+        REQUIRES_NOT_SORTED);
 
+  }
+
+  public void testGoogModule_destructuring() {
+    testWarningEs6(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "goog.require('z');",
+            "goog.require('a');",
+            "var {someFunction, anotherFunction} = goog.require('example.utils');",
+            "var {A_CONST, ANOTHER_CONST} = goog.require('example.constants');",
+            "",
+            "alert(1);"),
+        REQUIRES_NOT_SORTED);
+  }
+
+  public void testGoogModule_allThreeStyles() {
+    testWarningEs6(
+        LINE_JOINER.join(
+            "/** @fileoverview @suppress {extraRequire} */",
+            "goog.module('m');",
+            "",
+            "const shorthand2 = goog.require('a');",
+            "goog.require('standalone.two');",
+            "const {destructuring} = goog.require('c');",
+            "goog.require('standalone.one');",
+            "const shorthand1 = goog.require('b');"),
+        REQUIRES_NOT_SORTED);
   }
 
   public void testGoogModule_shorthand() {
@@ -157,18 +183,5 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "",
             "alert(1);"),
         REQUIRES_NOT_SORTED);
-  }
-
-  public void testGoogModuleWithDestructuring() {
-    testSameEs6(
-        LINE_JOINER.join(
-            "goog.module('m');",
-            "",
-            "goog.require('z');",
-            "goog.require('a');",
-            "var {someFunction, anotherFunction} = goog.require('example.utils');",
-            "var {A_CONST, ANOTHER_CONST} = goog.require('example.constants');",
-            "",
-            "alert(1);"));
   }
 }

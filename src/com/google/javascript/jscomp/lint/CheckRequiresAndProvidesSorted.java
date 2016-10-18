@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,10 +50,8 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           "JSC_PROVIDES_AFTER_REQUIRES",
           "goog.provide() statements should be before goog.require() statements.");
 
-  private List<Node> requires;
-  private List<Node> provides;
-  private boolean containsStandaloneRequire = false;
-  private boolean containsShorthandRequire = false;
+  private final List<Node> requires;
+  private final List<Node> provides;
 
   private final AbstractCompiler compiler;
 
@@ -78,20 +75,22 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
       new Function<Node, String>() {
         @Override
         public String apply(Node n) {
-          if (n.isExprResult()) {
-            // Case 1: goog.require('a.b.c');
-            return n.getFirstChild().getLastChild().getString();
-          } else if (NodeUtil.isNameDeclaration(n)) {
+          if (NodeUtil.isNameDeclaration(n)) {
             if (n.getFirstChild().isName()) {
-              // Case 2: var x = goog.require('w.x');
+              // Case 1: var x = goog.require('w.x');
               return n.getFirstChild().getString();
             } else if (n.getFirstChild().isDestructuringLhs()) {
-              // Case 3: var {y} = goog.require('w.x');
-              // All case 3 nodes should come after all case 2 nodes.
+              // Case 2: var {y} = goog.require('w.x');
+              // All case 2 nodes should come after all case 1 nodes.
               Node pattern = n.getFirstFirstChild();
               Preconditions.checkState(pattern.isObjectPattern(), pattern);
               return "{" + pattern.getFirstChild().getString();
             }
+          } else if (n.isExprResult()) {
+            // Case 3: goog.require('a.b.c');
+            // All case 3 nodes should come after case 1 and 2 nodes, so prepend
+            // '|' which sorts after '{'
+            return "|" + n.getFirstChild().getLastChild().getString();
           }
           throw new IllegalArgumentException("Unexpected node " + n);
         }
@@ -103,13 +102,6 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case SCRIPT:
-        // For now, don't report for requires being out of order if there both
-        // "const x = goog.require('goog.x');" and "goog.require('goog.y')" style requires.
-        // TODO(tbreisacher): Put all the shorthand ones first, and then all the standalone ones.
-        if (containsShorthandRequire && containsStandaloneRequire) {
-          return;
-        }
-
         reportIfOutOfOrder(requires, REQUIRES_NOT_SORTED);
         reportIfOutOfOrder(provides, PROVIDES_NOT_SORTED);
         reset();
@@ -129,7 +121,6 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           }
           if (callee.matchesQualifiedName("goog.require")) {
             requires.add(parent);
-            containsStandaloneRequire = true;
           } else {
             if (!requires.isEmpty()) {
               t.report(n, PROVIDES_AFTER_REQUIRES);
@@ -140,7 +131,6 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           }
         } else if (NodeUtil.isNameDeclaration(parent.getParent())
             && callee.matchesQualifiedName("goog.require")) {
-          containsShorthandRequire = true;
           requires.add(parent.getParent());
         }
         break;
@@ -168,7 +158,5 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   private void reset() {
     requires.clear();
     provides.clear();
-    containsShorthandRequire = false;
-    containsStandaloneRequire = false;
   }
 }
