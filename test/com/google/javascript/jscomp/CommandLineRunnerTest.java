@@ -1628,15 +1628,14 @@ public final class CommandLineRunnerTest extends TestCase {
               "goog.provide=function(a){};goog.require=function(a){};"),
           "goog.array={};",
           LINE_JOINER.join(
-              "function Baz$$module$Baz(){}",
-              "Baz$$module$Baz.prototype={",
+              "var module$Baz = function (){};",
+              "module$Baz.prototype={",
               "  baz:function(){return goog.array.last(['asdf','asd','baz'])},",
               "  bar:function(){return 8}",
-              "};",
-              "var module$Baz=Baz$$module$Baz;"),
+              "};"),
           LINE_JOINER.join(
-              "var Baz = Baz$$module$Baz,",
-              "    baz = new Baz();",
+              "var Baz = module$Baz,",
+              "    baz = new module$Baz();",
               "console.log(baz.baz());",
               "console.log(baz.bar());")
         });
@@ -1689,15 +1688,14 @@ public final class CommandLineRunnerTest extends TestCase {
               "goog.provide=function(a){};goog.require=function(a){};"),
           "goog.array={};",
           LINE_JOINER.join(
-              "function Baz$$module$Baz(){}",
-              "Baz$$module$Baz.prototype={",
-              "baz:function(){return goog.array.last([\"asdf\",\"asd\",\"baz\"])},",
-              "bar:function(){return 8}",
-              "};",
-              "var module$Baz=Baz$$module$Baz;"),
+              "var module$Baz = function (){};",
+              "module$Baz.prototype={",
+              "  baz:function(){return goog.array.last([\"asdf\",\"asd\",\"baz\"])},",
+              "  bar:function(){return 8}",
+              "};"),
           LINE_JOINER.join(
-              "var Baz = Baz$$module$Baz,",
-              "    baz = new Baz();",
+              "var Baz = module$Baz,",
+              "    baz = new module$Baz();",
               "console.log(baz.baz());",
               "console.log(baz.bar());")
         });
@@ -1729,7 +1727,7 @@ public final class CommandLineRunnerTest extends TestCase {
               "module$foo.default=Foo$$module$foo;"),
           LINE_JOINER.join(
               "var FooBar = module$foo,",
-              "    baz = new FooBar.default();",
+              "    baz = new module$foo.default();",
               "console.log(baz.bar());")
         });
   }
@@ -1754,11 +1752,10 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           LINE_JOINER.join(
-              "function Foo$$module$foo(){}",
-              "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};",
-              "var module$foo=Foo$$module$foo;"),
+              "/** @constructor */ var module$foo = function(){};",
+              "module$foo.prototype.bar=function(){console.log(\"bar\")};"),
           LINE_JOINER.join(
-              "var baz$$module$app = new Foo$$module$foo();",
+              "var baz$$module$app = new module$foo();",
               "console.log(baz$$module$app.bar());")
         });
   }
