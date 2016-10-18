@@ -194,7 +194,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
 
     for (Node n : defineCalls) {
       replaceGoogDefines(n);
@@ -413,17 +413,18 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       } else {
         JSModule providedModule = provided.explicitModule;
 
-        // This must be non-null, because there was an explicit provide.
-        Preconditions.checkNotNull(providedModule);
+        if (!provided.isFromExterns()) {
+          Preconditions.checkNotNull(providedModule, n);
 
-        JSModule module = t.getModule();
-        if (moduleGraph != null
-            && module != providedModule
-            && !moduleGraph.dependsOn(module, providedModule)) {
-          compiler.report(
-              t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
-                  providedModule.getName(),
-                  module.getName()));
+          JSModule module = t.getModule();
+          if (moduleGraph != null
+              && module != providedModule
+              && !moduleGraph.dependsOn(module, providedModule)) {
+            compiler.report(
+                t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
+                    providedModule.getName(),
+                    module.getName()));
+          }
         }
       }
 
@@ -1273,6 +1274,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     boolean isExplicitlyProvided() {
       return explicitNode != null;
+    }
+
+    boolean isFromExterns() {
+      return explicitNode.isFromExterns();
     }
 
     /**

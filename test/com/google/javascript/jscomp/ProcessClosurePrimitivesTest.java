@@ -451,6 +451,17 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
         MISSING_PROVIDE_ERROR);
   }
 
+  public void testProvideInExterns() {
+    allowExternsChanges(true);
+
+    test(
+        "/** @externs */ goog.provide('animals.Dog');"
+            + "/** @constructor */ animals.Dog = function() {}",
+        "goog.require('animals.Dog'); new animals.Dog()",
+        "new animals.Dog();",
+        null, null);
+  }
+
   public void testAddDependency() {
     test("goog.addDependency('x.js', ['A', 'B'], []);", "0");
 

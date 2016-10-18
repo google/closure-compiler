@@ -128,6 +128,7 @@ public class CompilerOptions {
 
   public void setIncrementalTypeChecking(boolean value) {
     generateTypedExterns = value;
+    allowGoogProvideInExterns = value;
     if (value) {
       setPreserveTypeAnnotations(value);
       setOutputJs(OutputJs.NORMAL);
@@ -179,6 +180,14 @@ public class CompilerOptions {
   //--------------------------------
 
   DependencyOptions dependencyOptions = new DependencyOptions();
+
+  // TODO(tbreisacher): When this is false, report an error if there's a goog.provide
+  // in an externs file.
+  private boolean allowGoogProvideInExterns = false;
+
+  boolean allowGoogProvideInExterns() {
+    return allowGoogProvideInExterns;
+  }
 
   /** Returns localized replacement for MSG_* variables */
   public MessageBundle messageBundle = null;
