@@ -343,6 +343,8 @@ public final class ErrorToFixMapper {
           && n.getFirstChild().matchesQualifiedName(closureFunction)) {
         calls.add(parent);
       } else if (NodeUtil.isNameDeclaration(parent)
+          && n.hasChildren()
+          && n.getLastChild().isCall()
           && n.getLastChild().getFirstChild().matchesQualifiedName(closureFunction)) {
         Preconditions.checkState(n.isName() || n.isDestructuringLhs());
         calls.add(parent);

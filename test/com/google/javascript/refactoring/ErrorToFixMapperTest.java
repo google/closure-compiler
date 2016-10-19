@@ -291,6 +291,52 @@ public class ErrorToFixMapperTest {
             "alert(1);"));
   }
 
+  @Test
+  public void testSortRequiresInGoogModule_let() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.c');",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.b');",
+            "",
+            "let localVar;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.b');",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.c');",
+            "",
+            "let localVar;"));
+  }
+
+  @Test
+  public void testSortRequiresInGoogModule_const() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.c');",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.b');",
+            "",
+            "const FOO = 0;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.b');",
+            "/** @suppress {extraRequire} */",
+            "goog.require('a.c');",
+            "",
+            "const FOO = 0;"));
+  }
+
   /**
    * Using this form in a goog.module is a violation of the style guide, but still fairly common.
    */
