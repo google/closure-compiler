@@ -545,12 +545,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(createEmptyPass("beforeStandardOptimizations"));
-    assertAllOneTimePasses(passes);
-
-    // Inline aliases so that following optimizations don't have to understand alias chains.
-    if (options.collapseProperties) {
-      passes.add(aggressiveInlineAliases);
-    }
 
     if (options.replaceIdGenerators) {
       passes.add(replaceIdGenerators);
@@ -574,6 +568,13 @@ public final class DefaultPassConfig extends PassConfig {
     // properties.
     if (options.disambiguatePrivateProperties) {
       passes.add(disambiguatePrivateProperties);
+    }
+
+    assertAllOneTimePasses(passes);
+
+    // Inline aliases so that following optimizations don't have to understand alias chains.
+    if (options.collapseProperties) {
+      passes.add(aggressiveInlineAliases);
     }
 
     // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
