@@ -1813,6 +1813,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** (number|string) */ w = y;",
         "  var /** number */ z = y;",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "var foo;",
+        "(function() { foo(); })();",
+        "foo();"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testBackwardForwardPathologicalCase2() {

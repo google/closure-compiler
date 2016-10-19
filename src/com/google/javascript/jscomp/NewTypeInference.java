@@ -3251,13 +3251,7 @@ final class NewTypeInference implements CompilerPass {
     // Unsound if the arguments and callee have interacting side effects
     EnvTypePair calleePair = analyzeExprFwd(
         callee, tmpEnv, commonTypes.topFunction(), looseFunctionType);
-    FunctionType calleeType = calleePair.type.getFunTypeIfSingletonObj();
-    if (calleeType == null) {
-      // TODO(dimvar): There is no unit test for this. We have only seen it
-      // happen in large programs. Normally, calleeType shouldn't be null.
-      // Revisit later to find cause.
-      return new EnvTypePair(calleePair.env, requiredType);
-    }
+    FunctionType calleeType = calleePair.type.getFunType();
     JSType result = calleeType.getReturnType();
     return new EnvTypePair(calleePair.env,
         isImpreciseType(result) ? requiredType : result);
