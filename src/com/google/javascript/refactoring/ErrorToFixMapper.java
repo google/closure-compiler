@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -267,10 +268,25 @@ public final class ErrorToFixMapper {
     String namespaceToRequire = regexMatcher.group(1);
     NodeMetadata metadata = new NodeMetadata(compiler);
     Match match = new Match(error.node, metadata);
-    return new SuggestedFix.Builder()
+    SuggestedFix.Builder fix = new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.node, compiler)
-        .addGoogRequire(match, namespaceToRequire)
-        .build();
+        .addGoogRequire(match, namespaceToRequire);
+    if (NodeUtil.getEnclosingType(error.node, Token.MODULE_BODY) != null) {
+      Node nodeToReplace = null;
+      if (error.node.isNew()) {
+        nodeToReplace = error.node.getFirstChild();
+      } else if (error.node.isCall()) {
+        nodeToReplace = error.node.getFirstFirstChild();
+      } else if (error.node.isQualifiedName()) {
+        nodeToReplace = error.node;
+      }
+
+      if (nodeToReplace != null) {
+        String shortName = namespaceToRequire.substring(namespaceToRequire.lastIndexOf('.') + 1);
+        fix.replace(nodeToReplace, IR.name(shortName), compiler);
+      }
+    }
+    return fix.build();
   }
 
   private static SuggestedFix getFixForDuplicateRequire(JSError error, AbstractCompiler compiler) {

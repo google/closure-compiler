@@ -450,6 +450,20 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testMissingRequireInGoogProvideFile() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.provide('p');",
+            "",
+            "alert(new a.b.C());"),
+        LINE_JOINER.join(
+            "goog.provide('p');",
+            "goog.require('a.b.C');",
+            "",
+            "alert(new a.b.C());"));
+  }
+
+  @Test
   public void testMissingRequireInGoogModule() {
     assertChanges(
         LINE_JOINER.join(
@@ -460,8 +474,86 @@ public class ErrorToFixMapperTest {
             "goog.module('m');",
             "var C = goog.require('a.b.C');",
             "",
-            // TODO(tbreisacher): Change this to use the shorthand: alert(new C());
-            "alert(new a.b.C());"));
+            "alert(new C());"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModuleTwice() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "alert(new a.b.C());",
+            "alert(new a.b.C());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var C = goog.require('a.b.C');",
+            "",
+            // TODO(tbreisacher): Can we make automatically switch both lines to use 'new C()'?
+            "alert(new a.b.C());",
+            "alert(new C());"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModule_call() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "alert(a.b.c());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var b = goog.require('a.b');",
+            "",
+            "alert(b.c());"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModule_extends() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "class Cat extends world.util.Animal {}"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "class Cat extends Animal {}"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModule_atExtends() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "/** @constructor @extends {world.util.Animal} */",
+            "function Cat() {}"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            // TODO(tbreisacher): Change this to "@extends {Animal}"
+            "/** @constructor @extends {world.util.Animal} */",
+            "function Cat() {}"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModule_atExtends_qname() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "/** @constructor @extends {world.util.Animal} */",
+            "world.util.Cat = function() {};"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            // TODO(tbreisacher): Change this to "@extends {Animal}"
+            "/** @constructor @extends {world.util.Animal} */",
+            "world.util.Cat = function() {};"));
   }
 
   @Test
@@ -482,8 +574,7 @@ public class ErrorToFixMapperTest {
             "var B = goog.require('x.B');",
             "var C = goog.require('c.C');",
             "",
-            // TODO(tbreisacher): Change this to use B instead of x.B.
-            "alert(new A(new x.B(new C())));"));
+            "alert(new A(new B(new C())));"));
   }
 
   @Test
@@ -504,7 +595,7 @@ public class ErrorToFixMapperTest {
             "var B = goog.require('x.B');",
             "const C = goog.require('c.C');",
             "",
-            "alert(new A(new x.B(new C())));"));
+            "alert(new A(new B(new C())));"));
   }
 
   @Test

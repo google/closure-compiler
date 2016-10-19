@@ -2125,7 +2125,7 @@ public final class NodeUtil {
   /**
    * Gets the closest ancestor to the given node of the provided type.
    */
-  static Node getEnclosingType(Node n, final Token type) {
+  public static Node getEnclosingType(Node n, final Token type) {
     return getEnclosingNode(
         n,
         new Predicate<Node>() {
