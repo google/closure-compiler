@@ -58,6 +58,13 @@ public class CompilerOptions {
   // package-private, and have a public setter.
 
   /**
+   * Should the compiled output start with "'use strict';"?
+   *
+   * <p>Ignored for non-strict output language modes.
+   */
+  private boolean emitUseStrict = true;
+
+  /**
    * The JavaScript language version accepted.
    */
   private LanguageMode languageIn;
@@ -2588,6 +2595,15 @@ public class CompilerOptions {
     this.conformanceConfigs = ImmutableList.copyOf(configs);
   }
 
+  public boolean isEmitUseStrict() {
+    return emitUseStrict;
+  }
+
+  public CompilerOptions setEmitUseStrict(boolean emitUseStrict) {
+    this.emitUseStrict = emitUseStrict;
+    return this;
+  }
+
   @Override
   public String toString() {
     String strValue =
@@ -2783,6 +2799,7 @@ public class CompilerOptions {
             .add("tweakReplacements", getTweakReplacements())
             .add("useDebugLog", useDebugLog)
             .add("useNewTypeInference", getNewTypeInference())
+            .add("emitUseStrict", emitUseStrict)
             .add("useTypesForLocalOptimization", useTypesForLocalOptimization)
             .add("variableRenaming", variableRenaming)
             .add("warningsGuard", getWarningsGuard())

@@ -162,6 +162,13 @@ public class CommandLineRunner extends
         + " and exits")
     private boolean printPassGraph = false;
 
+    @Option(
+      name = "--emit_use_strict",
+      handler = BooleanOptionHandler.class,
+      usage = "Start output with \"'use strict';\"."
+    )
+    private boolean emitUseStrict = true;
+
     // Turn on (very slow) extra sanity checks for use when modifying the
     // compiler.
     @Option(
@@ -1622,6 +1629,7 @@ public class CommandLineRunner extends
     }
 
     options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
+    options.setEmitUseStrict(flags.emitUseStrict && options.getLanguageOut().isStrict());
 
     return options;
   }

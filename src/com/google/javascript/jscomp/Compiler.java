@@ -1980,7 +1980,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
     builder.setTagAsExterns(firstOutput && options.shouldGenerateTypedExterns());
-    builder.setTagAsStrict(firstOutput && options.getLanguageOut().isStrict());
+    builder.setTagAsStrict(
+        firstOutput && options.isEmitUseStrict() && options.getLanguageOut().isStrict());
     return builder.build();
   }
 
