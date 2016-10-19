@@ -601,6 +601,18 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testAddGoogRequire_var() {
+    String before = "goog.provide('js.Foo');\n";
+    String after = Joiner.on('\n').join(
+        "goog.require('js.Bar');",
+        "",
+        "var x;",
+        "/** @private */",
+        "function foo_() {};");
+    assertAddGoogRequire(before, after, "abc.def");
+  }
+
+  @Test
   public void testAddGoogRequire() {
     String before = "goog.provide('js.Foo');\n";
     String after =

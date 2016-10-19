@@ -661,7 +661,7 @@ public final class SuggestedFix {
           if ((NodeUtil.isExprCall(child)
                   && Matchers.googRequire(namespace).matches(child.getFirstChild(), metadata))
               || (NodeUtil.isNameDeclaration(child)
-                  && Matchers.googRequire(namespace)
+                  && child.getFirstFirstChild() != null && Matchers.googRequire(namespace)
                       .matches(child.getFirstFirstChild(), metadata))) {
             return child;
           }
