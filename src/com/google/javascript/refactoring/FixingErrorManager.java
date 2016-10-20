@@ -16,13 +16,13 @@
 
 package com.google.javascript.refactoring;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.JSError;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -49,6 +49,7 @@ public class FixingErrorManager extends BasicErrorManager {
     return fixes.get(error);
   }
 
+  @VisibleForTesting
   public Collection<SuggestedFix> getAllFixes() {
     return fixes.values();
   }
