@@ -150,7 +150,8 @@ public final class ErrorToFixMapper {
       for (Node n : childrenOfAddedVarStatement) {
         var.addChildToBack(n.cloneTree());
       }
-      fix.insertBefore(parent, var, compiler);
+      // Use a sortKey of "1" to make sure this is applied before the statement below.
+      fix.insertBefore(parent, var, compiler, "1");
     }
 
     if (name.getNext() != null) {
@@ -159,7 +160,8 @@ public final class ErrorToFixMapper {
         fix.delete(n);
       }
       fix.delete(name);
-      fix.insertBefore(parent, assign, compiler);
+      // Use a sortKey of "2" to make sure this is applied after the statement above.
+      fix.insertBefore(parent, assign, compiler, "2");
     } else {
       // Remove the original var statement.
       fix.replace(parent, assign, compiler);

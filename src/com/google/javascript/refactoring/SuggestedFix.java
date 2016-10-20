@@ -152,7 +152,7 @@ public final class SuggestedFix {
       return insertBefore(nodeToInsertBefore, n, compiler, "");
     }
 
-    private Builder insertBefore(
+    Builder insertBefore(
         Node nodeToInsertBefore, Node n, AbstractCompiler compiler, String sortKey) {
       return insertBefore(nodeToInsertBefore, generateCode(compiler, n), sortKey);
     }
