@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.Node;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Primary driver of a refactoring. This class collects the inputs, runs the refactoring over
@@ -59,12 +60,19 @@ public final class RefactoringDriver {
   /**
    * Run the refactoring and return any suggested fixes as a result.
    */
-  public List<SuggestedFix> drive() {
-    JsFlumeCallback callback = new JsFlumeCallback(scanner, null);
+  public List<SuggestedFix> drive(Pattern includeFilePattern) {
+    JsFlumeCallback callback = new JsFlumeCallback(scanner, includeFilePattern);
     NodeTraversal.traverseEs6(compiler, rootNode, callback);
     List<SuggestedFix> fixes = callback.getFixes();
     fixes.addAll(scanner.processAllMatches(callback.getMatches()));
     return fixes;
+  }
+
+  /**
+   * Run the refactoring and return any suggested fixes as a result.
+   */
+  public List<SuggestedFix> drive() {
+    return drive(null);
   }
 
   public Compiler getCompiler() {
