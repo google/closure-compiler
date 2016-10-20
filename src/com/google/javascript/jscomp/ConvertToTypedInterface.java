@@ -217,7 +217,6 @@ class ConvertToTypedInterface implements CompilerPass {
             case CALL:
               Node callee = expr.getFirstChild();
               Preconditions.checkState(!callee.matchesQualifiedName("goog.scope"), n);
-              Preconditions.checkState(!callee.matchesQualifiedName("goog.forwardDeclare"), n);
               if (callee.matchesQualifiedName("goog.provide")) {
                 Node childBefore;
                 while (null != (childBefore = n.getPrevious())
