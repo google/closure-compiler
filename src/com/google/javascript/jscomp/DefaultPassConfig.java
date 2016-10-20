@@ -206,6 +206,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
+      TranspilationPasses.addPostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
@@ -377,6 +378,8 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(checks);
       }
+      // TODO(bradfordcsmith): This marking is really about how variable scoping is handled during
+      //     type checking. It should really be handled in a more direct fashion.
       checks.add(markTranspilationDone);
     }
 
@@ -388,10 +391,21 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(injectRuntimeLibraries);
     }
 
-    if (options.skipNonTranspilationPasses) {
-      return checks;
+    if (!options.skipNonTranspilationPasses) {
+      addNonTranspilationCheckPasses(checks);
     }
 
+    if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
+      TranspilationPasses.addPostCheckPasses(checks);
+    }
+
+    assertAllOneTimePasses(checks);
+    assertValidOrder(checks);
+
+    return checks;
+  }
+
+  private void addNonTranspilationCheckPasses(List<PassFactory> checks) {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
@@ -507,10 +521,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(createEmptyPass("afterStandardChecks"));
-
-    assertAllOneTimePasses(checks);
-    assertValidOrder(checks);
-    return checks;
   }
 
   @Override

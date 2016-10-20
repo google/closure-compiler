@@ -53,7 +53,6 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -459,11 +458,37 @@ class TypeInference
           n.setJSType(info.getType().evaluate(syntacticScope, registry));
         }
         break;
+
+      case SUPER:
+        traverseSuper(n);
+        break;
+
       default:
         break;
     }
 
     return scope;
+  }
+
+  private void traverseSuper(Node superNode) {
+    // We only need to handle cases of super() constructor calls for now.
+    // All super.method() uses are transpiled away before this pass.
+    JSType jsType = functionScope.getRootNode().getJSType();
+    FunctionType constructorType = (jsType == null) ? null : jsType.toMaybeFunctionType();
+    FunctionType superConstructorType =
+        (constructorType == null) ? null : constructorType.getSuperClassConstructor();
+    if (superConstructorType != null) {
+      // Treat super() like a function with the same signature as the
+      // superclass constructor, but don't require 'new' or 'this'.
+      superNode.setJSType(
+          new FunctionBuilder(registry)
+              .copyFromOtherFunction(superConstructorType)
+              .setIsConstructor(false)
+              .withTypeOfThis(null)
+              .build());
+    } else {
+      superNode.setJSType(unknownType);
+    }
   }
 
   /**
