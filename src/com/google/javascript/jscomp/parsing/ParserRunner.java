@@ -116,9 +116,7 @@ public final class ParserRunner {
     SourceFile file = new SourceFile(sourceFile.getName(), sourceString);
     boolean keepGoing = config.keepGoing == Config.RunMode.KEEP_GOING;
     Es6ErrorReporter es6ErrorReporter = new Es6ErrorReporter(errorReporter, keepGoing);
-    com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
-        new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
-            config.languageMode));
+    com.google.javascript.jscomp.parsing.parser.Parser.Config es6config = newParserConfig(config);
     Parser p = new Parser(es6config, es6ErrorReporter, file);
     ProgramTree tree = p.parseProgram();
     Node root = null;
@@ -139,13 +137,57 @@ public final class ParserRunner {
     return new ParseResult(root, comments, features, p.getInlineSourceMap());
   }
 
+  private static com.google.javascript.jscomp.parsing.parser.Parser.Config newParserConfig(
+      Config config) {
+    LanguageMode languageMode = config.languageMode;
+    boolean isStrictMode;
+    Mode parserConfigLanguageMode;
+    switch (languageMode) {
+      case ECMASCRIPT6_TYPED:
+        parserConfigLanguageMode = Mode.TYPESCRIPT;
+        isStrictMode = true;
+        break;
+
+      case ECMASCRIPT3:
+        parserConfigLanguageMode = Mode.ES3;
+        isStrictMode = false;
+        break;
+
+      case ECMASCRIPT5:
+        parserConfigLanguageMode = Mode.ES5;
+        isStrictMode = false;
+        break;
+
+      case ECMASCRIPT5_STRICT:
+        parserConfigLanguageMode = Mode.ES5;
+        isStrictMode = true;
+        break;
+
+      case ECMASCRIPT6:
+        parserConfigLanguageMode = Mode.ES6_OR_GREATER;
+        isStrictMode = false;
+        break;
+
+      case ECMASCRIPT6_STRICT:
+      case ECMASCRIPT7:
+      case ECMASCRIPT8:
+        parserConfigLanguageMode = Mode.ES6_OR_GREATER;
+        isStrictMode = true;
+        break;
+
+      default:
+        throw new IllegalStateException("unexpected language mode: " + languageMode);
+    }
+    return new com.google.javascript.jscomp.parsing.parser.Parser.Config(
+        parserConfigLanguageMode, isStrictMode);
+  }
+
   // TODO(sdh): this is less useful if we end up needing the node for library version detection
   public static FeatureSet detectFeatures(String sourcePath, String sourceString) {
     SourceFile file = new SourceFile(sourcePath, sourceString);
     ErrorReporter reporter = IRFactory.NULL_REPORTER;
     com.google.javascript.jscomp.parsing.parser.Parser.Config config =
-        new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
-            IRFactory.NULL_CONFIG.languageMode));
+        newParserConfig(IRFactory.NULL_CONFIG);
     Parser p = new Parser(config, new Es6ErrorReporter(reporter, false), file);
     ProgramTree tree = p.parseProgram();
     StaticSourceFile simpleSourceFile = new SimpleSourceFile(sourcePath, false);
@@ -182,29 +224,6 @@ public final class ParserRunner {
       this.reporter.warning(
           message, location.source.name,
           location.line + 1, location.column);
-    }
-  }
-
-  private static Mode mode(LanguageMode mode) {
-    switch (mode) {
-      case ECMASCRIPT3:
-        return Mode.ES3;
-      case ECMASCRIPT5:
-        return Mode.ES5;
-      case ECMASCRIPT5_STRICT:
-        return Mode.ES5_STRICT;
-      case ECMASCRIPT6:
-        return Mode.ES6;
-      case ECMASCRIPT6_STRICT:
-        return Mode.ES6_STRICT;
-      case ECMASCRIPT6_TYPED:
-        return Mode.ES6_TYPED;
-      case ECMASCRIPT7:
-        return Mode.ES7;
-      case ECMASCRIPT8:
-        return Mode.ES8;
-      default:
-        throw new IllegalStateException("unexpected language mode: " + mode);
     }
   }
 

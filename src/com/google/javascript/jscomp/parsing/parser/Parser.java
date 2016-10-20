@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -206,12 +208,8 @@ public class Parser {
     public static enum Mode {
       ES3,
       ES5,
-      ES5_STRICT,
-      ES6,
-      ES6_STRICT,
-      ES6_TYPED,
-      ES7,
-      ES8
+      ES6_OR_GREATER,
+      TYPESCRIPT,
     }
 
     /**
@@ -221,29 +219,18 @@ public class Parser {
     //     this is false.
     private final boolean parseTypeSyntax;
     private final boolean atLeast6;
-    private final boolean atLeast5;
     private final boolean isStrictMode;
     private final boolean warnTrailingCommas;
 
-    public Config(Mode mode) {
-      parseTypeSyntax = mode == Mode.ES6_TYPED;
-      atLeast6 =
-          mode == Mode.ES8
-          || mode == Mode.ES7
-          || mode == Mode.ES6
-          || mode == Mode.ES6_STRICT
-          || mode == Mode.ES6_TYPED;
-      atLeast5 = atLeast6 || mode == Mode.ES5 || mode == Mode.ES5_STRICT;
-      this.isStrictMode =
-          mode == Mode.ES5_STRICT
-          || mode == Mode.ES6_STRICT
-          || mode == Mode.ES6_TYPED
-          || mode == Mode.ES7
-          || mode == Mode.ES8;
+    public Config(Mode mode, boolean isStrictMode) {
+      checkArgument(!(mode == Mode.ES3 && isStrictMode));
+      parseTypeSyntax = mode == Mode.TYPESCRIPT;
+      atLeast6 = !(mode == Mode.ES3 || mode == Mode.ES5);
+      this.isStrictMode = isStrictMode;
 
       // Generally, we allow everything that is valid in any mode
       // we only warn about things that are not represented in the AST.
-      this.warnTrailingCommas = !atLeast5;
+      this.warnTrailingCommas = mode == Mode.ES3;
     }
   }
 
