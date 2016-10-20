@@ -20,19 +20,21 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.SetMultimap;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -90,14 +92,12 @@ public final class ApplySuggestedFixes {
    */
   public static Map<String, String> applySuggestedFixesToCode(
       Iterable<SuggestedFix> fixes, Map<String, String> filenameToCodeMap) {
-    ImmutableSetMultimap.Builder<String, CodeReplacement> builder = ImmutableSetMultimap.builder();
+    ReplacementMap map = new ReplacementMap();
     for (SuggestedFix fix : fixes) {
-      builder.putAll(fix.getReplacements());
+      map.putIfNoOverlap(fix);
     }
-    SetMultimap<String, CodeReplacement> replacementsMap = builder.build();
     ImmutableMap.Builder<String, String> newCodeMap = ImmutableMap.builder();
-    for (Map.Entry<String, Set<CodeReplacement>> entry
-        : Multimaps.asMap(replacementsMap).entrySet()) {
+    for (Map.Entry<String, Set<CodeReplacement>> entry : map.entrySet()) {
       String filename = entry.getKey();
       if (!filenameToCodeMap.containsKey(filename)) {
         throw new IllegalArgumentException("filenameToCodeMap missing code for file: " + filename);
@@ -137,15 +137,57 @@ public final class ApplySuggestedFixes {
    * by ORDER_CODE_REPLACEMENTS.
    */
   private static void validateNoOverlaps(List<CodeReplacement> replacements) {
-    int start = -1;
-    for (CodeReplacement replacement : replacements) {
-      if (replacement.getStartPosition() < start) {
-        throw new IllegalArgumentException(
-            "Found overlap between code replacements!\n" + Joiner.on("\n\n").join(replacements));
-      }
-      start = Math.max(start, replacement.getStartPosition() + replacement.getLength());
+    Preconditions.checkState(ORDER_CODE_REPLACEMENTS.isOrdered(replacements));
+    if (containsOverlaps(replacements)) {
+      throw new IllegalArgumentException(
+          "Found overlap between code replacements!\n" + Joiner.on("\n\n").join(replacements));
     }
   }
 
+  /**
+   * Checks whether the CodeReplacements have any overlap. The replacements must be provided in
+   * order sorted by start position, as sorted by ORDER_CODE_REPLACEMENTS.
+   */
+  private static boolean containsOverlaps(List<CodeReplacement> replacements) {
+    Preconditions.checkState(ORDER_CODE_REPLACEMENTS.isOrdered(replacements));
+    int start = -1;
+    for (CodeReplacement replacement : replacements) {
+      if (replacement.getStartPosition() < start) {
+        return true;
+      }
+      start = Math.max(start, replacement.getStartPosition() + replacement.getLength());
+    }
+    return false;
+  }
+
+  private static class ReplacementMap {
+    private final SetMultimap<String, CodeReplacement> map;
+
+    ReplacementMap() {
+      this.map = HashMultimap.create();
+    }
+
+    void putIfNoOverlap(SuggestedFix fix) {
+      if (canPut(fix)) {
+        map.putAll(fix.getReplacements());
+      }
+    }
+
+    private boolean canPut(SuggestedFix fix) {
+      for (String filename : fix.getReplacements().keys()) {
+        List<CodeReplacement> replacements = new ArrayList<>(map.get(filename));
+        replacements.addAll(fix.getReplacements().get(filename));
+        replacements = ORDER_CODE_REPLACEMENTS.sortedCopy(replacements);
+        if (containsOverlaps(replacements)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    Set<Entry<String, Set<CodeReplacement>>> entrySet() {
+      return Multimaps.asMap(map).entrySet();
+    }
+  }
   private ApplySuggestedFixes() {}
 }

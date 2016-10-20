@@ -18,6 +18,7 @@ package com.google.javascript.refactoring;
 import static com.google.common.collect.ObjectArrays.concat;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
+import static com.google.javascript.jscomp.CheckLevel.WARNING;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +57,7 @@ public class ErrorToFixMapperTest {
     options = RefactoringDriver.getCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, ERROR);
     options.setWarningLevel(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT, ERROR);
-    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, ERROR);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, WARNING);
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, ERROR);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, ERROR);
   }
@@ -464,6 +465,58 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testMissingRequire_unsorted1() {
+    // Both the fix for requires being unsorted, and the fix for the missing require, are applied.
+    // However, the end result is still out of order.
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('module');",
+            "",
+            "var Xray = goog.require('goog.Xray');",
+            "var Anteater = goog.require('goog.Anteater');",
+            "",
+            "alert(new Anteater());",
+            "alert(new Xray());",
+            "alert(new goog.dom.DomHelper());"),
+        LINE_JOINER.join(
+            "goog.module('module');",
+            "",
+            "var DomHelper = goog.require('goog.dom.DomHelper');",
+            "var Anteater = goog.require('goog.Anteater');",
+            "var Xray = goog.require('goog.Xray');",
+            "",
+            "alert(new Anteater());",
+            "alert(new Xray());",
+            "alert(new DomHelper());"));
+  }
+
+  @Test
+  public void testMissingRequire_unsorted2() {
+    // Both the fix for requires being unsorted, and the fix for the missing require, are applied.
+    // However, the end result is still out of order.
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('module');",
+            "",
+            "var DomHelper = goog.require('goog.dom.DomHelper');",
+            "var Anteater = goog.require('goog.Anteater');",
+            "",
+            "alert(new Anteater());",
+            "alert(new goog.rays.Xray());",
+            "alert(new DomHelper());"),
+        LINE_JOINER.join(
+            "goog.module('module');",
+            "var Xray = goog.require('goog.rays.Xray');",
+            "",
+            "var Anteater = goog.require('goog.Anteater');",
+            "var DomHelper = goog.require('goog.dom.DomHelper');",
+            "",
+            "alert(new Anteater());",
+            "alert(new Xray());",
+            "alert(new DomHelper());"));
+  }
+
+  @Test
   public void testMissingRequireInGoogModule() {
     assertChanges(
         LINE_JOINER.join(
@@ -674,6 +727,26 @@ public class ErrorToFixMapperTest {
             "goog.require('goog.string');",
             "",
             "alert(goog.string.parseInt('7'));"));
+  }
+
+  @Test
+  public void testExtraRequire_unsorted() {
+    // There is also a warning because requires are not sorted. That one is not fixed because
+    // the fix would conflict with the extra-require fix.
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.require('goog.string');",
+            "goog.require('goog.object');",
+            "goog.require('goog.dom');",
+            "",
+            "alert(goog.string.parseInt('7'));",
+            "alert(goog.dom.createElement('div'));"),
+        LINE_JOINER.join(
+            "goog.require('goog.string');",
+            "goog.require('goog.dom');",
+            "",
+            "alert(goog.string.parseInt('7'));",
+            "alert(goog.dom.createElement('div'));"));
   }
 
   @Test

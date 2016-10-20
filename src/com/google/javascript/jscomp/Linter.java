@@ -15,14 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.collect.ObjectArrays.concat;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.refactoring.ApplySuggestedFixes;
-import com.google.javascript.refactoring.ErrorToFixMapper;
-import com.google.javascript.refactoring.SuggestedFix;
+import com.google.javascript.refactoring.FixingErrorManager;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -72,6 +70,14 @@ public class Linter {
   private static void lint(Path path, boolean fix) throws IOException {
     SourceFile file = SourceFile.fromFile(path.toString());
     Compiler compiler = new Compiler(System.out);
+
+    FixingErrorManager errorManager = null;
+    if (fix) {
+      errorManager = new FixingErrorManager();
+      compiler.setErrorManager(errorManager);
+      errorManager.setCompiler(compiler);
+    }
+
     CompilerOptions options = new CompilerOptions();
     options.setLanguage(LanguageMode.ECMASCRIPT8);
 
@@ -87,8 +93,8 @@ public class Linter {
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
 
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
-    options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
-    options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.USE_OF_GOOG_BASE, CheckLevel.WARNING);
     options.setSummaryDetailLevel(0);
     compiler.setPassConfig(new LintPassConfig(options));
@@ -96,14 +102,7 @@ public class Linter {
     SourceFile externs = SourceFile.fromCode("<Linter externs>", "");
     compiler.compile(ImmutableList.<SourceFile>of(externs), ImmutableList.of(file), options);
     if (fix) {
-      List<SuggestedFix> fixes = new ArrayList<>();
-      for (JSError warning : concat(compiler.getErrors(), compiler.getWarnings(), JSError.class)) {
-        SuggestedFix suggestedFix = ErrorToFixMapper.getFixForJsError(warning, compiler);
-        if (suggestedFix != null) {
-          fixes.add(suggestedFix);
-        }
-      }
-      ApplySuggestedFixes.applySuggestedFixesToFiles(fixes);
+      ApplySuggestedFixes.applySuggestedFixesToFiles(errorManager.getAllFixes());
     }
   }
 }
