@@ -29,6 +29,8 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
+import com.google.javascript.jscomp.deps.DependencyInfo;
+import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.parsing.Config;
@@ -1466,6 +1468,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
         this.moduleLoader = new ModuleLoader(this, options.moduleRoots, inputs);
 
+        if (options.processCommonJSModules) {
+          this.moduleLoader.setPackageJsonMainEntries(processJsonInputs(inputs));
+        }
+
         if (options.lowerFromEs6()) {
           processEs6Modules();
         }
@@ -1675,6 +1681,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void repartitionInputs() {
     fillEmptyModules(modules);
     rebuildInputsFromModules();
+  }
+
+  /**
+   * Transforms JSON files to a module export that closure compiler can
+   * process and keeps track of any "main" entries in package.json files.
+   */
+  Map<String, String> processJsonInputs(List<CompilerInput> inputsToProcess) {
+    RewriteJsonToModule rewriteJson = new RewriteJsonToModule(this);
+    for (CompilerInput input : inputsToProcess) {
+      if (!input.getSourceFile().getOriginalPath().endsWith(".json")) {
+        continue;
+      }
+
+      input.setCompiler(this);
+
+      try {
+        // JSON objects need wrapped in parens to parse properly
+        input.getSourceFile().setCode("(" + input.getSourceFile().getCode() + ")");
+      } catch (IOException e) {
+        this.getErrorManager().report(CheckLevel.ERROR,
+            JSError.make(AbstractCompiler.READ_ERROR, input.getSourceFile().getOriginalPath()));
+        continue;
+      }
+
+      Node root = input.getAstRoot(this);
+      rewriteJson.process(null, root);
+    }
+    return rewriteJson.getPackageJsonMainEntries();
   }
 
   void processEs6Modules() {
