@@ -723,7 +723,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "/** @fileoverview Some more.\n * @externs\n */ /** @const */ var example2;",
         },
         new String[] {},
-        null);
+        null, null);
   }
 
   public void testConstructorsDontHaveVisibility() {

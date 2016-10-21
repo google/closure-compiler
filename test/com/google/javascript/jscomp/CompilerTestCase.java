@@ -160,13 +160,14 @@ public abstract class CompilerTestCase extends TestCase {
   private String filename = "testcode";
 
   static final String ACTIVE_X_OBJECT_DEF =
-  "/**\n" +
-  " * @param {string} progId\n" +
-  " * @param {string=} opt_location\n" +
-  " * @constructor\n" +
-  " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx\n" +
-  " */\n" +
-  "function ActiveXObject(progId, opt_location) {}\n";
+      LINE_JOINER.join(
+          "/**",
+          " * @param {string} progId",
+          " * @param {string=} opt_location",
+          " * @constructor",
+          " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx",
+          " */",
+          "function ActiveXObject(progId, opt_location) {}");
 
   /** A default set of externs for testing. */
   public static final String DEFAULT_EXTERNS =
@@ -821,14 +822,14 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
-   * Verifies that the compiler pass's JS output matches the expected output,
-   * or that an expected error is encountered.
+   * Verifies that the compiler pass's JS output matches the expected output, or that an expected
+   * error is encountered.
    *
    * @param js Inputs
    * @param expected Expected JS output
    * @param error Expected error, or null if no error is expected
    */
-  public void test(String[] js, String[] expected, DiagnosticType error) {
+  private void test(String[] js, String[] expected, DiagnosticType error) {
     test(js, expected, error, null);
   }
 
