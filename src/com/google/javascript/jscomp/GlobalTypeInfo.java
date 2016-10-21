@@ -1705,7 +1705,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     private void visitNamespacePropertyDeclaration(
         Node declNode, Node recv, String pname) {
-      Preconditions.checkArgument(declNode.isGetProp() || declNode.isStringKey());
+      Preconditions.checkArgument(declNode.isGetProp() || declNode.isStringKey(), declNode);
       Preconditions.checkArgument(currentScope.isNamespace(recv));
       // Named types have already been crawled in CollectNamedTypes
       if (declNode.isStringKey() && currentScope.isNamespace(declNode.getFirstChild())) {
