@@ -18063,4 +18063,24 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return /** @type {*} */ (x) && (n = x);",
         "}"));
   }
+
+  public void testGettersSettersAsNamespaceProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {",
+        "  /** @return {string} */",
+        "  get a() { return 'asdf'; }",
+        "};",
+        "ns.a - 5;"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {",
+        "  /** @param {string} x */",
+        "  set a(x) {}",
+        "};",
+        "ns.a = 5;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }

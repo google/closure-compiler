@@ -1460,8 +1460,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           && currentScope.isNamespace(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
           recordPropertyName(prop.getString(), prop);
-          visitNamespacePropertyDeclaration(
-              prop, maybeLvalue, prop.getString());
+          visitNamespacePropertyDeclaration(prop, maybeLvalue, prop.getString());
         }
       } else if (!NodeUtil.isEnumDecl(maybeLvalue)
           && !NodeUtil.isPrototypeAssignment(maybeLvalue)) {
@@ -1705,8 +1704,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     private void visitNamespacePropertyDeclaration(
         Node declNode, Node recv, String pname) {
-      Preconditions.checkArgument(declNode.isGetProp() || declNode.isStringKey(), declNode);
+      Preconditions.checkArgument(declNode.isGetProp() || declNode.isStringKey()
+          || declNode.isGetterDef() || declNode.isSetterDef(),
+          declNode);
       Preconditions.checkArgument(currentScope.isNamespace(recv));
+      if (declNode.isGetterDef()) {
+        pname = JSType.createGetterPropName(pname);
+      } else if (declNode.isSetterDef()) {
+        pname = JSType.createSetterPropName(pname);
+      }
       // Named types have already been crawled in CollectNamedTypes
       if (declNode.isStringKey() && currentScope.isNamespace(declNode.getFirstChild())) {
         return;
