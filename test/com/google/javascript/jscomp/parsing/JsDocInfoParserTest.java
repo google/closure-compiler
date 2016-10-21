@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config.RunMode;
+import com.google.javascript.jscomp.parsing.Config.StrictMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
@@ -61,11 +62,15 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void setUp() throws Exception {
     super.setUp();
     fileLevelJsDocBuilder = null;
-    extraAnnotations = new HashSet<>(ParserRunner.createConfig(
-        LanguageMode.ECMASCRIPT3, null)
-            .annotationNames.keySet());
-    extraSuppressions = new HashSet<>(ParserRunner.createConfig(
-        LanguageMode.ECMASCRIPT3, null).suppressionNames);
+    extraAnnotations =
+        new HashSet<>(
+            ParserRunner.createConfig(LanguageMode.ECMASCRIPT3, null, StrictMode.SLOPPY)
+                .annotationNames
+                .keySet());
+    extraSuppressions =
+        new HashSet<>(
+            ParserRunner.createConfig(LanguageMode.ECMASCRIPT3, null, StrictMode.SLOPPY)
+                .suppressionNames);
 
     extraSuppressions.add("x");
     extraSuppressions.add("y");
@@ -4652,7 +4657,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             RunMode.KEEP_GOING,
             extraSuppressions,
             LanguageMode.ECMASCRIPT3,
-            true);
+            true,
+            StrictMode.SLOPPY);
 
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("source", false), code, config, testErrorReporter);
@@ -4703,7 +4709,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             RunMode.STOP_AFTER_ERROR,
             extraSuppressions,
             LanguageMode.ECMASCRIPT3,
-            true);
+            true,
+            Config.StrictMode.SLOPPY);
 
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
 

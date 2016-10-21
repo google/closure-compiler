@@ -161,6 +161,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * IRFactory transforms the external AST to the internal AST.
@@ -251,6 +252,10 @@ class IRFactory {
           "implements", "interface", "let", "package", "private", "protected",
           "public", "static", "yield");
 
+  /**
+   * If non-null, use this set of keywords instead of TokenStream.isKeyword().
+   */
+  @Nullable
   private final Set<String> reservedKeywords;
   private final Set<Comment> parsedComments = new HashSet<>();
 
@@ -304,23 +309,12 @@ class IRFactory {
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
 
-    switch (config.languageMode) {
-      case ECMASCRIPT3:
-        reservedKeywords = null; // use TokenStream.isKeyword instead
-        break;
-      case ECMASCRIPT5:
-      case ECMASCRIPT6:
-        reservedKeywords = ES5_RESERVED_KEYWORDS;
-        break;
-      case ECMASCRIPT5_STRICT:
-      case ECMASCRIPT6_STRICT:
-      case ECMASCRIPT6_TYPED:
-      case ECMASCRIPT7:
-      case ECMASCRIPT8:
-        reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
-        break;
-      default:
-        throw new IllegalStateException("unknown language mode: " + config.languageMode);
+    if (config.strictMode == StrictMode.STRICT) {
+      reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
+    } else if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+      reservedKeywords = null; // use TokenStream.isKeyword instead
+    } else {
+      reservedKeywords = ES5_RESERVED_KEYWORDS;
     }
   }
 
@@ -385,10 +379,12 @@ class IRFactory {
     return irFactory.features;
   }
 
-  static final Config NULL_CONFIG = new Config(
-      ImmutableSet.<String>of(),
-      ImmutableSet.<String>of(),
-      LanguageMode.ECMASCRIPT6_TYPED);
+  static final Config NULL_CONFIG =
+      new Config(
+          ImmutableSet.<String>of(),
+          ImmutableSet.<String>of(),
+          LanguageMode.TYPESCRIPT,
+          Config.StrictMode.STRICT);
 
   static final ErrorReporter NULL_REPORTER = new ErrorReporter() {
     @Override
@@ -2593,7 +2589,7 @@ class IRFactory {
     }
 
     void maybeWarnTypeSyntax(ParseTree node, Feature feature) {
-      if (config.languageMode != LanguageMode.ECMASCRIPT6_TYPED) {
+      if (config.languageMode != LanguageMode.TYPESCRIPT) {
         errorReporter.warning(
             "type syntax is only supported in ES6 typed mode: " + feature,
             sourceName,
@@ -2984,7 +2980,7 @@ class IRFactory {
   private boolean inStrictContext() {
     // TODO(johnlenz): in ECMASCRIPT5/6 is a "mixed" mode and we should track the context
     // that we are in, if we want to support it.
-    return config.languageMode.strictMode == StrictMode.STRICT;
+    return config.strictMode == StrictMode.STRICT;
   }
 
   double normalizeNumber(LiteralToken token) {

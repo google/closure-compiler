@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config.RunMode;
+import com.google.javascript.jscomp.parsing.Config.StrictMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.Parser;
 import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
@@ -53,14 +54,21 @@ public final class ParserRunner {
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
 
-  public static Config createConfig(LanguageMode languageMode,
-                                    Set<String> extraAnnotationNames) {
+  // TODO(bradfordcsmith): Cleanup uses and remove this method.
+  @Deprecated
+  public static Config createConfig(LanguageMode languageMode, Set<String> extraAnnotationNames) {
+    return createConfig(languageMode, extraAnnotationNames, StrictMode.SLOPPY);
+  }
+
+  public static Config createConfig(
+      LanguageMode languageMode, Set<String> extraAnnotationNames, StrictMode strictMode) {
     return createConfig(
         languageMode,
         JsDocParsing.TYPES_ONLY,
         RunMode.STOP_AFTER_ERROR,
         extraAnnotationNames,
-        true);
+        true,
+        strictMode);
   }
 
   public static Config createConfig(
@@ -68,7 +76,8 @@ public final class ParserRunner {
       JsDocParsing jsdocParsingMode,
       RunMode runMode,
       Set<String> extraAnnotationNames,
-      boolean parseInlineSourceMaps) {
+      boolean parseInlineSourceMaps,
+      StrictMode strictMode) {
 
     initResourceConfig();
     Set<String> effectiveAnnotationNames;
@@ -84,7 +93,8 @@ public final class ParserRunner {
         runMode,
         suppressionNames,
         languageMode,
-        parseInlineSourceMaps);
+        parseInlineSourceMaps,
+        strictMode);
   }
 
   public static Set<String> getReservedVars() {
@@ -140,39 +150,25 @@ public final class ParserRunner {
   private static com.google.javascript.jscomp.parsing.parser.Parser.Config newParserConfig(
       Config config) {
     LanguageMode languageMode = config.languageMode;
-    boolean isStrictMode;
+    boolean isStrictMode = config.strictMode == StrictMode.STRICT;
     Mode parserConfigLanguageMode;
     switch (languageMode) {
-      case ECMASCRIPT6_TYPED:
+      case TYPESCRIPT:
         parserConfigLanguageMode = Mode.TYPESCRIPT;
-        isStrictMode = true;
         break;
 
       case ECMASCRIPT3:
         parserConfigLanguageMode = Mode.ES3;
-        isStrictMode = false;
         break;
 
       case ECMASCRIPT5:
         parserConfigLanguageMode = Mode.ES5;
-        isStrictMode = false;
-        break;
-
-      case ECMASCRIPT5_STRICT:
-        parserConfigLanguageMode = Mode.ES5;
-        isStrictMode = true;
         break;
 
       case ECMASCRIPT6:
-        parserConfigLanguageMode = Mode.ES6_OR_GREATER;
-        isStrictMode = false;
-        break;
-
-      case ECMASCRIPT6_STRICT:
       case ECMASCRIPT7:
       case ECMASCRIPT8:
         parserConfigLanguageMode = Mode.ES6_OR_GREATER;
-        isStrictMode = true;
         break;
 
       default:

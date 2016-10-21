@@ -232,10 +232,12 @@ public final class JsDocInfoParser {
   }
 
   private static JsDocInfoParser getParser(String toParse) {
-    Config config = new Config(
-        new HashSet<String>(),
-        new HashSet<String>(),
-        LanguageMode.ECMASCRIPT3);
+    Config config =
+        new Config(
+            new HashSet<String>(),
+            new HashSet<String>(),
+            LanguageMode.ECMASCRIPT3,
+            Config.StrictMode.SLOPPY);
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(toParse),
         toParse,

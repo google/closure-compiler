@@ -23,7 +23,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticSourceFile;
-
 import java.util.HashSet;
 
 /**
@@ -249,7 +248,11 @@ public final class TypeTransformationParser {
    */
   public boolean parseTypeTransformation() {
     Config config =
-        new Config(new HashSet<String>(), new HashSet<String>(), LanguageMode.ECMASCRIPT6);
+        new Config(
+            new HashSet<String>(),
+            new HashSet<String>(),
+            LanguageMode.ECMASCRIPT6,
+            Config.StrictMode.SLOPPY);
     // TODO(lpino): ParserRunner reports errors if the expression is not
     // ES6 valid. We need to abort the validation of the type transformation
     // whenever an error is reported.

@@ -2222,35 +2222,37 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (parserConfig == null) {
       switch (options.getLanguageIn()) {
         case ECMASCRIPT3:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT3);
-          externsParserConfig = createConfig(Config.LanguageMode.ECMASCRIPT5);
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT3, Config.StrictMode.SLOPPY);
+          externsParserConfig =
+              createConfig(Config.LanguageMode.ECMASCRIPT5, Config.StrictMode.SLOPPY);
           break;
         case ECMASCRIPT5:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT5);
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT5, Config.StrictMode.SLOPPY);
           externsParserConfig = parserConfig;
           break;
         case ECMASCRIPT5_STRICT:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT5_STRICT);
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT5, Config.StrictMode.STRICT);
           externsParserConfig = parserConfig;
           break;
         case ECMASCRIPT6:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6);
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6, Config.StrictMode.SLOPPY);
           externsParserConfig = parserConfig;
           break;
         case ECMASCRIPT6_STRICT:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6_STRICT);
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6, Config.StrictMode.STRICT);
           externsParserConfig = parserConfig;
           break;
         case ECMASCRIPT6_TYPED:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6_TYPED);
+          parserConfig =
+              createConfig(Config.LanguageMode.TYPESCRIPT, Config.StrictMode.STRICT);
           externsParserConfig = parserConfig;
           break;
         case ECMASCRIPT7:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT7);
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT7, Config.StrictMode.STRICT);
           externsParserConfig = parserConfig;
           break;
         case ECMASCRIPT8:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT8);
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT8, Config.StrictMode.STRICT);
           externsParserConfig = parserConfig;
           break;
         default:
@@ -2266,7 +2268,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  protected Config createConfig(Config.LanguageMode mode) {
+  protected Config createConfig(Config.LanguageMode mode, Config.StrictMode strictMode) {
     Config config =
         ParserRunner.createConfig(
             mode,
@@ -2275,7 +2277,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 ? Config.RunMode.KEEP_GOING
                 : Config.RunMode.STOP_AFTER_ERROR,
             options.extraAnnotationNames,
-            options.parseInlineSourceMaps);
+            options.parseInlineSourceMaps,
+            strictMode);
     return config;
   }
 
