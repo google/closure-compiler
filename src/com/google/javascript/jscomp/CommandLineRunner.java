@@ -1629,7 +1629,7 @@ public class CommandLineRunner extends
     }
 
     options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
-    options.setEmitUseStrict(flags.emitUseStrict && options.getLanguageOut().isStrict());
+    options.setEmitUseStrict(flags.emitUseStrict);
 
     return options;
   }

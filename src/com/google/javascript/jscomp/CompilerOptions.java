@@ -1043,6 +1043,13 @@ public class CompilerOptions {
   boolean printConfig = false;
 
   /**
+   * Are the input files written for strict mode?
+   *
+   * <p>Ignored for language modes that do not support strict mode.
+   */
+  private boolean isStrictModeInput = true;
+
+  /**
    * Should the compiler print its configuration options to stderr when they are initialized?
    *
    * <p> Default {@code false}.
@@ -2864,21 +2871,6 @@ public class CompilerOptions {
      */
     NO_TRANSPILE;
 
-    /** Whether this is a "strict mode" language. */
-    public boolean isStrict() {
-      Preconditions.checkState(this != NO_TRANSPILE);
-      switch (this) {
-        case ECMASCRIPT7:
-        case ECMASCRIPT8:
-        case ECMASCRIPT5_STRICT:
-        case ECMASCRIPT6_STRICT:
-        case ECMASCRIPT6_TYPED:
-          return true;
-        default:
-          return false;
-      }
-    }
-
     /** Whether this is ECMAScript 5 or higher. */
     public boolean isEs5OrHigher() {
       Preconditions.checkState(this != NO_TRANSPILE);
@@ -3156,5 +3148,14 @@ public class CompilerOptions {
     boolean isExplicitlyOn() {
       return this == TRUE || this == ON;
     }
+  }
+
+  public boolean isStrictModeInput() {
+    return isStrictModeInput;
+  }
+
+  public CompilerOptions setStrictModeInput(boolean isStrictModeInput) {
+    this.isStrictModeInput = isStrictModeInput;
+    return this;
   }
 }

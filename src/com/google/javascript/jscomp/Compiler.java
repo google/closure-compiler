@@ -409,7 +409,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           options.checkGlobalThisLevel);
     }
 
-    if (options.getLanguageIn().isStrict()) {
+    if (expectStrictModeInput()) {
       options.setWarningLevel(
           DiagnosticGroups.ES5_STRICT,
           CheckLevel.ERROR);
@@ -424,6 +424,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
       options.setWarningLevel(
           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
+    }
+  }
+
+  private boolean expectStrictModeInput() {
+    switch (options.getLanguageIn()) {
+      case ECMASCRIPT3:
+      case ECMASCRIPT5:
+      case ECMASCRIPT6:
+        return false;
+      case ECMASCRIPT5_STRICT:
+      case ECMASCRIPT6_STRICT:
+      case ECMASCRIPT6_TYPED:
+        return true;
+      default:
+        return options.isStrictModeInput();
     }
   }
 
@@ -1980,9 +1995,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
     builder.setTagAsExterns(firstOutput && options.shouldGenerateTypedExterns());
-    builder.setTagAsStrict(
-        firstOutput && options.isEmitUseStrict() && options.getLanguageOut().isStrict());
+    builder.setTagAsStrict(firstOutput && shouldEmitUseStrict());
     return builder.build();
+  }
+
+  private boolean shouldEmitUseStrict() {
+    switch (options.getLanguageOut()) {
+      case ECMASCRIPT3:
+      case ECMASCRIPT5:
+      case ECMASCRIPT6:
+        return false;
+      default:
+        return options.isEmitUseStrict();
+    }
   }
 
   /**
