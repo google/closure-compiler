@@ -52,7 +52,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     codingConvention = new GoogleCodingConvention();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT8);
   }
 
   @Override
@@ -67,6 +67,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     return options;
   }
 
+  @Override
   protected CodingConvention getCodingConvention() {
     return codingConvention;
   }
@@ -150,6 +151,8 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testWarning("class Foo { constructor(x) {} }", MISSING_JSDOC);
     testWarning("var Foo = class { bar() {} };", MISSING_JSDOC);
     testWarning("if (COMPILED) { var f = function() {}; }", MISSING_JSDOC);
+    testWarning("var f = async function() {};", MISSING_JSDOC);
+    testWarning("async function f() {};", MISSING_JSDOC);
 
     testSame("/** @return {string} */ function f() {}");
     testSame("/** @return {string} */ var f = function() {}");
@@ -160,6 +163,8 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("class Foo { /** @return {string} */ bar() {} }");
     testSame("class Foo { constructor(/** string */ x) {} }");
     testSame("var Foo = class { /** @return {string} */ bar() {} };");
+    testSame("/** @param {string} s */ var f = async function(s) {};");
+    testSame("/** @param {string} s */ async function f(s) {};");
   }
 
   public void testMissingJsDoc_noWarningIfInlineJsDocIsPresent() {
