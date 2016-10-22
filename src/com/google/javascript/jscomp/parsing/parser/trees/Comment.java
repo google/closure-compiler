@@ -32,7 +32,10 @@ public class Comment {
 
     // #!/usr/bin/node
     // Only valid at the start of a file.
-    SHEBANG
+    SHEBANG,
+
+    // /*! comment */
+    IMPORTANT
   }
 
   public final String value;

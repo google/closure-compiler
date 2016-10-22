@@ -1867,6 +1867,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(n.getFirstChild().getJSDocInfo().isConstructor()).isTrue();
   }
 
+  public void testImportantComment() {
+    isIdeMode = true;
+
+    Node n = parse("/*! Hi mom! */ function Foo() {}");
+    assertNode(n.getFirstChild()).hasType(Token.FUNCTION);
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(n.getJSDocInfo().getLicense()).isEqualTo(" Hi mom! ");
+  }
+
   public void testObjectLiteralDoc1() {
     Node n = parse("var x = {/** @type {number} */ 1: 2};");
 
