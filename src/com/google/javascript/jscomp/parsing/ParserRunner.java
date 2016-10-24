@@ -54,12 +54,6 @@ public final class ParserRunner {
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
 
-  // TODO(bradfordcsmith): Cleanup uses and remove this method.
-  @Deprecated
-  public static Config createConfig(LanguageMode languageMode, Set<String> extraAnnotationNames) {
-    return createConfig(languageMode, extraAnnotationNames, StrictMode.SLOPPY);
-  }
-
   public static Config createConfig(
       LanguageMode languageMode, Set<String> extraAnnotationNames, StrictMode strictMode) {
     return createConfig(
