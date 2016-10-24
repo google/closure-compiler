@@ -54,6 +54,8 @@ public interface FunctionTypeI extends TypeI {
    */
   TypeI convertMethodToFunction();
 
+  boolean hasInstanceType();
+
   ObjectTypeI getInstanceType();
 
   TypeI getReturnType();

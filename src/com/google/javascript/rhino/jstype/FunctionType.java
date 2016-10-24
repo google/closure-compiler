@@ -1160,6 +1160,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   /**
    * Returns whether this function type has an instance type.
    */
+  @Override
   public boolean hasInstanceType() {
     return isConstructor() || isInterface();
   }

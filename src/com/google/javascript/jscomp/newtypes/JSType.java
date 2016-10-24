@@ -1656,6 +1656,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public boolean hasInstanceType() {
+    Preconditions.checkState(this.isFunctionType());
+    return getFunTypeIfSingletonObj().getInstanceTypeOfCtor() != null;
+  }
+
+  @Override
   public ObjectTypeI getInstanceType() {
     Preconditions.checkState(this.isFunctionType());
     JSType instanceType = getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
