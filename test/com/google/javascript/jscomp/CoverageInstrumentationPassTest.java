@@ -114,18 +114,20 @@ public final class CoverageInstrumentationPassTest extends TestCase {
   }
 
   public void testDoWhileLoopBranch() throws Exception {
+    compareDoWhileLoopBranch(LanguageMode.ECMASCRIPT5);
     compareDoWhileLoopBranch(LanguageMode.ECMASCRIPT6);
   }
 
   private void compareDoWhileLoopMultiLineBranch(LanguageMode mode) throws Exception {
     GoldenFileComparer.compileAndCompare(
-        "CoverageInstrumentationPassTest/DoWhileLoopBranchGolden.jsdata",
+        "CoverageInstrumentationPassTest/DoWhileLoopMultiLineBranchGolden.jsdata",
         branchOptions(mode),
-        "CoverageInstrumentationPassTest/DoWhileLoopBranch.jsdata");
+        "CoverageInstrumentationPassTest/DoWhileLoopMultiLineBranch.jsdata");
   }
 
   public void testDoWhileLoopMultiLineBranch() throws Exception {
-    compareDoWhileLoopBranch(LanguageMode.ECMASCRIPT6);
+    compareDoWhileLoopMultiLineBranch(LanguageMode.ECMASCRIPT5);
+    compareDoWhileLoopMultiLineBranch(LanguageMode.ECMASCRIPT6);
   }
 
   private void compareWhileLoopBranch(LanguageMode mode) throws Exception {
