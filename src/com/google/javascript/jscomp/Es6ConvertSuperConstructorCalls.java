@@ -51,7 +51,14 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     // -   However, if the original call used spread (e.g. super(...list)), then spread
     //     transpilation will have turned that into something like
     //     super.apply(null, $jscomp$expanded$args).
-    if (parent.isCall()) {
+    if (node.isFromExterns()) {
+      // This class is defined in an externs file, so it's only a stub, not the actual
+      // implementation that should be instantiated.
+      // A call to super() shouldn't actually exist for a stub and is problematic to transpile,
+      // so just drop it.
+      NodeUtil.getEnclosingStatement(node).detach();
+      compiler.reportCodeChange();
+    } else if (parent.isCall()) {
       visitSuperCall(node, parent);
     } else {
       visitSuperApplyCall(node, parent);

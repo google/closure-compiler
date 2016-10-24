@@ -651,6 +651,25 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.f = function() {console.log('hi');};"));
   }
 
+  public void testSuperCallInExterns() {
+    // Drop super() calls in externs.
+    testExternChanges(
+        LINE_JOINER.join(
+            "class D {}",
+            "class C extends D {",
+            "  constructor() {",
+            "    super();",
+            "  }",
+            "}"),
+        "",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "/** @constructor @struct",
+            " * @extends {D}",
+            " */",
+            "var C = function() {};"));
+  }
   public void testSuperCall() {
     test(
         "class D {} class C extends D { constructor() { super(); } }",
