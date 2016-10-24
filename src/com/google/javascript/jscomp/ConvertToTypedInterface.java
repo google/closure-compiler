@@ -48,6 +48,11 @@ class ConvertToTypedInterface implements CompilerPass {
           "JSC_CONSTANT_WITHOUT_EXPLICIT_TYPE",
           "/** @const */-annotated values in library API should have types explicitly specified.");
 
+  static final DiagnosticType UNSUPPORTED_GOOG_SCOPE =
+      DiagnosticType.warning(
+          "JSC_UNSUPPORTED_GOOG_SCOPE",
+          "goog.scope is not supported inside .i.js files.");
+
   private final AbstractCompiler compiler;
 
   ConvertToTypedInterface(AbstractCompiler compiler) {
@@ -216,8 +221,10 @@ class ConvertToTypedInterface implements CompilerPass {
               break;
             case CALL:
               Node callee = expr.getFirstChild();
-              Preconditions.checkState(!callee.matchesQualifiedName("goog.scope"), n);
-              if (callee.matchesQualifiedName("goog.provide")) {
+              if (callee.matchesQualifiedName("goog.scope")) {
+                t.report(n, UNSUPPORTED_GOOG_SCOPE);
+                return false;
+              } else if (callee.matchesQualifiedName("goog.provide")) {
                 Node childBefore;
                 while (null != (childBefore = n.getPrevious())
                     && childBefore.getBooleanProp(Node.IS_NAMESPACE)) {

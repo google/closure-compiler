@@ -482,4 +482,21 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
     // This is OK, because short-import goog.forwardDeclares don't declare a type.
     testSame("goog.module('x.y.z'); var C = goog.forwardDeclare('a.b.C'); /** @type {C} */ var c;");
   }
+
+  public void testGoogScopeNotSupported() {
+    testSameWarning(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.provide('a.b.c.MyFoo');",
+              "",
+              "goog.require('x.y.Foo');",
+              "",
+              "goog.scope(function() {",
+              "  var Foo = x.y.Foo;",
+              "  var ns = a.b.c;",
+              "  ns.MyFoo = new Foo;",
+              "});")
+        },
+        ConvertToTypedInterface.UNSUPPORTED_GOOG_SCOPE);
+  }
 }
