@@ -61,6 +61,10 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
+  public void testConstKeywordJsdocPropagation() {
+    testEs6("const x = 5;", "/** @const {number} */ var x;");
+  }
+
   public void testThisPropertiesInConstructors() {
     test(
         "/** @constructor */ function Foo() { /** @const {number} */ this.x; }",
@@ -68,7 +72,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     test(
         "/** @constructor */ function Foo() { this.x; }",
-        "/** @constructor */ function Foo() {} \n /** @type {*} */ Foo.prototype.x;");
+        "/** @constructor */ function Foo() {} \n /** @const {*} */ Foo.prototype.x;");
 
     test(
         "/** @constructor */ function Foo() { /** @type {?number} */ this.x = null; this.x = 5; }",
@@ -314,7 +318,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     test(
         "var x = 7; /** @enum {number} */ var E = { A: x };",
-        "/** @type {*} */ var x; /** @enum {number} */ var E = { A: 0 };");
+        "/** @const {*} */ var x; /** @enum {number} */ var E = { A: 0 };");
   }
 
   public void testTryCatch() {
@@ -382,7 +386,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
     test("while (true) { foo(); break; }", "{}");
 
     test("for (var i = 0; i < 10; i++) { var field = 88; }",
-        "/** @type {*} */ var i; {/** @type {*} */ var field;}");
+        "/** @const {*} */ var i; {/** @const {*} */ var field;}");
 
     test(
         "while (i++ < 10) { var /** number */ field = i; }",
@@ -402,7 +406,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     test(
         "for (var i = 0; i < 10; i++) { var /** number */ field = i; }",
-        "/** @type {*} */ var i; { /** @type {number } */ var field; }");
+        "/** @const {*} */ var i; { /** @type {number } */ var field; }");
   }
 
   public void testNamespaces() {
@@ -428,7 +432,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     test(
         "/** @const */ var ns = {}; ns.x = 5; ns.x = 7;",
-        "/** @const */ var ns = {}; /** @type {*} */ ns.x;");
+        "/** @const */ var ns = {}; /** @const {*} */ ns.x;");
 
     testEs6(
         "const ns = {}; /** @type {number} */ ns.x = 5; ns.x = 7;",
@@ -440,9 +444,9 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     test("/** @type {number} */ var x = 4; x = 7;", "/** @type {number} */ var x;");
 
-    test("var x = 4; var x = 7;", "/** @type {*} */ var x;");
+    test("var x = 4; var x = 7;", "/** @const {*} */ var x;");
 
-    test("var x = 4; x = 7;", "/** @type {*} */ var x;");
+    test("var x = 4; x = 7;", "/** @const {*} */ var x;");
   }
 
   public void testDontRemoveGoogModuleContents() {

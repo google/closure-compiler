@@ -108,18 +108,18 @@ class ConvertToTypedInterface implements CompilerPass {
     private static JSDocInfo getJSDocForRhs(NodeTraversal t, Node rhs, JSDocInfo oldJSDoc) {
       switch (NodeUtil.getKnownValueType(rhs)) {
         case BOOLEAN:
-          return getTypeJSDoc(oldJSDoc, "boolean");
+          return getConstJSDoc(oldJSDoc, "boolean");
         case NUMBER:
-          return getTypeJSDoc(oldJSDoc, "number");
+          return getConstJSDoc(oldJSDoc, "number");
         case STRING:
-          return getTypeJSDoc(oldJSDoc, "string");
+          return getConstJSDoc(oldJSDoc, "string");
         case NULL:
-          return getTypeJSDoc(oldJSDoc, "null");
+          return getConstJSDoc(oldJSDoc, "null");
         case VOID:
-          return getTypeJSDoc(oldJSDoc, "void");
+          return getConstJSDoc(oldJSDoc, "void");
         case OBJECT:
           if (rhs.isRegExp()) {
-            return getTypeJSDoc(oldJSDoc, new Node(Token.BANG, IR.string("RegExp")));
+            return getConstJSDoc(oldJSDoc, new Node(Token.BANG, IR.string("RegExp")));
           }
           break;
         case UNDETERMINED:
@@ -161,7 +161,7 @@ class ConvertToTypedInterface implements CompilerPass {
         default:
           break;
       }
-      return getTypeJSDoc(oldJSDoc, expr);
+      return getConstJSDoc(oldJSDoc, expr);
     }
 
   }
@@ -474,13 +474,17 @@ class ConvertToTypedInterface implements CompilerPass {
   }
 
   private static boolean isInferrableConst(JSDocInfo jsdoc, Node nameNode) {
-    return jsdoc != null
-        && jsdoc.hasConstAnnotation()
+    boolean isConst =
+        nameNode.getParent().isConst() || (jsdoc != null && jsdoc.hasConstAnnotation());
+    return isConst
         && !hasAnnotatedType(jsdoc)
         && !NodeUtil.isNamespaceDecl(nameNode);
   }
 
   private static boolean hasAnnotatedType(JSDocInfo jsdoc) {
+    if (jsdoc == null) {
+      return false;
+    }
     return jsdoc.hasType()
         || jsdoc.hasReturnType()
         || jsdoc.getParameterCount() > 0
@@ -518,33 +522,32 @@ class ConvertToTypedInterface implements CompilerPass {
     JSType type = nameNode.getJSType();
     if (type == null) {
       compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
-      return getTypeJSDoc(oldJSDoc, new Node(Token.STAR));
+      return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
     } else {
-      return getTypeJSDoc(oldJSDoc, type.toNonNullAnnotationString());
+      return getConstJSDoc(oldJSDoc, type.toNonNullAnnotationString());
     }
   }
 
   private static JSDocInfo getAllTypeJSDoc() {
-    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-    builder.recordType(asTypeExpression(new Node(Token.STAR)));
-    return builder.build();
+    return getConstJSDoc(null, new Node(Token.STAR));
   }
 
   private static JSTypeExpression asTypeExpression(Node typeAst) {
     return new JSTypeExpression(typeAst, "<synthetic>");
   }
 
-  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, String contents) {
-    return getTypeJSDoc(oldJSDoc, Node.newString(contents));
+  private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, String contents) {
+    return getConstJSDoc(oldJSDoc, Node.newString(contents));
   }
 
-  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, Node typeAst) {
-    return getTypeJSDoc(oldJSDoc, asTypeExpression(typeAst));
+  private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, Node typeAst) {
+    return getConstJSDoc(oldJSDoc, asTypeExpression(typeAst));
   }
 
-  private static JSDocInfo getTypeJSDoc(JSDocInfo oldJSDoc, JSTypeExpression newType) {
-    JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(oldJSDoc);
+  private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, JSTypeExpression newType) {
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
     builder.recordType(newType);
+    builder.recordConstancy();
     return builder.build();
   }
 }
