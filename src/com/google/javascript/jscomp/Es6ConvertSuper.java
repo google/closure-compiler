@@ -31,7 +31,8 @@ import com.google.javascript.rhino.Token;
  * <p>This has to run before the main {@link Es6ToEs3Converter} pass. The super() constructor calls
  * are not converted here, but rather in {@link Es6ConvertSuperConstructorCalls}, which runs later.
  */
-public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallback
+    implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
   public Es6ConvertSuper(AbstractCompiler compiler) {
@@ -39,7 +40,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+  public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isClass()) {
       boolean hasConstructor = false;
       for (Node member = n.getLastChild().getFirstChild();
@@ -53,13 +54,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
       if (!hasConstructor) {
         addSyntheticConstructor(n);
       }
-    }
-    return true;
-  }
-
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isSuper()) {
+    } else if (n.isSuper()) {
       visitSuper(n, parent);
     }
   }
