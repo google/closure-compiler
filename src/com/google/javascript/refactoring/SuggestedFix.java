@@ -574,8 +574,7 @@ public final class SuggestedFix {
       String shortName = namespace.substring(namespace.lastIndexOf('.') + 1);
 
       if (script.isModuleBody()) {
-        // TODO(tbreisacher): Switch to IR.const() once ES6+ is on by default everywhere.
-        googRequireNode = IR.var(IR.name(shortName), googRequireNode);
+        googRequireNode = IR.constNode(IR.name(shortName), googRequireNode);
       } else {
         googRequireNode = IR.exprResult(googRequireNode);
       }
