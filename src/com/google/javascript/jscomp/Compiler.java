@@ -2252,12 +2252,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         return Config.LanguageMode.ECMASCRIPT5;
       case ECMASCRIPT6:
       case ECMASCRIPT6_STRICT:
+      case ECMASCRIPT_2015:
         return Config.LanguageMode.ECMASCRIPT6;
       case ECMASCRIPT6_TYPED:
         return Config.LanguageMode.TYPESCRIPT;
       case ECMASCRIPT7:
+      case ECMASCRIPT_2016:
         return Config.LanguageMode.ECMASCRIPT7;
       case ECMASCRIPT8:
+      case ECMASCRIPT_NEXT:
         return Config.LanguageMode.ECMASCRIPT8;
       default:
         throw new IllegalStateException("unexpected language mode: "

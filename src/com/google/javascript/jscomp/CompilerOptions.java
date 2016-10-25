@@ -2843,13 +2843,20 @@ public class CompilerOptions {
 
     /**
      * Shiny new JavaScript
+     * @deprecated Use ECMASCRIPT_2015 with {@code isStrictModeInput == false}.
      */
+    @Deprecated
     ECMASCRIPT6,
 
     /**
      * Nitpicky, shiny new JavaScript
+     * @deprecated Use ECMASCRIPT_2015 with {@code isStrictModeInput == true}.
      */
+    @Deprecated
     ECMASCRIPT6_STRICT,
+
+    /** ECMAScript standard approved in 2015. */
+    ECMASCRIPT_2015,
 
     /**
      * A superset of ES6 which adds Typescript-style type declarations. Always strict.
@@ -2857,14 +2864,25 @@ public class CompilerOptions {
     ECMASCRIPT6_TYPED,
 
     /**
-     * A superset of ES6 which adds the exponent operator (**).
+     * @deprecated Use ECMASCRIPT_2016.
      */
+    @Deprecated
     ECMASCRIPT7,
 
     /**
-     * A superset of ES7 which adds async functions.
+     * ECMAScript standard approved in 2016.
+     * Adds the exponent operator (**).
      */
+    ECMASCRIPT_2016,
+
+    /** @deprecated Use {@code ECMASCRIPT_NEXT} */
+    @Deprecated
     ECMASCRIPT8,
+
+    /**
+     * ECMAScript latest draft standard.
+     */
+    ECMASCRIPT_NEXT,
 
     /**
      * For languageOut only. The same language mode as the input.
@@ -2881,14 +2899,12 @@ public class CompilerOptions {
     public boolean isEs6OrHigher() {
       Preconditions.checkState(this != NO_TRANSPILE);
       switch (this) {
-        case ECMASCRIPT7:
-        case ECMASCRIPT8:
-        case ECMASCRIPT6:
-        case ECMASCRIPT6_STRICT:
-        case ECMASCRIPT6_TYPED:
-          return true;
-        default:
+        case ECMASCRIPT3:
+        case ECMASCRIPT5:
+        case ECMASCRIPT5_STRICT:
           return false;
+        default:
+          return true;
       }
     }
 
