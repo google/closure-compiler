@@ -311,6 +311,11 @@ function MediaTrackConstraintSetInterface_() {}
 MediaTrackConstraintSetInterface_.prototype.chromeMediaSource;
 
 /**
+ * @type {?boolean}
+ */
+MediaTrackConstraintSetInterface_.prototype.echoCancellation;
+
+/**
  * @type {?number}
  */
 MediaTrackConstraintSetInterface_.prototype.minWidth;
@@ -350,6 +355,11 @@ MediaTrackConstraintSetInterface_.prototype.minFrameRate;
  * @type {?number}
  */
 MediaTrackConstraintSetInterface_.prototype.maxFrameRate;
+
+/**
+ * @type {?string}
+ */
+MediaTrackConstraintSetInterface_.prototype.sourceId;
 
 /**
  * This type and two more below are defined as unions with Object because they
