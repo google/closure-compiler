@@ -30,6 +30,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
@@ -213,6 +214,41 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
+  private static final class ExportDefinition {
+    // Null if the export is of a @typedef
+    @Nullable Node rhs;
+    // Null if the export is of anything other than a name
+    @Nullable Var nameDecl;
+
+    private static final Set<Token> INLINABLE_NAME_PARENTS =
+        ImmutableSet.of(Token.VAR, Token.CONST, Token.LET, Token.FUNCTION, Token.CLASS);
+
+    static ExportDefinition fromRhs(NodeTraversal t, Node rhs) {
+      ExportDefinition newExport = new ExportDefinition();
+      newExport.rhs = rhs;
+      if (rhs != null && (rhs.isName() || rhs.isStringKey())) {
+        newExport.nameDecl = t.getScope().getVar(rhs.getString());
+      }
+      return newExport;
+    }
+
+    boolean hasInlinableName() {
+      if (nameDecl == null
+          || !INLINABLE_NAME_PARENTS.contains(nameDecl.getParentNode().getToken())) {
+        return false;
+      }
+      Node initialValue = nameDecl.getInitialValue();
+      return initialValue == null || !NodeUtil.isCallTo(initialValue, "goog.require");
+    }
+
+    String getLocalName() {
+      if (hasInlinableName()) {
+        return nameDecl.getName();
+      }
+      return null;
+    }
+  }
+
   private static final class ScriptDescription {
     boolean isModule;
     boolean declareLegacyNamespace;
@@ -246,10 +282,18 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     // "module$exports$a$b$c" for non-legacy modules
     @Nullable String getBinaryNamespace() {
-      if (this.declareLegacyNamespace) {
+      if (!this.isModule || this.declareLegacyNamespace) {
         return null;
       }
       return MODULE_EXPORTS_PREFIX + this.legacyNamespace.replace('.', '$');
+    }
+
+    @Nullable
+    String getExportedNamespace() {
+      if (this.declareLegacyNamespace) {
+        return this.legacyNamespace;
+      }
+      return this.getBinaryNamespace();
     }
   }
 
@@ -305,7 +349,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
         case GETPROP:
           if (isExportPropertyAssignment(n)) {
-            recordExportsPropertyAssignment(n);
+            recordExportsPropertyAssignment(t, n);
           }
           break;
 
@@ -517,15 +561,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return script == null ? null : script.getBinaryNamespace();
     }
 
-    @Nullable String getExportedNamespace(String legacyNamespace) {
+    @Nullable
+    private String getExportedNamespaceOrScript(String legacyNamespace) {
       if (legacyScriptNamespaces.contains(legacyNamespace)) {
         return legacyNamespace;
       }
       ScriptDescription script = scriptDescriptionsByGoogModuleNamespace.get(legacyNamespace);
-      if (script != null) {
-        return script.declareLegacyNamespace ? legacyNamespace : script.getBinaryNamespace();
-      }
-      return null;
+      return script == null ? null : script.getExportedNamespace();
     }
 
     void removeRoot(Node toRemove) {
@@ -776,30 +818,41 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return;
     }
 
-    Preconditions.checkState(currentScript.defaultExportLocalName == null);
+    Preconditions.checkState(currentScript.defaultExportRhs == null);
+    currentScript.willCreateExportsObject = true;
     Node exportRhs = n.getNext();
-    if (exportRhs.isName() && !currentScript.declareLegacyNamespace) {
-      String exportedName = exportRhs.getString();
-      Var var = t.getScope().getVar(exportedName);
-      // If rhs is the short name from an import, then we can't do the uninlining.
-      if (var != null
-          && var.getInitialValue() != null
-          && !NodeUtil.isCallTo(var.getInitialValue(), "goog.require")) {
-        currentScript.defaultExportLocalName = exportedName;
-        recordNameToInline(exportedName, currentScript.getBinaryNamespace());
-      }
-    } else if (exportRhs.isObjectLit()) {
+    if (isNamedExportsLiteral(exportRhs)) {
       for (Node key = exportRhs.getFirstChild(); key != null; key = key.getNext()) {
-        if (key.isStringKey()) {
-          String exportName = key.getString();
-          currentScript.namedExports.add(exportName);
-        }
+        String exportName = key.getString();
+        currentScript.namedExports.add(exportName);
       }
+      return;
     }
 
     currentScript.defaultExportRhs = exportRhs;
-    currentScript.willCreateExportsObject = true;
+    ExportDefinition defaultExport = ExportDefinition.fromRhs(t, exportRhs);
+    if (!currentScript.declareLegacyNamespace && defaultExport.hasInlinableName()) {
+      String localName = defaultExport.getLocalName();
+      currentScript.defaultExportLocalName = localName;
+      recordNameToInline(localName, currentScript.getBinaryNamespace());
+    }
+
     return;
+  }
+
+  private static boolean isNamedExportsLiteral(Node objLit) {
+    if (!objLit.isObjectLit()) {
+      return false;
+    }
+    for (Node key = objLit.getFirstChild(); key != null; key = key.getNext()) {
+      if (!key.isStringKey()) {
+        return false;
+      }
+      if (key.hasChildren() && !key.getFirstChild().isName()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private void recordModuleReturn() {
@@ -876,7 +929,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         && isTopLevel(t, statementNode, ScopeType.EXEC_CONTEXT)) {
       // Record alias -> exportedNamespace associations for later inlining.
       Node lhs = call.getParent();
-      String exportedNamespace = rewriteState.getExportedNamespace(legacyNamespace);
+      String exportedNamespace = rewriteState.getExportedNamespaceOrScript(legacyNamespace);
       if (exportedNamespace == null) {
         // There's nothing to inline. The missing provide/module will be reported elsewhere.
       } else if (lhs.isName()) {
@@ -947,7 +1000,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       // Don't know enough to give a good warning here.
       return;
     }
-    if (importedModule.defaultExportRhs != null && !importedModule.defaultExportRhs.isObjectLit()) {
+    if (importedModule.defaultExportRhs != null) {
       t.report(importNode, ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT);
       return;
     }
@@ -979,7 +1032,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       // In a non-module script goog.module.get() is used inside of a goog.scope() and it's
       // imported alias need only be made available within that scope.
       // Replace "goog.module.get('pkg.Foo');" with "module$exports$pkg$Foo;".
-      String exportedNamespace = rewriteState.getExportedNamespace(legacyNamespace);
+      String exportedNamespace = rewriteState.getExportedNamespaceOrScript(legacyNamespace);
       Node exportedNamespaceName = NodeUtil.newQName(compiler, exportedNamespace).srcrefTree(call);
       exportedNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
       call.getParent().replaceChild(call, exportedNamespaceName);
@@ -987,7 +1040,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     compiler.reportCodeChange();
   }
 
-  private void recordExportsPropertyAssignment(Node getpropNode) {
+  private void recordExportsPropertyAssignment(NodeTraversal t, Node getpropNode) {
     if (!currentScript.isModule) {
       return;
     }
@@ -1013,10 +1066,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // Update "exports.foo = Foo" to "module$exports$pkg$Foo.foo = Foo";
     Node exportsNameNode = getpropNode.getFirstChild();
     Preconditions.checkState(exportsNameNode.getString().equals("exports"));
-    String exportedNamespace =
-        currentScript.declareLegacyNamespace
-            ? currentScript.legacyNamespace
-            : currentScript.getBinaryNamespace();
+    String exportedNamespace = currentScript.getExportedNamespace();
     safeSetMaybeQualifiedString(exportsNameNode, exportedNamespace);
 
     Node jsdocNode = parent.isAssign() ? parent : getpropNode;
@@ -1357,6 +1407,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordNameToInline(String aliasName, String legacyNamespace) {
+    Preconditions.checkNotNull(aliasName);
     Preconditions.checkNotNull(legacyNamespace);
     Preconditions.checkState(
         null == currentScript.namesToInlineByAlias.put(aliasName, legacyNamespace),
@@ -1416,9 +1467,41 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (newString.contains(".")) {
       // When replacing with a dotted fully qualified name it's already better than an original
       // name.
+      Node nameParent = nameNode.getParent();
+      switch (nameParent.getToken()) {
+        case FUNCTION:
+        case CLASS:
+          if (NodeUtil.isStatement(nameParent) && nameParent.getFirstChild() == nameNode) {
+            Node statementParent = nameParent.getParent();
+            Node placeholder = IR.empty();
+            statementParent.replaceChild(nameParent, placeholder);
+            Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, nameParent, null);
+            newStatement.useSourceInfoIfMissingFromForTree(nameParent);
+            statementParent.replaceChild(placeholder, newStatement);
+            return;
+          }
+          break;
+        case VAR:
+        case LET:
+        case CONST:
+          {
+            JSDocInfo jsdoc = nameParent.getJSDocInfo();
+            Node rhs = nameNode.hasChildren() ? nameNode.getLastChild().detach() : null;
+            Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, rhs, jsdoc);
+            newStatement.useSourceInfoIfMissingFromForTree(nameParent);
+            NodeUtil.replaceDeclarationChild(nameNode, newStatement);
+            return;
+          }
+        case OBJECT_PATTERN:
+        case ARRAY_PATTERN:
+        case PARAM_LIST:
+          throw new RuntimeException("Not supported");
+        default:
+          break;
+      }
       Node newQualifiedNameNode = NodeUtil.newQName(compiler, newString);
       newQualifiedNameNode.srcrefTree(nameNode);
-      nameNode.getParent().replaceChild(nameNode, newQualifiedNameNode);
+      nameParent.replaceChild(nameNode, newQualifiedNameNode);
     } else {
       String originalName = nameNode.getString();
       nameNode.setString(newString);

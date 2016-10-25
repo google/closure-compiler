@@ -168,6 +168,27 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
     testEs6(
         new String[] {
+          "goog.module('ns.b'); /** @typedef {number} */ exports.Foo;",
+          LINE_JOINER.join(
+              "goog.module('ns.a');",
+              "",
+              "var {Foo} = goog.require('ns.b');",
+              "",
+              "/** @type {Foo} */",
+              "var f = 4;")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @const @typedef {number} */ module$exports$ns$b.Foo;"),
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$ns$a = {}",
+              "/** @type {module$exports$ns$b.Foo} */",
+              "var module$contents$ns$a_f = 4;")
+        });
+
+    testEs6(
+        new String[] {
           "goog.provide('ns.b'); /** @constructor */ ns.b.Foo = function() {};",
           LINE_JOINER.join(
               "goog.module('ns.a');",
@@ -278,7 +299,20 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
               "/** @const */ var module$exports$modB = {}",
               "/** @type {modA.Foo} */",
               "var module$contents$modB_f = new modA.Foo;")});
+  }
 
+  public void testObjectLiteralDefaultExport() {
+    testErrorEs6(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('modA');",
+              "",
+              "class Foo {}",
+              "// This is not a named exports object because of the value literal",
+              "exports = {Foo, Bar: [1,2,3]};"),
+          LINE_JOINER.join("goog.module('modB');", "", "var {Foo} = goog.require('modA');")
+        },
+        ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT);
   }
 
   public void testIllegalDestructuringImports() {
