@@ -627,7 +627,30 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @struct @interface",
             " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) { D.apply(this, arguments); };",
+            "var C = function(var_args) {};",
+            "C.prototype.g = function() {};"));
+  }
+
+  public void testExtendsRecord() {
+    test(
+        LINE_JOINER.join(
+            "/** @record */",
+            "class D {",
+            "  f() {}",
+            "}",
+            "/** @record */",
+            "class C extends D {",
+            "  g() {}",
+            "}"),
+        LINE_JOINER.join(
+            "/** @struct @record */",
+            "var D = function() {};",
+            "D.prototype.f = function() {};",
+            "/**",
+            " * @struct @record",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {};",
             "C.prototype.g = function() {};"));
   }
 

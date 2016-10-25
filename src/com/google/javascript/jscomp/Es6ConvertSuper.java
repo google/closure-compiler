@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -52,14 +53,14 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         }
       }
       if (!hasConstructor) {
-        addSyntheticConstructor(n);
+        addSyntheticConstructor(t, n);
       }
     } else if (n.isSuper()) {
       visitSuper(n, parent);
     }
   }
 
-  private void addSyntheticConstructor(Node classNode) {
+  private void addSyntheticConstructor(NodeTraversal t, Node classNode) {
     Node superClass = classNode.getSecondChild();
     Node classMembers = classNode.getLastChild();
     Node memberDef;
@@ -72,7 +73,12 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         return;
       }
       Node body = IR.block();
-      if (!classNode.isFromExterns()) {
+
+      // If a class is defined in an externs file or as an interface, it's only a stub, not an
+      // implementation that should be instantiated.
+      // A call to super() shouldn't actually exist for these cases and is problematic to
+      // transpile, so don't generate it.
+      if (!classNode.isFromExterns()  && !isInterface(classNode)) {
         Node exprResult = IR.exprResult(IR.call(
             IR.getprop(superClass.cloneTree(), IR.string("apply")),
             IR.thisNode(),
@@ -93,6 +99,11 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     }
     memberDef.useSourceInfoIfMissingFromForTree(classNode);
     classMembers.addChildToFront(memberDef);
+  }
+
+  private boolean isInterface(Node classNode) {
+    JSDocInfo classJsDocInfo = NodeUtil.getBestJSDocInfo(classNode);
+    return classJsDocInfo != null && classJsDocInfo.isInterface();
   }
 
   private void visitSuper(Node node, Node parent) {
@@ -121,6 +132,16 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         && parent.isCall()
         && parent.getFirstChild() == node) {
       // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls later.
+      if (node.isFromExterns() || isInterface(clazz)) {
+        // If a class is defined in an externs file or as an interface, it's only a stub, not an
+        // implementation that should be instantiated.
+        // A call to super() shouldn't actually exist for these cases and is problematic to
+        // transpile, so just drop it.
+        NodeUtil.getEnclosingStatement(node).detach();
+        compiler.reportCodeChange();
+      }
+      // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls
+      // later.
       return;
     }
     if (enclosingMemberDef.isStaticMember()) {
