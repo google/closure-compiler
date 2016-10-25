@@ -352,7 +352,7 @@ class IRFactory {
 
     if (tree.sourceComments != null) {
       for (Comment comment : tree.sourceComments) {
-        if (comment.type == Comment.Type.JSDOC
+        if ((comment.type == Comment.Type.JSDOC || comment.type == Comment.Type.IMPORTANT)
             && !irFactory.parsedComments.contains(comment)) {
           irFactory.handlePossibleFileOverviewJsDoc(comment);
         } else if (comment.type == Comment.Type.BLOCK) {
@@ -903,7 +903,12 @@ class IRFactory {
           errorReporter);
     jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
     jsdocParser.setFileOverviewJSDocInfo(fileOverviewInfo);
-    jsdocParser.parse();
+    if (node.type == Comment.Type.IMPORTANT && node.value.length() > 0) {
+      jsdocParser.parseImportantComment();
+    } else {
+      jsdocParser.parse();
+    }
+
     return jsdocParser;
   }
 
