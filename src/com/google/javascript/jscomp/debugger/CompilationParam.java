@@ -61,22 +61,6 @@ enum CompilationParam {
   },
 
   /**
-   * If true, the input language is ES6. If false, it's ES5.
-   */
-  LANG_IN_IS_ES6(true) {
-    @Override
-    void apply(CompilerOptions options, boolean value) {
-      options.setLanguageIn(value ?
-          CompilerOptions.LanguageMode.ECMASCRIPT6 :
-          CompilerOptions.LanguageMode.ECMASCRIPT5);
-    }
-    @Override
-    String getJavaInfo() {
-      return "options.setLanguageIn(LanguageMode.ECMASCRIPT6)";
-    }
-  },
-
-  /**
    * If true, the output language is ES5. If false, we skip transpilation.
    */
   TRANSPILE(true) {
