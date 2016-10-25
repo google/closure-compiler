@@ -618,7 +618,7 @@ TextRange.prototype.offsetTop;
 TextRange.prototype.text;
 
 /**
- * @param {boolean} toStart
+ * @param {boolean=} opt_toStart
  * @see http://msdn.microsoft.com/en-us/library/ms536371(VS.85).aspx
  */
 TextRange.prototype.collapse;
@@ -687,7 +687,7 @@ TextRange.prototype.moveEnd;
 
 /**
  * @param {string} unit
- * @param {number} count
+ * @param {number=} opt_count
  * @see http://msdn.microsoft.com/en-us/library/ms536623(VS.85).aspx
  */
 TextRange.prototype.moveStart;
