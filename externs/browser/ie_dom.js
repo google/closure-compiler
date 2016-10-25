@@ -612,11 +612,13 @@ TextRange.prototype.offsetLeft;
 TextRange.prototype.offsetTop;
 
 /**
+ * @type {string}
  * @see http://msdn.microsoft.com/en-us/library/ms534676(VS.85).aspx
  */
 TextRange.prototype.text;
 
 /**
+ * @param {boolean} toStart
  * @see http://msdn.microsoft.com/en-us/library/ms536371(VS.85).aspx
  */
 TextRange.prototype.collapse;
@@ -662,6 +664,8 @@ TextRange.prototype.getBoundingClientRect;
 TextRange.prototype.getClientRects;
 
 /**
+ * @param {TextRange|ControlRange} range
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536450(VS.85).aspx
  */
 TextRange.prototype.inRange;
@@ -682,6 +686,8 @@ TextRange.prototype.move;
 TextRange.prototype.moveEnd;
 
 /**
+ * @param {string} unit
+ * @param {number} count
  * @see http://msdn.microsoft.com/en-us/library/ms536623(VS.85).aspx
  */
 TextRange.prototype.moveStart;
@@ -742,11 +748,14 @@ TextRange.prototype.queryCommandValue;
 TextRange.prototype.scrollIntoView;
 
 /**
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms536735(VS.85).aspx
  */
-TextRange.prototype.select;
+TextRange.prototype.select = function() {};
 
 /**
+ * @param {string} how
+ * @param {TextRange|ControlRange} sourceRange
  * @see http://msdn.microsoft.com/en-us/library/ms536745(VS.85).aspx
  */
 TextRange.prototype.setEndPoint;
