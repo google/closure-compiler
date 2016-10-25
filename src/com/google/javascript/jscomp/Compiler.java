@@ -2242,48 +2242,41 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return convention;
   }
 
+  private Config.LanguageMode getParserConfigLanguageMode(
+      CompilerOptions.LanguageMode languageMode) {
+    switch (languageMode) {
+      case ECMASCRIPT3:
+        return Config.LanguageMode.ECMASCRIPT3;
+      case ECMASCRIPT5:
+      case ECMASCRIPT5_STRICT:
+        return Config.LanguageMode.ECMASCRIPT5;
+      case ECMASCRIPT6:
+      case ECMASCRIPT6_STRICT:
+        return Config.LanguageMode.ECMASCRIPT6;
+      case ECMASCRIPT6_TYPED:
+        return Config.LanguageMode.TYPESCRIPT;
+      case ECMASCRIPT7:
+        return Config.LanguageMode.ECMASCRIPT7;
+      case ECMASCRIPT8:
+        return Config.LanguageMode.ECMASCRIPT8;
+      default:
+        throw new IllegalStateException("unexpected language mode: "
+            + options.getLanguageIn());
+    }
+  }
+
   @Override
   Config getParserConfig(ConfigContext context) {
     if (parserConfig == null) {
-      switch (options.getLanguageIn()) {
-        case ECMASCRIPT3:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT3, Config.StrictMode.SLOPPY);
-          externsParserConfig =
-              createConfig(Config.LanguageMode.ECMASCRIPT5, Config.StrictMode.SLOPPY);
-          break;
-        case ECMASCRIPT5:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT5, Config.StrictMode.SLOPPY);
-          externsParserConfig = parserConfig;
-          break;
-        case ECMASCRIPT5_STRICT:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT5, Config.StrictMode.STRICT);
-          externsParserConfig = parserConfig;
-          break;
-        case ECMASCRIPT6:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6, Config.StrictMode.SLOPPY);
-          externsParserConfig = parserConfig;
-          break;
-        case ECMASCRIPT6_STRICT:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6, Config.StrictMode.STRICT);
-          externsParserConfig = parserConfig;
-          break;
-        case ECMASCRIPT6_TYPED:
-          parserConfig =
-              createConfig(Config.LanguageMode.TYPESCRIPT, Config.StrictMode.STRICT);
-          externsParserConfig = parserConfig;
-          break;
-        case ECMASCRIPT7:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT7, Config.StrictMode.STRICT);
-          externsParserConfig = parserConfig;
-          break;
-        case ECMASCRIPT8:
-          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT8, Config.StrictMode.STRICT);
-          externsParserConfig = parserConfig;
-          break;
-        default:
-          throw new IllegalStateException("unexpected language mode: "
-              + options.getLanguageIn());
-      }
+      Config.LanguageMode configLanguageMode = getParserConfigLanguageMode(options.getLanguageIn());
+      Config.StrictMode strictMode =
+          expectStrictModeInput() ? Config.StrictMode.STRICT : Config.StrictMode.SLOPPY;
+      parserConfig = createConfig(configLanguageMode, strictMode);
+      // Externs must always be parsed with at least ES5 language mode.
+      externsParserConfig =
+          configLanguageMode.equals(Config.LanguageMode.ECMASCRIPT3)
+          ? createConfig(Config.LanguageMode.ECMASCRIPT5, strictMode)
+          : parserConfig;
     }
     switch (context) {
       case EXTERNS:
