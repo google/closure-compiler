@@ -16,12 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link CompilerOptions}.
@@ -45,5 +44,13 @@ public final class CompilerOptionsTest extends TestCase {
 
   public void assertEquivalent(Node a, Node b) {
     assertTrue(a.isEquivalentTo(b));
+  }
+
+  public void testLanguageModeFromString() {
+    assertEquals(LanguageMode.ECMASCRIPT3, LanguageMode.fromString("ECMASCRIPT3"));
+    // Whitespace should be trimmed, characters converted to uppercase and leading 'ES' replaced
+    // with 'ECMASCRIPT'.
+    assertEquals(LanguageMode.ECMASCRIPT3, LanguageMode.fromString("  es3  "));
+    assertEquals(null, LanguageMode.fromString("junk"));
   }
 }

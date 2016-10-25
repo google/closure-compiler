@@ -2896,33 +2896,13 @@ public class CompilerOptions {
       if (value == null) {
         return null;
       }
-      switch (value) {
-        case "ECMASCRIPT6_STRICT":
-        case "ES6_STRICT":
-          return LanguageMode.ECMASCRIPT6_STRICT;
-        case "ECMASCRIPT6":
-        case "ES6":
-          return LanguageMode.ECMASCRIPT6;
-        case "ECMASCRIPT5_STRICT":
-        case "ES5_STRICT":
-          return LanguageMode.ECMASCRIPT5_STRICT;
-        case "ECMASCRIPT5":
-        case "ES5":
-          return LanguageMode.ECMASCRIPT5;
-        case "ECMASCRIPT3":
-        case "ES3":
-          return LanguageMode.ECMASCRIPT3;
-        case "ECMASCRIPT6_TYPED":
-        case "ES6_TYPED":
-          return LanguageMode.ECMASCRIPT6_TYPED;
-        case "ECMASCRIPT7":
-        case "ES7":
-          return LanguageMode.ECMASCRIPT7;
-        case "ECMASCRIPT8":
-        case "ES8":
-          return LanguageMode.ECMASCRIPT8;
+      // Trim spaces, disregard case, and allow abbreviation of ECMASCRIPT for convenience.
+      String canonicalizedName = value.trim().toUpperCase().replaceFirst("^ES", "ECMASCRIPT");
+      try {
+        return LanguageMode.valueOf(canonicalizedName);
+      } catch (IllegalArgumentException e) {
+        return null; // unknown name.
       }
-      return null;
     }
   }
 
