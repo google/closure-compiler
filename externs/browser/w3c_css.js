@@ -416,6 +416,7 @@ function CSSUnknownRule() {}
 /**
  * @constructor
  * @extends {CSSProperties}
+ * @implements {IArrayLike<string>}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration
  */
 function CSSStyleDeclaration() {}
