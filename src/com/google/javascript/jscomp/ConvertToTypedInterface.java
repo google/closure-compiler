@@ -258,7 +258,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case VAR:
         case CONST:
         case LET:
-          if (n.hasOneChild() && NodeUtil.isStatement(n)) {
+          if (n.hasOneChild() && NodeUtil.isStatement(n) && !isModuleImport(n)) {
             processName(n.getFirstChild(), n);
           }
           break;
@@ -499,6 +499,18 @@ class ConvertToTypedInterface implements CompilerPass {
         || jsdoc.isConstructorOrInterface()
         || jsdoc.hasThisType()
         || jsdoc.hasEnumParameterType();
+  }
+
+  private static boolean isModuleImport(Node importNode) {
+    Preconditions.checkArgument(NodeUtil.isNameDeclaration(importNode));
+    Preconditions.checkArgument(importNode.hasOneChild());
+    Node declarationLhs = importNode.getFirstChild();
+    if (declarationLhs.hasChildren()) {
+      Node importRhs = declarationLhs.getLastChild();
+      return NodeUtil.isCallTo(importRhs, "goog.require")
+          || NodeUtil.isCallTo(importRhs, "goog.forwardDeclare");
+    }
+    return false;
   }
 
   private static boolean isClassMemberFunction(Node functionNode) {

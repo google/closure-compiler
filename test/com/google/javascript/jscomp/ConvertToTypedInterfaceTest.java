@@ -234,6 +234,28 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "",
             "exports = Foo;"));
 
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const Baz = goog.require('a.b.c');",
+            "",
+            "/** @constructor */ function Foo() {};",
+            "/** @type {!Baz} */ Foo.prototype.baz",
+            "",
+            "exports = Foo;"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const {Bar, Baz} = goog.require('a.b.c');",
+            "",
+            "/** @constructor */ function Foo() {};",
+            "/** @type {!Baz} */ Foo.prototype.baz",
+            "",
+            "exports = Foo;"));
+
     testSame(
         new String[] {
           LINE_JOINER.join(
