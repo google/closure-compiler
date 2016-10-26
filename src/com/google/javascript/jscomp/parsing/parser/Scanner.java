@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-
 import java.util.LinkedList;
 
 /**
@@ -381,10 +380,14 @@ public class Scanner {
     if (!isAtEnd()) {
       nextChar();
       nextChar();
-      Comment.Type type = (index - startOffset > 4
-          && this.source.contents.charAt(startOffset + 2) == '*')
-          ? Comment.Type.JSDOC
-          : Comment.Type.BLOCK;
+      Comment.Type type = Comment.Type.BLOCK;
+      if (index - startOffset > 4) {
+        if (this.source.contents.charAt(startOffset + 2) == '*') {
+          type = Comment.Type.JSDOC;
+        } else if (this.source.contents.charAt(startOffset + 2) == '!') {
+          type = Comment.Type.IMPORTANT;
+        }
+      }
       SourceRange range = getLineNumberTable().getSourceRange(
           startOffset, index);
       String value = this.source.contents.substring(

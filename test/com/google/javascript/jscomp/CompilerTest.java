@@ -382,30 +382,159 @@ public final class CompilerTest extends TestCase {
   }
 
   // Make sure we correctly output license text.
-  public void testLicenseDirectiveOutput() throws Exception {
-    test("/** @license Your favorite license goes here */ var x;",
+  public void testImportantCommentOutput() throws Exception {
+    test(
+        "/*! Your favorite license goes here */ var x;",
         "/*\n Your favorite license goes here */\n",
         null);
   }
 
   // Make sure we output license text even if followed by @fileoverview.
-  public void testLicenseAndOverviewDirectiveWarning() throws Exception {
-    List<SourceFile> input = ImmutableList.of(
-      SourceFile.fromCode("foo",
-         ("/** @license Your favorite license goes here */\n" +
-        "/** \n" +
-        "  * @fileoverview This is my favorite file! */\n" +
-        "var x;")));
+  public void testImportantCommentAndOverviewDirectiveWarning() throws Exception {
+    List<SourceFile> input =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo",
+                ("/*! Your favorite license goes here */\n"
+                    + "/** \n"
+                    + "  * @fileoverview This is my favorite file! */\n"
+                    + "var x;")));
     assertTrue(
         (new Compiler()).compile(
             EMPTY_EXTERNS, input, new CompilerOptions()).success);
   }
 
   // Text for the opposite order - @fileoverview, then @license.
+  public void testOverviewAndImportantCommentOutput() throws Exception {
+    test(
+        "/** @fileoverview This is my favorite file! */\n"
+            + "/*! Your favorite license goes here */\n"
+            + "var x;",
+        "/*\n Your favorite license goes here */\n",
+        null);
+  }
+
+  // Test for sequence of @license and @fileoverview, and make sure
+  // all the licenses get copied over.
+  public void testImportantCommentOverviewImportantComment() throws Exception {
+    test(
+        "/*! Another license */\n"
+            + "/** @fileoverview This is my favorite file! */\n"
+            + "/*! Your favorite license goes here */\n"
+            + "var x;",
+        "/*\n Another license  Your favorite license goes here */\n",
+        null);
+   }
+
+  // Make sure things work even with @license and @fileoverview in the
+  // same comment.
+  public void testCombinedImportantCommentOverviewDirectiveOutput() throws Exception {
+    test(
+        "/*! Your favorite license goes here\n"
+            + " * @fileoverview This is my favorite file! */\n"
+            + "var x;",
+        "/*\n Your favorite license goes here\n" + " @fileoverview This is my favorite file! */\n",
+        null);
+  }
+
+  // Does the presence of @author change anything with the license?
+  public void testCombinedImportantCommentAuthorDirectiveOutput() throws Exception {
+    test(
+        "/*! Your favorite license goes here\n" + " * @author Robert */\n" + "var x;",
+        "/*\n Your favorite license goes here\n @author Robert */\n",
+        null);
+  }
+
+  // Make sure we concatenate licenses the same way.
+  public void testMultipleImportantCommentDirectiveOutput() throws Exception {
+    test(
+        "/*! Your favorite license goes here */\n" + "/*! Another license */\n" + "var x;",
+        "/*\n Your favorite license goes here  Another license */\n",
+        null);
+  }
+
+  public void testImportantCommentLicenseDirectiveOutput() throws Exception {
+    test(
+        "/*! Your favorite license goes here */\n" + "/** @license Another license */\n" + "var x;",
+        "/*\n Another license  Your favorite license goes here */\n",
+        null);
+  }
+
+  public void testLicenseImportantCommentDirectiveOutput() throws Exception {
+    test(
+        "/** @license Your favorite license goes here */\n" + "/*! Another license */\n" + "var x;",
+        "/*\n Your favorite license goes here  Another license */\n",
+        null);
+  }
+
+  // Do we correctly handle the license if it's not at the top level, but
+  // inside another declaration?
+  public void testImportantCommentInTree() throws Exception {
+    test(
+        "var a = function() {\n +" + "/*! Your favorite license goes here */\n" + " 1;};\n",
+        "/*\n Your favorite license goes here */\n",
+        null);
+  }
+
+  public void testMultipleUniqueImportantComments() throws Exception {
+    String js1 = "/*! One license here */\n" + "var x;";
+    String js2 = "/*! Another license here */\n" + "var y;";
+    String expected = "/*\n One license here */\n" + "/*\n Another license here */\n";
+
+    Compiler compiler = new Compiler();
+    CompilerOptions options = createNewFlagBasedOptions();
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
+    Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
+
+    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    assertEquals(expected, compiler.toSource());
+  }
+
+  public void testMultipleIndenticalImportantComments() throws Exception {
+    String js1 = "/*! Identical license here */\n" + "var x;";
+    String js2 = "/*! Identical license here */\n" + "var y;";
+    String expected = "/*\n Identical license here */\n";
+
+    Compiler compiler = new Compiler();
+    CompilerOptions options = createNewFlagBasedOptions();
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
+    Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
+
+    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    assertEquals(expected, compiler.toSource());
+  }
+
+  // Make sure we correctly output license text.
+  public void testLicenseDirectiveOutput() throws Exception {
+    test(
+        "/** @license Your favorite license goes here */ var x;",
+        "/*\n Your favorite license goes here */\n",
+        null);
+  }
+
+  // Make sure we output license text even if followed by @fileoverview.
+  public void testLicenseAndOverviewDirectiveWarning() throws Exception {
+    List<SourceFile> input =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo",
+                ("/** @license Your favorite license goes here */\n"
+                    + "/** \n"
+                    + "  * @fileoverview This is my favorite file! */\n"
+                    + "var x;")));
+    assertTrue((new Compiler()).compile(EMPTY_EXTERNS, input, new CompilerOptions()).success);
+  }
+
+  // Text for the opposite order - @fileoverview, then @license.
   public void testOverviewAndLicenseDirectiveOutput() throws Exception {
-    test("/** @fileoverview This is my favorite file! */\n" +
-        "/** @license Your favorite license goes here */\n" +
-        "var x;",
+    test(
+        "/** @fileoverview This is my favorite file! */\n"
+            + "/** @license Your favorite license goes here */\n"
+            + "var x;",
         "/*\n Your favorite license goes here */\n",
         null);
   }
@@ -413,30 +542,30 @@ public final class CompilerTest extends TestCase {
   // Test for sequence of @license and @fileoverview, and make sure
   // all the licenses get copied over.
   public void testLicenseOverviewLicense() throws Exception {
-     test("/** @license Another license */\n" +
-         "/** @fileoverview This is my favorite file! */\n" +
-         "/** @license Your favorite license goes here */\n" +
-         "var x;",
-         "/*\n Your favorite license goes here  Another license */\n",
-         null);
-   }
+    test(
+        "/** @license Another license */\n"
+            + "/** @fileoverview This is my favorite file! */\n"
+            + "/** @license Your favorite license goes here */\n"
+            + "var x;",
+        "/*\n Your favorite license goes here  Another license */\n",
+        null);
+  }
 
   // Make sure things work even with @license and @fileoverview in the
   // same comment.
   public void testCombinedLicenseOverviewDirectiveOutput() throws Exception {
-    test("/** @license Your favorite license goes here\n" +
-        " * @fileoverview This is my favorite file! */\n" +
-        "var x;",
-        "/*\n Your favorite license goes here\n" +
-        " @fileoverview This is my favorite file! */\n",
+    test(
+        "/** @license Your favorite license goes here\n"
+            + " * @fileoverview This is my favorite file! */\n"
+            + "var x;",
+        "/*\n Your favorite license goes here\n" + " @fileoverview This is my favorite file! */\n",
         null);
   }
 
   // Does the presence of @author change anything with the license?
   public void testCombinedLicenseAuthorDirectiveOutput() throws Exception {
-    test("/** @license Your favorite license goes here\n" +
-        " * @author Robert */\n" +
-        "var x;",
+    test(
+        "/** @license Your favorite license goes here\n" + " * @author Robert */\n" + "var x;",
         "/*\n Your favorite license goes here\n @author Robert */\n",
         null);
   }
@@ -501,6 +630,22 @@ public final class CompilerTest extends TestCase {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("testcode1", js1),
         SourceFile.fromCode("testcode2", js2));
+    Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
+
+    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    assertEquals(expected, compiler.toSource());
+  }
+
+  public void testIndenticalLicenseAndImportantComent() throws Exception {
+    String js1 = "/** @license Identical license here */\n" + "var x;";
+    String js2 = "/*! Identical license here */\n" + "var y;";
+    String expected = "/*\n Identical license here */\n";
+
+    Compiler compiler = new Compiler();
+    CompilerOptions options = createNewFlagBasedOptions();
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertTrue(Joiner.on(",").join(result.errors), result.success);

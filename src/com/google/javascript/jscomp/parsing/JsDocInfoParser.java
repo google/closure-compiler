@@ -282,6 +282,31 @@ public final class JsDocInfoParser {
     return parseHelperLoop(token, new ArrayList<ExtendedTypeInfo>());
   }
 
+  /**
+   * Important comments begin with /*! They are treated as license blocks, but no further JSDoc
+   * parsing is performed
+   */
+  void parseImportantComment() {
+    state = State.SEARCHING_ANNOTATION;
+    skipEOLs();
+
+    JsDocToken token = next();
+
+    ExtractionInfo info = extractMultilineComment(token, WhitespaceOption.PRESERVE, false, true);
+
+    // An extra space is added by the @license annotation
+    // so we need to add one here so they will be identical
+    String license = " " + info.string;
+
+    if (fileLevelJsDocBuilder != null) {
+      fileLevelJsDocBuilder.addLicense(license);
+    } else if (jsdocBuilder.shouldParseDocumentation()) {
+      jsdocBuilder.recordBlockDescription(license);
+    } else {
+      jsdocBuilder.recordBlockDescription("");
+    }
+  }
+
   private boolean parseHelperLoop(JsDocToken token,
                                   List<ExtendedTypeInfo> extendedTypes) {
     while (true) {
