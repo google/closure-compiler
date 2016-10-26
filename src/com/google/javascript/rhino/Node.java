@@ -1357,6 +1357,7 @@ public class Node implements Serializable {
     return extractLineno(sourcePosition);
   }
 
+  // Returns the 0-based column number
   public int getCharno() {
     return extractCharno(sourcePosition);
   }

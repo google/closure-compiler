@@ -4128,6 +4128,63 @@ public final class NodeUtil {
     return (n != null && n.isScript()) ? n.getInputId() : null;
   }
 
+  // NOTE(dimvar): This method is to support IDEs using the compiler. If we end up
+  // needing many more methods, put them all in a separate file.
+  // lineNo and columNo are 1-based.
+  // Column number 1 represents a cursor at the start of the line.
+  public static Node getNodeByLineCol(Node ancestor, int lineNo, int columNo) {
+    Preconditions.checkArgument(ancestor.isScript());
+    Node current = ancestor;
+    Node result = null;
+    while (current != null) {
+      int currLineNo = current.getLineno();
+      Preconditions.checkState(current.getLineno() <= lineNo);
+      Node nextSibling = current.getNext();
+      if (nextSibling != null) {
+        int nextSiblingLineNo = nextSibling.getLineno();
+        int nextSiblingColumNo = getColumnNoBase1(nextSibling);
+        if (result != null
+            && lineNo == nextSiblingLineNo && columNo == nextSiblingColumNo) {
+          // The cursor is in-between two nodes.
+          // If just one of them is a variable, a property, or a literal, return that one.
+          // Otherwise, return the node to the left of the cursor.
+          if (result.hasChildren() && !nextSibling.hasChildren()) {
+            return nextSibling;
+          }
+          return result;
+        }
+        // Check if the desired location is past the end of the current node,
+        // and if so, continue to the siblings.
+        if (lineNo > nextSiblingLineNo
+            || (lineNo > currLineNo && lineNo == nextSiblingLineNo)
+            || (lineNo == nextSiblingLineNo && columNo > nextSiblingColumNo)) {
+          current = nextSibling;
+          continue;
+        }
+      }
+      // The desired node is either current or one of its children.
+      int currColumNo = getColumnNoBase1(current);
+      if (currLineNo == lineNo) {
+        if (currColumNo > columNo) {
+          // current starts past the desired node, return.
+          return result;
+        }
+        if (currColumNo + current.getLength() >= columNo) {
+          result = current;
+        }
+      }
+      current = current.getFirstChild();
+    }
+    return result;
+  }
+
+  // This is here instead of in Node, because it's error-prone to have two methods
+  // in Node for getting the column. So, we implement the method only for the specific
+  // use case of getNodeByLineCol.
+  private static int getColumnNoBase1(Node n) {
+    return n.getCharno() + 1;
+  }
+
   /**
    * A new CALL node with the "FREE_CALL" set based on call target.
    */

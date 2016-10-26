@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +54,45 @@ public final class NodeUtilTest extends TestCase {
     Node expr = root.getFirstChild();
     Node var = expr.getFirstChild();
     return var.getFirstChild();
+  }
+
+  public void testGetNodeByLineCol_1() {
+    Node root = parse("var x = 1;");
+    assertNull(NodeUtil.getNodeByLineCol(root, 1, 0));
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 1)).hasType(Token.VAR);
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 2)).hasType(Token.VAR);
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 5)).hasType(Token.NAME);
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 9)).hasType(Token.NUMBER);
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 11)).hasType(Token.VAR);
+  }
+
+  public void testGetNodeByLineCol_2() {
+    Node root = parse(Joiner.on("\n").join(
+        "var x = {};",
+        "x.prop = 123;"));
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 1)).hasType(Token.NAME);
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 2)).hasType(Token.NAME);
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 3)).hasType(Token.STRING);
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 8)).hasType(Token.ASSIGN);
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 11)).hasType(Token.NUMBER);
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 13)).hasType(Token.NUMBER);
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 14)).hasType(Token.EXPR_RESULT);
+  }
+
+  public void testGetNodeByLineCol_preferLiterals() {
+    Node root;
+
+    root = parse("x-5;");
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 2)).hasType(Token.NAME);
+    assertNode(NodeUtil.getNodeByLineCol(root, 1, 3)).hasType(Token.NUMBER);
+
+    root = parse(Joiner.on("\n").join(
+        "function f(x) {",
+        "  return x||null;",
+        "}"));
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 11)).hasType(Token.NAME);
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 12)).hasType(Token.OR);
+    assertNode(NodeUtil.getNodeByLineCol(root, 2, 13)).hasType(Token.NULL);
   }
 
   public void testIsLiteralOrConstValue() {
