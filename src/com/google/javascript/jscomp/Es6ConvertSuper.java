@@ -80,7 +80,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       // transpile, so don't generate it.
       if (!classNode.isFromExterns()  && !isInterface(classNode)) {
         Node exprResult = IR.exprResult(IR.call(
-            IR.getprop(superClass.cloneTree(), IR.string("apply")),
+            IR.getprop(IR.superNode(), IR.string("apply")),
             IR.thisNode(),
             IR.name("arguments")));
         body.addChildToFront(exprResult);

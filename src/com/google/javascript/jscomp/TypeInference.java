@@ -483,7 +483,10 @@ class TypeInference
       superNode.setJSType(
           new FunctionBuilder(registry)
               .copyFromOtherFunction(superConstructorType)
+              // Invocations of super() don't use new
               .setIsConstructor(false)
+              // Even if the super class is abstract, we still need to call its constructor.
+              .withIsAbstract(false) //
               .withTypeOfThis(null)
               .build());
     } else {

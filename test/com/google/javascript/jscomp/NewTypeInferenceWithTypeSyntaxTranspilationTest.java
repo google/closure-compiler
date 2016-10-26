@@ -165,8 +165,10 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
         "(new Bar).prop = '3'"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck("class Foo extends Foo {}",
-        JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
+    typeCheck(
+        "class Foo extends Foo {}",
+        JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE,
+        NewTypeInference.UNDEFINED_SUPER_CLASS);
   }
 
   public void testInterface() {

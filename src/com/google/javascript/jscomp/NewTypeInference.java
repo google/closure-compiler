@@ -175,6 +175,11 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_INSTANTIATE_ABSTRACT_CLASS",
           "Cannot instantiate abstract class {0}.");
 
+  static final DiagnosticType UNDEFINED_SUPER_CLASS =
+      DiagnosticType.warning(
+          "JSC_UNDEFINED_SUPER_CLASS",
+          "Undefined super class for {0}.");
+
   static final DiagnosticType ASSERT_FALSE =
       DiagnosticType.warning(
           "JSC_NTI_ASSERT_FALSE",
@@ -2371,7 +2376,13 @@ final class NewTypeInference implements CompilerPass {
     if (currentScope.hasThis()) {
       NominalType thisClass = Preconditions.checkNotNull(
           envGetType(inEnv, THIS_ID).getNominalTypeIfSingletonObj());
-      NominalType superClass = Preconditions.checkNotNull(thisClass.getInstantiatedSuperclass());
+      NominalType superClass = thisClass.getInstantiatedSuperclass();
+      if (superClass == null) {
+        // This indicates bad code and there will probably be other errors reported.
+        // In particular JSC_NTI_INHERITANCE_CYCLE for `class Foo extends Foo ...`.
+        warnings.add(JSError.make(expr, UNDEFINED_SUPER_CLASS, thisClass.toString()));
+        return new EnvTypePair(inEnv, UNKNOWN);
+      }
       if (currentScope.isConstructor()) {
         JSType superCtor = commonTypes.fromFunctionType(superClass.getConstructorFunction());
         return new EnvTypePair(inEnv, superCtor);
@@ -2384,7 +2395,13 @@ final class NewTypeInference implements CompilerPass {
     JSType thisClassAsJstype = analyzeExprFwd(classNameNode, inEnv).type;
     FunctionType thisCtor = thisClassAsJstype.getFunTypeIfSingletonObj();
     NominalType thisClass = thisCtor.getThisType().getNominalTypeIfSingletonObj();
-    NominalType superClass = Preconditions.checkNotNull(thisClass.getInstantiatedSuperclass());
+    NominalType superClass = thisClass.getInstantiatedSuperclass();
+    if (superClass == null) {
+      // This indicates bad code and there will probably be other errors reported.
+      // In particular JSC_NTI_INHERITANCE_CYCLE for `class Foo extends Foo ...`.
+      warnings.add(JSError.make(expr, UNDEFINED_SUPER_CLASS, funName.toString()));
+      return new EnvTypePair(inEnv, UNKNOWN);
+    }
     return new EnvTypePair(inEnv, superClass.getNamespaceType());
   }
 
