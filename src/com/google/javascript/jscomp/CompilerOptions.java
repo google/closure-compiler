@@ -127,7 +127,7 @@ public class CompilerOptions {
   private boolean preserveDetailedSourceInfo = false;
   private boolean continueAfterErrors = false;
 
-  enum IncrementalCheckMode {
+  public enum IncrementalCheckMode {
     /** Normal mode */
     OFF,
 
