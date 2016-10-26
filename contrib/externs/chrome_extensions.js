@@ -1819,6 +1819,36 @@ chrome.bluetoothLowEnergy.onDescriptorValueChanged;
 
 
 /**
+ * @typedef {?{
+ *   type: string,
+ *   serviceUuids: (!Array<string>|undefined),
+ *   manufacturerData: (!Array<{id: number, data: !Array<number>}>|undefined),
+ *   solicitUuids: (!Array<string>|undefined),
+ *   serviceData: (!Array<{uuid: string, data: !Array<number>}>|undefined)
+ * }}
+ */
+chrome.bluetoothLowEnergy.Advertisement;
+
+
+/**
+ * @param {!chrome.bluetoothLowEnergy.Advertisement} advertisement
+ * @param {function(number)} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-registerAdvertisement
+ */
+chrome.bluetoothLowEnergy.registerAdvertisement =
+    function(advertisement, callback) {};
+
+
+/**
+ * @param {number} advertisementId
+ * @param {function()} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-unregisterAdvertisement
+ */
+chrome.bluetoothLowEnergy.unregisterAdvertisement =
+    function(advertisementId, callback) {};
+
+
+/**
  * @see http://developer.chrome.com/extensions/commands.html
  * @const
  */
