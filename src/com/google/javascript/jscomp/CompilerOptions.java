@@ -127,23 +127,44 @@ public class CompilerOptions {
   private boolean preserveDetailedSourceInfo = false;
   private boolean continueAfterErrors = false;
 
-  /**
-   * Whether the compiler should generate an output file that represents the type-only interface
-   * of the code being compiled.  This is useful for incremental type checking.
-   */
-  private boolean generateTypedExterns;
+  enum IncrementalCheckMode {
+    /** Normal mode */
+    OFF,
 
-  public void setIncrementalTypeChecking(boolean value) {
-    generateTypedExterns = value;
-    allowGoogProvideInExterns = value;
-    if (value) {
-      setPreserveTypeAnnotations(value);
-      setOutputJs(OutputJs.NORMAL);
+    /**
+     * The compiler should generate an output file that represents the type-only interface
+     * of the code being compiled.  This is useful for incremental type checking.
+     */
+    GENERATE_IJS,
+
+    /**
+     * The compiler should check type-only interface definitions generated above.
+     */
+    CHECK_IJS,
+  }
+
+  private IncrementalCheckMode incrementalCheckMode;
+
+  public void setIncrementalChecks(IncrementalCheckMode value) {
+    incrementalCheckMode = value;
+    switch (value) {
+      case OFF:
+        allowGoogProvideInExterns = false;
+        break;
+      case GENERATE_IJS:
+        allowGoogProvideInExterns = true;
+        setPreserveTypeAnnotations(true);
+        setOutputJs(OutputJs.NORMAL);
+        break;
+      case CHECK_IJS:
+        allowGoogProvideInExterns = true;
+        setOutputJs(OutputJs.SENTINEL);
+        break;
     }
   }
 
   public boolean shouldGenerateTypedExterns() {
-    return generateTypedExterns;
+    return incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
   }
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
