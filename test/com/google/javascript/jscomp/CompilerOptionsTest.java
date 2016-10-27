@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static junit.framework.TestCase.assertNull;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -51,6 +53,6 @@ public final class CompilerOptionsTest extends TestCase {
     // Whitespace should be trimmed, characters converted to uppercase and leading 'ES' replaced
     // with 'ECMASCRIPT'.
     assertEquals(LanguageMode.ECMASCRIPT3, LanguageMode.fromString("  es3  "));
-    assertEquals(null, LanguageMode.fromString("junk"));
+    assertNull(LanguageMode.fromString("junk"));
   }
 }
