@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.IR;
@@ -153,7 +152,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
    * export statements. Add goog.require statements for any require statements. Rewrites any require
    * calls to reference the rewritten module name.
    */
-  class FindImportsAndExports extends AbstractPreOrderCallback {
+  class FindImportsAndExports implements NodeTraversal.Callback {
     private boolean hasGoogProvideOrModule = false;
     private Node script = null;
 

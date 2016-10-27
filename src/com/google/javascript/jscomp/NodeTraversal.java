@@ -147,7 +147,7 @@ public class NodeTraversal {
   /** Abstract callback to visit all nodes in preorder. */
   public abstract static class AbstractPreOrderCallback implements Callback {
     @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {}
+    public final void visit(NodeTraversal t, Node n, Node parent) {}
   }
 
   /** Abstract scoped callback to visit all nodes in postorder. */
