@@ -157,7 +157,9 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "var c = goog.require('a.c');",
             "",
             "alert(1);"),
-        REQUIRES_NOT_SORTED);
+        REQUIRES_NOT_SORTED,
+        "goog.require() statements are not sorted. The correct order is:\n\n"
+            + "var c = goog.require('a.c');\nvar d = goog.require('a.b.d');\n\n");
   }
 
   public void testGoogModule_shorthand_destructuring() {

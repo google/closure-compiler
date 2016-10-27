@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp.lint;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -41,11 +40,11 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
     implements HotSwapCompilerPass {
   public static final DiagnosticType REQUIRES_NOT_SORTED =
       DiagnosticType.warning("JSC_REQUIRES_NOT_SORTED",
-      "goog.require() statements are not sorted. The correct order is:\n\n{0}\n\n");
+      "goog.require() statements are not sorted. The correct order is:\n\n{0}\n");
 
   public static final DiagnosticType PROVIDES_NOT_SORTED =
       DiagnosticType.warning("JSC_PROVIDES_NOT_SORTED",
-          "goog.provide() statements are not sorted. The correct order is:\n\n{0}\n\n");
+          "goog.provide() statements are not sorted. The correct order is:\n\n{0}\n");
 
   public static final DiagnosticType PROVIDES_AFTER_REQUIRES =
       DiagnosticType.warning(
@@ -164,17 +163,18 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
 
   private void reportIfOutOfOrder(List<Node> requiresOrProvides, DiagnosticType warning) {
     if (!alphabetical.isOrdered(requiresOrProvides)) {
-      List<String> correctOrder = new ArrayList<>();
+      StringBuilder correctOrder = new StringBuilder();
       for (Node require : alphabetical.sortedCopy(requiresOrProvides)) {
         CodePrinter.Builder builder = new CodePrinter.Builder(require);
         CompilerOptions options = new CompilerOptions();
+        options.setPrettyPrint(true);
         options.setPreferSingleQuotes(true);
         options.setPreserveTypeAnnotations(true);
         builder.setCompilerOptions(options);
-        correctOrder.add(builder.build() + ";");
+        correctOrder.append(builder.build());
       }
       compiler.report(
-          JSError.make(requiresOrProvides.get(0), warning, Joiner.on('\n').join(correctOrder)));
+          JSError.make(requiresOrProvides.get(0), warning, correctOrder.toString()));
     }
   }
 
