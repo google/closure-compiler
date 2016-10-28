@@ -429,7 +429,7 @@ public final class CompileTask
   private void flushSourceMap(SourceMap sourceMap) {
     try {
       FileWriter out = new FileWriter(sourceMapOutputFile);
-      sourceMap.appendTo(out, sourceMapOutputFile.getName());
+      sourceMap.appendTo(out, outputFile.getName());
       out.close();
     } catch (IOException e) {
       throw new BuildException("Cannot write sourcemap to file.", e);
