@@ -414,8 +414,6 @@ public final class CompileTask
 
         if (result.sourceMap != null) {
           flushSourceMap(result.sourceMap);
-          source.append(System.getProperty("line.separator"));
-          source.append("//# sourceMappingURL=" + sourceMapOutputFile.getName());
         }
         writeResult(source.toString());
       } else {
