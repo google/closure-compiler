@@ -132,7 +132,7 @@ public final class PerformanceTrackerTest extends TestCase {
         "Extern lines:   [0-9]+",
         "Extern sources: [0-9]+\n",
         "Log:",
-        "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize",
+        "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize\n",
         ".*"),
         Pattern.DOTALL);
     String outputString = output.toString();
