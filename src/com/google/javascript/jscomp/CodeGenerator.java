@@ -681,7 +681,6 @@ public class CodeGenerator {
         break;
 
       case FOR_OF:
-        // A "for-of" inside an array comprehension only has two children.
         Preconditions.checkState(childCount == 3);
         add("for");
         cc.maybeInsertSpace();
@@ -815,6 +814,7 @@ public class CodeGenerator {
         break;
 
       case IF:
+        Preconditions.checkState(childCount == 2 || childCount == 3);
         boolean hasElse = childCount == 3;
         boolean ambiguousElseClause = context == Context.BEFORE_DANGLING_ELSE && !hasElse;
         if (ambiguousElseClause) {
@@ -827,11 +827,6 @@ public class CodeGenerator {
         add(first);
         add(")");
 
-        // An "if" node inside an array comprehension only has one child.
-        if (childCount == 1) {
-          break;
-        }
-
         if (hasElse) {
           addNonEmptyStatement(first.getNext(), Context.BEFORE_DANGLING_ELSE, false);
           cc.maybeInsertSpace();
@@ -839,7 +834,6 @@ public class CodeGenerator {
           addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         } else {
           addNonEmptyStatement(first.getNext(), Context.OTHER, false);
-          Preconditions.checkState(childCount == 2);
         }
 
         if (ambiguousElseClause) {
