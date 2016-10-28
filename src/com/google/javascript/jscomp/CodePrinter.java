@@ -358,7 +358,7 @@ public final class CodePrinter {
 
     @Override
     void maybeInsertSpace() {
-      if (getLastChar() != ' ') {
+      if (getLastChar() != ' ' && getLastChar() != '\n') {
         add(" ");
       }
     }

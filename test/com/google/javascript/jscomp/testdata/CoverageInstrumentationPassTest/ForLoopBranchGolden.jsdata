@@ -1,17 +1,23 @@
 var __jscov = window.top.__jscov || (window.top.__jscov = {fileNames:[], branchPresent:[], branchesInLine:[], branchesTaken:[]});
-var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranch_jsdata = [];
-__jscov.branchesTaken.push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranch_jsdata);
-__jscov.branchPresent.push("02");
-var JSCompiler_lcov_branchesInLine = [];
-JSCompiler_lcov_branchesInLine[0] = 2;
-__jscov.branchesInLine.push(JSCompiler_lcov_branchesInLine);
-__jscov.fileNames.push("CoverageInstrumentationPassTest/ForLoopBranch.jsdata");
+{
+  var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranch_jsdata = [];
+  __jscov.branchesTaken.push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranch_jsdata);
+  __jscov.branchPresent.push("02");
+  {
+    var JSCompiler_lcov_branchesInLine = [];
+    JSCompiler_lcov_branchesInLine[0] = 2;
+  }
+  __jscov.branchesInLine.push(JSCompiler_lcov_branchesInLine);
+  __jscov.fileNames.push("CoverageInstrumentationPassTest/ForLoopBranch.jsdata");
+}
 function IsPostive(x) {
   for (var i = 0;i < x;i++) {
     JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranch_jsdata[0] = true;
     return true;
   }
-  JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranch_jsdata[1] = true;
-  return false;
+  {
+    JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranch_jsdata[1] = true;
+    return false;
+  }
 }
 ;

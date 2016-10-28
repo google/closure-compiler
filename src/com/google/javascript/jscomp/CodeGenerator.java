@@ -164,7 +164,7 @@ public class CodeGenerator {
           Preconditions.checkState(childCount >= 2 && childCount <= 3);
 
           add("try");
-          add(first, Context.PRESERVE_BLOCK);
+          add(first);
 
           // second child contains the catch block, or nothing if there
           // isn't a catch block
@@ -176,7 +176,7 @@ public class CodeGenerator {
           if (childCount == 3) {
             cc.maybeInsertSpace();
             add("finally");
-            add(last, Context.PRESERVE_BLOCK);
+            add(last);
           }
           break;
         }
@@ -189,7 +189,7 @@ public class CodeGenerator {
         add("(");
         add(first);
         add(")");
-        add(last, Context.PRESERVE_BLOCK);
+        add(last);
         break;
 
       case THROW:
@@ -609,7 +609,7 @@ public class CodeGenerator {
             maybeAddOptional(fn);
             add(parameters);
             maybeAddTypeDecl(fn);
-            add(body, Context.PRESERVE_BLOCK);
+            add(body);
           }
           break;
         }
@@ -621,7 +621,7 @@ public class CodeGenerator {
           if (n.getClass() != Node.class) {
             throw new Error("Unexpected Node subclass.");
           }
-          boolean preserveBlock = context == Context.PRESERVE_BLOCK;
+          boolean preserveBlock = n.isBlock() && !n.isSyntheticBlock();
           if (preserveBlock) {
             cc.beginBlock();
           }
@@ -1019,7 +1019,7 @@ public class CodeGenerator {
           Node body = function.getLastChild();
 
           add(params);
-          add(body, Context.PRESERVE_BLOCK);
+          add(body);
         } else {
           // This is a field or object literal property.
           boolean isInClass = n.getParent().getToken() == Token.CLASS_MEMBERS;
@@ -1311,11 +1311,11 @@ public class CodeGenerator {
     cc.addOp("=>", true);
 
     if (last.isBlock()) {
-      add(last, Context.PRESERVE_BLOCK);
+      add(last);
     } else {
       // This is a hack. Arrow functions have no token type, but
       // blockless arrow function bodies have lower precedence than anything other than commas.
-      addExpr(last, NodeUtil.precedence(Token.COMMA) + 1, Context.PRESERVE_BLOCK);
+      addExpr(last, NodeUtil.precedence(Token.COMMA) + 1, context);
     }
     cc.endFunction(context == Context.STATEMENT);
 
@@ -1344,7 +1344,7 @@ public class CodeGenerator {
     add(first.getNext()); // param list
     maybeAddTypeDecl(n);
 
-    add(last, Context.PRESERVE_BLOCK);
+    add(last);
     cc.endFunction(context == Context.STATEMENT);
 
     if (funcNeedsParens) {
@@ -1471,9 +1471,9 @@ public class CodeGenerator {
       }
 
       if (count == 1) {
-        // Hack around a couple of browser bugs:
-        //   Safari needs a block around function declarations.
-        //   IE6/7 needs a block around DOs.
+        // Preserve the block only if needed or requested.
+        //'let', 'const', etc are not allowed by themselves in "if" and other
+        // structures. Also, hack around a IE6/7 browser bug that needs a block around DOs.
         Node firstAndOnlyChild = getFirstNonEmptyChild(n);
         boolean alwaysWrapInBlock = cc.shouldPreserveExtraBlocks();
         if (alwaysWrapInBlock || isBlockDeclOrDo(firstAndOnlyChild)) {
@@ -1486,10 +1486,6 @@ public class CodeGenerator {
           // Continue with the only child.
           nodeToProcess = firstAndOnlyChild;
         }
-      }
-
-      if (count > 1) {
-        context = Context.PRESERVE_BLOCK;
       }
     }
 
@@ -1893,7 +1889,6 @@ public class CodeGenerator {
     STATEMENT,
     BEFORE_DANGLING_ELSE, // a hack to resolve the else-clause ambiguity
     START_OF_EXPR,
-    PRESERVE_BLOCK,
     // Are we inside the init clause of a for loop?  If so, the containing
     // expression can't contain an in operator.  Pass this context flag down
     // until we reach expressions which no longer have the limitation.

@@ -1,11 +1,15 @@
 var __jscov = window.top.__jscov || (window.top.__jscov = {fileNames:[], branchPresent:[], branchesInLine:[], branchesTaken:[]});
-var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_IfElseBranch_jsdata = [];
-__jscov.branchesTaken.push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_IfElseBranch_jsdata);
-__jscov.branchPresent.push("02");
-var JSCompiler_lcov_branchesInLine = [];
-JSCompiler_lcov_branchesInLine[0] = 2;
-__jscov.branchesInLine.push(JSCompiler_lcov_branchesInLine);
-__jscov.fileNames.push("CoverageInstrumentationPassTest/IfElseBranch.jsdata");
+{
+  var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_IfElseBranch_jsdata = [];
+  __jscov.branchesTaken.push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_IfElseBranch_jsdata);
+  __jscov.branchPresent.push("02");
+  {
+    var JSCompiler_lcov_branchesInLine = [];
+    JSCompiler_lcov_branchesInLine[0] = 2;
+  }
+  __jscov.branchesInLine.push(JSCompiler_lcov_branchesInLine);
+  __jscov.fileNames.push("CoverageInstrumentationPassTest/IfElseBranch.jsdata");
+}
 function IsPostive(x) {
   if (x > 0) {
     JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_IfElseBranch_jsdata[0] = true;

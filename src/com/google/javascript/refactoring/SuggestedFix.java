@@ -29,6 +29,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.Collection;
@@ -673,6 +674,10 @@ public final class SuggestedFix {
     public String generateCode(AbstractCompiler compiler, Node node) {
       // TODO(mknichel): Fix all the formatting problems with this code.
       // How does this play with goog.scope?
+      if (node.isBlock()) {
+        // Avoid printing the {}'s
+        node.setToken(Token.SCRIPT);
+      }
       CompilerOptions compilerOptions = new CompilerOptions();
       compilerOptions.setPreferSingleQuotes(true);
       compilerOptions.setLineLengthThreshold(80);

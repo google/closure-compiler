@@ -67,7 +67,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("function foo(){throw 'error';}",
         "function foo(){throw\"error\";}");
 
-    assertPrint("var x = 10; { var y = 20; }", "var x=10;var y=20");
+    // The code printer does not eliminate unnecessary blocks.
+    assertPrint("var x = 10; { var y = 20; }", "var x=10;{var y=20}");
 
     assertPrint("while (x-- > 0);", "while(x-- >0);");
     assertPrint("x-- >> 1", "x-- >>1");
@@ -256,6 +257,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("if(x)if(y);", "if(x)if(y);");
     assertPrint("if(x){if(y);}", "if(x)if(y);");
     assertPrint("if(x){if(y){};;;}", "if(x)if(y);");
+  }
+
+  public void testLetConstInIf() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrint("if (true) { let x; };", "if(true){let x}");
+    assertPrint("if (true) { const x = 0; };", "if(true){const x=0}");
   }
 
   public void testPrintBlockScopedFunctions() {
@@ -2241,6 +2248,46 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "    break;",
             "}",
             ""));
+  }
+
+  public void testBlocksInCaseArePreserved() throws Exception {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    String js = LINE_JOINER.join(
+        "switch(something) {",
+        "  case 0:",
+        "    {",
+        "      const x = 1;",
+        "      break;",
+        "    }",
+        "  case 1:",
+        "    break;",
+        "  case 2:",
+        "    console.log(`case 2!`);",
+        "    {",
+        "      const x = 2;",
+        "      break;",
+        "    }",
+        "}",
+        "");
+    assertPrettyPrint(js, js);
+  }
+
+  public void testBlocksArePreserved() throws Exception {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    String js = LINE_JOINER.join(
+        "console.log(0);",
+        "{",
+        "  let x = 1;",
+        "  console.log(x);",
+        "}",
+        "console.log(x);",
+        "");
+    assertPrettyPrint(js, js);
+  }
+
+  public void testBlocksNotPreserved() {
+    assertPrint("if (x) {};", "if(x);");
+    assertPrint("while (x) {};", "while(x);");
   }
 
   public void testDeclarations() {
