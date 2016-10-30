@@ -24,15 +24,19 @@ $jscomp.polyfill('Math.hypot', function(orig) {
    *
    * <p>Polyfills the static function Math.hypot().
    *
-   * @param {number} x Any number, or value that can be coerced to a number.
-   * @param {number} y Any number, or value that can be coerced to a number.
-   * @param {...*} var_args More numbers.
+   * @param {...number} var_args Any number, or value that can be coerced to a number.
    * @return {number} The square root of the sum of the squares.
    */
-  var polyfill = function(x, y, var_args) {
+  var polyfill = function(var_args) {
+    if (arguments.length === 0) {
+      return 0;
+    } else if (arguments.length === 1) {
+      return Math.abs(Number(arguments[0]));
+    }
+
     // Make the type checker happy.
-    x = Number(x);
-    y = Number(y);
+    var x = Number(arguments[0]);
+    var y = Number(arguments[1]);
     var i, z, sum;
     // Note: we need to normalize the numbers in case of over/underflow.
     var max = Math.max(Math.abs(x), Math.abs(y));

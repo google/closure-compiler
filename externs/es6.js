@@ -147,7 +147,6 @@ Math.sign = function(value) {};
 Math.cbrt = function(value) {};
 
 /**
- * @param {number} value1
  * @param {...number} var_args
  * @return {number}
  * @nosideeffects
