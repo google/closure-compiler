@@ -103,6 +103,8 @@ public abstract class CompilerTestCase extends TestCase {
    */
   private boolean normalizeEnabled = false;
 
+  private boolean polymerPass = false;
+
   /** Whether the tranpilation passes runs before pass being tested. */
   private boolean transpileEnabled = false;
 
@@ -415,6 +417,10 @@ public abstract class CompilerTestCase extends TestCase {
     this.allowExternsChanges = allowExternsChanges;
   }
 
+  public void enablePolymerPass() {
+    polymerPass = true;
+  }
+
   /**
    * Perform type checking before running the test pass. This will check
    * for type errors and annotate nodes with type information.
@@ -649,6 +655,13 @@ public abstract class CompilerTestCase extends TestCase {
    * @param js Input
    */
   public void testNoWarning(String js) {
+    test(js, null, null, null);
+  }
+
+  /**
+   * Verifies that the compiler generates no warnings for the given input.
+   */
+  public void testNoWarning(String[] js) {
     test(js, null, null, null);
   }
 
@@ -1258,6 +1271,12 @@ public abstract class CompilerTestCase extends TestCase {
       if (compiler.getErrorCount() == 0) {
         errorManagers[i] = new BlackHoleErrorManager();
         compiler.setErrorManager(errorManagers[i]);
+
+        if (polymerPass && i == 0) {
+          recentChange.reset();
+          new PolymerPass(compiler).process(externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
 
         if (rewriteClosureCode && i == 0) {
           new ClosureRewriteClass(compiler).process(null, mainRoot);
