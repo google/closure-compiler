@@ -101,10 +101,12 @@ final class PolymerClassRewriter {
           cls.constructor.value.cloneTree());
       assign.setJSDocInfo(constructorDoc.build());
       Node exprResult = IR.exprResult(assign);
+      exprResult.useSourceInfoIfMissingFromForTree(cls.target);
       block.addChildToBack(exprResult);
     } else {
       // var foo = Polymer({...}); OR Polymer({...});
       Node var = IR.var(cls.target.cloneTree(), cls.constructor.value.cloneTree());
+      var.useSourceInfoIfMissingFromForTree(exprRoot);
       var.setJSDocInfo(constructorDoc.build());
       block.addChildToBack(var);
     }
@@ -115,7 +117,6 @@ final class PolymerClassRewriter {
     addInterfaceExterns(cls, readOnlyProps);
     removePropertyDocs(objLit);
 
-    block.useSourceInfoIfMissingFromForTree(exprRoot);
     Node statements = block.removeChildren();
     Node parent = exprRoot.getParent();
 
@@ -208,7 +209,9 @@ final class PolymerClassRewriter {
       if (prop.value.isObjectLit()) {
         Node readOnlyValue = NodeUtil.getFirstPropMatchingKey(prop.value, "readOnly");
         if (readOnlyValue != null && readOnlyValue.isTrue()) {
-          block.addChildToBack(makeReadOnlySetter(prop.name.getString(), qualifiedPath));
+          Node setter = makeReadOnlySetter(prop.name.getString(), qualifiedPath);
+          setter.useSourceInfoIfMissingFromForTree(prop.name);
+          block.addChildToBack(setter);
           readOnlyProps.add(prop);
         }
       }
@@ -245,6 +248,7 @@ final class PolymerClassRewriter {
     for (MemberDefinition prop : cls.props) {
       Node propertyNode = IR.exprResult(
           NodeUtil.newQName(compiler, basePath + prop.name.getString()));
+      propertyNode.useSourceInfoIfMissingFromForTree(prop.name);
       JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(prop.info);
 
       JSTypeExpression propType = PolymerPassStaticUtils.getTypeFromProperty(prop, compiler);
@@ -319,6 +323,7 @@ final class PolymerClassRewriter {
         }
 
         Node exprResult = IR.exprResult(NodeUtil.newQName(compiler, qualifiedPath + propName));
+        exprResult.useSourceInfoFromForTree(behaviorProp.name);
         JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(behaviorProp.info);
 
         if (behaviorProp.name.isGetterDef()) {

@@ -111,7 +111,6 @@ final class PolymerClassDefinition {
       target = IR.name(elNameString);
     }
 
-    target.useSourceInfoIfMissingFrom(callNode);
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(target);
 
     JSDocInfo ctorInfo = null;

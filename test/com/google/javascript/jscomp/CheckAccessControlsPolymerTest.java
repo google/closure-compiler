@@ -117,8 +117,7 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
   }
 
   public void testPrivatePropertyFromBehaviorUsedInElement() {
-    // TODO(tbreisacher): Find out why this isn't reporting an error, and fix it.
-    testNoWarning(new String[] {
+    testError(new String[] {
       LINE_JOINER.join(
         "/** @polymerBehavior */",
         "var Behavior = {",
@@ -131,6 +130,6 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
         "  behaviors: [Behavior],",
         "  bar: function() { alert(this.foo_); },",
         "});")
-    });
+    }, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 }
