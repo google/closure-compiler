@@ -207,3 +207,23 @@ function testSupportsErrorExtensionHack() {
     assertNotEquals(e, e.superResult);
   }
 }
+
+function testExtendsObject() {
+  // When super() returns an object, it is supposed to replace `this`,
+  // but Object() always returns a new object, so it must be handled specially.
+  // Make sure that the compiler does NOT do that replacement.
+  class NoConstructor extends Object {}
+  assertTrue(new NoConstructor('junk') instanceof NoConstructor);
+
+  // super() should have `this` as its return value, not a new object created
+  // by calling Object().
+  class WithConstructor extends Object {
+    constructor(message) {
+      const superResult = super();
+      this.superResult = superResult;
+      this.message = message;
+    }
+  }
+  const withConstructor = new WithConstructor('message');
+  assertEquals(withConstructor, withConstructor.superResult);
+}

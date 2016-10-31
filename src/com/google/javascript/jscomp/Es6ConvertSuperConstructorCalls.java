@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -64,13 +65,28 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       // super() or super.apply()
       Node superCall = parent.isCall() ? parent : parent.getParent();
       String superClassQName = getSuperClassQName(superCall);
-      Node newSuperCall = createNewSuperCall(superClassQName, superCall);
-      if (isNativeErrorType(t, superClassQName)) {
-        replaceNativeErrorSuperCall(superCall, newSuperCall);
+      if (isNativeObjectClass(t, superClassQName)) {
+        // There's no need to call Object as a super constructor, so just replace the call with
+        // `this`, which is its correct return value.
+        // TODO(bradfordcsmith): Although unlikely, super() could have argument expressions with
+        //     side-effects.
+        superCall.getParent().replaceChild(superCall, IR.thisNode().useSourceInfoFrom(superCall));
+        compiler.reportCodeChange();
+      } else if (isUnextendableNativeClass(t, superClassQName)) {
+        compiler.report(
+            JSError.make(
+                superCall,
+                CANNOT_CONVERT_YET,
+                "extending native class: " + superClassQName));
       } else {
-        superCall.getParent().replaceChild(superCall, newSuperCall);
+        Node newSuperCall = createNewSuperCall(superClassQName, superCall);
+        if (isNativeErrorClass(t, superClassQName)) {
+          replaceNativeErrorSuperCall(superCall, newSuperCall);
+        } else {
+          superCall.getParent().replaceChild(superCall, newSuperCall);
+        }
+        compiler.reportCodeChange();
       }
-      compiler.reportCodeChange();
     }
   }
 
@@ -148,7 +164,11 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     superCall.getParent().replaceChild(superCall, superErrorExpr);
   }
 
-  private boolean isNativeErrorType(NodeTraversal t, String superClassName) {
+  private boolean isNativeObjectClass(NodeTraversal t, String className) {
+    return className.equals("Object") && !isDefinedInSources(t, className);
+  }
+
+  private boolean isNativeErrorClass(NodeTraversal t, String superClassName) {
     switch (superClassName) {
         // All Error classes listed in the ECMAScript spec as of 2016
       case "Error":
@@ -158,11 +178,70 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       case "SyntaxError":
       case "TypeError":
       case "URIError":
-        Var objectVar = t.getScope().getVar(superClassName);
-        return objectVar == null || objectVar.isExtern();
+        return !isDefinedInSources(t, superClassName);
       default:
         return false;
     }
+  }
+
+  /**
+   * Is the given class a native class for which we cannot properly transpile extension?
+   * @param t
+   * @param className
+   */
+  private boolean isUnextendableNativeClass(NodeTraversal t, String className) {
+    // This list originally taken from the list of built-in objects at
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference
+    // as of 2016-10-22.
+    // - Intl.* classes were left out, because it doesn't seem worth the extra effort
+    //   of handling the qualified name.
+    // - Deprecated and experimental classes were left out.
+    switch (className) {
+      case "Array":
+      case "ArrayBuffer":
+      case "Boolean":
+      case "DataView":
+      case "Date":
+      case "Float32Array":
+      case "Function":
+      case "Generator":
+      case "GeneratorFunction":
+      case "Int16Array":
+      case "Int32Array":
+      case "Int8Array":
+      case "InternalError":
+      case "Map":
+      case "Number":
+      case "Promise":
+      case "Proxy":
+      case "RegExp":
+      case "Set":
+      case "String":
+      case "Symbol":
+      case "TypedArray":
+      case "Uint16Array":
+      case "Uint32Array":
+      case "Uint8Array":
+      case "Uint8ClampedArray":
+      case "WeakMap":
+      case "WeakSet":
+        return !isDefinedInSources(t, className);
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Is a variable with the given name defined in the source code being compiled?
+   *
+   * <p>Please note that the call to {@code t.getScope()} is expensive, so we should avoid
+   * calling this method when possible.
+   * @param t
+   * @param varName
+   */
+  private boolean isDefinedInSources(NodeTraversal t, String varName) {
+    Var objectVar = t.getScope().getVar(varName);
+    return objectVar != null && !objectVar.isExtern();
   }
 
   private String getSuperClassQName(Node superCall) {
