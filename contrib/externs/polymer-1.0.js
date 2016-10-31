@@ -807,13 +807,18 @@ PolymerDomApi.prototype.setAttribute = function(attribute, value) {};
 PolymerDomApi.prototype.removeAttribute = function(attribute) {};
 
 /**
- * @typedef {function({
+ * @typedef {function(!PolymerDomApi.ObserveInfo)}
+ */
+PolymerDomApi.ObserveCallback;
+
+/**
+ * @typedef {{
  *   target: !Node,
  *   addedNodes: !Array<!Node>,
  *   removedNodes: !Array<!Node>
- * })}
+ * }}
  */
-PolymerDomApi.ObserveCallback;
+PolymerDomApi.ObserveInfo;
 
 /**
  * A virtual type for observer callback handles.
