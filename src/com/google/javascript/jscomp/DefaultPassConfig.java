@@ -548,6 +548,12 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(runtimeTypeCheck);
     }
 
+    // Converts arguments to IIFEs to variable assignments within the function.
+    // Improves later optimizations such as function inlining.
+    if (options.optimizeCalls) {
+      passes.add(convertIIFEArgsToVars);
+    }
+
     // Inlines functions that perform dynamic accesses to static properties of parameters that are
     // typed as {Function}. This turns a dynamic access to a static property of a class definition
     // into a fully qualified access and in so doing enables better dead code stripping.
@@ -2138,6 +2144,15 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
   };
+
+  /** Rewrite IIFE calls so that the call arguments are variable assignments */
+  private final PassFactory convertIIFEArgsToVars =
+      new PassFactory("convertIIFEArgsToVars", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new ConvertIIFEArgsToVars(compiler);
+        }
+      };
 
   /**
    * Look for function calls that are pure, and annotate them
