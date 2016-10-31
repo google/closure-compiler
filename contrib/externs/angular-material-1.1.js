@@ -425,7 +425,8 @@ md.$toast = function() {};
  *   locals: (Object|undefined),
  *   bindToController: (boolean|undefined),
  *   resolve: (Object|undefined),
- *   controllerAs: (string|undefined)
+ *   controllerAs: (string|undefined),
+ *   toastClass: (string|undefined),
  * }}
  */
 md.$toast.options;
