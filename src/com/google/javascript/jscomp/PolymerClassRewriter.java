@@ -295,6 +295,9 @@ final class PolymerClassRewriter {
             IR.assign(NodeUtil.newQName(compiler, qualifiedPath + fnName), fnValue));
         exprResult.useSourceInfoIfMissingFromForTree(behaviorFunction.name);
         JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(behaviorFunction.info);
+        // Uses of private members that come from behaviors are not recognized correctly,
+        // so just suppress that warning.
+        info.addSuppression("unusedPrivateMembers");
 
         // If the function in the behavior is @protected, switch it to @public so that
         // we don't get a visibility warning. This is a bit of a hack but easier than
