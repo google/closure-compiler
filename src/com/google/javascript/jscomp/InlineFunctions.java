@@ -325,10 +325,11 @@ class InlineFunctions implements CompilerPass {
           fs.setHasInnerFunctions(true);
           // If there are inner functions, we can inline into global scope
           // if there are no local vars or named functions.
+          // IIFEs can be aggressively inlined.
           // TODO(johnlenz): this can be improved by looking at the possible
           // values for locals.  If there are simple values, or constants
           // we could still inline.
-          if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
+          if (!assumeMinimumCapture && !isIIFE(fnNode) && hasLocalNames(fnNode)) {
             fs.setInline(false);
           }
         }
@@ -352,6 +353,35 @@ class InlineFunctions implements CompilerPass {
              block,
              new NodeUtil.MatchDeclaration(),
              new NodeUtil.MatchShallowStatement());
+  }
+
+  /**
+   * @param fnNode The function to inspect.
+   * @return Whether the function is an immediately called expression
+   */
+  private static boolean isIIFE(Node fnNode) {
+    Preconditions.checkState(fnNode.isFunction());
+    Preconditions.checkNotNull(fnNode.getParent());
+
+    Node parent = fnNode.getParent();
+    Node grandparent = parent.getParent();
+
+    // Check for standard IIFE
+    // (function() { })()
+    if (parent.isCall() && parent.getFirstChild() == fnNode) {
+      return true;
+
+    // Check for explicit calls
+    // (function() {} ).call(null)
+    } else if (parent.isGetProp() && parent.getFirstChild() == fnNode &&
+        fnNode.getNext() != null && fnNode.getNext().isString() &&
+        fnNode.getNext().getString().equals("call") &&
+        grandparent != null && grandparent.isCall() &&
+        grandparent.getFirstChild() == parent) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /**
