@@ -151,5 +151,15 @@ public final class ConvertIIFEArgsToVarsTest extends CompilerTestCase {
             " var a$jscomp$1 = 2;",
             " console.log(c);",
             "})()"));
+
+    test(
+        "var a = 1; (function(f) { var a = 2; })(function() { return a; });",
+        "var a = 1; (function() { var f=function() { return a; }; var a$jscomp$1 = 2; })();");
+  }
+
+  public void testRewriteFunctionArgument() {
+    test(
+        "(function(f) {})(function() {});",
+        "(function() { var f=function() {}; })();");
   }
 }

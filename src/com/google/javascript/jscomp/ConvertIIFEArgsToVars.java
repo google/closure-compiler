@@ -20,7 +20,9 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Convert the parameters of an immediately invoked function expression to variables and assign the
@@ -36,6 +38,7 @@ import java.util.List;
  */
 public class ConvertIIFEArgsToVars implements CompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;
+  private final Set<Node> iifeCallsWithArgsToRemove = new HashSet<>();
 
   public ConvertIIFEArgsToVars(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -53,6 +56,21 @@ public class ConvertIIFEArgsToVars implements CompilerPass, NodeTraversal.Callba
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isCall() && this.iifeCallsWithArgsToRemove.contains(n)) {
+      this.iifeCallsWithArgsToRemove.remove(n);
+      // Remove all arguments of the call node, except "this" if it exists.
+      Node removeRef;
+      if (n.getBooleanProp(Node.FREE_CALL)) {
+        removeRef = n.getFirstChild();
+      } else {
+        removeRef = n.getSecondChild();
+      }
+      while (removeRef.getNext() != null) {
+        n.removeChildAfter(removeRef);
+      }
+      return;
+    }
+
     if (!n.isFunction() || parent == null) {
       return;
     }
@@ -97,17 +115,8 @@ public class ConvertIIFEArgsToVars implements CompilerPass, NodeTraversal.Callba
       funcParams.getNext().addChildToFront(newVars.get(i));
     }
 
-    // Remove all arguments of the call node, except "this" if it exists.
-    Node removeRef;
-    if (call.getBooleanProp(Node.FREE_CALL)) {
-      removeRef = call.getFirstChild();
-    } else {
-      removeRef = call.getSecondChild();
-    }
-    while (removeRef.getNext() != null) {
-      call.removeChildAfter(removeRef);
-    }
-
+    // When visiting the call, remove arguments that are rewritten here
+    this.iifeCallsWithArgsToRemove.add(call);
     compiler.reportCodeChange();
   }
 
