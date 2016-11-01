@@ -50,6 +50,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       "JSC_GOOG_MODULE_USES_THROW",
       "The body of a goog.module cannot use 'throw'.");
 
+  static final DiagnosticType GOOG_MODULE_USES_GOOG_MODULE_GET = DiagnosticType.error(
+      "JSC_GOOG_MODULE_USES_GOOG_MODULE_GET",
+      "It's illegal to use a 'goog.module.get' at the module top-level."
+      + " Did you mean to use goog.require instead?");
+
   static final DiagnosticType INVALID_DESTRUCTURING_REQUIRE =
       DiagnosticType.error(
           "JSC_INVALID_DESTRUCTURING_REQUIRE",
@@ -160,8 +165,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           t.report(n, MULTIPLE_MODULES_IN_FILE);
         } else if (callee.matchesQualifiedName("goog.provide")) {
           t.report(n, MODULE_AND_PROVIDES);
-        } else if (callee.matchesQualifiedName("goog.require")) {
+        } else if (callee.matchesQualifiedName("goog.require")
+            || callee.matchesQualifiedName("goog.forwardDeclare")) {
           checkRequireCall(t, n, parent);
+        } else if (callee.matchesQualifiedName("goog.module.get") && t.inModuleHoistScope()) {
+          t.report(n, GOOG_MODULE_USES_GOOG_MODULE_GET);
         }
         break;
       case ASSIGN: {

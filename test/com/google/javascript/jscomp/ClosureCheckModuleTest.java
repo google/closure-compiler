@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_MODULE_LEVEL_STATEMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ERROR;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
+import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
@@ -82,6 +83,31 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "  throw 5;",
             "}"),
         GOOG_MODULE_USES_THROW);
+  }
+
+  public void testGoogModuleGetAtTopLevel() {
+    testError("goog.module('xyz');\ngoog.module.get('abc');", GOOG_MODULE_USES_GOOG_MODULE_GET);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var x = goog.require('other.x');",
+            "",
+            "if (x) {",
+            "  var y = goog.module.get('abc');",
+            "}"),
+        GOOG_MODULE_USES_GOOG_MODULE_GET);
+
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var x = goog.require('other.x');",
+            "",
+            "function f() {",
+            "  var y = goog.module.get('abc');",
+            "}"));
   }
 
   public void testGoogModuleAndProvide() {
