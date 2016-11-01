@@ -372,10 +372,10 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     String templateSrc = "var o = {}; o.<fnName> = function(){}; o.<fnName>()";
 
     // Ensure that functions with name != "partialFn" get marked.
-    assertPureCallsMarked(templateSrc.replaceAll("<fnName>", "notPartialFn"),
-                     ImmutableList.of("o.notPartialFn"));
+    assertPureCallsMarked(
+        templateSrc.replace("<fnName>", "notPartialFn"), ImmutableList.of("o.notPartialFn"));
 
-    assertPureCallsMarked(templateSrc.replaceAll("<fnName>", "partialFn"), NO_PURE_CALLS);
+    assertPureCallsMarked(templateSrc.replace("<fnName>", "partialFn"), NO_PURE_CALLS);
   }
 
   public void testNamespaceAnnotationInExterns6() throws Exception {
