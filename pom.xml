@@ -137,7 +137,7 @@
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <jdk.version>1.7</jdk.version>
     <junit.version>4.12</junit.version>
-    <guava.version>20.0-SNAPSHOT</guava.version>
+    <guava.version>20.0</guava.version>
     <protobuf.version>3.0.2</protobuf.version>
   </properties>
 
