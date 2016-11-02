@@ -603,6 +603,13 @@ PolymerElement.prototype.importHref = function(href, onload, onerror) {};
 PolymerElement.prototype.isLightDescendant = function(node) {};
 
 /**
+ * Checks whether an element is in this element's local DOM tree.
+ * @param {?Node} node The element to be checked.
+ * @return {boolean} true if node is in this element's local DOM tree.
+ */
+PolymerElement.prototype.isLocalDescendant = function(node) {};
+
+/**
  * Delete an element from an array.
  * @param {!Array|string} array Path to array from which to remove the item (or
  *     the array itself).
