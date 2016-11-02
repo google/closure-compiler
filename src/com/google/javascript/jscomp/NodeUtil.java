@@ -473,6 +473,14 @@ public final class NodeUtil {
     }
   }
 
+  /** Set the given function/class node to an empty name */
+  public static void removeName(Node n) {
+    Preconditions.checkState(n.isFunction() || n.isClass());
+    Node originalName = n.getFirstChild();
+    Node emptyName = n.isFunction() ? IR.name("") : IR.empty();
+    n.replaceChild(originalName, emptyName.useSourceInfoFrom(originalName));
+  }
+
   /**
    * Gets the function's name. This method recognizes the forms:
    * <ul>

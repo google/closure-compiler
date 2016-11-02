@@ -238,7 +238,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         return false;
       }
       Node initialValue = nameDecl.getInitialValue();
-      return initialValue == null || !NodeUtil.isCallTo(initialValue, "goog.require");
+      if (initialValue == null) {
+        return true;
+      }
+      return !NodeUtil.isCallTo(initialValue, "goog.require")
+          && !NodeUtil.isCallTo(initialValue, "goog.forwardDeclare")
+          && !NodeUtil.isCallTo(initialValue, "goog.getMsg");
     }
 
     String getLocalName() {
@@ -841,11 +846,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private static boolean isNamedExportsLiteral(Node objLit) {
-    if (!objLit.isObjectLit()) {
+    if (!objLit.isObjectLit() || !objLit.hasChildren()) {
       return false;
     }
     for (Node key = objLit.getFirstChild(); key != null; key = key.getNext()) {
-      if (!key.isStringKey()) {
+      if (!key.isStringKey() || key.isQuotedString()) {
         return false;
       }
       if (key.hasChildren() && !key.getFirstChild().isName()) {
@@ -1051,8 +1056,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node exportsNameNode = getpropNode.getFirstChild();
     Preconditions.checkState(exportsNameNode.getString().equals("exports"));
 
-    String exportName = getpropNode.getLastChild().getString();
-    currentScript.namedExports.add(exportName);
+    // Would be t.inModuleScope() if this ran before the inlineModuleIntoGlobal() call
+    // that happens at the beginning of module rewriting.
+    if (t.inGlobalScope()) {
+      String exportName = getpropNode.getLastChild().getString();
+      currentScript.namedExports.add(exportName);
+    }
   }
 
   private void updateExportsPropertyAssignment(Node getpropNode) {
@@ -1208,7 +1217,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node assignNode = n.getParent();
-    if (currentScript.defaultExportLocalName != null) {
+    if (!currentScript.declareLegacyNamespace
+        && currentScript.defaultExportLocalName != null) {
       assignNode.getParent().detach();
       return;
     }
@@ -1468,6 +1478,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       // When replacing with a dotted fully qualified name it's already better than an original
       // name.
       Node nameParent = nameNode.getParent();
+      JSDocInfo jsdoc = nameParent.getJSDocInfo();
       switch (nameParent.getToken()) {
         case FUNCTION:
         case CLASS:
@@ -1475,9 +1486,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             Node statementParent = nameParent.getParent();
             Node placeholder = IR.empty();
             statementParent.replaceChild(nameParent, placeholder);
-            Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, nameParent, null);
+            Node newStatement =
+                NodeUtil.newQNameDeclaration(compiler, newString, nameParent, jsdoc);
+            nameParent.setJSDocInfo(null);
             newStatement.useSourceInfoIfMissingFromForTree(nameParent);
             statementParent.replaceChild(placeholder, newStatement);
+            NodeUtil.removeName(nameParent);
             return;
           }
           break;
@@ -1485,7 +1499,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         case LET:
         case CONST:
           {
-            JSDocInfo jsdoc = nameParent.getJSDocInfo();
             Node rhs = nameNode.hasChildren() ? nameNode.getLastChild().detach() : null;
             Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, rhs, jsdoc);
             newStatement.useSourceInfoIfMissingFromForTree(nameParent);
