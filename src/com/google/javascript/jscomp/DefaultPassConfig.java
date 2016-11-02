@@ -222,7 +222,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     assertAllOneTimePasses(passes);
-    assertValidOrder(passes);
+    assertValidOrderForChecks(passes);
     return passes;
   }
 
@@ -422,7 +422,7 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
-    assertValidOrder(checks);
+    assertValidOrderForChecks(checks);
 
     return checks;
   }
@@ -731,13 +731,14 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(flowSensitiveInlineVariables);
     }
 
-    passes.addAll(getMainOptimizationLoop());
-    passes.add(createEmptyPass("afterMainOptimizations"));
-
-    // Must run after ProcessClosurePrimitives, Es6ConvertSuper, and assertion removals.
+    // Must run after ProcessClosurePrimitives, Es6ConvertSuper, and assertion removals, but
+    // before OptimizeCalls (specifically, OptimizeParameters).
     if (options.removeSuperMethods) {
       passes.add(removeSuperMethodsPass);
     }
+
+    passes.addAll(getMainOptimizationLoop());
+    passes.add(createEmptyPass("afterMainOptimizations"));
 
     passes.add(createEmptyPass("beforeModuleMotion"));
 
@@ -912,6 +913,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(rewriteBindThis);
     }
 
+    assertValidOrderForOptimizations(passes);
     return passes;
   }
 
@@ -1086,7 +1088,7 @@ public final class DefaultPassConfig extends PassConfig {
    * This enforces those constraints.
    * @param checks The list of check passes
    */
-  private void assertValidOrder(List<PassFactory> checks) {
+  private void assertValidOrderForChecks(List<PassFactory> checks) {
     assertPassOrder(
         checks,
         closureRewriteModule,
@@ -1145,6 +1147,17 @@ public final class DefaultPassConfig extends PassConfig {
         removeSuperMethodsPass,
         "Super-call method removal must run after closure code removal, because "
             + "removing assertions may make more super calls eligible to be stripped.");
+  }
+
+  /**
+   * Certain optimizations need to run in a particular order. For example, OptimizeCalls must run
+   * before RemoveSuperMethodsPass, because the former can invalidate assumptions in the latter.
+   * This enforces those constraints.
+   * @param optimizations The list of optimization passes
+   */
+  private void assertValidOrderForOptimizations(List<PassFactory> optimizations) {
+    assertPassOrder(optimizations, removeSuperMethodsPass, optimizeCalls,
+        "RemoveSuperMethodsPass must run before OptimizeCalls");
   }
 
   /** Checks that all constructed classes are goog.require()d. */
