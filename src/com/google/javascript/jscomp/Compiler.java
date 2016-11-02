@@ -1587,8 +1587,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void orderInputs() {
-    hoistExterns();
-
+    hoistUnorderedExterns();
     // Check if the sources need to be re-ordered.
     boolean staleInputs = false;
     if (options.dependencyOptions.needsManagement()) {
@@ -1601,9 +1600,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       try {
-        inputs =
-            (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
-            .manageDependencies(options.dependencyOptions, inputs);
+        inputs = getDegenerateModuleGraph().manageDependencies(options.dependencyOptions, inputs);
         staleInputs = true;
       } catch (MissingProvideException e) {
         report(JSError.make(
@@ -1614,7 +1611,35 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
+    if (options.dependencyOptions.needsManagement() && options.allowGoogProvideInExterns()) {
+      hoistAllExterns();
+    }
+
     hoistNoCompileFiles();
+
+    if (staleInputs) {
+      repartitionInputs();
+    }
+  }
+
+  /**
+   * Hoists inputs with the @externs annotation and no provides or requires into the externs list.
+   */
+  void hoistUnorderedExterns() {
+    boolean staleInputs = false;
+    for (CompilerInput input : inputs) {
+      if (options.dependencyOptions.needsManagement()) {
+        // If we're doing scanning dependency info anyway, use that
+        // information to skip sources that obviously aren't externs.
+        if (!input.getProvides().isEmpty() || !input.getRequires().isEmpty()) {
+          continue;
+        }
+      }
+
+      if (hoistIfExtern(input)) {
+        staleInputs = true;
+      }
+    }
 
     if (staleInputs) {
       repartitionInputs();
@@ -1624,42 +1649,44 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Hoists inputs with the @externs annotation into the externs list.
    */
-  void hoistExterns() {
+  void hoistAllExterns() {
     boolean staleInputs = false;
     for (CompilerInput input : inputs) {
-      if (!options.allowGoogProvideInExterns() && options.dependencyOptions.needsManagement()) {
-        // If we're doing scanning dependency info anyway, use that
-        // information to skip sources that obviously aren't externs.
-        if (!input.getProvides().isEmpty() || !input.getRequires().isEmpty()) {
-          continue;
-        }
-      }
-
-      Node n = input.getAstRoot(this);
-
-      // Inputs can have a null AST on a parse error.
-      if (n == null) {
-        continue;
-      }
-
-      JSDocInfo info = n.getJSDocInfo();
-      if (info != null && info.isExterns()) {
-        // If the input file is explicitly marked as an externs file, then
-        // assume the programmer made a mistake and throw it into
-        // the externs pile anyways.
-        externsRoot.addChildToBack(n);
-        input.setIsExtern(true);
-
-        input.getModule().remove(input);
-
-        externs.add(input);
+      if (hoistIfExtern(input)) {
         staleInputs = true;
       }
     }
-
     if (staleInputs) {
       repartitionInputs();
     }
+  }
+
+  /**
+   * Hoists a compiler input to externs if it contains the @externs annotation.
+   * Return whether or not the given input was hoisted.
+   */
+  private boolean hoistIfExtern(CompilerInput input) {
+    Node n = input.getAstRoot(this);
+
+    // Inputs can have a null AST on a parse error.
+    if (n == null) {
+      return false;
+    }
+
+    JSDocInfo info = n.getJSDocInfo();
+    if (info != null && info.isExterns()) {
+      // If the input file is explicitly marked as an externs file, then
+      // assume the programmer made a mistake and throw it into
+      // the externs pile anyways.
+      externsRoot.addChildToBack(n);
+      input.setIsExtern(true);
+
+      input.getModule().remove(input);
+
+      externs.add(input);
+      return true;
+    }
+    return false;
   }
 
   /**

@@ -918,6 +918,50 @@ public final class CompilerTest extends TestCase {
     assertTrue(ast.isEquivalentTo(newInput.getAstRoot(compiler)));
   }
 
+  public void testExternsDependencySorting() {
+    List<SourceFile> inputs = ImmutableList.of(
+        SourceFile.fromCode("leaf", "/** @externs */ goog.require('beer');"),
+        SourceFile.fromCode("beer", "/** @externs */ goog.provide('beer');\ngoog.require('hops');"),
+        SourceFile.fromCode("hops", "/** @externs */ goog.provide('hops');"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
+    options.dependencyOptions.setDependencySorting(true);
+
+    List<SourceFile> externs = ImmutableList.of();
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    assertThat(compiler.externsRoot.getChildCount()).isEqualTo(3);
+    assertExternIndex(compiler, 0, "hops");
+    assertExternIndex(compiler, 1, "beer");
+    assertExternIndex(compiler, 2, "leaf");
+  }
+
+  public void testExternsDependencyPruning() {
+    List<SourceFile> inputs = ImmutableList.of(
+        SourceFile.fromCode("unused", "/** @externs */ goog.provide('unused');"),
+        SourceFile.fromCode("moocher", "/** @externs */ goog.require('something');"),
+        SourceFile.fromCode("something", "/** @externs */ goog.provide('something');"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.dependencyOptions.setDependencyPruning(true);
+    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
+
+    List<SourceFile> externs = ImmutableList.of();
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    assertThat(compiler.externsRoot.getChildCount()).isEqualTo(2);
+    assertExternIndex(compiler, 0, "something");
+    assertExternIndex(compiler, 1, "moocher");
+  }
+
+  private void assertExternIndex(Compiler compiler, int index, String name) {
+    assertThat(compiler.externsRoot.getChildAtIndex(index))
+        .isSameAs(compiler.getInput(new InputId(name)).getAstRoot(compiler));
+  }
+
   public void testEs6ModuleEntryPoint() throws Exception {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode(
