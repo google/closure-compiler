@@ -708,6 +708,12 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(crossModuleCodeMotion);
     }
 
+    // Must run after ProcessClosurePrimitives, Es6ConvertSuper, and assertion removals, but
+    // before OptimizeCalls (specifically, OptimizeParameters) and DevirtualizePrototypeMethods.
+    if (options.removeSuperMethods) {
+      passes.add(removeSuperMethodsPass);
+    }
+
     // Method devirtualization benefits from property disambiguation so
     // it should run after that pass but before passes that do
     // optimizations based on global names (like cross module code motion
@@ -729,12 +735,6 @@ public final class DefaultPassConfig extends PassConfig {
     // opportunities when a function will be inlined into the global scope.
     if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(flowSensitiveInlineVariables);
-    }
-
-    // Must run after ProcessClosurePrimitives, Es6ConvertSuper, and assertion removals, but
-    // before OptimizeCalls (specifically, OptimizeParameters).
-    if (options.removeSuperMethods) {
-      passes.add(removeSuperMethodsPass);
     }
 
     passes.addAll(getMainOptimizationLoop());
@@ -1157,7 +1157,10 @@ public final class DefaultPassConfig extends PassConfig {
    */
   private void assertValidOrderForOptimizations(List<PassFactory> optimizations) {
     assertPassOrder(optimizations, removeSuperMethodsPass, optimizeCalls,
-        "RemoveSuperMethodsPass must run before OptimizeCalls");
+        "RemoveSuperMethodsPass must run before OptimizeCalls.");
+
+    assertPassOrder(optimizations, removeSuperMethodsPass, devirtualizePrototypeMethods,
+        "RemoveSuperMethodsPass must run before DevirtualizePrototypeMethods.");
   }
 
   /** Checks that all constructed classes are goog.require()d. */
