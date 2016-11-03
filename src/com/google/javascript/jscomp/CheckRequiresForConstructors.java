@@ -578,18 +578,18 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
    *      <li><pre>var foo = function() {};</pre>
    *      <li><pre>foo.bar = function() {};</pre>
    */
-  private boolean declaresFunction(Node n) {
-    if (n.isFunction()) {
+  private boolean declaresFunctionOrClass(Node n) {
+    if (n.isFunction() || n.isClass()) {
       return true;
     }
 
-    if (n.isAssign() && n.getLastChild().isFunction()) {
+    if (n.isAssign() && (n.getLastChild().isFunction() || n.getLastChild().isClass())) {
       return true;
     }
 
     if (NodeUtil.isNameDeclaration(n)
         && n.getFirstChild().hasChildren()
-        && n.getFirstFirstChild().isFunction()) {
+        && (n.getFirstFirstChild().isFunction() || n.getFirstFirstChild().isClass())) {
       return true;
     }
 
@@ -602,7 +602,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       return;
     }
 
-    if (declaresFunction(n)) {
+    if (declaresFunctionOrClass(n)) {
       for (JSTypeExpression expr : info.getImplementedInterfaces()) {
         maybeAddUsage(t, n, expr);
       }

@@ -448,6 +448,56 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testMissingRequire(js, warning);
   }
 
+  public void testFailWithImplements_class() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    String[] js = new String[] {
+      "var goog = {};"
+      + "goog.provide('example.Foo'); /** @interface */ example.Foo = function() {};",
+
+      "/** @implements {example.Foo} */ var SomeClass = class {};"
+    };
+    String warning = "missing require: 'example.Foo'";
+    testMissingRequire(js, warning);
+  }
+
+  public void testFailWithImplements_class2() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    String[] js = new String[] {
+      "var goog = {};"
+      + "goog.provide('example.Foo'); /** @interface */ example.Foo = function() {};",
+
+      "goog.provide('example.Bar'); /** @implements {example.Foo} */ example.Bar = class {};"
+    };
+    String warning = "missing require: 'example.Foo'";
+    testMissingRequire(js, warning);
+  }
+
+  public void testFailWithImplements_googModule() {
+    String[] js = new String[] {
+      "goog.provide('example.Interface'); /** @interface */ example.Interface = function() {};",
+
+      "goog.module('foo.Bar');"
+          + "/** @constructor @implements {example.Interface} */ function Bar() {}; exports = Bar;"
+    };
+    String warning = "missing require: 'example.Interface'";
+    testMissingRequire(js, warning);
+  }
+
+  public void testFailWithImplements_class_googModule() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    String[] js = new String[] {
+      "goog.provide('example.Interface'); /** @interface */ example.Interface = function() {};",
+
+      "goog.module('foo.Bar');"
+          + "/** @implements {example.Interface} */ class Bar {}; exports = Bar;"
+    };
+    String warning = "missing require: 'example.Interface'";
+    testMissingRequire(js, warning);
+  }
+
   public void testInterfaceExtends() {
     String js =
         LINE_JOINER.join(
