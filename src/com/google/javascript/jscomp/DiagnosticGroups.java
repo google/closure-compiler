@@ -626,7 +626,6 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup("transitionalSuspiciousCodeWarnings",
         PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR,
         PeepholeFoldConstants.NEGATING_A_NON_NUMBER_ERROR,
-        PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS,
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 

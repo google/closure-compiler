@@ -46,11 +46,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           "JSC_NEGATING_A_NON_NUMBER_ERROR",
           "Can''t negate non-numeric value: {0}");
 
-  static final DiagnosticType SHIFT_AMOUNT_OUT_OF_BOUNDS =
-      DiagnosticType.warning(
-          "JSC_SHIFT_AMOUNT_OUT_OF_BOUNDS",
-          "Shift amount out of bounds (see right operand): {0}");
-
   static final DiagnosticType FRACTIONAL_BITWISE_OPERAND =
       DiagnosticType.warning(
           "JSC_FRACTIONAL_BITWISE_OPERAND",
@@ -877,7 +872,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // only the lower 5 bits are used when shifting, so don't do anything
       // if the shift amount is outside [0,32)
       if (!(rval >= 0 && rval < 32)) {
-        report(SHIFT_AMOUNT_OUT_OF_BOUNDS, n);
         return n;
       }
 

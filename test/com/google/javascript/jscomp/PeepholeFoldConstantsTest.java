@@ -675,12 +675,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     fold("x = 0xffffffff << 0", "x = -1");
     fold("x = 0xffffffff << 4", "x = -16");
-    testSame("1 << 32",
-        PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
-    testSame("1 << -1",
-        PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
-    testSame("1 >> 32",
-        PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
+    testSame("1 << 32");
+    testSame("1 << -1");
+    testSame("1 >> 32");
     testSame("1.5 << 0",
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
     testSame("1 << .5",
