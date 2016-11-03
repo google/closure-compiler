@@ -231,7 +231,7 @@ class PeepholeSubstituteAlternateSyntax
         //
         // We can't do this in the general case, because String(a) has
         // slightly different semantics than '' + (a). See
-        // http://code.google.com/p/closure-compiler/issues/detail?id=759
+        // https://blickly.github.io/closure-compiler-issues/#759
         Node value = callTarget.getNext();
         if (value != null && value.getNext() == null &&
             NodeUtil.isImmutableValue(value)) {
@@ -730,7 +730,8 @@ class PeepholeSubstituteAlternateSyntax
     // sb contains everything in s[0:pos]
     StringBuilder sb = null;
     int pos = 0;
-    boolean isEscaped = false, inCharset = false;
+    boolean isEscaped = false;
+    boolean inCharset = false;
     for (int i = 0; i < s.length(); ++i) {
       char ch = s.charAt(i);
       switch (ch) {
