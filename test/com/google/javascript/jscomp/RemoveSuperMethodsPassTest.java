@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
+
 /** Tests for {@link RemoveSuperMethodsPass} */
 public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
 
@@ -212,5 +214,17 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @override @wizaction */",
             "Foo.prototype.bar = function() { Foo.superClass_.bar.call(this); };"));
+  }
+
+  public void testNoOptimize_duplicate() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode("file1.js",
+            LINE_JOINER.join(BOILERPLATE,
+                "/** @override */",
+                "Foo.prototype.bar = function() { Foo.superClass_.bar.call(this); };")),
+        SourceFile.fromCode("file2.js",
+            LINE_JOINER.join(
+                "/** @override @suppress {duplicate} */",
+                "Foo.prototype.bar = function() { Foo.superClass_.bar.call(this); };"))));
   }
 }

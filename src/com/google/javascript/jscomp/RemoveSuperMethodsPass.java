@@ -19,6 +19,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A pass for deleting methods that only make a super call with no change in arguments. This pass is
@@ -35,13 +37,21 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
+  private final Map<String, Node> removeCandidates;
+
   public RemoveSuperMethodsPass(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.removeCandidates = new HashMap<>();
   }
 
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, root, new RemoveSuperMethodsCallback());
+    NodeTraversal.traverseEs6(compiler, root, new FilterDuplicateMethods());
+    for (Map.Entry<String, Node> entry : removeCandidates.entrySet()) {
+      entry.getValue().getGrandparent().detach();
+      compiler.reportCodeChange();
+    }
   }
 
   private class RemoveSuperMethodsCallback extends AbstractPostOrderCallback {
@@ -70,8 +80,7 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
           if (argumentsMatch(n, call)
               && returnMatches(call)
               && functionNameMatches(methodName, call)) {
-            parent.getParent().detach();
-            compiler.reportCodeChange();
+            removeCandidates.put(methodName, n);
           }
         }
       }
@@ -172,6 +181,21 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
         }
       }
       return true;
+    }
+  }
+
+  /**
+   * Some projects intentionally keep duplicate methods, so bail out on those.
+   */
+  private class FilterDuplicateMethods extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isFunction() && parent.isAssign() && parent.getParent().isExprResult()) {
+        String methodName = NodeUtil.getName(n);
+        if (removeCandidates.containsKey(methodName) && removeCandidates.get(methodName) != n) {
+          removeCandidates.remove(methodName);
+        }
+      }
     }
   }
 }
