@@ -897,6 +897,18 @@ PolymerEventApi.prototype.event;
 Polymer.Async;
 
 /**
+ * @param {function()} callback
+ * @param {number=} waitTime
+ * @return {number}
+ */
+Polymer.Async.run = function (callback, waitTime) {};
+
+/**
+ * @param {number} handle
+ */
+Polymer.Async.cancel = function(handle) {};
+
+/**
  * polymer-onerror experiment relies on this private API, so expose it only
  * to let the compilation work. Do not use in user code.
  */
