@@ -216,6 +216,14 @@ class PhaseOptimizer implements CompilerPass {
           / passes.size();
       progress = progressRange.initialValue;
     }
+
+    // When looking at this code, one can mistakenly think that the instance of
+    // PhaseOptimizer keeps all compiler passes live. This would be undesirable. A pass can
+    // create large data structures that are only useful to the pass, and we shouldn't
+    // retain them until the end of the compilation. But if you look at
+    // NamedPass#process, the actual pass is created and immediately executed, and no
+    // reference to it is retained in PhaseOptimizer:
+    //   factory.create(compiler).process(externs, root);
     for (CompilerPass pass : passes) {
       pass.process(externs, root);
       if (hasHaltingErrors()) {
