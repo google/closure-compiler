@@ -42,6 +42,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeIRegistry;
@@ -242,7 +243,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * setting configuration for this logger affects all loggers
    * in other classes within the compiler.
    */
-  private static final Logger logger =
+  public static final Logger logger =
       Logger.getLogger("com.google.javascript.jscomp");
 
   private final PrintStream outStream;
@@ -2799,9 +2800,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           // Note that we could simply add the entire externs library, but that leads to
           // potentially-surprising behavior when the externs that are present depend on
           // whether or not a polyfill is used.
+          Node var = IR.var(IR.name(words.get(1)));
+          JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
+          // Suppress duplicate-var warning in case this name is already defined in the externs.
+          jsdoc.addSuppression("duplicate");
+          var.setJSDocInfo(jsdoc.build());
           getSynthesizedExternsInputAtEnd()
               .getAstRoot(this)
-              .addChildToBack(IR.var(IR.name(words.get(1))));
+              .addChildToBack(var);
           break;
         default:
           throw new RuntimeException("Bad directive: " + directive);
