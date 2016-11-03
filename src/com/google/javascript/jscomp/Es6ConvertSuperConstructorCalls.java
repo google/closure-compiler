@@ -210,7 +210,8 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       case "Int32Array":
       case "Int8Array":
       case "InternalError":
-      case "Map":
+        // TODO(bradfordcsmith): Disallow Map again when client code is fixed.
+        // case "Map":
       case "Number":
       case "Promise":
       case "Proxy":
