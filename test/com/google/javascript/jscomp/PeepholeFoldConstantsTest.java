@@ -34,24 +34,20 @@ import java.util.Set;
 public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   private boolean late;
+  private boolean useTypes = true;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     late = false;
+    useTypes = true;
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
-    CompilerPass peepholePass = new PeepholeOptimizationsPass(compiler,
-          new PeepholeFoldConstants(late, compiler.getOptions().useTypesForLocalOptimization));
+    CompilerPass peepholePass =
+        new PeepholeOptimizationsPass(compiler, new PeepholeFoldConstants(late, useTypes));
     return peepholePass;
-  }
-
-  @Override
-  protected CompilerOptions getOptions(CompilerOptions options) {
-    options.useTypesForLocalOptimization = true;
-    return super.getOptions(options);
   }
 
   @Override
@@ -1325,6 +1321,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("var /** null */ x; var y = null > x;", "var /** null */ x; var y = false;");
 
     testSame("var /** string */ x; x + 1 + 1 + x");
+
+    useTypes = false;
+    testSame("var /** number */ x; x + 1 + 1 + x");
     disableTypeCheck();
   }
 
