@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.VariableReferenceCheck.EARLY_REFERENCE;
+
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
@@ -41,6 +43,11 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   public CompilerPass getProcessor(Compiler compiler) {
     // Treats bad reads as errors, and reports bad write warnings.
     return new VariableReferenceCheck(compiler);
+  }
+
+  @Override
+  public int getNumRepetitions() {
+    return 1;
   }
 
   @Override
@@ -82,8 +89,24 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertRedeclare("function f(a) { if (!a) var a = 6; }");
   }
 
+  public void testEarlyReference_noChange() {
+    testEarlyReference_noChange("function f() { a = 2; var a = 3; }");
+    testEarlyReference_noChange("a = 2; var a;");
+  }
+
+  private void testEarlyReference_noChange(String js) {
+    test(js, js, null, EARLY_REFERENCE);
+  }
+
   public void testEarlyReference() {
-    assertUndeclared("function f() { a = 2; var a = 3; }");
+    testEarlyReference("function f() { a = 2; var a; }", "function f() { var a; a = 2; }");
+    testEarlyReference(
+        "function f() { if (true) { a = 2; var a; } }",
+        "function f() { var a; if (true) { a = 2; } }");
+  }
+
+  private void testEarlyReference(String js, String expected) {
+    test(js, expected, null, EARLY_REFERENCE);
   }
 
   public void testCorrectEarlyReference() {
@@ -162,8 +185,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     testSameEs6("for (let [key, [nestKey, nestVal], val] of X){}");
 
     testSameEs6("var {x: a, y: b} = {x: 1, y: 2}; a++; b++;");
-    testWarningEs6("a++; var {x: a} = {x: 1};",
-        VariableReferenceCheck.EARLY_REFERENCE);
+    testWarningEs6("a++; var {x: a} = {x: 1};", EARLY_REFERENCE);
   }
 
   public void testNoWarnInExterns1() {
@@ -268,15 +290,8 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   /**
    * Expects the JS to generate one bad-write warning.
    */
-  private void assertUndeclared(String js) {
-    testWarning(js, VariableReferenceCheck.EARLY_REFERENCE);
-  }
-
-  /**
-   * Expects the JS to generate one bad-write warning.
-   */
   private void assertUndeclaredEs6(String js) {
-    testWarningEs6(js, VariableReferenceCheck.EARLY_REFERENCE);
+    testWarningEs6(js, EARLY_REFERENCE);
   }
 
   /**

@@ -315,6 +315,32 @@ public final class IntegrationTest extends IntegrationTestCase {
          TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  // http://b/31448683
+  public void testBug31448683() {
+    CompilerOptions options = createCompilerOptions();
+    WarningLevel.QUIET.setOptionsForWarningLevel(options);
+    options.setInlineFunctions(true);
+    test(
+        options,
+        LINE_JOINER.join(
+            "function f() {",
+            "  x = x || 1",
+            "  var x;",
+            "  console.log(x);",
+            "}",
+            "for (var _ in [1]) {",
+            "  f();",
+            "}"),
+        LINE_JOINER.join(
+            "for(var _ in[1]) {",
+            "  {",
+            "     var x$jscomp$inline_0 = void 0;",
+            "     x$jscomp$inline_0 = x$jscomp$inline_0 || 1;",
+            "     console.log(x$jscomp$inline_0);",
+            "  }",
+            "}"));
+  }
+
   public void testWindowIsTypedEs6() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
