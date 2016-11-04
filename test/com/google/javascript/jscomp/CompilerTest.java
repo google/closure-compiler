@@ -139,6 +139,22 @@ public final class CompilerTest extends TestCase {
     assertEquals(1, manager.getErrorCount());
   }
 
+  public void testCommonJSInvalidJson() throws Exception {
+    List<SourceFile> inputs = ImmutableList.of(
+        SourceFile.fromCode("/gin.js", "require('missing')"),
+        SourceFile.fromCode("/bar.json", "invalid json"));
+    Compiler compiler = initCompilerForCommonJS(
+        inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
+
+    ErrorManager manager = compiler.getErrorManager();
+    if (manager.getErrorCount() > 0) {
+      String error = manager.getErrors()[0].toString();
+      assertTrue(
+          "Unexpected error: " + error,
+          error.contains("Unexpected JSON token at /bar.js"));
+    }
+  }
+
   private static String normalize(String path) {
     return path.replace(File.separator, "/");
   }
