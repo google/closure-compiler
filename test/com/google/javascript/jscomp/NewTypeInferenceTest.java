@@ -13133,6 +13133,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @param {!Function|!Object} x */",
         "function f(x) {}",
         "f({ a: 1, b: 2 });"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  var y;",
+        "  if (x) {",
+        "    y = {};",
+        "  } else {",
+        "    y = { focus: 123 };",
+        "  }",
+        "  return y.focus;",
+        "}"));
   }
 
   public void testUnificationWithSubtyping() {

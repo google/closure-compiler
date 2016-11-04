@@ -955,7 +955,14 @@ final class ObjectType implements TypeWithProperties {
   }
 
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
-    if (obj1.isTopObject() || obj2.isTopObject()) {
+    // TODO(dimvar): normally, we would want to only check
+    // (obj1.isTopObject() || obj2.isTopObject()) here. But at the moment,
+    // NTI can't distinguish between the top object type and an empty object
+    // literal. So, I put a hack to avoid spurious warnings.
+    // The proper fix is to eventually distinguish between an empty object
+    // literal and the top object type.
+    if ((obj1.isTopObject() && obj2.props.isEmpty())
+        || (obj2.isTopObject() && obj1.props.isEmpty())) {
       return obj1.commonTypes.TOP_OBJECTTYPE;
     }
     NominalType nom1 = obj1.nominalType;
