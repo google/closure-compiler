@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.FunctionAndS
 import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.Namespace;
 import com.google.javascript.jscomp.newtypes.NominalType;
+import com.google.javascript.jscomp.newtypes.ObjectKind;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.Typedef;
@@ -96,9 +97,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       "JSC_NTI_UNRECOGNIZED_TYPE_NAME",
       "Type annotation references non-existent type {0}.");
 
-  static final DiagnosticType STRUCTDICT_WITHOUT_CTOR = DiagnosticType.warning(
-      "JSC_NTI_STRUCTDICT_WITHOUT_CTOR",
-      "{0} used without @constructor.");
+  static final DiagnosticType STRUCT_WITHOUT_CTOR_OR_INTERF = DiagnosticType.warning(
+      "JSC_NTI_STRUCT_WITHOUT_CTOR_OR_INTERF",
+      "@struct used without @constructor, @interface, or @record.");
+
+  static final DiagnosticType DICT_WITHOUT_CTOR = DiagnosticType.warning(
+      "JSC_NTI_DICT_WITHOUT_CTOR",
+      "@dict used without @constructor.");
 
   static final DiagnosticType EXPECTED_CONSTRUCTOR = DiagnosticType.warning(
       "JSC_NTI_EXPECTED_CONSTRUCTOR",
@@ -221,6 +226,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
       CANNOT_OVERRIDE_FINAL_METHOD,
+      DICT_WITHOUT_CTOR,
       DUPLICATE_PROP_IN_ENUM,
       EXPECTED_CONSTRUCTOR,
       EXPECTED_INTERFACE,
@@ -233,7 +239,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       LENDS_ON_BAD_TYPE,
       ONE_TYPE_FOR_MANY_VARS,
       REDECLARED_PROPERTY,
-      STRUCTDICT_WITHOUT_CTOR,
+      STRUCT_WITHOUT_CTOR_OR_INTERF,
       SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
       UNKNOWN_OVERRIDE,
       UNRECOGNIZED_TYPE_NAME,
@@ -1115,21 +1121,18 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         }
         ImmutableList<String> typeParameters = builder.build();
         RawNominalType rawType;
-        if (fnDoc.usesImplicitMatch()) {
+        ObjectKind objKind = fnDoc.makesStructs()
+            ? ObjectKind.STRUCT : (fnDoc.makesDicts() ? ObjectKind.DICT : ObjectKind.UNRESTRICTED);
+        if (fnDoc.isConstructor()) {
+          rawType = RawNominalType.makeClass(
+              commonTypes, defSite, qname, typeParameters, objKind);
+        } else if (fnDoc.usesImplicitMatch()) {
           rawType = RawNominalType.makeStructuralInterface(
-              commonTypes, defSite, qname, typeParameters);
-        } else if (fnDoc.isInterface()) {
-          rawType = RawNominalType.makeNominalInterface(
-              commonTypes, defSite, qname, typeParameters);
-        } else if (fnDoc.makesStructs()) {
-          rawType = RawNominalType.makeStructClass(
-              commonTypes, defSite, qname, typeParameters);
-        } else if (fnDoc.makesDicts()) {
-          rawType = RawNominalType.makeDictClass(
-              commonTypes, defSite, qname, typeParameters);
+              commonTypes, defSite, qname, typeParameters, objKind);
         } else {
-          rawType = RawNominalType.makeUnrestrictedClass(
-              commonTypes, defSite, qname, typeParameters);
+          Preconditions.checkState(fnDoc.isInterface());
+          rawType = RawNominalType.makeNominalInterface(
+              commonTypes, defSite, qname, typeParameters, objKind);
         }
         nominaltypesByNode.put(defSite, rawType);
         if (isRedeclaration) {
@@ -1148,9 +1151,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           currentScope.addNamespace(nameNode, rawType);
         }
       } else if (fnDoc.makesStructs()) {
-        warnings.add(JSError.make(defSite, STRUCTDICT_WITHOUT_CTOR, "@struct"));
-      } else if (fnDoc.makesDicts()) {
-        warnings.add(JSError.make(defSite, STRUCTDICT_WITHOUT_CTOR, "@dict"));
+        warnings.add(JSError.make(defSite, STRUCT_WITHOUT_CTOR_OR_INTERF));
+      }
+      if (fnDoc.makesDicts() && !fnDoc.isConstructor()) {
+        warnings.add(JSError.make(defSite, DICT_WITHOUT_CTOR));
       }
     }
 

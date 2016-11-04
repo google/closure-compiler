@@ -9429,6 +9429,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "(new Foo).prop = 'asdf';"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @record",
+        " * @struct",
+        " */",
+        "function Foo() {}",
+        "/** @type {string} */",
+        "Foo.prototype.prop;",
+        "function f(/** !Foo */ x) { return x['prop']; }"),
+        NewTypeInference.ILLEGAL_PROPERTY_ACCESS);
   }
 
   public void testDictPropAccess() {
@@ -9741,10 +9752,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   public void testMisplacedStructDictAnnotation() {
     typeCheck(
         "/** @struct */ function Struct1() {}",
-        GlobalTypeInfo.STRUCTDICT_WITHOUT_CTOR);
+        GlobalTypeInfo.STRUCT_WITHOUT_CTOR_OR_INTERF);
     typeCheck(
         "/** @dict */ function Dict() {}",
-        GlobalTypeInfo.STRUCTDICT_WITHOUT_CTOR);
+        GlobalTypeInfo.DICT_WITHOUT_CTOR);
+    typeCheck(
+        "/** @dict @interface */ function Foo() {}",
+        GlobalTypeInfo.DICT_WITHOUT_CTOR);
   }
 
    public void testFunctionUnions() {

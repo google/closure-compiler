@@ -21,7 +21,7 @@ package com.google.javascript.jscomp.newtypes;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-class ObjectKind {
+public class ObjectKind {
   private static final int UNRESTRICTED_MASK = 0;
   private static final int STRUCT_MASK = 1;
   private static final int DICT_MASK = 2;
@@ -30,9 +30,9 @@ class ObjectKind {
 
   private int mask;
 
-  static final ObjectKind UNRESTRICTED = new ObjectKind(UNRESTRICTED_MASK);
-  static final ObjectKind STRUCT = new ObjectKind(STRUCT_MASK);
-  static final ObjectKind DICT = new ObjectKind(DICT_MASK);
+  public static final ObjectKind UNRESTRICTED = new ObjectKind(UNRESTRICTED_MASK);
+  public static final ObjectKind STRUCT = new ObjectKind(STRUCT_MASK);
+  public static final ObjectKind DICT = new ObjectKind(DICT_MASK);
   private static final ObjectKind BOTH = new ObjectKind(BOTH_MASK);
 
   private static final ObjectKind[] vals = {

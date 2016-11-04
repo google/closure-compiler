@@ -132,36 +132,28 @@ public final class RawNominalType extends Namespace {
     return false;
   }
 
-  public static RawNominalType makeUnrestrictedClass(JSTypes commonTypes,
-      Node defSite, String name, ImmutableList<String> typeParameters) {
-    return new RawNominalType(commonTypes, defSite,
-        name, typeParameters, Kind.CLASS, ObjectKind.UNRESTRICTED);
-  }
-
-  public static RawNominalType makeStructClass(JSTypes commonTypes,
-      Node defSite, String name, ImmutableList<String> typeParameters) {
-    return new RawNominalType(commonTypes, defSite,
-        name, typeParameters, Kind.CLASS, ObjectKind.STRUCT);
-  }
-
-  public static RawNominalType makeDictClass(JSTypes commonTypes,
-      Node defSite, String name, ImmutableList<String> typeParameters) {
-    return new RawNominalType(commonTypes, defSite,
-        name, typeParameters, Kind.CLASS, ObjectKind.DICT);
+  public static RawNominalType makeClass(JSTypes commonTypes,
+      Node defSite, String name, ImmutableList<String> typeParameters, ObjectKind objKind) {
+    return new RawNominalType(
+        commonTypes, defSite, name, typeParameters, Kind.CLASS, objKind);
   }
 
   public static RawNominalType makeNominalInterface(JSTypes commonTypes,
-      Node defSite, String name, ImmutableList<String> typeParameters) {
-    // interfaces are struct by default
-    return new RawNominalType(commonTypes, defSite,
-        name, typeParameters, Kind.INTERFACE, ObjectKind.UNRESTRICTED);
+      Node defSite, String name, ImmutableList<String> typeParameters, ObjectKind objKind) {
+    if (objKind == ObjectKind.DICT) {
+      objKind = ObjectKind.UNRESTRICTED;
+    }
+    return new RawNominalType(
+        commonTypes, defSite, name, typeParameters, Kind.INTERFACE, objKind);
   }
 
   public static RawNominalType makeStructuralInterface(JSTypes commonTypes,
-      Node defSite, String name, ImmutableList<String> typeParameters) {
-    // interfaces are struct by default
-    return new RawNominalType(commonTypes, defSite,
-        name, typeParameters, Kind.RECORD, ObjectKind.UNRESTRICTED);
+      Node defSite, String name, ImmutableList<String> typeParameters, ObjectKind objKind) {
+    if (objKind == ObjectKind.DICT) {
+      objKind = ObjectKind.UNRESTRICTED;
+    }
+    return new RawNominalType(
+        commonTypes, defSite, name, typeParameters, Kind.RECORD, objKind);
   }
 
   JSTypes getCommonTypes() {
