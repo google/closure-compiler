@@ -57,6 +57,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
     parseTypeInfo = true;
     enableClosurePass();
+    enableRewriteClosureCode();
   }
 
   @Override
@@ -431,6 +432,27 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         + "}\n"
         + "Child.prototype = new Parent();"},
         BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  public void testPrivateAccess_googModule() {
+    test(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.module('example.one');",
+              "/** @constructor */ function C() {};",
+              "/** @private */ C.prototype.m = function() {};",
+              "exports = C;"),
+          LINE_JOINER.join(
+              "goog.module('example.two');",
+              "var one = goog.require('example.one');",
+              "(new one()).m();"),
+        },
+        null,
+        BAD_PRIVATE_PROPERTY_ACCESS,
+        null,
+        // TODO(tbreisacher): The type name in the error message should be "example.one" instead of
+        // module$exports$example$one
+        "Access to private property m of module$exports$example$one not allowed here.");
   }
 
   public void testNoPrivateAccessForProperties1() {
