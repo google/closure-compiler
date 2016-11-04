@@ -16,16 +16,12 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.NodeUtil.getEnclosingFunction;
-import static com.google.javascript.jscomp.NodeUtil.getFunctionBody;
-
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.List;
@@ -81,8 +77,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   // we clear after each method call, because the Set never gets too big.
   private final Set<BasicBlock> blocksWithDeclarations = new HashSet<>();
 
-  public Set<Node> declarationsToHoist = new HashSet<>();
-
   public VariableReferenceCheck(AbstractCompiler compiler) {
     this(compiler, false);
   }
@@ -111,13 +105,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     if (shouldProcess(root)) {
       new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior())
           .process(externs, root);
-      for (Node decl : declarationsToHoist) {
-        Node newDecl =
-            IR.var(IR.name(decl.getString())).useSourceInfoFromForTree(decl);
-        getFunctionBody(getEnclosingFunction(decl)).addChildToFront(newDecl);
-        NodeUtil.removeChild(decl.getParent(), decl);
-        compiler.reportCodeChange();
-      }
     }
   }
 
@@ -376,15 +363,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
                           ? EARLY_REFERENCE_ERROR
                           : EARLY_REFERENCE,
                       v.name));
-              if (v.isVar() && !v.scope.isGlobal()) {
-                Node decl = v.getNode();
-                Node rhs = NodeUtil.getRValueOfLValue(decl);
-                // If there is no RHS, don't hoist this. InlineFunctions only gets it wrong
-                // when there is no RHS and it adds the implicit "= void 0".
-                if (decl.getParent().isVar() && rhs == null) {
-                  declarationsToHoist.add(decl);
-                }
-              }
               hasErrors = true;
             }
           }

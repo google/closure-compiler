@@ -104,7 +104,7 @@ class FunctionToBlockMutator {
     // that they are properly initialized.
     //
     if (isCallInLoop) {
-      fixUnitializedVarDeclarations(newBlock);
+      fixUnitializedVarDeclarations(newBlock, newBlock);
     }
 
     String labelName = getLabelNameForFunction(fnName);
@@ -147,7 +147,7 @@ class FunctionToBlockMutator {
    *  For all VAR node with uninitialized declarations, set
    *  the values to be "undefined".
    */
-  private static void fixUnitializedVarDeclarations(Node n) {
+  private static void fixUnitializedVarDeclarations(Node n, Node containingBlock) {
     // Inner loop structure must already have logic to initialize its
     // variables.  In particular FOR-IN structures must not be modified.
     if (NodeUtil.isLoopStructure(n)) {
@@ -155,18 +155,19 @@ class FunctionToBlockMutator {
     }
 
     // For all VARs
-    if (n.isVar()) {
+    if (n.isVar() && n.hasOneChild()) {
       Node name = n.getFirstChild();
       // It isn't initialized.
       if (!name.hasChildren()) {
         Node srcLocation = name;
         name.addChildToBack(NodeUtil.newUndefinedNode(srcLocation));
+        containingBlock.addChildToFront(n.detach());
       }
       return;
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      fixUnitializedVarDeclarations(c);
+      fixUnitializedVarDeclarations(c, containingBlock);
     }
   }
 

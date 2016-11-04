@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+
 /**
  * Inline function tests.
  * @author johnlenz@google.com (john lenz)
@@ -1339,6 +1340,32 @@ public final class InlineFunctionsTest extends CompilerTestCase {
   public void testComplexInline8() {
     test("function f(x){a(x)}var z=f(1)",
          "var z;{a(1);z=void 0}");
+  }
+
+  public void testInlineIntoLoopWithUninitializedVars1() {
+    test(
+        LINE_JOINER.join(
+            "function f(){var x;if (true){x=7} return x;}",
+            "for(;;) {f();}"),
+        LINE_JOINER.join(
+            "for(;;) {{",
+            "  var x$jscomp$inline_0 = void 0;",
+            "  if (true) { x$jscomp$inline_0 = 7; }",
+            "  x$jscomp$inline_0;",
+            "}}"));
+  }
+
+  public void testInlineIntoLoopWithUninitializedVars2() {
+    test(
+        LINE_JOINER.join(
+            "function f(){x = x||1; var x; return x;}",
+            "for(;;) {f();}"),
+        LINE_JOINER.join(
+            "for(;;) {{",
+            "  var x$jscomp$inline_0 = void 0;",
+            "  x$jscomp$inline_0 = x$jscomp$inline_0 || 1;",
+            "  x$jscomp$inline_0;",
+            "}}"));
   }
 
   public void testComplexInlineVars1() {
