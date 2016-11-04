@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.SourceFile;
 import junit.framework.TestCase;
@@ -51,7 +52,6 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("A/index.js", loader.resolve("A/index.js"));
     assertUri("A/index.js", loader.resolve("B/index.js").resolveCommonJsModule("../A"));
     assertUri("A/index.js", loader.resolve("app.js").resolveCommonJsModule("./A"));
-    assertUri("A/index.js", loader.resolve("app.js").resolveCommonJsModule("A"));
   }
 
   public void testNormalizeUris() throws Exception {
@@ -82,6 +82,45 @@ public final class ModuleLoaderTest extends TestCase {
     assertEquals("/", ModuleNames.canonicalizePath("/a/b/../../.."));
     assertEquals("/b", ModuleNames.canonicalizePath("/a/../../../b"));
     assertEquals("/", ModuleNames.canonicalizePath("/a/.."));
+  }
+
+  public void testLocateCommonNodeModules() throws Exception {
+    ImmutableList<CompilerInput> compilerInputs =
+        inputs(
+            "/A/index.js",
+            "/A/index.json",
+            "/node_modules/A/index.js",
+            "/node_modules/A/foo.js",
+            "/node_modules/A/node_modules/A/index.json",
+            "/B/package.json",
+            "/B/lib/b.js",
+            "/node_modules/B/package.json",
+            "/node_modules/B/lib/b.js");
+
+    ImmutableMap<String, String> packageJsonMainEntries =
+        ImmutableMap.of(
+            "/B/package.json", "/B/lib/b",
+            "/node_modules/B/package.json", "/node_modules/B/lib/b.js");
+
+    ModuleLoader loader =
+        new ModuleLoader(null, (new ImmutableList.Builder<String>()).build(), compilerInputs);
+    loader.setPackageJsonMainEntries(packageJsonMainEntries);
+
+    assertUri("/A/index.js", loader.resolve("/foo.js").resolveCommonJsModule("/A"));
+    assertUri("/A/index.js", loader.resolve("/foo.js").resolveCommonJsModule("./A"));
+    assertUri("/A/index.json", loader.resolve("/foo.js").resolveCommonJsModule("/A/index.json"));
+
+    assertUri("/node_modules/A/index.js", loader.resolve("/foo.js").resolveCommonJsModule("A"));
+    assertUri(
+        "/node_modules/A/node_modules/A/index.json",
+        loader.resolve("/node_modules/A/foo.js").resolveCommonJsModule("A"));
+    assertUri(
+        "/node_modules/A/foo.js",
+        loader.resolve("/node_modules/A/index.js").resolveCommonJsModule("./foo"));
+
+    assertUri("/B/lib/b.js", loader.resolve("/app.js").resolveCommonJsModule("/B"));
+
+    assertUri("/node_modules/B/lib/b.js", loader.resolve("/app.js").resolveCommonJsModule("B"));
   }
 
   ImmutableList<CompilerInput> inputs(String... names) {

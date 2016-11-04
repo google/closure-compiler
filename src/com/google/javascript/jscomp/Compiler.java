@@ -1482,6 +1482,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
         this.moduleLoader = new ModuleLoader(this, options.moduleRoots, inputs);
 
+        if (options.processCommonJSModules) {
+          this.moduleLoader.setPackageJsonMainEntries(processJsonInputs(inputs));
+        }
+
         if (options.lowerFromEs6()) {
           processEs6Modules();
         }
@@ -1718,6 +1722,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void repartitionInputs() {
     fillEmptyModules(modules);
     rebuildInputsFromModules();
+  }
+
+  /**
+   * Transforms JSON files to a module export that closure compiler can process and keeps track of
+   * any "main" entries in package.json files.
+   */
+  Map<String, String> processJsonInputs(List<CompilerInput> inputsToProcess) {
+    RewriteJsonToModule rewriteJson = new RewriteJsonToModule(this);
+    for (CompilerInput input : inputsToProcess) {
+      if (!input.getSourceFile().getOriginalPath().endsWith(".json")) {
+        continue;
+      }
+
+      input.setCompiler(this);
+      try {
+        // JSON objects need wrapped in parens to parse properly
+        input.getSourceFile().setCode("(" + input.getSourceFile().getCode() + ")");
+      } catch (IOException e) {
+        continue;
+      }
+
+      Node root = input.getAstRoot(this);
+      if (root == null) {
+        continue;
+      }
+      rewriteJson.process(null, root);
+    }
+    return rewriteJson.getPackageJsonMainEntries();
   }
 
   void processEs6Modules() {
