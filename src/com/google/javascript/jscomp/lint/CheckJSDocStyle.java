@@ -54,6 +54,10 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           "Visibility annotations on constructors are not supported.\n"
           + "Please mark the visibility on the class instead.");
 
+  public static final DiagnosticType CLASS_DISALLOWED_JSDOC =
+      DiagnosticType.disabled("JSC_CLASS_DISALLOWED_JSDOC",
+          "@constructor annotations are redundant on classes.");
+
   public static final DiagnosticType MISSING_JSDOC =
       DiagnosticType.disabled("JSC_MISSING_JSDOC", "Function must have JSDoc.");
 
@@ -94,6 +98,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public static final DiagnosticGroup ALL_DIAGNOSTICS =
       new DiagnosticGroup(
           INVALID_SUPPRESS,
+          CLASS_DISALLOWED_JSDOC,
           CONSTRUCTOR_DISALLOWED_JSDOC,
           MISSING_JSDOC,
           MISSING_PARAMETER_JSDOC,
@@ -123,6 +128,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     switch (n.getToken()) {
       case FUNCTION:
         visitFunction(t, n, parent);
+        break;
+      case CLASS:
+        visitClass(t, n);
         break;
       case ASSIGN:
         // If the right side is a function it will be handled when the function is visited.
@@ -231,6 +239,17 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         && jsDoc != null
         && !jsDoc.getVisibility().equals(Visibility.INHERITED)) {
       t.report(function, CONSTRUCTOR_DISALLOWED_JSDOC);
+    }
+  }
+
+  private void visitClass(NodeTraversal t, Node cls) {
+    JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(cls);
+
+    if (jsDoc == null) {
+      return;
+    }
+    if (jsDoc.isConstructor()) {
+      t.report(cls, CLASS_DISALLOWED_JSDOC);
     }
   }
 

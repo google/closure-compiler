@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.CLASS_DISALLOWED_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.CONSTRUCTOR_DISALLOWED_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
@@ -52,7 +53,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     codingConvention = new GoogleCodingConvention();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT8);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override
@@ -120,6 +121,64 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @suppress {extraRequire} */ goog.require('unused.Class');");
     testSame("/** @const @suppress {duplicate} */ var google = {};");
     testSame("/** @suppress {const} */ var google = {};");
+  }
+
+  public void testExtraneousClassAnnotations() {
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " */",
+            "var X = class {};"),
+        CLASS_DISALLOWED_JSDOC);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " */",
+            "class X {};"),
+        CLASS_DISALLOWED_JSDOC);
+
+    // TODO(tbreisacher): Warn for @extends too. We need to distinguish between cases like this
+    // which are totally redundant...
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @extends {Y}",
+            " */",
+            "class X extends Y {};"));
+
+    // ... and ones like this which are not.
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @extends {Y<number>}",
+            " */",
+            "class X extends Y {};"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @implements {Z}",
+            " */",
+            "class X extends Y {};"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @interface",
+            " * @extends {Y}",
+            " */",
+            "class X extends Y {};"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @record",
+            " * @extends {Y}",
+            " */",
+            "class X extends Y {};"));
   }
 
   public void testNestedArrowFunctions() {
