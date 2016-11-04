@@ -47,7 +47,7 @@ public final class FunctionNamespace extends Namespace {
         ObjectKind.UNRESTRICTED));
   }
 
-  DeclaredTypeRegistry getScope() {
+  public DeclaredTypeRegistry getScope() {
     return this.scope;
   }
 }

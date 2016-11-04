@@ -10394,34 +10394,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(LINE_JOINER.join(
-        "/** @return {string} */",
-        "function f() { return ''; }",
-        "/** @const */",
-        "var s = f();",
-        "function g() { s - 5; }"),
-        NewTypeInference.INVALID_OPERAND_TYPE);
-
-    typeCheck(LINE_JOINER.join(
-        "/** @const */",
-        "var s = f();",
-        "/** @return {string} */",
-        "function f() { return ''; }",
-        "function g() { s; }"),
-        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
-
-    typeCheck(LINE_JOINER.join(
-        "/** @constructor */",
-        "function Foo() {}",
-        "/** @constructor */",
-        "function Bar() {}",
-        "/** @const */",
-        "var foo = new Foo;",
-        "function g() {",
-        "  var /** Bar */ bar = foo;",
-        "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
-
-    typeCheck(LINE_JOINER.join(
         "/** @const */",
         "var n1 = 1;",
         "/** @const */",
@@ -10469,6 +10441,42 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "");
 
     typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  /** @const */ var y = /** @type {number} */ (x);",
+        "  return function() { y; }",
+        "}"));
+  }
+
+  public void testConstInferenceCalls() {
+    typeCheck(LINE_JOINER.join(
+        "/** @return {string} */",
+        "function f() { return ''; }",
+        "/** @const */",
+        "var s = f();",
+        "function g() { s - 5; }"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var s = f();",
+        "/** @return {string} */",
+        "function f() { return ''; }",
+        "function g() { s; }"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/** @const */",
+        "var foo = new Foo;",
+        "function g() {",
+        "  var /** Bar */ bar = foo;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
         "/** @const */ var ns = {};",
         "/** @constructor */",
         "ns.Foo = function() {};",
@@ -10490,10 +10498,46 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(LINE_JOINER.join(
-        "function f(x) {",
-        "  /** @const */ var y = /** @type {number} */ (x);",
-        "  return function() { y; }",
+        "/** @const */",
+        "var ns = {};",
+        "/**",
+        " * @param {number} x",
+        " * @return {number}",
+        " */",
+        "function local_f(x) { return x; };",
+        "local_f.prop = 123;", // Makes local_f a function namespace
+        "/** @const */",
+        "ns.f = local_f;",
+        "/** @const */ var f = ns.f;",
+        "/** @const */ var n = f(123);",
+        "function g(x) {",
+        "  return n + x + local_f.prop;",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/**",
+        " * @param {number} x",
+        " * @return {number}",
+        " */",
+        "ns.f = function(x) { return x; };",
+        "/** @const */ var f = ns.f;",
+        "/** @const */ var n = f(123);",
+        "function g(x) { return n + x; }"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */ var f = ns.f;",
+        "/** @const */ var n = f(123);",
+        "/**",
+        " * @param {number} x",
+        " * @return {number}",
+        " */",
+        "ns.f = function(x) { return x; };",
+        "function g(x) { return n + x; }"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
 
   public void testConstInferenceAndOf() {

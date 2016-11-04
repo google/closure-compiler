@@ -1934,6 +1934,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           if (funType != null) {
             return funType.toFunctionType();
           }
+        } else if (decl.getNamespace() != null) {
+          Namespace ns = decl.getNamespace();
+          if (ns instanceof FunctionNamespace) {
+            DeclaredFunctionType funType =
+                ((FunctionNamespace) ns).getScope().getDeclaredFunctionType();
+            return Preconditions.checkNotNull(funType).toFunctionType();
+          }
         } else if (decl.getTypeOfSimpleDecl() != null) {
           return decl.getTypeOfSimpleDecl().getFunTypeIfSingletonObj();
         }
