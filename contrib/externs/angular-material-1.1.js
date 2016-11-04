@@ -903,7 +903,8 @@ md.$panel = function() {};
  *   onOpenComplete: (Function|undefined),
  *   onRemoving: (Function|undefined),
  *   onDomRemoved: (Function|undefined),
- *   origin: (!angular.JQLite|!Element|undefined)
+ *   origin: (!angular.JQLite|!Element|undefined),
+ *   onCloseSuccess: (function(!md.$panel.MdPanelRef, string)|undefined),
  * }}
  */
 md.$panel.config;
@@ -951,6 +952,17 @@ md.$panel.prototype.yPosition = {
 };
 
 /**
+ * Possible values of absPosition.
+ * @enum {string}
+ */
+md.$panel.prototype.absPosition = {
+  TOP: 'top',
+  RIGHT: 'right',
+  BOTTOM: 'bottom',
+  LEFT: 'left',
+};
+
+/**
  * Possible default animations.
  * @enum {string}
  */
@@ -966,6 +978,15 @@ md.$panel.prototype.animation = {
  */
 md.$panel.prototype.interceptorTypes = {
   CLOSE: 'onClose',
+};
+
+/**
+ * Possible reasons for close.
+ * @enum {string}
+ */
+md.$panel.prototype.closeReasons = {
+  CLICK_OUTSIDE: 'clickOutsideToClose',
+  ESCAPE: 'escapeToClose',
 };
 
 
