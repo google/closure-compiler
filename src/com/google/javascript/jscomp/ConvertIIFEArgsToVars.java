@@ -107,7 +107,7 @@ public class ConvertIIFEArgsToVars implements CompilerPass, NodeTraversal.Callba
     List<Node> newVars = new ArrayList<>();
     while (param != null) {
       newVars.add(
-          IR.var(param.cloneNode(), getCallArgument(param, call)).useSourceInfoFromForTree(param));
+          IR.var(param.cloneNode(), getCallArgument(compiler, param, call)).useSourceInfoFromForTree(param));
       param = param.getNext();
     }
     funcParams.removeChildren();
@@ -123,7 +123,7 @@ public class ConvertIIFEArgsToVars implements CompilerPass, NodeTraversal.Callba
   /**
    * For a function param name of an IIFE, find the matching call argument and return it as a copy.
    */
-  public Node getCallArgument(Node param, Node call) {
+  public static Node getCallArgument(AbstractCompiler compiler, Node param, Node call) {
     Preconditions.checkState(param.isName());
     Preconditions.checkState(param.getParent() != null && param.getParent().isParamList());
     Preconditions.checkState(call != null && call.isCall());
