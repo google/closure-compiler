@@ -1385,6 +1385,15 @@ Object.assign = function(target, var_args) {};
  */
 Object.values = function(obj) {};
 
+/**
+ * @param {!Object<T>} obj
+ * @return {!Array<!Array<(string|T)>>} entries
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries
+ * @throws {Error}
+ * @template T
+ */
+Object.entries = function(obj) {};
+
 
 
 /**
