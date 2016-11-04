@@ -307,4 +307,11 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "  return { a: x.focus };",
         "}"));
   }
+
+  public void testDestructuring() {
+    typeCheck(LINE_JOINER.join(
+        "function f({ myprop1: { myprop2: prop } }) {",
+        "  return prop;",
+        "}"));
+  }
 }

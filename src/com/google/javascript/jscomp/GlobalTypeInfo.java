@@ -1374,6 +1374,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             // for code like this: function f(x) { if (x.foo) { return x.foo + 1; } }
             recordPropertyName(n.getLastChild().getString(), n);
           }
+          if (n.getFirstChild().isName()
+              && n.getFirstChild().getString().startsWith("$jscomp$destructuring$")) {
+            recordPropertyName(n.getLastChild().getString(), n);
+          }
           if (parent.isExprResult() && n.isQualifiedName()) {
             visitPropertyDeclaration(n);
           }
