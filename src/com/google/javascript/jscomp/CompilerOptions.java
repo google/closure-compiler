@@ -720,10 +720,10 @@ public class CompilerOptions {
   /** Processes the output of J2CL */
   J2clPassMode j2clPassMode;
 
-  /** Remove methods that only make a super call without changing the arguments. */
+  /** Remove goog.abstractMethod assignments and @abstract methods. */
   boolean removeAbstractMethods;
 
-  /** Remove goog.abstractMethod assignments. */
+  /** Remove methods that only make a super call without changing the arguments. */
   boolean removeSuperMethods;
 
   /** Remove goog.asserts calls. */
