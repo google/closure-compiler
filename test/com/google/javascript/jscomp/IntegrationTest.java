@@ -341,6 +341,10 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}"));
   }
 
+  public void testBug32660578() {
+    testSame(createCompilerOptions(), "function f() { alert(x); for (var x in []) {} }");
+  }
+
   public void testWindowIsTypedEs6() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
