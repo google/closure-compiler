@@ -95,6 +95,19 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "/** @const */ var module$exports$ns$a = {};"});
   }
 
+  public void testIjsModule() {
+    allowExternsChanges(true);
+    test(
+        // .i.js file
+        "goog.module('external'); /** @constructor */ exports = function() {};",
+        // source file
+        "goog.module('ns.a'); var b = goog.require('external'); /** @type {b} */ new b;",
+        LINE_JOINER.join(
+            "/** @const */ var module$exports$ns$a = {};",
+            "/** @type {module$exports$external} */ new module$exports$external"),
+        null, null);
+  }
+
   public void testDestructuringInsideModule() {
     // Array destrucuturing
     testEs6(

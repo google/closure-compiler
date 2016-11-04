@@ -600,11 +600,20 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     Deque<ScriptDescription> scriptDescriptions = new LinkedList<>();
+    processAllFiles(scriptDescriptions, externs);
+    processAllFiles(scriptDescriptions, root);
+  }
+
+  private void processAllFiles(Deque<ScriptDescription> scriptDescriptions, Node scriptParent) {
+    if (scriptParent == null) {
+      return;
+    }
 
     // Record all the scripts first so that the googModuleNamespaces global state can be complete
     // before doing any updating also queue up scriptDescriptions for later use in ScriptUpdater
     // runs.
-    for (Node c = root.getFirstChild(); c != null; c = c.getNext()) {
+    for (Node c = scriptParent.getFirstChild(); c != null; c = c.getNext()) {
+      Preconditions.checkState(c.isScript());
       pushScript(new ScriptDescription());
       currentScript.rootNode = c;
       scriptDescriptions.addLast(currentScript);
@@ -619,7 +628,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     // Update scripts using the now complete googModuleNamespaces global state and unspool the
     // scriptDescriptions that were queued up by all the recording.
-    for (Node c = root.getFirstChild(); c != null; c = c.getNext()) {
+    for (Node c = scriptParent.getFirstChild(); c != null; c = c.getNext()) {
       pushScript(scriptDescriptions.removeFirst());
       NodeTraversal.traverseEs6(compiler, c, new ScriptUpdater());
       popScript();
