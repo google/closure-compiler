@@ -1408,20 +1408,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     statementNode.getParent().addChildBefore(IR.var(nameNode, rhsNode), statementNode);
   }
 
-  /**
-   * Will skip const if the target is a class definition as that has a different meaning.
-   */
   private void markConstAndCopyJsDoc(Node from, Node target, Node value) {
     JSDocInfo info = from.getJSDocInfo();
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
-
-    // Don't add @const on class declarations because in that context it means "not subclassable".
-    if (!NodeUtil.isCallTo(value, "goog.defineClass")
-        && !(info != null && info.isConstructorOrInterface())) {
-      builder.recordConstancy();
-      compiler.reportCodeChange();
-    }
-
+    builder.recordConstancy();
     target.setJSDocInfo(builder.build());
   }
 

@@ -173,7 +173,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         new String[] {
           LINE_JOINER.join(
               "/** @const */ var module$exports$ns$b = {};",
-              "/** @constructor */ module$exports$ns$b.Foo = function() {};"),
+              "/** @constructor @const */ module$exports$ns$b.Foo = function() {};"),
           LINE_JOINER.join(
               "/** @const */ var module$exports$ns$a = {}",
               "/** @type {module$exports$ns$b.Foo} */",
@@ -236,7 +236,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         new String[] {
           LINE_JOINER.join(
               "goog.provide('ns.b');",
-              "/** @constructor */ ns.b.Foo = function() {};"),
+              "/** @constructor @const */ ns.b.Foo = function() {};"),
           LINE_JOINER.join(
               "/** @const */ var module$exports$ns$a = {}",
               "/** @type {ns.b.Foo} */",
@@ -256,7 +256,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         new String[] {
           LINE_JOINER.join(
               "/** @const */ var module$exports$ns$b = {};",
-              "/** @constructor */ module$exports$ns$b.Foo = function() {};"),
+              "/** @constructor @const */ module$exports$ns$b.Foo = function() {};"),
           LINE_JOINER.join(
               "/** @const */ var module$exports$ns$a = {}",
               "/** @type {module$exports$ns$b.Foo} */",
@@ -424,7 +424,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
                 "/** @type {ns.B} */ var c;")},
 
         new String[] {
-            "/** @constructor */ var module$exports$ns$B = function() {};",
+            "/** @constructor @const */ var module$exports$ns$B = function() {};",
             LINE_JOINER.join(
                 "/** @const */ var module$exports$ns$a = {};",
                 "/** @type {module$exports$ns$B} */ var module$contents$ns$a_c;")});
@@ -477,7 +477,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
                 "/** @type {ns.B} */ var c;")},
 
         new String[] {
-            "/** @constructor */ var module$exports$ns$B = function() {};",
+            "/** @constructor @const */ var module$exports$ns$B = function() {};",
             LINE_JOINER.join(
                 "goog.provide('ns.a');",
                 "",
@@ -1122,23 +1122,23 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
           "};"));
   }
 
-  public void testExport7_classNoConst() {
+  public void testExport7() {
     test(
         LINE_JOINER.join(
             "goog.module('ns.a');",
             "/** @constructor */",
             "exports = function() {};"),
 
-        "/** @constructor */ var module$exports$ns$a = function() {};");
+        "/** @constructor @const */ var module$exports$ns$a = function() {};");
   }
 
-  public void testExport8_classNoConst() {
+  public void testExport8() {
     test(
         LINE_JOINER.join(
             "goog.module('ns.a');",
             "exports = goog.defineClass({});"),
 
-        "var module$exports$ns$a = goog.defineClass({});");
+        "/** @const */ var module$exports$ns$a = goog.defineClass({});");
   }
 
   public void testExport9() {
@@ -1175,7 +1175,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "/** @const @typedef {string} */ module$exports$a$B.C;"));
   }
 
-  public void testExport12_classNoConst() {
+  public void testExport12() {
     test(
         LINE_JOINER.join(
             "goog.module('ns.a');",
@@ -1183,7 +1183,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
         LINE_JOINER.join(
             "/** @const */ var module$exports$ns$a = {};",
-            "module$exports$ns$a.foo = goog.defineClass({});"));
+            "/** @const */ module$exports$ns$a.foo = goog.defineClass({});"));
   }
 
   public void testExport13() {
@@ -1605,7 +1605,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
           "/** @param {a.b.Foo} x */ function f(x) {}"
         },
         new String[] {
-          "goog.provide('a.b.Foo'); /** @constructor */ a.b.Foo = function() {};",
+          "goog.provide('a.b.Foo'); /** @constructor @const */ a.b.Foo = function() {};",
           "/** @param {a.b.Foo} x */ function f(x) {}"
         });
 
@@ -1797,7 +1797,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         new String[] {
             LINE_JOINER.join(
                 "/** @const */ var module$exports$base = {};",
-                "/** @constructor */ module$exports$base.Foo = function() {};"),
+                "/** @constructor @const */ module$exports$base.Foo = function() {};"),
             "/** @const */ var module$exports$FooWrapper = module$exports$base.Foo;",
         });
   }
@@ -1818,7 +1818,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         new String[] {
             LINE_JOINER.join(
               "/** @const */ var module$exports$base = {};",
-              "/** @constructor */ module$exports$base.Foo = function() {};"),
+              "/** @constructor @const */ module$exports$base.Foo = function() {};"),
             "/** @const */ var module$exports$FooWrapper = module$exports$base.Foo;",
         });
   }
