@@ -557,7 +557,9 @@ class ConvertToTypedInterface implements CompilerPass {
     Preconditions.checkArgument(nameNode.isQualifiedName());
     JSType type = nameNode.getJSType();
     if (type == null) {
-      compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
+      if (!nameNode.isFromExterns()) {
+        compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
+      }
       return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
     } else {
       return getConstJSDoc(oldJSDoc, type.toNonNullAnnotationString());
