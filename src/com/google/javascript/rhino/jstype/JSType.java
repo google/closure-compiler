@@ -1671,7 +1671,7 @@ public abstract class JSType implements TypeI, Serializable {
       this.isSubtype = isSubtype;
     }
 
-    private boolean isSubtype;
+    private final boolean isSubtype;
     boolean subtypeValue() {
       return this.isSubtype;
     }
