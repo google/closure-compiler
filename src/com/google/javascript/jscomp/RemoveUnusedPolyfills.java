@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -56,14 +56,10 @@ class RemoveUnusedPolyfills implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Traverser traverser = new Traverser();
-    NodeTraversal.traverseEs6(compiler, root, traverser);
-    boolean changed = false;
-    for (Node node : traverser.removableNodes()) {
+    CollectUnusedPolyfills collector = new CollectUnusedPolyfills();
+    NodeTraversal.traverseEs6(compiler, root, collector);
+    for (Node node : collector.removableNodes()) {
       NodeUtil.removeChild(node.getParent(), node);
-      changed = true;
-    }
-    if (changed) {
       compiler.reportCodeChange();
     }
   }
@@ -73,77 +69,90 @@ class RemoveUnusedPolyfills implements CompilerPass {
       "Number", "number",
       "String", "string");
 
-  private class Traverser extends AbstractPostOrderCallback {
+  private class CollectUnusedPolyfills extends AbstractPostOrderCallback {
 
     final SetMultimap<String, PrototypeMethod> methodsByName = HashMultimap.create();
-    final Map<PrototypeMethod, Node> methodPolyfills = new HashMap<>();
-    final Map<String, Node> staticPolyfills = new HashMap<>();
+    // These maps map polyfill names to their definitions in the AST.
+    // Each polyfill is considered unused by default, and if we find uses of it we
+    // remove it from these maps.
+    final Map<PrototypeMethod, Node> unusedMethodPolyfills = new HashMap<>();
+    final Map<String, Node> unusedStaticPolyfills = new HashMap<>();
 
     Iterable<Node> removableNodes() {
-      return Iterables.concat(methodPolyfills.values(), staticPolyfills.values());
+      return Iterables.concat(unusedMethodPolyfills.values(), unusedStaticPolyfills.values());
     }
 
-    void visitPolyfillDefinition(Node node, String polyfill) {
+    @Override
+    public void visit(NodeTraversal traversal, Node n, Node parent) {
+      if (NodeUtil.isExprCall(n)) {
+        Node call = n.getFirstChild();
+        Node callee = call.getFirstChild();
+        String originalName = callee.getOriginalQualifiedName();
+        if ("$jscomp.polyfill".equals(originalName)) {
+          // A polyfill definition looks like this:
+          // $jscomp.polyfill('Array.prototype.includes', ...);
+          String polyfillName = call.getSecondChild().getString();
+          visitPolyfillDefinition(n, polyfillName);
+        }
+      } else if (n.isGetProp() || n.isQualifiedName()) {
+        visitPossiblePolyfillUse(n);
+      }
+    }
+
+    void visitPolyfillDefinition(Node n, String polyfillName) {
       // Find the $jscomp.polyfill calls and add them to the table.
-      PrototypeMethod method = PrototypeMethod.split(polyfill);
+      PrototypeMethod method = PrototypeMethod.split(polyfillName);
       if (method != null) {
-        if (methodPolyfills.put(method, node) != null) {
+        if (unusedMethodPolyfills.put(method, n) != null) {
           throw new RuntimeException(method + " polyfilled multiple times.");
         }
         methodsByName.put(method.method, method);
       } else {
-        if (staticPolyfills.put(polyfill, node) != null) {
-          throw new RuntimeException(polyfill + " polyfilled multiple times.");
+        if (unusedStaticPolyfills.put(polyfillName, n) != null) {
+          throw new RuntimeException(polyfillName + " polyfilled multiple times.");
         }
       }
     }
 
-    void visitPossiblePolyfillUse(Node node) {
+    void visitPossiblePolyfillUse(Node n) {
       // Remove anything from the table that could possibly be needed.
-
-      if (node.isQualifiedName()) {
+      if (n.isQualifiedName()) {
         // First remove anything with an exact qualified name match.
-        String qname = node.getQualifiedName();
+        String qname = n.getQualifiedName();
         qname = qname.replaceAll("^(goog\\.global\\.|window\\.)", "");
-        staticPolyfills.remove(qname);
-        methodPolyfills.remove(PrototypeMethod.split(qname));
+        unusedStaticPolyfills.remove(qname);
+        unusedMethodPolyfills.remove(PrototypeMethod.split(qname));
       }
-
-      if (node.isGetProp()) {
-        // Now look at the method name and possible target types.
-        String methodName = node.getLastChild().getString();
-        Node target = node.getFirstChild();
-
-        Set<PrototypeMethod> methods = methodsByName.get(methodName);
-
-        if (methods.isEmpty()) {
-          return;
-        }
-
-        JSType targetType = target.getJSType();
-        if (targetType == null) {
-          // TODO(sdh): When does this happen?  If it means incomplete type information, then
-          // we need to remove all the potential methods.  If not, we can just return.
-          methodPolyfills.keySet().removeAll(methods);
-          return;
-        }
-        targetType = targetType.restrictByNotNullOrUndefined();
-
-        TypeIRegistry registry = compiler.getTypeIRegistry();
-        if (targetType.isUnknownType()
-            || targetType.isEmptyType()
-            || targetType.isAllType()
-            || targetType.isEquivalentTo(
-                registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
-          methodPolyfills.keySet().removeAll(methods);
-        }
-
-        for (PrototypeMethod method : ImmutableList.copyOf(methods)) {
-          checkType(targetType, registry, method, method.type);
-          String primitiveType = PRIMITIVE_WRAPPERS.get(method.type);
-          if (primitiveType != null) {
-            checkType(targetType, registry, method, primitiveType);
-          }
+      if (!n.isGetProp()) {
+        return;
+      }
+      // Now look at the method name and possible target types.
+      String methodName = n.getLastChild().getString();
+      Set<PrototypeMethod> methods = methodsByName.get(methodName);
+      if (methods.isEmpty()) {
+        return;
+      }
+      JSType receiverType = n.getFirstChild().getJSType();
+      if (receiverType == null) {
+        // TODO(sdh): When does this happen?  If it means incomplete type information, then
+        // we need to remove all the potential methods.  If not, we can just return.
+        unusedMethodPolyfills.keySet().removeAll(methods);
+        return;
+      }
+      receiverType = receiverType.restrictByNotNullOrUndefined();
+      TypeIRegistry registry = compiler.getTypeIRegistry();
+      if (receiverType.isUnknownType()
+          || receiverType.isEmptyType()
+          || receiverType.isAllType()
+          || receiverType.isEquivalentTo(
+              registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+        unusedMethodPolyfills.keySet().removeAll(methods);
+      }
+      for (PrototypeMethod method : ImmutableSet.copyOf(methods)) {
+        checkType(receiverType, registry, method, method.type);
+        String primitiveType = PRIMITIVE_WRAPPERS.get(method.type);
+        if (primitiveType != null) {
+          checkType(receiverType, registry, method, primitiveType);
         }
       }
     }
@@ -155,21 +164,8 @@ class RemoveUnusedPolyfills implements CompilerPass {
         throw new RuntimeException("Missing built-in type: " + typeName);
       }
       if (!targetType.getGreatestSubtype(type).isBottom()) {
-        methodPolyfills.remove(method);
+        unusedMethodPolyfills.remove(method);
       }
-    }
-
-    @Override
-    public void visit(NodeTraversal traversal, Node node, Node parent) {
-      if (NodeUtil.isExprCall(node)) {
-        Node call = node.getFirstChild();
-        Node name = call.getFirstChild();
-        String originalName = name.getOriginalQualifiedName();
-        if ("$jscomp.polyfill".equals(originalName)) {
-          visitPolyfillDefinition(node, name.getNext().getString());
-        }
-      }
-      visitPossiblePolyfillUse(node);
     }
   }
 
@@ -190,7 +186,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
       return Objects.hash(type, method);
     }
     @Override public String toString() {
-      return type + ".prototype." + method;
+      return type + PROTOTYPE + method;
     }
     static PrototypeMethod split(String name) {
       int index = name.indexOf(PROTOTYPE);
