@@ -30,6 +30,9 @@
 function EventTarget() {}
 
 /**
+ * TODO(tbreisacher): Change the type of useCapture to be
+ * {boolean|!EventListenerOptions}, here and in removeEventListener.
+ *
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
  * @param {boolean} useCapture
@@ -405,3 +408,26 @@ function FocusEvent(type, opt_eventInitDict) {}
 
 /** @type {EventTarget} */
 FocusEvent.prototype.relatedTarget;
+
+
+/**
+ * See https://dom.spec.whatwg.org/#dictdef-eventlisteneroptions
+ * @record
+ */
+var EventListenerOptions = function() {};
+
+/** @type {boolean|undefined} */
+EventListenerOptions.prototype.capture;
+
+/**
+ * See https://dom.spec.whatwg.org/#dictdef-addeventlisteneroptions
+ * @record
+ * @extends {EventListenerOptions}
+ */
+var AddEventListenerOptions = function() {};
+
+/** @type {boolean|undefined} */
+AddEventListenerOptions.prototype.passive;
+
+/** @type {boolean|undefined} */
+AddEventListenerOptions.prototype.once;
