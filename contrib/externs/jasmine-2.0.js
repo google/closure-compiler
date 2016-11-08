@@ -36,6 +36,12 @@ jasmine.addMatchers = function(matchers) {};
 
 
 /**
+ * @param {function(?, ?): (boolean|undefined)} tester
+ */
+jasmine.addCustomEqualityTester = function(tester) {};
+
+
+/**
  * @return {!jasmine.Clock}
  */
 jasmine.clock = function() {};
