@@ -417,21 +417,57 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testPrivateAccessForProperties5() {
-    testError(new String[] {
-        "/** @constructor */\n"
-        + "function Parent () {\n"
-        + "  /** @private */\n"
-        + "  this.prop = 'foo';\n"
-        + "};",
-        "/**\n"
-        + " * @constructor\n"
-        + " * @extends {Parent}\n"
-        + " */\n"
-        + "function Child() {\n"
-        + "  this.prop = 'asdf';\n"
-        + "}\n"
-        + "Child.prototype = new Parent();"},
-        BAD_PRIVATE_PROPERTY_ACCESS);
+    test(
+        new String[] {
+          LINE_JOINER.join(
+              "/** @constructor */",
+              "function Parent () {",
+              "  /** @private */",
+              "  this.prop = 'foo';",
+              "};"),
+          LINE_JOINER.join(
+              "/**",
+              " * @constructor",
+              " * @extends {Parent}",
+              " */",
+              "function Child() {",
+              "  this.prop = 'asdf';",
+              "}",
+              "Child.prototype = new Parent();")
+        },
+        null,
+        BAD_PRIVATE_PROPERTY_ACCESS,
+        null,
+        "Access to private property prop of Parent not allowed here.");
+  }
+
+  public void testPrivateAccessForProperties6() {
+    test(
+        new String[] {
+          LINE_JOINER.join(
+              "goog.provide('x.y.z.Parent');",
+              "",
+              "/** @constructor */",
+              "x.y.z.Parent = function() {",
+              "  /** @private */",
+              "  this.prop = 'foo';",
+              "};"),
+          LINE_JOINER.join(
+              "goog.require('x.y.z.Parent');",
+              "",
+              "/**",
+              " * @constructor",
+              " * @extends {x.y.z.Parent}",
+              " */",
+              "function Child() {",
+              "  this.prop = 'asdf';",
+              "}",
+              "Child.prototype = new x.y.z.Parent();")
+        },
+        null,
+        BAD_PRIVATE_PROPERTY_ACCESS,
+        null,
+        "Access to private property prop of x.y.z.Parent not allowed here.");
   }
 
   public void testPrivateAccess_googModule() {
