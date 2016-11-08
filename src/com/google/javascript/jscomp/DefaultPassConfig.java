@@ -1541,12 +1541,12 @@ public final class DefaultPassConfig extends PassConfig {
   /** Various peephole optimizations. */
   private static CompilerPass createPeepholeOptimizationsPass(AbstractCompiler compiler) {
     final boolean late = false;
-    final boolean useTypesForOptimization =  compiler.getOptions().useTypesForLocalOptimization;
+    final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
     return new PeepholeOptimizationsPass(compiler,
           new MinimizeExitPoints(compiler),
           new PeepholeMinimizeConditions(late, useTypesForOptimization),
           new PeepholeSubstituteAlternateSyntax(late),
-          new PeepholeReplaceKnownMethods(late),
+          new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
           new PeepholeRemoveDeadCode(),
           new PeepholeFoldConstants(late, useTypesForOptimization),
           new PeepholeCollectPropertyAssignments());
@@ -1576,13 +1576,14 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       final boolean late = true;
+      final boolean useTypesForOptimization = options.useTypesForLocalOptimization;
       return new PeepholeOptimizationsPass(compiler,
             new StatementFusion(options.aggressiveFusion),
             new PeepholeRemoveDeadCode(),
-            new PeepholeMinimizeConditions(late, options.useTypesForLocalOptimization),
+            new PeepholeMinimizeConditions(late, useTypesForOptimization),
             new PeepholeSubstituteAlternateSyntax(late),
-            new PeepholeReplaceKnownMethods(late),
-            new PeepholeFoldConstants(late, options.useTypesForLocalOptimization),
+            new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
+            new PeepholeFoldConstants(late, useTypesForOptimization),
             new ReorderConstantExpression());
     }
   };

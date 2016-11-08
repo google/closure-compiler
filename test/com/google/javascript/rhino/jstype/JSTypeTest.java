@@ -2288,9 +2288,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
 
     // properties (ECMA-262 page 98 - 106)
-    assertEquals(23, STRING_OBJECT_TYPE.getImplicitPrototype().
+    assertEquals(24, STRING_OBJECT_TYPE.getImplicitPrototype().
         getPropertiesCount());
-    assertEquals(24, STRING_OBJECT_TYPE.getPropertiesCount());
+    assertEquals(25, STRING_OBJECT_TYPE.getPropertiesCount());
 
     assertReturnTypeEquals(STRING_TYPE,
         STRING_OBJECT_TYPE.getPropertyType("toString"));
@@ -2318,6 +2318,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         STRING_OBJECT_TYPE.getPropertyType("slice"));
     assertReturnTypeEquals(ARRAY_TYPE,
         STRING_OBJECT_TYPE.getPropertyType("split"));
+    assertReturnTypeEquals(STRING_TYPE,
+        STRING_OBJECT_TYPE.getPropertyType("substr"));
     assertReturnTypeEquals(STRING_TYPE,
         STRING_OBJECT_TYPE.getPropertyType("substring"));
     assertReturnTypeEquals(STRING_TYPE,

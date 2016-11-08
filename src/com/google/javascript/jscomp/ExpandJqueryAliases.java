@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -88,7 +87,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     this.peepholePasses = new PeepholeOptimizationsPass(compiler,
         new PeepholeMinimizeConditions(late, useTypesForOptimization),
         new PeepholeSubstituteAlternateSyntax(late),
-        new PeepholeReplaceKnownMethods(late),
+        new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
         new PeepholeRemoveDeadCode(),
         new PeepholeFoldConstants(late, useTypesForOptimization),
         new PeepholeCollectPropertyAssignments());
@@ -109,11 +108,13 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       }
 
       Node secondArgument = firstArgument.getNext();
-      if ((firstArgument.isObjectLit() && secondArgument == null) ||
-          (firstArgument.isName() || NodeUtil.isGet(firstArgument) &&
-          !NodeUtil.mayHaveSideEffects(firstArgument, compiler) &&
-          secondArgument != null && secondArgument.isObjectLit() &&
-          secondArgument.getNext() == null)) {
+      if ((firstArgument.isObjectLit() && secondArgument == null)
+          || (firstArgument.isName()
+              || (NodeUtil.isGet(firstArgument)
+                  && !NodeUtil.mayHaveSideEffects(firstArgument, compiler)
+                  && secondArgument != null
+                  && secondArgument.isObjectLit()
+                  && secondArgument.getNext() == null))) {
         return true;
       }
     }
@@ -355,7 +356,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     boolean isValidExpansion = true;
 
     // Expand the jQuery.expandedEach call
-    Node key = objectToLoopOver.getFirstChild(), val = null;
+    Node key = objectToLoopOver.getFirstChild();
+    Node val = null;
     for (int i = 0; key != null; key = key.getNext(), i++) {
       if (key != null) {
         if (objectToLoopOver.isArrayLit()) {
@@ -535,7 +537,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         List<Node> valueReferences, boolean useArrayMode) {
       Preconditions.checkState(functionRoot.isFunction());
 
-      String keyString = null, valueString = null;
+      String keyString = null;
+      String valueString = null;
       Node callbackParams = NodeUtil.getFunctionParameters(functionRoot);
       Node param = callbackParams.getFirstChild();
       if (param != null) {
@@ -579,7 +582,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         isThis = n.isThis();
       }
 
-      if (isThis || n.isName() && !isShadowed(n.getString(), t.getScope())) {
+      if (isThis || (n.isName() && !isShadowed(n.getString(), t.getScope()))) {
         String nodeValue = isThis ? null : n.getString();
         if (!isThis && keyName != null && nodeValue.equals(keyName)) {
           keyReferences.add(n);

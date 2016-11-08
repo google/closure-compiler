@@ -25,16 +25,18 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   private boolean late = true;
+  private boolean useTypes = true;
 
-  public PeepholeReplaceKnownMethodsTest() {
-    super("");
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    late = true;
+    useTypes = true;
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
-    CompilerPass peepholePass = new PeepholeOptimizationsPass(compiler,
-          new PeepholeReplaceKnownMethods(late));
-    return peepholePass;
+    return new PeepholeOptimizationsPass(compiler, new PeepholeReplaceKnownMethods(late, useTypes));
   }
 
   public void testStringIndexOf() {
@@ -308,10 +310,36 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt(021, 8)", "x = 15");
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // Reduce this to 2 if we get better expression evaluators.
-    return 2;
+  // TODO(moz): Fold String.prototype.slice()
+  public void testReplaceWithCharAt() {
+    enableTypeCheck();
+    foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
+    foldStringTyped("a.substring(2, 1)", "a.charAt(1)");
+    foldSameStringTyped("a.substring(1, 2, 3)");
+    foldSameStringTyped("a.substring(i, i + 1)"); // TODO(moz): Fold cases like these
+    foldSameStringTyped("a.substring()");
+    foldSameStringTyped("a.substring(1)");
+    foldSameStringTyped("a.substring(1, 3, 4)");
+    foldSameStringTyped("a.substring(-1, 3)");
+    foldSameStringTyped("a.substring(3, 1)");
+
+    foldStringTyped("a.substr(0, 1)", "a.charAt(0)");
+    foldStringTyped("a.substr(2, 1)", "a.charAt(2)");
+    foldStringTyped("a.substr(-2, 1)", "a.charAt(-2)");
+    foldStringTyped("a.substr(bar(), 1)", "a.charAt(bar())");
+    foldSameStringTyped("a.substr(2, 1, 3)");
+    foldSameStringTyped("a.substr(1, 2, 3)");
+    foldSameStringTyped("a.substr()");
+    foldSameStringTyped("a.substr(1)");
+    foldSameStringTyped("a.substr(1, 2)");
+    foldSameStringTyped("a.substr(1, 2, 3)");
+
+    foldSame("var /** ? */ a; a.substring(0, 1)");
+
+    useTypes = false;
+    foldSameStringTyped("a.substring(0, 1)");
+    foldSameStringTyped("a.substr(0, 1)");
+    disableTypeCheck();
   }
 
   private void foldSame(String js) {
@@ -320,5 +348,13 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   private void fold(String js, String expected) {
     test(js, expected);
+  }
+
+  private void foldSameStringTyped(String js) {
+    foldStringTyped(js, js);
+  }
+
+  private void foldStringTyped(String js, String expected) {
+    test("var /** string */ a;" + js, "var /** string */ a;" + expected);
   }
 }

@@ -190,7 +190,7 @@ public final class MultiPassTest extends CompilerTestCase {
             return new PeepholeOptimizationsPass(compiler,
                 new PeepholeMinimizeConditions(late, false /* useTypes */),
                 new PeepholeSubstituteAlternateSyntax(late),
-                new PeepholeReplaceKnownMethods(late),
+                new PeepholeReplaceKnownMethods(late, false),
                 new PeepholeRemoveDeadCode(),
                 new PeepholeFoldConstants(late, false),
                 new PeepholeCollectPropertyAssignments());
