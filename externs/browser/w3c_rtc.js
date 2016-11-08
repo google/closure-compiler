@@ -1139,7 +1139,6 @@ RTCPeerConnection.prototype.oniceconnectionstatechange;
 RTCPeerConnection.prototype.ondatachannel;
 
 /**
- * @type {function(new: RTCPeerConnection, RTCConfiguration,
- *     !MediaConstraints=)}
+ * @const
  */
-var webkitRTCPeerConnection;
+var webkitRTCPeerConnection = RTCPeerConnection;
