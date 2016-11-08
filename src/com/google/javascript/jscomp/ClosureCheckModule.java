@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -107,6 +108,18 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "Reference to fully qualified import name ''{0}''."
               + " Please use the short name ''{1}'' instead.");
 
+  static final DiagnosticType JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME =
+      DiagnosticType.disabled(
+          "JSC_JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME",
+          "Reference to fully qualified import name ''{0}'' in JSDoc."
+              + " Imports in goog.module should use the return value of goog.require instead.");
+
+  static final DiagnosticType JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
+      DiagnosticType.disabled(
+          "JSC_JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME",
+          "Reference to fully qualified import name ''{0}'' in JSDoc."
+              + " Please use the short name ''{1}'' instead.");
+
   static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
       DiagnosticType.error(
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL",
@@ -156,6 +169,10 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (currentModuleName == null) {
       return;
+    }
+    JSDocInfo jsDoc = n.getJSDocInfo();
+    if (jsDoc != null) {
+      checkJSDoc(t, jsDoc);
     }
     switch (n.getToken()) {
       case CALL:
@@ -223,6 +240,45 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       default:
         break;
     }
+  }
+  private void checkJSDoc(NodeTraversal t, JSDocInfo jsDoc) {
+    for (Node typeNode : jsDoc.getTypeNodes()) {
+      checkTypeExpression(t, typeNode);
+    }
+  }
+
+  private void checkTypeExpression(final NodeTraversal t, Node typeNode) {
+    NodeUtil.visitPreOrder(
+        typeNode,
+        new NodeUtil.Visitor() {
+          @Override
+          public void visit(Node node) {
+            if (!node.isString()) {
+              return;
+            }
+            String type = node.getString();
+            while (true) {
+              if (shortRequiredNamespaces.containsKey(type)) {
+                String shortName = shortRequiredNamespaces.get(type);
+                if (shortName == null) {
+                  t.report(node, JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, type);
+                } else {
+                  t.report(
+                      node,
+                      JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+                      type,
+                      shortName);
+                }
+              }
+              if (type.contains(".")) {
+                type = type.substring(0, type.lastIndexOf("."));
+              } else {
+                return;
+              }
+            }
+          }
+        },
+        Predicates.<Node>alwaysTrue());
   }
 
   private void checkModuleExport(NodeTraversal t, Node n, Node parent) {

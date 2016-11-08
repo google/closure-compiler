@@ -337,8 +337,8 @@ public final class SuggestedFix {
       // EXPR_RESULT nodes will contain the trailing semicolons, but the child node
       // will not. Replace the EXPR_RESULT node to ensure that the semicolons are
       // correct in the final output.
-      if (original.getParent().isExprResult()) {
-        original = original.getParent();
+      if (parent != null && parent.isExprResult()) {
+        original = parent;
       }
       // TODO(mknichel): Move this logic to CodePrinter.
       String newCode = generateCode(compiler, newNode);
@@ -348,7 +348,8 @@ public final class SuggestedFix {
       }
       // Most replacements don't need the semicolon in the new generated code - however, some
       // statements that are blocks or expressions will need the semicolon.
-      boolean needsSemicolon = parent.isExprResult() || parent.isBlock() || parent.isScript();
+      boolean needsSemicolon =
+          parent != null && (parent.isExprResult() || parent.isBlock() || parent.isScript());
       if (newCode.endsWith(";") && !needsSemicolon) {
         newCode = newCode.substring(0, newCode.length() - 1);
       }

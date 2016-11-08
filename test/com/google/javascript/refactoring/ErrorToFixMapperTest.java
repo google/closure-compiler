@@ -593,6 +593,108 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testSwitchToShorthand_JSDoc1() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @constructor @implements {world.util.Animal} */",
+            "function Cat() {}"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @constructor @implements {Animal} */",
+            "function Cat() {}"));
+  }
+
+  @Test
+  public void testSwitchToShorthand_JSDoc2() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @constructor @extends {world.util.Animal} */",
+            "function Cat() {}"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @constructor @extends {Animal} */",
+            "function Cat() {}"));
+  }
+
+  @Test
+  public void testSwitchToShorthand_JSDoc3() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {world.util.Animal} */",
+            "var animal;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {Animal} */",
+            "var animal;"));
+  }
+
+  @Test
+  public void testSwitchToShorthand_JSDoc4() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {!world.util.Animal} */",
+            "var animal;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {!Animal} */",
+            "var animal;"));
+  }
+
+  @Test
+  public void testSwitchToShorthand_JSDoc5() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?world.util.Animal} */",
+            "var animal;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Animal} */",
+            "var animal;"));
+  }
+
+  @Test
+  public void testSwitchToShorthand_JSDoc6() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Array<world.util.Animal>} */",
+            "var animals;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Array<Animal>} */",
+            "var animals;"));
+  }
+
+  @Test
   public void testMissingRequireInGoogModule_atExtends_qname() {
     assertChanges(
         LINE_JOINER.join(

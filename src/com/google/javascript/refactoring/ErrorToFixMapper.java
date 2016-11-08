@@ -100,6 +100,7 @@ public final class ErrorToFixMapper {
       case "JSC_EXTRA_REQUIRE_WARNING":
         return getFixForExtraRequire(error, compiler);
       case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
+      case "JSC_JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
         return getFixForReferenceToShortImportByLongName(error, compiler);
       default:
         return null;
