@@ -94,6 +94,16 @@ public final class ConvertIIFEArgsToVarsTest extends CompilerTestCase {
             "}).call(null, a, b);"));
   }
 
+  public void testArgumentsReference2() {
+    testSame(
+        LINE_JOINER.join(
+            "(function(_) {",
+            "    (function(args) {",
+            "      console.log(args[0]);",
+            "    })(arguments);",
+            "  })(0)"));
+  }
+
   public void testUndefinedAlias() {
     test(
         "(function(c, d) { console.log(c, d); })();",
@@ -161,5 +171,13 @@ public final class ConvertIIFEArgsToVarsTest extends CompilerTestCase {
     test(
         "(function(f) {})(function() {});",
         "(function() { var f=function() {}; })();");
+  }
+
+  public void testThisAsArgument() {
+    testSame(
+        LINE_JOINER.join(
+            "(function(window) {",
+            "  console.log(window);",
+            "})(this);"));
   }
 }

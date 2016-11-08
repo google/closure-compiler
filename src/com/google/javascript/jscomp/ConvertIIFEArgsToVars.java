@@ -99,7 +99,8 @@ public class ConvertIIFEArgsToVars implements CompilerPass, NodeTraversal.Callba
     }
 
     Node funcParams = NodeUtil.getFunctionParameters(n);
-    if (!funcParams.hasChildren() || NodeUtil.isVarArgsFunction(n)) {
+    if (!funcParams.hasChildren() || !callArgumentsInlineable(n, call) ||
+        NodeUtil.isVarArgsFunction(n)) {
       return;
     }
 
@@ -144,5 +145,26 @@ public class ConvertIIFEArgsToVars implements CompilerPass, NodeTraversal.Callba
     }
 
     return callArg.cloneTree();
+  }
+
+  /**
+   * Check to ensure that arguments to a CALL are not references
+   * to "this" or "arguments"
+   */
+  public boolean callArgumentsInlineable(Node fnc, Node call) {
+    Preconditions.checkState(fnc.isFunction());
+    Preconditions.checkState(call.isCall());
+    Preconditions.checkState(call.hasChildren());
+
+    Node firstArg = call.getSecondChild();
+    Node n = firstArg;
+    while (n != null) {
+      if (n == null || n.matchesQualifiedName("arguments") ||
+          (n.isThis() && (!fnc.getBooleanProp(Node.FREE_CALL) && firstArg == n))) {
+        return false;
+      }
+      n = n.getNext();
+    }
+    return true;
   }
 }
