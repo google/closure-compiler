@@ -1515,7 +1515,8 @@ class IRFactory {
         isIdentifier = config.languageMode == LanguageMode.ECMASCRIPT3;
       }
       if (reservedKeywords != null && reservedKeywords.contains(identifier)) {
-        isIdentifier = true;
+        features = features.require(Feature.KEYWORDS_AS_PROPERTIES);
+        isIdentifier = config.languageMode == LanguageMode.ECMASCRIPT3;
       }
       if (isIdentifier) {
         errorReporter.error(

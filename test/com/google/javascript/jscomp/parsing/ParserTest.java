@@ -2307,6 +2307,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     expectFeatures();
     parseError("class = 1;", "'identifier' expected");
+    parseError("var import = 0;", "'identifier' expected");
     // TODO(johnlenz): reenable
     //parse("public = 2;");
 
@@ -2321,6 +2322,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures();
     parseError("public = 2;", "primary expression expected");
     parseError("class = 1;", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+    expectFeatures(Feature.CONST_DECLARATIONS);
+    parseError("const else = 1;", "'identifier' expected");
   }
 
   public void testTypeScriptKeywords() {
@@ -2838,6 +2844,25 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "  throw() {}",
         "  else() {}",
         "}"));
+  }
+
+  public void testClassReservedWordsAsMethodNames() {
+    expectFeatures(Feature.CLASSES, Feature.KEYWORDS_AS_PROPERTIES);
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+    parse(
+        "class C {\n"
+            + "  import() {};\n"
+            + "  get break() {};\n"
+            + "  set break(a) {};\n"
+            + "}\n");
+
+    parse(
+        "class C {\n"
+            + "  static import() {};\n"
+            + "  static get break() {};\n"
+            + "  static set break(a) {};\n"
+            + "}\n");
   }
 
   public void testSuper1() {
