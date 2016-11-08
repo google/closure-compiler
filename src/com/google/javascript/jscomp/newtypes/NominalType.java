@@ -128,7 +128,7 @@ public final class NominalType {
   }
 
   boolean isClassy() {
-    return !isFunction() && !isBuiltinObject();
+    return !isFunction() && !isBuiltinObject() && !isLiteralObject();
   }
 
   boolean isFunction() {
@@ -136,7 +136,11 @@ public final class NominalType {
   }
 
   public boolean isBuiltinObject() {
-    return this.rawType.isBuiltinWithName("Object");
+    return this.rawType.isBuiltinObject();
+  }
+
+  public boolean isLiteralObject() {
+    return this.rawType.isBuiltinWithName(JSTypes.OBJLIT_CLASS_NAME);
   }
 
   boolean isIObject() {

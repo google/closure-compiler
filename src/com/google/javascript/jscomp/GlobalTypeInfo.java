@@ -443,6 +443,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         continue;
       }
       checkAndFinalizeNominalType(rawType);
+      if (rawType.isBuiltinObject()) {
+        this.commonTypes.getLiteralObjNominalType().getRawNominalType().finalize();
+      }
     }
     JSType globalThisType;
     if (win != null) {
@@ -1167,9 +1170,16 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         case "Function":
           commonTypes.setFunctionType(rawType);
           break;
-        case "Object":
+        case "Object": {
           commonTypes.setObjectType(rawType);
+          // Create a separate raw type for object literals
+          RawNominalType objLitRawType = RawNominalType.makeClass(
+              commonTypes, rawType.getDefSite(), JSTypes.OBJLIT_CLASS_NAME,
+              ImmutableList.<String>of(), ObjectKind.UNRESTRICTED);
+          objLitRawType.addSuperClass(rawType.getAsNominalType());
+          commonTypes.setLiteralObjNominalType(objLitRawType);
           break;
+        }
         case "Number":
           commonTypes.setNumberInstance(rawType.getInstanceAsJSType());
           break;
@@ -2255,7 +2265,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             result.slotType, false, qnameNode.isFromExterns());
       }
       if (ctorType != null) {
-        ctorType.setCtorFunction(result.functionType.toFunctionType());
+        FunctionType ft = result.functionType.toFunctionType();
+        ctorType.setCtorFunction(ft);
+        if (ctorType.isBuiltinObject()) {
+          commonTypes.getLiteralObjNominalType().getRawNominalType().setCtorFunction(ft);
+        }
       }
       if (declNode.isFunction()) {
         maybeWarnFunctionDeclaration(declNode, result.functionType);

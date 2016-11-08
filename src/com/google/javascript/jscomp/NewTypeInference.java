@@ -2953,9 +2953,8 @@ final class NewTypeInference implements CompilerPass {
     //   function f(obj) { obj.prop = 123; }
     // f should accept objects without prop, so we don't require that obj
     // already have prop.
-    if (recvType.mayBeStruct() && !recvType.hasProp(pname)) {
-      warnings.add(JSError.make(
-          getProp, ILLEGAL_PROPERTY_CREATION, pname.toString()));
+    if (recvType.isStructWithoutProp(pname)) {
+      warnings.add(JSError.make(getProp, ILLEGAL_PROPERTY_CREATION, pname.toString()));
       return true;
     }
     return false;
@@ -2975,7 +2974,7 @@ final class NewTypeInference implements CompilerPass {
     }
 
     if (recvType.isUnknown() || recvType.isTrueOrTruthy() || recvType.isLoose()
-        || allowPropertyOnSubtypes && recvType.isInstanceofObject()) {
+        || allowPropertyOnSubtypes && recvType.mayContainUnknownObject()) {
       if (symbolTable.isPropertyDefined(pname)) {
         return false;
       }
@@ -2985,8 +2984,7 @@ final class NewTypeInference implements CompilerPass {
     }
 
     if (allowPropertyOnSubtypes && !recvType.isStruct()
-        && (recvType.isInstanceofObject()
-            || recvType.isPropDefinedOnSubtype(propQname))) {
+        && recvType.isPropDefinedOnSubtype(propQname)) {
       return false;
     }
 
@@ -4296,7 +4294,7 @@ final class NewTypeInference implements CompilerPass {
         if (jsdoc != null && jsdoc.makesDicts()) {
           return TOP_DICT;
         }
-        return TOP_OBJECT;
+        return this.commonTypes.getEmptyObjectLiteral();
       }
       case FOR:
         Preconditions.checkState(NodeUtil.isForIn(expr));

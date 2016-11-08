@@ -44,6 +44,20 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class JSTypes {
+  // The builtin Object type represents instances of Object, but also objects
+  // whose class we don't know, such as when a function @param is annotated as !Object.
+  // However, it is very useful to know that some objects, such as object literals,
+  // are *certainly* instances of Object and not some other class.
+  // Knowing this allows things such as:
+  // 1) Distinguishing between the top-object type and the type of an empty object literal.
+  // 2) Calculating the meet of an object-literal type and an array to be bottom instead
+  //    of an array type.
+  // We use a special Object$ nominal type to represent explicit instances of Object.
+  // For now, we only tag object literals as belonging to this class. Prototypes of classes
+  // that inherit from Object, and objects created by "new Object" still have the general
+  // "Object" as their nominal type.
+  public static final String OBJLIT_CLASS_NAME = "Object{}";
+
   // The types that are final don't depend on the externs. The types that
   // are non-final, such as numberInstance, are filled in when we traverse
   // the externs during GlobalTypeInfo.
@@ -61,12 +75,6 @@ public final class JSTypes {
   public final JSType UNDEFINED;
   public final JSType UNKNOWN;
 
-  // Currently, TOP_OBJECTTYPE has two conflicting roles: the supertype of all
-  // object types, and the type of an empty object literal.
-  // In particular, its kind is UNRESTRICTED, which is confusing, because this
-  // kind is a subkind of STRUCT and DICT.
-  // We take that into account in ObjectType#specialize, but not yet in meet and join.
-  // TODO(dimvar): Find a clean way to split the two types & avoid the confusion
   final ObjectType TOP_OBJECTTYPE;
   final PersistentMap<String, Property> BOTTOM_PROPERTY_MAP;
   final ObjectType BOTTOM_OBJECT;
@@ -117,6 +125,7 @@ public final class JSTypes {
   private JSType regexpInstance;
   private RawNominalType arrayType;
   private RawNominalType builtinObject;
+  private RawNominalType literalObject;
   private RawNominalType builtinFunction;
   private RawNominalType arguments;
   private RawNominalType iObject;
@@ -279,8 +288,12 @@ public final class JSTypes {
     return this.builtinObject == null ? null : this.builtinObject.getAsNominalType();
   }
 
-  public JSType getObjectInstance() {
-    return this.builtinObject == null ? null : this.builtinObject.getInstanceAsJSType();
+  public NominalType getLiteralObjNominalType() {
+    return this.literalObject == null ? null : this.literalObject.getAsNominalType();
+  }
+
+  public JSType getEmptyObjectLiteral() {
+    return this.literalObject == null ? null : this.literalObject.getInstanceAsJSType();
   }
 
   public NominalType getIObjectType() {
@@ -394,6 +407,10 @@ public final class JSTypes {
 
   public void setObjectType(RawNominalType builtinObject) {
     this.builtinObject = builtinObject;
+  }
+
+  public void setLiteralObjNominalType(RawNominalType literalObject) {
+    this.literalObject = literalObject;
   }
 
   public void setArrayType(RawNominalType arrayType) {

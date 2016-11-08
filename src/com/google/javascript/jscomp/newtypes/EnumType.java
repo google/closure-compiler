@@ -127,7 +127,8 @@ public final class EnumType extends Namespace implements TypeWithProperties {
           Property.makeConstant(null, enumPropType, enumPropType));
     }
     return JSType.fromObjectType(ObjectType.makeObjectType(
-        this.commonTypes, null, propMap, null, this, false, ObjectKind.UNRESTRICTED));
+        this.commonTypes, this.commonTypes.getLiteralObjNominalType(), propMap,
+        null, this, false, ObjectKind.UNRESTRICTED));
   }
 
   @Override

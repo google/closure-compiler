@@ -46,6 +46,8 @@ public final class NamespaceLit extends Namespace {
   protected JSType computeJSType() {
     Preconditions.checkState(this.namespaceType == null);
     return JSType.fromObjectType(ObjectType.makeObjectType(
-        this.commonTypes, this.window, null, null, this, false, ObjectKind.UNRESTRICTED));
+        this.commonTypes,
+        this.window == null ? this.commonTypes.getLiteralObjNominalType() : this.window,
+        null, null, this, false, ObjectKind.UNRESTRICTED));
   }
 }

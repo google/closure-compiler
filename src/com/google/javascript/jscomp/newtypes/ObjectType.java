@@ -37,9 +37,6 @@ import java.util.TreeSet;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 final class ObjectType implements TypeWithProperties {
-  // TODO(dimvar): currently, we can't distinguish between an obj at the top of
-  // the proto chain (nominalType = null) and an obj for which we can't figure
-  // out its class
   private final NominalType nominalType;
   // If an ObjectType is a namespace, we record the Namespace object created
   // during GTI here.
@@ -84,7 +81,7 @@ final class ObjectType implements TypeWithProperties {
           "Cannot create function %s without nominal type", fn);
     if (ns != null && nominalType != null) {
       String name = nominalType.getName();
-      Preconditions.checkArgument(name.equals("Object")
+      Preconditions.checkArgument(name.equals(JSTypes.OBJLIT_CLASS_NAME)
           || name.equals("Function") || name.equals("Window"),
           "Can't create namespace with nominal type %s", name);
     }
@@ -637,7 +634,7 @@ final class ObjectType implements TypeWithProperties {
             && !thisNt.isNominalSubtypeOf(otherNt)) {
           return false;
         }
-        if (thisNt.isBuiltinObject()) {
+        if (thisNt.isBuiltinObject() || thisNt.isLiteralObject()) {
           return compareRecordTypeToIObject(otherNt, subSuperMap);
         }
       }
@@ -955,14 +952,7 @@ final class ObjectType implements TypeWithProperties {
   }
 
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
-    // TODO(dimvar): normally, we would want to only check
-    // (obj1.isTopObject() || obj2.isTopObject()) here. But at the moment,
-    // NTI can't distinguish between the top object type and an empty object
-    // literal. So, I put a hack to avoid spurious warnings.
-    // The proper fix is to eventually distinguish between an empty object
-    // literal and the top object type.
-    if ((obj1.isTopObject() && obj2.props.isEmpty())
-        || (obj2.isTopObject() && obj1.props.isEmpty())) {
+    if (obj1.isTopObject() || obj2.isTopObject()) {
       return obj1.commonTypes.TOP_OBJECTTYPE;
     }
     NominalType nom1 = obj1.nominalType;
@@ -984,9 +974,14 @@ final class ObjectType implements TypeWithProperties {
       props = joinProps(obj1.props, obj2.props, nom1, nom2);
     }
     NominalType nominal = NominalType.pickSuperclass(nom1, nom2);
-    // TODO(blickly): Split TOP_OBJECT from empty object and remove this case
-    if (nominal == null || !nominal.isFunction()) {
-      fn = null;
+    if (nominal == null && fn != null) {
+      if (isLoose) {
+        nominal = obj1.commonTypes.getFunctionType();
+      } else {
+        // NOTE(dimvar): we don't have a unit test that triggers this case,
+        // but it happens in our regression tests.
+        fn = null;
+      }
     }
     Namespace ns = Objects.equals(obj1.ns, obj2.ns) ? obj1.ns : null;
     return makeObjectType(commonTypes, nominal, props, fn, ns, isLoose,
@@ -1070,6 +1065,12 @@ final class ObjectType implements TypeWithProperties {
             newObj = meet(obj1, obj2);
           }
           newObjs.add(newObj);
+        } else if (obj1.getNominalType().isStructuralInterface()
+            && obj2.isSubtypeOf(obj1, SubtypeCache.create())) {
+          newObjs.add(obj2);
+        } else if (obj2.getNominalType().isStructuralInterface()
+            && obj1.isSubtypeOf(obj2, SubtypeCache.create())) {
+          newObjs.add(obj1);
         }
       }
     }
@@ -1350,9 +1351,7 @@ final class ObjectType implements TypeWithProperties {
   boolean isPropDefinedOnSubtype(QualifiedName pname) {
     Preconditions.checkArgument(pname.isIdentifier());
     NominalType nt = getNominalType();
-    // If this type represents an object literal, return false.
-    // NewTypeInference handles the "Object" case.
-    return nt.isBuiltinObject() ? false : nt.isPropDefinedOnSubtype(pname);
+    return nt.isBuiltinObject() || nt.isPropDefinedOnSubtype(pname);
   }
 
   @Override
@@ -1368,7 +1367,8 @@ final class ObjectType implements TypeWithProperties {
         return getNominalType().appendTo(builder);
       }
     }
-    if (nominalType != null && !nominalType.getName().equals("Function")) {
+    if (nominalType != null && !nominalType.getName().equals("Function")
+        && !nominalType.getName().equals(JSTypes.OBJLIT_CLASS_NAME)) {
       nominalType.appendTo(builder);
     } else if (isStruct()) {
       builder.append("struct");

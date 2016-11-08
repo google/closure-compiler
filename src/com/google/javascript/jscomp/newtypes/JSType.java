@@ -393,6 +393,15 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return false;
   }
 
+  public boolean isStructWithoutProp(QualifiedName pname) {
+    for (ObjectType obj : getObjs()) {
+      if (obj.isStruct() && !obj.mayHaveProp(pname)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public boolean isLoose() {
     ImmutableSet<ObjectType> objs = getObjs();
     return objs.size() == 1 && Iterables.getOnlyElement(objs).isLoose();
@@ -1558,7 +1567,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public boolean isSomeUnknownType() {
     FunctionType ft = this.getFunTypeIfSingletonObj();
     return isUnknown()
-        || (isInstanceofObject() && isLoose())
+        || (isUnknownObject() && isLoose())
         || (ft != null && ft.isTopFunction());
   }
 
@@ -1756,7 +1765,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       // Object.prototype is the only case where we are equal to our own prototype.
       // In this case, we should return null.
       Preconditions.checkState(
-          this.isInstanceofObject(),
+          this.isUnknownObject(),
           "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
           this);
       return null;
@@ -1810,9 +1819,22 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return false;
   }
 
+  public boolean isUnknownObject() {
+    return isSingletonObj() && getNominalTypeIfSingletonObj().isBuiltinObject();
+  }
+
   @Override
   public boolean isInstanceofObject() {
-    return this.isSingletonObj() && this.getNominalTypeIfSingletonObj().isBuiltinObject();
+    return isSingletonObj() && getNominalTypeIfSingletonObj().isLiteralObject();
+  }
+
+  public boolean mayContainUnknownObject() {
+    for (ObjectType obj : this.getObjs()) {
+      if (obj.getNominalType().isBuiltinObject()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override

@@ -170,6 +170,10 @@ public final class RawNominalType extends Namespace {
     return isBuiltinHelper(this.name, s, this.defSite);
   }
 
+  public boolean isBuiltinObject() {
+    return isBuiltinHelper(this.name, "Object", this.defSite);
+  }
+
   public boolean isClass() {
     return this.kind == Kind.CLASS;
   }
@@ -242,7 +246,7 @@ public final class RawNominalType extends Namespace {
 
   private void addSubtype(RawNominalType subtype) {
     Preconditions.checkState(!this.isFinalized);
-    if (!isBuiltinWithName("Object")) {
+    if (!isBuiltinObject()) {
       this.subtypes.add(subtype);
     }
   }
@@ -328,7 +332,7 @@ public final class RawNominalType extends Namespace {
 
   // Checks for subtyping without taking generics into account
   boolean isSubtypeOf(RawNominalType other) {
-    if (this == other || other.isBuiltinWithName("Object")) {
+    if (this == other || other.isBuiltinObject()) {
       return true;
     }
     if (other.isInterface()) {
