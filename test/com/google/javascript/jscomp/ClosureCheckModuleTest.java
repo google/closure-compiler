@@ -413,6 +413,14 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "",
             "/** @type {A} */ var a;"));
 
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var Foo = goog.require('Foo');",
+            "",
+            "/** @type {Foo} */ var a;"));
+
     testError(
         LINE_JOINER.join(
             "goog.module('x.y.z');",

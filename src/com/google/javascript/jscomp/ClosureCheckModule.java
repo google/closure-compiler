@@ -262,7 +262,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
                 String shortName = shortRequiredNamespaces.get(type);
                 if (shortName == null) {
                   t.report(node, JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, type);
-                } else {
+                } else if (!shortName.equals(type)) {
                   t.report(
                       node,
                       JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
