@@ -486,4 +486,107 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "const {foo, bar} = module$other;",
             "var baz = module$other.foo + module$other.bar;"));
   }
+
+  public void testUMDRemoveIIFE() {
+    setFilename("test");
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})()"),
+        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        LINE_JOINER.join(
+            ";;;(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})()"),
+        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}.call(this))"),
+        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+
+    // We can't remove IIFEs explict calls that don't use "this"
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}.call(window))"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "}).call(window);"));
+
+    // Can't remove IIFEs when there are sibling statements
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})();",
+            "alert('foo');"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "})();",
+            "alert('foo');"));
+
+    // Can't remove IIFEs when there are sibling statements
+    testModules(
+        LINE_JOINER.join(
+            "alert('foo');",
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})();"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "alert('foo');",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "})();"));
+  }
 }
