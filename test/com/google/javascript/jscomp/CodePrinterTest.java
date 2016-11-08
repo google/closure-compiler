@@ -2356,8 +2356,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testTemplateLiteral() {
-    languageMode = LanguageMode.ECMASCRIPT6;
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("`hello`");
+    assertPrintSame("`\\\\bhello`");
     assertPrint("`hel\rlo`", "`hel\\nlo`");
     assertPrint("`hel\r\nlo`", "`hel\\nlo`");
     assertPrint("`hello`\n'world'", "`hello`;\"world\"");

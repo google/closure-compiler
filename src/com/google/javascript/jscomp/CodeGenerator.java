@@ -1093,7 +1093,7 @@ public class CodeGenerator {
         add("`");
         for (Node c = first; c != null; c = c.getNext()) {
           if (c.isString()) {
-            add(strEscape(c.getString(), "\"", "'", "\\`", "\\", false, false));
+            add(strEscape(c.getString(), "\"", "'", "\\`", "\\\\", false, false));
           } else {
             // Can't use add() since isWordChar('$') == true and cc would add
             // an extra space.
