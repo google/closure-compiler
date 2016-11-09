@@ -112,9 +112,24 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
       Node name = IR.name(THIS_VAR);
       Node thisVar = IR.constNode(name, IR.thisNode());
       thisVar.useSourceInfoIfMissingFromForTree(scopeRoot);
-      scopeRoot.addChildToFront(thisVar);
+      Node firstStatement = scopeRoot.getFirstChild();
+      if (isSuperCallStatement(firstStatement)) {
+        scopeRoot.addChildAfter(thisVar, firstStatement);
+      } else {
+        scopeRoot.addChildToFront(thisVar);
+      }
       scope.declare(THIS_VAR, name, input);
     }
+  }
+
+  private boolean isSuperCallStatement(Node firstStatement) {
+    // TODO(bradfordcsmith): This won't catch cases of super() used in an expression or
+    //     in anything other than the first statement.
+    if (!firstStatement.isExprResult()) {
+      return false;
+    }
+    Node expr = firstStatement.getFirstChild();
+    return expr.isCall() && expr.getFirstChild().isSuper();
   }
 
   private static class UpdateThisAndArgumentsReferences implements NodeTraversal.Callback {
