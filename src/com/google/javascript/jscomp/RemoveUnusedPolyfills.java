@@ -23,8 +23,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.HashMap;
 import java.util.Map;
@@ -132,7 +132,13 @@ class RemoveUnusedPolyfills implements CompilerPass {
       if (methods.isEmpty()) {
         return;
       }
-      JSType receiverType = n.getFirstChild().getJSType();
+      TypeI receiverType = n.getFirstChild().getTypeI();
+      if (NodeUtil.isPrototypeProperty(n)) {
+        TypeI maybeCtor = n.getFirstFirstChild().getTypeI();
+        if (maybeCtor != null && maybeCtor.isConstructor()) {
+          receiverType = maybeCtor.toMaybeFunctionType().getInstanceType();
+        }
+      }
       if (receiverType == null) {
         // TODO(sdh): When does this happen?  If it means incomplete type information, then
         // we need to remove all the potential methods.  If not, we can just return.
@@ -142,8 +148,8 @@ class RemoveUnusedPolyfills implements CompilerPass {
       receiverType = receiverType.restrictByNotNullOrUndefined();
       TypeIRegistry registry = compiler.getTypeIRegistry();
       if (receiverType.isUnknownType()
-          || receiverType.isEmptyType()
-          || receiverType.isAllType()
+          || receiverType.isBottom()
+          || receiverType.isTop()
           || receiverType.isEquivalentTo(
               registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
         unusedMethodPolyfills.keySet().removeAll(methods);
@@ -158,12 +164,12 @@ class RemoveUnusedPolyfills implements CompilerPass {
     }
 
     private void checkType(
-        JSType targetType, TypeIRegistry registry, PrototypeMethod method, String typeName) {
-      JSType type = registry.getType(typeName);
+        TypeI receiverType, TypeIRegistry registry, PrototypeMethod method, String typeName) {
+      TypeI type = registry.getType(typeName);
       if (type == null) {
         throw new RuntimeException("Missing built-in type: " + typeName);
       }
-      if (!targetType.getGreatestSubtype(type).isBottom()) {
+      if (!receiverType.meetWith(type).isBottom()) {
         unusedMethodPolyfills.remove(method);
       }
     }

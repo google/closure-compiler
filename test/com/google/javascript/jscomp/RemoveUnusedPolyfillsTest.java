@@ -17,14 +17,14 @@
 package com.google.javascript.jscomp;
 
 /** Unit tests for the RemoveUnusedPolyfills compiler pass. */
-public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
+public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
 
   private static final String EXTERNS = LINE_JOINER.join(
+      DEFAULT_EXTERNS,
       // Polyfill
       "var $jscomp = {};",
       "$jscomp.polyfill = function(name, func, from, to) {};",
       // Methods
-      "Function.prototype.call = function(ctx) {};",
       "Array.prototype.includes = function() {};",
       "String.prototype.includes = function() {};",
       "/** @constructor */ function Foo() {}",
@@ -62,12 +62,19 @@ public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
 
   public RemoveUnusedPolyfillsTest() {
     super(EXTERNS);
-    enableTypeCheck();
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new RemoveUnusedPolyfills(compiler);
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    // NTI warns about property accesses on *
+    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+    return options;
   }
 
   public void testRemovesPolyfillInstanceMethods() {
@@ -104,6 +111,8 @@ public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
   public void testDoesNotRemoveMethodsCalledOnObject() {
     testSame(STRING_INCLUDES + "obj.includes();");
     testSame(BOTH_INCLUDES + "obj.includes();");
+    testSame(ARRAY_INCLUDES
+        + "function f(/** !Object */ x) { x.includes = function() {}; x.includes(); }");
   }
 
   public void testDoesNotRemoveMethodsCalledOnCorrectTypes() {

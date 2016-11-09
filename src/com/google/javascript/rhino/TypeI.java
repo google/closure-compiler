@@ -118,5 +118,7 @@ public interface TypeI {
    */
   Iterable<? extends TypeI> getUnionMembers();
 
+  TypeI meetWith(TypeI other);
+
   String getDisplayName();
 }

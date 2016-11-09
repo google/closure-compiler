@@ -1626,6 +1626,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public TypeI meetWith(TypeI other) {
+    return meet(this, (JSType) other);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (o == null) {
       return false;

@@ -1047,6 +1047,11 @@ public abstract class JSType implements TypeI, Serializable {
     return getGreatestSubtype(this, that);
   }
 
+  @Override
+  public TypeI meetWith(TypeI that) {
+    return getGreatestSubtype(this, (JSType) that);
+  }
+
   /**
    * A generic implementation meant to be used as a helper for common
    * getGreatestSubtype implementations.
