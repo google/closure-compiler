@@ -152,11 +152,26 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = 'abcde'['substring'](1,3)", "x = 'bc'");
     fold("x = 'abcde'.substring(2)", "x = 'cde'");
 
-    // we should be leaving negative indexes alone for now
+    // we should be leaving negative, out-of-bound, and inverted indices alone for now
     foldSame("x = 'abcde'.substring(-1)");
     foldSame("x = 'abcde'.substring(1, -2)");
     foldSame("x = 'abcde'.substring(1, 2, 3)");
+    foldSame("x = 'abcde'.substring(2, 0)");
     foldSame("x = 'a'.substring(0, 2)");
+  }
+
+  public void testFoldStringSlice() {
+    fold("x = 'abcde'.slice(0,2)", "x = 'ab'");
+    fold("x = 'abcde'.slice(1,2)", "x = 'b'");
+    fold("x = 'abcde'['slice'](1,3)", "x = 'bc'");
+    fold("x = 'abcde'.slice(2)", "x = 'cde'");
+
+    // we should be leaving negative, out-of-bound, and inverted indices alone for now
+    foldSame("x = 'abcde'.slice(-1)");
+    foldSame("x = 'abcde'.slice(1, -2)");
+    foldSame("x = 'abcde'.slice(1, 2, 3)");
+    foldSame("x = 'abcde'.slice(2, 0)");
+    foldSame("x = 'a'.slice(0, 2)");
   }
 
   public void testFoldStringCharAt() {
@@ -310,18 +325,27 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt(021, 8)", "x = 15");
   }
 
-  // TODO(moz): Fold String.prototype.slice()
   public void testReplaceWithCharAt() {
     enableTypeCheck();
     foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
-    foldStringTyped("a.substring(2, 1)", "a.charAt(1)");
     foldSameStringTyped("a.substring(1, 2, 3)");
     foldSameStringTyped("a.substring(i, i + 1)"); // TODO(moz): Fold cases like these
     foldSameStringTyped("a.substring()");
     foldSameStringTyped("a.substring(1)");
     foldSameStringTyped("a.substring(1, 3, 4)");
     foldSameStringTyped("a.substring(-1, 3)");
+    foldSameStringTyped("a.substring(2, 1)");
     foldSameStringTyped("a.substring(3, 1)");
+
+    foldStringTyped("a.slice(0, 1)", "a.charAt(0)");
+    foldSameStringTyped("a.slice(1, 2, 3)");
+    foldSameStringTyped("a.slice(i, i + 1)"); // TODO(moz): Fold cases like these
+    foldSameStringTyped("a.slice()");
+    foldSameStringTyped("a.slice(1)");
+    foldSameStringTyped("a.slice(1, 3, 4)");
+    foldSameStringTyped("a.slice(-1, 3)");
+    foldSameStringTyped("a.slice(2, 1)");
+    foldSameStringTyped("a.slice(3, 1)");
 
     foldStringTyped("a.substr(0, 1)", "a.charAt(0)");
     foldStringTyped("a.substr(2, 1)", "a.charAt(2)");

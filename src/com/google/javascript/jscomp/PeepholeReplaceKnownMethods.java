@@ -115,7 +115,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
             case "substr":
               return tryFoldStringSubstr(subtree, stringNode, firstArg);
             case "substring":
-              return tryFoldStringSubstring(subtree, stringNode, firstArg);
+            case "slice":
+              return tryFoldStringSubstringOrSlice(subtree, stringNode, firstArg);
             case "charAt":
               return tryFoldStringCharAt(subtree, stringNode, firstArg);
             case "charCodeAt":
@@ -129,7 +130,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         case "substr":
           return tryReplaceSubstrWithCharAt(subtree, callTarget, firstArg);
         case "substring":
-          return tryReplaceSubstringWithCharAt(subtree, callTarget, firstArg);
+        case "slice":
+          return tryReplaceSubstringOrSliceWithCharAt(subtree, callTarget, firstArg);
       }
     }
     return subtree;
@@ -558,9 +560,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
   }
 
   /**
-   * Try to fold .substring() calls on strings
+   * Try to fold .substring() or .slice() calls on strings
    */
-  private Node tryFoldStringSubstring(Node n, Node stringNode, Node arg1) {
+  private Node tryFoldStringSubstringOrSlice(Node n, Node stringNode, Node arg1) {
     Preconditions.checkArgument(n.isCall());
     Preconditions.checkArgument(stringNode.isString());
     Preconditions.checkArgument(arg1 != null);
@@ -598,10 +600,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     // specify the behavior in some of these cases, but we haven't
     // done a thorough investigation that it is correctly implemented
     // in all browsers.
-    if ((end > stringAsString.length()) ||
-        (start > stringAsString.length()) ||
-        (end < 0) ||
-        (start < 0)) {
+    if ((end > stringAsString.length()) || (start > stringAsString.length())
+        || (start < 0) || (end < 0)
+        || (start > end)) {
       return n;
     }
 
@@ -627,7 +628,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     return n;
   }
 
-  private Node tryReplaceSubstringWithCharAt(Node n, Node callTarget, Node firstArg) {
+  private Node tryReplaceSubstringOrSliceWithCharAt(Node n, Node callTarget, Node firstArg) {
     if (n.getChildCount() != 3) {
       return n;
     }
@@ -642,18 +643,19 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     }
     int start = maybeStart.intValue();
     int end = maybeEnd.intValue();
-    if (Math.abs(start - end) == 1) {
-      return replaceWithCharAt(n, callTarget, start < end ? firstArg : secondArg);
+    if (start >= end) {
+      return n; // Bail out for simplicity
+    }
+    if (end - start == 1) {
+      return replaceWithCharAt(n, callTarget, firstArg);
     }
     return n;
   }
 
   private Node replaceWithCharAt(Node n, Node callTarget, Node firstArg) {
     // TODO(moz): Maybe correct the arity of the function type here.
-    n.detachChildren();
     callTarget.getLastChild().setString("charAt");
-    n.addChildToFront(callTarget);
-    n.addChildToBack(firstArg);
+    firstArg.getNext().detach();
     reportCodeChange();
     return n;
   }
