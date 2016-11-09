@@ -87,7 +87,7 @@ class RhinoErrorReporter {
   static final DiagnosticType ES6_FEATURE =
       DiagnosticType.error("ES6_FEATURE",
           "{0}. Use --language_in=ECMASCRIPT6 or ECMASCRIPT6_STRICT " +
-          "to enable ES6 features.");
+          "or higher to enable ES6 features.");
 
   static final DiagnosticType ES6_TYPED =
       DiagnosticType.error("ES6_TYPED",
