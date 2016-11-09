@@ -1083,7 +1083,7 @@ public class Node implements Serializable {
   }
 
   /** Can only be called when <tt>getType() == TokenStream.NUMBER</tt> */
-  public double getDouble() throws UnsupportedOperationException {
+  public double getDouble() {
     if (this.token == Token.NUMBER) {
       throw new IllegalStateException(
           "Number node not created with Node.newNumber");
@@ -1094,9 +1094,10 @@ public class Node implements Serializable {
 
   /**
    * Can only be called when <tt>getType() == Token.NUMBER</tt>
+   *
    * @param value value to set.
    */
-  public void setDouble(double value) throws UnsupportedOperationException {
+  public void setDouble(double value) {
     if (this.token == Token.NUMBER) {
       throw new IllegalStateException(
           "Number node not created with Node.newNumber");
@@ -1106,7 +1107,7 @@ public class Node implements Serializable {
   }
 
   /** Can only be called when node has String context. */
-  public String getString() throws UnsupportedOperationException {
+  public String getString() {
     if (this.token == Token.STRING) {
       throw new IllegalStateException(
           "String node not created with Node.newString");
@@ -1117,9 +1118,10 @@ public class Node implements Serializable {
 
   /**
    * Can only be called for a Token.STRING or Token.NAME.
+   *
    * @param value the value to set.
    */
-  public void setString(String value) throws UnsupportedOperationException {
+  public void setString(String value) {
     if (this.token == Token.STRING || this.token == Token.NAME) {
       throw new IllegalStateException(
           "String node not created with Node.newString");
