@@ -143,7 +143,7 @@ public class CompilerOptions {
     CHECK_IJS,
   }
 
-  private IncrementalCheckMode incrementalCheckMode;
+  private IncrementalCheckMode incrementalCheckMode = IncrementalCheckMode.OFF;
 
   public void setIncrementalChecks(IncrementalCheckMode value) {
     incrementalCheckMode = value;
@@ -167,6 +167,10 @@ public class CompilerOptions {
 
   public boolean allowIjsInputs() {
     return incrementalCheckMode != IncrementalCheckMode.OFF;
+  }
+
+  public boolean allowUnfulfilledForwardDeclarations() {
+    return incrementalCheckMode == IncrementalCheckMode.OFF;
   }
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
