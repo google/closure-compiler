@@ -81,11 +81,11 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.error(
       "JSC_DUPLICATE_OBJECT_KEY",
-      "object literals cannot contain duplicate keys in ES5 strict mode");
+      "Object literal contains illegal duplicate key \"{0}\", disallowed in ES5 strict mode");
 
   static final DiagnosticType DUPLICATE_CLASS_METHODS = DiagnosticType.error(
       "JSC_DUPLICATE_CLASS_METHODS",
-      "Classes cannot contain duplicate method names");
+      "Class contain duplicate method name \"{0}\"");
 
   static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.error(
       "JSC_BAD_FUNCTION_DECLARATION",
@@ -187,23 +187,24 @@ class StrictModeCheck extends AbstractPostOrderCallback
     for (Node key = n.getFirstChild();
          key != null;
          key = key.getNext()) {
+      String keyName = key.getString();
       if (!key.isSetterDef()) {
         // normal property and getter cases
-        if (!getters.add(key.getString())) {
+        if (!getters.add(keyName)) {
           if (n.isClassMembers()) {
-            t.report(key, DUPLICATE_CLASS_METHODS);
+            t.report(key, DUPLICATE_CLASS_METHODS, keyName);
           } else {
-            t.report(key, DUPLICATE_OBJECT_KEY);
+            t.report(key, DUPLICATE_OBJECT_KEY, keyName);
           }
         }
       }
       if (!key.isGetterDef()) {
         // normal property and setter cases
-        if (!setters.add(key.getString())) {
+        if (!setters.add(keyName)) {
           if (n.isClassMembers()) {
-            t.report(key, DUPLICATE_CLASS_METHODS);
+            t.report(key, DUPLICATE_CLASS_METHODS, keyName);
           } else {
-            t.report(key, DUPLICATE_OBJECT_KEY);
+            t.report(key, DUPLICATE_OBJECT_KEY, keyName);
           }
         }
       }
