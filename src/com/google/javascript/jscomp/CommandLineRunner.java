@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
@@ -711,8 +712,7 @@ public class CommandLineRunner extends
     private void parse(List<String> args) throws CmdLineException {
       parser.parseArgument(args.toArray(new String[] {}));
 
-      compilationLevelParsed =
-          COMPILATION_LEVEL_MAP.get(compilationLevel.toUpperCase());
+      compilationLevelParsed = COMPILATION_LEVEL_MAP.get(Ascii.toUpperCase(compilationLevel));
       if (compilationLevelParsed == null) {
         throw new CmdLineException(
             parser, "Bad value for --compilation_level: " + compilationLevel);
@@ -1013,7 +1013,7 @@ public class CommandLineRunner extends
           setter.addValue(true);
           return 0;
         } else {
-          String lowerParam = param.toLowerCase();
+          String lowerParam = Ascii.toLowerCase(param);
           if (TRUES.contains(lowerParam)) {
             setter.addValue(true);
           } else if (FALSES.contains(lowerParam)) {
@@ -1572,7 +1572,7 @@ public class CommandLineRunner extends
     if (!flags.j2clPassMode.isEmpty()) {
       try {
         CompilerOptions.J2clPassMode j2clPassMode =
-            CompilerOptions.J2clPassMode.valueOf(flags.j2clPassMode.toUpperCase());
+            CompilerOptions.J2clPassMode.valueOf(Ascii.toUpperCase(flags.j2clPassMode));
         options.setJ2clPass(j2clPassMode);
       } catch (IllegalArgumentException ex) {
         throw new FlagUsageException(

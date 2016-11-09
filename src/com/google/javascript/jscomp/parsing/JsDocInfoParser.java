@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ascii;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -334,7 +335,7 @@ public final class JsDocInfoParser {
                 // PRIVATE and PROTECTED are not allowed in @fileoverview JsDoc.
                 addParserWarning(
                     "msg.bad.fileoverview.visibility.annotation",
-                    visibility.toString().toLowerCase());
+                    Ascii.toLowerCase(visibility.toString()));
                 success = false;
                 break;
               default:

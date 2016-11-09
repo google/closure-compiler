@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -2938,7 +2939,7 @@ public class CompilerOptions {
         return null;
       }
       // Trim spaces, disregard case, and allow abbreviation of ECMASCRIPT for convenience.
-      String canonicalizedName = value.trim().toUpperCase().replaceFirst("^ES", "ECMASCRIPT");
+      String canonicalizedName = Ascii.toUpperCase(value.trim()).replaceFirst("^ES", "ECMASCRIPT");
       try {
         return LanguageMode.valueOf(canonicalizedName);
       } catch (IllegalArgumentException e) {

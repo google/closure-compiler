@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser.util.format;
 
+import com.google.common.base.Ascii;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -494,7 +495,7 @@ public final class SimpleFormat {
     }
 
     if (Character.isUpperCase(token.getConversionType()) && result != null) {
-      result = result.toString().toUpperCase();
+      result = Ascii.toUpperCase(result.toString());
     }
     return result;
   }

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
@@ -116,7 +117,7 @@ public final class TypeTransformationParser {
   }
 
   private Keywords nameToKeyword(String s) {
-    return Keywords.valueOf(s.toUpperCase());
+    return Keywords.valueOf(Ascii.toUpperCase(s));
   }
 
   private boolean isValidKeyword(String name) {

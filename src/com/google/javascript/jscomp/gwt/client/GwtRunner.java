@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.gwt.client;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 
+import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableMap;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -253,7 +254,7 @@ public final class GwtRunner implements EntryPoint {
   private static void applyOptionsFromFlags(CompilerOptions options, Flags flags) {
     CompilationLevel level = DEFAULT_COMPILATION_LEVEL;
     if (flags.compilationLevel != null) {
-      level = CompilationLevel.fromString(flags.compilationLevel.toUpperCase());
+      level = CompilationLevel.fromString(Ascii.toUpperCase(flags.compilationLevel));
       if (level == null) {
         throw new RuntimeException(
             "Bad value for compilationLevel: " + flags.compilationLevel);
@@ -275,7 +276,7 @@ public final class GwtRunner implements EntryPoint {
 
     CompilerOptions.Environment environment = CompilerOptions.Environment.BROWSER;
     if (flags.env != null) {
-      environment = CompilerOptions.Environment.valueOf(flags.env.toUpperCase());
+      environment = CompilerOptions.Environment.valueOf(Ascii.toUpperCase(flags.env));
     }
     options.setEnvironment(environment);
 
