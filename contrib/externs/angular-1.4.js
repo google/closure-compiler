@@ -413,7 +413,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *       function(!angular.JQLite=,!angular.Attributes=): string|
  *       undefined),
  *   templateNamespace: (string|undefined),
- *   templateUrl: (string|
+ *   templateUrl: (string|!Object|
  *       function(!angular.JQLite=,!angular.Attributes=)|
  *       undefined),
  *   terminal: (boolean|undefined),
@@ -2140,7 +2140,7 @@ angular.$routeProvider.Params.controllerAs;
 /** @type {string} */
 angular.$routeProvider.Params.template;
 
-/** @type {string|function(!Object.<string,string>=)} */
+/** @type {string|!Object|function(!Object.<string,string>=)} */
 angular.$routeProvider.Params.templateUrl;
 
 /** @type {Object.<string, (string|angular.Injectable|!angular.$q.Promise)>} */

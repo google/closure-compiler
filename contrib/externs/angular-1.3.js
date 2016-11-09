@@ -448,7 +448,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *       function(!angular.JQLite=,!angular.Attributes=): string|
  *       undefined),
  *   templateNamespace: (string|undefined),
- *   templateUrl: (string|
+ *   templateUrl: (string|!Object|
  *       function(!angular.JQLite=,!angular.Attributes=)|
  *       undefined),
  *   terminal: (boolean|undefined),
@@ -522,7 +522,8 @@ angular.Directive.scope;
 angular.Directive.template;
 
 /**
- * @type {(string|function(!angular.JQLite=, !angular.Attributes=)|undefined)}
+ * @type {(string|!Object|function(!angular.JQLite=,
+ * !angular.Attributes=)|undefined)}
  */
 angular.Directive.templateUrl;
 
@@ -2266,7 +2267,7 @@ angular.$routeProvider.when = function(path, route) {};
  *   controller: (angular.Injectable|string|undefined),
  *   controllerAs: (string|undefined),
  *   template: (string|undefined),
- *   templateUrl: (string|function(!Object.<string,string>=)|undefined),
+ *   templateUrl: (string|!Object|function(!Object.<string,string>=)|undefined),
  *   resolve: (Object.<string, (
  *       string|angular.Injectable|!angular.$q.Promise
  *       )>|undefined),
