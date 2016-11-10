@@ -21,75 +21,240 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 
+import com.google.javascript.jscomp.GlobalNamespace.Name;
+import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
 
 /** Converts {@code super()} calls. This has to run after typechecking. */
 public final class Es6ConvertSuperConstructorCalls
 implements NodeTraversal.Callback, HotSwapCompilerPass {
   private static final String TMP_ERROR = "$jscomp$tmp$error";
+  private static final String SUPER_THIS = "$jscomp$super$this";
+
+  /** Stores superCalls for a constructor. */
+  private static final class ConstructorData {
+    final Node constructor;
+    final List<Node> superCalls;
+
+    ConstructorData(Node constructor) {
+      this.constructor = constructor;
+      superCalls = new ArrayList<>();
+    }
+  }
 
   private final AbstractCompiler compiler;
+  private final Deque<ConstructorData> constructorDataStack;
+  private GlobalNamespace globalNamespace;
 
   public Es6ConvertSuperConstructorCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.constructorDataStack = new ArrayDeque<>();
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isFunction()) {
+      // TODO(bradfordcsmith): Avoid creating data for non-constructor functions.
+      constructorDataStack.push(new ConstructorData(n));
+    } else if (n.isSuper()) {
+      Node superCall = parent.isCall() ? parent : parent.getParent();
+      checkState(superCall.isCall(), superCall);
+      ConstructorData constructorData = checkNotNull(constructorDataStack.peek());
+      constructorData.superCalls.add(superCall);
+    }
     return true;
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isSuper()) {
-      visitSuper(t, n, parent);
+    ConstructorData constructorData = constructorDataStack.peek();
+    if (constructorData != null && n == constructorData.constructor) {
+      constructorDataStack.pop();
+      visitSuper(t, constructorData);
     }
   }
 
-  private void visitSuper(NodeTraversal t, Node node, Node parent) {
+  private void visitSuper(NodeTraversal t, ConstructorData constructorData) {
     // NOTE: When this pass runs:
     // -   ES6 classes have already been rewritten as ES5 functions.
     // -   All instances of super() that are not super constructor calls have been rewritten.
     // -   However, if the original call used spread (e.g. super(...list)), then spread
     //     transpilation will have turned that into something like
     //     super.apply(null, $jscomp$expanded$args).
-    if (node.isFromExterns()) {
+    Node constructor = constructorData.constructor;
+    List<Node> superCalls = constructorData.superCalls;
+    if (superCalls.isEmpty()) {
+      return; // nothing to do
+    }
+    if (constructor.isFromExterns()) {
       // This class is defined in an externs file, so it's only a stub, not the actual
       // implementation that should be instantiated.
       // A call to super() shouldn't actually exist for a stub and is problematic to transpile,
       // so just drop it.
-      NodeUtil.getEnclosingStatement(node).detach();
+      for (Node superCall : superCalls) {
+        NodeUtil.getEnclosingStatement(superCall).detach();
+      }
       compiler.reportCodeChange();
     } else {
-      // super() or super.apply()
-      Node superCall = parent.isCall() ? parent : parent.getParent();
-      String superClassQName = getSuperClassQName(superCall);
+      String superClassQName = getSuperClassQName(constructor);
       if (isNativeObjectClass(t, superClassQName)) {
         // There's no need to call Object as a super constructor, so just replace the call with
         // `this`, which is its correct return value.
         // TODO(bradfordcsmith): Although unlikely, super() could have argument expressions with
         //     side-effects.
-        superCall.getParent().replaceChild(superCall, IR.thisNode().useSourceInfoFrom(superCall));
+        for (Node superCall : superCalls) {
+          superCall.getParent().replaceChild(superCall, IR.thisNode().useSourceInfoFrom(superCall));
+        }
         compiler.reportCodeChange();
       } else if (isUnextendableNativeClass(t, superClassQName)) {
         compiler.report(
             JSError.make(
-                superCall,
-                CANNOT_CONVERT_YET,
-                "extending native class: " + superClassQName));
-      } else {
-        Node newSuperCall = createNewSuperCall(superClassQName, superCall);
-        if (isNativeErrorClass(t, superClassQName)) {
+                constructor, CANNOT_CONVERT_YET, "extending native class: " + superClassQName));
+      } else if (isNativeErrorClass(t, superClassQName)) {
+        for (Node superCall : superCalls) {
+          Node newSuperCall = createNewSuperCall(superClassQName, superCall);
           replaceNativeErrorSuperCall(superCall, newSuperCall);
+        }
+      } else if (isKnownToReturnOnlyUndefined(superClassQName)) {
+        // super() will not change the value of `this`.
+        for (Node superCall : superCalls) {
+          Node newSuperCall = createNewSuperCall(superClassQName, superCall);
+          Node superCallParent = superCall.getParent();
+          if (superCallParent.hasOneChild() && NodeUtil.isStatement(superCallParent)) {
+            // super() is a statement unto itself
+            superCallParent.replaceChild(superCall, newSuperCall);
+          } else {
+            // super() is part of an expression, so it must return `this`.
+            superCallParent.replaceChild(
+                superCall,
+                IR.comma(newSuperCall, IR.thisNode().useSourceInfoFrom(superCall))
+                    .useSourceInfoFrom(superCall));
+          }
+        }
+      } else {
+        Node constructorBody = checkNotNull(constructor.getChildAtIndex(2));
+        Node firstStatement = constructorBody.getFirstChild();
+        Node firstSuperCall = superCalls.get(0);
+
+        if (constructorBody.hasOneChild()
+            && firstStatement.isExprResult()
+            && firstStatement.hasOneChild()
+            && firstStatement.getFirstChild() == firstSuperCall) {
+          checkState(superCalls.size() == 1, constructor);
+          // Super call is the entire constructor, so just replace it with.
+          // `return <newSuperCall> || this;`
+          constructorBody.replaceChild(
+              firstStatement,
+              IR.returnNode(
+                      IR.or(createNewSuperCall(superClassQName, superCalls.get(0)), IR.thisNode()))
+                  .useSourceInfoIfMissingFromForTree(firstStatement));
         } else {
-          superCall.getParent().replaceChild(superCall, newSuperCall);
+          // `this` -> `$jscomp$super$this` throughout the constructor body,
+          // except for super() calls.
+          updateThisToSuperThis(constructorBody, superCalls);
+          // Start constructor with `var $jscomp$super$this;`
+          constructorBody.addChildToFront(
+              IR.var(IR.name(SUPER_THIS)).useSourceInfoFromForTree(constructorBody));
+          // End constructor with `return $jscomp$super$this;`
+          constructorBody.addChildToBack(
+              IR.returnNode(IR.name(SUPER_THIS)).useSourceInfoFromForTree(constructorBody));
+          // Replace each super() call with `($jscomp$super$this = <newSuperCall> || this)`
+          for (Node superCall : superCalls) {
+            Node newSuperCall = createNewSuperCall(superClassQName, superCall);
+            superCall
+                .getParent()
+                .replaceChild(
+                    superCall,
+                    IR.assign(IR.name(SUPER_THIS), IR.or(newSuperCall, IR.thisNode()))
+                        .useSourceInfoIfMissingFromForTree(superCall));
+          }
         }
         compiler.reportCodeChange();
       }
     }
   }
 
+  private boolean isKnownToReturnOnlyUndefined(String functionQName) {
+    Name globalName = globalNamespace.getSlot(functionQName);
+    if (globalName == null) {
+      return false;
+    }
+
+    Ref declarationRef = globalName.getDeclaration();
+    if (declarationRef == null) {
+      for (Ref ref : globalName.getRefs()) {
+        if (ref.isSet()) {
+          declarationRef = ref;
+        }
+      }
+    }
+    if (declarationRef == null) {
+      return false;
+    }
+
+    Node declaredVarOrProp = declarationRef.getNode();
+    if (declaredVarOrProp.isFromExterns()) {
+      return false;
+    }
+
+    Node declaration = declaredVarOrProp.getParent();
+    Node declaredValue = null;
+    if (declaration.isFunction()) {
+      declaredValue = declaration;
+    } else if (declaration.isVar() && declaredVarOrProp.isName()) {
+      if (declaredVarOrProp.hasChildren()) {
+        declaredValue = checkNotNull(declaredVarOrProp.getFirstChild());
+      } else {
+        return false; // Declaration without an assigned value.
+      }
+    } else if (declaration.isAssign() && declaration.getFirstChild() == declaredVarOrProp) {
+      declaredValue = checkNotNull(declaration.getSecondChild());
+    } else if (declaration.isObjectLit() && declaredVarOrProp.hasOneChild()){
+      declaredValue = checkNotNull(declaredVarOrProp.getFirstChild());
+    } else {
+      throw new IllegalStateException(
+          "Unexpected declaration format: " + declaration.toStringTree());
+    }
+
+    if (declaredValue.isFunction()) {
+      Node functionBody = checkNotNull(declaredValue.getChildAtIndex(2));
+      return !(new UndefinedReturnValueCheck().mayReturnDefinedValue(functionBody));
+    } else if (declaredValue.isQualifiedName()) {
+      return isKnownToReturnOnlyUndefined(declaredValue.getQualifiedName());
+    } else {
+      throw new IllegalStateException("Unexpected value: " + declaredValue.toStringTree());
+    }
+  }
+
+  private class UndefinedReturnValueCheck {
+    private boolean foundNonEmptyReturn;
+
+    boolean mayReturnDefinedValue(Node functionBody) {
+      foundNonEmptyReturn = false;
+      NodeTraversal.Callback checkForDefinedReturnValue =
+          new NodeTraversal.AbstractShallowCallback() {
+
+            @Override
+            public void visit(NodeTraversal t, Node n, Node parent) {
+              if (!foundNonEmptyReturn) {
+                if (n.getToken() == Token.RETURN
+                    && n.hasChildren()
+                    && !n.getFirstChild().matchesQualifiedName("undefined")) {
+                  foundNonEmptyReturn = true;
+                }
+              }
+            }
+          };
+      NodeTraversal.traverseEs6(compiler, functionBody, checkForDefinedReturnValue);
+      return foundNonEmptyReturn;
+    }
+  }
   private Node createNewSuperCall(String superClassQName, Node superCall) {
     checkArgument(superCall.isCall(), superCall);
     Node newSuperCall = superCall.cloneTree();
@@ -245,11 +410,38 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     return objectVar != null && !objectVar.isExtern();
   }
 
-  private String getSuperClassQName(Node superCall) {
-    // Find the $jscomp.inherits() call and take the super class name from there.
-    Node enclosingConstructor = checkNotNull(NodeUtil.getEnclosingFunction(superCall));
-    String className = NodeUtil.getNameNode(enclosingConstructor).getQualifiedName();
-    Node constructorStatement = checkNotNull(NodeUtil.getEnclosingStatement(enclosingConstructor));
+  private void updateThisToSuperThis(Node constructorBody, final List<Node> superCalls) {
+    NodeTraversal.Callback replaceThisWithSuperThis =
+        new NodeTraversal.Callback() {
+          @Override
+          public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+            if (superCalls.contains(n)) {
+              return false; // Leave `this` intact on super calls.
+            } else if (n.isFunction() && !n.isArrowFunction()) {
+              // Don't replace `this` in non-arrow function definitions.
+              return false;
+            } else {
+              return true;
+            }
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isThis()) {
+              Node superThis = IR.name(SUPER_THIS).useSourceInfoFrom(n);
+              parent.replaceChild(n, superThis);
+            } else if (n.isReturn() && !n.hasChildren()) {
+              // An empty return needs to be changed to return $jscomp$super$this
+              n.addChildToFront(IR.name(SUPER_THIS).useSourceInfoFrom(n));
+            }
+          }
+        };
+    NodeTraversal.traverseEs6(compiler, constructorBody, replaceThisWithSuperThis);
+  }
+
+  private String getSuperClassQName(Node constructor) {
+    String className = NodeUtil.getNameNode(constructor).getQualifiedName();
+    Node constructorStatement = checkNotNull(NodeUtil.getEnclosingStatement(constructor));
 
     for (Node statement = constructorStatement.getNext();
         statement != null;
@@ -286,6 +478,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    globalNamespace = new GlobalNamespace(compiler, externs, root);
     // Might need to synthesize constructors for ambient classes in .d.ts externs
     TranspilationPasses.processTranspile(compiler, externs, this);
     TranspilationPasses.processTranspile(compiler, root, this);

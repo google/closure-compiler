@@ -264,7 +264,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {D}",
             " * @param {...?} var_args",
             " */",
-            "var testcode$classdecl$var0 = function(var_args) { D.apply(this,arguments); };",
+            "var testcode$classdecl$var0 = function(var_args) {",
+            "    return D.apply(this,arguments) || this; ",
+            "  };",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
             "testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };",
             "f(testcode$classdecl$var0)"));
@@ -585,7 +587,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {ns.D}",
             " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) { ns.D.apply(this, arguments); };",
+            "var C = function(var_args) {",
+            " return ns.D.apply(this, arguments) || this;",
+            "};",
             "$jscomp.inherits(C, ns.D);"));
 
     // Don't inject $jscomp.inherits() or apply() for externs
@@ -811,6 +815,18 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "$jscomp.inherits(C, D);"));
 
     test(
+        "class D {} class C extends D { constructor(str, n) { super(str); this.n = n; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {}",
+            "/** @constructor @struct @extends {D} */",
+            "var C = function(str, n) {",
+            "  D.call(this,str);",
+            "  this.n = n;",
+            "}",
+            "$jscomp.inherits(C, D);"));
+
+    test(
         LINE_JOINER.join(
             "class D {}",
             "class C extends D {",
@@ -869,6 +885,144 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.f = function() {",
             "  D.prototype.f.call(this);",
             "}"));
+  }
+
+  public void testSuperKnownNotToChangeThis() {
+    test(
+        LINE_JOINER.join(
+            "class D {",
+            "  /** @param {string} str */",
+            "  constructor(str) {",
+            "    this.str = str;",
+            "    return;", // Empty return should not trigger this-changing behavior.
+            "  }",
+            "}",
+            "class C extends D {",
+            "  /**",
+            "   * @param {string} str",
+            "   * @param {number} n",
+            "   */",
+            "  constructor(str, n) {",
+            // This is nuts, but confirms that super() used in an expression works.
+            "    super(str).n = n;",
+            // Also confirm that an existing empty return is handled correctly.
+            "    return;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor @struct",
+            " * @param {string} str",
+            " */",
+            "var D = function(str) {",
+            "  this.str = str;",
+            "  return;",
+            "}",
+            "/**",
+            " * @constructor @struct @extends {D}",
+            " * @param {string} str",
+            " * @param {number} n",
+            " */",
+            "var C = function(str, n) {",
+            "  (D.call(this,str), this).n = n;", // super() returns `this`.
+            "  return;",
+            "}",
+            "$jscomp.inherits(C, D);"));
+  }
+
+  public void testSuperMightChangeThis() {
+    // Class D is unknown, so we must assume its constructor could change `this`.
+    test(
+        LINE_JOINER.join(
+            "class C extends D {",
+            "  constructor(str, n) {",
+            // This is nuts, but confirms that super() used in an expression works.
+            "    super(str).n = n;",
+            // Also confirm that an existing empty return is handled correctly.
+            "    return;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct @extends {D} */",
+            "var C = function(str, n) {",
+            "  var $jscomp$super$this;",
+            "  ($jscomp$super$this = D.call(this,str) || this).n = n;",
+            "  return $jscomp$super$this;", // Duplicate because of existing return statement.
+            "  return $jscomp$super$this;",
+            "}",
+            "$jscomp.inherits(C, D);"));
+  }
+
+  public void testAlternativeSuperCalls() {
+    test(
+        LINE_JOINER.join(
+            "class D {",
+            "  /** @param {string} name */",
+            "  constructor(name) {",
+            "    this.name = name;",
+            "  }",
+            "}",
+            "class C extends D {",
+            "  /** @param {string} str",
+            "   * @param {number} n */",
+            "  constructor(str, n) {",
+            "    if (n >= 0) {",
+            "      super('positive: ' + str);",
+            "    } else {",
+            "      super('negative: ' + str);",
+            "    }",
+            "    this.n = n;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct",
+            " * @param {string} name */",
+            "var D = function(name) {",
+            "  this.name = name;",
+            "}",
+            "/** @constructor @struct @extends {D}",
+            " * @param {string} str",
+            " * @param {number} n */",
+            "var C = function(str, n) {",
+            "  if (n >= 0) {",
+            "    D.call(this, 'positive: ' + str);",
+            "  } else {",
+            "    D.call(this, 'negative: ' + str);",
+            "  }",
+            "  this.n = n;",
+            "}",
+            "$jscomp.inherits(C, D);"));
+
+    // Class being extended is unknown, so we must assume super() could change the value of `this`.
+    test(
+        LINE_JOINER.join(
+            "class C extends D {",
+            "  /** @param {string} str",
+            "   * @param {number} n */",
+            "  constructor(str, n) {",
+            "    if (n >= 0) {",
+            "      super('positive: ' + str);",
+            "    } else {",
+            "      super('negative: ' + str);",
+            "    }",
+            "    this.n = n;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct @extends {D}",
+            " * @param {string} str",
+            " * @param {number} n */",
+            "var C = function(str, n) {",
+            "  var $jscomp$super$this;",
+            "  if (n >= 0) {",
+            "    $jscomp$super$this = D.call(this, 'positive: ' + str) || this;",
+            "  } else {",
+            "    $jscomp$super$this = D.call(this, 'negative: ' + str) || this;",
+            "  }",
+            "  $jscomp$super$this.n = n;",
+            "  return $jscomp$super$this;",
+            "}",
+            "$jscomp.inherits(C, D);"));
   }
 
   public void testComputedSuper() {
@@ -1025,7 +1179,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor @struct",
             " * @param {...?} var_args",
             " * @extends{C} */",
-            "  var D = function(var_args) { C.apply(this, arguments); };",
+            "  var D = function(var_args) {",
+            "    C.apply(this, arguments); ",
+            "  };",
             "  $jscomp.inherits(D, C);",
             "};"));
   }
@@ -1093,7 +1249,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {B}",
             " * @param {...?} var_args",
             " */",
-            "var S = function(var_args) { B.apply(this, arguments); };",
+            "var S = function(var_args) { return B.apply(this, arguments) || this; };",
             "$jscomp.inherits(S, B);",
             "/** @this {?} */",
             "S.f=function() { B.f.call(this) }"));
@@ -1105,7 +1261,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {B}",
             " * @param {...?} var_args",
             " */",
-            "var S = function(var_args) { B.apply(this, arguments); };",
+            "var S = function(var_args) { return B.apply(this, arguments) || this; };",
             "$jscomp.inherits(S, B);",
             "S.prototype.f=function() {",
             "  B.prototype.f.call(this);",
@@ -1205,8 +1361,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testInheritFromExterns() {
     test(
         LINE_JOINER.join(
-            "/** @constructor */ function ExternsClass() {}",
-            "ExternsClass.m = function() {};"),
+            "/** @constructor */ function ExternsClass() {}", "ExternsClass.m = function() {};"),
         "class CodeClass extends ExternsClass {}",
         LINE_JOINER.join(
             "/** @constructor @struct",
@@ -1214,10 +1369,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var CodeClass = function(var_args) {",
-            "  ExternsClass.apply(this,arguments)",
+            "  return ExternsClass.apply(this,arguments) || this;",
             "};",
             "$jscomp.inherits(CodeClass,ExternsClass)"),
-        null, null);
+        null,
+        null);
   }
 
   public void testMockingInFunction() {
@@ -1434,7 +1590,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {C}",
             " * @param {...?} var_args",
             " */",
-            "var D = function(var_args) { C.apply(this,arguments); };",
+            "var D = function(var_args) {",
+            "  C.apply(this,arguments); ",
+            "};",
             "/** @nocollapse @type {?} */",
             "D.value;",
             "$jscomp.inherits(D, C);",
