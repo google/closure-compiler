@@ -332,7 +332,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   private void checkShortGoogRequireCall(NodeTraversal t, Node callNode, Node declaration) {
     String shortName = null;
     if (NodeUtil.isNameDeclaration(declaration)) {
-      if (declaration.isLet()) {
+      if (declaration.isLet()
+          && !callNode.getFirstChild().matchesQualifiedName("goog.forwardDeclare")) {
         t.report(declaration, LET_GOOG_REQUIRE);
       }
       if (!declaration.hasOneChild()) {

@@ -507,6 +507,12 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
   }
 
   public void testIllegalLetShortRequire() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "let a = goog.forwardDeclare('foo.a');"));
+
     testErrorEs6(
         LINE_JOINER.join(
             "goog.module('xyz');",
