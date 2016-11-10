@@ -1194,7 +1194,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
           commonTypes,
           TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK
           | NULL_MASK | UNDEFINED_MASK | NON_SCALAR_MASK,
-          ImmutableSet.of(this.commonTypes.TOP_OBJECTTYPE), null, NO_ENUMS);
+          ImmutableSet.of(this.commonTypes.getTopObjectType()), null, NO_ENUMS);
       return almostTop.removeType(other);
     }
     int newMask = getMask() & ~otherMask;

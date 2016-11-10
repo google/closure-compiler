@@ -15450,6 +15450,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     // deliberately not adding the default externs here, to avoid the definition
     // of window.
     typeCheckCustomExterns(LINE_JOINER.join(
+        "/** @constructor */ function Object() {}",
         "/**",
         " * @constructor",
         " * @param {...*} var_args",

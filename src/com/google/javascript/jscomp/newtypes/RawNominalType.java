@@ -101,10 +101,6 @@ public final class RawNominalType extends Namespace {
 
     if (isBuiltinHelper(name, "Function", defSite)) {
       objInstance = ObjectType.fromFunction(this.commonTypes.TOP_FUNCTION, this.wrappedAsNominal);
-    } else if (isBuiltinHelper(name, "Object", defSite)) {
-      // We do this to avoid having two instances of ObjectType that both
-      // represent the top JS object.
-      objInstance = this.commonTypes.TOP_OBJECTTYPE;
     } else {
       objInstance = ObjectType.fromNominalType(this.wrappedAsNominal);
     }
@@ -634,8 +630,14 @@ public final class RawNominalType extends Namespace {
     // at the "constructor" property.
     // If in future we decide that it's important to model this property,
     // we'll have to address the subtyping issues.
+    NominalType protoNT = this.superclass;
+    if (protoNT == null) {
+      NominalType builtinObj = Preconditions.checkNotNull(this.commonTypes.getObjectType(),
+          "Missing externs for the builtin Object type");
+      protoNT = builtinObj;
+    }
     JSType protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
-        this.commonTypes, this.superclass, this.protoProps,
+        this.commonTypes, protoNT, this.protoProps,
         null, null, false, ObjectKind.UNRESTRICTED));
     addCtorProperty("prototype", null, protoObject, false);
     this.isFinalized = true;

@@ -419,7 +419,7 @@ public final class JSTypeCreatorFromJSDoc {
         // at least not warn about inexistent properties on it, so we type it
         // as @dict.
         return maybeMakeNullable(n.hasChildren()
-            ? this.commonTypes.TOP_DICT : this.commonTypes.TOP_OBJECT);
+            ? this.commonTypes.getTopDict() : this.commonTypes.getTopObject());
       default:
         return lookupTypeByName(typeName, n, registry, outerTypeParameters);
     }
@@ -598,7 +598,7 @@ public final class JSTypeCreatorFromJSDoc {
     } else if (child.getToken() == Token.NEW) {
       Node newTypeNode = child.getFirstChild();
       JSType t = getThisOrNewType(newTypeNode, registry, typeParameters);
-      if (!t.isSubtypeOf(this.commonTypes.TOP_OBJECT)
+      if (!t.isSubtypeOf(this.commonTypes.getTopObject())
           && (!t.hasTypeVariable() || t.hasScalar())) {
         warnings.add(JSError.make(
             newTypeNode, NEW_EXPECTS_OBJECT_OR_TYPEVAR, t.toString()));

@@ -460,7 +460,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       globalThisType = win.getInstanceAsJSType();
     } else {
       // Type the global THIS as a loose object
-      globalThisType = this.commonTypes.TOP_OBJECT.withLoose();
+      globalThisType = this.commonTypes.getTopObject().withLoose();
     }
     this.globalScope.setDeclaredType(
         (new FunctionTypeBuilder(this.commonTypes)).
@@ -2030,7 +2030,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           return simpleInferDeclaration(
               this.currentScope.getDeclaration(n.getString(), false));
         case OBJECTLIT: {
-          JSType objLitType = commonTypes.TOP_OBJECT;
+          JSType objLitType = commonTypes.getEmptyObjectLiteral();
           for (Node prop : n.children()) {
             JSType propType = simpleInferExprType(prop.getFirstChild());
             if (propType == null) {

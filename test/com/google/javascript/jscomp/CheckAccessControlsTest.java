@@ -209,7 +209,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.NTI_ONLY;
     testDepProp(
         js,
-        "Property bar of type Object{bar:?, baz:function(this:Foo):?} has been deprecated:"
+        "Property bar of type {bar:?, baz:function(this:Foo):?} has been deprecated:"
             + " It is now in production, use that model...");
   }
 

@@ -411,9 +411,7 @@ final class NewTypeInference implements CompilerPass {
   private JSType NUMBER_OR_STRING;
   private JSType STRING;
   private JSType TOP;
-  private JSType TOP_DICT;
   private JSType TOP_OBJECT;
-  private JSType TOP_STRUCT;
   private JSType TRUE_TYPE;
   private JSType TRUTHY;
   private JSType UNDEFINED;
@@ -466,9 +464,7 @@ final class NewTypeInference implements CompilerPass {
       this.NUMBER_OR_STRING = this.commonTypes.NUMBER_OR_STRING;
       this.STRING = this.commonTypes.STRING;
       this.TOP = this.commonTypes.TOP;
-      this.TOP_DICT = this.commonTypes.TOP_DICT;
-      this.TOP_OBJECT = this.commonTypes.TOP_OBJECT;
-      this.TOP_STRUCT = this.commonTypes.TOP_STRUCT;
+      this.TOP_OBJECT = this.commonTypes.getTopObject();
       this.TRUE_TYPE = this.commonTypes.TRUE_TYPE;
       this.TRUTHY = this.commonTypes.TRUTHY;
       this.UNDEFINED = this.commonTypes.UNDEFINED;
@@ -2770,8 +2766,7 @@ final class NewTypeInference implements CompilerPass {
             ? arrayType : beforeType.removeType(arrayType);
       }
       case "isArrayLike":
-        return TOP_OBJECT.withProperty(
-            new QualifiedName("length"), NUMBER);
+        return TOP_OBJECT.withProperty(new QualifiedName("length"), NUMBER);
       case "boolean":
       case "isBoolean":
         return booleanContext.isTrueOrTruthy()
@@ -4289,10 +4284,10 @@ final class NewTypeInference implements CompilerPass {
       case OBJECTLIT: {
         JSDocInfo jsdoc = expr.getJSDocInfo();
         if (jsdoc != null && jsdoc.makesStructs()) {
-          return TOP_STRUCT;
+          return this.commonTypes.getTopStruct();
         }
         if (jsdoc != null && jsdoc.makesDicts()) {
-          return TOP_DICT;
+          return this.commonTypes.getTopDict();
         }
         return this.commonTypes.getEmptyObjectLiteral();
       }

@@ -1286,6 +1286,21 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "Violation: My rule message\nThe property \"prop\" on type \"module$contents$example_f\"");
   }
 
+  public void testCustomBanUnknownProp7() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testNoWarning(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {!Object<number, number>} */",
+        "  this.prop;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  return x.prop[1] + 123;",
+        "}"));
+  }
+
   public void testCustomBanUnknownInterfaceProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
