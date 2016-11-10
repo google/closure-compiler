@@ -539,7 +539,9 @@ class ConvertToTypedInterface implements CompilerPass {
       }
       // goog.defineClass
       Preconditions.checkState(parent.isStringKey());
-      return parent.getGrandparent().getParent().getString();
+      Node defineClassCall = parent.getGrandparent();
+      Preconditions.checkState(defineClassCall.isCall());
+      return NodeUtil.getBestLValue(defineClassCall).getQualifiedName();
     }
     return NodeUtil.getName(functionNode);
   }

@@ -379,6 +379,17 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
 
     testEs6(
         LINE_JOINER.join(
+            "ns.Foo = goog.defineClass(null, {",
+            "  constructor: function() { /** @type {number} */ this.num = 5;},",
+            "});"),
+        LINE_JOINER.join(
+            "ns.Foo = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "});",
+            "/** @type {number} */ ns.Foo.prototype.num;"));
+
+    testEs6(
+        LINE_JOINER.join(
             "const Foo = goog.defineClass(null, {",
             "  /** @return {number} */",
             "  foo: function() { return 5;},",
