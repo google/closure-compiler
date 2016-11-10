@@ -1542,6 +1542,14 @@ public final class CommandLineRunnerTest extends TestCase {
     testSame("var x = {}; with (x) {}");
   }
 
+  public void testIsolationMode() {
+    args.add("--isolation_mode=IIFE");
+    testSame("window.x = \"123\";");
+    String output = new String(outReader.toByteArray(), UTF_8);
+    assertThat(output).isEqualTo(
+        "(function(){window.x=\"123\";}).call(this);\n");
+  }
+
   public void testNoSrCFilesWithManifest() throws IOException {
     args.add("--env=CUSTOM");
     args.add("--output_manifest=test.MF");

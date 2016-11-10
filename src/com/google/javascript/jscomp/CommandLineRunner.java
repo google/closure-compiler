@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
+import com.google.javascript.jscomp.CompilerOptions.IsolationMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.TokenStream;
@@ -266,6 +267,12 @@ public class CommandLineRunner extends
         + "diagnostic  group is enabled, see --jscomp_warning), "
         + "3 (always print summary). The default level is 1")
     private int summaryDetailLevel = 1;
+
+    @Option(name = "--isolation_mode",
+        usage = "If set to IIFE the compiler output will follow the form:\n"
+        + "  (function(){%output%)).call(this);\n"
+        + "Options: NONE, IIFE")
+    private IsolationMode isolationMode = IsolationMode.NONE;
 
     @Option(name = "--output_wrapper",
         usage = "Interpolate output into this string at the place denoted"
@@ -1336,8 +1343,11 @@ public class CommandLineRunner extends
       }
     }
 
-    if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
+    if (flags.outputWrapper == null) {
       flags.outputWrapper = "";
+    }
+
+    if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
       try {
         flags.outputWrapper = Files.toString(
             new File(flags.outputWrapperFile), UTF_8);
@@ -1346,10 +1356,18 @@ public class CommandLineRunner extends
       }
     }
 
-    if (flags.outputWrapper != null && !flags.outputWrapper.isEmpty() &&
+    if (!flags.outputWrapper.isEmpty() &&
         !flags.outputWrapper.contains(CommandLineRunner.OUTPUT_MARKER)) {
       reportError("ERROR - invalid output_wrapper specified. Missing '" +
           CommandLineRunner.OUTPUT_MARKER + "'.");
+    }
+
+    if (!flags.outputWrapper.isEmpty() && flags.isolationMode != IsolationMode.NONE) {
+      reportError("--output_wrapper and --isolation_mode may not be used together.");
+    }
+
+    if (flags.isolationMode == IsolationMode.IIFE) {
+      flags.outputWrapper = "(function(){%output%}).call(this);";
     }
 
     if (errors) {

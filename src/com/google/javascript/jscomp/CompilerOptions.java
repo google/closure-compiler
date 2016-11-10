@@ -2999,6 +2999,12 @@ public class CompilerOptions {
     }
   }
 
+  /** What kind of isolation is going to be used */
+  public static enum IsolationMode {
+    NONE, // output does not include additional isolation.
+    IIFE; // The output should be wrapped in an IIFE to isolate global variables.
+  }
+
   /**
    * A Role Specific Interface for JS Compiler that represents a data holder
    * object which is used to store goog.scope alias code changes to code made
