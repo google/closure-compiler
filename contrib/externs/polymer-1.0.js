@@ -389,7 +389,7 @@ PolymerElement.prototype.toggleClass = function(name, bool, node) {};
  * if bool is truthy and removing it if bool is falsey. If node is specified,
  * sets the attribute on node instead of the host element.
  * @param {string} name
- * @param {boolean} bool
+ * @param {boolean=} bool
  * @param {HTMLElement=} node
  */
 PolymerElement.prototype.toggleAttribute = function(name, bool, node) {};
