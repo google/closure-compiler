@@ -25,8 +25,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
-import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -42,27 +40,13 @@ import junit.framework.TestCase;
  */
 public final class NodeUtilTest extends TestCase {
 
-  private static Node parse(String js, boolean typeCheck) {
+  private static Node parse(String js) {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
     Node n = compiler.parseTestCode(js);
-    if (typeCheck) {
-      ReverseAbstractInterpreter rai =
-          new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-      new TypeCheck(compiler, rai, compiler.getTypeRegistry())
-          .processForTesting(n.getFirstChild(), n.getLastChild());
-    }
     assertThat(compiler.getErrors()).isEmpty();
     return n;
-  }
-
-  private static Node parse(String js) {
-    return parse(js, false);
-  }
-
-  private static Node parseAndTypeCheck(String js) {
-    return parse(js, true);
   }
 
   static Node getNode(String js) {
@@ -2458,34 +2442,6 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isObjectDefinePropertyDefinition(
         getCallNode("Object.defineProperty();")));
   }
-
-  public void testWasCasted() {
-    assertFalse(NodeUtil.wasCasted(getCallNode(parseAndTypeCheck("var x = foo();"))));
-    assertTrue(
-        NodeUtil.wasCasted(
-            getCallNode(parseAndTypeCheck("var x = /** @type {string} */ (foo());"))));
-  }
-
-  public void testMaybePropagateCastTo() {
-    Node ast = parseAndTypeCheck("var x = /** @type {string} */ (foo());");
-    Node x = getNameNode(ast, "x");
-    Node call = getCallNode(ast);
-
-    assertFalse(NodeUtil.wasCasted(x));
-    NodeUtil.maybePropagateCast(call, x);
-    assertTrue(NodeUtil.wasCasted(x));
-  }
-
-  public void testMaybePropagateCastTo_noExistingCast() {
-    Node ast = parseAndTypeCheck("var x = foo();");
-    Node x = getNameNode(ast, "x");
-    Node call = getCallNode(ast);
-
-    assertFalse(NodeUtil.wasCasted(x));
-    NodeUtil.maybePropagateCast(call, x);
-    assertFalse(NodeUtil.wasCasted(x));
-  }
-
 
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);

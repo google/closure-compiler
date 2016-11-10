@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
+import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -1766,6 +1767,38 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setRemoveUnusedVariables(Reach.ALL);
     test(options, code, "function f() { var x; 3; 4; x = 5; return x; } f();");
+  }
+
+  public void testPreservesCastInformation() {
+    // Only set the suffix instead of both prefix and suffix, because j2cl pass
+    // looks for that exact suffix, and IntegrationTestCase adds an input
+    // id number between prefix and suffix.
+    inputFileNameSuffix = "vmbootstrap/Arrays.impl.java.js";
+    CompilerOptions options = new CompilerOptions();
+    String code = LINE_JOINER.join(
+        "/** @constructor */",
+        "var Arrays = function() {};",
+        "Arrays.$create = function() { return {}; }",
+        "/** @constructor */",
+        "function Foo() { this.myprop = 1; }",
+        "/** @constructor */",
+        "function Bar() { this.myprop = 2; }",
+        "var x = /** @type {!Foo} */ (Arrays.$create()).myprop;");
+
+    options.setCheckTypes(true);
+    options.setJ2clPass(J2clPassMode.TRUE);
+    options.setDisambiguateProperties(true);
+
+    test(options, code,
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var Arrays = function() {};",
+            "Arrays.$create = function() { return {}; }",
+            "/** @constructor */",
+            "function Foo() { this.Foo$myprop = 1; }",
+            "/** @constructor */",
+            "function Bar() { this.Bar$myprop = 2; }",
+            "var x = {}.Foo$myprop;"));
   }
 
   public void testInlineFunctions() {

@@ -22,7 +22,7 @@ import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
+import com.google.javascript.rhino.TypeI;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -291,8 +291,11 @@ class FunctionInjector {
     }
 
     // If the call site had a cast ensure it's persisted to the new expression that replaces it.
-    NodeUtil.maybePropagateCast(callNode, newExpression);
-
+    TypeI typeBeforeCast = callNode.getTypeIBeforeCast();
+    if (typeBeforeCast != null) {
+      newExpression.putProp(Node.TYPE_BEFORE_CAST, typeBeforeCast);
+      newExpression.setTypeI(callNode.getTypeI());
+    }
     callParentNode.replaceChild(callNode, newExpression);
     return newExpression;
   }
@@ -563,7 +566,9 @@ class FunctionInjector {
   private static void removeConstantVarAnnotation(Scope scope, String name) {
     Var var = scope.getVar(name);
     Node nameNode = var == null ? null : var.getNameNode();
-    if (nameNode == null) return;
+    if (nameNode == null) {
+      return;
+    }
 
     if (nameNode.getBooleanProp(Node.IS_CONSTANT_VAR)) {
       nameNode.removeProp(Node.IS_CONSTANT_VAR);
