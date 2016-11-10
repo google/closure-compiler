@@ -290,6 +290,9 @@ class FunctionInjector {
       newExpression = safeReturnNode.removeFirstChild();
     }
 
+    // If the call site had a cast ensure it's persisted to the new expression that replaces it.
+    NodeUtil.maybePropagateCast(callNode, newExpression);
+
     callParentNode.replaceChild(callNode, newExpression);
     return newExpression;
   }

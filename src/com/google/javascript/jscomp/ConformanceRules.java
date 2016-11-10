@@ -310,13 +310,9 @@ public final class ConformanceRules {
       return false;
     }
 
-    protected boolean wasCast(Node n) {
-      return n.getTypeIBeforeCast() != null;
-    }
-
     protected boolean isTypeImmediatelyTightened(Node n) {
       Node parent = n.getParent();
-      return wasCast(n) || isAssertionCall(parent);
+      return NodeUtil.wasCasted(n) || isAssertionCall(parent);
     }
 
     protected boolean isUsed(Node n) {

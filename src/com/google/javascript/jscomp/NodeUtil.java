@@ -4868,4 +4868,15 @@ public final class NodeUtil {
   static boolean isCallTo(Node n, String qualifiedName) {
     return n.isCall() && n.getFirstChild().matchesQualifiedName(qualifiedName);
   }
+
+  static boolean wasCasted(Node node) {
+    return node.getProp(Node.TYPE_BEFORE_CAST) != null;
+  }
+
+  static void maybePropagateCast(Node source, Node destination) {
+    if (wasCasted(source)) {
+      destination.putProp(Node.TYPE_BEFORE_CAST, source.getProp(Node.TYPE_BEFORE_CAST));
+      destination.setJSType(source.getJSType());
+    }
+  }
 }
