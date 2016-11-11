@@ -898,22 +898,36 @@ public final class ProcessCommonJSModules implements CompilerPass {
           if (newNameIsQualified) {
             // Refactor a var declaration to a getprop assignment
             Node getProp = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            JSDocInfo info = parent.getJSDocInfo();
+            if (info != null) {
+              parent.setJSDocInfo(null);
+              getProp.setJSDocInfo(info);
+            }
+
             if (nameRef.hasChildren()) {
               Node expr =
                   IR.exprResult(IR.assign(getProp, nameRef.getFirstChild().detachFromParent()))
                       .useSourceInfoIfMissingFromForTree(nameRef);
               parent.getParent().replaceChild(parent, expr);
             } else {
-              parent.getParent().replaceChild(parent, getProp);
+              parent.getParent()
+                .replaceChild(parent, IR.exprResult(getProp).useSourceInfoFrom(getProp));
             }
           } else if (newNameDeclaration != null) {
             // Variable is already defined. Convert this to an assignment.
             Node name = NodeUtil.newName(compiler, newName, nameRef, originalName);
+            Node assign = IR.assign(name, nameRef.getFirstChild().detachFromParent());
+            JSDocInfo info = parent.getJSDocInfo();
+            if (info != null) {
+              parent.setJSDocInfo(null);
+              assign.setJSDocInfo(info);
+            }
+
             parent
                 .getParent()
                 .replaceChild(
                     parent,
-                    IR.exprResult(IR.assign(name, nameRef.getFirstChild().detachFromParent()))
+                    IR.exprResult(assign)
                         .useSourceInfoFromForTree(nameRef));
           } else {
             nameRef.setString(newName);
@@ -921,36 +935,28 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
           break;
 
-        case GETPROP:
-          {
-            Node name =
-                newNameIsQualified
-                    ? NodeUtil.newQName(compiler, newName, nameRef, originalName)
-                    : NodeUtil.newName(compiler, newName, nameRef, originalName);
-            parent.replaceChild(nameRef, name);
-            moveChildrenToNewNode(nameRef, name);
-
-            break;
-        }
         default:
           {
             Node name =
                 newNameIsQualified
                     ? NodeUtil.newQName(compiler, newName, nameRef, originalName)
                     : NodeUtil.newName(compiler, newName, nameRef, originalName);
+
+            JSDocInfo info = nameRef.getJSDocInfo();
+            if (info != null) {
+              nameRef.setJSDocInfo(null);
+              name.setJSDocInfo(info);
+            }
             parent.replaceChild(nameRef, name);
-            moveChildrenToNewNode(nameRef, name);
+            if (nameRef.hasChildren()) {
+              name.addChildrenToFront(nameRef.removeChildren());
+            }
+
             break;
           }
       }
 
       compiler.reportCodeChange();
-    }
-
-    private void moveChildrenToNewNode(Node oldNode, Node newNode) {
-      while (oldNode.hasChildren()) {
-        newNode.addChildToBack(oldNode.getFirstChild().detachFromParent());
-      }
     }
 
     /**
