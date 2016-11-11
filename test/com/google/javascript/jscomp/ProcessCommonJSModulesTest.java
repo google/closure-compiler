@@ -486,4 +486,19 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "const {foo, bar} = module$other;",
             "var baz = module$other.foo + module$other.bar;"));
   }
+
+  public void testAnnotationsCopied() {
+    setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6, CompilerOptions.LanguageMode.ECMASCRIPT5);
+    setFilename("test");
+    testModules(
+        LINE_JOINER.join(
+            "/** @interface */ var a;",
+            "/** @type {string} */ a.prototype.foo;",
+            "module.exports.a = a;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test = {};",
+            "/** @interface */ module$test.a;",
+            "/** @type {string} */ module$test.a.prototype.foo;"));
+  }
 }
