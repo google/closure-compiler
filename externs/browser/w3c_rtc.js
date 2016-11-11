@@ -279,6 +279,31 @@ MediaStream.prototype.stop = function() {};
  */
 var webkitMediaStream;
 
+
+/**
+ * @interface
+ * @see http://w3c.github.io/webrtc-pc/#rtcrtpsender-interface
+ */
+function RTCRtpSender() {}
+
+/**
+ * @const {!MediaStreamTrack}
+ */
+RTCRtpSender.prototype.track;
+
+
+/**
+ * @interface
+ * @see http://w3c.github.io/webrtc-pc/#rtcrtpreceiver-interface
+ */
+function RTCRtpReceiver() {}
+
+/**
+ * @const {!MediaStreamTrack}
+ */
+RTCRtpReceiver.prototype.track;
+
+
 /**
  * This interface defines the available constraint attributes.  These are the
  * attributes defined in
@@ -1071,6 +1096,11 @@ RTCPeerConnection.prototype.getRemoteStreams = function() {};
 RTCPeerConnection.prototype.getStreamById = function(streamId) {};
 
 /**
+ * @return {!Array<!RTCRtpSender>}
+ */
+RTCPeerConnection.prototype.getSenders = function() {};
+
+/**
  * @param {?string} label
  * @param {RTCDataChannelInit=} dataChannelDict
  * @return {!RTCDataChannel}
@@ -1089,6 +1119,21 @@ RTCPeerConnection.prototype.addStream = function(stream, constraints) {};
  * @return {undefined}
  */
 RTCPeerConnection.prototype.removeStream = function(stream) {};
+
+/**
+ * @param {!MediaStreamTrack} track
+ * @param {!MediaStream} stream
+ * @param {...MediaStream} var_args Additional streams.
+ * @return {!RTCRtpSender}
+ */
+RTCPeerConnection.prototype.addTrack = function(track, stream, var_args) {};
+
+
+/**
+ * @param {!RTCRtpSender} sender
+ * @return {undefined}
+ */
+RTCPeerConnection.prototype.removeTrack = function(sender) {};
 
 // TODO(bemasc): Add identity provider stuff once implementations exist
 
