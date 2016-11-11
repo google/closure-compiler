@@ -865,6 +865,13 @@ public class Node implements Serializable {
   }
 
   /**
+   * Detaches Node and replaces it with newNode.
+   */
+  public void replaceWith(Node newNode) {
+    this.getParent().replaceChild(this, newNode);
+  }
+
+  /**
    * Detaches child from Node and replaces it with newChild.
    */
   public void replaceChild(Node child, Node newChild) {
