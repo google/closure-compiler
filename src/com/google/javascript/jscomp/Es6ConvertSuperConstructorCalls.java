@@ -228,7 +228,8 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     } else if (declaredValue.isQualifiedName()) {
       return isKnownToReturnOnlyUndefined(declaredValue.getQualifiedName());
     } else {
-      throw new IllegalStateException("Unexpected value: " + declaredValue.toStringTree());
+      // TODO(bradfordcsmith): What cases are these? Can we do better?
+      return false;
     }
   }
 
