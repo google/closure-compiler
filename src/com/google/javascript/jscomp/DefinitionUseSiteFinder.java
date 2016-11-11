@@ -169,7 +169,7 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
         String name = getSimplifiedName(def.getLValue());
         if (name != null) {
           this.definitionNodeByDefinitionSite.remove(node);
-          this.nameDefinitionMultimap.remove(name, node);
+          this.nameDefinitionMultimap.remove(name, def);
         }
       }
     } else {
