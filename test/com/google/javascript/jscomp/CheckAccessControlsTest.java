@@ -471,24 +471,33 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testPrivateAccess_googModule() {
-    test(
-        new String[] {
+    String[] js = new String[] {
           LINE_JOINER.join(
-              "goog.module('example.one');",
-              "/** @constructor */ function C() {};",
-              "/** @private */ C.prototype.m = function() {};",
-              "exports = C;"),
+              "goog.module('example.One');",
+              "/** @constructor */ function One() {}",
+              "/** @private */ One.prototype.m = function() {};",
+              "exports = One;"),
           LINE_JOINER.join(
               "goog.module('example.two');",
-              "var one = goog.require('example.one');",
-              "(new one()).m();"),
-        },
+              "var One = goog.require('example.One');",
+              "(new One()).m();"),
+        };
+
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    test(
+        js,
         null,
         BAD_PRIVATE_PROPERTY_ACCESS,
         null,
-        // TODO(tbreisacher): The type name in the error message should be "example.one" instead of
-        // module$exports$example$one
-        "Access to private property m of module$exports$example$one not allowed here.");
+        "Access to private property m of One not allowed here.");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    test(
+        js,
+        null,
+        BAD_PRIVATE_PROPERTY_ACCESS,
+        null,
+        "Access to private property m of module$exports$example$One not allowed here.");
   }
 
   public void testNoPrivateAccessForProperties1() {

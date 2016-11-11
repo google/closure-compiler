@@ -460,7 +460,6 @@ public abstract class CompilerTestCase extends TestCase {
   /**
    * Process closure library primitives.
    */
-  // TODO(nicksantos): Fix other passes to use this when appropriate.
   protected void enableClosurePass() {
     closurePassEnabled = true;
   }
