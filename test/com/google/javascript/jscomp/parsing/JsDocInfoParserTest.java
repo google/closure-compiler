@@ -2726,10 +2726,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Some.Long.Type.Name", 0, 7, 1, 8, true);
   }
 
-  @SuppressWarnings("deprecation")
   public void testParseWithoutMarkerName() {
     JSDocInfo jsdoc = parse("@author helloworld*/", true);
-    assertThat(assertAnnotationMarker(jsdoc, "author", 0, 0).getName()).isNull();
+    assertThat(assertAnnotationMarker(jsdoc, "author", 0, 0).getNameNode()).isNull();
   }
 
   public void testParseWithMarkerType() {
@@ -4563,17 +4562,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param startCharno The starting character of the text.
    * @return The marker, for chaining purposes.
    */
-  @SuppressWarnings("deprecation")
   private JSDocInfo.Marker assertNameInMarker(JSDocInfo.Marker marker,
       String name, int startLine, int startCharno) {
-    assertThat(marker.getName()).isNotNull();
-    assertThat(marker.getName().getItem()).isEqualTo(name);
+    assertThat(marker.getNameNode()).isNotNull();
+    assertThat(marker.getNameNode().getItem().getString()).isEqualTo(name);
 
-    assertThat(marker.getName().getPositionOnStartLine()).isEqualTo(startCharno);
-    assertThat(marker.getName().getPositionOnEndLine()).isEqualTo(startCharno + name.length());
+    assertThat(marker.getNameNode().getPositionOnStartLine()).isEqualTo(startCharno);
+    assertThat(marker.getNameNode().getPositionOnEndLine()).isEqualTo(startCharno + name.length());
 
-    assertThat(marker.getName().getStartLine()).isEqualTo(startLine);
-    assertThat(marker.getName().getEndLine()).isEqualTo(startLine);
+    assertThat(marker.getNameNode().getStartLine()).isEqualTo(startLine);
+    assertThat(marker.getNameNode().getEndLine()).isEqualTo(startLine);
 
     return marker;
   }

@@ -361,7 +361,6 @@ public class JSDocInfo implements Serializable {
    */
   public static final class Marker {
     private TrimmedStringPosition annotation;
-    private TrimmedStringPosition name;
     private NamePosition nameNode;
     private StringPosition description;
     private TypePosition type;
@@ -375,20 +374,6 @@ public class JSDocInfo implements Serializable {
 
     void setAnnotation(TrimmedStringPosition p) {
       annotation = p;
-    }
-
-    /**
-     * Gets the position information for the name found
-     * in a @param tag.
-     * @deprecated Use #getNameNode
-     */
-    @Deprecated
-    public StringPosition getName() {
-      return name;
-    }
-
-    void setName(TrimmedStringPosition p) {
-      name = p;
     }
 
     /**
@@ -437,7 +422,6 @@ public class JSDocInfo implements Serializable {
       }
 
       return TrimmedStringPosition.areEquivalent(m1.annotation, m2.annotation)
-          && TrimmedStringPosition.areEquivalent(m1.name, m2.name)
           && NamePosition.areEquivalent(m1.nameNode, m2.nameNode)
           && StringPosition.areEquivalent(m1.description, m2.description)
           && TypePosition.areEquivalent(m1.type, m2.type);
