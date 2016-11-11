@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -192,7 +191,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
       if (node.isName() && "y".equals(node.getString())) {
         Node replacement = Node.newString(Token.NAME, "x");
 
-        node.getParent().replaceChild(node, replacement);
+        node.replaceWith(replacement);
         reportCodeChange();
 
         return replacement;

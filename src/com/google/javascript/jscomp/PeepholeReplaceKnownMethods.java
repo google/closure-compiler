@@ -164,7 +164,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     // From Rhino, NativeString.java. See ECMA 15.5.4.11
     String lowered = stringNode.getString().toLowerCase(Locale.ROOT);
     Node replacement = IR.string(lowered);
-    subtree.getParent().replaceChild(subtree, replacement);
+    subtree.replaceWith(replacement);
     reportCodeChange();
     return replacement;
   }
@@ -176,7 +176,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     // From Rhino, NativeString.java. See ECMA 15.5.4.12
     String upped = stringNode.getString().toUpperCase(Locale.ROOT);
     Node replacement = IR.string(upped);
-    subtree.getParent().replaceChild(subtree, replacement);
+    subtree.replaceWith(replacement);
     reportCodeChange();
     return replacement;
   }
@@ -269,7 +269,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         } else {
           numericNode = IR.number(checkVal);
         }
-        n.getParent().replaceChild(n, numericNode);
+        n.replaceWith(numericNode);
         reportCodeChange();
         return numericNode;
       }
@@ -340,7 +340,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       }
     }
 
-    n.getParent().replaceChild(n, newNode);
+    n.replaceWith(newNode);
 
     reportCodeChange();
 
@@ -377,7 +377,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     int indexVal = isIndexOf ? lstring.indexOf(searchValue, fromIndex)
                              : lstring.lastIndexOf(searchValue, fromIndex);
     Node newNode = IR.number(indexVal);
-    n.getParent().replaceChild(n, newNode);
+    n.replaceWith(newNode);
 
     reportCodeChange();
 

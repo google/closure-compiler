@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollect
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -511,7 +510,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       // "('undefined' != typeof Bar && foo instanceof Bar)"
       Node reference = n.getLastChild().cloneNode();
       Preconditions.checkState(reference.isName());
-      n.getParent().replaceChild(n, tmp);
+      n.replaceWith(tmp);
       Node and = IR.and(
           new Node(Token.NE,
               IR.string("undefined"),
@@ -520,7 +519,7 @@ class CrossModuleCodeMotion implements CompilerPass {
           n
       );
       and.useSourceInfoIfMissingFromForTree(n);
-      tmp.getParent().replaceChild(tmp, and);
+      tmp.replaceWith(and);
       compiler.reportCodeChange();
     }
   }

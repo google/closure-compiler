@@ -1221,7 +1221,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     Node oldRoot = oldInput.getAstRoot(this);
     if (oldRoot != null) {
-      oldRoot.getParent().replaceChild(oldRoot, newRoot);
+      oldRoot.replaceWith(newRoot);
     } else {
       getRoot().getLastChild().addChildToBack(newRoot);
     }

@@ -272,7 +272,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return;
     }
 
-    n.getParent().replaceChild(n, replacement);
+    n.replaceWith(replacement);
     reportCodeChange();
   }
 
@@ -326,7 +326,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (typeNameString != null) {
       Node newNode = IR.string(typeNameString);
-      originalTypeofNode.getParent().replaceChild(originalTypeofNode, newNode);
+      originalTypeofNode.replaceWith(newNode);
       reportCodeChange();
 
       return newNode;
@@ -453,7 +453,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
 
       if (replacementNode != null) {
-        n.getParent().replaceChild(n, replacementNode);
+        n.replaceWith(replacementNode);
         reportCodeChange();
         return replacementNode;
       }
@@ -531,7 +531,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     Node newNode = new Node(newType,
         left.detach(), newRight.detach());
-    n.getParent().replaceChild(n, newNode);
+    n.replaceWith(newNode);
 
     reportCodeChange();
 
@@ -557,7 +557,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node replacement = IR.assign(left.detach(),
         new Node(op, left.cloneTree(), right.detach())
             .srcref(n));
-    n.getParent().replaceChild(n, replacement);
+    n.replaceWith(replacement);
     reportCodeChange();
 
     return replacement;
@@ -685,7 +685,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       String rightString = NodeUtil.getStringValue(right);
       if (leftString != null && rightString != null) {
         Node newStringNode = IR.string(leftString + rightString);
-        n.getParent().replaceChild(n, newStringNode);
+        n.replaceWith(newStringNode);
         reportCodeChange();
         return newStringNode;
       }
@@ -701,7 +701,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node result = performArithmeticOp(n.getToken(), left, right);
     if (result != null) {
       result.useSourceInfoIfMissingFromForTree(n);
-      n.getParent().replaceChild(n, result);
+      n.replaceWith(result);
       reportCodeChange();
       return result;
     }
@@ -905,7 +905,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
 
       Node newNumber = IR.number(result);
-      n.getParent().replaceChild(n, newNumber);
+      n.replaceWith(newNumber);
       reportCodeChange();
 
       return newNumber;
@@ -924,7 +924,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     Node newNode = NodeUtil.booleanNode(result.toBoolean(true));
-    n.getParent().replaceChild(n, newNode);
+    n.replaceWith(newNode);
     reportCodeChange();
 
     return newNode;
@@ -1247,7 +1247,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       Preconditions.checkState(knownLength != -1);
       Node lengthNode = IR.number(knownLength);
-      n.getParent().replaceChild(n, lengthNode);
+      n.replaceWith(lengthNode);
       reportCodeChange();
 
       return lengthNode;
@@ -1308,7 +1308,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     // Replace the entire GETELEM with the value
-    n.getParent().replaceChild(n, elem);
+    n.replaceWith(elem);
     reportCodeChange();
     return elem;
   }
@@ -1359,7 +1359,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node elem = IR.string(Character.toString(c));
 
     // Replace the entire GETELEM with the value
-    n.getParent().replaceChild(n, elem);
+    n.replaceWith(elem);
     reportCodeChange();
     return elem;
   }
@@ -1422,7 +1422,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       replacement.putBooleanProp(Node.FREE_CALL, true);
     }
 
-    n.getParent().replaceChild(n, replacement);
+    n.replaceWith(replacement);
     reportCodeChange();
     return n;
   }

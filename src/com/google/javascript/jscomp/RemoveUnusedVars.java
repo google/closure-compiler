@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -462,7 +461,7 @@ class RemoveUnusedVars
       }
       for (Node n : toReplaceWithZero) {
         compiler.reportChangeToEnclosingScope(n);
-        n.getParent().replaceChild(n, IR.number(0).srcref(n));
+        n.replaceWith(IR.number(0).srcref(n));
       }
     }
 

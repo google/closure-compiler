@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -117,7 +116,7 @@ class RemoveUnusedClassProperties
 
           compiler.reportChangeToEnclosingScope(parent);
           if (replaceParent) {
-            parent.getParent().replaceChild(parent, replacement);
+            parent.replaceWith(replacement);
           } else {
             parent.replaceChild(n, replacement);
           }

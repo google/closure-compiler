@@ -823,7 +823,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     }
 
     memberVariable.putBooleanProp(Node.OPT_ES6_TYPED, function.isOptionalEs6Typed());
-    member.getParent().replaceChild(member, memberVariable);
+    member.replaceWith(memberVariable);
     return memberVariable;
   }
 

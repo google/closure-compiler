@@ -21,7 +21,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -178,7 +177,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
         name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         Node replacement = IR.call(name).srcref(n);
         replacement.putBooleanProp(Node.FREE_CALL, true);
-        n.getParent().replaceChild(n, replacement);
+        n.replaceWith(replacement);
         replacement.addChildToBack(n);
       }
       compiler.reportCodeChange();

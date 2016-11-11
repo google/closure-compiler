@@ -511,10 +511,9 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           ModuleOriginalNamePair pair = importMap.get(name);
           Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
           if (pair.originalName.isEmpty()) {
-            n.getParent().replaceChild(
-                n, moduleAccess.useSourceInfoIfMissingFromForTree(n));
+            n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
           } else {
-            n.getParent().replaceChild(n,
+            n.replaceWith(
                 IR.getprop(moduleAccess, IR.string(pair.originalName))
                     .useSourceInfoIfMissingFromForTree(n));
           }

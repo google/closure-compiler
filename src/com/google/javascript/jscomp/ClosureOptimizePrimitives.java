@@ -107,7 +107,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
         keyNode.setQuotedString();
         objNode.addChildToBack(IR.propdef(keyNode, valueNode));
       }
-      callNode.getParent().replaceChild(callNode, objNode);
+      callNode.replaceWith(objNode);
       compiler.reportCodeChange();
     }
   }
@@ -175,7 +175,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
         keyNode.setQuotedString();
         objNode.addChildToBack(IR.propdef(keyNode, valueNode));
       }
-      callNode.getParent().replaceChild(callNode, objNode);
+      callNode.replaceWith(objNode);
       compiler.reportCodeChange();
     }
   }
@@ -221,7 +221,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       return;
     }
     Node stringNode = IR.string(tagName).srcref(n);
-    n.getParent().replaceChild(n, stringNode);
+    n.replaceWith(stringNode);
     compiler.reportCodeChange();
   }
 }

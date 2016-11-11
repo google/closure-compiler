@@ -227,7 +227,7 @@ class ProcessTweaks implements CompilerPass {
     for (TweakFunctionCall call : calls) {
       Node callNode = call.callNode;
       Node objNode = createCompilerDefaultValueOverridesVarNode(callNode);
-      callNode.getParent().replaceChild(callNode, objNode);
+      callNode.replaceWith(objNode);
     }
     return !calls.isEmpty();
   }

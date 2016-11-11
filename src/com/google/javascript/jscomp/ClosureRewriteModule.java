@@ -976,7 +976,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           //   "function() {var Foo = module$exports$bar$Foo;}"
           Node binaryNamespaceName = IR.name(rewriteState.getBinaryNamespace(legacyNamespace));
           binaryNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
-          call.getParent().replaceChild(call, binaryNamespaceName);
+          call.replaceWith(binaryNamespaceName);
         } else if (importHasAlias || !rewriteState.isLegacyModule(legacyNamespace)) {
           // Delete the goog.require() because we're going to inline its alias later.
           statementNode.detach();
@@ -988,7 +988,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         // because even though we're going to inline the B alias,
         // ProcessClosurePrimitives is going to want to see this legacy require.
         call.detach();
-        statementNode.getParent().replaceChild(statementNode, IR.exprResult(call));
+        statementNode.replaceWith(IR.exprResult(call));
       }
       if (targetIsNonLegacyGoogModule) {
         // Add goog.require() and namespace name to preprocessor table because they're removed
@@ -1049,7 +1049,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       String exportedNamespace = rewriteState.getExportedNamespaceOrScript(legacyNamespace);
       Node exportedNamespaceName = NodeUtil.newQName(compiler, exportedNamespace).srcrefTree(call);
       exportedNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
-      call.getParent().replaceChild(call, exportedNamespaceName);
+      call.replaceWith(exportedNamespaceName);
     }
     compiler.reportCodeChange();
   }
@@ -1247,7 +1247,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       Node exportsObjectCreationNode = IR.var(binaryNamespaceName, rhs);
       exportsObjectCreationNode.useSourceInfoIfMissingFromForTree(exprResultNode);
       exportsObjectCreationNode.putBooleanProp(Node.IS_NAMESPACE, true);
-      exprResultNode.getParent().replaceChild(exprResultNode, exportsObjectCreationNode);
+      exprResultNode.replaceWith(exportsObjectCreationNode);
       jsdocNode = exportsObjectCreationNode;
       currentScript.hasCreatedExportObject = true;
     }
@@ -1268,7 +1268,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname = NodeUtil.newQName(compiler, currentScript.legacyNamespace).srcrefTree(n);
-      n.getParent().replaceChild(n, legacyQname);
+      n.replaceWith(legacyQname);
       return;
     }
 
@@ -1365,7 +1365,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     for (Node loadModuleStatement : loadModuleStatements) {
       Node moduleBlockNode = loadModuleStatement.getFirstChild().getLastChild().getLastChild();
       moduleBlockNode.detach();
-      loadModuleStatement.getParent().replaceChild(loadModuleStatement, moduleBlockNode);
+      loadModuleStatement.replaceWith(moduleBlockNode);
       NodeUtil.tryMergeBlock(moduleBlockNode);
       compiler.reportCodeChange();
     }

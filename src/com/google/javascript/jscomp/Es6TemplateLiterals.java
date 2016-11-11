@@ -38,12 +38,12 @@ class Es6TemplateLiterals {
   static void visitTemplateLiteral(NodeTraversal t, Node n) {
     int length = n.getChildCount();
     if (length == 0) {
-      n.getParent().replaceChild(n, IR.string("\"\""));
+      n.replaceWith(IR.string("\"\""));
     } else {
       Node first = n.removeFirstChild();
       Preconditions.checkState(first.isString());
       if (length == 1) {
-        n.getParent().replaceChild(n, first);
+        n.replaceWith(first);
       } else {
         // Add the first string with the first substitution expression
         Node add = IR.add(first, n.removeFirstChild().removeFirstChild());
@@ -61,7 +61,7 @@ class Es6TemplateLiterals {
           }
           add = IR.add(add, child.isString() ? child : child.removeFirstChild());
         }
-        n.getParent().replaceChild(n, add.useSourceInfoIfMissingFromForTree(n));
+        n.replaceWith(add.useSourceInfoIfMissingFromForTree(n));
       }
     }
     t.getCompiler().reportCodeChange();
@@ -115,7 +115,7 @@ class Es6TemplateLiterals {
     }
     call.useSourceInfoIfMissingFromForTree(templateLit);
     call.putBooleanProp(Node.FREE_CALL, !call.getFirstChild().isGetProp());
-    n.getParent().replaceChild(n, call);
+    n.replaceWith(call);
     t.getCompiler().reportCodeChange();
   }
 

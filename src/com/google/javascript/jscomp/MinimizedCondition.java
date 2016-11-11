@@ -150,7 +150,7 @@ class MinimizedCondition {
   private static Node swapWithPlaceholderNode(Node n) {
     Preconditions.checkNotNull(n.getParent());
     Node placeholder = IR.script();
-    n.getParent().replaceChild(n, placeholder);
+    n.replaceWith(placeholder);
     return placeholder;
   }
 

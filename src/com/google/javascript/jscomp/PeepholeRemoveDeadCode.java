@@ -95,7 +95,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (!catchBlock.hasChildren() &&
         (finallyBlock == null || !finallyBlock.hasChildren())) {
       n.removeChild(body);
-      n.getParent().replaceChild(n, body);
+      n.replaceWith(body);
       reportCodeChange();
       return body;
     }
@@ -105,7 +105,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       NodeUtil.redeclareVarsInsideBranch(catchBlock);
       if (finallyBlock != null) {
         n.removeChild(finallyBlock);
-        n.getParent().replaceChild(n, finallyBlock);
+        n.replaceWith(finallyBlock);
       } else {
         n.getParent().removeChild(n);
       }
@@ -128,7 +128,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (left.isName()
         && right.isName()
         && left.getString().equals(right.getString())) {
-      subtree.getParent().replaceChild(subtree, right.detach());
+      subtree.replaceWith(right.detach());
       reportCodeChange();
       return right;
     }
@@ -275,7 +275,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         if (result.getParent() != null) {
           result.detach();
         }
-        n.getParent().replaceChild(n, result);
+        n.replaceWith(result);
       }
       reportCodeChange();
     }
@@ -315,7 +315,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       caseBlock.addChildToFront(IR.exprResult(n.removeFirstChild()).srcref(n));
     }
     caseBlock.setIsSyntheticBlock(false);
-    n.getParent().replaceChild(n, caseBlock.detach());
+    n.replaceWith(caseBlock.detach());
     reportCodeChange();
     return caseBlock;
   }
@@ -325,7 +325,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       // Remove the switch if there are no remaining cases
       Node condition = n.removeFirstChild();
       Node replacement = IR.exprResult(condition).srcref(n);
-      n.getParent().replaceChild(n, replacement);
+      n.replaceWith(replacement);
       reportCodeChange();
       return replacement;
     } else if (n.getChildCount() == 2 && n.getLastChild().isDefaultCase()) {
@@ -625,8 +625,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         if (value != TernaryValue.UNKNOWN) {
           Node replacementConditionNode =
               NodeUtil.booleanNode(value.toBoolean(true));
-          condition.getParent().replaceChild(condition,
-              replacementConditionNode);
+          condition.replaceWith(replacementConditionNode);
           reportCodeChange();
         }
       }
@@ -972,7 +971,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
                      IR.empty().srcref(n),
                      body.detach())
           .srcref(n);
-      n.getParent().replaceChild(n, whileNode);
+      n.replaceWith(whileNode);
       reportCodeChange();
       return whileNode;
     }
@@ -999,8 +998,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    */
   private void tryFoldForCondition(Node forCondition) {
     if (NodeUtil.getPureBooleanValue(forCondition) == TernaryValue.TRUE) {
-      forCondition.getParent().replaceChild(forCondition,
-          IR.empty());
+      forCondition.replaceWith(IR.empty());
       reportCodeChange();
     }
   }

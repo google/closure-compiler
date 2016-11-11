@@ -313,7 +313,7 @@ class PeepholeMinimizeConditions
     // end of a function. This means a break is same as return.
     if (follow == null || areMatchingExits(n, follow)) {
       Node replacement = IR.breakNode();
-      n.getParent().replaceChild(n, replacement);
+      n.replaceWith(replacement);
       this.reportCodeChange();
       return replacement;
     }
@@ -1053,7 +1053,7 @@ class PeepholeMinimizeConditions
       } else {
         replacement = booleanResult ? IR.not(IR.not(objExpression)) : objExpression;
       }
-      n.getParent().replaceChild(n, replacement);
+      n.replaceWith(replacement);
       reportCodeChange();
       return replacement;
     }

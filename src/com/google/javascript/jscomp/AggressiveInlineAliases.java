@@ -85,7 +85,7 @@ class AggressiveInlineAliases implements CompilerPass {
           }
         }
         Preconditions.checkState(target.isGetProp() || target.isName());
-        target.getParent().replaceChild(target, value.cloneTree());
+        target.replaceWith(value.cloneTree());
         prop.removeRef(ref);
         // Rescan the expression root.
         newNodes.add(new AstChange(ref.module, ref.scope, ref.node));

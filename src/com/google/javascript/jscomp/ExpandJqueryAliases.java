@@ -247,7 +247,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     // immediately-called anonymous function.
     if (n.getParent().isExprResult()) {
       Node parent = n.getParent();
-      parent.getParent().replaceChild(parent, fncBlock);
+      parent.replaceWith(fncBlock);
     } else {
       Node targetVal;
       if ("jQuery.prototype".equals(objectToExtend.getQualifiedName())) {
@@ -419,7 +419,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
                 prop.detach());
             newGetProps.add(newGetProp);
             origGetElems.add(ancestor);
-            ancestor.getParent().replaceChild(ancestor, newGetProp);
+            ancestor.replaceWith(newGetProp);
           } else {
             if (prop.isString() &&
                 !NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {
@@ -438,7 +438,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
           Node origNode = valueNodes.get(j);
           Node newNode = val.cloneTree();
           newValues.add(newNode);
-          origNode.getParent().replaceChild(origNode, newNode);
+          origNode.replaceWith(newNode);
         }
 
         // Wrap the new tree in an anonymous function call
@@ -452,16 +452,13 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
       // Reset the source tree
       for (int j = 0; j < newGetProps.size(); j++) {
-        newGetProps.get(j).getParent().replaceChild(newGetProps.get(j),
-            origGetElems.get(j));
+        newGetProps.get(j).replaceWith(origGetElems.get(j));
       }
       for (int j = 0; j < newKeys.size(); j++) {
-        newKeys.get(j).getParent().replaceChild(newKeys.get(j),
-            keyNodes.get(j));
+        newKeys.get(j).replaceWith(keyNodes.get(j));
       }
       for (int j = 0; j < newValues.size(); j++) {
-        newValues.get(j).getParent().replaceChild(newValues.get(j),
-            valueNodes.get(j));
+        newValues.get(j).replaceWith(valueNodes.get(j));
       }
 
       if (!isValidExpansion) {

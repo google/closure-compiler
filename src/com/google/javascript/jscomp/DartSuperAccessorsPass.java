@@ -160,7 +160,7 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
   }
 
   private static Node replace(Node original, Node replacement) {
-    original.getParent().replaceChild(original, replacement);
+    original.replaceWith(replacement);
     return replacement;
   }
 

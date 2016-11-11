@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -130,7 +129,7 @@ class FunctionToBlockMutator {
 
         fnNameNode.setString("");
         // Add the VAR, remove the FUNCTION
-        n.getParent().replaceChild(n, var);
+        n.replaceWith(var);
         // readd the function as a function expression
         name.addChildToFront(n);
       }

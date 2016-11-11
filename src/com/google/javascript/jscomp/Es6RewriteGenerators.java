@@ -125,7 +125,7 @@ public final class Es6RewriteGenerators
       case THIS:
         enclosing = NodeUtil.getEnclosingFunction(n);
         if (enclosing != null && enclosing.isGeneratorFunction()) {
-          n.getParent().replaceChild(n, IR.name(GENERATOR_THIS));
+          n.replaceWith(IR.name(GENERATOR_THIS));
         }
         break;
       case YIELD:

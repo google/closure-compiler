@@ -21,7 +21,6 @@ import com.google.common.collect.Ordering;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.List;
 
 /**
@@ -57,7 +56,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       Node newValue = getNewValueNode(msgNode, message);
       newValue.useSourceInfoIfMissingFromForTree(msgNode);
 
-      msgNode.getParent().replaceChild(msgNode, newValue);
+      msgNode.replaceWith(newValue);
       compiler.reportCodeChange();
     } catch (MalformedException e) {
       compiler.report(JSError.make(e.getNode(),

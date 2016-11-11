@@ -88,7 +88,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
     secondExpr.detach();
     Node replacement =
         eq == Eq.DOUBLE ? IR.eq(firstExpr, secondExpr) : IR.sheq(firstExpr, secondExpr);
-    callNode.getParent().replaceChild(callNode, replacement.useSourceInfoIfMissingFrom(callNode));
+    callNode.replaceWith(replacement.useSourceInfoIfMissingFrom(callNode));
     compiler.reportCodeChange();
   }
 

@@ -109,7 +109,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
         // TODO(bradfordcsmith): Although unlikely, super() could have argument expressions with
         //     side-effects.
         for (Node superCall : superCalls) {
-          superCall.getParent().replaceChild(superCall, IR.thisNode().useSourceInfoFrom(superCall));
+          superCall.replaceWith(IR.thisNode().useSourceInfoFrom(superCall));
         }
         compiler.reportCodeChange();
       } else if (isUnextendableNativeClass(t, superClassQName)) {
@@ -167,12 +167,9 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
           // Replace each super() call with `($jscomp$super$this = <newSuperCall> || this)`
           for (Node superCall : superCalls) {
             Node newSuperCall = createNewSuperCall(superClassQName, superCall);
-            superCall
-                .getParent()
-                .replaceChild(
-                    superCall,
-                    IR.assign(IR.name(SUPER_THIS), IR.or(newSuperCall, IR.thisNode()))
-                        .useSourceInfoIfMissingFromForTree(superCall));
+            superCall.replaceWith(
+                IR.assign(IR.name(SUPER_THIS), IR.or(newSuperCall, IR.thisNode()))
+                    .useSourceInfoIfMissingFromForTree(superCall));
           }
         }
         compiler.reportCodeChange();
@@ -327,7 +324,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     Node superErrorExpr =
         IR.comma(IR.comma(IR.comma(getTmpError, copyMessage), setStack), IR.name(TMP_ERROR))
             .useSourceInfoIfMissingFromForTree(superCall);
-    superCall.getParent().replaceChild(superCall, superErrorExpr);
+    superCall.replaceWith(superErrorExpr);
   }
 
   private boolean isNativeObjectClass(NodeTraversal t, String className) {

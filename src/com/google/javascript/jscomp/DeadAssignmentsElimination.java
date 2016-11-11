@@ -253,7 +253,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
           rhs.getString().equals(var.name) &&
           n.isAssign()) {
         n.removeChild(rhs);
-        n.getParent().replaceChild(n, rhs);
+        n.replaceWith(rhs);
         compiler.reportCodeChange();
         return;
       }
@@ -279,7 +279,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
       if (n.isAssign()) {
         n.removeChild(rhs);
-        n.getParent().replaceChild(n, rhs);
+        n.replaceWith(rhs);
       } else if (NodeUtil.isAssignmentOp(n)) {
         n.removeChild(rhs);
         n.removeChild(lhs);

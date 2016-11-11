@@ -452,7 +452,7 @@ class ConvertToTypedInterface implements CompilerPass {
       if (NodeUtil.isStatement(n)) {
         n.detach();
       } else {
-        n.getParent().replaceChild(n, IR.empty().srcref(n));
+        n.replaceWith(IR.empty().srcref(n));
       }
       compiler.reportCodeChange();
     }
@@ -465,7 +465,7 @@ class ConvertToTypedInterface implements CompilerPass {
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
       newStatement.useSourceInfoIfMissingFromForTree(nameNode);
-      statement.getParent().replaceChild(statement, newStatement);
+      statement.replaceWith(newStatement);
       compiler.reportCodeChange();
     }
 

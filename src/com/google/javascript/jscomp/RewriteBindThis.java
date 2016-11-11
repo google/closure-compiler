@@ -67,7 +67,7 @@ class RewriteBindThis extends AbstractPostOrderCallback implements CompilerPass{
     Node grandparent = parent.getParent();
 
     parent.removeChild(functionNode);
-    grandparent.getParent().replaceChild(grandparent, functionNode);
+    grandparent.replaceWith(functionNode);
     functionNode.putBooleanProp(Node.ARROW_FN, true);
 
     compiler.reportCodeChange();

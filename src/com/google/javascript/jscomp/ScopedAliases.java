@@ -28,7 +28,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,7 +35,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -186,9 +184,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         Node expressionWithScopeCall = scopeCall.getParent();
         Node scopeClosureBlock = scopeCall.getLastChild().getLastChild();
         scopeClosureBlock.detach();
-        expressionWithScopeCall.getParent().replaceChild(
-            expressionWithScopeCall,
-            scopeClosureBlock);
+        expressionWithScopeCall.replaceWith(scopeClosureBlock);
         NodeUtil.tryMergeBlock(scopeClosureBlock);
       }
 
@@ -233,7 +229,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         Preconditions.checkState(!aliasReference.hasChildren());
         aliasReference.addChildToFront(replacement);
       } else {
-        aliasReference.getParent().replaceChild(aliasReference, replacement);
+        aliasReference.replaceWith(replacement);
       }
     }
   }

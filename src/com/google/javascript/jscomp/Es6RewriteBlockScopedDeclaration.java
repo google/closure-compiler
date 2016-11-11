@@ -413,8 +413,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 reference.getParent().putBooleanProp(Node.FREE_CALL, false);
               }
               // Change reference to GETPROP.
-              reference.getParent().replaceChild(
-                  reference,
+              reference.replaceWith(
                   IR.getprop(IR.name(object.name), IR.string(var.name))
                       .useSourceInfoIfMissingFromForTree(reference));
             }
@@ -448,7 +447,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         } else {
           replacement = call.useSourceInfoIfMissingFromForTree(function);
         }
-        function.getParent().replaceChild(function, replacement);
+        function.replaceWith(replacement);
         returnNode.addChildToFront(function);
       }
     }

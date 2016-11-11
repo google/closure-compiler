@@ -41,9 +41,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.Token;
-
 import java.util.LinkedHashMap;
-
 import javax.annotation.Nullable;
 
 /**
@@ -91,15 +89,14 @@ public final class JsdocToEs6TypedConverter
           if (parentDocInfo == null) {
             break;
           }
-          JSTypeExpression parameterType =
-              parentDocInfo.getParameterType(n.getString());
+          JSTypeExpression parameterType = parentDocInfo.getParameterType(n.getString());
           if (parameterType != null) {
             Node attachTypeExpr = n;
             // Modify the primary AST to represent a function parameter as a
             // REST node, if the type indicates it is a rest parameter.
             if (parameterType.getRoot().getToken() == Token.ELLIPSIS) {
               attachTypeExpr = IR.rest(n.getString());
-              n.getParent().replaceChild(n, attachTypeExpr);
+              n.replaceWith(attachTypeExpr);
               compiler.reportCodeChange();
             }
             setTypeExpression(attachTypeExpr, parameterType);

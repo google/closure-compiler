@@ -21,9 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.Iterator;
-
 import javax.annotation.Nullable;
 
 /**
@@ -61,8 +59,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     Node replacementNode =
         isSecondMessageTranslated && !isFirstMessageTranslated ?
         callNode.getChildAtIndex(2) : callNode.getSecondChild();
-    callNode.getParent().replaceChild(callNode,
-        replacementNode.detach());
+    callNode.replaceWith(replacementNode.detach());
   }
 
   @Override
@@ -98,7 +95,7 @@ final class ReplaceMessages extends JsMessageVisitor {
 
     if (newValue != msgNode) {
       newValue.useSourceInfoIfMissingFromForTree(msgNode);
-      msgNode.getParent().replaceChild(msgNode, newValue);
+      msgNode.replaceWith(newValue);
       compiler.reportCodeChange();
     }
   }

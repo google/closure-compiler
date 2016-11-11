@@ -194,7 +194,7 @@ class Normalize implements CompilerPass {
         if (exposedProperties.contains(propName)) {
           Node obj = n.removeFirstChild();
           Node prop = n.removeFirstChild();
-          n.getParent().replaceChild(n, IR.getelem(obj, prop));
+          n.replaceWith(IR.getelem(obj, prop));
           compiler.reportCodeChange();
         }
       } else if (n.isStringKey()) {
@@ -595,7 +595,7 @@ class Normalize implements CompilerPass {
                 Node newStatement = first;
                 // Clone just the node, to remove any initialization.
                 Node name = newStatement.getFirstChild().cloneNode();
-                first.getParent().replaceChild(first, name);
+                first.replaceWith(name);
                 insertBeforeParent.addChildBefore(newStatement, insertBefore);
                 reportCodeChange("FOR-IN var declaration");
               }

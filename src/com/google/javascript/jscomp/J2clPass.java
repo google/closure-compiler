@@ -62,7 +62,7 @@ public class J2clPass implements CompilerPass {
 
       Node replacement = getDefineReplacement(firstExpr, secondExpr);
       replacement.useSourceInfoIfMissingFromForTree(callNode);
-      callNode.getParent().replaceChild(callNode, replacement);
+      callNode.replaceWith(replacement);
       compiler.reportCodeChange();
     }
 

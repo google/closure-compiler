@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -382,10 +381,9 @@ class InlineObjectLiterals implements CompilerPass {
       replacement.useSourceInfoIfMissingFromForTree(replace);
 
       if (replace.isVar()) {
-        replace.getParent().replaceChild(
-            replace, NodeUtil.newExpr(replacement));
+        replace.replaceWith(NodeUtil.newExpr(replacement));
       } else {
-        replace.getParent().replaceChild(replace, replacement);
+        replace.replaceWith(replacement);
       }
     }
 

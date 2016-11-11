@@ -550,7 +550,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
 
     result.useSourceInfoIfMissingFromForTree(obj);
-    obj.getParent().replaceChild(obj, result);
+    obj.replaceWith(result);
 
     Node var = IR.var(IR.name(objName), obj);
     var.useSourceInfoIfMissingFromForTree(statement);

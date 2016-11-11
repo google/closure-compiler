@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -256,7 +255,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     // If the return value of the method call is read,
     // replace it with "void 0". Otherwise, remove the call entirely.
     if (NodeUtil.isExprCall(parent)) {
-      parent.getParent().replaceChild(parent, IR.empty());
+      parent.replaceWith(IR.empty());
     } else {
       Node srcLocation = call;
       parent.replaceChild(call, NodeUtil.newUndefinedNode(srcLocation));

@@ -26,7 +26,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -238,7 +236,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     Node replacement = NodeUtil.newQNameDeclaration(
         compiler, name, value, n.getJSDocInfo());
     replacement.useSourceInfoIfMissingFromForTree(parent);
-    parent.getParent().replaceChild(parent, replacement);
+    parent.replaceWith(replacement);
     compiler.reportCodeChange();
   }
 
@@ -1368,8 +1366,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             nameNode.addChildToFront(valueNode);
             Node varNode = IR.var(nameNode);
             varNode.useSourceInfoFrom(candidateDefinition);
-            candidateDefinition.getParent().replaceChild(
-                candidateDefinition, varNode);
+            candidateDefinition.replaceWith(varNode);
             varNode.setJSDocInfo(assignNode.getJSDocInfo());
             compiler.reportCodeChange();
             replacementNode = varNode;

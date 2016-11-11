@@ -178,7 +178,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node baseCall = baseCall(
         superName.getQualifiedName(), methodName, enclosingCall.removeChildren());
     baseCall.useSourceInfoIfMissingFromForTree(enclosingCall);
-    enclosingCall.getParent().replaceChild(enclosingCall, baseCall);
+    enclosingCall.replaceWith(baseCall);
     compiler.reportCodeChange();
   }
 
