@@ -15,26 +15,53 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
-/**
- * Converts ES6 arrow functions to standard anonymous ES3 functions.
- */
-public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallback
-    implements HotSwapCompilerPass {
-  private final AbstractCompiler compiler;
-
+/** Converts ES6 arrow functions to standard anonymous ES3 functions. */
+public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapCompilerPass {
   // The name of the vars that capture 'this' and 'arguments'
   // for converting arrow functions.
   private static final String ARGUMENTS_VAR = "$jscomp$arguments";
   private static final String THIS_VAR = "$jscomp$this";
 
+  private static class ThisContext {
+    final Node scopeBody;
+    final boolean isConstructor;
+    Node lastSuperStatement = null; // Last statement in the body that refers to super().
+    boolean needsThisVar = false;
+    boolean needsArgumentsVar = false;
+
+    ThisContext(Node scopeBody, boolean isConstructor) {
+      this.scopeBody = scopeBody;
+      this.isConstructor = isConstructor;
+    }
+
+    static ThisContext forFunction(Node functionNode, Node functionParent) {
+      Node scopeBody = functionNode.getLastChild();
+      boolean isConstructor =
+          functionParent.isMemberFunctionDef() && functionParent.getString().equals("constructor");
+      return new ThisContext(scopeBody, isConstructor);
+    }
+
+    static ThisContext forScript(Node scriptNode) {
+      return new ThisContext(scriptNode, false /* isConstructor */);
+    }
+  }
+
+  private final AbstractCompiler compiler;
+  private final Deque<ThisContext> thisContextStack;
+
   public Es6RewriteArrowFunction(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.thisContextStack = new ArrayDeque<>();
   }
 
   @Override
@@ -51,9 +78,19 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      case SCRIPT:
+        thisContextStack.push(ThisContext.forScript(n));
+        break;
       case FUNCTION:
-        if (n.isArrowFunction()) {
-          visitArrowFunction(t, n);
+        if (!n.isArrowFunction()) {
+          thisContextStack.push(ThisContext.forFunction(n, parent));
+        }
+        break;
+      case SUPER:
+        ThisContext thisContext = checkNotNull(thisContextStack.peek());
+        // super(...) within a constructor.
+        if (thisContext.isConstructor && parent.isCall() && parent.getFirstChild() == n) {
+          thisContext.lastSuperStatement = getEnclosingStatement(parent, thisContext.scopeBody);
         }
         break;
       default:
@@ -62,7 +99,31 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
     return true;
   }
 
-  private void visitArrowFunction(NodeTraversal t, Node n) {
+  /**
+   * @param n
+   * @param block
+   * @return The statement Node that is a child of block and contains n.
+   */
+  private Node getEnclosingStatement(Node n, Node block) {
+    while (checkNotNull(n.getParent()) != block) {
+      n = checkNotNull(NodeUtil.getEnclosingStatement(n.getParent()));
+    }
+    return n;
+  }
+
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    ThisContext thisContext = thisContextStack.peek();
+
+    if (n.isArrowFunction()) {
+      visitArrowFunction(n, checkNotNull(thisContext));
+    } else if (thisContext != null && thisContext.scopeBody == n) {
+      thisContextStack.pop();
+      addVarDecls(thisContext);
+    }
+  }
+
+  private void visitArrowFunction(Node n, ThisContext thisContext) {
     n.setIsArrowFunction(false);
     n.makeNonIndexable();
     Node body = n.getLastChild();
@@ -74,29 +135,15 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
 
     UpdateThisAndArgumentsReferences updater = new UpdateThisAndArgumentsReferences(compiler);
     NodeTraversal.traverseEs6(compiler, body, updater);
-    addVarDecls(t, updater.changedThis, updater.changedArguments);
+    thisContext.needsThisVar = thisContext.needsThisVar || updater.changedThis;
+    thisContext.needsArgumentsVar = thisContext.needsArgumentsVar || updater.changedArguments;
 
     compiler.reportCodeChange();
   }
 
-  private void addVarDecls(NodeTraversal t, boolean addThis, boolean addArguments) {
-    Scope scope = t.getScope().getClosestHoistScope();
-    if (scope.isDeclared(THIS_VAR, false)) {
-      addThis = false;
-    }
-    if (scope.isDeclared(ARGUMENTS_VAR, false)) {
-      addArguments = false;
-    }
-
-    Node scopeRoot = scope.getRootNode();
-    if (scopeRoot.isSyntheticBlock() && scopeRoot.getFirstChild().isScript()) {
-      // Add the new node inside the SCRIPT node instead of the
-      // synthetic block that contains it.
-      scopeRoot = scopeRoot.getFirstChild();
-    }
-
-    CompilerInput input = compiler.getInput(scopeRoot.getInputId());
-    if (addArguments) {
+  private void addVarDecls(ThisContext thisContext) {
+    Node scopeBody = thisContext.scopeBody;
+    if (thisContext.needsArgumentsVar) {
       Node name = IR.name(ARGUMENTS_VAR);
       Node argumentsVar = IR.constNode(name, IR.name("arguments"));
       JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
@@ -104,32 +151,23 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
           new JSTypeExpression(
               new Node(Token.BANG, IR.string("Arguments")), "<Es6RewriteArrowFunction>"));
       argumentsVar.setJSDocInfo(jsdoc.build());
-      argumentsVar.useSourceInfoIfMissingFromForTree(scopeRoot);
-      scopeRoot.addChildToFront(argumentsVar);
-      scope.declare(ARGUMENTS_VAR, name, input);
+      argumentsVar.useSourceInfoIfMissingFromForTree(scopeBody);
+      scopeBody.addChildToFront(argumentsVar);
     }
-    if (addThis) {
+    if (thisContext.needsThisVar) {
       Node name = IR.name(THIS_VAR);
       Node thisVar = IR.constNode(name, IR.thisNode());
-      thisVar.useSourceInfoIfMissingFromForTree(scopeRoot);
-      Node firstStatement = scopeRoot.getFirstChild();
-      if (isSuperCallStatement(firstStatement)) {
-        scopeRoot.addChildAfter(thisVar, firstStatement);
+      thisVar.useSourceInfoIfMissingFromForTree(scopeBody);
+      if (thisContext.lastSuperStatement == null) {
+        scopeBody.addChildToFront(thisVar);
       } else {
-        scopeRoot.addChildToFront(thisVar);
+        // Not safe to reference `this` until after super() has been called.
+        // TODO(bradfordcsmith): Some complex cases still aren't covered, like
+        //     if (...) { super(); arrow function } else { super(); }
+        scopeBody.addChildAfter(thisVar, thisContext.lastSuperStatement);
       }
-      scope.declare(THIS_VAR, name, input);
     }
-  }
-
-  private boolean isSuperCallStatement(Node firstStatement) {
-    // TODO(bradfordcsmith): This won't catch cases of super() used in an expression or
-    //     in anything other than the first statement.
-    if (!firstStatement.isExprResult()) {
-      return false;
-    }
-    Node expr = firstStatement.getFirstChild();
-    return expr.isCall() && expr.getFirstChild().isSuper();
+    compiler.reportCodeChange();
   }
 
   private static class UpdateThisAndArgumentsReferences implements NodeTraversal.Callback {
