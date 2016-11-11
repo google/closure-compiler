@@ -35,7 +35,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
@@ -526,11 +525,11 @@ class AmbiguateProperties implements CompilerPass {
 
           // The children of an OBJECTLIT node are keys, where the values
           // are the children of the keys.
+          JSType jstype = getJSType(n);
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             // We only want keys that were unquoted.
             // Keys are STRING, GET, SET
             if (!key.isQuotedString()) {
-              JSType jstype = getJSType(n.getFirstChild());
               maybeMarkCandidate(key, jstype);
             } else {
               // Ensure that we never rename some other property in a way
