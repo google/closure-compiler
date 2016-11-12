@@ -1101,7 +1101,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (typeNode.isString()) {
         String name = typeNode.getString();
         // Type nodes can be module paths.
-        if (ModuleLoader.isRelativeIdentifier(name) || ModuleLoader.isAbsoluteIdentifier(name)) {
+        if (ModuleLoader.isPathIdentifier(name)) {
           int lastSlash = name.lastIndexOf('/');
           int endIndex = name.indexOf('.', lastSlash);
           String localTypeName = null;
