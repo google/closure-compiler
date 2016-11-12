@@ -35,7 +35,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
     modifyCallSites = false;
-    compareJsDoc = false;
   }
 
   @Override
@@ -640,11 +639,14 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testRemoveInheritedClass1() {
-    test("function goog$inherits(){}" +
-        "/**@constructor*/function a(){}" +
-        "/**@constructor*/function b(){}" +
-        "goog$inherits(b,a); new a",
-        "function a(){} new a");
+    test(
+        LINE_JOINER.join(
+            "function goog$inherits() {}",
+            "/**@constructor*/ function a() {}",
+            "/**@constructor*/ function b() {}",
+            "goog$inherits(b, a);",
+            "new a;"),
+        LINE_JOINER.join("/**@constructor*/ function a() {}", "new a;"));
   }
 
   public void testRemoveInheritedClass2() {
@@ -674,40 +676,49 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testRemoveInheritedClass5() {
-    test("function goog$inherits(){}" +
-        "/**@constructor*/function a(){}" +
-        "/**@constructor*/function b(){}" +
-        "goog$inherits(b,a);" +
-        "/**@constructor*/function c(){}" +
-        "goog$inherits(c,b); new b",
-        "function goog$inherits(){}" +
-        "function a(){}" +
-        "function b(){}" +
-        "goog$inherits(b,a); new b");
+    test(
+        LINE_JOINER.join(
+            "function goog$inherits() {}",
+            "/**@constructor*/ function a() {}",
+            "/**@constructor*/ function b() {}",
+            "goog$inherits(b,a);",
+            "/**@constructor*/ function c() {}",
+            "goog$inherits(c,b); new b"),
+        LINE_JOINER.join(
+            "function goog$inherits(){}",
+            "/**@constructor*/ function a(){}",
+            "/**@constructor*/ function b(){}",
+            "goog$inherits(b,a); new b"));
   }
 
   public void testRemoveInheritedClass6() {
-    test("function goog$mixin(){}" +
-        "/**@constructor*/function a(){}" +
-        "/**@constructor*/function b(){}" +
-        "/**@constructor*/function c(){}" +
-        "/**@constructor*/function d(){}" +
-        "goog$mixin(b.prototype,a.prototype);" +
-        "goog$mixin(c.prototype,a.prototype); new c;" +
-        "goog$mixin(d.prototype,a.prototype)",
-        "function goog$mixin(){}" +
-        "function a(){}" +
-        "function c(){}" +
-        "goog$mixin(c.prototype,a.prototype); new c");
+    test(
+        LINE_JOINER.join(
+            "function goog$mixin(){}",
+            "/** @constructor*/ function a(){}",
+            "/** @constructor*/ function b(){}",
+            "/** @constructor*/ function c(){}",
+            "/** @constructor*/ function d(){}",
+            "goog$mixin(b.prototype,a.prototype);",
+            "goog$mixin(c.prototype,a.prototype); new c;",
+            "goog$mixin(d.prototype,a.prototype)"),
+        LINE_JOINER.join(
+            "function goog$mixin(){}",
+            "/** @constructor*/ function a(){}",
+            "/** @constructor*/ function c(){}",
+            "goog$mixin(c.prototype,a.prototype); new c"));
   }
 
   public void testRemoveInheritedClass7() {
-    test("function goog$mixin(){}" +
-        "/**@constructor*/function a(){alert(goog$mixin(a, a))}" +
-        "/**@constructor*/function b(){}" +
-        "goog$mixin(b.prototype,a.prototype); new a",
-        "function goog$mixin(){}" +
-        "function a(){alert(goog$mixin(a, a))} new a");
+    test(
+        LINE_JOINER.join(
+            "function goog$mixin(){}",
+            "/**@constructor*/function a(){alert(goog$mixin(a, a))}",
+            "/**@constructor*/function b(){}",
+            "goog$mixin(b.prototype,a.prototype); new a"),
+        LINE_JOINER.join(
+            "function goog$mixin(){}",
+            "/**@constructor*/function a(){alert(goog$mixin(a, a))} new a"));
   }
 
   public void testRemoveInheritedClass8() {
@@ -726,13 +737,19 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testRemoveInheritedClass10() {
-    test("function goog$inherits(){}" +
-        "/**@constructor*/function a(){}" +
-        "/**@constructor*/function b(){}" +
-        "goog$inherits(b,a); new a;" +
-        "var c = a; var d = a.g; new b",
-        "function goog$inherits(){}" +
-        "function a(){} function b(){} goog$inherits(b,a); new a; new b");
+    test(
+        LINE_JOINER.join(
+            "function goog$inherits() {}",
+            "/**@constructor*/ function a() {}",
+            "/**@constructor*/ function b() {}",
+            "goog$inherits(b,a); new a;",
+            "var c = a; var d = a.g; new b"),
+        LINE_JOINER.join(
+            "function goog$inherits(){}",
+            "/**@constructor*/ function a(){}",
+            "/**@constructor*/ function b(){}",
+            "goog$inherits(b,a); ",
+            "new a; new b"));
   }
 
   public void testRemoveInheritedClass11() {

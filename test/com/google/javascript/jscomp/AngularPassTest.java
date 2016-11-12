@@ -48,7 +48,6 @@ public final class AngularPassTest extends Es6CompilerTestCase {
   }
 
   public void testNgInjectSetVisibility() throws Exception {
-    compareJsDoc = true;
     test("/** @ngInject */ function fn(a, b) {}",
         "/** @ngInject */ function fn(a, b) {} /** @public */ fn['$inject']=['a', 'b']");
   }

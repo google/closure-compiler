@@ -523,7 +523,6 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @see MarkNoSideEffectCalls
    */
-  // TODO(nicksantos): This pass doesn't get run anymore. It should be removed.
   void enableMarkNoSideEffects() {
     markNoSideEffects = true;
   }

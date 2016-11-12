@@ -27,11 +27,6 @@ import com.google.javascript.rhino.Node;
  */
 
 public final class ProcessEs6ModulesTest extends CompilerTestCase {
-
-  public ProcessEs6ModulesTest() {
-    compareJsDoc = true;
-  }
-
   @Override
   public void setUp() {
     // ECMASCRIPT5 to trigger module processing after parsing.
