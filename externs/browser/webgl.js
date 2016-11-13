@@ -778,6 +778,12 @@ WebGLRenderingContext.VERTEX_ATTRIB_ARRAY_POINTER;
 WebGLRenderingContext.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING;
 
 /** @type {number} */
+WebGLRenderingContext.IMPLEMENTATION_COLOR_READ_FORMAT;
+
+/** @type {number} */
+WebGLRenderingContext.IMPLEMENTATION_COLOR_READ_TYPE;
+
+/** @type {number} */
 WebGLRenderingContext.COMPILE_STATUS;
 
 /** @type {number} */
