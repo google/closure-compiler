@@ -33,22 +33,22 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   protected void setUp() {
     super.enableLineNumberCheck(false);
     enableNormalize();
-    compareJsDoc = false;
   }
 
   public void testValue() {
-    testChecks("/** @param {number} i */ function f(i) {}",
-        "function f(i) {" +
-        "  $jscomp.typecheck.checkType(i, " +
-        "      [$jscomp.typecheck.valueChecker('number')]);" +
-        "}");
+    testChecks(
+        "/** @param {number} i */ function f(i) {}",
+        "/** @param {number} i */ function f(i) {"
+            + "  $jscomp.typecheck.checkType(i, "
+            + "      [$jscomp.typecheck.valueChecker('number')]);"
+            + "}");
   }
 
   public void testConstValue() {
     // User a variable that's immutable by the google coding convention,
     // to ensure the immutable annotations are preserved.
     testChecks("/** @param {number} CONST */ function f(CONST) {}",
-        "function f(CONST) {" +
+        "/** @param {number} CONST */ function f(CONST) {" +
         "  $jscomp.typecheck.checkType(CONST, " +
         "      [$jscomp.typecheck.valueChecker('number')]);" +
         "}");
@@ -56,7 +56,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public void testValueWithInnerFn() {
     testChecks("/** @param {number} i */ function f(i) { function g() {} }",
-        "function f(i) {" +
+        "/** @param {number} i */ function f(i) {" +
         "  function g() {}" +
         "  $jscomp.typecheck.checkType(i, " +
         "      [$jscomp.typecheck.valueChecker('number')]);" +
@@ -64,64 +64,74 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   public void testNullValue() {
-    testChecks("/** @param {null} i */ function f(i) {}",
-        "function f(i) {" +
-        "  $jscomp.typecheck.checkType(i, [$jscomp.typecheck.nullChecker]);" +
-        "}");
+    testChecks(
+        "/** @param {null} i */ function f(i) {}",
+        "/** @param {null} i */ function f(i) {"
+            + "  $jscomp.typecheck.checkType(i, [$jscomp.typecheck.nullChecker]);"
+            + "}");
   }
 
   public void testValues() {
-    testChecks("/** @param {number} i\n@param {string} j*/ function f(i, j) {}",
-        "function f(i, j) {" +
-        "  $jscomp.typecheck.checkType(i, " +
-        "      [$jscomp.typecheck.valueChecker('number')]);" +
-        "  $jscomp.typecheck.checkType(j, " +
-        "      [$jscomp.typecheck.valueChecker('string')]);" +
-        "}");
+    testChecks(
+        "/** @param {number} i\n@param {string} j*/ function f(i, j) {}",
+        "/** @param {number} i\n@param {string} j*/ function f(i, j) {"
+            + "  $jscomp.typecheck.checkType(i, "
+            + "      [$jscomp.typecheck.valueChecker('number')]);"
+            + "  $jscomp.typecheck.checkType(j, "
+            + "      [$jscomp.typecheck.valueChecker('string')]);"
+            + "}");
   }
 
   public void testSkipParamOK() {
-    testChecks("/** @param {*} i\n@param {string} j*/ function f(i, j) {}",
-        "function f(i, j) {" +
-        "  $jscomp.typecheck.checkType(j, " +
-        "      [$jscomp.typecheck.valueChecker('string')]);" +
-        "}");
+    testChecks(
+        LINE_JOINER.join(
+            "/**", " * @param {*} i", " * @param {string} j", " */", "function f(i, j) {}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @param {*} i",
+            " * @param {string} j",
+            " */",
+            "function f(i, j) {",
+            "  $jscomp.typecheck.checkType(j, ",
+            "      [$jscomp.typecheck.valueChecker('string')]);",
+            "}"));
   }
 
   public void testUnion() {
     testChecks("/** @param {number|string} x */ function f(x) {}",
-        "function f(x) {" +
+        "/** @param {number|string} x */ function f(x) {" +
         "  $jscomp.typecheck.checkType(x, [" +
         "      $jscomp.typecheck.valueChecker('number'), " +
         "      $jscomp.typecheck.valueChecker('string')" +
-        "]);" +
+        "  ]);" +
         "}");
   }
 
   public void testUntypedParam() {
-    testChecks("/** ... */ function f(x) {}", "function f(x) {}");
+    testChecks("/** ... */ function f(x) {}", "/** ... */ function f(x) {}");
   }
 
   public void testReturn() {
     testChecks("/** @return {string} */ function f() { return 'x'; }",
-        "function f() {" +
+        "/** @return {string} */ function f() {" +
         "  return $jscomp.typecheck.checkType('x', " +
         "      [$jscomp.typecheck.valueChecker('string')]);" +
         "}");
   }
 
   public void testNativeClass() {
-    testChecks("/** @param {!String} x */ function f(x) {}",
-        "function f(x) {" +
-        "  $jscomp.typecheck.checkType(x, " +
-        "      [$jscomp.typecheck.externClassChecker('String')]);" +
-        "}");
+    testChecks(
+        "/** @param {!String} x */ function f(x) {}",
+        "/** @param {!String} x */ function f(x) {"
+            + "  $jscomp.typecheck.checkType(x, "
+            + "      [$jscomp.typecheck.externClassChecker('String')]);"
+            + "}");
   }
 
   public void testFunctionObjectParam() {
     testChecks(
         "/** @param {!Function} x */ function f(x) {}",
-        "function f(x) {"
+        "/** @param {!Function} x */ function f(x) {"
             + "  $jscomp.typecheck.checkType(x, "
             + "      [$jscomp.typecheck.externClassChecker('Function')]);"
             + "}");
@@ -130,7 +140,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   public void testFunctionTypeParam() {
     testChecks(
         "/** @param {function()} x */ function f(x) {}",
-        "function f(x) {"
+        "/** @param {function()} x */ function f(x) {"
             + "  $jscomp.typecheck.checkType(x, "
             + "      [$jscomp.typecheck.valueChecker('function')]);"
             + "}");
@@ -140,7 +150,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   public void testFunctionTypeOrFunctionObjectParam() {
     testChecks(
         "/** @param {function()|!Function} x */ function f(x) {}",
-        "function f(x) {"
+        "/** @param {function()|!Function} x */ function f(x) {"
             + "  $jscomp.typecheck.checkType(x, "
             + "      [$jscomp.typecheck.externClassChecker('Function')]);"
             + "}");
@@ -150,21 +160,30 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   public void testFunctionObjectOrObjectParam() {
     testChecks(
         "/** @param {!Function|!Object} x */ function f(x) {}",
-        "function f(x) {"
+        "/** @param {!Function|!Object} x */ function f(x) {"
             + "  $jscomp.typecheck.checkType(x, "
             + "      [$jscomp.typecheck.objectChecker]);"
             + "}");
   }
 
   public void testQualifiedClass() {
-    testChecks("var goog = {}; /** @constructor */goog.Foo = function() {};" +
-        "/** @param {!goog.Foo} x */ function f(x) {}",
-        "var goog = {}; goog.Foo = function() {};" +
-        "goog.Foo.prototype['instance_of__goog.Foo'] = true;" +
-        "function f(x) {" +
-        "  $jscomp.typecheck.checkType(x, " +
-        "    [$jscomp.typecheck.classChecker('goog.Foo')]);" +
-        "}");
+    testChecks(
+        LINE_JOINER.join(
+            "var goog = {};",
+            "/** @constructor */",
+            "goog.Foo = function() {};",
+            "/** @param {!goog.Foo} x */ ",
+            "function f(x) {}"),
+        LINE_JOINER.join(
+            "var goog = {};",
+            "/** @constructor */",
+            "goog.Foo = function() {};",
+            "goog.Foo.prototype['instance_of__goog.Foo'] = true;",
+            "/** @param {!goog.Foo} x */ ",
+            "function f(x) {",
+            "  $jscomp.typecheck.checkType(x, ",
+            "    [$jscomp.typecheck.classChecker('goog.Foo')]);",
+            "}"));
   }
 
   public void testInnerClasses() {
@@ -182,90 +201,107 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   public void testInterface() {
-    testChecks("/** @interface */function I() {}" +
-        "/** @param {!I} i */function f(i) {}",
-        "function I() {}" +
-        "function f(i) {" +
+    testChecks("/** @interface */ function I() {}" +
+        "/** @param {!I} i */ function f(i) {}",
+        "/** @interface */ function I() {}" +
+        "/** @param {!I} i */ function f(i) {" +
         "  $jscomp.typecheck.checkType(i, " +
         "    [$jscomp.typecheck.interfaceChecker('I')])" +
         "}");
   }
 
   public void testImplementedInterface() {
-    testChecks("/** @interface */function I() {}" +
-        "/** @param {!I} i */function f(i) {}" +
-        "/** @constructor\n@implements {I} */function C() {}",
-        "function I() {}" +
-        "function f(i) {" +
-        "  $jscomp.typecheck.checkType(i, " +
-        "      [$jscomp.typecheck.interfaceChecker('I')])" +
-        "}" +
-        "function C() {}" +
-        "C.prototype['instance_of__C'] = true;" +
-        "C.prototype['implements__I'] = true;");
+    testChecks(
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}",
+            "/** @param {!I} i */ function f(i) {}",
+            "/** @constructor\n@implements {I} */ function C() {}"),
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}",
+            "/** @param {!I} i */ function f(i) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.interfaceChecker('I')])",
+            "}",
+            "/** @constructor\n@implements {I} */ function C() {}",
+            "C.prototype['instance_of__C'] = true;",
+            "C.prototype['implements__I'] = true;"));
   }
 
   public void testExtendedInterface() {
-    testChecks("/** @interface */function I() {}" +
-        "/** @interface\n@extends {I} */function J() {}" +
-        "/** @param {!I} i */function f(i) {}" +
-        "/** @constructor\n@implements {J} */function C() {}",
-        "function I() {}" +
-        "function J() {}" +
-        "function f(i) {" +
-        "  $jscomp.typecheck.checkType(i, " +
-        "      [$jscomp.typecheck.interfaceChecker('I')])" +
-        "}" +
-        "function C() {}" +
-        "C.prototype['instance_of__C'] = true;" +
-        "C.prototype['implements__I'] = true;" +
-        "C.prototype['implements__J'] = true;");
+    testChecks(
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}",
+            "/** @interface\n@extends {I} */ function J() {}",
+            "/** @param {!I} i */function f(i) {}",
+            "/** @constructor\n@implements {J} */function C() {}"),
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}",
+            "/** @interface\n@extends {I} */ function J() {}",
+            "/** @param {!I} i */ function f(i) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.interfaceChecker('I')])",
+            "}",
+            "/** @constructor\n@implements {J} */ function C() {}",
+            "C.prototype['instance_of__C'] = true;",
+            "C.prototype['implements__I'] = true;",
+            "C.prototype['implements__J'] = true;"));
   }
 
   public void testImplementedInterfaceOrdering() {
-    testChecks("/** @interface */function I() {}" +
-        "/** @param {!I} i */function f(i) {}" +
-        "/** @constructor\n@implements {I} */function C() {}" +
-        "C.prototype.f = function() {};",
-        "function I() {}" +
-        "function f(i) {" +
-        "  $jscomp.typecheck.checkType(i, " +
-        "      [$jscomp.typecheck.interfaceChecker('I')])" +
-        "}" +
-        "function C() {}" +
-        "C.prototype['instance_of__C'] = true;" +
-        "C.prototype['implements__I'] = true;" +
-        "C.prototype.f = function() {};");
+    testChecks(
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}" ,
+            "/** @param {!I} i */ function f(i) {}" ,
+            "/** @constructor\n@implements {I} */ function C() {}" ,
+            "C.prototype.f = function() {};"),
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}",
+            "/** @param {!I} i */ function f(i) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.interfaceChecker('I')])",
+            "}",
+            "/** @constructor\n@implements {I} */ function C() {}",
+            "C.prototype['instance_of__C'] = true;",
+            "C.prototype['implements__I'] = true;",
+            "C.prototype.f = function() {};"));
   }
 
   public void testImplementedInterfaceOrderingGoogInherits() {
-    testChecks("var goog = {}; goog.inherits = function(x, y) {};" +
-        "/** @interface */function I() {}" +
-        "/** @param {!I} i */function f(i) {}" +
-        "/** @constructor */function B() {}" +
-        "/** @constructor\n@extends {B}\n@implements {I} */function C() {}" +
-        "goog.inherits(C, B);" +
-        "C.prototype.f = function() {};",
-        "var goog = {}; goog.inherits = function(x, y) {};" +
-        "function I() {}" +
-        "function f(i) {" +
-        "  $jscomp.typecheck.checkType(i, " +
-        "      [$jscomp.typecheck.interfaceChecker('I')])" +
-        "}" +
-        "function B() {}" +
-        "B.prototype['instance_of__B'] = true;" +
-        "function C() {}" +
-        "goog.inherits(C, B);" +
-        "C.prototype['instance_of__C'] = true;" +
-        "C.prototype['implements__I'] = true;" +
-        "C.prototype.f = function() {};");
+    testChecks(
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.inherits = function(x, y) {};",
+            "/** @interface */function I() {}",
+            "/** @param {!I} i */function f(i) {}",
+            "/** @constructor */function B() {}",
+            "/** @constructor\n@extends {B}\n@implements {I} */function C() {}",
+            "goog.inherits(C, B);",
+            "C.prototype.f = function() {};"),
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.inherits = function(x, y) {};",
+            "/** @interface */function I() {}",
+            "/** @param {!I} i */function f(i) {",
+            "  $jscomp.typecheck.checkType(i, ",
+            "      [$jscomp.typecheck.interfaceChecker('I')])",
+            "}",
+            "/** @constructor */function B() {}",
+            "B.prototype['instance_of__B'] = true;",
+            "/** @constructor\n@extends {B}\n@implements {I} */function C() {}",
+            "goog.inherits(C, B);",
+            "C.prototype['instance_of__C'] = true;",
+            "C.prototype['implements__I'] = true;",
+            "C.prototype.f = function() {};"));
   }
 
   public void testInnerConstructor() {
-    testChecks("(function() { /** @constructor */ function C() {} })()",
-        "(function() {" +
-        "  function C() {} C.prototype['instance_of__C'] = true;" +
-        "})()");
+    testChecks(
+        "(function() { /** @constructor */ function C() {} })()",
+        LINE_JOINER.join(
+            "(function() {",
+            "  /** @constructor */ function C() {}",
+            "  C.prototype['instance_of__C'] = true;",
+            "})()"));
   }
 
   public void testReturnNothing() {
@@ -273,7 +309,9 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   public void testFunctionType() {
-    testChecks("/** @type {!Function} */function f() {}", "function f() {}");
+    testChecks(
+        "/** @type {!Function} */function f() {}",
+        "/** @type {!Function} */function f() {}");
   }
 
   private void testChecks(String js, String expected) {
