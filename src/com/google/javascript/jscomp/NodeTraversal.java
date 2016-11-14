@@ -391,13 +391,22 @@ public class NodeTraversal {
    */
   void traverseAtScope(Scope s) {
     Node n = s.getRootNode();
+    curNode = n;
+    Deque<Scope> parentScopes = new ArrayDeque<>();
+    Scope temp = s.getParent();
+    while (temp != null) {
+      parentScopes.push(temp);
+      temp = temp.getParent();
+    }
+    while (!parentScopes.isEmpty()) {
+      pushScope(parentScopes.pop(), true);
+    }
     if (n.isFunction()) {
       // We need to do some extra magic to make sure that the scope doesn't
       // get re-created when we dive into the function.
       if (inputId == null) {
         setInputId(NodeUtil.getInputId(n), getSourceName(n));
       }
-      curNode = n;
       pushScope(s);
 
       Node args = n.getSecondChild();
@@ -410,7 +419,6 @@ public class NodeTraversal {
       if (inputId == null) {
         setInputId(NodeUtil.getInputId(n), getSourceName(n));
       }
-      curNode = n;
       pushScope(s);
 
       // traverseBranch is not called here to avoid re-creating the block scope.

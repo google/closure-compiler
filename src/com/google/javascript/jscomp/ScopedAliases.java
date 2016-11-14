@@ -357,7 +357,7 @@ class ScopedAliases implements HotSwapCompilerPass {
           findAliases(t, hoistedScope);
         }
       }
-      Node scopeMethodCall = findScopeMethodCall(t.getScope().getRootNode());
+      Node scopeMethodCall = findScopeMethodCall(t.getScopeRoot());
       if (scopeMethodCall != null) {
         transformation = transformationHandler.logAliasTransformation(
             scopeMethodCall.getSourceFileName(), getSourceRegion(scopeMethodCall));

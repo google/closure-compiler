@@ -111,9 +111,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       }
       PolymerClassRewriter rewriter = new PolymerClassRewriter(compiler, polymerElementExterns);
       if (NodeUtil.isNameDeclaration(grandparent) || parent.isAssign()) {
-        rewriter.rewritePolymerClass(grandparent, def, traversal.getScope().isGlobal());
+        rewriter.rewritePolymerClass(grandparent, def, traversal.inGlobalScope());
       } else {
-        rewriter.rewritePolymerClass(parent, def, traversal.getScope().isGlobal());
+        rewriter.rewritePolymerClass(parent, def, traversal.inGlobalScope());
       }
     }
   }

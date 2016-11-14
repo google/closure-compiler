@@ -234,7 +234,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void enterScope(NodeTraversal t) {
-    Node n = t.getScope().getRootNode();
+    Node n = t.getScopeRoot();
     BasicBlock parent = blockStack.isEmpty() ? null : peek(blockStack);
     blockStack.add(new BasicBlock(parent, n));
   }
@@ -245,7 +245,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
   @Override
   public void exitScope(NodeTraversal t) {
     pop(blockStack);
-    if (t.getScope().isGlobal()) {
+    if (t.inGlobalScope()) {
       // Update global scope reference lists when we are done with it.
       compiler.updateGlobalVarReferences(referenceMap, t.getScopeRoot());
       behavior.afterExitScope(t, compiler.getGlobalVarReferences());
