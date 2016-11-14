@@ -153,7 +153,7 @@ crypto.Cipher.prototype.update;
 
 /**
  * @name crypto.Cipher.prototype.final
- * @param {string} output_encoding
+ * @param {string=} output_encoding
  * @return {string|Buffer}
  */
 crypto.Cipher.prototype.final;
@@ -186,7 +186,7 @@ crypto.Cipheriv.prototype.update;
 
 /**
  * @name crypto.Cipheriv.prototype.final
- * @param {string} output_encoding
+ * @param {string=} output_encoding
  * @return {string|Buffer}
  */
 crypto.Cipheriv.prototype.final;
@@ -234,13 +234,13 @@ crypto.Decipher.prototype.update;
 
 /**
  * @name crypto.Decipher.prototype.final
- * @param {string} output_encoding
+ * @param {string=} output_encoding
  * @return {string|Buffer}
  */
 crypto.Decipher.prototype.final;
 
 /**
- * @param {string} output_encoding
+ * @param {string=} output_encoding
  * @return {string|Buffer}
  */
 crypto.Decipher.prototype.finaltol;
@@ -274,13 +274,13 @@ crypto.Decipheriv.prototype.update;
 
 /**
  * @name crypto.Decipheriv.prototype.final
- * @param {string} output_encoding
+ * @param {string=} output_encoding
  * @return {string|Buffer}
  */
 crypto.Decipheriv.prototype.final;
 
 /**
- * @param {string} output_encoding
+ * @param {string=} output_encoding
  * @return {string|Buffer}
  */
 crypto.Decipheriv.prototype.finaltol;
