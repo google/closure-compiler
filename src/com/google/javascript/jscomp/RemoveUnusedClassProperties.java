@@ -33,6 +33,8 @@ import java.util.Set;
  * "Object.keys".  This is the same assumption used with
  * RemoveUnusedPrototypeProperties but is slightly wider in scope.
  *
+ * TODO(tomnguyen) Handle destructuring of objects/classes as cases where the field is used.
+ *
  * @author johnlenz@google.com (John Lenz)
  */
 class RemoveUnusedClassProperties
@@ -147,17 +149,29 @@ class RemoveUnusedClassProperties
          break;
        }
 
-       case OBJECTLIT: {
-         // Assume any object literal definition might be a reflection on the
-         // class property.
-         if (!NodeUtil.isObjectDefinePropertiesDefinition(n.getParent())) {
-           for (Node c : n.children()) {
-             used.add(c.getString());
-           }
-         }
-         break;
-       }
-
+      case OBJECTLIT:
+        {
+          // Assume any object literal definition might be a reflection on the
+          // class property.
+          if (!NodeUtil.isObjectDefinePropertiesDefinition(n.getParent())) {
+            for (Node c : n.children()) {
+              // Object literals can contain computed_prop fields.
+              if (!c.isComputedProp()) {
+                used.add(c.getString());
+              }
+            }
+          }
+          break;
+        }
+      case CLASS:
+        Node classMemberDefs = n.getLastChild();
+        for (Node m : classMemberDefs.children()) {
+          // Computed props are treated as unremovable for now.
+          if (!m.isComputedProp()) {
+            candidates.add(m);
+          }
+        }
+        break;
       case CALL:
         // Look for properties referenced through the property rename functions.
         Node target = n.getFirstChild();
