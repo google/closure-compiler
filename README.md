@@ -59,9 +59,7 @@ unit tests too).
 6. In Package Explorer, remove from the build path:
     - `src/com/google/javascript/jscomp/debugger/DebuggerGwtMain.java`
     - `src/com/google/javascript/jscomp/gwt/`
-7. In Project config, navigate to `Java Code Style > Formatter` and configure the project to
-   use the [Google styleguide settings](https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml).
-8. See *Using Maven* above to build the JAR.
+7. See *Using Maven* above to build the JAR.
 
 ## Running
 
@@ -154,7 +152,9 @@ will re-order the inputs automatically.
    signed for them.
 2. To make sure your changes are of the type that will be accepted, ask about your patch on the [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
 3. Fork the repository.
-4. Make your changes.
+4. Make your changes. Check out our
+   [coding conventions](https://github.com/google/closure-compiler/wiki/Contributors#coding-conventions)
+   for details on making sure your code is in correct style.
 5. Submit a pull request for your changes. A project developer will review your work and then merge your request into the project.
 
 ## Closure Compiler License
