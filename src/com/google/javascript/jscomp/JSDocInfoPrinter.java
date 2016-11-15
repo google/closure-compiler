@@ -48,6 +48,7 @@ public final class JSDocInfoPrinter {
 
     // order:
     //   export|public|private|package|protected
+    //   abstract
     //   lends
     //   const
     //   final
@@ -71,6 +72,10 @@ public final class JSDocInfoPrinter {
     } else if (info.getVisibility() != null
         && info.getVisibility() != Visibility.INHERITED) {
       parts.add("@" + info.getVisibility().toString().toLowerCase());
+    }
+
+    if (info.isAbstract()) {
+      parts.add("@abstract");
     }
 
     if (info.getLendsName() != null) {

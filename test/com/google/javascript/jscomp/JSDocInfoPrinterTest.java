@@ -336,6 +336,10 @@ public final class JSDocInfoPrinterTest extends TestCase {
     testSame("/** @export */ ");
   }
 
+  public void testAbstract() {
+    testSame("/** @abstract */ ");
+  }
+
   private void testSame(String jsdoc) {
     test(jsdoc, jsdoc);
   }
