@@ -297,6 +297,11 @@ public final class ModuleLoader {
     return name.startsWith(MODULE_SLASH);
   }
 
+  /** Whether name is a path-based identifier (has a '/' character) */
+  public static boolean isPathIdentifier(String name) {
+    return name.contains(MODULE_SLASH);
+  }
+
   private static ImmutableList<String> createRootPaths(
       Iterable<String> roots, PathResolver resolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
