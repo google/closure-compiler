@@ -3,11 +3,17 @@ jdk:
   - openjdk7
   - oraclejdk8
 
-script:
-  - mvn javadoc:javadoc
-  - mvn test
+cache:
+  directories:
+  - $HOME/.m2
 
-sudo: false
+install: true
+
+script:
+  - mvn install -B
+  - mvn javadoc:javadoc
+
+sudo: required
 
 notifications:
   email: false
