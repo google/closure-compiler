@@ -135,7 +135,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
                 "    },",
                 "  },",
                 "",
-                "  /** @suppress {checkTypes|globalThis} */",
+                "  /** @suppress {checkTypes|globalThis|visibility} */",
                 "  fooChanged_: function() {},",
                 "};"),
             LINE_JOINER.join(

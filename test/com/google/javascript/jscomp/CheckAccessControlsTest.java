@@ -382,34 +382,16 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testPrivateAccessForProperties3() {
-    testSame(new String[] {
+    // Even though baz is "part of the Foo class" the access is disallowed since it's
+    // not in the same file.
+    testError(new String[] {
         "/** @constructor */ function Foo() {}"
         + "/** @private */ Foo.prototype.bar_ = function() {}; (new Foo).bar_();",
-        "Foo.prototype.baz = function() { this.bar_(); };"});
+        "Foo.prototype.baz = function() { this.bar_(); };"},
+        BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testPrivateAccessForProperties4() {
-    // If a prototype property is defined via a computed access in a separate file from the
-    // constructor itself, then when running with NTI we fail to recognize that property as being a
-    // prototype property. This is enough of a corner case that we are fine with allowing it.
-    // If they are in the same file then things work as expected
-    // (see testPrivateAccessForProperties4b).
-    this.mode = TypeInferenceMode.OTI_ONLY;
-    testSame(new String[] {
-        "/** @constructor */ function Foo() {}"
-        + "/** @private */ Foo.prototype.bar_ = function() {};",
-        "Foo.prototype['baz'] = function() { (new Foo()).bar_(); };"});
-  }
-
-  public void testPrivateAccessForProperties4a() {
-    // Identical to 4 except the computed access
-    testSame(new String[] {
-        "/** @constructor */ function Foo() {}"
-        + "/** @private */ Foo.prototype.bar_ = function() {};",
-        "Foo.prototype.baz = function() { (new Foo()).bar_(); };"});
-  }
-
-  public void testPrivateAccessForProperties4b() {
     testSame(
         "/** @constructor */ function Foo() {}"
         + "/** @private */ Foo.prototype.bar_ = function() {};"

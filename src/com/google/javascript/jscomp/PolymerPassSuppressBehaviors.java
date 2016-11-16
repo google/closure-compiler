@@ -55,7 +55,7 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
   }
 
   /**
-   * Strip property type annotations and add suppress checkTypes and globalThis on functions.
+   * Strip property type annotations and add suppressions on functions.
    */
   private void suppressBehavior(Node behaviorValue) {
     if (behaviorValue == null) {
@@ -104,6 +104,7 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
           JSDocInfoBuilder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
       suppressDoc.addSuppression("checkTypes");
       suppressDoc.addSuppression("globalThis");
+      suppressDoc.addSuppression("visibility");
       defaultValueKey.setJSDocInfo(suppressDoc.build());
     }
   }
@@ -115,6 +116,7 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
         JSDocInfoBuilder suppressDoc = new JSDocInfoBuilder(true);
         suppressDoc.addSuppression("checkTypes");
         suppressDoc.addSuppression("globalThis");
+        suppressDoc.addSuppression("visibility");
         keyNode.setJSDocInfo(suppressDoc.build());
       }
     }

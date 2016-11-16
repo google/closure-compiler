@@ -829,10 +829,6 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       Node parent,
       boolean isClassType,
       TypeI ownerType) {
-    TypeI currentClass = getCurrentClass();
-    if (currentClass != null && ownerType.isEquivalentTo(currentClass)) {
-      return;
-    }
 
     if (isClassType && isValidPrivateConstructorAccess(parent)) {
       return;
