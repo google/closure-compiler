@@ -44,7 +44,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     enableTypeCheck();
     enableClosurePass();
     enableGatherExternProperties();
-    compareJsDoc = false;
   }
 
   @Override
@@ -74,7 +73,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   public void testOneVar1() {
     test("/** @constructor */ var Foo = function(){};Foo.prototype.b = 0;",
-         "var Foo = function(){};Foo.prototype.a = 0;");
+         "/** @constructor */ var Foo = function(){};Foo.prototype.a = 0;");
   }
 
   public void testOneVar2() {
@@ -113,7 +112,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "Foo.prototype.z=0;",
         "Foo.prototype.x=0;");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
+        "/** @constructor */ var Foo = function(){};",
         "Foo.prototype.a=0;",
         "Foo.prototype.a=0;",
         "Foo.prototype.b=0;");
@@ -125,7 +124,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ var Foo = function(){};",
         "Foo.prototype = {z:0, z:1, x:0};");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
+        "/** @constructor */ var Foo = function(){};",
         "Foo.prototype = {a:0, a:1, b:0};");
     test(js, output);
   }
@@ -137,9 +136,9 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ var Bar = function(){};",
         "Bar.prototype.c = 0;");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
+        "/** @constructor */ var Foo = function(){};",
         "Foo.prototype.a=0;",
-        "var Bar = function(){};",
+        "/** @constructor */ var Bar = function(){};",
         "Bar.prototype.a=0;");
     test(js, output);
   }
@@ -153,10 +152,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "Bar.prototype.c = 0;",
         "Bar.prototype.r = 0;");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
+        "/** @constructor */ var Foo = function(){};",
         "Foo.prototype.a=0;",
         "Foo.prototype.b=0;",
-        "var Bar = function(){};",
+        "/** @constructor */ var Bar = function(){};",
         "Bar.prototype.b=0;",
         "Bar.prototype.a=0;");
     test(js, output);
@@ -173,10 +172,11 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "U.joint;",
         "U.joint");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
-        "var Bar = function(){};",
+        "/** @constructor */ var Foo = function(){};",
+        "/** @constructor */ var Bar = function(){};",
         "Foo.prototype.b=0;",
         "Bar.prototype.b=0;",
+        "/** @type {Foo|Bar} */",
         "var U;",
         "U.a;",
         "U.a");
@@ -206,20 +206,23 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "U3.j5;",
         "U3.j6");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
-        "var Bar = function(){};",
-        "var Baz = function(){};",
-        "var Bat = function(){};",
+        "/** @constructor */ var Foo = function(){};",
+        "/** @constructor */ var Bar = function(){};",
+        "/** @constructor */ var Baz = function(){};",
+        "/** @constructor */ var Bat = function(){};",
         "Foo.prototype.c=0;",
         "Bar.prototype.e=0;",
         "Baz.prototype.e=0;",
         "Bat.prototype.c=0;",
+        "/** @type {Foo|Bar} */",
         "var U1;",
         "U1.a;",
         "U1.b;",
+        "/** @type {Baz|Bar} */",
         "var U2;",
         "U2.c;",
         "U2.d;",
+        "/** @type {Baz|Bat} */",
         "var U3;",
         "U3.a;",
         "U3.b");
@@ -292,9 +295,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "Bar.prototype.bazz;",
         "(new Foo).fun().bazz();");
     String output = LINE_JOINER.join(
-        "function Foo(){};",
+        "/** @constructor */ function Foo(){};",
+        "/** @return {Bar} */",
         "Foo.prototype.a = function() { return new Bar(); };",
-        "function Bar(){};",
+        "/** @constructor */ function Bar(){};",
         "Bar.prototype.a;",
         "(new Foo).a().a();");
     test(js, output);
@@ -404,7 +408,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "var bar = new Bar();",
             "bar.b();"),
         LINE_JOINER.join(
-            "function Bar(){};",
+            "/** @constructor */ function Bar(){};",
             "Bar.prototype.a = function(){};",
             "Bar.prototype.b = function(){};",
             "var bar = new Bar();",
@@ -455,8 +459,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "var bar = new Bar();",
             "bar.toString();"),
         LINE_JOINER.join(
-            "var Bar = function(){};",
-            "Bar.prototype.toString = function(){};",
+            "/** @constructor */ var Bar = function(){};",
+            "/** @override */ Bar.prototype.toString = function(){};",
             "Bar.prototype.a = function(){};",
             "var bar = new Bar();",
             "bar.toString();"));
@@ -470,7 +474,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     test("/** @constructor */function Bar(){}; Bar.getA = function(){}; " +
          "Bar.prototype.getA = function(){}; Bar.getA();" +
          "var bar = new Bar(); bar.getA();",
-         "function Bar(){}; Bar.a = function(){};" +
+         "/** @constructor */function Bar(){}; Bar.a = function(){};" +
          "Bar.prototype.a = function(){}; Bar.a();" +
          "var bar = new Bar(); bar.a();");
   }
@@ -479,7 +483,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     test("/** @constructor */function Bar(){};" +
          "Bar.getA = function(){}; " +
          "Bar.prototype.getB = function(){};",
-         "function Bar(){}; Bar.a = function(){};" +
+         "/** @constructor */function Bar(){}; Bar.a = function(){};" +
          "Bar.prototype.a = function(){};");
   }
 
@@ -559,7 +563,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "Foo.prototype.x=0;",
         "Foo.prototype.y=0;");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
+        "/** @constructor */ var Foo = function(){};",
         "Foo.prototype.a=0;",
         "Foo.prototype.a=0;",
         "Foo.prototype.b=0;",
@@ -583,16 +587,21 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         " */",
         "function Bar(){}",
         "Bar.prototype.y;",
-        "/** @inheritDoc */",
+        "/** @override */",
         "Bar.prototype.x = function() { return this.y; };",
         "Bar.prototype.z = function() {};\n"
         // Simulates inline getters.
         + "/** @type {Foo} */ (new Bar).y;");
     String output = LINE_JOINER.join(
-        "function Foo(){}",
+        "/** @interface */ function Foo(){}",
         "Foo.prototype.b = function(){};",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo}",
+        " */",
         "function Bar(){}",
         "Bar.prototype.a;",
+        "/** @override */",
         "Bar.prototype.b = function() { return this.a; };",
         "Bar.prototype.c = function() {};\n"
         // Simulates inline getters.
@@ -603,10 +612,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   public void testImplementsAndExtends() {
     String js = LINE_JOINER.join(
         "/** @interface */ function Foo() {}",
-        "/**",
-        " * @constructor",
-        " */",
-        "function Bar(){}",
+        "/** @constructor */ function Bar(){}",
         "Bar.prototype.y = function() { return 3; };",
         "/**",
         " * @constructor",
@@ -617,12 +623,17 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "/** @param {Foo} x */ function f(x) { x.z = 3; }",
         "/** @param {SubBar} x */ function g(x) { x.z = 3; }");
     String output = LINE_JOINER.join(
-        "function Foo(){}",
-        "function Bar(){}",
+        "/** @interface */ function Foo(){}",
+        "/** @constructor */ function Bar(){}",
         "Bar.prototype.b = function() { return 3; };",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " * @implements {Foo}",
+        " */",
         "function SubBar(){}",
-        "function f(x) { x.a = 3; }",
-        "function g(x) { x.a = 3; }");
+        "/** @param {Foo} x */ function f(x) { x.a = 3; }",
+        "/** @param {SubBar} x */ function g(x) { x.a = 3; }");
     test(js, output);
   }
 
@@ -642,11 +653,19 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "/** @param {C1} x */ function f(x) { x.y = 3; }",
         "/** @param {A} x */ function g(x) { x.z = 3; }\n");
     String output = LINE_JOINER.join(
-        "function A(){}",
+        "/** @interface */ function A(){}",
+        "/**",
+        " * @constructor",
+        " */",
         "function C1(){}",
+        "/**",
+        " * @constructor",
+        " * @extends {C1}",
+        " * @implements {A}",
+        " */",
         "function C2(){}",
-        "function f(x) { x.a = 3; }",
-        "function g(x) { x.b = 3; }\n");
+        "/** @param {C1} x */ function f(x) { x.a = 3; }",
+        "/** @param {A} x */ function g(x) { x.b = 3; }\n");
     test(js, output);
   }
 
@@ -657,10 +676,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "/** @param {A} x */ function f(x) { x.y = 3; }",
         "/** @param {B} x */ function g(x) { x.z = 3; }\n");
     String output = LINE_JOINER.join(
-        "function A(){}",
-        "function B(){}",
-        "function f(x) { x.a = 3; }",
-        "function g(x) { x.b = 3; }\n");
+        "/** @interface */ function A(){}",
+        "/** @interface \n @extends {A} */ function B(){}",
+        "/** @param {A} x */ function f(x) { x.a = 3; }",
+        "/** @param {B} x */ function g(x) { x.b = 3; }\n");
     test(js, output);
   }
 
@@ -683,7 +702,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "F.y = 2;\n");
     String output = LINE_JOINER.join(
         "Function.prototype.a = 1;",
-        "function F() {}",
+        "/** @constructor */ function F() {}",
         "F.b = 2;\n");
     test(js, output);
   }
@@ -723,12 +742,15 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "x.bb = 2;\n",
         "x.cc = 3;");
     String result = LINE_JOINER.join(
+        "/** @constructor \n @template T */\n",
         "function C() {",
         "  this.b = 1;",
         "}",
+        "/** @return {C.<T>} */\n",
         "C.prototype.a = function() {",
         "  return this;",
         "};",
+        "/** @type {C.<string>} */\n",
         "var x = (new C).a();",
         "x.c = 2;",
         "x.d = 3;");
@@ -812,7 +834,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ var Foo = function(){};",
         "Foo.prototype = {z:0, z:1, x:0};");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
+        "/** @constructor */ var Foo = function(){};",
         "Foo.prototype = {a:0, a:1, b:0};");
     test(js, output);
   }
@@ -824,9 +846,9 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ var Bar = function(){};",
         "Bar.prototype = {c: 0};");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
+        "/** @constructor */ var Foo = function(){};",
         "Foo.prototype = {a: 0};",
-        "var Bar = function(){};",
+        "/** @constructor */ var Bar = function(){};",
         "Bar.prototype = {a: 0};");
     test(js, output);
   }
@@ -838,9 +860,9 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ var Bar = function(){};",
         "Bar.prototype = {c: 0, r: 0};");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
+        "/** @constructor */ var Foo = function(){};",
         "Foo.prototype = {a: 0, b: 0};",
-        "var Bar = function(){};",
+        "/** @constructor */ var Bar = function(){};",
         "Bar.prototype = {b: 0, a: 0};");
     test(js, output);
   }
@@ -853,14 +875,15 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "Bar.prototype = {bardoo: 0};",
         "/** @type {Foo|Bar} */",
         "var U;",
-        "U.joint");
+        "U.joint;");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
-        "var Bar = function(){};",
+        "/** @constructor */ var Foo = function(){};",
+        "/** @constructor */ var Bar = function(){};",
         "Foo.prototype = {a: 0};",
         "Bar.prototype = {a: 0};",
+        "/** @type {Foo|Bar} */",
         "var U;",
-        "U.b");
+        "U.b;");
     test(js, output);
   }
 
@@ -887,20 +910,23 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "U3.j5;",
         "U3.j6");
     String output = LINE_JOINER.join(
-        "var Foo = function(){};",
-        "var Bar = function(){};",
-        "var Baz = function(){};",
-        "var Bat = function(){};",
+        "/** @constructor */ var Foo = function(){};",
+        "/** @constructor */ var Bar = function(){};",
+        "/** @constructor */ var Baz = function(){};",
+        "/** @constructor */ var Bat = function(){};",
         "Foo.prototype = {c: 0};",
         "Bar.prototype = {e: 0};",
         "Baz.prototype = {e: 0};",
         "Bat.prototype = {c: 0};",
+        "/** @type {Foo|Bar} */",
         "var U1;",
         "U1.a;",
         "U1.b;",
+        "/** @type {Baz|Bar} */",
         "var U2;",
         "U2.c;",
         "U2.d;",
+        "/** @type {Baz|Bat} */",
         "var U3;",
         "U3.a;",
         "U3.b");
@@ -949,9 +975,9 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "Bar.prototype.bazz;",
         "(new Foo).fun().bazz();");
     String output = LINE_JOINER.join(
-        "function Foo(){};",
-        "Foo.prototype = { a: function() { return new Bar(); } };",
-        "function Bar(){};",
+        "/** @constructor */ function Foo(){};",
+        "Foo.prototype = { /** @return {Bar} */ a: function() { return new Bar(); } };",
+        "/** @constructor */ function Bar(){};",
         "Bar.prototype.a;",
         "(new Foo).a().a();");
     test(js, output);
@@ -965,7 +991,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "var bar = new Bar();",
             "bar.b();"),
         LINE_JOINER.join(
-            "function Bar(){};",
+            "/** @constructor */ function Bar(){};",
             "Bar.prototype = {a: function(){}, b: function(){}};",
             "var bar = new Bar();",
             "bar.a();"));
