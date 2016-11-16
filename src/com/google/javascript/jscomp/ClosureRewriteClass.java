@@ -543,7 +543,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   /**
    * @return Whether the call represents a class definition.
    */
-  private static boolean isGoogDefineClass(Node value) {
+  static boolean isGoogDefineClass(Node value) {
     if (value != null && value.isCall()) {
       return value.getFirstChild().matchesQualifiedName("goog.defineClass");
     }

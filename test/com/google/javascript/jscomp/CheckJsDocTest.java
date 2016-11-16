@@ -119,9 +119,16 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
   }
 
   public void testAbstract_class() {
-    testSameEs6("/** @abstract */class Foo { constructor() {}}");
+    testSameEs6("/** @abstract */ class Foo { constructor() {}}");
     testSame("/** @abstract @constructor */ var Foo = function() {};");
     testSame("/** @abstract @constructor */ var Foo = function() { var x = 1; };");
+  }
+
+  public void testAbstract_defineClass() {
+    testSame("/** @abstract */ goog.defineClass(null, { constructor: {} });");
+    testSame("/** @abstract */ var Foo = goog.defineClass(null, { constructor: {} });");
+    testSame("/** @abstract */ ns.Foo = goog.defineClass(null, { constructor: {} });");
+    testWarning("/** @abstract */ var Foo;", MISPLACED_ANNOTATION);
   }
 
   public void testAbstract_constructor() {
