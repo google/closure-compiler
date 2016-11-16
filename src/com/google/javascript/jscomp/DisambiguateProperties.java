@@ -880,7 +880,7 @@ class DisambiguateProperties implements CompilerPass {
                  : registry.getDirectImplementors(objType)) {
           list.add(impl.getInstanceType());
         }
-        return list.isEmpty() ? null : list;
+        return list;
       } else {
         return null;
       }
