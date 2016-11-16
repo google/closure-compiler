@@ -35,12 +35,6 @@ public final class CachingTranspiler implements Transpiler {
   private final LoadingCache<Key, TranspileResult> cache;
   private final Supplier<String> runtime;
 
-  private static final String DEFAULT_SPEC = "maximumSize=100";
-
-  public CachingTranspiler(Transpiler delegate) {
-    this(delegate, CacheBuilder.from(DEFAULT_SPEC));
-  }
-
   public CachingTranspiler(
       final Transpiler delegate, CacheBuilder<Object, ? super TranspileResult> builder) {
     checkNotNull(delegate);

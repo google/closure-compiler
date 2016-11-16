@@ -16,10 +16,14 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.RETURNS_SMART_NULLS;
+import static org.mockito.Mockito.when;
 
-import junit.framework.TestCase;
-
+import com.google.javascript.jscomp.transpile.TranspileResult;
+import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.IOException;
+import junit.framework.TestCase;
+import org.mockito.Mockito;
 
 /**
  * Tests for ClosureBundler
@@ -101,5 +105,28 @@ public final class ClosureBundlerTest extends TestCase {
         .appendTo(sb, TRADITIONAL, "\"a string\"");
     assertThat(sb.toString())
         .isEqualTo("(0,eval(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\"));\n");
+  }
+
+  public void testTranspilation() throws IOException {
+    String input = "goog.module('Foo');\nclass Foo {}";
+
+    Transpiler transpiler = Mockito.mock(Transpiler.class, RETURNS_SMART_NULLS);
+    when(transpiler.runtime()).thenReturn("RUNTIME;");
+    when(transpiler.transpile("foo.js", input))
+        .thenReturn(new TranspileResult("foo.js", input, "TRANSPILED;", ""));
+
+    ClosureBundler bundler = new ClosureBundler(transpiler).withPath("foo.js");
+    StringBuilder sb = new StringBuilder();
+    bundler.appendTo(sb, MODULE, input);
+    assertThat(sb.toString())
+        .isEqualTo("RUNTIME;goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
+            + ";return exports;});\n");
+
+    // Second call doesn't include runtime anymore.
+    sb = new StringBuilder();
+    bundler.appendTo(sb, MODULE, input);
+    assertThat(sb.toString())
+        .isEqualTo("goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
+            + ";return exports;});\n");
   }
 }
