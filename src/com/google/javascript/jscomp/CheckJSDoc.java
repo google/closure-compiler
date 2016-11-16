@@ -183,11 +183,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (info == null || !info.isAbstract()) {
       return;
     }
-    if (n.isClass()
-        || ClosureRewriteClass.isGoogDefineClass(n)
-        || (n.isAssign() && ClosureRewriteClass.isGoogDefineClass(n.getLastChild()))
-        || (NodeUtil.isNameDeclaration(n)
-            && ClosureRewriteClass.isGoogDefineClass(n.getFirstFirstChild()))) {
+    if (isClassDecl(n)) {
       return;
     }
 

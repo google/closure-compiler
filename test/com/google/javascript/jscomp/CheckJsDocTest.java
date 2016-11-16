@@ -120,6 +120,9 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
 
   public void testAbstract_class() {
     testSameEs6("/** @abstract */ class Foo { constructor() {}}");
+    testSameEs6("/** @abstract */ exports.Foo = class {}");
+    testSameEs6("/** @abstract */ const Foo = class {}");
+    testSame("/** @abstract @constructor */ exports.Foo = function() {}");
     testSame("/** @abstract @constructor */ var Foo = function() {};");
     testSame("/** @abstract @constructor */ var Foo = function() { var x = 1; };");
   }
