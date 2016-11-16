@@ -52,17 +52,17 @@ public final class DependencyFile implements SourceFile {
   }
 
   @Override
-  public String getName() throws ServiceException {
+  public String getName() {
     return delegate.getName();
   }
 
   @Override
-  public String getContent() throws ServiceException {
+  public String getContent() {
     return delegate.getContent();
   }
 
   @Override
-  public boolean wasModified() throws ServiceException {
+  public boolean wasModified() {
     return delegate.wasModified();
   }
 

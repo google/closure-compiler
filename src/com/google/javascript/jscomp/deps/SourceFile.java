@@ -20,7 +20,7 @@ package com.google.javascript.jscomp.deps;
  * An interface for representing source files for the Compilation Service.
  */
 public interface SourceFile {
-  String getName() throws ServiceException;
-  String getContent() throws ServiceException;
-  boolean wasModified() throws ServiceException;
+  String getName();
+  String getContent();
+  boolean wasModified();
 }
