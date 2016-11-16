@@ -3,11 +3,19 @@ jdk:
   - openjdk7
   - oraclejdk8
 
-script:
-  - mvn javadoc:javadoc
-  - mvn test
+cache:
+  directories:
+  - $HOME/.m2
 
-sudo: false
+# Skip the "installation" step:
+# https://docs.travis-ci.com/user/customizing-the-build#Skipping-the-Installation-Step
+install: true
+
+script:
+  - mvn install --batch-mode
+  - mvn javadoc:javadoc
+
+sudo: required
 
 notifications:
   email: false
