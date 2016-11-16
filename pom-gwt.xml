@@ -102,6 +102,20 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.9.5</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava-testlib</artifactId>
+      <!-- See <dependencyManagement> in pom.xml for <version> -->
+      <scope>test</scope>
+    </dependency>
+
     <!-- Ant is a provided scope as it is only needed to compile; ant will provide itself when using the jar -->
     <dependency>
       <groupId>org.apache.ant</groupId>
@@ -223,8 +237,12 @@
             <exclude>**/gwt/super/**</exclude>
             <exclude>**/super/**</exclude>
             <exclude>**/testing/**</exclude>
+            <exclude>**/transpile/**</exclude>
             <exclude>**/webservice/**</exclude>
           </excludes>
+          <testExcludes>
+            <testExclude>**/transpile/**</testExclude>
+          </testExcludes>
         </configuration>
       </plugin>
 
