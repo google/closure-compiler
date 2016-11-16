@@ -144,6 +144,12 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return n.getLastChild();
     }
 
+    if (n.isStringKey() && n.getGrandparent() != null
+        && ClosureRewriteClass.isGoogDefineClass(n.getGrandparent())
+        && n.getFirstChild().isFunction()) {
+      return n.getFirstChild();
+    }
+
     return null;
   }
 
@@ -204,14 +210,14 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return;
     }
 
-    if (n.isMemberFunctionDef() && "constructor".equals(n.getString())) {
-      // @abstract annotation on an ES6 constructor
+    if ((n.isMemberFunctionDef() || n.isStringKey()) && "constructor".equals(n.getString())) {
+      // @abstract annotation on an ES6 or goog.defineClass constructor
       report(n, MISPLACED_ANNOTATION, "@abstract", "constructors cannot be abstract");
       return;
     }
 
     if (!info.isConstructor()
-        && !n.isMemberFunctionDef()
+        && (!n.isMemberFunctionDef() && !n.isStringKey())
         && !NodeUtil.isPrototypeMethod(functionNode)) {
       // @abstract annotation on a non-method (or static method) in ES5
       report(
