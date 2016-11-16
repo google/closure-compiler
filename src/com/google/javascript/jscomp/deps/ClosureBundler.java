@@ -15,47 +15,27 @@
  */
 package com.google.javascript.jscomp.deps;
 
-import com.google.common.base.Strings;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
-import com.google.javascript.jscomp.transpile.TranspileResult;
-import com.google.javascript.jscomp.transpile.Transpiler;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * A utility class to assist in creating JS bundle files.
  */
 public class ClosureBundler {
-
-  private final Transpiler transpiler;
-
-  private EvalMode mode = EvalMode.NORMAL;
+  private boolean useEval = false;
   private String sourceUrl = null;
   private String path = "unknown_source";
 
-  // TODO(sdh): This cache should be moved out into a higher level, but is
-  // currently required due to the API that source maps must be accessible
-  // via just a path (and not the file contents).
-  private final Map<String, String> sourceMapCache = new ConcurrentHashMap<>();
-
-  // TODO(sdh): This causes serious problems with edit-refresh if the bundler
-  // is used in the wrong scope.  The logic must be moved outside this class.
-  private boolean shouldSendRuntime = true;
-
   public ClosureBundler() {
-    this(Transpiler.NULL);
-  }
-
-  public ClosureBundler(Transpiler transpiler) {
-    this.transpiler = transpiler;
   }
 
   public final ClosureBundler useEval(boolean useEval) {
-    this.mode = useEval ? EvalMode.EVAL : EvalMode.NORMAL;
+    this.useEval = useEval;
     return this;
   }
 
@@ -98,19 +78,10 @@ public class ClosureBundler {
       Appendable out,
       DependencyInfo info,
       CharSource content) throws IOException {
-    // TODO(sdh): Move this logic into the bundle manager.
-    if (shouldSendRuntime) {
-      String runtime = transpiler.runtime();
-      if (!runtime.isEmpty()) {
-        mode.appendTraditional(runtime, out, null);
-      }
-      shouldSendRuntime = false;
-    }
-
     if (info.isModule()) {
-      mode.appendGoogModule(transpile(content.read()), out, sourceUrl);
+      appendGoogModule(out, content);
     } else {
-      mode.appendTraditional(transpile(content.read()), out, sourceUrl);
+      appendTraditional(out, content);
     }
   }
 
@@ -119,60 +90,44 @@ public class ClosureBundler {
    * method.
    */
   public String getSourceMap(String path) {
-    return Strings.nullToEmpty(sourceMapCache.get(path));
+    return "";
   }
 
-  private String transpile(String s) {
-    TranspileResult result = transpiler.transpile(path, s);
-    sourceMapCache.put(path, result.sourceMap());
-    return result.transpiled();
+  private void appendTraditional(Appendable out, CharSource contents)
+      throws IOException {
+    if (useEval) {
+      out.append("(0,eval(\"");
+      append(out, Mode.ESCAPED, contents);
+      appendSourceUrl(out, Mode.ESCAPED);
+      out.append("\"));\n");
+    } else {
+      append(out, Mode.NORMAL, contents);
+      appendSourceUrl(out, Mode.NORMAL);
+    }
   }
 
-  private enum EvalMode {
-    EVAL {
-      @Override
-      void appendTraditional(String s, Appendable out, String sourceUrl) throws IOException {
-        out.append("(0,eval(\"");
-        EscapeMode.ESCAPED.append(s, out);
-        appendSourceUrl(out, EscapeMode.ESCAPED, sourceUrl);
-        out.append("\"));\n");
-      }
-
-      @Override
-      void appendGoogModule(String s, Appendable out, String sourceUrl) throws IOException {
-        out.append("goog.loadModule(\"");
-        EscapeMode.ESCAPED.append(s, out);
-        appendSourceUrl(out, EscapeMode.ESCAPED, sourceUrl);
-        out.append("\");\n");
-      }
-    },
-    NORMAL {
-      @Override
-      void appendTraditional(String s, Appendable out, String sourceUrl) throws IOException {
-        EscapeMode.NORMAL.append(s, out);
-        appendSourceUrl(out, EscapeMode.NORMAL, sourceUrl);
-      }
-
-      @Override
-      void appendGoogModule(String s, Appendable out, String sourceUrl) throws IOException {
-        // add the prefix on the first line so the line numbers aren't affected.
-        out.append(
-            "goog.loadModule(function(exports) {"
-            + "'use strict';");
-        EscapeMode.NORMAL.append(s, out);
-        out.append(
-            "\n" // terminate any trailing single line comment.
-            + ";" // terminate any trailing expression.
-            + "return exports;});\n");
-        appendSourceUrl(out, EscapeMode.NORMAL, sourceUrl);
-      }
-    };
-
-    abstract void appendTraditional(String s, Appendable out, String sourceUrl) throws IOException;
-    abstract void appendGoogModule(String s, Appendable out, String sourceUrl) throws IOException;
+  private void appendGoogModule(Appendable out, CharSource contents)
+      throws IOException {
+    if (useEval) {
+      out.append("goog.loadModule(\"");
+      append(out, Mode.ESCAPED, contents);
+      appendSourceUrl(out, Mode.ESCAPED);
+      out.append("\");\n");
+    } else {
+      // add the prefix on the first line so the line numbers aren't affected.
+      out.append(
+          "goog.loadModule(function(exports) {"
+          + "'use strict';");
+      append(out, Mode.NORMAL, contents);
+      out.append(
+          "\n" // terminate any trailing single line comment.
+          + ";" // terminate any trailing expression.
+          + "return exports;});\n");
+      appendSourceUrl(out, Mode.NORMAL);
+    }
   }
 
-  private enum EscapeMode {
+  private enum Mode {
     ESCAPED {
       @Override void append(String s, Appendable out) throws IOException {
         out.append(SourceCodeEscapers.javascriptEscaper().escape(s));
@@ -187,8 +142,17 @@ public class ClosureBundler {
     abstract void append(String s, Appendable out) throws IOException;
   }
 
-  private static void appendSourceUrl(Appendable out, EscapeMode mode, String sourceUrl)
+  private void append(Appendable out, Mode mode, String s) throws IOException {
+    String transformed = transformInput(s, path);
+    mode.append(transformed, out);
+  }
+
+  private void append(Appendable out, Mode mode, CharSource cs)
       throws IOException {
+    append(out, mode, cs.read());
+  }
+
+  private void appendSourceUrl(Appendable out, Mode mode) throws IOException {
     if (sourceUrl == null) {
       return;
     }
@@ -196,5 +160,14 @@ public class ClosureBundler {
     // Don't go through #append. That method relies on #transformInput,
     // but source URLs generally aren't valid JS inputs.
     mode.append(toAppend, out);
+  }
+
+  /**
+   * Template method. Subclasses that need to transform the inputs should override this method.
+   * (For example, {@link TranspilingClosureBundler#transformInput} transpiles inputs from ES6
+   * to ES5.)
+   */
+  protected String transformInput(String input, String path) {
+    return input;
   }
 }
