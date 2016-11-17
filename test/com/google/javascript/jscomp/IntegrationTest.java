@@ -1801,6 +1801,98 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var x = {}.Foo$myprop;"));
   }
 
+  public void testInliningLocalVarsPreservesCasts() {
+    String code = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() { this.myprop = 1; }",
+        "/** @constructor */",
+        "function Bar() { this.myprop = 2; }",
+        "/** @return {Object} */",
+        "function getSomething() {",
+        "  var x = new Bar();",
+        "  return new Foo();",
+        "}",
+        "(function someMethod() {",
+        "  var x = getSomething();",
+        "  var y = /** @type {Foo} */ (x).myprop;",
+        "  return 1 != y;",
+        "})()");
+
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    options.setSmartNameRemoval(true);
+    options.setFoldConstants(true);
+    options.setExtraSmartNameRemoval(true);
+    options.setInlineVariables(true);
+    options.setDisambiguateProperties(true);
+
+    // Verify that property disambiguation continues to work after the local
+    // var and cast have been removed by inlining.
+    test(options, code,
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() { this.Foo$myprop = 1; }",
+            "/** @constructor */",
+            "function Bar() { this.Bar$myprop = 2; }",
+            "/** @return {Object} */",
+            "function getSomething() {",
+            "  var x = new Bar();",
+            "  return new Foo();",
+            "}",
+            "(function someMethod() {",
+            "  return 1 != getSomething().Foo$myprop;",
+            "})()"));
+  }
+
+  /**
+   * Tests that inlining of local variables doesn't destroy type information
+   * when the cast is from a non-nullable type to a nullable type.
+   */
+  public void testInliningLocalVarsPreservesCastsNullable() {
+    String code = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() { this.myprop = 1; }",
+        "/** @constructor */",
+        "function Bar() { this.myprop = 2; }",
+        // Note that this method return a non-nullable type.
+        "/** @return {!Object} */",
+        "function getSomething() {",
+        "  var x = new Bar();",
+        "  return new Foo();",
+        "}",
+        "(function someMethod() {",
+        "  var x = getSomething();",
+        // Note that this casts from !Object to ?Foo.
+        "  var y = /** @type {Foo} */ (x).myprop;",
+        "  return 1 != y;",
+        "})()");
+
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    options.setSmartNameRemoval(true);
+    options.setFoldConstants(true);
+    options.setExtraSmartNameRemoval(true);
+    options.setInlineVariables(true);
+    options.setDisambiguateProperties(true);
+
+    // Verify that property disambiguation continues to work after the local
+    // var and cast have been removed by inlining.
+    test(options, code,
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() { this.Foo$myprop = 1; }",
+            "/** @constructor */",
+            "function Bar() { this.Bar$myprop = 2; }",
+            "/** @return {Object} */",
+            "function getSomething() {",
+            "  var x = new Bar();",
+            "  return new Foo();",
+            "}",
+            "(function someMethod() {",
+            "  return 1 != getSomething().Foo$myprop;",
+            "})()"));
+  }
+
   public void testInlineFunctions() {
     CompilerOptions options = createCompilerOptions();
     String code = "function f() { return 3; } f(); ";
