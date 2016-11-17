@@ -30,7 +30,7 @@ import java.util.Locale;
  * Just to fold known methods when they are called with constants.
  *
  */
-class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
   private final boolean late;
   private final boolean useTypes;
@@ -124,8 +124,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
           }
         }
       }
-    } else if (useTypes && firstArg != null
-               && stringNode.getJSType() != null && stringNode.getJSType().isStringValueType()) {
+    }
+    if (useTypes && firstArg != null && (isStringLiteral
+        || (stringNode.getJSType() != null && stringNode.getJSType().isStringValueType()))) {
       switch (functionNameString) {
         case "substr":
           return tryReplaceSubstrWithCharAt(subtree, callTarget, firstArg);
@@ -483,7 +484,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         return foldedStringNode;
       default:
         // No folding could actually be performed.
-        if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {
+        if (arrayNode.hasXChildren(arrayFoldedChildren.size())) {
           return n;
         }
         int kJoinOverhead = "[].join()".length();
@@ -616,7 +617,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
   }
 
   private Node tryReplaceSubstrWithCharAt(Node n, Node callTarget, Node firstArg) {
-    if (n.getChildCount() == 3) {
+    if (n.hasXChildren(3)) {
       Double maybeLength = NodeUtil.getNumberValue(firstArg.getNext(), useTypes);
       if (maybeLength != null) {
         int length = maybeLength.intValue();
@@ -629,7 +630,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
   }
 
   private Node tryReplaceSubstringOrSliceWithCharAt(Node n, Node callTarget, Node firstArg) {
-    if (n.getChildCount() != 3) {
+    if (!n.hasXChildren(3)) {
       return n;
     }
     Double maybeStart = NodeUtil.getNumberValue(firstArg, useTypes);

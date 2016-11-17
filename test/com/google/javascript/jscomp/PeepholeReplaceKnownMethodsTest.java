@@ -328,8 +328,9 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   public void testReplaceWithCharAt() {
     enableTypeCheck();
     foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
+    foldSameStringTyped("a.substring(i, j + 1)");
+    foldSameStringTyped("a.substring(i, i + 1)");
     foldSameStringTyped("a.substring(1, 2, 3)");
-    foldSameStringTyped("a.substring(i, i + 1)"); // TODO(moz): Fold cases like these
     foldSameStringTyped("a.substring()");
     foldSameStringTyped("a.substring(1)");
     foldSameStringTyped("a.substring(1, 3, 4)");
@@ -337,9 +338,10 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSameStringTyped("a.substring(2, 1)");
     foldSameStringTyped("a.substring(3, 1)");
 
-    foldStringTyped("a.slice(0, 1)", "a.charAt(0)");
+    foldStringTyped("var /** number */ i; a.slice(0, 1)", "var /** number */ i; a.charAt(0)");
+    foldSameStringTyped("a.slice(i, j + 1)");
+    foldSameStringTyped("a.slice(i, i + 1)");
     foldSameStringTyped("a.slice(1, 2, 3)");
-    foldSameStringTyped("a.slice(i, i + 1)"); // TODO(moz): Fold cases like these
     foldSameStringTyped("a.slice()");
     foldSameStringTyped("a.slice(1)");
     foldSameStringTyped("a.slice(1, 3, 4)");
@@ -351,6 +353,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldStringTyped("a.substr(2, 1)", "a.charAt(2)");
     foldStringTyped("a.substr(-2, 1)", "a.charAt(-2)");
     foldStringTyped("a.substr(bar(), 1)", "a.charAt(bar())");
+    foldStringTyped("''.substr(bar(), 1)", "''.charAt(bar())");
     foldSameStringTyped("a.substr(2, 1, 3)");
     foldSameStringTyped("a.substr(1, 2, 3)");
     foldSameStringTyped("a.substr()");
@@ -363,6 +366,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     useTypes = false;
     foldSameStringTyped("a.substring(0, 1)");
     foldSameStringTyped("a.substr(0, 1)");
+    foldSameStringTyped("''.substring(i, i + 1)");
     disableTypeCheck();
   }
 

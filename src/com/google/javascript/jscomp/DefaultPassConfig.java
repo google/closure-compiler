@@ -1550,7 +1550,7 @@ public final class DefaultPassConfig extends PassConfig {
           new PeepholeRemoveDeadCode(),
           new PeepholeFoldConstants(late, useTypesForOptimization),
           new PeepholeCollectPropertyAssignments());
-  };
+  }
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizations =
@@ -2799,6 +2799,8 @@ public final class DefaultPassConfig extends PassConfig {
               (new J2clConstantHoisterPass(compiler));
           final J2clEqualitySameRewriterPass j2clEqualitySameRewriterPass =
               (new J2clEqualitySameRewriterPass(compiler));
+          final J2clReplaceKnownMethodsPass j2clReplaceKnownMethodsPass =
+              (new J2clReplaceKnownMethodsPass(compiler, options.useTypesForLocalOptimization));
           return new CompilerPass() {
 
             @Override
@@ -2806,6 +2808,7 @@ public final class DefaultPassConfig extends PassConfig {
               j2clClinitPrunerPass.process(externs, root);
               j2clConstantHoisterPass.process(externs, root);
               j2clEqualitySameRewriterPass.process(externs, root);
+              j2clReplaceKnownMethodsPass.process(externs, root);
             }
           };
         }
