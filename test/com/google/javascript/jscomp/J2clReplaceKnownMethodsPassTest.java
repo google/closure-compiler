@@ -48,6 +48,8 @@ public final class J2clReplaceKnownMethodsPassTest extends CompilerTestCase {
     foldStringTyped(
         "var /** number */ i; a.substring(i, i + 1)", "var /** number */ i; a.charAt(i)");
     foldStringTyped(
+        "var /** number */ i; a.substring(i - 1, i)", "var /** number */ i; a.charAt(i - 1)");
+    foldStringTyped(
         "var /** number */ i; ''.substring(i, i + 1)", "var /** number */ i; ''.charAt(i)");
     foldSameStringTyped("var /** number */ i; a.substring(i, 2 + 1)");
     foldSameStringTyped("a.substring(i, j + 1)");

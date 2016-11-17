@@ -69,15 +69,27 @@ class J2clReplaceKnownMethodsPass extends AbstractPostOrderCallback implements H
     Node callTarget = n.getFirstChild();
     Node firstArg = callTarget.getNext();
     Node secondArg = firstArg.getNext();
+    if (firstArg.getJSType() == null || !firstArg.getJSType().isNumberValueType()
+        || secondArg.getJSType() == null || !secondArg.getJSType().isNumberValueType()) {
+      return;
+    }
     if (firstArg.isName() && secondArg.isAdd()
         && secondArg.getFirstChild().isName()
         && secondArg.getFirstChild().getString().equals(firstArg.getString())
-        && firstArg.getJSType() != null && firstArg.getJSType().isNumberValueType()) {
-      Double maybeOne = NodeUtil.getNumberValue(secondArg.getSecondChild());
-      if (maybeOne != null && maybeOne.intValue() == 1) { // substring(i, i + 1)
-        replaceWithCharAt(callTarget, firstArg);
-      }
+        && isOne(secondArg.getSecondChild())) {
+      // substring(i, i + 1)
+      replaceWithCharAt(callTarget, firstArg);
+    } else if (firstArg.isSub() && secondArg.isName()
+        && firstArg.getFirstChild().isName()
+        && firstArg.getFirstChild().getString().equals(secondArg.getString())
+        && isOne(firstArg.getSecondChild())) {
+      // substring(i - 1, i)
+      replaceWithCharAt(callTarget, firstArg);
     }
+  }
+
+  private boolean isOne(Node n) {
+    return n.isNumber() && n.getDouble() == 1.0;
   }
 
   private void replaceWithCharAt(Node callTarget, Node firstArg) {

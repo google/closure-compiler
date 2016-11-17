@@ -2829,6 +2829,10 @@ public class Node implements Serializable {
     return this.token == Token.ADD;
   }
 
+  public boolean isSub() {
+    return this.token == Token.SUB;
+  }
+
   public boolean isAnd() {
     return this.token == Token.AND;
   }
