@@ -1884,11 +1884,8 @@ public class Node implements Serializable {
         String name = getString();
         return name.isEmpty() ? null : name;
       case GETPROP:
-        String left = getFirstChild().getQualifiedName();
-        if (left == null) {
-          return null;
-        }
-        return left + "." + getLastChild().getString();
+        StringBuilder builder = getQualifiedNameForGetProp(0);
+        return builder != null ? builder.toString() : null;
       case THIS:
         return "this";
       case SUPER:
@@ -1896,6 +1893,35 @@ public class Node implements Serializable {
       default:
         return null;
     }
+  }
+
+  /**
+   * Helper method for {@link #getQualifiedName} to handle GETPROP nodes.
+   *
+   * @param reserve The number of characters of space to reserve in the StringBuilder
+   * @return {@code null} if this is not a qualified name or a StringBuilder if it is a complex
+   *     qualified name.
+   */
+  private StringBuilder getQualifiedNameForGetProp(int reserve) {
+    String propName = getLastChild().getString();
+    reserve += 1 + propName.length();  // +1 for the '.'
+    Node firstChild = getFirstChild();
+    StringBuilder builder;
+    if (firstChild.isGetProp()) {
+      builder = firstChild.getQualifiedNameForGetProp(reserve);
+      if (builder == null) {
+        return null;
+      }
+    } else {
+      String left = firstChild.getQualifiedName();
+      if (left == null) {
+        return null;
+      }
+      builder = new StringBuilder(left.length() + reserve);
+      builder.append(left);
+    }
+    builder.append('.').append(propName);
+    return builder;
   }
 
   /**
