@@ -18,13 +18,13 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
-import java.util.Set;
 
 /**
  * Used by {@code Scope} to store information about variables.
@@ -206,23 +206,24 @@ public class Var implements StaticSlot, StaticRef {
     return false;
   }
 
+  private static final ImmutableSet<Token> DECLARATION_TYPES = Sets.immutableEnumSet(
+      Token.VAR,
+      Token.LET,
+      Token.CONST,
+      Token.FUNCTION,
+      Token.CLASS,
+      Token.CATCH,
+      Token.PARAM_LIST);
+
   protected Token declarationType() {
-    final Set<Token> types = ImmutableSet.of(
-        Token.VAR,
-        Token.LET,
-        Token.CONST,
-        Token.FUNCTION,
-        Token.CLASS,
-        Token.CATCH,
-        Token.PARAM_LIST);
     for (Node current = nameNode; current != null;
          current = current.getParent()) {
-      if (types.contains(current.getToken())) {
+      if (DECLARATION_TYPES.contains(current.getToken())) {
         return current.getToken();
       }
     }
     throw new IllegalStateException("The nameNode for " + this + " must be a descendant"
-        + " of one of: " + types);
+        + " of one of: " + DECLARATION_TYPES);
   }
 
 
