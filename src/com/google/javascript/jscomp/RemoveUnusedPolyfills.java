@@ -69,6 +69,9 @@ class RemoveUnusedPolyfills implements CompilerPass {
       "Number", "number",
       "String", "string");
 
+  private static final String GOOG_GLOBAL = "goog.global.";
+  private static final String WINDOW = "window.";
+
   private class CollectUnusedPolyfills extends AbstractPostOrderCallback {
 
     final SetMultimap<String, PrototypeMethod> methodsByName = HashMultimap.create();
@@ -119,7 +122,11 @@ class RemoveUnusedPolyfills implements CompilerPass {
       if (n.isQualifiedName()) {
         // First remove anything with an exact qualified name match.
         String qname = n.getQualifiedName();
-        qname = qname.replaceAll("^(goog\\.global\\.|window\\.)", "");
+        if (qname.startsWith(GOOG_GLOBAL)) {
+          qname = qname.substring(GOOG_GLOBAL.length());
+        } else if (qname.startsWith(WINDOW)) {
+          qname = qname.substring(WINDOW.length());
+        }
         unusedStaticPolyfills.remove(qname);
         unusedMethodPolyfills.remove(PrototypeMethod.split(qname));
       }
