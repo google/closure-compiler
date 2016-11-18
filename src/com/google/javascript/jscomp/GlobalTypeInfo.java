@@ -1661,6 +1661,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     private void visitConstructorPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
+      mayVisitWeirdCtorDefinition(getProp);
       // Named types have already been crawled in CollectNamedTypes
       if (isNamedType(getProp)) {
         return;
@@ -1695,8 +1696,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
     }
 
-    private void visitNamespacePropertyDeclaration(Node getProp) {
-      Preconditions.checkArgument(getProp.isGetProp());
+    private void mayVisitWeirdCtorDefinition(Node getProp) {
       if (isCtorDefinedByCall(getProp)) {
         computeFnDeclaredType(
             NodeUtil.getBestJSDocInfo(getProp),
@@ -1711,6 +1711,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             getProp, null, this.currentScope);
         return;
       }
+    }
+
+    private void visitNamespacePropertyDeclaration(Node getProp) {
+      Preconditions.checkArgument(getProp.isGetProp());
+      mayVisitWeirdCtorDefinition(getProp);
       // Named types have already been crawled in CollectNamedTypes
       if (isNamedType(getProp)) {
         return;

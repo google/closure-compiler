@@ -15636,6 +15636,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "ns.Foo = TestCase('asdf');",
             "function f() { var /** !ns.Foo */ obj = 123; }"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "Foo.Bar = Foo.bind(undefined, function() {});"),
+        NewTypeInference.CANNOT_BIND_CTOR);
   }
 
   public void testLocalWithCallableObjectType() {
