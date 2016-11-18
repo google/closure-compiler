@@ -123,7 +123,16 @@ public final class BaseTranspiler implements Transpiler {
 
     protected void setOptions(CompilerOptions options) {
       options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
-      options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
+      // TODO(sdh): It would be nice to allow people to output code in
+      // strict mode.  But currently we swallow all the input language
+      // strictness checks, and there are various tests that are never
+      // compiled and so are broken when we output 'use strict'.  We
+      // could consider adding some sort of logging/warning/error in
+      // cases where the input was not strict, though there could still
+      // be semantic differences even if syntax is strict.  Possibly
+      // the first step would be to allow the option of outputting strict
+      // and then change the default and see what breaks.  b/33005948
+      options.setLanguageOut(LanguageMode.ECMASCRIPT5);
       options.setQuoteKeywordProperties(true);
       options.setSkipNonTranspilationPasses(true);
       options.setVariableRenaming(VariableRenamingPolicy.OFF);

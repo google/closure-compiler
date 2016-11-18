@@ -67,7 +67,7 @@ public final class BaseTranspilerTest extends TestCase {
 
   public void testCompilerSupplier_compileChanged() {
     BaseTranspiler.CompileResult result = compiler.compile("source.js", "const x = () => 42;");
-    assertThat(result.source).isEqualTo("'use strict';var x = function() {\n  return 42;\n};\n");
+    assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
     assertThat(result.errors).isEmpty();
     assertThat(result.transpiled).isTrue();
     assertThat(result.sourceMap).contains("\"mappings\":\";\"");
@@ -75,7 +75,7 @@ public final class BaseTranspilerTest extends TestCase {
 
   public void testCompilerSupplier_compileNoChange() {
     BaseTranspiler.CompileResult result = compiler.compile("source.js", "var x = 42;");
-    assertThat(result.source).isEqualTo("'use strict';var x = 42;\n");
+    assertThat(result.source).isEqualTo("var x = 42;\n");
     assertThat(result.errors).isEmpty();
     assertThat(result.transpiled).isFalse();
     assertThat(result.sourceMap).contains("\"mappings\":\";\"");
