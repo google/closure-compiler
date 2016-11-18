@@ -248,6 +248,10 @@ public final class NominalType {
     return this.rawType.isClass();
   }
 
+  public boolean isAbstractClass() {
+    return this.rawType.isAbstractClass();
+  }
+
   public boolean isInterface() {
     return this.rawType.isInterface();
   }
@@ -353,6 +357,10 @@ public final class NominalType {
 
   boolean mayHaveProp(String pname) {
     return this.rawType.mayHaveProp(pname);
+  }
+
+  public boolean hasAbstractMethod(String pname) {
+    return this.rawType.hasAbstractMethod(pname);
   }
 
   boolean isSubtypeOf(NominalType other, SubtypeCache subSuperMap) {

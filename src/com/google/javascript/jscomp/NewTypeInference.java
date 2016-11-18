@@ -170,9 +170,9 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_NOT_A_CONSTRUCTOR",
           "Expected a constructor but found type {0}.");
 
-  static final DiagnosticType INSTANTIATE_ABSTRACT_CLASS =
+  static final DiagnosticType CANNOT_INSTANTIATE_ABSTRACT_CLASS =
       DiagnosticType.warning(
-          "JSC_NTI_INSTANTIATE_ABSTRACT_CLASS",
+          "JSC_NTI_CANNOT_INSTANTIATE_ABSTRACT_CLASS",
           "Cannot instantiate abstract class {0}.");
 
   static final DiagnosticType UNDEFINED_SUPER_CLASS =
@@ -292,6 +292,11 @@ final class NewTypeInference implements CompilerPass {
           + "left : {0}\n"
           + "right: {1}");
 
+  static final DiagnosticType ABSTRACT_METHOD_NOT_CALLABLE =
+      DiagnosticType.warning(
+          "JSC_NTI_ABSTRACT_METHOD_NOT_CALLABLE",
+          "Abstract method {0} cannot be called");
+
   // Not part of ALL_DIAGNOSTICS because it should not be enabled with
   // --jscomp_error=newCheckTypes. It should only be enabled explicitly.
 
@@ -306,8 +311,10 @@ final class NewTypeInference implements CompilerPass {
           "This {0} expression has the unknown type.");
 
   static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
+      ABSTRACT_METHOD_NOT_CALLABLE,
       ASSERT_FALSE,
       CANNOT_BIND_CTOR,
+      CANNOT_INSTANTIATE_ABSTRACT_CLASS,
       CONST_PROPERTY_DELETED,
       CONST_PROPERTY_REASSIGNED,
       CONST_REASSIGNED,
@@ -321,7 +328,6 @@ final class NewTypeInference implements CompilerPass {
       ILLEGAL_PROPERTY_CREATION,
       IN_USED_WITH_STRUCT,
       INEXISTENT_PROPERTY,
-      INSTANTIATE_ABSTRACT_CLASS,
       INVALID_ARGUMENT_TYPE,
       INVALID_CAST,
       INVALID_INDEX_TYPE,
@@ -1928,8 +1934,8 @@ final class NewTypeInference implements CompilerPass {
       if (!funType.isSomeConstructorOrInterface() || funType.isInterfaceDefinition()) {
         warnings.add(JSError.make(expr, NOT_A_CONSTRUCTOR, funType.toString()));
         return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
-      } else if (funType.isAbstract()) {
-        warnings.add(JSError.make(expr, INSTANTIATE_ABSTRACT_CLASS, funType.toString()));
+      } else if (funType.isConstructorOfAbstractClass()) {
+        warnings.add(JSError.make(expr, CANNOT_INSTANTIATE_ABSTRACT_CLASS, funType.toString()));
         return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
       }
     }
@@ -3107,13 +3113,18 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(pair.env, requiredType);
     }
     FunctionType ft = recvType.getFunTypeIfSingletonObj();
-    if (ft != null && pname.equals("call")) {
+    if (ft != null && (pname.equals("call") || pname.equals("apply"))) {
+      if (ft.isAbstract()) {
+        // We don't check if the parent of the property access is a call node.
+        // This catches calls that are a few nodes away, and also warns on .call/.apply
+        // accesses that do not result in calls (these should be very rare).
+        String funName = receiver.isQualifiedName() ? receiver.getQualifiedName() : "";
+        warnings.add(JSError.make(propAccessNode, ABSTRACT_METHOD_NOT_CALLABLE, funName));
+      }
       return new EnvTypePair(pair.env,
-          commonTypes.fromFunctionType(ft.transformByCallProperty()));
-    }
-    if (ft != null && pname.equals("apply")) {
-      return new EnvTypePair(pair.env,
-          commonTypes.fromFunctionType(ft.transformByApplyProperty()));
+          pname.equals("call")
+          ? commonTypes.fromFunctionType(ft.transformByCallProperty())
+          : commonTypes.fromFunctionType(ft.transformByApplyProperty()));
     }
     if (this.convention.isSuperClassReference(pname)) {
       if (ft != null && ft.isUniqueConstructor()) {

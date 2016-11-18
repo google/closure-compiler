@@ -856,7 +856,10 @@ public final class JSTypeCreatorFromJSDoc {
           getThisOrNewType(thisRoot.getFirstChild(), registry, typeParameters));
     }
 
-    builder.addAbstract(jsdoc.isAbstract());
+    if (!jsdoc.isConstructor()) {
+      builder.addAbstract(jsdoc.isAbstract());
+    }
+
     return builder.buildDeclaration();
   }
 

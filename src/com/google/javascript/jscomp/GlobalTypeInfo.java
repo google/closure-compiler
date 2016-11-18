@@ -224,7 +224,24 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           "JSC_NTI_INTERFACE_METHOD_NOT_EMPTY",
           "interface member functions must have an empty body");
 
+  static final DiagnosticType ABSTRACT_METHOD_IN_CONCRETE_CLASS =
+      DiagnosticType.warning(
+          "JSC_NTI_ABSTRACT_METHOD_IN_CONCRETE_CLASS",
+          "Abstract methods can only appear in abstract classes. "
+          + "Please declare class {0} as @abstract");
+
+  static final DiagnosticType ABSTRACT_METHOD_IN_INTERFACE =
+      DiagnosticType.warning(
+          "JSC_NTI_ABSTRACT_METHOD_IN_INTERFACE",
+          "Abstract methods cannot appear in interfaces");
+
+  static final DiagnosticType ABSTRACT_METHOD_NOT_IMPLEMENTED_IN_CONCRETE_CLASS =
+      DiagnosticType.warning(
+          "JSC_NTI_ABSTRACT_METHOD_NOT_IMPLEMENTED_IN_CONCRETE_CLASS",
+          "Abstract method {0} from superclass {1} not implemented");
+
   static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
+      ABSTRACT_METHOD_IN_CONCRETE_CLASS,
       CANNOT_OVERRIDE_FINAL_METHOD,
       DICT_WITHOUT_CTOR,
       DUPLICATE_PROP_IN_ENUM,
@@ -246,6 +263,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       WRONG_PARAMETER_COUNT);
 
   static final DiagnosticGroup NEW_DIAGNOSTICS = new DiagnosticGroup(
+      ABSTRACT_METHOD_IN_INTERFACE,
+      ABSTRACT_METHOD_NOT_IMPLEMENTED_IN_CONCRETE_CLASS,
       ANONYMOUS_NOMINAL_TYPE,
       CANNOT_ADD_PROPERTIES_TO_TYPEDEF,
       CANNOT_INIT_TYPEDEF,
@@ -546,6 +565,14 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       Preconditions.checkState(superClass.isFinalized());
       // TODO(blickly): Can we optimize this to skip unnecessary iterations?
       for (String pname : superClass.getAllPropsOfClass()) {
+        if (superClass.isAbstractClass()
+            && superClass.hasAbstractMethod(pname)
+            && !rawType.isAbstractClass()
+            && !rawType.mayHaveOwnProp(pname)) {
+          warnings.add(JSError.make(
+              rawType.getDefSite(), ABSTRACT_METHOD_NOT_IMPLEMENTED_IN_CONCRETE_CLASS,
+              pname, superClass.getName()));
+        }
         nonInheritedPropNames.remove(pname);
         checkSuperProperty(rawType, superClass, pname,
             propMethodTypesToProcess, propTypesToProcess);
@@ -1128,7 +1155,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             ? ObjectKind.STRUCT : (fnDoc.makesDicts() ? ObjectKind.DICT : ObjectKind.UNRESTRICTED);
         if (fnDoc.isConstructor()) {
           rawType = RawNominalType.makeClass(
-              commonTypes, defSite, qname, typeParameters, objKind);
+              commonTypes, defSite, qname, typeParameters, objKind, fnDoc.isAbstract());
         } else if (fnDoc.usesImplicitMatch()) {
           rawType = RawNominalType.makeStructuralInterface(
               commonTypes, defSite, qname, typeParameters, objKind);
@@ -1175,7 +1202,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           // Create a separate raw type for object literals
           RawNominalType objLitRawType = RawNominalType.makeClass(
               commonTypes, rawType.getDefSite(), JSTypes.OBJLIT_CLASS_NAME,
-              ImmutableList.<String>of(), ObjectKind.UNRESTRICTED);
+              ImmutableList.<String>of(), ObjectKind.UNRESTRICTED, false);
           objLitRawType.addSuperClass(rawType.getAsNominalType());
           commonTypes.setLiteralObjNominalType(objLitRawType);
           break;
@@ -2409,6 +2436,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         }
       }
       propertyDefs.put(rawType, pname, new PropertyDef(defSite, methodType, methodScope));
+
+      // Warn for abstract methods not in abstract classes
+      if (methodType != null && methodType.isAbstract() && !rawType.isAbstractClass()) {
+        if (rawType.isClass()) {
+          warnings.add(JSError.make(defSite, ABSTRACT_METHOD_IN_CONCRETE_CLASS, rawType.getName()));
+        } else if (rawType.isInterface()) {
+          warnings.add(JSError.make(defSite, ABSTRACT_METHOD_IN_INTERFACE));
+        }
+      }
 
       // Add the property to the class with the appropriate type.
       boolean isConst = isConst(defSite);

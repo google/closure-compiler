@@ -314,4 +314,26 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "  return prop;",
         "}"));
   }
+
+  public void testAbstractMethodCalls() {
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract */",
+        "class A {",
+        "  /** @abstract */",
+        "  foo() {}",
+        "}",
+        "class B extends A {",
+        "  foo() { super.foo(); }",
+        "}"),
+        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract */",
+        "class A {",
+        "  foo() {}",
+        "}",
+        "class B extends A {",
+        "  foo() { super.foo(); }",
+        "}"));
+  }
 }

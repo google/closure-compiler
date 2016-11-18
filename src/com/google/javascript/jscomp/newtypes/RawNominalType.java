@@ -60,6 +60,7 @@ public final class RawNominalType extends Namespace {
   private final Set<RawNominalType> subtypes = new LinkedHashSet<>();
   private ImmutableSet<NominalType> interfaces = null;
   private final Kind kind;
+  private final boolean isAbstractClass;
   // Used in GlobalTypeInfo to find type mismatches in the inheritance chain.
   private ImmutableSet<String> allProps = null;
   // In GlobalTypeInfo, we request (wrapped) RawNominalTypes in various
@@ -80,8 +81,8 @@ public final class RawNominalType extends Namespace {
   }
 
   private RawNominalType(
-      JSTypes commonTypes, Node defSite,
-      String name, ImmutableList<String> typeParameters, Kind kind, ObjectKind objectKind) {
+      JSTypes commonTypes, Node defSite, String name,
+      ImmutableList<String> typeParameters, Kind kind, ObjectKind objectKind, boolean isAbstract) {
     super(commonTypes, name, defSite);
     Preconditions.checkNotNull(objectKind);
     Preconditions.checkState(isValidDefsite(defSite), "Invalid defsite %s", defSite);
@@ -96,6 +97,7 @@ public final class RawNominalType extends Namespace {
     this.kind = isBuiltinHelper(name, "IObject", defSite) ? Kind.RECORD : kind;
     this.objectKind = isBuiltinHelper(name, "IObject", defSite)
         ? ObjectKind.UNRESTRICTED : objectKind;
+    this.isAbstractClass = isAbstract;
     this.wrappedAsNominal = new NominalType(ImmutableMap.<String, JSType>of(), this);
     ObjectType objInstance;
 
@@ -128,10 +130,10 @@ public final class RawNominalType extends Namespace {
     return false;
   }
 
-  public static RawNominalType makeClass(JSTypes commonTypes,
-      Node defSite, String name, ImmutableList<String> typeParameters, ObjectKind objKind) {
+  public static RawNominalType makeClass(JSTypes commonTypes, Node defSite, String name,
+      ImmutableList<String> typeParameters, ObjectKind objKind, boolean isAbstract) {
     return new RawNominalType(
-        commonTypes, defSite, name, typeParameters, Kind.CLASS, objKind);
+        commonTypes, defSite, name, typeParameters, Kind.CLASS, objKind, isAbstract);
   }
 
   public static RawNominalType makeNominalInterface(JSTypes commonTypes,
@@ -140,7 +142,7 @@ public final class RawNominalType extends Namespace {
       objKind = ObjectKind.UNRESTRICTED;
     }
     return new RawNominalType(
-        commonTypes, defSite, name, typeParameters, Kind.INTERFACE, objKind);
+        commonTypes, defSite, name, typeParameters, Kind.INTERFACE, objKind, false);
   }
 
   public static RawNominalType makeStructuralInterface(JSTypes commonTypes,
@@ -149,7 +151,7 @@ public final class RawNominalType extends Namespace {
       objKind = ObjectKind.UNRESTRICTED;
     }
     return new RawNominalType(
-        commonTypes, defSite, name, typeParameters, Kind.RECORD, objKind);
+        commonTypes, defSite, name, typeParameters, Kind.RECORD, objKind, false);
   }
 
   JSTypes getCommonTypes() {
@@ -194,6 +196,10 @@ public final class RawNominalType extends Namespace {
 
   public boolean isDict() {
     return this.objectKind.isDict();
+  }
+
+  public boolean isAbstractClass() {
+    return this.isAbstractClass;
   }
 
   public boolean isFinalized() {
@@ -371,6 +377,12 @@ public final class RawNominalType extends Namespace {
       }
     }
     return null;
+  }
+
+  public boolean hasAbstractMethod(String pname) {
+    Property p = getPropFromClass(pname);
+    JSType ptype = p == null ? null : p.getType();
+    return ptype != null && ptype.isFunctionType() && ptype.getFunType().isAbstract();
   }
 
   private Property getPropFromClass(String pname) {

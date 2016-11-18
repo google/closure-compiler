@@ -142,6 +142,11 @@ public final class FunctionType {
     return isAbstract;
   }
 
+  public boolean isConstructorOfAbstractClass() {
+    return isUniqueConstructor()
+        && this.nominalType.getNominalTypeIfSingletonObj().isAbstractClass();
+  }
+
   static FunctionType normalized(
       JSTypes commonTypes,
       List<JSType> requiredFormals,

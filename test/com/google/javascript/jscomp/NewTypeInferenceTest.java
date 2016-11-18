@@ -18159,14 +18159,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"));
   }
 
-  public void testInstantiateAbstractClass() {
-    typeCheck(LINE_JOINER.join(
-        "/** @abstract @constructor */",
-        "function C() {}",
-        "new C;"),
-        NewTypeInference.INSTANTIATE_ABSTRACT_CLASS);
-  }
-
   public void testMaybeSpecializeInCast() {
     // In this case, we're explicitly using the cast to "protect" arr from the
     // context, so it's not correct to infer that arr has type !Array<!Sub>
@@ -18216,5 +18208,163 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "};",
         "ns.a = 5;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testAbstractDeclarations() {
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract @constructor */",
+        "function C() {}",
+        "new C;"),
+        NewTypeInference.CANNOT_INSTANTIATE_ABSTRACT_CLASS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @abstract */",
+        "Foo.prototype.bar = function(x) {};"),
+        GlobalTypeInfo.ABSTRACT_METHOD_IN_CONCRETE_CLASS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @abstract */",
+        "Foo.prototype.bar = function(x) {};"),
+        GlobalTypeInfo.ABSTRACT_METHOD_IN_INTERFACE);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @abstract",
+        " */",
+        "function Foo() {}",
+        "/** @abstract */",
+        "Foo.prototype.f = function() {};",
+        "/**",
+        " * @constructor",
+        " * @abstract",
+        " * @extends {Foo}",
+        " */",
+        "function Bar() {}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @abstract",
+        " */",
+        "function Foo() {}",
+        "/** @abstract */",
+        "Foo.prototype.f = function() {};",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "function Bar() {}"),
+        GlobalTypeInfo.ABSTRACT_METHOD_NOT_IMPLEMENTED_IN_CONCRETE_CLASS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @abstract",
+        " */",
+        "function Foo() {}",
+        "/** @abstract */",
+        "Foo.prototype.f = function() {};",
+        "/**",
+        " * @constructor",
+        " * @abstract",
+        " * @extends {Foo}",
+        " */",
+        "function Bar() {}",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " */",
+        "function Baz() {}"),
+        GlobalTypeInfo.ABSTRACT_METHOD_NOT_IMPLEMENTED_IN_CONCRETE_CLASS);
+
+    // TODO(dimvar): this warning is wrong.
+    // But to remove it, we should check that a concrete class C that inherits from an
+    // abstract class A that implements an interface I, implements all methods of I.
+    // Currently, we only check classes that directly implement an interface.
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function I() {}",
+        "/** @param {number} x */",
+        "I.prototype.method = function(x) {};",
+        "/** @constructor @abstract @implements{I} */",
+        "function C() {}"),
+        GlobalTypeInfo.INTERFACE_METHOD_NOT_IMPLEMENTED);
+  }
+
+  public void testAbstractMethodCalls() {
+    // Converted from Closure style "goog.base" super call
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/** @constructor @abstract */ ns.A = function() {};",
+            "/** @abstract */ ns.A.prototype.foo = function() {};",
+            "/** @constructor @extends {ns.A} */ ns.B = function() {};",
+            "ns.B.superClass_ = ns.A.prototype",
+            "/** @override */ ns.B.prototype.foo = function() {",
+            "  ns.B.superClass_.foo.call(this);",
+            "};"),
+        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/** @constructor @abstract */ ns.A = function() {};",
+            "/** @abstract */ ns.A.prototype.foo = function() {};",
+            "/** @constructor @extends {ns.A} */ ns.B = function() {};",
+            "ns.B.superClass_ = ns.A.prototype",
+            "/** @override */ ns.B.prototype.foo = function() {",
+            "  ns.B.superClass_.foo.apply(this);",
+            "};"),
+        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "/** @abstract */",
+            "A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() { A.prototype.foo['call'](this); };"),
+        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @struct @constructor */ var A = function() {};",
+            "A.prototype.foo = function() {};",
+            "/** @struct @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() {",
+            "  (function() {",
+            "    return A.prototype.foo.call($jscomp$this);",
+            "  })();",
+            "};"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ function A() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ function B() {};",
+            "/** @override */ B.prototype.foo = function() {};",
+            "var abstractMethod = A.prototype.foo;",
+            "abstractMethod.call(new B);"),
+        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ var A = function() {};",
+            "/** @constructor @extends {A} */ var B = function() { A.call(this); };"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor @abstract */ function A() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ function B() {};",
+            "/** @override */ B.prototype.foo = function() {};",
+            "var abstractMethod = A.prototype.foo;",
+            "(0, abstractMethod).call(new B);"),
+        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
   }
 }
