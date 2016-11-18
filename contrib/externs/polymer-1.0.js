@@ -772,6 +772,12 @@ PolymerDomApi.prototype.previousSibling;
 /** @type {?Node} */
 PolymerDomApi.prototype.nextSibling;
 
+/** @type {?HTMLElement} */
+PolymerDomApi.prototype.previousElementSibling;
+
+/** @type {?HTMLElement} */
+PolymerDomApi.prototype.nextElementSibling;
+
 /** @type {string} */
 PolymerDomApi.prototype.textContent;
 
