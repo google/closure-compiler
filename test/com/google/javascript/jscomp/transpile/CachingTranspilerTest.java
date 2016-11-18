@@ -22,6 +22,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.cache.CacheBuilder;
 import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -39,7 +40,7 @@ public final class CachingTranspilerTest extends TestCase {
   @Override
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    transpiler = new CachingTranspiler(delegate);
+    transpiler = new CachingTranspiler(delegate, CacheBuilder.newBuilder());
   }
 
   public void testTranspileDelegates() {
