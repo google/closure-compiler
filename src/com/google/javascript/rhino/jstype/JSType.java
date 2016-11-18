@@ -44,13 +44,14 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.TypeI;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
+import java.util.List;
 
 /**
  * Represents JavaScript value types.<p>
@@ -78,8 +79,8 @@ public abstract class JSType implements TypeI, Serializable {
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
       new CanCastToVisitor();
 
-  private static final ImmutableList<String> COVARIANT_TYPES =
-      ImmutableList.of("Object", "IArrayLike", "Array");
+  private static final ImmutableSet<String> COVARIANT_TYPES =
+      ImmutableSet.of("Object", "IArrayLike", "Array");
 
   /**
    * Total ordering on types based on their textual representation.
@@ -302,7 +303,9 @@ public abstract class JSType implements TypeI, Serializable {
     // Check if this is a union that contains an array
     if (this.isUnionType()) {
       JSType arrayType = registry.getNativeType(JSTypeNative.ARRAY_TYPE);
-      for (JSType alternate : this.toMaybeUnionType().getAlternates()) {
+      List<JSType> alternates = this.toMaybeUnionType().getAlternates();
+      for (int i = 0; i < alternates.size(); i++) {
+        JSType alternate = alternates.get(i);
         if (alternate.isSubtype(arrayType)) {
           return true;
         }
@@ -1126,7 +1129,9 @@ public abstract class JSType implements TypeI, Serializable {
     } else if (type.isUnionType()) {
       UnionType unionType = type.toMaybeUnionType();
       boolean needsFiltering = false;
-      for (JSType alt : unionType.getAlternates()) {
+      List<JSType> alternates = unionType.getAlternates();
+      for (int i = 0; i < alternates.size(); i++) {
+        JSType alt = alternates.get(i);
         if (alt.isNoResolvedType()) {
           needsFiltering = true;
           break;
@@ -1406,8 +1411,10 @@ public abstract class JSType implements TypeI, Serializable {
     // unions
     if (thatType.isUnionType()) {
       UnionType union = thatType.toMaybeUnionType();
-      for (JSType element : union.alternatesWithoutStucturalTyping) {
-        if (thisType.isSubtype(element, implicitImplCache, subtypingMode)) {
+      List<JSType> alternates = union.alternatesWithoutStucturalTyping;
+      // use indexed iteration to avoid iterator allocations
+      for (int i = 0; i < alternates.size(); i++) {
+        if (thisType.isSubtype(alternates.get(i), implicitImplCache, subtypingMode)) {
           return true;
         }
       }
