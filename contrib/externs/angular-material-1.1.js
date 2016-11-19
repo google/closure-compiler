@@ -1000,6 +1000,15 @@ md.$panel.MdPanelRef = function(config, $injector) {};
 /** @type {string} */
 md.$panel.MdPanelRef.prototype.id;
 
+/** @type {!md.$panel.config} */
+md.$panel.MdPanelRef.prototype.config;
+
+/** @type {!angular.JQLite|undefined} */
+md.$panel.MdPanelRef.prototype.panelContainer;
+
+/** @type {!angular.JQLite|undefined} */
+md.$panel.MdPanelRef.prototype.panelEl;
+
 /** @type {boolean} */
 md.$panel.MdPanelRef.prototype.isAttached;
 
