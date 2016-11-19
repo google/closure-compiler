@@ -270,6 +270,10 @@ public abstract class PassConfig {
       return delegate.getOptimizations();
     }
 
+    @Override protected List<PassFactory> getTranspileOnlyPasses() {
+      return delegate.getTranspileOnlyPasses();
+    }
+
     @Override MemoizedScopeCreator getTypedScopeCreator() {
       return delegate.getTypedScopeCreator();
     }
