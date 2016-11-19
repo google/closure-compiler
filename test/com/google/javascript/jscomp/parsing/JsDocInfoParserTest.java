@@ -1461,6 +1461,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + BAD_TYPE_WIKI_LINK);
   }
 
+  public void testParseAbstract_abstractAndFinal() {
+    parse(
+        "* @final \n * @abstract */",
+        "Bad type annotation. type annotation incompatible with other annotations."
+            + BAD_TYPE_WIKI_LINK);
+  }
+
   public void testStackedAnnotation() {
     JSDocInfo info = parse("@const @type {string}*/");
     assertThat(info.isConstant()).isTrue();
