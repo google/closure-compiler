@@ -190,9 +190,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         }
         break;
       case ASSIGN: {
-        Node lhs = n.getFirstChild();
-        if (lhs.isQualifiedName()
-            && NodeUtil.getRootOfQualifiedName(lhs).matchesQualifiedName("exports")) {
+        if (isExportLhs(n.getFirstChild())) {
           checkModuleExport(t, n, parent);
         }
         break;
@@ -281,18 +279,27 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         Predicates.<Node>alwaysTrue());
   }
 
+  /** Is this the LHS of a goog.module export? i.e. Either "exports" or "exports.name" */
+  private boolean isExportLhs(Node lhs) {
+    if (!lhs.isQualifiedName()) {
+      return false;
+    }
+    return lhs.matchesQualifiedName("exports")
+        || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
+  }
+
   private void checkModuleExport(NodeTraversal t, Node n, Node parent) {
     Preconditions.checkArgument(n.isAssign());
     Node lhs = n.getFirstChild();
-    Preconditions.checkState(lhs.isQualifiedName());
-    Preconditions.checkState(NodeUtil.getRootOfQualifiedName(lhs).matchesQualifiedName("exports"));
+    Preconditions.checkState(isExportLhs(lhs));
+    if (defaultExportNode == null && (!t.inModuleScope() || !parent.isExprResult())) {
+      // Invalid export location.
+      t.report(n, EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+    }
     if (lhs.isName()) {
       if  (defaultExportNode != null) {
         // Multiple exports
         t.report(n, EXPORT_REPEATED_ERROR, String.valueOf(defaultExportNode.getLineno()));
-      } else if (!t.inModuleScope() || !parent.isExprResult()) {
-        // Invalid export location.
-        t.report(n, EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
       }
       defaultExportNode = lhs;
     }

@@ -560,8 +560,23 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
         LINE_JOINER.join(
             "goog.module('xyz');",
             "",
+            "if (window.exportMe) { exports.me = 5; }"),
+            EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
+
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "exports = {};",
+            "if (window.exportMe) { exports.me = 5; }"));
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
             "exports = 5;",
             "exports = 'str';"),
             EXPORT_REPEATED_ERROR);
+
   }
 }
