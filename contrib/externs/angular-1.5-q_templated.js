@@ -71,9 +71,11 @@ angular.$q.Promise.prototype.catch = function(callback) {};
 
 /**
  * @param {?function(?)} callback
+ * @param {?(function(?): ?)=} opt_notifyCallback
  * @return {!angular.$q.Promise.<T>}
  */
-angular.$q.Promise.prototype.finally = function(callback) {};
+angular.$q.Promise.prototype.finally =
+    function(callback, opt_notifyCallback) {};
 
 /**
  * @constructor
