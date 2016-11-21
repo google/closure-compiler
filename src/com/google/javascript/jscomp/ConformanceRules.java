@@ -395,16 +395,16 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (NodeUtil.isInSyntheticScript(n)) {
-        return ConformanceResult.CONFORMANCE;
-      }
-
       if (n.isGetProp() || n.isName()) {
         if (n.isQualifiedName()) {
           for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
             if (n.matchesQualifiedName(name) && isRootOfQualifiedNameGlobal(t, n)) {
-              return ConformanceResult.VIOLATION;
+              if (NodeUtil.isInSyntheticScript(n)) {
+                return ConformanceResult.CONFORMANCE;
+              } else {
+                return ConformanceResult.VIOLATION;
+              }
             }
           }
         }
