@@ -586,9 +586,17 @@ md.$mdThemingProvider.prototype.setNonce = function(nonce) {};
 /** @constructor */
 md.$mdTheming = function() {};
 
+/**
+ * @param {string} name
+ * @return {boolean}
+ */
+md.$mdTheming.prototype.registered = function(name) {};
+
+/** @return {string} */
+md.$mdTheming.prototype.defaultTheme = function() {};
 
 /** @param {string} name */
-md.$mdTheming.prototype.generateTheme = function(name) {}
+md.$mdTheming.prototype.generateTheme = function(name) {};
 
 /******************************************************************************/
 
