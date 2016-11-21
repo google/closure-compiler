@@ -386,10 +386,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case CALL:
-          if (NodeUtil.isCallTo(n, "goog.loadModule") && n.getLastChild().isFunction()) {
-            updateGoogLoadModule(n);
+        case EXPR_RESULT:
+          if (isGoogLoadModuleStatement(n)) {
+            updateGoogLoadModuleEarly(n);
           }
+          break;
+
+        case CALL:
           if (NodeUtil.isCallTo(n, "goog.module")) {
             updateGoogModule(n);
           }
@@ -434,6 +437,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+        case EXPR_RESULT:
+          if (isGoogLoadModuleStatement(n)) {
+            updateGoogLoadModuleLate(n);
+          }
+          break;
+
         case SCRIPT:
           updateEndScript();
           break;
@@ -447,6 +456,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           break;
       }
     }
+  }
+
+  private static boolean isGoogLoadModuleStatement(Node exprResult) {
+    Preconditions.checkArgument(exprResult.isExprResult());
+    Node call = exprResult.getFirstChild();
+    return call != null
+        && NodeUtil.isCallTo(call, "goog.loadModule") && call.getLastChild().isFunction();
   }
 
   /**
@@ -540,7 +556,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   // Per script state needed for rewriting including nested goog.loadModule() calls.
   private Deque<ScriptDescription> scriptStack = new LinkedList<>();
   private ScriptDescription currentScript = null;
-  private List<Node> loadModuleStatements = new ArrayList<>(); // Statements to be inlined.
 
   // Global state tracking an association between the dotted names of goog.module()s and whether
   // the goog.module declares itself as a legacy namespace.
@@ -632,8 +647,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       pushScript(scriptDescriptions.removeFirst());
       NodeTraversal.traverseEs6(compiler, c, new ScriptUpdater());
       popScript();
-
-      inlineGoogLoadModuleCalls();
     }
   }
 
@@ -653,8 +666,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     NodeTraversal.traverseEs6(compiler, scriptRoot, new ScriptUpdater());
     popScript();
-
-    inlineGoogLoadModuleCalls();
 
     reportUnrecognizedRequires();
   }
@@ -880,13 +891,23 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     scriptNode.addChildrenToBack(moduleNode.removeChildren());
   }
 
-  private void updateGoogLoadModule(Node call) {
+  private void updateGoogLoadModuleEarly(Node exprResultNode) {
     pushScript(currentScript.removeFirstChildScript());
+    Node moduleScopeRoot = exprResultNode.getFirstChild().getLastChild().getLastChild();
+    Preconditions.checkState(NodeUtil.isModuleScopeRoot(moduleScopeRoot),
+        "goog.loadModule called with non-module contents: %s", moduleScopeRoot);
+    currentScript.rootNode = moduleScopeRoot;
+  }
 
-    currentScript.rootNode = call.getLastChild().getLastChild();
-    // These should be removed and replaced with the block in the function being passed as a
-    // parameter, but it's not safe to do this in the middle of AST traversal.
-    loadModuleStatements.add(NodeUtil.getEnclosingStatement(call));
+  private void updateGoogLoadModuleLate(Node exprResultNode) {
+    Node call = exprResultNode.removeFirstChild();
+    Node moduleBlockNode = call.getLastChild().getLastChild();
+
+    exprResultNode.setToken(Token.BLOCK);
+    exprResultNode.addChildrenToBack(moduleBlockNode.removeChildren());
+    currentScript.rootNode = exprResultNode;
+    NodeUtil.tryMergeBlock(exprResultNode);
+    compiler.reportCodeChange();
   }
 
   private void updateGoogModule(Node call) {
@@ -1352,24 +1373,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     markConst(binaryNamespaceExportNode);
     compiler.reportCodeChange();
     currentScript.hasCreatedExportObject = true;
-  }
-
-  /**
-   * Rewrite "goog.loadModule(function(exports) { asdf; });" to "{ asdf; }"
-   *
-   * Can't be done in updateGoogLoadModule() because it runs in the middle of AST traversal and
-   * performing a block merge in the middle of AST traversal will either hide the block contents
-   * from the traversal or will screw up the NodeTraversal.getScope() creation.
-   */
-  private void inlineGoogLoadModuleCalls() {
-    for (Node loadModuleStatement : loadModuleStatements) {
-      Node moduleBlockNode = loadModuleStatement.getFirstChild().getLastChild().getLastChild();
-      moduleBlockNode.detach();
-      loadModuleStatement.replaceWith(moduleBlockNode);
-      NodeUtil.tryMergeBlock(moduleBlockNode);
-      compiler.reportCodeChange();
-    }
-    loadModuleStatements.clear();
   }
 
   static void checkAndSetStrictModeDirective(NodeTraversal t, Node n) {
