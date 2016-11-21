@@ -1086,9 +1086,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node exportsNameNode = getpropNode.getFirstChild();
     Preconditions.checkState(exportsNameNode.getString().equals("exports"));
 
-    // Would be t.inModuleScope() if this ran before the inlineModuleIntoGlobal() call
+    // Would be just t.inModuleScope() if this ran before the inlineModuleIntoGlobal() call
     // that happens at the beginning of module rewriting.
-    if (t.inGlobalScope()) {
+    if (t.inModuleScope() || t.inGlobalScope()) {
       String exportName = getpropNode.getLastChild().getString();
       currentScript.namedExports.add(exportName);
     }

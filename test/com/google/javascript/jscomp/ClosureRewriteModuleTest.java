@@ -31,6 +31,8 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.QUALIFIED_REFERENCE_TO_GOOG_MODULE;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Unit tests for ClosureRewriteModule
  * @author johnlenz@google.com (John Lenz)
@@ -594,34 +596,64 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "var module$contents$xid_xid = xid"));
   }
 
-//  public void testBundle6() {
-//    test(
-//        LINE_JOINER.join(
-//            "goog.loadModule(function(exports) {",
-//            "  goog.module('goog.asserts');",
-//            "  return exports;",
-//            "});",
-//            "goog.loadModule(function(exports) {",
-//            "  'use strict';",
-//            "  goog.module('xid');",
-//            "  goog.module.declareLegacyNamespace();",
-//            "  var asserts = goog.require('goog.asserts');",
-//            "  var xid = function(id) {",
-//            "    return xid.internal_(id);",
-//            "  };",
-//            "  xid.internal_ = function(id) {};",
-//            "  exports = xid;",
-//            "  return exports;",
-//            "});"),
-//        LINE_JOINER.join(
-//            "/** @const */ var module$exports$goog$asserts = {};",
-//            "goog.provide('xid');",
-//            "/** @const */ xid = function(id) {",
-//            "  return xid.internal_(id);",
-//            "};",
-//            "xid.internal_ = function(id) {};",
-//            "var module$contents$xid_xid = xid"));
-//  }
+  public void testBundle6() {
+    test(
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) {",
+            "  goog.module('goog.asserts');",
+            "  return exports;",
+            "});",
+            "goog.loadModule(function(exports) {",
+            "  'use strict';",
+            "  goog.module('xid');",
+            "  goog.module.declareLegacyNamespace();",
+            "  var asserts = goog.require('goog.asserts');",
+            "  var xid = function(id) {",
+            "    return xid.internal_(id);",
+            "  };",
+            "  xid.internal_ = function(id) {};",
+            "  exports = xid;",
+            "  return exports;",
+            "});"),
+        LINE_JOINER.join(
+            "/** @const */ var module$exports$goog$asserts = {};",
+            "goog.provide('xid');",
+            "var module$contents$xid_xid = function(id) {",
+            "  return module$contents$xid_xid.internal_(id);",
+            "};",
+            "module$contents$xid_xid.internal_ = function(id) {};",
+            "/** @const */ xid = module$contents$xid_xid "));
+  }
+
+  public void testBundleWithDestructuringImport() {
+    testEs6(
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) { 'use strict';",
+            "  goog.module('mod_B');",
+            "",
+            "  /** @interface */ function B(){}",
+            "",
+            "  exports.B = B;",
+            "  return exports;",
+            "});",
+            "goog.loadModule(function(exports) { 'use strict';",
+            "  goog.module('mod_A');",
+            "",
+            "  var {B} = goog.require('mod_B');",
+            "",
+            "  /** @constructor @implements {B} */",
+            "  function A() {}",
+            "  return exports;",
+            "});"),
+        LINE_JOINER.join(
+            "/** @const */ var module$exports$mod_B = {};",
+            "/** @interface */ function module$contents$mod_B_B(){}",
+            "/** @const */ module$exports$mod_B.B = module$contents$mod_B_B;",
+            "",
+            "/** @const */ var module$exports$mod_A = {};",
+            "/** @constructor @implements {module$exports$mod_B.B} */",
+            "function module$contents$mod_A_A(){}"));
+  }
 
   public void testGoogLoadModuleString() {
     testSame("goog.loadModule(\"goog.module('a.b.c'); exports = class {};\");");
@@ -1901,4 +1933,64 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         });
   }
 
+  public void testIjsFileInExterns() {
+    allowExternsChanges(true);
+    test(
+        LINE_JOINER.join(
+            "/** @externs */",
+            "goog.module('mod_B');",
+            "",
+            "/** @interface */ function B(){}",
+            "",
+            "exports = B;"),
+        LINE_JOINER.join(
+            "goog.module('mod_A');",
+            "",
+            "var B = goog.require('mod_B');",
+            "",
+            "/** @constructor @implements {B} */",
+            "function A() {}"),
+        (String) null, null, null);
+
+    test(
+        LINE_JOINER.join(
+            "/** @externs */",
+            "goog.loadModule(function(exports) { 'use strict';",
+            "  goog.module('mod_B');",
+            "",
+            "  /** @interface */ function B(){}",
+            "",
+            "  exports = B;",
+            "  return exports;",
+            "});"),
+        LINE_JOINER.join(
+            "goog.module('mod_A');",
+            "",
+            "var B = goog.require('mod_B');",
+            "",
+            "/** @constructor @implements {B} */",
+            "function A() {}"),
+        (String) null, null, null);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    test(
+        LINE_JOINER.join(
+            "/** @externs */",
+            "goog.loadModule(function(exports) { 'use strict';",
+            "  goog.module('mod_B');",
+            "",
+            "  /** @interface */ function B(){}",
+            "",
+            "  exports.B = B;",
+            "  return exports;",
+            "});"),
+        LINE_JOINER.join(
+            "goog.module('mod_A');",
+            "",
+            "var {B} = goog.require('mod_B');",
+            "",
+            "/** @constructor @implements {B} */",
+            "function A() {}"),
+        (String) null, null, null);
+  }
 }
