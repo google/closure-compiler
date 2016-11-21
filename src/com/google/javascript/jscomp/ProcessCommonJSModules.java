@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -99,19 +98,19 @@ public final class ProcessCommonJSModules implements CompilerPass {
     FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
 
-    Builder<Node> exports = ImmutableList.builder();
+    ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
     if (finder.isCommonJsModule()) {
       finder.reportModuleErrors();
       finder.replaceUmdPatterns();
 
       //UMD pattern replacement can leave detached export references - don't include those
-      for (Node export : finder.getModuleExports()) {
-        if (NodeUtil.getEnclosingScript(export) != null) {
+      for (ExportInfo export : finder.getModuleExports()) {
+        if (NodeUtil.getEnclosingScript(export.node) != null) {
           exports.add(export);
         }
       }
-      for (Node export : finder.getExports()) {
-        if (NodeUtil.getEnclosingScript(export) != null) {
+      for (ExportInfo export : finder.getExports()) {
+        if (NodeUtil.getEnclosingScript(export.node) != null) {
           exports.add(export);
         }
       }
@@ -138,6 +137,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
   }
 
+  static class ExportInfo {
+    final Node node;
+    final Scope scope;
+
+    ExportInfo(Node node, Scope scope) {
+      this.node = node;
+      this.scope = scope;
+    }
+  }
+
   private Node getBaseQualifiedNameNode(Node n) {
     Node refParent = n;
     while (refParent.getParent() != null && refParent.getParent().isQualifiedName()) {
@@ -161,16 +170,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
 
     List<UmdPattern> umdPatterns = new ArrayList<>();
-    List<Node> moduleExports = new ArrayList<>();
-    List<Node> exports = new ArrayList<>();
+    List<ExportInfo> moduleExports = new ArrayList<>();
+    List<ExportInfo> exports = new ArrayList<>();
     Set<String> imports = new HashSet<>();
     List<JSError> errors = new ArrayList<>();
 
-    public List<Node> getModuleExports() {
+    public List<ExportInfo> getModuleExports() {
       return ImmutableList.copyOf(moduleExports);
     }
 
-    public List<Node> getExports() {
+    public List<ExportInfo> getExports() {
       return ImmutableList.copyOf(exports);
     }
 
@@ -212,7 +221,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         // meaning it is not defined in the current scope as a local
         // variable or function parameter
         if (v == null) {
-          moduleExports.add(n);
+          moduleExports.add(new ExportInfo(n, t.getScope()));
 
           // If the module.exports statement is nested in the then branch of an if statement,
           // assume the if statement is an UMD pattern with a common js export in the then branch
@@ -246,7 +255,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
               errors.add(t.makeError(qNameRoot, SUSPICIOUS_EXPORTS_ASSIGNMENT));
             }
           } else {
-            exports.add(n);
+            exports.add(new ExportInfo(n, t.getScope()));
 
             // If the exports statement is nested in the then branch of an if statement,
             // assume the if statement is an UMD pattern with a common js export in the then branch
@@ -405,18 +414,18 @@ public final class ProcessCommonJSModules implements CompilerPass {
       // are properties, initialize the variable as well.
       int directAssignmentsAtTopLevel = 0;
       int directAssignments = 0;
-      for (Node export : moduleExports) {
-        if (NodeUtil.getEnclosingScript(export) == null) {
+      for (ExportInfo export : moduleExports) {
+        if (NodeUtil.getEnclosingScript(export.node) == null) {
           continue;
         }
 
-        Node base = getBaseQualifiedNameNode(export);
-        if (base == export && export.getParent().isAssign()) {
-          Node rValue = NodeUtil.getRValueOfLValue(export);
+        Node base = getBaseQualifiedNameNode(export.node);
+        if (base == export.node && export.node.getParent().isAssign()) {
+          Node rValue = NodeUtil.getRValueOfLValue(export.node);
           if (rValue == null || !rValue.isObjectLit()) {
             directAssignments++;
-            if (export.getParent().getParent().isExprResult()
-                && NodeUtil.isTopLevel(export.getParent().getParent().getParent())) {
+            if (export.node.getParent().getParent().isExprResult()
+                && NodeUtil.isTopLevel(export.node.getParent().getParent().getParent())) {
               directAssignmentsAtTopLevel++;
             }
           }
@@ -515,11 +524,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   private class RewriteModule extends AbstractPostOrderCallback {
     private final boolean allowFullRewrite;
-    private final ImmutableCollection<Node> exports;
+    private final ImmutableCollection<ExportInfo> exports;
     private final List<Node> imports = new ArrayList<>();
     private final List<Node> rewrittenClassExpressions = new ArrayList<>();
 
-    public RewriteModule(boolean allowFullRewrite, ImmutableCollection<Node> exports) {
+    public RewriteModule(boolean allowFullRewrite, ImmutableCollection<ExportInfo> exports) {
       this.allowFullRewrite = allowFullRewrite;
       this.exports = exports;
     }
@@ -536,8 +545,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
             compiler.reportCodeChange();
           }
 
-          for (Node export : exports) {
-            visitExport(t, export);
+          for (ExportInfo export : exports) {
+            visitExport(t, export.node);
           }
 
           for (Node require : imports) {
@@ -966,27 +975,32 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       String moduleName = t.getInput().getPath().toModuleName();
 
-      for (Node export : this.exports) {
-        Node qNameBase = getBaseQualifiedNameNode(export);
-        Node rValue = NodeUtil.getRValueOfLValue(qNameBase);
-        if (rValue == null) {
+      for (ExportInfo export : this.exports) {
+        Node exportBase = getBaseQualifiedNameNode(export.node);
+        Node exportRValue = NodeUtil.getRValueOfLValue(exportBase);
+
+        if (exportRValue == null) {
           continue;
         }
 
+        Node exportedName = getExportedNameNode(export);
         // We don't want to handle the export itself
-        if (rValue == n || (rValue.isClass() && rValue.getFirstChild() == n)) {
+        if (exportRValue == n
+            || ((NodeUtil.isClassExpression(exportRValue)
+                    || NodeUtil.isFunctionExpression(exportRValue))
+                && exportedName == n)) {
           return null;
         }
 
-        String exportedNameBase = qNameBase.getQualifiedName();
+        String exportBaseQName = exportBase.getQualifiedName();
 
-        if (rValue.isObjectLit()) {
-          if (!"module.exports".equals(exportedNameBase)) {
+        if (exportRValue.isObjectLit()) {
+          if (!"module.exports".equals(exportBaseQName)) {
             return n.getQualifiedName();
           }
 
-          Node key = rValue.getFirstChild();
-          Var exportVar = null;
+          Node key = exportRValue.getFirstChild();
+          boolean keyIsExport = false;
           while (key != null) {
             if (key.isStringKey()
                 && !key.isQuotedString()
@@ -998,8 +1012,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
                   }
 
                   Var valVar = t.getScope().getVar(key.getFirstChild().getQualifiedName());
-                  if (valVar != null && valVar.getNode() == var.getNode()) {
-                    exportVar = valVar;
+                  if (valVar != null && valVar.getNameNode() == var.getNameNode()) {
+                    keyIsExport = true;
                     break;
                   }
                 }
@@ -1010,8 +1024,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
                 // Handle ES6 object lit shorthand assignments
                 Var valVar = t.getScope().getVar(key.getString());
-                if (valVar != null && valVar.getNode() == var.getNode()) {
-                  exportVar = valVar;
+                if (valVar != null && valVar.getNameNode() == var.getNameNode()) {
+                  keyIsExport = true;
                   break;
                 }
               }
@@ -1019,32 +1033,42 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
             key = key.getNext();
           }
-          if (key != null && exportVar != null) {
+          if (key != null && keyIsExport) {
             return moduleName + "." + key.getString();
           }
         } else {
-          String qName;
-          if (rValue.isClass()) {
-            qName = rValue.getFirstChild().getQualifiedName();
-          } else {
-            qName = rValue.getQualifiedName();
-          }
-          if (qName != null) {
-            Var exportVar = t.getScope().getVar(qName);
-            if (exportVar != null && exportVar.getNode() == var.getNode()) {
-              String exportPrefix =
-                  exportedNameBase.startsWith(MODULE) ? "module.exports" : EXPORTS;
+          if (var.getNameNode() == exportedName) {
+            String exportPrefix = exportBaseQName.startsWith(MODULE) ? "module.exports" : EXPORTS;
 
-              if (exportedNameBase.length() == exportPrefix.length()) {
-                return moduleName;
-              }
-
-              return moduleName + exportedNameBase.substring(exportPrefix.length());
+            if (exportBaseQName.length() == exportPrefix.length()) {
+              return moduleName;
             }
+
+            return moduleName + exportBaseQName.substring(exportPrefix.length());
           }
         }
       }
       return n.getQualifiedName();
+    }
+
+    private Node getExportedNameNode(ExportInfo info) {
+      Node qNameBase = getBaseQualifiedNameNode(info.node);
+      Node rValue = NodeUtil.getRValueOfLValue(qNameBase);
+
+      if (rValue == null) {
+        return null;
+      }
+
+      if (NodeUtil.isFunctionExpression(rValue) || NodeUtil.isClassExpression(rValue)) {
+        return rValue.getFirstChild();
+      }
+
+      Var var = info.scope.getVar(rValue.getQualifiedName());
+      if (var == null) {
+        return null;
+      }
+
+      return var.getNameNode();
     }
 
     /**
@@ -1053,14 +1077,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
      * @return null if it's not an alias or the imported module name
      */
     private String getModuleImportName(NodeTraversal t, Node n) {
-      Node rValue;
+      Node rValue = null;
       String propSuffix = "";
       if (n.isStringKey()
           && n.getParent().isObjectPattern()
           && n.getParent().getParent().isDestructuringLhs()) {
         rValue = n.getParent().getNext();
         propSuffix = "." + n.getString();
-      } else {
+      } else if (n.getParent() != null) {
         rValue = NodeUtil.getRValueOfLValue(n);
       }
 
