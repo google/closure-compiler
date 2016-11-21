@@ -772,12 +772,13 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public JSType getGreatestSubtypeWithProperty(
       JSType type, String propertyName) {
-    if (greatestSubtypeByProperty.containsKey(propertyName)) {
-      return greatestSubtypeByProperty.get(propertyName)
-          .getGreatestSubtype(type);
+    JSType withProperty = greatestSubtypeByProperty.get(propertyName);
+    if (withProperty != null) {
+      return withProperty.getGreatestSubtype(type);
     }
-    if (typesIndexedByProperty.containsKey(propertyName)) {
-      JSType built = typesIndexedByProperty.get(propertyName).build();
+    UnionTypeBuilder typesWithProp = typesIndexedByProperty.get(propertyName);
+    if (typesWithProp != null) {
+      JSType built = typesWithProp.build();
       greatestSubtypeByProperty.put(propertyName, built);
       return built.getGreatestSubtype(type);
     }
