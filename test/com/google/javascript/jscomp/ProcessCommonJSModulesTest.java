@@ -501,4 +501,19 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @interface */ module$test.a;",
             "/** @type {string} */ module$test.a.prototype.foo;"));
   }
+
+  public void testParamShadow() {
+    setFilename("test");
+    testModules(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "/** @constructor */ function Bar(Foo) { this.foo = new Foo(); }",
+            "Foo.prototype.test = new Bar(Foo);",
+            "module.exports = Foo;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = /** @constructor */ function () {};",
+            "/** @constructor */ function Bar$$module$test(Foo) { this.foo = new Foo(); }",
+            "module$test.prototype.test = new Bar$$module$test(module$test);"));
+  }
 }
