@@ -433,10 +433,8 @@ public class PrototypeObjectType extends ObjectType {
     }
 
     // other prototype based objects
-    if (isUnknownType() || implicitPrototypeChainIsUnknown()) {
+    if (isUnknownType()) {
       // If unsure, say 'yes', to avoid spurious warnings.
-      // TODO(user): resolve the prototype chain completely in all cases,
-      // to avoid guessing.
       return true;
     }
     return thatObj != null && isImplicitPrototype(thatObj);
@@ -460,17 +458,6 @@ public class PrototypeObjectType extends ObjectType {
       }
     }
     return true;
-  }
-
-  private boolean implicitPrototypeChainIsUnknown() {
-    ObjectType p = getImplicitPrototype();
-    while (p != null) {
-      if (p.isUnknownType()) {
-        return true;
-      }
-      p = p.getImplicitPrototype();
-    }
-    return false;
   }
 
   @Override
