@@ -1040,6 +1040,88 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         CANNOT_CONVERT_YET);
   }
 
+  public void testSuperMethodInGetter() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(
+        LINE_JOINER.join(
+            "class Base {",
+            "  method() {",
+            "    return 5;",
+            "  }",
+            "}",
+            "",
+            "class Subclass extends Base {",
+            "  constructor() {",
+            "    super();",
+            "  }",
+            "",
+            "  get x() {",
+            "    return super.method();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var Base = function() {};",
+            "Base.prototype.method = function() { return 5; };",
+            "",
+            "/** @constructor @struct @extends {Base} */",
+            "var Subclass = function() { Base.call(this); };",
+            "",
+            "/** @type {?} */",
+            "Subclass.prototype.x;",
+            "$jscomp.inherits(Subclass, Base);",
+            "$jscomp.global.Object.defineProperties(Subclass.prototype, {",
+            "  x: {",
+            "    configurable:true,",
+            "    enumerable:true,",
+            "    /** @this {Subclass} */",
+            "    get: function() { return Base.prototype.method.call(this); },",
+            "  }",
+            "});"));
+  }
+
+  public void testSuperMethodInSetter() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(
+        LINE_JOINER.join(
+            "class Base {",
+            "  method() {",
+            "    this._x = 5;",
+            "  }",
+            "}",
+            "",
+            "class Subclass extends Base {",
+            "  constructor() {",
+            "    super();",
+            "  }",
+            "",
+            "  set x(value) {",
+            "    super.method();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var Base = function() {};",
+            "Base.prototype.method = function() { this._x = 5; };",
+            "",
+            "/** @constructor @struct @extends {Base} */",
+            "var Subclass = function() { Base.call(this); };",
+            "",
+            "/** @type {?} */",
+            "Subclass.prototype.x;",
+            "$jscomp.inherits(Subclass, Base);",
+            "$jscomp.global.Object.defineProperties(Subclass.prototype, {",
+            "  x: {",
+            "    configurable:true,",
+            "    enumerable:true,",
+            "    /** @this {Subclass} */",
+            "    set: function(value) { Base.prototype.method.call(this); },",
+            "  }",
+            "});"));
+  }
+
   public void testExtendFunction() {
     // Function and other native classes cannot be correctly extended in transpiled form.
     // Test both explicit and automatically generated constructors.

@@ -19,6 +19,7 @@ import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -53,14 +54,14 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         }
       }
       if (!hasConstructor) {
-        addSyntheticConstructor(t, n);
+        addSyntheticConstructor(n);
       }
     } else if (n.isSuper()) {
       visitSuper(n, parent);
     }
   }
 
-  private void addSyntheticConstructor(NodeTraversal t, Node classNode) {
+  private void addSyntheticConstructor(Node classNode) {
     Node superClass = classNode.getSecondChild();
     Node classMembers = classNode.getLastChild();
     Node memberDef;
@@ -127,7 +128,21 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       return;
     }
 
-    Node enclosingMemberDef = NodeUtil.getEnclosingClassMemberFunction(node);
+    Node enclosingMemberDef = NodeUtil.getEnclosingNode(
+        node,
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node n) {
+            switch (n.getToken()) {
+              case MEMBER_FUNCTION_DEF:
+              case GETTER_DEF:
+              case SETTER_DEF:
+                return true;
+              default:
+                return false;
+            }
+          }
+        });
     if (enclosingMemberDef.getString().equals("constructor")
         && parent.isCall()
         && parent.getFirstChild() == node) {
