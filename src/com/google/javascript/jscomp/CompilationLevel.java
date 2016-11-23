@@ -151,21 +151,20 @@ public enum CompilationLevel {
     options.setDeadAssignmentElimination(true);
     options.setExtractPrototypeMemberDeclarations(true);
     options.setCollapseVariableDeclarations(true);
-    options.convertToDottedProperties = true;
-    options.labelRenaming = true;
+    options.setConvertToDottedProperties(true);
+    options.setLabelRenaming(true);
     options.setRemoveDeadCode(true);
     options.setOptimizeArgumentsArray(true);
-    options.collapseObjectLiterals = true;
-    options.protectHiddenSideEffects = true;
+    options.setCollapseObjectLiterals(true);
+    options.setProtectHiddenSideEffects(true);
 
     // All the advanced optimizations.
-    options.removeClosureAsserts = true;
-    options.removeAbstractMethods = true;
-    options.removeSuperMethods = true;
-    options.reserveRawExports = true;
-    options.setRenamingPolicy(
-        VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
-    options.shadowVariables = true;
+    options.setRemoveClosureAsserts(true);
+    options.setRemoveAbstractMethods(true);
+    options.setRemoveSuperMethods(true);
+    options.setReserveRawExports(true);
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setShadowVariables(true);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setRemoveUnusedPrototypePropertiesInExterns(false);
     options.setRemoveUnusedClassProperties(true);
@@ -190,9 +189,9 @@ public enum CompilationLevel {
 
     // Call optimizations
     options.setDevirtualizePrototypeMethods(true);
-    options.optimizeParameters = true;
-    options.optimizeReturns = true;
-    options.optimizeCalls = true;
+    options.setOptimizeParameters(true);
+    options.setOptimizeReturns(true);
+    options.setOptimizeCalls(true);
   }
 
   /**
