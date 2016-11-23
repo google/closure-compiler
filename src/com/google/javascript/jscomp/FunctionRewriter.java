@@ -22,7 +22,6 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -36,11 +35,16 @@ import java.util.List;
  *
  * as:
  *
- * C.prototype.getA = JSCompiler_get("a_);
- * C.prototype.setA = JSCompiler_set("a_);
+ * C.prototype.getA = JSCompiler_get("a");
+ * C.prototype.setA = JSCompiler_set("a");
  *
  * if by doing so we will save bytes, after the helper functions are
  * added and renaming is done.
+ *
+ * NOTE: JSCompiler_get and JSCompiler_set turn dotted accesses to
+ * computed accesses, which causes JS engines to use dictionary lookups.
+ * Because of this perf regression, this pass is off by default in advanced
+ * mode even though it improves code size.
  *
  */
 class FunctionRewriter implements CompilerPass {
