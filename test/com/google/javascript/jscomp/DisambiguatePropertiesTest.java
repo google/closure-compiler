@@ -1208,6 +1208,50 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(js, "{a=[[Foo.prototype, I.prototype]]}");
   }
 
+  public void testInterface_noDirectImplementors() {
+    String js = ""
+        + "/** @interface */\n"
+        + "function I() {}\n"
+        + "I.prototype.a;\n"
+        + "I.prototype.b;\n"
+        + "/** @interface @extends {I} */\n"
+        + "function J() {}\n"
+        + "/** @constructor @implements {J} */\n"
+        + "function Foo() {}\n"
+        + "Foo.prototype.a;\n"
+        + "Foo.prototype.b;\n"
+        + "function f(/** !I */ x) {\n"
+        + "  return x.a;\n"
+        + "}\n"
+        + "/** @interface */\n"
+        + "function Z() {}\n"
+        + "Z.prototype.a;\n"
+        + "Z.prototype.b;";
+    String output = ""
+        + "/** @interface */\n"
+        + "function I() {}\n"
+        + "I.prototype.Foo_prototype$a;\n"
+        + "I.prototype.Foo_prototype$b;\n"
+        + "/** @interface @extends {I} */\n"
+        + "function J() {}\n"
+        + "/** @constructor @implements {J} */\n"
+        + "function Foo() {}\n"
+        + "Foo.prototype.Foo_prototype$a;\n"
+        + "Foo.prototype.Foo_prototype$b;\n"
+        + "function f(/** !I */ x){\n"
+        + "  return x.Foo_prototype$a;\n"
+        + "}\n"
+        + "/** @interface */\n"
+        + "function Z() {}\n"
+        + "Z.prototype.Z_prototype$a;\n"
+        + "Z.prototype.Z_prototype$b";
+    testSets(
+        js,
+        output,
+        "{a=[[Foo.prototype, I.prototype], [Z.prototype]],"
+            + " b=[[Foo.prototype, I.prototype], [Z.prototype]]}");
+  }
+
   public void testInterfaceOfSuperclass() {
     String js = ""
         + "/** @interface */ function I() {};\n"
