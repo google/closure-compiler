@@ -374,6 +374,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (isUnknown()) {
       return false;
     }
+    if (isBottom()) {
+      return false;
+    }
     Preconditions.checkState(!getObjs().isEmpty(),
         "Expected object type but found %s", this);
     for (ObjectType objType : getObjs()) {

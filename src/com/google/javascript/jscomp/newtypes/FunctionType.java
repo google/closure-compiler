@@ -114,7 +114,10 @@ public final class FunctionType {
       Preconditions.checkState(!formal.isBottom());
     }
     Preconditions.checkState(restFormals == null || !restFormals.isBottom());
-    Preconditions.checkNotNull(returnType);
+
+    if (!isLoose()) {
+      Preconditions.checkNotNull(returnType);
+    }
   }
 
   JSTypes getCommonTypes() {
@@ -970,24 +973,28 @@ public final class FunctionType {
       }
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    for (JSType reqFormal : this.requiredFormals) {
-      builder.addReqFormal(reqFormal.substituteGenerics(reducedMap));
+    if (!isTopFunction()) {
+      for (JSType reqFormal : this.requiredFormals) {
+        builder.addReqFormal(reqFormal.substituteGenerics(reducedMap));
+      }
+      for (JSType optFormal : this.optionalFormals) {
+        builder.addOptFormal(optFormal.substituteGenerics(reducedMap));
+      }
+      if (this.restFormals != null) {
+        builder.addRestFormals(restFormals.substituteGenerics(reducedMap));
+      }
+      builder.addRetType(this.returnType.substituteGenerics(reducedMap));
     }
-    for (JSType optFormal : this.optionalFormals) {
-      builder.addOptFormal(optFormal.substituteGenerics(reducedMap));
-    }
-    if (this.restFormals != null) {
-      builder.addRestFormals(restFormals.substituteGenerics(reducedMap));
-    }
-    builder.addRetType(this.returnType.substituteGenerics(reducedMap));
     if (isLoose()) {
       builder.addLoose();
     }
     builder.addNominalType(substGenericsInNomType(this.nominalType, typeMap));
     builder.addReceiverType(substGenericsInNomType(this.receiverType, typeMap));
     // TODO(blickly): Do we need instatiation here?
-    for (String var : this.outerVarPreconditions.keySet()) {
-      builder.addOuterVarPrecondition(var, this.outerVarPreconditions.get(var));
+    if (!isTopFunction()) {
+      for (String var : this.outerVarPreconditions.keySet()) {
+        builder.addOuterVarPrecondition(var, this.outerVarPreconditions.get(var));
+      }
     }
     builder.addTypeParameters(this.typeParameters);
     return builder.buildFunction();
@@ -998,16 +1005,18 @@ public final class FunctionType {
       return this;
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    for (JSType reqFormal : this.requiredFormals) {
-      builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
+    if (!isTopFunction()) {
+      for (JSType reqFormal : this.requiredFormals) {
+        builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
+      }
+      for (JSType optFormal : this.optionalFormals) {
+        builder.addOptFormal(optFormal.substituteGenerics(typeMap));
+      }
+      if (this.restFormals != null) {
+        builder.addRestFormals(restFormals.substituteGenerics(typeMap));
+      }
+      builder.addRetType(this.returnType.substituteGenerics(typeMap));
     }
-    for (JSType optFormal : this.optionalFormals) {
-      builder.addOptFormal(optFormal.substituteGenerics(typeMap));
-    }
-    if (this.restFormals != null) {
-      builder.addRestFormals(restFormals.substituteGenerics(typeMap));
-    }
-    builder.addRetType(this.returnType.substituteGenerics(typeMap));
     if (isLoose()) {
       builder.addLoose();
     }
