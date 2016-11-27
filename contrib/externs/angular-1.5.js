@@ -21,7 +21,6 @@
  *     $cookieStore
  *     $httpBackend
  *     $rootElement
- *     $rootScope
  *
  * @see http://angularjs.org/
  * @externs
@@ -925,7 +924,10 @@ angular.Module.prototype.name;
  */
 angular.Module.prototype.requires;
 
-/** @constructor */
+/**
+ * NOTE: $rootScope is the same as angular.Scope.
+ * @constructor
+ */
 angular.Scope = function() {};
 
 /** @type {?string} */
