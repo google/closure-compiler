@@ -1400,13 +1400,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "Only an identifier or destructuring pattern is allowed here.");
   }
 
-  public void testArrayDestructuringTrailingComma() {
-    mode = LanguageMode.ECMASCRIPT6;
-    strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING, Feature.TRAILING_COMMA);
-    parseError("var [x,] = ['x',];", "Array pattern may not end with a comma");
-  }
-
   public void testArrayDestructuringDeclarationRest() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
