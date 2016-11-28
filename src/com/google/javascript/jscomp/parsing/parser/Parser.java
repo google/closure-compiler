@@ -3578,10 +3578,6 @@ public class Parser {
         } else if (peek(TokenType.COMMA)) {
           // Consume the comma separator
           eat(TokenType.COMMA);
-          if (peek(TokenType.CLOSE_SQUARE)) {
-            reportError("Array pattern may not end with a comma");
-            break;
-          }
         } else {
           // Otherwise we must be done
           break;
