@@ -669,7 +669,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  $jscomp$tmp$error = Error.apply(this, arguments),",
             "      this.message = $jscomp$tmp$error.message,",
             "      ('stack' in $jscomp$tmp$error) && (this.stack = $jscomp$tmp$error.stack),",
-            "      $jscomp$tmp$error;",
+            "      this;",
             "};",
             "$jscomp.inherits(C, Error);"));
     test(
@@ -690,9 +690,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "      ($jscomp$tmp$error = Error.call(this, 'C error'),",
             "          this.message = $jscomp$tmp$error.message,",
             "          ('stack' in $jscomp$tmp$error) && (this.stack = $jscomp$tmp$error.stack),",
-            // TODO(bradfordcsmith): The spec says super() should return `this`, but Angular2
-            //     errors.ts currently depends on it returning the newly created Error object.
-            "          $jscomp$tmp$error)",
+            "          this)",
             "      || this;",
             "};",
             "$jscomp.inherits(C, Error);"));

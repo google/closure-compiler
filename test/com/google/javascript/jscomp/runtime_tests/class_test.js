@@ -188,7 +188,7 @@ function testExtendsError() {
   }
 }
 
-function testSupportsErrorExtensionHack() {
+function testExtendsErrorSuperReturnsThis() {
   class MyError extends Error {
     constructor() {
       const superResult = super('my message');
@@ -196,16 +196,7 @@ function testSupportsErrorExtensionHack() {
     }
   }
   const e = new MyError();
-  if (MyError.toString().startsWith('class')) {
-    // Browser should have correct behavior for uncompiled code.
-    assertEquals(e, e.superResult);
-  } else {
-    // TODO(bradfordcsmith): The spec says super() should return `this`,
-    //  but Angular2 errors.ts currently depends on incorrect compiler behavior
-    //  that causes it to return a newly created Error object.
-    //  https://github.com/angular/angular/issues/12575
-    assertNotEquals(e, e.superResult);
-  }
+  assertEquals(e, e.superResult);
 }
 
 function testExtendsObject() {
