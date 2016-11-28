@@ -343,17 +343,10 @@ public final class PerformanceTracker {
           }
         });
 
-    this.output.print("Summary:\n"
-        + "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction\n");
-    for (Entry<String, Stats> entry : statEntries) {
-      String key = entry.getKey();
-      Stats stats = entry.getValue();
-      this.output.print(SimpleFormat.format("%s,%d,%d,%d,%d,%d,%d,%d\n", key, stats.runtime,
-            stats.allocMem, stats.runs, stats.changes, stats.astDiff, stats.diff, stats.gzDiff));
-    }
-
     this.output.print(Joiner.on("\n").join(
         "\nTOTAL:",
+        "Start time(ms): " + this.startTime,
+        "End time(ms): " + this.endTime,
         "Wall time(ms): " + (this.endTime - this.startTime),
         "Passes runtime(ms): " + this.passesRuntime,
         "Max mem usage (measured after each pass)(MB): " + this.maxMem,
@@ -374,6 +367,15 @@ public final class PerformanceTracker {
         "JS sources: " + this.jsSources,
         "Extern lines:   " + this.externLines,
         "Extern sources: " + this.externSources + "\n\n"));
+
+    this.output.print("Summary:\n"
+        + "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction\n");
+    for (Entry<String, Stats> entry : statEntries) {
+      String key = entry.getKey();
+      Stats stats = entry.getValue();
+      this.output.print(SimpleFormat.format("%s,%d,%d,%d,%d,%d,%d,%d\n", key, stats.runtime,
+            stats.allocMem, stats.runs, stats.changes, stats.astDiff, stats.diff, stats.gzDiff));
+    }
 
     this.output.print(Joiner.on("\n").join(
         "Log:",

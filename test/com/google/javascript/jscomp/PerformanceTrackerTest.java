@@ -110,9 +110,9 @@ public final class PerformanceTrackerTest extends TestCase {
     tracker.outputTracerReport();
     outstream.close();
     Pattern p = Pattern.compile(Joiner.on("\n").join(
-        ".*Summary:",
-        "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction",
         ".*TOTAL:",
+        "Start time\\(ms\\): [0-9]+",
+        "End time\\(ms\\): [0-9]+",
         "Wall time\\(ms\\): [0-9]+",
         "Passes runtime\\(ms\\): [0-9]+",
         "Max mem usage \\(measured after each pass\\)\\(MB\\): -?[0-9]+",
@@ -131,6 +131,8 @@ public final class PerformanceTrackerTest extends TestCase {
         "JS sources: [0-9]+",
         "Extern lines:   [0-9]+",
         "Extern sources: [0-9]+\n",
+        ".*Summary:",
+        "pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction",
         "Log:",
         "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize\n",
         ".*"),
