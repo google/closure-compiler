@@ -16,6 +16,10 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
+import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -45,18 +49,40 @@ public class FixingErrorManager extends BasicErrorManager {
     fixes.putAll(error, ErrorToFixMapper.getFixesForJsError(error, compiler));
   }
 
+  private boolean containsFixableShorthandModuleWarning() {
+    for (JSError error : fixes.keySet()) {
+      if (error.getType().equals(JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)
+          || error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public List<SuggestedFix> getFixesForJsError(JSError error) {
     return fixes.get(error);
   }
 
   /** Returns fixes for errors first, then fixes for warnings. */
   public Collection<SuggestedFix> getAllFixes() {
+    boolean containsFixableShorthandModuleWarning = containsFixableShorthandModuleWarning();
     Collection<SuggestedFix> fixes = new ArrayList<>();
     for (JSError error : getErrors()) {
-      fixes.addAll(getFixesForJsError(error));
+      // Sometimes code will produce a spurious extra-require error as well as a warning about
+      // using a full namespace instead of a shorthand type.
+      if (error.getType().equals(EXTRA_REQUIRE_WARNING) && containsFixableShorthandModuleWarning) {
+        // In this case, don't apply the extra-require fix.
+      } else {
+        fixes.addAll(getFixesForJsError(error));
+      }
     }
     for (JSError warning : getWarnings()) {
-      fixes.addAll(getFixesForJsError(warning));
+      if (warning.getType().equals(EXTRA_REQUIRE_WARNING)
+          && containsFixableShorthandModuleWarning) {
+        // As above, don't apply the extra-require fix.
+      } else {
+        fixes.addAll(getFixesForJsError(warning));
+      }
     }
     return fixes;
   }

@@ -102,7 +102,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "Reference to fully qualified import name ''{0}''."
               + " Imports in goog.module should use the return value of goog.require instead.");
 
-  static final DiagnosticType REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
+  public static final DiagnosticType REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
       DiagnosticType.disabled(
           "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME",
           "Reference to fully qualified import name ''{0}''."
@@ -114,11 +114,12 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "Reference to fully qualified import name ''{0}'' in JSDoc."
               + " Imports in goog.module should use the return value of goog.require instead.");
 
-  static final DiagnosticType JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
-      DiagnosticType.disabled(
-          "JSC_JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME",
-          "Reference to fully qualified import name ''{0}'' in JSDoc."
-              + " Please use the short name ''{1}'' instead.");
+  public static final DiagnosticType
+      JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
+          DiagnosticType.disabled(
+              "JSC_JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME",
+              "Reference to fully qualified import name ''{0}'' in JSDoc."
+                  + " Please use the short name ''{1}'' instead.");
 
   static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
       DiagnosticType.error(

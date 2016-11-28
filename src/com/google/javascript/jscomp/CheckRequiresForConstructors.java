@@ -42,25 +42,25 @@ import javax.annotation.Nullable;
  * warning for each discrepancy.
  *
  * <p>The rules on when a warning is reported are: <ul>
- * <li>Type is referenced in code -> goog.require is required
+ * <li>Type is referenced in code → goog.require is required
  *     (missingRequires check fails if it's not there)
- * <li>Type is referenced in an @extends or @implements -> goog.require is required
+ * <li>Type is referenced in an @extends or @implements → goog.require is required
  *     (missingRequires check fails if it's not there)
- * <li>Type is referenced in other JsDoc (@type etc) -> goog.require is optional
+ * <li>Type is referenced in other JsDoc (@type etc) → goog.require is optional
  *     (don't warn, regardless of if it is there)
- * <li>Type is not referenced at all -> goog.require is forbidden
+ * <li>Type is not referenced at all → goog.require is forbidden
  *     (extraRequires check fails if it is there)
  * </ul>
  *
  */
-class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal.Callback {
+public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;
   private final CodingConvention codingConvention;
 
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
   private static final Joiner DOT_JOINER = Joiner.on('.');
 
-  public static enum Mode {
+  static enum Mode {
     // Looking at a single file. Only a minimal set of externs are present.
     SINGLE_FILE,
     // Used during a normal compilation. The entire program + externs are available.
@@ -100,7 +100,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_CALL_WARNING", "missing require: ''{0}''");
 
-  static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
+  public static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");
 
   private static final Set<String> DEFAULT_EXTRA_NAMESPACES = ImmutableSet.of(
@@ -406,9 +406,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       } else if (parent.isDestructuringLhs() && parent.getFirstChild().isObjectPattern()) {
         for (Node stringKey : parent.getFirstChild().children()) {
           if (stringKey.hasChildren()) {
-            visitRequire(stringKey.getFirstChild().getString(), call);
+            visitRequire(stringKey.getFirstChild().getString(), stringKey.getFirstChild());
           } else {
-            visitRequire(stringKey.getString(), call);
+            visitRequire(stringKey.getString(), stringKey);
           }
         }
       } else {

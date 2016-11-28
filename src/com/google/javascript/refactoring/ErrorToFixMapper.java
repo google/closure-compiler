@@ -47,8 +47,6 @@ public final class ErrorToFixMapper {
       Pattern.compile("Variable referenced before declaration: (.*)");
   private static final Pattern MISSING_REQUIRE =
       Pattern.compile("missing require: '([^']+)'");
-  private static final Pattern EXTRA_REQUIRE =
-      Pattern.compile("extra require: '([^']+)'");
   private static final Pattern DUPLICATE_REQUIRE =
       Pattern.compile("'([^']+)' required more than once\\.");
   private static final Pattern USE_SHORT_NAME =
@@ -309,16 +307,20 @@ public final class ErrorToFixMapper {
   }
 
   private static SuggestedFix getFixForExtraRequire(JSError error, AbstractCompiler compiler) {
-    Matcher regexMatcher = EXTRA_REQUIRE.matcher(error.description);
-    Preconditions.checkState(regexMatcher.matches(),
-        "Unexpected error description: %s", error.description);
-    String namespace = regexMatcher.group(1);
-    NodeMetadata metadata = new NodeMetadata(compiler);
-    Match match = new Match(error.node, metadata);
-    return new SuggestedFix.Builder()
-        .attachMatchedNodeInfo(error.node, compiler)
-        .removeGoogRequire(match, namespace)
-        .build();
+    SuggestedFix.Builder fix =
+        new SuggestedFix.Builder().attachMatchedNodeInfo(error.node, compiler);
+    boolean destructuring = NodeUtil.getEnclosingType(error.node, Token.OBJECT_PATTERN) != null;
+    if (destructuring) {
+      if (error.node.isStringKey()) {
+        fix.delete(error.node);
+      } else {
+        Preconditions.checkState(error.node.getParent().isStringKey());
+        fix.delete(error.node.getParent());
+      }
+    } else {
+      fix.deleteWithoutRemovingWhitespaceBefore(NodeUtil.getEnclosingStatement(error.node));
+    }
+    return fix.build();
   }
 
   private static SuggestedFix getFixForUnsortedRequiresOrProvides(

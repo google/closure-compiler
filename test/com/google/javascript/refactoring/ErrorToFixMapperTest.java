@@ -395,11 +395,13 @@ public class ErrorToFixMapperTest {
   public void testSortRequiresInGoogModule_destructuring() {
     assertChanges(
         LINE_JOINER.join(
+            "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
             "const {fooBar} = goog.require('x');",
             "const {foo, bar} = goog.require('y');"),
         LINE_JOINER.join(
+            "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
             "const {foo, bar} = goog.require('y');",
@@ -828,6 +830,121 @@ public class ErrorToFixMapperTest {
             "goog.require('goog.string');",
             "",
             "alert(goog.string.parseInt('7'));"));
+  }
+
+  @Test
+  public void testExtraRequire_module() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const googString = goog.require('goog.string');",
+            "const object = goog.require('goog.object');",
+            "alert(googString.parseInt('7'));"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const googString = goog.require('goog.string');",
+            "alert(googString.parseInt('7'));"));
+  }
+
+  @Test
+  public void testExtraRequire_destructuring1() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo, bar} = goog.require('goog.util');",
+            "",
+            "alert(bar(7));"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {bar} = goog.require('goog.util');",
+            "",
+            "alert(bar(7));"));
+  }
+
+  @Test
+  public void testExtraRequire_destructuring2() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo, bar} = goog.require('goog.util');",
+            "",
+            "alert(foo(7));"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo, } = goog.require('goog.util');",
+            "",
+            "alert(foo(7));"));
+  }
+
+  @Test
+  public void testExtraRequire_destructuring3() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo, bar, qux} = goog.require('goog.util');",
+            "",
+            "alert(foo(qux(7)));"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo, qux} = goog.require('goog.util');",
+            "",
+            "alert(foo(qux(7)));"));
+  }
+
+  @Test
+  public void testExtraRequire_destructuring4() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo, bar, qux} = goog.require('goog.util');"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            // TODO(tbreisacher): Remove the entire statement instead?
+            "const {} = goog.require('goog.util');"));
+  }
+
+  @Test
+  public void testExtraRequire_destructuring5() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo: googUtilFoo, bar} = goog.require('goog.util');",
+            "",
+            "alert(bar(7));"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {bar} = goog.require('goog.util');",
+            "",
+            "alert(bar(7));"));
+  }
+
+  @Test
+  public void testExtraRequire_destructuring6() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo: googUtilFoo, bar} = goog.require('goog.util');",
+            "",
+            "alert(googUtilFoo(7));"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo: googUtilFoo, } = goog.require('goog.util');",
+            "",
+            "alert(googUtilFoo(7));"));
   }
 
   @Test
