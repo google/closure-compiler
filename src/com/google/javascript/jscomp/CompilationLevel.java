@@ -143,6 +143,8 @@ public enum CompilationLevel {
     // Do not call applySafeCompilationOptions(options) because the call can
     // create possible conflicts between multiple diagnostic groups.
 
+    options.setCheckTypes(true);
+
     // All the safe optimizations.
     options.dependencyOptions.setDependencySorting(true);
     options.setClosurePass(true);
@@ -202,7 +204,6 @@ public enum CompilationLevel {
   public void setTypeBasedOptimizationOptions(CompilerOptions options) {
     switch (this) {
       case ADVANCED_OPTIMIZATIONS:
-        options.inferTypes = true;
         options.setDisambiguateProperties(true);
         options.setAmbiguateProperties(true);
         options.setInlineProperties(true);

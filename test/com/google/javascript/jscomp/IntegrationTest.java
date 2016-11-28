@@ -2600,8 +2600,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testIssue724() {
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setCheckTypes(false);
     String code =
         "isFunction = function(functionToCheck) {" +
         "  var getType = {};" +
@@ -2702,6 +2702,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         .setOptionsForCompilationLevel(options);
     options.setRenamingPolicy(
         VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
+    options.setCheckTypes(false);
     test(options, source, expected);
   }
 
@@ -3166,8 +3167,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testNamelessParameter() {
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setCheckTypes(false);
     String code =
         "var impl_0;" +
         "$load($init());" +
@@ -3416,7 +3417,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInlineProperties() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
-    options.setCheckTypes(true);
     level.setOptionsForCompilationLevel(options);
     level.setTypeBasedOptimizationOptions(options);
 
