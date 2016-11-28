@@ -1132,11 +1132,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    this.msg = msg;",
             "  }",
             "}"),
-        CANNOT_CONVERT_YET);
+        CANNOT_CONVERT);
 
     testError(
         "class FooFunction extends Function {}",
-        CANNOT_CONVERT_YET);
+        CANNOT_CONVERT);
   }
 
   public void testExtendObject() {

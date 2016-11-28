@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
@@ -115,7 +115,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       } else if (isUnextendableNativeClass(t, superClassQName)) {
         compiler.report(
             JSError.make(
-                constructor, CANNOT_CONVERT_YET, "extending native class: " + superClassQName));
+                constructor, CANNOT_CONVERT, "extending native class: " + superClassQName));
       } else if (isNativeErrorClass(t, superClassQName)) {
         for (Node superCall : superCalls) {
           Node newSuperCall = createNewSuperCall(superClassQName, superCall);
