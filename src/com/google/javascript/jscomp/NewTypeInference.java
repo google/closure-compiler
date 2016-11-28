@@ -1160,9 +1160,9 @@ final class NewTypeInference implements CompilerPass {
 
     if (declRetType != null) {
       builder.addRetType(declRetType);
-      if (!isAllowedToNotReturn(fn) &&
-          !UNDEFINED.isSubtypeOf(declRetType) &&
-          hasPathWithNoReturn(this.cfg)) {
+      if (!isAllowedToNotReturn(fn)
+          && !UNDEFINED.isSubtypeOf(declRetType)
+          && hasPathWithNoReturn(this.cfg)) {
         warnings.add(JSError.make(
             fnRoot, MISSING_RETURN_STATEMENT, declRetType.toString()));
       }
@@ -1241,6 +1241,9 @@ final class NewTypeInference implements CompilerPass {
     }
     if (!NodeUtil.isPrototypeMethod(fn)) {
       return false;
+    }
+    if (methodScope.getDeclaredFunctionType().isAbstract()) {
+      return true;
     }
     JSType maybeInterface;
     Node ntQnameNode = NodeUtil.getPrototypeClassName(fn.getParent().getFirstChild());

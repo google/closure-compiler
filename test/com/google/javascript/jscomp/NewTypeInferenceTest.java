@@ -18294,6 +18294,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @constructor @abstract @implements{I} */",
         "function C() {}"),
         GlobalTypeInfo.INTERFACE_METHOD_NOT_IMPLEMENTED);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor @abstract */",
+        "function Foo() {}",
+        "/** @abstract @return {number} */",
+        "Foo.prototype.bar = function(x) {};"));
   }
 
   public void testAbstractMethodCalls() {
