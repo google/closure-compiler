@@ -302,7 +302,10 @@ public abstract class JSType implements TypeI, Serializable {
     // Check if this is a union that contains an array
     if (this.isUnionType()) {
       JSType arrayType = registry.getNativeType(JSTypeNative.ARRAY_TYPE);
-      for (JSType alternate : this.toMaybeUnionType().getAlternates()) {
+      // use an indexed loop to avoid allocations
+      ImmutableList<JSType> alternatesList = this.toMaybeUnionType().getAlternatesList();
+      for (int i = 0; i < alternatesList.size(); i++) {
+        JSType alternate = alternatesList.get(i);
         if (alternate.isSubtype(arrayType)) {
           return true;
         }
@@ -1136,7 +1139,9 @@ public abstract class JSType implements TypeI, Serializable {
       if (needsFiltering) {
         UnionTypeBuilder builder = new UnionTypeBuilder(type.registry);
         builder.addAlternate(type.getNativeType(JSTypeNative.NO_RESOLVED_TYPE));
-        for (JSType alt : unionType.getAlternates()) {
+        ImmutableList<JSType> alternatesList = unionType.getAlternatesList();
+        for (int i = 0; i < alternatesList.size(); i++) {
+          JSType alt = alternatesList.get(i);
           if (!alt.isNoResolvedType()) {
             builder.addAlternate(alt);
           }
@@ -1406,7 +1411,11 @@ public abstract class JSType implements TypeI, Serializable {
     // unions
     if (thatType.isUnionType()) {
       UnionType union = thatType.toMaybeUnionType();
-      for (JSType element : union.alternatesWithoutStucturalTyping) {
+      // use an indexed for-loop to avoid allocations
+      ImmutableList<JSType> alternatesWithoutStucturalTyping =
+          union.alternatesWithoutStucturalTyping;
+      for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
+        JSType element = alternatesWithoutStucturalTyping.get(i);
         if (thisType.isSubtype(element, implicitImplCache, subtypingMode)) {
           return true;
         }
