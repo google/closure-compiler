@@ -74,22 +74,24 @@ public final class LightweightMessageFormatterTest extends TestCase {
 
   public void testFormatErrorSpaces() throws Exception {
     Node n = Node.newString("foobar", 5, 8);
+    n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("    if (foobar) {");
     assertEquals("javascript/complex.js:5: ERROR - error description here\n" +
         "    if (foobar) {\n" +
-        "        ^\n", formatter.formatError(error));
+        "        ^^^^^^\n", formatter.formatError(error));
   }
 
   public void testFormatErrorTabs() throws Exception {
     Node n = Node.newString("foobar", 5, 6);
+    n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("\t\tif (foobar) {");
     assertEquals("javascript/complex.js:5: ERROR - error description here\n" +
         "\t\tif (foobar) {\n" +
-        "\t\t    ^\n", formatter.formatError(error));
+        "\t\t    ^^^^^^\n", formatter.formatError(error));
   }
 
   public void testFormatErrorSpaceEndOfLine1() throws Exception {
@@ -112,6 +114,7 @@ public final class LightweightMessageFormatterTest extends TestCase {
 
   public void testFormatErrorOriginalSource() throws Exception {
     Node n = Node.newString("foobar", 5, 8);
+    n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter =
@@ -121,7 +124,7 @@ public final class LightweightMessageFormatterTest extends TestCase {
         "Originally at:\n" +
         "original/source.html:3: ERROR - error description here\n" +
         "<div ng-show='(foo'>\n" +
-        "               ^\n",
+        "               ^^^^^\n",
         formatter.formatError(error));
   }
 

@@ -110,10 +110,9 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
       b.append('\n');
 
       // padding equal to the excerpt and arrow at the end
-      // charno == sourceExpert.length() means something is missing
+      // charno == sourceExcerpt.length() means something is missing
       // at the end of the line
-      if (excerpt.equals(LINE)
-          && 0 <= charno && charno <= sourceExcerpt.length()) {
+      if (excerpt.equals(LINE) && 0 <= charno && charno <= sourceExcerpt.length()) {
         for (int i = 0; i < charno; i++) {
           char c = sourceExcerpt.charAt(i);
           if (TokenUtil.isWhitespace(c)) {
@@ -122,7 +121,16 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
             b.append(' ');
           }
         }
-        b.append("^\n");
+        if (error.node == null) {
+          b.append("^");
+        } else {
+          int length =
+              Math.max(1, Math.min(error.node.getLength(), sourceExcerpt.length() - charno));
+          for (int i = 0; i < length; i++) {
+            b.append("^");
+          }
+        }
+        b.append("\n");
       }
     }
     return b.toString();
