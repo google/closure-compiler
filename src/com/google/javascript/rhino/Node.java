@@ -884,7 +884,7 @@ public class Node implements Serializable {
     Preconditions.checkState(child.parent == this);
 
     // Copy over important information.
-    newChild.useSourceInfoWithoutLengthIfMissingFrom(child);
+    newChild.useSourceInfoIfMissingFrom(child);
     newChild.parent = this;
 
     Node nextSibling = child.next;
