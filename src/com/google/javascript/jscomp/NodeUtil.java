@@ -3388,7 +3388,7 @@ public final class NodeUtil {
   @Deprecated
   static void setDebugInformation(Node node, Node basisNode,
                                   String originalName) {
-    node.copyInformationFromForTree(basisNode);
+    node.useSourceInfoWithoutLengthIfMissingFromForTree(basisNode);
     node.setOriginalName(originalName);
   }
 

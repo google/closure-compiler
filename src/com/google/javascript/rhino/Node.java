@@ -884,7 +884,7 @@ public class Node implements Serializable {
     Preconditions.checkState(child.parent == this);
 
     // Copy over important information.
-    newChild.copyInformationFrom(child);
+    newChild.useSourceInfoWithoutLengthIfMissingFrom(child);
     newChild.parent = this;
 
     Node nextSibling = child.next;
@@ -2218,7 +2218,7 @@ public class Node implements Serializable {
    */
   // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
   @Deprecated
-  public Node copyInformationFrom(Node other) {
+  public Node useSourceInfoWithoutLengthIfMissingFrom(Node other) {
     if (getProp(ORIGINALNAME_PROP) == null) {
       putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
@@ -2238,10 +2238,10 @@ public class Node implements Serializable {
    */
   // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
   @Deprecated
-  public Node copyInformationFromForTree(Node other) {
-    copyInformationFrom(other);
+  public Node useSourceInfoWithoutLengthIfMissingFromForTree(Node other) {
+    useSourceInfoWithoutLengthIfMissingFrom(other);
     for (Node child = first; child != null; child = child.next) {
-      child.copyInformationFromForTree(other);
+      child.useSourceInfoWithoutLengthIfMissingFromForTree(other);
     }
 
     return this;
