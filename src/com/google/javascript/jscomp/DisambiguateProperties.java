@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
@@ -131,9 +130,9 @@ class DisambiguateProperties implements CompilerPass {
    */
   private final Map<String, CheckLevel> propertiesToErrorFor;
 
-  // FunctionType#getImplementedInterfaces() is slow, so we use this cache
-  // to call it just once per constructor.
-  private Map<FunctionType, Iterable<ObjectType>> implementedInterfaces;
+  // Use this cache to call FunctionType#getImplementedInterfaces
+  // or FunctionType#getExtendedInterfaces only once per constructor.
+  private Map<FunctionType, Iterable<ObjectType>> ancestorInterfaces;
 
   // Cache calls to getTypeWithProperty.
   private Map<String, IdentityHashMap<JSType, ObjectType>> gtwpCache;
@@ -350,7 +349,7 @@ class DisambiguateProperties implements CompilerPass {
   public void process(Node externs, Node root) {
     Preconditions.checkState(
         compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
-    this.implementedInterfaces = new HashMap<>();
+    this.ancestorInterfaces = new HashMap<>();
     this.gtwpCache = new HashMap<>();
     // TypeValidator records places where a type A is used in a context that
     // expects a type B.
@@ -892,8 +891,7 @@ class DisambiguateProperties implements CompilerPass {
    * field or null if it is not found anywhere.
    * Can return a subtype of the input type.
    */
-  @VisibleForTesting
-  ObjectType getTypeWithProperty(String field, JSType type) {
+  private ObjectType getTypeWithProperty(String field, JSType type) {
     if (type == null) {
       return null;
     }
@@ -989,7 +987,7 @@ class DisambiguateProperties implements CompilerPass {
 
   /**
    * Records that this property could be referenced from any interface that
-   * this type, or any type in its superclass chain, implements.
+   * this type inherits from.
    *
    * If the property p is defined only on a subtype of constructor, then this
    * method has no effect. But we tried modifying getTypeWithProperty to tell us
@@ -997,13 +995,12 @@ class DisambiguateProperties implements CompilerPass {
    * recordInterface, and there was no speed-up.
    * And it made the code harder to understand, so we don't do it.
    */
-  private void recordInterfaces(FunctionType constructor, JSType relatedType,
-      DisambiguateProperties.Property p) {
-    Preconditions.checkArgument(constructor.isConstructor());
-    Iterable<ObjectType> interfaces = implementedInterfaces.get(constructor);
+  private void recordInterfaces(FunctionType constructor, JSType relatedType, Property p) {
+    Iterable<ObjectType> interfaces = ancestorInterfaces.get(constructor);
     if (interfaces == null) {
-      interfaces = constructor.getImplementedInterfaces();
-      implementedInterfaces.put(constructor, interfaces);
+      interfaces = constructor.isConstructor()
+          ? constructor.getImplementedInterfaces() : constructor.getExtendedInterfaces();
+      ancestorInterfaces.put(constructor, interfaces);
     }
     for (ObjectType itype : interfaces) {
       JSType top = getTypeWithProperty(p.name, itype);
@@ -1030,7 +1027,6 @@ class DisambiguateProperties implements CompilerPass {
     } else {
       constructor = objType.getConstructor();
     }
-    return constructor != null && constructor.isConstructor()
-        ? constructor : null;
+    return constructor;
   }
 }
