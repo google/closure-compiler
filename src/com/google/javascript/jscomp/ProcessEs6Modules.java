@@ -210,7 +210,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     if (alreadyRequired.add(moduleName)) {
       Node require = IR.exprResult(
           IR.call(NodeUtil.newQName(compiler, "goog.require"), IR.string(moduleName)));
-      require.copyInformationFromForTree(importDecl);
+      require.useSourceInfoIfMissingFromForTree(importDecl);
       script.addChildAfter(require, googRequireInsertSpot);
       googRequireInsertSpot = require;
       t.getInput().addRequire(moduleName);
@@ -391,7 +391,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       Node googProvide = IR.exprResult(
           IR.call(NodeUtil.newQName(compiler, "goog.provide"),
               IR.string(moduleName)));
-      script.addChildToFront(googProvide.copyInformationFromForTree(script));
+      script.addChildToFront(googProvide.useSourceInfoIfMissingFromForTree(script));
       t.getInput().addProvide(moduleName);
     }
 
