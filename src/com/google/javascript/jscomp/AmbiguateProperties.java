@@ -35,7 +35,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
@@ -144,11 +143,6 @@ class AmbiguateProperties implements CompilerPass {
         r.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE)));
 
     for (TypeMismatch mis : compiler.getTypeMismatches()) {
-      addInvalidatingType(mis.typeA);
-      addInvalidatingType(mis.typeB);
-    }
-
-    for (TypeMismatch mis : compiler.getImplicitInterfaceUses()) {
       addInvalidatingType(mis.typeA);
       addInvalidatingType(mis.typeB);
     }

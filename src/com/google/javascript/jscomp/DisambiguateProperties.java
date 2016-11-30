@@ -359,10 +359,6 @@ class DisambiguateProperties implements CompilerPass {
       recordInvalidatingType(mis.typeA, mis.src);
       recordInvalidatingType(mis.typeB, mis.src);
     }
-    for (TypeMismatch mis : compiler.getImplicitInterfaceUses()) {
-      recordInvalidatingType(mis.typeA, mis.src);
-      recordInvalidatingType(mis.typeB, mis.src);
-    }
     // Gather names of properties in externs; these properties can't be renamed.
     NodeTraversal.traverseEs6(compiler, externs, new FindExternProperties());
     // Look at each unquoted property access and decide if that property will

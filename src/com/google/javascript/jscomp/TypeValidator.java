@@ -75,9 +75,6 @@ class TypeValidator {
   // mismatches. For example, if we pass (Cake|null) where only Cake is
   // allowed, that doesn't mean we should invalidate all Cakes.
   private final List<TypeMismatch> mismatches = new ArrayList<>();
-  // the detection logic of this one is similar to this.mismatches
-  private final List<TypeMismatch> implicitStructuralInterfaceUses =
-      new ArrayList<>();
 
   // User warnings
   private static final String FOUND_REQUIRED =
@@ -200,15 +197,6 @@ class TypeValidator {
 
   void setSubtypingMode(SubtypingMode mode) {
     this.subtypingMode = mode;
-  }
-
-  /**
-   * all uses of implicitly implemented structural interfaces,
-   * captured during type validation and type checking
-   * (uses of explicitly @implemented structural interfaces are excluded)
-   */
-  public Iterable<TypeMismatch> getImplicitStructuralInterfaceUses() {
-    return implicitStructuralInterfaceUses;
   }
 
   // All non-private methods should have the form:
@@ -366,7 +354,7 @@ class TypeValidator {
         && (caseType.autoboxesTo() == null
         || !caseType.autoboxesTo()
         .isSubtypeWithoutStructuralTyping(switchType))) {
-      recordStructuralInterfaceUses(caseType, switchType);
+      recordImplicitInterfaceUses(caseType, switchType);
     }
   }
 
@@ -445,7 +433,7 @@ class TypeValidator {
       return false;
     } else if (!leftType.isNoType()
         && !rightType.isSubtypeWithoutStructuralTyping(leftType)){
-      recordStructuralInterfaceUses(rightType, leftType);
+      recordImplicitInterfaceUses(rightType, leftType);
     }
     return true;
   }
@@ -467,7 +455,7 @@ class TypeValidator {
       mismatch(t, n, msg, rightType, leftType);
       return false;
     } else if (!rightType.isSubtypeWithoutStructuralTyping(leftType)) {
-      recordStructuralInterfaceUses(rightType, leftType);
+      recordImplicitInterfaceUses(rightType, leftType);
     }
     return true;
   }
@@ -492,7 +480,7 @@ class TypeValidator {
               typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())),
           argType, paramType);
     } else if (!argType.isSubtypeWithoutStructuralTyping(paramType)){
-      recordStructuralInterfaceUses(argType, paramType);
+      recordImplicitInterfaceUses(argType, paramType);
     }
   }
 
@@ -538,15 +526,15 @@ class TypeValidator {
    *
    * @param t The node traversal.
    * @param n The node where warnings should point.
-   * @param type The type being cast from.
-   * @param castType The type being cast to.
+   * @param targetType The type being cast to.
+   * @param sourceType The type being cast from.
    */
-  void expectCanCast(NodeTraversal t, Node n, JSType castType, JSType type) {
-    if (!type.canCastTo(castType)) {
-      registerMismatch(type, castType, report(t.makeError(n, INVALID_CAST,
-          type.toString(), castType.toString())));
-    } else if (!type.isSubtypeWithoutStructuralTyping(castType)){
-      recordStructuralInterfaceUses(type, castType);
+  void expectCanCast(NodeTraversal t, Node n, JSType targetType, JSType sourceType) {
+    if (!sourceType.canCastTo(targetType)) {
+      registerMismatch(sourceType, targetType, report(t.makeError(n, INVALID_CAST,
+          sourceType.toString(), targetType.toString())));
+    } else if (!sourceType.isSubtypeWithoutStructuralTyping(targetType)){
+      recordImplicitInterfaceUses(sourceType, targetType);
     }
   }
 
@@ -773,13 +761,15 @@ class TypeValidator {
     }
   }
 
-  private void recordStructuralInterfaceUses(JSType found, JSType required) {
+  private void recordImplicitInterfaceUses(JSType found, JSType required) {
+    found = found.restrictByNotNullOrUndefined();
+    required = required.restrictByNotNullOrUndefined();
     boolean strictMismatch =
         !found.isSubtypeWithoutStructuralTyping(required)
         && !required.isSubtypeWithoutStructuralTyping(found);
     boolean mismatch = !found.isSubtype(required) && !required.isSubtype(found);
-    if (strictMismatch && !mismatch) {
-      implicitStructuralInterfaceUses.add(new TypeMismatch(found, required, null));
+    if (strictMismatch || mismatch) {
+      mismatches.add(new TypeMismatch(found, required, null));
     }
   }
 
@@ -794,7 +784,7 @@ class TypeValidator {
         !found.isSubtypeWithoutStructuralTyping(required)
         && !required.isSubtypeWithoutStructuralTyping(found);
       if (strictMismatch) {
-        implicitStructuralInterfaceUses.add(new TypeMismatch(found, required, error));
+        mismatches.add(new TypeMismatch(found, required, error));
       }
       return;
     }
