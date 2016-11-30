@@ -345,6 +345,7 @@ public class ErrorToFixMapperTest {
   public void testSortRequiresInGoogModule_standalone() {
     assertChanges(
         LINE_JOINER.join(
+            "/** @fileoverview @suppress {strictModuleChecks} */",
             "goog.module('m');",
             "",
             "goog.require('a.c');",
@@ -355,6 +356,7 @@ public class ErrorToFixMapperTest {
             "alert(a.b.d());",
             "alert(a.b.c());"),
         LINE_JOINER.join(
+            "/** @fileoverview @suppress {strictModuleChecks} */",
             "goog.module('m');",
             "",
             "goog.require('a.b.c');",
@@ -610,6 +612,54 @@ public class ErrorToFixMapperTest {
             "var x;",
             "",
             "class Cat extends Animal {}"));
+  }
+
+  @Test
+  public void testAddLhsToGoogRequire() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "goog.require('world.util.Animal');",
+            "",
+            "class Cat extends world.util.Animal {}"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const Animal = goog.require('world.util.Animal');",
+            "",
+            "class Cat extends Animal {}"));
+  }
+
+  @Test
+  public void testAddLhsToGoogRequire_new() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "goog.require('world.util.Animal');",
+            "",
+            "let cat = new world.util.Animal();"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const Animal = goog.require('world.util.Animal');",
+            "",
+            "let cat = new Animal();"));
+  }
+
+  @Test
+  public void testAddLhsToGoogRequire_jsdoc() {
+    // TODO(tbreisacher): Add "const Animal = " before the goog.require and change
+    // world.util.Animal to Animal
+    assertNoChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "goog.require('world.util.Animal');",
+            "",
+            "/** @type {world.util.Animal} */",
+            "var cat;"));
   }
 
   @Test

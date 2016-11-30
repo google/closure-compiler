@@ -31,12 +31,10 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
 
@@ -544,6 +542,13 @@ public final class SuggestedFix {
       int lengthOfArgumentToRemove = endOfArgumentToRemove - startOfArgumentToRemove;
       replacements.put(n.getSourceFileName(),
           new CodeReplacement(startOfArgumentToRemove, lengthOfArgumentToRemove, ""));
+      return this;
+    }
+
+    public Builder addLhsToGoogRequire(Match m, String namespace) {
+      Node existingNode = findGoogRequireNode(m.getNode(), m.getMetadata(), namespace);
+      String shortName = namespace.substring(namespace.lastIndexOf('.') + 1);
+      insertBefore(existingNode, "const " + shortName + " = ");
       return this;
     }
 
