@@ -3286,6 +3286,8 @@ public final class NodeUtil {
     String nodeName = name.substring(0, endPos);
     if ("this".equals(nodeName)) {
       node = IR.thisNode();
+    } else if ("super".equals(nodeName)) {
+      node = IR.superNode();
     } else {
       node = newName(compiler, nodeName);
     }

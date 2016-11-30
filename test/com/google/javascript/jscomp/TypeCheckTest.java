@@ -33,6 +33,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -4019,7 +4020,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "  }",
             "}"),
         LINE_JOINER.join(
-            "actual parameter 1 of function does not match formal parameter",
+            "actual parameter 1 of super does not match formal parameter",
             "found   : number",
             "required: string"));
   }

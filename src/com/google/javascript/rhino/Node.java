@@ -1971,6 +1971,7 @@ public class Node implements Serializable {
       case NAME:
         return !getString().isEmpty();
       case THIS:
+      case SUPER:
         return true;
       case GETPROP:
         return getFirstChild().isQualifiedName();
