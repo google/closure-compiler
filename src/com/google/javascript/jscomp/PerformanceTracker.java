@@ -376,6 +376,7 @@ public final class PerformanceTracker {
       this.output.print(SimpleFormat.format("%s,%d,%d,%d,%d,%d,%d,%d\n", key, stats.runtime,
             stats.allocMem, stats.runs, stats.changes, stats.astDiff, stats.diff, stats.gzDiff));
     }
+    this.output.print("\n");
 
     this.output.print(Joiner.on("\n").join(
         "Log:",
