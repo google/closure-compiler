@@ -42,10 +42,6 @@ public class ClosureBundler {
   // via just a path (and not the file contents).
   private final Map<String, String> sourceMapCache = new ConcurrentHashMap<>();
 
-  // TODO(sdh): This causes serious problems with edit-refresh if the bundler
-  // is used in the wrong scope.  The logic must be moved outside this class.
-  private boolean shouldSendRuntime = true;
-
   public ClosureBundler() {
     this(Transpiler.NULL);
   }
@@ -98,19 +94,17 @@ public class ClosureBundler {
       Appendable out,
       DependencyInfo info,
       CharSource content) throws IOException {
-    // TODO(sdh): Move this logic into the bundle manager.
-    if (shouldSendRuntime) {
-      String runtime = transpiler.runtime();
-      if (!runtime.isEmpty()) {
-        mode.appendTraditional(runtime, out, null);
-      }
-      shouldSendRuntime = false;
-    }
-
     if (info.isModule()) {
       mode.appendGoogModule(transpile(content.read()), out, sourceUrl);
     } else {
       mode.appendTraditional(transpile(content.read()), out, sourceUrl);
+    }
+  }
+
+  public void appendRuntimeTo(Appendable out) throws IOException {
+    String runtime = transpiler.runtime();
+    if (!runtime.isEmpty()) {
+      mode.appendTraditional(runtime, out, null);
     }
   }
 

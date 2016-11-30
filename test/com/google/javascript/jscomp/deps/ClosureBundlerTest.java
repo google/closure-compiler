@@ -117,12 +117,13 @@ public final class ClosureBundlerTest extends TestCase {
 
     ClosureBundler bundler = new ClosureBundler(transpiler).withPath("foo.js");
     StringBuilder sb = new StringBuilder();
+    bundler.appendRuntimeTo(sb);
     bundler.appendTo(sb, MODULE, input);
     assertThat(sb.toString())
         .isEqualTo("RUNTIME;goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
             + ";return exports;});\n");
 
-    // Second call doesn't include runtime anymore.
+    // Without calling appendRuntimeTo(), the runtime is not included anymore.
     sb = new StringBuilder();
     bundler.appendTo(sb, MODULE, input);
     assertThat(sb.toString())
