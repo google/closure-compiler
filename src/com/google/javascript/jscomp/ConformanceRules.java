@@ -38,6 +38,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
 import javax.annotation.Nullable;
 
 /**
@@ -220,10 +222,12 @@ public final class ConformanceRules {
   }
 
 
+
+
   abstract static class AbstractTypeRestrictionRule extends AbstractRule {
     private final TypeI nativeObjectType;
     private final TypeI whitelistedTypes;
-    private final ImmutableList<AssertionFunctionSpec> assertions;
+    private final ImmutableList<Node> assertionsFunctionNames;
 
 
     public AbstractTypeRestrictionRule(AbstractCompiler compiler, Requirement requirement)
@@ -232,7 +236,12 @@ public final class ConformanceRules {
       nativeObjectType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
       List<String> whitelistedTypeNames = requirement.getValueList();
       whitelistedTypes = union(whitelistedTypeNames);
-      assertions = ImmutableList.copyOf(compiler.getCodingConvention().getAssertionFunctions());
+
+      ImmutableList.Builder<Node> builder = ImmutableList.builder();
+      for (AssertionFunctionSpec fn : compiler.getCodingConvention().getAssertionFunctions()) {
+        builder.add(NodeUtil.newQName(compiler, fn.getFunctionName()));
+      }
+      assertionsFunctionNames = builder.build();
     }
 
     protected boolean isWhitelistedType(Node n) {
@@ -301,8 +310,8 @@ public final class ConformanceRules {
     protected boolean isAssertionCall(Node n) {
       if (n.isCall() && n.getFirstChild().isQualifiedName()) {
         Node target = n.getFirstChild();
-        for (int i = 0; i < assertions.size(); i++) {
-          if (target.matchesQualifiedName(assertions.get(i).getFunctionName())) {
+        for (int i = 0; i < assertionsFunctionNames.size(); i++) {
+          if (target.matchesQualifiedName(assertionsFunctionNames.get(i))) {
             return true;
           }
         }
@@ -382,7 +391,7 @@ public final class ConformanceRules {
    * Banned name rule
    */
   static class BannedName extends AbstractRule {
-    private final List<String> names;
+    private final ImmutableList<Node> names;
 
     BannedName(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -390,26 +399,39 @@ public final class ConformanceRules {
       if (requirement.getValueCount() == 0) {
         throw new InvalidRequirementSpec("missing value");
       }
-      names = requirement.getValueList();
+      ImmutableList.Builder<Node> builder = ImmutableList.builder();
+      for (String name : requirement.getValueList()) {
+        builder.add(NodeUtil.newQName(compiler, name));
+      }
+      names = builder.build();
     }
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (n.isGetProp() || n.isName()) {
-        if (n.isQualifiedName()) {
-          for (int i = 0; i < names.size(); i++) {
-            String name = names.get(i);
-            if (n.matchesQualifiedName(name) && isRootOfQualifiedNameGlobal(t, n)) {
-              if (NodeUtil.isInSyntheticScript(n)) {
-                return ConformanceResult.CONFORMANCE;
-              } else {
-                return ConformanceResult.VIOLATION;
-              }
+      if (isCandidateNode(n)) {
+        for (int i = 0; i < names.size(); i++) {
+          Node nameNode = names.get(i);
+          if (n.matchesQualifiedName(nameNode) && isRootOfQualifiedNameGlobal(t, n)) {
+            if (NodeUtil.isInSyntheticScript(n)) {
+              return ConformanceResult.CONFORMANCE;
+            } else {
+              return ConformanceResult.VIOLATION;
             }
           }
         }
       }
       return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isCandidateNode(Node n) {
+      switch(n.getToken()) {
+        case GETPROP:
+          return n.getFirstChild().isQualifiedName();
+        case NAME:
+          return !n.getString().isEmpty();
+        default:
+          return false;
+      }
     }
 
     private static boolean isRootOfQualifiedNameGlobal(NodeTraversal t, Node n) {
@@ -664,10 +686,10 @@ public final class ConformanceRules {
    */
   static class RestrictedNameCall extends AbstractRule {
     private static class Restriction {
-      final String name;
+      final Node name;
       final FunctionTypeI restrictedCallType;
 
-      Restriction(String name, FunctionTypeI restrictedCallType) {
+      Restriction(Node name, FunctionTypeI restrictedCallType) {
         this.name = name;
         this.restrictedCallType = restrictedCallType;
       }
@@ -684,7 +706,7 @@ public final class ConformanceRules {
 
       ImmutableList.Builder <Restriction> builder = ImmutableList.builder();
       for (String value : requirement.getValueList()) {
-        String name = getNameFromValue(value);
+        Node name = NodeUtil.newQName(compiler, getNameFromValue(value));
         String restrictedDecl = getTypeFromValue(value);
         if (name == null || restrictedDecl == null) {
           throw new InvalidRequirementSpec("bad prop value");
@@ -1222,28 +1244,29 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      // TODO(tbreisacher): Figure out how to remove this restriction.
-      String filename = n.getSourceFileName();
-      if (filename != null
-          && (filename.contains("synthetic:es6/weakmap")
-              || filename.contains("synthetic:es6/weakset")
-              || filename.contains("synthetic:runtime_type_check"))) {
-        return ConformanceResult.CONFORMANCE;
-      }
-
       if (n.isGetProp()
           && isSomeUnknownType(n)
           && isUsed(n) // skip most assignments, etc
           && !isTypeImmediatelyTightened(n)
           && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown
           && !isTypeVariable(n)
-          && !isDeclaredUnknown(n)) {
+          && !isDeclaredUnknown(n)
+          && !isInWhitelistedSyntheticFile(n)) {
         String propName = n.getLastChild().getString();
         String typeName = n.getFirstChild().getTypeI().toString();
         return new ConformanceResult(ConformanceLevel.VIOLATION,
             "The property \"" + propName + "\" on type \"" + typeName + "\"");
       }
       return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isInWhitelistedSyntheticFile(Node n) {
+      // TODO(tbreisacher): Figure out how to remove this restriction.
+      String filename = n.getSourceFileName();
+      return (filename != null
+          && (filename.contains("synthetic:es6/weakmap")
+              || filename.contains("synthetic:es6/weakset")
+              || filename.contains("synthetic:runtime_type_check")));
     }
 
     private boolean isCheckablePropertySource(Node n) {
