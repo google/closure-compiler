@@ -236,20 +236,16 @@ webkitIDBDatabaseException.prototype.message;
 function IDBRequest() {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
-IDBRequest.prototype.addEventListener =
-    function(type, listener, opt_useCapture) {};
+IDBRequest.prototype.addEventListener = function(type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
-IDBRequest.prototype.removeEventListener =
-    function(type, listener, opt_useCapture) {};
+IDBRequest.prototype.removeEventListener = function(type, listener, options) {};
 
 /**
  * @override
@@ -421,20 +417,17 @@ IDBDatabase.prototype.onerror = function() {};
 IDBDatabase.prototype.onversionchange = function() {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
-IDBDatabase.prototype.addEventListener =
-    function(type, listener, opt_useCapture) {};
+IDBDatabase.prototype.addEventListener = function(type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 IDBDatabase.prototype.removeEventListener =
-    function(type, listener, opt_useCapture) {};
+    function(type, listener, options) {};
 
 /**
  * @override

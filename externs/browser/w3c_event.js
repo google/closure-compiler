@@ -30,24 +30,20 @@
 function EventTarget() {}
 
 /**
- * TODO(tbreisacher): Change the type of useCapture to be
- * {boolean|!EventListenerOptions}, here and in removeEventListener.
- *
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
- * @param {boolean} useCapture
+ * @param {!AddEventListenerOptions|boolean} options
  * @return {undefined}
  */
-EventTarget.prototype.addEventListener = function(type, listener, useCapture)
-    {};
+EventTarget.prototype.addEventListener = function(type, listener, options) {};
 
 /**
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
- * @param {boolean} useCapture
+ * @param {!EventListenerOptions|boolean} options
  * @return {undefined}
  */
-EventTarget.prototype.removeEventListener = function(type, listener, useCapture)
+EventTarget.prototype.removeEventListener = function(type, listener, options)
     {};
 
 /**

@@ -484,20 +484,16 @@ FileError.prototype.code;
 function FileReader() {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
-FileReader.prototype.addEventListener = function(type, listener, opt_useCapture)
-    {};
+FileReader.prototype.addEventListener = function(type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
-FileReader.prototype.removeEventListener = function(type, listener,
-    opt_useCapture) {};
+FileReader.prototype.removeEventListener = function(type, listener, options) {};
 
 /**
  * @override
