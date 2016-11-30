@@ -25,7 +25,6 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Set;
 
 /**
@@ -54,22 +53,15 @@ public class NodeTraversal {
    * A stack of scope roots. All scopes that have not been created
    * are represented in this Deque.
    */
-  private final Deque<Node> scopeRoots = new ArrayDeque<>();
+  private final ArrayDeque<Node> scopeRoots = new ArrayDeque<>();
 
   /**
-   * Stack containing the control flow graphs (CFG) that have been created.
-   * There are fewer CFGs than scopes, since block-level scopes are not valid CFG roots.
-   * The CFG objects are lazily populated: elements are {@code null} until requested by
-   * {@link #getControlFlowGraph()}. Note that {@link ArrayDeque} does not allow
-   * {@code null} elements, so {@link LinkedList} is used instead.
+   * Stack containing the control flow graphs (CFG) that have been created. There are fewer CFGs
+   * than scopes, since block-level scopes are not valid CFG roots. The CFG objects are lazily
+   * populated: elements are simply the CFG root node until requested by {@link
+   * #getControlFlowGraph()}.
    */
-  private Deque<ControlFlowGraph<Node>> cfgs = new LinkedList<>();
-
-  /**
-   * A stack of scope roots that are valid cfg roots. All cfg roots that have not been created
-   * are represented in this Deque.
-   */
-  private final Deque<Node> cfgRoots = new ArrayDeque<>();
+  private final ArrayDeque<Object> cfgs = new ArrayDeque<>();
 
   /** The current source file name */
   private String sourceName;
@@ -750,8 +742,7 @@ public class NodeTraversal {
   private void recordScopeRoot(Node node) {
     compiler.setScope(node);
     if (NodeUtil.isValidCfgRoot(node)) {
-      cfgRoots.push(node);
-      cfgs.push(null);
+      cfgs.push(node);
     }
   }
 
@@ -803,8 +794,6 @@ public class NodeTraversal {
       scopeRoot = scopeRoots.pop();
     }
     if (NodeUtil.isValidCfgRoot(scopeRoot)) {
-      Preconditions.checkState(!cfgRoots.isEmpty());
-      Preconditions.checkState(cfgRoots.pop() == scopeRoot);
       cfgs.pop();
     }
     if (hasScope()) {
@@ -845,13 +834,19 @@ public class NodeTraversal {
 
   /** Gets the control flow graph for the current JS scope. */
   public ControlFlowGraph<Node> getControlFlowGraph() {
-    if (cfgs.peek() == null) {
+    ControlFlowGraph<Node> result;
+    Object o = cfgs.peek();
+    if (o instanceof Node) {
+      Node cfgRoot = (Node) o;
       ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-      cfa.process(null, getCfgRoot());
+      cfa.process(null, cfgRoot);
+      result = cfa.getCfg();
       cfgs.pop();
-      cfgs.push(cfa.getCfg());
+      cfgs.push(result);
+    } else {
+      result = (ControlFlowGraph<Node>) o;
     }
-    return cfgs.peek();
+    return result;
   }
 
   /** Returns the current scope's root. */
@@ -864,7 +859,14 @@ public class NodeTraversal {
   }
 
   private Node getCfgRoot() {
-    return cfgRoots.peek();
+    Node result;
+    Object o = cfgs.peek();
+    if (o instanceof Node) {
+      result = (Node) o;
+    } else {
+      result = ((ControlFlowGraph<Node>) o).getEntry().getValue();
+    }
+    return result;
   }
 
   /**
