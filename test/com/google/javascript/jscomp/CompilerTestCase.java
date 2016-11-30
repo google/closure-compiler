@@ -1470,7 +1470,7 @@ public abstract class CompilerTestCase extends TestCase {
                   + "\n" + explanation);
             }
           }
-        } else if (expected != null) {
+        } else {
           String[] expectedSources = new String[expected.size()];
           for (int i = 0; i < expected.size(); ++i) {
             try {
