@@ -742,7 +742,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * stack.
    */
   <T> T runInCompilerThread(Callable<T> callable) {
-    return compilerExecutor.runInCompilerThread(callable, options != null && options.tracer.isOn());
+    return compilerExecutor.runInCompilerThread(
+        callable, options != null && options.getTracerMode().isOn());
   }
 
   private void compileInternal() {
@@ -1036,7 +1037,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   Tracer newTracer(String passName) {
     String comment = passName
         + (recentChange.hasCodeChanged() ? " on recently changed AST" : "");
-    if (options.tracer.isOn() && tracker != null) {
+    if (options.getTracerMode().isOn() && tracker != null) {
       tracker.recordPassStart(passName, true);
     }
     return new Tracer("Compiler", comment);
@@ -1044,7 +1045,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   void stopTracer(Tracer t, String passName) {
     long result = t.stop();
-    if (options.tracer.isOn() && tracker != null) {
+    if (options.getTracerMode().isOn() && tracker != null) {
       tracker.recordPassStop(passName, result);
     }
   }
@@ -1460,8 +1461,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externsRoot.detachChildren();
     jsRoot.detachChildren();
 
-    if (options.tracer.isOn()) {
-      tracker = new PerformanceTracker(externsRoot, jsRoot, options.tracer, this.outStream);
+    if (options.getTracerMode().isOn()) {
+      tracker =
+          new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), this.outStream);
       addChangeHandler(tracker.getCodeChangeHandler());
     }
 

@@ -930,7 +930,7 @@ public class CompilerOptions {
     this.reportPath = reportPath;
   }
 
-  TracerMode tracer;
+  private TracerMode tracer;
 
   public TracerMode getTracerMode() {
     return tracer;
