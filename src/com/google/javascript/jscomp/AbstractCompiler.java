@@ -180,7 +180,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   /**
    * Gets all types that are used implicitly as a
-   * matching structural interface type. These are
+   * matching interface type. These are
    * recorded as TypeMismatchs only for convenience
    */
   abstract Iterable<TypeMismatch> getImplicitInterfaceUses();

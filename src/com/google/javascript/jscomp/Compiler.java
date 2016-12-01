@@ -1421,7 +1421,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Iterable<TypeMismatch> getImplicitInterfaceUses() {
-    return getTypeValidator().getImplicitStructuralInterfaceUses();
+    return getTypeValidator().getImplicitInterfaceUses();
   }
 
   @Override
