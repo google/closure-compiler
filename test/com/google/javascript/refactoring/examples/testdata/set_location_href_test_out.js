@@ -19,6 +19,7 @@
 goog.provide('refactoring_testcase');
 
 goog.require('goog.dom.safe');
+/** @suppress {extraRequire} */
 goog.require('test_dependency');
 
 /**

@@ -92,7 +92,7 @@ public final class RefactoringDriver {
   @VisibleForTesting
   public static CompilerOptions getCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setSummaryDetailLevel(0);
 
@@ -110,7 +110,9 @@ public final class RefactoringDriver {
     options.setGenerateExports(true);
     options.setPreserveGoogProvidesAndRequires(true);
 
-    options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
 
     return options;
   }

@@ -18,6 +18,7 @@
 
 goog.provide('refactoring_testcase');
 
+/** @suppress {extraRequire} */
 goog.require('test_dependency');
 
 /**
