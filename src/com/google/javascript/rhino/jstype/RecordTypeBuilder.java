@@ -72,8 +72,7 @@ public class RecordTypeBuilder {
    * @param propertyNode the node that holds this property definition
    * @return The builder itself for chaining purposes.
    */
-  public RecordTypeBuilder addProperty(String name, JSType type, Node
-      propertyNode) {
+  public RecordTypeBuilder addProperty(String name, JSType type, Node propertyNode) {
     isEmpty = false;
     properties.put(name, new RecordProperty(type, propertyNode));
     return this;

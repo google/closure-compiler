@@ -45,9 +45,11 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -119,6 +121,11 @@ public class UnionTypeBuilder implements Serializable {
     }
     // This copy should be pretty cheap since in the common case alternates only contains 2-3 items
     return ImmutableList.copyOf(alternates);
+  }
+
+  @VisibleForTesting
+  int getAlternatesCount() {
+    return alternates.size();
   }
 
   private boolean isSubtype(
