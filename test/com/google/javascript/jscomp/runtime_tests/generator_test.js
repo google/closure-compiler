@@ -359,7 +359,7 @@ function testArguments() {
 function testArguments2() {
   var yieldArguments = function*() {
     yield arguments[0];
-  }
+  };
   compareToExpected(yieldArguments, [1729], 1729);
 }
 
@@ -505,7 +505,7 @@ function testShortCircuiting_ternary() {
 
 function testShortCircuiting_nested() {
   function *nested() {
-    (yield 1) || (yield 2) && (yield 3)
+    (yield 1) || (yield 2) && (yield 3);
   }
 
   var iter = nested();
@@ -553,10 +553,10 @@ function testGeneratorNested() {
 
 function testYieldInput() {
   function *stringBuilder() {
-    var message = ""
+    var message = "";
     while (true) {
       var letter = yield;
-      message += letter
+      message += letter;
       if (letter == '\n') {
         break;
       }
@@ -569,7 +569,7 @@ function testYieldInput() {
   builder.next();
 
   for (var i = 0; i < 5; i++) {
-    builder.next('i' + i)
+    builder.next('i' + i);
   }
   assertEquals("i0i1i2i3i4\n", builder.next('\n').value);
 }
@@ -641,7 +641,7 @@ function testGeneratorYieldLoopGuardIncr() {
   assertTrue(iter.next(false).done);
 
   function *h() {
-    do {} while (yield 1)
+    do {} while (yield 1);
   }
 
   iter = h();
@@ -756,7 +756,7 @@ var NumberCounter = class {
       yield i;
     }
   }
-}
+};
 
 function testGeneratorMethodThis() {
   var counter = new NumberCounter(5);
@@ -796,17 +796,17 @@ function testTryCatchSimpleYield() {
   }
   function *emptyCatch() {
     try {
-      throw 1
+      throw 1;
     } catch (e) {}
     yield 1;
   }
   function *tryInCatch() {
     try {
-      throw 1
+      throw 1;
     } catch (e) {
       try {
         yield e;
-        throw 2
+        throw 2;
       } catch(e2) {
         yield e2;
       }

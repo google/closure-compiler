@@ -16,8 +16,8 @@
 
 goog.module('es6.class.test');
 
-var testSuite = goog.require('goog.testing.testSuite');
 var Example = goog.require('jscomp.runtime_tests.Example');
+var testSuite = goog.require('goog.testing.testSuite');
 
 var MyClass = class {
   /** @return {!Example<!MyClass>} */

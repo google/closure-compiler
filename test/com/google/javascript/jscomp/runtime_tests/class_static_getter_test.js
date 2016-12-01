@@ -20,13 +20,13 @@ var i = 0;
 
 var Base = class {
   static get foo() { i++; return 'base'; }
-}
+};
 
-var Sub1 = class extends Base {}
+var Sub1 = class extends Base {};
 
 var Sub2 = class extends Base {
   static get foo() { return 'sub2'; }
-}
+};
 
 function testInheritedGetter() {
   assertEquals(0, i);

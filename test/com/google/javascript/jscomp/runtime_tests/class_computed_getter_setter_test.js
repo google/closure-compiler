@@ -41,7 +41,7 @@ const SettableCounter = class {
   set [value](val) {
     this.x = val;
   }
-}
+};
 
 function testSetter() {
   let s = new SettableCounter();

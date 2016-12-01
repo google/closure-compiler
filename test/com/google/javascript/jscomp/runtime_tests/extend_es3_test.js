@@ -34,7 +34,7 @@ var SixUnrestricted = class extends ThreeUnrestricted {
     assertEquals('three', this.name);
     this.name = 'six';
   }
-}
+};
 
 function testUnrestricted() {
   var s = new SixUnrestricted();
@@ -54,7 +54,7 @@ var SixStruct = class extends ThreeStruct {
     assertEquals('three', this.name);
     this.name = 'six';
   }
-}
+};
 
 function testStruct() {
   var s = new SixStruct();

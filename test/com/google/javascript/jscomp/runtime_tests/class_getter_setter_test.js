@@ -28,7 +28,7 @@ var GetterSetter = class {
   set foo(val) {
     this.counter++;
   }
-}
+};
 
 function testGetter() {
   let gs = new GetterSetter();
@@ -49,7 +49,7 @@ var Base = class {
   set foo(val) {
     throw new Error('Should not have been called.');
   }
-}
+};
 
 var Sub = class extends Base {
   constructor() {
@@ -64,7 +64,7 @@ var Sub = class extends Base {
   set foo(val) {
     this.counter++;
   }
-}
+};
 
 function testSubclassGetter() {
   let s = new Sub();
@@ -82,7 +82,7 @@ var Multiple = class {
   get bar() {
     return 'bar';
   }
-}
+};
 
 function testMultiple() {
   let s =  new Multiple();

@@ -33,12 +33,12 @@ var DynamicDispSup = class {
   f(str) {
     return str + 'super';
   }
-}
+};
 var DynamicDispSub = class extends DynamicDispSup {
   f(str) {
     return str + 'sub';
   }
-}
+};
 
 function testDynamicDispatch() {
   var dds = new DynamicDispSub();
@@ -49,12 +49,12 @@ var SuperCallSup = class {
   foo(b) {
     return b + 'sup';
   }
-}
+};
 var SuperCallSub = class extends SuperCallSup {
   foo(bar) {
     return super.foo(bar);
   }
-}
+};
 
 function testSuperCall() {
   var scs = new SuperCallSub();
@@ -65,7 +65,7 @@ var ConstructorNoArgs = class {
   constructor() {
     this.a = 1729;
   }
-}
+};
 
 function testConstructorEmpty() {
   assertEquals(1729, (new ConstructorNoArgs()).a);
@@ -76,7 +76,7 @@ var ConstructorArgs = class {
   constructor(b) {
     this.a = b;
   }
-}
+};
 
 function testConstructorArgs() {
   assertEquals(1729, (new ConstructorArgs(1729)).a);
@@ -98,7 +98,7 @@ var SuperConstructorSup = class {
     var d = new SuperConstructorSub();
     return d.getM();
   }
-}
+};
 
 function testSuperConstructor() {
   var scsup = new SuperConstructorSup();
@@ -116,13 +116,13 @@ baz.Foo = class {
     return this.i;
   }
 
-}
+};
 
 baz.Bar = class extends baz.Foo {
   constructor() {
     super(1729);
   }
-}
+};
 
 function testQualifiedNames() {
   assertEquals(1729, (new baz.Bar()).f());
@@ -143,13 +143,13 @@ var A = class {
     newThis.init.apply(newThis, arguments);
     return newThis;
   }
-}
+};
 
 var B = class extends A {
   init() {
     super.init();
   }
-}
+};
 
 function testImplicitSuperConstructorCall() {
   assertEquals(1234, B.create().x);

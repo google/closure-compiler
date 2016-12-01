@@ -145,12 +145,12 @@ function testArrowFunction() {
     assertEquals('v1', value1);
     assertEquals('v2', value2);
     assertEquals('bar', y);
-  }
+  };
   g('foo', {key2: 'v2', key1: 'v1'}, 'bar');
 }
 
 function testComputedProps() {
-  var {['-']: x} = {['-']: 1}
+  var {['-']: x} = {['-']: 1};
   assertEquals(1, x);
 
   function f({['*']: y}) {

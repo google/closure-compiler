@@ -52,7 +52,7 @@ function testComplexDefault() {
 
 function testArrowFunctionDefaultShadowed() {
   var x = true;
-  var f = (a = x) => { const x = false; return a; }
+  var f = (a = x) => { const x = false; return a; };
   assertTrue(f());
 }
 

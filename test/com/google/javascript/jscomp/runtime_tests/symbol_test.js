@@ -28,7 +28,7 @@ const SymbolProps = class {
   [s1]() { return 's1'; }
   [s2]() { return 's2'; }
   [s3]() { return 's3'; }
-}
+};
 
 function testSymbols() {
   const sp = new SymbolProps();

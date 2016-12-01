@@ -78,7 +78,7 @@ function testCallExpression() {
   function f() {
     return function(strings, ...values) {
       return ++i;
-    }
+    };
   }
   assertEquals(1, f()`foo`);
 }
@@ -127,7 +127,7 @@ ${x}\n`;
 // See https://github.com/google/closure-compiler/issues/1299
 function testGH1299() {
   function html(strings, ...values) {
-    return ''
+    return '';
   }
 
   let x = 'text';

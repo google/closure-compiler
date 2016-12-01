@@ -33,7 +33,7 @@ var StaticInSup = class {
   static f() {
     return 1729;
   }
-}
+};
 var StaticInSub  = class extends StaticInSup {
   f() {
     return 1730;
@@ -43,7 +43,7 @@ var StaticInSub  = class extends StaticInSup {
   static g() {
     return this.f();
   }
-}
+};
 
 function testStaticInheritance() {
   assertEquals(1729, StaticInSub.g());
@@ -54,8 +54,8 @@ var Grandparent = class {
   static f() {
     return 1729;
   }
-}
-var Parent = class extends Grandparent {}
+};
+var Parent = class extends Grandparent {};
 var Child = class extends Parent {
   f() {
     return 1730;
@@ -65,14 +65,14 @@ var Child = class extends Parent {
   static g() {
     return this.f();
   }
-}
+};
 
 function testMultiLevelStaticInheritance() {
   assertEquals(1729, Child.g());
 }
 
 i.Foo = class { static f() { return 1729; } };
-var Bar = class extends i.Foo {}
+var Bar = class extends i.Foo {};
 
 function testStaticQualifiedName() {
   assertEquals(1729, Bar.f());
@@ -99,14 +99,14 @@ var Base = class {
   static f() { return this.g(); }
   /** @nocollapse */
   static g() { return 'Super.g'; }
-}
+};
 
 var Sub = class extends Base {
   /** @nocollapse */
   static f() { return super.f(); }
   /** @nocollapse */
   static g() { return 'Sub.g'; }
-}
+};
 
 function testStaticThisSuper() {
   assertEquals('Sub.g', Sub.f());
@@ -114,7 +114,7 @@ function testStaticThisSuper() {
 
 var A = class {
   static h() { return 'A.h'; }
-}
+};
 
 /** @const */
 var module$test = {};
@@ -123,9 +123,9 @@ var module$test = {};
 
 /** @constructor */ var B = A;
 
-var C  = class extends module$test.A {}
+var C  = class extends module$test.A {};
 
-var D  = class extends B {}
+var D  = class extends B {};
 
 function testAliasedClass() {
   assertEquals('A.h', C.h());
@@ -135,12 +135,12 @@ function testAliasedClass() {
 var X = class {
   /** @return {!X} */
   static get() { return new X(); }
-}
+};
 
 var Y = class extends X {
   /** @return {!Y} */
   static get() { return new Y(); }
-}
+};
 
 function testBug20088015() {
   assertTrue(Y.get() instanceof Y);

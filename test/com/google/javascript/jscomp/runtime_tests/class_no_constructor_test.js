@@ -20,9 +20,9 @@ var Base = class {
   constructor(var_args) {
     this.ctorArgs = arguments;
   }
-}
+};
 
-var Sub = class extends Base {}
+var Sub = class extends Base {};
 
 /**
  * Test for https://github.com/google/closure-compiler/issues/690

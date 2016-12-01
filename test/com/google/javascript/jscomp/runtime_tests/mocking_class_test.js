@@ -29,12 +29,12 @@ var DMock = class {
   f() {
     return 'super';
   }
-}
+};
 var CMock = class extends DMock {
   f() {
     return 'sub';
   }
-}
+};
 DMock = function() {};
 var initialCInstance = new CMock();
 CMock = function() {};
@@ -47,12 +47,12 @@ var A = class {
   f() {
     return 1729;
   }
-}
+};
 var C = class extends A {
   f() {
     return super.f() + 1;
   }
-}
+};
 
 var old = new C();
 C = class extends A {

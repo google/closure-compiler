@@ -22,14 +22,14 @@ var ExportedGetter = class {
   get exportMe() {
     return 0;
   }
-}
+};
 
 /** @unrestricted */
 var ExportedSetter = class {
   /** @export */
   set exportMe(val) {
   }
-}
+};
 
 function testGetterNotRenamed() {
   var eg = new ExportedGetter();

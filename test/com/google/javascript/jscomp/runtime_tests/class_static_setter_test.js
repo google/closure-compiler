@@ -25,14 +25,14 @@ function setUp() {
 
 var Base = class {
   static set foo(val) { baseCounter++; }
-}
+};
 
 var Sub1 = class extends Base {
-}
+};
 
 var Sub2 = class extends Base {
   static set foo(val) { sub2counter++; }
-}
+};
 
 function testSetter() {
   Base.foo = 'value';
