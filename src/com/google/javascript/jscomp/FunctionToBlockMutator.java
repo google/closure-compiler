@@ -63,16 +63,62 @@ class FunctionToBlockMutator {
    */
   Node mutate(String fnName, Node fnNode, Node callNode,
       String resultName, boolean needsDefaultResult, boolean isCallInLoop) {
-    Node newFnNode = fnNode.cloneTree();
-    // Now that parameter names have been replaced, make sure all the local
-    // names are unique, to allow functions to be inlined multiple times
-    // without causing conflicts.
-    makeLocalNamesUnique(newFnNode, isCallInLoop);
+    return mutateInternal(
+        fnName, fnNode, callNode, resultName, needsDefaultResult, isCallInLoop,
+        /* renameLocals */ true);
+  }
 
-    // Function declarations must be rewritten as function expressions as
-    // they will be within a block and normalization prevents function
-    // declarations within block as browser implementations vary.
-    rewriteFunctionDeclarations(newFnNode.getLastChild());
+  /**
+   * Used when an IIFE wrapper is being removed
+   *
+   * @param fnName The name to use when preparing human readable names.
+   * @param fnNode The function to prepare.
+   * @param callNode The call node that will be replaced.
+   * @return A clone of the function body mutated to be suitable for injection as a statement into a
+   *     script root
+   */
+  Node unwrapIifeInModule(String fnName, Node fnNode, Node callNode) {
+    return mutateInternal(fnName, fnNode, callNode,
+        /* resultName */ null,
+        /* needsDefaultResult */ false,
+        /* isCallInLoop */ false,
+        /* renameLocals */ false);
+  }
+
+  /**
+   * @param fnName The name to use when preparing human readable names.
+   * @param fnNode The function to prepare.
+   * @param callNode The call node that will be replaced.
+   * @param resultName Function results should be assigned to this name.
+   * @param needsDefaultResult Whether the result value must be set.
+   * @param isCallInLoop Whether the function body must be prepared to be injected into the body of
+   *     a loop.
+   * @param renameLocals If the inlining is part of module rewriting and doesn't require making
+   *     local names unique
+   * @return A clone of the function body mutated to be suitable for injection as a statement into
+   *     another code block.
+   */
+  private Node mutateInternal(
+      String fnName,
+      Node fnNode,
+      Node callNode,
+      String resultName,
+      boolean needsDefaultResult,
+      boolean isCallInLoop,
+      boolean renameLocals) {
+    Node newFnNode = fnNode.cloneTree();
+
+    if (renameLocals) {
+      // Now that parameter names have been replaced, make sure all the local
+      // names are unique, to allow functions to be inlined multiple times
+      // without causing conflicts.
+      makeLocalNamesUnique(newFnNode, isCallInLoop);
+
+      // Function declarations must be rewritten as function expressions as
+      // they will be within a block and normalization prevents function
+      // declarations within block as browser implementations vary.
+      rewriteFunctionDeclarations(newFnNode.getLastChild());
+    }
 
     // TODO(johnlenz): Mark NAME nodes constant for parameters that are not
     // modified.

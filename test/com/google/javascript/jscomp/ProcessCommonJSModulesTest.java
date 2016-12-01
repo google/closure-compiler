@@ -57,7 +57,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "var name = require('./other'); name()",
         LINE_JOINER.join(
-            "goog.require('module$other');", "var name = module$other;", "module$other();"));
+            "goog.require('module$other');",
+            "var name = module$other;",
+            "module$other();"));
     test(
         ImmutableList.of(
             SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), ""),
@@ -110,7 +112,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     setFilename("test");
     testModules(
         LINE_JOINER.join(
-            "var name = require('./other');", "var e;", "e = module.exports = function() {};"),
+            "var name = require('./other');",
+            "var e;",
+            "e = module.exports = function() {};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "goog.require('module$other');",
@@ -121,7 +125,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
     testModules(
         LINE_JOINER.join(
-            "var name = require('./other');", "var e = module.exports = function() {};"),
+            "var name = require('./other');",
+            "var e = module.exports = function() {};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "goog.require('module$other');",
@@ -130,7 +135,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var e$$module$test = module$test = function () {};"));
 
     testModules(
-        LINE_JOINER.join("var name = require('./other');", "(module.exports = function() {})();"),
+        LINE_JOINER.join(
+            "var name = require('./other');",
+            "(module.exports = function() {})();"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "goog.require('module$other');",
@@ -143,7 +150,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     setFilename("test");
     testModules(
         LINE_JOINER.join(
-            "exports.one = 1;", "module.exports.obj = {};", "module.exports.obj.two = 2;"),
+            "exports.one = 1;",
+            "module.exports.obj = {};",
+            "module.exports.obj.two = 2;"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test = {};",
@@ -160,7 +169,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testModuleExportsWrittenWithExportsRefs() {
     setFilename("test");
     testModules(
-        LINE_JOINER.join("exports.one = 1;", "module.exports = {};"),
+        LINE_JOINER.join(
+            "exports.one = 1;",
+            "module.exports = {};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test={};",
@@ -171,7 +182,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     setFilename("test");
     testModules(
         LINE_JOINER.join(
-            "module.exports = {};", "var a = 1, b = 2;", "(function() { var a; b = 4})();"),
+            "module.exports = {};",
+            "var a = 1, b = 2;",
+            "(function() { var a; b = 4})();"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test={};",
@@ -182,7 +195,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testDash() {
     setFilename("test-test");
     testModules(
-        LINE_JOINER.join("var name = require('./other');", "exports.foo = 1;"),
+        LINE_JOINER.join(
+            "var name = require('./other');",
+            "exports.foo = 1;"),
         LINE_JOINER.join(
             "goog.provide('module$test_test');",
             "goog.require('module$other');",
@@ -194,7 +209,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testIndex() {
     setFilename("foo/index");
     testModules(
-        LINE_JOINER.join("var name = require('../other');", "exports.bar = 1;"),
+        LINE_JOINER.join(
+            "var name = require('../other');",
+            "exports.bar = 1;"),
         LINE_JOINER.join(
             "goog.provide('module$foo$index');",
             "goog.require('module$other');",
@@ -206,7 +223,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testModuleName() {
     setFilename("foo/bar");
     testModules(
-        LINE_JOINER.join("var name = require('../other');", "module.exports = name;"),
+        LINE_JOINER.join(
+            "var name = require('../other');",
+            "module.exports = name;"),
         LINE_JOINER.join(
             "goog.provide('module$foo$bar');",
             "goog.require('module$other');",
@@ -291,7 +310,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}"),
-        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
 
     testModules(
         LINE_JOINER.join(
@@ -303,7 +324,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}"),
-        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
 
     testModules(
         LINE_JOINER.join(
@@ -314,7 +337,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "if (typeof define === 'function' && define.amd) {",
             "  define([], function () {return foobar;});",
             "}"),
-        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
   }
 
   public void testEs6ObjectShorthand() {
@@ -323,7 +348,11 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     setFilename("test");
     testModules(
         LINE_JOINER.join(
-            "function foo() {}", "module.exports = {", "  prop: 'value',", "  foo", "};"),
+            "function foo() {}",
+            "module.exports = {",
+            "  prop: 'value',",
+            "  foo",
+            "};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test = {};",
@@ -347,7 +376,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "};"));
 
     testModules(
-        LINE_JOINER.join("var a = require('./other');", "module.exports = {a: a};"),
+        LINE_JOINER.join(
+            "var a = require('./other');",
+            "module.exports = {a: a};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "goog.require('module$other');",
@@ -356,7 +387,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.a = module$other;"));
 
     testModules(
-        LINE_JOINER.join("var a = require('./other');", "module.exports = {a};"),
+        LINE_JOINER.join(
+            "var a = require('./other');",
+            "module.exports = {a};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "goog.require('module$other');",
@@ -365,7 +398,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.a = module$other;"));
 
     testModules(
-        LINE_JOINER.join("var a = 4;", "module.exports = {a};"),
+        LINE_JOINER.join(
+            "var a = 4;",
+            "module.exports = {a};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test = {};",
@@ -397,7 +432,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     setFilename("test");
     testModules(
         LINE_JOINER.join(
-            "function foo() {}", "foo.prototype = new Date();", "module.exports = foo;"),
+            "function foo() {}",
+            "foo.prototype = new Date();",
+            "module.exports = foo;"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "var module$test = function() {};",
@@ -405,7 +442,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
     testModules(
         LINE_JOINER.join(
-            "function foo() {}", "foo.prototype = new Date();", "module.exports = {foo: foo};"),
+            "function foo() {}",
+            "foo.prototype = new Date();",
+            "module.exports = {foo: foo};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test = {};",
@@ -417,7 +456,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     setFilename("test");
     testModules(
         LINE_JOINER.join(
-            "module.exports = foo;", "function foo() {}", "foo.prototype = new Date();"),
+            "module.exports = foo;",
+            "function foo() {}",
+            "foo.prototype = new Date();"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "var module$test = function() {};",
@@ -428,16 +469,25 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6, CompilerOptions.LanguageMode.ECMASCRIPT5);
     setFilename("test");
     testModules(
-        LINE_JOINER.join("class foo extends Array {}", "module.exports = foo;"),
         LINE_JOINER.join(
-            "goog.provide('module$test');", "let module$test = class extends Array {}"));
+            "class foo extends Array {}",
+            "module.exports = foo;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "let module$test = class extends Array {}"));
 
     testModules(
-        LINE_JOINER.join("class foo {}", "module.exports = foo;"),
-        LINE_JOINER.join("goog.provide('module$test');", "let module$test = class {}"));
+        LINE_JOINER.join(
+            "class foo {}",
+            "module.exports = foo;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "let module$test = class {}"));
 
     testModules(
-        LINE_JOINER.join("class foo {}", "module.exports.foo = foo;"),
+        LINE_JOINER.join(
+            "class foo {}",
+            "module.exports.foo = foo;"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test = {};",
@@ -480,7 +530,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6, CompilerOptions.LanguageMode.ECMASCRIPT5);
     setFilename("test");
     testModules(
-        LINE_JOINER.join("const {foo, bar} = require('./other');", "var baz = foo + bar;"),
+        LINE_JOINER.join(
+            "const {foo, bar} = require('./other');",
+            "var baz = foo + bar;"),
         LINE_JOINER.join(
             "goog.require('module$other');",
             "const {foo, bar} = module$other;",
@@ -500,6 +552,174 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ var module$test = {};",
             "/** @interface */ module$test.a;",
             "/** @type {string} */ module$test.a.prototype.foo;"));
+  }
+
+  public void testUMDRemoveIIFE() {
+    setFilename("test");
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})()"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        LINE_JOINER.join(
+            ";;;(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})()"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}.call(this))"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        LINE_JOINER.join(
+            ";;;(function(global){",
+            "var foobar = {foo: 'bar'};",
+            "global.foobar = foobar;",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  global.foobar = foobar;",
+            "}})(this)"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};",
+            "this.foobar = module$test;"));
+
+    testModules(
+        LINE_JOINER.join(
+            "(function(global){",
+            "var foobar = {foo: 'bar'};",
+            "global.foobar = foobar;",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  global.foobar = foobar;",
+            "}}.call(this, this))"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};",
+            "this.foobar = module$test;"));
+
+    // We can't remove IIFEs explict calls that don't use "this"
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}.call(window))"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "}).call(window);"));
+
+    // Can't remove IIFEs when there are sibling statements
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})();",
+            "alert('foo');"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "})();",
+            "alert('foo');"));
+
+    // Can't remove IIFEs when there are sibling statements
+    testModules(
+        LINE_JOINER.join(
+            "alert('foo');",
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})();"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "alert('foo');",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "})();"));
+
+    // Annotations for local names should be preserved
+    testModules(
+        LINE_JOINER.join(
+            "(function(global){",
+            "/** @param {...*} var_args */",
+            "function log(var_args) {}",
+            "var foobar = {foo: 'bar', log: function() { log.apply(null, arguments); } };",
+            "global.foobar = foobar;",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  global.foobar = foobar;",
+            "}}.call(this, this))"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @param {...*} var_args */",
+            "function log$$module$test(var_args){}",
+            "var module$test = {",
+            "  foo: 'bar',",
+            "  log: function() { log$$module$test.apply(null,arguments); }",
+            "};",
+            "this.foobar = module$test;"));
   }
 
   public void testParamShadow() {
