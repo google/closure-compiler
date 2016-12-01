@@ -366,6 +366,7 @@ class TypeValidator {
         || !caseType.autoboxesTo()
         .isSubtypeWithoutStructuralTyping(switchType))) {
       recordImplicitInterfaceUses(n, caseType, switchType);
+      recordImplicitUseOfNativeObject(n, caseType, switchType);
     }
   }
 
@@ -445,6 +446,7 @@ class TypeValidator {
     } else if (!leftType.isNoType()
         && !rightType.isSubtypeWithoutStructuralTyping(leftType)){
       recordImplicitInterfaceUses(n, rightType, leftType);
+      recordImplicitUseOfNativeObject(n, rightType, leftType);
     }
     return true;
   }
@@ -467,6 +469,7 @@ class TypeValidator {
       return false;
     } else if (!rightType.isSubtypeWithoutStructuralTyping(leftType)) {
       recordImplicitInterfaceUses(n, rightType, leftType);
+      recordImplicitUseOfNativeObject(n, rightType, leftType);
     }
     return true;
   }
@@ -492,6 +495,7 @@ class TypeValidator {
           argType, paramType);
     } else if (!argType.isSubtypeWithoutStructuralTyping(paramType)){
       recordImplicitInterfaceUses(n, argType, paramType);
+      recordImplicitUseOfNativeObject(n, argType, paramType);
     }
   }
 
@@ -793,6 +797,28 @@ class TypeValidator {
       String msg = "Implicit use of type " + sourceType + " as " + targetType;
       JSError err = JSError.make(src, TYPE_MISMATCH_WARNING, msg);
       implicitInterfaceUses.add(new TypeMismatch(sourceType, targetType, err));
+    }
+  }
+
+  // NOTE(dimvar): declaring this here instead of JSType, because there is another
+  // method there that behaves differently :-/
+  private static boolean isInstanceOfObject(JSType t) {
+    if (t.isObject() && !t.isUnionType()) {
+      ObjectType proto = t.toObjectType().getImplicitPrototype();
+      return proto != null && proto.isNativeObjectType();
+    }
+    return false;
+  }
+
+  private void recordImplicitUseOfNativeObject(Node src, JSType sourceType, JSType targetType) {
+    sourceType = sourceType.restrictByNotNullOrUndefined();
+    targetType = targetType.restrictByNotNullOrUndefined();
+    if (isInstanceOfObject(sourceType) && !isInstanceOfObject(targetType)) {
+      // We don't report a type error, but we still need to construct a JSError,
+      // for people who enable the invalidation diagnostics in DisambiguateProperties.
+      String msg = "Implicit use of Object type: " + sourceType + " as type: " + targetType;
+      JSError err = JSError.make(src, TYPE_MISMATCH_WARNING, msg);
+      mismatches.add(new TypeMismatch(sourceType, targetType, err));
     }
   }
 
