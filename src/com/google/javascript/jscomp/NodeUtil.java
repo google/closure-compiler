@@ -3587,13 +3587,28 @@ public final class NodeUtil {
    * @return {@code true} if the node is a definition with Object.defineProperties
    */
   static boolean isObjectDefinePropertiesDefinition(Node n) {
-    if (!(n.isCall() && n.getChildCount() == 3)) {
+    if (!n.isCall() || !n.hasXChildren(3)) {
       return false;
     }
     Node first = n.getFirstChild();
-    return first.matchesQualifiedName("Object.defineProperties")
-        || first.matchesQualifiedName("$jscomp.global.Object.defineProperties")
-        || first.matchesQualifiedName("$jscomp$global.Object.defineProperties");
+    if (!first.isGetProp()) {
+      return false;
+    }
+    Node prop = first.getLastChild();
+    return prop.getString().equals("defineProperties")
+        && isKnownGlobalObjectReference(first.getFirstChild());
+  }
+
+  private static boolean isKnownGlobalObjectReference(Node n) {
+    switch (n.getToken()) {
+      case NAME:
+        return n.getString().equals("Object");
+      case GETPROP:
+        return n.matchesQualifiedName("$jscomp.global.Object")
+            || n.matchesQualifiedName("$jscomp$global.Object");
+      default:
+        return false;
+    }
   }
 
   /**
