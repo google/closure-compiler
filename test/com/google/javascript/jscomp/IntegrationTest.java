@@ -1195,41 +1195,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "Bar.prototype.a=function(x){};"));
   }
 
-  public void testDisambiguatePropertiesClassCastedToUnrelatedInterface() {
-    CompilerOptions options = createCompilerOptions();
-    options.setDisambiguateProperties(true);
-    options.setCheckTypes(true);
-    test(options,
-        LINE_JOINER.join(
-            "/** @interface */",
-            "function Foo() {}",
-            "Foo.prototype.prop1;",
-            "Foo.prototype.prop2;",
-            "/** @constructor */",
-            "function Bar() {",
-            "  this.prop1 = 123;",
-            "}",
-            "var x = /** @type {Foo} */ (new Bar);",
-            "/** @constructor */",
-            "function Baz() {",
-            "  this.prop1 = 123;",
-            "}"),
-        LINE_JOINER.join(
-            "/** @interface */",
-            "function Foo() {}",
-            "Foo.prototype.prop1;",
-            "Foo.prototype.prop2;",
-            "/** @constructor */",
-            "function Bar() {",
-            "  this.prop1 = 123;",
-            "}",
-            "var x = new Bar;",
-            "/** @constructor */",
-            "function Baz() {",
-            "  this.prop1 = 123;",
-            "}"));
-  }
-
   public void testMarkPureCalls() {
     String testCode = "function foo() {} foo();";
     CompilerOptions options = createCompilerOptions();

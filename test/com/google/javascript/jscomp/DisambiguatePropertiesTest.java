@@ -1576,57 +1576,52 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(js, js, "{}");
   }
 
-  // TODO(dimvar): Temporarily commenting these out to land a fix.
-  // These tests were passing by accident, they were not testing what they were supposed
-  // to. Disambiguation was backing off because of (I|null), not because of the
-  // implicit use of the record type.
+  public void testStructuralTypingWithDisambiguatePropertyRenaming1_3() {
+    String js = LINE_JOINER.join(
+        "/** @record */",
+        "function I(){}",
+        "/** @type {number} */",
+        "I.prototype.x;",
+        "",
+        "/** @constructor @implements {I} */",
+        "function Foo(){}",
+        "/** @type {number} */",
+        "Foo.prototype.x;",
+        "",
+        "/** @constructor */",
+        "function Bar(){}",
+        "/** @type {number} */",
+        "Bar.prototype.x;",
+        "",
+        "function f(/** I */ i) { return i.x; }",
+        "function g(/** {x:number} */ i) { return f(i); }",
+        "g(new Bar());");
 
-//  public void testStructuralTypingWithDisambiguatePropertyRenaming1_3() {
-//    String js = LINE_JOINER.join(
-//        "/** @record */",
-//        "function I(){}",
-//        "/** @type {number} */",
-//        "I.prototype.x;",
-//        "",
-//        "/** @constructor @implements {I} */",
-//        "function Foo(){}",
-//        "/** @type {number} */",
-//        "Foo.prototype.x;",
-//        "",
-//        "/** @constructor */",
-//        "function Bar(){}",
-//        "/** @type {number} */",
-//        "Bar.prototype.x;",
-//        "",
-//        "function f(/** I */ i) { return i.x; }",
-//        "function g(/** {x:number} */ i) { return f(i); }",
-//        "g(new Bar());");
-//
-//    testSets(js, js, "{}");
-//  }
-//
-//  public void testStructuralTypingWithDisambiguatePropertyRenaming1_4() {
-//    String js = LINE_JOINER.join(
-//        "/** @record */",
-//        "function I(){}",
-//        "/** @type {number} */",
-//        "I.prototype.x;",
-//        "",
-//        "/** @constructor @implements {I} */",
-//        "function Foo(){}",
-//        "/** @type {number} */",
-//        "Foo.prototype.x;",
-//        "",
-//        "/** @constructor */",
-//        "function Bar(){}",
-//        "/** @type {number} */",
-//        "Bar.prototype.x;",
-//        "",
-//        "function f(/** !I */ i) { return i.x; }",
-//        "function g(/** {x:number} */ i) { return f(i); }",
-//        "g(new Bar());");
-//    testSets(js, js, "{}");
-//  }
+    testSets(js, js, "{}");
+  }
+
+  public void testStructuralTypingWithDisambiguatePropertyRenaming1_4() {
+    String js = LINE_JOINER.join(
+        "/** @record */",
+        "function I(){}",
+        "/** @type {number} */",
+        "I.prototype.x;",
+        "",
+        "/** @constructor @implements {I} */",
+        "function Foo(){}",
+        "/** @type {number} */",
+        "Foo.prototype.x;",
+        "",
+        "/** @constructor */",
+        "function Bar(){}",
+        "/** @type {number} */",
+        "Bar.prototype.x;",
+        "",
+        "function f(/** I */ i) { return i.x; }",
+        "function g(/** {x:number} */ i) { return f(i); }",
+        "g(new Bar());");
+    testSets(js, js, "{}");
+  }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1_5() {
     String js = LINE_JOINER.join(

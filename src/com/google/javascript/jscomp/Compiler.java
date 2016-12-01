@@ -1420,6 +1420,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  Iterable<TypeMismatch> getImplicitInterfaceUses() {
+    return getTypeValidator().getImplicitStructuralInterfaceUses();
+  }
+
+  @Override
   GlobalTypeInfo getSymbolTable() {
     if (this.symbolTable == null) {
       this.symbolTable = new GlobalTypeInfo(this, forwardDeclaredTypes);
