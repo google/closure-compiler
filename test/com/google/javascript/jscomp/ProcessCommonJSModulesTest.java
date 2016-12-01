@@ -502,6 +502,165 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @type {string} */ module$test.a.prototype.foo;"));
   }
 
+  public void testUMDRemoveIIFE() {
+    setFilename("test");
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})()"),
+        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        LINE_JOINER.join(
+            ";;;(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})()"),
+        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}.call(this))"),
+        LINE_JOINER.join("goog.provide('module$test');", "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        LINE_JOINER.join(
+            ";;;(function(global){",
+            "var foobar = {foo: 'bar'};",
+            "global.foobar = foobar;",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  global.foobar = foobar;",
+            "}})(this)"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};",
+            "this.foobar = module$test;"));
+
+    testModules(
+        LINE_JOINER.join(
+            "(function(global){",
+            "var foobar = {foo: 'bar'};",
+            "global.foobar = foobar;",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  global.foobar = foobar;",
+            "}}.call(this, this))"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};",
+            "this.foobar = module$test;"));
+
+    // We can't remove IIFEs explict calls that don't use "this"
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}.call(window))"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "}).call(window);"));
+
+    // Can't remove IIFEs when there are sibling statements
+    testModules(
+        LINE_JOINER.join(
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})();",
+            "alert('foo');"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "})();",
+            "alert('foo');"));
+
+    // Can't remove IIFEs when there are sibling statements
+    testModules(
+        LINE_JOINER.join(
+            "alert('foo');",
+            "(function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}})();"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "alert('foo');",
+            "(function(){",
+            "  module$test={foo:\"bar\"};",
+            "})();"));
+
+    // Annotations for local names should be preserved
+    testModules(
+        LINE_JOINER.join(
+            "(function(global){",
+            "/** @param {...*} var_args */",
+            "function log(var_args) {}",
+            "var foobar = {foo: 'bar', log: function() { log.apply(null, arguments); } };",
+            "global.foobar = foobar;",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  global.foobar = foobar;",
+            "}}.call(this, this))"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @param {...*} var_args */",
+            "function log$$module$test(var_args){}",
+            "var module$test = {foo: 'bar', log: function(){ log$$module$test.apply(null,arguments) }};",
+            "this.foobar = module$test;"));
+  }
+  
   public void testParamShadow() {
     setFilename("test");
     testModules(

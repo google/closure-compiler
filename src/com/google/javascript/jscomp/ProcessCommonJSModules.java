@@ -101,7 +101,17 @@ public final class ProcessCommonJSModules implements CompilerPass {
     ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
     if (finder.isCommonJsModule()) {
       finder.reportModuleErrors();
-      finder.replaceUmdPatterns();
+
+      if (finder.umdPatterns.size() > 0) {
+        finder.replaceUmdPatterns();
+
+        // Removing the IIFE rewrites vars. We need to re-traverse
+        // to get the new references.
+        if (removeIIFEWrapper(root)) {
+          finder = new FindImportsAndExports();
+          NodeTraversal.traverseEs6(compiler, root, finder);
+        }
+      }
 
       //UMD pattern replacement can leave detached export references - don't include those
       for (ExportInfo export : finder.getModuleExports()) {
@@ -154,6 +164,70 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
 
     return refParent;
+  }
+
+  /**
+   * UMD modules are often wrapped in an IIFE for cases where they are used as scripts instead of
+   * modules. Remove the wrapper.
+   */
+  private boolean removeIIFEWrapper(Node root) {
+    Preconditions.checkState(root.isScript());
+    Node n = root.getFirstChild();
+
+    // Sometimes scripts start with a semicolon for easy concatenation.
+    // Skip any empty statements from those
+    while (n != null && n.isEmpty()) {
+      n = n.getNext();
+    }
+
+    if (n == null
+        || !n.isExprResult()
+        || n.getFirstChild() == null
+        || !n.getFirstChild().isCall()
+        || n.getNext() != null) {
+      return false;
+    }
+
+    // Find the IIFE call and function nodes
+    Node call = n.getFirstChild();
+    Node fnc;
+    if (call.getFirstChild().isFunction()) {
+      fnc = n.getFirstFirstChild();
+    } else if (call.getFirstChild().isGetProp()
+        && call.getFirstFirstChild().isFunction()
+        && call.getFirstFirstChild().getNext().isString()
+        && call.getFirstFirstChild().getNext().getString().equals("call")) {
+      fnc = call.getFirstFirstChild();
+
+      // We only support explicitly binding "this" to the parent "this"
+      if (!call.getBooleanProp(Node.FREE_CALL)
+          && !(call.getSecondChild() != null && call.getSecondChild().isThis())) {
+        return false;
+      }
+    } else {
+      return false;
+    }
+
+    if (NodeUtil.isVarArgsFunction(fnc)) {
+      return false;
+    }
+
+    CompilerInput ci = compiler.getInput(root.getInputId());
+    ModulePath modulePath = ci.getPath();
+    if (modulePath == null) {
+      return false;
+    }
+
+    String iifeLabel = modulePath.toModuleName() + "_iifeWrapper";
+
+    FunctionToBlockMutator mutator =
+        new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
+    Node block = mutator.unwrapIifeInModule(iifeLabel, fnc, call, false);
+    root.removeChildren();
+    root.addChildrenToFront(block.removeChildren());
+    compiler.reportCodeChange();
+
+    return true;
   }
 
   /**
@@ -487,6 +561,10 @@ public final class ProcessCommonJSModules implements CompilerPass {
     void replaceUmdPatterns() {
       for (UmdPattern umdPattern : umdPatterns) {
         Node p = umdPattern.ifRoot.getParent();
+        if (NodeUtil.getEnclosingScript(p) == null) {
+          continue;
+        }
+
         Node newNode = umdPattern.activeBranch;
 
         if (newNode == null) {
@@ -502,6 +580,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
           umdPattern.ifRoot.detachChildren();
         }
         p.replaceChild(umdPattern.ifRoot, newNode);
+      }
+
+
+      if (umdPatterns.size() > 0) {
+        compiler.reportCodeChange();
       }
     }
   }
@@ -658,11 +741,23 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
+      ModulePath modulePath = t.getInput().getPath();
+      String moduleName = modulePath.toModuleName();
+
       // If this is an assignment to module.exports or exports, renaming
       // has already handled this case. Remove the export.
       Var rValueVar = null;
       if (rValue != null && rValue.isQualifiedName()) {
         rValueVar = t.getScope().getVar(rValue.getQualifiedName());
+
+        // If the exported name is not found and this is a direct assignment
+        // to modules.exports, look to see if the module name has a var definition
+        if (rValueVar == null && root == export) {
+          rValueVar = t.getScope().getVar(moduleName);
+          if (rValueVar != null && rValueVar.getNode() == root) {
+            rValueVar = null;
+          }
+        }
       }
 
       if (root.getParent().isAssign()
@@ -673,9 +768,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         compiler.reportCodeChange();
         return;
       }
-
-      ModulePath modulePath = t.getInput().getPath();
-      String moduleName = modulePath.toModuleName();
+      
       Node updatedExport =
           NodeUtil.newName(compiler, moduleName, export, export.getQualifiedName());
 
