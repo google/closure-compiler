@@ -643,7 +643,9 @@ class DisambiguateProperties implements CompilerPass {
       }
 
       for (JSError error : invalidationMap.get(t)) {
-        errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
+        if (error != null) {
+          errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
+        }
       }
     }
 
