@@ -527,7 +527,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         initModule.useSourceInfoIfMissingFromForTree(this.script);
 
         Node refChild = this.script.getFirstChild();
-        while (refChild.getNext() != null & refChild.getNext().isExprResult()
+        while (refChild.getNext() != null
+            && refChild.getNext().isExprResult()
             && refChild.getNext().getFirstChild().isCall()
             && (refChild.getNext().getFirstFirstChild().matchesQualifiedName("goog.require")
                 || refChild.getNext().getFirstFirstChild().matchesQualifiedName("goog.provide"))) {
