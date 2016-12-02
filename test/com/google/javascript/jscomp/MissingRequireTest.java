@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 import java.util.List;
 
 /**
@@ -32,11 +31,6 @@ import java.util.List;
  */
 
 public final class MissingRequireTest extends Es6CompilerTestCase {
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-  }
-
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
@@ -401,21 +395,21 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testFailEs6ClassExtends() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     String js = "var goog = {}; class SubClass extends goog.foo.Bar.Inner {}";
     String warning = "missing require: 'goog.foo.Bar.Inner'";
     testMissingRequire(js, warning);
   }
 
   public void testFailEs6ClassExtendsSomethingWithoutNS() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     String js = "var goog = {}; class SubClass extends SomethingWithoutNS {}";
     String warning = "missing require: 'SomethingWithoutNS'";
     testMissingRequire(js, warning);
   }
 
   public void testEs6ClassExtendsSomethingInExterns() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     String js = "var goog = {}; class SubClass extends SomethingInExterns {}";
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "/** @constructor */ var SomethingInExterns;"));
@@ -423,7 +417,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testEs6ClassExtendsSomethingInExternsWithNS() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     String js = "var goog = {}; class SubClass extends MyExterns.SomethingInExterns {}";
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var MyExterns;\n"
@@ -659,7 +653,9 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   public void testPassWithoutWarningsAndMultipleFiles() {
     String[] js =
         new String[] {
-          LINE_JOINER.join("goog.require('Foo');", "var foo = new Foo();"),
+          LINE_JOINER.join(
+              "goog.require('Foo');",
+              "var foo = new Foo();"),
 
           "goog.require('Bar'); var bar = new Bar();"
         };
@@ -671,7 +667,6 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     String[] js =
         new String[] {
           LINE_JOINER.join(
-
               "/** @constructor */",
               "function Bar() {}",
               "/** @suppress {extraRequire} */",
@@ -1048,7 +1043,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   // Check to make sure that we still get warnings when processing a non-module after processing
   // a module.
   public void testFailAfterModule() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
 
     String module = "import {Foo} from 'bar';";
     String script = "var x = new example.X()";
