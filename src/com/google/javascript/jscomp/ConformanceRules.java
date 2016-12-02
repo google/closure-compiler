@@ -1452,9 +1452,11 @@ public final class ConformanceRules {
 
       JSDocInfo ownJsDoc = n.getFirstChild().getJSDocInfo();
       if (ownJsDoc != null && ownJsDoc.isConstructor()) {
-        FunctionTypeI functionType = n.getFirstChild()
-            .getTypeI()
-            .toMaybeFunctionType();
+        TypeI type = n.getFirstChild().getTypeI();
+        if (type == null) {
+          return ConformanceResult.CONFORMANCE;
+        }
+        FunctionTypeI functionType = type.toMaybeFunctionType();
         if (functionType == null) {
           return ConformanceResult.CONFORMANCE;
         }
