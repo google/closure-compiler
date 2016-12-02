@@ -649,6 +649,25 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testAddLhsToGoogRequire_getprop() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "goog.require('magical.factories');",
+            "goog.require('world.util.AnimalType');",
+            "",
+            "let cat = magical.factories.createAnimal(world.util.AnimalType.CAT);"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const factories = goog.require('magical.factories');",
+            "const AnimalType = goog.require('world.util.AnimalType');",
+            "",
+            "let cat = factories.createAnimal(AnimalType.CAT);"));
+  }
+
+  @Test
   public void testAddLhsToGoogRequire_jsdoc() {
     // TODO(tbreisacher): Add "const Animal = " before the goog.require and change
     // world.util.Animal to Animal
