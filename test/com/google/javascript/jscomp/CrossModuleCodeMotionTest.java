@@ -797,6 +797,40 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     });
   }
 
+  public void testClinit1() {
+    JSModule[] modules = createModuleChain(
+        // m1
+        "function Foo$clinit() { Foo$clinit = function() {}; }",
+        // m2
+        "Foo$clinit();");
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "function Foo$clinit() { Foo$clinit = function() {}; }" +
+          "Foo$clinit();"
+        });
+  }
+
+  public void testClinit2() {
+    JSModule[] modules = createModuleChain(
+        // m1
+        "var Foo$clinit = function() { Foo$clinit = function() {}; };",
+        // m2
+        "Foo$clinit();");
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "var Foo$clinit = function() { Foo$clinit = function() {}; };" +
+          "Foo$clinit();"
+        });
+  }
+
   public void testClone1() {
     test(createModuleChain(
              // m1
@@ -806,8 +840,8 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
          new String[] {
            // m1
            "",
-           "function f(){} f.prototype.clone = function() { return new f() };" +
            // m2
+           "function f(){} f.prototype.clone = function() { return new f() };" +
            "var a = (new f).clone();"
          });
   }
