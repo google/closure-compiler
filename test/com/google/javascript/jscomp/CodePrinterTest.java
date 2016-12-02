@@ -2395,10 +2395,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     String expectedCode = ""
         + "var module$exports$foo$bar = {};\n"
         + "const STR = '3';\n"
-        + "function fn() {\n"
+        + "module$exports$foo$bar.fn = function fn() {\n"
         + "  alert(STR);\n"
-        + "}\n"
-        + "exports.fn = fn;\n";
+        + "};\n";
 
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.setClosurePass(true);

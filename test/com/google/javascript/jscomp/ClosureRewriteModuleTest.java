@@ -156,8 +156,8 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
           "var x = foo();",
           "exports = {x};"),
         LINE_JOINER.join(
-          "var module$contents$a_x = foo();",
-          "/** @const */ var module$exports$a = {/** @const */ x: module$contents$a_x};"));
+          "/** @const */ var module$exports$a = {};",
+          "module$exports$a.x = foo();"));
   }
 
   public void testDestructuringImports() {
@@ -264,7 +264,46 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
               "/** @type {module$exports$ns$b.Foo} */",
               "var module$contents$ns$a_f = new module$exports$ns$b.Foo;")});
 
-    // TODO(blickly): We don't want any module$contents variables for this definition of Foo
+    testEs6(
+        new String[] {
+          "goog.module('modA'); class Foo {} exports.Foo = Foo;",
+          LINE_JOINER.join(
+              "goog.module('modB');",
+              "",
+              "var {Foo:importedFoo} = goog.require('modA');",
+              "",
+              "/** @type {importedFoo} */",
+              "var f = new importedFoo;")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modA = {};",
+              "module$exports$modA.Foo = class {}"),
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modB = {}",
+              "/** @type {module$exports$modA.Foo} */",
+              "var module$contents$modB_f = new module$exports$modA.Foo;")});
+
+    testEs6(
+        new String[] {
+          "goog.module('modA'); class Foo {} exports.Foo = Foo;",
+          LINE_JOINER.join(
+              "goog.module('modB');",
+              "",
+              "var {Foo} = goog.require('modA');",
+              "",
+              "/** @type {Foo} */",
+              "var f = new Foo;")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modA = {};",
+              "module$exports$modA.Foo = class {}"),
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modB = {}",
+              "/** @type {module$exports$modA.Foo} */",
+              "var module$contents$modB_f = new module$exports$modA.Foo;")});
+
     testEs6(
         new String[] {
           "goog.module('modA'); class Foo {} exports = {Foo};",
@@ -278,14 +317,33 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         },
         new String[] {
           LINE_JOINER.join(
-              "class module$contents$modA_Foo {}",
-              "/** @const */ var module$exports$modA = {",
-              "    /** @const */ Foo: module$contents$modA_Foo",
-              "};"),
+              "/** @const */ var module$exports$modA = {};",
+              "module$exports$modA.Foo = class {};"),
           LINE_JOINER.join(
               "/** @const */ var module$exports$modB = {}",
               "/** @type {module$exports$modA.Foo} */",
               "var module$contents$modB_f = new module$exports$modA.Foo;")});
+
+    testEs6(
+        new String[] {
+          "goog.module('modA'); class Bar {} exports = class Foo {}; exports.Bar = Bar;",
+          LINE_JOINER.join(
+              "goog.module('modB');",
+              "",
+              "var Foo = goog.require('modA');",
+              "",
+              "/** @type {Foo} */",
+              "var f = new Foo;")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "class module$contents$modA_Bar {}",
+              "/** @const */ var module$exports$modA = class Foo {};",
+              "/** @const */ module$exports$modA.Bar = module$contents$modA_Bar;"),
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modB = {}",
+              "/** @type {module$exports$modA} */",
+              "var module$contents$modB_f = new module$exports$modA;")});
 
     testEs6(
         new String[] {
@@ -316,6 +374,28 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
               "var module$contents$modB_f = new modA.Foo;")});
   }
 
+  public void testUninlinableExports() {
+    testEs6(
+        new String[] {
+          "goog.module('ns.b'); /** @constructor */ exports.Foo = function() {};",
+          LINE_JOINER.join(
+              "goog.module('ns.a');",
+              "",
+              "var {Foo} = goog.require('ns.b');",
+              "",
+              "/** @type {Foo} */",
+              "var f = new Foo;")
+        },
+        new String[] {
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @const @constructor */ module$exports$ns$b.Foo = function() {};"),
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$ns$a = {}",
+              "/** @type {module$exports$ns$b.Foo} */",
+              "var module$contents$ns$a_f = new module$exports$ns$b.Foo;")});
+  }
+
   public void testObjectLiteralDefaultExport() {
     testErrorEs6(
         new String[] {
@@ -328,6 +408,64 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
           LINE_JOINER.join("goog.module('modB');", "", "var {Foo} = goog.require('modA');")
         },
         ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT);
+  }
+
+  public void testUninlinableNamedExports() {
+    testEs6(
+        new String[] {
+          "goog.module('modA'); \n exports = class {};",
+          LINE_JOINER.join(
+              "goog.module('modB');",
+              "",
+              "var Foo = goog.require('modA');",
+              "",
+              "exports.Foo = Foo;"),
+        },
+        new String[] {
+          "/** @const */ var module$exports$modA = class {};",
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modB = {};",
+              "/** @const */ module$exports$modB.Foo = module$exports$modA;"),
+        });
+
+    testEs6(
+        new String[] {
+          "goog.module('modA'); \n exports = class {};",
+          LINE_JOINER.join(
+              "goog.module('modB');",
+              "",
+              "var Foo = goog.require('modA');",
+              "",
+              "exports = {Foo};"),
+        },
+        new String[] {
+          "/** @const */ var module$exports$modA = class {};",
+          LINE_JOINER.join(
+              "/** @const */ var module$exports$modB = {",
+              "  /** @const */ Foo: module$exports$modA,",
+              "};"),
+        });
+
+    testEs6(
+        new String[] {
+          "goog.module('modA'); \n exports = class {};",
+          LINE_JOINER.join(
+              "goog.module('modB');",
+              "",
+              "var Foo = goog.require('modA');",
+              "class Bar {}",
+              "",
+              "exports = {Foo, Bar};"),
+        },
+        new String[] {
+          "/** @const */ var module$exports$modA = class {};",
+          LINE_JOINER.join(
+              "class module$contents$modB_Bar {}",
+              "/** @const */ var module$exports$modB = {",
+              "  /** @const */ Foo: module$exports$modA,",
+              "  /** @const */ Bar: module$contents$modB_Bar,",
+              "};"),
+        });
   }
 
   public void testIllegalDestructuringImports() {
@@ -647,8 +785,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "});"),
         LINE_JOINER.join(
             "/** @const */ var module$exports$mod_B = {};",
-            "/** @interface */ function module$contents$mod_B_B(){}",
-            "/** @const */ module$exports$mod_B.B = module$contents$mod_B_B;",
+            "/** @interface */ module$exports$mod_B.B = function(){};",
             "",
             "/** @const */ var module$exports$mod_A = {};",
             "/** @constructor @implements {module$exports$mod_B.B} */",
@@ -1136,8 +1273,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
         LINE_JOINER.join(
             "/** @const */ var module$exports$ns$a = {};",
-            "/** @typedef {string} */ var module$contents$ns$a_x;",
-            "/** @const */ module$exports$ns$a.x = module$contents$ns$a_x;"));
+            "/** @typedef {string} */ module$exports$ns$a.x;"));
   }
 
   public void testExport6() {
@@ -1148,10 +1284,20 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "exports = { something: x };"),
 
         LINE_JOINER.join(
-          "/** @typedef {string} */ var module$contents$ns$a_x;",
-          "/** @const */ var module$exports$ns$a = {",
-          "  /** @typedef {string} */ something : module$contents$ns$a_x",
-          "};"));
+          "/** @const */ var module$exports$ns$a = {};",
+          "/** @typedef {string} */ module$exports$ns$a.something;"));
+  }
+
+  public void testExport6_1() {
+    test(
+        LINE_JOINER.join(
+            "goog.module('ns.a');",
+            "/** @typedef {string} */ var x;",
+            "exports.something = x;"),
+
+        LINE_JOINER.join(
+          "/** @const */ var module$exports$ns$a = {};",
+          "/** @typedef {string} */ module$exports$ns$a.something;"));
   }
 
   public void testExport7() {
@@ -1238,11 +1384,8 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
             "exports = { Something };"),
 
         LINE_JOINER.join(
-            "class module$contents$ns$a_Something {}",
-            "/** @const */ var module$exports$ns$a = {",
-            "  /** @const */",
-            "  Something: module$contents$ns$a_Something",
-            "};"));
+            "/** @const */ var module$exports$ns$a = {};",
+            "module$exports$ns$a.Something = class {};"));
 
     testErrorEs6(
         LINE_JOINER.join(
@@ -1462,6 +1605,29 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         IMPORT_INLINING_SHADOWS_VAR);
   }
 
+  public void testExportRewritingShadows() {
+    test(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "function test() {}",
+            "function f(test) { return test; }",
+            "exports = test;"),
+        LINE_JOINER.join(
+            "function module$exports$a$b$c() {}",
+            "function module$contents$a$b$c_f(test) { return test; }"));
+
+    test(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "function test() {}",
+            "function f(test) { return test; }",
+            "exports.test = test;"),
+        LINE_JOINER.join(
+            "/** @const */ var module$exports$a$b$c = {};",
+            "module$exports$a$b$c.test = function() {};",
+            "function module$contents$a$b$c_f(test) { return test; }"));
+  }
+
   public void testRequireTooEarly1() {
     // Module to Module require.
     testError(
@@ -1661,7 +1827,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
               "goog.module('a.b.Foo');",
               "goog.module.declareLegacyNamespace();",
               "",
-              "/** @constructor */ function Foo() {};",
+              "/** @constructor */ function Foo() {}",
               "",
               "exports = Foo;"),
           "/** @param {a.b.Foo} x */ function f(x) {}"
@@ -1669,7 +1835,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         new String[] {
             LINE_JOINER.join(
                 "goog.provide('a.b.Foo');",
-                "/** @constructor */ function module$contents$a$b$Foo_Foo() {};",
+                "/** @constructor */ function module$contents$a$b$Foo_Foo() {}",
                 "/** @const */ a.b.Foo = module$contents$a$b$Foo_Foo;"),
           "/** @param {a.b.Foo} x */ function f(x) {}"
         });
