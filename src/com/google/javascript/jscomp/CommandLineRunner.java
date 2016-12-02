@@ -320,7 +320,7 @@ public class CommandLineRunner extends
     private List<String> sourceMapLocationMapping = new ArrayList<>();
 
     @Option(name = "--source_map_input",
-        hidden = true,
+        hidden = false,
         usage = "Source map locations for input files, separated by a '|', "
         + "(i.e. input-file-path|input-source-map)")
     private List<String> sourceMapInputs = new ArrayList<>();
@@ -784,6 +784,7 @@ public class CommandLineRunner extends
                     "output_manifest",
                     "output_module_dependencies",
                     "property_renaming_report",
+                    "source_map_input",
                     "source_map_location_mapping",
                     "variable_renaming_report"))
             .putAll(
