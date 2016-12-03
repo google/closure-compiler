@@ -114,3 +114,14 @@ SinonFakeXmlHttpRequest.prototype.requestBody;
  * @param {?string} body
  */
 SinonFakeXmlHttpRequest.prototype.respond = function(status, headers, body) {};
+
+
+
+/**
+ * @param {?Object} object
+ * @param {?string} property
+ * @param {?Array<string>} types
+ *
+ * @return {!Function}
+ */
+sinon.spy = function(object, property, types) {};
