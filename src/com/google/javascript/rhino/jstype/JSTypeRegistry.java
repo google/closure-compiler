@@ -148,6 +148,9 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   private final Map<String, UnionTypeBuilder> typesIndexedByProperty =
        new HashMap<>();
 
+  private final JSType sentinelObjectLiteral;
+  private boolean optimizePropertyIndex = false;
+
   // A map of properties to each reference type on which those
   // properties have been declared. Each type has a unique name used
   // for de-duping.
@@ -192,6 +195,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     nativeTypes = new JSType[JSTypeNative.values().length];
     namesToTypes = new HashMap<>();
     resetForTypeCheck();
+    this.sentinelObjectLiteral = createAnonymousObjectType(null);
+  }
+
+  public void setOptimizePropertyIndex(boolean optimizePropIndex) {
+    this.optimizePropertyIndex = optimizePropIndex;
   }
 
   /**
@@ -702,6 +710,19 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     nativeTypes[typeId.ordinal()] = type;
   }
 
+  // When t is an object that is not the prototype of some class,
+  // and its nominal type is Object, and it has some properties,
+  // we don't need to store these properties in the propertyIndex separately.
+  private static boolean isObjectLiteralThatCanBeSkipped(JSType t) {
+    if (t.isObject() && !t.isUnionType()) {
+      ObjectType tObj = t.toObjectType();
+      ObjectType proto = tObj.getImplicitPrototype();
+      return !tObj.isNativeObjectType() && !tObj.isPrototypeObject()
+          && proto != null && proto.isNativeObjectType();
+    }
+    return false;
+  }
+
   /**
    * Tells the type system that {@code owner} may have a property named
    * {@code propertyName}. This allows the registry to keep track of what
@@ -721,6 +742,9 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       typesIndexedByProperty.put(propertyName, typeSet);
     }
 
+    if (this.optimizePropertyIndex && isObjectLiteralThatCanBeSkipped(type)) {
+      type = this.sentinelObjectLiteral;
+    }
     typeSet.addAlternate(type);
     addReferenceTypeIndexedByProperty(propertyName, type);
 

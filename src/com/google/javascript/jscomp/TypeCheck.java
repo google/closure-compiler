@@ -1514,10 +1514,19 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
+  private boolean allowLoosePropertyAccessOnNode(Node n) {
+    Node parent = n.getParent();
+    return NodeUtil.isPropertyTest(compiler, n)
+        // Property declaration
+        || (n.isQualifiedName() && parent.isExprResult())
+        // Property creation
+        || (n.isQualifiedName() && parent.isAssign() && parent.getFirstChild() == n);
+  }
+
   private void checkPropertyAccessHelper(JSType objectType, String propName,
       NodeTraversal t, Node n) {
     if (!objectType.isEmptyType() && reportMissingProperties
-        && (!NodeUtil.isPropertyTest(compiler, n) || objectType.isStruct())
+        && (!allowLoosePropertyAccessOnNode(n) || objectType.isStruct())
         && !typeRegistry.canPropertyBeDefined(objectType, propName)) {
       boolean lowConfidence =
           objectType.isUnknownType() || objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
