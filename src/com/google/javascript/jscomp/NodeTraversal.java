@@ -24,7 +24,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -787,33 +786,29 @@ public class NodeTraversal {
     if (!quietly && scopeCallback != null) {
       scopeCallback.exitScope(this);
     }
-    Node scopeRoot;
-    if (scopeRoots.isEmpty()) {
+    Node scopeRoot = scopeRoots.pollFirst();
+    if (scopeRoot == null) {
       scopeRoot = scopes.pop().getRootNode();
-    } else {
-      scopeRoot = scopeRoots.pop();
     }
     if (NodeUtil.isValidCfgRoot(scopeRoot)) {
       cfgs.pop();
     }
-    if (hasScope()) {
-      compiler.setScope(getScopeRoot());
+    Node newScopeRoot = getScopeRoot();
+    if (newScopeRoot != null) {
+      compiler.setScope(newScopeRoot);
     }
   }
 
   /** Gets the current scope. */
   public Scope getScope() {
-    Scope scope = scopes.isEmpty() ? null : scopes.peek();
-    if (scopeRoots.isEmpty()) {
-      return scope;
-    }
+    Scope scope = scopes.peek();
 
-    Iterator<Node> it = scopeRoots.descendingIterator();
-    while (it.hasNext()) {
-      scope = scopeCreator.createScope(it.next(), scope);
+    Node root = null;
+    while ((root = scopeRoots.pollLast()) != null) {
+      scope = scopeCreator.createScope(root, scope);
       scopes.push(scope);
     }
-    scopeRoots.clear();
+
     // No need to call compiler.setScope; the top scopeRoot is now the top scope
     return scope;
   }
@@ -851,10 +846,12 @@ public class NodeTraversal {
 
   /** Returns the current scope's root. */
   public Node getScopeRoot() {
-    if (scopeRoots.isEmpty()) {
-      return scopes.peek().getRootNode();
+    Node root = scopeRoots.peek();
+    if (root == null) {
+      Scope s = scopes.peek();
+      return s != null ? s.getRootNode() : null;
     } else {
-      return scopeRoots.peek();
+      return root;
     }
   }
 
@@ -923,10 +920,6 @@ public class NodeTraversal {
     int sum = scopes.size() + scopeRoots.size();
     Preconditions.checkState(sum > 0);
     return sum - 1; // Use 0-based scope depth to be consistent within the compiler
-  }
-
-  public boolean hasScope() {
-    return !(scopes.isEmpty() && scopeRoots.isEmpty());
   }
 
   /** Reports a diagnostic (error or warning) */
