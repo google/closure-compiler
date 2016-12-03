@@ -38,8 +38,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -184,7 +184,7 @@ public class DepsGenerator {
       Iterable<DependencyInfo> parsedFileDependencies) {
     // Create a map of namespace -> file providing it.
     // Also report any duplicate provides.
-    Map<String, DependencyInfo> providesMap = new HashMap<>();
+    Map<String, DependencyInfo> providesMap = new LinkedHashMap<>();
     addToProvideMap(preparsedFileDepedencies, providesMap);
     addToProvideMap(parsedFileDependencies, providesMap);
     // For each require in the parsed sources:
@@ -281,7 +281,7 @@ public class DepsGenerator {
    */
   private Map<String, DependencyInfo> parseDepsFiles() throws IOException {
     DepsFileParser depsParser = createDepsFileParser();
-    Map<String, DependencyInfo> depsFiles = new HashMap<>();
+    Map<String, DependencyInfo> depsFiles = new LinkedHashMap<>();
     for (SourceFile file : deps) {
       if (!shouldSkipDepsFile(file)) {
         List<DependencyInfo>
@@ -324,7 +324,7 @@ public class DepsGenerator {
    */
   private Map<String, DependencyInfo> parseSources(
       Set<String> preparsedFiles) throws IOException {
-    Map<String, DependencyInfo> parsedFiles = new HashMap<>();
+    Map<String, DependencyInfo> parsedFiles = new LinkedHashMap<>();
     JsFileParser jsParser = new JsFileParser(errorManager).setModuleLoader(loader);
     Compiler compiler = new Compiler();
     compiler.init(
