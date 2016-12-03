@@ -25,19 +25,19 @@
  * @author guido.tapia@picnet.com.au (Guido Tapia)
  */
 
-/** @type {!IDBFactory|undefined} */
+/** @type {IDBFactory} */
 Window.prototype.moz_indexedDB;
 
-/** @type {!IDBFactory|undefined} */
+/** @type {IDBFactory} */
 Window.prototype.mozIndexedDB;
 
-/** @type {!IDBFactory|undefined} */
+/** @type {IDBFactory} */
 Window.prototype.webkitIndexedDB;
 
-/** @type {!IDBFactory|undefined} */
+/** @type {IDBFactory} */
 Window.prototype.msIndexedDB;
 
-/** @type {!IDBFactory|undefined} */
+/** @type {IDBFactory} */
 Window.prototype.indexedDB;
 
 /**
