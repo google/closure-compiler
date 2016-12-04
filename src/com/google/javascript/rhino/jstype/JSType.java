@@ -45,6 +45,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.TypeI;
@@ -78,8 +79,8 @@ public abstract class JSType implements TypeI, Serializable {
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
       new CanCastToVisitor();
 
-  private static final ImmutableList<String> COVARIANT_TYPES =
-      ImmutableList.of("Object", "IArrayLike", "Array");
+  private static final ImmutableSet<String> COVARIANT_TYPES =
+      ImmutableSet.of("Object", "IArrayLike", "Array");
 
   /**
    * Total ordering on types based on their textual representation.
@@ -1129,7 +1130,9 @@ public abstract class JSType implements TypeI, Serializable {
     } else if (type.isUnionType()) {
       UnionType unionType = type.toMaybeUnionType();
       boolean needsFiltering = false;
-      for (JSType alt : unionType.getAlternates()) {
+      ImmutableList<JSType> alternatesList = unionType.getAlternatesList();
+      for (int i = 0; i < alternatesList.size(); i++) {
+        JSType alt = alternatesList.get(i);
         if (alt.isNoResolvedType()) {
           needsFiltering = true;
           break;
@@ -1139,7 +1142,6 @@ public abstract class JSType implements TypeI, Serializable {
       if (needsFiltering) {
         UnionTypeBuilder builder = new UnionTypeBuilder(type.registry);
         builder.addAlternate(type.getNativeType(JSTypeNative.NO_RESOLVED_TYPE));
-        ImmutableList<JSType> alternatesList = unionType.getAlternatesList();
         for (int i = 0; i < alternatesList.size(); i++) {
           JSType alt = alternatesList.get(i);
           if (!alt.isNoResolvedType()) {
