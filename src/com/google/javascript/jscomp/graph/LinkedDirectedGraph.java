@@ -237,12 +237,26 @@ public class LinkedDirectedGraph<N, E>
       DiGraphNode<N, E>  dNode2) {
     // Verify the nodes.
     List<DiGraphEdge<N, E>> outEdges = dNode1.getOutEdges();
-    int len = outEdges.size();
-    for (int i = 0; i < len; i++) {
-      DiGraphEdge<N, E> outEdge = outEdges.get(i);
-      if (outEdge.getDestination() == dNode2
-          && edgeMatcher.apply(outEdge.getValue())) {
-        return true;
+    int outEdgesLen = outEdges.size();
+    List<DiGraphEdge<N, E>> inEdges = dNode2.getInEdges();
+    int inEdgesLen = inEdges.size();
+    // It is possible that there is a large assymmetry between the nodes, so pick the direction
+    // to search based on the shorter list since the edge lists should be symmetric.
+    if (outEdgesLen < inEdgesLen) {
+      for (int i = 0; i < outEdgesLen; i++) {
+        DiGraphEdge<N, E> outEdge = outEdges.get(i);
+        if (outEdge.getDestination() == dNode2
+            && edgeMatcher.apply(outEdge.getValue())) {
+          return true;
+        }
+      }
+    } else {
+      for (int i = 0; i < inEdgesLen; i++) {
+        DiGraphEdge<N, E> inEdge = inEdges.get(i);
+        if (inEdge.getSource() == dNode1
+            && edgeMatcher.apply(inEdge.getValue())) {
+          return true;
+        }
       }
     }
 
@@ -253,14 +267,7 @@ public class LinkedDirectedGraph<N, E>
     // Verify the nodes.
     DiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
     DiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
-    for (DiGraphEdge<N, E> outEdge : dNode1.getOutEdges()) {
-      if (outEdge.getDestination() == dNode2
-          && edgeMatcher.apply(outEdge.getValue())) {
-        return true;
-      }
-    }
-
-    return false;
+    return isConnectedInDirection(dNode1, edgeMatcher, dNode2);
   }
 
   @Override

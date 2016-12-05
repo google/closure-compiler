@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
@@ -37,7 +38,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -50,7 +50,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * This pass identifies all global names, simple (e.g. <code>a</code>) or
@@ -88,7 +87,7 @@ final class NameAnalyzer implements CompilerPass {
   private final AbstractCompiler compiler;
 
   /** Map of all JS names found */
-  private final Map<String, JsName> allNames = new TreeMap<>();
+  private final Map<String, JsName> allNames = new HashMap<>();
 
   /** Reference dependency graph */
   private LinkedDirectedGraph<JsName, RefType> referenceGraph =
@@ -204,6 +203,7 @@ final class NameAnalyzer implements CompilerPass {
     /** Whether this is a call that only affects the class definition */
     boolean onlyAffectsClassDef = false;
 
+    @Override
     public String toString() {
       return "NameInformation:" + name;
     }
@@ -1280,7 +1280,8 @@ final class NameAnalyzer implements CompilerPass {
     sb.append("</ul>");
 
     sb.append("ALL NAMES<ul>\n");
-    for (JsName node : allNames.values()) {
+    // Sort before generating to ensure a consistent stable order
+    for (JsName node : Ordering.natural().sortedCopy(allNames.values())) {
       sb.append("<li>").append(nameAnchor(node.name)).append("<ul>");
       if (!node.prototypeNames.isEmpty()) {
         sb.append("<li>PROTOTYPES: ");
@@ -1353,7 +1354,7 @@ final class NameAnalyzer implements CompilerPass {
    */
   private JsName getName(String name, boolean canCreate) {
     if (canCreate) {
-      createName(name);
+      return createName(name);
     }
     return allNames.get(name);
   }
@@ -1364,13 +1365,14 @@ final class NameAnalyzer implements CompilerPass {
    *
    * @param name A fully qualified name
    */
-  private void createName(String name) {
+  private JsName createName(String name) {
     JsName jsn = allNames.get(name);
     if (jsn == null) {
       jsn = new JsName();
       jsn.name = name;
       allNames.put(name, jsn);
     }
+    return jsn;
   }
 
   /**
@@ -1450,7 +1452,7 @@ final class NameAnalyzer implements CompilerPass {
   private void referenceParentNames() {
     // Duplicate set of nodes to process so we don't modify set we are
     // currently iterating over
-    Set<JsName> allNamesCopy = new HashSet<>(allNames.values());
+    JsName[] allNamesCopy = allNames.values().toArray(new JsName[0]);
 
     for (JsName name : allNamesCopy) {
       String curName = name.name;
