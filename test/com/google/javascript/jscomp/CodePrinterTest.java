@@ -1006,6 +1006,26 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrint("let x=0;", "let x = 0;\n");
   }
 
+  public void testPrettyPrinter_number() throws Exception {
+    assertPrettyPrintSame("var x = 10;\n");
+    assertPrettyPrintSame("var x = 1.;\n");
+    assertPrettyPrint("var x = 0xFE;", "var x = 254;\n");
+    assertPrettyPrintSame(
+        "var x = 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;\n");
+    assertPrettyPrintSame("f(10000);\n");
+    assertPrettyPrintSame("var x = -10000;\n");
+    assertPrettyPrintSame("var x = y - -10000;\n");
+    assertPrettyPrintSame("f(-10000);\n");
+    assertPrettyPrintSame("x < 2592000;\n");
+    assertPrettyPrintSame("x < 1000.000;\n");
+    assertPrettyPrintSame("x < 1000.912;\n");
+    assertPrettyPrintSame("var x = 1E20;\n");
+    assertPrettyPrintSame("var x = 1E1;\n");
+    assertPrettyPrintSame("var x = void 0;\n");
+    assertPrettyPrintSame("foo(-0);\n");
+    assertPrettyPrint("var x = 4-1000;", "var x = 4 - 1000;\n");
+  }
+
   public void testTypeAnnotations() {
     assertTypeAnnotations(
         "/** @constructor */ function Foo(){}",
@@ -1269,6 +1289,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "var x;",
         "");
 
+    assertPrettyPrint(js, js);
+  }
+
+  private void assertPrettyPrintSame(String js) {
     assertPrettyPrint(js, js);
   }
 

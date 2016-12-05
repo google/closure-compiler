@@ -308,7 +308,7 @@ public class CodeGenerator {
 
       case NUMBER:
         Preconditions.checkState(childCount == 0);
-        cc.addNumber(n.getDouble());
+        cc.addNumber(n.getDouble(), n);
         break;
 
       case TYPEOF:
@@ -332,7 +332,7 @@ public class CodeGenerator {
           // we print produces the same AST as the code we parse back.
           // NEG is a weird case because Rhino parses "- -2" as "2".
           if (n.getFirstChild().isNumber()) {
-            cc.addNumber(-n.getFirstChild().getDouble());
+            cc.addNumber(-n.getFirstChild().getDouble(), n.getFirstChild());
           } else {
             cc.addOp(NodeUtil.opToStrNoFail(type), false);
             addExpr(first, NodeUtil.precedence(type), Context.OTHER);
@@ -601,7 +601,7 @@ public class CodeGenerator {
               // Determine if the string is a simple number.
               double d = getSimpleNumber(name);
               if (!Double.isNaN(d)) {
-                cc.addNumber(d);
+                cc.addNumber(d, n);
               } else {
                 addJsString(n);
               }
@@ -1601,7 +1601,7 @@ public class CodeGenerator {
       // Determine if the string is a simple number.
       double d = getSimpleNumber(key);
       if (!Double.isNaN(d)) {
-        cc.addNumber(d);
+        cc.addNumber(d, n);
       } else {
         addJsString(n);
       }

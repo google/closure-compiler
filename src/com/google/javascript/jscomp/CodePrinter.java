@@ -22,9 +22,10 @@ import com.google.debugging.sourcemap.FilePosition;
 import com.google.javascript.jscomp.CodePrinter.Builder.CodeGeneratorFactory;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeIRegistry;
-
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -257,8 +258,48 @@ public final class CodePrinter {
     }
 
     /**
-     * Adds a newline to the code, resetting the line length and handling
-     * indenting for pretty printing.
+     * Attempt to read the number format out of the original source location, falling back to the
+     * default behavior if we cannot locate it.
+     */
+    @Override
+    void addNumber(double x, Node n) {
+      if (isNegativeZero(x)) {
+        super.addNumber(x, n);
+        return;
+      }
+      String numberFromSource = getNumberFromSource(n);
+      if (numberFromSource == null) {
+        super.addNumber(x, n);
+        return;
+      }
+
+      if (x < 0) {
+        numberFromSource = "-" + numberFromSource;
+      }
+
+      // The string we extract from the source code is not always a number.
+      // Conservatively, we only use it if we can verify that it is as a number
+      // with the right value. This excludes some valid constants (hex, etc.)
+      // for simplicity.
+      double d;
+      try {
+        d = Double.parseDouble(numberFromSource);
+      } catch (NumberFormatException e) {
+        super.addNumber(x, n);
+        return;
+      }
+
+      if (x != d) {
+        super.addNumber(x, n);
+        return;
+      }
+
+      addConstant(numberFromSource);
+    }
+
+    /**
+     * Adds a newline to the code, resetting the line length and handling indenting for pretty
+     * printing.
      */
     @Override
     void startNewLine() {
@@ -413,6 +454,38 @@ public final class CodePrinter {
     @Override
     void endFile() {
       maybeEndStatement();
+    }
+
+    private static String getNumberFromSource(Node n) {
+      if (!n.isNumber()) {
+        return null;
+      }
+
+      StaticSourceFile staticSrc = NodeUtil.getSourceFile(n);
+      if (!(staticSrc instanceof SourceFile)) {
+        return null;
+      }
+      SourceFile src = (SourceFile) staticSrc;
+
+      String srcCode;
+      try {
+        srcCode = src.getCode();
+      } catch (IOException e) {
+        return null;
+      }
+
+      int offset;
+      try {
+        offset = n.getSourceOffset();
+      } catch (IllegalArgumentException e) {
+        return null;
+      }
+      int endOffset = offset + n.getLength();
+      if (offset < 0 || endOffset > srcCode.length()) {
+        return null;
+      }
+
+      return srcCode.substring(offset, endOffset);
     }
   }
 

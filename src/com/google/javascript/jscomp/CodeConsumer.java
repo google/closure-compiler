@@ -239,7 +239,7 @@ public abstract class CodeConsumer {
     }
   }
 
-  void addNumber(double x) {
+  void addNumber(double x, Node n) {
     // This is not pretty printing. This is to prevent misparsing of x- -4 as
     // x--4 (which is a syntax error).
     char prev = getLastChar();
