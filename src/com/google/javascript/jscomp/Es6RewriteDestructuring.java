@@ -41,6 +41,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
   @Override
   public void process(Node externs, Node root) {
+    TranspilationPasses.processTranspile(compiler, externs, this);
     TranspilationPasses.processTranspile(compiler, root, this);
   }
 

@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -575,6 +576,20 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var $jscomp$destructuring$var0 = obj===undefined ? {x:0} : obj;",
             "  var x = $jscomp$destructuring$var0.x",
             "};"));
+  }
+
+  public void testDestructuringPatternInExterns() {
+    enableTypeCheck();
+    allowExternsChanges(true);
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "",
+            "Foo.prototype.bar = function({a}) {};"),
+        "(new Foo).bar({b: 0});",
+        POSSIBLE_INEXISTENT_PROPERTY);
   }
 
   public void testTypeCheck_inlineAnnotations() {
