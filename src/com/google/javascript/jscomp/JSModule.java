@@ -19,14 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.Es6SortedDependencies;
-
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -174,12 +173,16 @@ public final class JSModule implements DependencyInfo, Serializable {
    * dependencies of this module.
    */
   public Set<JSModule> getAllDependencies() {
-    Set<JSModule> allDeps = new HashSet<>(deps);
+    // JSModule uses identity semantics
+    Set<JSModule> allDeps = Sets.newIdentityHashSet();
+    allDeps.addAll(deps);
     ArrayDeque<JSModule> stack = new ArrayDeque<>(deps);
 
     while (!stack.isEmpty()) {
       JSModule module = stack.pop();
-      for (JSModule dep : module.getDependencies()) {
+      List<JSModule> moduleDeps = module.deps;
+      for (int i = 0; i < moduleDeps.size(); i++) {
+        JSModule dep = moduleDeps.get(i);
         if (allDeps.add(dep)) {
           stack.push(dep);
         }

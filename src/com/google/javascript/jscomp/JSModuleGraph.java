@@ -24,6 +24,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -32,18 +33,16 @@ import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * A {@link JSModule} dependency graph that assigns a depth to each module and
@@ -63,18 +62,15 @@ public final class JSModuleGraph {
   private List<List<JSModule>> modulesByDepth;
 
   /**
-   * dependencyMap is a cache of dependencies that makes the dependsOn
-   * function faster.  Each map entry associates a starting
-   * JSModule with the set of JSModules that are transitively dependent on the
-   * starting module.
+   * dependencyMap is a cache of dependencies that makes the dependsOn function faster. Each map
+   * entry associates a starting JSModule with the set of JSModules that are transitively dependent
+   * on the starting module.
    *
-   * If the cache returns null, then the entry hasn't been filled in for that
-   * module.
+   * <p>If the cache returns null, then the entry hasn't been filled in for that module.
    *
-   * dependencyMap should be filled from leaf to root so that
-   * getTransitiveDepsDeepestFirst can use its results directly.
+   * <p>NOTE: JSModule has identity semantics so this map implementation is safe
    */
-  private Map<JSModule, Set<JSModule>> dependencyMap = new HashMap<>();
+  private final Map<JSModule, Set<JSModule>> dependencyMap = new IdentityHashMap<>();
 
   /**
    * Creates a module graph from a list of modules in dependency order.
@@ -187,13 +183,7 @@ public final class JSModuleGraph {
    * module never depends on itself, as that dependency would be cyclic.
    */
   public boolean dependsOn(JSModule src, JSModule m) {
-    Set<JSModule> deps = dependencyMap.get(src);
-    if (deps == null) {
-      deps = getTransitiveDepsDeepestFirst(src);
-      dependencyMap.put(src, deps);
-    }
-
-    return deps.contains(m);
+    return getTransitiveDeps(src).contains(m);
   }
 
   /**
@@ -263,14 +253,17 @@ public final class JSModuleGraph {
    * @param m A module in this graph
    * @return The transitive dependencies of module {@code m}
    */
-  Set<JSModule> getTransitiveDepsDeepestFirst(JSModule m) {
+  List<JSModule> getTransitiveDepsDeepestFirst(JSModule m) {
+    return InverseDepthComparator.INSTANCE.sortedCopy(getTransitiveDeps(m));
+  }
+
+  /** Returns the transitive dependencies of the module. */
+  private Set<JSModule> getTransitiveDeps(JSModule m) {
     Set<JSModule> deps = dependencyMap.get(m);
-    if (deps != null) {
-      return deps;
+    if (deps == null) {
+      deps = m.getAllDependencies();
+      dependencyMap.put(m, deps);
     }
-    deps = new TreeSet<>(new InverseDepthComparator());
-    addDeps(deps, m);
-    dependencyMap.put(m, deps);
     return deps;
   }
 
@@ -487,7 +480,8 @@ public final class JSModuleGraph {
    * A module depth comparator that considers a deeper module to be "less than"
    * a shallower module. Uses module names to consistently break ties.
    */
-  private static class InverseDepthComparator implements Comparator<JSModule> {
+  private static final class InverseDepthComparator extends Ordering<JSModule> {
+    static final InverseDepthComparator INSTANCE = new InverseDepthComparator();
     @Override
     public int compare(JSModule m1, JSModule m2) {
       return depthCompare(m2, m1);
