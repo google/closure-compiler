@@ -92,12 +92,14 @@ final class RenameVars implements CompilerPass {
       ArrayListMultimap.create();
 
   class Assignment {
+    final boolean isLocal;
     final String oldName;
     final int orderOfOccurrence;
     String newName;
     int count; // Number of times this is referenced
 
     Assignment(String name) {
+      this.isLocal = name.startsWith(LOCAL_VAR_PREFIX);
       this.oldName = name;
       this.newName = null;
       this.count = 0;
@@ -138,8 +140,7 @@ final class RenameVars implements CompilerPass {
   private final char[] reservedCharacters;
 
   /** A prefix to distinguish temporary local names from global names */
-  // TODO(user): No longer needs to be public when shadowing doesn't use it.
-  public static final String LOCAL_VAR_PREFIX = "L ";
+  private static final String LOCAL_VAR_PREFIX = "L ";
 
   // Shared name generator
   private final NameGenerator nameGenerator;
@@ -455,7 +456,7 @@ final class RenameVars implements CompilerPass {
         continue;
       }
 
-      if (a.oldName.startsWith(LOCAL_VAR_PREFIX)
+      if (a.isLocal
           || (!externNames.contains(a.oldName)
               && prevNewName.startsWith(prefix))) {
         reservedNames.add(prevNewName);
@@ -499,7 +500,7 @@ final class RenameVars implements CompilerPass {
       }
 
       String newName;
-      if (a.oldName.startsWith(LOCAL_VAR_PREFIX)) {
+      if (a.isLocal) {
         // For local variable, we make the assignment right away.
         newName = localNameGenerator.generateNextName();
         finalizeNameAssignment(a, newName);

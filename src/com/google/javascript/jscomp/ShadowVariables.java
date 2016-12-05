@@ -201,15 +201,16 @@ class ShadowVariables implements CompilerPass {
           continue;
         }
 
-        // Try to look for the best shadow for the current candidate.
-        Assignment bestShadow = findBestShadow(s, var);
-        if (bestShadow == null) {
-          continue;
-        }
-
         // The name assignment being shadowed.
         Assignment localAssignment = assignments.get(var.getName());
         if (localAssignment == null) {
+          continue;
+        }
+        // Try to run this check last as it is more expensive than the above checks.
+
+        // Try to look for the best shadow for the current candidate.
+        Assignment bestShadow = findBestShadow(s, var);
+        if (bestShadow == null) {
           continue;
         }
 
@@ -244,7 +245,7 @@ class ShadowVariables implements CompilerPass {
     private Assignment findBestShadow(Scope curScope, Var var) {
       // Search for the candidate starting from the most used local.
       for (Assignment assignment : varsByFrequency) {
-        if (assignment.oldName.startsWith(RenameVars.LOCAL_VAR_PREFIX)) {
+        if (assignment.isLocal) {
           if (!scopeUpRefMap.containsEntry(curScope.getRootNode(), assignment.oldName)) {
             if (curScope.isDeclared(assignment.oldName, true)) {
               // Don't shadow if the scopes are the same eg.:
