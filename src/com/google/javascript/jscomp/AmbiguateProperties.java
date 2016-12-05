@@ -35,7 +35,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
@@ -44,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -257,10 +257,11 @@ class AmbiguateProperties implements CompilerPass {
         }
       }
     }
-
-    logger.fine("Collapsed " + numRenamedPropertyNames + " properties into "
-                + numNewPropertyNames + " and skipped renaming "
-                + numSkippedPropertyNames + " properties.");
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("Collapsed " + numRenamedPropertyNames + " properties into "
+                  + numNewPropertyNames + " and skipped renaming "
+                  + numSkippedPropertyNames + " properties.");
+    }
   }
 
   private BitSet getRelatedTypesOnNonUnion(JSType type) {

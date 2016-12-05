@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -739,12 +740,14 @@ class DisambiguateProperties implements CompilerPass {
         }
       }
     }
-    logger.fine("Renamed " + instancesRenamed + " instances of "
-                + propsRenamed + " properties.");
-    logger.fine("Skipped renaming " + instancesSkipped + " invalidated "
-                + "properties, " + propsSkipped + " instances of properties "
-                + "that were skipped for specific types and " + singleTypeProps
-                + " properties that were referenced from only one type.");
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("Renamed " + instancesRenamed + " instances of "
+                  + propsRenamed + " properties.");
+      logger.fine("Skipped renaming " + instancesSkipped + " invalidated "
+                  + "properties, " + propsSkipped + " instances of properties "
+                  + "that were skipped for specific types and " + singleTypeProps
+                  + " properties that were referenced from only one type.");
+    }
   }
 
   /**

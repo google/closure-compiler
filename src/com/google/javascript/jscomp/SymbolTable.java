@@ -46,7 +46,6 @@ import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.UnionType;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,8 +53,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.annotation.Nullable;
 
 /**
@@ -1014,7 +1013,9 @@ public final class SymbolTable {
       // at the same node. We bail out here to be safe.
       if (symbols.get(newProp.getDeclaration().getNode(),
               newProp.getName()) != null) {
-        logger.fine("Found duplicate symbol " + newProp);
+        if (logger.isLoggable(Level.FINE)) {
+          logger.fine("Found duplicate symbol " + newProp);
+        }
         continue;
       }
 

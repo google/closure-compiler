@@ -43,6 +43,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -121,8 +122,9 @@ public class DepsGenerator {
   public String computeDependencyCalls() throws IOException {
     // Build a map of closure-relative path -> DepInfo.
     Map<String, DependencyInfo> depsFiles = parseDepsFiles();
-    logger.fine("preparsedFiles: " + depsFiles);
-
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("preparsedFiles: " + depsFiles);
+    }
     // Find all goog.provides & goog.requires in src files
     Map<String, DependencyInfo> jsFiles = parseSources(depsFiles.keySet());
 
@@ -334,8 +336,9 @@ public class DepsGenerator {
       String closureRelativePath =
           PathUtil.makeRelative(
               closurePathAbs, PathUtil.makeAbsolute(file.getName()));
-      logger.fine("Closure-relative path: " + closureRelativePath);
-
+      if (logger.isLoggable(Level.FINE)) {
+        logger.fine("Closure-relative path: " + closureRelativePath);
+      }
       if (InclusionStrategy.WHEN_IN_SRCS == mergeStrategy ||
           !preparsedFiles.contains(closureRelativePath)) {
         DependencyInfo depInfo =

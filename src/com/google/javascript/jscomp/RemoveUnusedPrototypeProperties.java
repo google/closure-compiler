@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.NameInfo;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Symbol;
 import com.google.javascript.rhino.Node;
-
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -68,7 +68,9 @@ class RemoveUnusedPrototypeProperties implements CompilerPass {
           // Code-change reporting happens at the remove methods
           declaration.remove(compiler);
         }
-        logger.fine("Removed unused prototype property: " + nameInfo.name);
+        if (logger.isLoggable(Level.FINE)) {
+          logger.fine("Removed unused prototype property: " + nameInfo.name);
+        }
       }
     }
   }

@@ -129,7 +129,9 @@ public final class DepsFileParser extends JsFileLineParser {
    */
   public List<DependencyInfo> parseFileReader(String filePath, Reader reader) {
     depInfos = new ArrayList<>();
-    logger.fine("Parsing Dep: " + filePath);
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("Parsing Dep: " + filePath);
+    }
     doParse(filePath, reader);
     return depInfos;
   }

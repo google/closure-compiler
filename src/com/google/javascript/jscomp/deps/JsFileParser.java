@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -174,7 +175,9 @@ public final class JsFileParser extends JsFileLineParser {
     this.file = loader.resolve(filePath);
     this.moduleType = ModuleType.NON_MODULE;
 
-    logger.fine("Parsing Source: " + filePath);
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("Parsing Source: " + filePath);
+    }
     doParse(filePath, fileContents);
 
     if (moduleType == ModuleType.ES6_MODULE) {
@@ -195,7 +198,9 @@ public final class JsFileParser extends JsFileLineParser {
 
     DependencyInfo dependencyInfo = new SimpleDependencyInfo(
         closureRelativePath, filePath, provides, requires, loadFlags);
-    logger.fine("DepInfo: " + dependencyInfo);
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("DepInfo: " + dependencyInfo);
+    }
     return dependencyInfo;
   }
 

@@ -2789,7 +2789,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       Node originalRoot, Node js, PassFactory passFactory) {
     HotSwapCompilerPass pass = passFactory.getHotSwapPass(this);
     if (pass != null) {
-      logger.info("Performing HotSwap for pass " + passFactory.getName());
+      if (logger.isLoggable(Level.INFO)) {
+        logger.info("Performing HotSwap for pass " + passFactory.getName());
+      }
       pass.hotSwapScript(js, originalRoot);
     }
   }

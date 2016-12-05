@@ -22,6 +22,7 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -93,23 +94,31 @@ class InlineSimpleMethods extends MethodCompilerPass {
           Node returned = returnedExpression(firstDefinition);
           if (returned != null) {
             if (isPropertyTree(returned)) {
-              logger.fine("Inlining property accessor: " + callName);
+              if (logger.isLoggable(Level.FINE)) {
+                logger.fine("Inlining property accessor: " + callName);
+              }
               inlinePropertyReturn(parent, callNode, returned);
             } else if (NodeUtil.isLiteralValue(returned, false) &&
               !NodeUtil.mayHaveSideEffects(
                   callNode.getFirstChild(), compiler)) {
-              logger.fine("Inlining constant accessor: " + callName);
+              if (logger.isLoggable(Level.FINE)) {
+                logger.fine("Inlining constant accessor: " + callName);
+              }
               inlineConstReturn(parent, callNode, returned);
             }
           } else if (isEmptyMethod(firstDefinition) &&
               !NodeUtil.mayHaveSideEffects(
                   callNode.getFirstChild(), compiler)) {
-            logger.fine("Inlining empty method: " + callName);
+            if (logger.isLoggable(Level.FINE)) {
+              logger.fine("Inlining empty method: " + callName);
+            }
             inlineEmptyMethod(parent, callNode);
           }
         }
       } else {
-        logger.fine("Method '" + callName + "' has conflicting definitions.");
+        if (logger.isLoggable(Level.FINE)) {
+          logger.fine("Method '" + callName + "' has conflicting definitions.");
+        }
       }
     }
   }
