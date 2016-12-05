@@ -71,13 +71,13 @@ function ReadableStreamSource() {};
 
 /**
  * @type {(undefined|
- *     function((!ReadableByteStreamController|!ReadableStreamDefaultController)):(!Promise<*>|undefined))}
+ *     function((!ReadableByteStreamController|!ReadableStreamDefaultController)):(!IThenable<*>|undefined))}
  */
 ReadableStreamSource.prototype.start;
 
 /**
  * @type {(undefined|
- *     function((!ReadableByteStreamController|!ReadableStreamDefaultController)):(!Promise<*>|undefined))}
+ *     function((!ReadableByteStreamController|!ReadableStreamDefaultController)):(!IThenable<*>|undefined))}
  */
 ReadableStreamSource.prototype.pull;
 
@@ -323,16 +323,16 @@ ReadableStreamBYOBRequest.prototype.respondWithNewView = function(view) {};
  */
 function WritableStreamSink() {};
 
-/** @type {(undefined|function(!WritableStreamDefaultController):(!Promise<*>|undefined))}*/
+/** @type {(undefined|function(!WritableStreamDefaultController):(!IThenable<*>|undefined))}*/
 WritableStreamSink.prototype.start;
 
-/** @type {(undefined|function(!WritableStreamDefaultController):(!Promise<*>|undefined))}*/
+/** @type {(undefined|function(!WritableStreamDefaultController):(!IThenable<*>|undefined))}*/
 WritableStreamSink.prototype.write;
 
-/** @type {(undefined|function():(!Promise<*>|undefined))} */
+/** @type {(undefined|function():(!IThenable<*>|undefined))} */
 WritableStreamSink.prototype.close;
 
-/** @type {(undefined|function(*):(!Promise<*>|undefined))} */
+/** @type {(undefined|function(*):(!IThenable<*>|undefined))} */
 WritableStreamSink.prototype.abort;
 
 
