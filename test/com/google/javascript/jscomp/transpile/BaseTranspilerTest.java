@@ -70,7 +70,8 @@ public final class BaseTranspilerTest extends TestCase {
     assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
     assertThat(result.errors).isEmpty();
     assertThat(result.transpiled).isTrue();
-    assertThat(result.sourceMap).contains("\"mappings\":\";\"");
+    assertThat(result.sourceMap)
+        .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;\"");
   }
 
   public void testCompilerSupplier_compileNoChange() {
@@ -78,7 +79,7 @@ public final class BaseTranspilerTest extends TestCase {
     assertThat(result.source).isEqualTo("var x = 42;\n");
     assertThat(result.errors).isEmpty();
     assertThat(result.transpiled).isFalse();
-    assertThat(result.sourceMap).contains("\"mappings\":\";\"");
+    assertThat(result.sourceMap).isEmpty();
   }
 
   public void testCompilerSupplier_runtime() {

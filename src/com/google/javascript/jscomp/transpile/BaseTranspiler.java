@@ -88,6 +88,7 @@ public final class BaseTranspiler implements Transpiler {
     public CompileResult compile(String path, String code) {
       Compiler compiler = compiler();
       Result result = compiler.compile(EXTERNS, SourceFile.fromCode(path, code), options());
+      String source = compiler.toSource();
       StringBuilder sourceMap = new StringBuilder();
       if (result.sourceMap != null) {
         try {
@@ -96,11 +97,12 @@ public final class BaseTranspiler implements Transpiler {
           // impossible, and not a big deal even if it did happen.
         }
       }
+      boolean transpiled = !result.transpiledFiles.isEmpty();
       return new CompileResult(
-          compiler.toSource(),
+          source,
           result.errors,
-          !result.transpiledFiles.isEmpty(),
-          sourceMap.toString());
+          transpiled,
+          transpiled ? sourceMap.toString() : "");
     }
 
     public String runtime(String library) {
