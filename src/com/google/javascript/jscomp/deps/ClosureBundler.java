@@ -29,40 +29,48 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * A utility class to assist in creating JS bundle files.
  */
-public class ClosureBundler {
+public final class ClosureBundler {
 
   private final Transpiler transpiler;
 
-  private EvalMode mode = EvalMode.NORMAL;
-  private String sourceUrl = null;
-  private String path = "unknown_source";
+  private final EvalMode mode;
+  private final String sourceUrl;
+  private final String path;
 
   // TODO(sdh): This cache should be moved out into a higher level, but is
   // currently required due to the API that source maps must be accessible
   // via just a path (and not the file contents).
-  private final Map<String, String> sourceMapCache = new ConcurrentHashMap<>();
+  private final Map<String, String> sourceMapCache;
 
   public ClosureBundler() {
     this(Transpiler.NULL);
   }
 
   public ClosureBundler(Transpiler transpiler) {
+    this(transpiler, EvalMode.NORMAL, null, "unknown_source",
+        new ConcurrentHashMap<String, String>());
+  }
+
+  private ClosureBundler(Transpiler transpiler, EvalMode mode, String sourceUrl, String path,
+      Map<String, String> sourceMapCache) {
     this.transpiler = transpiler;
+    this.mode = mode;
+    this.sourceUrl = sourceUrl;
+    this.path = path;
+    this.sourceMapCache = sourceMapCache;
   }
 
   public final ClosureBundler useEval(boolean useEval) {
-    this.mode = useEval ? EvalMode.EVAL : EvalMode.NORMAL;
-    return this;
+    EvalMode newMode = useEval ? EvalMode.EVAL : EvalMode.NORMAL;
+    return new ClosureBundler(transpiler, newMode, sourceUrl, path, sourceMapCache);
   }
 
-  public final ClosureBundler withSourceUrl(String sourceUrl) {
-    this.sourceUrl = sourceUrl;
-    return this;
+  public final ClosureBundler withSourceUrl(String newSourceUrl) {
+    return new ClosureBundler(transpiler, mode, newSourceUrl, path, sourceMapCache);
   }
 
-  public final ClosureBundler withPath(String path) {
-    this.path = path;
-    return this;
+  public final ClosureBundler withPath(String newPath) {
+    return new ClosureBundler(transpiler, mode, sourceUrl, newPath, sourceMapCache);
   }
 
   /** Append the contents of the string to the supplied appendable. */
