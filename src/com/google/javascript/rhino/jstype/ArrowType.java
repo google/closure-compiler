@@ -43,6 +43,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import java.util.Objects;
 
 /**
  * The arrow type models a "bare" function type: from some parameter types to
@@ -220,15 +221,11 @@ final class ArrowType extends JSType {
 
   @Override
   public int hashCode() {
-    int hashCode = 0;
-    if (returnType != null) {
-      hashCode += returnType.hashCode();
-    }
+    int hashCode = Objects.hashCode(returnType);
     if (parameters != null) {
       Node param = parameters.getFirstChild();
       while (param != null) {
-        JSType paramType = param.getJSType();
-        hashCode = hashCode * 31 + (paramType == null ? 0 : paramType.hashCode());
+        hashCode = hashCode * 31 + Objects.hashCode(param.getJSType());
         param = param.getNext();
       }
     }
