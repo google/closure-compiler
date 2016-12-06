@@ -246,7 +246,7 @@ public class IR {
     Preconditions.checkState(target.isVar() || mayBeExpression(target));
     Preconditions.checkState(mayBeExpression(cond));
     Preconditions.checkState(body.isBlock());
-    return new Node(Token.FOR, target, cond, body);
+    return new Node(Token.FOR_IN, target, cond, body);
   }
 
   public static Node forNode(Node init, Node cond, Node incr, Node body) {

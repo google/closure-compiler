@@ -163,9 +163,9 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
           tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state);
           continue;
         case FOR:
+        case FOR_IN:
           if (!NodeUtil.isForIn(n)) {
-            tryRemoveAssignment(
-                t, NodeUtil.getConditionExpression(n), state);
+            tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state);
           }
           continue;
         case SWITCH:

@@ -50,7 +50,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     implements HotSwapCompilerPass {
 
   private static final Set<Token> LOOP_TOKENS =
-      EnumSet.of(Token.WHILE, Token.FOR, Token.FOR_OF, Token.DO, Token.FUNCTION);
+      EnumSet.of(Token.WHILE, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.DO, Token.FUNCTION);
 
   private final AbstractCompiler compiler;
   private final Table<Node, String, String> renameTable = HashBasedTable.create();

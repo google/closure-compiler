@@ -22,13 +22,11 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -247,9 +245,9 @@ final class MustBeReachingVariableDef extends
         return;
 
       case FOR:
+      case FOR_IN:
         if (!NodeUtil.isForIn(n)) {
-          computeMustDef(
-              NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
+          computeMustDef(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         } else {
           // for(x in y) {...}
           Node lhs = n.getFirstChild();

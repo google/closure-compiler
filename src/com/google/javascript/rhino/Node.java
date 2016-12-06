@@ -2951,7 +2951,15 @@ public class Node implements Serializable {
   }
 
   public boolean isFor() {
+    return this.isVanillaFor() || this.isForIn();
+  }
+
+  public boolean isVanillaFor() {
     return this.token == Token.FOR;
+  }
+
+  public boolean isForIn() {
+    return this.token == Token.FOR_IN;
   }
 
   public boolean isForOf() {

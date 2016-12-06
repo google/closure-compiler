@@ -58,13 +58,15 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryFoldIf(subtree);
       case WHILE:
         return tryFoldWhile(subtree);
-      case FOR: {
-        Node condition = NodeUtil.getConditionExpression(subtree);
-        if (condition != null) {
-          tryFoldForCondition(condition);
+      case FOR:
+      case FOR_IN:
+        {
+          Node condition = NodeUtil.getConditionExpression(subtree);
+          if (condition != null) {
+            tryFoldForCondition(condition);
+          }
+          return tryFoldFor(subtree);
         }
-        return tryFoldFor(subtree);
-      }
       case DO:
         Node foldedDo = tryFoldDoAway(subtree);
         if (foldedDo.isDo()) {

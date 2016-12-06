@@ -549,6 +549,7 @@ class Normalize implements CompilerPass {
         case LABEL:
         case BLOCK:
         case FOR:
+        case FOR_IN:
         case WHILE:
         case DO:
           return;
@@ -585,6 +586,7 @@ class Normalize implements CompilerPass {
             extractForInitializer(c, insertBefore, insertBeforeParent);
             break;
           case FOR:
+          case FOR_IN:
             if (NodeUtil.isForIn(c)) {
               Node first = c.getFirstChild();
               if (first.isVar()) {

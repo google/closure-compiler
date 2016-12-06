@@ -381,6 +381,7 @@ class ProcessDefines implements CompilerPass {
       switch (n.getToken()) {
         case CASE:
         case FOR:
+        case FOR_IN:
         case FUNCTION:
         case HOOK:
         case IF:

@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollect
 import com.google.javascript.jscomp.VariableVisibilityAnalysis.VariableVisibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -341,6 +340,7 @@ import java.util.Set;
       case HOOK:
         return (indexOfChildInParent == 1 || indexOfChildInParent == 2);
       case FOR:
+      case FOR_IN:
         // Only initializer is not control dependent
         return indexOfChildInParent != 0;
       case SWITCH:

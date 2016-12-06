@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
@@ -196,9 +195,9 @@ class LiveVariablesAnalysis extends
         return;
 
       case FOR:
+      case FOR_IN:
         if (!NodeUtil.isForIn(n)) {
-          computeGenKill(NodeUtil.getConditionExpression(n), gen, kill,
-              conditional);
+          computeGenKill(NodeUtil.getConditionExpression(n), gen, kill, conditional);
         } else {
           // for(x in y) {...}
           Node lhs = n.getFirstChild();

@@ -504,6 +504,7 @@ class IRFactory {
   private static boolean isBreakTarget(Node n) {
     switch (n.getToken()) {
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case WHILE:
       case DO:
@@ -517,6 +518,7 @@ class IRFactory {
   private static boolean isContinueTarget(Node n) {
     switch (n.getToken()) {
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case WHILE:
       case DO:
@@ -1166,10 +1168,7 @@ class IRFactory {
             lineno(loopNode.initializer), charno(loopNode.initializer));
       }
       return newNode(
-          Token.FOR,
-          initializer,
-          transform(loopNode.collection),
-          transformBlock(loopNode.body));
+          Token.FOR_IN, initializer, transform(loopNode.collection), transformBlock(loopNode.body));
     }
 
     Node processForOf(ForOfStatementTree loopNode) {

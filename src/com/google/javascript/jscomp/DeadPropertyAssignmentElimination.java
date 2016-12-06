@@ -408,6 +408,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
         case THROW:
         case FOR:
+        case FOR_IN:
         case SWITCH:
           // TODO(kevinoconnor): Switch/for statements need special consideration since they may
           // execute out of order.

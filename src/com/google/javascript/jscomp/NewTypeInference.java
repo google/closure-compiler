@@ -705,11 +705,11 @@ final class NewTypeInference implements CompilerPass {
       case DO:
       case WHILE:
       case FOR:
+      case FOR_IN:
         // Do the loop body first, then the loop follow.
         // For DO loops, we do BODY-CONDT-CONDF-FOLLOW
         // Since CONDT is currently unused, this could be optimized.
-        List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges =
-            dn.getOutEdges();
+        List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges = dn.getOutEdges();
         seen.add(dn);
         workset.add(dn);
         for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : outEdges) {
@@ -911,6 +911,7 @@ final class NewTypeInference implements CompilerPass {
           break;
         case DO:
         case FOR:
+        case FOR_IN:
         case IF:
         case WHILE:
           Node expr = NodeUtil.isForIn(n) ?
@@ -1007,6 +1008,7 @@ final class NewTypeInference implements CompilerPass {
         case DO:
         case IF:
         case FOR:
+        case FOR_IN:
         case WHILE:
           if (NodeUtil.isForIn(n)) {
             Node obj = n.getSecondChild();
@@ -4306,6 +4308,7 @@ final class NewTypeInference implements CompilerPass {
         return this.commonTypes.getEmptyObjectLiteral();
       }
       case FOR:
+      case FOR_IN:
         Preconditions.checkState(NodeUtil.isForIn(expr));
         return TOP_OBJECT;
       case GETPROP:

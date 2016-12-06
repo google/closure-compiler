@@ -652,6 +652,7 @@ public class CodeGenerator {
         }
 
       case FOR:
+      case FOR_IN:
         if (childCount == 4) {
           add("for");
           cc.maybeInsertSpace();

@@ -82,6 +82,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
       case WHILE:
       case FOR:
+      case FOR_IN:
       case FOR_OF:
         reportIfWasEmpty(t, NodeUtil.getLoopCodeBlock(n));
         break;

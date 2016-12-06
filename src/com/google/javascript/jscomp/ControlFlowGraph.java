@@ -168,6 +168,7 @@ public class ControlFlowGraph<N> extends
         return NodeUtil.getConditionExpression(parent) != n;
 
       case FOR:
+      case FOR_IN:
         // The FOR(;;) node differs from other control structures in that
         // it has an initialization and an increment statement. Those
         // two statements have corresponding CFG nodes to represent them.

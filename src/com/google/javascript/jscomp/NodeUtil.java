@@ -2362,19 +2362,20 @@ public final class NodeUtil {
     return n.isFunction() && !n.isArrowFunction();
   }
 
+  /** Use Node.isVanillaFor instead. */
+  @Deprecated
   static boolean isVanillaFor(Node n) {
-    return n.isFor() && n.getChildCount() == 4;
+    return n.isVanillaFor();
   }
 
   static boolean isEnhancedFor(Node n) {
-    return n.isForOf() || isForIn(n);
+    return n.isForOf() || n.isForIn();
   }
 
-  /**
-   * @return Whether the node represents a FOR-IN loop.
-   */
+  /** Use Node.isForIn instead. */
+  @Deprecated
   public static boolean isForIn(Node n) {
-    return n.isFor() && n.getChildCount() == 3;
+    return n.isForIn();
   }
 
   /**
@@ -2383,6 +2384,7 @@ public final class NodeUtil {
   static boolean isLoopStructure(Node n) {
     switch (n.getToken()) {
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case DO:
       case WHILE:
@@ -2400,6 +2402,7 @@ public final class NodeUtil {
   static Node getLoopCodeBlock(Node n) {
     switch (n.getToken()) {
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case WHILE:
         return n.getLastChild();
@@ -2433,6 +2436,7 @@ public final class NodeUtil {
   public static boolean isControlStructure(Node n) {
     switch (n.getToken()) {
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case DO:
       case WHILE:
@@ -2461,6 +2465,7 @@ public final class NodeUtil {
       case TRY:
         return parent.getFirstChild() == n || parent.getLastChild() == n;
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case WHILE:
       case LABEL:
@@ -2492,6 +2497,7 @@ public final class NodeUtil {
       case DO:
         return n.getLastChild();
       case FOR:
+      case FOR_IN:
         return NodeUtil.isForIn(n) ? null : n.getSecondChild();
       case FOR_OF:
       case CASE:
@@ -2530,6 +2536,7 @@ public final class NodeUtil {
         }
         return true;
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case SWITCH:
       case CLASS:
@@ -3696,6 +3703,7 @@ public final class NodeUtil {
       case WHILE:
       case DO:
       case FOR:
+      case FOR_IN:
         return NodeUtil.getConditionExpression(parent) == propAccess;
 
       case INSTANCEOF:
@@ -4540,6 +4548,7 @@ public final class NodeUtil {
         return (expr == parent.getFirstChild())
             ? false : isExpressionResultUsed(parent);
       case FOR:
+      case FOR_IN:
         if (!NodeUtil.isForIn(parent)) {
           // Only an expression whose result is in the condition part of the
           // expression is used.
@@ -4571,6 +4580,7 @@ public final class NodeUtil {
           // other ancestors may be conditional
           continue inspect;
         case FOR:
+        case FOR_IN:
           if (NodeUtil.isForIn(parent)) {
             if (parent.getSecondChild() != n) {
               return false;

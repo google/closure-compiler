@@ -815,6 +815,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case FOR:
+      case FOR_IN:
         if (NodeUtil.isForIn(n)) {
           Node obj = n.getSecondChild();
           if (getJSType(obj).isStruct()) {

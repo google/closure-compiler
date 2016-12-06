@@ -135,6 +135,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
         // We don't want to add a new return value.
         return n.hasChildren();
       case FOR:
+      case FOR_IN:
         if (NodeUtil.isForIn(n)) {
           // Avoid cases where we have for(var x = foo() in a) { ....
           return !mayHaveSideEffects(n.getFirstChild());
@@ -202,6 +203,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
         fuseExpressionIntoFirstChild(before.removeFirstChild(), control);
         return;
       case FOR:
+      case FOR_IN:
         before.getParent().removeChild(before);
         if (NodeUtil.isForIn(control)) {
           fuseExpressionIntoSecondChild(before.removeFirstChild(), control);

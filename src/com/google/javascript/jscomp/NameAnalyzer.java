@@ -1841,6 +1841,7 @@ final class NameAnalyzer implements CompilerPass {
       case BLOCK:
       case SCRIPT:
       case FOR:
+      case FOR_IN:
       case LABEL:
         break;
       default:
@@ -1917,6 +1918,7 @@ final class NameAnalyzer implements CompilerPass {
         return parent.getFirstChild() == n;
 
       case FOR:
+      case FOR_IN:
         return parent.getSecondChild() == n;
 
       case DO:

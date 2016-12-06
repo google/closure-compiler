@@ -672,6 +672,7 @@ class ExpressionDecomposer {
           return parent;
         // Any of these indicate an unsupported expression:
         case FOR:
+        case FOR_IN:
           if (!NodeUtil.isForIn(parent) && child == parent.getFirstChild()) {
             return parent;
           }

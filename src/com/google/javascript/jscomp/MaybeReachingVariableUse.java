@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -184,9 +183,9 @@ class MaybeReachingVariableUse extends
         return;
 
       case FOR:
+      case FOR_IN:
         if (!NodeUtil.isForIn(n)) {
-          computeMayUse(
-              NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
+          computeMayUse(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         } else {
           // for(x in y) {...}
           Node lhs = n.getFirstChild();

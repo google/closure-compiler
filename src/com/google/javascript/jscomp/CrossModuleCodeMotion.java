@@ -226,6 +226,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       switch (ancestor.getToken()) {
         case DO:
         case FOR:
+        case FOR_IN:
         case HOOK:
         case IF:
         case SWITCH:

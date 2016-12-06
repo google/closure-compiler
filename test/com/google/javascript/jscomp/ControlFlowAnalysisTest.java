@@ -25,12 +25,10 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Tests {@link ControlFlowAnalysis}.
@@ -716,40 +714,41 @@ public final class ControlFlowAnalysisTest extends TestCase {
 
   public void testForIn() {
     String src = "var a,b;for(a in b){a()};";
-    String expected = "digraph AST {\n" +
-      "  node [color=lightblue2, style=filled];\n" +
-      "  node0 [label=\"SCRIPT\"];\n" +
-      "  node1 [label=\"VAR\"];\n" +
-      "  node0 -> node1 [weight=1];\n" +
-      "  node2 [label=\"NAME\"];\n" +
-      "  node1 -> node2 [weight=1];\n" +
-      "  node3 [label=\"NAME\"];\n" +
-      "  node1 -> node3 [weight=1];\n" +
-      "  node4 [label=\"NAME\"];\n" +
-      "  node1 -> node4 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node5 [label=\"FOR\"];\n" +
-      "  node0 -> node5 [weight=1];\n" +
-      "  node6 [label=\"NAME\"];\n" +
-      "  node5 -> node6 [weight=1];\n" +
-      "  node5 -> node4 [weight=1];\n" +
-      "  node4 -> node5 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node7 [label=\"BLOCK\"];\n" +
-      "  node5 -> node7 [weight=1];\n" +
-      "  node8 [label=\"EXPR_RESULT\"];\n" +
-      "  node7 -> node8 [weight=1];\n" +
-      "  node9 [label=\"CALL\"];\n" +
-      "  node8 -> node9 [weight=1];\n" +
-      "  node10 [label=\"NAME\"];\n" +
-      "  node9 -> node10 [weight=1];\n" +
-      "  node8 -> node5 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node7 -> node8 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node11 [label=\"EMPTY\"];\n" +
-      "  node5 -> node11 [label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node5 -> node7 [label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node0 -> node11 [weight=1];\n" +
-      "  node11 -> RETURN [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "}\n";
+    String expected =
+        "digraph AST {\n"
+        + "  node [color=lightblue2, style=filled];\n"
+        + "  node0 [label=\"SCRIPT\"];\n"
+        + "  node1 [label=\"VAR\"];\n"
+        + "  node0 -> node1 [weight=1];\n"
+        + "  node2 [label=\"NAME\"];\n"
+        + "  node1 -> node2 [weight=1];\n"
+        + "  node3 [label=\"NAME\"];\n"
+        + "  node1 -> node3 [weight=1];\n"
+        + "  node4 [label=\"NAME\"];\n"
+        + "  node1 -> node4 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node5 [label=\"FOR_IN\"];\n"
+        + "  node0 -> node5 [weight=1];\n"
+        + "  node6 [label=\"NAME\"];\n"
+        + "  node5 -> node6 [weight=1];\n"
+        + "  node5 -> node4 [weight=1];\n"
+        + "  node4 -> node5 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node7 [label=\"BLOCK\"];\n"
+        + "  node5 -> node7 [weight=1];\n"
+        + "  node8 [label=\"EXPR_RESULT\"];\n"
+        + "  node7 -> node8 [weight=1];\n"
+        + "  node9 [label=\"CALL\"];\n"
+        + "  node8 -> node9 [weight=1];\n"
+        + "  node10 [label=\"NAME\"];\n"
+        + "  node9 -> node10 [weight=1];\n"
+        + "  node8 -> node5 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node7 -> node8 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node11 [label=\"EMPTY\"];\n"
+        + "  node5 -> node11 [label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node5 -> node7 [label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node0 -> node11 [weight=1];\n"
+        + "  node11 -> RETURN [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "}\n";
     testCfg(src, expected);
   }
 
@@ -1305,14 +1304,23 @@ public final class ControlFlowAnalysisTest extends TestCase {
 
   public void testLabelledForInLoopOrder() {
     assertNodeOrder(
-        createCfg("var i = 0; var y = {}; " +
-            "label: for (var x in y) { " +
-            "    if (x) { break label; } else { i++ } x(); }"),
+        createCfg(
+            "var i = 0; var y = {}; "
+                + "label: for (var x in y) { "
+                + "    if (x) { break label; } else { i++ } x(); }"),
         ImmutableList.of(
-            Token.SCRIPT, Token.VAR, Token.VAR, Token.NAME,
-            Token.FOR, Token.BLOCK,
-            Token.IF, Token.BLOCK, Token.BREAK,
-            Token.BLOCK, Token.EXPR_RESULT, Token.EXPR_RESULT));
+            Token.SCRIPT,
+            Token.VAR,
+            Token.VAR,
+            Token.NAME,
+            Token.FOR_IN,
+            Token.BLOCK,
+            Token.IF,
+            Token.BLOCK,
+            Token.BREAK,
+            Token.BLOCK,
+            Token.EXPR_RESULT,
+            Token.EXPR_RESULT));
   }
 
   public void testLocalFunctionOrder() {

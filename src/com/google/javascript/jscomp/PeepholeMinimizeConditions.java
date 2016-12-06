@@ -97,6 +97,7 @@ class PeepholeMinimizeConditions
         return node;
 
       case FOR:
+      case FOR_IN:
         if (!NodeUtil.isForIn(node)) {
           tryJoinForCondition(node);
           tryMinimizeCondition(NodeUtil.getConditionExpression(node));
@@ -947,6 +948,7 @@ class PeepholeMinimizeConditions
         case WITH:
         case WHILE:
         case FOR:
+        case FOR_IN:
           n = n.getLastChild();
           continue;
         default:

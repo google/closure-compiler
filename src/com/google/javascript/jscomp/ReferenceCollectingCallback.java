@@ -299,6 +299,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       switch (parent.getToken()) {
         case DO:
         case FOR:
+        case FOR_IN:
         case FOR_OF:
         case TRY:
         case WHILE:
@@ -808,9 +809,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
       if (root.getParent() != null) {
         Token pType = root.getParent().getToken();
-        this.isLoop = pType == Token.DO ||
-            pType == Token.WHILE ||
-            pType == Token.FOR;
+        this.isLoop =
+            pType == Token.DO
+                || pType == Token.WHILE
+                || pType == Token.FOR
+                || pType == Token.FOR_IN;
       } else {
         this.isLoop = false;
       }

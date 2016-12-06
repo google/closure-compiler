@@ -51,6 +51,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
         break;
 
       case FOR:
+      case FOR_IN:
       case WHILE:
         tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
         break;

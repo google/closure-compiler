@@ -31,7 +31,6 @@ import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -763,6 +762,7 @@ class GlobalNamespace
           case IF:
           case WHILE:
           case FOR:
+          case FOR_IN:
           case TYPEOF:
           case VOID:
           case NOT:

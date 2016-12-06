@@ -250,6 +250,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     if (parent != null) {
       switch (parent.getToken()) {
         case FOR:
+        case FOR_IN:
         case FOR_OF:
           // Only traverse the body of the for loop.
           return n == parent.getLastChild();
@@ -311,6 +312,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         return;
       case FOR_OF:
       case FOR:
+      case FOR_IN:
         handleFor(n);
         return;
       case SWITCH:
@@ -751,6 +753,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case FOR_OF:
         return parent;
       case FOR:
+      case FOR_IN:
         if (NodeUtil.isForIn(parent)) {
           return parent;
         } else {
@@ -814,6 +817,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case DO:
         return computeFallThrough(n.getFirstChild());
       case FOR:
+      case FOR_IN:
       case FOR_OF:
         if (n.isForOf() || NodeUtil.isForIn(n)) {
           return n.getSecondChild();
@@ -969,6 +973,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   static boolean isBreakStructure(Node n, boolean labeled) {
     switch (n.getToken()) {
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case DO:
       case WHILE:
@@ -989,6 +994,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   static boolean isContinueStructure(Node n) {
     switch (n.getToken()) {
       case FOR:
+      case FOR_IN:
       case FOR_OF:
       case DO:
       case WHILE:

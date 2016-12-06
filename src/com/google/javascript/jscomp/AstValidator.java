@@ -137,6 +137,9 @@ public final class AstValidator implements CompilerPass {
       case FOR:
         validateFor(n);
         return;
+      case FOR_IN:
+        validateForIn(n);
+        return;
       case FOR_OF:
         validateForOf(n);
         return;
@@ -942,18 +945,18 @@ public final class AstValidator implements CompilerPass {
 
   private void validateFor(Node n) {
     validateNodeType(Token.FOR, n);
-    if (NodeUtil.isForIn(n)) {
-      // FOR-IN
-      validateChildCount(n, 3);
-      validateVarOrAssignmentTarget(n.getFirstChild());
-      validateExpression(n.getSecondChild());
-    } else {
-      // FOR
-      validateChildCount(n, 4);
-      validateVarOrOptionalExpression(n.getFirstChild());
-      validateOptionalExpression(n.getSecondChild());
-      validateOptionalExpression(n.getChildAtIndex(2));
-    }
+    validateChildCount(n, 4);
+    validateVarOrOptionalExpression(n.getFirstChild());
+    validateOptionalExpression(n.getSecondChild());
+    validateOptionalExpression(n.getChildAtIndex(2));
+    validateBlock(n.getLastChild());
+  }
+
+  private void validateForIn(Node n) {
+    validateNodeType(Token.FOR_IN, n);
+    validateChildCount(n, 3);
+    validateVarOrAssignmentTarget(n.getFirstChild());
+    validateExpression(n.getSecondChild());
     validateBlock(n.getLastChild());
   }
 
