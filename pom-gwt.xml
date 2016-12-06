@@ -43,7 +43,7 @@
     <jdk.version>1.7</jdk.version>
     <!-- for substitution in ParserConfig.properties -->
     <compiler.date>${maven.build.timestamp}</compiler.date>
-    <maven.build.timestamp.format>yyyy-MM-dd HH\:mm</maven.build.timestamp.format>
+    <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <compiler.version>${project.version}</compiler.version>
   </properties>
 
