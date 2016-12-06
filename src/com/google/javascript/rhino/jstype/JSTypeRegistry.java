@@ -714,6 +714,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   // and its nominal type is Object, and it has some properties,
   // we don't need to store these properties in the propertyIndex separately.
   private static boolean isObjectLiteralThatCanBeSkipped(JSType t) {
+    t = t.restrictByNotNullOrUndefined();
     if (t.isObject() && !t.isUnionType()) {
       ObjectType tObj = t.toObjectType();
       ObjectType proto = tObj.getImplicitPrototype();
