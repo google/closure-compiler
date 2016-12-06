@@ -44,6 +44,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * A property slot of an object.
@@ -146,5 +147,10 @@ public final class Property
         + ", type:" + this.type
         + ", inferred: " + this.inferred
         + "}";
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, type);
   }
 }

@@ -115,4 +115,9 @@ public class VoidType extends ValueType {
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseVoidType();
   }
+
+  @Override
+  public int hashCode() {
+    return System.identityHashCode(this);
+  }
 }

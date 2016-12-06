@@ -43,10 +43,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -190,5 +190,13 @@ class PropertyMap implements Serializable {
 
   Iterable<Property> values() {
     return properties.values();
+  }
+
+  @Override
+  public int hashCode() {
+    // Calculate the hash just based on the property names, not their types.
+    // Otherwise we can get into an infinite loop because the ObjectType hashCode
+    // method calls this one.
+    return Objects.hashCode(properties.keySet());
   }
 }

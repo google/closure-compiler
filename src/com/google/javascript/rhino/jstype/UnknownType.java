@@ -164,4 +164,9 @@ public class UnknownType extends ObjectType {
   JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
     return this;
   }
+
+  @Override
+  public int hashCode() {
+    return System.identityHashCode(this);
+  }
 }

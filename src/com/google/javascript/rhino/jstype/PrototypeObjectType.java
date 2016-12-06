@@ -46,7 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -561,4 +561,8 @@ public class PrototypeObjectType extends ObjectType {
     }
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(className, properties);
+  }
 }
