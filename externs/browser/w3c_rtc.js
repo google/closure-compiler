@@ -95,6 +95,13 @@ MediaStreamTrack.prototype.enabled;
 MediaStreamTrack.prototype.muted;
 
 /**
+ * @type {string}
+ * @see https://crbug.com/653531
+ * @see https://wicg.github.io/mst-content-hint/
+ */
+MediaStreamTrack.prototype.contentHint;
+
+/**
  * @type {boolean}
  * @const
  */
