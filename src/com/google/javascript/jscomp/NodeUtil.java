@@ -3375,7 +3375,7 @@ public final class NodeUtil {
       if (current.isName() || current.isThis() || current.isSuper()) {
         return current;
       }
-      Preconditions.checkState(current.isGetProp());
+      Preconditions.checkState(current.isGetProp(), "Not a getprop node: ", current);
     }
   }
 
