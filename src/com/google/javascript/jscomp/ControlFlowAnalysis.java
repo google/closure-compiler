@@ -149,8 +149,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     astPositionCounter = 0;
     astPosition = new HashMap<>();
     nodePriorities = new HashMap<>();
-    cfg = new AstControlFlowGraph(computeFallThrough(root), nodePriorities,
-                                  edgeAnnotations);
+    cfg = new AstControlFlowGraph(computeFallThrough(root), nodePriorities, edgeAnnotations);
     NodeTraversal.traverseEs6(compiler, root, this);
     astPosition.put(null, ++astPositionCounter); // the implicit return is last.
 
@@ -166,8 +165,6 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       for (DiGraphNode<Node, Branch> candidate : cfg.getDirectedGraphNodes()) {
         Node value = candidate.getValue();
         if (value != null && value.isFunction()) {
-          Preconditions.checkState(
-              !nodePriorities.containsKey(candidate) || candidate == entry);
           prioritizeFromEntryNode(candidate);
         }
       }
@@ -204,8 +201,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
       nodePriorities.put(current, ++priorityCounter);
 
-      List<DiGraphNode<Node, Branch>> successors =
-          cfg.getDirectedSuccNodes(current);
+      List<DiGraphNode<Node, Branch>> successors = cfg.getDirectedSuccNodes(current);
       worklist.addAll(successors);
     }
   }
