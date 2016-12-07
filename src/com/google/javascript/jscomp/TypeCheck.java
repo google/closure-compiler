@@ -812,16 +812,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case DO:
       case IF:
       case WHILE:
+      case FOR:
         typeable = false;
         break;
 
-      case FOR:
       case FOR_IN:
-        if (n.isForIn()) {
-          Node obj = n.getSecondChild();
-          if (getJSType(obj).isStruct()) {
-            report(t, obj, IN_USED_WITH_STRUCT);
-          }
+        Node obj = n.getSecondChild();
+        if (getJSType(obj).isStruct()) {
+          report(t, obj, IN_USED_WITH_STRUCT);
         }
         typeable = false;
         break;

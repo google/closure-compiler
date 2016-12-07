@@ -184,21 +184,20 @@ class MaybeReachingVariableUse extends
         return;
 
       case FOR:
+        computeMayUse(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
+        return;
+
       case FOR_IN:
-        if (!n.isForIn()) {
-          computeMayUse(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
-        } else {
-          // for(x in y) {...}
-          Node lhs = n.getFirstChild();
-          Node rhs = lhs.getNext();
-          if (lhs.isVar()) {
-            lhs = lhs.getLastChild(); // for(var x in y) {...}
-          }
-          if (lhs.isName() && !conditional) {
-            removeFromUseIfLocal(lhs.getString(), output);
-          }
-          computeMayUse(rhs, cfgNode, output, conditional);
+        // for(x in y) {...}
+        Node lhs = n.getFirstChild();
+        Node rhs = lhs.getNext();
+        if (lhs.isVar()) {
+          lhs = lhs.getLastChild(); // for(var x in y) {...}
         }
+        if (lhs.isName() && !conditional) {
+          removeFromUseIfLocal(lhs.getString(), output);
+        }
+        computeMayUse(rhs, cfgNode, output, conditional);
         return;
 
       case AND:

@@ -246,19 +246,18 @@ final class MustBeReachingVariableDef extends
         return;
 
       case FOR:
+        computeMustDef(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
+        return;
+
       case FOR_IN:
-        if (!n.isForIn()) {
-          computeMustDef(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
-        } else {
-          // for(x in y) {...}
-          Node lhs = n.getFirstChild();
-          Node rhs = lhs.getNext();
-          if (lhs.isVar()) {
-            lhs = lhs.getLastChild(); // for(var x in y) {...}
-          }
-          if (lhs.isName()) {
-            addToDefIfLocal(lhs.getString(), cfgNode, rhs, output);
-          }
+        // for(x in y) {...}
+        Node lhs = n.getFirstChild();
+        Node rhs = lhs.getNext();
+        if (lhs.isVar()) {
+          lhs = lhs.getLastChild(); // for(var x in y) {...}
+        }
+        if (lhs.isName()) {
+          addToDefIfLocal(lhs.getString(), cfgNode, rhs, output);
         }
         return;
 

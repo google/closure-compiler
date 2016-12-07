@@ -267,8 +267,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     Node grandparent = parent.getParent();
     Preconditions.checkState(
         parent.isBlock()
-            || (parent.isVanillaFor() || parent.isForIn())
-            || parent.isForOf()
+            || NodeUtil.isAnyFor(parent)
             || parent.isScript()
             || parent.isModuleBody()
             || parent.isLabel(),

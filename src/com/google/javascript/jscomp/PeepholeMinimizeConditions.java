@@ -97,11 +97,8 @@ class PeepholeMinimizeConditions
         return node;
 
       case FOR:
-      case FOR_IN:
-        if (!node.isForIn()) {
-          tryJoinForCondition(node);
-          tryMinimizeCondition(NodeUtil.getConditionExpression(node));
-        }
+        tryJoinForCondition(node);
+        tryMinimizeCondition(NodeUtil.getConditionExpression(node));
         return node;
 
       case BLOCK:

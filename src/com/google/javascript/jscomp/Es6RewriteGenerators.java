@@ -329,12 +329,10 @@ public final class Es6RewriteGenerators
         case WHILE:
         case DO:
         case FOR:
-        case FOR_IN:
-          if (currentStatement.isForIn()) {
-            visitForIn();
-            return false;
-          }
           visitLoop(null);
+          return false;
+        case FOR_IN:
+          visitForIn();
           return false;
         case LABEL:
           visitLabel();
@@ -979,7 +977,6 @@ public final class Es6RewriteGenerators
           break;
         case DO:
         case FOR:
-        case FOR_IN:
         case WHILE:
           visitLoop(n);
           break;
@@ -1023,7 +1020,6 @@ public final class Es6RewriteGenerators
       Node incr = null;
       switch (n.getToken()) {
         case FOR:
-        case FOR_IN:
           guard = n.getSecondChild();
           incr = guard.getNext();
           break;

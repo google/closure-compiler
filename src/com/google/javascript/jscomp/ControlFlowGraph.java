@@ -169,7 +169,6 @@ public class ControlFlowGraph<N> extends
         return NodeUtil.getConditionExpression(parent) != n;
 
       case FOR:
-      case FOR_IN:
         // The FOR(;;) node differs from other control structures in that
         // it has an initialization and an increment statement. Those
         // two statements have corresponding CFG nodes to represent them.
@@ -177,13 +176,11 @@ public class ControlFlowGraph<N> extends
         // That way the following:
         // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
         // var x = 0; while(x<10) {  x++; }
-        if (parent.isForIn()) {
-          // TODO(user): Investigate how we should handle the case where
-          // we have a very complex expression inside the FOR-IN header.
-          return n != parent.getFirstChild();
-        } else {
-          return NodeUtil.getConditionExpression(parent) != n;
-        }
+        return NodeUtil.getConditionExpression(parent) != n;
+      case FOR_IN:
+        // TODO(user): Investigate how we should handle the case where
+        // we have a very complex expression inside the FOR-IN header.
+        return n != parent.getFirstChild();
       case SWITCH:
       case CASE:
       case CATCH:

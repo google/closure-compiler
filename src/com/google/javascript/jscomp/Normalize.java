@@ -585,23 +585,23 @@ class Normalize implements CompilerPass {
           case LABEL:
             extractForInitializer(c, insertBefore, insertBeforeParent);
             break;
-          case FOR:
           case FOR_IN:
-            if (c.isForIn()) {
-              Node first = c.getFirstChild();
-              if (first.isVar()) {
-                // Transform:
-                //    for (var a = 1 in b) {}
-                // to:
-                //    var a = 1; for (a in b) {};
-                Node newStatement = first;
-                // Clone just the node, to remove any initialization.
-                Node name = newStatement.getFirstChild().cloneNode();
-                first.replaceWith(name);
-                insertBeforeParent.addChildBefore(newStatement, insertBefore);
-                reportCodeChange("FOR-IN var declaration");
-              }
-            } else if (!c.getFirstChild().isEmpty()) {
+            Node first = c.getFirstChild();
+            if (first.isVar()) {
+              // Transform:
+              //    for (var a = 1 in b) {}
+              // to:
+              //    var a = 1; for (a in b) {};
+              Node newStatement = first;
+              // Clone just the node, to remove any initialization.
+              Node name = newStatement.getFirstChild().cloneNode();
+              first.replaceWith(name);
+              insertBeforeParent.addChildBefore(newStatement, insertBefore);
+              reportCodeChange("FOR-IN var declaration");
+            }
+            break;
+          case FOR:
+            if (!c.getFirstChild().isEmpty()) {
               Node init = c.getFirstChild();
               Node empty = IR.empty();
               empty.useSourceInfoIfMissingFrom(c);

@@ -653,33 +653,33 @@ public class CodeGenerator {
         }
 
       case FOR:
-      case FOR_IN:
-        if (childCount == 4) {
-          add("for");
-          cc.maybeInsertSpace();
-          add("(");
-          if (NodeUtil.isNameDeclaration(first)) {
-            add(first, Context.IN_FOR_INIT_CLAUSE);
-          } else {
-            addExpr(first, 0, Context.IN_FOR_INIT_CLAUSE);
-          }
-          add(";");
-          add(first.getNext());
-          add(";");
-          add(first.getNext().getNext());
-          add(")");
-          addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
+        Preconditions.checkState(childCount == 4);
+        add("for");
+        cc.maybeInsertSpace();
+        add("(");
+        if (NodeUtil.isNameDeclaration(first)) {
+          add(first, Context.IN_FOR_INIT_CLAUSE);
         } else {
-          Preconditions.checkState(childCount == 3);
-          add("for");
-          cc.maybeInsertSpace();
-          add("(");
-          add(first);
-          add("in");
-          add(first.getNext());
-          add(")");
-          addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
+          addExpr(first, 0, Context.IN_FOR_INIT_CLAUSE);
         }
+        add(";");
+        add(first.getNext());
+        add(";");
+        add(first.getNext().getNext());
+        add(")");
+        addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
+        break;
+
+      case FOR_IN:
+        Preconditions.checkState(childCount == 3);
+        add("for");
+        cc.maybeInsertSpace();
+        add("(");
+        add(first);
+        add("in");
+        add(first.getNext());
+        add(")");
+        addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         break;
 
       case FOR_OF:

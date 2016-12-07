@@ -1815,7 +1815,7 @@ final class NameAnalyzer implements CompilerPass {
       newReplacements.add(valueExpr);
       changeProxy.replaceWith(
           parent, n, collapseReplacements(newReplacements));
-    } else if (n.isAssign() && !(parent.isVanillaFor() || parent.isForIn())) {
+    } else if (n.isAssign() && !parent.isVanillaFor()) {
       // assignment appears in a RHS expression.  we have already
       // considered names in the assignment's RHS as being referenced;
       // replace the assignment with its RHS.
@@ -1855,7 +1855,7 @@ final class NameAnalyzer implements CompilerPass {
         break;
       case ASSIGN:
         Preconditions.checkArgument(
-            parent.isVanillaFor() || parent.isForIn(),
+            parent.isVanillaFor(),
             "Unsupported assignment in replaceWithRhs. parent: %s",
             parent.getToken());
         break;

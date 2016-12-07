@@ -196,27 +196,27 @@ class LiveVariablesAnalysis extends
         return;
 
       case FOR:
-      case FOR_IN:
-        if (!n.isForIn()) {
-          computeGenKill(NodeUtil.getConditionExpression(n), gen, kill, conditional);
-        } else {
-          // for(x in y) {...}
-          Node lhs = n.getFirstChild();
-          if (lhs.isVar()) {
-            // for(var x in y) {...}
-            lhs = lhs.getLastChild();
-          }
-
-          if (lhs.isName()) {
-            addToSetIfLocal(lhs, kill);
-            addToSetIfLocal(lhs, gen);
-          } else {
-            computeGenKill(lhs, gen, kill, conditional);
-          }
-
-          // rhs is executed only once so we don't go into it every loop.
-        }
+        computeGenKill(NodeUtil.getConditionExpression(n), gen, kill, conditional);
         return;
+
+      case FOR_IN: {
+        // for(x in y) {...}
+        Node lhs = n.getFirstChild();
+        if (lhs.isVar()) {
+          // for(var x in y) {...}
+          lhs = lhs.getLastChild();
+        }
+
+        if (lhs.isName()) {
+          addToSetIfLocal(lhs, kill);
+          addToSetIfLocal(lhs, gen);
+        } else {
+          computeGenKill(lhs, gen, kill, conditional);
+        }
+
+        // rhs is executed only once so we don't go into it every loop.
+        return;
+      }
 
       case VAR:
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
