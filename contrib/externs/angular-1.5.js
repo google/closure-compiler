@@ -192,6 +192,8 @@ angular.module = function(name, opt_requires, opt_configFn) {};
 
 angular.noop = function() {};
 
+angular.reloadWithDebugInfo = function() {};
+
 /**
  * @param {Object|Array|Date|string|number|boolean} obj
  * @param {boolean=} opt_pretty
@@ -1286,6 +1288,12 @@ angular.$compileProvider = function() {};
 angular.$compileProvider.prototype.debugInfoEnabled = function(opt_enabled) {};
 
 /**
+ * @param {number} iterations
+ * @return {boolean|!angular.$compileProvider}
+ */
+angular.$compileProvider.prototype.onChangesTtl = function(iterations) {};
+
+/**
  * @param {!RegExp=} opt_expression
  * @return {!RegExp|!angular.$compileProvider}
  */
@@ -1298,6 +1306,20 @@ angular.$compileProvider.prototype.aHrefSanitizationWhitelist = function(
  */
 angular.$compileProvider.prototype.imgSrcSanitizationWhitelist = function(
     opt_expression) {};
+
+/**
+ * @param {boolean=} opt_enabled
+ * @return {boolean|!angular.$compileProvider}
+ */
+angular.$compileProvider.prototype.commentDirectivesEnabled = function(
+    opt_enabled) {};
+
+/**
+ * @param {boolean=} opt_enabled
+ * @return {boolean|!angular.$compileProvider}
+ */
+angular.$compileProvider.prototype.cssClassDirectivesEnabled = function(
+    opt_enabled) {};
 
 /**
  * @param {string} name
