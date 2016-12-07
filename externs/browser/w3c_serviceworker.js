@@ -278,7 +278,7 @@ ServiceWorkerGlobalScope.prototype.onevicted;
 /** @type {?function(!MessageEvent)} */
 ServiceWorkerGlobalScope.prototype.onmessage;
 
-/** @type {IDBFactory} */
+/** @type {!IDBFactory|undefined} */
 ServiceWorkerGlobalScope.prototype.indexedDB;
 
 /**
