@@ -878,7 +878,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   Node tryFoldFor(Node n) {
     Preconditions.checkArgument(n.isFor());
     // If this is a FOR-IN loop skip it.
-    if (NodeUtil.isForIn(n)) {
+    if (n.isForIn()) {
       return n;
     }
 

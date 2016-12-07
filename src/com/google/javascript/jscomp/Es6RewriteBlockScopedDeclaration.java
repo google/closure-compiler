@@ -169,7 +169,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node destDeclaration) {
     if (srcDeclaration.isConst()
         // Don't add @const for the left side of a for/in. If we do we get warnings from the NTI.
-        && !(NodeUtil.isForIn(srcParent) && srcDeclaration == srcParent.getFirstChild())) {
+        && !(srcParent.isForIn() && srcDeclaration == srcParent.getFirstChild())) {
       extractInlineJSDoc(srcDeclaration, srcName, destDeclaration);
       JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(destDeclaration.getJSDocInfo());
       builder.recordConstancy();
@@ -336,7 +336,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         Node objectLit =
             IR.var(IR.name(object.name), IR.objectlit()).useSourceInfoFromForTree(loopNode);
         addNodeBeforeLoop(objectLit, loopNode);
-        if (NodeUtil.isVanillaFor(loopNode)) { // For
+        if (loopNode.isVanillaFor()) { // For
           // The initializer is pulled out and placed prior to the loop.
           Node initializer = loopNode.getFirstChild();
           loopNode.replaceChild(initializer, IR.empty());

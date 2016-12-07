@@ -185,7 +185,7 @@ class MaybeReachingVariableUse extends
 
       case FOR:
       case FOR_IN:
-        if (!NodeUtil.isForIn(n)) {
+        if (!n.isForIn()) {
           computeMayUse(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         } else {
           // for(x in y) {...}

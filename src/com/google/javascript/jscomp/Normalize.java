@@ -587,7 +587,7 @@ class Normalize implements CompilerPass {
             break;
           case FOR:
           case FOR_IN:
-            if (NodeUtil.isForIn(c)) {
+            if (c.isForIn()) {
               Node first = c.getFirstChild();
               if (first.isVar()) {
                 // Transform:

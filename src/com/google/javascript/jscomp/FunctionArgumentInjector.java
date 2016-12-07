@@ -226,9 +226,11 @@ class FunctionArgumentInjector {
    */
   private static boolean canNameValueChange(Node n, Node parent) {
     Token type = parent.getToken();
-    return (type == Token.VAR || type == Token.INC || type == Token.DEC ||
-        (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) ||
-        (NodeUtil.isForIn(parent)));
+    return (type == Token.VAR
+        || type == Token.INC
+        || type == Token.DEC
+        || (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
+        || (parent.isForIn()));
   }
 
   /**

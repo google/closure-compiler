@@ -330,7 +330,7 @@ public final class Es6RewriteGenerators
         case DO:
         case FOR:
         case FOR_IN:
-          if (NodeUtil.isForIn(currentStatement)) {
+          if (currentStatement.isForIn()) {
             visitForIn();
             return false;
           }
@@ -1015,7 +1015,7 @@ public final class Es6RewriteGenerators
 
     private void visitLoop(Node n) {
       Node enclosingFunc = NodeUtil.getEnclosingFunction(n);
-      if (enclosingFunc == null || !enclosingFunc.isGeneratorFunction() || NodeUtil.isForIn(n)) {
+      if (enclosingFunc == null || !enclosingFunc.isGeneratorFunction() || n.isForIn()) {
         return;
       }
       Node enclosingBlock = NodeUtil.getEnclosingBlock(n);

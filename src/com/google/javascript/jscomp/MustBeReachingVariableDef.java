@@ -247,7 +247,7 @@ final class MustBeReachingVariableDef extends
 
       case FOR:
       case FOR_IN:
-        if (!NodeUtil.isForIn(n)) {
+        if (!n.isForIn()) {
           computeMustDef(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         } else {
           // for(x in y) {...}

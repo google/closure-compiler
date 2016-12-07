@@ -406,7 +406,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   }
 
   private void handleFor(Node forNode) {
-    if (NodeUtil.isForIn(forNode) || forNode.isForOf()) {
+    if (forNode.isForIn() || forNode.isForOf()) {
       // We have:  for (index in collection) { body }
       // or:       for (item of collection) { body }
       Node item = forNode.getFirstChild();
@@ -641,7 +641,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       previous = cur;
     }
     Node iter = cur;
-    if (NodeUtil.isVanillaFor(cur)) {
+    if (cur.isVanillaFor()) {
       // the increment expression happens after the continue
       iter = cur.getChildAtIndex(2);
     }
@@ -755,7 +755,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         return parent;
       case FOR:
       case FOR_IN:
-        if (NodeUtil.isForIn(parent)) {
+        if (parent.isForIn()) {
           return parent;
         } else {
           return parent.getSecondChild().getNext();
@@ -820,7 +820,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case FOR:
       case FOR_IN:
       case FOR_OF:
-        if (n.isForOf() || NodeUtil.isForIn(n)) {
+        if (n.isForOf() || n.isForIn()) {
           return n.getSecondChild();
         }
         return computeFallThrough(n.getFirstChild());

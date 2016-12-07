@@ -164,7 +164,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
           continue;
         case FOR:
         case FOR_IN:
-          if (!NodeUtil.isForIn(n)) {
+          if (!n.isForIn()) {
             tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state);
           }
           continue;
@@ -291,8 +291,9 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
               IR.voidNode(IR.number(0).srcref(n)));
         } else if (n.isComma() && n != parent.getLastChild()) {
           parent.removeChild(n);
-        } else if (parent.isFor() && !NodeUtil.isForIn(parent) &&
-            NodeUtil.getConditionExpression(parent) != n) {
+        } else if (parent.isFor()
+            && !parent.isForIn()
+            && NodeUtil.getConditionExpression(parent) != n) {
           parent.replaceChild(n, IR.empty());
         } else {
           // Cannot replace x = a++ with x = a because that's not valid

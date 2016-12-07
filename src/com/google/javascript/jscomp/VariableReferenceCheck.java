@@ -306,7 +306,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           Reference decl = references.get(0);
           Node declNode = decl.getNode();
           Node gp = declNode.getGrandparent();
-          boolean lhsOfForInLoop = NodeUtil.isForIn(gp) && gp.getFirstFirstChild() == declNode;
+          boolean lhsOfForInLoop = gp.isForIn() && gp.getFirstFirstChild() == declNode;
 
           if (decl.getScope().isLocal()
               && (decl.isVarDeclaration() || decl.isLetDeclaration() || decl.isConstDeclaration())

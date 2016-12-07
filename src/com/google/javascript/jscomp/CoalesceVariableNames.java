@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 import com.google.javascript.jscomp.graph.UndiGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -337,7 +336,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     Node parent = var.getParent();
 
     // Special case when we are in FOR-IN loop.
-    if (NodeUtil.isForIn(parent)) {
+    if (parent.isForIn()) {
       var.removeChild(name);
       parent.replaceChild(var, name);
     } else if (var.hasOneChild()) {

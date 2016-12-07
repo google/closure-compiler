@@ -197,7 +197,7 @@ class LiveVariablesAnalysis extends
 
       case FOR:
       case FOR_IN:
-        if (!NodeUtil.isForIn(n)) {
+        if (!n.isForIn()) {
           computeGenKill(NodeUtil.getConditionExpression(n), gen, kill, conditional);
         } else {
           // for(x in y) {...}

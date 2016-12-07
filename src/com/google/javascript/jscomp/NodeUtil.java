@@ -607,7 +607,7 @@ public final class NodeUtil {
     if ((isAssignmentOp(parent) && parent.getFirstChild() == n)
         || parent.isInc()
         || parent.isDec()
-        || (isForIn(parent) && parent.getFirstChild() == n)) {
+        || (parent.isForIn() && parent.getFirstChild() == n)) {
       // If GETPROP/GETELEM is used as assignment target the object literal is
       // acting as a temporary we can't fold it here:
       //    "{a:x}.a += 1" is not "x += 1"
@@ -2365,7 +2365,7 @@ public final class NodeUtil {
 
   /** Use Node.isVanillaFor instead. */
   @Deprecated
-  static boolean isVanillaFor(Node n) {
+  public static boolean isVanillaFor(Node n) {
     return n.isVanillaFor();
   }
 
@@ -2499,7 +2499,7 @@ public final class NodeUtil {
         return n.getLastChild();
       case FOR:
       case FOR_IN:
-        return NodeUtil.isForIn(n) ? null : n.getSecondChild();
+        return n.isForIn() ? null : n.getSecondChild();
       case FOR_OF:
       case CASE:
         return null;
@@ -2998,7 +2998,7 @@ public final class NodeUtil {
       return false;
     }
     return (isAssignmentOp(parent) && parent.getFirstChild() == n)
-        || (isForIn(parent) && parent.getFirstChild() == n)
+        || (parent.isForIn() && parent.getFirstChild() == n)
         || isNameDeclaration(parent)
         || (parent.isFunction() && parent.getFirstChild() == n)
         || parent.isRest()
@@ -4554,7 +4554,7 @@ public final class NodeUtil {
             ? false : isExpressionResultUsed(parent);
       case FOR:
       case FOR_IN:
-        if (!NodeUtil.isForIn(parent)) {
+        if (!parent.isForIn()) {
           // Only an expression whose result is in the condition part of the
           // expression is used.
           return (parent.getSecondChild() == expr);
@@ -4586,7 +4586,7 @@ public final class NodeUtil {
           continue inspect;
         case FOR:
         case FOR_IN:
-          if (NodeUtil.isForIn(parent)) {
+          if (parent.isForIn()) {
             if (parent.getSecondChild() != n) {
               return false;
             }

@@ -210,7 +210,7 @@ class TypeInference
 
       switch (branch) {
         case ON_TRUE:
-          if (NodeUtil.isForIn(source)) {
+          if (source.isForIn()) {
             // item is assigned a property name, so its type should be string.
             Node item = source.getFirstChild();
             Node obj = item.getNext();
@@ -223,12 +223,14 @@ class TypeInference
             if (item.isName()) {
               JSType iterKeyType = getNativeType(STRING_TYPE);
               ObjectType objType = getJSType(obj).dereference();
-              JSType objIndexType = objType == null ?
-                  null : objType.getTemplateTypeMap().getResolvedTemplateType(
-                      registry.getObjectIndexKey());
+              JSType objIndexType =
+                  objType == null
+                      ? null
+                      : objType
+                          .getTemplateTypeMap()
+                          .getResolvedTemplateType(registry.getObjectIndexKey());
               if (objIndexType != null && !objIndexType.isUnknownType()) {
-                JSType narrowedKeyType =
-                    iterKeyType.getGreatestSubtype(objIndexType);
+                JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
                 if (!narrowedKeyType.isEmptyType()) {
                   iterKeyType = narrowedKeyType;
                 }

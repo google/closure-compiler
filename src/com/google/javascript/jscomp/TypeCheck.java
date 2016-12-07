@@ -817,7 +817,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case FOR:
       case FOR_IN:
-        if (NodeUtil.isForIn(n)) {
+        if (n.isForIn()) {
           Node obj = n.getSecondChild();
           if (getJSType(obj).isStruct()) {
             report(t, obj, IN_USED_WITH_STRUCT);
@@ -1434,7 +1434,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // Not need to type first key in for in.
-    if (NodeUtil.isForIn(parent) && parent.getFirstChild() == n) {
+    if (parent.isForIn() && parent.getFirstChild() == n) {
       return false;
     }
 

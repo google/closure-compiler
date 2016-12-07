@@ -566,7 +566,7 @@ final class NameAnalyzer implements CompilerPass {
       Node parent = n.getParent();
       NameInformation ns = createNameInformation(t, nameNode);
       if (ns != null) {
-        if (parent.isFor() && !NodeUtil.isForIn(parent)) {
+        if (parent.isFor() && !parent.isForIn()) {
           // Patch for assignments that appear in the init,
           // condition or iteration part of a FOR loop.  Without
           // this change, all 3 of those parts try to claim the for
@@ -817,7 +817,7 @@ final class NameAnalyzer implements CompilerPass {
       // control structure predicates.  These names are always
       // referenced when the enclosing function is called.
       if (n.isFor()) {
-        if (!NodeUtil.isForIn(n)) {
+        if (!n.isForIn()) {
           Node decl = n.getFirstChild();
           Node pred = decl.getNext();
           Node step = pred.getNext();

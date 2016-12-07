@@ -203,7 +203,7 @@ class UnreachableCodeElimination implements CompilerPass {
 
       // TODO(user): This is a problem with removeNoOpStatements.
       // Every expression in a FOR-IN header looks side effect free on its own.
-      if (NodeUtil.isForIn(parent)) {
+      if (parent.isForIn()) {
         return;
       }
 

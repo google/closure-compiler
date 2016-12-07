@@ -746,8 +746,7 @@ class RemoveUnusedVars
           boolean assignedToUnknownValue = false;
           boolean hasPropertyAssign = false;
 
-          if (var.getParentNode().isVar() &&
-              !NodeUtil.isForIn(var.getParentNode().getParent())) {
+          if (var.getParentNode().isVar() && !var.getParentNode().getParent().isForIn()) {
             Node value = var.getInitialValue();
             assignedToUnknownValue = value != null &&
                 !NodeUtil.isLiteralValue(value, true);
