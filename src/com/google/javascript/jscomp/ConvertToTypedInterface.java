@@ -302,7 +302,7 @@ class ConvertToTypedInterface implements CompilerPass {
             Node body = NodeUtil.getLoopCodeBlock(n);
             parent.addChildAfter(body.detach(), n);
             NodeUtil.removeChild(parent, n);
-            Node initializer = n.isFor() ? n.getFirstChild() : IR.empty();
+            Node initializer = NodeUtil.isAnyFor(n) ? n.getFirstChild() : IR.empty();
             if (initializer.isVar() && initializer.hasOneChild()) {
               parent.addChildBefore(initializer.detach(), body);
               processName(initializer.getFirstChild(), initializer);

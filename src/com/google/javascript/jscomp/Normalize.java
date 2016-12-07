@@ -823,7 +823,7 @@ class Normalize implements CompilerPass {
         // It is an empty reference remove it.
         if (NodeUtil.isStatementBlock(grandparent)) {
           grandparent.removeChild(parent);
-        } else if (grandparent.isFor()) {
+        } else if (grandparent.isForIn()) {
           // This is the "for (var a in b)..." case.  We don't need to worry
           // about initializers in "for (var a;;)..." as those are moved out
           // as part of the other normalizations.

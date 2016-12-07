@@ -2373,6 +2373,10 @@ public final class NodeUtil {
     return n.isForOf() || n.isForIn();
   }
 
+  static boolean isAnyFor(Node n) {
+    return n.isVanillaFor() || n.isForIn() || n.isForOf();
+  }
+
   /** Use Node.isForIn instead. */
   @Deprecated
   public static boolean isForIn(Node n) {
@@ -2685,8 +2689,7 @@ public final class NodeUtil {
       parent.removeChild(node);
       // A LABEL without children can not be referred to, remove it.
       removeChild(parent.getParent(), parent);
-    } else if (parent.isFor()
-        && parent.getChildCount() == 4) {
+    } else if (parent.isVanillaFor()) {
       // Only Token.FOR can have an Token.EMPTY other control structure
       // need something for the condition. Others need to be replaced
       // or the structure removed.

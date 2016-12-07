@@ -422,7 +422,7 @@ class DefinitionsRemover {
           "AST should be normalized first");
       Node parent = var.getParent();
       Node rValue = name.removeFirstChild();
-      Preconditions.checkState(!parent.isFor());
+      Preconditions.checkState(!NodeUtil.isLoopStructure(parent));
       parent.replaceChild(var, NodeUtil.newExpr(rValue));
     }
 

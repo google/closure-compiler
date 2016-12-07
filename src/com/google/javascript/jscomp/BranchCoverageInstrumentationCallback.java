@@ -80,7 +80,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
             fileName, new FileInstrumentationData(fileName, createArrayName(traversal)));
       }
       processBranchInfo(node, instrumentationData.get(fileName), getChildrenBlocks(node));
-    } else if (node.isFor() || node.isWhile() || node.isDo()) {
+    } else if (NodeUtil.isLoopStructure(node)) {
       List<Node> blocks = getChildrenBlocks(node);
       ControlFlowGraph<Node> cfg = traversal.getControlFlowGraph();
       for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : cfg.getOutEdges(node)) {

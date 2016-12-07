@@ -96,8 +96,7 @@ class Denormalize implements CompilerPass, Callback {
           compiler.reportCodeChange();
         }
       }
-    } else if (nextSibling.isFor()
-        && nextSibling.getFirstChild().isEmpty()) {
+    } else if (nextSibling.isVanillaFor() && nextSibling.getFirstChild().isEmpty()) {
 
       // Does the current node contain an in operator?  If so, embedding
       // the expression in a for loop can cause some JavaScript parsers (such

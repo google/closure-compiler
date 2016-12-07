@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallba
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -461,7 +460,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (!c.isName()) {
           allName = false;
         }
-        if (c.isAssign() || parent.isFor()) {
+        if (c.isAssign() || NodeUtil.isAnyFor(parent)) {
           interestingChildren.add(c);
         }
       }
@@ -472,7 +471,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         return;
       }
       for (Node c : interestingChildren) {
-        if (parent.isFor() && parent.getFirstChild() == n) {
+        if (NodeUtil.isAnyFor(parent) && parent.getFirstChild() == n) {
           commas.add(c.cloneTree());
         } else {
           // Var statement outside of for-loop.

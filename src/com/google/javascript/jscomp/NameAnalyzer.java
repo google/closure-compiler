@@ -566,7 +566,7 @@ final class NameAnalyzer implements CompilerPass {
       Node parent = n.getParent();
       NameInformation ns = createNameInformation(t, nameNode);
       if (ns != null) {
-        if (parent.isFor() && !parent.isForIn()) {
+        if (parent.isVanillaFor()) {
           // Patch for assignments that appear in the init,
           // condition or iteration part of a FOR loop.  Without
           // this change, all 3 of those parts try to claim the for
@@ -790,10 +790,10 @@ final class NameAnalyzer implements CompilerPass {
         if (value != null) {
           addSimplifiedChildren(value);
         }
-      } else if (n.isAssign() &&
-          (parent.isExprResult() ||
-           parent.isFor() ||
-           parent.isReturn())) {
+      } else if (n.isAssign()
+          && (parent.isExprResult()
+              || parent.isVanillaFor()
+              || parent.isReturn())) {
         for (Node child : n.children()) {
           addSimplifiedChildren(child);
         }
@@ -816,20 +816,18 @@ final class NameAnalyzer implements CompilerPass {
       // arguments to function calls with side effects or are used in
       // control structure predicates.  These names are always
       // referenced when the enclosing function is called.
-      if (n.isFor()) {
-        if (!n.isForIn()) {
-          Node decl = n.getFirstChild();
-          Node pred = decl.getNext();
-          Node step = pred.getNext();
-          addSimplifiedExpression(decl, n);
-          addSimplifiedExpression(pred, n);
-          addSimplifiedExpression(step, n);
-        } else { // n.getChildCount() == 3
-          Node decl = n.getFirstChild();
-          Node iter = decl.getNext();
-          addAllChildren(decl);
-          addAllChildren(iter);
-        }
+      if (n.isVanillaFor()) {
+        Node decl = n.getFirstChild();
+        Node pred = decl.getNext();
+        Node step = pred.getNext();
+        addSimplifiedExpression(decl, n);
+        addSimplifiedExpression(pred, n);
+        addSimplifiedExpression(step, n);
+      } else if (n.isForIn()) {
+        Node decl = n.getFirstChild();
+        Node iter = decl.getNext();
+        addAllChildren(decl);
+        addAllChildren(iter);
       }
 
       if (parent.isVar() ||
@@ -1817,7 +1815,7 @@ final class NameAnalyzer implements CompilerPass {
       newReplacements.add(valueExpr);
       changeProxy.replaceWith(
           parent, n, collapseReplacements(newReplacements));
-    } else if (n.isAssign() && !parent.isFor()) {
+    } else if (n.isAssign() && !(parent.isVanillaFor() || parent.isForIn())) {
       // assignment appears in a RHS expression.  we have already
       // considered names in the assignment's RHS as being referenced;
       // replace the assignment with its RHS.
@@ -1857,7 +1855,7 @@ final class NameAnalyzer implements CompilerPass {
         break;
       case ASSIGN:
         Preconditions.checkArgument(
-            parent.isFor(),
+            parent.isVanillaFor() || parent.isForIn(),
             "Unsupported assignment in replaceWithRhs. parent: %s",
             parent.getToken());
         break;
@@ -1872,7 +1870,7 @@ final class NameAnalyzer implements CompilerPass {
       replacements.addAll(getSideEffectNodes(rhs));
     }
 
-    if (parent.isFor()) {
+    if (parent.isVanillaFor() || parent.isForIn()) {
       // tweak replacements array s.t. it is a single expression node.
       if (replacements.isEmpty()) {
         replacements.add(IR.empty());

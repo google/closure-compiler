@@ -59,7 +59,6 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case WHILE:
         return tryFoldWhile(subtree);
       case FOR:
-      case FOR_IN:
         {
           Node condition = NodeUtil.getConditionExpression(subtree);
           if (condition != null) {
@@ -876,11 +875,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Removes FORs that always evaluate to false.
    */
   Node tryFoldFor(Node n) {
-    Preconditions.checkArgument(n.isFor());
-    // If this is a FOR-IN loop skip it.
-    if (n.isForIn()) {
-      return n;
-    }
+    Preconditions.checkArgument(n.isVanillaFor());
 
     Node init = n.getFirstChild();
     Node cond = init.getNext();

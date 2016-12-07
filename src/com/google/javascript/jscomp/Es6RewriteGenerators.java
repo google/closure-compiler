@@ -767,7 +767,7 @@ public final class Es6RewriteGenerators
       body = currentStatement.removeFirstChild();
       initializer = IR.empty();
       incr = IR.empty();
-    } else if (currentStatement.isFor()) {
+    } else if (currentStatement.isVanillaFor()) {
       initializer = currentStatement.removeFirstChild();
       if (initializer.isAssign()) {
         initializer = IR.exprResult(initializer);

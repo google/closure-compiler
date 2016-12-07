@@ -638,7 +638,7 @@ class InlineVariables implements CompilerPass {
      */
     private boolean isValidDeclaration(Reference declaration) {
       return (declaration.getParent().isVar()
-          && !declaration.getGrandparent().isFor())
+              && !NodeUtil.isLoopStructure(declaration.getGrandparent()))
           || NodeUtil.isFunctionDeclaration(declaration.getParent());
     }
 

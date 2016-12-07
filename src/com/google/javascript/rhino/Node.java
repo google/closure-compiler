@@ -2955,6 +2955,8 @@ public class Node implements Serializable {
     return this.token == Token.FALSE;
   }
 
+  /** Use isVanillaFor, isForIn, or NodeUtil.isAnyFor instead */
+  @Deprecated
   public boolean isFor() {
     return this.isVanillaFor() || this.isForIn();
   }
