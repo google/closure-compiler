@@ -1397,7 +1397,7 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(new String(outReader.toByteArray(), UTF_8))
         .isEqualTo("digraph AST {\n"
             + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"BLOCK\"];\n"
+            + "  node0 [label=\"ROOT\"];\n"
             + "  node1 [label=\"SCRIPT\"];\n"
             + "  node0 -> node1 [weight=1];\n"
             + "  node1 -> RETURN [label=\"UNCOND\", "

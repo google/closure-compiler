@@ -168,6 +168,7 @@ class MaybeReachingVariableUse extends
     switch (n.getToken()) {
 
       case BLOCK:
+      case ROOT:
       case FUNCTION:
         return;
 

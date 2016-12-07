@@ -654,13 +654,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Sets up the skeleton of the AST (the externs and root).
    */
   private void initAST() {
-    jsRoot = IR.block();
+    jsRoot = IR.root();
     jsRoot.setIsSyntheticBlock(true);
 
-    externsRoot = IR.block();
+    externsRoot = IR.root();
     externsRoot.setIsSyntheticBlock(true);
 
-    externAndJsRoot = IR.block(externsRoot, jsRoot);
+    externAndJsRoot = IR.root(externsRoot, jsRoot);
     externAndJsRoot.setIsSyntheticBlock(true);
   }
 

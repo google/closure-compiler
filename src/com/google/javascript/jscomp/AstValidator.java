@@ -73,7 +73,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   public void validateRoot(Node n) {
-    validateNodeType(Token.BLOCK, n);
+    validateNodeType(Token.ROOT, n);
     validateIsSynthetic(n);
     validateChildCount(n, 2);
     validateCodeRoot(n.getFirstChild());
@@ -81,7 +81,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   public void validateCodeRoot(Node n) {
-    validateNodeType(Token.BLOCK, n);
+    validateNodeType(Token.ROOT, n);
     validateIsSynthetic(n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateScript(c);

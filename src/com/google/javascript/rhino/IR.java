@@ -87,6 +87,15 @@ public class IR {
     return paramList;
   }
 
+  public static Node root(Node ... rootChildren) {
+    Node root = new Node(Token.ROOT);
+    for (Node child : rootChildren) {
+      Preconditions.checkState(child.getToken() == Token.ROOT || child.getToken() == Token.SCRIPT);
+      root.addChildToBack(child);
+    }
+    return root;
+  }
+
   public static Node block() {
     Node block = new Node(Token.BLOCK);
     return block;

@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -212,11 +211,11 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
         compilerOptions);
 
-    Node externsRoot = IR.block();
+    Node externsRoot = IR.root();
     externsRoot.setIsSyntheticBlock(true);
     externsRoot.addChildToFront(
         compiler.getInput(new InputId("[externs]")).getAstRoot(compiler));
-    Node astRoot = IR.block();
+    Node astRoot = IR.root();
     astRoot.setIsSyntheticBlock(true);
     astRoot.addChildToFront(
         compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
@@ -228,7 +227,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         compiler.getWarningCount());
 
     // Create common parent of externs and ast; needed by Es6RewriteBlockScopedDeclaration.
-    Node block = IR.block(externsRoot, astRoot);
+    Node block = IR.root(externsRoot, astRoot);
     block.setIsSyntheticBlock(true);
 
     // Run ASTValidator

@@ -1135,6 +1135,7 @@ public final class NodeUtil {
       case CAST:
       case AND:
       case BLOCK:
+      case ROOT:
       case EXPR_RESULT:
       case HOOK:
       case IF:
@@ -2530,7 +2531,7 @@ public final class NodeUtil {
       case BLOCK:
         // Don't create block scope for synthetic blocks, or the one contained in a CATCH.
         if (n.isSyntheticBlock()
-            || n.getParent() == null || n.getGrandparent() == null
+            || n.getParent() == null
             || n.getParent().isCatch()) {
           return false;
         }
@@ -2552,10 +2553,11 @@ public final class NodeUtil {
       case FUNCTION:
       case SCRIPT:
       case MODULE_BODY:
+      case ROOT:
         return true;
       case BLOCK:
         // Only valid for top level synthetic block
-        if (n.getParent() == null || n.getGrandparent() == null) {
+        if (n.getParent() == null) {
           return true;
         }
       default:
@@ -2586,6 +2588,7 @@ public final class NodeUtil {
       case SCRIPT:
       case MODULE_BODY:
       case BLOCK:
+      case ROOT:
       case LABEL:
       case NAMESPACE_ELEMENTS: // The body of TypeScript namespace is also a statement parent
         return true;
@@ -2813,6 +2816,7 @@ public final class NodeUtil {
     while (current != null) {
       switch (current.getToken()) {
         case BLOCK:
+        case ROOT:
           return !current.getParent().isFunction();
         case FUNCTION:
         case SCRIPT:
@@ -4521,6 +4525,7 @@ public final class NodeUtil {
     Node parent = expr.getParent();
     switch (parent.getToken()) {
       case BLOCK:
+      case ROOT:
       case EXPR_RESULT:
         return false;
       case CAST:

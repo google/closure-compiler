@@ -883,6 +883,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         case NAMESPACE_ELEMENTS:
           return true;
         case BLOCK:
+        case ROOT:
           return n.getFirstChild() != null && n.getFirstChild().isScript();
         case DECLARE:
           return n.getFirstChild().getToken() == Token.NAMESPACE;

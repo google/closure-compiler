@@ -617,6 +617,7 @@ public class CodeGenerator {
       case SCRIPT:
       case MODULE_BODY:
       case BLOCK:
+      case ROOT:
         {
           if (n.getClass() != Node.class) {
             throw new Error("Unexpected Node subclass.");

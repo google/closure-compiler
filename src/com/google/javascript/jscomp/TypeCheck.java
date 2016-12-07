@@ -803,6 +803,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case SCRIPT:
       case EXPR_RESULT:
       case BLOCK:
+      case ROOT:
       case EMPTY:
       case DEFAULT_CASE:
       case CONTINUE:

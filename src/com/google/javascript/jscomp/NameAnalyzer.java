@@ -1839,6 +1839,7 @@ final class NameAnalyzer implements CompilerPass {
     // validate inputs
     switch (parent.getToken()) {
       case BLOCK:
+      case ROOT:
       case SCRIPT:
       case FOR:
       case FOR_IN:

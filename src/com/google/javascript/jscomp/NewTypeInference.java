@@ -898,6 +898,7 @@ final class NewTypeInference implements CompilerPass {
           break;
         }
         case BLOCK:
+        case ROOT:
         case BREAK:
         case CATCH:
         case CONTINUE:
@@ -958,6 +959,7 @@ final class NewTypeInference implements CompilerPass {
       boolean conditional = false;
       switch (n.getToken()) {
         case BLOCK:
+        case ROOT:
         case BREAK:
         case CONTINUE:
         case DEFAULT_CASE:

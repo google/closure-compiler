@@ -148,6 +148,7 @@ public class ControlFlowGraph<N> extends
     Node parent = n.getParent();
     switch (parent.getToken()) {
       case BLOCK:
+      case ROOT:
       case SCRIPT:
       case TRY:
         return true;

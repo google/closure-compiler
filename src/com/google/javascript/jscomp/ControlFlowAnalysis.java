@@ -325,6 +325,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         handleDefault(n);
         return;
       case BLOCK:
+      case ROOT:
       case SCRIPT:
         handleStmtList(n);
         return;
@@ -980,6 +981,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case SWITCH:
         return true;
       case BLOCK:
+      case ROOT:
       case IF:
       case TRY:
         return labeled;

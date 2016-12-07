@@ -184,6 +184,7 @@ class LiveVariablesAnalysis extends
     switch (n.getToken()) {
       case SCRIPT:
       case BLOCK:
+      case ROOT:
       case FUNCTION:
         return;
 

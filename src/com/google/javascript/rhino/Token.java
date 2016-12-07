@@ -135,6 +135,7 @@ public enum Token {
 
     EMPTY,
 
+    ROOT, // Used only for the 3 root nodes of the AST: externsRoot, jsRoot, and externsAndJsRoot
     BLOCK, // statement block
     LABEL, // label
     EXPR_RESULT, // expression statement in scripts
@@ -249,6 +250,7 @@ public enum Token {
       case ARRAYLIT:
       case BANG:
       case BLOCK:
+      case ROOT:
       case BREAK:
       case CALL:
       case COLON:
