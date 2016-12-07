@@ -485,11 +485,12 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   private void addSourcesContentMap(Appendable out) throws IOException {
     boolean found = false;
-    List<String> contents = new ArrayList<>();
-    contents.addAll(Collections.nCopies(sourceFileMap.size(), ""));
+    int size = sourceFileMap.size();
+    List<String> contents = new ArrayList<>(size);
+    contents.addAll(Collections.nCopies(size, ""));
     for (Map.Entry<String, String> entry : sourceFileContentMap.entrySet()) {
       Integer index = sourceFileMap.get(entry.getKey());
-      if (index != null && index < contents.size()) {
+      if (index != null && index < size) {
         contents.set(index, entry.getValue());
         found = true;
       }
@@ -499,7 +500,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     }
     appendFieldStart(out, "sourcesContent");
     out.append("[");
-    for (int i = 0; i < contents.size(); i++) {
+    for (int i = 0; i < size; i++) {
       if (i != 0) {
         out.append(",");
       }
@@ -541,27 +542,31 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   private static void appendFirstField(
       Appendable out, String name, CharSequence value)
       throws IOException {
-    out.append("\"");
-    out.append(name);
-    out.append("\"");
-    out.append(":");
+    appendFieldStart(out, name, true);
     out.append(value);
   }
 
   private static void appendField(
       Appendable out, String name, CharSequence value)
       throws IOException {
-    out.append(",\n");
-    out.append("\"");
-    out.append(name);
-    out.append("\"");
-    out.append(":");
+    appendFieldStart(out, name, false);
     out.append(value);
   }
 
   private static void appendFieldStart(Appendable out, String name)
       throws IOException {
-    appendField(out, name, "");
+    appendFieldStart(out, name, false);
+  }
+
+  private static void appendFieldStart(Appendable out, String name, boolean first)
+      throws IOException {
+    if (!first) {
+      out.append(",\n");
+    }
+    out.append("\"");
+    out.append(name);
+    out.append("\"");
+    out.append(":");
   }
 
   @SuppressWarnings("unused")
@@ -821,8 +826,8 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
         out.append(",\n");
       }
       out.append("{\n");
-      appendFirstField(out, "offset",
-          offsetValue(section.getLine(), section.getColumn()));
+      appendFieldStart(out, "offset", true);
+      appendOffsetValue(out, section.getLine(), section.getColumn());
       if (section.getSectionType() == SourceMapSection.SectionType.URL) {
         appendField(out, "url", escapeString(section.getSectionValue()));
       } else if (section.getSectionType() == SourceMapSection.SectionType.MAP) {
@@ -839,13 +844,11 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     out.append("\n}\n");
   }
 
-  private static CharSequence offsetValue(int line, int column) throws IOException {
-    StringBuilder out = new StringBuilder();
+  private static void appendOffsetValue(Appendable out, int line, int column) throws IOException {
     out.append("{\n");
     appendFirstField(out, "line", String.valueOf(line));
     appendField(out, "column", String.valueOf(column));
     out.append("\n}");
-    return out;
   }
 
   private int getSourceId(String sourceName) {
