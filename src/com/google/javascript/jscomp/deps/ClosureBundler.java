@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -125,7 +126,7 @@ public final class ClosureBundler {
   }
 
   private String transpile(String s) {
-    TranspileResult result = transpiler.transpile(path, s);
+    TranspileResult result = transpiler.transpile(Paths.get(path), s);
     sourceMapCache.put(path, result.sourceMap());
     return result.transpiled();
   }

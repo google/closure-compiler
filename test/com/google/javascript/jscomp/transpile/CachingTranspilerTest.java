@@ -23,6 +23,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.cache.CacheBuilder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -33,9 +35,13 @@ public final class CachingTranspilerTest extends TestCase {
   private Transpiler transpiler;
   @Mock(answer = RETURNS_SMART_NULLS) Transpiler delegate;
 
-  private static final TranspileResult RESULT1 = new TranspileResult("foo.js", "bar", "baz", "");
-  private static final TranspileResult RESULT2 = new TranspileResult("qux.js", "qux", "corge", "");
-  private static final TranspileResult RESULT3 = new TranspileResult("bar.js", "baz", "xyzzy", "");
+  private static final Path FOO_JS = Paths.get("foo.js");
+  private static final Path BAR_JS = Paths.get("bar.js");
+  private static final Path QUX_JS = Paths.get("qux.js");
+
+  private static final TranspileResult RESULT1 = new TranspileResult(FOO_JS, "bar", "baz", "");
+  private static final TranspileResult RESULT2 = new TranspileResult(QUX_JS, "qux", "corge", "");
+  private static final TranspileResult RESULT3 = new TranspileResult(BAR_JS, "baz", "xyzzy", "");
 
   @Override
   public void setUp() {
@@ -44,24 +50,24 @@ public final class CachingTranspilerTest extends TestCase {
   }
 
   public void testTranspileDelegates() {
-    when(delegate.transpile("foo.js", "bar")).thenReturn(RESULT1);
-    assertThat(transpiler.transpile("foo.js", "bar")).isSameAs(RESULT1);
+    when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
+    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
   }
 
   public void testTranspileCaches() {
-    when(delegate.transpile("foo.js", "bar")).thenReturn(RESULT1);
-    assertThat(transpiler.transpile("foo.js", "bar")).isSameAs(RESULT1);
-    assertThat(transpiler.transpile("foo.js", "bar")).isSameAs(RESULT1);
-    verify(delegate, times(1)).transpile("foo.js", "bar");
+    when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
+    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
+    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
+    verify(delegate, times(1)).transpile(FOO_JS, "bar");
   }
 
   public void testTranspileDependsOnBothPathAndCode() {
-    when(delegate.transpile("foo.js", "bar")).thenReturn(RESULT1);
-    when(delegate.transpile("food.js", "bar")).thenReturn(RESULT2);
-    when(delegate.transpile("foo.js", "bard")).thenReturn(RESULT3);
-    assertThat(transpiler.transpile("foo.js", "bar")).isSameAs(RESULT1);
-    assertThat(transpiler.transpile("food.js", "bar")).isSameAs(RESULT2);
-    assertThat(transpiler.transpile("foo.js", "bard")).isSameAs(RESULT3);
+    when(delegate.transpile(FOO_JS, "bar")).thenReturn(RESULT1);
+    when(delegate.transpile(BAR_JS, "bar")).thenReturn(RESULT2);
+    when(delegate.transpile(FOO_JS, "bard")).thenReturn(RESULT3);
+    assertThat(transpiler.transpile(FOO_JS, "bar")).isSameAs(RESULT1);
+    assertThat(transpiler.transpile(BAR_JS, "bar")).isSameAs(RESULT2);
+    assertThat(transpiler.transpile(FOO_JS, "bard")).isSameAs(RESULT3);
   }
 
   public void testRuntimeDelegates() {

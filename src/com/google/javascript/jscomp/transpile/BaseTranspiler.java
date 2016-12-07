@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * Basic Transpiler implementation for outputting ES5 code.
@@ -48,7 +49,7 @@ public final class BaseTranspiler implements Transpiler {
   }
 
   @Override
-  public TranspileResult transpile(String path, String code) {
+  public TranspileResult transpile(Path path, String code) {
     CompileResult result = compilerSupplier.compile(path, code);
     if (result.errors.length > 0) {
       // TODO(sdh): how to handle this?  Currently we throw an ISE with the message,
@@ -85,14 +86,15 @@ public final class BaseTranspiler implements Transpiler {
    * time when we're in single-file mode.
    */
   public static class CompilerSupplier {
-    public CompileResult compile(String path, String code) {
+    public CompileResult compile(Path path, String code) {
       Compiler compiler = compiler();
-      Result result = compiler.compile(EXTERNS, SourceFile.fromCode(path, code), options());
+      Result result =
+          compiler.compile(EXTERNS, SourceFile.fromCode(path.toString(), code), options());
       String source = compiler.toSource();
       StringBuilder sourceMap = new StringBuilder();
       if (result.sourceMap != null) {
         try {
-          result.sourceMap.appendTo(sourceMap, path);
+          result.sourceMap.appendTo(sourceMap, path.toString());
         } catch (IOException e) {
           // impossible, and not a big deal even if it did happen.
         }

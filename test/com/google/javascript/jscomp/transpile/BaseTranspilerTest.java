@@ -21,6 +21,8 @@ import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.when;
 
 import com.google.javascript.jscomp.JSError;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -33,6 +35,8 @@ public final class BaseTranspilerTest extends TestCase {
   private BaseTranspiler.CompilerSupplier compiler;
   @Mock(answer = RETURNS_SMART_NULLS) BaseTranspiler.CompilerSupplier mockCompiler;
 
+  private static final Path FOO_JS = Paths.get("foo.js");
+  private static final Path SOURCE_JS = Paths.get("source.js");
   private static final JSError[] NO_ERRORS = new JSError[] {};
 
   @Override
@@ -45,17 +49,17 @@ public final class BaseTranspilerTest extends TestCase {
   // Tests for BaseTranspiler
 
   public void testTranspiler_transpile() {
-    when(mockCompiler.compile("foo.js", "bar"))
+    when(mockCompiler.compile(FOO_JS, "bar"))
         .thenReturn(new BaseTranspiler.CompileResult("result", NO_ERRORS, true, "srcmap"));
-    assertThat(transpiler.transpile("foo.js", "bar"))
-        .isEqualTo(new TranspileResult("foo.js", "bar", "result", "srcmap"));
+    assertThat(transpiler.transpile(FOO_JS, "bar"))
+        .isEqualTo(new TranspileResult(FOO_JS, "bar", "result", "srcmap"));
   }
 
   public void testTranspiler_noTranspilation() {
-    when(mockCompiler.compile("foo.js", "bar"))
+    when(mockCompiler.compile(FOO_JS, "bar"))
         .thenReturn(new BaseTranspiler.CompileResult("result", NO_ERRORS, false, "srcmap"));
-    assertThat(transpiler.transpile("foo.js", "bar"))
-        .isEqualTo(new TranspileResult("foo.js", "bar", "bar", ""));
+    assertThat(transpiler.transpile(FOO_JS, "bar"))
+        .isEqualTo(new TranspileResult(FOO_JS, "bar", "bar", ""));
   }
 
   public void testTranspiler_runtime() {
@@ -66,7 +70,7 @@ public final class BaseTranspilerTest extends TestCase {
   // Tests for CompilerSupplier
 
   public void testCompilerSupplier_compileChanged() {
-    BaseTranspiler.CompileResult result = compiler.compile("source.js", "const x = () => 42;");
+    BaseTranspiler.CompileResult result = compiler.compile(SOURCE_JS, "const x = () => 42;");
     assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
     assertThat(result.errors).isEmpty();
     assertThat(result.transpiled).isTrue();
@@ -75,7 +79,7 @@ public final class BaseTranspilerTest extends TestCase {
   }
 
   public void testCompilerSupplier_compileNoChange() {
-    BaseTranspiler.CompileResult result = compiler.compile("source.js", "var x = 42;");
+    BaseTranspiler.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
     assertThat(result.source).isEqualTo("var x = 42;\n");
     assertThat(result.errors).isEmpty();
     assertThat(result.transpiled).isFalse();

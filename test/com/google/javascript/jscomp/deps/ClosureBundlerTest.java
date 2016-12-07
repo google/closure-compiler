@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import com.google.javascript.jscomp.transpile.TranspileResult;
 import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.IOException;
+import java.nio.file.Paths;
 import junit.framework.TestCase;
 import org.mockito.Mockito;
 
@@ -112,8 +113,8 @@ public final class ClosureBundlerTest extends TestCase {
 
     Transpiler transpiler = Mockito.mock(Transpiler.class, RETURNS_SMART_NULLS);
     when(transpiler.runtime()).thenReturn("RUNTIME;");
-    when(transpiler.transpile("foo.js", input))
-        .thenReturn(new TranspileResult("foo.js", input, "TRANSPILED;", ""));
+    when(transpiler.transpile(Paths.get("foo.js"), input))
+        .thenReturn(new TranspileResult(Paths.get("foo.js"), input, "TRANSPILED;", ""));
 
     ClosureBundler bundler = new ClosureBundler(transpiler).withPath("foo.js");
     StringBuilder sb = new StringBuilder();

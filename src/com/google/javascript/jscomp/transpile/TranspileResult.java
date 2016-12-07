@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.transpile;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URLEncoder;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -27,19 +28,19 @@ import java.util.Objects;
  */
 public final class TranspileResult {
 
-  private final String path;
+  private final Path path;
   private final String original;
   private final String transpiled;
   private final String sourceMap;
 
-  public TranspileResult(String path, String original, String transpiled, String sourceMap) {
+  public TranspileResult(Path path, String original, String transpiled, String sourceMap) {
     this.path = checkNotNull(path);
     this.original = checkNotNull(original);
     this.transpiled = checkNotNull(transpiled);
     this.sourceMap = checkNotNull(sourceMap);
   }
 
-  public String path() {
+  public Path path() {
     return path;
   }
 
@@ -77,6 +78,10 @@ public final class TranspileResult {
 
   public String transpiled() {
     return transpiled;
+  }
+
+  public boolean wasTranspiled() {
+    return !transpiled.equals(original);
   }
 
   @Override
