@@ -2993,25 +2993,48 @@ public final class NodeUtil {
    * @return True if n is an L-value.
    */
   public static boolean isLValue(Node n) {
-    if (!n.isName() && !n.isGetProp() && !n.isGetElem() && !n.isStringKey()) {
-      return false;
+    switch (n.getToken()) {
+      case NAME:
+      case GETPROP:
+      case GETELEM:
+      case STRING_KEY:
+        break;
+      default:
+        return false;
     }
+
     Node parent = n.getParent();
     if (parent == null) {
       return false;
     }
-    return (isAssignmentOp(parent) && parent.getFirstChild() == n)
-        || (parent.isForIn() && parent.getFirstChild() == n)
-        || isNameDeclaration(parent)
-        || (parent.isFunction() && parent.getFirstChild() == n)
-        || parent.isRest()
-        || (parent.isDefaultValue() && parent.getFirstChild() == n)
-        || parent.isDec()
-        || parent.isInc()
-        || parent.isParamList()
-        || parent.isCatch()
-        || isImportedName(n)
-        || isLhsByDestructuring(n);
+
+    switch (parent.getToken()) {
+      case IMPORT_SPEC:
+        return parent.getLastChild() == n;
+      case VAR:
+      case LET:
+      case CONST:
+      case REST:
+      case PARAM_LIST:
+      case IMPORT:
+      case INC:
+      case DEC:
+      case CATCH:
+        return true;
+      case CLASS:
+      case FUNCTION:
+      case DEFAULT_VALUE:
+      case FOR:
+      case FOR_IN:
+      case FOR_OF:
+        return parent.getFirstChild() == n;
+      case OBJECT_PATTERN:
+      case ARRAY_PATTERN:
+      case STRING_KEY:
+        return isLhsByDestructuring(n);
+      default:
+        return NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n;
+    }
   }
 
   static boolean isLhsOfAssign(Node n) {

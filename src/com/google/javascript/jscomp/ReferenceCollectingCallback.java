@@ -739,9 +739,6 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     private static boolean isLhsOfEnhancedForExpression(Node n) {
       Node parent = n.getParent();
-      if (NodeUtil.isNameDeclaration(parent)) {
-        return isLhsOfEnhancedForExpression(parent);
-      }
       return NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == n;
     }
 
@@ -759,16 +756,28 @@ class ReferenceCollectingCallback implements ScopedCallback,
     boolean isLvalue() {
       Node parent = getParent();
       Token parentType = parent.getToken();
-      return (parentType == Token.VAR && nameNode.getFirstChild() != null)
-          || (parentType == Token.LET && nameNode.getFirstChild() != null)
-          || (parentType == Token.CONST && nameNode.getFirstChild() != null)
-          || (parentType == Token.DEFAULT_VALUE && parent.getFirstChild() == nameNode)
-          || parentType == Token.INC
-          || parentType == Token.DEC
-          || parentType == Token.CATCH
-          || (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == nameNode)
-          || isLhsOfEnhancedForExpression(nameNode)
-          || NodeUtil.isLhsByDestructuring(nameNode);
+      switch (parentType) {
+        case VAR:
+        case LET:
+        case CONST:
+          return (nameNode.getFirstChild() != null || isLhsOfEnhancedForExpression(nameNode));
+        case DEFAULT_VALUE:
+          return parent.getFirstChild() == nameNode;
+        case INC:
+        case DEC:
+        case CATCH:
+          return true;
+        case FOR:
+        case FOR_IN:
+        case FOR_OF:
+          return NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == nameNode;
+        case OBJECT_PATTERN:
+        case ARRAY_PATTERN:
+        case STRING_KEY:
+          return NodeUtil.isLhsByDestructuring(nameNode);
+        default:
+          return (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == nameNode);
+      }
     }
 
     Scope getScope() {
