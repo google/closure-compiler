@@ -57,3 +57,54 @@ var suiteTeardown = function(cb) {};
  * @param {!Function} cb
  */
 var test = function(name, cb) {};
+
+// Below are the externs for the BDD API: https://mochajs.org/#bdd
+
+/**
+ * @typedef {function(function(*=): *): (*|IThenable<*>)}
+ */
+var ActionFunction;
+
+/**
+ * @param {string} description
+ * @param {function(): void} spec
+ */
+var describe = function(description, spec) {};
+
+/**
+ * @param {string} description
+ * @param {function(): void} spec
+ */
+var context = function(description, spec) {};
+
+/**
+ * @param {string} expectation
+ * @param {ActionFunction=} assertion
+ */
+var it = function(expectation, assertion) {};
+
+/**
+ * @param {string} expectation
+ * @param {ActionFunction=} assertion
+ */
+var specify = function(expectation, assertion) {};
+
+/**
+ * @param {ActionFunction} action
+ */
+var before = function(action) {};
+
+/**
+ * @param {ActionFunction} action
+ */
+var after = function(action) {};
+
+/**
+ * @param {ActionFunction} action
+ */
+var beforeEach = function(action) {};
+
+/**
+ * @param {ActionFunction} action
+ */
+var afterEach = function(action) {};
