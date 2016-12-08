@@ -71,6 +71,13 @@ class CoverageInstrumentationPass implements CompilerPass {
    */
   private void addHeaderCode(Node script) {
     script.addChildToFront(createConditionalObjectDecl(JS_INSTRUMENTATION_OBJECT_NAME, script));
+
+    // Make subsequent usages of "window" and "window.top" work in a Web Worker context.
+    script.addChildToFront(
+        compiler.parseSyntheticCode(
+            "if (!self.window) { self.window = self; self.window.top = self; }")
+        .removeFirstChild()
+        .useSourceInfoIfMissingFromForTree(script));
   }
 
   @Override

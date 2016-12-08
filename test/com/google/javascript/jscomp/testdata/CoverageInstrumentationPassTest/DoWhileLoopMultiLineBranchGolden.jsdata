@@ -1,3 +1,7 @@
+if (!self.window) {
+  self.window = self;
+  self.window.top = self;
+}
 var __jscov = window.top.__jscov || (window.top.__jscov = {fileNames:[], branchPresent:[], branchesInLine:[], branchesTaken:[]});
 {
   var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_DoWhileLoopMultiLineBranch_jsdata = [];
