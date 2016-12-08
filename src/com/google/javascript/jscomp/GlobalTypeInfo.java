@@ -389,8 +389,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   @Override
   public void process(Node externs, Node root) {
     Preconditions.checkNotNull(warnings, "Cannot rerun GlobalTypeInfo.process");
-    Preconditions.checkArgument(externs == null || externs.isSyntheticBlock());
-    Preconditions.checkArgument(root.isSyntheticBlock());
+    Preconditions.checkArgument(externs == null || externs.isRoot());
+    Preconditions.checkArgument(root.isRoot());
 
     this.compiler.setMostRecentTypechecker(MostRecentTypechecker.NTI);
 

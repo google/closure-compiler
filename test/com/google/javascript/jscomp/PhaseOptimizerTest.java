@@ -43,10 +43,8 @@ public final class PhaseOptimizerTest extends TestCase {
   @Override
   public void setUp() {
     passesRun.clear();
-    dummyExternsRoot = new Node(Token.BLOCK);
-    dummyRoot = new Node(Token.BLOCK);
-    // Needed if we are validating the AST using AstValidator.
-    dummyRoot.setIsSyntheticBlock(true);
+    dummyExternsRoot = new Node(Token.ROOT);
+    dummyRoot = new Node(Token.ROOT);
     compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     tracker = new PerformanceTracker(dummyExternsRoot, dummyRoot, TracerMode.TIMING_ONLY, null);

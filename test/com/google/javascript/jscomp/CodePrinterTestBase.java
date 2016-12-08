@@ -61,8 +61,7 @@ public abstract class CodePrinterTestBase extends TestCase {
       CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
       Node externs = new Node(Token.SCRIPT);
       externs.setInputId(new InputId("externs"));
-      Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
-      externAndJsRoot.setIsSyntheticBlock(true);
+      Node externAndJsRoot = new Node(Token.ROOT, externs, n);
       typeResolver.process(externs, n);
       CompilerPass inferTypes = passConfig.inferTypes.create(compiler);
       inferTypes.process(externs, n);

@@ -114,7 +114,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         inputId = NodeUtil.getInputId(n);
       }
       boolean scanInnerBlocks =
-          n.isSyntheticBlock() || NodeUtil.isFunctionBlock(n) || n.isModuleBody();
+          n.isRoot() || NodeUtil.isFunctionBlock(n) || n.isModuleBody();
       scanVars(n, scanInnerBlocks, true);
     } else {
       // n is the global SCRIPT node
@@ -266,7 +266,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     Node parent = n.getParent();
     Node grandparent = parent.getParent();
     Preconditions.checkState(
-        parent.isBlock()
+        parent.isNormalBlock()
             || NodeUtil.isAnyFor(parent)
             || parent.isScript()
             || parent.isModuleBody()

@@ -622,7 +622,7 @@ public class CodeGenerator {
           if (n.getClass() != Node.class) {
             throw new Error("Unexpected Node subclass.");
           }
-          boolean preserveBlock = n.isBlock() && !n.isSyntheticBlock();
+          boolean preserveBlock = n.isNormalBlock() && !n.isSyntheticBlock();
           if (preserveBlock) {
             cc.beginBlock();
           }

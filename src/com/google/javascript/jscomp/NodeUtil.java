@@ -2559,11 +2559,6 @@ public final class NodeUtil {
       case MODULE_BODY:
       case ROOT:
         return true;
-      case BLOCK:
-        // Only valid for top level synthetic block
-        if (n.getParent() == null) {
-          return true;
-        }
       default:
         return false;
     }
@@ -2592,7 +2587,6 @@ public final class NodeUtil {
       case SCRIPT:
       case MODULE_BODY:
       case BLOCK:
-      case ROOT:
       case LABEL:
       case NAMESPACE_ELEMENTS: // The body of TypeScript namespace is also a statement parent
         return true;
@@ -2819,7 +2813,6 @@ public final class NodeUtil {
     while (current != null) {
       switch (current.getToken()) {
         case BLOCK:
-        case ROOT:
           return !current.getParent().isFunction();
         case FUNCTION:
         case SCRIPT:
@@ -4551,7 +4544,6 @@ public final class NodeUtil {
     Node parent = expr.getParent();
     switch (parent.getToken()) {
       case BLOCK:
-      case ROOT:
       case EXPR_RESULT:
         return false;
       case CAST:

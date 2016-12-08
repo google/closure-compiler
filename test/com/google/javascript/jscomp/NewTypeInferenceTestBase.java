@@ -212,11 +212,9 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         compilerOptions);
 
     Node externsRoot = IR.root();
-    externsRoot.setIsSyntheticBlock(true);
     externsRoot.addChildToFront(
         compiler.getInput(new InputId("[externs]")).getAstRoot(compiler));
     Node astRoot = IR.root();
-    astRoot.setIsSyntheticBlock(true);
     astRoot.addChildToFront(
         compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
 

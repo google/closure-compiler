@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -33,7 +34,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -68,7 +68,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testInitialTypingScope() throws Exception {
     TypedScope s = new TypedScopeCreator(compiler,
         CodingConventions.getDefault()).createInitialScope(
-            new Node(Token.BLOCK));
+            new Node(Token.ROOT));
 
     assertTypeEquals(ARRAY_FUNCTION_TYPE, s.getVar("Array").getType());
     assertTypeEquals(BOOLEAN_OBJECT_FUNCTION_TYPE,
@@ -8152,8 +8152,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node externs = new Node(Token.SCRIPT);
     externs.setInputId(new InputId("externs"));
 
-    Node externAndJsRoot = new Node(Token.BLOCK, externs, parent);
-    externAndJsRoot.setIsSyntheticBlock(true);
+    Node externAndJsRoot = IR.root(externs, parent);
 
     makeTypeCheck().processForTesting(null, parent);
     return node.getJSType();
@@ -11268,9 +11267,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   private double getTypedPercent(String js) {
     Node n = compiler.parseTestCode(js);
 
-    Node externs = new Node(Token.BLOCK);
-    Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
-    externAndJsRoot.setIsSyntheticBlock(true);
+    Node externs = IR.root();
+    Node externAndJsRoot = IR.root(externs, n);
 
     TypeCheck t = makeTypeCheck();
     t.processForTesting(null, n);
@@ -11857,9 +11855,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
     Node second = compiler.parseTestCode("new Foo");
 
-    Node externs = new Node(Token.BLOCK);
-    Node externAndJsRoot = new Node(Token.BLOCK, externs, second);
-    externAndJsRoot.setIsSyntheticBlock(true);
+    Node externs = IR.root();
+    Node externAndJsRoot = IR.root(externs, second);
 
     new TypeCheck(
         compiler,
@@ -17260,9 +17257,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       String js, List<String> descriptions) {
     compiler.initOptions(compiler.getOptions());
     Node n = compiler.parseTestCode(js);
-    Node externs = new Node(Token.BLOCK);
-    Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
-    externAndJsRoot.setIsSyntheticBlock(true);
+    Node externs = IR.root();
+    Node externAndJsRoot = IR.root(externs, n);
 
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
@@ -17406,8 +17402,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node n = compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler);
     Node externsNode = compiler.getInput(new InputId("[externs]"))
         .getAstRoot(compiler);
-    Node externAndJsRoot = new Node(Token.BLOCK, externsNode, n);
-    externAndJsRoot.setIsSyntheticBlock(true);
+    Node externAndJsRoot = IR.root(externsNode, n);
 
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
@@ -17428,9 +17423,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   private Node typeCheck(Node n) {
-    Node externsNode = new Node(Token.BLOCK);
-    Node externAndJsRoot = new Node(Token.BLOCK, externsNode, n);
-    externAndJsRoot.setIsSyntheticBlock(true);
+    Node externsNode = IR.root();
+    Node externAndJsRoot = IR.root(externsNode);
+    externAndJsRoot.addChildToBack(n);
 
     makeTypeCheck().processForTesting(null, n);
     return n;
@@ -17443,9 +17438,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   void testTypes(String js, String[] warnings) {
     Node n = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
-    Node externsNode = new Node(Token.BLOCK);
+    Node externsNode = IR.root();
     // create a parent node for the extern and source blocks
-    new Node(Token.BLOCK, externsNode, n);
+    IR.root(externsNode, n);
 
     makeTypeCheck().processForTesting(null, n);
     assertEquals(0, compiler.getErrorCount());

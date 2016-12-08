@@ -2854,6 +2854,7 @@ public class Node implements Serializable {
     return this.token == Token.ASSIGN_ADD;
   }
 
+  /** Use isNormalBlock or isRoot instead */
   @Deprecated
   public boolean isBlock() {
     return this.token == Token.BLOCK || this.token == Token.ROOT;
@@ -2861,6 +2862,10 @@ public class Node implements Serializable {
 
   public boolean isNormalBlock() {
     return this.token == Token.BLOCK;
+  }
+
+  public boolean isRoot() {
+    return this.token == Token.ROOT;
   }
 
   public boolean isBreak() {

@@ -410,8 +410,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     this.exports = new ArrayList<>();
     this.compiler = compiler;
     this.definitionMap = new HashMap<>();
-    this.externsRoot = IR.block();
-    this.externsRoot.setIsSyntheticBlock(true);
+    this.externsRoot = IR.script();
     this.alreadyExportedPaths = new HashSet<>();
     this.mappedPaths = new HashMap<>();
 
