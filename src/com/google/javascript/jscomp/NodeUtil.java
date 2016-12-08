@@ -40,6 +40,7 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -2552,16 +2553,11 @@ public final class NodeUtil {
     return false;
   }
 
+  private static final Set<Token> DEFINITE_CFG_ROOTS =
+      EnumSet.of(Token.FUNCTION, Token.SCRIPT, Token.MODULE_BODY, Token.ROOT);
+
   static boolean isValidCfgRoot(Node n) {
-    switch (n.getToken()) {
-      case FUNCTION:
-      case SCRIPT:
-      case MODULE_BODY:
-      case ROOT:
-        return true;
-      default:
-        return false;
-    }
+    return DEFINITE_CFG_ROOTS.contains(n.getToken());
   }
 
   /**
@@ -2578,21 +2574,19 @@ public final class NodeUtil {
     }
   };
 
+  private static final Set<Token> IS_STATEMENT_PARENT =
+      EnumSet.of(
+          Token.SCRIPT,
+          Token.MODULE_BODY,
+          Token.BLOCK,
+          Token.LABEL,
+          Token.NAMESPACE_ELEMENTS);
+
   static boolean isStatementParent(Node parent) {
     // It is not possible to determine definitely if a node is a statement
     // or not if it is not part of the AST.  A FUNCTION node can be
     // either part of an expression or a statement.
-    Preconditions.checkState(parent != null);
-    switch (parent.getToken()) {
-      case SCRIPT:
-      case MODULE_BODY:
-      case BLOCK:
-      case LABEL:
-      case NAMESPACE_ELEMENTS: // The body of TypeScript namespace is also a statement parent
-        return true;
-      default:
-        return false;
-    }
+    return IS_STATEMENT_PARENT.contains(parent.getToken());
   }
 
   private static boolean isDeclarationParent(Node parent) {
