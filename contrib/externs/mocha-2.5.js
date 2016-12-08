@@ -24,46 +24,46 @@
  * @see https://mochajs.org/
  */
 
-// Below are the externs for the TDD API: https://mochajs.org/#tdd
-
-/**
- * @param {string} name
- * @param {!Function} cb
- */
-var suite = function(name, cb) {};
-
-/**
- * @param {!Function} cb
- */
-var setup = function(cb) {};
-
-/**
- * @param {!Function} cb
- */
-var teardown = function(cb) {};
-
-/**
- * @param {!Function} cb
- */
-var suiteSetup = function(cb) {};
-
-/**
- * @param {!Function} cb
- */
-var suiteTeardown = function(cb) {};
-
-/**
- * @param {string} name
- * @param {!Function} cb
- */
-var test = function(name, cb) {};
-
-// Below are the externs for the BDD API: https://mochajs.org/#bdd
-
 /**
  * @typedef {function(function(*=): *): (*|IThenable<*>)}
  */
 var ActionFunction;
+
+// Below are the externs for the TDD API: https://mochajs.org/#tdd
+
+/**
+ * @param {string} description
+ * @param {function(): void} spec
+ */
+var suite = function(description, spec) {};
+
+/**
+ * @param {!ActionFunction} action
+ */
+var setup = function(action) {};
+
+/**
+ * @param {!ActionFunction} action
+ */
+var teardown = function(action) {};
+
+/**
+ * @param {!ActionFunction} action
+ */
+var suiteSetup = function(action) {};
+
+/**
+ * @param {!ActionFunction} action
+ */
+var suiteTeardown = function(action) {};
+
+/**
+ * @param {string} expectation
+ * @param {!ActionFunction=} assertion
+ */
+var test = function(expectation, assertion) {};
+
+// Below are the externs for the BDD API: https://mochajs.org/#bdd
 
 /**
  * @param {string} description
@@ -79,32 +79,32 @@ var context = function(description, spec) {};
 
 /**
  * @param {string} expectation
- * @param {ActionFunction=} assertion
+ * @param {!ActionFunction=} assertion
  */
 var it = function(expectation, assertion) {};
 
 /**
  * @param {string} expectation
- * @param {ActionFunction=} assertion
+ * @param {!ActionFunction=} assertion
  */
 var specify = function(expectation, assertion) {};
 
 /**
- * @param {ActionFunction} action
+ * @param {!ActionFunction} action
  */
 var before = function(action) {};
 
 /**
- * @param {ActionFunction} action
+ * @param {!ActionFunction} action
  */
 var after = function(action) {};
 
 /**
- * @param {ActionFunction} action
+ * @param {!ActionFunction} action
  */
 var beforeEach = function(action) {};
 
 /**
- * @param {ActionFunction} action
+ * @param {!ActionFunction} action
  */
 var afterEach = function(action) {};
