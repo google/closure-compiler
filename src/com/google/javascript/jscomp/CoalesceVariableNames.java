@@ -401,23 +401,24 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
 
     private static boolean isAssignTo(Var var, Node n, Node parent) {
-      if (n.isName() && var.getName().equals(n.getString()) && parent != null) {
-        if (parent.isParamList()) {
-          // In a function declaration, the formal parameters are assigned.
-          return true;
-        } else if (parent.isVar()) {
-          // If this is a VAR declaration, if the name node has a child, we are
-          // assigning to that name.
-          return n.hasChildren();
+      if (n.isName()) {
+        if (var.getName().equals(n.getString()) && parent != null) {
+          if (parent.isParamList()) {
+            // In a function declaration, the formal parameters are assigned.
+            return true;
+          } else if (parent.isVar()) {
+            // If this is a VAR declaration, if the name node has a child, we are
+            // assigning to that name.
+            return n.hasChildren();
+          }
         }
-        return false; // Definitely a read.
-      } else {
+      } else if (NodeUtil.isAssignmentOp(n)) {
         // Lastly, any assignmentOP is also an assign.
         Node name = n.getFirstChild();
         return name != null && name.isName()
-            && var.getName().equals(name.getString())
-            && NodeUtil.isAssignmentOp(n);
+            && var.getName().equals(name.getString());
       }
+      return false; // Definitely a read.
     }
 
     private static boolean isReadFrom(Var var, Node name) {
