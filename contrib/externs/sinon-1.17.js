@@ -62,6 +62,11 @@ SinonSandbox.prototype.stub = function() {};
  */
 var SinonStub = function() {};
 
+/**
+ * @param {*} obj
+ * @return {!SinonStub}
+ */
+SinonStub.prototype.returns = function(obj) {};
 
 
 sinon.fakeServer;
