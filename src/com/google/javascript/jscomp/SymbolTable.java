@@ -1486,7 +1486,7 @@ public final class SymbolTable {
       } else {
         // Otherwise, declare a "this" property when possible.
         SymbolScope scope = scopes.get(t.getScopeRoot());
-        Preconditions.checkNotNull(scope);
+        Preconditions.checkNotNull(scope, "No scope found for node: %s", t.getScopeRoot());
         Symbol scopeSymbol = getSymbolForScope(scope);
         if (scopeSymbol != null) {
           SymbolScope propScope = scopeSymbol.getPropertyScope();
