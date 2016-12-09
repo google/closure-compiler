@@ -738,7 +738,7 @@ PolymerDomApi.prototype.replaceChild = function(oldNode, newNode) {};
 
 /**
  * @param {!Node} node
- * @param {!Node} beforeNode
+ * @param {?Node} beforeNode
  */
 PolymerDomApi.prototype.insertBefore = function(node, beforeNode) {};
 
