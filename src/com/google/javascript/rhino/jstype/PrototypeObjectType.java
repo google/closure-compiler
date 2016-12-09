@@ -563,6 +563,10 @@ public class PrototypeObjectType extends ObjectType {
 
   @Override
   public int hashCode() {
-    return Objects.hash(className, properties);
+    if (isStructuralType()) {
+      return Objects.hash(className, properties);
+    } else {
+      return System.identityHashCode(this);
+    }
   }
 }

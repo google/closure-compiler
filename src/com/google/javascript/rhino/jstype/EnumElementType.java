@@ -39,8 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
-
-
+import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
@@ -142,11 +141,8 @@ public class EnumElementType extends ObjectType {
    */
   @Override
   public int hashCode() {
-    if (hasReferenceName()) {
-      return getReferenceName().hashCode();
-    } else {
-      return super.hashCode();
-    }
+    Preconditions.checkState(hasReferenceName());
+    return getReferenceName().hashCode();
   }
 
   @Override

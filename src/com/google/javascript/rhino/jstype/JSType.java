@@ -735,9 +735,7 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   @Override
-  public int hashCode() {
-    throw new RuntimeException(this.getClass() + " must implement hashCode().");
-  }
+  public abstract int hashCode();
 
   /**
    * This predicate is used to test whether a given type can appear in a
