@@ -1369,6 +1369,7 @@ public final class NodeUtilTest extends TestCase {
     return NodeUtil.isValidDefineValue(value, defines);
   }
 
+  @SuppressWarnings("JUnit3FloatingPointComparisonWithoutDelta")
   public void testGetNumberValue() {
     // Strings
     assertEquals(1.0, NodeUtil.getNumberValue(getNode("'\\uFEFF1'")));
