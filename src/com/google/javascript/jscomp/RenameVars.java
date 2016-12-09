@@ -21,10 +21,10 @@ import static com.google.common.base.Strings.nullToEmpty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ListMultimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
 import javax.annotation.Nullable;
 
 /**
@@ -88,7 +87,7 @@ final class RenameVars implements CompilerPass {
   // Logic for bleeding functions, where the name leaks into the outer
   // scope on IE but not on other browsers.
   private final Set<Var> localBleedingFunctions = new HashSet<>();
-  private final ArrayListMultimap<Scope, Var> localBleedingFunctionsPerScope =
+  private final ListMultimap<Scope, Var> localBleedingFunctionsPerScope =
       ArrayListMultimap.create();
 
   class Assignment {
