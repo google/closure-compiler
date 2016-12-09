@@ -478,7 +478,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("strictMissingRequire",
           CheckRequiresForConstructors.MISSING_REQUIRE_WARNING,
           CheckRequiresForConstructors.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckRequiresForConstructors.MISSING_REQUIRE_CALL_WARNING);
+          CheckRequiresForConstructors.MISSING_REQUIRE_STRICT_WARNING);
 
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerGroup("legacyGoogScopeRequire",
