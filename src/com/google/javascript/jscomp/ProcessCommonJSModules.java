@@ -666,7 +666,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       if (root.getParent().isAssign()
-          && (root.getNext().isName() || root.getNext().isGetProp())
+          && (root.getNext() != null && (root.getNext().isName() || root.getNext().isGetProp()))
           && root.getParent().getParent().isExprResult()
           && rValueVar != null) {
         root.getParent().getParent().detachFromParent();

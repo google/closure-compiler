@@ -368,10 +368,14 @@ public final class ModuleLoader {
     //   /foo/ -> bar/node_modules/baz/foo_bar_baz.js
     //   /foo/node_modules/bar/ -> baz/foo_bar_baz.js
     for (String modulePath : modulePaths) {
-      String[] nodeModulesDirs = modulePath.split("/node_modules/");
+      String splitPath = modulePath;
+      if (modulePath.startsWith("node_modules/")) {
+        splitPath = "/" + modulePath;
+      }
+      String[] nodeModulesDirs = splitPath.split("/node_modules/");
       String parentPath = "";
       for (int i = 0; i < nodeModulesDirs.length - 1; i++) {
-        if (i + 1 < nodeModulesDirs.length) {
+        if (i + 1 < nodeModulesDirs.length && !nodeModulesDirs[i].equals("")) {
           parentPath += nodeModulesDirs[i] + "/";
         }
         String subPath = modulePath.substring(parentPath.length() + "node_modules/".length());
