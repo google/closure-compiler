@@ -252,6 +252,9 @@ class IRFactory {
           "implements", "interface", "let", "package", "private", "protected",
           "public", "static", "yield");
 
+  private static final Pattern COMMENT_PATTERN =
+      Pattern.compile("(/|(\n[ \t]*))\\*[ \t]*@[a-zA-Z]+[ \t\n{]");
+
   /**
    * If non-null, use this set of keywords instead of TokenStream.isKeyword().
    */
@@ -626,8 +629,7 @@ class IRFactory {
    * Check to see if the given block comment looks like it should be JSDoc.
    */
   private void handleBlockComment(Comment comment) {
-    Pattern p = Pattern.compile("(/|(\n[ \t]*))\\*[ \t]*@[a-zA-Z]+[ \t\n{]");
-    if (p.matcher(comment.value).find()) {
+    if (COMMENT_PATTERN.matcher(comment.value).find()) {
       errorReporter.warning(
           SUSPICIOUS_COMMENT_WARNING,
           sourceName,
