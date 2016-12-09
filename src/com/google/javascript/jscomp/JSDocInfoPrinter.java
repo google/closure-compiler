@@ -52,6 +52,7 @@ public final class JSDocInfoPrinter {
     //   lends
     //   const
     //   final
+    //   desc
     //   dict|struct|unrestricted
     //   constructor|interface|record
     //   extends
@@ -88,6 +89,11 @@ public final class JSDocInfoPrinter {
 
     if (info.isFinal()) {
       parts.add("@final");
+    }
+
+    String description = info.getDescription();
+    if (description != null) {
+      parts.add("@desc " + description + '\n');
     }
 
     if (info.makesDicts()) {
