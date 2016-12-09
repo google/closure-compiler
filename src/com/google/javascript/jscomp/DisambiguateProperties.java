@@ -116,10 +116,9 @@ class DisambiguateProperties implements CompilerPass {
 
   /**
    * Map of a type to all the related errors that invalidated the type
-   * for disambiguation. It has to be Object because of the generic nature of
-   * this pass.
+   * for disambiguation.
    */
-  private final Multimap<Object, JSError> invalidationMap;
+  private final Multimap<JSType, JSError> invalidationMap;
 
   /**
    * In practice any large code base will have thousands and thousands of
