@@ -265,33 +265,32 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   private boolean isNodeAtCurrentLexicalScope(Node n) {
     Node parent = n.getParent();
     Node grandparent = parent.getParent();
-    Preconditions.checkState(
-        parent.isNormalBlock()
-            || NodeUtil.isAnyFor(parent)
-            || parent.isScript()
-            || parent.isModuleBody()
-            || parent.isLabel(),
-        parent);
 
-    if (parent.isSyntheticBlock()
-        && grandparent != null && (grandparent.isCase() || grandparent.isDefaultCase())) {
-      Node switchNode = grandparent.getParent();
-      return scope.getRootNode() == switchNode;
-    }
-
-    if (parent == scope.getRootNode() || parent.isScript()
-        || (grandparent.isCatch()
-            && parent.getGrandparent() == scope.getRootNode())) {
-      return true;
-    }
-
-    while (parent.isLabel()) {
-      if (parent.getParent() == scope.getRootNode()) {
+    switch (parent.getToken()) {
+      case SCRIPT:
         return true;
-      }
-      parent = parent.getParent();
+      case BLOCK:
+        if (parent.isSyntheticBlock() && (grandparent.isCase() || grandparent.isDefaultCase())
+            || grandparent.isCatch()) {
+          return scope.getRootNode() == grandparent.getParent();
+        }
+        // Fall through
+      case FOR:
+      case FOR_IN:
+      case FOR_OF:
+      case MODULE_BODY:
+        return parent == scope.getRootNode();
+      case LABEL:
+        while (parent.isLabel()) {
+          if (parent.getParent() == scope.getRootNode()) {
+            return true;
+          }
+          parent = parent.getParent();
+        }
+        return false;
+      default:
+        throw new RuntimeException("Unsupported node parent: " + parent);
     }
-    return false;
   }
 
   @Override

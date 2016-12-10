@@ -3493,9 +3493,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
         feature);
   }
 
-  private Node script(Node stmt) {
+  private static Node script(Node stmt) {
     Node n = new Node(Token.SCRIPT, stmt);
-    n.setIsSyntheticBlock(true);
     return n;
   }
 

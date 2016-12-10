@@ -828,7 +828,6 @@ public final class NodeUtilTest extends TestCase {
 
     Node outerBlockNode = actual.getFirstChild();
     Node innerBlockNode = outerBlockNode.getFirstChild();
-    innerBlockNode.setIsSyntheticBlock(true);
 
     NodeUtil.removeChild(outerBlockNode, innerBlockNode);
     String expected = "{{}}";
