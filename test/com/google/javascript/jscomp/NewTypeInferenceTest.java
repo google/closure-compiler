@@ -18300,6 +18300,20 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Foo() {}",
         "/** @abstract @return {number} */",
         "Foo.prototype.bar = function(x) {};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @return {number} */",
+        "Foo.prototype.prop = function() {};",
+        "/**",
+        " * @constructor",
+        " * @abstract",
+        " * @implements {Foo}",
+        " */",
+        "function Bar() {}",
+        "/** @abstract */",
+        "Bar.prototype.prop = function() {};"));
   }
 
   public void testAbstractMethodCalls() {

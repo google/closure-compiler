@@ -276,6 +276,7 @@ public final class DeclaredFunctionType {
     } else if (!superType.typeParameters.isEmpty()) {
       builder.addTypeParameters(superType.typeParameters);
     }
+    builder.addAbstract(this.isAbstract);
     return builder.buildDeclaration();
   }
 
