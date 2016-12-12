@@ -138,6 +138,27 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  // https://github.com/google/closure-compiler/issues/2189
+  public void testGithubIssue2189() {
+    setExpectParseWarningsThisTest();
+    test(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {string} a",
+            " * @param {{b: ?<?>}} __1",
+            " */",
+            "function x(a, { b }) {}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @param {string} a",
+            " * @param {{b: ?<?>}} __1",
+            " */",
+            "function x(a, $jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var b=$jscomp$destructuring$var1.b;",
+            "}"));
+  }
+
   public void testObjectDestructuringStrangeProperties() {
     test(
         "var {5: b} = foo();",

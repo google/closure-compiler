@@ -1414,6 +1414,9 @@ public class JSDocInfo implements Serializable {
     if (info == null || info.parameters == null) {
       return null;
     }
+    if (index >= info.parameters.size()) {
+      return null;
+    }
     return Iterables.get(info.parameters.keySet(), index);
   }
 
