@@ -419,6 +419,12 @@ public final class DefaultPassConfig extends PassConfig {
       addOldTypeCheckerPasses(checks, options);
     }
 
+    // When options.generateExportsAfterTypeChecking is true, run GenerateExports after
+    // both type checkers, not just after NTI.
+    if (options.generateExportsAfterTypeChecking && options.generateExports) {
+      checks.add(generateExports);
+    }
+
     checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
@@ -449,10 +455,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (!options.getNewTypeInference()) {
       addOldTypeCheckerPasses(checks, options);
-    }
-
-    if (options.generateExportsAfterTypeChecking && options.generateExports) {
-      checks.add(generateExports);
     }
 
     if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE) ||
@@ -1849,6 +1851,18 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     public void process(Node externs, Node root) {
+      // If NTI is enabled, erase the NTI types from the AST before adding the old types.
+      if (this.compiler.getOptions().getNewTypeInference()) {
+        NodeTraversal.traverseEs6(
+            this.compiler, root,
+            new NodeTraversal.AbstractPostOrderCallback(){
+              @Override
+              public void visit(NodeTraversal t, Node n, Node parent) {
+                n.setTypeI(null);
+              }
+            });
+      }
+
       this.compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);
       if (topScope == null) {
         regenerateGlobalTypedScope(compiler, root.getParent());
