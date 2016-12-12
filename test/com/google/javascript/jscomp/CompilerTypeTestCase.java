@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-
 import java.util.Arrays;
 
 /**
@@ -111,6 +110,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
     compiler = new Compiler();
     compiler.initOptions(options);
     registry = compiler.getTypeRegistry();
+    registry.setOptimizePropertyIndex_TRANSITIONAL_METHOD(true);
     initTypes();
   }
 }

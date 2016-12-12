@@ -16682,6 +16682,131 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "var x = b.prop2"));
   }
 
+  public void testOptimizePropertyMap1() throws Exception {
+    // For non object-literal types such as Function, the behavior doesn't change.
+    // The stray property is added as unknown.
+    testTypes(LINE_JOINER.join(
+        "/** @return {!Function} */",
+        "function f() {",
+        "  var x = function() {};",
+        "  /** @type {number} */",
+        "  x.prop = 123;",
+        "  return x;",
+        "}",
+        "function g(/** !Function */ x) {",
+        "  var /** null */ n = x.prop;",
+        "}"));
+  }
+
+  public void testOptimizePropertyMap2() throws Exception {
+    // Don't add the inferred property to all Foo values.
+    testTypes(LINE_JOINER.join(
+        "/** @typedef {{a:number}} */",
+        "var Foo;",
+        "function f(/** !Foo */ x) {",
+        "  var y = x;",
+        "  /** @type {number} */",
+        "  y.b = 123;",
+        "}",
+        "function g(/** !Foo */ x) {",
+        "  var /** null */ n = x.b;",
+        "}"),
+        "Property b never defined on x");
+  }
+
+  public void testOptimizePropertyMap3() throws Exception {
+    // For @record types, add the stray property to the index as before.
+    testTypes(LINE_JOINER.join(
+        "/** @record */",
+        "function Foo() {}",
+        "/** @type {number} */",
+        "Foo.prototype.a;",
+        "function f(/** !Foo */ x) {",
+        "  var y = x;",
+        "  /** @type {number} */",
+        "  y.b = 123;",
+        "}",
+        "function g(/** !Foo */ x) {",
+        "  var /** null */ n = x.b;",
+        "}"));
+  }
+
+  public void testOptimizePropertyMap4() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "function f(x) {",
+        "  var y = { a: 1, b: 2 };",
+        "}",
+        "function g(x) {",
+        "  return x.b + 1;",
+        "}"));
+  }
+
+  public void testOptimizePropertyMap5() throws Exception {
+    // Tests that we don't declare the properties on Object (so they don't appear on
+    // all object types).
+    testTypes(LINE_JOINER.join(
+        "function f(x) {",
+        "  var y = { a: 1, b: 2 };",
+        "}",
+        "function g() {",
+        "  var x = { c: 123 };",
+        "  return x.a + 1;",
+        "}"),
+        "Property a never defined on x");
+  }
+
+  public void testOptimizePropertyMap6() throws Exception {
+    // The stray property doesn't appear on other inline record types.
+    testTypes(LINE_JOINER.join(
+        "function f(/** {a:number} */ x) {",
+        "  var y = x;",
+        "  /** @type {number} */",
+        "  y.b = 123;",
+        "}",
+        "function g(/** {c:number} */ x) {",
+        "  var /** null */ n = x.b;",
+        "}"),
+        "Property b never defined on x");
+  }
+
+  public void testOptimizePropertyMap7() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "function f() {",
+        "  var x = {a:1};",
+        "  x.b = 2;",
+        "}",
+        "function g() {",
+        "  var y = {a:1};",
+        "  return y.b + 1;",
+        "}"),
+        "Property b never defined on y");
+  }
+
+  public void testOptimizePropertyMap8() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "function f(/** {a:number, b:number} */ x) {}",
+        "function g(/** {c:number} */ x) {",
+        "  var /** null */ n = x.b;",
+        "}"),
+        "Property b never defined on x");
+  }
+
+  public void testOptimizePropertyMap9() throws Exception {
+    // Don't add the stray property to all types that meet with {a: number, c: string}.
+    testTypes(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = 123;",
+        "}",
+        "function f(/** {a: number, c: string} */ x) {",
+        "  x.b = 234;",
+        "}",
+        "function g(/** !Foo */ x) {",
+        "  return x.b + 5;",
+        "}"),
+        "Property b never defined on Foo");
+  }
+
   public void testCovarianceForRecordType21() throws Exception {
     testTypesWithExtraExterns(
         "",

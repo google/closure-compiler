@@ -148,7 +148,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   private final Map<String, UnionTypeBuilder> typesIndexedByProperty =
        new HashMap<>();
 
-  private final JSType sentinelObjectLiteral;
+  private JSType sentinelObjectLiteral;
   private boolean optimizePropertyIndex = false;
 
   // A map of properties to each reference type on which those
@@ -195,10 +195,16 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     nativeTypes = new JSType[JSTypeNative.values().length];
     namesToTypes = new HashMap<>();
     resetForTypeCheck();
-    this.sentinelObjectLiteral = createAnonymousObjectType(null);
   }
 
-  public void setOptimizePropertyIndex(boolean optimizePropIndex) {
+  private JSType getSentinelObjectLiteral() {
+    if (this.sentinelObjectLiteral == null) {
+      this.sentinelObjectLiteral = createAnonymousObjectType(null);
+    }
+    return this.sentinelObjectLiteral;
+  }
+
+  public void setOptimizePropertyIndex_TRANSITIONAL_METHOD(boolean optimizePropIndex) {
     this.optimizePropertyIndex = optimizePropIndex;
   }
 
@@ -715,11 +721,14 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   // we don't need to store these properties in the propertyIndex separately.
   private static boolean isObjectLiteralThatCanBeSkipped(JSType t) {
     t = t.restrictByNotNullOrUndefined();
-    if (t.isObject() && !t.isUnionType()) {
-      ObjectType tObj = t.toObjectType();
-      ObjectType proto = tObj.getImplicitPrototype();
-      return !tObj.isNativeObjectType() && !tObj.isPrototypeObject()
-          && proto != null && proto.isNativeObjectType();
+    // Inline-record type declaration
+    if (t.toMaybeRecordType() != null) {
+      return true;
+    }
+    // Type of an object-literal value
+    else if (t instanceof PrototypeObjectType) {
+      PrototypeObjectType tObj = (PrototypeObjectType) t;
+      return tObj.isAnonymous();
     }
     return false;
   }
@@ -744,8 +753,9 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     }
 
     if (this.optimizePropertyIndex && isObjectLiteralThatCanBeSkipped(type)) {
-      type = this.sentinelObjectLiteral;
+      type = getSentinelObjectLiteral();
     }
+
     typeSet.addAlternate(type);
     addReferenceTypeIndexedByProperty(propertyName, type);
 

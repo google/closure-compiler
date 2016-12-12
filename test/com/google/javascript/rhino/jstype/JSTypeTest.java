@@ -5754,8 +5754,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         objType.defineDeclaredProperty(propName, UNKNOWN_TYPE, null);
         objType.defineDeclaredProperty("allHaz", UNKNOWN_TYPE, null);
 
-        assertTypeEquals(type,
-            registry.getGreatestSubtypeWithProperty(type, propName));
+        // We exclude {a: number, b: string} because, for inline record types,
+        // we register their properties on a sentinel object literal in the registry.
+        if (!type.equals(this.recordType)) {
+          assertTypeEquals(type, registry.getGreatestSubtypeWithProperty(type, propName));
+        }
 
         assertTypeEquals(NO_TYPE,
             registry.getGreatestSubtypeWithProperty(type, "GRRR"));
