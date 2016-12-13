@@ -1543,10 +1543,12 @@ public final class DefaultPassConfig extends PassConfig {
   /** Various peephole optimizations. */
   private static CompilerPass createPeepholeOptimizationsPass(AbstractCompiler compiler) {
     final boolean late = false;
-    final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
+    CompilerOptions options = compiler.getOptions();
+    final boolean useTypesForOptimization = options.useTypesForLocalOptimization;
     return new PeepholeOptimizationsPass(compiler,
           new MinimizeExitPoints(compiler),
-          new PeepholeMinimizeConditions(late, useTypesForOptimization),
+          new PeepholeMinimizeConditions(
+              late, useTypesForOptimization, options.assumeAccurateNullUndefinedTypes),
           new PeepholeSubstituteAlternateSyntax(late),
           new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
           new PeepholeRemoveDeadCode(),
@@ -1582,7 +1584,8 @@ public final class DefaultPassConfig extends PassConfig {
       return new PeepholeOptimizationsPass(compiler,
             new StatementFusion(options.aggressiveFusion),
             new PeepholeRemoveDeadCode(),
-            new PeepholeMinimizeConditions(late, useTypesForOptimization),
+            new PeepholeMinimizeConditions(
+                late, useTypesForOptimization, options.assumeAccurateNullUndefinedTypes),
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
             new PeepholeFoldConstants(late, useTypesForOptimization),

@@ -40,6 +40,7 @@ class PeepholeMinimizeConditions
 
   private final boolean late;
   private final boolean useTypes;
+  private final boolean assumeAccurateNullUndefinedTypes;
 
   /**
    * @param late When late is false, this mean we are currently running before
@@ -48,9 +49,11 @@ class PeepholeMinimizeConditions
    * merging statements with commas, etc). When this is true, we would
    * do anything to minimize for size.
    */
-  PeepholeMinimizeConditions(boolean late, boolean useTypes) {
+  PeepholeMinimizeConditions(boolean late, boolean useTypes,
+      boolean assumeAccurateNullUndefinedTypes) {
     this.late = late;
     this.useTypes = useTypes;
+    this.assumeAccurateNullUndefinedTypes = assumeAccurateNullUndefinedTypes;
   }
 
   /**
@@ -1071,7 +1074,7 @@ class PeepholeMinimizeConditions
     RIGHT
   }
 
-  private static BooleanCoercability canConvertComparisonToBooleanCoercion(
+  private BooleanCoercability canConvertComparisonToBooleanCoercion(
       Node left, Node right, Token op) {
     // Convert null or undefined check of an object to coercion.
     boolean leftIsNull = left.isNull();
@@ -1084,10 +1087,11 @@ class PeepholeMinimizeConditions
     boolean leftIsObjectType = isObjectType(left);
     boolean rightIsObjectType = isObjectType(right);
     if (op == Token.SHEQ || op == Token.SHNE) {
-      if ((leftIsObjectType && !left.getJSType().isVoidable() && rightIsNull)
-          || (leftIsObjectType && !left.getJSType().isNullable() && rightIsUndefined)
-          || (rightIsObjectType && !right.getJSType().isVoidable() && leftIsNull)
-          || (rightIsObjectType && !right.getJSType().isNullable() && leftIsUndefined)) {
+      if ((leftIsObjectType && !left.getJSType().isNullable() && rightIsUndefined)
+          || (rightIsObjectType && !right.getJSType().isNullable() && leftIsUndefined)
+          || (assumeAccurateNullUndefinedTypes
+                 && ((leftIsObjectType && !left.getJSType().isVoidable() && rightIsNull)
+                     || (rightIsObjectType && !right.getJSType().isVoidable() && leftIsNull)))) {
         return leftIsNullOrUndefined ? BooleanCoercability.RIGHT : BooleanCoercability.LEFT;
       }
     } else {

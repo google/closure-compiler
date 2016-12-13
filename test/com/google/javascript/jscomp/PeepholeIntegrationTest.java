@@ -33,7 +33,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
       new PeepholeOptimizationsPass(compiler,
-        new PeepholeMinimizeConditions(late, false /* useTypes */),
+        new PeepholeMinimizeConditions(
+            late, false /* useTypes */, false /* assumeAccurateNullUndefinedTypes */),
         new PeepholeSubstituteAlternateSyntax(late),
         new PeepholeRemoveDeadCode(),
         new PeepholeFoldConstants(late, false)

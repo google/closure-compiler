@@ -525,6 +525,12 @@ public class CompilerOptions {
   /** Use type information to enable additional optimization opportunities. */
   boolean useTypesForLocalOptimization;
 
+  /**
+   * Assume accurate distinction between null and undefined to enable additional optimization
+   * opportunities.
+   */
+  boolean assumeAccurateNullUndefinedTypes;
+
   //--------------------------------
   // Renaming
   //--------------------------------
@@ -2186,6 +2192,10 @@ public class CompilerOptions {
 
   public void setUseTypesForLocalOptimization(boolean useTypesForLocalOptimization) {
     this.useTypesForLocalOptimization = useTypesForLocalOptimization;
+  }
+
+  public void setAssumeAccurateNullUndefinedTypes(boolean assumeAccurateNullUndefinedTypes) {
+    this.assumeAccurateNullUndefinedTypes = assumeAccurateNullUndefinedTypes;
   }
 
   @Deprecated

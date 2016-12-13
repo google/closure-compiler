@@ -25,18 +25,20 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   private boolean late = true;
   private boolean useTypes = true;
+  private boolean assumeAccurateNullUndefinedTypes = true;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     late = true;
     useTypes = true;
+    assumeAccurateNullUndefinedTypes = true;
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
-        compiler, new PeepholeMinimizeConditions(late, useTypes));
+        compiler, new PeepholeMinimizeConditions(late, useTypes, assumeAccurateNullUndefinedTypes));
     peepholePass.setRetraverseOnChange(false);
     return peepholePass;
   }
@@ -866,6 +868,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "if (/** @type {Array|undefined} */ (window['c']) == null) {}",
         "if (!/** @type {Array|undefined} */ (window['c'])) {}");
     testSame("if (/** @type {Array|undefined} */ (window['c']) === null) {}");
+
+    assumeAccurateNullUndefinedTypes = false;
+    testSame("var x = /** @type {?Object} */ ({}); if (x !== null) throw 'a';");
   }
 
   public void testCoercionSubstitution_unknownType() {
