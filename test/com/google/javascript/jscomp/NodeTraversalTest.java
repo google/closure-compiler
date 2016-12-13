@@ -25,12 +25,10 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link NodeTraversal}.
@@ -213,7 +211,7 @@ public final class NodeTraversalTest extends TestCase {
         + "visit IF [source_file: [testcode]] @4:2\n"
         + "visit BLOCK [source_file: [testcode]] @2:15\n"
         + "visit FUNCTION foo [source_file: [testcode]] @2:0\n"
-        + "visit SCRIPT [synthetic: 1] [source_file: [testcode]] "
+        + "visit SCRIPT [source_file: [testcode]] "
         + "[input_id: InputId: [testcode]] "
         + "[feature_set: FeatureSet{number=3}] @1:0\n";
 

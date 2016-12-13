@@ -463,6 +463,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   private void handleCase(Node node) {
     // Case is a bit tricky....First it goes into the body if condition is true.
     createEdge(node, Branch.ON_TRUE,
+
         node.getSecondChild());
     // Look for the next CASE, skipping over DEFAULT.
     Node next = getNextSiblingOfType(node.getNext(), Token.CASE);
@@ -526,7 +527,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         case TRY:
           break;
         default:
-          if (node.isBlock() && node.isSyntheticBlock()) {
+          if ((node.isNormalBlock() && node.isSyntheticBlock())
+              || node.isRoot()) { // TODO(blickly): Stop creating this edge for ROOT nodes
             createEdge(node, Branch.SYN_BLOCK, computeFollowNode(node, this));
           }
           break;

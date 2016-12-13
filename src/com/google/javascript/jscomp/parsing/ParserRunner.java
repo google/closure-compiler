@@ -131,7 +131,6 @@ public final class ParserRunner {
           IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
       root = factory.getResultNode();
       features = features.require(factory.getFeatures());
-      root.setIsSyntheticBlock(true);
       root.putProp(Node.FEATURE_SET, features);
 
       if (config.parseJsDocDocumentation.shouldParseDescriptions()) {

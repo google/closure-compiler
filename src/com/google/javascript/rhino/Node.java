@@ -2425,6 +2425,7 @@ public class Node implements Serializable {
    * a real source block.
    */
   public void setIsSyntheticBlock(boolean val) {
+    Preconditions.checkState(token == Token.BLOCK);
     putBooleanProp(SYNTHETIC_BLOCK_PROP, val);
   }
 
