@@ -118,7 +118,7 @@ class DisambiguateProperties implements CompilerPass {
    * Map of a type to all the related errors that invalidated the type
    * for disambiguation.
    */
-  private final Multimap<JSType, JSError> invalidationMap;
+  private Multimap<JSType, JSError> invalidationMap;
 
   /**
    * In practice any large code base will have thousands and thousands of
@@ -326,8 +326,7 @@ class DisambiguateProperties implements CompilerPass {
       AbstractCompiler compiler, Map<String, CheckLevel> propertiesToErrorFor) {
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
-    this.BOTTOM_OBJECT =
-        this.registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE).toObjectType();
+    this.BOTTOM_OBJECT = this.registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE).toObjectType();
     this.invalidatingTypes = new HashSet<>(ImmutableSet.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
@@ -338,11 +337,6 @@ class DisambiguateProperties implements CompilerPass {
         registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
         registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
     this.propertiesToErrorFor = propertiesToErrorFor;
-    if (!this.propertiesToErrorFor.isEmpty()) {
-      this.invalidationMap = LinkedHashMultimap.create();
-    } else {
-      this.invalidationMap = null;
-    }
   }
 
   @Override
@@ -351,18 +345,9 @@ class DisambiguateProperties implements CompilerPass {
         compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
     this.ancestorInterfaces = new HashMap<>();
     this.gtwpCache = new HashMap<>();
-    // TypeValidator records places where a type A is used in a context that
-    // expects a type B.
-    // For each pair (A, B), here we mark both A and B as types whose properties
-    // cannot be renamed.
-    for (TypeMismatch mis : compiler.getTypeMismatches()) {
-      recordInvalidatingType(mis.typeA, mis.src);
-      recordInvalidatingType(mis.typeB, mis.src);
-    }
-    for (TypeMismatch mis : compiler.getImplicitInterfaceUses()) {
-      recordInvalidatingType(mis.typeA, mis.src);
-      recordInvalidatingType(mis.typeB, mis.src);
-    }
+
+    recordInvalidations();
+
     // Gather names of properties in externs; these properties can't be renamed.
     NodeTraversal.traverseEs6(compiler, externs, new FindExternProperties());
     // Look at each unquoted property access and decide if that property will
@@ -372,45 +357,87 @@ class DisambiguateProperties implements CompilerPass {
     renameProperties();
   }
 
-  private void recordInvalidationError(JSType t, JSError error) {
-    if (!t.isObject()) {
-      return;
+  abstract class InvalidationVisitor {
+    abstract void visit(JSType type, JSError src);
+
+    void process(JSType type, JSError src) {
+      type = type.restrictByNotNullOrUndefined();
+      if (type.isUnionType()) {
+        for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+          process(alt, src);
+        }
+      } else if (type.isEnumElementType()) {
+        process(type.toMaybeEnumElementType().getPrimitiveType(), src);
+      } else {
+        visit(type, src);
+
+        ObjectType objType = ObjectType.cast(type);
+        if (objType != null && objType.getImplicitPrototype() != null) {
+          process(objType.getImplicitPrototype(), src);
+        }
+        if (objType != null && objType.isConstructor() && objType.isFunctionType()) {
+          process(objType.toMaybeFunctionType().getInstanceType(), src);
+        }
+      }
     }
-    if (invalidationMap != null) {
-      Collection<JSError> errors = this.invalidationMap.get(t);
+
+    void processAllTypeMismatches() {
+      // TypeValidator records places where a type A is used in a context that
+      // expects a type B.
+      // For each pair (A, B), here we mark both A and B as types whose properties
+      // cannot be renamed.
+      for (TypeMismatch mis : compiler.getTypeMismatches()) {
+        process(mis.typeA, mis.src);
+        process(mis.typeB, mis.src);
+      }
+      for (TypeMismatch mis : compiler.getImplicitInterfaceUses()) {
+        process(mis.typeA, mis.src);
+        process(mis.typeB, mis.src);
+      }
+    }
+  }
+
+  class TypeInvalidationVisitor extends InvalidationVisitor {
+    @Override
+    void visit(JSType type, JSError src) {
+      // add the type to the invalidation set.
+      invalidatingTypes.add(type);
+    }
+  }
+
+  public void recordInvalidations() {
+    // Uses an identity hash set to quickly remove duplicates.
+    TypeInvalidationVisitor visitor = new TypeInvalidationVisitor();
+    visitor.processAllTypeMismatches();
+  }
+
+  class ErrorInvalidationVisitor extends InvalidationVisitor {
+    Multimap<JSType, JSError> map = LinkedHashMultimap.create();
+
+    @Override
+    void visit(JSType type, JSError src) {
+      if (!type.isObject()) {
+        return;
+      }
+      Collection<JSError> errors = map.get(type);
       if (errors.size() < MAX_INVALIDATION_WARNINGS_PER_PROPERTY) {
-        errors.add(error);
+        errors.add(src);
       }
     }
   }
 
-  /**
-   * Invalidates the given type, so that no properties on it will be renamed.
-   */
-  private void recordInvalidatingType(JSType type, JSError error) {
-    type = type.restrictByNotNullOrUndefined();
-    if (type.isUnionType()) {
-      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
-        recordInvalidatingType(alt, error);
-      }
-    } else if (type.isEnumElementType()) {
-      recordInvalidatingType(
-          type.toMaybeEnumElementType().getPrimitiveType(), error);
-    } else {
-      addInvalidatingType(type);
-      recordInvalidationError(type, error);
-      ObjectType objType = ObjectType.cast(type);
-      if (objType != null && objType.getImplicitPrototype() != null) {
-        addInvalidatingType(objType.getImplicitPrototype());
-        recordInvalidationError(objType.getImplicitPrototype(), error);
-      }
-      if (objType != null
-          && objType.isConstructor() && objType.isFunctionType()) {
-        addInvalidatingType(objType.toMaybeFunctionType().getInstanceType());
-      }
+  private Multimap<JSType, JSError> getInvalidationsErrors() {
+    Preconditions.checkState(!this.propertiesToErrorFor.isEmpty());
+    if (this.invalidationMap == null) {
+      // Building the type invalidation map gets expensive for projects with large numbers
+      // of invalidations so we defer building this map as often we don't need it as
+      // reporting invalidation errors should be rare.
+      ErrorInvalidationVisitor visitor = new ErrorInvalidationVisitor();
+      visitor.processAllTypeMismatches();
+      this.invalidationMap = visitor.map;
     }
+    return this.invalidationMap;
   }
-
 
   /** Returns the property for the given name, creating it if necessary. */
   protected Property getProperty(String name) {
@@ -646,7 +673,7 @@ class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      for (JSError error : invalidationMap.get(t)) {
+      for (JSError error : getInvalidationsErrors().get(t)) {
         if (error != null) {
           errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
         }
@@ -792,11 +819,6 @@ class DisambiguateProperties implements CompilerPass {
       }
     }
     return ret;
-  }
-
-  private void addInvalidatingType(JSType type) {
-    checkState(!type.isUnionType());
-    invalidatingTypes.add(type);
   }
 
   private JSType getType(Node node) {
@@ -999,7 +1021,7 @@ class DisambiguateProperties implements CompilerPass {
    * recordInterface, and there was no speed-up.
    * And it made the code harder to understand, so we don't do it.
    */
-  private void recordInterfaces(FunctionType constructor, JSType relatedType, Property p) {
+  void recordInterfaces(FunctionType constructor, JSType relatedType, Property p) {
     Iterable<ObjectType> interfaces = ancestorInterfaces.get(constructor);
     if (interfaces == null) {
       interfaces = constructor.isConstructor()
