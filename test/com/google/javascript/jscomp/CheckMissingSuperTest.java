@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckMissingSuper.MISSING_CALL_TO_SUPER;
+import static com.google.javascript.jscomp.CheckMissingSuper.THIS_BEFORE_SUPER;
 
 public final class CheckMissingSuperTest extends Es6CompilerTestCase {
   @Override
@@ -32,6 +33,10 @@ public final class CheckMissingSuperTest extends Es6CompilerTestCase {
     testSameEs6("class C extends D { constructor() { super(); } }");
     testSameEs6("class C { constructor() {} }");
     testSameEs6("class C extends D {}");
+  }
+
+  public void testThisBeforeSuper() {
+    testErrorEs6("class C extends D { constructor() { this.foo(); super(); } }", THIS_BEFORE_SUPER);
   }
 
   // We could require that the super() call is the first statement in the constructor, except that

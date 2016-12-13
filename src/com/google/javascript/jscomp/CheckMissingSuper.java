@@ -27,6 +27,8 @@ import com.google.javascript.rhino.Node;
 final class CheckMissingSuper extends AbstractPostOrderCallback implements HotSwapCompilerPass {
   static final DiagnosticType MISSING_CALL_TO_SUPER =
       DiagnosticType.error("JSC_MISSING_CALL_TO_SUPER", "constructor is missing a call to super()");
+  static final DiagnosticType THIS_BEFORE_SUPER =
+      DiagnosticType.error("JSC_THIS_BEFORE_SUPER", "cannot access this before calling super()");
 
   private final AbstractCompiler compiler;
 
@@ -77,6 +79,9 @@ final class CheckMissingSuper extends AbstractPostOrderCallback implements HotSw
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isThis()) {
+        t.report(n, THIS_BEFORE_SUPER);
+      }
       if (n.isSuper() && parent.isCall()) {
         found = true;
         return;
