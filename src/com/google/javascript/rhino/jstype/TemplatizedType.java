@@ -44,8 +44,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.util.LinkedHashSet;
+import java.util.Objects;
 
 /**
  * An object type with declared template types, such as
@@ -115,6 +115,15 @@ public final class TemplatizedType extends ProxyObjectType {
     }
 
     return typeString;
+  }
+
+  @Override
+  public int hashCode() {
+    int baseHash = super.hashCode();
+    if (templateTypes.isEmpty()) {
+      return baseHash;
+    }
+    return Objects.hash(templateTypes, baseHash);
   }
 
   @Override

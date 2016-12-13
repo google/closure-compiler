@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
@@ -58,7 +60,6 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
   /**
    * Tests the behavior of variants type.
    */
-  @SuppressWarnings("checked")
   public void testTemplatizedType() throws Exception {
     TemplatizedType arrOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);
@@ -79,6 +80,12 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     assertFalse(arrOfString.isEquivalentTo(ARRAY_TYPE));
     assertFalse(arrOfString.isEquivalentTo(arrOfNumber));
     assertFalse(arrOfNumber.isEquivalentTo(arrOfString));
+  }
+
+  public void testEquality() {
+    // Weird that we allow this as a type at all.
+    TemplatizedType booleanOfString = createTemplatizedType(BOOLEAN_OBJECT_TYPE, STRING_TYPE);
+    assertThat(booleanOfString.hashCode()).isEqualTo(BOOLEAN_OBJECT_TYPE.hashCode());
   }
 
   public void testPrint1() throws Exception {
