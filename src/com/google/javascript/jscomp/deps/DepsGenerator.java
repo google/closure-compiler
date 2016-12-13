@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.LazyParsedDependencyInfo;
 import com.google.javascript.jscomp.SourceFile;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -303,8 +302,7 @@ public class DepsGenerator {
     // into srcs.  So we need to scan all the src files for addDependency
     // calls as well.
     for (SourceFile src : srcs) {
-      if ((new File(src.getName())).exists() &&
-          !shouldSkipDepsFile(src)) {
+      if (!shouldSkipDepsFile(src)) {
         List<DependencyInfo> srcInfos =
             depsParser.parseFileReader(src.getName(), src.getCodeReader());
         for (DependencyInfo info : srcInfos) {
