@@ -63,7 +63,6 @@ class Normalize implements CompilerPass {
   private final AbstractCompiler compiler;
   private final boolean assertOnChange;
   private static final boolean CONVERT_WHILE_TO_FOR = true;
-  static final boolean MAKE_LOCAL_NAMES_UNIQUE = true;
 
   public static final DiagnosticType CATCH_BLOCK_VAR_ERROR =
     DiagnosticType.error(
@@ -114,11 +113,9 @@ class Normalize implements CompilerPass {
     new NodeTraversal(
         compiler, new NormalizeStatements(compiler, assertOnChange))
         .traverseRoots(externs, root);
-    if (MAKE_LOCAL_NAMES_UNIQUE) {
-      MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
-      NodeTraversal t = new NodeTraversal(compiler, renamer);
-      t.traverseRoots(externs, root);
-    }
+    MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
+    NodeTraversal t = new NodeTraversal(compiler, renamer);
+    t.traverseRoots(externs, root);
     // It is important that removeDuplicateDeclarations runs after
     // MakeDeclaredNamesUnique in order for catch block exception names to be
     // handled properly. Specifically, catch block exception names are

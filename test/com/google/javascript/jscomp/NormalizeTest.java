@@ -252,10 +252,6 @@ public final class NormalizeTest extends CompilerTestCase {
 
 
   public void testMakeLocalNamesUnique() {
-    if (!Normalize.MAKE_LOCAL_NAMES_UNIQUE) {
-      return;
-    }
-
     // Verify global names are untouched.
     testSame("var a;");
 
