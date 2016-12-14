@@ -898,11 +898,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
       if (jsdoc == null) {
-        return qnameNode.isFromExterns()
+        return (qnameNode.isFromExterns()
+            // When assigning to a namespace prop and the rhs is also a namespace, consider
+            // it an alias, even if there is no @const. An ES6-module default export is
+            // transpiled to this form.
+            || qnameNode.isGetProp() && this.currentScope.isNamespace(qnameNode.getFirstChild()))
             // If the aliased namespace is a variable, do the aliasing at
             // declaration, not at a random assignment later.
             && (qnameNode.getParent().isVar() || !qnameNode.isName())
-            && this.currentScope.getNamespace(QualifiedName.fromNode(rhs)) != null;
+            && this.currentScope.isNamespace(rhs);
       } else {
         return jsdoc.isConstructorOrInterface() || jsdoc.hasConstAnnotation();
       }

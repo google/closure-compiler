@@ -14547,6 +14547,19 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "ns.prop = ns3;"),
         "function f() { var /** string */ s = ns.prop.x; }",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var module$input0 = {};",
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "module$input0.default = Foo;",
+        "function f() {",
+        "  var /** !Bar */ a = new module$input0.default();",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testOptionalPropertiesInRecordTypes() {
