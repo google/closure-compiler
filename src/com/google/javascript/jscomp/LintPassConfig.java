@@ -45,6 +45,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
         earlyLintChecks,
+        variableReferenceCheck,
         closureRewriteClass,
         lateLintChecks);
   }
@@ -77,6 +78,14 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new Es6SuperCheck(compiler)));
         }
       };
+
+  private final PassFactory variableReferenceCheck =
+      new PassFactory("variableReferenceCheck", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new VariableReferenceCheck(compiler);
+    }
+  };
 
   private final PassFactory closureRewriteClass =
       new PassFactory("closureRewriteClass", true) {

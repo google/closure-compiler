@@ -26,13 +26,13 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   private static final String VARIABLE_RUN =
       "var a = 1; var b = 2; var c = a + b, d = c;";
 
-  private boolean enableUnusedLocalAssignmentCheck = false;
+  private boolean enableUnusedLocalAssignmentCheck;
 
   @Override
   public CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     if (enableUnusedLocalAssignmentCheck) {
-      options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+      options.setWarningLevel(DiagnosticGroups.UNUSED_LOCAL_VARIABLE, CheckLevel.WARNING);
     }
     return options;
   }
@@ -46,6 +46,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    enableUnusedLocalAssignmentCheck = false;
   }
 
   public void testCorrectCode() {

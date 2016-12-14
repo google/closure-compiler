@@ -595,8 +595,7 @@ public class DiagnosticGroups {
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
               RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
               RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
-              RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS,
-              VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT));
+              RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS));
 
   static final DiagnosticGroup STRICT_MODULE_CHECKS =
       DiagnosticGroups.registerGroup(
