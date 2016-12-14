@@ -55,7 +55,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       "JSCompiler_OptimizeArgumentsArray_p";
 
   // The prefix for the newly introduced parameter name.
-  private final String paramPredix;
+  private final String paramPrefix;
 
   // To make each parameter name unique in the function. We append an
   // unique integer at the end.
@@ -84,7 +84,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    */
   OptimizeArgumentsArray(AbstractCompiler compiler, String paramPrefix) {
     this.compiler = Preconditions.checkNotNull(compiler);
-    this.paramPredix = Preconditions.checkNotNull(paramPrefix);
+    this.paramPrefix = Preconditions.checkNotNull(paramPrefix);
   }
 
   @Override
@@ -300,6 +300,6 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    * Generate a unique name for the next parameter.
    */
   private String getNewName() {
-    return paramPredix + uniqueId++;
+    return paramPrefix + uniqueId++;
   }
 }
