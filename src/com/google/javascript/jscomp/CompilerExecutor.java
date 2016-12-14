@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -125,7 +123,7 @@ final class CompilerExecutor {
 
     // Pass on any exception caught by the runnable object.
     if (exception[0] != null) {
-      Throwables.propagate(exception[0]);
+      throw new RuntimeException(exception[0]);
     }
 
     return result;

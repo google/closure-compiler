@@ -3802,7 +3802,12 @@ public final class IntegrationTest extends IntegrationTestCase {
     try {
       test(options, "", "");
       fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
-    } catch (CompilerOptionsPreprocessor.InvalidOptionsException e) {}
+    } catch (RuntimeException e) {
+      Throwable t = e.getCause();
+      if (!(t instanceof CompilerOptionsPreprocessor.InvalidOptionsException)) {
+        fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
+      }
+    }
   }
 
   public void testMaxFunSizeAfterInliningUsage() {
@@ -3812,7 +3817,12 @@ public final class IntegrationTest extends IntegrationTestCase {
     try {
       test(options, "", "");
       fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
-    } catch (CompilerOptionsPreprocessor.InvalidOptionsException expected) {}
+    } catch (RuntimeException e) {
+      Throwable t = e.getCause();
+      if (!(t instanceof CompilerOptionsPreprocessor.InvalidOptionsException)) {
+        fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
+      }
+    }
   }
 
   // isEquivalentTo returns false for alpha-equivalent nodes

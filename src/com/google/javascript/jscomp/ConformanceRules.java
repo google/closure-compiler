@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
@@ -997,7 +996,7 @@ public final class ConformanceRules {
           if (cause instanceof InvalidRequirementSpec) {
             throw (InvalidRequirementSpec) cause;
           }
-          throw Throwables.propagate(cause);
+          throw new RuntimeException(cause);
         }
         return rule;
       } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {

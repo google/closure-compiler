@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -116,7 +115,7 @@ public final class RefasterJsScanner extends Scanner {
       try {
         initialize(metadata.getCompiler());
       } catch (Exception e) {
-        Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
     matchedTemplate = null;
