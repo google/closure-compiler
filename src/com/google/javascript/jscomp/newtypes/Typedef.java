@@ -35,18 +35,20 @@ public final class Typedef {
   private State state;
   private JSTypeExpression typeExpr;
   private JSType type;
+  private final boolean struct;
 
-  private Typedef(JSTypeExpression typeExpr) {
+  private Typedef(JSTypeExpression typeExpr, boolean struct) {
     Preconditions.checkNotNull(typeExpr);
     this.state = State.NOT_RESOLVED;
     // Non-null iff the typedef is resolved
     this.type = null;
     // Non-null iff the typedef is not resolved
     this.typeExpr = typeExpr;
+    this.struct = struct;
   }
 
-  public static Typedef make(JSTypeExpression typeExpr) {
-    return new Typedef(typeExpr);
+  public static Typedef make(JSTypeExpression typeExpr, boolean struct) {
+    return new Typedef(typeExpr, struct);
   }
 
   public boolean isResolved() {
@@ -83,5 +85,9 @@ public final class Typedef {
     state = State.RESOLVED;
     typeExpr = null;
     type = t;
+  }
+  
+  boolean isStruct() {
+    return struct;
   }
 }

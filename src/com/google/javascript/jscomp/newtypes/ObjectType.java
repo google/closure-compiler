@@ -270,6 +270,13 @@ final class ObjectType implements TypeWithProperties {
         this.commonTypes, this.nominalType, newProps, fn, null, true, this.objectKind);
   }
 
+  ObjectType withObjectKind(ObjectKind ok) {
+    Preconditions.checkState(this.objectKind.isUnrestricted());
+    return makeObjectType(
+        this.commonTypes, this.nominalType, this.props,
+        this.fn, this.ns, this.isLoose, ok);
+  }
+
   ObjectType withFunction(FunctionType ft, NominalType fnNominal) {
     Preconditions.checkState(this.isNamespace());
     Preconditions.checkState(!ft.isLoose() || ft.isQmarkFunction());
@@ -638,6 +645,16 @@ final class ObjectType implements TypeWithProperties {
     }
     if (!arePropertiesSubtypes(other, otherPropNames, subSuperMap, boxedInfo)) {
       return false;
+    }
+    
+    if (otherNt.isBuiltinObject() && other.isStruct()) {
+      if (!otherPropNames.containsAll(this.props.keySet())) {
+        return false;
+      }
+      if (!otherPropNames.containsAll(thisNt.getAllOwnClassProps())) {
+        // also verify assigning a nominal type to a struct typedef
+        return false;
+      }
     }
 
     if (other.fn == null) {

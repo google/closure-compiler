@@ -18367,4 +18367,84 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "(0, abstractMethod).call(new B);"),
         NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
   }
+
+  public void testStructTypedefs() {
+    // Placebo:
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @typedef {{ a: number, z: (number|undefined) }} */",
+            "var TD;",
+            "var /** TD */ b = { a: 1, b: 2 };"));
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @typedef {{ a: number, z: (number|undefined) }} */",
+            "var TD;",
+            "var /** TD */ b = { a: 1 };"));
+    // Struct typedefs
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @struct @typedef {{ a: number, z: (number|undefined) }} */",
+            "var TD;",
+            "var /** TD */ b = { a: 1, b: 2 };"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @struct @typedef {{ a: number, z: (number|undefined) }} */",
+            "var TD;",
+            "var /** TD */ b = { a: 1 };"));
+    // Struct typedefs with @struct after @typedef (tests relaxed jsdoc restrictions):
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @typedef {{ a: number, z: (number|undefined) }} @struct */",
+            "var TD;",
+            "var /** TD */ b = { a: 1, b: 2 };"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @typedef {{ a: number, z: (number|undefined) }} @struct */",
+            "var TD;",
+            "var /** TD */ b = { a: 1 };"));
+    // Struct typedef assignment from nominal type (valid)
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @typedef {{ a: number, z: (number|undefined) }} @struct */",
+            "var TD;",
+            "/** @constructor */",
+            "var C = function() {",
+            "  /** @private {number} */ this.a = 5;",
+            "};",
+            "var /** TD */ b = new C();"
+            ));
+    // Mismatching struct typedef assignment from nominal type
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @typedef {{ a: number, z: (number|undefined) }} @struct */",
+            "var TD;",
+            "/** @constructor */",
+            "var C = function() {",
+            "  /** @private {number} */ this.a = 5;",
+            "  /** @private {number} */ this.b = 5;",
+            "};",
+            "var /** TD */ b = new C();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+    // Struct typedef assignment to nominal type (illegal)
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @typedef {{ a: number, z: (number|undefined) }} @struct */",
+            "var TD;",
+            "/** @constructor */",
+            "var C = function() {",
+            "  /** @private {number} */ this.a = 5;",
+            "};",
+            "var /** C */ b = { a: 1 };"
+            ),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+    // Unsupported complex typedef
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @typedef {{ a: number, z: (number|undefined) }|undefined} @struct */",
+            "var TD;"),
+        JSTypeCreatorFromJSDoc.COMPLEX_TYPEDEF_STRUCT);
+  }
+  
 }
