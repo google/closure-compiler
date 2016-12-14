@@ -25,20 +25,18 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   private boolean late = true;
   private boolean useTypes = true;
-  private boolean assumeAccurateNullUndefinedTypes = true;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     late = true;
     useTypes = true;
-    assumeAccurateNullUndefinedTypes = true;
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
-        compiler, new PeepholeMinimizeConditions(late, useTypes, assumeAccurateNullUndefinedTypes));
+        compiler, new PeepholeMinimizeConditions(late, useTypes));
     peepholePass.setRetraverseOnChange(false);
     return peepholePass;
   }
@@ -755,9 +753,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     enableTypeCheck();
     test("var x = {}; var y = x != null;", "var x = {}; var y = !!x;");
     test("var x = {}; var y = x == null;", "var x = {}; var y = !x;");
-    test("var x = {}; var y = x !== null;", "var x = {}; var y = !!x;");
+    testSame("var x = {}; var y = x !== null;");
     testSame("var x = undefined; var y = x !== null;");
-    test("var x = {}; var y = x === null;", "var x = {}; var y = !x;");
+    testSame("var x = {}; var y = x === null;");
     testSame("var x = undefined; var y = x === null;");
 
     test("var x = 1; var y = x != 0;", "var x = 1; var y = !!x;");
@@ -770,12 +768,12 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     enableTypeCheck();
     test("var x = {};\nif (x != null) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
     test("var x = {};\nif (x == null) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
-    test("var x = {};\nif (x !== null) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
-    test("var x = {};\nif (x === null) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
+    testSame("var x = {};\nif (x !== null) throw 'a';\n");
+    testSame("var x = {};\nif (x === null) throw 'a';\n");
     test("var x = {};\nif (null != x) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
     test("var x = {};\nif (null == x) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
-    test("var x = {};\nif (null !== x) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
-    test("var x = {};\nif (null === x) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
+    testSame("var x = {};\nif (null !== x) throw 'a';\n");
+    testSame("var x = {};\nif (null === x) throw 'a';\n");
 
     test("var x = 1;\nif (x != 0) throw 'a';\n", "var x = 1;\nif (x) throw 'a';\n");
     test("var x = 1;\nif (x == 0) throw 'a';\n", "var x = 1;\nif (!x) throw 'a';\n");
@@ -820,9 +818,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     test(
         "var x = /** @type {?Object} */ ({}); if (x != null) throw 'a';",
         "var x = /** @type {?Object} */ ({}); if (x) throw 'a';");
-    test(
-        "var x = /** @type {?Object} */ ({}); if (x !== null) throw 'a';",
-        "var x = /** @type {?Object} */ ({}); if (x) throw 'a';");
+    // We back off on strict comparison against null.
+    testSame("var x = /** @type {?Object} */ ({}); if (x !== null) throw 'a';");
     test(
         "var x = /** @type {?Object} */ ({}); if (x != undefined) throw 'a';",
         "var x = /** @type {?Object} */ ({}); if (x) throw 'a';");
@@ -868,9 +865,6 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "if (/** @type {Array|undefined} */ (window['c']) == null) {}",
         "if (!/** @type {Array|undefined} */ (window['c'])) {}");
     testSame("if (/** @type {Array|undefined} */ (window['c']) === null) {}");
-
-    assumeAccurateNullUndefinedTypes = false;
-    testSame("var x = /** @type {?Object} */ ({}); if (x !== null) throw 'a';");
   }
 
   public void testCoercionSubstitution_unknownType() {

@@ -337,7 +337,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.setInlineProperties(false);
       options.setUseTypesForLocalOptimization(false);
       options.setUseTypesForOptimization(false);
-      options.setAssumeAccurateNullUndefinedTypes(false);
     }
 
     if (options.legacyCodeCompile) {

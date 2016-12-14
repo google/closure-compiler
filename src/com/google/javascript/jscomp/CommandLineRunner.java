@@ -409,12 +409,6 @@ public class CommandLineRunner extends
         + "may result in incorrect results.")
     private boolean useTypesForOptimization = true;
 
-    @Option(name = "--assume_accurate_null_undefined_types",
-        handler = BooleanOptionHandler.class,
-        usage = "Enables optimizations which rely on accurate distinction between null and "
-        + "undefined types.")
-    private boolean assumeAccurateNullUndefinedTypes = false;
-
     @Option(name = "--assume_function_wrapper",
         handler = BooleanOptionHandler.class,
         usage = "Enable additional optimizations based on the assumption that the output will be "
@@ -1566,8 +1560,6 @@ public class CommandLineRunner extends
     if (flags.useTypesForOptimization) {
       level.setTypeBasedOptimizationOptions(options);
     }
-
-    options.setAssumeAccurateNullUndefinedTypes(flags.assumeAccurateNullUndefinedTypes);
 
     if (flags.assumeFunctionWrapper) {
       level.setWrappedOutputOptimizations(options);
