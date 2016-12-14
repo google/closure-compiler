@@ -38,7 +38,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "@export has no effect here");
 
   static final DiagnosticType AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE =
-      DiagnosticType.disabled(
+      DiagnosticType.error(
           "JSC_AT_EXPORT_IN_GOOG_MODULE",
           "@export is not allowed here in a non-legacy goog.module."
           + " Consider using goog.exportSymbol instead.");

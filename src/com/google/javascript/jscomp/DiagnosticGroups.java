@@ -574,9 +574,6 @@ public class DiagnosticGroups {
               // checkTypes DiagnosticGroup
               CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
               CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
-
-              // TODO(tbreisacher): Make this an error once all Google projects are fixed.
-              ClosureCheckModule.AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE,
               CheckMissingSemicolon.MISSING_SEMICOLON,
               CheckPrimitiveAsObject.NEW_PRIMITIVE_OBJECT,
               CheckPrimitiveAsObject.PRIMITIVE_OBJECT_DECLARATION,
