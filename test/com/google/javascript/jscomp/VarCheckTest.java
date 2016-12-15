@@ -141,8 +141,7 @@ public final class VarCheckTest extends Es6CompilerTestCase {
   }
 
   public void testMultiplyDeclaredVars4() {
-    testSame("x;", "var x = 1; var x = 2;",
-        VarCheck.VAR_MULTIPLY_DECLARED_ERROR, true);
+    testSame("x;", "var x = 1; var x = 2;", VAR_MULTIPLY_DECLARED_ERROR, true);
   }
 
   public void testMultiplyDeclaredLets() {
