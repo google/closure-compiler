@@ -1270,6 +1270,13 @@ angular.$compileProvider.prototype.cssClassDirectivesEnabled = function(
     opt_enabled) {};
 
 /**
+ * @param {boolean=} opt_enabled
+ * @return {boolean|!angular.$compileProvider}
+ */
+angular.$compileProvider.prototype.preAssignBindingsEnabled = function(
+    opt_enabled) {};
+
+/**
  * @param {string} name
  * @param {!angular.Component} options
  */
