@@ -617,6 +617,10 @@ public class CommandLineRunner extends
         usage = "Checks for type errors using the new type inference algorithm.")
     private boolean useNewTypeInference = false;
 
+    @Option(name = "--rename_variable_prefix",
+        usage = "Specifies a prefix that will be prepended to all variables.")
+    private String renamePrefix = null;
+
     @Option(name = "--rename_prefix_namespace",
         usage = "Specifies the name of an object that will be used to store all "
         + "non-extern globals")
@@ -1600,6 +1604,8 @@ public class CommandLineRunner extends
             "Unknown J2clPassMode `" + flags.j2clPassMode + "' specified.");
       }
     }
+
+    options.renamePrefix = flags.renamePrefix;
 
     options.renamePrefixNamespace = flags.renamePrefixNamespace;
 
