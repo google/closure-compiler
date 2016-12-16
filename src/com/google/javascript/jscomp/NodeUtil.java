@@ -2534,13 +2534,9 @@ public final class NodeUtil {
   static boolean createsBlockScope(Node n) {
     switch (n.getToken()) {
       case BLOCK:
-        // Don't create block scope for synthetic blocks, or the one contained in a CATCH.
-        if (n.isSyntheticBlock()
-            || n.getParent() == null
-            || n.getParent().isCatch()) {
-          return false;
-        }
-        return true;
+        Node parent = n.getParent();
+        // Don't create block scope for switch cases or catch blocks.
+        return parent != null && !isSwitchCase(parent) && !parent.isCatch();
       case FOR:
       case FOR_IN:
       case FOR_OF:
@@ -2548,9 +2544,8 @@ public final class NodeUtil {
       case CLASS:
         return true;
       default:
-        break;
+        return false;
     }
-    return false;
   }
 
   private static final Set<Token> DEFINITE_CFG_ROOTS =
