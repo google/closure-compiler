@@ -43,16 +43,19 @@ class InferConsts implements CompilerPass {
 
   @Override
   public void process(Node externs, Node js) {
-    ReferenceCollectingCallback collector = new ReferenceCollectingCallback(
-        compiler, ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR);
-    NodeTraversal.traverseEs6(compiler, js, collector);
+    ReferenceCollectingCallback collector =
+        new ReferenceCollectingCallback(
+            compiler,
+            ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+            new Es6SyntacticScopeCreator(compiler));
+    collector.process(js);
 
     for (Var v : collector.getAllSymbols()) {
       considerVar(v, collector.getReferences(v));
     }
 
     Scope globalExternsScope =
-        SyntacticScopeCreator.makeUntyped(compiler).createScope(externs, null);
+        new Es6SyntacticScopeCreator(compiler).createScope(externs, null);
     for (Var v : globalExternsScope.getAllSymbols()) {
       considerVar(v, null);
     }

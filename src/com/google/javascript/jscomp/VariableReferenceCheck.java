@@ -103,7 +103,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     if (shouldProcess(root)) {
-      new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior())
+      new ReferenceCollectingCallback(
+              compiler, new ReferenceCheckingBehavior(), new Es6SyntacticScopeCreator(compiler))
           .process(externs, root);
     }
   }
@@ -113,7 +114,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     if (!forTranspileOnly
         || (compiler.getOptions().getLanguageIn().isEs6OrHigher()
             && TranspilationPasses.isScriptEs6ImplOrHigher(scriptRoot))) {
-      new ReferenceCollectingCallback(compiler, new ReferenceCheckingBehavior())
+      new ReferenceCollectingCallback(
+              compiler, new ReferenceCheckingBehavior(), new Es6SyntacticScopeCreator(compiler))
           .hotSwapScript(scriptRoot, originalRoot);
     }
   }

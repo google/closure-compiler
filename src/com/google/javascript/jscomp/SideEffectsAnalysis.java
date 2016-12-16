@@ -955,10 +955,11 @@ import java.util.Set;
       referencesByNameNode = new HashMap<>();
 
       ReferenceCollectingCallback callback =
-        new ReferenceCollectingCallback(compiler,
-            ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR);
-
-      NodeTraversal.traverseEs6(compiler, root, callback);
+          new ReferenceCollectingCallback(
+              compiler,
+              ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+              new Es6SyntacticScopeCreator(compiler));
+      callback.process(root);
 
       for (Var variable : callback.getAllSymbols()) {
         ReferenceCollection referenceCollection =

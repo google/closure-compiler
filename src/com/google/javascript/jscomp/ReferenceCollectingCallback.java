@@ -67,6 +67,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   private final Behavior behavior;
 
+  private final ScopeCreator scopeCreator;
+
   /**
    * JavaScript compiler to use in traversing.
    */
@@ -88,8 +90,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Constructor initializes block stack.
    */
-  ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior) {
-    this(compiler, behavior, Predicates.<Var>alwaysTrue());
+  ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior, ScopeCreator creator) {
+    this(compiler, behavior, creator, Predicates.<Var>alwaysTrue());
   }
 
   /**
@@ -98,10 +100,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
    * The test for Var equality uses reference equality, so it's necessary to
    * inject a scope when you traverse.
    */
-  ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior,
+  ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior, ScopeCreator creator,
       Predicate<Var> varFilter) {
     this.compiler = compiler;
     this.behavior = behavior;
+    this.scopeCreator = creator;
     this.varFilter = varFilter;
   }
 
@@ -111,11 +114,13 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(compiler, this, externs, root);
+    NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
+    t.traverseRoots(externs, root);
   }
 
   public void process(Node root) {
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
+    t.traverse(root);
   }
 
   /**
@@ -123,7 +128,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   void processScope(Scope scope) {
     this.narrowScope = scope;
-    (new NodeTraversal(compiler, this)).traverseAtScope(scope);
+    (new NodeTraversal(compiler, this, scopeCreator)).traverseAtScope(scope);
     this.narrowScope = null;
   }
 

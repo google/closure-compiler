@@ -62,7 +62,7 @@ class InlineObjectLiterals implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
-        compiler, new InliningBehavior());
+        compiler, new InliningBehavior(), SyntacticScopeCreator.makeUntyped(compiler));
     callback.process(externs, root);
   }
 

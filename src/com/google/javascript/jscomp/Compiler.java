@@ -1362,8 +1362,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     ReferenceCollectingCallback refCollector =
         new ReferenceCollectingCallback(
-            this, ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR);
-    NodeTraversal.traverse(this, getRoot(), refCollector);
+            this,
+            ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+            SyntacticScopeCreator.makeUntyped(this));
+    refCollector.process(getRoot());
     symbolTable.addSymbolsFrom(refCollector);
 
     PreprocessorSymbolTable preprocessorSymbolTable =

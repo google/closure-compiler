@@ -80,8 +80,12 @@ class InlineVariables implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
-        compiler, new InliningBehavior(), getFilterForMode());
+    ReferenceCollectingCallback callback =
+        new ReferenceCollectingCallback(
+            compiler,
+            new InliningBehavior(),
+            SyntacticScopeCreator.makeUntyped(compiler),
+            getFilterForMode());
     callback.process(externs, root);
   }
 

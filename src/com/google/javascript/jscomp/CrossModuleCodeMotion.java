@@ -303,14 +303,14 @@ class CrossModuleCodeMotion implements CompilerPass {
   private void collectReferences(Node root) {
     ReferenceCollectingCallback collector = new ReferenceCollectingCallback(
         compiler, ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+        new Es6SyntacticScopeCreator(compiler),
         new Predicate<Var>() {
           @Override public boolean apply(Var var) {
             // Only collect global and non-exported names.
-            return var.isGlobal() &&
-                !compiler.getCodingConvention().isExported(var.getName());
+            return var.isGlobal() && !compiler.getCodingConvention().isExported(var.getName());
           }
         });
-    NodeTraversal.traverseEs6(compiler, root, collector);
+    collector.process(root);
 
     for (Var v : collector.getAllSymbols()) {
       NamedInfo info = getNamedInfo(v);

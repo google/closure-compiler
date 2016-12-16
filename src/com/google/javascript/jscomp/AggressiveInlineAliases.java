@@ -187,6 +187,7 @@ class AggressiveInlineAliases implements CompilerPass {
           new ReferenceCollectingCallback(
               compiler,
               ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+              new Es6SyntacticScopeCreator(compiler),
               Predicates.equalTo(aliasVar));
       collector.processScope(scope);
 

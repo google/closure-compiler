@@ -110,9 +110,9 @@ class VariableVisibilityAnalysis implements CompilerPass {
   public void process(Node externs, Node root) {
     ReferenceCollectingCallback callback =
       new ReferenceCollectingCallback(compiler,
-          ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR);
+          ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR, new Es6SyntacticScopeCreator(compiler));
 
-    NodeTraversal.traverseEs6(compiler, root, callback);
+    callback.process(root);
 
     for (Var variable : callback.getAllSymbols()) {
       ReferenceCollection referenceCollection =
@@ -131,8 +131,7 @@ class VariableVisibilityAnalysis implements CompilerPass {
       } else if (variable.isGlobal()) {
         visibility = VariableVisibility.GLOBAL;
       } else {
-        throw new IllegalStateException("Un-handled variable visibility for " +
-            variable);
+        throw new IllegalStateException("Un-handled variable visibility for " + variable);
       }
 
       visibilityByDeclaringNameNode.put(variable.getNameNode(), visibility);
