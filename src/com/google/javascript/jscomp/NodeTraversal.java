@@ -253,9 +253,8 @@ public class NodeTraversal {
     }
   }
 
-  /**
-   * Creates a node traversal using the specified callback interface.
-   */
+  /** Use the 3-argument constructor instead. */
+  @Deprecated
   public NodeTraversal(AbstractCompiler compiler, Callback cb) {
     this(compiler, cb, compiler.getLanguageMode().isEs6OrHigher()
         ? new Es6SyntacticScopeCreator(compiler)
