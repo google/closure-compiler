@@ -110,12 +110,10 @@ class Normalize implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    new NodeTraversal(
-        compiler, new NormalizeStatements(compiler, assertOnChange))
-        .traverseRoots(externs, root);
+    NodeTraversal.traverseRootsEs6(
+        compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);
     MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
-    NodeTraversal t = new NodeTraversal(compiler, renamer);
-    t.traverseRoots(externs, root);
+    NodeTraversal.traverseRootsEs6(compiler, renamer, externs, root);
     // It is important that removeDuplicateDeclarations runs after
     // MakeDeclaredNamesUnique in order for catch block exception names to be
     // handled properly. Specifically, catch block exception names are
@@ -221,7 +219,7 @@ class Normalize implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      new NodeTraversal(compiler, this).traverseRoots(externs, root);
+      NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
     }
 
     @Override
