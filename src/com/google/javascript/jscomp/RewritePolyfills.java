@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
@@ -36,10 +38,6 @@ public class RewritePolyfills implements HotSwapCompilerPass {
   static final DiagnosticType INSUFFICIENT_OUTPUT_VERSION_ERROR = DiagnosticType.disabled(
       "JSC_INSUFFICIENT_OUTPUT_VERSION",
       "Built-in ''{0}'' not supported in output version {1}: set --language_out to at least {2}");
-
-  // Also polyfill references to e.g. goog.global.Map or window.Map.
-  private static final String GLOBAL = "goog.global.";
-  private static final String WINDOW = "window.";
 
   /**
    * Represents a single polyfill: specifically, for a native symbol
@@ -85,11 +83,14 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     private final ImmutableMultimap<String, Polyfill> methods;
     // Map of static polyfills, keyed by fully-qualified native name.
     private final ImmutableMap<String, Polyfill> statics;
+    // Set of suffixes of qualified names.
+    private final ImmutableSet<String> suffixes;
 
     private Polyfills(
         ImmutableMultimap<String, Polyfill> methods, ImmutableMap<String, Polyfill> statics) {
       this.methods = methods;
       this.statics = statics;
+      this.suffixes = ImmutableSet.copyOf(Iterables.transform(statics.keySet(), EXTRACT_SUFFIX));
     }
 
     /**
@@ -123,12 +124,27 @@ public class RewritePolyfills implements HotSwapCompilerPass {
           methods.put(symbol.replaceAll(".*\\.prototype\\.", ""), polyfill);
         } else {
           statics.put(symbol, polyfill);
-          statics.put(GLOBAL + symbol, polyfill);
-          statics.put(WINDOW + symbol, polyfill);
         }
       }
       return new Polyfills(methods.build(), statics.build());
     }
+
+    /**
+     * Given a qualified name {@code node}, checks whether the suffix
+     * of the name could possibly match a static polyfill.
+     */
+    boolean checkSuffix(Node node) {
+      return node.isGetProp() ? suffixes.contains(node.getLastChild().getString())
+          : node.isName() ? suffixes.contains(node.getString())
+          : false;
+    }
+
+    private static final Function<String, String> EXTRACT_SUFFIX =
+        new Function<String, String>() {
+          @Override public String apply(String arg) {
+            return arg.substring(arg.lastIndexOf(".") + 1);
+          }
+        };
   }
 
   private final AbstractCompiler compiler;
@@ -190,28 +206,39 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     hotSwapScript(root, null);
   }
 
-  private class Traverser extends AbstractPostOrderCallback {
+  private class Traverser extends GuardedCallback<String> {
 
     final Set<String> libraries = new LinkedHashSet<>();
 
+    Traverser() {
+      super(compiler);
+    }
+
     @Override
-    public void visit(NodeTraversal traversal, Node node, Node parent) {
-
+    public void visitGuarded(NodeTraversal traversal, Node node, Node parent) {
       // Find qualified names that match static calls
-      if (node.isQualifiedName()) {
+      if (node.isQualifiedName() && polyfills.checkSuffix(node)) {
         String name = node.getQualifiedName();
-        Polyfill polyfill = null;
 
-        if (polyfills.statics.containsKey(name)) {
-          polyfill = polyfills.statics.get(name);
+        // TODO(sdh): We could reduce some work here by combining the global names
+        // check with the root-in-scope check but it's not clear how to do so and
+        // still keep the var lookup *after* the polyfill-existence check.
+        boolean isExplicitGlobal = false;
+        for (String global : GLOBAL_NAMES) {
+          if (name.startsWith(global)) {
+            name = name.substring(global.length());
+            isExplicitGlobal = true;
+            break;
+          }
         }
 
-        if (polyfill != null) {
-          // Check the scope to make sure it's a global name.
-          if (isRootInScope(node, traversal) || NodeUtil.isVarOrSimpleAssignLhs(node, parent)) {
-            return;
-          }
+        // If the name is known, then make sure it's either explicitly or implicitly global.
+        Polyfill polyfill = polyfills.statics.get(name);
+        if (polyfill != null && !isExplicitGlobal && isRootInScope(node, traversal)) {
+          polyfill = null;
+        }
 
+        if (polyfill != null && !isGuarded(name)) {
           if (!languageOutIsAtLeast(polyfill.polyfillVersion)) {
             traversal.report(
                 node,
@@ -232,8 +259,9 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
       // Inject anything that *might* match method calls - these may be removed later.
       if (node.isGetProp() && node.getLastChild().isString()) {
-        Collection<Polyfill> methods = polyfills.methods.get(node.getLastChild().getString());
-        if (!methods.isEmpty() && !isStaticFunction(node, traversal)) {
+        String name = node.getLastChild().getString();
+        Collection<Polyfill> methods = polyfills.methods.get(name);
+        if (!methods.isEmpty() && !isGuarded("." + name)) {
           for (Polyfill polyfill : methods) {
             inject(polyfill);
           }
@@ -248,14 +276,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
           // this will not work at all in uncompiled mode, so this may be a non-starter.
         }
       }
-    }
-
-    private boolean isStaticFunction(Node node, NodeTraversal traversal) {
-      if (!node.isQualifiedName()) {
-        return false;
-      }
-      String qname = node.getQualifiedName();
-      return qname.startsWith("goog.string") || qname.startsWith("goog.array");
+      return;
     }
 
     private void inject(Polyfill polyfill) {
@@ -264,6 +285,9 @@ public class RewritePolyfills implements HotSwapCompilerPass {
       }
     }
   }
+
+  private static final ImmutableSet<String> GLOBAL_NAMES =
+      ImmutableSet.of("goog.global.", "window.");
 
   private boolean languageOutIsAtLeast(LanguageMode mode) {
     return compiler.getOptions().getLanguageOut().compareTo(mode) >= 0;
@@ -286,7 +310,8 @@ public class RewritePolyfills implements HotSwapCompilerPass {
   }
 
   private static boolean isRootInScope(Node node, NodeTraversal traversal) {
-    String rootName = NodeUtil.getRootOfQualifiedName(node).getQualifiedName();
-    return traversal.getScope().getVar(rootName) != null;
+    Node root = NodeUtil.getRootOfQualifiedName(node);
+    // NOTE: `this` and `super` are always considered "in scope" and thus shouldn't be polyfilled.
+    return !root.isName() || traversal.getScope().getVar(root.getString()) != null;
   }
 }

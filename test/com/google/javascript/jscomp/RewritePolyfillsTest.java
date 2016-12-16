@@ -21,7 +21,6 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.RewritePolyfills.Polyfills;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -98,6 +97,10 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     return expected.toString();
   }
 
+  private void testDoesNotInject(String code) {
+    testInjects(code); // empty list of injections
+  }
+
   private void testInjects(String code, String... libraries) {
     test(code, addLibraries(code, libraries));
   }
@@ -117,6 +120,9 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     setLanguage(ES6, ES5);
     testInjects("var m = new Map();", "es6/map");
+    testInjects("var m = new goog.global.Map();", "es6/map");
+    testInjects("var Map = goog.global.Map; new Map();", "es6/map");
+    testInjects("var m = new window.Map();", "es6/map");
 
     setLanguage(ES6, ES3);
     testInjects("var s = new Set();", "es6/set");
@@ -135,16 +141,16 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     addLibrary("Set", "es6", "es3", "es6/set");
 
     setLanguage(ES6, ES6);
-    testInjects("new Proxy();");
-    testInjects("var m = new Map();");
-    testInjects("new Set();");
+    testDoesNotInject("new Proxy();");
+    testDoesNotInject("var m = new Map();");
+    testDoesNotInject("new Set();");
   }
 
   public void testClassesNotInjectedIfDeclaredInScope() {
     addLibrary("Map", "es6", "es5", "es6/map");
 
     setLanguage(ES6, ES5);
-    testInjects("/** @constructor */ var Map = function() {}; new Map();");
+    testDoesNotInject("/** @constructor */ var Map = function() {}; new Map();");
   }
 
   public void testClassesWarnIfInsufficientLanguageOut() {
@@ -180,19 +186,19 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     addLibrary("Object.keys", "es5", "es3", "es5/object/keys");
 
     setLanguage(ES6, ES6);
-    testInjects("Array.from(x);");
-    testInjects("Math.clz32(x);");
-    testInjects("Array.of(x);");
+    testDoesNotInject("Array.from(x);");
+    testDoesNotInject("Math.clz32(x);");
+    testDoesNotInject("Array.of(x);");
 
     setLanguage(ES5, ES5);
-    testInjects("Object.keys(x);");
+    testDoesNotInject("Object.keys(x);");
   }
 
   public void testStaticMethodsNotInjectedIfDeclaredInScope() {
     addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
 
     setLanguage(ES6, ES5);
-    testInjects("var Math = {clz32: function() {}}; Math.clz32(x);");
+    testDoesNotInject("var Math = {clz32: function() {}}; Math.clz32(x);");
   }
 
   public void testStaticMethodsWarnIfInsufficientLanguageOut() {
@@ -205,6 +211,60 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     setLanguage(ES6, ES3);
     testInjects(
         "Math.clz32(x);", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR, "es6/math/clz32");
+  }
+
+  public void testStaticMethodsNotInstalledIfGuardedByIf() {
+    addLibrary("Array.of", "es6", "es5", "es6/array/of");
+
+    testDoesNotInject("if (Array.of) { Array.of(); } else { Array.of(); }");
+    testDoesNotInject("if (x || Array.of) { Array.of(x); }");
+    testDoesNotInject("if (x && Array.of) { Array.of(x); }");
+    testDoesNotInject("if (!Array.of) { Array.of(x); }");
+    testDoesNotInject("if (Array.of != 'x') { Array.of(x); }");
+    testDoesNotInject("if (Array.of !== 'x') { Array.of(x); }");
+    testDoesNotInject("if (Array.of == 'x') { Array.of(x); }");
+    testDoesNotInject("if (Array.of === 'x') { Array.of(x); }");
+    testDoesNotInject("if (typeof Array.of == 'function') { Array.of(); }");
+  }
+
+  public void testStaticMethodsNotInstalledIfGuardedByLogicalOperator() {
+    addLibrary("Array.of", "es6", "es5", "es6/array/of");
+
+    testDoesNotInject("Array.of && Array.of();");
+    testDoesNotInject("!Array.of || Array.of();");
+    // NOTE: needs to be first argument to actually guard.
+    testInjects("x && Array.of;", "es6/array/of");
+    // NOTE: || is not safe by itself.
+    testInjects("Array.of || Array.of();", "es6/array/of");
+  }
+
+  public void testStaticMethodsNotInstalledIfGuardedByHook() {
+    addLibrary("Array.of", "es6", "es5", "es6/array/of");
+
+    testDoesNotInject("var x = Array.of ? y : function(z) { Array.of(z); };");
+    testDoesNotInject("var x = Array.of ? function(y) { Array.of(y); } : z;");
+    testDoesNotInject("typeof Array.of ? Array.of(x) : Array.of(y);");
+    testDoesNotInject("String(Array.of) == 'foo' ? Array.of(x) : Array.of(y);");
+    testDoesNotInject("Array.of instanceof Function ? Array.of(x) : Array.of(y);");
+    // NOTE: needs to be first argument to actually guard.
+    testInjects("x ? (Array.of ? y : z) : Array.of(x)", "es6/array/of");
+  }
+
+  public void testStaticMethodsNotInstalledIfGuardedByAbruptReturn() {
+    addLibrary("Array.of", "es6", "es5", "es6/array/of");
+
+    testDoesNotInject("if (!Array.of) throw 'x'; Array.of();");
+    testDoesNotInject("!function() { if (!Array.of) return; Array.of(); }");
+    testDoesNotInject("if (!Array.of) { throw 'x'; } Array.of();");
+    // NOTE: abrupt return must be a sibling conditional's direct child
+    testInjects("{ if (!Array.of) throw 'x'; } Array.of();", "es6/array/of");
+    testInjects("!function() { { if (!Array.of) return; } Array.of(); }()", "es6/array/of");
+    testInjects("if (!Array.of) { { throw 'x'; } } Array.of();", "es6/array/of");
+    testInjects("{ if (!Array.of) throw 'x'; throw 'x'; } Array.of();", "es6/array/of");
+    testInjects("{ if (Array.of) throw 'x'; { throw 'x'; } } Array.of();", "es6/array/of");
+    testInjects(
+        "if (unrelated) { if (Array.of) throw 'x'; { throw 'x'; } } else Array.of();",
+        "es6/array/of");
   }
 
   public void testPrototypeMethodsInjected() {
@@ -227,12 +287,12 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     addLibrary("Array.prototype.forEach", "es5", "es3", "es5/array/foreach");
 
     setLanguage(ES6, ES6);
-    testInjects("x.normalize();");
-    testInjects("x.endsWith();");
-    testInjects("x.fill(y);");
+    testDoesNotInject("x.normalize();");
+    testDoesNotInject("x.endsWith();");
+    testDoesNotInject("x.fill(y);");
 
     setLanguage(ES5, ES5);
-    testInjects("x.forEach();");
+    testDoesNotInject("x.forEach();");
   }
 
   public void testMultiplePrototypeMethodsWithSameName() {
@@ -277,12 +337,61 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "es6/string/endswith");
   }
 
-  public void testPrototypeMethodsNotInstalledIfBlacklisted() {
+  public void testPrototypeMethodsNotInstalledIfGuardedByIf() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
-    setLanguage(ES6, ES5);
-    // NOTE: By the time this pass runs, goog.module aliases have already been fully expanded.
-    testInjects("goog.string.endsWith('x');");
+    testDoesNotInject("if (String.prototype.endsWith) { x.endsWith(); } else { y.endsWith(); }");
+    testDoesNotInject("if (x || String.prototype.endsWith) { x.endsWith(); }");
+    testDoesNotInject("if (x && String.prototype.endsWith) { x.endsWith(); }");
+    testDoesNotInject("if (!String.prototype.endsWith) { x.endsWith(); }");
+    testDoesNotInject("if (String.prototype.endsWith != 'x') { x.endsWith(); }");
+    testDoesNotInject("if (String.prototype.endsWith !== 'x') { x.endsWith(); }");
+    testDoesNotInject("if (String.prototype.endsWith == 'x') { x.endsWith(); }");
+    testDoesNotInject("if (String.prototype.endsWith === 'x') { x.endsWith(); }");
+    testDoesNotInject("if (typeof String.prototype.endsWith == 'function') { x.endsWith(); }");
+  }
+
+  public void testPrototypeMethodsNotInstalledIfGuardedByLogicalOperator() {
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+
+    testDoesNotInject("String.prototype.endsWith && x.endsWith();");
+    testDoesNotInject("!String.prototype.endsWith || x.endsWith();");
+    testDoesNotInject("x.endsWith && x.endsWith();");
+    // NOTE: needs to be first argument to actually guard.
+    testInjects("x && x.endsWith;", "es6/string/endswith");
+    // NOTE: || is not safe by itself.
+    testInjects("String.prototype.endsWith || x.endsWith();", "es6/string/endswith");
+  }
+
+  public void testPrototypeMethodsNotInstalledIfGuardedByHook() {
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+
+    testDoesNotInject("var x = String.prototype.endsWith ? y : function(z) { z.endsWith(); };");
+    testDoesNotInject("var x = String.prototype.endsWith ? function(y) { y.endsWith(); } : z;");
+    testDoesNotInject("typeof String.prototype.endsWith ? x.endsWith() : y.endsWith();");
+    testDoesNotInject("String(x.endsWith) == 'foo' ? x.endsWith() : y.endsWith();");
+    testDoesNotInject("Boolean(x.endsWith) ? x.endsWith() : y.endsWith();");
+    // NOTE: needs to be first argument to actually guard.
+    testInjects("x ? (String.prototype.endsWith ? y : z) : x.endsWith()", "es6/string/endswith");
+  }
+
+  public void testPrototypeMethodsNotInstalledIfGuardedByAbruptReturn() {
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+
+    testDoesNotInject("if (!x.endsWith) throw 'x'; y.endsWith();");
+    testDoesNotInject("if (!x.endsWith) { throw 'x'; } y.endsWith();");
+    testDoesNotInject("!function() { if (!x.endsWith) return; y.endsWith(); }()");
+    // NOTE: abrupt return must be a sibling conditional's direct child
+    testInjects("{ if (!x.endsWith) throw 'x'; } y.endsWith();", "es6/string/endswith");
+    testInjects("if (!x.endsWith) { { throw 'x'; } } y.endsWith();", "es6/string/endswith");
+    testInjects(
+        "!function() { { if (!x.endsWith) return; } y.endsWith(); }()", "es6/string/endswith");
+    testInjects("{ if (!x.endsWith) throw 'x'; throw 'x'; } y.endsWith();", "es6/string/endswith");
+    testInjects(
+        "{ if (x.endsWith) throw 'x'; { throw 'x'; } } x.endsWith();", "es6/string/endswith");
+    testInjects(
+        "if (unrelated) { if (x.endsWith) throw 'x'; { throw 'x'; } } else x.endsWith();",
+        "es6/string/endswith");
   }
 
   public void testCleansUpUnnecessaryPolyfills() {
