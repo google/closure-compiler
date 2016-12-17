@@ -1826,7 +1826,7 @@ class IRFactory {
       ParseTree expr = caseNode.expression;
       Node node = newNode(Token.CASE, transform(expr));
       Node block = newNode(Token.BLOCK);
-      block.putBooleanProp(Node.SYNTHETIC_BLOCK_PROP, true);
+      block.setIsAddedBlock(true);
       setSourceInfo(block, caseNode);
       if (caseNode.statements != null) {
         for (ParseTree child : caseNode.statements) {
@@ -1840,7 +1840,7 @@ class IRFactory {
     Node processSwitchDefault(DefaultClauseTree caseNode) {
       Node node = newNode(Token.DEFAULT_CASE);
       Node block = newNode(Token.BLOCK);
-      block.putBooleanProp(Node.SYNTHETIC_BLOCK_PROP, true);
+      block.setIsAddedBlock(true);
       setSourceInfo(block, caseNode);
       if (caseNode.statements != null) {
         for (ParseTree child : caseNode.statements) {

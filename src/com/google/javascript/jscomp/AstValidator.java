@@ -634,20 +634,6 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateSyntheticBlock(Node n) {
-    validateNodeType(Token.BLOCK, n);
-    validateIsSynthetic(n);
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateStatement(c);
-    }
-  }
-
-  private void validateIsSynthetic(Node n) {
-    if (!n.getBooleanProp(Node.SYNTHETIC_BLOCK_PROP)) {
-      violation("Missing 'synthetic block' annotation.", n);
-    }
-  }
-
   private void validateHasSourceName(Node n) {
     String sourceName = n.getSourceFileName();
     if (isNullOrEmpty(sourceName)) {
@@ -1118,14 +1104,14 @@ public final class AstValidator implements CompilerPass {
   private void validateDefaultCase(Node n) {
     validateNodeType(Token.DEFAULT_CASE, n);
     validateChildCount(n);
-    validateSyntheticBlock(n.getLastChild());
+    validateBlock(n.getLastChild());
   }
 
   private void validateCase(Node n) {
     validateNodeType(Token.CASE, n);
     validateChildCount(n);
     validateExpression(n.getFirstChild());
-    validateSyntheticBlock(n.getLastChild());
+    validateBlock(n.getLastChild());
   }
 
   private void validateOptionalExpression(Node n) {

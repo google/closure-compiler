@@ -270,8 +270,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
       case SCRIPT:
         return true;
       case BLOCK:
-        if (parent.isSyntheticBlock() && (grandparent.isCase() || grandparent.isDefaultCase())
-            || grandparent.isCatch()) {
+        if (grandparent.isCase() || grandparent.isDefaultCase() || grandparent.isCatch()) {
           return scope.getRootNode() == grandparent.getParent();
         }
         // Fall through

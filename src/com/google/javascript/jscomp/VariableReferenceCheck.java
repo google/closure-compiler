@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
@@ -23,6 +24,7 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -76,6 +78,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   // NOTE(nicksantos): It's a lot faster to use a shared Set that
   // we clear after each method call, because the Set never gets too big.
   private final Set<BasicBlock> blocksWithDeclarations = new HashSet<>();
+
+  // These types do not permit a block-scoped declaration inside them without an explicit block.
+  // e.g. if (b) let x;
+  private static final Set<Token> BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS =
+      Sets.immutableEnumSet(Token.IF, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.WHILE);
 
   public VariableReferenceCheck(AbstractCompiler compiler) {
     this(compiler, false);
@@ -376,7 +383,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
         if (isDeclaration
             && !reference.isVarDeclaration()
-            && reference.getGrandparent().isAddedBlock()) {
+            && reference.getGrandparent().isAddedBlock()
+            && BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS.contains(
+                reference.getGrandparent().getParent().getToken())) {
           compiler.report(JSError.make(referenceNode, DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.name));
         }
 

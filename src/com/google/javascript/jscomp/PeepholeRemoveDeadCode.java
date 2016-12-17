@@ -315,7 +315,6 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (shouldIncludeCondition) {
       caseBlock.addChildToFront(IR.exprResult(n.removeFirstChild()).srcref(n));
     }
-    caseBlock.setIsSyntheticBlock(false);
     n.replaceWith(caseBlock.detach());
     reportCodeChange();
     return caseBlock;

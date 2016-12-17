@@ -279,13 +279,13 @@ public class IR {
   public static Node caseNode(Node expr, Node body) {
     Preconditions.checkState(mayBeExpression(expr));
     Preconditions.checkState(body.isBlock());
-    body.putBooleanProp(Node.SYNTHETIC_BLOCK_PROP, true);
+    body.setIsAddedBlock(true);
     return new Node(Token.CASE, expr, body);
   }
 
   public static Node defaultCase(Node body) {
     Preconditions.checkState(body.isBlock());
-    body.putBooleanProp(Node.SYNTHETIC_BLOCK_PROP, true);
+    body.setIsAddedBlock(true);
     return new Node(Token.DEFAULT_CASE, body);
   }
 

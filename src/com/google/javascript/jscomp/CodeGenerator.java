@@ -1650,8 +1650,9 @@ public class CodeGenerator {
   }
 
   void addCaseBody(Node caseBody) {
+    Preconditions.checkState(caseBody.isBlock());
     cc.beginCaseBody();
-    add(caseBody);
+    addAllSiblings(caseBody.getFirstChild());
     cc.endCaseBody();
   }
 
