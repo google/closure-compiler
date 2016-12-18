@@ -1010,7 +1010,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return;
       }
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
-      Typedef td = Typedef.make(jsdoc.getTypedefType());
+      Typedef td = Typedef.make(jsdoc.getTypedefType(), jsdoc.makesStructs());
       currentScope.addTypedef(qnameNode, td);
     }
 

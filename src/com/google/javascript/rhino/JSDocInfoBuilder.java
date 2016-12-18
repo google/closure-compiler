@@ -974,7 +974,8 @@ public final class JSDocInfoBuilder {
    * if it was already defined or it was incompatible with the existing flags
    */
   public boolean recordStruct() {
-    if (hasAnySingletonTypeTags()
+    // typedef is now compatible with struct:
+    if ((hasAnySingletonTypeTags() && !currentInfo.hasTypedefType())
         || currentInfo.makesDicts() || currentInfo.makesStructs()
         || currentInfo.makesUnrestricted()) {
       return false;
