@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -27,6 +28,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -164,6 +166,16 @@ public final class JSDocInfoPrinter {
     if (!names.isEmpty()) {
       parts.add("@template " + Joiner.on(',').join(names));
       multiline = true;
+    }
+
+    ImmutableMap<String, Node> typeTransformations = info.getTypeTransformations();
+    if (!typeTransformations.isEmpty()) {
+      multiline = true;
+      for (Map.Entry<String, Node> e : typeTransformations.entrySet()) {
+        String name = e.getKey();
+        String tranformationDefinition = new CodePrinter.Builder(e.getValue()).build();
+        parts.add("@template " + name + " := " +  tranformationDefinition  + " =:");
+      }
     }
 
     if (info.isOverride()) {
