@@ -21,12 +21,8 @@
  */
 
 /**
- * @enum {string}
+ * Set of possible values: 'hidden', 'visible', 'prerender', 'unloaded'.
+ * @typedef {string}
  * @see http://www.w3.org/TR/page-visibility/#VisibilityState
  */
-var VisibilityState = {
-  HIDDEN: 'hidden',
-  VISIBLE: 'visible',
-  PRERENDER: 'prerender',
-  UNLOADED: 'unloaded'
-};
+var VisibilityState;
