@@ -6292,6 +6292,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " */",
         "function f(x, y, z) { return x; }",
         "var /** null */ n = f(1, 'asdf', /** @type {?} */ (null));"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @template T */",
+        "function f(x) {",
+        "  var y = x;",
+        "  y();",
+        "  return y;",
+        "}",
+        "f(function() {});"));
   }
 
   public void testGenericReturnType() {

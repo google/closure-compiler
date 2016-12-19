@@ -762,7 +762,7 @@ public final class FunctionType {
   }
 
   public boolean isGeneric() {
-    return !typeParameters.isEmpty();
+    return !this.typeParameters.isEmpty();
   }
 
   public List<String> getTypeParameters() {
@@ -773,7 +773,8 @@ public final class FunctionType {
       Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
     Preconditions.checkState(this.typeParameters.isEmpty(),
         "Non-empty type parameters %s", this.typeParameters);
-    Preconditions.checkState(this.outerVarPreconditions.isEmpty());
+    Preconditions.checkState(this == this.commonTypes.LOOSE_TOP_FUNCTION
+        || this.outerVarPreconditions.isEmpty());
     Preconditions.checkState(this != this.commonTypes.TOP_FUNCTION);
 
     if (this == this.commonTypes.LOOSE_TOP_FUNCTION || other.isTopFunction() || other.isLoose()) {
@@ -947,7 +948,7 @@ public final class FunctionType {
   }
 
   private FunctionType substituteNominalGenerics(Map<String, JSType> typeMap) {
-    if (typeMap.isEmpty()) {
+    if (typeMap.isEmpty() || this.isTopFunction()) {
       return this;
     }
     Map<String, JSType> reducedMap = typeMap;
