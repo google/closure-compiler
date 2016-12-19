@@ -360,8 +360,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testMisusedEnumTag() {
-    test("var a = {}; var d = 1; d = a; a.b = function() {}; /** @enum */ a.b.c = 0; a.b.c;",
-         "var a = {}; var d = 1; d = a; a.b = function() {}; /** @enum */ a.b.c = 0; a.b.c;");
+    testSame("var a = {}; var d = 1; d = a; a.b = function() {}; /** @enum */ a.b.c = 0; a.b.c;");
   }
 
   public void testAliasCreatedForFunctionDepth1_1() {
@@ -927,8 +926,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testChainedAssignments4() {
-    test("var x = {}; a = b = x.y;",
-         "var x = {}; a = b = x.y;");
+    testSame("var x = {}; a = b = x.y;");
   }
 
   public void testChainedAssignments5() {
@@ -1059,8 +1057,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testDoNotCollapsePropertyOnExternType() {
-    test("String.myFunc = function() {}; String.myFunc()",
-         "String.myFunc = function() {}; String.myFunc()");
+    testSame("String.myFunc = function() {}; String.myFunc()");
   }
 
   public void testBug1704733() {

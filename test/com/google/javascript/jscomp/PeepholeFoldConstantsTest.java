@@ -447,12 +447,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("a=!true", "a=false");
     fold("a=!10", "a=false");
     fold("a=!false", "a=true");
-    fold("a=!foo()", "a=!foo()");
+    foldSame("a=!foo()");
     fold("a=-0", "a=-0.0");
     fold("a=-(0)", "a=-0.0");
-    fold("a=-Infinity", "a=-Infinity");
+    foldSame("a=-Infinity");
     fold("a=-NaN", "a=NaN");
-    fold("a=-foo()", "a=-foo()");
+    foldSame("a=-foo()");
     fold("a=~~0", "a=0");
     fold("a=~~10", "a=10");
     fold("a=~-7", "a=6");
@@ -475,7 +475,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testUnaryOpsStringCompare() {
-    fold("a = -1", "a = -1");
+    foldSame("a = -1");
     fold("a = ~0", "a = -1");
     fold("a = ~1", "a = -2");
     fold("a = ~101", "a = -102");
@@ -519,7 +519,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("a() && (1 && b())", "a() && b()");
     // TODO(johnlenz): Consider folding the following to:
     //   "(a(),1) && b();
-    fold("(a() && 1) && b()", "(a() && 1) && b()");
+    foldSame("(a() && 1) && b()");
 
     // Really not foldable, because it would change the type of the
     // expression if foo() returns something equivalent, but not
@@ -739,21 +739,21 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 10 + 20", "x = 30");
     fold("x = 2 / 4", "x = 0.5");
     fold("x = 2.25 * 3", "x = 6.75");
-    fold("z = x * y", "z = x * y");
-    fold("x = y * 5", "x = y * 5");
-    fold("x = 1 / 0", "x = 1 / 0");
+    foldSame("z = x * y");
+    foldSame("x = y * 5");
+    foldSame("x = 1 / 0");
     fold("x = 3 % 2", "x = 1");
     fold("x = 3 % -2", "x = 1");
     fold("x = -1 % 3", "x = -1");
-    fold("x = 1 % 0", "x = 1 % 0");
+    foldSame("x = 1 % 0");
   }
 
   public void testFoldArithmetic2() {
     foldSame("x = y + 10 + 20");
     foldSame("x = y / 2 / 4");
     fold("x = y * 2.25 * 3", "x = y * 6.75");
-    fold("z = x * y", "z = x * y");
-    fold("x = y * 5", "x = y * 5");
+    foldSame("z = x * y");
+    foldSame("x = y * 5");
     fold("x = y + (z * 24 * 60 * 60 * 1000)", "x = y + z * 864E5");
   }
 
@@ -969,7 +969,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // Cannot fold
     fold("x = [foo(), 0].length", "x = [foo(),0].length");
-    fold("x = y.length", "x = y.length");
+    foldSame("x = y.length");
   }
 
   public void testFoldStringLength() {
@@ -1033,7 +1033,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public void testDivision() {
     // Make sure the 1/3 does not expand to 0.333333
-    fold("print(1/3)", "print(1/3)");
+    foldSame("print(1/3)");
 
     // Decimal form is preferable to fraction form when strings are the
     // same length.
@@ -1214,7 +1214,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("void 0");
     fold("void 1", "void 0");
     fold("void x", "void 0");
-    fold("void x()", "void x()");
+    foldSame("void x()");
   }
 
   public void testObjectLiteral() {

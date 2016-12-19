@@ -146,8 +146,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   public void testExportedSetPropertyOfThis() {
-    test("this.propExported = 'bar'",
-         "this.propExported = 'bar'");
+    testSame("this.propExported = 'bar'");
   }
 
   public void testReadPropertyOfThis() {
@@ -183,8 +182,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   public void testExternedPropertyNameDefinedByObjectLiteral() {
-    test("function x() { var foo = google.gears.factory; }",
-         "function x() { var foo = google.gears.factory; }");
+    testSame("function x() { var foo = google.gears.factory; }");
   }
 
   public void testAvoidingConflictsBetweenQuotedAndUnquotedPropertyNames() {

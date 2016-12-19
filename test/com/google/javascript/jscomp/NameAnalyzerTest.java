@@ -183,7 +183,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testSideEffectClassification1() {
-    test("foo();", "foo();");
+    testSame("foo();");
   }
 
   public void testSideEffectClassification2() {
@@ -203,7 +203,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testSideEffectClassification6() {
-    test("function sef(){} sef();", "function sef(){} sef();");
+    testSame("function sef(){} sef();");
   }
 
   public void testSideEffectClassification7() {
@@ -1078,7 +1078,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testRhsReference5() {
-    test("var a = 1, b = 5; a; foo(b)", "var a = 1, b = 5; a; foo(b)");
+    testSame("var a = 1, b = 5; a; foo(b)");
   }
 
   public void testRhsAssign1() {

@@ -89,7 +89,7 @@ public final class CheckMissingGetCssNameTest extends Es6CompilerTestCase {
   }
 
   private void testNotMissing(String js) {
-    test(js, js);
+    testSame(js);
   }
 
   private void testMissingEs6(String js) {
@@ -97,6 +97,6 @@ public final class CheckMissingGetCssNameTest extends Es6CompilerTestCase {
   }
 
   private void testNotMissingEs6(String js) {
-    testEs6(js, js);
+    testSameEs6(js);
   }
 }

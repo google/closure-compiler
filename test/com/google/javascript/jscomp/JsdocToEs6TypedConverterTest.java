@@ -84,7 +84,7 @@ public final class JsdocToEs6TypedConverterTest extends CompilerTestCase {
   }
 
   public void testVariableDeclarationWithoutDeclaredType() throws Exception {
-    test("var print;", "var print;");
+    testSame("var print;");
   }
 
   public void testFunctionReturnType() throws Exception {

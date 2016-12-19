@@ -166,8 +166,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
          "var b = f();" +
          "JSCompiler_object_inline_a_0=a,JSCompiler_object_inline_b_1=b,true;" +
          "if(JSCompiler_object_inline_a_0) g(JSCompiler_object_inline_b_1)");
-    testLocal("var x = {}; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b) + x.c",
-         "var x = {}; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b) + x.c");
+    testSameLocal("var x = {}; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b) + x.c");
     testLocal("var x; var b = f(); x = {a:a, b:b}; x.c = c; if(x.a) g(x.b) + x.c",
          "var JSCompiler_object_inline_a_0;" +
          "var JSCompiler_object_inline_b_1;" +
@@ -207,8 +206,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject12() {
-    testLocal("var a; a = {x:1, y:2}; f(a.x, a.y2);",
-        "var a; a = {x:1, y:2}; f(a.x, a.y2);");
+    testSameLocal("var a; a = {x:1, y:2}; f(a.x, a.y2);");
   }
 
   public void testObject13() {
@@ -280,8 +278,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
       " f(JSCompiler_object_inline_y_0,JSCompiler_object_inline_x_1)" +
       "}");
 
-    testLocal("var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}",
-        "var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}");
+    testSameLocal("var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}");
   }
 
   public void testObject23() {
@@ -350,8 +347,8 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         "return foo.bar;");
   }
 
-  private final String LOCAL_PREFIX = "function local(){";
-  private final String LOCAL_POSTFIX = "}";
+  private static final String LOCAL_PREFIX = "function local(){";
+  private static final String LOCAL_POSTFIX = "}";
 
   private void testLocal(String code, String result) {
     test(LOCAL_PREFIX + code + LOCAL_POSTFIX,
@@ -359,6 +356,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   private void testSameLocal(String code) {
-    testLocal(code, code);
+    testSame(LOCAL_PREFIX + code + LOCAL_POSTFIX);
   }
 }

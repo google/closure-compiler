@@ -150,13 +150,11 @@ public final class AliasStringsTest extends CompilerTestCase {
   public void testObjectLiterals() {
     strings = ImmutableSet.of("pxpxpxpxpxpxpxpxpxpx", "abcdefghijabcdefghij");
 
-    test("var foo={px:435}", "var foo={px:435}");
+    testSame("var foo={px:435}");
 
     // string as key
-    test("var foo={'pxpxpxpxpxpxpxpxpxpx':435}", "var foo={'pxpxpxpxpxpxpxpxpxpx':435}");
-    test(
-        "bar=function f(){return {'pxpxpxpxpxpxpxpxpxpx':435}}",
-        "bar=function f(){return {'pxpxpxpxpxpxpxpxpxpx':435}}");
+    testSame("var foo={'pxpxpxpxpxpxpxpxpxpx':435}");
+    testSame("bar=function f(){return {'pxpxpxpxpxpxpxpxpxpx':435}}");
 
     test(
         "function f() {var foo={bar:'abcdefghijabcdefghij'+'abcdefghijabcdefghij'}}",

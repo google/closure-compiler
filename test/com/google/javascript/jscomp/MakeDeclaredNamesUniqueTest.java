@@ -179,9 +179,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
         "let a = function foo(){foo()};let b = function foo$jscomp$1(){foo$jscomp$1()};");
 
     // Verify catch exceptions names are made unique
-    testWithInversion(
-        "try { } catch(e) {e;}",
-         "try { } catch(e) {e;}");
+    testSameWithInversion("try { } catch(e) {e;}");
 
     // Inversion does not handle exceptions correctly.
     test(
@@ -365,8 +363,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
             "try { } catch(e) {e; try { } catch(e) {e;} }; ");
     testSame("var a$jscomp$1;");
     testSame("function f() { var $jscomp$; }");
-    test("var CONST = 3; var b = CONST;",
-         "var CONST = 3; var b = CONST;");
+    testSame("var CONST = 3; var b = CONST;");
     test("function f() {var CONST = 3; var ACONST$jscomp$1 = 2;}",
          "function f() {var CONST = 3; var ACONST = 2;}");
   }

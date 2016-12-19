@@ -126,7 +126,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
 
   public void testEmpty() {
     this.instrumentationPb = "";
-    test("function a(){b}", "function a(){b}");
+    testSame("function a(){b}");
   }
 
   public void testAppNameSetter() {

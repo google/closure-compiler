@@ -134,8 +134,8 @@ public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
     test(BOTH_INCLUDES + "arr.includes();", ARRAY_INCLUDES + "arr.includes();");
     test(BOTH_INCLUDES + "[].includes();", ARRAY_INCLUDES + "[].includes();");
 
-    test(BOTH_INCLUDES + "strOrArr.includes();", BOTH_INCLUDES + "strOrArr.includes();");
-    test(BOTH_INCLUDES + "strOrMyArray.includes();", BOTH_INCLUDES + "strOrMyArray.includes();");
+    testSame(BOTH_INCLUDES + "strOrArr.includes();");
+    testSame(BOTH_INCLUDES + "strOrMyArray.includes();");
     test(BOTH_INCLUDES + "strOrFoo.includes();", STRING_INCLUDES + "strOrFoo.includes();");
     test(BOTH_INCLUDES + "fooOrMyArray.includes();", ARRAY_INCLUDES + "fooOrMyArray.includes();");
   }

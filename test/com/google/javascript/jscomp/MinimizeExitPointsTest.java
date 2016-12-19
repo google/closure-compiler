@@ -56,8 +56,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
          "f:while(a())break f");
     foldSame("f:for(x in a())break f");
 
-    fold("f:{while(a())break;}",
-         "f:{while(a())break;}");
+    foldSame("f:{while(a())break;}");
     foldSame("f:{for(x in a())break}");
 
     fold("f:try{break f;}catch(e){break f;}",
@@ -151,8 +150,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
 
     fold("while(true)while(a())break;",
          "while(true)while(a())break");
-    fold("while(true)for(x in a())break",
-         "while(true)for(x in a())break");
+    foldSame("while(true)for(x in a())break");
 
     fold("while(true){try{continue;}catch(e){continue;}}",
          "while(true){try{}catch(e){}}");
@@ -193,8 +191,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
 
     fold("do{while(a())break;}while(true)",
          "do while(a())break;while(true)");
-    fold("do for(x in a())break;while(true)",
-         "do for(x in a())break;while(true)");
+    foldSame("do for(x in a())break;while(true)");
 
     fold("do{try{continue;}catch(e){continue;}}while(true)",
          "do{try{}catch(e){}}while(true)");

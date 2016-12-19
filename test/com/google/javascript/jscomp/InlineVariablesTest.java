@@ -885,8 +885,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   public void testInlineUndefined5() {
-    test("var x; for(x in a) {}",
-         "var x; for(x in a) {}");
+    testSame("var x; for(x in a) {}");
   }
 
   public void testIssue90() {

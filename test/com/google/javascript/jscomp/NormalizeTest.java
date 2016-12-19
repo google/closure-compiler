@@ -263,18 +263,15 @@ public final class NormalizeTest extends CompilerTestCase {
          "var a;function foo(a$jscomp$1){var b;a$jscomp$1}");
     test("var a;function foo(){var b;a}function boo(){var b;a}",
          "var a;function foo(){var b;a}function boo(){var b$jscomp$1;a}");
-    test("function foo(a){var b}" +
-         "function boo(a){var b}",
-         "function foo(a){var b}" +
-         "function boo(a$jscomp$1){var b$jscomp$1}");
+    test("function foo(a){var b} function boo(a){var b}",
+         "function foo(a){var b} function boo(a$jscomp$1){var b$jscomp$1}");
 
     // Verify function expressions are renamed.
     test("var a = function foo(){foo()};var b = function foo(){foo()};",
          "var a = function foo(){foo()};var b = function foo$jscomp$1(){foo$jscomp$1()};");
 
     // Verify catch exceptions names are made unique
-    test("try { } catch(e) {e;}",
-         "try { } catch(e) {e;}");
+    testSame("try { } catch(e) {e;}");
     test("try { } catch(e) {e;}; try { } catch(e) {e;}",
          "try { } catch(e) {e;}; try { } catch(e$jscomp$1) {e$jscomp$1;}");
     test("try { } catch(e) {e; try { } catch(e) {e;}};",
@@ -330,27 +327,22 @@ public final class NormalizeTest extends CompilerTestCase {
 
     // TODO(johnlenz): Do we need to handle this differently for "third_party"
     // mode? Remove the previous function definitions?
-    test("function f(){} function f(){}",
-         "function f(){} function f(){}");
+    testSame("function f(){} function f(){}");
     test("if (a) { function f(){} } else { function f(){} }",
          "if (a) { var f = function (){} } else { f = function (){} }");
   }
 
   public void testRenamingConstants() {
-    test("var ACONST = 4;var b = ACONST;",
-         "var ACONST = 4; var b = ACONST;");
+    testSame("var ACONST = 4; var b = ACONST;");
 
     test("var a, ACONST = 4;var b = ACONST;",
          "var a; var ACONST = 4; var b = ACONST;");
 
-    test("var ACONST; ACONST = 4; var b = ACONST;",
-         "var ACONST; ACONST = 4;" +
-         "var b = ACONST;");
+    testSame("var ACONST; ACONST = 4; var b = ACONST;");
 
-    test("var ACONST = new Foo(); var b = ACONST;",
-         "var ACONST = new Foo(); var b = ACONST;");
+    testSame("var ACONST = new Foo(); var b = ACONST;");
 
-    test("/** @const */ var aa; aa = 1;", "/** @const */ var aa; aa = 1");
+    testSame("/** @const */ var aa; aa = 1;");
   }
 
   public void testSkipRenamingExterns() {

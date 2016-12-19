@@ -253,7 +253,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testDoNotRenameExportedName() {
-    test("_foo()", "_foo()");
+    testSame("_foo()");
   }
 
   public void testDoNotRenameArguments() {
@@ -261,8 +261,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testRenameWithNameOverlap() {
-    test("var a = 1; var b = 2; b + b;",
-         "var a = 1; var b = 2; b + b;");
+    testSame("var a = 1; var b = 2; b + b;");
   }
 
   public void testRenameWithPrefix1() {
@@ -428,11 +427,9 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testStableRenameWithNameOverlap() {
-    test("var a = 1; var b = 2; b + b;",
-         "var a = 1; var b = 2; b + b;");
+    testSame("var a = 1; var b = 2; b + b;");
     previouslyUsedMap = renameVars.getVariableMap();
-    test("var a = 1; var c, b = 2; b + b;",
-         "var a = 1; var c, b = 2; b + b;");
+    testSame("var a = 1; var c, b = 2; b + b;");
   }
 
   public void testStableRenameWithAnonymousFunctions() {

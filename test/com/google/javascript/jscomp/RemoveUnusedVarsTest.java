@@ -124,8 +124,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
          "var x;function A(){B()}function B(){print(x)}A()");
 
     // Test closures in a return statement
-    test("function A(){var x;return function(){print(x)}}A()",
-         "function A(){var x;return function(){print(x)}}A()");
+    testSame("function A(){var x;return function(){print(x)}}A()");
 
     // Test other closures, multiple passes
     test("function A(){}function B(){" +

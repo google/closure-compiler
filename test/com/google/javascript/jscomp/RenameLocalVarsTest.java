@@ -91,7 +91,7 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
   }
 
   public void testDoNotRenameExportedName() {
-    test("_foo()", "_foo()");
+    testSame("_foo()");
   }
 
   public void testRenameWithNameOverlap() {

@@ -77,10 +77,9 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
     fold("{'hi'}", "");
     fold("{x==3}", "");
     fold("{ (function(){x++}) }", "");
-    fold("function f(){return;}", "function f(){return;}");
+    foldSame("function f(){return;}");
     fold("function f(){return 3;}", "function f(){return 3}");
-    fold("function f(){if(x)return; x=3; return; }",
-         "function f(){if(x)return; x=3; return; }");
+    foldSame("function f(){if(x)return; x=3; return; }");
     fold("{x=3;;;y=2;;;}", "x=3;y=2");
 
     // Cases to test for empty block.
@@ -207,7 +206,7 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
     fold("do { foo() } while(false);", "foo()");
     fold("do { foo() } while(void 0);", "foo()");
     fold("do { foo() } while(undefined);", "foo()");
-    fold("do { foo() } while(true);", "do { foo() } while(true);");
+    foldSame("do { foo() } while(true);");
     fold("do { var a = 0; } while(false);", "var a=0");
 
     fold("do { var a = 0; } while(!{a:foo()});", "var a=0;foo()");
@@ -222,7 +221,7 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
   }
 
   public void testMinimizeWhileConstantCondition() {
-    fold("while(true) foo()", "while(true) foo()");
+    foldSame("while(true) foo()");
     fold("while(0) foo()", "");
     fold("while(0.0) foo()", "");
     fold("while(NaN) foo()", "");

@@ -137,13 +137,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "  return w$0;",
             "}"));
 
-    test(
-        LINE_JOINER.join(
-            "function x() {}",
-            "function f(y=(function () { w = 5; return w; }())) {",
-            "  w;",
-            "  return w;",
-            "}"),
+    testSame(
         LINE_JOINER.join(
             "function x() {}",
             "function f(y=(function () { w = 5; return w; }())) {",

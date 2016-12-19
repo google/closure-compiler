@@ -254,10 +254,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "document",
         "window.document", null, null);
     // Javascript builtin objects
-    test(
-        "Object;Function;Array;String;Boolean;Number;Math;"
-        + "Date;RegExp;JSON;Error;EvalError;ReferenceError;"
-        + "SyntaxError;TypeError;URIError;",
+    testSame(
         "Object;Function;Array;String;Boolean;Number;Math;"
         + "Date;RegExp;JSON;Error;EvalError;ReferenceError;"
         + "SyntaxError;TypeError;URIError;");

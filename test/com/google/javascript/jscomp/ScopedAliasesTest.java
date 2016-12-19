@@ -1004,7 +1004,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         "var g = goog;\n g.dom.createElement(g.dom.TagName.DIV);";
     TransformationHandlerSpy spy = new TransformationHandlerSpy();
     transformationHandler = spy;
-    test(fullJsCode, fullJsCode);
+    testSame(fullJsCode);
 
     assertThat(spy.observedPositions).isEmpty();
   }

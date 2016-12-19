@@ -116,7 +116,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   public void testRemoveDo() {
-    test("do { print(1); break } while(1)", "do { print(1); break } while(1)");
+    testSame("do { print(1); break } while(1)");
     test("while(1) { break; do { print(1); break } while(1) }",
          "while(1) { break; do {} while(1) }");
   }
@@ -140,8 +140,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   public void testSwitchCase() {
     test("function f() { switch(x) { default: return 5; foo()}}",
          "function f() { switch(x) { default: return 5;}}");
-    test("function f() { switch(x) { default: return; case 1: foo(); bar()}}",
-         "function f() { switch(x) { default: return; case 1: foo(); bar()}}");
+    testSame("function f() { switch(x) { default: return; case 1: foo(); bar()}}");
     test("function f() { switch(x) { default: return; case 1: return 5;bar()}}",
          "function f() { switch(x) { default: return; case 1: return 5;}}");
   }

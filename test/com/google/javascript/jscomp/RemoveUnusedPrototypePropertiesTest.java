@@ -75,12 +75,9 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
            "e.prototype.a = function(){};" +
            "e.prototype.bExtern = function(){};" +
            "var x = new e; x.a()");
-    test("function e(){}" +
-           "e.prototype = {a: function(){}, bExtern: function(){}};" +
-           "var x = new e; x.a()",
-         "function e(){}" +
-           "e.prototype = {a: function(){}, bExtern: function(){}};" +
-           "var x = new e; x.a()");
+    testSame("function e(){}"
+        + "e.prototype = {a: function(){}, bExtern: function(){}};"
+        + "var x = new e; x.a()");
   }
 
   public void testAliasing1() {
@@ -122,15 +119,12 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
            "(new e).method1()");
 
     // Using an alias should keep it
-    test("function e(){}" +
-           "e.prototype.method1 = function(){};" +
-           // aliases
-           "e.prototype.alias1 = e.prototype.method1;" +
-           "(new e).alias1()",
-         "function e(){}" +
-           "e.prototype.method1 = function(){};" +
-           "e.prototype.alias1 = e.prototype.method1;" +
-           "(new e).alias1()");
+    testSame(
+        "function e(){}"
+            + "e.prototype.method1 = function(){};"
+            // aliases
+            + "e.prototype.alias1 = e.prototype.method1;"
+            + "(new e).alias1()");
   }
 
   public void testAliasing3() {

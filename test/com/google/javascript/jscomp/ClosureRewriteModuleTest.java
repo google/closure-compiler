@@ -799,17 +799,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
   public void testGoogScope1() {
     // Typedef defined inside a goog.scope(). The typedef is seen and is *not* legacy-to-binary
     // bridge exported.
-    test(
-        LINE_JOINER.join(
-            "goog.provide('a.c.B');",
-            "goog.provide('a.u.M');",
-            "goog.scope(function() {",
-            "  /** @constructor */",
-            "  a.c.B = function() {}",
-            "  /** @typedef {function(!Array<a.u.E>)} */",
-            "  a.u.M;",
-            "});"),
-
+    testSame(
         LINE_JOINER.join(
             "goog.provide('a.c.B');",
             "goog.provide('a.u.M');",
@@ -1321,11 +1311,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
   public void testExport9() {
     // Doesn't legacy-to-binary bridge export a typedef.
-    test(
-        LINE_JOINER.join(
-            "goog.provide('goog.ui.ControlContent');",
-            "/** @typedef {string} */ goog.ui.ControlContent;"),
-
+    testSame(
         LINE_JOINER.join(
             "goog.provide('goog.ui.ControlContent');",
             "/** @typedef {string} */ goog.ui.ControlContent;"));

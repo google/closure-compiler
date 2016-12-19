@@ -76,7 +76,7 @@ public final class SanityCheckTest extends CompilerTestCase {
     };
 
     try {
-      test("while(1){}", "while(1){}");
+      testSame("while(1){}");
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
       assertThat(e.getMessage()).contains("Normalize constraints violated:\nWHILE node");

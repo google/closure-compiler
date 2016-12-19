@@ -114,8 +114,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   public void testForIn() {
     // We lose some precision here, unless we have "branched-backward-dataflow".
-    inFunction("var x = 1, k; x;      ; for (var y in k) { y }",
-               "var x = 1, k; x;      ; for (var y in k) { y }");
+    inFunction("var x = 1, k; x;      ; for (var y in k) { y }");
 
     inFunction("var x = 1, k; x; y = 1; for (var y in k) { y }",
                "var x = 1, k; x; x = 1; for (    x in k) { x }");
@@ -160,10 +159,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   public void testTryCatch() {
-    inFunction("try {} catch (e) { } var x = 4; x;",
-               "try {} catch (e) { } var x = 4; x;");
-    inFunction("var x = 4; x; try {} catch (e) { }",
-               "var x = 4; x; try {} catch (e) { }");
+    inFunction("try {} catch (e) { } var x = 4; x;");
+    inFunction("var x = 4; x; try {} catch (e) { }");
   }
 
   public void testDeadAssignment() {
@@ -180,13 +177,13 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   public void testParameter2() {
     // Make sure two formal parameter name never merges.
-    test("function FUNC(x,y) {x = 0; x; y = 0; y}");
-    test("function FUNC(x,y,z) {x = 0; x; y = 0; z = 0; z}");
+    testSame("function FUNC(x,y) {x = 0; x; y = 0; y}");
+    testSame("function FUNC(x,y,z) {x = 0; x; y = 0; z = 0; z}");
   }
 
   public void testParameter3() {
     // Make sure the formal parameter declaration is consider a def.
-    test("function FUNC(x) {var y; y = 0; x; y}");
+    testSame("function FUNC(x) {var y; y = 0; x; y}");
   }
 
   public void testParameter4a() {
@@ -269,7 +266,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "  }" +
         "  return buffer;" +
         "}";
-    test(src, src);
+    testSame(src);
   }
 
   public void testDeterministic() {
@@ -445,15 +442,11 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   private void inFunction(String src) {
-    inFunction(src, src);
+    testSame("function FUNC(){" + src + "}");
   }
 
   private void inFunction(String src, String expected) {
     test("function FUNC(){" + src + "}",
          "function FUNC(){" + expected + "}");
-  }
-
-  private void test(String src) {
-    test(src, src);
   }
 }

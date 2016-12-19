@@ -104,7 +104,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
     currentPeepholePasses =
       ImmutableList.of(note1Applied, note2Applied);
 
-    test("var x; var y", "var x; var y");
+    testSame("var x; var y");
 
     /*
      * We expect the optimization order to be: "x" visited by optimization1 "x"

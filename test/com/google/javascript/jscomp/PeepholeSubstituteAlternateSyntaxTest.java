@@ -205,11 +205,11 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
     // One argument - cannot be fold when normalized
     fold("x = new Array(7)", "x = Array(7)");
-    fold("x = Array(7)", "x = Array(7)");
+    foldSame("x = Array(7)");
     fold("x = new Array(y)", "x = Array(y)");
-    fold("x = Array(y)", "x = Array(y)");
+    foldSame("x = Array(y)");
     fold("x = new Array(foo())", "x = Array(foo())");
-    fold("x = Array(foo())", "x = Array(foo())");
+    foldSame("x = Array(foo())");
 
     // More than one argument - can be fold when normalized
     fold("x = new Array(1, 2, 3, 4)", "x = [1, 2, 3, 4]");

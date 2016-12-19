@@ -160,6 +160,6 @@ public final class StatementFusionTest extends CompilerTestCase  {
   }
 
   private void fuseSame(String code) {
-    fuse(code, code);
+    testSame("function F(){if(CONDITION){" + code + "}}");
   }
 }

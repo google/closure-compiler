@@ -523,7 +523,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
       "Foo.x = 0;",
       "/** @param {!Function} x */ function f(x) { x.y = 1; x.x = 2;}",
       "f(Foo)");
-    test(js, js);
+    testSame(js);
 
     js = LINE_JOINER.join(
       "/** @constructor */ var Foo = function() {};",

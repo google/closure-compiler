@@ -126,8 +126,8 @@ public final class PeepholeSimplifyRegExpTest extends CompilerTestCase {
   public final void testAlterations() {
     testSame("/foo|bar/");
     test("/Foo|BAR/i", "/foo|bar/i");
-    test("/Foo||BAR/", "/Foo||BAR/");
-    test("/Foo|BAR|/", "/Foo|BAR|/");
+    testSame("/Foo||BAR/");
+    testSame("/Foo|BAR|/");
   }
 
   public final void testNestedAlterations() {

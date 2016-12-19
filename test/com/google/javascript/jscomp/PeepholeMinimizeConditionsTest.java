@@ -80,16 +80,13 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("function f(){if(x){a.foo()}}", "function f(){x&&a.foo()}");
 
     // Try it out with throw/catch/finally [which should not change]
-    fold("function f(){try{foo()}catch(e){bar(e)}finally{baz()}}",
-         "function f(){try{foo()}catch(e){bar(e)}finally{baz()}}");
+    foldSame("function f(){try{foo()}catch(e){bar(e)}finally{baz()}}");
 
     // Try it out with switch statements
-    fold("function f(){switch(x){case 1:break}}",
-         "function f(){switch(x){case 1:break}}");
+    foldSame("function f(){switch(x){case 1:break}}");
 
     // Do while loops stay in a block if that's where they started
-    fold("function f(){if(e1){do foo();while(e2)}else foo2()}",
-         "function f(){if(e1){do foo();while(e2)}else foo2()}");
+    foldSame("function f(){if(e1){do foo();while(e2)}else foo2()}");
     // Test an obscure case with do and while
     fold("if(x){do{foo()}while(y)}else bar()",
          "if(x){do foo();while(y)}else bar()");

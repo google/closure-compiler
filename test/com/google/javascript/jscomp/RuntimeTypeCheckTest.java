@@ -108,7 +108,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   public void testUntypedParam() {
-    testChecks("/** ... */ function f(x) {}", "/** ... */ function f(x) {}");
+    testChecksSame("/** ... */ function f(x) {}");
   }
 
   public void testReturn() {
@@ -305,17 +305,20 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   public void testReturnNothing() {
-    testChecks("function f() { return; }", "function f() { return; }");
+    testChecksSame("function f() { return; }");
   }
 
   public void testFunctionType() {
-    testChecks(
-        "/** @type {!Function} */function f() {}",
-        "/** @type {!Function} */function f() {}");
+    testChecksSame("/** @type {!Function} */function f() {}");
   }
 
   private void testChecks(String js, String expected) {
     test(js, expected);
+    assertThat(getLastCompiler().injected).containsExactly("runtime_type_check");
+  }
+
+  private void testChecksSame(String js) {
+    testSame(js);
     assertThat(getLastCompiler().injected).containsExactly("runtime_type_check");
   }
 

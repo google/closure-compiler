@@ -175,13 +175,13 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testRestParameter() {
     test("function f(...p1: number[]) {}", "function f(/** ...number */ ...p1) {}");
-    test("function f(...p1) {}", "function f(...p1) {}");
+    testSame("function f(...p1) {}");
   }
 
   public void testReturnType() {
     test("function f(...p1: number[]): void {}",
          "/** @return{void} */ function f(/** ...number */ ...p1) {}");
-    test("function f(...p1) {}", "function f(...p1) {}");
+    testSame("function f(...p1) {}");
   }
 
   public void testBuiltins() {
