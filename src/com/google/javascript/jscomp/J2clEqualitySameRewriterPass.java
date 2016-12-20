@@ -84,12 +84,13 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
   }
 
   private void rewriteToEq(Node callNode, Node firstExpr, Node secondExpr, Eq eq) {
+    Node parent = callNode.getParent();
     firstExpr.detach();
     secondExpr.detach();
     Node replacement =
         eq == Eq.DOUBLE ? IR.eq(firstExpr, secondExpr) : IR.sheq(firstExpr, secondExpr);
-    callNode.replaceWith(replacement.useSourceInfoIfMissingFrom(callNode));
-    compiler.reportCodeChange();
+    parent.replaceChild(callNode, replacement.useSourceInfoIfMissingFrom(callNode));
+    compiler.reportChangeToEnclosingScope(parent);
   }
 
   private static boolean isEqualitySameCall(Node node) {

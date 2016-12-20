@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.PureFunctionIdentifier.Driver;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,9 +46,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, new EmptyClinitPruner());
 
     if (madeChange) {
-      compiler.reportCodeChange();
-      Driver findPureFunction = new Driver(compiler, null);
-      findPureFunction.process(externs, root);
+      new PureFunctionIdentifier.Driver(compiler, null).process(externs, root);
     }
   }
 
@@ -83,14 +80,14 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
-      tryRemovingClinit(t, node, parent);
+      tryRemovingClinit(node, parent);
 
       if (isNewControlBranch(parent)) {
         clinitsCalledAtBranch = clinitsCalledAtBranch.parent;
       }
     }
 
-    private void tryRemovingClinit(NodeTraversal t, Node node, Node parent) {
+    private void tryRemovingClinit(Node node, Node parent) {
       String clinitName = node.isCall() ? getClinitMethodName(node.getFirstChild()) : null;
       if (clinitName == null) {
         return;
@@ -103,7 +100,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
       // Replacing with '0' is a simple way of removing without introducing invalid AST.
       parent.replaceChild(node, Node.newNumber(0).useSourceInfoIfMissingFrom(node));
-      t.getCompiler().reportCodeChange();
+      compiler.reportChangeToEnclosingScope(parent);
       madeChange = true;
     }
 
@@ -161,6 +158,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       Node staticFnNode = var.getInitialValue();
       if (callsClinit(staticFnNode, clinitName) && hasSafeArguments(t, callOrNewNode)) {
         parent.removeChild(node);
+        compiler.reportChangeToEnclosingScope(parent);
         madeChange = true;
       }
     }
@@ -239,13 +237,13 @@ public class J2clClinitPrunerPass implements CompilerPass {
         return;
       }
 
-      trySubstituteEmptyFunction(node, t.getCompiler());
+      trySubstituteEmptyFunction(node);
     }
 
     /**
-     * Clears the body of any functions are are equivalent to empty functions.
+     * Clears the body of any functions that are equivalent to empty functions.
      */
-    private void trySubstituteEmptyFunction(Node fnNode, AbstractCompiler compiler) {
+    private void trySubstituteEmptyFunction(Node fnNode) {
       String fnQualifiedName = NodeUtil.getName(fnNode);
 
       // Ignore anonymous/constructor functions.
@@ -266,6 +264,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       }
 
       body.removeChild(firstExpr);
+      compiler.reportChangeToEnclosingScope(body);
       madeChange = true;
     }
 
