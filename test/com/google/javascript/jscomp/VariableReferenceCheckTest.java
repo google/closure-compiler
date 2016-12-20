@@ -259,6 +259,43 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertNoWarning("for (prop in obj) {}");
     assertNoWarning("var prop; for (prop in obj) {}");
   }
+
+  public void testGoogModule() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("goog.module('example'); var X = 3; use(X);");
+    assertUnused("goog.module('example'); var X = 3;");
+  }
+
+  public void testGoogModule_bundled() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("goog.loadModule(function(exports) { 'use strict';"
+                    + "goog.module('example'); var X = 3; use(X);"
+                    + "return exports; });");
+    assertUnused("goog.loadModule(function(exports) { 'use strict';"
+                 + "goog.module('example'); var X = 3;"
+                 + "return exports; });");
+  }
+
+  public void testGoogModule_destructuring() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarningEs6("goog.module('example'); var {x} = goog.require('y'); use(x);");
+    // We could warn here, but it's already caught by the extra require check.
+    assertNoWarningEs6("goog.module('example'); var {x} = goog.require('y');");
+  }
+
+  public void testGoogModule_require() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("goog.module('example'); var X = goog.require('foo.X'); use(X);");
+    // We could warn here, but it's already caught by the extra require check.
+    assertNoWarning("goog.module('example'); var X = goog.require('foo.X');");
+  }
+
+  public void testGoogModule_usedInTypeAnnotation() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning(
+        "goog.module('example'); var X = goog.require('foo.X'); /** @type {X} */ var y; use(y);");
+  }
+
   /**
    * Expects the JS to generate one bad-read error.
    */
