@@ -3936,6 +3936,20 @@ public final class IntegrationTest extends IntegrationTestCase {
             "(new d).a(100, 200);"));
   }
 
+  // GitHub issue #2203: https://github.com/google/closure-compiler/issues/2203
+  public void testPureFunctionIdentifierWorksWithMultipleNames() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(options,
+        LINE_JOINER.join(
+            "var SetCustomData1 = function SetCustomData2(element, dataName, dataValue) {",
+            "    var x = element['_customData'];",
+            "    x[dataName] = dataValue;",
+            "}",
+            "SetCustomData1(window, \"foo\", \"bar\");"),
+        "window._customData.foo=\"bar\";");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
