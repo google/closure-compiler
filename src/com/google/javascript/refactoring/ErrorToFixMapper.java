@@ -84,8 +84,9 @@ public final class ErrorToFixMapper {
       case "JSC_PROVIDES_NOT_SORTED":
         return getFixForUnsortedRequiresOrProvides("goog.provide", error, compiler);
       case "JSC_DEBUGGER_STATEMENT_PRESENT":
-      case "JSC_USELESS_EMPTY_STATEMENT":
         return removeNode(error, compiler);
+      case "JSC_USELESS_EMPTY_STATEMENT":
+        return removeEmptyStatement(error, compiler);
       case "JSC_INEXISTENT_PROPERTY":
         return getFixForInexistentProperty(error, compiler);
       case "JSC_MISSING_CALL_TO_SUPER":
@@ -234,6 +235,13 @@ public final class ErrorToFixMapper {
     return new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.node, compiler)
         .delete(error.node)
+        .build();
+  }
+
+  private static SuggestedFix removeEmptyStatement(JSError error, AbstractCompiler compiler) {
+    return new SuggestedFix.Builder()
+        .attachMatchedNodeInfo(error.node, compiler)
+        .deleteWithoutRemovingWhitespace(error.node)
         .build();
   }
 

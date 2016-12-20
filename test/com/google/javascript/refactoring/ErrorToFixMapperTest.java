@@ -76,6 +76,21 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testEmptyStatement1() {
+    assertChanges("var x;;", "var x;");
+  }
+
+  @Test
+  public void testEmptyStatement2() {
+    assertChanges("var x;;\nvar y;", "var x;\nvar y;");
+  }
+
+  @Test
+  public void testEmptyStatement3() {
+    assertChanges("function f() {};\nf();", "function f() {}\nf();");
+  }
+
+  @Test
   public void testRedeclaration() {
     String code = "function f() { var x; var x; }";
     String expectedCode = "function f() { var x; }";

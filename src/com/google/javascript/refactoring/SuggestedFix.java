@@ -194,6 +194,13 @@ public final class SuggestedFix {
       return delete(n, false);
     }
 
+    /** Deletes a node without touching any surrounding whitespace. */
+    public Builder deleteWithoutRemovingWhitespace(Node n) {
+      replacements.put(
+          n.getSourceFileName(), new CodeReplacement(n.getSourceOffset(), n.getLength(), ""));
+      return this;
+    }
+
     /**
      * Deletes a node and its contents from the source file.
      */
