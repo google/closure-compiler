@@ -211,4 +211,9 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
             "const {Foo} = goog.require('Bar');"),
         DUPLICATE_REQUIRE);
   }
+
+  // Just make sure we don't crash.
+  public void testEmptyRequire() {
+    testSame("goog.require();");
+  }
 }
