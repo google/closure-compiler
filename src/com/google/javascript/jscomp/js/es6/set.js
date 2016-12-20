@@ -135,6 +135,10 @@ $jscomp.polyfill('Set', function(NativeSet) {
   };
 
 
+  /** @override */
+  PolyfillSet.prototype.keys = PolyfillSet.prototype.values;
+
+
   /** @type {?} */ (PolyfillSet.prototype)[Symbol.iterator] =
       PolyfillSet.prototype.values;
 
