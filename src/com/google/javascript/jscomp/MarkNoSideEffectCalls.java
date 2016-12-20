@@ -182,6 +182,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
       if (maybeFunction) {
         node.setSideEffectFlags(Node.NO_SIDE_EFFECTS);
+        compiler.reportChangeToEnclosingScope(node);
       }
     }
   }

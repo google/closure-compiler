@@ -1319,9 +1319,11 @@ public abstract class CompilerTestCase extends TestCase {
         }
 
         if (computeSideEffects && i == 0) {
+          recentChange.reset();
           PureFunctionIdentifier.Driver mark =
               new PureFunctionIdentifier.Driver(compiler, null);
           mark.process(externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
         if (markNoSideEffects && i == 0) {
@@ -1416,8 +1418,8 @@ public abstract class CompilerTestCase extends TestCase {
         normalizeActualCode(compiler, externsRootClone, mainRootClone);
       }
 
-      boolean codeChange = !mainRootClone.isEquivalentTo(mainRoot);
-      boolean externsChange = !externsRootClone.isEquivalentTo(externsRoot);
+      boolean codeChange = !mainRootClone.isEquivalentWithSideEffectsTo(mainRoot);
+      boolean externsChange = !externsRootClone.isEquivalentWithSideEffectsTo(externsRoot);
 
       // Generally, externs should not be changed by the compiler passes.
       if (externsChange && !allowExternsChanges) {

@@ -284,8 +284,8 @@ public class Node implements Serializable {
 
     @Override
     boolean isEquivalentTo(
-        Node node, boolean compareType, boolean recur, boolean jsDoc) {
-      boolean equiv = super.isEquivalentTo(node, compareType, recur, jsDoc);
+        Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
+      boolean equiv = super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect);
       if (equiv) {
         double thisValue = getDouble();
         double thatValue = ((NumberNode) node).getDouble();
@@ -348,8 +348,8 @@ public class Node implements Serializable {
 
     @Override
     boolean isEquivalentTo(
-        Node node, boolean compareType, boolean recur, boolean jsDoc) {
-      return (super.isEquivalentTo(node, compareType, recur, jsDoc)
+        Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
+      return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
           && this.str.equals(((StringNode) node).str));
     }
 
@@ -1779,32 +1779,48 @@ public class Node implements Serializable {
   }
 
   /** Returns true if this node is equivalent semantically to another */
-  public boolean isEquivalentTo(Node node) {
-    return isEquivalentTo(node, false, true, false);
+  public final boolean isEquivalentTo(Node node) {
+    return isEquivalentTo(node, false, true, false, false);
+  }
+
+  /** Returns true if this node is equivalent semantically to another including side efffects. */
+  public final boolean isEquivalentWithSideEffectsTo(Node node) {
+    return isEquivalentTo(node, false, true, false, true);
   }
 
   /** Checks equivalence without going into child nodes */
-  public boolean isEquivalentToShallow(Node node) {
-    return isEquivalentTo(node, false, false, false);
+  public final boolean isEquivalentToShallow(Node node) {
+    return isEquivalentTo(node, false, false, false, false);
   }
 
   /**
-   * Returns true if this node is equivalent semantically to another and
-   * the types are equivalent.
+   * Returns true if this node is equivalent semantically to another and the types are equivalent.
    */
-  public boolean isEquivalentToTyped(Node node) {
-    return isEquivalentTo(node, true, true, true);
+  public final boolean isEquivalentToTyped(Node node) {
+    return isEquivalentTo(node, true, true, true, false);
   }
 
   /**
    * @param compareType Whether to compare the JSTypes of the nodes.
-   * @param recurse Whether to compare the children of the current node, if
-   *    not only the the count of the children are compared.
+   * @param recurse Whether to compare the children of the current node, if not only the the count
+   *     of the children are compared.
    * @param jsDoc Whether to check that the JsDoc of the nodes are equivalent.
    * @return Whether this node is equivalent semantically to the provided node.
    */
+  final boolean isEquivalentTo(Node node, boolean compareType, boolean recurse, boolean jsDoc) {
+    return isEquivalentTo(node, compareType, recurse, jsDoc, false);
+  }
+
+  /**
+   * @param compareType Whether to compare the JSTypes of the nodes.
+   * @param recurse Whether to compare the children of the current node, if not only the the count
+   *     of the children are compared.
+   * @param jsDoc Whether to check that the JsDoc of the nodes are equivalent.
+   * @param sideEffect Whether to check that the side-effect flags of the nodes are equivalent.
+   * @return Whether this node is equivalent semantically to the provided node.
+   */
   boolean isEquivalentTo(
-      Node node, boolean compareType, boolean recurse, boolean jsDoc) {
+      Node node, boolean compareType, boolean recurse, boolean jsDoc, boolean sideEffect) {
     if (token != node.token
         || getChildCount() != node.getChildCount()
         || this.getClass() != node.getClass()) {
@@ -1857,11 +1873,17 @@ public class Node implements Serializable {
       }
     }
 
+    if (sideEffect) {
+      if (this.getSideEffectFlags() != node.getSideEffectFlags()) {
+        return false;
+      }
+    }
+
     if (recurse) {
       for (Node n = first, n2 = node.first;
            n != null;
            n = n.next, n2 = n2.next) {
-        if (!n.isEquivalentTo(n2, compareType, recurse, jsDoc)) {
+        if (!n.isEquivalentTo(n2, compareType, recurse, jsDoc, sideEffect)) {
           return false;
         }
       }

@@ -403,7 +403,11 @@ class PureFunctionIdentifier implements CompilerPass {
         }
       }
 
-      callNode.setSideEffectFlags(flags.valueOf());
+      int newSideEffectFlags = flags.valueOf();
+      if (callNode.getSideEffectFlags() != newSideEffectFlags) {
+        callNode.setSideEffectFlags(newSideEffectFlags);
+        compiler.reportChangeToEnclosingScope(callNode);
+      }
     }
   }
 
