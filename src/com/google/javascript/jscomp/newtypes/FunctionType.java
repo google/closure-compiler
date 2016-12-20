@@ -780,6 +780,9 @@ public final class FunctionType {
     if (this == this.commonTypes.LOOSE_TOP_FUNCTION || other.isTopFunction() || other.isLoose()) {
       return true;
     }
+    if (other.isGeneric()) {
+      other = instantiateGenericsWithUnknown(other);
+    }
     if (!acceptsAnyArguments()) {
       if (other.requiredFormals.size() > this.requiredFormals.size()) {
         return false;

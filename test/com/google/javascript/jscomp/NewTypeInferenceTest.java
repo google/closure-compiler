@@ -6301,6 +6301,49 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return y;",
         "}",
         "f(function() {});"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} elem",
+        " * @return {!Array<T>}",
+        " * @template T",
+        " */",
+        "function singleton(elem) {",
+        "  return [elem];",
+        "}",
+        "/**",
+        " * @param {function(P): R} fun",
+        " * @param {P} arg",
+        " * @return {R}",
+        " * @template P, R",
+        " */",
+        "function apply(fun, arg) {",
+        "  return fun(arg);",
+        "}",
+        // We infer that apply returns Array<?>.
+        // Inferring Array<string> is harder; it's not clear how to do it in a general way.
+        "var /** number */ x = apply(singleton, 'x')[0];"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return x; }",
+        "/**",
+        " * @template U",
+        " * @param {U} x",
+        " * @return {U}",
+        " */",
+        "function g(x) { return x; }",
+        "/**",
+        " * @template R",
+        " * @param {function(R):R} x",
+        " * @param {function(R):R} y",
+        " */",
+        "function h(x, y) {}",
+        "h(f, g);"));
   }
 
   public void testGenericReturnType() {
