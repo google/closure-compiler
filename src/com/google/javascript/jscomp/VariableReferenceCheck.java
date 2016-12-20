@@ -395,31 +395,34 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         }
       }
 
-      // Only check for unused local if there are no other errors, and if not in a goog.scope
-      // function.
-      // TODO(tbreisacher): Consider moving UNUSED_LOCAL_ASSIGNMENT into its own check pass, so
-      // that we can run it after goog.scope processing, and get rid of the inGoogScope check.
       if (unusedAssignment != null && !isRead && !hasErrors) {
-        boolean inGoogScope = false;
-        Scope s = v.getScope();
-        Node function = null;
-        if (s.isFunctionBlockScope()) {
-          function = s.getRootNode().getParent();
-        } else if (s.isFunctionScope()) {
-          // TODO(tbreisacher): Remove this branch when everything is switched to
-          // Es6SyntacticScopeCreator.
-          function = s.getRootNode();
-        }
-        if (function != null) {
-          Node callee = function.getPrevious();
-          inGoogScope = callee != null && callee.matchesQualifiedName("goog.scope");
-        }
-
-        if (!inGoogScope) {
-          compiler.report(
-              JSError.make(unusedAssignment.getNode(), UNUSED_LOCAL_ASSIGNMENT, v.name));
-        }
+        checkForUnusedLocalVar(v, unusedAssignment);
       }
+    }
+  }
+
+  // Only check for unused local if not in a goog.scope function.
+  // TODO(tbreisacher): Consider moving UNUSED_LOCAL_ASSIGNMENT into its own check pass, so
+  // that we can run it after goog.scope processing, and get rid of the inGoogScope check.
+  private void checkForUnusedLocalVar(Var v, Reference unusedAssignment) {
+    boolean inGoogScope = false;
+    Scope s = v.getScope();
+    Node function = null;
+    if (s.isFunctionBlockScope()) {
+      function = s.getRootNode().getParent();
+    } else if (s.isFunctionScope()) {
+      // TODO(tbreisacher): Remove this branch when everything is switched to
+      // Es6SyntacticScopeCreator.
+      function = s.getRootNode();
+    }
+    if (function != null) {
+      Node callee = function.getPrevious();
+      inGoogScope = callee != null && callee.matchesQualifiedName("goog.scope");
+    }
+
+    if (!inGoogScope) {
+      compiler.report(
+          JSError.make(unusedAssignment.getNode(), UNUSED_LOCAL_ASSIGNMENT, v.name));
     }
   }
 }
