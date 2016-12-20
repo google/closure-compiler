@@ -420,24 +420,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       inGoogScope = callee != null && callee.matchesQualifiedName("goog.scope");
     }
 
-    if (inGoogScope) {
-      // No warning.
-      return;
+    if (!inGoogScope) {
+      compiler.report(
+          JSError.make(unusedAssignment.getNode(), UNUSED_LOCAL_ASSIGNMENT, v.name));
     }
-
-    if (s.isModuleScope()) {
-      Node statement = NodeUtil.getEnclosingStatement(v.getNode());
-      if (NodeUtil.isNameDeclaration(statement)) {
-        Node lhs = statement.getFirstChild();
-        Node rhs = lhs.getFirstChild();
-        if (rhs.isCall() && rhs.getFirstChild().matchesQualifiedName("goog.require")) {
-          // No warning. Will be caught by the unused-require check anyway.
-          return;
-        }
-      }
-    }
-
-    compiler.report(
-        JSError.make(unusedAssignment.getNode(), UNUSED_LOCAL_ASSIGNMENT, v.name));
   }
 }
