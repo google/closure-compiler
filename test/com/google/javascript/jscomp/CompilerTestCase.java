@@ -1216,6 +1216,7 @@ public abstract class CompilerTestCase extends TestCase {
       DiagnosticType error,
       DiagnosticType warning,
       String description) {
+    Preconditions.checkState(!this.typeCheckEnabled || !this.newTypeInferenceEnabled);
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
 

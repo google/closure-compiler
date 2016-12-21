@@ -27,6 +27,7 @@ import java.util.Set;
 /**
  * A compiler pass to normalize externs by declaring global names on
  * the "window" object, if it is declared in externs.
+ * The new declarations are added to the window instance, not to Window.prototype.
  */
 class DeclaredGlobalExternsOnWindow
     extends NodeTraversal.AbstractShallowStatementCallback

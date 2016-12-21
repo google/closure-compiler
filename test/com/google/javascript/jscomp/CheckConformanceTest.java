@@ -91,7 +91,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableTypeCheck();
     super.enableClosurePass();
     configuration = DEFAULT_CONFORMANCE;
   }
