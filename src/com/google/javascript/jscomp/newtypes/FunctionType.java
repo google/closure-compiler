@@ -1073,9 +1073,8 @@ public final class FunctionType {
     }
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
     for (int i = 0, size = argTypes.size(); i < size; i++) {
-      if (!this.getFormalType(i)
-          .unifyWithSubtype(argTypes.get(i), typeParameters, typeMultimap,
-              SubtypeCache.create())) {
+      if (!this.getFormalType(i).unifyWithSubtype(
+          argTypes.get(i), typeParameters, typeMultimap, SubtypeCache.create())) {
         return null;
       }
     }
