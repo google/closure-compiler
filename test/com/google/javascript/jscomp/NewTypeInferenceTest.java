@@ -18473,4 +18473,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  }",
         "}"));
   }
+
+  public void testFunctionDeclsWithoutFunctionLiteralOnNamespaces() {
+    typeCheck(
+        "window.setTimeout(123);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/** @param {number} x */",
+            "ns.foobar;"),
+        "ns.foobar('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }

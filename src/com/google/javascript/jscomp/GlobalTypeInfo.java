@@ -1603,8 +1603,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     // Used when declaring constructor and namespace properties. Prototype property
     // declarations are similar, but different enough that they didn't neatly fit
     // in this method (eg, redeclaration warnings are stricter).
-    PropertyType getPropTypeHelper(
-        JSDocInfo jsdoc, Node initializer, RawNominalType thisType) {
+    PropertyType getPropTypeHelper(JSDocInfo jsdoc, Node declNode, RawNominalType thisType) {
+      Node initializer = NodeUtil.getRValueOfLValue(declNode);
       PropertyType result = new PropertyType();
       DeclaredFunctionType dft = null;
       if (initializer != null && initializer.isFunction()) {
@@ -1612,6 +1612,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
       if (jsdoc != null && jsdoc.hasType()) {
         result.declType = getDeclaredTypeOfNode(jsdoc, currentScope);
+      } else if (initializer == null && jsdoc != null && jsdoc.containsFunctionDeclaration()) {
+        // We're parsing a function declaration without a function initializer
+        Preconditions.checkState(declNode.isGetProp() && declNode.getParent().isExprResult());
+        dft = computeFnDeclaredType(
+            jsdoc, declNode.getLastChild().getString(), declNode, null, currentScope);
+        result.declType = commonTypes.fromFunctionType(dft.toFunctionType());
       } else if (initializer != null && initializer.isFunction()) {
         JSType funType = commonTypes.fromFunctionType(dft.toFunctionType());
         if ((jsdoc != null && jsdoc.containsFunctionDeclaration())
@@ -1780,8 +1786,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
-      Node initializer = NodeUtil.getRValueOfLValue(declNode);
-      PropertyType pt = getPropTypeHelper(jsdoc, initializer, null);
+      PropertyType pt = getPropTypeHelper(jsdoc, declNode, null);
       JSType propDeclType = pt.declType;
       JSType propInferredFunType = pt.inferredFunType;
       boolean isConst = isConst(declNode);
@@ -1808,8 +1813,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         ns.addUndeclaredProperty(pname, declNode, propInferredFunType, false);
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
-        JSType t = initializer == null
-            ? null : simpleInferExprType(initializer);
+        Node initializer = NodeUtil.getRValueOfLValue(declNode);
+        JSType t = initializer == null ? null : simpleInferExprType(initializer);
         if (t == null) {
           t = commonTypes.UNKNOWN;
         }
@@ -1833,7 +1838,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       RawNominalType rawType = thisType.getRawNominalType();
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
-      PropertyType pt = getPropTypeHelper(jsdoc, initializer, rawType);
+      PropertyType pt = getPropTypeHelper(jsdoc, getProp, rawType);
       JSType propDeclType = pt.declType;
       JSType propInferredFunType = pt.inferredFunType;
       boolean isConst = isConst(getProp);
