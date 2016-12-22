@@ -231,7 +231,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     Node parent = n.getParent();
     Preconditions.checkState(parent.isExprResult());
     String name = n.getSecondChild().getString();
-    Node value = n.getChildAtIndex(2).detach();
+    Node value = n.isFromExterns() ? null : n.getChildAtIndex(2).detach();
 
     Node replacement = NodeUtil.newQNameDeclaration(
         compiler, name, value, n.getJSDocInfo());
@@ -1045,7 +1045,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     // Verify second arg
     arg = arg.getNext();
-    if (!verifyNotNull(t, methodName, arg) || !verifyIsLast(t, methodName, arg)) {
+    if (!args.isFromExterns()
+        && (!verifyNotNull(t, methodName, arg) || !verifyIsLast(t, methodName, arg))) {
       return false;
     }
 

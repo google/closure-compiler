@@ -231,6 +231,9 @@ class ConvertToTypedInterface implements CompilerPass {
                   parent.removeChild(childBefore);
                   compiler.reportCodeChange();
                 }
+              } else if (callee.matchesQualifiedName("goog.define")) {
+                expr.getLastChild().detach();
+                compiler.reportCodeChange();
               } else if (!callee.matchesQualifiedName("goog.require")
                   && !callee.matchesQualifiedName("goog.module")) {
                 n.detach();

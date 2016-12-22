@@ -430,6 +430,9 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   public void testDefines() {
     // NOTE: This is another pattern that is only allowed in externs.
     test("/** @define {number} */ var x = 5;", "/** @define {number} */ var x;");
+
+    test("/** @define {number} */ goog.define('goog.BLAH', 5);",
+         "/** @define {number} */ goog.define('goog.BLAH');");
   }
 
   public void testIfs() {
