@@ -4926,6 +4926,25 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               "Cannot do '[]' access on a struct");
   }
 
+  public void testGetelemStruct_noErrorForSettingWellKnownSymbol() throws Exception {
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "Foo.prototype[Symbol.iterator] = 123;\n");
+  }
+
+  public void testGetelemStruct_noErrorForGettingWellKnownSymbol() throws Exception {
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "/** @param {!Foo} foo */\n" +
+              "function getIterator(foo) { return foo[Symbol.iterator](); }\n");
+  }
+
   public void testInOnStruct() throws Exception {
     testTypes("/**\n" +
               " * @constructor\n" +

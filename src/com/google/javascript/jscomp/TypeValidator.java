@@ -384,7 +384,7 @@ class TypeValidator {
                         JSType indexType) {
     Preconditions.checkState(n.isGetElem(), n);
     Node indexNode = n.getLastChild();
-    if (objType.isStruct()) {
+    if (objType.isStruct() && !isWellKnownSymbol(indexNode)) {
       report(JSError.make(indexNode,
                           ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
     }
@@ -408,6 +408,14 @@ class TypeValidator {
             typeRegistry.createUnionType(ARRAY_TYPE, OBJECT_TYPE));
       }
     }
+  }
+
+  // TODO(sdh): Replace isWellKnownSymbol with a real type-based
+  // check once the type system understands the symbol primitive.
+  // Any @const symbol reference should be allowed for a @struct.
+  private static boolean isWellKnownSymbol(Node n) {
+    return n.isGetProp() && n.getFirstChild().isName()
+        && n.getFirstChild().getString().equals("Symbol");
   }
 
   /**
