@@ -1612,9 +1612,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
       if (jsdoc != null && jsdoc.hasType()) {
         result.declType = getDeclaredTypeOfNode(jsdoc, currentScope);
-      } else if (initializer == null && jsdoc != null && jsdoc.containsFunctionDeclaration()) {
+      } else if (jsdoc != null && jsdoc.containsFunctionDeclaration()
+          && (initializer == null || !initializer.isFunction())) {
         // We're parsing a function declaration without a function initializer
-        Preconditions.checkState(declNode.isGetProp() && declNode.getParent().isExprResult());
+        Preconditions.checkState(declNode.isGetProp());
         dft = computeFnDeclaredType(
             jsdoc, declNode.getLastChild().getString(), declNode, null, currentScope);
         result.declType = commonTypes.fromFunctionType(dft.toFunctionType());

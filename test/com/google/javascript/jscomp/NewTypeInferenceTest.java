@@ -18487,4 +18487,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "ns.foobar('asdf');",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
+
+  public void testGoogJsonStyleWeirdFunctionDeclaration() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        // NOTE(dimvar): this jsdoc is not used to typecheck the function literals,
+        // they are considered unannotated functions.
+        "/** @param {string} s */",
+        "ns.jsonparse = 1 < 2 ? function(s) {} : function(s) {};",
+        "function f() {",
+        "  ns.jsonparse(123);",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }
