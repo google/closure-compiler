@@ -1208,6 +1208,9 @@ angular.$ariaProvider.prototype.config = function(config) {};
  */
 angular.$compile;
 
+/** @const */
+angular.compile = {}
+
 /**
  * @record
  */
