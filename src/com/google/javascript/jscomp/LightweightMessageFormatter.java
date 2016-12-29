@@ -33,6 +33,8 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
   private SourceExcerpt excerpt;
   private static final ExcerptFormatter excerptFormatter =
       new LineNumberingFormatter();
+  private boolean includeLocation = true;
+  private boolean includeLevel = true;
 
   /**
    * A constructor for when the client doesn't care about source information.
@@ -57,6 +59,16 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     return new LightweightMessageFormatter();
   }
 
+  public LightweightMessageFormatter setIncludeLocation(boolean includeLocation) {
+    this.includeLocation = includeLocation;
+    return this;
+  }
+
+  public LightweightMessageFormatter setIncludeLevel(boolean includeLevel) {
+    this.includeLevel = includeLevel;
+    return this;
+  }
+
   @Override
   public String formatError(JSError error) {
     return format(error, false);
@@ -79,18 +91,20 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     String nonMappedPosition = formatPosition(sourceName, lineNumber);
 
     // Check if we can reverse-map the source.
-    OriginalMapping mapping = source == null ? null : source.getSourceMapping(
-        error.sourceName, error.lineNumber, error.getCharno());
-    if (mapping == null) {
-      boldLine.append(nonMappedPosition);
-    } else {
-      sourceName = mapping.getOriginalFile();
-      lineNumber = mapping.getLineNumber();
-      charno = mapping.getColumnPosition();
+    if (includeLocation) {
+      OriginalMapping mapping = source == null ? null : source.getSourceMapping(
+          error.sourceName, error.lineNumber, error.getCharno());
+      if (mapping == null) {
+        boldLine.append(nonMappedPosition);
+      } else {
+        sourceName = mapping.getOriginalFile();
+        lineNumber = mapping.getLineNumber();
+        charno = mapping.getColumnPosition();
 
-      b.append(nonMappedPosition);
-      b.append("\nOriginally at:\n");
-      boldLine.append(formatPosition(sourceName, lineNumber));
+        b.append(nonMappedPosition);
+        b.append("\nOriginally at:\n");
+        boldLine.append(formatPosition(sourceName, lineNumber));
+      }
     }
 
     // extract source excerpt
@@ -98,8 +112,10 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
         excerpt.get(
             source, sourceName, lineNumber, excerptFormatter);
 
-    boldLine.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
-    boldLine.append(" - ");
+    if (includeLevel) {
+      boldLine.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
+      boldLine.append(" - ");
+    }
 
     boldLine.append(error.description);
 

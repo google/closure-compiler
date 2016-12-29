@@ -60,24 +60,22 @@ public class Linter {
   }
 
   static void lint(String filename) throws IOException {
-    lint(Paths.get(filename), false);
+    lint(Paths.get(filename), new Compiler(System.out));
   }
 
   static void fix(String filename) throws IOException {
-    lint(Paths.get(filename), true);
+     Compiler compiler = new Compiler(System.out);
+     FixingErrorManager errorManager = new FixingErrorManager();
+     compiler.setErrorManager(errorManager);
+     errorManager.setCompiler(compiler);
+
+     lint(Paths.get(filename), compiler);
+
+     ApplySuggestedFixes.applySuggestedFixesToFiles(errorManager.getAllFixes());
   }
 
-  private static void lint(Path path, boolean fix) throws IOException {
+ static void lint(Path path, Compiler compiler) throws IOException {
     SourceFile file = SourceFile.fromFile(path.toString());
-    Compiler compiler = new Compiler(System.out);
-
-    FixingErrorManager errorManager = null;
-    if (fix) {
-      errorManager = new FixingErrorManager();
-      compiler.setErrorManager(errorManager);
-      errorManager.setCompiler(compiler);
-    }
-
     CompilerOptions options = new CompilerOptions();
     options.setLanguage(LanguageMode.ECMASCRIPT8);
 
@@ -102,8 +100,5 @@ public class Linter {
     compiler.disableThreads();
     SourceFile externs = SourceFile.fromCode("<Linter externs>", "");
     compiler.compile(ImmutableList.<SourceFile>of(externs), ImmutableList.of(file), options);
-    if (fix) {
-      ApplySuggestedFixes.applySuggestedFixesToFiles(errorManager.getAllFixes());
-    }
   }
 }
