@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
 
 /** An optimization pass to re-write J2CL Equality.$same. */
 public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
@@ -68,19 +67,6 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
       rewriteToEq(callNode, firstExpr, secondExpr, Eq.TRIPLE);
       return;
     }
-
-    // "--use_types_for_optimization" must be on to enable the following type check.
-    if (!compiler.getOptions().useTypesForLocalOptimization) {
-      return;
-    }
-
-    JSType firstType = getTypeRestrictByNotNullOrUndefined(firstExpr);
-    JSType secondType = getTypeRestrictByNotNullOrUndefined(secondExpr);
-    if (isObjectType(firstType) || isObjectType(secondType) || sameType(firstType, secondType)) {
-      // Typeof is same for both so no coersion danger.
-      rewriteToEq(callNode, firstExpr, secondExpr, Eq.DOUBLE);
-      return;
-    }
   }
 
   private void rewriteToEq(Node callNode, Node firstExpr, Node secondExpr, Eq eq) {
@@ -105,22 +91,5 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
     // like other j2cl passes, which is more precise.
     String originalQname = fnName.getOriginalQualifiedName();
     return originalQname.endsWith(".$same") && originalQname.contains("Equality");
-  }
-
-  private static JSType getTypeRestrictByNotNullOrUndefined(Node node) {
-    JSType jsType = node.getJSType();
-    return jsType == null ? null : jsType.restrictByNotNullOrUndefined();
-  }
-
-  private static boolean isObjectType(JSType jsType) {
-    return !isUnknownType(jsType) && jsType.isObject();
-  }
-
-  private static boolean sameType(JSType jsType1, JSType jsType2) {
-    return !isUnknownType(jsType1) && !isUnknownType(jsType2) && jsType1.equals(jsType2);
-  }
-
-  private static boolean isUnknownType(JSType jsType) {
-    return jsType == null || jsType.isUnknownType() || jsType.isNoType() || jsType.isAllType();
   }
 }

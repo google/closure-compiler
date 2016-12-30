@@ -37,7 +37,6 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.useTypesForLocalOptimization = useTypesForOptimization;
     options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
     return options;
   }
@@ -52,24 +51,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(b, 5);",
             "Equality.$same(b, []);",
             "Equality.$same(b, null);",
-            "Equality.$same(null, b);",
-            "/** @type {number|undefined} */",
-            "var num1 = 5;",
-            "/** @type {?number} */",
-            "var num2 = 5;",
-            "Equality.$same(num1, num2);",
-            "/** @type {string} */",
-            "var str1 = '';",
-            "/** @type {string|undefined} */",
-            "var str2 = 'abc';",
-            "Equality.$same(str1, str2);",
-            "/** @type {!Object} */",
-            "var obj1 = {};",
-            "/** @type {Object} */",
-            "var obj2 = null;",
-            "Equality.$same(obj1, obj2);",
-            "Equality.$same(obj1, str2);",
-            "Equality.$same(obj1, num2);"),
+            "Equality.$same(null, b);"),
         LINE_JOINER.join(
             "0 === '';",
             "var a = 'ABC';",
@@ -78,24 +60,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "b === 5;",
             "b === [];",
             "b == null;",
-            "null == b;",
-            "/** @type {number|undefined} */",
-            "var num1 = 5;",
-            "/** @type {?number} */",
-            "var num2 = 5;",
-            "num1 == num2;",
-            "/** @type {string} */",
-            "var str1 = '';",
-            "/** @type {string|undefined} */",
-            "var str2 = 'abc';",
-            "str1 == str2;",
-            "/** @type {!Object} */",
-            "var obj1 = {};",
-            "/** @type {Object} */",
-            "var obj2 = null;",
-            "obj1 == obj2;",
-            "obj1 == str2;",
-            "obj1 == num2;"));
+            "null == b;"));
   }
 
   public void testNotRewriteEqualitySame() {
@@ -113,18 +78,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(str, allType);"));
   }
 
-  public void testNotRewriteEqualitySame_allType() {
-    testSame(
-        LINE_JOINER.join(
-            "/** @type {*} */",
-            "var allType1 = 1;",
-            "/** @type {*} */",
-            "var allType2 = '1';",
-            "Equality.$same(allType1, allType2);"));
-  }
-
-  public void testNotRewriteEqualitySame_noTypeCheck() {
-    useTypesForOptimization = false;
+  public void testNotRewriteEqualitySame_sameTypes() {
     testSame(
         LINE_JOINER.join(
             "/** @type {number|undefined} */",
@@ -143,6 +97,11 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "var obj2 = null;",
             "Equality.$same(obj1, obj2);",
             "Equality.$same(obj1, str2);",
-            "Equality.$same(obj1, num2);"));
+            "Equality.$same(obj1, num2);",
+            "/** @type {*} */",
+            "var allType1 = 1;",
+            "/** @type {*} */",
+            "var allType2 = '1';",
+            "Equality.$same(allType1, allType2);"));
   }
 }
