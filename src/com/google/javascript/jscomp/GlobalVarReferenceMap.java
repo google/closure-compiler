@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
@@ -25,6 +24,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,24 +44,22 @@ class GlobalVarReferenceMap implements ReferenceMap {
 
   private Map<String, ReferenceCollection> refMap = null;
 
-  private final ImmutableMap<InputId, Integer> inputOrder;
+  private final Map<InputId, Integer> inputOrder;
 
   /**
    * @param inputs The ordered list of all inputs for the compiler.
    */
   GlobalVarReferenceMap(List<CompilerInput> inputs, List<CompilerInput> externs) {
-    ImmutableMap.Builder<InputId, Integer> inputOrderBuilder = ImmutableMap.builder();
-
+    inputOrder = new HashMap<>();
     int ind = 0;
     for (CompilerInput extern : externs) {
-      inputOrderBuilder.put(extern.getInputId(), ind);
+      inputOrder.put(extern.getInputId(), ind);
       ind++;
     }
     for (CompilerInput input : inputs) {
-      inputOrderBuilder.put(input.getInputId(), ind);
+      inputOrder.put(input.getInputId(), ind);
       ind++;
     }
-    inputOrder = inputOrderBuilder.build();
   }
 
   @Override
