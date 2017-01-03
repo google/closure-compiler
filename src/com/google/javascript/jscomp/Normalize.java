@@ -67,8 +67,8 @@ class Normalize implements CompilerPass {
   public static final DiagnosticType CATCH_BLOCK_VAR_ERROR =
     DiagnosticType.error(
         "JSC_CATCH_BLOCK_VAR_ERROR",
-        "The use of scope variable {0} is not allowed within a catch block " +
-        "with a catch exception of the same name.");
+        "The use of scope variable {0} is not allowed within a catch block"
+        + " with a catch exception of the same name.");
 
 
   Normalize(AbstractCompiler compiler, boolean assertOnChange) {
@@ -238,16 +238,16 @@ class Normalize implements CompilerPass {
         }
 
         boolean shouldBeConstant =
-            (info != null && info.isConstant()) ||
-            NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n);
+            (info != null && info.isConstant())
+            || NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n);
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (shouldBeConstant && !isMarkedConstant) {
           if (assertOnChange) {
             String name = n.getString();
             throw new IllegalStateException(
-                "Unexpected const change.\n" +
-                "  name: "+ name + "\n" +
-                "  parent:" + n.getParent().toStringTree());
+                "Unexpected const change.\n"
+                + "  name: " + name + "\n"
+                + "  parent:" + n.getParent().toStringTree());
           }
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
@@ -261,8 +261,8 @@ class Normalize implements CompilerPass {
   static class VerifyConstants extends AbstractPostOrderCallback
       implements CompilerPass {
 
-    final private AbstractCompiler compiler;
-    final private boolean checkUserDeclarations;
+    private final AbstractCompiler compiler;
+    private final boolean checkUserDeclarations;
 
     VerifyConstants(AbstractCompiler compiler, boolean checkUserDeclarations) {
       this.compiler = compiler;
@@ -418,20 +418,17 @@ class Normalize implements CompilerPass {
       // may be a variable reference: The right side of a GETPROP
       // or an OBJECTLIT key.
       boolean isObjLitKey = NodeUtil.isObjectLitKey(n);
-      boolean isProperty = isObjLitKey ||
-          (parent.isGetProp() &&
-           parent.getLastChild() == n);
+      boolean isProperty = isObjLitKey || (parent.isGetProp() && parent.getLastChild() == n);
       if (n.isName() || isProperty) {
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
-        if (!isMarkedConstant &&
-            NodeUtil.isConstantByConvention(
-                compiler.getCodingConvention(), n)) {
+        if (!isMarkedConstant
+            && NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n)) {
           if (assertOnChange) {
             String name = n.getString();
             throw new IllegalStateException(
-                "Unexpected const change.\n" +
-                "  name: "+ name + "\n" +
-                "  parent:" + n.getParent().toStringTree());
+                "Unexpected const change.\n"
+                + "  name: " + name + "\n"
+                + "  parent:" + n.getParent().toStringTree());
           }
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }

@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.VariableReferenceCheck.EARLY_REFERENCE;
+import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VARIABLE;
+import static com.google.javascript.jscomp.VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT;
+
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
@@ -163,8 +167,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     testSameEs6("for (let [key, [nestKey, nestVal], val] of X){}");
 
     testSameEs6("var {x: a, y: b} = {x: 1, y: 2}; a++; b++;");
-    testWarningEs6("a++; var {x: a} = {x: 1};",
-        VariableReferenceCheck.EARLY_REFERENCE);
+    testWarningEs6("a++; var {x: a} = {x: 1};", EARLY_REFERENCE);
   }
 
   public void testNoWarnInExterns1() {
@@ -263,21 +266,21 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
    * Expects the JS to generate one bad-read error.
    */
   private void assertRedeclare(String js) {
-    testWarning(js, VariableReferenceCheck.REDECLARED_VARIABLE);
+    testWarning(js, REDECLARED_VARIABLE);
   }
 
   /**
    * Expects the JS to generate one bad-write warning.
    */
   private void assertUndeclared(String js) {
-    testWarning(js, VariableReferenceCheck.EARLY_REFERENCE);
+    testWarning(js, EARLY_REFERENCE);
   }
 
   /**
    * Expects the JS to generate one bad-write warning.
    */
   private void assertUndeclaredEs6(String js) {
-    testWarningEs6(js, VariableReferenceCheck.EARLY_REFERENCE);
+    testWarningEs6(js, EARLY_REFERENCE);
   }
 
   /**
@@ -291,14 +294,14 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
    * Expects the JS to generate one unused local error.
    */
   private void assertUnused(String js) {
-    testWarning(js, VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
+    testWarning(js, UNUSED_LOCAL_ASSIGNMENT);
   }
 
   /**
    * Expects the JS to generate one unused local error.
    */
   private void assertUnusedEs6(String js) {
-    testWarningEs6(js, VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
+    testWarningEs6(js, UNUSED_LOCAL_ASSIGNMENT);
   }
 
   /**

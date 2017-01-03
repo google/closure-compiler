@@ -179,18 +179,21 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testMoveFunctions1() throws Exception {
     test("function f() { if (x) return; foo(); function foo() {} }",
          "function f() {function foo() {} if (x) return; foo(); }");
-    test("function f() { " +
-            "function foo() {} " +
-            "if (x) return;" +
-            "foo(); " +
-            "function bar() {} " +
-         "}",
-         "function f() {" +
-           "function foo() {}" +
-           "function bar() {}" +
-           "if (x) return;" +
-           "foo();" +
-         "}");
+    test(
+        LINE_JOINER.join(
+            "function f() { ",
+            "function foo() {} ",
+            "if (x) return;",
+            "foo(); ",
+            "function bar() {} ",
+            "}"),
+        LINE_JOINER.join(
+            "function f() {",
+            "function foo() {}",
+            "function bar() {}",
+            "if (x) return;",
+            "foo();",
+            "}"));
   }
 
   public void testMoveFunctions2() throws Exception {
@@ -356,23 +359,27 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testIssue166b() {
-    testError("function a() {" +
-         "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }" +
-         "};",
+    testError(
+        LINE_JOINER.join(
+            "function a() {",
+            "  try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
+            "};"),
          Normalize.CATCH_BLOCK_VAR_ERROR);
   }
 
   public void testIssue166c() {
-    testError("var e = 0; try { throw 1 } catch(e) {" +
-        "/** @suppress {duplicate} */ var e=2 }",
+    testError(
+        "var e = 0; try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
         Normalize.CATCH_BLOCK_VAR_ERROR);
   }
 
   public void testIssue166d() {
-    testError("function a() {" +
-        "var e = 0; try { throw 1 } catch(e) {" +
-            "/** @suppress {duplicate} */ var e=2 }" +
-        "};",
+    testError(
+        LINE_JOINER.join(
+            "function a() {",
+            "  var e = 0;",
+            "  try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
+            "};"),
         Normalize.CATCH_BLOCK_VAR_ERROR);
   }
 
@@ -382,12 +389,17 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testIssue166f() {
-    test("function a() {" +
-         "var e = 2; try { throw 1 } catch(e) {}" +
-         "}",
-         "function a() {" +
-         "var e = 2; try { throw 1 } catch(e$jscomp$1) {}" +
-         "}");
+    test(
+        LINE_JOINER.join(
+            "function a() {",
+            "  var e = 2;",
+            "  try { throw 1 } catch(e) {}",
+            "}"),
+        LINE_JOINER.join(
+             "function a() {",
+             "  var e = 2;",
+             "  try { throw 1 } catch(e$jscomp$1) {}",
+             "}"));
   }
 
   public void testIssue() {
@@ -442,8 +454,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testGetterPropertyIsConstant() throws Exception {
-    testSame("var a = { get CONST() {return 3} }; " +
-             "var b = a.CONST;");
+    testSame("var a = { get CONST() {return 3} }; var b = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
@@ -455,8 +466,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public void testSetterPropertyIsConstant() throws Exception {
     // Verifying that a SET is properly annotated.
-    testSame("var a = { set CONST(b) {throw 'invalid'} }; " +
-             "var c = a.CONST;");
+    testSame("var a = { set CONST(b) {throw 'invalid'} }; var c = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
