@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +40,7 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
   private static final Pattern PACKAGE_WITH_TEST_DIR =
     Pattern.compile("^(.*)/(?:test|tests|testing)/(?:[^/]+)$");
 
-  private static final Pattern GENFILES_DIR = Pattern.compile("^.*/genfiles/(.*)$");
+  private static final Pattern GENFILES_DIR = Pattern.compile("-out/.*/(bin|genfiles)/(.*)$");
 
   /** By default, decorate the ClosureCodingConvention. */
   public GoogleCodingConvention() {
@@ -167,8 +166,9 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
     String name = source.getName();
     Matcher genfilesMatcher = GENFILES_DIR.matcher(name);
     if (genfilesMatcher.find()) {
-      name = genfilesMatcher.group(1);
+      name = genfilesMatcher.group(2);
     }
+
     Matcher m = PACKAGE_WITH_TEST_DIR.matcher(name);
     if (m.find()) {
       return m.group(1);
