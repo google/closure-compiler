@@ -1339,6 +1339,14 @@ Polymer.Iconset = function() {};
 Polymer.Iconset.prototype.applyIcon = function(
       element, icon, theme, scale) {};
 
+/**
+ * Remove an icon from the given element by undoing the changes effected
+ * by `applyIcon`.
+ *
+ * @param {Element} element The element from which the icon is removed.
+ */
+Polymer.Iconset.prototype.removeIcon = function(element) {};
+
 Polymer.ResolveUrl = {};
 
 /**
