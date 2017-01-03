@@ -147,8 +147,7 @@ public final class DefaultPassConfig extends PassConfig {
     // The current approach to protecting "hidden" side-effects is to
     // wrap them in a function call that is stripped later, this shouldn't
     // be done in IDE mode where AST changes may be unexpected.
-    protectHiddenSideEffects = options != null &&
-        options.protectHiddenSideEffects && !options.allowsHotswapReplaceScript();
+    protectHiddenSideEffects = options != null && options.shouldProtectHiddenSideEffects();
   }
 
   @Override

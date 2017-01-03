@@ -3122,6 +3122,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "_.x = null; try { +_.x.FOO; } catch (a) {}");
   }
 
+  // https://github.com/google/closure-compiler/issues/1875
+  public void testNoProtectSideEffectsInChecksOnly() {
+    String code = "x;";
+
+    CompilerOptions options = createCompilerOptions();
+    options.setChecksOnly(true);
+    options.setProtectHiddenSideEffects(true);
+    testSame(options, code);
+  }
+
   public void testRenameCollision() {
     String code = "" +
           "/**\n" +
