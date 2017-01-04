@@ -522,6 +522,12 @@ public class CommandLineRunner extends
         usage = "Rewrite Polymer classes to be compiler-friendly.")
     private boolean polymerPass = false;
 
+    @Option(name = "--chrome_pass",
+        handler = BooleanOptionHandler.class,
+        usage = "Enable Chrome-specific options for handling cr.* functions.",
+        hidden = true)
+    private boolean chromePass = false;
+
     @Option(name = "--dart_pass",
         handler = BooleanOptionHandler.class,
         usage = "Rewrite Dart Dev Compiler output to be compiler-friendly.")
@@ -1395,6 +1401,8 @@ public class CommandLineRunner extends
         conv = CodingConventions.getDefault();
       } else if (flags.processJqueryPrimitives) {
         conv = new JqueryCodingConvention();
+      } else if (flags.chromePass) {
+        conv = new ChromeCodingConvention();
       } else {
         conv = new ClosureCodingConvention();
       }
@@ -1591,6 +1599,8 @@ public class CommandLineRunner extends
     options.angularPass = flags.angularPass;
 
     options.polymerPass = flags.polymerPass;
+
+    options.chromePass = flags.chromePass;
 
     options.setDartPass(flags.dartPass);
 

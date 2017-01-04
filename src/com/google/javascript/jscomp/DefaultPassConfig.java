@@ -337,6 +337,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(polymerPass);
     }
 
+    if (options.chromePass) {
+      checks.add(chromePass);
+    }
+
     if (options.checkSuspiciousCode
         || options.enables(DiagnosticGroups.GLOBAL_THIS)
         || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
@@ -2790,6 +2794,13 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new PolymerPass(compiler);
+    }
+  };
+
+  private final PassFactory chromePass = new PassFactory("chromePass", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new ChromePass(compiler);
     }
   };
 

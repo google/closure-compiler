@@ -719,6 +719,9 @@ public class CompilerOptions {
   /** Processes Polymer calls */
   boolean polymerPass;
 
+  /** Processes cr.* functions */
+  boolean chromePass;
+
   /** Processes the output of the Dart Dev Compiler */
   boolean dartPass;
 
