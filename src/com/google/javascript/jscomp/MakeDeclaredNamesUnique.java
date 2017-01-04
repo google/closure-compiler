@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultiset;
@@ -445,6 +447,15 @@ class MakeDeclaredNamesUnique
 
     static final String UNIQUE_ID_SEPARATOR = "$jscomp$";
 
+    @Override
+    public String toString() {
+      return toStringHelper(this)
+          .add("nameUsage", nameUsage)
+          .add("declarations", declarations)
+          .add("global", global)
+          .toString();
+    }
+
     ContextualRenamer() {
       global = true;
       nameUsage = HashMultiset.create();
@@ -471,8 +482,8 @@ class MakeDeclaredNamesUnique
      * Create a ContextualRenamer
      */
     @Override
-    public Renamer forChildScope(boolean hoistintTargetScope) {
-      return new ContextualRenamer(nameUsage, hoistintTargetScope, this);
+    public Renamer forChildScope(boolean hoistingTargetScope) {
+      return new ContextualRenamer(nameUsage, hoistingTargetScope, this);
     }
 
     /**
