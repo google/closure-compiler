@@ -53,6 +53,25 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     enableUnusedLocalAssignmentCheck = false;
   }
 
+  public void testDoubleTryCatch() {
+    testSame(
+        LINE_JOINER.join(
+            "function g() {",
+            "  return f;",
+            "",
+            "  function f() {",
+            "    try {",
+            "    } catch (e) {",
+            "      alert(e);",
+            "    }",
+            "    try {",
+            "    } catch (e) {",
+            "      alert(e);",
+            "    }",
+            "  }",
+            "}"));
+  }
+
   public void testCorrectCode() {
     assertNoWarning("function foo(d) { (function() { d.foo(); }); d.bar(); } ");
     assertNoWarning("function foo() { bar(); } function bar() { foo(); } ");
