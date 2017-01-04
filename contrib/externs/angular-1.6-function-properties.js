@@ -22,33 +22,9 @@
  *
  * <p>This is a separate file so that we can check the Angular externs against
  * new-type-inference (NTI), which currently does not support
- * properties-on-functions.
+ * properties-on-functions, where-in two functions have properties with the same
+ * name.
  */
-
-
-/******************************************************************************
- *  $filter Properties
- *****************************************************************************/
-
-/**
- * The 'orderBy' filter is available through $filterProvider and AngularJS
- * injection; but is not accessed through a documented public API of AngularJS.
- * <p>In current AngularJS version the injection is satisfied by
- * angular.orderByFunction, where the implementation is found.
- * <p>See http://docs.angularjs.org/api/ng.filter:orderBy.
- * @typedef {function(Array,
- *     (string|function(?):*|Array<(string|function(?):*)>),
- *     boolean=): Array}
- */
-angular.$filter.orderBy;
-
-/**
- * @typedef {function(Array,
- *     (string|Object|function(?):*),
- *     (function(?):*|boolean)=): Array}
- */
-angular.$filter.filter;
-
 
 
 /******************************************************************************
@@ -70,27 +46,6 @@ angular.$interval_;
  * @type {function(!angular.$q.Promise):boolean}
  */
 angular.$interval_.cancel = function(promise) {};
-
-
-/******************************************************************************
- *  $parse Properties
- *****************************************************************************/
-
-/**
- * Augment the angular.parse.Expression type definition by reopening the type
- * via an artificial angular.$parse instance.
- *
- * This allows us to define methods on function objects which is something
- * that can't be expressed via typical type annotations.
- *
- * @type {angular.parse.Expression}
- */
-angular.$parse_;
-
-/**
- * @type {function((!angular.Scope|!Object), *)}
- */
-angular.$parse_.assign = function(scope, newValue) {};
 
 
 /******************************************************************************

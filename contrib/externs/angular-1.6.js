@@ -51,7 +51,7 @@ var angular = {};
 angular.bind = function(self, fn, args) {};
 
 /** @record */
-angular.BootstrapOptions;
+angular.BootstrapOptions = function() {};
 
 /** @type {boolean|undefined} */
 angular.BootstrapOptions.prototype.strictDi;
@@ -217,7 +217,7 @@ angular.uppercase = function(s) {};
  *
  * @record
  */
-angular.Animation;
+angular.Animation = function() {};
 
 /**
  * @type {(function(!angular.JQLite, !Object, !Object, !Function, !Object=):
@@ -394,7 +394,7 @@ angular.Directive;
 
 
 /** @interface */
-angular.Change;
+angular.Change = function() {};
 
 /** @type {*} */
 angular.Change.prototype.currentValue;
@@ -964,7 +964,7 @@ angular.Scope.prototype.$watchGroup = function(exps, opt_listener) {};
 /**
  * @interface
  */
-angular.Scope.Event;
+angular.Scope.Event = function() {};
 
 /** @type {!angular.Scope} */
 angular.Scope.Event.prototype.currentScope;
@@ -1286,7 +1286,7 @@ angular.$compileProvider.prototype.component = function(name, options) {};
 angular.cacheFactory = {};
 
 /** @record */
-angular.cacheFactory.Options;
+angular.cacheFactory.Options = function() {};
 
 /** @type {number|undefined} */
 angular.cacheFactory.Options.prototype.capacity;
@@ -1347,9 +1347,21 @@ angular.cacheFactory.Cache.prototype.destroy = function() {};
 angular.$cacheFactory;
 
 /**
+ * Augment the angular.$cacheFactory type definition by reopening the type via
+ * an artificial angular.$cacheFactory instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$cacheFactory}
+ */
+angular.$cacheFactory_;
+
+/**
  * @return {!angular.cacheFactory.Cache|undefined}
  */
-angular.$cacheFactory.prototype.get = function() {};
+angular.$cacheFactory_.get;
+
 
 /******************************************************************************
  * $controller Service
@@ -1359,6 +1371,7 @@ angular.$cacheFactory.prototype.get = function() {};
  * @typedef {function((Function|string), !Object): !Object}
  */
 angular.$controller;
+
 
 /******************************************************************************
  * $controllerProvider Service
@@ -1393,7 +1406,7 @@ angular.$cookies = function() {};
  * https://docs.angularjs.org/api/ngCookies/provider/$cookiesProvider#defaults
  * @record
  */
-angular.$cookies.Config;
+angular.$cookies.Config = function() {};
 
 /** @type {string|undefined} */
 angular.$cookies.Config.prototype.path;
@@ -1473,6 +1486,36 @@ angular.$exceptionHandler;
  * @typedef {function(string): !Function}
  */
 angular.$filter;
+
+/**
+ * Augment the angular.$filter type definition by reopening the type via
+ * an artificial angular.$filter instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$filter}
+ */
+angular.$filter_;
+
+/**
+ * The 'orderBy' filter is available through $filterProvider and AngularJS
+ * injection; but is not accessed through a documented public API of AngularJS.
+ * <p>In current AngularJS version the injection is satisfied by
+ * angular.orderByFunction, where the implementation is found.
+ * <p>See http://docs.angularjs.org/api/ng.filter:orderBy.
+ * @typedef {function(Array,
+ *     (string|function(?):*|Array<(string|function(?):*)>),
+ *     boolean=): Array}
+ */
+angular.$filter_.orderBy;
+
+/**
+ * @typedef {function(Array,
+ *     (string|Object|function(?):*),
+ *     (function(?):*|boolean)=): Array}
+ */
+angular.$filter_.filter;
 
 
 /******************************************************************************
@@ -1838,7 +1881,7 @@ angular.$locationProvider = function() {};
 /**
  * @record
  */
-angular.$locationProvider.html5ModeConfig;
+angular.$locationProvider.html5ModeConfig = function() {};
 
 /** @type {boolean|undefined} */
 angular.$locationProvider.html5ModeConfig.prototype.enabled;
@@ -2150,6 +2193,22 @@ angular.parse = {};
  * @typedef {function((!angular.Scope|!Object), Object=):*}
  */
 angular.parse.Expression;
+
+/**
+ * Augment the angular.parse.Expression type definition by reopening the type
+ * via an artificial angular.$parse instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.parse.Expression}
+ */
+angular.$parse_;
+
+/**
+ * @type {function((!angular.Scope|!Object), *)}
+ */
+angular.$parse_.assign = function(scope, newValue) {};
 
 
 /******************************************************************************
