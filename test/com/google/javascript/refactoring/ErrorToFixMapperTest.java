@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +56,7 @@ public class ErrorToFixMapperTest {
     errorManager.setCompiler(compiler);
 
     options = RefactoringDriver.getCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, WARNING);
     options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, ERROR);
     options.setWarningLevel(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT, ERROR);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, WARNING);
@@ -88,6 +90,56 @@ public class ErrorToFixMapperTest {
   @Test
   public void testEmptyStatement3() {
     assertChanges("function f() {};\nf();", "function f() {}\nf();");
+  }
+
+  @Test
+  public void testImplicitNullability1() {
+    String originalCode = "/** @type {Object} */ var o;";
+    compiler.compile(
+        ImmutableList.<SourceFile>of(), // Externs
+        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
+        options);
+    assertThat(compiler.getErrors()).isEmpty();
+    JSError[] warnings = compiler.getWarnings();
+    assertThat(warnings).hasLength(1);
+    JSError warning = warnings[0];
+    List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
+    assertThat(fixes).hasSize(2);
+
+    // First fix is to add "!"
+    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
+        ImmutableList.of(fixes.get(0)), ImmutableMap.of("test", originalCode)).get("test");
+    assertThat(newCode).isEqualTo("/** @type {!Object} */ var o;");
+
+    // Second fix is to add "?"
+    newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
+        ImmutableList.of(fixes.get(1)), ImmutableMap.of("test", originalCode)).get("test");
+    assertThat(newCode).isEqualTo("/** @type {?Object} */ var o;");
+  }
+
+  @Test
+  public void testImplicitNullability2() {
+    String originalCode = "/** @param {Object} o */ function f(o) {}";
+    compiler.compile(
+        ImmutableList.<SourceFile>of(), // Externs
+        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
+        options);
+    assertThat(compiler.getErrors()).isEmpty();
+    JSError[] warnings = compiler.getWarnings();
+    assertThat(warnings).hasLength(1);
+    JSError warning = warnings[0];
+    List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
+    assertThat(fixes).hasSize(2);
+
+    // First fix is to add "!"
+    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
+        ImmutableList.of(fixes.get(0)), ImmutableMap.of("test", originalCode)).get("test");
+    assertThat(newCode).isEqualTo("/** @param {!Object} o */ function f(o) {}");
+
+    // Second fix is to add "?"
+    newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
+        ImmutableList.of(fixes.get(1)), ImmutableMap.of("test", originalCode)).get("test");
+    assertThat(newCode).isEqualTo("/** @param {?Object} o */ function f(o) {}");
   }
 
   @Test
