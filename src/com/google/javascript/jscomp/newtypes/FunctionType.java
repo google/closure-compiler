@@ -354,8 +354,13 @@ public final class FunctionType {
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     builder.addReqFormal(fromReceiverToFirstFormal());
-    builder.addOptFormal(JSType.join(
-        this.commonTypes.getArrayInstance(), this.commonTypes.getArgumentsArrayType()));
+    JSType arrayContents;
+    if (getMaxArityWithoutRestFormals() == 0 && hasRestFormals()) {
+      arrayContents = getRestFormalsType();
+    } else {
+      arrayContents = this.commonTypes.UNKNOWN;
+    }
+    builder.addOptFormal(this.commonTypes.getIArrayLikeInstance(arrayContents));
     builder.addRetType(this.returnType);
     builder.addAbstract(this.isAbstract);
     return builder.buildFunction();

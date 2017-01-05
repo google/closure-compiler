@@ -130,6 +130,7 @@ public final class JSTypes {
   private RawNominalType builtinFunction;
   private RawNominalType arguments;
   private RawNominalType iObject;
+  private RawNominalType iArrayLike;
 
   final boolean allowMethodsAsFunctions;
   final boolean looseSubtypingForLooseObjects;
@@ -274,6 +275,16 @@ public final class JSTypes {
 
   public JSType getArrayInstance() {
     return getArrayInstance(this.UNKNOWN);
+  }
+
+  public JSType getIArrayLikeInstance(JSType t) {
+    if (this.iArrayLike == null) {
+      return this.UNKNOWN;
+    }
+    ImmutableList<String> typeParams = iArrayLike.getTypeParameters();
+    Preconditions.checkState(typeParams.size() == 1);
+    String typeParam = Iterables.getOnlyElement(typeParams);
+    return this.iArrayLike.getInstanceAsJSType().substituteGenerics(ImmutableMap.of(typeParam, t));
   }
 
   public NominalType getObjectType() {
@@ -445,6 +456,10 @@ public final class JSTypes {
 
   public void setIObjectType(RawNominalType iObject) {
     this.iObject = iObject;
+  }
+
+  public void setIArrayLikeType(RawNominalType iArrayLike) {
+    this.iArrayLike = iArrayLike;
   }
 
   public void setRegexpInstance(JSType regexpInstance) {

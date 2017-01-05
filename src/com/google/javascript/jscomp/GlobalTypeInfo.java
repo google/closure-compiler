@@ -1229,6 +1229,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         case "IObject":
           commonTypes.setIObjectType(rawType);
           break;
+        case "IArrayLike":
+          commonTypes.setIArrayLikeType(rawType);
       }
     }
 

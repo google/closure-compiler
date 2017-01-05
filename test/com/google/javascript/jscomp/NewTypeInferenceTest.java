@@ -13612,7 +13612,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testFunctionApplyProperty() {
-    // We only check the receiver argument of a .apply invocation
+    // We only check the receiver argument of a .apply invocation, unless the applied function
+    // uses typed var_args.
     typeCheck(LINE_JOINER.join(
         "function f(/** number */ x) {}",
         "f.apply(null, ['asdf']);"));
@@ -13667,6 +13668,23 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(LINE_JOINER.join(
         "function f(x) {}",
         "function g() { f.apply(null, arguments); }"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {...number} var_args */",
+        "String.fromCharCode = function(var_args) {};",
+        "/** @param {!IArrayLike<number>} x */",
+        "function f(x) {",
+        "  String.fromCharCode.apply(null, x);",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {...number} var_args */",
+        "String.fromCharCode = function(var_args) {};",
+        "/** @param {!IArrayLike<string>} x */",
+        "function f(x) {",
+        "  String.fromCharCode.apply(null, x);",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testDontWarnOnPropAccessOfBottom() {
@@ -16521,6 +16539,28 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @param {!Foo} x */",
         "function f(x) {}",
         "f({ prop: 123, 'a': 'asdf', 'b': 'asdf' });"));
+  }
+
+  public void testIArrayLikeSubtyping() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IArrayLike<number>} x",
+        " * @param {!IObject<?, number>} y",
+        " */",
+        "function f(x, y) {",
+        "  y.length = 0;",
+        "  x = y;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IArrayLike<number>} x",
+        " * @param {!IArrayLike<string>} y",
+        " */",
+        "function f(x, y) {",
+        "  x = y;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testIObjectExtraProperties() {

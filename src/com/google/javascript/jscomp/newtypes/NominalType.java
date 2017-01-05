@@ -147,6 +147,10 @@ public final class NominalType {
     return this.rawType.isBuiltinWithName("IObject");
   }
 
+  boolean isIArrayLike() {
+    return this.rawType.isBuiltinWithName("IArrayLike");
+  }
+
   public boolean isStruct() {
     return this.rawType.isStruct();
   }
