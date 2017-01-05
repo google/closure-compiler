@@ -180,10 +180,10 @@ class ReferenceCollectingCallback implements ScopedCallback,
           addReference(v, new Reference(n, t, peek(blockStack)));
         }
 
-        if (v.getParentNode() != null &&
-            NodeUtil.isHoistedFunctionDeclaration(v.getParentNode()) &&
+        if (v.getParentNode() != null
+            && NodeUtil.isHoistedFunctionDeclaration(v.getParentNode())
             // If we're only traversing a narrow scope, do not try to climb outside.
-            (narrowScope == null || narrowScope.getDepth() <= v.getScope().getDepth())) {
+            && (narrowScope == null || narrowScope.getDepth() <= v.getScope().getDepth())) {
           outOfBandTraversal(v);
         }
       }
@@ -227,7 +227,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     List<BasicBlock> oldBlockStack = blockStack;
     blockStack = newBlockStack;
 
-    NodeTraversal outOfBandTraversal = new NodeTraversal(compiler, this);
+    NodeTraversal outOfBandTraversal = new NodeTraversal(compiler, this, scopeCreator);
     outOfBandTraversal.traverseFunctionOutOfBand(fnNode, containingScope);
 
     blockStack = oldBlockStack;
