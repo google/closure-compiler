@@ -117,6 +117,48 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertRedeclare("function f(a) { if (!a) var a = 6; }");
   }
 
+  public void testIssue166a() {
+    testError(
+        "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
+        REDECLARED_VARIABLE_ERROR);
+  }
+
+  public void testIssue166b() {
+    testError(
+        "function a() { try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 } };",
+        REDECLARED_VARIABLE_ERROR);
+  }
+
+  public void testIssue166c() {
+    testError(
+        "var e = 0; try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
+        REDECLARED_VARIABLE_ERROR);
+  }
+
+  public void testIssue166d() {
+    testError(
+        LINE_JOINER.join(
+            "function a() {",
+            "  var e = 0; try { throw 1 } catch(e) {",
+            "    /** @suppress {duplicate} */ var e = 2;",
+            "  }",
+            "};"),
+        REDECLARED_VARIABLE_ERROR);
+  }
+
+  public void testIssue166e() {
+    testSame("var e = 2; try { throw 1 } catch(e) {}");
+  }
+
+  public void testIssue166f() {
+    testSame(
+        LINE_JOINER.join(
+            "function a() {",
+            "  var e = 2;",
+            "  try { throw 1 } catch(e) {}",
+            "}"));
+  }
+
   public void testEarlyReference() {
     assertUndeclared("function f() { a = 2; var a = 3; }");
   }

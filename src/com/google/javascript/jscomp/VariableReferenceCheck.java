@@ -247,10 +247,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             v.getParentNode().isVar()
                 && (reference.isLetDeclaration() || reference.isConstDeclaration());
         boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();
-        // We disallow redeclaration of caught exception in ES6
+        // We disallow redeclaration of caught exceptions
         boolean shadowCatchVar =
             isDeclaration
-                && compiler.getLanguageMode().isEs6OrHigher()
                 && v.getParentNode().isCatch()
                 && !isVarNodeSameAsReferenceNode;
         boolean shadowParam =
