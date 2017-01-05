@@ -591,6 +591,9 @@ public class NodeTraversal {
     t.traverse(root);
   }
 
+  /**
+   * @deprecated Use traverseRootsEs6.
+   */
   @Deprecated
   public static void traverseRoots(
       AbstractCompiler compiler, Callback cb, Node externs, Node root) {

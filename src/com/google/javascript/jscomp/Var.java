@@ -169,7 +169,7 @@ public class Var implements StaticSlot, StaticRef {
 
   @Override
   public String toString() {
-    return "Var " + name;
+    return "Var " + name + " @ " + nameNode;
   }
 
   boolean isVar() {

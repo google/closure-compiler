@@ -222,7 +222,7 @@ public class IR {
   }
 
   public static Node exprResult(Node expr) {
-    Preconditions.checkState(mayBeExpression(expr));
+    Preconditions.checkState(mayBeExpression(expr), expr);
     return new Node(Token.EXPR_RESULT, expr);
   }
 
