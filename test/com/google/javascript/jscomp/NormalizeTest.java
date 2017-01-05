@@ -31,7 +31,7 @@ import java.util.Set;
  */
 public final class NormalizeTest extends CompilerTestCase {
 
-  private static final String EXTERNS = "var window;";
+  private static final String EXTERNS = "var window; var Arguments;";
 
   public NormalizeTest() {
     super(EXTERNS);
@@ -333,6 +333,12 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("function f(){} function f(){}");
     test("if (a) { function f(){} } else { function f(){} }",
          "if (a) { var f = function (){} } else { f = function (){} }");
+  }
+
+  // It's important that we not remove this var completely. See
+  // http://blickly.github.io/closure-compiler-issues/#290
+  public void testRemoveDuplicateVarDeclarations4() {
+    testSame("if (!Arguments) { /** @suppress {duplicate} */ var Arguments = {}; }");
   }
 
   public void testRenamingConstants() {
