@@ -16,8 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -31,10 +37,18 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
   private Compiler compiler;
   private Es6SyntacticScopeCreator scopeCreator;
+  private Multiset<String> redeclarations;
+
+  private class RecordingRedeclarationHandler implements RedeclarationHandler {
+    @Override
+    public void onRedeclaration(Scope s, String name, Node n, CompilerInput input) {
+      redeclarations.add(name);
+    }
+  }
 
   private Node getRoot(String js) {
     Node root = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    assertThat(compiler.getErrors()).isEmpty();
     return root;
   }
 
@@ -51,7 +65,123 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     compiler.initOptions(options);
-    scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    redeclarations = HashMultiset.create();
+    RedeclarationHandler handler = new RecordingRedeclarationHandler();
+    scopeCreator = new Es6SyntacticScopeCreator(compiler, handler);
+  }
+
+  public void testVarRedeclaration1() {
+    getScope("var x; var x");
+    assertThat(redeclarations).hasCount("x", 1);
+  }
+
+  public void testVarRedeclaration2() {
+    getScope("var x; var x; var x;");
+    assertThat(redeclarations).hasCount("x", 2);
+  }
+
+  public void testVarRedeclaration3() {
+    String js = "var x; if (true) { var x; } var x;";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node block = root
+        .getFirstChild()  // VAR
+        .getNext()  // IF
+        .getLastChild();  // BLOCK
+    checkState(block.isNormalBlock(), block);
+    scopeCreator.createScope(block, globalScope);
+
+    assertThat(redeclarations).hasCount("x", 2);
+  }
+
+  public void testVarRedeclaration4() {
+    String js = "var x; if (true) { var x; var x; }";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node block = root
+        .getFirstChild()  // VAR
+        .getNext()  // IF
+        .getLastChild();  // BLOCK
+    checkState(block.isNormalBlock(), block);
+    scopeCreator.createScope(block, globalScope);
+
+    assertThat(redeclarations).hasCount("x", 2);
+  }
+
+  public void testVarRedeclaration5() {
+    String js = "if (true) { var x; var x; }";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node block = root
+        .getFirstChild()  // IF
+        .getLastChild();  // BLOCK
+    checkState(block.isNormalBlock(), block);
+    scopeCreator.createScope(block, globalScope);
+
+    assertThat(redeclarations).hasCount("x", 1);
+  }
+
+  public void testLetRedeclaration1() {
+    getScope("let x; let x");
+    assertThat(redeclarations).hasCount("x", 1);
+  }
+
+  public void testLetRedeclaration2() {
+    getScope("let x; let x; let x;");
+    assertThat(redeclarations).hasCount("x", 2);
+  }
+
+  public void testLetRedeclaration3() {
+    String js = "let x; if (true) { let x; } let x;";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node block = root
+        .getFirstChild()  // VAR
+        .getNext()  // IF
+        .getLastChild();  // BLOCK
+    checkState(block.isNormalBlock(), block);
+    scopeCreator.createScope(block, globalScope);
+
+    assertThat(redeclarations).hasCount("x", 1);
+  }
+
+  public void testLetRedeclaration4() {
+    String js = "let x; if (true) { let x; let x; }";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node block = root
+        .getFirstChild()  // VAR
+        .getNext()  // IF
+        .getLastChild();  // BLOCK
+    checkState(block.isNormalBlock(), block);
+    scopeCreator.createScope(block, globalScope);
+
+    assertThat(redeclarations).hasCount("x", 1);
+  }
+
+  public void testLetRedeclaration5() {
+    String js = "if (true) { let x; let x; }";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node block = root
+        .getFirstChild()  // IF
+        .getLastChild();  // BLOCK
+    checkState(block.isNormalBlock(), block);
+    scopeCreator.createScope(block, globalScope);
+
+    assertThat(redeclarations).hasCount("x", 1);
   }
 
   public void testArrayDestructuring() {
