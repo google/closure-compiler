@@ -587,6 +587,11 @@ class Normalize implements CompilerPass {
           case FOR:
             if (!c.getFirstChild().isEmpty()) {
               Node init = c.getFirstChild();
+
+              if (init.isLet() || init.isConst() || init.isClass() || init.isFunction()) {
+                return;
+              }
+
               Node empty = IR.empty();
               empty.useSourceInfoIfMissingFrom(c);
               c.replaceChild(init, empty);
@@ -611,7 +616,7 @@ class Normalize implements CompilerPass {
     }
 
     /**
-     * Split a var node such as:
+     * Split a var (or let or const) node such as:
      *   var a, b;
      * into individual statements:
      *   var a;
@@ -621,7 +626,7 @@ class Normalize implements CompilerPass {
     private void splitVarDeclarations(Node n) {
       for (Node next, c = n.getFirstChild(); c != null; c = next) {
         next = c.getNext();
-        if (c.isVar()) {
+        if (NodeUtil.isNameDeclaration(c)) {
           if (assertOnChange && !c.hasChildren()) {
             throw new IllegalStateException("Empty VAR node.");
           }
@@ -629,7 +634,7 @@ class Normalize implements CompilerPass {
           while (c.getFirstChild() != c.getLastChild()) {
             Node name = c.getFirstChild();
             c.removeChild(name);
-            Node newVar = IR.var(name).srcref(n);
+            Node newVar = new Node(c.getToken(), name).srcref(n);
             n.addChildBefore(newVar, c);
             reportCodeChange("VAR with multiple children");
           }
@@ -706,8 +711,8 @@ class Normalize implements CompilerPass {
    */
   private void removeDuplicateDeclarations(Node externs, Node root) {
     Callback tickler = new ScopeTicklingCallback();
-    ScopeCreator scopeCreator =  SyntacticScopeCreator.makeUntypedWithRedeclHandler(
-        compiler, new DuplicateDeclarationHandler());
+    ScopeCreator scopeCreator =
+        new Es6SyntacticScopeCreator(compiler, new DuplicateDeclarationHandler());
     NodeTraversal t = new NodeTraversal(compiler, tickler, scopeCreator);
     t.traverseRoots(externs, root);
   }
@@ -808,8 +813,7 @@ class Normalize implements CompilerPass {
   /**
    * A simple class that causes scope to be created.
    */
-  private static final class ScopeTicklingCallback
-      implements NodeTraversal.ScopedCallback {
+  private static final class ScopeTicklingCallback implements NodeTraversal.ScopedCallback {
     @Override
     public void enterScope(NodeTraversal t) {
       // Cause the scope to be created, which will cause duplicate
@@ -823,8 +827,7 @@ class Normalize implements CompilerPass {
     }
 
     @Override
-    public boolean shouldTraverse(
-        NodeTraversal nodeTraversal, Node n, Node parent) {
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return true;
     }
 
