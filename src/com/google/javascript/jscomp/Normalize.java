@@ -64,13 +64,6 @@ class Normalize implements CompilerPass {
   private final boolean assertOnChange;
   private static final boolean CONVERT_WHILE_TO_FOR = true;
 
-  public static final DiagnosticType CATCH_BLOCK_VAR_ERROR =
-    DiagnosticType.error(
-        "JSC_CATCH_BLOCK_VAR_ERROR",
-        "The use of scope variable {0} is not allowed within a catch block"
-        + " with a catch exception of the same name.");
-
-
   Normalize(AbstractCompiler compiler, boolean assertOnChange) {
     this.compiler = compiler;
     this.assertOnChange = assertOnChange;
@@ -127,7 +120,6 @@ class Normalize implements CompilerPass {
     //      var e = 1; // f scope 'e'
     //   }
     // otherwise 'var e = 1' would be rewritten as 'e = 1'.
-    // TODO(johnlenz): Introduce a separate scope for catch nodes.
     removeDuplicateDeclarations(externs, root);
     new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
@@ -751,26 +743,7 @@ class Normalize implements CompilerPass {
         }
       }
 
-      if (v.isCatch()) {
-        // Redeclaration of a catch expression variable is hard to model
-        // without support for "with" expressions.
-        // The ECMAScript spec (section 12.14), declares that a catch
-        // "catch (e) {}" is handled like "with ({'e': e}) {}" so that
-        // "var e" would refer to the scope variable, but any following
-        // reference would still refer to "e" of the catch expression.
-        // Until we have support for this disallow it.
-        // Currently the Scope object adds the catch expression to the
-        // function scope, which is technically not true but a good
-        // approximation for most uses.
-
-        // TODO(johnlenz): Consider improving how scope handles catch
-        // expression.
-
-        // Use the name of the var before it was made unique.
-        name = MakeDeclaredNamesUnique.ContextualRenameInverter.getOriginalName(
-            name);
-        compiler.report(JSError.make(n, CATCH_BLOCK_VAR_ERROR, name));
-      } else if (parent.isFunction()) {
+      if (parent.isFunction()) {
         if (v.getParentNode().isVar()) {
           s.undeclare(v);
           s.declare(name, n, v.input);

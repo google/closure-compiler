@@ -359,36 +359,6 @@ public final class NormalizeTest extends CompilerTestCase {
          "var b = EXTERN; var c = ext.FOO", null, null);
   }
 
-  public void testIssue166a() {
-    testError("try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-         Normalize.CATCH_BLOCK_VAR_ERROR);
-  }
-
-  public void testIssue166b() {
-    testError(
-        LINE_JOINER.join(
-            "function a() {",
-            "  try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-            "};"),
-         Normalize.CATCH_BLOCK_VAR_ERROR);
-  }
-
-  public void testIssue166c() {
-    testError(
-        "var e = 0; try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-        Normalize.CATCH_BLOCK_VAR_ERROR);
-  }
-
-  public void testIssue166d() {
-    testError(
-        LINE_JOINER.join(
-            "function a() {",
-            "  var e = 0;",
-            "  try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-            "};"),
-        Normalize.CATCH_BLOCK_VAR_ERROR);
-  }
-
   public void testIssue166e() {
     test("var e = 2; try { throw 1 } catch(e) {}",
          "var e = 2; try { throw 1 } catch(e$jscomp$1) {}");
