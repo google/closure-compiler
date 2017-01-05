@@ -381,7 +381,7 @@ public final class JsMessageVisitorTest extends TestCase {
   }
 
   public void testUnnamedGoogleMessage() {
-    extractMessagesSafely("var MSG_UNNAMED_2 = goog.getMsg('Hullo');");
+    extractMessagesSafely("var MSG_UNNAMED = goog.getMsg('Hullo');");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -409,15 +409,6 @@ public final class JsMessageVisitorTest extends TestCase {
     assertEquals("Message value of MSG_BAR is just an empty string. "
         + "Empty messages are forbidden.",
         compiler.getWarnings()[0].description);
-  }
-
-  public void testMessageIsNoUnnamed() {
-    extractMessagesSafely("var MSG_UNNAMED_ITEM = goog.getMsg('Hullo');");
-
-    assertThat(messages).hasSize(1);
-    JsMessage msg = messages.get(0);
-    assertEquals("MSG_UNNAMED_ITEM", msg.getKey());
-    assertFalse(msg.isHidden());
   }
 
   public void testMsgVarWithoutAssignment() {
@@ -523,6 +514,14 @@ public final class JsMessageVisitorTest extends TestCase {
 
   public void testExternalMessage() {
     extractMessagesSafely("var MSG_EXTERNAL_111 = goog.getMsg('Hello World');");
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+    assertTrue(messages.get(0).isExternal());
+    assertEquals("111", messages.get(0).getId());
+  }
+
+  public void testExternalMessage_customSuffix() {
+    extractMessagesSafely("var MSG_EXTERNAL_111$$1 = goog.getMsg('Hello World');");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
     assertTrue(messages.get(0).isExternal());

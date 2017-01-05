@@ -100,12 +100,12 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * Later we replace the message names with ids constructed as a hash of the
    * message content.
    * <p>
-   * <link href="http://code.google.com/p/closure-templates/">
-   * Soy</link> generates messages with names MSG_UNNAMED_<NUMBER> . This
+   * <a href="https://github.com/google/closure-templates">
+   * Soy</a> generates messages with names MSG_UNNAMED.* . This
    * pattern recognizes such messages.
    */
   private static final Pattern MSG_UNNAMED_PATTERN =
-      Pattern.compile("MSG_UNNAMED_\\d+");
+      Pattern.compile("MSG_UNNAMED.*");
 
   private static final Pattern CAMELCASE_PATTERN =
       Pattern.compile("[a-z][a-zA-Z\\d]*[_\\d]*");

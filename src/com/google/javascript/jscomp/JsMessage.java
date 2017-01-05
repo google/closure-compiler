@@ -298,8 +298,8 @@ public final class JsMessage {
   @GwtIncompatible("java.util.regex")
   public static class Builder {
 
-    private static final Pattern MSG_EXTERNAL_PATTERN =
-        Pattern.compile("MSG_EXTERNAL_(\\d+)");
+    // Allow arbitrary suffixes to allow for local variable disambiguation.
+    private static final Pattern MSG_EXTERNAL_PATTERN = Pattern.compile("MSG_EXTERNAL_(\\d+).*");
 
     /**
      * @return an external message id or null if this is not an
