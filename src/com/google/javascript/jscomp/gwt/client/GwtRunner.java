@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,7 @@ public final class GwtRunner implements EntryPoint {
     String[] entryPoint;
     String env;
     boolean exportLocalPropertyDefinitions;
+    String[] extraAnnotationNames;
     boolean generateExports;
     String languageIn;
     String languageOut;
@@ -117,6 +119,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.entryPoint = null;
     defaultFlags.env = "BROWSER";
     defaultFlags.exportLocalPropertyDefinitions = false;
+    defaultFlags.extraAnnotationNames = null;
     defaultFlags.generateExports = false;
     defaultFlags.languageIn = "ECMASCRIPT6";
     defaultFlags.languageOut = "ECMASCRIPT5";
@@ -365,6 +368,10 @@ public final class GwtRunner implements EntryPoint {
       // a useful exception.
       flags.defines.validatePrimitiveTypes();
       options.setDefineReplacements(flags.defines.asMap());
+    }
+
+    if (flags.extraAnnotationNames != null) {
+      options.setExtraAnnotationNames(Arrays.asList(flags.extraAnnotationNames));
     }
 
     options.setAngularPass(flags.angularPass);
