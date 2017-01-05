@@ -556,7 +556,7 @@ md._sidenavService;
 /**
  * Sidenav service is actually a function that returns an object.
  * @typedef {
- *   function(string):md._sidenavService
+ *   function(string, boolean=):md._sidenavService
  * }
  */
 md.$sidenav;
