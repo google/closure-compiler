@@ -1179,7 +1179,7 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
 
   public void testProvideInIndependentModules4() {
     // Regression test for bug 261:
-    // http://code.google.com/p/closure-compiler/issues/detail?id=261
+    // http://blickly.github.io/closure-compiler-issues/#261
     testModule(
         new String[] {
             "goog.provide('apps');",

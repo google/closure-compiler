@@ -812,7 +812,7 @@ class PeepholeMinimizeConditions
           // IE has a bug where event handlers behave differently when
           // their return value is used vs. when their return value is in
           // an EXPR_RESULT. It's pretty freaking weird. See:
-          // http://code.google.com/p/closure-compiler/issues/detail?id=291
+          // http://blickly.github.io/closure-compiler-issues/#291
           // We try to detect this case, and not fold EXPR_RESULTs
           // into other expressions.
           if (maybeExpr.getFirstChild().isCall()) {

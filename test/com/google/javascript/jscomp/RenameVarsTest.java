@@ -575,7 +575,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   public void testDollarSignSuperExport1() {
     useGoogleCodingConvention = false;
-    // See http://code.google.com/p/closure-compiler/issues/detail?id=32
+    // See http://blickly.github.io/closure-compiler-issues/#32
     test("var x = function($super,duper,$fantastic){}",
          "var c = function($super,    a,        b){}");
 
@@ -591,7 +591,7 @@ public final class RenameVarsTest extends CompilerTestCase {
     withNormalize = true;
 
     useGoogleCodingConvention = false;
-    // See http://code.google.com/p/closure-compiler/issues/detail?id=32
+    // See http://blickly.github.io/closure-compiler-issues/#32
     test("var x = function($super,duper,$fantastic){};" +
             "var y = function($super,duper){};",
          "var c = function($super,    a,         b){};" +
@@ -615,7 +615,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   public void testPseudoNames() {
     generatePseudoNames = false;
-    // See http://code.google.com/p/closure-compiler/issues/detail?id=32
+    // See http://blickly.github.io/closure-compiler-issues/#32
     test("var foo = function(a, b, c){}",
          "var d = function(a, b, c){}");
 

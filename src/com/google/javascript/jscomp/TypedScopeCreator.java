@@ -440,7 +440,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * literals, the type on the @lends annotation resolves correctly.
      *
      * For more information, see
-     * http://code.google.com/p/closure-compiler/issues/detail?id=314
+     * http://blickly.github.io/closure-compiler-issues/#314
      */
     private List<Node> lentObjectLiterals = null;
 

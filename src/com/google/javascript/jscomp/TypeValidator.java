@@ -320,7 +320,7 @@ class TypeValidator {
       // }
       // In this case, we incorrectly type x because of how we
       // infer properties locally. See issue 109.
-      // http://code.google.com/p/closure-compiler/issues/detail?id=109
+      // http://blickly.github.io/closure-compiler-issues/#109
       //
       // We do not do this inference globally.
       if (n.isGetProp() &&
