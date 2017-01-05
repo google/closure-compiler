@@ -18501,4 +18501,66 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
+
+  public void testWorkaroundWayToDeclareFunctionsWithProperties() {
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + LINE_JOINER.join(
+            "/** @typedef {function(number)} */",
+            "var Fun1;",
+            "/** @type {Fun1} */",
+            "var fun1_;",
+            "/** @type {number} */",
+            "fun1_.extraProp;"),
+        LINE_JOINER.join(
+            "function f(/** !Fun1 */ x) {",
+            "  var /** string */ s = x.extraProp;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + LINE_JOINER.join(
+            "/** @typedef {function(number)} */",
+            "var Fun1;",
+            "/** @type {Fun1} */",
+            "var fun1_;",
+            "/** @type {number} */",
+            "fun1_.extraProp;",
+            "/** @typedef {function(string)} */",
+            "var Fun2;",
+            "/** @type {Fun2} */",
+            "var fun2_;",
+            "/** @type {string} */",
+            "fun2_.extraProp;"),
+        "");
+
+    // Only be loose for stray prop defs, not defs on the Function type.
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + LINE_JOINER.join(
+            "/** @type {number} */",
+            "Function.prototype.foo;",
+            "/** @type {string} */",
+            "Function.prototype.foo;"),
+        "",
+        GlobalTypeInfo.REDECLARED_PROPERTY);
+
+    // The types of extraProp join to bottom; make it unknown.
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + LINE_JOINER.join(
+            "/** @typedef {function(number)} */",
+            "var Fun1;",
+            "/** @type {Fun1} */",
+            "var fun1_;",
+            "/** @type {function(number)} */",
+            "fun1_.extraProp;",
+            "/** @typedef {function(string)} */",
+            "var Fun2;",
+            "/** @type {Fun2} */",
+            "var fun2_;",
+            "/** @type {function(string)} */",
+            "fun2_.extraProp;"),
+        LINE_JOINER.join(
+            "function f(/** !Fun1 */ x) {",
+            "  x.extraProp = function(y) {};",
+            "}"));
+  }
 }

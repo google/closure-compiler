@@ -1908,11 +1908,21 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
       RawNominalType rawType = nt.getRawNominalType();
       String pname = getProp.getLastChild().getString();
-      JSType declType = getDeclaredTypeOfNode(
-          NodeUtil.getBestJSDocInfo(getProp), currentScope);
+      JSType declType = getDeclaredTypeOfNode(NodeUtil.getBestJSDocInfo(getProp), currentScope);
       if (declType != null) {
         declType = declType.substituteGenericsWithUnknown();
-        if (mayWarnAboutExistingProp(rawType, pname, getProp, declType)) {
+        JSType prevType = rawType.getInstancePropDeclaredType(pname);
+        // JSCompiler doesn't allow declaring function types with properties yet.
+        // The workaround way is to define a function typedef, then declare a variable
+        // of that type, and declare properties on that variable.
+        // These properties get added to Function. Don't warn about duplicate definitions
+        // in this case.
+        if (nt.isFunction() && prevType != null) {
+          declType = JSType.join(declType, prevType);
+          if (declType.isBottom()) {
+            declType = commonTypes.UNKNOWN;
+          }
+        } else if (mayWarnAboutExistingProp(rawType, pname, getProp, declType)) {
           return;
         }
         rawType.addPropertyWhichMayNotBeOnAllInstances(pname, declType);

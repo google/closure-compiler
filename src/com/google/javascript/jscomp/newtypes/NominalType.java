@@ -131,7 +131,7 @@ public final class NominalType {
     return !isFunction() && !isBuiltinObject() && !isLiteralObject();
   }
 
-  boolean isFunction() {
+  public boolean isFunction() {
     return this.rawType.isBuiltinWithName("Function");
   }
 
