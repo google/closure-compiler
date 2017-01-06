@@ -228,6 +228,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(y).hasLength("y = 1".length());
   }
 
+  public void testSourceLocationsNonAscii() {
+    Node n = parse("'안녕세계!'");
+    Node exprResult = n.getFirstChild();
+    Node string = exprResult.getFirstChild();
+    assertNode(string).hasType(Token.STRING);
+    assertNode(string).hasLength(7);  // 2 quotes, plus 5 characters
+  }
+
   public void testReturn() {
     parse("function foo() { return 1; }");
     parseError("return;", UNEXPECTED_RETURN);
