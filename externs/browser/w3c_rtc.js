@@ -62,6 +62,7 @@ function MediaStreamTrack() {}
 /**
  * @param {!function(!Array<!SourceInfo>)} callback
  * @return {undefined}
+ * @deprecated Use MediaDevices.enumerateDevices().
  */
 MediaStreamTrack.getSources = function(callback) {};
 
