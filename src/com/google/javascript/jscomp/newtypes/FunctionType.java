@@ -79,14 +79,19 @@ public final class FunctionType {
     checkValid();
   }
 
-  // Only used to create TOP_FUNCTION and LOOSE_TOP_FUNCTION
+  // This constructor is only used to create TOP_FUNCTION and LOOSE_TOP_FUNCTION.
+  // We create only one TOP_FUNCTION and one LOOSE_TOP_FUNCTION, and check
+  // for "topness" using reference equality. Most fields of these two types are set to null,
+  // and are not allowed to be null for other function types. This is on purpose;
+  // we do not want to accidentally make a top function be equals() to some other
+  // function type. The return type is unknown for convenience.
   private FunctionType(JSTypes commonTypes, boolean isLoose) {
     Preconditions.checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.requiredFormals = null;
     this.optionalFormals = null;
     this.restFormals = null;
-    this.returnType = null;
+    this.returnType = Preconditions.checkNotNull(this.commonTypes.UNKNOWN);
     this.nominalType = null;
     this.receiverType = null;
     this.outerVarPreconditions = null;
@@ -275,7 +280,6 @@ public final class FunctionType {
   }
 
   public JSType getReturnType() {
-    Preconditions.checkArgument(!isTopFunction());
     return returnType;
   }
 

@@ -18603,4 +18603,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "  x.extraProp = function(y) {};",
             "}"));
   }
+
+  public void testDontCrashWhenInferringConstWithTopFunction() {
+    typeCheck("/** @const */ var bar = new Function('')();");
+  }
 }
