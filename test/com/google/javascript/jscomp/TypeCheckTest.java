@@ -17380,6 +17380,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
        "required: string");
   }
 
+  // Github issue #2222: https://github.com/google/closure-compiler/issues/2222
+  public void testSetPrototypeToNewInstance() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.prototype = new C;"));
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }

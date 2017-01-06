@@ -444,6 +444,10 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     if (baseType.hasReferenceName() ||
         isNativeObjectType() ||
         baseType.isFunctionPrototypeType()) {
+      if (prototypeSlot != null && hasInstanceType() && baseType.equals(getInstanceType())) {
+        // Bail out for cases like Foo.prototype = new Foo();
+        return;
+      }
       baseType = new PrototypeObjectType(
           registry, getReferenceName() + ".prototype", baseType);
     }
