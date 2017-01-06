@@ -143,6 +143,48 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testImplicitNullability3() {
+    String originalCode = LINE_JOINER.join(
+        "/**",
+        " * Some non-ASCII characters: αβγδε",
+        " * @param {Object} o",
+        " */",
+        "function f(o) {}");
+    compiler.compile(
+        ImmutableList.<SourceFile>of(), // Externs
+        ImmutableList.of(SourceFile.fromCode("test", originalCode)),
+        options);
+    assertThat(compiler.getErrors()).isEmpty();
+    JSError[] warnings = compiler.getWarnings();
+    assertThat(warnings).hasLength(1);
+    JSError warning = warnings[0];
+    List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
+    assertThat(fixes).hasSize(2);
+
+    // First fix is to add "!"
+    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
+        ImmutableList.of(fixes.get(0)), ImmutableMap.of("test", originalCode)).get("test");
+    String expected = LINE_JOINER.join(
+        "/**",
+        " * Some non-ASCII characters: αβγδε",
+        " * @param {!Object} o",
+        " */",
+        "function f(o) {}");
+    assertThat(newCode).isEqualTo(expected);
+
+    // Second fix is to add "?"
+    newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
+        ImmutableList.of(fixes.get(1)), ImmutableMap.of("test", originalCode)).get("test");
+    expected = LINE_JOINER.join(
+        "/**",
+        " * Some non-ASCII characters: αβγδε",
+        " * @param {?Object} o",
+        " */",
+        "function f(o) {}");
+    assertThat(newCode).isEqualTo(expected);
+  }
+
+  @Test
   public void testRedeclaration() {
     String code = "function f() { var x; var x; }";
     String expectedCode = "function f() { var x; }";
