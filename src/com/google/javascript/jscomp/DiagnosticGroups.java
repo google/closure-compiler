@@ -543,7 +543,9 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup FUNCTION_PARAMS =
       DiagnosticGroups.registerGroup(
-          "functionParams", FunctionTypeBuilder.OPTIONAL_ARG_AT_END);
+          "functionParams",
+          FunctionTypeBuilder.INEXISTENT_PARAM,
+          FunctionTypeBuilder.OPTIONAL_ARG_AT_END);
 
   public static final DiagnosticGroup DEPRECATED_ANNOTATIONS =
       DiagnosticGroups.registerGroup("deprecatedAnnotations",
