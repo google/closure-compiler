@@ -18607,4 +18607,40 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   public void testDontCrashWhenInferringConstWithTopFunction() {
     typeCheck("/** @const */ var bar = new Function('')();");
   }
+
+  // Documenting that inferring @const types depends on the order in which
+  // we traverse scopes during GlobalTypeInfo. This seems like an inherent
+  // issue which cannot be avoided.
+  public void testConstInferenceDependsOnOrderOfScopeTraversing() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "};",
+        "/** @type {!Foo} */",
+        "var foo = new Foo;",
+        "/** @const */",
+        "var c = foo.prop;",
+        "function g() {",
+        "  return c;",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "};",
+        "function f() {",
+        "  /** @type {!Foo} */",
+        "  var foo = new Foo;",
+        "  /** @const */",
+        "  var c = foo.prop;",
+        "  function g() {",
+        "    return c;",
+        "  }",
+        "}"));
+  }
 }
