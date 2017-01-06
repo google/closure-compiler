@@ -33,9 +33,7 @@ public final class CodeReplacement {
   // same startPosition.
   private final String sortKey;
 
-  // TODO(tbreisacher): Make this package-private by refactoring tests so they
-  // don't need to call it directly.
-  public CodeReplacement(int startPosition, int length, String newContent) {
+  CodeReplacement(int startPosition, int length, String newContent) {
     this(startPosition, length, newContent, "");
   }
 
