@@ -3852,6 +3852,18 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
   }
 
+  public void testExternsProvideIsAllowed() {
+    CompilerOptions options = createCompilerOptions();
+    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+
+    externs = ImmutableList.of(SourceFile.fromCode("<externs>",
+        "goog.provide('foo.bar'); /** @type {!Array<number>} */ foo.bar;"));
+
+    test(options, "", "");
+  }
+
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
   public void testInlineStringConcat() {
     CompilerOptions options = createCompilerOptions();
