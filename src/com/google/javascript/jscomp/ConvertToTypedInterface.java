@@ -25,7 +25,10 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
+
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -62,7 +65,7 @@ class ConvertToTypedInterface implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, root, new PropagateConstJsdoc(compiler));
-    NodeTraversal.traverseRootsEs6(compiler, new RemoveCode(compiler), externs, root);
+    new RemoveCode(compiler).process(externs, root);
   }
 
   private static class PropagateConstJsdoc extends NodeTraversal.AbstractPostOrderCallback {
@@ -174,23 +177,41 @@ class ConvertToTypedInterface implements CompilerPass {
   private static class RemoveCode extends AbstractModuleCallback {
     private final AbstractCompiler compiler;
     private final Set<String> globalSeenNames = new HashSet<>();
+    private final List<Node> globalConstructorsToProcess = new ArrayList();
     private Node currentModule = null;
     private Set<String> moduleSeenNames;
+    private List<Node> moduleConstructorsToProcess;
 
     RemoveCode(AbstractCompiler compiler) {
       this.compiler = compiler;
+    }
+
+    void process(Node externs, Node root) {
+      NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+
+      processConstructors(globalConstructorsToProcess);
     }
 
     @Override
     public void enterModule(NodeTraversal t, Node scopeRoot) {
       currentModule = scopeRoot;
       moduleSeenNames = new HashSet<>();
+      moduleConstructorsToProcess = new ArrayList<>();
     }
 
     @Override
     public void exitModule(NodeTraversal t, Node scopeRoot) {
+      processConstructors(moduleConstructorsToProcess);
+
       currentModule = null;
       moduleSeenNames = null;
+      moduleConstructorsToProcess = null;
+    }
+
+    private void processConstructors(List<Node> constructorNodes) {
+      for (Node ctorNode : constructorNodes) {
+        processConstructor(ctorNode);
+      }
     }
 
     @Override
@@ -204,7 +225,8 @@ class ConvertToTypedInterface implements CompilerPass {
           Node body = n.getLastChild();
           if (body.isBlock() && body.hasChildren()) {
             if (isConstructor(n)) {
-              processConstructor(n);
+              markConstructorToProcess(n);
+              return false;
             }
             n.getLastChild().removeChildren();
             compiler.reportCodeChange();
@@ -332,6 +354,15 @@ class ConvertToTypedInterface implements CompilerPass {
       }
     }
 
+    private void markConstructorToProcess(Node ctorNode) {
+      Preconditions.checkArgument(ctorNode.isFunction());
+      if (currentModule == null) {
+        globalConstructorsToProcess.add(ctorNode);
+      } else {
+        moduleConstructorsToProcess.add(ctorNode);
+      }
+    }
+
     private void markNameProcessed(String fullyQualifiedName) {
       if (currentModule == null) {
         globalSeenNames.add(fullyQualifiedName);
@@ -379,6 +410,10 @@ class ConvertToTypedInterface implements CompilerPass {
               }
             }
           });
+      final Node functionBody = function.getLastChild();
+      Preconditions.checkState(functionBody.isNormalBlock());
+      functionBody.removeChildren();
+      compiler.reportCodeChange();
     }
 
     enum RemovalType {
