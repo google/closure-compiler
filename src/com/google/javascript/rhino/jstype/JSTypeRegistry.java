@@ -284,6 +284,10 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     StringType STRING_TYPE = new StringType(this);
     registerNativeType(JSTypeNative.STRING_TYPE, STRING_TYPE);
 
+    SymbolType SYMBOL_TYPE = new SymbolType(this);
+    registerNativeType(JSTypeNative.SYMBOL_TYPE, SYMBOL_TYPE);
+
+
     UnknownType UNKNOWN_TYPE = new UnknownType(this, false);
     registerNativeType(JSTypeNative.UNKNOWN_TYPE, UNKNOWN_TYPE);
     UnknownType checkedUnknownType = new UnknownType(this, true);
@@ -592,6 +596,14 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     JSType NUMBER_STRING = createUnionType(NUMBER_TYPE, STRING_TYPE);
     registerNativeType(JSTypeNative.NUMBER_STRING, NUMBER_STRING);
 
+    // (string, number, symbol)
+    JSType NUMBER_STRING_SYMBOL = createUnionType(NUMBER_TYPE, STRING_TYPE, SYMBOL_TYPE);
+    registerNativeType(JSTypeNative.NUMBER_STRING_SYMBOL, NUMBER_STRING_SYMBOL);
+
+    // (string, symbol)
+    JSType STRING_SYMBOL = createUnionType(STRING_TYPE, SYMBOL_TYPE);
+    registerNativeType(JSTypeNative.STRING_SYMBOL, STRING_SYMBOL);
+
     // Native object properties are filled in by externs...
 
     // (String, string)
@@ -696,6 +708,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     register(getNativeType(JSTypeNative.REGEXP_TYPE));
     register(getNativeType(JSTypeNative.STRING_OBJECT_TYPE));
     register(getNativeType(JSTypeNative.STRING_TYPE));
+    register(getNativeType(JSTypeNative.SYMBOL_TYPE));
     register(getNativeType(JSTypeNative.VOID_TYPE));
     register(getNativeType(JSTypeNative.VOID_TYPE), "Undefined");
     register(getNativeType(JSTypeNative.VOID_TYPE), "void");
@@ -1120,6 +1133,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         return getNativeType(JSTypeNative.NUMBER_TYPE);
       case "string":
         return getNativeType(JSTypeNative.STRING_TYPE);
+      case "symbol":
+        return getNativeType(JSTypeNative.SYMBOL_TYPE);
       case "undefined":
       case "void":
         return getNativeType(JSTypeNative.VOID_TYPE);

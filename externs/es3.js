@@ -30,10 +30,6 @@
 // Some types require them to be part of their definition (such as Array).
 
 
-// TODO(johnlenz): symbol should be a primitive type.
-/** @typedef {?} */
-var symbol;
-
 /**
  * @param {string=} opt_description
  * @return {symbol}

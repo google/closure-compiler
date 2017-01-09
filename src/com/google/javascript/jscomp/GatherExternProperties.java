@@ -269,6 +269,11 @@ class GatherExternProperties extends AbstractPostOrderCallback
     }
 
     @Override
+    public Set<String> caseSymbolType() {
+      return externProperties;
+    }
+
+    @Override
     public Set<String> caseVoidType() {
       return externProperties;
     }

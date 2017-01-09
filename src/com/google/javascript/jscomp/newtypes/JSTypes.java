@@ -68,6 +68,7 @@ public final class JSTypes {
   public final JSType NULL;
   public final JSType NUMBER;
   public final JSType STRING;
+  public final JSType SYMBOL;
   public final JSType TOP;
   public final JSType TOP_SCALAR;
   public final JSType TRUE_TYPE;
@@ -145,6 +146,7 @@ public final class JSTypes {
     this.NULL = Preconditions.checkNotNull(types.get("NULL"));
     this.NUMBER = Preconditions.checkNotNull(types.get("NUMBER"));
     this.STRING = Preconditions.checkNotNull(types.get("STRING"));
+    this.SYMBOL = Preconditions.checkNotNull(types.get("SYMBOL"));
     this.TOP = Preconditions.checkNotNull(types.get("TOP"));
     this.TOP_SCALAR = Preconditions.checkNotNull(types.get("TOP_SCALAR"));
     this.TRUE_TYPE = Preconditions.checkNotNull(types.get("TRUE_TYPE"));

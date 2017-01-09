@@ -46,8 +46,8 @@ $jscomp.symbolCounter_ = 0;
  * @suppress {reportUnknownTypes}
  */
 $jscomp.Symbol = function(opt_description) {
-  return /** @type {symbol} */ (
-      $jscomp.SYMBOL_PREFIX + (opt_description || '') + ($jscomp.symbolCounter_++));
+  return /** @type {symbol} */ (/** @type {*} */(
+      $jscomp.SYMBOL_PREFIX + (opt_description || '') + ($jscomp.symbolCounter_++)));
 };
 
 

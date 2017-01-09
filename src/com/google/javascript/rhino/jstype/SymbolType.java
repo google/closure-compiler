@@ -39,110 +39,55 @@
 
 package com.google.javascript.rhino.jstype;
 
-
-
+import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
+import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 
 /**
- * A type visitor.<p>
- *
- * This code will calculate a specific value of type {@code T} from a type
- * based on its structure:
- *
- * <pre>JSType type = &hellip;;
- * T value = type.visit(new Visitor&lt;T&gt;() {
- * &nbsp;&nbsp;&hellip;
- * });</pre>
- *
+ * String type.
  */
-public interface Visitor<T> {
-  /**
-   * Bottom type's case.
-   */
-  T caseNoType(NoType type);
+public final class SymbolType extends ValueType {
+    private static final long serialVersionUID = 1L;
 
-  /**
-   * Enum element type's case.
-   */
-  T caseEnumElementType(EnumElementType type);
+    SymbolType(JSTypeRegistry registry) {
+        super(registry);
+    }
 
-  /**
-   * All type's case.
-   */
-  T caseAllType();
+    @Override
+    public TernaryValue testForEquality(JSType that) {
+        TernaryValue result = super.testForEquality(that);
+        if (result != null) {
+            return result;
+        }
+        if (that.isUnknownType() || that.isSubtype(
+                getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN))) {
+            return UNKNOWN;
+        }
+        return FALSE;
+    }
 
-  /**
-   * Boolean value type's case.
-   */
-  T caseBooleanType();
+    @Override
+    String toStringHelper(boolean forAnnotations) {
+        return getDisplayName();
+    }
 
-  /**
-   * Bottom Object type's case.
-   */
-  T caseNoObjectType();
+    @Override
+    public String getDisplayName() {
+        return "symbol";
+    }
 
-  /**
-   * Function type's case.
-   */
-  T caseFunctionType(FunctionType type);
+    @Override
+    public BooleanLiteralSet getPossibleToBooleanOutcomes() {
+        return BooleanLiteralSet.TRUE;
+    }
 
-  /**
-   * Object type's case.
-   */
-  T caseObjectType(ObjectType type);
+    @Override
+    public <T> T visit(Visitor<T> visitor) {
+        return visitor.caseSymbolType();
+    }
 
-  /**
-   * Unknown type's case.
-   */
-  T caseUnknownType();
-
-  /**
-   * Null type's case.
-   */
-  T caseNullType();
-
-  /**
-   * Named type's case.
-   */
-  T caseNamedType(NamedType type);
-
-  /**
-   * Proxy type's case.
-   */
-  T caseProxyObjectType(ProxyObjectType type);
-
-  /**
-   * Number value type's case.
-   */
-  T caseNumberType();
-
-  /**
-   * String value type's case.
-   */
-  T caseStringType();
-
-  /**
-   * Symbol value type's case.
-   */
-  T caseSymbolType();
-
-  /**
-   * Void type's case.
-   */
-  T caseVoidType();
-
-  /**
-   * Union type's case.
-   */
-  T caseUnionType(UnionType type);
-
-  /**
-   * Templatized type's case.
-   */
-  T caseTemplatizedType(TemplatizedType type);
-
-  /**
-   * Template type's case.
-   */
-  T caseTemplateType(TemplateType templateType);
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
 }

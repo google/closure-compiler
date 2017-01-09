@@ -223,6 +223,11 @@ public class ModificationVisitor implements Visitor<JSType> {
   }
 
   @Override
+  public JSType caseSymbolType() {
+    return getNativeType(JSTypeNative.SYMBOL_TYPE);
+  }
+
+  @Override
   public JSType caseStringType() {
     return getNativeType(JSTypeNative.STRING_TYPE);
   }
