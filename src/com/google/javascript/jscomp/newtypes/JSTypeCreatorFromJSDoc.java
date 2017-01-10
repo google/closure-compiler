@@ -414,12 +414,22 @@ public final class JSTypeCreatorFromJSDoc {
       case "Function":
         checkInvalidGenericsInstantiation(n);
         return maybeMakeNullable(this.commonTypes.qmarkFunction());
-      case "Object":
-        // We don't generally handle parameterized Object<...>, but we want to
-        // at least not warn about inexistent properties on it, so we type it
-        // as @dict.
-        return maybeMakeNullable(n.hasChildren()
-            ? this.commonTypes.getTopDict() : this.commonTypes.getTopObject());
+      case "Object": {
+        JSType result;
+        if (n.hasChildren()) {
+          // We consider a parameterized Object<...> as an alias of IObject.
+          NominalType iobject = this.commonTypes.getIObjectType();
+          if (iobject == null) {
+            // Can happen when using old externs.
+            return this.commonTypes.UNKNOWN;
+          }
+          result = getNominalTypeHelper(
+              iobject.getRawNominalType(), n, registry, outerTypeParameters);
+        } else {
+          result = this.commonTypes.getTopObject();
+        }
+        return maybeMakeNullable(result);
+      }
       default:
         return lookupTypeByName(typeName, n, registry, outerTypeParameters);
     }
@@ -534,14 +544,13 @@ public final class JSTypeCreatorFromJSDoc {
     ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
     if (n.hasChildren()) {
       // Compute instantiation of polymorphic class/interface.
-      Preconditions.checkState(n.getFirstChild().isBlock(), n);
+      Preconditions.checkState(n.getFirstChild().isNormalBlock(), n);
       for (Node child : n.getFirstChild().children()) {
-        typeList.add(
-            getTypeFromCommentHelper(child, registry, outerTypeParameters));
+        typeList.add(getTypeFromCommentHelper(child, registry, outerTypeParameters));
       }
     }
-    ImmutableList<JSType> typeArguments = typeList.build();
-    ImmutableList<String> typeParameters = rawType.getTypeParameters();
+    List<JSType> typeArguments = typeList.build();
+    List<String> typeParameters = rawType.getTypeParameters();
     int typeArgsSize = typeArguments.size();
     int typeParamsSize = typeParameters.size();
     if (typeArgsSize != typeParamsSize) {
@@ -555,16 +564,15 @@ public final class JSTypeCreatorFromJSDoc {
             String.valueOf(typeParamsSize),
             String.valueOf(typeArgsSize)));
       }
-      return maybeMakeNullable(JSType.fromObjectType(ObjectType.fromNominalType(
-              uninstantiated.instantiateGenerics(
-                  fixLengthOfTypeList(typeParameters.size(), typeArguments)))));
+      typeArguments = fixLengthOfTypeList(typeParameters.size(), typeArguments);
+      NominalType instantiated = uninstantiated.instantiateGenerics(typeArguments);
+      return maybeMakeNullable(JSType.fromObjectType(ObjectType.fromNominalType(instantiated)));
     }
     return maybeMakeNullable(JSType.fromObjectType(ObjectType.fromNominalType(
             uninstantiated.instantiateGenerics(typeArguments))));
   }
 
-  private List<JSType> fixLengthOfTypeList(
-      int desiredLength, List<JSType> typeList) {
+  private List<JSType> fixLengthOfTypeList(int desiredLength, List<JSType> typeList) {
     int length = typeList.size();
     if (length == desiredLength) {
       return typeList;

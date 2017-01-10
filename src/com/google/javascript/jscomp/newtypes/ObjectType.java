@@ -682,7 +682,7 @@ final class ObjectType implements TypeWithProperties {
        if (keyType.isNumber() && Ints.tryParse(pname) == null) {
          return false;
        }
-       if (!keyType.isNumber() && !keyType.isString()) {
+       if (!keyType.isNumber() && !keyType.isString() && !keyType.isUnknown()) {
          return false;
        }
        if (!ptype.isSubtypeOf(valueType, subSuperMap)) {

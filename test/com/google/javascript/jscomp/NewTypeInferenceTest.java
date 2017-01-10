@@ -16350,7 +16350,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"));
   }
 
-  public void testIObjectAccesses() {
+  public void testIObjectBracketAccesses() {
     typeCheck(LINE_JOINER.join(
         "function f(/** !IObject<number,string> */ x) {",
         "  return x['asdf'];",
@@ -16443,6 +16443,37 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** number */ n = s;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  // A dot access on IObject<K, V> is not typed as V.
+  // It is either declared separately with its own type (eg, when Foo implements IObject and
+  // has some extra properties), or it is a type error.
+  public void testIObjectDotAccesses() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !IObject<?, ?> */ x) {",
+        "  return x.hasOwnProperty('test');",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function g(x) {",
+        "  x.foobar = 123;",
+        "}",
+        "function f(/** !IObject<?, ?> */ x) {",
+        "  return x.foobar;",
+        "}"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.foobar = 123;",
+        "}",
+        "function f(/** !IObject<?, ?> */ x) {",
+        "  return x.foobar;",
+        "}"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheck("var /** !IObject<?, ?> */ x = { 'abs': '', '%': ''};");
   }
 
   public void testIObjectSubtyping() {
@@ -17931,6 +17962,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"));
 
     typeCheck(LINE_JOINER.join(
+        "function f(/** !IObject<?, ?> */ x) {",
+        "  return x.prop + 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
         "/** @constructor @extends {Foo} */",
@@ -18641,6 +18681,65 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  function g() {",
         "    return c;",
         "  }",
+        "}"));
+  }
+
+  // We currently consider Object<K,V> to be the same as IObject<K,V>.
+  // Since we may change that in the future, they are tested separately.
+  public void testParameterizedObject() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object<?, ?> */ x) {",
+        "  return x.hasOwnProperty('test');",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function g(x) {",
+        "  x.foobar = 123;",
+        "}",
+        "function f(/** !Object<?, ?> */ x) {",
+        "  return x.foobar;",
+        "}"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.foobar = 123;",
+        "}",
+        "function f(/** !Object<?, ?> */ x) {",
+        "  return x.foobar;",
+        "}"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheck("var /** !Object<?, ?> */ x = { 'abs': '', '%': ''};");
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object<number,string> */ x) {",
+        "  return x['asdf'];",
+        "}"),
+        NewTypeInference.INVALID_INDEX_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object<number, number> */ x) {",
+        "  x['asdf'] = 123;",
+        "}"),
+        NewTypeInference.INVALID_INDEX_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object<number, string> */ x, /** number */ i) {",
+        "  x[i] - 123;",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object<boolean> */ x) {",
+        "  var /** string */ s = x['asdf'];",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Object<number> */ x) {",
+        "  return x[{a: 123}] + x['sadf'];",
         "}"));
   }
 }

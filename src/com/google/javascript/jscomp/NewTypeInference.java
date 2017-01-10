@@ -2978,7 +2978,8 @@ final class NewTypeInference implements CompilerPass {
     }
 
     if (recvType.isUnknown() || recvType.isTrueOrTruthy() || recvType.isLoose()
-        || allowPropertyOnSubtypes && recvType.mayContainUnknownObject()) {
+        || (allowPropertyOnSubtypes
+            && (recvType.mayContainUnknownObject() || recvType.isIObject()))) {
       if (symbolTable.isPropertyDefined(pname)) {
         return false;
       }
