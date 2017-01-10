@@ -6103,7 +6103,7 @@ google.maps.places.AutocompletionRequest.prototype.types;
 google.maps.places.ComponentRestrictions = function() {};
 
 /**
- * @type {string}
+ * @type {string|Array<string>}
  */
 google.maps.places.ComponentRestrictions.prototype.country;
 
@@ -6730,4 +6730,3 @@ google.maps.visualization.WeightedLocation.prototype.location;
  * @type {number}
  */
 google.maps.visualization.WeightedLocation.prototype.weight;
-
