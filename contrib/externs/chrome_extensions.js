@@ -33,7 +33,7 @@
  * The best practices for each are described in more detail below.  It
  * should be noted that, due to historical reasons, and the evolutionary
  * nature of this file, much this file currently violates the best practices
- * described below. As changed are made, the changes should adhere to the
+ * described below. As changes are made, the changes should adhere to the
  * best practices.
  *
  * A. When to Add Packages to this File?
@@ -110,7 +110,7 @@
  * Always qualify the type name to reduce top-level pollution in this file:
  *
  *   Do:
- *        chrome.extension.Port = function() {}
+ *        chrome.runtime.Port = function() {}
  *   Don't:
  *        function Port() {}
  *
@@ -2556,6 +2556,13 @@ chrome.tabs.TabStatus = {
   COMPLETE: '',
   LOADING: '',
 };
+
+
+/**
+ * @const {number}
+ * @see https://developer.chrome.com/extensions/tabs#property-TAB_ID_NONE
+ */
+chrome.tabs.TAB_ID_NONE = -1;
 
 
 /**
@@ -6569,9 +6576,154 @@ OnClickData.prototype.editable;
 function Debuggee() {}
 
 
-/** @type {number} */
+/** @type {?number} */
 Debuggee.prototype.tabId;
 
+
+/** @type {?string} */
+Debuggee.prototype.extensionId;
+
+
+/** @type {?string} */
+Debuggee.prototype.targetId;
+
+
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/debugger
+ */
+chrome.debugger = {};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/debugger#type-TargetInfoType
+ */
+chrome.debugger.TargetInfoType = {
+  PAGE: '',
+  BACKGROUND_PAGE: '',
+  WORKER: '',
+  OTHER: ''
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/debugger#type-DetachReason
+ */
+chrome.debugger.DetachReason = {
+  TARGET_CLOSED: '',
+  CANCELED_BY_USER: '',
+  REPLACED_WITH_DEVTOOLS: ''
+};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/debugger#type-TargetInfo
+ */
+chrome.debugger.TargetInfo = function() {};
+
+
+/** @type {!chrome.debugger.TargetInfoType|string} */
+chrome.debugger.TargetInfo.prototype.type;
+
+
+/** @type {string} */
+chrome.debugger.TargetInfo.prototype.id;
+
+
+/** @type {?number} */
+chrome.debugger.TargetInfo.prototype.tabId;
+
+
+/** @type {?string} */
+chrome.debugger.TargetInfo.prototype.extensionId;
+
+
+/** @type {boolean} */
+chrome.debugger.TargetInfo.prototype.attached;
+
+
+/** @type {string} */
+chrome.debugger.TargetInfo.prototype.title;
+
+
+/** @type {string} */
+chrome.debugger.TargetInfo.prototype.url;
+
+
+/** @type {?string} */
+chrome.debugger.TargetInfo.prototype.faviconUrl;
+
+
+/**
+ * @param {!Debuggee} target
+ * @param {string} requiredVersion
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/debugger#method-attach
+ */
+chrome.debugger.attach = function(target, requiredVersion, callback) {};
+
+
+/**
+ * @param {!Debuggee} target
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/debugger#method-detach
+ */
+chrome.debugger.detach = function(target, callback) {};
+
+
+/**
+ * @param {!Debuggee} target
+ * @param {string} method
+ * @param {!Object=} commandParams
+ * @param {function(!Object=): void=} callback
+ * @see https://developer.chrome.com/extensions/debugger#method-sendCommand
+ */
+chrome.debugger.sendCommand = function(
+    target, method, commandParams, callback) {};
+
+
+/**
+ * @param {function(!Array<!chrome.debugger.TargetInfo>): void} callback
+ * @see https://developer.chrome.com/extensions/debugger#method-getTargets
+ */
+chrome.debugger.getTargets = function(callback) {};
+
+
+/**
+ * @type {!chrome.debugger.DebuggerEvent}
+ * @see https://developer.chrome.com/extensions/debugger#event-onEvent
+ */
+chrome.debugger.onEvent;
+
+
+/**
+ * @type {!chrome.debugger.DetachEvent}
+ * @see https://developer.chrome.com/extensions/debugger#event-onEvent
+ */
+chrome.debugger.onDetach;
+
+
+/** @constructor */
+chrome.debugger.DebuggerEvent = function() {};
+
+
+/**
+ * @param {function(!Debuggee, string, !Object=): void} callback
+ */
+chrome.debugger.DebuggerEvent.prototype.addListener = function(callback) {};
+
+
+/** @constructor */
+chrome.debugger.DetachEvent = function() {};
+
+/**
+ * @param {function(!Debuggee,
+ *     (!chrome.debugger.DetachReason|string)): void} callback
+ */
+chrome.debugger.DetachEvent.prototype.addListener = function(callback) {};
 
 
 /**
