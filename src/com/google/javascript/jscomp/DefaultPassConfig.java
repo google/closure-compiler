@@ -278,6 +278,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.shouldGenerateTypedExterns()) {
       checks.add(closureGoogScopeAliases);
+      checks.add(closureRewriteClass);
       checks.add(generateIjs);
       checks.add(whitespaceWrapGoogModules);
       return checks;
