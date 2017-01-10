@@ -122,7 +122,7 @@ public final class ApplySuggestedFixes {
     for (CodeReplacement replacement : sortedReplacements) {
       sb.append(code, lastIndex, replacement.getStartPosition());
       sb.append(replacement.getNewContent());
-      lastIndex = replacement.getStartPosition() + replacement.getLength();
+      lastIndex = replacement.getEndPosition();
     }
     if (lastIndex <= code.length()) {
       sb.append(code, lastIndex, code.length());
@@ -155,7 +155,7 @@ public final class ApplySuggestedFixes {
       if (replacement.getStartPosition() < start) {
         return true;
       }
-      start = Math.max(start, replacement.getStartPosition() + replacement.getLength());
+      start = Math.max(start, replacement.getEndPosition());
     }
     return false;
   }

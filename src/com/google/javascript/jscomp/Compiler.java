@@ -2466,7 +2466,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  SourceFile getSourceFileByName(String sourceName) {
+  public SourceFile getSourceFileByName(String sourceName) {
     // Here we assume that the source name is the input name, this
     // is try of JavaScript parsed from source.
     if (sourceName != null) {

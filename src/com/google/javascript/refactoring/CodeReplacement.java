@@ -53,11 +53,19 @@ public final class CodeReplacement {
   }
 
   /**
-   * Returns how many bytes the new content should replace in the
+   * Returns how many characters the new content should replace in the
    * original content.
    */
   public int getLength() {
     return length;
+  }
+
+  /**
+   * Returns the end position within the file that the modification
+   * should be applied starting at.
+   */
+  public int getEndPosition() {
+    return startPosition + length;
   }
 
   /**
