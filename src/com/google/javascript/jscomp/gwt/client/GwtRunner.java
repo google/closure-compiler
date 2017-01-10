@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.DefaultExterns;
 import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -94,6 +95,7 @@ public final class GwtRunner implements EntryPoint {
     boolean rewritePolyfills;
     String warningLevel;
     boolean useTypesForOptimization;
+    String tracerMode;
 
     // These flags do not match the Java compiler JAR.
     File[] jsCode;
@@ -135,6 +137,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.jsCode = null;
     defaultFlags.externs = null;
     defaultFlags.createSourceMap = false;
+    defaultFlags.tracerMode = "OFF";
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
@@ -372,6 +375,10 @@ public final class GwtRunner implements EntryPoint {
 
     if (flags.extraAnnotationNames != null) {
       options.setExtraAnnotationNames(Arrays.asList(flags.extraAnnotationNames));
+    }
+
+    if (flags.tracerMode != null) {
+      options.setTracerMode(TracerMode.valueOf(flags.tracerMode));
     }
 
     options.setAngularPass(flags.angularPass);
