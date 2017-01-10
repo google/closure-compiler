@@ -355,7 +355,7 @@ public class DiagnosticGroups {
 //           NewTypeInference.INEXISTENT_PROPERTY,
 //           NewTypeInference.INVALID_ARGUMENT_TYPE,
 //           NewTypeInference.INVALID_CAST,
-//          NewTypeInference.INVALID_INDEX_TYPE,
+          NewTypeInference.INVALID_INDEX_TYPE,
           NewTypeInference.INVALID_INFERRED_RETURN_TYPE,
           NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE,
 //           NewTypeInference.INVALID_OPERAND_TYPE,

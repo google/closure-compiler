@@ -1282,11 +1282,6 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return nt != null && !nt.isClassy();
   }
 
-  public boolean isIObject() {
-    NominalType nt = getNominalTypeIfSingletonObj();
-    return nt != null && nt.isIObject();
-  }
-
   public boolean isInterfaceDefinition() {
     FunctionType ft = getFunTypeIfSingletonObj();
     return ft != null && ft.isInterfaceDefinition();

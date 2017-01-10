@@ -2017,13 +2017,12 @@ public final class JsDocInfoParser {
    * TypeExpressionList := TopLevelTypeExpression
    *     | TopLevelTypeExpression ',' TypeExpressionList
    */
-  private Node parseTypeExpressionList(String typeName, JsDocToken token) {
+  private Node parseTypeExpressionList(JsDocToken token) {
     Node typeExpr = parseTopLevelTypeExpression(token);
     if (typeExpr == null) {
       return null;
     }
     Node typeList = IR.block();
-    int numTypeExprs = 1;
     typeList.addChildToBack(typeExpr);
     while (match(JsDocToken.COMMA)) {
       next();
@@ -2032,12 +2031,7 @@ public final class JsDocInfoParser {
       if (typeExpr == null) {
         return null;
       }
-      numTypeExprs++;
       typeList.addChildToBack(typeExpr);
-    }
-    if (typeName.equals("Object") && numTypeExprs == 1) {
-      // Unlike other generic types, Object<V> means Object<?, V>, not Object<V, ?>.
-      typeList.addChildToFront(newNode(Token.QMARK));
     }
     return typeList;
   }
@@ -2167,7 +2161,7 @@ public final class JsDocInfoParser {
     if (match(JsDocToken.LEFT_ANGLE)) {
       next();
       skipEOLs();
-      Node memberType = parseTypeExpressionList(typeName, next());
+      Node memberType = parseTypeExpressionList(next());
       if (memberType != null) {
         typeNameNode.addChildToFront(memberType);
 
