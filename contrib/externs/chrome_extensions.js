@@ -6589,6 +6589,17 @@ Debuggee.prototype.targetId;
 
 
 /**
+ * @typedef {?{
+ *   tabId: (number|undefined),
+ *   extensionId: (string|undefined),
+ *   targetId: (string|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/debugger.html#type-Debuggee
+ */
+chrome.debugger.Debuggee;
+
+
+/**
  * @const
  * @see https://developer.chrome.com/extensions/debugger
  */
@@ -6658,7 +6669,7 @@ chrome.debugger.TargetInfo.prototype.faviconUrl;
 
 
 /**
- * @param {!Debuggee} target
+ * @param {!chrome.debugger.Debuggee} target
  * @param {string} requiredVersion
  * @param {function(): void=} callback
  * @see https://developer.chrome.com/extensions/debugger#method-attach
@@ -6667,7 +6678,7 @@ chrome.debugger.attach = function(target, requiredVersion, callback) {};
 
 
 /**
- * @param {!Debuggee} target
+ * @param {!chrome.debugger.Debuggee} target
  * @param {function(): void=} callback
  * @see https://developer.chrome.com/extensions/debugger#method-detach
  */
@@ -6675,7 +6686,7 @@ chrome.debugger.detach = function(target, callback) {};
 
 
 /**
- * @param {!Debuggee} target
+ * @param {!chrome.debugger.Debuggee} target
  * @param {string} method
  * @param {!Object=} commandParams
  * @param {function(!Object=): void=} callback
@@ -6711,7 +6722,7 @@ chrome.debugger.DebuggerEvent = function() {};
 
 
 /**
- * @param {function(!Debuggee, string, !Object=): void} callback
+ * @param {function(!chrome.debugger.Debuggee, string, !Object=): void} callback
  */
 chrome.debugger.DebuggerEvent.prototype.addListener = function(callback) {};
 
@@ -6720,7 +6731,7 @@ chrome.debugger.DebuggerEvent.prototype.addListener = function(callback) {};
 chrome.debugger.DetachEvent = function() {};
 
 /**
- * @param {function(!Debuggee,
+ * @param {function(!chrome.debugger.Debuggee,
  *     (!chrome.debugger.DetachReason|string)): void} callback
  */
 chrome.debugger.DetachEvent.prototype.addListener = function(callback) {};
