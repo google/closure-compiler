@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collections;
 
 /**
@@ -272,8 +271,8 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  String toStringHelper(boolean forAnnotations) {
-    return referencedType.toStringHelper(forAnnotations);
+  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+    return referencedType.appendTo(sb, forAnnotations);
   }
 
   @Override

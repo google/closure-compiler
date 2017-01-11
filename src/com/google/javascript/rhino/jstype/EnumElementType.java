@@ -146,10 +146,11 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  String toStringHelper(boolean forAnnotations) {
-    return forAnnotations ?
-        primitiveType.toString() :
-        (getReferenceName() + "<" + primitiveType + ">");
+  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+    if (forAnnotations) {
+      return sb.append(this.primitiveType);
+    }
+    return sb.append(getReferenceName()).append("<").append(this.primitiveType).append(">");
   }
 
   @Override

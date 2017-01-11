@@ -1578,7 +1578,7 @@ public abstract class JSType implements TypeI, Serializable {
    */
   @Override
   public String toString() {
-    return toStringHelper(false);
+    return appendTo(new StringBuilder(), false).toString();
   }
 
   /**
@@ -1592,29 +1592,27 @@ public abstract class JSType implements TypeI, Serializable {
   /**
    * A string representation of this type, suitable for printing
    * in type annotations at code generation time.
+   *
+   * Don't call from this package; use appendAsNonNull instead.
    */
   public final String toAnnotationString() {
-    return toStringHelper(true);
+    return appendTo(new StringBuilder(), true).toString();
   }
 
-  public final String toNonNullString(boolean forAnnotations) {
-    if (forAnnotations) {
-      return toNonNullAnnotationString();
-    } else {
-      return toStringHelper(false);
-    }
-  }
-
+  // Don't call from this package; use appendAsNonNull instead.
   public final String toNonNullAnnotationString() {
-    return !isUnknownType() && !isTemplateType() && !isRecordType() && !isFunctionType()
-        && isObject() ? "!" + toAnnotationString() : toAnnotationString();
+    return appendAsNonNull(new StringBuilder(), true).toString();
   }
 
-  /**
-   * @param forAnnotations Whether this is for use in code generator
-   *     annotations. Otherwise, it's for warnings.
-   */
-  abstract String toStringHelper(boolean forAnnotations);
+  final StringBuilder appendAsNonNull(StringBuilder sb, boolean forAnnotations) {
+    if (forAnnotations && isObject()
+        && !isUnknownType() && !isTemplateType() && !isRecordType() && !isFunctionType()) {
+      sb.append("!");
+    }
+    return appendTo(sb, forAnnotations);
+  }
+
+  abstract StringBuilder appendTo(StringBuilder sb, boolean forAnnotations);
 
   /**
    * Modify this type so that it matches the specified type.

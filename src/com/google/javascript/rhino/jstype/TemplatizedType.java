@@ -39,11 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
@@ -101,20 +98,19 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   @Override
-  String toStringHelper(final boolean forAnnotations) {
-    String typeString = super.toStringHelper(forAnnotations);
-
-    if (!templateTypes.isEmpty()) {
-      typeString += "<"
-          + Joiner.on(",").join(Lists.transform(templateTypes, new Function<JSType, String>() {
-            @Override
-            public String apply(JSType type) {
-              return type.toStringHelper(forAnnotations);
-            }
-          })) + ">";
+  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+    super.appendTo(sb, forAnnotations);
+    if (!this.templateTypes.isEmpty()) {
+      sb.append("<");
+      int lastIndex = this.templateTypes.size() - 1;
+      for (int i = 0; i < lastIndex; i++) {
+        this.templateTypes.get(i).appendTo(sb, forAnnotations);
+        sb.append(",");
+      }
+      this.templateTypes.get(lastIndex).appendTo(sb, forAnnotations);
+      sb.append(">");
     }
-
-    return typeString;
+    return sb;
   }
 
   @Override

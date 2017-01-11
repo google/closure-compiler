@@ -44,7 +44,6 @@ import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -133,8 +132,8 @@ public class EnumType extends PrototypeObjectType {
   }
 
   @Override
-  String toStringHelper(boolean forAnnotations) {
-    return forAnnotations ? "Object" : getReferenceName();
+  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+    return sb.append(forAnnotations ? "Object" : getReferenceName());
   }
 
   @Override

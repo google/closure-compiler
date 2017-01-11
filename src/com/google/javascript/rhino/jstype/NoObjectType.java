@@ -162,8 +162,8 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  String toStringHelper(boolean forAnnotations) {
-    return forAnnotations ? "?" : "NoObject";
+  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+    return sb.append(forAnnotations ? "?" : "NoObject");
   }
 
   @Override

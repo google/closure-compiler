@@ -287,8 +287,8 @@ final class ArrowType extends JSType {
   }
 
   @Override
-  String toStringHelper(boolean forAnnotations) {
-    return "[ArrowType]";
+  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+    return sb.append("[ArrowType]");
   }
 
   @Override

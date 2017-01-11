@@ -538,22 +538,20 @@ public class UnionType extends JSType {
     return restricted.build();
   }
 
-  @Override String toStringHelper(boolean forAnnotations) {
-    StringBuilder result = new StringBuilder();
+  @Override
+  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     boolean firstAlternate = true;
-
-    result.append("(");
+    sb.append("(");
     SortedSet<JSType> sorted = new TreeSet<>(ALPHA);
     sorted.addAll(alternatesWithoutStucturalTyping);
     for (JSType t : sorted) {
       if (!firstAlternate) {
-        result.append("|");
+        sb.append("|");
       }
-      result.append(t.toStringHelper(forAnnotations));
+      t.appendTo(sb, forAnnotations);
       firstAlternate = false;
     }
-    result.append(")");
-    return result.toString();
+    return sb.append(")");
   }
 
   @Override

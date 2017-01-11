@@ -122,7 +122,7 @@ public class NoType extends NoObjectType {
   }
 
   @Override
-  String toStringHelper(boolean forAnnotations) {
-    return forAnnotations ? "?" : "None";
+  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+    return sb.append(forAnnotations ? "?" : "None");
   }
 }
