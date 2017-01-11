@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 
 import com.google.common.collect.ImmutableList;
@@ -64,6 +65,21 @@ public final class SymbolTableTest extends TestCase {
     options.setContinueAfterErrors(true);
     options.setAllowHotswapReplaceScript(true);
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
+  }
+
+  /**
+   * Make sure rewrite of super() call containing a function literal doesn't cause
+   * the SymbolTable to crash.
+   */
+  public void testFunctionInCall() {
+    createSymbolTable(
+        LINE_JOINER.join(
+            "class Y { constructor(fn) {} }",
+            "class X extends Y {",
+            "  constructor() {",
+            "    super(function() {});",
+            "  }",
+            "}"));
   }
 
   public void testGlobalVar() throws Exception {
