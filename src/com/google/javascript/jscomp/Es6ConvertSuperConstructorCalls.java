@@ -259,7 +259,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     Node callee = newSuperCall.getFirstChild();
 
     if (callee.isSuper()) {
-      // super(...) -> super.call(this, ...)
+      // super(...) -> SuperClass.call(this, ...)
       Node superClassDotCall =
           IR.getprop(NodeUtil.newQName(compiler, superClassQName), IR.string("call"))
               .useSourceInfoFromForTree(callee);
