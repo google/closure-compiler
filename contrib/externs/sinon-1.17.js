@@ -798,3 +798,11 @@ SinonFakeXmlHttpRequest.prototype.requestBody;
  * @param {?string} body
  */
 SinonFakeXmlHttpRequest.prototype.respond = function(status, headers, body) {};
+
+
+
+/**
+ * @param {number} millis
+ * @return {Object}
+ */
+sinon.useFakeTimers = function(millis) {};
