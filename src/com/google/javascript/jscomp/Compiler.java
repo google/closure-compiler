@@ -1344,14 +1344,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   public SymbolTable buildKnownSymbolTable() {
-    SymbolTable symbolTable = new SymbolTable(getTypeRegistry());
+    SymbolTable symbolTable = new SymbolTable(this, getTypeRegistry());
 
     MemoizedScopeCreator typedScopeCreator = getTypedScopeCreator();
     if (typedScopeCreator != null) {
       symbolTable.addScopes(typedScopeCreator.getAllMemoizedScopes());
       symbolTable.addSymbolsFrom(typedScopeCreator);
     } else {
-      symbolTable.findScopes(this, externsRoot, jsRoot);
+      symbolTable.findScopes(externsRoot, jsRoot);
     }
 
     GlobalNamespace globalNamespace =
@@ -1376,10 +1376,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     symbolTable.fillNamespaceReferences();
     symbolTable.fillPropertyScopes();
-    symbolTable.fillThisReferences(this, externsRoot, jsRoot);
-    symbolTable.fillPropertySymbols(this, externsRoot, jsRoot);
-    symbolTable.fillJSDocInfo(this, externsRoot, jsRoot);
-    symbolTable.fillSymbolVisibility(this, externsRoot, jsRoot);
+    symbolTable.fillThisReferences(externsRoot, jsRoot);
+    symbolTable.fillPropertySymbols(externsRoot, jsRoot);
+    symbolTable.fillJSDocInfo(externsRoot, jsRoot);
+    symbolTable.fillSymbolVisibility(externsRoot, jsRoot);
 
     return symbolTable;
   }

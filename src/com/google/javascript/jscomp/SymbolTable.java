@@ -125,13 +125,16 @@ public final class SymbolTable {
 
   private SymbolScope globalScope = null;
 
+  private final AbstractCompiler compiler;
+
   private final JSTypeRegistry registry;
 
   /**
    * Clients should get a symbol table by asking the compiler at the end
    * of a compilation job.
    */
-  SymbolTable(JSTypeRegistry registry) {
+  SymbolTable(AbstractCompiler compiler, JSTypeRegistry registry) {
+    this.compiler = compiler;
     this.registry = registry;
   }
 
@@ -470,7 +473,7 @@ public final class SymbolTable {
   }
 
   /** Finds all the scopes and adds them to this symbol table. */
-  void findScopes(AbstractCompiler compiler, Node externs, Node root) {
+  void findScopes(Node externs, Node root) {
     NodeTraversal.traverseRoots(
         compiler,
         new NodeTraversal.AbstractScopedCallback() {
@@ -870,14 +873,12 @@ public final class SymbolTable {
    * As described at the top of this file, notice that "new Foo()" and
    * "Foo.prototype" are represented by the same symbol.
    */
-  void fillPropertySymbols(
-      AbstractCompiler compiler, Node externs, Node root) {
-    (new PropertyRefCollector(compiler)).process(externs, root);
+  void fillPropertySymbols(Node externs, Node root) {
+    (new PropertyRefCollector()).process(externs, root);
   }
 
   /** Index JSDocInfo. */
-  void fillJSDocInfo(
-      AbstractCompiler compiler, Node externs, Node root) {
+  void fillJSDocInfo(Node externs, Node root) {
     NodeTraversal.traverseRoots(
         compiler, new JSDocInfoCollector(compiler.getTypeRegistry()), externs, root);
 
@@ -930,8 +931,7 @@ public final class SymbolTable {
   }
 
   /** Records the visibility of each symbol. */
-  void fillSymbolVisibility(
-      AbstractCompiler compiler, Node externs, Node root) {
+  void fillSymbolVisibility(Node externs, Node root) {
         CollectFileOverviewVisibility collectPass =
         new CollectFileOverviewVisibility(compiler);
     collectPass.process(externs, root);
@@ -1035,9 +1035,8 @@ public final class SymbolTable {
   /**
    * Fill in references to "this" variables.
    */
-  void fillThisReferences(
-      AbstractCompiler compiler, Node externs, Node root) {
-    (new ThisRefCollector(compiler)).process(externs, root);
+  void fillThisReferences(Node externs, Node root) {
+    (new ThisRefCollector()).process(externs, root);
   }
 
   /**
@@ -1324,12 +1323,6 @@ public final class SymbolTable {
   private class PropertyRefCollector
       extends NodeTraversal.AbstractPostOrderCallback
       implements CompilerPass {
-    private final AbstractCompiler compiler;
-
-    PropertyRefCollector(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
-
     @Override
     public void process(Node externs, Node root) {
       NodeTraversal.traverseRoots(compiler, this, externs, root);
@@ -1445,8 +1438,6 @@ public final class SymbolTable {
   private class ThisRefCollector
       extends NodeTraversal.AbstractScopedCallback
       implements CompilerPass {
-    private final AbstractCompiler compiler;
-
     // The 'this' symbols in the current scope chain.
     //
     // If we don't know how to declare 'this' in a scope chain,
@@ -1454,10 +1445,6 @@ public final class SymbolTable {
     // occurrence. We should strive to always be able to come up
     // with some symbol for 'this'.
     private final List<Symbol> thisStack = new ArrayList<>();
-
-    ThisRefCollector(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
 
     @Override
     public void process(Node externs, Node root) {
