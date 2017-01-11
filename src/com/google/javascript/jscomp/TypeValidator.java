@@ -792,6 +792,8 @@ class TypeValidator {
     return result;
   }
 
+  private int numImplicitUses = 0;
+
   private void recordImplicitInterfaceUses(Node src, JSType sourceType, JSType targetType) {
     sourceType = removeNullUndefinedAndTemplates(sourceType);
     targetType = removeNullUndefinedAndTemplates(targetType);
@@ -802,7 +804,15 @@ class TypeValidator {
     if (strictMismatch || mismatch) {
       // We don't report a type error, but we still need to construct a JSError,
       // for people who enable the invalidation diagnostics in DisambiguateProperties.
-      String msg = "Implicit use of type " + sourceType + " as " + targetType;
+      // Constructing these error strings can take a large amount of time, so we stop after the
+      // first few. Picked 10 arbitrarily.
+      String msg;
+      if (numImplicitUses < 10) {
+        msg = "Implicit use of type " + sourceType + " as " + targetType;
+      } else {
+        msg = "";
+      }
+      numImplicitUses++;
       JSError err = JSError.make(src, TYPE_MISMATCH_WARNING, msg);
       implicitInterfaceUses.add(new TypeMismatch(sourceType, targetType, err));
     }
