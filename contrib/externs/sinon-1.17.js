@@ -802,7 +802,7 @@ SinonFakeXmlHttpRequest.prototype.respond = function(status, headers, body) {};
 
 
 /**
- * @param {number} millis
+ * @param {...?} params
  * @return {Object}
  */
-sinon.useFakeTimers = function(millis) {};
+sinon.useFakeTimers = function(params) {};
