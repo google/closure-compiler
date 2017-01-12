@@ -132,6 +132,13 @@ angular.$q.Deferred.prototype.promise;
 angular.$q.prototype.all = function(promises) {};
 
 /**
+ * @param {!Array<!angular.$q.Promise>|!Object<string,!angular.$q.Promise>}
+ *     promises
+ * @return {!angular.$q.Promise}
+ */
+angular.$q.prototype.race = function(promises) {};
+
+/**
  * @return {!angular.$q.Deferred}
  */
 angular.$q.prototype.defer = function() {};
