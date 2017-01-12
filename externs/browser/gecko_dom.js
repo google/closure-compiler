@@ -896,7 +896,8 @@ BoxObject.prototype.width;
 /**
  * @param {Element} element
  * @param {?string=} pseudoElt
- * @return {CSSStyleDeclaration}
+ * @return {?CSSStyleDeclaration}
  * @nosideeffects
+ * @see https://bugzilla.mozilla.org/show_bug.cgi?id=548397
  */
 function getComputedStyle(element, pseudoElt) {}
