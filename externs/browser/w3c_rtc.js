@@ -870,6 +870,7 @@ var MediaConstraints;
 
 /**
  * @interface
+ * @extends {EventTarget}
  */
 function RTCDataChannel() {}
 
@@ -967,12 +968,23 @@ RTCDataChannelInitInterface_.prototype.reliable;
 var RTCDataChannelInit;
 
 /**
+ * @typedef {{expires: number}}
+ */
+var RTCCertificate;
+
+/**
  * @param {RTCConfiguration} configuration
  * @param {!MediaConstraints=} constraints
  * @constructor
  * @implements {EventTarget}
  */
 function RTCPeerConnection(configuration, constraints) {}
+
+/**
+ * @param {Object} keygenAlgorithm
+ * @return {Promise<RTCCertificate>}
+ */
+RTCPeerConnection.generateCertificate = function (keygenAlgorithm) {};
 
 /**
  * @param {boolean=} opt_useCapture
