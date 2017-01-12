@@ -4166,6 +4166,31 @@ Navigator.prototype.plugins;
 Navigator.prototype.javaEnabled = function() {};
 
 /**
+ * @type {Object}
+ */
+Navigator.prototype.webkitPersistentStorage;
+/**
+ * @param {number} newQuotaInBytes
+ * @param {!Function=} opt_quotaCallback
+ * @param {!Function=} opt_errorCallback
+ *
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/offline_storage#method_overview
+ */
+Navigator.prototype.webkitPersistentStorage.requestQuota = function(
+    newQuotaInBytes, opt_quotaCallback, opt_errorCallback) {};
+
+/**
+ * @param {!Function=} opt_successCallback
+ * @param {!Function=} opt_errorCallback
+ *
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/offline_storage#method_overview
+ */
+Navigator.prototype.webkitPersistentStorage.queryUsageAndQuota = function(
+    opt_successCallback, opt_errorCallback) {};
+
+/**
  * @constructor
  * @implements {IObject<(string|number),!Plugin>}
  * @implements {IArrayLike<!Plugin>}
