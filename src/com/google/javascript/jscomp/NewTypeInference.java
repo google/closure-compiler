@@ -2978,7 +2978,8 @@ final class NewTypeInference implements CompilerPass {
     }
 
     if (recvType.isUnknown() || recvType.isTrueOrTruthy() || recvType.isLoose()
-        || allowPropertyOnSubtypes && recvType.mayContainUnknownObject()) {
+        || (allowPropertyOnSubtypes
+            && (recvType.mayContainUnknownObject() || recvType.isIObject()))) {
       if (symbolTable.isPropertyDefined(pname)) {
         return false;
       }
@@ -3686,6 +3687,9 @@ final class NewTypeInference implements CompilerPass {
     JSType recvType = pair.type;
     JSType indexType = recvType.getIndexType();
     if (indexType != null) {
+      if (indexType.isBottom()) {
+        indexType = UNKNOWN;
+      }
       pair = analyzeExprBwd(index, pair.env, indexType);
       pair.type = getIndexedTypeOrUnknown(recvType);
       return pair;

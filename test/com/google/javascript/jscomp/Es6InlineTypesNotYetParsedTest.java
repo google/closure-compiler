@@ -115,7 +115,7 @@ public final class Es6InlineTypesNotYetParsedTest extends CompilerTestCase {
     assertSource("/** @type {Object.<string, number>}  */ var s;")
         .transpilesTo("var s: Object<string, number>;");
     assertSource("/** @type {Object.<number>}  */ var s;")
-        .transpilesTo("var s: Object<number>;");
+        .transpilesTo("var s: Object<any, number>;");
   }
 
   public void testParameterizedTypeWithVoid() throws Exception {
