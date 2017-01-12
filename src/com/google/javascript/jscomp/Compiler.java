@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
-import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -739,7 +738,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   <T> T runInCompilerThread(Callable<T> callable) {
     return compilerExecutor.runInCompilerThread(
-        callable, options != null && options.getTracerMode() == TracerMode.ALL);
+        callable, options != null && options.getTracerMode().isOn());
   }
 
   private void compileInternal() {
