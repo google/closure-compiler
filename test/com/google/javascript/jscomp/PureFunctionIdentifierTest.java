@@ -1327,6 +1327,16 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertPureCallsMarked(source, ImmutableList.of("b"));
   }
 
+  public void testAmbiguousDefinitionsDoubleDefinition6() {
+    String source = LINE_JOINER.join(
+            "var SetCustomData1 = function SetCustomData2(element, dataName, dataValue) {",
+            "    var x = element['_customData'];",
+            "    x[dataName] = dataValue;",
+            "}",
+            "SetCustomData1(window, \"foo\", \"bar\");");
+    assertPureCallsMarked(source, NO_PURE_CALLS);
+  }
+
   public void testCallBeforeDefinition() throws Exception {
     assertPureCallsMarked("f(); function f(){}", ImmutableList.of("f"));
     assertPureCallsMarked("var a = {}; a.f(); a.f = function (){}", ImmutableList.of("a.f"));
