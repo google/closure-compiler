@@ -1468,7 +1468,9 @@ public class Node implements Serializable {
 
   /**
    * <p>Return an iterable object that iterates over this node's siblings,
-   * <b>including this Node</b>. The iterator does not support the optional
+   * <b>including this Node</b> but not any siblings that are before this one.
+   *
+   * <p>The iterator does not support the optional
    * operation {@link Iterator#remove()}.</p>
    *
    * <p>To iterate over a node's siblings including itself, one can write</p>
@@ -1482,32 +1484,26 @@ public class Node implements Serializable {
   /**
    * @see Node#siblings()
    */
-  private static final class SiblingNodeIterable
-      implements Iterable<Node>, Iterator<Node> {
+  private static final class SiblingNodeIterable implements Iterable<Node> {
     private final Node start;
-    @Nullable private Node current;
-    private boolean used;
 
     SiblingNodeIterable(Node start) {
       this.start = start;
-      this.current = start;
-      this.used = false;
     }
-
     @Override
     public Iterator<Node> iterator() {
-      if (!used) {
-        used = true;
-        return this;
-      } else {
-        // We have already used the current object as an iterator;
-        // we must create a new SiblingNodeIterable based on this
-        // iterable's start node.
-        //
-        // Since the primary use case for Node.children is in for
-        // loops, this branch is extremely unlikely.
-        return (new SiblingNodeIterable(start)).iterator();
-      }
+      return new SiblingNodeIterator(start);
+    }
+  }
+
+  /**
+   * @see Node#siblings()
+   */
+  private static final class SiblingNodeIterator implements Iterator<Node> {
+    @Nullable private Node current;
+
+    SiblingNodeIterator(Node start) {
+      this.current = start;
     }
 
     @Override
