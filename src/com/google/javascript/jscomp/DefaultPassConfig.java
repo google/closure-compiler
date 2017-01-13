@@ -306,6 +306,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureRewriteClass);
     }
 
+    // This pass should be before any check for properties, types and this
+    checks.add(objectDefinePropertyPreprocess);
+
     checks.add(checkSideEffects);
 
     if (options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
@@ -1503,6 +1506,15 @@ public final class DefaultPassConfig extends PassConfig {
           cssNames = newCssNames;
         }
       };
+    }
+  };
+
+  /** Pre-process Object.defineProperty */
+  final PassFactory objectDefinePropertyPreprocess =
+      new PassFactory("ObjectDefinePropertyPreprocess", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new ObjectDefinePropertyPreprocess(compiler);
     }
   };
 
