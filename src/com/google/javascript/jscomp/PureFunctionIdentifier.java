@@ -43,7 +43,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -437,11 +436,6 @@ class PureFunctionIdentifier implements CompilerPass {
       this.inExterns = inExterns;
     }
 
-    private void resetFunctionVars(Node function) {
-      blacklistedVarsByFunction.replaceValues(function, Collections.<Var>emptySet());
-      taintedVarsByFunction.replaceValues(function, Collections.<Var>emptySet());
-    }
-
     @Override
     public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
       // Functions need to be processed as part of pre-traversal so that an entry for the function
@@ -456,7 +450,6 @@ class PureFunctionIdentifier implements CompilerPass {
           functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
         }
       }
-
       return true;
     }
 
@@ -573,21 +566,23 @@ class PureFunctionIdentifier implements CompilerPass {
         }
       }
 
+      // Clean up memory after exiting out of the function scope where we will no longer need these.
       if (t.getScopeRoot().isFunction()) {
-        resetFunctionVars(function);
+        blacklistedVarsByFunction.removeAll(function);
+        taintedVarsByFunction.removeAll(function);
       }
     }
 
-    private boolean varDeclaredInDifferentFunction(Var v, Scope scope) {
+    private boolean isVarDeclaredInScope(Var v, Scope scope) {
       if (v == null) {
-        return true;
-      } else if (v.scope != scope) {
-        Node declarationRoot = NodeUtil.getEnclosingFunction(v.scope.rootNode);
-        Node scopeRoot = NodeUtil.getEnclosingFunction(scope.rootNode);
-        return declarationRoot != scopeRoot;
-      } else {
         return false;
       }
+      if (v.scope == scope) {
+        return true;
+      }
+      Node declarationRoot = NodeUtil.getEnclosingFunction(v.scope.rootNode);
+      Node scopeRoot = NodeUtil.getEnclosingFunction(scope.rootNode);
+      return declarationRoot == scopeRoot;
     }
 
     /**
@@ -603,9 +598,7 @@ class PureFunctionIdentifier implements CompilerPass {
       Node lhs = op.getFirstChild();
       if (lhs.isName()) {
         Var var = scope.getVar(lhs.getString());
-        if (varDeclaredInDifferentFunction(var, scope)) {
-          sideEffectInfo.setTaintsGlobalState();
-        } else {
+        if (isVarDeclaredInScope(var, scope)) {
           // Assignment to local, if the value isn't a safe local value,
           // a literal or new object creation, add it to the local blacklist.
           // parameter values depend on the caller.
@@ -617,6 +610,8 @@ class PureFunctionIdentifier implements CompilerPass {
           if (rhs != null && op.isAssign() && !NodeUtil.evaluatesToLocalValue(rhs)) {
             blacklistedVarsByFunction.put(enclosingFunction, var);
           }
+        } else {
+          sideEffectInfo.setTaintsGlobalState();
         }
       } else if (NodeUtil.isGet(lhs)) {
         if (lhs.getFirstChild().isThis()) {
@@ -627,13 +622,12 @@ class PureFunctionIdentifier implements CompilerPass {
           if (objectNode.isName()) {
             var = scope.getVar(objectNode.getString());
           }
-          if (varDeclaredInDifferentFunction(var, scope)) {
-            sideEffectInfo.setTaintsGlobalState();
-          } else {
+          if (isVarDeclaredInScope(var, scope)) {
             // Maybe a local object modification.  We won't know for sure until
             // we exit the scope and can validate the value of the local.
-            //
             taintedVarsByFunction.put(enclosingFunction, var);
+          } else {
+            sideEffectInfo.setTaintsGlobalState();
           }
         }
       } else {
