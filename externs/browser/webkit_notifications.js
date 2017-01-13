@@ -22,10 +22,17 @@
  * @typedef {{dir: (string|undefined), lang: (string|undefined),
  *            body: (string|undefined), tag: (string|undefined),
  *            icon: (string|undefined),
- *            requireInteraction: (boolean|undefined)}}
+ *            requireInteraction: (boolean|undefined),
+ *            actions: (!Array<!NotificationAction>|undefined)}}
  * @see http://notifications.spec.whatwg.org/#notificationoptions
  */
 var NotificationOptions;
+
+/**
+ * @typedef {{action: string, title: string, icon: (string|undefined)}}
+ * @see https://notifications.spec.whatwg.org/#dictdef-notificationoptions
+ */
+var NotificationAction;
 
 /**
  * @typedef {{tag: (string|undefined)}}
