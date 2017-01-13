@@ -332,15 +332,14 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closurePrimitives);
     }
 
-    // It's important that the PolymerPass run *after* the ClosurePrimitives
-    // rewrite and *before* the suspicious code checks.
-    // This is enforced in the assertValidOrder method.
-    if (options.polymerPass) {
-      checks.add(polymerPass);
-    }
-
     if (options.chromePass) {
       checks.add(chromePass);
+    }
+
+    // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
+    // and *before* the suspicious code checks. This is enforced in the assertValidOrder method.
+    if (options.polymerPass) {
+      checks.add(polymerPass);
     }
 
     if (options.checkSuspiciousCode
@@ -1106,6 +1105,11 @@ public final class DefaultPassConfig extends PassConfig {
         closurePrimitives,
         polymerPass,
         "The Polymer pass must run after goog.provide processing.");
+    assertPassOrder(
+        checks,
+        chromePass,
+        polymerPass,
+        "The Polymer pass must run after ChromePass processing.");
     assertPassOrder(
         checks,
         polymerPass,
