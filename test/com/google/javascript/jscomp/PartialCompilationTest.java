@@ -133,7 +133,7 @@ public class PartialCompilationTest extends TestCase {
     assertThat(referenced.isNoResolvedType()).isTrue();
     assertThat(referenced.getReferenceName()).isEqualTo("some.thing.Missing");
     ImmutableList<JSType> templateTypes = templatizedType.getTemplateTypes();
-    assertThat(templateTypes).hasSize(0);
+    assertThat(templateTypes).isEmpty();
     templateTypes = templatizedType.getUnresolvedTemplateTypes();
     assertThat(templateTypes.get(0).isString()).isTrue();
     assertThat(templateTypes.get(1).isObject()).isTrue();
