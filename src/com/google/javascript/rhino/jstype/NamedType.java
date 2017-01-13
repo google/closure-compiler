@@ -336,9 +336,7 @@ public class NamedType extends ProxyObjectType {
     if (!isForwardDeclared) {
       warning(t, "Bad type annotation. Unknown type " + reference);
     } else {
-      setReferencedType(
-          registry.getNativeObjectType(
-              JSTypeNative.NO_RESOLVED_TYPE));
+      setReferencedType(new NoResolvedType(registry, getReferenceName()));
 
       if (validator != null) {
         validator.apply(getReferencedType());

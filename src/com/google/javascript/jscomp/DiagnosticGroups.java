@@ -47,7 +47,7 @@ public class DiagnosticGroups {
       DiagnosticType.warning("JSC_UNUSED", "{0}");
 
   public static final Set<String> wildcardExcludedGroups = ImmutableSet.of(
-      "reportUnknownTypes", "analyzerChecks", "oldReportUnknownTypes");
+      "reportUnknownTypes", "analyzerChecks", "oldReportUnknownTypes", "missingSourcesWarnings");
 
   public DiagnosticGroups() {}
 
@@ -127,6 +127,7 @@ public class DiagnosticGroups {
           + "msgDescriptions, "
           + "newCheckTypes, "
           + "nonStandardJsDocs, "
+          + "missingSourcesWarnings, "
           + "reportUnknownTypes, "
           + "suspiciousCode, "
           + "strictModuleDepCheck, "
@@ -473,6 +474,26 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup MISSING_REQUIRE =
       DiagnosticGroups.registerGroup("missingRequire",
           CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
+
+  /**
+   * A set of diagnostics expected when parsing and type checking partial programs.
+   * Useful for clutz (tool that extracts TypeScript definitions from JS code).
+   */
+  public static final DiagnosticGroup MISSING_SOURCES_WARNINGS =
+      DiagnosticGroups.registerGroup(
+          "missingSourcesWarnings",
+          REPORT_UNKNOWN_TYPES,
+          UNDEFINED_NAMES,
+          UNDEFINED_VARIABLES,
+          MISSING_PROVIDE,
+          DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY),
+          DiagnosticGroup.forType(ProcessClosurePrimitives.MISSING_PROVIDE_ERROR),
+          MISSING_PROPERTIES,
+          // triggered by typedefs with missing types
+          DUPLICATE_VARS,
+          // caused by a define depending on another define that's missing
+          DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_INIT_ERROR),
+          DiagnosticGroup.forType(Es6ExternsCheck.MISSING_ES6_EXTERNS));
 
   public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
       DiagnosticGroups.registerGroup("strictMissingRequire",
