@@ -57,9 +57,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import javax.annotation.Nullable;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.dataflow.qual.Pure;
 
 /**
  * <p>JSDoc information describing JavaScript code. JSDoc is represented as a
@@ -112,21 +109,13 @@ public class JSDocInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // Function information
-    @Nullable
     private JSTypeExpression baseType;
-    @Nullable
     private ArrayList<JSTypeExpression> extendedInterfaces;
-    @Nullable
     private ArrayList<JSTypeExpression> implementedInterfaces;
-    @Nullable
     private LinkedHashMap<String, JSTypeExpression> parameters;
-    @Nullable
     private ArrayList<JSTypeExpression> thrownTypes;
-    @Nullable
     private ArrayList<String> templateTypeNames;
-    @Nullable
     private Set<String> disposedParameters;
-    @Nullable
     private LinkedHashMap<String, Node> typeTransformations;
 
     // Other information
@@ -134,9 +123,7 @@ public class JSDocInfo implements Serializable {
     private String meaning;
     private String deprecated;
     private String license;
-    @Nullable
     private ImmutableSet<String> suppressions;
-    @Nullable
     private ImmutableSet<String> modifies;
     private String lendsName;
 
@@ -197,10 +184,8 @@ public class JSDocInfo implements Serializable {
       return other;
     }
 
-    @Nullable
-    @SuppressWarnings("nullness")
     protected ArrayList<JSTypeExpression> cloneTypeList(
-        @Nullable ArrayList<JSTypeExpression> list, boolean cloneTypeExpressionNodes) {
+        ArrayList<JSTypeExpression> list, boolean cloneTypeExpressionNodes) {
       ArrayList<JSTypeExpression> newlist = null;
       if (list != null) {
         newlist = new ArrayList<>(list.size());
@@ -211,10 +196,8 @@ public class JSDocInfo implements Serializable {
       return newlist;
     }
 
-    @Nullable
-    @SuppressWarnings("nullness")
     protected LinkedHashMap<String, JSTypeExpression> cloneTypeMap(
-        @Nullable LinkedHashMap<String, JSTypeExpression> map, boolean cloneTypeExpressionNodes) {
+        LinkedHashMap<String, JSTypeExpression> map, boolean cloneTypeExpressionNodes) {
       LinkedHashMap<String, JSTypeExpression> newmap = null;
       if (map != null) {
         newmap = new LinkedHashMap<>();
@@ -318,7 +301,7 @@ public class JSDocInfo implements Serializable {
         return false;
       }
 
-      return ((p1.getItem() == null && p2.getItem() == null)
+      return (p1.getItem() == null && p2.getItem() == null
               || p1.getItem().isEquivalentTo(p2.getItem()))
           && p1.getStartLine() == p2.getStartLine()
           && p1.getPositionOnStartLine() == p2.getPositionOnStartLine()
@@ -357,7 +340,7 @@ public class JSDocInfo implements Serializable {
         return false;
       }
 
-      return ((p1.getItem() == null && p2.getItem() == null)
+      return (p1.getItem() == null && p2.getItem() == null
               || p1.getItem().isEquivalentTo(p2.getItem()))
           && p1.getStartLine() == p2.getStartLine()
           && p1.getPositionOnStartLine() == p2.getPositionOnStartLine()
@@ -446,7 +429,6 @@ public class JSDocInfo implements Serializable {
     }
   }
 
-  @Nullable
   private LazilyInitializedInfo info;
 
   private LazilyInitializedDocumentation documentation;
@@ -474,13 +456,11 @@ public class JSDocInfo implements Serializable {
    * @see #setType(JSTypeExpression, int)
    * @see #getType(int)
    */
-  @Nullable
   private JSTypeExpression type;
 
   /**
    * The type for {@link #getThisType()}.
    */
-  @Nullable
   private JSTypeExpression thisType;
 
   /**
@@ -577,9 +557,7 @@ public class JSDocInfo implements Serializable {
     return other;
   }
 
-  @Nullable
-  private static JSTypeExpression cloneType(
-      @Nullable JSTypeExpression expr, boolean cloneTypeNodes) {
+  private static JSTypeExpression cloneType(JSTypeExpression expr, boolean cloneTypeNodes) {
     if (expr != null) {
       return cloneTypeNodes ? expr.clone() : expr;
     }
@@ -587,7 +565,7 @@ public class JSDocInfo implements Serializable {
   }
 
   @VisibleForTesting
-  public static boolean areEquivalent(@Nullable JSDocInfo jsDoc1, @Nullable JSDocInfo jsDoc2) {
+  public static boolean areEquivalent(JSDocInfo jsDoc1, JSDocInfo jsDoc2) {
     if (jsDoc1 == null && jsDoc2 == null) {
       return true;
     }
@@ -999,8 +977,7 @@ public class JSDocInfo implements Serializable {
    * @return Whether there is a declaration of a callable type.
    */
   public boolean containsFunctionDeclaration() {
-    JSTypeExpression typeExpr = getType();
-    boolean hasFunctionType = typeExpr != null && typeExpr.getRoot().isFunction();
+    boolean hasFunctionType = hasType() && getType().getRoot().isFunction();
     return hasFunctionType
         || hasReturnType()
         || hasThisType()
@@ -1024,7 +1001,6 @@ public class JSDocInfo implements Serializable {
     this.visibility = visibility;
   }
 
-  @EnsuresNonNull({"info"})
   private void lazyInitInfo() {
     if (info == null) {
       info = new LazilyInitializedInfo();
@@ -1051,7 +1027,6 @@ public class JSDocInfo implements Serializable {
    * Adds a marker to the documentation (if it exists) and
    * returns the marker. Returns null otherwise.
    */
-  @Nullable
   Marker addMarker() {
     if (!lazyInitDocumentation()) {
       return null;
@@ -1310,7 +1285,7 @@ public class JSDocInfo implements Serializable {
     if (isTypeTransformationName(newTemplateTypeName) || hasTypedefType()) {
       return false;
     }
-    if (info.templateTypeNames == null) {
+    if (info.templateTypeNames == null){
       info.templateTypeNames = new ArrayList<>();
     } else if (info.templateTypeNames.contains(newTemplateTypeName)) {
       return false;
@@ -1320,17 +1295,15 @@ public class JSDocInfo implements Serializable {
     return true;
   }
 
-  @Pure
   private boolean isTemplateTypeName(String name) {
-    if (info == null || info.templateTypeNames == null) {
+    if (info.templateTypeNames == null) {
       return false;
     }
     return info.templateTypeNames.contains(name);
   }
 
-  @Pure
   private boolean isTypeTransformationName(String name) {
-    if (info == null || info.typeTransformations == null) {
+    if (info.typeTransformations == null) {
       return false;
     }
     return info.typeTransformations.containsKey(name);
@@ -1392,7 +1365,6 @@ public class JSDocInfo implements Serializable {
    * @return the parameter's type or {@code null} if this parameter is not
    *     defined or has a {@code null} type
    */
-  @Nullable
   public JSTypeExpression getParameterType(String parameter) {
     if (info == null || info.parameters == null) {
       return null;
@@ -1440,7 +1412,6 @@ public class JSDocInfo implements Serializable {
    * is the order in which parameters are defined in the JSDoc, rather
    * than the order in which the function declares them.
    */
-  @Nullable
   public String getParameterNameAt(int index) {
     if (info == null || info.parameters == null) {
       return null;
@@ -1508,7 +1479,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Get the message for a given thrown type.
    */
-  @Nullable
   public String getThrowsDescriptionForType(JSTypeExpression type) {
     if (documentation == null || documentation.throwsDescriptions == null) {
       return null;
@@ -1537,7 +1507,6 @@ public class JSDocInfo implements Serializable {
    * Returns whether a typedef parameter type, specified using the
    * {@code @typedef} annotation, is present on this JSDoc.
    */
-  @Pure
   public boolean hasTypedefType() {
     return hasType(TYPEFIELD_TYPEDEF);
   }
@@ -1561,8 +1530,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the type specified by the {@code @type} annotation.
    */
-  @Nullable
-  @Pure
   public JSTypeExpression getType() {
     return getType(TYPEFIELD_TYPE);
   }
@@ -1577,7 +1544,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the return type specified by the {@code @return} annotation.
    */
-  @Nullable
   public JSTypeExpression getReturnType() {
     return getType(TYPEFIELD_RETURN);
   }
@@ -1585,7 +1551,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the enum parameter type specified by the {@code @enum} annotation.
    */
-  @Nullable
   public JSTypeExpression getEnumParameterType() {
     return getType(TYPEFIELD_ENUM);
   }
@@ -1593,12 +1558,10 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the typedef type specified by the {@code @type} annotation.
    */
-  @Nullable
   public JSTypeExpression getTypedefType() {
     return getType(TYPEFIELD_TYPEDEF);
   }
 
-  @Nullable
   private JSTypeExpression getType(int typefield) {
     if ((MASK_TYPEFIELD & bitset) == typefield) {
       return type;
@@ -1610,7 +1573,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the type specified by the {@code @this} annotation.
    */
-  @Nullable
   public JSTypeExpression getThisType() {
     return thisType;
   }
@@ -1638,7 +1600,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the base type specified by the {@code @extends} annotation.
    */
-  @Nullable
   public JSTypeExpression getBaseType() {
     return (info == null) ? null : info.baseType;
   }
@@ -1646,7 +1607,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the description specified by the {@code @desc} annotation.
    */
-  @Nullable
   public String getDescription() {
     return (info == null) ? null : info.description;
   }
@@ -1667,7 +1627,6 @@ public class JSDocInfo implements Serializable {
    * <p>But some code generators (like Closure Templates) inject their own
    * meaning with the jsdoc {@code @meaning} annotation.
    */
-  @Nullable
   public String getMeaning() {
     return (info == null) ? null : info.meaning;
   }
@@ -1685,7 +1644,6 @@ public class JSDocInfo implements Serializable {
    * The {@code @lends} annotation allows the type system to track
    * those property assignments.
    */
-  @Nullable
   public String getLendsName() {
     return (info == null) ? null : info.lendsName;
   }
@@ -1805,14 +1763,12 @@ public class JSDocInfo implements Serializable {
    * Return whether the function disposes of specified parameter.
    */
   public boolean disposesOf(String parameterName) {
-    return info != null && info.disposedParameters != null
-        && info.disposedParameters.contains(parameterName);
+    return isDisposes() && info.disposedParameters.contains(parameterName);
   }
 
   /**
    * Gets the description specified by the {@code @license} annotation.
    */
-  @Nullable
   public String getLicense() {
     return (info == null) ? null : info.license;
   }
@@ -1935,7 +1891,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the deprecation reason or null if none specified.
    */
-  @Nullable
   public String getDeprecationReason() {
     return info == null ? null : info.deprecated;
   }
@@ -1956,12 +1911,10 @@ public class JSDocInfo implements Serializable {
     return modifies == null ? Collections.<String>emptySet() : modifies;
   }
 
-  @Nullable
   private Integer getPropertyBitField() {
     return info == null ? null : info.propertyBitField;
   }
 
-  @SuppressWarnings("nullness")
   void mergePropertyBitfieldFrom(JSDocInfo other) {
     if (other.info != null) {
       lazyInitInfo();
@@ -1985,7 +1938,6 @@ public class JSDocInfo implements Serializable {
    * Returns the description for the parameter with the given name, if its
    * exists.
    */
-  @Nullable
   public String getDescriptionForParameter(String name) {
     if (documentation == null || documentation.parameters == null) {
       return null;
@@ -1997,7 +1949,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the list of authors or null if none.
    */
-  @Nullable
   public Collection<String> getAuthors() {
     return documentation == null ? null : documentation.authors;
   }
@@ -2005,7 +1956,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the list of references or null if none.
    */
-  @Nullable
   public Collection<String> getReferences() {
     return documentation == null ? null : documentation.sees;
   }
@@ -2013,7 +1963,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the version or null if none.
    */
-  @Nullable
   public String getVersion() {
     return documentation == null ? null : documentation.version;
   }
@@ -2021,7 +1970,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the description of the returned object or null if none specified.
    */
-  @Nullable
   public String getReturnDescription() {
     return documentation == null ? null : documentation.returnDescription;
   }
@@ -2029,7 +1977,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the block-level description or null if none specified.
    */
-  @Nullable
   public String getBlockDescription() {
     return documentation == null ? null : documentation.blockDescription;
   }
@@ -2044,7 +1991,6 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the file overview or null if none specified.
    */
-  @Nullable
   public String getFileOverview() {
     return documentation == null ? null : documentation.fileOverview;
   }
@@ -2078,7 +2024,6 @@ public class JSDocInfo implements Serializable {
    * appropriate nodes here.
    * @return collection of all type nodes
    */
-  @SuppressWarnings("nullness")
   public Collection<Node> getTypeNodes() {
     List<Node> nodes = new ArrayList<>();
 
@@ -2135,7 +2080,6 @@ public class JSDocInfo implements Serializable {
    * Returns the original JSDoc comment string. Returns null unless
    * parseJsDocDocumentation is enabled via the ParserConfig.
    */
-  @Nullable
   public String getOriginalCommentString() {
     return documentation == null ? null : documentation.sourceComment;
   }
