@@ -611,20 +611,12 @@ final class ObjectType implements TypeWithProperties {
       }
       // IObject and IArrayLike are treated specially;
       // unlike other structural types, we check that the generics match.
-      if (otherNt.isIObject()) {
-        if (thisNt.inheritsFromIObjectReflexive()
-            && !thisNt.isNominalSubtypeOf(otherNt)) {
-          return false;
-        }
-        if (thisNt.isBuiltinObject() || thisNt.isLiteralObject()) {
-          return compareRecordTypeToIObject(otherNt, subSuperMap);
-        }
-      } else if (otherNt.isIArrayLike()) {
-        if (thisNt.inheritsFromIObjectReflexive()
-            && (!thisNt.getIndexType().isSubtypeOf(this.commonTypes.NUMBER, subSuperMap)
-                || !thisNt.getIndexedType().isSubtypeOf(otherNt.getIndexedType(), subSuperMap))) {
-          return false;
-        }
+      if (thisNt.inheritsFromIObjectReflexive() && otherNt.inheritsFromIObjectReflexive()
+          && !thisNt.isIObjectSubtypeOf(otherNt)) {
+        return false;
+      }
+      if ((thisNt.isBuiltinObject() || thisNt.isLiteralObject()) && otherNt.isIObject()) {
+        return compareRecordTypeToIObject(otherNt, subSuperMap);
       }
     } else if (!thisNt.isNominalSubtypeOf(otherNt)) {
       return false;

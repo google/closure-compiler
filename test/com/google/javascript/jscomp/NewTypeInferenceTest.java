@@ -16499,8 +16499,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    // TODO(dimvar): there shouldn't be a warning here because the index
-    // operation is like a function; w/ contravariant subtyping for the args.
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @param {!IObject<number, number>} x",
@@ -16508,10 +16506,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " */",
         "function f(x, y) {",
         "  x = y;",
-        "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "}"));
 
-    // TODO(dimvar): missed warning here b/c of covariant generics. Fix.
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @param {!IObject<(number|string), number>} x",
@@ -16519,7 +16515,20 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " */",
         "function f(x, y) {",
         "  x = y;",
-        "}"));
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @implements {IObject<(string|number), string>}",
+        " * @implements {IArrayLike<string>}",
+        " */",
+        "function Foo() {",
+        "  this.length = 123;",
+        "}",
+        "/** @type {!IArrayLike<string>} */",
+        "var x = new Foo;"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -18763,5 +18772,24 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f(/** !Object<number> */ x) {",
         "  return x[{a: 123}] + x['sadf'];",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Object<number, number>} x",
+        " * @param {!Object<(number|string), number>} y",
+        " */",
+        "function f(x, y) {",
+        "  x = y;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Object<(number|string), number>} x",
+        " * @param {!Object<number, number>} y",
+        " */",
+        "function f(x, y) {",
+        "  x = y;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }

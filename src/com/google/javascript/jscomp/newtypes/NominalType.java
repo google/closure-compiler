@@ -416,6 +416,14 @@ public final class NominalType {
       && thisRaw.getSuperClass().instantiateGenerics(this.typeMap).isNominalSubtypeOf(other);
   }
 
+  boolean isIObjectSubtypeOf(NominalType other) {
+    Preconditions.checkState(
+        this.inheritsFromIObjectReflexive() && other.inheritsFromIObjectReflexive());
+    // Contravariance for the index type and covariance for the indexed type.
+    return other.getIndexType().isSubtypeOf(this.getIndexType())
+        && this.getIndexedType().isSubtypeOf(other.getIndexedType());
+  }
+
   private boolean areTypeMapsCompatible(NominalType other) {
     Preconditions.checkState(this.rawType.equals(other.rawType));
     if (this.typeMap.isEmpty()) {
