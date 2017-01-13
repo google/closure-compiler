@@ -402,6 +402,11 @@ public class CommandLineRunner extends
         usage = "Don't generate output. Run checks, but no optimization passes.")
     private boolean checksOnly = false;
 
+    @Option(name = "--continue_after_errors",
+        handler = BooleanOptionHandler.class,
+        usage = "Continue trying to compile after an error is encountered.")
+    private boolean continueAfterErrors = false;
+
     @Option(name = "--use_types_for_optimization",
         handler = BooleanOptionHandler.class,
         usage = "Enable or disable the optimizations "
@@ -1568,6 +1573,8 @@ public class CommandLineRunner extends
     if (flags.checksOnly) {
       options.setOutputJs(CompilerOptions.OutputJs.NONE);
     }
+
+    options.setContinueAfterErrors(flags.continueAfterErrors);
 
     if (flags.useTypesForOptimization) {
       level.setTypeBasedOptimizationOptions(options);
