@@ -708,7 +708,7 @@ public final class NodeUtil {
     if (node.isString()) {
       return true;
     } else if (node.getToken() == Token.ADD) {
-      Preconditions.checkState(node.getChildCount() == 2);
+      Preconditions.checkState(node.hasTwoChildren(), node);
       Node left = node.getFirstChild();
       Node right = node.getLastChild();
       return isStringLiteralValue(left) && isStringLiteralValue(right);
@@ -4543,22 +4543,20 @@ public final class NodeUtil {
         return (expr == parent.getFirstChild()) || isExpressionResultUsed(parent);
       case COMMA:
         Node grandparent = parent.getParent();
-        if (grandparent.isCall() &&
-            parent == grandparent.getFirstChild()) {
+        if (grandparent.isCall() && parent == grandparent.getFirstChild()) {
           // Semantically, a direct call to eval is different from an indirect
           // call to an eval. See ECMA-262 S15.1.2.1. So it's OK for the first
           // expression to a comma to be a no-op if it's used to indirect
           // an eval. This we pretend that this is "used".
-          if (expr == parent.getFirstChild() &&
-              parent.getChildCount() == 2 &&
-              expr.getNext().isName() &&
-              "eval".equals(expr.getNext().getString())) {
+          if (expr == parent.getFirstChild()
+              && parent.hasTwoChildren()
+              && expr.getNext().isName()
+              && "eval".equals(expr.getNext().getString())) {
             return true;
           }
         }
 
-        return (expr == parent.getFirstChild())
-            ? false : isExpressionResultUsed(parent);
+        return (expr == parent.getFirstChild()) ? false : isExpressionResultUsed(parent);
       case FOR:
       case FOR_IN:
         if (!parent.isForIn()) {

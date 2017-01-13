@@ -435,7 +435,7 @@ public final class AstValidator implements CompilerPass {
       } else {
         validateStatement(n.getFirstChild(), isAmbient);
       }
-      if (n.getChildCount() == 2) {
+      if (n.hasTwoChildren()) {
         validateString(n.getSecondChild());
       }
     }

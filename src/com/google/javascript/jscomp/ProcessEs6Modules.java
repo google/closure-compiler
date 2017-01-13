@@ -178,7 +178,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       } else if (child.getToken() == Token.IMPORT_SPECS) {
         for (Node grandChild : child.children()) {
           String origName = grandChild.getFirstChild().getString();
-          if (grandChild.getChildCount() == 2) { // import {a as foo} from "mod"
+          if (grandChild.hasTwoChildren()) { // import {a as foo} from "mod"
             importMap.put(
                 grandChild.getLastChild().getString(),
                 new ModuleOriginalNamePair(moduleName, origName));
@@ -262,7 +262,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       //   export * from 'moduleIdentifier';
       compiler.report(JSError.make(export, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Wildcard export"));
-    } else if (export.getChildCount() == 2) {
+    } else if (export.hasTwoChildren()) {
       //   export {x, y as z} from 'moduleIdentifier';
       Node moduleIdentifier = export.getLastChild();
       Node importNode = new Node(Token.IMPORT, moduleIdentifier.cloneNode());
@@ -286,7 +286,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         for (Node exportSpec : export.getFirstChild().children()) {
           Node origName = exportSpec.getFirstChild();
           exportMap.put(
-              exportSpec.getChildCount() == 2
+              exportSpec.hasTwoChildren()
                   ? exportSpec.getLastChild().getString()
                   : origName.getString(),
               new NameNodePair(origName.getString(), exportSpec));

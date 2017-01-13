@@ -32,7 +32,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Visitor;
-
 import java.util.Map;
 
 /**
@@ -183,7 +182,7 @@ public final class ClosureReverseAbstractInterpreter
   @Override
   public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
       FlowScope blindScope, boolean outcome) {
-    if (condition.isCall() && condition.getChildCount() == 2) {
+    if (condition.isCall() && condition.hasTwoChildren()) {
       Node callee = condition.getFirstChild();
       Node param = condition.getLastChild();
       if (callee.isGetProp() && param.isQualifiedName()) {

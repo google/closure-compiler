@@ -181,7 +181,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         return;  // should not examine class's children
 
       case CATCH:
-        checkState(n.getChildCount() == 2, n);
+        checkState(n.hasTwoChildren(), n);
         // the first child is the catch var and the second child
         // is the code block
         if (isNodeAtCurrentLexicalScope(n)) {

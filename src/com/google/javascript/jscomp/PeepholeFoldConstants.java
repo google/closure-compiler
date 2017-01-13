@@ -580,8 +580,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       // (TRUE || x) => TRUE (also, (3 || x) => 3)
       // (FALSE && x) => FALSE
-      if (lval && type == Token.OR ||
-          !lval && type == Token.AND) {
+      if ((lval && type == Token.OR) || (!lval && type == Token.AND)) {
         result = left;
 
       } else if (!mayHaveSideEffects(left)) {
@@ -809,7 +808,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // other values are converted to numbers elsewhere.
     Double rightValObj = NodeUtil.getNumberValue(right, shouldUseTypes);
     if (rightValObj != null && left.getToken() == opType) {
-      Preconditions.checkState(left.getChildCount() == 2);
+      Preconditions.checkState(left.hasTwoChildren());
 
       Node ll = left.getFirstChild();
       Node lr = ll.getNext();

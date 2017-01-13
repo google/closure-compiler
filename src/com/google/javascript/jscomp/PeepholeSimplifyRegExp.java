@@ -31,8 +31,7 @@ class PeepholeSimplifyRegExp extends AbstractPeepholeOptimization {
     if (subtree.isRegExp()) {
       // Split regexp into pattern and flags.
       String pattern = subtree.getFirstChild().getString();
-      String flags = subtree.getChildCount() == 2
-          ? subtree.getLastChild().getString() : "";
+      String flags = subtree.hasTwoChildren() ? subtree.getLastChild().getString() : "";
       // Parse to an AST and optimize.
       RegExpTree regexTree;
       try {
@@ -67,7 +66,7 @@ class PeepholeSimplifyRegExp extends AbstractPeepholeOptimization {
         subtree.getFirstChild().setString(newPattern);
         if (!newFlags.isEmpty()) {
           subtree.getLastChild().setString(newFlags);
-        } else if (subtree.getChildCount() == 2) {
+        } else if (subtree.hasTwoChildren()) {
           subtree.getLastChild().detach();
         }
         reportCodeChange();

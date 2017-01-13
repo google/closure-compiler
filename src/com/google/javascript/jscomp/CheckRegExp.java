@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.regex.RegExpTree;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.Set;
 
 /**
@@ -89,8 +88,7 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
     // Check the syntax of regular expression patterns.
     } else if (n.isRegExp()) {
       String pattern = n.getFirstChild().getString();
-      String flags = n.getChildCount() == 2
-          ? n.getLastChild().getString() : "";
+      String flags = n.hasTwoChildren() ? n.getLastChild().getString() : "";
       try {
         RegExpTree.parseRegExp(pattern, flags);
       } catch (IllegalArgumentException | IndexOutOfBoundsException ex) {

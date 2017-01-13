@@ -115,8 +115,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       // SubClass.mixin(SuperClass.prototype)
       // goog.mixin(SubClass.prototype, SuperClass.prototype)
       // goog$mixin(SubClass.prototype, SuperClass.prototype)
-      boolean isDeprecatedCall = callNode.getChildCount() == 2 &&
-          callName.isGetProp();
+      boolean isDeprecatedCall = callNode.hasTwoChildren() && callName.isGetProp();
       if (isDeprecatedCall) {
         // SubClass.inherits(SuperClass)
         subclass = callName.getFirstChild();
@@ -293,8 +292,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     // Identify forward declaration of form goog.forwardDeclare('foo.bar')
-    if (callName.matchesQualifiedName("goog.forwardDeclare") &&
-        n.getChildCount() == 2) {
+    if (callName.matchesQualifiedName("goog.forwardDeclare") && n.hasTwoChildren()) {
       Node typeDeclaration = n.getSecondChild();
       if (typeDeclaration.isString()) {
         return ImmutableList.of(typeDeclaration.getString());
@@ -313,7 +311,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   public String getSingletonGetterClassName(Node callNode) {
     Node callArg = callNode.getFirstChild();
     // Use both the original name and the post-CollapseProperties name.
-    if (callNode.getChildCount() == 2
+    if (callNode.hasTwoChildren()
         && (callArg.matchesQualifiedName("goog.addSingletonGetter")
             || callArg.matchesQualifiedName("goog$addSingletonGetter"))) {
       return callArg.getNext().getQualifiedName();

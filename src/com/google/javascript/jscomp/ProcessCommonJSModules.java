@@ -346,7 +346,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       if (n.isCall()
-          && n.getChildCount() == 2
+          && n.hasTwoChildren()
           && n.getFirstChild().matchesQualifiedName("require")
           && n.getSecondChild().isString()) {
         visitRequireCall(t, n, parent);
@@ -638,7 +638,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           break;
 
         case CALL:
-          if (n.getChildCount() == 2
+          if (n.hasTwoChildren()
               && n.getFirstChild().matchesQualifiedName("require")
               && n.getSecondChild().isString()) {
             imports.add(n);
@@ -1187,7 +1187,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       if (rValue.isCall()) {
         // var foo = require('bar');
-        if (rValue.getChildCount() == 2
+        if (rValue.hasTwoChildren()
             && rValue.getFirstChild().matchesQualifiedName("require")
             && rValue.getSecondChild().isString()
             && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {

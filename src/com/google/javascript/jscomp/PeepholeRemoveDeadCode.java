@@ -189,10 +189,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         //    x ? 1 : 1 --> null
         if (trueNode == null && falseNode != null) {
           n.setToken(Token.OR);
-          Preconditions.checkState(n.getChildCount() == 2, n);
+          Preconditions.checkState(n.hasTwoChildren(), n);
         } else if (trueNode != null && falseNode == null) {
           n.setToken(Token.AND);
-          Preconditions.checkState(n.getChildCount() == 2, n);
+          Preconditions.checkState(n.hasTwoChildren(), n);
         } else if (trueNode == null && falseNode == null) {
           result = trySimplifyUnusedResult(n.getFirstChild());
         } else {
@@ -328,7 +328,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       n.replaceWith(replacement);
       reportCodeChange();
       return replacement;
-    } else if (n.getChildCount() == 2 && n.getLastChild().isDefaultCase()) {
+    } else if (n.hasTwoChildren() && n.getLastChild().isDefaultCase()) {
       return tryRemoveSwitchWithSingleCase(n, true);
     } else {
       return n;
@@ -782,7 +782,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     boolean condTrue = condValue.toBoolean(true);
-    if (n.getChildCount() == 2) {
+    if (n.hasTwoChildren()) {
       Preconditions.checkState(type == Token.IF);
 
       if (condTrue) {

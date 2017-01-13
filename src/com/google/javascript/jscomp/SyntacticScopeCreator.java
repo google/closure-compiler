@@ -150,7 +150,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         return;   // should not examine function's children
 
       case CATCH:
-        Preconditions.checkState(n.getChildCount() == 2, n);
+        Preconditions.checkState(n.hasTwoChildren(), n);
         // The first child is the catch var and the second child
         // is the code block.
 
