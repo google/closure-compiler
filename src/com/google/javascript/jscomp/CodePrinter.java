@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.javascript.jscomp.CodePrinter.Builder.CodeGeneratorFactory;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -125,10 +126,12 @@ public final class CodePrinter {
      * appending the information it saved to the SourceMap
      * object given.
      */
-    void generateSourceMap(SourceMap map){
+    void generateSourceMap(String code, SourceMap map) {
       if (createSrcMap) {
+        List<Integer> lineLengths = computeLineLengths(code);
         for (Mapping mapping : allMappings) {
-          map.addMapping(mapping.node, mapping.start, mapping.end);
+          map.addMapping(
+              mapping.node, mapping.start, adjustEndPosition(lineLengths, mapping.end));
         }
       }
     }
@@ -213,6 +216,56 @@ public final class CodePrinter {
 
     protected final int getCurrentLineIndex() {
       return lineIndex;
+    }
+
+    /** Calculates length of each line in compiled code. */
+    private static List<Integer> computeLineLengths(String code) {
+      ImmutableList.Builder<Integer> builder = ImmutableList.<Integer>builder();
+      int lineStartPos = 0;
+      int lineEndPos = code.indexOf('\n');
+      while (lineEndPos > -1) {
+        builder.add(lineEndPos - lineStartPos);
+        // Next line starts where current line ends + 1 to skip "\n" character.
+        lineStartPos = lineEndPos + 1;
+        lineEndPos = code.indexOf('\n', lineStartPos);
+      }
+      return builder.build();
+    }
+
+    /**
+     * Adjusts end position of a mapping. End position points to a column *after* the last character
+     * that is covered by a mapping. And if it's end of the line there are 2 possibilites: either
+     * point to the non-existent character after the last char on a line or point to the first
+     * character on the next line. In some cases we end up with 2 mappings which should have the
+     * same end position, but they use different styles as described above it leads to invalid
+     * source maps.
+     *
+     * This method adjusts all such end positions, so if it points to the non-existing character
+     * at the end of line - it is changed to point to the first character on the next line.
+     *
+     * @param lineLengths List of all line lengths in compiled code.
+     * @param endPosition End position of a mapping.
+     */
+    private static FilePosition adjustEndPosition(
+        List<Integer> lineLengths, FilePosition endPosition) {
+      int line = endPosition.getLine();
+      // if position points to non-existing line, return it unmodified
+      if (line >= lineLengths.size()) {
+        return endPosition;
+      }
+
+      // TODO(nbeloglazov): fix cases where Precondition fails and reenable it.
+      // Preconditions.checkState(
+      //   endPosition.getColumn() <= lineLengths.get(line),
+      //    "End position " + endPosition + " points to a column larger than line length "
+      //     + lineLengths.get(line));
+
+      // if end position points to the column just after the last character on the line -
+      // change it to point the first character on the next line
+      if (endPosition.getColumn() == lineLengths.get(line)) {
+        return new FilePosition(line + 1, 0);
+      }
+      return endPosition;
     }
   }
 
@@ -816,7 +869,7 @@ public final class CodePrinter {
     String code = mcp.getCode();
 
     if (createSourceMap) {
-      mcp.generateSourceMap(sourceMap);
+      mcp.generateSourceMap(code, sourceMap);
     }
 
     return code;
