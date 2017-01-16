@@ -978,6 +978,39 @@ public final class ScopedAliasesTest extends CompilerTestCase {
          "$jscomp.scope.x = null;");
   }
 
+  public void testIssue2210() {
+    test("var ns = {};" +
+         "var y = 1;" +
+         "goog.scope(function () {" +
+         "  ns.fact = function y(n) {" +
+         "    return n == 1 ? 1 : n * y(n - 1);" +
+         "  };" +
+         "});",
+         "var ns = {};" +
+         "var y = 1;" +
+         "ns.fact = function y$jscomp$1(n) {" +
+         "  return n == 1 ? 1 : n * y$jscomp$1(n - 1);" +
+         "};");
+  }
+
+  public void testIssue2210b() {
+    test("var ns = {};" +
+         "var y = 1;" +
+         "goog.scope(function () {" +
+         "  function x(y) {}" +
+         "  ns.fact = function y(n) {" +
+         "    return n == 1 ? 1 : n * y(n - 1);" +
+         "  };" +
+         "});",
+         SCOPE_NAMESPACE +
+         "var ns = {};" +
+         "var y = 1;" +
+         "$jscomp.scope.x = function (y) {};" +
+         "ns.fact = function y$jscomp$1(n) {" +
+         "  return n == 1 ? 1 : n * y$jscomp$1(n - 1);" +
+         "};");
+  }
+
   public void testTypeCheck() {
     enableTypeCheck();
     runTypeCheckAfterProcessing = true;
