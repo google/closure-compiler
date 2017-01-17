@@ -71,13 +71,6 @@
               <goal>shade</goal>
             </goals>
             <configuration>
-              <artifactSet>
-                <excludes>
-                  <exclude>org.checkerframework:checker</exclude>
-                  <exclude>org.checkerframework:checker-qual</exclude>
-                  <exclude>org.checkerframework:jdk7</exclude>
-                </excludes>
-              </artifactSet>
               <filters>
                 <filter>
                   <artifact>com.google.javascript:closure-compiler</artifact>
