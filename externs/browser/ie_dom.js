@@ -709,6 +709,7 @@ TextRange.prototype.moveToPoint;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536654(VS.85).aspx
+ * @return {?Element}
  */
 TextRange.prototype.parentElement;
 
