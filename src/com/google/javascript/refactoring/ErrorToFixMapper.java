@@ -15,6 +15,8 @@
  */
 package com.google.javascript.refactoring;
 
+import static com.google.javascript.refactoring.SuggestedFix.getShortNameForRequire;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -305,7 +307,7 @@ public final class ErrorToFixMapper {
       }
 
       if (nodeToReplace != null) {
-        String shortName = namespaceToRequire.substring(namespaceToRequire.lastIndexOf('.') + 1);
+        String shortName = getShortNameForRequire(namespaceToRequire);
         fix.replace(nodeToReplace, IR.name(shortName), compiler);
       }
     }

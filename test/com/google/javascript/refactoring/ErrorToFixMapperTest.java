@@ -910,6 +910,34 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testMissingRequireInGoogModule_googString() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "alert(goog.string.trim('   str    '));"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "const googString = goog.require('goog.string');",
+            "",
+            "alert(googString.trim('   str    '));"));
+  }
+
+  @Test
+  public void testMissingRequireInGoogModule_googStructsMap() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "alert(new goog.structs.Map());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "const StructsMap = goog.require('goog.structs.Map');",
+            "",
+            "alert(new StructsMap());"));
+  }
+
+  @Test
   public void testMissingRequireInGoogModule_insertedInCorrectOrder() {
     assertChanges(
         LINE_JOINER.join(
