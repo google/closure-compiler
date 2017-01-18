@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -119,6 +118,58 @@ public final class NormalizeTest extends Es6CompilerTestCase {
 
   public void testFunctionInForLoop() {
     testSameEs6("for (function a() {};;) { break; }");
+  }
+
+  public void testLetInGlobalHoistScope() {
+    testEs6(
+        LINE_JOINER.join(
+            "if (true) {",
+            "  let x = 1; alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "if (true) {",
+            "  let x$jscomp$1 = 1; alert(x$jscomp$1);",
+            "}"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "if (true) {",
+            "  let x = 1; alert(x);",
+            "} else {",
+            "  let x = 1; alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "if (true) {",
+            "  let x$jscomp$1 = 1; alert(x$jscomp$1);",
+            "} else {",
+            "  let x$jscomp$2 = 1; alert(x$jscomp$2);",
+            "}"));
+  }
+
+  public void testConstInGlobalHoistScope() {
+    testEs6(
+        LINE_JOINER.join(
+            "if (true) {",
+            "  const x = 1; alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "if (true) {",
+            "  const x$jscomp$1 = 1; alert(x$jscomp$1);",
+            "}"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "if (true) {",
+            "  const x = 1; alert(x);",
+            "} else {",
+            "  const x = 1; alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "if (true) {",
+            "  const x$jscomp$1 = 1; alert(x$jscomp$1);",
+            "} else {",
+            "  const x$jscomp$2 = 1; alert(x$jscomp$2);",
+            "}"));
   }
 
   public void testAssignShorthand() {
