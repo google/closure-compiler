@@ -55,17 +55,9 @@ public final class TemplatizedType extends ProxyObjectType {
   final ImmutableList<JSType> templateTypes;
   final TemplateTypeMapReplacer replacer;
 
-  private final ImmutableList<JSType> unresolvedTemplateTypes;
-
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,
       ImmutableList<JSType> templateTypes) {
-    this(registry, objectType, templateTypes, templateTypes);
-  }
-
-  TemplatizedType(
-        JSTypeRegistry registry, ObjectType objectType,
-        ImmutableList<JSType> templateTypes, ImmutableList<JSType> unresolvedTemplateTypes) {
     super(registry, objectType, objectType.getTemplateTypeMap().addValues(
         templateTypes));
 
@@ -78,7 +70,6 @@ public final class TemplatizedType extends ProxyObjectType {
       builder.add(getTemplateTypeMap().getResolvedTemplateType(filledTemplateKey));
     }
     this.templateTypes = builder.build();
-    this.unresolvedTemplateTypes = unresolvedTemplateTypes;
 
     replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
   }
@@ -148,15 +139,6 @@ public final class TemplatizedType extends ProxyObjectType {
   @Override
   public ImmutableList<JSType> getTemplateTypes() {
     return templateTypes;
-  }
-
-  /**
-   * Returns the raw template types (template arguments) before resolving against the templatized
-   * base type. This is useful to obtain the raw types, in particular if the underlying templatized
-   * type was unavailable during parsing, e.g. because it was forward declared.
-   */
-  public ImmutableList<JSType> getUnresolvedTemplateTypes() {
-    return unresolvedTemplateTypes;
   }
 
   @Override

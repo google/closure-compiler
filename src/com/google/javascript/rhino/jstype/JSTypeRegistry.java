@@ -1113,21 +1113,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public JSType getType(StaticTypedScope<JSType> scope, String jsTypeName,
       String sourceName, int lineno, int charno) {
-    return getType(scope, jsTypeName, sourceName, lineno, charno, true);
-  }
-
-  /**
-   * @param recordUnresolvedTypes record unresolved named types and resolve
-   *     them later. Set to false if types should be ignored for backwards
-   *     compatibility (i.e. previously unparsed template type args).
-   */
-  private JSType getType(
-      StaticTypedScope<JSType> scope,
-      String jsTypeName,
-      String sourceName,
-      int lineno,
-      int charno,
-      boolean recordUnresolvedTypes) {
     switch (jsTypeName) {
       case "boolean":
         return getNativeType(JSTypeNative.BOOLEAN_TYPE);
@@ -1158,10 +1143,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       // TODO(user): Each instance should support named type creation using
       // interning.
       NamedType namedType = createNamedType(jsTypeName, sourceName, lineno, charno);
-      if (recordUnresolvedTypes) {
-        // Only record unresolved named types
-        unresolvedNamedTypes.put(scope, namedType);
-      }
+      unresolvedNamedTypes.put(scope, namedType);
       type = namedType;
     }
     return type;
@@ -1665,11 +1647,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public JSType createTypeFromCommentNode(
       Node n, String sourceName, StaticTypedScope<? extends TypeI> scope) {
-    return createFromTypeNodesInternal(n, sourceName, (StaticTypedScope<JSType>) scope, true);
+    return createFromTypeNodesInternal(n, sourceName, (StaticTypedScope<JSType>) scope);
   }
 
   private JSType createFromTypeNodesInternal(Node n, String sourceName,
-      StaticTypedScope<JSType> scope, boolean recordUnresolvedTypes) {
+      StaticTypedScope<JSType> scope) {
     switch (n.getToken()) {
       case LC: // Record type.
         return createRecordTypeFromNodes(
@@ -1677,7 +1659,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
       case BANG: // Not nullable
         return createFromTypeNodesInternal(
-            n.getFirstChild(), sourceName, scope, recordUnresolvedTypes)
+            n.getFirstChild(), sourceName, scope)
             .restrictByNotNullOrUndefined();
 
       case QMARK: // Nullable or unknown
@@ -1687,17 +1669,17 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         }
         return createNullableType(
             createFromTypeNodesInternal(
-                firstChild, sourceName, scope, recordUnresolvedTypes));
+                firstChild, sourceName, scope));
 
       case EQUALS: // Optional
         return createOptionalType(
             createFromTypeNodesInternal(
-                n.getFirstChild(), sourceName, scope, recordUnresolvedTypes));
+                n.getFirstChild(), sourceName, scope));
 
       case ELLIPSIS: // Var args
         return createOptionalType(
             createFromTypeNodesInternal(
-                n.getFirstChild(), sourceName, scope, recordUnresolvedTypes));
+                n.getFirstChild(), sourceName, scope));
 
       case STAR: // The AllType
         return getNativeType(ALL_TYPE);
@@ -1707,7 +1689,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
           builder.addAlternate(
-              createFromTypeNodesInternal(child, sourceName, scope, recordUnresolvedTypes));
+              createFromTypeNodesInternal(child, sourceName, scope));
         }
         return builder.build();
 
@@ -1721,21 +1703,12 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       // TODO(martinprobst): The new type syntax resolution should be separate.
       // Remove the NAME case then.
       case NAME:
-        JSType namedType =
-            getType(
-                scope,
-                n.getString(),
-                sourceName,
-                n.getLineno(),
-                n.getCharno(),
-                recordUnresolvedTypes);
+        JSType namedType = getType(scope, n.getString(), sourceName, n.getLineno(), n.getCharno());
         if ((namedType instanceof ObjectType)
             && !(namedType instanceof NamespaceType)
             && !(nonNullableTypeNames.contains(n.getString()))) {
           Node typeList = n.getFirstChild();
-          boolean isUnknownForwardDeclared =
-              namedType.isUnknownType() && isForwardDeclaredType(n.getString());
-          if ((!namedType.isUnknownType() || isUnknownForwardDeclared) && typeList != null) {
+          if (!namedType.isUnknownType() && typeList != null) {
             // Templatized types.
             ImmutableList.Builder<JSType> templateTypes = ImmutableList.builder();
 
@@ -1745,11 +1718,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
               templateTypes.add(getNativeType(UNKNOWN_TYPE));
             }
 
-            int nAllowedTypes =
-                isUnknownForwardDeclared
-                    ? Integer.MAX_VALUE
-                    : namedType.getTemplateTypeMap().numUnfilledTemplateKeys();
-            boolean recordTemplateArgs = recordUnresolvedTypes && !isUnknownForwardDeclared;
+            int nAllowedTypes = namedType.getTemplateTypeMap().numUnfilledTemplateKeys();
             int templateNodeIndex = 0;
             for (Node templateNode : typeList.children()) {
               // Don't parse more templatized type nodes than the type can
@@ -1768,21 +1737,9 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
                     sourceName, templateNode.getLineno(), templateNode.getCharno());
                 break;
               }
-              templateTypes.add(
-                  createFromTypeNodesInternal(templateNode, sourceName, scope, recordTemplateArgs));
+              templateTypes.add(createFromTypeNodesInternal(templateNode, sourceName, scope));
             }
-            if (isUnknownForwardDeclared) {
-              // For backwards compatibility, construct a TemplatizedType but "hide" the template
-              // arguments from further resolution.
-              namedType =
-                  new TemplatizedType(
-                      this,
-                      (ObjectType) namedType,
-                      ImmutableList.<JSType>of(),
-                      templateTypes.build());
-            } else {
-              namedType = createTemplatizedType((ObjectType) namedType, templateTypes.build());
-            }
+            namedType = createTemplatizedType((ObjectType) namedType, templateTypes.build());
             Preconditions.checkNotNull(namedType);
           }
           return createDefaultObjectUnion(namedType);
@@ -1798,7 +1755,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
           Node contextNode = current.getFirstChild();
 
           JSType candidateThisType = createFromTypeNodesInternal(
-              contextNode, sourceName, scope, recordUnresolvedTypes);
+              contextNode, sourceName, scope);
 
           // Allow null/undefined 'this' types to indicate that
           // the function is not called in a deliberate context,
@@ -1835,11 +1792,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
               } else {
                 paramBuilder.addVarArgs(
                     createFromTypeNodesInternal(
-                        arg.getFirstChild(), sourceName, scope, recordUnresolvedTypes));
+                        arg.getFirstChild(), sourceName, scope));
               }
             } else {
               JSType type = createFromTypeNodesInternal(
-                  arg, sourceName, scope, recordUnresolvedTypes);
+                  arg, sourceName, scope);
               if (arg.getToken() == Token.EQUALS) {
                 boolean addSuccess = paramBuilder.addOptionalParams(type);
                 if (!addSuccess) {
@@ -1857,7 +1814,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         }
 
         JSType returnType =
-            createFromTypeNodesInternal(current, sourceName, scope, recordUnresolvedTypes);
+            createFromTypeNodesInternal(current, sourceName, scope);
 
         return new FunctionBuilder(this)
             .withParamsNode(paramBuilder.build())
@@ -1912,7 +1869,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       if (hasType) {
         // We have a declared type.
         fieldType = createFromTypeNodesInternal(
-            fieldTypeNode.getLastChild(), sourceName, scope, true);
+            fieldTypeNode.getLastChild(), sourceName, scope);
       } else {
         // Otherwise, the type is UNKNOWN.
         fieldType = getNativeType(JSTypeNative.UNKNOWN_TYPE);

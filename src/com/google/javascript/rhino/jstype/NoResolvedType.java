@@ -53,21 +53,9 @@ package com.google.javascript.rhino.jstype;
  */
 class NoResolvedType extends NoType {
   private static final long serialVersionUID = 1L;
-  /** The name originally used to reference this type, or {@code null} if none. */
-  private String referenceName;
 
   NoResolvedType(JSTypeRegistry registry) {
     super(registry);
-  }
-
-  NoResolvedType(JSTypeRegistry registry, String referenceName) {
-    this(registry);
-    this.referenceName = referenceName;
-  }
-
-  @Override
-  public String getReferenceName() {
-    return referenceName;
   }
 
   @Override
