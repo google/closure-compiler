@@ -16,9 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +52,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * This pass identifies all global names, simple (e.g. <code>a</code>) or
@@ -192,13 +195,13 @@ final class NameAnalyzer implements CompilerPass {
     boolean isPrototype = false;
 
     /** Name of the prototype class, i.e. "a" if name is "a.prototype.b" */
-    String prototypeClass = null;
+    @Nullable String prototypeClass = null;
 
     /** Local name of prototype property i.e. "b" if name is "a.prototype.b" */
-    String prototypeProperty = null;
+    @Nullable String prototypeProperty = null;
 
     /** Name of the super class of name */
-    String superclass = null;
+    @Nullable String superclass = null;
 
     /** Whether this is a call that only affects the class definition */
     boolean onlyAffectsClassDef = false;
@@ -312,7 +315,7 @@ final class NameAnalyzer implements CompilerPass {
       Node containingNode = parent.getParent();
       switch (parent.getToken()) {
         case VAR:
-          Preconditions.checkState(parent.hasOneChild());
+          checkState(parent.hasOneChild());
           replaceWithRhs(containingNode, parent);
           break;
         case FUNCTION:
@@ -331,7 +334,7 @@ final class NameAnalyzer implements CompilerPass {
           // create dependency scopes for them.
           break;
         case EXPR_RESULT:
-          Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(parent.getFirstChild()));
+          checkState(isAnalyzableObjectDefinePropertiesDefinition(parent.getFirstChild()));
           replaceWithRhs(containingNode, parent);
           break;
         default:
@@ -354,8 +357,7 @@ final class NameAnalyzer implements CompilerPass {
      */
     PrototypeSetNode(JsName name, Node parent) {
       super(name, parent.getFirstChild());
-
-      Preconditions.checkState(parent.isAssign());
+      checkState(parent.isAssign());
     }
 
     @Override public void remove() {
@@ -402,7 +404,7 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     Node getGrandparent() {
-      return node.getParent() == null ? null : node.getGrandparent();
+      return node.getGrandparent();
     }
   }
 
@@ -419,12 +421,12 @@ final class NameAnalyzer implements CompilerPass {
      */
     ClassDefiningFunctionNode(JsName name, Node node) {
       super(name, node);
-      Preconditions.checkState(node.isCall());
+      checkState(node.isCall());
     }
 
     @Override
     public void remove() {
-      Preconditions.checkState(node.isCall());
+      checkState(node.isCall());
       Node parent = getParent();
       if (parent.isExprResult()) {
         changeProxy.removeChild(getGrandparent(), parent);
@@ -448,8 +450,8 @@ final class NameAnalyzer implements CompilerPass {
      */
     InstanceOfCheckNode(JsName name, Node node) {
       super(name, node);
-      Preconditions.checkState(node.isQualifiedName());
-      Preconditions.checkState(getParent().isInstanceOf());
+      checkState(node.isQualifiedName());
+      checkState(getParent().isInstanceOf());
     }
 
     @Override
@@ -513,9 +515,11 @@ final class NameAnalyzer implements CompilerPass {
         }
       } else if (NodeUtil.isVarDeclaration(n)) {
         NameInformation ns = createNameInformation(t, n);
+        checkNotNull(ns, "createNameInformation returned null for: %s", n);
         recordDepScope(n, ns);
       } else if (NodeUtil.isFunctionDeclaration(n) && t.inGlobalScope()) {
         NameInformation ns = createNameInformation(t, n.getFirstChild());
+        checkNotNull(ns, "createNameInformation returned null for: %s", n.getFirstChild());
         recordDepScope(n, ns);
       } else if (NodeUtil.isExprCall(n)) {
         Node callNode = n.getFirstChild();
@@ -527,6 +531,7 @@ final class NameAnalyzer implements CompilerPass {
       } else if (isAnalyzableObjectDefinePropertiesDefinition(n)) {
         Node targetObject = n.getSecondChild();
         NameInformation ns = createNameInformation(t, targetObject);
+        checkNotNull(ns, "createNameInformation returned null for: %s", targetObject);
         recordDepScope(n, ns);
       }
     }
@@ -542,6 +547,7 @@ final class NameAnalyzer implements CompilerPass {
           break;
         case NAME:
           NameInformation ns = createNameInformation(t, parent);
+          checkNotNull(ns, "createNameInformation returned null for: %s", parent);
           recordDepScope(recordNode, ns);
           break;
         case OR:
@@ -597,7 +603,7 @@ final class NameAnalyzer implements CompilerPass {
      * Defines a dependency scope.
      */
     private void recordDepScope(Node node, NameInformation name) {
-      Preconditions.checkNotNull(name);
+      checkNotNull(name);
       scopes.put(node, name);
     }
   }
@@ -615,12 +621,12 @@ final class NameAnalyzer implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isVarDeclaration(n)) {
         NameInformation ns = createNameInformation(t, n);
-        Preconditions.checkNotNull(ns, "NameInformation is null");
+        checkNotNull(ns, "createNameInformation returned null for: %s", n);
         createName(ns.name);
       } else if (NodeUtil.isFunctionDeclaration(n)) {
         Node nameNode = n.getFirstChild();
         NameInformation ns = createNameInformation(t, nameNode);
-        Preconditions.checkNotNull(ns, "NameInformation is null");
+        checkNotNull(ns, "createNameInformation returned null for: %s", nameNode);
         createName(nameNode.getString());
       }
     }
@@ -643,7 +649,7 @@ final class NameAnalyzer implements CompilerPass {
       if (t.inGlobalHoistScope()) {
         if (NodeUtil.isVarDeclaration(n)) {
           NameInformation ns = createNameInformation(t, n);
-          Preconditions.checkNotNull(ns);
+          checkNotNull(ns, "createNameInformation returned null for: %s", n);
           recordSet(ns.name, n);
         } else if (NodeUtil.isFunctionDeclaration(n) && t.inGlobalScope()) {
           Node nameNode = n.getFirstChild();
@@ -922,7 +928,7 @@ final class NameAnalyzer implements CompilerPass {
 
     private void maybeRecordReferenceOrAlias(
         NodeTraversal t, Node n, Node parent,
-        NameInformation nameInfo, NameInformation referring) {
+        NameInformation nameInfo, @Nullable NameInformation referring) {
       String referringName = "";
       if (referring != null) {
         referringName = referring.isPrototype
@@ -1023,7 +1029,7 @@ final class NameAnalyzer implements CompilerPass {
      */
     private boolean maybeRecordAlias(
         String name, Node parent,
-        NameInformation referring, String referringName) {
+        @Nullable NameInformation referring, String referringName) {
       // A common type of reference is
       // function F() {}
       // F.prototype.bar = goog.nullFunction;
@@ -1126,7 +1132,7 @@ final class NameAnalyzer implements CompilerPass {
   }
 
   static void createEmptyReport(AbstractCompiler compiler, String reportPath) {
-    Preconditions.checkNotNull(reportPath);
+    checkNotNull(reportPath);
     try {
       Files.write("", new File(reportPath), UTF_8);
     } catch (IOException e) {
@@ -1476,9 +1482,9 @@ final class NameAnalyzer implements CompilerPass {
    *
    * @param t The node traversal
    * @param n The current node
-   * @return The name information, or null if the name is irrelevant to this
-   *     pass
+   * @return The name information, or null if the name is irrelevant to this pass
    */
+  @Nullable
   private NameInformation createNameInformation(NodeTraversal t, Node n) {
     Node parent = n.getParent();
     // Build the full name and find its root node by iterating down through all
@@ -1587,17 +1593,15 @@ final class NameAnalyzer implements CompilerPass {
   }
 
   /**
-   * Creates name information for a particular qualified name that occurs in a
-   * particular scope.
+   * Creates name information for a particular qualified name that occurs in a particular scope.
    *
    * @param name A qualified name (e.g. "x" or "a.b.c")
    * @param scope The scope in which {@code name} occurs
    * @param rootNameNode The NAME node for the first token of {@code name}
-   * @return The name information, or null if the name is irrelevant to this
-   *     pass
+   * @return The name information, or null if the name is irrelevant to this pass
    */
-  private NameInformation createNameInformation(
-      String name, Scope scope, Node rootNameNode) {
+  @Nullable
+  private NameInformation createNameInformation(String name, Scope scope, Node rootNameNode) {
     // Check the scope. Currently we're only looking at globally scoped vars.
     String rootName = rootNameNode.getString();
     Var v = scope.getVar(rootName);
@@ -1854,10 +1858,10 @@ final class NameAnalyzer implements CompilerPass {
       case VAR:
         break;
       case ASSIGN:
-        Preconditions.checkArgument(
+        checkArgument(
             parent.isVanillaFor(),
             "Unsupported assignment in replaceWithRhs. parent: %s",
-            parent.getToken());
+            parent);
         break;
       default:
         throw new IllegalArgumentException(
@@ -1965,7 +1969,7 @@ final class NameAnalyzer implements CompilerPass {
         {
           // In our analyzable case, only the last argument to Object.defineProperties
           // (the object literal) can have side-effects
-          Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
+          checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
           return ImmutableList.of(n.getLastChild());
         }
       case NAME:
