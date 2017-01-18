@@ -41,6 +41,8 @@ package com.google.javascript.rhino;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -813,11 +815,15 @@ public final class JSDocInfoBuilder {
     return true;
   }
 
+  private Set<String> licenseTexts = new HashSet<>();
   public boolean addLicense(String license) {
+    if (!licenseTexts.add(license)) return false;
+
     String txt = currentInfo.getLicense();
     if (txt == null) {
       txt = "";
     }
+
     currentInfo.setLicense(txt + license);
     populated = true;
     return true;
