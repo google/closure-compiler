@@ -16,6 +16,7 @@
 
 package com.google.javascript.refactoring;
 
+import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -105,7 +106,7 @@ public final class SuggestedFix {
     // A few special cases so that we don't end up with code like
     // "const string = goog.require('goog.string');" which would shadow the built-in string type.
     String rightmostName = namespace.substring(lastDot + 1);
-    switch (rightmostName.toUpperCase()) {
+    switch (Ascii.toUpperCase(rightmostName)) {
       case "ARRAY":
       case "MAP":
       case "MATH":
