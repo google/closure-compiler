@@ -41,6 +41,7 @@ package com.google.javascript.rhino;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -66,6 +67,9 @@ public final class JSDocInfoBuilder {
   // the current marker, if any.
   private JSDocInfo.Marker currentMarker;
 
+  // the set of unique license texts
+  private final Set<String> licenseTexts;
+
   public JSDocInfoBuilder(boolean parseDocumentation) {
     this(new JSDocInfo(parseDocumentation), parseDocumentation, false);
   }
@@ -75,6 +79,7 @@ public final class JSDocInfoBuilder {
     this.currentInfo = info;
     this.parseDocumentation = parseDocumentation;
     this.populated = populated;
+    this.licenseTexts = new HashSet<>();
   }
 
   public static JSDocInfoBuilder copyFrom(JSDocInfo info) {
@@ -814,10 +819,15 @@ public final class JSDocInfoBuilder {
   }
 
   public boolean addLicense(String license) {
+    if (!licenseTexts.add(license)) {
+      return false;
+    }
+
     String txt = currentInfo.getLicense();
     if (txt == null) {
       txt = "";
     }
+
     currentInfo.setLicense(txt + license);
     populated = true;
     return true;

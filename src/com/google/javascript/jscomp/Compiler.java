@@ -384,7 +384,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // But we do not want to see the warnings from OTI.
     if (options.getNewTypeInference()) {
       options.checkTypes = true;
-      // Supress warnings from the const checks of CheckAccessControls so as to avoid
+      // Suppress warnings from the const checks of CheckAccessControls so as to avoid
       // duplication.
       options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS_CONST, CheckLevel.OFF);
       if (!options.reportOTIErrorsUnderNTI) {

@@ -492,7 +492,7 @@ public final class CompilerTest extends TestCase {
     assertEquals(expected, compiler.toSource());
   }
 
-  public void testMultipleIndenticalImportantComments() throws Exception {
+  public void testMultipleIdenticalImportantComments() throws Exception {
     String js1 = "/*! Identical license here */\n" + "var x;";
     String js2 = "/*! Identical license here */\n" + "var y;";
     String expected = "/*\n Identical license here */\n";
@@ -618,25 +618,29 @@ public final class CompilerTest extends TestCase {
     assertEquals(expected, compiler.toSource());
   }
 
-  public void testMultipleIndenticalLicenses() throws Exception {
+  public void testMultipleIdenticalLicenses() throws Exception {
     String js1 = "/** @license Identical license here */\n"
                  + "var x;";
     String js2 = "/** @license Identical license here */\n"
                  + "var y;";
+    String js3 = "/** @license Identical license here */\n"
+                 + "var z;\n"
+                 + "/** @license Identical license here */";
     String expected = "/*\n Identical license here */\n";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("testcode1", js1),
-        SourceFile.fromCode("testcode2", js2));
+        SourceFile.fromCode("testcode2", js2),
+        SourceFile.fromCode("bundled", js3));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertTrue(Joiner.on(",").join(result.errors), result.success);
     assertEquals(expected, compiler.toSource());
   }
 
-  public void testIndenticalLicenseAndImportantComent() throws Exception {
+  public void testIdenticalLicenseAndImportantComment() throws Exception {
     String js1 = "/** @license Identical license here */\n" + "var x;";
     String js2 = "/*! Identical license here */\n" + "var y;";
     String expected = "/*\n Identical license here */\n";
