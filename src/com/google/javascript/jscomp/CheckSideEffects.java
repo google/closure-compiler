@@ -22,8 +22,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Checks for non side effecting statements such as
@@ -49,8 +50,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   private final List<Node> problemNodes = new ArrayList<>();
 
-  private final LinkedHashMap<String, String> noSideEffectExterns =
-     new LinkedHashMap<>();
+  private final Set<String> noSideEffectExterns = new HashSet<>();
 
   private final AbstractCompiler compiler;
 
@@ -134,8 +134,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback
         if (!NodeUtil.isStatement(n)) {
           problemNodes.add(n);
         }
-      } else if (n.isCall() && (n.getFirstChild().isGetProp() ||
-          n.getFirstChild().isName() || n.getFirstChild().isString())) {
+      } else if (n.isCall() && (n.getFirstChild().isGetProp()
+          || n.getFirstChild().isName() || n.getFirstChild().isString())) {
         String qname = n.getFirstChild().getQualifiedName();
 
         // The name should not be defined in src scopes - only externs
@@ -144,19 +144,18 @@ final class CheckSideEffects extends AbstractPostOrderCallback
           if (n.getFirstChild().isGetProp()) {
             Node rootNameNode =
                 NodeUtil.getRootOfQualifiedName(n.getFirstChild());
-            isDefinedInSrc = rootNameNode != null && rootNameNode.isName() &&
-                t.getScope().getVar(rootNameNode.getString()) != null;
+            isDefinedInSrc = rootNameNode != null && rootNameNode.isName()
+                && t.getScope().getVar(rootNameNode.getString()) != null;
           } else {
             isDefinedInSrc = t.getScope().getVar(qname) != null;
           }
         }
 
-        if (qname != null && noSideEffectExterns.containsKey(qname) &&
-            !isDefinedInSrc) {
+        if (qname != null && noSideEffectExterns.contains(qname) && !isDefinedInSrc) {
           problemNodes.add(n);
           if (report) {
-            String msg = "The result of the extern function call '" + qname +
-                "' is not being used.";
+            String msg = "The result of the extern function call '" + qname
+                + "' is not being used.";
             t.report(n, USELESS_CODE_ERROR, msg);
           }
         }
@@ -243,7 +242,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
         JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
         if (jsDoc != null && jsDoc.isNoSideEffects()) {
           String name = NodeUtil.getName(n);
-          noSideEffectExterns.put(name, null);
+          noSideEffectExterns.add(name);
         }
       }
     }
