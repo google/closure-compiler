@@ -289,6 +289,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   // Uses %, which is not allowed in identifiers, to avoid naming clashes
   // with existing functions.
   private static final String ANON_FUN_PREFIX = "%anon_fun";
+  // A property of this name is used as a marker during const inference,
+  // to avoid misuse of constructor types.
+  private static final QualifiedName CONST_INFERENCE_MARKER =
+      new QualifiedName("jscomp$infer$const$property");
   private static final String WINDOW_INSTANCE = "window";
   private static final String WINDOW_CLASS = "Window";
   private DefaultNameGenerator funNameGen;
@@ -1995,7 +1999,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (n.isQualifiedName()) {
         Declaration decl = currentScope.getDeclaration(QualifiedName.fromNode(n), false);
         if (decl == null) {
-          JSType t = simpleInferExprType(n);
+          JSType t = simpleInferExprTypeRecur(n);
           if (t != null) {
             return t.getFunTypeIfSingletonObj();
           }
@@ -2017,7 +2021,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           return decl.getTypeOfSimpleDecl().getFunTypeIfSingletonObj();
         }
       }
-      JSType t = simpleInferExprType(n);
+      JSType t = simpleInferExprTypeRecur(n);
       return t == null ? null : t.getFunTypeIfSingletonObj();
     }
 
@@ -2037,7 +2041,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         for (Node argNode = n.getSecondChild();
              argNode != null;
              argNode = argNode.getNext()) {
-          JSType t = simpleInferExprType(argNode);
+          JSType t = simpleInferExprTypeRecur(argNode);
           if (t == null) {
             return null;
           }
@@ -2053,6 +2057,18 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     }
 
     private JSType simpleInferExprType(Node n) {
+      JSType t = simpleInferExprTypeRecur(n);
+      // If the inferred type has the marker property, discard it.
+      // Note that when the marker is nested somewhere in the type, this heuristic breaks,
+      // and the marker leaks into the result.
+      // Hopefully this is rare in practice, but I'm not sure; try it out.
+      if (t == null || t.mayHaveProp(CONST_INFERENCE_MARKER)) {
+        return null;
+      }
+      return t;
+    }
+
+    private JSType simpleInferExprTypeRecur(Node n) {
       switch (n.getToken()) {
         case REGEXP:
           return commonTypes.getRegexpType();
@@ -2063,12 +2079,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             return commonTypes.getArrayInstance();
           }
           Node child = n.getFirstChild();
-          JSType arrayType = simpleInferExprType(child);
+          JSType arrayType = simpleInferExprTypeRecur(child);
           if (arrayType == null) {
             return null;
           }
           while (null != (child = child.getNext())) {
-            if (!arrayType.equals(simpleInferExprType(child))) {
+            if (!arrayType.equals(simpleInferExprTypeRecur(child))) {
               return null;
             }
           }
@@ -2086,7 +2102,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         case OBJECTLIT: {
           JSType objLitType = commonTypes.getEmptyObjectLiteral();
           for (Node prop : n.children()) {
-            JSType propType = simpleInferExprType(prop.getFirstChild());
+            JSType propType = simpleInferExprTypeRecur(prop.getFirstChild());
             if (propType == null) {
               return null;
             }
@@ -2103,7 +2119,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           return simpleInferGetelemType(n);
         case COMMA:
         case ASSIGN:
-          return simpleInferExprType(n.getLastChild());
+          return simpleInferExprTypeRecur(n.getLastChild());
         case CALL:
         case NEW:
           return simpleInferCallNewType(n);
@@ -2111,8 +2127,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         case OR:
           return simpleInferAndOrType(n);
         case HOOK: {
-          JSType lhs = simpleInferExprType(n.getSecondChild());
-          JSType rhs = simpleInferExprType(n.getLastChild());
+          JSType lhs = simpleInferExprTypeRecur(n.getSecondChild());
+          JSType rhs = simpleInferExprTypeRecur(n.getLastChild());
           return lhs == null || rhs == null ? null : JSType.join(lhs, rhs);
         }
         default:
@@ -2164,7 +2180,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           }
         }
       }
-      JSType recvType = simpleInferExprType(recv);
+      JSType recvType = simpleInferExprTypeRecur(recv);
       if (recvType != null && recvType.isScalar()) {
         recvType = recvType.autobox();
       }
@@ -2186,11 +2202,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           return propType;
         }
       }
-      JSType recvType = simpleInferExprType(recv);
+      JSType recvType = simpleInferExprTypeRecur(recv);
       if (recvType != null) {
         JSType indexType = recvType.getIndexType();
         if (indexType != null) {
-          JSType propType = simpleInferExprType(propNode);
+          JSType propType = simpleInferExprTypeRecur(propNode);
           if (propType != null && propType.isSubtypeOf(indexType)) {
             return recvType.getIndexedType();
           }
@@ -2203,9 +2219,20 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (decl == null) {
         return null;
       }
-      // Namespaces (literals, enums, constructors) get populated during
-      // ProcessScope, so it's generally NOT safe to convert them to jstypes
-      // until after ProcessScope is done.
+      // Namespaces (literals, enums, constructors) get populated during ProcessScope,
+      // so it's generally NOT safe to convert them to jstypes until after ProcessScope is done.
+      // However, we've seen examples where it is useful to use the constructor type
+      // during inference, e.g., to get the type of the instance from it.
+      // We allow this use case but add a marker property to make sure that the constructor type
+      // itself doesn't leak into the result.
+      if (decl.getNominal() != null) {
+        FunctionType ctorFn = decl.getNominal().getConstructorFunction();
+        if (ctorFn == null) {
+          return null;
+        }
+        return commonTypes.fromFunctionType(ctorFn)
+            .withProperty(CONST_INFERENCE_MARKER, commonTypes.UNKNOWN);
+      }
       if (decl.getNamespace() != null) {
         return null;
       }
@@ -2225,11 +2252,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     private JSType simpleInferAndOrType(Node n) {
       Preconditions.checkState(n.isOr() || n.isAnd());
-      JSType lhs = simpleInferExprType(n.getFirstChild());
+      JSType lhs = simpleInferExprTypeRecur(n.getFirstChild());
       if (lhs == null) {
         return null;
       }
-      JSType rhs = simpleInferExprType(n.getSecondChild());
+      JSType rhs = simpleInferExprTypeRecur(n.getSecondChild());
       if (rhs == null) {
         return null;
       }

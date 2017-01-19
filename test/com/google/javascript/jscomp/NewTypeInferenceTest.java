@@ -18792,4 +18792,65 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testUseConstructorTypeInConstInference() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {function(new:T)} x",
+        " * @return {T}",
+        " */",
+        "function appContextGet(x) {",
+        "  return new x;",
+        "}",
+        "/** @const */",
+        "var c = appContextGet(Foo);",
+        "function f() {",
+        "  var /** null */ n = c;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @return {T}",
+        " */",
+        "function appContextGet(x) {",
+        "  return x;",
+        "}",
+        "/** @const */",
+        "var c = appContextGet(Foo);",
+        "function f() {",
+        "  var /** null */ n = c;",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    // Test to show that in convoluted cases the constructor type leaks
+    // into the const inference result even though it shouldn't.
+    // Correct behavior would be a COULD_NOT_INFER_CONST_TYPE warning.
+    // Currently, the const is inferred to a type that includes the marker property,
+    // which then is not present during NTI and we get a spurious warning.
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @return {T}",
+        " */",
+        "function appContextGet(x) {",
+        "  return x;",
+        "}",
+        "/** @const */",
+        "var c = 0 || { myprop: appContextGet(Foo) };",
+        "function f() {",
+        "  return c;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
