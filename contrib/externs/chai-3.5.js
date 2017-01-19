@@ -17,8 +17,7 @@
 /**
  * @fileoverview Externs definitions for Chai, 3.5 branch.
  *
- * This file currently only defines the BDD API, and that part should be
- * complete.
+ * This file defines both the BDD and TDD APIs. The BDD API should be complete.
  *
  * This file defines some virtual types for the chained methods, please don't
  * use these types directly, but follow the official API guidelines.
@@ -237,3 +236,80 @@ ExpectChain.prototype.increase = function(value, name, opt_message) {};
  * @param {string=} opt_message
  */
 ExpectChain.prototype.decrease = function(value, name, opt_message) {};
+
+// Below are the externs for the TDD expect API: http://chaijs.com/api/assert/
+
+/** @const */
+var assert = {};
+
+/**
+ * @param {*} object
+ * @param {string=} opt_message
+ */
+assert.isOk = function(object, opt_message) {};
+
+/**
+ * @param {*} object
+ * @param {string=} opt_message
+ */
+assert.isNotOk = function(object, opt_message) {};
+
+/**
+ * @param {*} actual
+ * @param {*} expected
+ * @param {string=} opt_message
+ */
+assert.equal = function(actual, expected, opt_message) {};
+
+/**
+ * @param {*} actual
+ * @param {*} expected
+ * @param {string=} opt_message
+ */
+assert.notEqual = function(actual, expected, opt_message) {};
+
+/**
+ * @param {*} actual
+ * @param {*} expected
+ * @param {string=} opt_message
+ */
+assert.deepEqual = function(actual, expected, opt_message) {};
+
+/**
+ * @param {*} valueToCheck
+ * @param {*} valueToBeBelow
+ * @param {string=} opt_message
+ */
+assert.isBelow = function(valueToCheck, valueToBeBelow, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isTrue = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isFalse = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isUndefined = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isDefined = function(value, opt_message) {};
+
+/**
+ * @param {Object} object
+ * @param {string} property
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.propertyVal = function(object, property, value, opt_message) {};

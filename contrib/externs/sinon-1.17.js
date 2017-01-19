@@ -771,6 +771,8 @@ SinonFakeServer.prototype.requests;
  */
 SinonFakeServer.prototype.respondImmediately;
 
+SinonFakeServer.prototype.respond = function() {};
+
 SinonFakeServer.prototype.restore = function() {};
 
 /**
@@ -791,6 +793,21 @@ var SinonFakeXmlHttpRequest = function() {};
  * @type {?string}
  */
 SinonFakeXmlHttpRequest.prototype.requestBody;
+
+/**
+ * @type {?Object<string, string>}
+ */
+SinonFakeXmlHttpRequest.prototype.requestHeaders;
+
+/**
+ * @type {?string}
+ */
+SinonFakeXmlHttpRequest.prototype.method;
+
+/**
+ * @type {?string}
+ */
+SinonFakeXmlHttpRequest.prototype.url;
 
 /**
  * @param {?number} status
