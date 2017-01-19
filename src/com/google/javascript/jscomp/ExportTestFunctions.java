@@ -78,6 +78,8 @@ public class ExportTestFunctions implements CompilerPass {
           if (isTestFunction(functionName)) {
             exportTestFunctionAsSymbol(functionName, n, parent);
           }
+        } else if (n.isClass()) {
+          exportClass(parent, n);
         }
       } else if (NodeUtil.isExprAssign(parent) &&
             !n.getLastChild().isAssign()) {
@@ -97,6 +99,38 @@ public class ExportTestFunctions implements CompilerPass {
             compiler.reportCodeChange();
           } else if (c.isMemberFunctionDef()) {
             rewriteMemberDefInObjLit(c, n);
+          }
+        }
+      }
+    }
+
+    private void exportClass(Node scriptNode, Node classNode) {
+      Node classMembers = classNode.getLastChild();
+      for (Node maybeMemberFunctionDef : classMembers.children()) {
+        if (maybeMemberFunctionDef.isMemberFunctionDef()) {
+          String methodName = maybeMemberFunctionDef.getString();
+          if (TEST_FUNCTIONS_NAME_PATTERN.matcher(methodName).matches()) {
+            String functionRef = NodeUtil.getName(classNode) + ".prototype." + methodName;
+            String classRef = NodeUtil.getName(classNode) + ".prototype";
+
+            Node exportCallTarget =
+                NodeUtil.newQName(
+                    compiler, exportPropertyFunction, maybeMemberFunctionDef, methodName);
+            Node call = IR.call(exportCallTarget);
+            if (exportCallTarget.isName()) {
+              call.putBooleanProp(Node.FREE_CALL, true);
+            }
+
+            call.addChildToBack(
+                NodeUtil.newQName(compiler, classRef, maybeMemberFunctionDef, classRef));
+            call.addChildToBack(IR.string(methodName));
+            call.addChildToBack(
+                NodeUtil.newQName(compiler, functionRef, maybeMemberFunctionDef, functionRef));
+
+            Node expression = IR.exprResult(call);
+
+            scriptNode.addChildAfter(expression, classNode);
+            compiler.reportCodeChange();
           }
         }
       }
