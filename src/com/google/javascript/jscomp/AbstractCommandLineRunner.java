@@ -2262,6 +2262,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    private boolean sourceMapIncludeSourcesContent = false;
+
+    public CommandLineConfig setSourceMapIncludeSourcesContent(boolean sourceMapIncludeSourcesContent) {
+      this.sourceMapIncludeSourcesContent = sourceMapIncludeSourcesContent;
+      return this;
+    }
+
     private ArrayList<FlagEntry<CheckLevel>> warningGuards = new ArrayList<>();
 
     /**

@@ -247,6 +247,11 @@ public class CommandLineRunner extends
         + "or property_renaming_report")
     private boolean createNameMapFiles = false;
 
+    @Option(name = "--source_map_include_sources_content",
+        handler = BooleanOptionHandler.class,
+        usage = "Includes sources content into source map")
+    private boolean sourceMapIncludeSourcesContent = false;
+
     @Option(name = "--property_renaming_report",
         usage = "File where the serialized version of the property "
         + "renaming map produced should be saved")
@@ -803,7 +808,8 @@ public class CommandLineRunner extends
                     "property_renaming_report",
                     "source_map_input",
                     "source_map_location_mapping",
-                    "variable_renaming_report"))
+                    "variable_renaming_report",
+                    "source_map_include_sources_content"))
             .putAll(
                 "Miscellaneous",
                 ImmutableList.of(
@@ -1489,6 +1495,7 @@ public class CommandLineRunner extends
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
           .setSourceMapInputFiles(sourceMapInputs)
+          .setSourceMapIncludeSourcesContent(flags.sourceMapIncludeSourcesContent)
           .setParseInlineSourceMaps(parseInlineSourceMaps)
           .setApplyInputSourceMaps(applyInputSourceMaps)
           .setWarningGuards(Flags.guardLevels)
@@ -1682,6 +1689,8 @@ public class CommandLineRunner extends
     options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
     options.setStrictModeInput(flags.strictModeInput);
     options.setEmitUseStrict(flags.emitUseStrict);
+
+    options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeSourcesContent);
 
     return options;
   }
