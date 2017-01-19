@@ -2364,24 +2364,12 @@ public final class NodeUtil {
     return n.isFunction() && !n.isArrowFunction();
   }
 
-  /** Use Node.isVanillaFor instead. */
-  @Deprecated
-  public static boolean isVanillaFor(Node n) {
-    return n.isVanillaFor();
-  }
-
   static boolean isEnhancedFor(Node n) {
     return n.isForOf() || n.isForIn();
   }
 
   static boolean isAnyFor(Node n) {
     return n.isVanillaFor() || n.isForIn() || n.isForOf();
-  }
-
-  /** Use Node.isForIn instead. */
-  @Deprecated
-  public static boolean isForIn(Node n) {
-    return n.isForIn();
   }
 
   /**
