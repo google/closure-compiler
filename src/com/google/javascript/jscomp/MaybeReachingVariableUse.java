@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
@@ -92,7 +93,7 @@ class MaybeReachingVariableUse extends
      * @param other The constructed object is a replicated copy of this element.
      */
     public ReachingUses(ReachingUses other) {
-      mayUseMap = HashMultimap.create(other.mayUseMap);
+      mayUseMap = MultimapBuilder.hashKeys().hashSetValues().build(other.mayUseMap);
     }
 
     @Override
