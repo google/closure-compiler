@@ -286,6 +286,12 @@ angular.ResourceInstance.prototype.$promise;
 
 
 /**
+ * @type {boolean}
+ */
+angular.ResourceInstance.prototype.$resolved;
+
+
+/**
  * Usage: resource.$get([parameters], [success], [error])
  *
  * @param {angular.Resource.ParamsOrCallback=} opt_paramsOrCallback
