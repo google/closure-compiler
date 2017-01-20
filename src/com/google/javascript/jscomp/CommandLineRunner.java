@@ -232,9 +232,10 @@ public class CommandLineRunner extends
         + "or property_renaming_report")
     private boolean createNameMapFiles = false;
 
-    @Option(name = "--source_map_include_sources_content",
+    @Option(name = "--source_map_include_content",
         handler = BooleanOptionHandler.class,
-        usage = "Includes sources content into source map")
+        usage = "Includes sources content into source map. Greatly increases "
+        + "the size of source maps but offers greater portability")
     private boolean sourceMapIncludeSourcesContent = false;
 
     @Option(name = "--property_renaming_report",
@@ -768,9 +769,9 @@ public class CommandLineRunner extends
                     "output_manifest",
                     "output_module_dependencies",
                     "property_renaming_report",
+                    "source_map_include_content",
                     "source_map_location_mapping",
-                    "variable_renaming_report",
-                    "source_map_include_sources_content"))
+                    "variable_renaming_report"))
             .putAll(
                 "Miscellaneous",
                 ImmutableList.of(
