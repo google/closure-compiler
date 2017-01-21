@@ -207,7 +207,11 @@ public final class JsFileParserTest extends TestCase {
    */
   public void testParseEs6Module4() {
     ModuleLoader loader =
-        new ModuleLoader(null, ImmutableList.of("/foo"), ImmutableList.<DependencyInfo>of());
+        new ModuleLoader(
+            null,
+            ImmutableList.of("/foo"),
+            ImmutableList.<DependencyInfo>of(),
+            ModuleLoader.ResolutionMode.LEGACY);
 
     String contents = ""
         + "import './a';\n"

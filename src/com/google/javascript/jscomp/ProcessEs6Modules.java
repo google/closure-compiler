@@ -165,7 +165,21 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       // These are rewritten to plain namespace object accesses.
       moduleName = importName.substring("goog:".length());
     } else {
-      moduleName = t.getInput().getPath().resolveEs6Module(importName).toModuleName();
+      ModuleLoader.ModulePath modulePath =
+          t.getInput()
+              .getPath()
+              .resolveJsModule(
+                  importName,
+                  importDecl.getSourceFileName(),
+                  importDecl.getLineno(),
+                  importDecl.getCharno());
+      if (modulePath == null) {
+        // The module loader issues an error
+        // Fall back to assuming the module is a file path
+        modulePath = t.getInput().getPath().resolveModuleAsPath(importName);
+      }
+
+      moduleName = modulePath.toModuleName();
     }
 
     for (Node child : importDecl.children()) {
@@ -270,8 +284,18 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       parent.addChildBefore(importNode, export);
       visit(t, importNode, parent);
 
-      String moduleName =
-          t.getInput().getPath().resolveEs6Module(moduleIdentifier.getString()).toModuleName();
+      ModuleLoader.ModulePath path =
+          t.getInput()
+              .getPath()
+              .resolveJsModule(
+                  moduleIdentifier.getString(),
+                  export.getSourceFileName(),
+                  export.getLineno(),
+                  export.getCharno());
+      if (path == null) {
+        path = t.getInput().getPath().resolveModuleAsPath(moduleIdentifier.getString());
+      }
+      String moduleName = path.toModuleName();
 
       for (Node exportSpec : export.getFirstChild().children()) {
         String nameFromOtherModule = exportSpec.getFirstChild().getString();
@@ -539,8 +563,20 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           }
 
           String moduleName = name.substring(0, endIndex);
-          String globalModuleName =
-              t.getInput().getPath().resolveEs6Module(moduleName).toModuleName();
+          ModuleLoader.ModulePath path =
+              t.getInput()
+                  .getPath()
+                  .resolveJsModule(
+                      moduleName,
+                      typeNode.getSourceFileName(),
+                      typeNode.getLineno(),
+                      typeNode.getCharno());
+
+          if (path == null) {
+            path = t.getInput().getPath().resolveModuleAsPath(moduleName);
+          }
+          String globalModuleName = path.toModuleName();
+
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
         } else {

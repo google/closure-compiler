@@ -1086,10 +1086,13 @@ public class CompilerOptions {
    */
   private boolean isStrictModeInput = true;
 
+  /** Which algorithm to use for locating ES6 and CommonJS modules */
+  ModuleLoader.ResolutionMode moduleResolutionMode;
+
   /**
    * Should the compiler print its configuration options to stderr when they are initialized?
    *
-   * <p> Default {@code false}.
+   * <p>Default {@code false}.
    */
   public void setPrintConfig(boolean printConfig) {
     this.printConfig = printConfig;
@@ -1108,6 +1111,9 @@ public class CompilerOptions {
 
     // Which environment to use
     environment = Environment.BROWSER;
+
+    // Modules
+    moduleResolutionMode = ModuleLoader.ResolutionMode.LEGACY;
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -2646,6 +2652,14 @@ public class CompilerOptions {
   public CompilerOptions setEmitUseStrict(boolean emitUseStrict) {
     this.emitUseStrict = emitUseStrict;
     return this;
+  }
+
+  public ModuleLoader.ResolutionMode getModuleResolutionMode() {
+    return this.moduleResolutionMode;
+  }
+
+  public void setModuleResolutionMode(ModuleLoader.ResolutionMode mode) {
+    this.moduleResolutionMode = mode;
   }
 
   @Override

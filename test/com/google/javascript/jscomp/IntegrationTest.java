@@ -617,10 +617,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test(options,
+    test(
+        options,
         new String[] {
-          "import {x} from 'i1'; alert(x);",
-          "export var x = 5;",
+          "import {x} from './i1'; alert(x);", "export var x = 5;",
         },
         new String[] {
           "goog.require('module$i1'); alert(module$i1.x);",
@@ -636,10 +636,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test(options,
+    test(
+        options,
         new String[] {
-          "import {x} from 'i2'; alert(x);",
-          "export var x = 5;",
+          "import {x} from './i2'; alert(x);", "export var x = 5;",
         },
         ModuleLoader.LOAD_WARNING);
   }
