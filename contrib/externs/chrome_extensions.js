@@ -9964,6 +9964,13 @@ chrome.bluetoothPrivate.setPairingResponse = function(options, callback) {};
 /**
  * @param {string} deviceAddress
  * @param {function():void=} callback
+ */
+chrome.bluetoothPrivate.disconnectAll = function(deviceAddress, callback) {};
+
+
+/**
+ * @param {string} deviceAddress
+ * @param {function():void=} callback
  * @return {undefined}
  */
 chrome.bluetoothPrivate.forgetDevice = function(deviceAddress, callback) {};
