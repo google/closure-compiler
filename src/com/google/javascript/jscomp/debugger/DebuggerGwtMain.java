@@ -23,6 +23,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.ui.CellPanel;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HTML;
@@ -118,22 +119,31 @@ public class DebuggerGwtMain implements EntryPoint {
   }
 
   private void createCheckboxes(CellPanel checkboxPanel) {
-    for (final CompilationParam param : CompilationParam.getSortedValues()) {
-      CheckBox cb = new CheckBox(param.toString());
-      if (param.getJavaInfo() != null) {
-        cb.setTitle("Java API equivalent: " + param.getJavaInfo());
-      }
-      cb.setValue(param.getDefaultValue());
-      param.apply(options, param.getDefaultValue());
-      cb.addClickHandler(new ClickHandler() {
-        @Override
-        public void onClick(ClickEvent event) {
-          boolean checked = ((CheckBox) event.getSource()).getValue();
-          param.apply(options, checked);
-          doCompile();
+    for (CompilationParam.ParamGroup group : CompilationParam.ParamGroup.values()) {
+      SafeHtmlBuilder builder = new SafeHtmlBuilder();
+      builder.appendHtmlConstant("<b>");
+      builder.appendEscaped(group.name);
+      builder.appendHtmlConstant("</b>");
+
+      checkboxPanel.add(new HTML(builder.toSafeHtml()));
+      for (final CompilationParam param : CompilationParam.getGroupedSortedValues().get(group)) {
+        CheckBox cb = new CheckBox(param.toString());
+        if (param.getJavaInfo() != null) {
+          cb.setTitle("Java API equivalent: " + param.getJavaInfo());
         }
-      });
-      checkboxPanel.add(cb);
+        cb.setValue(param.getDefaultValue());
+        param.apply(options, param.getDefaultValue());
+        cb.addClickHandler(
+            new ClickHandler() {
+              @Override
+              public void onClick(ClickEvent event) {
+                boolean checked = ((CheckBox) event.getSource()).getValue();
+                param.apply(options, checked);
+                doCompile();
+              }
+            });
+        checkboxPanel.add(cb);
+      }
     }
   }
 }

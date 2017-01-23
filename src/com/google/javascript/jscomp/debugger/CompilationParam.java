@@ -28,6 +28,9 @@ import com.google.javascript.jscomp.VariableRenamingPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An enum of boolean CGI parameters to the compilation.
@@ -60,10 +63,8 @@ enum CompilationParam {
     }
   },
 
-  /**
-   * If true, the output language is ES5. If false, we skip transpilation.
-   */
-  TRANSPILE(true) {
+  /** If true, the output language is ES5. If false, we skip transpilation. */
+  TRANSPILE(true, ParamGroup.TRANSPILATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setLanguageOut(value ?
@@ -76,10 +77,8 @@ enum CompilationParam {
     }
   },
 
-  /**
-   * If true, skip all passes aside from transpilation-related ones.
-   */
-  SKIP_NON_TRANSPILATION_PASSES {
+  /** If true, skip all passes aside from transpilation-related ones. */
+  SKIP_NON_TRANSPILATION_PASSES(ParamGroup.TRANSPILATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setSkipNonTranspilationPasses(value);
@@ -91,7 +90,7 @@ enum CompilationParam {
   // Checks
   //--------------------------------
 
-  CHECK_LINT {
+  CHECK_LINT(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       if (value) {
@@ -105,7 +104,7 @@ enum CompilationParam {
   },
 
   /** Checks that all symbols are defined */
-  CHECK_SYMBOLS(true) {
+  CHECK_SYMBOLS(true, ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCheckSymbols(value);
@@ -113,7 +112,7 @@ enum CompilationParam {
   },
 
   /** Checks missing return */
-  CHECK_MISSING_RETURN {
+  CHECK_MISSING_RETURN(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(
@@ -126,7 +125,7 @@ enum CompilationParam {
   },
 
   /** Checks for suspicious statements that have no effect */
-  CHECK_SUSPICIOUS_CODE {
+  CHECK_SUSPICIOUS_CODE(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCheckSuspiciousCode(value);
@@ -134,7 +133,7 @@ enum CompilationParam {
   },
 
   /** Checks types on expressions */
-  CHECK_TYPES(true) {
+  CHECK_TYPES(true, ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCheckTypes(value);
@@ -142,7 +141,7 @@ enum CompilationParam {
   },
 
   /** Checks types on expressions */
-  CHECK_TYPES_NEW_INFERENCE {
+  CHECK_TYPES_NEW_INFERENCE(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setNewTypeInference(value);
@@ -154,7 +153,7 @@ enum CompilationParam {
   },
 
   /** Checks for missing properties */
-  MISSING_PROPERTIES(true) {
+  MISSING_PROPERTIES(true, ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(
@@ -168,10 +167,10 @@ enum CompilationParam {
   },
 
   /**
-   * Flags a warning if a property is missing the @override annotation, but it
-   * overrides a base class property.
+   * Flags a warning if a property is missing the @override annotation, but it overrides a base
+   * class property.
    */
-  CHECK_REPORT_MISSING_OVERRIDE {
+  CHECK_REPORT_MISSING_OVERRIDE(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(
@@ -183,8 +182,8 @@ enum CompilationParam {
     }
   },
 
-  /** Checks for missing goog.require() calls **/
-  CHECK_REQUIRES {
+  /** Checks for missing goog.require() calls */
+  CHECK_REQUIRES(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE,
@@ -196,8 +195,8 @@ enum CompilationParam {
     }
   },
 
-  /** Checks for missing goog.provides() calls **/
-  CHECK_PROVIDES {
+  /** Checks for missing goog.provides() calls * */
+  CHECK_PROVIDES(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(
@@ -209,11 +208,8 @@ enum CompilationParam {
     }
   },
 
-  /**
-   * Checks the integrity of references to qualified global names.
-   * (e.g. "a.b")
-   */
-  CHECK_GLOBAL_NAMES {
+  /** Checks the integrity of references to qualified global names. (e.g. "a.b") */
+  CHECK_GLOBAL_NAMES(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCheckGlobalNamesLevel(value ?
@@ -225,10 +221,8 @@ enum CompilationParam {
     }
   },
 
-  /**
-   * Checks deprecation.
-   */
-  CHECK_DEPRECATED {
+  /** Checks deprecation. */
+  CHECK_DEPRECATED(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(DiagnosticGroups.DEPRECATED,
@@ -240,10 +234,8 @@ enum CompilationParam {
     }
   },
 
-  /**
-   * Checks visibility.
-   */
-  CHECK_VISIBILITY {
+  /** Checks visibility. */
+  CHECK_VISIBILITY(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(DiagnosticGroups.VISIBILITY,
@@ -255,10 +247,8 @@ enum CompilationParam {
     }
   },
 
-  /**
-   * Checks visibility.
-   */
-  CHECK_CONSTANTS {
+  /** Checks visibility. */
+  CHECK_CONSTANTS(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(DiagnosticGroups.CONST,
@@ -270,10 +260,8 @@ enum CompilationParam {
     }
   },
 
-  /**
-   * Checks es5strict.
-   */
-  CHECK_ES5_STRICT {
+  /** Checks es5strict. */
+  CHECK_ES5_STRICT(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(DiagnosticGroups.ES5_STRICT,
@@ -286,11 +274,10 @@ enum CompilationParam {
   },
 
   /**
-   * Checks for certain uses of the {@code this} keyword that are considered
-   * unsafe because they are likely to reference the global {@code this}
-   * object unintentionally.
+   * Checks for certain uses of the {@code this} keyword that are considered unsafe because they are
+   * likely to reference the global {@code this} object unintentionally.
    */
-  CHECK_GLOBAL_THIS {
+  CHECK_GLOBAL_THIS(ParamGroup.ERROR_CHECKING) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCheckGlobalThisLevel(value ?
@@ -306,7 +293,7 @@ enum CompilationParam {
   // Optimizations
   //--------------------------------
 
-  COMPUTE_FUNCTION_SIDE_EFFECTS {
+  COMPUTE_FUNCTION_SIDE_EFFECTS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setComputeFunctionSideEffects(value);
@@ -314,14 +301,14 @@ enum CompilationParam {
   },
 
   /** Folds constants (e.g. (2 + 3) to 5) */
-  FOLD_CONSTANTS {
+  FOLD_CONSTANTS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setFoldConstants(value);
     }
   },
 
-  DEAD_ASSIGNMENT_ELIMINATION {
+  DEAD_ASSIGNMENT_ELIMINATION(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setDeadAssignmentElimination(value);
@@ -329,7 +316,7 @@ enum CompilationParam {
   },
 
   /** Inlines constants (symbols that are all CAPS) */
-  INLINE_CONSTANTS {
+  INLINE_CONSTANTS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setInlineConstantVars(value);
@@ -341,7 +328,7 @@ enum CompilationParam {
   },
 
   /** Inlines functions */
-  INLINE_FUNCTIONS {
+  INLINE_FUNCTIONS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setInlineFunctions(value);
@@ -354,7 +341,7 @@ enum CompilationParam {
   },
 
   /** Merge two variables together as one. */
-  COALESCE_VARIABLE_NAMES {
+  COALESCE_VARIABLE_NAMES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCoalesceVariableNames(value);
@@ -362,7 +349,7 @@ enum CompilationParam {
   },
 
   /** Inlines variables */
-  INLINE_VARIABLES {
+  INLINE_VARIABLES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setInlineVariables(value);
@@ -370,14 +357,14 @@ enum CompilationParam {
   },
 
   /** Flowsenstive Inlines variables */
-  FLOW_SENSITIVE_INLINE_VARIABLES {
+  FLOW_SENSITIVE_INLINE_VARIABLES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setFlowSensitiveInlineVariables(value);
     }
   },
 
-  INLINE_PROPERTIES {
+  INLINE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setInlineProperties(value);
@@ -385,7 +372,7 @@ enum CompilationParam {
   },
 
   /** Removes code associated with unused global names */
-  SMART_NAME_REMOVAL {
+  SMART_NAME_REMOVAL(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setSmartNameRemoval(value);
@@ -393,7 +380,7 @@ enum CompilationParam {
   },
 
   /** Removes code that will never execute */
-  REMOVE_DEAD_CODE {
+  REMOVE_DEAD_CODE(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setRemoveDeadCode(value);
@@ -401,7 +388,7 @@ enum CompilationParam {
   },
 
   /** Checks for unreachable code */
-  CHECK_UNREACHABLE_CODE {
+  CHECK_UNREACHABLE_CODE(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, value ?
@@ -414,7 +401,7 @@ enum CompilationParam {
   },
 
   /** Extracts common prototype member declarations */
-  EXTRACT_PROTOTYPE_MEMBER_DECLARATIONS {
+  EXTRACT_PROTOTYPE_MEMBER_DECLARATIONS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setExtractPrototypeMemberDeclarations(value);
@@ -422,7 +409,7 @@ enum CompilationParam {
   },
 
   /** Removes unused member prototypes */
-  REMOVE_UNUSED_PROTOTYPE_PROPERTIES {
+  REMOVE_UNUSED_PROTOTYPE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setRemoveUnusedPrototypeProperties(value);
@@ -430,7 +417,7 @@ enum CompilationParam {
   },
 
   /** Removes unused static class prototypes */
-  REMOVE_UNUSED_CLASS_PROPERTIES {
+  REMOVE_UNUSED_CLASS_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setRemoveUnusedClassProperties(value);
@@ -438,7 +425,7 @@ enum CompilationParam {
   },
 
   /** Tells AnalyzePrototypeProperties it can remove externed props. */
-  REMOVE_UNUSED_PROTOTYPE_PROPERTIES_IN_EXTERNS {
+  REMOVE_UNUSED_PROTOTYPE_PROPERTIES_IN_EXTERNS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setRemoveUnusedPrototypePropertiesInExterns(value);
@@ -446,7 +433,7 @@ enum CompilationParam {
   },
 
   /** Removes unused variables */
-  REMOVE_UNUSED_VARIABLES {
+  REMOVE_UNUSED_VARIABLES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       if (value) {
@@ -458,18 +445,15 @@ enum CompilationParam {
   },
 
   /** Collapses multiple variable declarations into one */
-  COLLAPSE_VARIABLE_DECLARATIONS {
+  COLLAPSE_VARIABLE_DECLARATIONS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCollapseVariableDeclarations(value);
     }
   },
 
-  /**
-   * Collapses anonymous function expressions into named function
-   * declarations
-   */
-  COLLAPSE_ANONYMOUS_FUNCTIONS {
+  /** Collapses anonymous function expressions into named function declarations */
+  COLLAPSE_ANONYMOUS_FUNCTIONS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCollapseAnonymousFunctions(value);
@@ -477,11 +461,10 @@ enum CompilationParam {
   },
 
   /**
-   * Aliases all string literals to global instances, to avoid creating more
-   * objects than necessary (if true, overrides any set of strings passed in
-   * to aliasableStrings)
+   * Aliases all string literals to global instances, to avoid creating more objects than necessary
+   * (if true, overrides any set of strings passed in to aliasableStrings)
    */
-  ALIAS_ALL_STRINGS {
+  ALIAS_ALL_STRINGS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setAliasAllStrings(value);
@@ -489,7 +472,7 @@ enum CompilationParam {
   },
 
   /** Converts quoted property accesses to dot syntax (a['b'] -> a.b) */
-  CONVERT_TO_DOTTED_PROPERTIES {
+  CONVERT_TO_DOTTED_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setConvertToDottedProperties(value);
@@ -505,7 +488,7 @@ enum CompilationParam {
   //--------------------------------
 
   /** Controls label renaming. */
-  LABEL_RENAMING {
+  LABEL_RENAMING(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setLabelRenaming(value);
@@ -521,34 +504,34 @@ enum CompilationParam {
   },
 
   /** Flattens multi-level property names (e.g. a$b = x) */
-  COLLAPSE_PROPERTIES {
+  COLLAPSE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCollapseProperties(value);
     }
   },
 
-  DEVIRTUALIZE_PROTOTYPE_METHODS {
+  DEVIRTUALIZE_PROTOTYPE_METHODS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setDevirtualizePrototypeMethods(value);
     }
   },
 
-  REWRITE_FUNCTION_EXPRESSIONS {
+  REWRITE_FUNCTION_EXPRESSIONS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setRewriteFunctionExpressions(value);    }
   },
 
-  DISAMBIGUATE_PROPERTIES {
+  DISAMBIGUATE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setDisambiguateProperties(value);
     }
   },
 
-  AMBIGUATE_PROPERTIES {
+  AMBIGUATE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setAmbiguateProperties(value);
@@ -586,7 +569,7 @@ enum CompilationParam {
   },
 
   /** If true, rename all variables */
-  VARIABLE_RENAMING {
+  VARIABLE_RENAMING(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setVariableRenaming(value ?
@@ -599,7 +582,7 @@ enum CompilationParam {
     }
   },
 
-  PROPERTY_RENAMING {
+  PROPERTY_RENAMING(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setPropertyRenaming(value ?
@@ -612,21 +595,21 @@ enum CompilationParam {
     }
   },
 
-  OPTIMIZE_CALLS {
+  OPTIMIZE_CALLS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setOptimizeCalls(value);
     }
   },
 
-  OPTIMIZE_PARAMETERS {
+  OPTIMIZE_PARAMETERS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setOptimizeParameters(value);
     }
   },
 
-  OPTIMIZE_RETURNS {
+  OPTIMIZE_RETURNS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setOptimizeReturns(value);
@@ -646,7 +629,7 @@ enum CompilationParam {
   },
 
   /** Move top level function declarations to the top */
-  MOVE_FUNCTION_DECLARATIONS {
+  MOVE_FUNCTION_DECLARATIONS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setMoveFunctionDeclarations(value);
@@ -671,28 +654,28 @@ enum CompilationParam {
     }
   },
 
-  MARK_NO_SIDE_EFFECT_CALLS {
+  MARK_NO_SIDE_EFFECT_CALLS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setMarkNoSideEffectCalls(value);
     }
   },
 
-  CROSS_MODULE_CODE_MOTION {
+  CROSS_MODULE_CODE_MOTION(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCrossModuleCodeMotion(value);
     }
   },
 
-  CROSS_MODULE_METHOD_MOTION {
+  CROSS_MODULE_METHOD_MOTION(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setCrossModuleMethodMotion(value);
     }
   },
 
-  SYNTHETIC_BLOCK_MARKER {
+  SYNTHETIC_BLOCK_MARKER(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       if (value) {
@@ -711,21 +694,21 @@ enum CompilationParam {
   },
 
   /** Process @ngInject directive */
-  ANGULAR_PASS {
+  ANGULAR_PASS(ParamGroup.SPECIAL_PASSES) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setAngularPass(value);
     }
   },
 
-  POLYMER_PASS {
+  POLYMER_PASS(ParamGroup.SPECIAL_PASSES) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setPolymerPass(value);
     }
   },
 
-  J2CL_PASS {
+  J2CL_PASS(ParamGroup.SPECIAL_PASSES) {
     @Override
     void apply(CompilerOptions options, boolean value) {
       options.setJ2clPass(value ? J2clPassMode.ON : J2clPassMode.OFF);
@@ -751,14 +734,38 @@ enum CompilationParam {
     }
   };
 
-  private final boolean defaultValue;
+  enum ParamGroup {
+    ERROR_CHECKING("Lint and Error Checking"),
+    TRANSPILATION("Transpilation"),
+    TYPE_CHECKING_OPTIMIZATION("Type Checking/Optimization"),
+    SPECIAL_PASSES("Specialized Passes"),
+    MISC("Other");
+
+    public final String name;
+
+    ParamGroup(String name) {
+      this.name = name;
+    }
+  }
+
+  private final boolean defaultValue; // default is false.
+  private final ParamGroup group;
 
   CompilationParam() {
-    this(false);
+    this(false, ParamGroup.MISC);
   }
 
   CompilationParam(boolean defaultValue) {
+    this(defaultValue, ParamGroup.MISC);
+  }
+
+  CompilationParam(ParamGroup group) {
+    this(false, group);
+  }
+
+  CompilationParam(boolean defaultValue, ParamGroup group) {
     this.defaultValue = defaultValue;
+    this.group = group;
   }
 
   /** Returns the default value. */
@@ -794,6 +801,22 @@ enum CompilationParam {
     });
 
     return values.toArray(new CompilationParam[0]);
+  }
+
+  static Map<ParamGroup, CompilationParam[]> getGroupedSortedValues() {
+    Map<ParamGroup, CompilationParam[]> compilationParamsByGroup = new HashMap<>();
+
+    for (ParamGroup group : ParamGroup.values()) {
+      List<CompilationParam> groupParams = new ArrayList<>();
+      for (CompilationParam param : CompilationParam.values()) {
+        if (param.group == group) {
+          groupParams.add(param);
+        }
+      }
+      compilationParamsByGroup.put(group, groupParams.toArray(new CompilationParam[0]));
+    }
+
+    return compilationParamsByGroup;
   }
 
   /** Applies a CGI parameter to the options. */
