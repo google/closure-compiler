@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.regex.Pattern;
 
 /**

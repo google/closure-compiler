@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 
 /** Unit tests for {@link RewriteJsonToModule} */
@@ -38,6 +39,7 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     // Trigger module processing after parsing.
     options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
     return options;
   }
 

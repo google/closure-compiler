@@ -2525,6 +2525,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    public CommandLineConfig setModuleResolutionMode(ModuleLoader.ResolutionMode mode) {
+      this.moduleResolutionMode = mode;
+      return this;
+    }
+
+    private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.LEGACY;
   }
 
   /**

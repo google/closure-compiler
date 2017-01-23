@@ -130,13 +130,13 @@ public final class CompilerTest extends TestCase {
         inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
 
     ErrorManager manager = compiler.getErrorManager();
-    if (manager.getErrorCount() > 0) {
-      String error = manager.getErrors()[0].toString();
+    if (manager.getWarningCount() > 0) {
+      String error = manager.getWarnings()[0].toString();
       assertTrue(
           "Unexpected error: " + error,
-          error.contains("Failed to load module \"missing\" at /gin.js"));
+          error.contains("Failed to load module \"missing.js\" at /gin.js"));
     }
-    assertEquals(1, manager.getErrorCount());
+    assertEquals(1, manager.getWarningCount());
   }
 
   private static String normalize(String path) {
