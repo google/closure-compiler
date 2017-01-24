@@ -1785,6 +1785,67 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         p.scope.getVar("a").getType().toString());
   }
 
+  public void testDontDropPropertiesInUnion1() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @param {{a: number}|{a:number, b:string}} x */",
+        "function f(x) {",
+        "  var /** null */ n = x.b;",
+        "}"));
+  }
+
+  public void testDontDropPropertiesInUnion2() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @param {{a:number, b:string}|{a: number}} x */",
+        "function f(x) {",
+        "  var /** null */ n = x.b;",
+        "}"));
+  }
+
+  public void testDontDropPropertiesInUnion3() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @param {{a: number}|{a:number, b:string}} x */",
+        "function f(x) {}",
+        "/** @param {{a: number}} x */",
+        "function g(x) { return x.b; }"));
+  }
+
+  public void testDontDropPropertiesInUnion4() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @param {{a: number}|{a:number, b:string}} x */",
+        "function f(x) {}",
+        "/** @param {{c: number}} x */",
+        "function g(x) { return x.b; }"),
+        "Property b never defined on x");
+  }
+
+  public void testDontDropPropertiesInUnion5() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @param {{a: number}|{a: number, b: string}} x */",
+        "function f(x) {}",
+        "f({a: 123});"));
+  }
+
+  public void testDontDropPropertiesInUnion6() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @param {{a: number}|{a: number, b: string}} x */",
+        "function f(x) {",
+        "  var /** null */ n = x;",
+        "}"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : {a: number}",
+            "required: null"));
+  }
+
+  public void testDontDropPropertiesInUnion7() throws Exception {
+    // Missed warning because in the registry we map {a, c} to {b, d}
+    testTypes(LINE_JOINER.join(
+        "/** @param {{a: number}|{a:number, b:string}} x */",
+        "function f(x) {}",
+        "/** @param {{c: number}|{c:number, d:string}} x */",
+        "function g(x) { return x.b; }"));
+  }
+
   public void testScoping11() throws Exception {
     // named function expressions create a binding in their body only
     // the return is wrong but the assignment is OK since the type of b is ?

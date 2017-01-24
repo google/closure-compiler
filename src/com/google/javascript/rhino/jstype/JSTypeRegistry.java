@@ -64,6 +64,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -150,6 +151,20 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
   private JSType sentinelObjectLiteral;
   private boolean optimizePropertyIndex = false;
+
+  // To avoid blowing up the size of typesIndexedByProperty, we use the sentinel object
+  // literal instead of registering arbitrarily many types.
+  // But because of the way unions are constructed, some properties of record types in unions
+  // are getting dropped and cause spurious "non-existent property" warnings.
+  // The next two fields avoid the warnings. The first field contains property names of records
+  // that participate in unions, and have caused properties to be dropped.
+  // The second field contains the names of the dropped properties. When checking
+  // canPropertyBeDefined, if the type has a property in propertiesOfSupertypesInUnions, we
+  // consider it to possibly have any property in droppedPropertiesOfUnions. This is a loose
+  // check, but we restrict it to records that may be present in unions, and it allows us to
+  // keep typesIndexedByProperty small.
+  private final Set<String> propertiesOfSupertypesInUnions = new HashSet<>();
+  private final Set<String> droppedPropertiesOfUnions = new HashSet<>();
 
   // A map of properties to each reference type on which those
   // properties have been declared. Each type has a unique name used
@@ -733,6 +748,19 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     return false;
   }
 
+  void registerDroppedPropertiesInUnion(RecordType subtype, RecordType supertype) {
+    boolean foundDroppedProperty = false;
+    for (String pname : subtype.getPropertyMap().getOwnPropertyNames()) {
+      if (!supertype.hasProperty(pname)) {
+        foundDroppedProperty = true;
+        this.droppedPropertiesOfUnions.add(pname);
+      }
+    }
+    if (foundDroppedProperty) {
+      this.propertiesOfSupertypesInUnions.addAll(supertype.getPropertyMap().getOwnPropertyNames());
+    }
+  }
+
   /**
    * Tells the type system that {@code owner} may have a property named
    * {@code propertyName}. This allows the registry to keep track of what
@@ -849,6 +877,17 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
             return true;
           }
         }
+      }
+      if (type.toMaybeRecordType() != null) {
+        RecordType rec = type.toMaybeRecordType();
+        boolean mayBeInUnion = false;
+        for (String pname : rec.getPropertyMap().getOwnPropertyNames()) {
+          if (this.propertiesOfSupertypesInUnions.contains(pname)) {
+            mayBeInUnion = true;
+            break;
+          }
+        }
+        return mayBeInUnion && this.droppedPropertiesOfUnions.contains(propertyName);
       }
     }
     return false;
