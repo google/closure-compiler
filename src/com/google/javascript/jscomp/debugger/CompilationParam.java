@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.VariableRenamingPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -804,7 +804,7 @@ enum CompilationParam {
   }
 
   static Map<ParamGroup, CompilationParam[]> getGroupedSortedValues() {
-    Map<ParamGroup, CompilationParam[]> compilationParamsByGroup = new HashMap<>();
+    Map<ParamGroup, CompilationParam[]> compilationParamsByGroup = new EnumMap<>(ParamGroup.class);
 
     for (ParamGroup group : ParamGroup.values()) {
       List<CompilationParam> groupParams = new ArrayList<>();
