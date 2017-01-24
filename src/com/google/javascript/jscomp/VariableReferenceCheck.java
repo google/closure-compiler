@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashSet;
@@ -404,6 +405,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   // TODO(tbreisacher): Consider moving UNUSED_LOCAL_ASSIGNMENT into its own check pass, so
   // that we can run it after goog.scope processing, and get rid of the inGoogScope check.
   private void checkForUnusedLocalVar(Var v, Reference unusedAssignment) {
+    JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(unusedAssignment.getNode());
+    if (jsDoc != null && jsDoc.hasTypedefType()) {
+      return;
+    }
+
     boolean inGoogScope = false;
     Scope s = v.getScope();
     Node function = null;

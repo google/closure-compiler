@@ -263,6 +263,15 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertUnused("function f() { var a; a = 2; }");
   }
 
+  public void testUnusedTypedefInModule() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertUnused("goog.module('m'); var x;");
+    assertUnusedEs6("goog.module('m'); let x;");
+
+    testSame("goog.module('m'); /** @typedef {string} */ var x;");
+    testSameEs6("goog.module('m'); /** @typedef {string} */ let x;");
+  }
+
   /**
    * Inside a goog.scope, don't warn because the alias might be used in a type annotation.
    */
