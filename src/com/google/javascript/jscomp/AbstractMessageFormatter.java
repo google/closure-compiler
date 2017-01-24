@@ -54,11 +54,11 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
   }
 
   private static enum Color {
-    ERROR("\033[31m"),
-    WARNING("\033[35m"),
-    NO_COLOR("\033[39m"),
-    BOLD("\033[1m"),
-    UNBOLD("\033[0m");
+    ERROR("\u001b[31m"),
+    WARNING("\u001b[35m"),
+    NO_COLOR("\u001b[39m"),
+    BOLD("\u001b[1m"),
+    UNBOLD("\u001b[0m");
 
     private final String controlCharacter;
 
