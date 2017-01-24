@@ -1003,3 +1003,16 @@ StorageQuota.prototype.requestQuota = function(size, opt_successCallback,
  */
 StorageQuota.prototype.queryUsageAndQuota = function(successCallback,
     opt_errorCallback) {};
+
+
+/**
+ * @type {!StorageQuota}
+ * @see https://developer.chrome.com/apps/offline_storage
+ */
+Navigator.prototype.webkitPersistentStorage;
+
+/**
+ * @type {!StorageQuota}
+ * @see https://developer.chrome.com/apps/offline_storage
+ */
+Navigator.prototype.webkitTemporaryStorage;
