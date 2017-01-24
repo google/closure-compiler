@@ -444,6 +444,13 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         "missing require: 'example.Outer'");
   }
 
+  public void testFailGoogArray() {
+    mode = CheckRequiresForConstructors.Mode.SINGLE_FILE;
+    testMissingRequireStrict(
+        "console.log(goog.array.contains([1, 2, 3], 4));",
+        "missing require: 'goog.array'");
+  }
+
   public void testPassConstant() {
     testSame("goog.require('example.Constants'); alert(example.Constants.FOO);");
     testSame("goog.require('example.Outer'); alert(example.Outer.Inner.FOO);");

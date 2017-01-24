@@ -111,12 +111,9 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
     this.codingConvention = compiler.getCodingConvention();
   }
 
-  /**
-   * Uses Collections of new and goog.require nodes to create a compiler warning
-   * for each new class name without a corresponding goog.require().
-   */
   @Override
   public void process(Node externs, Node root) {
+    reset();
     NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
   }
 
@@ -125,6 +122,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
     // TODO(joeltine): Remove this and properly handle hot swap passes. See
     // b/28869281 for context.
     mode = Mode.SINGLE_FILE;
+    reset();
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
@@ -249,6 +247,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
     this.weakUsages.clear();
     this.requires.clear();
     this.closurizedNamespaces.clear();
+    this.closurizedNamespaces.add("goog");
     this.providedNames.clear();
     this.googScopeBlock = null;
   }
