@@ -67,9 +67,11 @@ enum CompilationParam {
   TRANSPILE(true, ParamGroup.TRANSPILATION) {
     @Override
     void apply(CompilerOptions options, boolean value) {
-      options.setLanguageOut(value ?
-          CompilerOptions.LanguageMode.ECMASCRIPT5 :
-          CompilerOptions.LanguageMode.NO_TRANSPILE);
+      options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_NEXT);
+      options.setLanguageOut(
+          value
+              ? CompilerOptions.LanguageMode.ECMASCRIPT5
+              : CompilerOptions.LanguageMode.NO_TRANSPILE);
     }
     @Override
     String getJavaInfo() {
