@@ -83,6 +83,18 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         DISALLOWED_MEMBER_JSDOC);
   }
 
+  public void testMisplacedParamAnnotation() {
+    testWarningEs6(LINE_JOINER.join(
+        "/** @param {string} x */ var Foo = goog.defineClass(null, {",
+        "  constructor(x) {}",
+        "});"), MISPLACED_ANNOTATION);
+
+    testWarningEs6(LINE_JOINER.join(
+        "/** @param {string} x */ const Foo = class {",
+        "  constructor(x) {}",
+        "};"), MISPLACED_ANNOTATION);
+  }
+
   public void testAbstract_method() {
     testSameEs6("class Foo { /** @abstract */ doSomething() {}}");
     testSame(LINE_JOINER.join(

@@ -283,9 +283,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       // with a function as the RHS, etc.
       switch (n.getToken()) {
         case FUNCTION:
-        case VAR:
-        case LET:
-        case CONST:
         case GETTER_DEF:
         case SETTER_DEF:
         case MEMBER_FUNCTION_DEF:
@@ -299,7 +296,15 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
             return;
           }
           break;
+        case VAR:
+        case LET:
+        case CONST:
         case ASSIGN: {
+          Node lhs = n.getFirstChild();
+          Node rhs = NodeUtil.getRValueOfLValue(lhs);
+          if (rhs != null && isClass(rhs) && !info.isConstructor()) {
+            break;
+          }
           // TODO(tbreisacher): Check that the RHS of the assignment is a
           // function. Note that it can be a FUNCTION node, but it can also be
           // a call to goog.abstractMethod, goog.functions.constant, etc.
