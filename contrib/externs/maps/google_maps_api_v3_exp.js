@@ -3983,7 +3983,7 @@ google.maps.OverlayView.prototype.getMap = function() {};
 
 /**
  * @nosideeffects
- * @return {google.maps.MapPanes}
+ * @return {?google.maps.MapPanes}
  */
 google.maps.OverlayView.prototype.getPanes = function() {};
 
