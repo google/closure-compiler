@@ -1001,17 +1001,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
             // Refactor a var declaration to a getprop assignment
             Node getProp = NodeUtil.newQName(compiler, newName, nameRef, originalName);
             JSDocInfo info = parent.getJSDocInfo();
-            if (info != null) {
-              parent.setJSDocInfo(null);
-              getProp.setJSDocInfo(info);
-            }
-
+            parent.setJSDocInfo(null);
             if (nameRef.hasChildren()) {
-              Node expr =
-                  IR.exprResult(IR.assign(getProp, nameRef.getFirstChild().detachFromParent()))
-                      .useSourceInfoIfMissingFromForTree(nameRef);
+              Node assign = IR.assign(getProp, nameRef.getFirstChild().detachFromParent());
+              assign.setJSDocInfo(info);
+              Node expr = IR.exprResult(assign).useSourceInfoIfMissingFromForTree(nameRef);
               parent.replaceWith(expr);
             } else {
+              getProp.setJSDocInfo(info);
               parent.replaceWith(IR.exprResult(getProp).useSourceInfoFrom(getProp));
             }
           } else if (newNameDeclaration != null) {

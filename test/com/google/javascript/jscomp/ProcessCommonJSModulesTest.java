@@ -220,6 +220,26 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$foo$index.bar = 1;"));
   }
 
+  public void testVarJsdocGoesOnAssignment() {
+    testModules(
+        LINE_JOINER.join(
+            "/**",
+            " * @const",
+            " * @enum {number}",
+            " */",
+            "var MyEnum = { ONE: 1, TWO: 2 };",
+            "module.exports = {MyEnum: MyEnum};"),
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "/** @const */",
+            "var module$testcode = {};",
+            "/**",
+            " * @const",
+            " * @enum {number}",
+            " */",
+            "(module$testcode.MyEnum = {ONE:1, TWO:2});"));
+  }
+
   public void testModuleName() {
     setFilename("foo/bar");
     testModules(
