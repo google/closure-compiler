@@ -163,8 +163,7 @@ public final class JsFileParser extends JsFileLineParser {
    */
   public DependencyInfo parseFile(String filePath, String closureRelativePath,
       String fileContents) {
-    return parseReader(filePath, closureRelativePath,
-        new StringReader(fileContents));
+    return parseReader(filePath, closureRelativePath, new StringReader(fileContents));
   }
 
   private DependencyInfo parseReader(String filePath,
