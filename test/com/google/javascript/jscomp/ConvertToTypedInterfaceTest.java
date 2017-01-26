@@ -331,6 +331,40 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         });
   }
 
+  public void testCrossFileModifications() {
+    test(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "othermodule.modify.something = othermodule.modify.something + 1;"),
+        "goog.module('a.b.c');");
+
+    testEs6(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "class Foo {}",
+            "Foo.something = othermodule.modify.something + 1;",
+            "exports = Foo;"),
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "class Foo {}",
+            "/** @const {*} */ Foo.something",
+            "exports = Foo;"));
+
+    test(
+        LINE_JOINER.join(
+            "goog.provide('a.b.c');",
+            "otherfile.modify.something = otherfile.modify.something + 1;"),
+        "goog.provide('a.b.c');");
+
+    test(
+        LINE_JOINER.join(
+            "goog.provide('a.b.c');",
+            "a.b.c.something = otherfile.modify.something + 1;"),
+        LINE_JOINER.join(
+            "goog.provide('a.b.c');",
+            "/** @const {*} */ a.b.c.something;"));
+  }
+
   public void testRemoveCalls() {
     test("alert('hello'); window.clearTimeout();", "");
 

@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -25,7 +25,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -174,38 +173,60 @@ class ConvertToTypedInterface implements CompilerPass {
 
   }
 
-  private static class RemoveCode extends AbstractModuleCallback {
+  /**
+   * Class to keep track of what has been seen so far in a given file.
+   *
+   * This is cleared after each file to make sure that the analysis is working on a per-file basis.
+   */
+  private static class FileInfo {
+    private final Set<String> prefixNames = new HashSet<>();
+    private final Set<String> seenNames = new HashSet<>();
+    private final List<Node> constructorsToProcess = new ArrayList<>();
+
+    boolean isNameProcessed(String fullyQualifiedName) {
+      return seenNames.contains(fullyQualifiedName);
+    }
+
+    boolean isPrefixProvided(String fullyQualifiedName) {
+      for (String prefix : Iterables.concat(seenNames, prefixNames)) {
+        if (fullyQualifiedName.startsWith(prefix)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    void markConstructorToProcess(Node ctorNode) {
+      Preconditions.checkArgument(ctorNode.isFunction());
+      constructorsToProcess.add(ctorNode);
+    }
+
+    void markNameProcessed(String fullyQualifiedName) {
+      seenNames.add(fullyQualifiedName);
+    }
+
+    void markPrefixDefined(String namespacePrefix) {
+      prefixNames.add(namespacePrefix);
+    }
+
+    void clear() {
+      prefixNames.clear();
+      seenNames.clear();
+      constructorsToProcess.clear();
+    }
+
+  }
+
+  private static class RemoveCode implements NodeTraversal.Callback {
     private final AbstractCompiler compiler;
-    private final Set<String> globalSeenNames = new HashSet<>();
-    private final List<Node> globalConstructorsToProcess = new ArrayList();
-    private Node currentModule = null;
-    private Set<String> moduleSeenNames;
-    private List<Node> moduleConstructorsToProcess;
+    private final FileInfo currentFile = new FileInfo();
 
     RemoveCode(AbstractCompiler compiler) {
       this.compiler = compiler;
     }
 
     void process(Node externs, Node root) {
-      NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
-
-      processConstructors(globalConstructorsToProcess);
-    }
-
-    @Override
-    public void enterModule(NodeTraversal t, Node scopeRoot) {
-      currentModule = scopeRoot;
-      moduleSeenNames = new HashSet<>();
-      moduleConstructorsToProcess = new ArrayList<>();
-    }
-
-    @Override
-    public void exitModule(NodeTraversal t, Node scopeRoot) {
-      processConstructors(moduleConstructorsToProcess);
-
-      currentModule = null;
-      moduleSeenNames = null;
-      moduleConstructorsToProcess = null;
+      NodeTraversal.traverseEs6(compiler, root, this);
     }
 
     private void processConstructors(List<Node> constructorNodes) {
@@ -217,15 +238,22 @@ class ConvertToTypedInterface implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+        case SCRIPT:
+          currentFile.clear();
+          break;
+        case CLASS:
         case FUNCTION: {
           if (parent.isCall()) {
             Preconditions.checkState(!parent.getFirstChild().matchesQualifiedName("goog.scope"),
                 parent);
           }
+          if (NodeUtil.isStatementParent(parent)) {
+            currentFile.markNameProcessed(n.getFirstChild().getString());
+          }
           Node body = n.getLastChild();
-          if (body.isBlock() && body.hasChildren()) {
+          if (body.isNormalBlock() && body.hasChildren()) {
             if (isConstructor(n)) {
-              markConstructorToProcess(n);
+              currentFile.markConstructorToProcess(n);
               return false;
             }
             n.getLastChild().removeChildren();
@@ -247,6 +275,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 t.report(n, UNSUPPORTED_GOOG_SCOPE);
                 return false;
               } else if (callee.matchesQualifiedName("goog.provide")) {
+                currentFile.markPrefixDefined(expr.getLastChild().getString());
                 Node childBefore;
                 while (null != (childBefore = n.getPrevious())
                     && childBefore.getBooleanProp(Node.IS_NAMESPACE)) {
@@ -304,6 +333,9 @@ class ConvertToTypedInterface implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+        case SCRIPT:
+          processConstructors(currentFile.constructorsToProcess);
+          break;
         case TRY:
         case DEFAULT_CASE:
           parent.replaceChild(n, n.getFirstChild().detach());
@@ -346,31 +378,6 @@ class ConvertToTypedInterface implements CompilerPass {
       }
     }
 
-    private boolean isNameProcessed(String fullyQualifiedName) {
-      if (currentModule == null) {
-        return globalSeenNames.contains(fullyQualifiedName);
-      } else {
-        return moduleSeenNames.contains(fullyQualifiedName);
-      }
-    }
-
-    private void markConstructorToProcess(Node ctorNode) {
-      Preconditions.checkArgument(ctorNode.isFunction());
-      if (currentModule == null) {
-        globalConstructorsToProcess.add(ctorNode);
-      } else {
-        moduleConstructorsToProcess.add(ctorNode);
-      }
-    }
-
-    private void markNameProcessed(String fullyQualifiedName) {
-      if (currentModule == null) {
-        globalSeenNames.add(fullyQualifiedName);
-      } else {
-        moduleSeenNames.add(fullyQualifiedName);
-      }
-    }
-
     private void processConstructor(final Node function) {
       final String className = getClassName(function);
       if (className == null) {
@@ -391,7 +398,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 }
                 String pname = name.getLastChild().getString();
                 String fullyQualifiedName = className + ".prototype." + pname;
-                if (isNameProcessed(fullyQualifiedName)) {
+                if (currentFile.isNameProcessed(fullyQualifiedName)) {
                   return;
                 }
                 JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
@@ -406,7 +413,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 // TODO(blickly): Preserve the declaration order of the this properties.
                 insertionPoint.getParent().addChildAfter(newProtoAssignStmt, insertionPoint);
                 compiler.reportCodeChange();
-                markNameProcessed(fullyQualifiedName);
+                currentFile.markNameProcessed(fullyQualifiedName);
               }
             }
           });
@@ -455,11 +462,15 @@ class ConvertToTypedInterface implements CompilerPass {
       }
       if (jsdoc == null
           || !jsdoc.containsDeclaration()) {
-        if (isNameProcessed(nameNode.getQualifiedName())) {
+        String fullyQualifiedName = nameNode.getQualifiedName();
+        if (currentFile.isNameProcessed(fullyQualifiedName)) {
           return RemovalType.REMOVE_ALL;
         }
-        jsdocNode.setJSDocInfo(getAllTypeJSDoc());
-        return RemovalType.REMOVE_RHS;
+        if (isDeclaration(nameNode) || currentFile.isPrefixProvided(fullyQualifiedName)) {
+          jsdocNode.setJSDocInfo(getAllTypeJSDoc());
+          return RemovalType.REMOVE_RHS;
+        }
+        return RemovalType.REMOVE_ALL;
       }
       if (isInferrableConst(jsdoc, nameNode)) {
         jsdocNode.setJSDocInfo(pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
@@ -485,7 +496,7 @@ class ConvertToTypedInterface implements CompilerPass {
           maybeRemoveRhs(nameNode, statement, jsdocNode.getJSDocInfo());
           break;
       }
-      markNameProcessed(nameNode.getQualifiedName());
+      currentFile.markNameProcessed(nameNode.getQualifiedName());
     }
 
     private void removeNode(Node n) {
@@ -518,6 +529,22 @@ class ConvertToTypedInterface implements CompilerPass {
         }
         compiler.reportCodeChange();
       }
+    }
+  }
+
+  // TODO(blickly): Move to NodeUtil if it makes more sense there.
+  private static boolean isDeclaration(Node nameNode) {
+    Preconditions.checkArgument(nameNode.isQualifiedName());
+    Node parent = nameNode.getParent();
+    switch (parent.getToken()) {
+      case VAR:
+      case LET:
+      case CONST:
+      case CLASS:
+      case FUNCTION:
+        return true;
+      default:
+        return false;
     }
   }
 
