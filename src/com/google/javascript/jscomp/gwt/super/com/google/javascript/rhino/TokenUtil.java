@@ -17,6 +17,8 @@
 package com.google.javascript.rhino;
 
 import com.google.javascript.rhino.jstype.TernaryValue;
+import jsinterop.annotations.JsPackage;
+import jsinterop.annotations.JsType;
 
 /**
  * Helper methods for parsing JavaScript.
@@ -24,10 +26,20 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  * @author moz@google.com (Michael Zhou)
  */
 public class TokenUtil {
+  @JsType(isNative = true, namespace = JsPackage.GLOBAL, name = "RegExp")
+  private static class RegExp {
+    RegExp(String string) {}
+    native boolean test(String string);
+    native boolean test(int charcode);
+  }
 
-  static native boolean isJSIdentifier(String s) /*-{
-    return /^[a-zA-Z_$][\w$]*$/.test(s); // TODO(moz): Support full range of valid characters.
-  }-*/;
+  // TODO(moz): Support full range of valid characters.
+  private static final RegExp JS_IDENTIFIER_REGEX = new RegExp("^[a-zA-Z_$][\\w$]*$");
+  private static final RegExp WHITE_SPACE_REGEX = new RegExp("\\s");
+
+  static boolean isJSIdentifier(String s) {
+    return JS_IDENTIFIER_REGEX.test(s);
+  }
 
   public static boolean isJSSpace(int c) {
     if (c <= 127) {
@@ -41,9 +53,9 @@ public class TokenUtil {
     return c > 127; // TODO(moz): Correct this.
   }
 
-  public static native boolean isWhitespace(int c) /*-{
-    return /\s/.test(c);
-  }-*/;
+  public static boolean isWhitespace(int c) {
+    return WHITE_SPACE_REGEX.test(c);
+  };
 
   public static TernaryValue isStrWhiteSpaceChar(int c) {
     switch (c) {
@@ -64,4 +76,3 @@ public class TokenUtil {
     }
   }
 }
-
