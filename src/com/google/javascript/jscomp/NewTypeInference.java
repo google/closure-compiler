@@ -3217,7 +3217,9 @@ final class NewTypeInference implements CompilerPass {
           // retain Namespace instances after GTI instead of turning them into
           // ObjectTypes, and then update those with the summaries and stop
           // specializing here.
-          env = envPutType(env, objName, objType.withProperty(props, type));
+          if (objType != null) {
+            env = envPutType(env, objName, objType.withProperty(props, type));
+          }
         }
         return env;
       }
