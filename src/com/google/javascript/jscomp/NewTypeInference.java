@@ -2515,8 +2515,7 @@ final class NewTypeInference implements CompilerPass {
     Node arg = firstArg;
     int i = 0;
     while (arg != null) {
-      EnvTypePair pair =
-          isFwd ? analyzeExprFwd(arg, typeEnv) : analyzeExprBwd(arg, typeEnv);
+      EnvTypePair pair = isFwd ? analyzeExprFwd(arg, typeEnv) : analyzeExprBwd(arg, typeEnv);
       unifyWithSubtypeWarnIfFail(funType.getFormalType(i), pair.type,
           typeParameters, typeMultimap, arg, isFwd);
       arg = arg.getNext();
@@ -3175,10 +3174,8 @@ final class NewTypeInference implements CompilerPass {
       // Tighten the inferred type and don't warn.
       // See analyzeNameFwd for explanation about types as lower/upper bounds.
       resultType = resultType.specialize(requiredType);
-      LValueResultFwd lvr =
-          analyzeLValueFwd(propAccessNode, inEnv, resultType);
-      TypeEnv updatedEnv =
-          updateLvalueTypeInEnv(lvr.env, propAccessNode, lvr.ptr, resultType);
+      LValueResultFwd lvr = analyzeLValueFwd(propAccessNode, inEnv, resultType);
+      TypeEnv updatedEnv = updateLvalueTypeInEnv(lvr.env, propAccessNode, lvr.ptr, resultType);
       return new EnvTypePair(updatedEnv, resultType);
     }
     // We've already warned about missing props, and never want to return null.

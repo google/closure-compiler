@@ -555,10 +555,9 @@ public final class NominalType {
     }
     // Most of the time, both nominal types are already instantiated when
     // unifyWith is called. Rarely, when we call a polymorphic function from the
-    // body of a method of a polymorphic class, then other.typeMap is
-    // empty. For now, don't do anything fancy in that case.
-    Preconditions.checkState(!typeMap.isEmpty());
-    if (other.typeMap.isEmpty()) {
+    // body of a method of a polymorphic class, then this.typeMap and/or other.typeMap
+    // can be empty. For now, don't do anything fancy in that case.
+    if (this.typeMap.isEmpty() || other.typeMap.isEmpty()) {
       return true;
     }
     boolean hasUnified = true;

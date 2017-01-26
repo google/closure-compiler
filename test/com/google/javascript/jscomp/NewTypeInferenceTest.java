@@ -18853,4 +18853,40 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testDontCrashWhenUnifyingNominalTypeWithEmptyTypemap() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template SCOPE",
+        " */",
+        "function MyEventHandler() {}",
+        "/**",
+        " * @template T",
+        " * @this {T}",
+        " * @return {!MyEventHandler<T>}",
+        " */",
+        "MyEventHandler.prototype.getHandler = function() {",
+        "  return /** @type {!MyEventHandler<T>} */ (new MyEventHandler);",
+        "};",
+        "/**",
+        " * @param {function(this: SCOPE, EVENTOBJ)} x",
+        " * @template EVENTOBJ",
+        " */",
+        "MyEventHandler.prototype.listen = function(x) {};",
+        "MyEventHandler.prototype.foobar = function() {",
+        "  this.getHandler().listen(MyEventHandler.prototype.listen);",
+        "};"));
+  }
+
+  public void testSpecializeFunctionReturnType() {
+    typeCheck(LINE_JOINER.join(
+        "/** @return {?Object} */",
+        "function f() { return {}; }",
+        "function g(/** ?Object */ x) {",
+        "  if ((x = f()) !== null) {",
+        "    var /** !Object */ y = x;",
+        "  }",
+        "}"));
+  }
 }

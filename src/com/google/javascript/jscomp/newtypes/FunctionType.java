@@ -998,7 +998,7 @@ public final class FunctionType {
     }
     builder.addNominalType(substGenericsInNomType(this.nominalType, typeMap));
     builder.addReceiverType(substGenericsInNomType(this.receiverType, typeMap));
-    // TODO(blickly): Do we need instatiation here?
+    // TODO(blickly): Do we need instantiation here?
     for (String var : this.outerVarPreconditions.keySet()) {
       builder.addOuterVarPrecondition(var, this.outerVarPreconditions.get(var));
     }
