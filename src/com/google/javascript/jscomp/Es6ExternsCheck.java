@@ -35,7 +35,7 @@ final class Es6ExternsCheck extends AbstractPreOrderCallback implements Compiler
   }
 
   private boolean hasEs6Syntax(Node root) {
-    Preconditions.checkState(root.isBlock());
+    Preconditions.checkState(root.isRoot());
     for (Node script : root.children()) {
       Preconditions.checkState(script.isScript());
       if (TranspilationPasses.isScriptEs6ImplOrHigher(script)) {
