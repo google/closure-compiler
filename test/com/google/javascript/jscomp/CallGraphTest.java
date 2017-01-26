@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -626,7 +625,7 @@ public final class CallGraphTest extends CompilerTestCase {
 
     assertTrue(mainFunction.isMain());
     assertNotNull(mainFunction.getBodyNode());
-    assertTrue(mainFunction.getBodyNode().isBlock());
+    assertTrue(mainFunction.getBodyNode().isRoot());
 
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
 
@@ -642,8 +641,8 @@ public final class CallGraphTest extends CompilerTestCase {
 
     CallGraph.Function mainFunction = callgraph.getMainFunction();
 
-    // Main function's AST node should be the global block
-    assertTrue(mainFunction.getAstNode().isBlock());
+    // Main function's AST node should be the root of the AST.
+    assertTrue(mainFunction.getAstNode().isRoot());
 
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
 
@@ -667,7 +666,7 @@ public final class CallGraphTest extends CompilerTestCase {
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
 
     // Regular function's body node should be the block for A
-    assertTrue(functionA.getBodyNode().isBlock());
+    assertTrue(functionA.getBodyNode().isNormalBlock());
     assertEquals(NodeUtil.getFunctionBody(functionA.getAstNode()),
         functionA.getBodyNode());
   }

@@ -529,7 +529,7 @@ public final class JSTypeCreatorFromJSDoc {
 
   private void checkInvalidGenericsInstantiation(Node n) {
     if (n.hasChildren()) {
-      Preconditions.checkState(n.getFirstChild().isBlock(), n);
+      Preconditions.checkState(n.getFirstChild().isNormalBlock(), n);
       warnings.add(JSError.make(n, INVALID_GENERICS_INSTANTIATION,
               "", "0", String.valueOf(n.getFirstChild().getChildCount())));
     }
