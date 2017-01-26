@@ -298,7 +298,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     // `this`, so a workaround is needed.
     Node superStatement = NodeUtil.getEnclosingStatement(superCall);
     Node body = superStatement.getParent();
-    checkState(body.isBlock(), body);
+    checkState(body.isNormalBlock(), body);
 
     // var $jscomp$tmp$error;
     Node getError = IR.var(IR.name(TMP_ERROR)).useSourceInfoIfMissingFromForTree(superCall);

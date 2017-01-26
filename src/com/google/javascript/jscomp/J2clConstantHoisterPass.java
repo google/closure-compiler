@@ -141,8 +141,8 @@ public class J2clConstantHoisterPass implements CompilerPass {
 
   private static boolean isClinitFieldAssignment(Node node) {
     return node.getParent().isExprResult()
-        && node.getParent().getParent().isBlock()
-        && isClinitMethod(node.getParent().getParent().getParent());
+        && node.getGrandparent().isNormalBlock()
+        && isClinitMethod(node.getGrandparent().getParent());
   }
 
   // TODO(goktug): Create a utility to share this logic and start using getQualifiedOriginalName.

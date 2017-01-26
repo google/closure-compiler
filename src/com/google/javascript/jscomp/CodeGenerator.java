@@ -160,7 +160,7 @@ public class CodeGenerator {
       case TRY:
         {
           Preconditions.checkState(
-              first.getNext().isBlock() && !first.getNext().hasMoreThanOneChild());
+              first.getNext().isNormalBlock() && !first.getNext().hasMoreThanOneChild());
           Preconditions.checkState(childCount >= 2 && childCount <= 3);
 
           add("try");
@@ -1074,7 +1074,7 @@ public class CodeGenerator {
         }
         add(first);
         add(":");
-        if (!last.isBlock()) {
+        if (!last.isNormalBlock()) {
           cc.maybeInsertSpace();
         }
         addNonEmptyStatement(last, getContextForNonEmptyExpression(context), true);
@@ -1312,7 +1312,7 @@ public class CodeGenerator {
 
     cc.addOp("=>", true);
 
-    if (last.isBlock()) {
+    if (last.isNormalBlock()) {
       add(last);
     } else {
       // This is a hack. Arrow functions have no token type, but
@@ -1454,13 +1454,13 @@ public class CodeGenerator {
       Node n, Context context, boolean allowNonBlockChild) {
     Node nodeToProcess = n;
 
-    if (!allowNonBlockChild && !n.isBlock()) {
+    if (!allowNonBlockChild && !n.isNormalBlock()) {
       throw new Error("Missing BLOCK child.");
     }
 
     // Strip unneeded blocks, that is blocks with <2 children unless
     // the CodePrinter specifically wants to keep them.
-    if (n.isBlock()) {
+    if (n.isNormalBlock()) {
       int count = getNonEmptyChildCount(n, 2);
       if (count == 0) {
         if (cc.shouldPreserveExtraBlocks()) {
@@ -1505,7 +1505,7 @@ public class CodeGenerator {
   private static boolean isBlockDeclOrDo(Node n) {
     if (n.isLabel()) {
       Node labeledStatement = n.getLastChild();
-      if (!labeledStatement.isBlock()) {
+      if (!labeledStatement.isNormalBlock()) {
         return isBlockDeclOrDo(labeledStatement);
       } else {
         // For labels with block children, we need to ensure that a
@@ -1650,7 +1650,7 @@ public class CodeGenerator {
   }
 
   void addCaseBody(Node caseBody) {
-    Preconditions.checkState(caseBody.isBlock());
+    Preconditions.checkState(caseBody.isNormalBlock());
     cc.beginCaseBody();
     addAllSiblings(caseBody.getFirstChild());
     cc.endCaseBody();
@@ -1859,7 +1859,7 @@ public class CodeGenerator {
     int i = 0;
     Node c = n.getFirstChild();
     for (; c != null && i < maxCount; c = c.getNext()) {
-      if (c.isBlock()) {
+      if (c.isNormalBlock()) {
         i += getNonEmptyChildCount(c, maxCount - i);
       } else if (!c.isEmpty()) {
         i++;
@@ -1871,7 +1871,7 @@ public class CodeGenerator {
   /** Gets the first non-empty child of the given node. */
   private static Node getFirstNonEmptyChild(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (c.isBlock()) {
+      if (c.isNormalBlock()) {
         Node result = getFirstNonEmptyChild(c);
         if (result != null) {
           return result;

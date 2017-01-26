@@ -102,7 +102,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     // Do not try to remove a block or an expr result. We already handle
     // these cases when we visit the child, and the peephole passes will
     // fix up the tree in more clever ways when these are removed.
-    if (n.isExprResult() || n.isBlock()) {
+    if (n.isExprResult() || n.isNormalBlock()) {
       return;
     }
 

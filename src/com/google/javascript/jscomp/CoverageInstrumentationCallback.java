@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.Map;
 
 /**
@@ -165,7 +164,7 @@ class CoverageInstrumentationCallback extends
 
     // For arrow functions whose body is an expression instead of a block,
     // convert it to a block so that it can be instrumented.
-    if (node.isFunction() && !NodeUtil.getFunctionBody(node).isBlock()) {
+    if (node.isFunction() && !NodeUtil.getFunctionBody(node).isNormalBlock()) {
       Node returnValue = NodeUtil.getFunctionBody(node);
       Node body = IR.block(IR.returnNode(returnValue.detach()));
       body.useSourceInfoIfMissingFromForTree(returnValue);

@@ -184,7 +184,7 @@ class UnreachableCodeElimination implements CompilerPass {
 
     private Node computeFollowing(Node n) {
       Node next = ControlFlowAnalysis.computeFollowNode(n);
-      while (next != null && next.isBlock()) {
+      while (next != null && next.isNormalBlock()) {
         if (next.hasChildren()) {
           next = next.getFirstChild();
         } else {
@@ -196,7 +196,7 @@ class UnreachableCodeElimination implements CompilerPass {
 
     private void removeDeadExprStatementSafely(Node n) {
       Node parent = n.getParent();
-      if (n.isEmpty() || (n.isBlock() && !n.hasChildren())) {
+      if (n.isEmpty() || (n.isNormalBlock() && !n.hasChildren())) {
         // Not always trivial to remove, let FoldConstants work its magic later.
         return;
       }

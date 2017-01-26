@@ -348,7 +348,7 @@ class RemoveUnusedVars
     Preconditions.checkState(n.isFunction(), n);
 
     final Node body = n.getLastChild();
-    Preconditions.checkState(body.getNext() == null && body.isBlock(), body);
+    Preconditions.checkState(body.getNext() == null && body.isNormalBlock(), body);
 
     Scope fnScope = SyntacticScopeCreator.makeUntyped(compiler).createScope(n, parentScope);
     traverseNode(body, n, fnScope);

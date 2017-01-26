@@ -426,7 +426,7 @@ class FunctionToBlockMutator {
    *   a = (void) 0;
    */
   private static void addDummyAssignment(Node node, String resultName) {
-    Preconditions.checkArgument(node.isBlock());
+    Preconditions.checkArgument(node.isNormalBlock());
 
     // A result is needed create a dummy value.
     Node srcLocation = node;

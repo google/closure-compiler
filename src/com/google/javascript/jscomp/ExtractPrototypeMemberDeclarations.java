@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -252,7 +251,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
 
-      if (!n.isScript() && !n.isBlock()) {
+      if (!n.isScript() && !n.isNormalBlock()) {
         return;
       }
 

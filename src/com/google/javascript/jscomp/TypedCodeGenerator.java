@@ -25,7 +25,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -48,9 +47,7 @@ class TypedCodeGenerator extends CodeGenerator {
   @Override
   protected void add(Node n, Context context) {
     Node parent = n.getParent();
-    if (parent != null
-        && (parent.isBlock()
-            || parent.isScript())) {
+    if (parent != null && (parent.isNormalBlock() || parent.isScript())) {
       if (n.isFunction()) {
         add(getFunctionAnnotation(n));
       } else if (n.isExprResult()

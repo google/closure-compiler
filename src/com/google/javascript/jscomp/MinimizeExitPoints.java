@@ -163,7 +163,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
     }
 
     // The rest assumes a block with at least one child, bail on anything else.
-    if (!n.isBlock() || !n.hasChildren()) {
+    if (!n.isNormalBlock() || !n.hasChildren()) {
       return;
     }
 
@@ -269,7 +269,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
     Node exitNode = null;
 
     // Pick an exit node candidate.
-    if (srcBlock.isBlock()) {
+    if (srcBlock.isNormalBlock()) {
       if (!srcBlock.hasChildren()) {
         return;
       }
@@ -297,7 +297,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
       } else if (destBlock.isEmpty()) {
         // Use the new block.
         ifNode.replaceChild(destBlock, newDestBlock);
-      } else if (destBlock.isBlock()) {
+      } else if (destBlock.isNormalBlock()) {
         // Reuse the existing block.
         newDestBlock = destBlock;
       } else {

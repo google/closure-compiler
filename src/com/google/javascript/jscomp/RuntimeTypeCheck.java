@@ -187,7 +187,7 @@ class RuntimeTypeCheck implements CompilerPass {
     }
 
     private static Node findEnclosingConstructorDeclaration(Node n) {
-      while (!n.getParent().isScript() && !n.getParent().isBlock()) {
+      while (!n.getParent().isScript() && !n.getParent().isNormalBlock()) {
         n = n.getParent();
       }
       return n;

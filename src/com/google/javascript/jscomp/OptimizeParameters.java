@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -478,8 +477,7 @@ class OptimizeParameters
         "Node must be a function.");
 
     Node block = function.getLastChild();
-    Preconditions.checkArgument(block.isBlock(),
-        "Node must be a block.");
+    Preconditions.checkArgument(block.isNormalBlock(), "Node must be a block.");
 
     Preconditions.checkState(value.getParent() == null);
     Node stmt;

@@ -947,8 +947,7 @@ final class NewTypeInference implements CompilerPass {
           "Implicit return should not be in workset.");
       TypeEnv inEnv = getInEnv(dn);
       TypeEnv outEnv = null;
-      if (parent.isScript()
-          || (parent.isBlock() && parent.getParent().isFunction())) {
+      if (parent.isScript() || (parent.isNormalBlock() && parent.getParent().isFunction())) {
         // All joins have merged; forget changes
         inEnv = inEnv.clearChangeLog();
       }

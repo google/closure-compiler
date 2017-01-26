@@ -127,7 +127,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     n.setIsArrowFunction(false);
     n.makeNonIndexable();
     Node body = n.getLastChild();
-    if (!body.isBlock()) {
+    if (!body.isNormalBlock()) {
       body.detach();
       body = IR.block(IR.returnNode(body)).useSourceInfoIfMissingFromForTree(body);
       n.addChildToBack(body);

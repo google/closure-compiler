@@ -385,7 +385,8 @@ class ScopedAliases implements HotSwapCompilerPass {
     private void reportInvalidVariables(NodeTraversal t) {
       Node scopeRoot = t.getScopeRoot();
       Node enclosingFunctionBody = t.getEnclosingFunction().getLastChild();
-      if (isGoogScopeFunctionBody(enclosingFunctionBody) && scopeRoot.isBlock()
+      if (isGoogScopeFunctionBody(enclosingFunctionBody)
+          && scopeRoot.isNormalBlock()
           && !scopeRoot.getParent().isFunction()) {
         for (Var v : t.getScope().getVarIterable()) {
           Node parent = v.getNameNode().getParent();
@@ -427,7 +428,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         Node n = v.getNode();
         Node parent = n.getParent();
         // We use isBlock to avoid variables declared in loop headers.
-        boolean isVar = NodeUtil.isNameDeclaration(parent) && parent.getParent().isBlock();
+        boolean isVar = NodeUtil.isNameDeclaration(parent) && parent.getParent().isNormalBlock();
         boolean isFunctionDecl = NodeUtil.isFunctionDeclaration(parent);
         if (isVar && n.getFirstChild() != null && n.getFirstChild().isQualifiedName()) {
           recordAlias(v);

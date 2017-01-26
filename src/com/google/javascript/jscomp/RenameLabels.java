@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -238,7 +237,7 @@ final class RenameLabels implements CompilerPass {
         Node newChild = node.getLastChild();
         node.removeChild(newChild);
         parent.replaceChild(node, newChild);
-        if (newChild.isBlock()) {
+        if (newChild.isNormalBlock()) {
           NodeUtil.tryMergeBlock(newChild);
         }
         compiler.reportCodeChange();

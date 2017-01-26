@@ -108,7 +108,8 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
           declareVar(classNameNode);
         }
       }
-    } else if (n.isBlock()
+    } else if (n.isRoot()
+        || n.isNormalBlock()
         || NodeUtil.isAnyFor(n)
         || n.isSwitch()
         || n.isModuleBody()) {

@@ -64,10 +64,8 @@ class CollapseAnonymousFunctions implements CompilerPass {
       // definitions are added to scopes before the start of execution.
 
       Node grandparent = parent.getParent();
-      if (!(parent.isScript() ||
-            grandparent != null &&
-            grandparent.isFunction() &&
-            parent.isBlock())) {
+      if (!(parent.isScript()
+          || grandparent != null && grandparent.isFunction() && parent.isNormalBlock())) {
         return;
       }
 

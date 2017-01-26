@@ -286,7 +286,7 @@ class ShadowVariables implements CompilerPass {
       // declaring scope of the best shadow variable.
       Var shadowed = s.getVar(toShadow.oldName);
       if (shadowed != null) {
-        if (s.isFunctionScope() && s.getRootNode().getLastChild().isBlock()) {
+        if (s.isFunctionScope() && s.getRootNode().getLastChild().isNormalBlock()) {
           scopeUpRefMap.put(s.getRootNode().getLastChild(), toShadow.oldName);
           scopeUpRefMap.remove(s.getRootNode().getLastChild(), original.oldName);
         }

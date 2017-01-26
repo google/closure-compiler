@@ -486,7 +486,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Preconditions.checkState(caseNode == executingCase
           || !executingCase.isDefaultCase());
       Node block = executingCase.getLastChild();
-      Preconditions.checkState(block.isBlock());
+      Preconditions.checkState(block.isNormalBlock());
       if (block.hasChildren()) {
         for (Node blockChild : block.children()) {
           // If this is a block with a labelless break, it is useless.
@@ -582,7 +582,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Some nodes unremovable node don't have side-effects.
    */
   private static boolean isUnremovableNode(Node n) {
-    return (n.isBlock() && n.isSyntheticBlock()) || n.isScript();
+    return (n.isNormalBlock() && n.isSyntheticBlock()) || n.isScript();
   }
 
   // TODO(johnlenz): Consider moving this to a separate peephole pass.
@@ -959,7 +959,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Preconditions.checkArgument(n.isDo());
 
     Node body = NodeUtil.getLoopCodeBlock(n);
-    if (body.isBlock() && !body.hasChildren()) {
+    if (body.isNormalBlock() && !body.hasChildren()) {
       Node cond = NodeUtil.getConditionExpression(n);
       Node whileNode =
           IR.forNode(IR.empty().srcref(n),

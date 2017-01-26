@@ -321,7 +321,7 @@ public final class Es6RewriteGenerators
     } else if (currentStatement.isFunction()) {
       visitFunctionStatement();
       return false;
-    } else if (currentStatement.isBlock()) {
+    } else if (currentStatement.isNormalBlock()) {
       visitBlock();
       return false;
     } else if (controlCanExit(currentStatement)) {
@@ -784,7 +784,7 @@ public final class Es6RewriteGenerators
 
     Node condition, prestatement;
 
-    if (guard.isBlock()) {
+    if (guard.isNormalBlock()) {
       prestatement = guard.removeFirstChild();
       condition = guard.removeFirstChild();
     } else {
@@ -799,7 +799,7 @@ public final class Es6RewriteGenerators
       continueState = generatorCaseCount++;
       Node continueCase = makeGeneratorMarker(continueState);
       body.addChildToBack(continueCase);
-      body.addChildToBack(incr.isBlock() ? incr : IR.exprResult(incr));
+      body.addChildToBack(incr.isNormalBlock() ? incr : IR.exprResult(incr));
     }
 
     currentLoopContext.add(0, new LoopContext(generatorCaseCount, continueState, label));

@@ -572,7 +572,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
 
         // Remove redundant block node. Not strictly necessary, but makes tests more legible.
-        if (umdPattern.activeBranch.isBlock() && umdPattern.activeBranch.getChildCount() == 1) {
+        if (umdPattern.activeBranch.isNormalBlock()
+            && umdPattern.activeBranch.getChildCount() == 1) {
           newNode = umdPattern.activeBranch.getFirstChild();
           umdPattern.activeBranch.detachChildren();
         } else {

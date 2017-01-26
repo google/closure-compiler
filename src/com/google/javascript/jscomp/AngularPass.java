@@ -23,7 +23,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -296,7 +295,7 @@ class AngularPass extends AbstractPostOrderCallback
       return;
     }
     // report an error if the function declaration did not take place in a block or global scope
-    if (!target.getParent().isScript() && !target.getParent().isBlock()) {
+    if (!target.getParent().isScript() && !target.getParent().isNormalBlock()) {
       compiler.report(t.makeError(n, INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR));
       return;
     }

@@ -162,8 +162,9 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
       if (maybeAssign.isAssign()) {
         maybeAssign = maybeAssign.getParent();
-        if (maybeAssign.isBlock() || maybeAssign.isScript() ||
-            NodeUtil.isStatement(maybeAssign)) {
+        if (maybeAssign.isNormalBlock()
+            || maybeAssign.isScript()
+            || NodeUtil.isStatement(maybeAssign)) {
           return;
         }
       }

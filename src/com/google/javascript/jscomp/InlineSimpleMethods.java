@@ -207,8 +207,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     }
 
     Node expectedBlock = fn.getLastChild();
-    return  expectedBlock.isBlock() ?
-        expectedBlock : null;
+    return expectedBlock.isNormalBlock() ? expectedBlock : null;
   }
 
   /**

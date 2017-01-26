@@ -2637,7 +2637,7 @@ public final class NodeUtil {
       Node tryNode = node.getParent();
       Preconditions.checkState(NodeUtil.hasFinally(tryNode));
       node.detachChildren();
-    } else if (node.isBlock()) {
+    } else if (node.isNormalBlock()) {
       // Simply empty the block.  This maintains source location and
       // "synthetic"-ness.
       node.detachChildren();
@@ -2719,7 +2719,7 @@ public final class NodeUtil {
    * @return Whether the block was removed.
    */
   public static boolean tryMergeBlock(Node block) {
-    Preconditions.checkState(block.isBlock());
+    Preconditions.checkState(block.isNormalBlock());
     Node parent = block.getParent();
     // Try to remove the block if its parent is a block/script or if its
     // parent is label and it has exactly one child.
@@ -2806,7 +2806,7 @@ public final class NodeUtil {
   }
 
   static boolean isFunctionBlock(Node n) {
-    return n.isBlock() && n.getParent() != null && n.getParent().isFunction();
+    return n.isNormalBlock() && n.getParent() != null && n.getParent().isFunction();
   }
 
   /**
@@ -3271,8 +3271,8 @@ public final class NodeUtil {
     }
 
     // make sure that the adding root looks ok
-    Preconditions.checkState(addingRoot.isBlock() || addingRoot.isModuleBody()
-        || addingRoot.isScript());
+    Preconditions.checkState(
+        addingRoot.isNormalBlock() || addingRoot.isModuleBody() || addingRoot.isScript());
     Preconditions.checkState(addingRoot.getFirstChild() == null ||
         !addingRoot.getFirstChild().isScript());
     return addingRoot;
@@ -3870,10 +3870,10 @@ public final class NodeUtil {
     @Override
     public boolean apply(Node n) {
       Node parent = n.getParent();
-      return n.isBlock()
-          || (!n.isFunction() && (parent == null
-              || isControlStructure(parent)
-              || isStatementBlock(parent)));
+      return n.isRoot()
+          || n.isNormalBlock()
+          || (!n.isFunction()
+              && (parent == null || isControlStructure(parent) || isStatementBlock(parent)));
     }
   }
 
@@ -4020,7 +4020,7 @@ public final class NodeUtil {
    * @see NodeUtil#getCatchBlock
    */
   static boolean hasCatchHandler(Node n) {
-    Preconditions.checkArgument(n.isBlock());
+    Preconditions.checkArgument(n.isNormalBlock());
     return n.hasChildren() && n.getFirstChild().isCatch();
   }
 

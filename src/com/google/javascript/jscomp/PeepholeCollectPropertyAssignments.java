@@ -33,7 +33,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
 
   @Override
   Node optimizeSubtree(Node subtree) {
-    if (!subtree.isScript() && !subtree.isBlock()) {
+    if (!subtree.isScript() && !subtree.isNormalBlock()) {
       return subtree;
     }
 

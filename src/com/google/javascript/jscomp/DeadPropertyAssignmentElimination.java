@@ -294,13 +294,13 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
       // Mark all properties as read when leaving a block since we haven't proven that the block
       // will execute.
-      if (n.isBlock()) {
+      if (n.isNormalBlock()) {
         visitBlock(n);
       }
     }
 
     private void visitBlock(Node blockNode) {
-      Preconditions.checkArgument(blockNode.isBlock());
+      Preconditions.checkArgument(blockNode.isNormalBlock());
 
       // We don't do flow analysis yet so we're going to assume everything written up to this
       // block is read.

@@ -475,10 +475,9 @@ class CollapseProperties implements CompilerPass {
 
       Node current = grandparent;
       Node currentParent = grandparent.getParent();
-      for (; !currentParent.isScript() &&
-             !currentParent.isBlock();
-           current = currentParent,
-           currentParent = currentParent.getParent()) {}
+      for (;
+          !currentParent.isScript() && !currentParent.isNormalBlock();
+          current = currentParent, currentParent = currentParent.getParent()) {}
 
       // Create a stub variable declaration right
       // before the current statement.

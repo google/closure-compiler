@@ -726,7 +726,7 @@ public final class AstValidator implements CompilerPass {
     if (n.isArrowFunction()) {
       validateEs6Feature("arrow functions", n);
       validateEmptyName(name);
-      if (body.isBlock()) {
+      if (body.isNormalBlock()) {
         validateBlock(body);
       } else {
         validateExpression(body);

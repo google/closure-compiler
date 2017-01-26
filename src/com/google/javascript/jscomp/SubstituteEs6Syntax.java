@@ -61,7 +61,7 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
    */
   private void maybeSimplifyArrowFunctionBody(Node arrowFunction, Node body) {
     Preconditions.checkArgument(arrowFunction.isArrowFunction());
-    if (!body.isBlock() || !body.hasOneChild() || !body.getFirstChild().isReturn()) {
+    if (!body.isNormalBlock() || !body.hasOneChild() || !body.getFirstChild().isReturn()) {
       return;
     }
     Node returnValue = body.getFirstChild().removeFirstChild();
