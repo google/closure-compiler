@@ -624,7 +624,11 @@ final class NewTypeInference implements CompilerPass {
     }
     if (currentScope.isFunction()) {
       Node fn = currentScope.getRoot();
-      if (!currentScope.hasThis() && NodeUtil.referencesSuper(fn)) {
+      if (!currentScope.hasThis()
+          // Can't use NodeUtil.referencesSuper here because that function is correct only
+          // on valid ASTs, but here we may have an invalid AST that contains super inside
+          // a function.
+          && NodeUtil.containsType(fn.getLastChild(), Token.SUPER, NodeUtil.MATCH_NOT_FUNCTION)) {
         // This function is a static method on some class. To do lookups of the
         // class name, we add the root of the qualified name to the environment.
         Node funNameNode = NodeUtil.getBestLValue(fn);

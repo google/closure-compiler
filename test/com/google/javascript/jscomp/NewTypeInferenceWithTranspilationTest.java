@@ -336,4 +336,14 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "  foo() { super.foo(); }",
         "}"));
   }
+
+  // super is handled natively in both type checkers, which results in ASTs that
+  // are temporarily invalid: a super call that is not in a class.
+  // Avoid crashing.
+  public void testDontCrashWithInvalidIntermediateASTwithSuper() {
+    typeCheck(LINE_JOINER.join(
+        "class Foo {}",
+        "function g(x) {}",
+        "g(function f(x) { return class extends Foo {} });"));
+  }
 }
