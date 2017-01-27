@@ -42,8 +42,7 @@ import java.util.Set;
  *  TODO(johnlenz): Try to merge this with the ScopeCreator.
  *  TODO(moz): Handle more ES6 features, such as default parameters.
  */
-class MakeDeclaredNamesUnique
-    implements NodeTraversal.ScopedCallback {
+class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
   // Arguments is special cased to handle cases where a local name shadows
   // the arguments declaration.
@@ -86,12 +85,11 @@ class MakeDeclaredNamesUnique
       // If the contextual renamer is being used, the starting context can not
       // be a function.
       Preconditions.checkState(
-          !declarationRoot.isFunction() ||
-          !(rootRenamer instanceof ContextualRenamer));
+          !declarationRoot.isFunction() || !(rootRenamer instanceof ContextualRenamer));
       Preconditions.checkState(t.inGlobalScope());
       renamer = rootRenamer;
     } else {
-      renamer = nameStack.peek().forChildScope(!NodeUtil.createsBlockScope(declarationRoot));
+      renamer = nameStack.peek().createForChildScope(!NodeUtil.createsBlockScope(declarationRoot));
     }
 
     if (!declarationRoot.isFunction()) {
@@ -118,12 +116,11 @@ class MakeDeclaredNamesUnique
       case FUNCTION: {
         // Add recursive function name, if needed.
         // NOTE: "enterScope" is called after we need to pick up this name.
-        Renamer renamer = nameStack.peek().forChildScope(false);
+        Renamer renamer = nameStack.peek().createForChildScope(false);
 
         // If needed, add the function recursive name.
         String name = n.getFirstChild().getString();
-        if (name != null && !name.isEmpty() && parent != null
-            && !NodeUtil.isFunctionDeclaration(n)) {
+        if (!name.isEmpty() && parent != null && !NodeUtil.isFunctionDeclaration(n)) {
           renamer.addDeclaredName(name, false);
         }
 
@@ -132,7 +129,7 @@ class MakeDeclaredNamesUnique
       }
 
       case PARAM_LIST: {
-        Renamer renamer = nameStack.peek().forChildScope(true);
+        Renamer renamer = nameStack.peek().createForChildScope(true);
 
         // Add the function parameters
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
@@ -148,7 +145,7 @@ class MakeDeclaredNamesUnique
       }
 
       case CATCH: {
-        Renamer renamer = nameStack.peek().forChildScope(false);
+        Renamer renamer = nameStack.peek().createForChildScope(false);
 
         String name = n.getFirstChild().getString();
         renamer.addDeclaredName(name, false);
@@ -264,7 +261,7 @@ class MakeDeclaredNamesUnique
     /**
      * @return A Renamer for a scope within the scope of the current Renamer.
      */
-    Renamer forChildScope(boolean hoisted);
+    Renamer createForChildScope(boolean hoisted);
 
     /**
      * @return The closest hoisting target for var and function declarations.
@@ -482,7 +479,7 @@ class MakeDeclaredNamesUnique
      * Create a ContextualRenamer
      */
     @Override
-    public Renamer forChildScope(boolean hoistingTargetScope) {
+    public Renamer createForChildScope(boolean hoistingTargetScope) {
       return new ContextualRenamer(nameUsage, hoistingTargetScope, this);
     }
 
@@ -624,7 +621,7 @@ class MakeDeclaredNamesUnique
     }
 
     @Override
-    public Renamer forChildScope(boolean hoistingTargetScope) {
+    public Renamer createForChildScope(boolean hoistingTargetScope) {
       return new InlineRenamer(
           convention, uniqueIdSupplier, idPrefix, removeConstness, hoistingTargetScope, this);
     }
@@ -659,7 +656,7 @@ class MakeDeclaredNamesUnique
     }
 
     @Override
-    public Renamer forChildScope(boolean hoisted) {
+    public Renamer createForChildScope(boolean hoisted) {
       return new InlineRenamer(convention, uniqueIdSupplier, idPrefix, false, hoisted, this);
     }
   }
@@ -693,8 +690,8 @@ class MakeDeclaredNamesUnique
     }
 
     @Override
-    public Renamer forChildScope(boolean hoistingTargetScope) {
-      return new WhitelistedRenamer(delegate.forChildScope(hoistingTargetScope), whitelist);
+    public Renamer createForChildScope(boolean hoistingTargetScope) {
+      return new WhitelistedRenamer(delegate.createForChildScope(hoistingTargetScope), whitelist);
     }
 
     @Override

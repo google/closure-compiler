@@ -410,10 +410,10 @@ public final class NormalizeTest extends Es6CompilerTestCase {
          "function f() { var a = 1; a = 2 }");
     test("var a = 1; function f(){ var a = 2 }",
          "var a = 1; function f(){ var a$jscomp$1 = 2 }");
-    test("function f() { var a = 1; lable1:var a = 2 }",
-         "function f() { var a = 1; lable1:{a = 2}}");
-    test("function f() { var a = 1; lable1:var a }",
-         "function f() { var a = 1; lable1:{} }");
+    test("function f() { var a = 1; label1:var a = 2 }",
+         "function f() { var a = 1; label1:{a = 2}}");
+    test("function f() { var a = 1; label1:var a }",
+         "function f() { var a = 1; label1:{} }");
     test("function f() { var a = 1; for(var a in b); }",
          "function f() { var a = 1; for(a in b); }");
   }
