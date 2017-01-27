@@ -150,7 +150,7 @@ public class RecoverableJsAstTest {
 
     if (expectedRoot == null) {
       // We use null to signal a parse failure, which results in an empty sources root.
-      assertTrue(mainRoot.isBlock() && !mainRoot.hasChildren());
+      assertTrue(mainRoot.isRoot() && !mainRoot.hasChildren());
     } else {
       String explanation = expectedRoot.checkTreeEqualsIncludingJsDoc(mainRoot);
       if (explanation != null) {

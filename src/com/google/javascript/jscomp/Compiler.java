@@ -2657,8 +2657,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   void updateGlobalVarReferences(Map<Var, ReferenceCollection> refMapPatch,
       Node collectionRoot) {
-    Preconditions.checkState(collectionRoot.isScript()
-        || collectionRoot.isBlock());
+    Preconditions.checkState(collectionRoot.isScript() || collectionRoot.isRoot());
     if (globalRefMap == null) {
       globalRefMap = new GlobalVarReferenceMap(getInputsInOrder(),
           getExternsInOrder());

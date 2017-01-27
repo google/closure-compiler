@@ -612,7 +612,7 @@ class IRFactory {
 
   Node transformBlock(ParseTree node) {
     Node irNode = transform(node);
-    if (!irNode.isBlock()) {
+    if (!irNode.isNormalBlock()) {
       if (irNode.isEmpty()) {
         irNode.setToken(Token.BLOCK);
       } else {
@@ -1283,7 +1283,7 @@ class IRFactory {
       maybeProcessType(node, functionTree.returnType);
 
       Node bodyNode = transform(functionTree.functionBody);
-      if (!isArrow && !isSignature && !bodyNode.isBlock()) {
+      if (!isArrow && !isSignature && !bodyNode.isNormalBlock()) {
         // When in "keep going" mode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
         Preconditions.checkState(config.keepGoing == Config.RunMode.KEEP_GOING);

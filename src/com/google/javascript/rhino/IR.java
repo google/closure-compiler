@@ -56,7 +56,7 @@ public class IR {
   public static Node function(Node name, Node params, Node body) {
     Preconditions.checkState(name.isName());
     Preconditions.checkState(params.isParamList());
-    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(body.isNormalBlock());
     return new Node(Token.FUNCTION, name, params, body);
   }
 
@@ -228,25 +228,25 @@ public class IR {
 
   public static Node ifNode(Node cond, Node then) {
     Preconditions.checkState(mayBeExpression(cond));
-    Preconditions.checkState(then.isBlock());
+    Preconditions.checkState(then.isNormalBlock());
     return new Node(Token.IF, cond, then);
   }
 
   public static Node ifNode(Node cond, Node then, Node elseNode) {
     Preconditions.checkState(mayBeExpression(cond));
-    Preconditions.checkState(then.isBlock());
-    Preconditions.checkState(elseNode.isBlock());
+    Preconditions.checkState(then.isNormalBlock());
+    Preconditions.checkState(elseNode.isNormalBlock());
     return new Node(Token.IF, cond, then, elseNode);
   }
 
   public static Node doNode(Node body, Node cond) {
-    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(body.isNormalBlock());
     Preconditions.checkState(mayBeExpression(cond));
     return new Node(Token.DO, body, cond);
   }
 
   public static Node whileNode(Node cond, Node body) {
-    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(body.isNormalBlock());
     Preconditions.checkState(mayBeExpression(cond));
     return new Node(Token.WHILE, cond, body);
   }
@@ -254,7 +254,7 @@ public class IR {
   public static Node forIn(Node target, Node cond, Node body) {
     Preconditions.checkState(target.isVar() || mayBeExpression(target));
     Preconditions.checkState(mayBeExpression(cond));
-    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(body.isNormalBlock());
     return new Node(Token.FOR_IN, target, cond, body);
   }
 
@@ -262,7 +262,7 @@ public class IR {
     Preconditions.checkState(init.isVar() || mayBeExpressionOrEmpty(init));
     Preconditions.checkState(mayBeExpressionOrEmpty(cond));
     Preconditions.checkState(mayBeExpressionOrEmpty(incr));
-    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(body.isNormalBlock());
     return new Node(Token.FOR, init, cond, incr, body);
   }
 
@@ -278,13 +278,13 @@ public class IR {
 
   public static Node caseNode(Node expr, Node body) {
     Preconditions.checkState(mayBeExpression(expr));
-    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(body.isNormalBlock());
     body.setIsAddedBlock(true);
     return new Node(Token.CASE, expr, body);
   }
 
   public static Node defaultCase(Node body) {
-    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(body.isNormalBlock());
     body.setIsAddedBlock(true);
     return new Node(Token.DEFAULT_CASE, body);
   }
@@ -303,14 +303,14 @@ public class IR {
   }
 
   public static Node tryFinally(Node tryBody, Node finallyBody) {
-    Preconditions.checkState(tryBody.isBlock());
-    Preconditions.checkState(finallyBody.isBlock());
+    Preconditions.checkState(tryBody.isNormalBlock());
+    Preconditions.checkState(finallyBody.isNormalBlock());
     Node catchBody = block().useSourceInfoIfMissingFrom(tryBody);
     return new Node(Token.TRY, tryBody, catchBody, finallyBody);
   }
 
   public static Node tryCatch(Node tryBody, Node catchNode) {
-    Preconditions.checkState(tryBody.isBlock());
+    Preconditions.checkState(tryBody.isNormalBlock());
     Preconditions.checkState(catchNode.isCatch());
     Node catchBody = blockUnchecked(catchNode).useSourceInfoIfMissingFrom(catchNode);
     return new Node(Token.TRY, tryBody, catchBody);
@@ -318,7 +318,7 @@ public class IR {
 
   public static Node tryCatchFinally(
       Node tryBody, Node catchNode, Node finallyBody) {
-    Preconditions.checkState(finallyBody.isBlock());
+    Preconditions.checkState(finallyBody.isNormalBlock());
     Node tryNode = tryCatch(tryBody, catchNode);
     tryNode.addChildToBack(finallyBody);
     return tryNode;
@@ -326,7 +326,7 @@ public class IR {
 
   public static Node catchNode(Node expr, Node body) {
     Preconditions.checkState(expr.isName());
-    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(body.isNormalBlock());
     return new Node(Token.CATCH, expr, body);
   }
 

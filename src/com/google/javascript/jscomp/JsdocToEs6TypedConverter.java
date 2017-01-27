@@ -178,7 +178,7 @@ public final class JsdocToEs6TypedConverter
               return null;
             default:
               TypeDeclarationNode root = namedType(typeName);
-              if (n.hasChildren() && n.getFirstChild().isBlock()) {
+              if (n.hasChildren() && n.getFirstChild().isNormalBlock()) {
                 Node block = n.getFirstChild();
                 if ("Array".equals(typeName)) {
                   return arrayType(convertTypeNodeAST(block.getFirstChild()));
