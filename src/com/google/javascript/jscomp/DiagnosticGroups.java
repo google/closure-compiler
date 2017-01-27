@@ -47,7 +47,8 @@ public class DiagnosticGroups {
       DiagnosticType.warning("JSC_UNUSED", "{0}");
 
   public static final Set<String> wildcardExcludedGroups = ImmutableSet.of(
-      "reportUnknownTypes", "analyzerChecks", "oldReportUnknownTypes");
+      "reportUnknownTypes", "analyzerChecks", "oldReportUnknownTypes",
+      "newCheckTypes", "newCheckTypesCompatibility", "newCheckTypesExtraChecks");
 
   public DiagnosticGroups() {}
 

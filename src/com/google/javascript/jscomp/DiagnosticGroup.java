@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
-
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -126,6 +125,10 @@ public class DiagnosticGroup implements Serializable {
    */
   public Iterable<DiagnosticType> getTypes() {
     return types;
+  }
+
+  String getName() {
+    return this.name;
   }
 
   @Override

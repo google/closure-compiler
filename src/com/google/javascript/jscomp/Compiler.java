@@ -29,6 +29,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
+import com.google.javascript.jscomp.WarningsGuard.DiagnosticGroupState;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.parsing.Config;
@@ -378,6 +379,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           DiagnosticGroup.forType(
               RhinoErrorReporter.TYPE_PARSE_ERROR),
           CheckLevel.OFF);
+    }
+    DiagnosticGroupState ntiState =
+        options.getWarningsGuard().enablesExplicitly(DiagnosticGroups.NEW_CHECK_TYPES);
+    if (ntiState == DiagnosticGroupState.ON) {
+      options.setNewTypeInference(true);
+    } else if (ntiState == DiagnosticGroupState.OFF) {
+      options.setNewTypeInference(false);
     }
     // With NTI, we still need OTI to run because the later passes that use
     // types only understand OTI types at the moment.

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,6 +156,21 @@ public class ComposeWarningsGuard extends WarningsGuard {
     }
 
     return false;
+  }
+
+  @Override
+  public DiagnosticGroupState enablesExplicitly(DiagnosticGroup group) {
+    for (WarningsGuard guard : guards) {
+      switch (guard.enablesExplicitly(group)) {
+        case ON:
+          return DiagnosticGroupState.ON;
+        case OFF:
+          return DiagnosticGroupState.OFF;
+        case UNSPECIFIED:
+          continue;
+      }
+    }
+    return DiagnosticGroupState.UNSPECIFIED;
   }
 
   List<WarningsGuard> getGuards() {
