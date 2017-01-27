@@ -905,7 +905,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     externExports = pass.getGeneratedExterns();
 
-    endPass();
+    endPass("externExports");
   }
 
   @Override
@@ -945,7 +945,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       r.enableTweakStripping();
     }
     process(r);
-    endPass();
+    endPass("stripCode");
   }
 
   /**
@@ -974,15 +974,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     Preconditions.checkState(currentTracer == null);
     currentPassName = passName;
     currentTracer = newTracer(passName);
+    beforePass(passName);
   }
 
   /**
    * Marks the end of a pass.
    */
-  void endPass() {
+  void endPass(String passName) {
     Preconditions.checkState(currentTracer != null,
         "Tracer should not be null at the end of a pass.");
     stopTracer(currentTracer, currentPassName);
+    afterPass(passName);
     currentPassName = null;
     currentTracer = null;
 
@@ -2208,7 +2210,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     logger.fine("Normalizing");
     startPass("normalize");
     process(new Normalize(this, false));
-    endPass();
+    endPass("normalize");
   }
 
   @Override
@@ -2225,7 +2227,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             this, getPassConfig().getIntermediateState().functionNames);
     process(recordFunctionInfoPass);
     functionInformationMap = recordFunctionInfoPass.getMap();
-    endPass();
+    endPass("recordFunctionInformation");
   }
 
   protected final RecentChange recentChange = new RecentChange();
