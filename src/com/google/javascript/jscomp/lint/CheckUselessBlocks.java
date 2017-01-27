@@ -76,7 +76,7 @@ public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
     Node parent = n.getParent();
     if (parent != null && (parent.isScript()
         || (parent.isBlock() && !parent.isSyntheticBlock() && !parent.isAddedBlock()))) {
-      return n.isBlock() && !n.isSyntheticBlock() && !n.isAddedBlock();
+      return !n.isSyntheticBlock() && !n.isAddedBlock();
     }
     return false;
   }
@@ -124,7 +124,7 @@ public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isBlock() && !loneBlocks.isEmpty() && loneBlocks.peek() == n) {
+    if (n.isNormalBlock() && !loneBlocks.isEmpty() && loneBlocks.peek() == n) {
       loneBlocks.pop();
       t.report(n, USELESS_BLOCK);
     }
