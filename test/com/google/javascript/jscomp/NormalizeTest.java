@@ -172,6 +172,38 @@ public final class NormalizeTest extends Es6CompilerTestCase {
             "}"));
   }
 
+  public void testVarReferencedInHoistedFunction() {
+    test(
+        LINE_JOINER.join(
+            "var f1 = function() {",
+            "  var x;",
+            "};",
+            "",
+            "(function () {",
+            "  {",
+            "    var x = 0;",
+            "  }",
+            "  function f2() {",
+            "    alert(x);",
+            "  }",
+            "  f2();",
+            "})();"),
+        LINE_JOINER.join(
+            "var f1 = function() {",
+            "  var x;",
+            "};",
+            "",
+            "(function () {",
+            "  function f2() {",
+            "    alert(x$jscomp$1);",
+            "  }",
+            "  {",
+            "    var x$jscomp$1 = 0;",
+            "  }",
+            "  f2();",
+            "})();"));
+  }
+
   public void testAssignShorthand() {
     test("x |= 1;", "x = x | 1;");
     test("x ^= 1;", "x = x ^ 1;");
