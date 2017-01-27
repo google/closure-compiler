@@ -109,12 +109,12 @@ public class ErrorToFixMapperTest {
     // First fix is to add "!"
     String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
         ImmutableList.of(fixes.get(0)), ImmutableMap.of("test", originalCode)).get("test");
-    assertThat(newCode).isEqualTo("/** @type {!Object} */ var o;");
+    assertThat(newCode).isEqualTo("/** @type {?Object} */ var o;");
 
     // Second fix is to add "?"
     newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
         ImmutableList.of(fixes.get(1)), ImmutableMap.of("test", originalCode)).get("test");
-    assertThat(newCode).isEqualTo("/** @type {?Object} */ var o;");
+    assertThat(newCode).isEqualTo("/** @type {!Object} */ var o;");
   }
 
   @Test
@@ -134,12 +134,12 @@ public class ErrorToFixMapperTest {
     // First fix is to add "!"
     String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
         ImmutableList.of(fixes.get(0)), ImmutableMap.of("test", originalCode)).get("test");
-    assertThat(newCode).isEqualTo("/** @param {!Object} o */ function f(o) {}");
+    assertThat(newCode).isEqualTo("/** @param {?Object} o */ function f(o) {}");
 
     // Second fix is to add "?"
     newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
         ImmutableList.of(fixes.get(1)), ImmutableMap.of("test", originalCode)).get("test");
-    assertThat(newCode).isEqualTo("/** @param {?Object} o */ function f(o) {}");
+    assertThat(newCode).isEqualTo("/** @param {!Object} o */ function f(o) {}");
   }
 
   @Test
@@ -167,7 +167,7 @@ public class ErrorToFixMapperTest {
     String expected = LINE_JOINER.join(
         "/**",
         " * Some non-ASCII characters: αβγδε",
-        " * @param {!Object} o",
+        " * @param {?Object} o",
         " */",
         "function f(o) {}");
     assertThat(newCode).isEqualTo(expected);
@@ -178,7 +178,7 @@ public class ErrorToFixMapperTest {
     expected = LINE_JOINER.join(
         "/**",
         " * Some non-ASCII characters: αβγδε",
-        " * @param {?Object} o",
+        " * @param {!Object} o",
         " */",
         "function f(o) {}");
     assertThat(newCode).isEqualTo(expected);

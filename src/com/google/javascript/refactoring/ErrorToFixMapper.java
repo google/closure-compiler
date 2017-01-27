@@ -230,7 +230,7 @@ public final class ErrorToFixMapper {
             .insertBefore(error.node, "!")
             .setDescription("Make type non-nullable")
             .build();
-    return ImmutableList.of(bang, qmark);
+    return ImmutableList.of(qmark, bang);
   }
 
   private static SuggestedFix removeNode(JSError error, AbstractCompiler compiler) {
