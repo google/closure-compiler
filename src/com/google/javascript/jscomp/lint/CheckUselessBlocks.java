@@ -75,7 +75,7 @@ public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
   private boolean isLoneBlock(Node n) {
     Node parent = n.getParent();
     if (parent != null && (parent.isScript()
-        || (parent.isBlock() && !parent.isSyntheticBlock() && !parent.isAddedBlock()))) {
+        || (parent.isNormalBlock() && !parent.isSyntheticBlock() && !parent.isAddedBlock()))) {
       return !n.isSyntheticBlock() && !n.isAddedBlock();
     }
     return false;

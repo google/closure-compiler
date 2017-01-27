@@ -497,10 +497,11 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   private void handleStmtList(Node node) {
     Node parent = node.getParent();
     // Special case, don't add a block of empty CATCH block to the graph.
-    if (node.isBlock() && parent != null &&
-        parent.isTry() &&
-        NodeUtil.getCatchBlock(parent) == node &&
-        !NodeUtil.hasCatchHandler(node)) {
+    if (node.isNormalBlock()
+        && parent != null
+        && parent.isTry()
+        && NodeUtil.getCatchBlock(parent) == node
+        && !NodeUtil.hasCatchHandler(node)) {
       return;
     }
 
@@ -1026,9 +1027,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * @return The CATCH node or null there is no catch handler.
    */
   static Node getCatchHandlerForBlock(Node block) {
-    if (block.isBlock() &&
-        block.getParent().isTry() &&
-        block.getParent().getFirstChild() == block) {
+    if (block.isNormalBlock()
+        && block.getParent().isTry()
+        && block.getParent().getFirstChild() == block) {
       for (Node s = block.getNext(); s != null; s = s.getNext()) {
         if (NodeUtil.hasCatchHandler(s)) {
           return s.getFirstChild();

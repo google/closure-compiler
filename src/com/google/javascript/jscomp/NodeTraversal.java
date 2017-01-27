@@ -405,7 +405,7 @@ public class NodeTraversal {
       traverseBranch(body, n);
 
       popScope();
-    } else if (n.isBlock()) {
+    } else if (n.isNormalBlock()) {
       if (inputId == null) {
         setInputId(NodeUtil.getInputId(n), getSourceName(n));
       }
@@ -879,7 +879,7 @@ public class NodeTraversal {
   /** Determines whether the traversal is currently in the scope of the block of a function. */
   public boolean inFunctionBlockScope() {
     Node scopeRoot = getScopeRoot();
-    return scopeRoot.isBlock()
+    return scopeRoot.isNormalBlock()
         && scopeRoot.getParent() != null
         && scopeRoot.getParent().isFunction();
   }
@@ -891,11 +891,12 @@ public class NodeTraversal {
     Node cfgRoot = getCfgRoot();
     Preconditions.checkState(
         cfgRoot.isScript()
-            || cfgRoot.isBlock()
+            || cfgRoot.isRoot()
+            || cfgRoot.isNormalBlock()
             || cfgRoot.isFunction()
             || cfgRoot.isModuleBody(),
         cfgRoot);
-    return cfgRoot.isScript() || cfgRoot.isBlock();
+    return cfgRoot.isScript() || cfgRoot.isRoot() || cfgRoot.isNormalBlock();
   }
 
   /**
