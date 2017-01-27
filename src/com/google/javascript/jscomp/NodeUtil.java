@@ -774,6 +774,7 @@ public final class NodeUtil {
         if (val.isQualifiedName()) {
           return defines.contains(val.getQualifiedName());
         }
+        break;
       default:
         break;
     }
@@ -786,7 +787,7 @@ public final class NodeUtil {
    * @param block The node.
    */
   static boolean isEmptyBlock(Node block) {
-    if (!block.isBlock()) {
+    if (!block.isNormalBlock()) {
       return false;
     }
 
@@ -2506,7 +2507,7 @@ public final class NodeUtil {
    * @return Whether the node is of a type that contain other statements.
    */
   public static boolean isStatementBlock(Node n) {
-    return n.isScript() || n.isBlock() || n.isModuleBody();
+    return n.isRoot() || n.isScript() || n.isNormalBlock() || n.isModuleBody();
   }
 
   /**
@@ -4811,7 +4812,7 @@ public final class NodeUtil {
   }
 
   private static boolean isBundledGoogModuleScopeRoot(Node n) {
-    if (!n.isBlock() || !n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
+    if (!n.isNormalBlock() || !n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
       return false;
     }
     Node function = n.getParent();
