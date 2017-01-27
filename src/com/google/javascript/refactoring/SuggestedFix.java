@@ -158,7 +158,7 @@ public final class SuggestedFix {
      * Inserts a new node as the first child of the provided node.
      */
     public Builder addChildToFront(Node parentNode, String content) {
-      Preconditions.checkState(parentNode.isBlock(),
+      Preconditions.checkState(parentNode.isNormalBlock(),
           "addChildToFront is only supported for BLOCK statements.");
       int startPosition = parentNode.getSourceOffset() + 1;
       replacements.put(
@@ -284,7 +284,7 @@ public final class SuggestedFix {
       Node parent = n.getParent();
       if (deleteWhitespaceBefore
           && parent != null
-          && (parent.isScript() || parent.isBlock())) {
+          && (parent.isScript() || parent.isNormalBlock())) {
         Node previousSibling = n.getPrevious();
         if (previousSibling != null) {
           int previousSiblingEndPosition =
@@ -388,7 +388,7 @@ public final class SuggestedFix {
       // Most replacements don't need the semicolon in the new generated code - however, some
       // statements that are blocks or expressions will need the semicolon.
       boolean needsSemicolon =
-          parent != null && (parent.isExprResult() || parent.isBlock() || parent.isScript());
+          parent != null && (parent.isExprResult() || parent.isNormalBlock() || parent.isScript());
       if (newCode.endsWith(";") && !needsSemicolon) {
         newCode = newCode.substring(0, newCode.length() - 1);
       }
@@ -721,7 +721,7 @@ public final class SuggestedFix {
     public String generateCode(AbstractCompiler compiler, Node node) {
       // TODO(mknichel): Fix all the formatting problems with this code.
       // How does this play with goog.scope?
-      if (node.isBlock()) {
+      if (node.isNormalBlock()) {
         // Avoid printing the {}'s
         node.setToken(Token.SCRIPT);
       }
