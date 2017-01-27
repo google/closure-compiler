@@ -710,10 +710,23 @@ public class CommandLineRunner extends
         usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
     private boolean rewritePolyfills = true;
 
-    @Option(name = "--print_source_after_each_pass",
-        hidden = true,
-        usage = "Whether to iteratively print resulting JS source per pass.")
-        private boolean printSourceAfterEachPass = false;
+    @Option(
+      name = "--print_source_after_each_pass",
+      hidden = true,
+      usage = "Whether to iteratively print resulting JS source per pass."
+    )
+    private boolean printSourceAfterEachPass = false;
+
+    @Option(
+      name = "--module_resolution",
+      hidden = false,
+      usage =
+          "Specifies how the compiler locates modules. BROWSER requires all module imports "
+              + "to begin with a '.' or '/' and have a file extension. NODE uses the node module "
+              + "rules. LEGACY prepends a '/' to any import not already beginning with a "
+              + "'.' or '/'."
+    )
+    private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.LEGACY;
 
     @Argument
     private List<String> arguments = new ArrayList<>();
@@ -787,7 +800,10 @@ public class CommandLineRunner extends
             .putAll(
                 "JS Modules",
                 ImmutableList.of(
-                    "js_module_root", "process_common_js_modules", "transform_amd_modules"))
+                    "js_module_root",
+                    "module_resolution",
+                    "process_common_js_modules",
+                    "transform_amd_modules"))
             .putAll(
                 "Library and Framework Specific",
                 ImmutableList.of(
@@ -1690,6 +1706,7 @@ public class CommandLineRunner extends
     options.setStrictModeInput(flags.strictModeInput);
     options.setEmitUseStrict(flags.emitUseStrict);
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeSourcesContent);
+    options.setModuleResolutionMode(flags.moduleResolutionMode);
 
     return options;
   }

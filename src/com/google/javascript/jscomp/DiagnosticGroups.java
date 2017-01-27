@@ -143,8 +143,9 @@ public class DiagnosticGroups {
           + "visibility";
 
   public static final DiagnosticGroup COMMON_JS_MODULE_LOAD =
-      DiagnosticGroups.registerGroup(
-          "commonJsModuleLoad", ProcessCommonJSModules.COMMON_JS_MODULE_LOAD_ERROR);
+      DiagnosticGroups.registerGroup("commonJsModuleLoad",
+          ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
+          ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",

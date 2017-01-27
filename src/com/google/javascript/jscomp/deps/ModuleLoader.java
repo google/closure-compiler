@@ -55,9 +55,8 @@ public final class ModuleLoader {
   /** The default module root, the current directory. */
   public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
 
-  public static final DiagnosticType LOAD_WARNING = DiagnosticType.warning(
-      "JSC_ES6_MODULE_LOAD_WARNING",
-      "Failed to load module \"{0}\"");
+  public static final DiagnosticType LOAD_WARNING =
+      DiagnosticType.warning("JSC_JS_MODULE_LOAD_WARNING", "Failed to load module \"{0}\"");
 
   @Nullable private final ErrorHandler errorHandler;
 
@@ -75,6 +74,8 @@ public final class ModuleLoader {
   /** Used to canonicalize paths before resolution. */
   private final PathResolver pathResolver;
 
+  private final ResolutionMode resolutionMode;
+
   /**
    * Creates an instance of the module loader which can be used to locate ES6 and CommonJS modules.
    *
@@ -84,7 +85,8 @@ public final class ModuleLoader {
       @Nullable ErrorHandler errorHandler,
       Iterable<String> moduleRoots,
       Iterable<? extends DependencyInfo> inputs,
-      PathResolver pathResolver) {
+      PathResolver pathResolver,
+      ResolutionMode resolutionMode) {
     checkNotNull(moduleRoots);
     checkNotNull(inputs);
     checkNotNull(pathResolver);
@@ -99,11 +101,31 @@ public final class ModuleLoader {
     this.packageJsonMainEntries = ImmutableMap.of();
 
     this.nodeModulesRegistry = buildRegistry(this.modulePaths);
+
+    this.resolutionMode = resolutionMode;
   }
 
-  public ModuleLoader(@Nullable ErrorHandler errorHandler,
-      Iterable<String> moduleRoots, Iterable<? extends DependencyInfo> inputs) {
-    this(errorHandler, moduleRoots, inputs, PathResolver.RELATIVE);
+  public ModuleLoader(
+      @Nullable ErrorHandler errorHandler,
+      Iterable<String> moduleRoots,
+      Iterable<? extends DependencyInfo> inputs,
+      ResolutionMode resolutionMode) {
+    this(errorHandler, moduleRoots, inputs, PathResolver.RELATIVE, resolutionMode);
+  }
+
+  public ModuleLoader(
+      @Nullable ErrorHandler errorHandler,
+      Iterable<String> moduleRoots,
+      Iterable<? extends DependencyInfo> inputs,
+      PathResolver pathResolver) {
+    this(errorHandler, moduleRoots, inputs, pathResolver, ResolutionMode.LEGACY);
+  }
+
+  public ModuleLoader(
+      @Nullable ErrorHandler errorHandler,
+      Iterable<String> moduleRoots,
+      Iterable<? extends DependencyInfo> inputs) {
+    this(errorHandler, moduleRoots, inputs, PathResolver.RELATIVE, ResolutionMode.LEGACY);
   }
 
   public Map<String, String> getPackageJsonMainEntries() {
@@ -120,6 +142,7 @@ public final class ModuleLoader {
    */
   public class ModulePath {
     private final String path;
+    private final String[] fileExtensionsToSearch = {"", ".js", ".json"};
 
     private ModulePath(String path) {
       this.path = path;
@@ -149,32 +172,69 @@ public final class ModuleLoader {
     }
 
     /**
-     * Find a CommonJS module {@code requireName}. See
+     * Find a JS module {@code requireName}. See
      * https://nodejs.org/api/modules.html#modules_all_together
      *
      * @return The normalized module URI, or {@code null} if not found.
      */
-    public ModulePath resolveCommonJsModule(String requireName) {
-      String loadAddress;
+    @Nullable
+    public ModulePath resolveJsModule(String moduleAddress) {
+      return resolveJsModule(moduleAddress, null, -1, -1);
+    }
+
+    /**
+     * Find a JS module {@code requireName}. See
+     * https://nodejs.org/api/modules.html#modules_all_together
+     *
+     * @return The normalized module URI, or {@code null} if not found.
+     */
+    @Nullable
+    public ModulePath resolveJsModule(
+        String moduleAddress, String sourcename, int lineno, int colno) {
+      String loadAddress = null;
 
       // * the immediate name require'd
-      if (isAbsoluteIdentifier(requireName) || isRelativeIdentifier(requireName)) {
-        loadAddress = resolveCommonJsModuleFileOrDirectory(requireName);
-      } else {
-        loadAddress = resolveCommonJsModuleFromRegistry(requireName);
+      switch (resolutionMode) {
+        case LEGACY:
+          loadAddress = resolveJsModuleLegacy(moduleAddress, sourcename, lineno, colno);
+          break;
+
+        case BROWSER:
+          if (isAbsoluteIdentifier(moduleAddress) || isRelativeIdentifier(moduleAddress)) {
+            // Edge is the only browser supporting modules currently and requires
+            // a file extension. This may be loosened as more browsers support
+            // ES2015 modules natively.
+            loadAddress = locate(moduleAddress);
+          }
+          break;
+
+        case NODE:
+          if (isAbsoluteIdentifier(moduleAddress) || isRelativeIdentifier(moduleAddress)) {
+            loadAddress = resolveJsModuleFileOrDirectory(moduleAddress);
+          } else {
+            loadAddress = resolveJsModuleFromRegistry(moduleAddress);
+          }
+          break;
       }
+
       if (loadAddress != null) {
         return new ModulePath(loadAddress);
       }
+
+      if (errorHandler != null) {
+        errorHandler.report(
+            CheckLevel.WARNING,
+            JSError.make(sourcename, lineno, colno, LOAD_WARNING, moduleAddress));
+      }
+
       return null;
     }
 
-    private String resolveCommonJsModuleFile(String requireName) {
-      String[] extensions = {"", ".js", ".json"};
-
-      // Load as a file
-      for (int i = 0; i < extensions.length; i++) {
-        String loadAddress = locate(requireName + extensions[i]);
+    @Nullable
+    private String resolveJsModuleFile(String moduleAddress) {
+      // Load node module as a file
+      for (int i = 0; i < fileExtensionsToSearch.length; i++) {
+        String loadAddress = locate(moduleAddress + fileExtensionsToSearch[i]);
         if (loadAddress != null) {
           return loadAddress;
         }
@@ -183,26 +243,28 @@ public final class ModuleLoader {
       return null;
     }
 
-    private String resolveCommonJsModuleFileOrDirectory(String requireName) {
-      String loadAddress = resolveCommonJsModuleFile(requireName);
+    @Nullable
+    private String resolveJsModuleFileOrDirectory(String moduleAddress) {
+      String loadAddress = resolveJsModuleFile(moduleAddress);
       if (loadAddress == null) {
-        loadAddress = resolveCommonJsModuleDirectory(requireName);
+        loadAddress = resolveJsModuleDirectory(moduleAddress);
       }
       return loadAddress;
     }
 
-    private String resolveCommonJsModuleDirectory(String requireName) {
+    @Nullable
+    private String resolveJsModuleDirectory(String moduleAddress) {
       String[] extensions = {
         MODULE_SLASH + "package.json", MODULE_SLASH + "index.js", MODULE_SLASH + "index.json"
       };
 
       // Load as a file
       for (int i = 0; i < extensions.length; i++) {
-        String loadAddress = locate(requireName + extensions[i]);
+        String loadAddress = locate(moduleAddress + extensions[i]);
         if (loadAddress != null) {
           if (i == 0) {
             if (packageJsonMainEntries.containsKey(loadAddress)) {
-              return resolveCommonJsModuleFile(packageJsonMainEntries.get(loadAddress));
+              return resolveJsModuleFile(packageJsonMainEntries.get(loadAddress));
             }
           } else {
             return loadAddress;
@@ -213,7 +275,8 @@ public final class ModuleLoader {
       return null;
     }
 
-    private String resolveCommonJsModuleFromRegistry(String requireName) {
+    @Nullable
+    private String resolveJsModuleFromRegistry(String moduleAddress) {
       for (Map.Entry<String, ImmutableSet<String>> nodeModulesFolder :
           nodeModulesRegistry.entrySet()) {
         if (!this.path.startsWith(nodeModulesFolder.getKey())) {
@@ -221,14 +284,14 @@ public final class ModuleLoader {
         }
 
         // Load as a file
-        String fullModulePath = nodeModulesFolder.getKey() + "node_modules/" + requireName;
-        String loadAddress = resolveCommonJsModuleFile(fullModulePath);
+        String fullModulePath = nodeModulesFolder.getKey() + "node_modules/" + moduleAddress;
+        String loadAddress = resolveJsModuleFile(fullModulePath);
         if (loadAddress != null) {
           return loadAddress;
         }
 
         // Load as a directory
-        loadAddress = resolveCommonJsModuleDirectory(fullModulePath);
+        loadAddress = resolveJsModuleDirectory(fullModulePath);
         if (loadAddress != null) {
           return loadAddress;
         }
@@ -238,19 +301,22 @@ public final class ModuleLoader {
     }
 
     /**
-     * Find an ES6 module {@code moduleName} relative to {@code context}.
-     * @return The normalized module URI, or {@code null} if not found.
+     * Find a module using the old LEGACY method.
+     *
+     * @return The normalized module path.
      */
-    public ModulePath resolveEs6Module(String moduleName) {
+    private String resolveJsModuleLegacy(
+        String moduleName, String sourcename, int lineno, int colno) {
       // Allow module names with or without the ".js" extension.
       if (!moduleName.endsWith(".js")) {
         moduleName += ".js";
       }
       String resolved = locateNoCheck(moduleName);
       if (!modulePaths.contains(resolved) && errorHandler != null) {
-        errorHandler.report(CheckLevel.WARNING, JSError.make(LOAD_WARNING, moduleName));
+        errorHandler.report(
+            CheckLevel.WARNING, JSError.make(sourcename, lineno, colno, LOAD_WARNING, moduleName));
       }
-      return new ModulePath(resolved);
+      return resolved;
     }
 
     /**
@@ -268,8 +334,8 @@ public final class ModuleLoader {
     }
 
     /**
-     * Locates the module with the given name, but returns null if there is no JS
-     * file in the expected location.
+     * Locates the module with the given name, but returns null if there is no JS file in the
+     * expected location.
      */
     @Nullable
     private String locate(String name) {
@@ -278,6 +344,26 @@ public final class ModuleLoader {
         return path;
       }
       return null;
+    }
+
+    /**
+     * Treats the module address as a path and returns the name of that module. Does not verify that
+     * there is actually a JS file at the provided URI.
+     *
+     * <p>Primarily used for per-file ES6 module transpilation
+     */
+    public ModulePath resolveModuleAsPath(String moduleAddress) {
+      if (!moduleAddress.endsWith(".js")) {
+        moduleAddress += ".js";
+      }
+      String path = ModuleNames.escapePath(moduleAddress);
+      if (isRelativeIdentifier(moduleAddress)) {
+        String ourPath = this.path;
+        int lastIndex = ourPath.lastIndexOf('/');
+        path = ModuleNames.canonicalizePath(ourPath.substring(0, lastIndex + 1) + path);
+      }
+      path = normalize(path, moduleRootPaths);
+      return new ModulePath(path);
     }
   }
 
@@ -370,6 +456,14 @@ public final class ModuleLoader {
     for (String modulePath : modulePaths) {
       String[] nodeModulesDirs = modulePath.split("/node_modules/");
       String parentPath = "";
+
+      if (nodeModulesDirs.length > 0 && nodeModulesDirs[0].startsWith("node_modules/")) {
+        if (!registry.containsKey(parentPath)) {
+          registry.put(parentPath, new HashSet<String>());
+        }
+        registry.get(parentPath).add("node_modules/");
+      }
+
       for (int i = 0; i < nodeModulesDirs.length - 1; i++) {
         if (i + 1 < nodeModulesDirs.length) {
           parentPath += nodeModulesDirs[i] + "/";
@@ -433,5 +527,41 @@ public final class ModuleLoader {
 
   /** A trivial module loader with no roots. */
   public static final ModuleLoader EMPTY =
-      new ModuleLoader(null, ImmutableList.<String>of(), ImmutableList.<DependencyInfo>of());
+      new ModuleLoader(
+          null,
+          ImmutableList.<String>of(),
+          ImmutableList.<DependencyInfo>of(),
+          ResolutionMode.LEGACY);
+
+  /** An enum used to specify what algorithm to use to locate non path-based modules */
+  public enum ResolutionMode {
+    /**
+     * Mimics the behavior of MS Edge.
+     *
+     * Modules must begin with a "." or "/" character.
+     * Modules must include the file extension
+     * MS Edge was the only browser to define a module resolution behavior at the time of this
+     * writing.
+     */
+    BROWSER,
+
+    /**
+     * Keeps the same behavior the compiler has used historically.
+     *
+     * Modules which do not begin with a "." or "/" character are assumed to be relative to the
+     * compilation root.
+     * ".js" file extensions are added if the import omits them.
+     */
+    LEGACY,
+
+    /**
+     * Uses the node module resolution algorithm.
+     *
+     * Modules which do not begin with a "." or "/" character are looked up from the appropriate
+     * node_modules folder.
+     * Includes the ability to require directories and JSON files.
+     * Exact match, then ".js", then ".json" file extensions are searched.
+     */
+    NODE
+  }
 }

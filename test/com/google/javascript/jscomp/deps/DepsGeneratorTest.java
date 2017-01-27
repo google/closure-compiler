@@ -55,7 +55,8 @@ public final class DepsGeneratorTest extends TestCase {
                 null,
                 ImmutableList.of("/base/"),
                 ImmutableList.<DependencyInfo>of(),
-                ModuleLoader.PathResolver.ABSOLUTE));
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.LEGACY));
     String output = depsGenerator.computeDependencyCalls();
 
     assertNoWarnings();
@@ -155,7 +156,8 @@ public final class DepsGeneratorTest extends TestCase {
                 null,
                 ImmutableList.of("/base/"),
                 ImmutableList.<DependencyInfo>of(),
-                ModuleLoader.PathResolver.ABSOLUTE));
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.LEGACY));
 
     String output = depsGenerator.computeDependencyCalls();
 
@@ -175,7 +177,8 @@ public final class DepsGeneratorTest extends TestCase {
                 null,
                 ImmutableList.of("/base/"),
                 ImmutableList.<DependencyInfo>of(),
-                ModuleLoader.PathResolver.ABSOLUTE));
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.LEGACY));
 
     String expectedWithDepsAsSources =
         LINE_JOINER.join(
@@ -229,7 +232,8 @@ public final class DepsGeneratorTest extends TestCase {
                 null,
                 ImmutableList.of("/base/" + "/"),
                 ImmutableList.<DependencyInfo>of(),
-                ModuleLoader.PathResolver.ABSOLUTE));
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.LEGACY));
 
     String output = depsGenerator.computeDependencyCalls();
 
@@ -285,7 +289,8 @@ public final class DepsGeneratorTest extends TestCase {
                 null,
                 ImmutableList.of("/base/"),
                 ImmutableList.<DependencyInfo>of(),
-                ModuleLoader.PathResolver.ABSOLUTE));
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.LEGACY));
 
     String output = depsGenerator.computeDependencyCalls();
 
@@ -310,7 +315,8 @@ public final class DepsGeneratorTest extends TestCase {
                 null,
                 ImmutableList.of(""),
                 ImmutableList.<DependencyInfo>of(),
-                ModuleLoader.PathResolver.ABSOLUTE));
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.LEGACY));
     String output = depsGenerator.computeDependencyCalls();
 
     if (fatal) {
@@ -376,7 +382,8 @@ public final class DepsGeneratorTest extends TestCase {
                 null,
                 ImmutableList.of("."),
                 ImmutableList.<DependencyInfo>of(),
-                ModuleLoader.PathResolver.ABSOLUTE));
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.LEGACY));
 
     String output = worker.computeDependencyCalls();
 

@@ -43,10 +43,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
   private static final String EXPORTS = "exports";
   private static final String MODULE = "module";
 
-  public static final DiagnosticType COMMON_JS_MODULE_LOAD_ERROR = DiagnosticType.error(
-      "JSC_COMMONJS_MODULE_LOAD_ERROR",
-      "Failed to load module \"{0}\"");
-
   public static final DiagnosticType UNKNOWN_REQUIRE_ENSURE =
       DiagnosticType.warning(
           "JSC_COMMONJS_UNKNOWN_REQUIRE_ENSURE_ERROR", "Unrecognized require.ensure call: {0}");
@@ -356,9 +352,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
     /** Visit require calls. Emit corresponding goog.require call. */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
       String requireName = require.getSecondChild().getString();
-      ModulePath modulePath = t.getInput().getPath().resolveCommonJsModule(requireName);
+      ModulePath modulePath =
+          t.getInput()
+              .getPath()
+              .resolveJsModule(
+                  requireName,
+                  require.getSourceFileName(),
+                  require.getLineno(),
+                  require.getCharno());
       if (modulePath == null) {
-        compiler.report(t.makeError(require, COMMON_JS_MODULE_LOAD_ERROR, requireName));
+        // The module loader will issue an error
         return;
       }
 
@@ -701,9 +704,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
       String requireName = require.getSecondChild().getString();
-      ModulePath modulePath = t.getInput().getPath().resolveCommonJsModule(requireName);
+      ModulePath modulePath =
+          t.getInput()
+              .getPath()
+              .resolveJsModule(
+                  requireName,
+                  require.getSourceFileName(),
+                  require.getLineno(),
+                  require.getCharno());
       if (modulePath == null) {
-        compiler.report(t.makeError(require, COMMON_JS_MODULE_LOAD_ERROR, requireName));
+        // The module loader will issue an error
         return;
       }
 
@@ -1190,7 +1200,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
             && rValue.getSecondChild().isString()
             && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {
           String requireName = rValue.getSecondChild().getString();
-          ModulePath modulePath = t.getInput().getPath().resolveCommonJsModule(requireName);
+          ModulePath modulePath =
+              t.getInput()
+                  .getPath()
+                  .resolveJsModule(
+                      requireName, n.getSourceFileName(), n.getLineno(), n.getCharno());
           if (modulePath == null) {
             return null;
           }
@@ -1227,9 +1241,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
 
           String moduleName = name.substring(0, endIndex);
-          ModulePath modulePath = t.getInput().getPath().resolveCommonJsModule(moduleName);
+          ModulePath modulePath =
+              t.getInput()
+                  .getPath()
+                  .resolveJsModule(
+                      moduleName,
+                      typeNode.getSourceFileName(),
+                      typeNode.getLineno(),
+                      typeNode.getCharno());
           if (modulePath == null) {
-            t.makeError(typeNode, COMMON_JS_MODULE_LOAD_ERROR, moduleName);
+            // The module loader will issue an error
             return;
           }
 
