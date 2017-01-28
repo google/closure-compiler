@@ -18889,4 +18889,82 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  }",
         "}"));
   }
+
+  public void testDontWarnAboutUnknownExtends() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(new: Object) */ clazz) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {clazz}",
+        "   */",
+        "  function Foo() {}",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(new: ?) */ clazz) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {clazz}",
+        "   */",
+        "  function Foo() {}",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(clazz) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {clazz}",
+        "   */",
+        "  function Foo() {}",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Function */ clazz) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {clazz}",
+        "   */",
+        "  function Foo() {}",
+        "}"),
+        JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ clazz) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {clazz}",
+        "   */",
+        "  function Foo() {}",
+        "}"),
+        JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {function(new: T)} clazz",
+        " */",
+        "function f(clazz) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {clazz}",
+        "   */",
+        "  function Foo() {}",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** function(new: Foo) */ clazz) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {clazz}",
+        "   */",
+        "  function Bar() {}",
+        "  var /** string */ s = (new Bar).prop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }

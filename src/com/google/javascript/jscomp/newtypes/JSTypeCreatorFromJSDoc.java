@@ -949,8 +949,7 @@ public final class JSTypeCreatorFromJSDoc {
       return null;
     }
     if (!jsdoc.isConstructor()) {
-      warnings.add(JSError.make(
-          funNode, EXTENDS_NOT_ON_CTOR_OR_INTERF, functionName));
+      warnings.add(JSError.make(funNode, EXTENDS_NOT_ON_CTOR_OR_INTERF, functionName));
       return null;
     }
     Node docNode = jsdoc.getBaseType().getRoot();
@@ -960,13 +959,44 @@ public final class JSTypeCreatorFromJSDoc {
       return parentClass;
     }
     if (parentClass == null) {
-      warnings.add(JSError.make(funNode, EXTENDS_NON_OBJECT,
-              functionName, extendedType.toString()));
+      return getMaybeHigherOrderParentClass(docNode, functionName, funNode, extendedType, registry);
     } else {
       Preconditions.checkState(parentClass.isInterface());
       warnings.add(JSError.make(funNode, CONFLICTING_EXTENDED_TYPE,
               "constructor", functionName));
     }
+    return null;
+  }
+
+  /**
+   * Used for first-class classes like:
+   * function(clazz) { class Foo extends clazz { ... } }
+   */
+  private NominalType getMaybeHigherOrderParentClass(Node docNode, String functionName,
+      Node funNode, JSType extendedType, DeclaredTypeRegistry registry) {
+    if (extendedType.isUnknown()
+        && docNode.getToken() == Token.BANG
+        && docNode.getFirstChild().getToken() == Token.STRING) {
+      String varname = docNode.getFirstChild().getString();
+      Declaration decl = registry.getDeclaration(QualifiedName.fromQualifiedString(varname), false);
+      if (decl != null) {
+        if (decl.getTypeOfSimpleDecl() == null) {
+          return null;
+        }
+        JSType maybeFunction = decl.getTypeOfSimpleDecl();
+        if (maybeFunction != null && maybeFunction.isFunctionType()) {
+          FunctionType maybeCtor = maybeFunction.getFunType();
+          if (maybeCtor.isSomeConstructorOrInterface()) {
+            extendedType = maybeCtor.getThisType();
+            NominalType parentClass = extendedType.getNominalTypeIfSingletonObj();
+            if (parentClass == null || parentClass.isClass()) {
+              return parentClass;
+            }
+          }
+        }
+      }
+    }
+    warnings.add(JSError.make(funNode, EXTENDS_NON_OBJECT, functionName, extendedType.toString()));
     return null;
   }
 

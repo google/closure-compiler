@@ -346,4 +346,11 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "function g(x) {}",
         "g(function f(x) { return class extends Foo {} });"));
   }
+
+  public void testDontWarnAboutUnknownExtends() {
+    typeCheck(LINE_JOINER.join(
+        "function f(clazz) {",
+        "  class Foo extends clazz {}",
+        "}"));
+  }
 }
