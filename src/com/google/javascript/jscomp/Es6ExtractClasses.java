@@ -143,8 +143,11 @@ public final class Es6ExtractClasses
   private boolean shouldExtractClass(Node classNode, Node parent) {
     boolean isAnonymous = classNode.getFirstChild().isEmpty();
     if (NodeUtil.isClassDeclaration(classNode)
-        || isAnonymous && parent.isName()
-        || (isAnonymous && parent.isAssign() && parent.getParent().isExprResult())) {
+        || (isAnonymous && parent.isName())
+        || (isAnonymous
+            && parent.isAssign()
+            && parent.getFirstChild().isQualifiedName()
+            && parent.getParent().isExprResult())) {
       // No need to extract. Handled directly by Es6ToEs3Converter.ClassDeclarationMetadata#create.
       return false;
     }

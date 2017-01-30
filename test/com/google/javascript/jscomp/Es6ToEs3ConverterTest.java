@@ -512,6 +512,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "goog.example.C.prototype.foo = function() {};"));
   }
 
+  public void testClassExpressionInAssignment_getElem() {
+    test(
+        "window['MediaSource'] = class {};",
+        LINE_JOINER.join(
+            "/** @constructor @struct @const */",
+            "var testcode$classdecl$var0 = function() {};",
+            "window['MediaSource'] = testcode$classdecl$var0;"));
+  }
+
   public void testClassExpression() {
     test(
         "var C = new (class {})();",
