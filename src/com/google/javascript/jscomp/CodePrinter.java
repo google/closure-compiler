@@ -81,6 +81,12 @@ public final class CodePrinter {
       Node node;
       FilePosition start;
       FilePosition end;
+
+      @Override
+      public String toString() {
+        // This toString() representation is used for debugging purposes only.
+        return "Mapping: start " + start + ", end " + end + ", node " + node;
+      }
     }
 
     /**
@@ -648,6 +654,7 @@ public final class CodePrinter {
           reportLineCut(lineIndex, position - lineStartPosition, true);
           lineIndex++;
           lineLength -= (position - lineStartPosition);
+          prevLineStartPosition = lineStartPosition;
           lineStartPosition = position + 1;
         } else {
           startNewLine();
@@ -677,7 +684,9 @@ public final class CodePrinter {
         code.setCharAt(prevCutPosition, ' ');
         lineStartPosition = prevLineStartPosition;
         lineLength = code.length() - lineStartPosition;
-        reportLineCut(lineIndex, prevCutPosition + 1, false);
+        // We need +1 to account for the space added few lines above.
+        int prevLineEndPosition = prevCutPosition - prevLineStartPosition + 1;
+        reportLineCut(lineIndex, prevLineEndPosition, false);
         lineIndex--;
         prevCutPosition = 0;
         prevLineStartPosition = 0;
