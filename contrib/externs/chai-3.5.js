@@ -307,7 +307,7 @@ assert.isUndefined = function(value, opt_message) {};
 assert.isDefined = function(value, opt_message) {};
 
 /**
- * @param {Object} object
+ * @param {?Object|undefined} object
  * @param {string} property
  * @param {*} value
  * @param {string=} opt_message
