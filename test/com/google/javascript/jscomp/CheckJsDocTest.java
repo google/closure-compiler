@@ -104,6 +104,13 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         "Foo.prototype.something = function() {}"));
   }
 
+  public void testAbstract_getter_setter() {
+    testSameEs6("class Foo { /** @abstract */ get foo() {}}");
+    testSameEs6("class Foo { /** @abstract */ set foo(val) {}}");
+    testWarningEs6("class Foo { /** @abstract */ static get foo() {}}", MISPLACED_ANNOTATION);
+    testWarningEs6("class Foo { /** @abstract */ static set foo(val) {}}", MISPLACED_ANNOTATION);
+  }
+
   public void testAbstract_nonEmptyMethod() {
     testWarningEs6(
         "class Foo { /** @abstract */ doSomething() { return 0; }}",

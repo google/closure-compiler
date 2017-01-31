@@ -150,6 +150,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return n.getFirstChild();
     }
 
+    if (n.isGetterDef() || n.isSetterDef()) {
+      return n.getFirstChild();
+    }
+
     return null;
   }
 
@@ -213,7 +217,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     }
 
     if (!info.isConstructor()
-        && (!n.isMemberFunctionDef() && !n.isStringKey())
+        && !n.isMemberFunctionDef()
+        && !n.isStringKey()
+        && !n.isGetterDef()
+        && !n.isSetterDef()
         && !NodeUtil.isPrototypeMethod(functionNode)) {
       // @abstract annotation on a non-method (or static method) in ES5
       report(
