@@ -260,11 +260,11 @@ public final class CodePrinter {
         return endPosition;
       }
 
-      // TODO(nbeloglazov): fix cases where Precondition fails and reenable it.
-      // Preconditions.checkState(
-      //   endPosition.getColumn() <= lineLengths.get(line),
-      //    "End position " + endPosition + " points to a column larger than line length "
-      //     + lineLengths.get(line));
+      Preconditions.checkState(
+          endPosition.getColumn() <= lineLengths.get(line),
+          "End position %s points to a column larger than line length %s",
+          endPosition,
+          lineLengths.get(line));
 
       // if end position points to the column just after the last character on the line -
       // change it to point the first character on the next line
