@@ -269,6 +269,21 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
   }
 
+  public void testAdvancedModeIncludesExtraSmartNameRemoval() {
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        LINE_JOINER.join(
+            "(function() {",
+            "  /** @constructor} */",
+            "  function Bar() {}",
+            "  var y = Bar;",
+            "  new y();",
+            "})();"),
+        "");
+  }
+
   public void testBug2410122() {
     CompilerOptions options = createCompilerOptions();
     options.setGenerateExports(true);
@@ -1600,6 +1615,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setExtraSmartNameRemoval(false);
     test(options, code, expected);
   }
 
