@@ -8370,7 +8370,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @constructor @extends {A} */ var B = function() {};",
             "B.superClass_ = A.prototype",
             "/** @override */ B.prototype.foo = function() { B.superClass_.foo.call(this); };"),
-        "Abstract method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be called");
   }
 
   public void testAbstractMethodCall2() throws Exception {
@@ -8385,7 +8385,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @override */ ns.B.prototype.foo = function() {",
             "  ns.B.superClass_.foo.call(this);",
             "};"),
-        "Abstract method ns.A.prototype.foo cannot be called");
+        "Abstract super method ns.A.prototype.foo cannot be called");
   }
 
   public void testAbstractMethodCall3() throws Exception {
@@ -8396,7 +8396,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @abstract */ A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ var B = function() {};",
             "/** @override */ B.prototype.foo = function() { A.prototype.foo.call(this); };"),
-        "Abstract method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be called");
   }
 
   public void testAbstractMethodCall4() throws Exception {
@@ -8473,7 +8473,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @constructor @abstract */ var A = function() {};",
             "/** @abstract */ A.prototype.foo = function() {};",
             "A.prototype.foo.call(new Subtype);"),
-        "Abstract method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be called");
   }
 
   public void testAbstractMethodCall11() throws Exception {
@@ -8485,7 +8485,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "abstractMethod.call(new B);"),
-        "Abstract method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be called");
   }
 
   public void testAbstractMethodCall12() throws Exception {
@@ -8496,7 +8496,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @constructor @extends {A} */ var B = function() {};",
             "B.superClass_ = A.prototype",
             "/** @override */ B.prototype.foo = function() { B.superClass_.foo.apply(this); };"),
-        "Abstract method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be called");
   }
 
   public void testAbstractMethodCall13() throws Exception {
@@ -8516,7 +8516,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "(0, abstractMethod).call(new B);"),
-        "Abstract method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be called");
   }
 
   public void testAbstractMethodCall_Indirect2() throws Exception {
@@ -8528,7 +8528,106 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "(abstractMethod = abstractMethod).call(new B);"),
-        "Abstract method A.prototype.foo cannot be called");
+        "Abstract super method A.prototype.foo cannot be called");
+  }
+
+  public void testAbstractMethodCall_Es6Class() throws Exception {
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "  bar() {",
+            "    this.foo();",
+            "  }",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  foo() {}",
+            "  /** @override */",
+            "  bar() {",
+            "    this.foo();",
+            "  }",
+            "}"));
+  }
+
+  public void testAbstractMethodCall_Es6Class_prototype() throws Exception {
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  foo() {}",
+            "  bar() {",
+            "    Sub.prototype.foo();",
+            "  }",
+            "}"));
+  }
+
+  public void testAbstractMethodCall_Es6Class_prototype_warning() throws Exception {
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  foo() {}",
+            "  bar() {",
+            "    Base.prototype.foo();",
+            "  }",
+            "}"),
+        "Abstract super method Base.prototype.foo cannot be called");
+  }
+
+  public void testNonAbstractMethodCall_Es6Class_prototype() throws Exception {
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "  bar() {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  foo() {}",
+            "  /** @override */",
+            "  bar() {",
+            "    Base.prototype.bar();",
+            "  }",
+            "}"));
+  }
+
+  // GitHub issue #2262: https://github.com/google/closure-compiler/issues/2262
+  public void testAbstractMethodCall_Es6ClassWithSpread() throws Exception {
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  foo() {}",
+            "  /** @param {!Array} arr */",
+            "  bar(arr) {",
+            "    this.foo.apply(this, [].concat(arr));",
+            "  }",
+            "}"));
   }
 
   public void testFunctionCall1() throws Exception {
