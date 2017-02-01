@@ -98,7 +98,7 @@ class ConvertToTypedInterface implements CompilerPass {
     private void propagateJsdocAtName(NodeTraversal t, Node nameNode) {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
-      if (!isInferrableConst(jsdoc, nameNode)) {
+      if (!isInferrableConst(jsdoc, nameNode, false)) {
         return;
       }
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
@@ -217,7 +217,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
   }
 
-  private static class RemoveCode implements NodeTraversal.Callback {
+  private static class RemoveCode implements CompilerPass, NodeTraversal.Callback {
     private final AbstractCompiler compiler;
     private final FileInfo currentFile = new FileInfo();
 
@@ -225,7 +225,8 @@ class ConvertToTypedInterface implements CompilerPass {
       this.compiler = compiler;
     }
 
-    void process(Node externs, Node root) {
+    @Override
+    public void process(Node externs, Node root) {
       NodeTraversal.traverseEs6(compiler, root, this);
     }
 
@@ -292,10 +293,6 @@ class ConvertToTypedInterface implements CompilerPass {
               }
               break;
             case ASSIGN:
-              if (t.inModuleScope() && expr.getFirstChild().matchesQualifiedName("exports")) {
-                // Module exports shouldn't be renamed
-                break;
-              }
               processName(expr.getFirstChild(), n);
               break;
             case GETPROP:
@@ -404,7 +401,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
                 if (jsdoc == null) {
                   jsdoc = getAllTypeJSDoc();
-                } else if (isInferrableConst(jsdoc, name)) {
+                } else if (isInferrableConst(jsdoc, name, false)) {
                   jsdoc = pullJsdocTypeFromAst(compiler, jsdoc, name);
                 }
                 Node newProtoAssignStmt =
@@ -447,12 +444,13 @@ class ConvertToTypedInterface implements CompilerPass {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
+      boolean isExport = isExportLhs(nameNode);
       if (rhs == null
           || rhs.isFunction()
           || rhs.isClass()
           || NodeUtil.isCallTo(rhs, "goog.defineClass")
           || isImportRhs(rhs)
-          || isExportLhs(nameNode)
+          || (isExport && (rhs.isQualifiedName() || rhs.isObjectLit()))
           || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
           || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"))
           || (rhs.isObjectLit()
@@ -460,8 +458,8 @@ class ConvertToTypedInterface implements CompilerPass {
               && (jsdoc == null || !hasAnnotatedType(jsdoc)))) {
         return RemovalType.PRESERVE_ALL;
       }
-      if (jsdoc == null
-          || !jsdoc.containsDeclaration()) {
+      if (!isExport
+          && (jsdoc == null || !jsdoc.containsDeclaration())) {
         String fullyQualifiedName = nameNode.getQualifiedName();
         if (currentFile.isNameProcessed(fullyQualifiedName)) {
           return RemovalType.REMOVE_ALL;
@@ -472,7 +470,7 @@ class ConvertToTypedInterface implements CompilerPass {
         }
         return RemovalType.REMOVE_ALL;
       }
-      if (isInferrableConst(jsdoc, nameNode)) {
+      if (isInferrableConst(jsdoc, nameNode, isExport)) {
         jsdocNode.setJSDocInfo(pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
       }
       return RemovalType.REMOVE_RHS;
@@ -513,6 +511,11 @@ class ConvertToTypedInterface implements CompilerPass {
         removeEnumValues(NodeUtil.getRValueOfLValue(nameNode));
         return;
       }
+      if (nameNode.matchesQualifiedName("exports")) {
+        replaceRhsWithUnknown(nameNode);
+        compiler.reportCodeChange();
+        return;
+      }
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
       newStatement.useSourceInfoIfMissingFromForTree(nameNode);
@@ -532,6 +535,11 @@ class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
+  private static void replaceRhsWithUnknown(Node lhs) {
+    Node rhs = NodeUtil.getRValueOfLValue(lhs);
+    rhs.replaceWith(IR.cast(IR.number(0), getQmarkTypeJSDoc()).srcrefTree(rhs));
+  }
+
   // TODO(blickly): Move to NodeUtil if it makes more sense there.
   private static boolean isDeclaration(Node nameNode) {
     Preconditions.checkArgument(nameNode.isQualifiedName());
@@ -548,9 +556,11 @@ class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private static boolean isInferrableConst(JSDocInfo jsdoc, Node nameNode) {
+  private static boolean isInferrableConst(JSDocInfo jsdoc, Node nameNode, boolean isImpliedConst) {
     boolean isConst =
-        nameNode.getParent().isConst() || (jsdoc != null && jsdoc.hasConstAnnotation());
+        isImpliedConst
+            || nameNode.getParent().isConst()
+            || (jsdoc != null && jsdoc.hasConstAnnotation());
     return isConst
         && !hasAnnotatedType(jsdoc)
         && !NodeUtil.isNamespaceDecl(nameNode);
@@ -637,6 +647,10 @@ class ConvertToTypedInterface implements CompilerPass {
 
   private static JSDocInfo getAllTypeJSDoc() {
     return getConstJSDoc(null, new Node(Token.STAR));
+  }
+
+  private static JSDocInfo getQmarkTypeJSDoc() {
+    return getConstJSDoc(null, new Node(Token.QMARK));
   }
 
   private static JSTypeExpression asTypeExpression(Node typeAst) {

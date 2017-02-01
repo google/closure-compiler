@@ -331,6 +331,44 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         });
   }
 
+  public void testGoogModulesWithUndefinedExports() {
+    testEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const Baz = goog.require('x.y.z.Baz');",
+            "const Foobar = goog.require('f.b.Foobar');",
+            "",
+            "/** @type {Foobar} */",
+            "exports.foobar = (new Baz).getFoobar();"),
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const Baz = goog.require('x.y.z.Baz');",
+            "const Foobar = goog.require('f.b.Foobar');",
+            "",
+            "/** @type {Foobar} */",
+            "exports.foobar;"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const Baz = goog.require('x.y.z.Baz');",
+            "const Foobar = goog.require('f.b.Foobar');",
+            "",
+            "/** @type {Foobar} */",
+            "exports = (new Baz).getFoobar();"),
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const Baz = goog.require('x.y.z.Baz');",
+            "const Foobar = goog.require('f.b.Foobar');",
+            "",
+            "/** @type {Foobar} */",
+            "exports = /** @const {?} */ (0);"));
+  }
+
   public void testCrossFileModifications() {
     test(
         LINE_JOINER.join(
@@ -607,7 +645,9 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testDontRemoveGoogModuleContents() {
-    testSame("goog.module('x.y.z'); var C = goog.require('a.b.C'); exports = new C;");
+    testWarning(
+        "goog.module('x.y.z'); var C = goog.require('a.b.C'); exports = new C;",
+        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
 
     testSameEs6("goog.module('x.y.z.Foo'); exports = class {};");
 
