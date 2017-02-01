@@ -21,16 +21,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -283,7 +283,8 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     private Deque<Set<String>> referenceStack = new ArrayDeque<>();
 
     // Name are globally unique initially, so we don't need a per-scope map.
-    private Map<String, List<Node>> nameMap = new HashMap<>();
+    private final ListMultimap<String, Node> nameMap =
+        MultimapBuilder.hashKeys().arrayListValues().build();
 
     private ContextualRenameInverter(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -360,13 +361,12 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         // scopes or the current scope renaming another var to this new name.
         referencedNames.add(newName);
         List<Node> references = nameMap.get(name);
-        Preconditions.checkState(references != null);
         for (Node n : references) {
           Preconditions.checkState(n.isName(), n);
           n.setString(newName);
         }
         compiler.reportCodeChange();
-        nameMap.remove(name);
+        nameMap.removeAll(name);
       }
     }
 
@@ -415,12 +415,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     private void addCandidateNameReference(String name, Node n) {
-      List<Node> nodes = nameMap.get(name);
-      if (null == nodes) {
-        nodes = new LinkedList<>();
-        nameMap.put(name, nodes);
-      }
-      nodes.add(n);
+      nameMap.put(name, n);
     }
   }
 
