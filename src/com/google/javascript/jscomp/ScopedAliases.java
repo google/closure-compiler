@@ -585,6 +585,17 @@ class ScopedAliases implements HotSwapCompilerPass {
       }
     }
 
+    private void renameBleedingFunctionName(Node fnName) {
+      MakeDeclaredNamesUnique.Renamer renamer =
+          new MakeDeclaredNamesUnique.WhitelistedRenamer(
+              new MakeDeclaredNamesUnique.ContextualRenamer(),
+              ImmutableSet.of(fnName.getString()));
+      renamer.addDeclaredName(fnName.getString(), false);
+
+      MakeDeclaredNamesUnique uniquifier = new MakeDeclaredNamesUnique(renamer);
+      NodeTraversal.traverseEs6(compiler, fnName.getParent().getParent(), uniquifier);
+    }
+
     private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
       if (preprocessorSymbolTable != null) {
         preprocessorSymbolTable.addReference(n.getFirstChild());
@@ -659,26 +670,34 @@ class ScopedAliases implements HotSwapCompilerPass {
         }
       }
 
-      // Validate all descendent scopes of the goog.scope block.
-      if (inGoogScopeBody()) {
-        // Check if this name points to an alias.
-        if (aliasVar != null) {
-          // Note, to support the transitive case, it's important we don't
-          // clone aliasedNode here.  For example,
-          // var g = goog; var d = g.dom; d.createElement('DIV');
-          // The node in aliasedNode (which is "g") will be replaced in the
-          // changes pass above with "goog".  If we cloned here, we'd end up
-          // with <code>g.dom.createElement('DIV')</code>.
-          aliasUsages.add(new AliasedNode(aliasVar, n));
-        }
+      // If this is a bleeding function expression, like
+      // var x = function y() { ... }
+      // then old versions of IE declare "y" in the current scope. We don't
+      // want the scope unboxing to add "y" to the global scope, so we
+      // need to rename it.
+      //
+      // TODO(moz): Remove this once we stop supporting IE8.
+      if (NodeUtil.isBleedingFunctionName(n)) {
+        renameBleedingFunctionName(n);
+      }
 
-        // When we inject declarations, we duplicate jsdoc. Make sure
-        // we only process that jsdoc once.
-        JSDocInfo info = n.getJSDocInfo();
-        if (info != null && !injectedDecls.contains(n)) {
-          for (Node node : info.getTypeNodes()) {
-            fixTypeNode(node);
-          }
+      // Check if this name points to an alias.
+      if (aliasVar != null) {
+        // Note, to support the transitive case, it's important we don't
+        // clone aliasedNode here.  For example,
+        // var g = goog; var d = g.dom; d.createElement('DIV');
+        // The node in aliasedNode (which is "g") will be replaced in the
+        // changes pass above with "goog".  If we cloned here, we'd end up
+        // with <code>g.dom.createElement('DIV')</code>.
+        aliasUsages.add(new AliasedNode(aliasVar, n));
+      }
+
+      // When we inject declarations, we duplicate jsdoc. Make sure
+      // we only process that jsdoc once.
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null && !injectedDecls.contains(n)) {
+        for (Node node : info.getTypeNodes()) {
+          fixTypeNode(node);
         }
       }
     }
