@@ -371,7 +371,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
 
   public void testTransformationWithInvalidIndexTemplateTypeOf() {
     testTTL(UNKNOWN_TYPE, "templateTypeOf(ARRNUM, 2)",
-        "Index out of bounds in templateTypeOf: 2 > 1");
+        "Index out of bounds in templateTypeOf: 2 >= 1");
   }
 
   public void testTransformationWithRecordType() {
