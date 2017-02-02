@@ -325,7 +325,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "class B extends A {",
         "  foo() { super.foo(); }",
         "}"),
-        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
 
     typeCheck(LINE_JOINER.join(
         "/** @abstract */",
@@ -334,6 +334,77 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "}",
         "class B extends A {",
         "  foo() { super.foo(); }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract */",
+        "class A {",
+        "  /** @abstract */",
+        "  foo() {}",
+        "  bar() {",
+        "    this.foo();",
+        "  }",
+        "}",
+        "class B extends A {",
+        "  foo() {}",
+        "  bar() {",
+        "    this.foo();",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract */",
+        "class A {",
+        "  /** @abstract */",
+        "  foo() {}",
+        "}",
+        "class B extends A {",
+        "  foo() {}",
+        "  /** @param {!Array} arr */",
+        "  bar(arr) {",
+        "    this.foo(...arr);",
+        "  }",
+        "}"));
+
+    // This should generate a warning
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract */",
+        "class A {",
+        "  /** @abstract */",
+        "  foo() {}",
+        "}",
+        "class B extends A {",
+        "  foo() {}",
+        "  bar() {",
+        "    A.prototype.foo();",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract */",
+        "class A {",
+        "  /** @abstract */",
+        "  foo() {}",
+        "}",
+        "class B extends A {",
+        "  foo() {}",
+        "  bar() {",
+        "    B.prototype.foo();",
+        "  }",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract */",
+        "class A {",
+        "  /** @abstract */",
+        "  foo() {}",
+        "  bar() {}",
+        "}",
+        "class B extends A {",
+        "  foo() {}",
+        "  bar() {",
+        "    A.prototype.bar();",
+        "  }",
         "}"));
   }
 

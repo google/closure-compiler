@@ -18514,7 +18514,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "/** @override */ ns.B.prototype.foo = function() {",
             "  ns.B.superClass_.foo.call(this);",
             "};"),
-        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
 
     typeCheck(
         LINE_JOINER.join(
@@ -18526,7 +18526,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "/** @override */ ns.B.prototype.foo = function() {",
             "  ns.B.superClass_.foo.apply(this);",
             "};"),
-        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
 
     typeCheck(
         LINE_JOINER.join(
@@ -18535,7 +18535,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ var B = function() {};",
             "/** @override */ B.prototype.foo = function() { A.prototype.foo['call'](this); };"),
-        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
 
     typeCheck(
         LINE_JOINER.join(
@@ -18556,7 +18556,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "abstractMethod.call(new B);"),
-        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
 
     typeCheck(
         LINE_JOINER.join(
@@ -18571,7 +18571,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "/** @override */ B.prototype.foo = function() {};",
             "var abstractMethod = A.prototype.foo;",
             "(0, abstractMethod).call(new B);"),
-        NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE);
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
   }
 
   public void testDontRemoveLooseObjects() {

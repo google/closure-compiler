@@ -339,7 +339,7 @@ public class DiagnosticGroups {
           GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
           GlobalTypeInfo.UNKNOWN_OVERRIDE,
           GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
-          NewTypeInference.ABSTRACT_METHOD_NOT_CALLABLE,
+          NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE,
           NewTypeInference.ASSERT_FALSE,
           NewTypeInference.CANNOT_BIND_CTOR,
           NewTypeInference.CONST_REASSIGNED,

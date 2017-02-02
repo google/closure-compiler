@@ -292,10 +292,10 @@ final class NewTypeInference implements CompilerPass {
           + "left : {0}\n"
           + "right: {1}");
 
-  static final DiagnosticType ABSTRACT_METHOD_NOT_CALLABLE =
+  static final DiagnosticType ABSTRACT_SUPER_METHOD_NOT_CALLABLE =
       DiagnosticType.warning(
-          "JSC_NTI_ABSTRACT_METHOD_NOT_CALLABLE",
-          "Abstract method {0} cannot be called");
+          "JSC_NTI_ABSTRACT_SUPER_METHOD_NOT_CALLABLE",
+          "Abstract super method {0} cannot be called");
 
   // Not part of ALL_DIAGNOSTICS because it should not be enabled with
   // --jscomp_error=newCheckTypes. It should only be enabled explicitly.
@@ -311,7 +311,7 @@ final class NewTypeInference implements CompilerPass {
           "This {0} expression has the unknown type.");
 
   static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
-      ABSTRACT_METHOD_NOT_CALLABLE,
+      ABSTRACT_SUPER_METHOD_NOT_CALLABLE,
       ASSERT_FALSE,
       CANNOT_BIND_CTOR,
       CANNOT_INSTANTIATE_ABSTRACT_CLASS,
@@ -3129,7 +3129,7 @@ final class NewTypeInference implements CompilerPass {
         // This catches calls that are a few nodes away, and also warns on .call/.apply
         // accesses that do not result in calls (these should be very rare).
         String funName = receiver.isQualifiedName() ? receiver.getQualifiedName() : "";
-        warnings.add(JSError.make(propAccessNode, ABSTRACT_METHOD_NOT_CALLABLE, funName));
+        warnings.add(JSError.make(propAccessNode, ABSTRACT_SUPER_METHOD_NOT_CALLABLE, funName));
       }
       return new EnvTypePair(pair.env,
           pname.equals("call")
