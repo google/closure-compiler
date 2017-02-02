@@ -190,6 +190,11 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     testSame("var asdf;", "asdf;", null);
   }
 
+  public void testFunctionDeclarationInExterns() {
+    testSameEs6("function foo(x = 7) {}", "foo();", null);
+    testSameEs6("function foo(...rest) {}", "foo(1,2,3);", null);
+  }
+
   public void testVarAssignmentInExterns() {
     testSame("/** @type{{foo:string}} */ var foo; var asdf = foo;", "asdf.foo;", null);
   }

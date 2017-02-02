@@ -295,6 +295,8 @@ class VarCheck extends AbstractPostOrderCallback implements
           case FUNCTION:
           case CLASS:
           case PARAM_LIST:
+          case DEFAULT_VALUE:
+          case REST:
             // These are okay.
             break;
           case GETPROP:
