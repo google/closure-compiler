@@ -2852,11 +2852,8 @@ public final class NodeUtil {
    * that bleeds into the inner scope).
    */
   static boolean isBleedingFunctionName(Node n) {
-    if (!n.isName() || n.getString().isEmpty()) {
-      return false;
-    }
-    Node parent = n.getParent();
-    return isFunctionExpression(parent) && n == parent.getFirstChild();
+    return n.isName() && !n.getString().isEmpty() &&
+        isFunctionExpression(n.getParent());
   }
 
   /**
