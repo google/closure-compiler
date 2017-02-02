@@ -158,6 +158,28 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "/** @const {number} */ Foo.prototype.x;"));
   }
 
+  public void testConstPropagationPrivateProperties1() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @const @private */ this.x = someComplicatedExpression();",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "/** @const @private {*} */ Foo.prototype.x;"));
+  }
+
+  public void testConstPropagationPrivateProperties2() {
+    testEs6(
+        LINE_JOINER.join(
+            "goog.provide('a.b.c');",
+            "",
+            "/** @private @const */",
+            "a.b.c.helper_ = someComplicatedExpression();"),
+        "goog.provide('a.b.c');   /** @private @const {*} */ a.b.c.helper_;");
+  }
+
   public void testConstJsdocPropagationForNames_optional() {
     test(
         LINE_JOINER.join(

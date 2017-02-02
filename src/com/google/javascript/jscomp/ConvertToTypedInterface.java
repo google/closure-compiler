@@ -20,6 +20,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -29,6 +30,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * The goal of this pass is to shrink the AST, preserving only typing, not behavior.
@@ -636,13 +639,17 @@ class ConvertToTypedInterface implements CompilerPass {
     Preconditions.checkArgument(nameNode.isQualifiedName());
     JSType type = nameNode.getJSType();
     if (type == null) {
-      if (!nameNode.isFromExterns()) {
+      if (!nameNode.isFromExterns() && !isPrivate(oldJSDoc)) {
         compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
       }
       return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
     } else {
       return getConstJSDoc(oldJSDoc, type.toNonNullAnnotationString());
     }
+  }
+
+  private static boolean isPrivate(@Nullable JSDocInfo jsdoc) {
+    return jsdoc != null && jsdoc.getVisibility().equals(Visibility.PRIVATE);
   }
 
   private static JSDocInfo getAllTypeJSDoc() {
