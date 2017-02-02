@@ -706,7 +706,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       inheritedPropDefs =
           ImmutableSet.of(getPropDefFromClass(superType, pname));
     }
-    if (superType.isInterface() && current.isClass()
+    if (superType.isInterface()
+        && current.isClass()
+        && !isCtorDefinedByCall(NodeUtil.getBestLValue(current.getDefSite()))
         && !current.mayHaveProp(pname)) {
       warnings.add(JSError.make(
           inheritedPropDefs.iterator().next().defSite,
@@ -2663,7 +2665,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
                 this.convention, fromDefsiteToName(defSite)));
   }
 
-  private static boolean isCtorDefinedByCall(Node qnameNode) {
+  static boolean isCtorDefinedByCall(Node qnameNode) {
     if (!qnameNode.isName() && !qnameNode.isGetProp()) {
       return false;
     }

@@ -1286,15 +1286,16 @@ final class NewTypeInference implements CompilerPass {
     if (currentScope.isLocalFunDef(varName)) {
       return inEnv;
     }
+    Node rhs = nameNode.getFirstChild();
     if (NodeUtil.isNamespaceDecl(nameNode)
+        || (GlobalTypeInfo.isCtorDefinedByCall(nameNode)
+            && !isFunctionBind(rhs.getFirstChild(), inEnv, true))
         || nameNode.getParent().getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       Preconditions.checkNotNull(declType,
           "Can't skip var declaration with undeclared type at: %s", nameNode);
       maybeSetTypeI(nameNode, declType);
       return envPutType(inEnv, varName, declType);
     }
-
-    Node rhs = nameNode.getFirstChild();
     TypeEnv outEnv = inEnv;
     JSType rhsType;
     if (rhs == null) {
@@ -1797,7 +1798,9 @@ final class NewTypeInference implements CompilerPass {
     if (lhs.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       lhs.removeProp(Node.ANALYZED_DURING_GTI);
       JSType declType = markAndGetTypeOfPreanalyzedNode(lhs, inEnv, true);
-      if (rhs.matchesQualifiedName(ABSTRACT_METHOD_NAME)) {
+      if (rhs.matchesQualifiedName(ABSTRACT_METHOD_NAME)
+          || (GlobalTypeInfo.isCtorDefinedByCall(lhs)
+              && !isFunctionBind(rhs.getFirstChild(), inEnv, true))) {
         return new EnvTypePair(inEnv, requiredType);
       }
       EnvTypePair rhsPair = analyzeExprFwd(rhs, inEnv, declType);

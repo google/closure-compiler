@@ -51,6 +51,12 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
 
   protected static final String DEFAULT_EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
+          "/**",
+          " * @param {Object} proto",
+          " * @param {Object=} opt_properties",
+          " * @return {!Object}",
+          " */",
+          "Object.create = function(proto, opt_properties) {};",
           "/** @const {undefined} */",
           "var undefined;",
           "/** @return {string} */",

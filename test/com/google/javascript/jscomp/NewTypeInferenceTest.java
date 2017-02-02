@@ -18967,4 +18967,68 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testMixinApplication() {
+    String defs = LINE_JOINER.join(
+        "/** @constructor */",
+        "function MyElement() {",
+        "  /** @type {string} */",
+        "  this.elemprop = 'asdf';",
+        "}",
+        "/** @record */",
+        "function Toggle() {}",
+        "/**",
+        " * @param {string} x",
+        " * @return {string}",
+        " */",
+        "Toggle.prototype.foobar = function(x) {};",
+        "/**",
+        " * @template T",
+        " * @param {function(new:T)} superclass",
+        " */",
+        "function addToggle(superclass) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {superclass}",
+        "   * @implements {Toggle}",
+        "   */",
+        "  function Clazz() {",
+        "    Superclass.apply(this, arguments);;",
+        "  }",
+        "  Clazz.prototype = Object.create(Superclass.prototype);",
+        "  /** @override */",
+        "  Clazz.prototype.foobar = function(x) { return 'foobar ' + x; };",
+        "  return Clazz;",
+        "}");
+
+    typeCheck(LINE_JOINER.join(
+        defs,
+        "/**",
+        " * @constructor",
+        " * @extends {MyElement}",
+        " * @implements {Toggle}",
+        " */",
+        "var MyElementWithToogle = addToggle(MyElement);",
+        "(new MyElementWithToogle).foobar(123);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        defs,
+        "/**",
+        " * @constructor",
+        " * @extends {MyElement}",
+        " * @implements {Toggle}",
+        " */",
+        "var MyElementWithToogle = addToggle(MyElement);",
+        "(new MyElementWithToogle).elemprop = 123;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        defs,
+        "var MyElementWithToogle = addToggle(MyElement);",
+        "(new MyElementWithToogle).foobar(123);",
+        // The MyElementWithToogle type is unknown
+        "/** @type {MyElementWithToogle} */ var x = 123;"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }
