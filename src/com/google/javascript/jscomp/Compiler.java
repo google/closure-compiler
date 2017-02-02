@@ -25,6 +25,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
@@ -99,6 +100,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       "unknown module \"{0}\" specified in entry point spec");
 
   // Used in PerformanceTracker
+  static final String READING_PASS_NAME = "readInputs";
   static final String PARSING_PASS_NAME = "parseInputs";
   static final String CROSS_MODULE_CODE_MOTION_NAME = "crossModuleCodeMotion";
   static final String CROSS_MODULE_METHOD_MOTION_NAME =
@@ -752,9 +754,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void compileInternal() {
     setProgress(0.0, null);
     CompilerOptionsPreprocessor.preprocess(options);
+    read();
+    // Guesstimate.
+    setProgress(0.02, "read");
     parse();
-    // 15 percent of the work is assumed to be for parsing (based on some
-    // minimal analysis on big JS projects, of course this depends on options)
+    // Guesstimate.
     setProgress(0.15, "parse");
     if (hasErrors()) {
       return;
@@ -793,6 +797,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (tracker != null) {
       tracker.outputTracerReport();
     }
+  }
+
+  public void read() {
+    readInputs();
   }
 
   public void parse() {
@@ -1451,6 +1459,39 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   //------------------------------------------------------------------------
+  // Reading
+  //------------------------------------------------------------------------
+
+  /**
+   * Performs all externs and main inputs IO.
+   *
+   * <p>Allows for easy measurement of IO cost separately from parse cost.
+   */
+  void readInputs() {
+    if (options.getTracerMode().isOn()) {
+      tracker =
+          new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), this.outStream);
+      addChangeHandler(tracker.getCodeChangeHandler());
+    }
+
+    Tracer tracer = newTracer(READING_PASS_NAME);
+    beforePass(READING_PASS_NAME);
+
+    try {
+      for (CompilerInput input : Iterables.concat(externs, inputs)) {
+        try {
+          input.getCode();
+        } catch (IOException e) {
+          report(JSError.make(AbstractCompiler.READ_ERROR, input.getName()));
+        }
+      }
+    } finally {
+      afterPass(READING_PASS_NAME);
+      stopTracer(tracer, READING_PASS_NAME);
+    }
+  }
+
+  //------------------------------------------------------------------------
   // Parsing
   //------------------------------------------------------------------------
 
@@ -1467,12 +1508,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // individual file parse trees.
     externsRoot.detachChildren();
     jsRoot.detachChildren();
-
-    if (options.getTracerMode().isOn()) {
-      tracker =
-          new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), this.outStream);
-      addChangeHandler(tracker.getCodeChangeHandler());
-    }
 
     Tracer tracer = newTracer(PARSING_PASS_NAME);
     beforePass(PARSING_PASS_NAME);
