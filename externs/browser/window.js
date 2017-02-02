@@ -118,10 +118,11 @@ var netscape;
 var sun;
 
 /**
+ * @param {*} message
  * @see https://developer.mozilla.org/en/DOM/window.alert
  * @return {undefined}
  */
-function alert(x) {}
+function alert(message) {}
 
 /**
  * @param {number|undefined|null} immediateID
