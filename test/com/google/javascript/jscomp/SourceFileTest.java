@@ -18,7 +18,16 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import junit.framework.TestCase;
+
 
 public final class SourceFileTest extends TestCase {
 
@@ -32,12 +41,9 @@ public final class SourceFileTest extends TestCase {
     }
   }
 
-  /**
-   * Tests that keys are assigned sequentially.
-   */
+  /** Tests that keys are assigned sequentially. */
   public void testLineOffset() throws Exception {
-    ResetableSourceFile sf = new ResetableSourceFile(
-      "test.js", "'1';\n'2';\n'3'\n");
+    ResetableSourceFile sf = new ResetableSourceFile("test.js", "'1';\n'2';\n'3'\n");
     assertThat(sf.getLineOffset(1)).isEqualTo(0);
     assertThat(sf.getLineOffset(2)).isEqualTo(5);
     assertThat(sf.getLineOffset(3)).isEqualTo(10);
@@ -46,5 +52,62 @@ public final class SourceFileTest extends TestCase {
     assertThat(sf.getLineOffset(1)).isEqualTo(0);
     assertThat(sf.getLineOffset(2)).isEqualTo(7);
     assertThat(sf.getLineOffset(3)).isEqualTo(14);
+  }
+
+  public void testCachingFile() throws IOException {
+    // Setup environment.
+    String expectedContent = "// content content content";
+    String newExpectedContent = "// new content new content new content";
+    Path jsFile = Files.createTempFile("test", ".js");
+    Files.write(jsFile, expectedContent.getBytes(StandardCharsets.UTF_8));
+    SourceFile sourceFile = SourceFile.fromFile(jsFile.toFile());
+
+    // Verify initial state.
+    assertEquals(expectedContent, sourceFile.getCode());
+
+    // Perform a change.
+    Files.write(jsFile, newExpectedContent.getBytes(StandardCharsets.UTF_8));
+    sourceFile.clearCachedSource();
+
+    // Verify final state.
+    assertEquals(newExpectedContent, sourceFile.getCode());
+  }
+
+  public void testCachingZipFile() throws IOException {
+    // Setup environment.
+    String expectedContent = "// content content content";
+    String newExpectedContent = "// new content new content new content";
+    Path jsZipFile = Files.createTempFile("test", ".js.zip");
+    createZipWithContent(jsZipFile, expectedContent);
+    SourceFile zipSourceFile =
+        SourceFile.fromZipEntry(
+            jsZipFile.toString(),
+            jsZipFile.toAbsolutePath().toString(),
+            "foo.js",
+            StandardCharsets.UTF_8);
+
+    // Verify initial state.
+    assertEquals(expectedContent, zipSourceFile.getCode());
+
+    // Perform a change.
+    createZipWithContent(jsZipFile, newExpectedContent);
+    zipSourceFile.clearCachedSource();
+
+    // Verify final state.
+    assertEquals(newExpectedContent, zipSourceFile.getCode());
+  }
+
+  private static void createZipWithContent(Path zipFile, String content)
+      throws IOException, FileNotFoundException {
+    ZipOutputStream zos;
+    if (zipFile.toFile().exists()) {
+      zipFile.toFile().delete();
+    }
+    zipFile.toFile().createNewFile();
+    zos = new ZipOutputStream(new FileOutputStream(zipFile.toFile()));
+    zos.putNextEntry(new ZipEntry("foo.js"));
+    zos.write(content.getBytes(StandardCharsets.UTF_8));
+    zos.closeEntry();
+    zos.close();
   }
 }

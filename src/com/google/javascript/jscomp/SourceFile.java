@@ -26,7 +26,6 @@ import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.javascript.rhino.StaticSourceFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +35,7 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -669,7 +669,15 @@ public class SourceFile implements StaticSourceFile, Serializable {
       String cachedCode = super.getCode();
 
       if (cachedCode == null) {
-        cachedCode = Resources.toString(url, this.getCharset());
+        URLConnection urlConnection = url.openConnection();
+        // Perform the read through the URL connection while making sure that it does not internally
+        // cache, because its default internal caching would defeat our own cache management.
+        urlConnection.setUseCaches(false);
+        InputStream inputStream = urlConnection.getInputStream();
+        cachedCode = CharStreams.toString(new InputStreamReader(inputStream, this.getCharset()));
+        // Must close the stream or else the cache won't be cleared.
+        inputStream.close();
+
         super.setCode(cachedCode, this.getCharset() == StandardCharsets.UTF_8);
         // Byte Order Mark can be removed by setCode
         cachedCode = super.getCode();
