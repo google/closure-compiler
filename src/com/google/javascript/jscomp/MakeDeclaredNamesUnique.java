@@ -186,7 +186,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       case PARAM_LIST:
         // Note: The parameters and function body variables live in the
         // same scope, we introduce the scope when in the "shouldTraverse"
-        // visit of LP, but remove it when when we exit the function above.
+        // visit of PARAM_LIST, but remove it when when we exit the function above.
         break;
 
       case CATCH:

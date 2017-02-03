@@ -252,7 +252,7 @@ final class FunctionTypeBuilder {
    * the parameter and return types of the function it is overriding.
    *
    * @param oldType The function being overridden. Does nothing if this is null.
-   * @param paramsParent The LP node of the function that we're assigning to.
+   * @param paramsParent The PARAM_LIST node of the function that we're assigning to.
    *     If null, that just means we're not initializing this to a function
    *     literal.
    */

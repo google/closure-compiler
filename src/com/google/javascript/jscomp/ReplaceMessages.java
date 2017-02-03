@@ -197,7 +197,7 @@ final class ReplaceMessages extends JsMessageVisitor {
    * combine the other two types.
    *
    * @param partsIterator  an iterator over message parts
-   * @param argListNode  an LP node whose children are valid placeholder names
+   * @param argListNode  a PARAM_LIST node whose children are valid placeholder names
    * @return the root of the constructed parse tree
    *
    * @throws MalformedException if {@code partsIterator} contains a

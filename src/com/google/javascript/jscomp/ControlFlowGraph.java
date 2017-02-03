@@ -156,7 +156,7 @@ public class ControlFlowGraph<N> extends
         // A function node represents the start of a function where the name
         // bleeds into the local scope and parameters are assigned
         // to the formal argument names. The node includes the name of the
-        // function and the LP list since we assume the whole set up process
+        // function and the PARAM_LIST since we assume the whole set up process
         // is atomic without change in control flow. The next change of
         // control is going into the function's body, represented by the second
         // child.

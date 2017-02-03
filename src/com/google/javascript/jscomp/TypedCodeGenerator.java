@@ -124,7 +124,7 @@ class TypedCodeGenerator extends CodeGenerator {
     // parameters of the function type do not have the real parameter names.
     // FUNCTION
     //   NAME
-    //   LP
+    //   PARAM_LIST
     //     NAME param1
     //     NAME param2
     if (fnNode != null && fnNode.isFunction()) {

@@ -397,7 +397,7 @@ class RemoveUnusedVars
       return;
     }
 
-    Node argList = getFunctionArgList(function);
+    Node argList = NodeUtil.getFunctionParameters(function);
     boolean modifyCallers = modifyCallSites
         && callSiteOptimizer.canModifyCallers(function);
     if (!modifyCallers) {
@@ -417,14 +417,6 @@ class RemoveUnusedVars
     }
   }
 
-
-  /**
-   * @return the LP node containing the function parameters.
-   */
-  private static Node getFunctionArgList(Node function) {
-    return function.getSecondChild();
-  }
-
   private static class CallSiteOptimizer {
     private final AbstractCompiler compiler;
     private final DefinitionUseSiteFinder defFinder;
@@ -441,7 +433,7 @@ class RemoveUnusedVars
     public void optimize(Scope fnScope, Set<Var> referenced) {
       Node function = fnScope.getRootNode();
       Preconditions.checkState(function.isFunction());
-      Node argList = getFunctionArgList(function);
+      Node argList = NodeUtil.getFunctionParameters(function);
 
       // In this path we try to modify all the call sites to remove unused
       // function parameters.

@@ -629,7 +629,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
           break;
         default:
           throw new MalformedException(
-              "NAME, LP, or BLOCK node expected; found: " + node.getToken(), fnChild);
+              "NAME, PARAM_LIST, or BLOCK node expected; found: " + node, fnChild);
       }
     }
   }

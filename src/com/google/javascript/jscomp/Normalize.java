@@ -456,16 +456,16 @@ class Normalize implements CompilerPass {
      * Rewrite the function declaration from:
      *   function x() {}
      *   FUNCTION
-     *     NAME
-     *     LP
+     *     NAME x
+     *     PARAM_LIST
      *     BLOCK
      * to:
      *   var x = function() {};
      *   VAR
-     *     NAME
+     *     NAME x
      *       FUNCTION
      *         NAME (w/ empty string)
-     *         LP
+     *         PARAM_LIST
      *         BLOCK
      */
     private static void rewriteFunctionDeclaration(Node n) {

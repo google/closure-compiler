@@ -4033,7 +4033,6 @@ public final class NodeUtil {
     * @return The Node containing the Function parameters.
     */
   public static Node getFunctionParameters(Node fnNode) {
-    // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
     Preconditions.checkArgument(fnNode.isFunction());
     return fnNode.getSecondChild();
   }

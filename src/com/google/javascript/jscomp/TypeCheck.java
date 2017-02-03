@@ -1419,10 +1419,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // At this stage, we need to determine whether this is a leaf
     // node in an expression (which therefore needs to have a type
     // assigned for it) versus some other decorative node that we
-    // can safely ignore.  Function names, arguments (children of LP nodes) and
+    // can safely ignore.  Function names, arguments (children of PARAM_LIST nodes) and
     // variable declarations are ignored.
     // TODO(user): remove this short-circuiting in favor of a
-    // pre order traversal of the FUNCTION, CATCH, LP and VAR nodes.
+    // pre order traversal of the FUNCTION, CATCH, PARAM_LIST and VAR nodes.
     Token parentNodeType = parent.getToken();
     if (parentNodeType == Token.FUNCTION ||
         parentNodeType == Token.CATCH ||
