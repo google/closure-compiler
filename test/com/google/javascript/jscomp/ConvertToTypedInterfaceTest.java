@@ -212,6 +212,26 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "/** @const {!Array<number>} */ Foo.prototype.nums;"));
   }
 
+  public void testOptionalRestParamFunction() {
+    testEs6(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {?Object} o",
+            " * @param {string=} str",
+            " * @param {number=} num",
+            " * @param {...!Object} rest",
+            " */",
+            "function foo(o, str = '', num = 5, ...rest) {}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @param {?Object} o",
+            " * @param {string=} str",
+            " * @param {number=} num",
+            " * @param {...!Object} rest",
+            " */",
+            "function foo(o, str, num, ...rest) {}"));
+  }
+
   public void testConstJsdocPropagationForNames_defaultValue() {
     testEs6(
         LINE_JOINER.join(
@@ -227,8 +247,24 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             " * @constructor",
             " * @param {string=} str",
             " */",
-            "function Foo(str='') {}",
+            "function Foo(str) {}",
             "/** @const {string} */ Foo.prototype.s;"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  /** @param {string=} str */",
+            "  constructor(str = '') {",
+            "    /** @const */ this.s = str;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class Foo {",
+            "  /** @param {string=} str */",
+            "  constructor(str) {}",
+            "}",
+            "/** @const {string} */ Foo.prototype.s;"));
+
   }
 
   public void testConstWithDeclaredTypes() {

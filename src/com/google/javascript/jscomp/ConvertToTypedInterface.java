@@ -246,6 +246,10 @@ class ConvertToTypedInterface implements CompilerPass {
           currentFile.clear();
           break;
         case CLASS:
+          if (NodeUtil.isStatementParent(parent)) {
+            currentFile.markNameProcessed(n.getFirstChild().getString());
+          }
+          break;
         case FUNCTION: {
           if (parent.isCall()) {
             Preconditions.checkState(!parent.getFirstChild().matchesQualifiedName("goog.scope"),
@@ -254,6 +258,7 @@ class ConvertToTypedInterface implements CompilerPass {
           if (NodeUtil.isStatementParent(parent)) {
             currentFile.markNameProcessed(n.getFirstChild().getString());
           }
+          processFunctionParameters(n.getSecondChild());
           Node body = n.getLastChild();
           if (body.isNormalBlock() && body.hasChildren()) {
             if (isConstructor(n)) {
@@ -375,6 +380,18 @@ class ConvertToTypedInterface implements CompilerPass {
           break;
         default:
           break;
+      }
+    }
+
+    private void processFunctionParameters(Node paramList) {
+      Preconditions.checkArgument(paramList.isParamList());
+      for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
+        if (arg.isDefaultValue()) {
+          Node replacement = arg.getFirstChild().detach();
+          arg.replaceWith(replacement);
+          arg = replacement;
+          compiler.reportCodeChange();
+        }
       }
     }
 
