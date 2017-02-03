@@ -88,23 +88,20 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       letConsts.add(n);
     }
     Scope hoistScope = scope.getClosestHoistScope();
-    boolean doRename = false;
     if (scope != hoistScope) {
-      doRename = hoistScope.isDeclared(oldName, true) || undeclaredNames.contains(oldName);
-      String newName = doRename
-          ? oldName + "$" + compiler.getUniqueNameIdSupplier().get()
-          : oldName;
-      Var oldVar = scope.getVar(oldName);
-      scope.undeclare(oldVar);
-      hoistScope.declare(newName, nameNode, oldVar.input);
-      if (doRename) {
+      String newName = oldName;
+      if (hoistScope.isDeclared(oldName, true) || undeclaredNames.contains(oldName)) {
+        do {
+          newName = oldName + "$" + compiler.getUniqueNameIdSupplier().get();
+        } while (hoistScope.isDeclared(newName, true));
         nameNode.setString(newName);
         Node scopeRoot = scope.getRootNode();
         renameTable.put(scopeRoot, oldName, newName);
+        compiler.reportCodeChange();
       }
-    }
-    if (doRename) {
-      compiler.reportCodeChange();
+      Var oldVar = scope.getVar(oldName);
+      scope.undeclare(oldVar);
+      hoistScope.declare(newName, nameNode, oldVar.input);
     }
   }
 

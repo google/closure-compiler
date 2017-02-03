@@ -206,6 +206,26 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  public void testRenameConflict() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  let x = 1;",
+            "  let x$0 = 2;",
+            "  {",
+            "    let x = 3;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  var x = 1;",
+            "  var x$0 = 2;",
+            "  {",
+            "    var x$1 = 3;",
+            "  }",
+            "}"));
+  }
+
   public void testForOfLoop() {
     test(
         LINE_JOINER.join(
