@@ -94,7 +94,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
     if (!declarationRoot.isFunction()) {
       // Add the block declarations
-      findDeclaredNames(declarationRoot, null, renamer);
+      findDeclaredNames(declarationRoot, renamer, false);
     }
     nameStack.push(renamer);
   }
@@ -138,7 +138,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         }
 
         Node functionBody = n.getNext();
-        findDeclaredNames(functionBody, null, renamer);
+        findDeclaredNames(functionBody, renamer, false);
 
         nameStack.push(renamer);
         break;
@@ -215,16 +215,19 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   /**
    * Traverses the current scope and collects declared names.  Does not
    * decent into functions or add CATCH exceptions.
+   * @param recursive Whether this is being called recursively.
    */
-  private void findDeclaredNames(Node n, Node parent, Renamer renamer) {
+  private void findDeclaredNames(Node n, Renamer renamer, boolean recursive) {
+    Node parent = n.getParent();
+
     // Do a shallow traversal, so don't traverse into function declarations,
     // except for the name of the function itself.
-    if (parent == null
+    if (!recursive
         || !parent.isFunction()
         || n == parent.getFirstChild()) {
       if (NodeUtil.isVarDeclaration(n)) {
         renamer.addDeclaredName(n.getString(), true);
-      } else if (NodeUtil.isBlockScopedDeclaration(n) && parent != null && !parent.isCatch()) {
+      } else if (NodeUtil.isBlockScopedDeclaration(n) && !parent.isCatch()) {
         renamer.addDeclaredName(n.getString(), false);
       } else if (NodeUtil.isFunctionDeclaration(n)) {
         Node nameNode = n.getFirstChild();
@@ -232,7 +235,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       }
 
       for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-        findDeclaredNames(c, n, renamer);
+        findDeclaredNames(c, renamer, true);
       }
     }
   }
