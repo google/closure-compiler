@@ -1799,7 +1799,7 @@ public class CompilerOptions {
    * Sets ECMAScript version to use.
    */
   public void setLanguage(LanguageMode language) {
-    Preconditions.checkState(languageIn != LanguageMode.NO_TRANSPILE);
+    Preconditions.checkState(language != LanguageMode.NO_TRANSPILE);
     this.languageIn = language;
     this.languageOut = language;
   }
