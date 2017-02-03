@@ -224,7 +224,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         || n == parent.getFirstChild()) {
       if (NodeUtil.isVarDeclaration(n)) {
         renamer.addDeclaredName(n.getString(), true);
-      } else if (NodeUtil.isBlockScopedDeclaration(n) && !parent.isCatch()) {
+      } else if (NodeUtil.isBlockScopedDeclaration(n) && parent != null && !parent.isCatch()) {
         renamer.addDeclaredName(n.getString(), false);
       } else if (NodeUtil.isFunctionDeclaration(n)) {
         Node nameNode = n.getFirstChild();

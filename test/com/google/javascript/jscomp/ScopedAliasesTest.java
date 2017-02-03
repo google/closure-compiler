@@ -978,6 +978,65 @@ public final class ScopedAliasesTest extends CompilerTestCase {
          "$jscomp.scope.x = null;");
   }
 
+  public void testIssue2210() {
+    test(
+        LINE_JOINER.join(
+            "var ns = {};",
+            "var y = 1;",
+            "goog.scope(function () {",
+            "  ns.fact = function y(n) {",
+            "    return n == 1 ? 1 : n * y(n - 1);",
+            "  };",
+            "});"),
+        LINE_JOINER.join(
+            "var ns = {};",
+            "var y = 1;",
+            "ns.fact = function y$jscomp$1(n) {",
+            "  return n == 1 ? 1 : n * y$jscomp$1(n - 1);",
+            "};"));
+  }
+
+  public void testIssue2210b() {
+    test(
+        LINE_JOINER.join(
+            "var ns = {};",
+             "var y = 1;",
+             "goog.scope(function () {",
+             "  function x(y) {}",
+             "  ns.fact = function y(n) {",
+             "    return n == 1 ? 1 : n * y(n - 1);",
+             "  };",
+             "});"),
+        LINE_JOINER.join(
+            SCOPE_NAMESPACE,
+            "var ns = {};",
+            "var y = 1;",
+            "$jscomp.scope.x = function (y) {};",
+            "ns.fact = function y$jscomp$1(n) {",
+            "  return n == 1 ? 1 : n * y$jscomp$1(n - 1);",
+            "};"));
+  }
+
+  public void testIssue2210c() {
+    testScoped(
+        LINE_JOINER.join(
+            "foo(() => {",
+            "  const y = function y() {",
+            "    use(y);",
+            "  };",
+            "});"),
+        LINE_JOINER.join(
+            "foo(() => {",
+            "  const y = function y$jscomp$1() {",
+            "    use(y$jscomp$1);",
+            "  };",
+            "});"), LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testObjectPattern() {
+    testScopedNoChanges("", "{foo: ({bar}) => baz};", LanguageMode.ECMASCRIPT6);
+  }
+
   public void testTypeCheck() {
     enableTypeCheck();
     runTypeCheckAfterProcessing = true;
