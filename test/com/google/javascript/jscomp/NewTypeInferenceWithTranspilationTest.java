@@ -313,6 +313,15 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "function f({ myprop1: { myprop2: prop } }) {",
         "  return prop;",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {{prop: (number|undefined)}} x",
+        " * @return {number}",
+        " */",
+        "function f({prop = 1} = {}) {",
+        "  return prop;",
+        "}"));
   }
 
   public void testAbstractMethodCalls() {

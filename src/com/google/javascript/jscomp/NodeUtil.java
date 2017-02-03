@@ -3738,6 +3738,20 @@ public final class NodeUtil {
     return false;
   }
 
+  static boolean isPropertyAbsenceTest(Node propAccess) {
+    Node parent = propAccess.getParent();
+    switch (parent.getToken()) {
+      case EQ:
+      case SHEQ: {
+        Node other = parent.getFirstChild() == propAccess
+            ? parent.getSecondChild() : parent.getFirstChild();
+        return isUndefined(other);
+      }
+      default:
+        return false;
+    }
+  }
+
   /**
    * @param qName A qualified name node representing a class prototype, or a property on that
    *     prototype, e.g. foo.Bar.prototype, or foo.Bar.prototype.toString.

@@ -19031,4 +19031,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @type {MyElementWithToogle} */ var x = 123;"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
+
+  public void testSpecializeAfterPropAbsenceTest() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {{foo:(number|undefined)}} x",
+        " * @return {number}",
+        " */",
+        "function f(x) {",
+        "  return (x.foo === undefined ? 123 : x.foo);",
+        "}"));
+  }
 }
