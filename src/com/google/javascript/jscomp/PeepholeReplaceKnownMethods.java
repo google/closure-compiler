@@ -127,12 +127,28 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
     if (useTypes && firstArg != null && (isStringLiteral
         || (stringNode.getJSType() != null && stringNode.getJSType().isStringValueType()))) {
-      switch (functionNameString) {
-        case "substr":
-          return tryReplaceSubstrWithCharAt(subtree, callTarget, firstArg);
-        case "substring":
-        case "slice":
-          return tryReplaceSubstringOrSliceWithCharAt(subtree, callTarget, firstArg);
+      if (subtree.hasXChildren(3)) {
+        Double maybeStart = NodeUtil.getNumberValue(firstArg, useTypes);
+        if (maybeStart != null) {
+          int start = maybeStart.intValue();
+          Double maybeLengthOrEnd = NodeUtil.getNumberValue(firstArg.getNext(), useTypes);
+          if (maybeLengthOrEnd != null) {
+            switch (functionNameString) {
+              case "substr":
+                int length = maybeLengthOrEnd.intValue();
+                if (start >= 0 && length == 1) {
+                  return replaceWithCharAt(subtree, callTarget, firstArg);
+                }
+                break;
+              case "substring":
+              case "slice":
+                int end = maybeLengthOrEnd.intValue();
+                if (end - start == 1) {
+                  return replaceWithCharAt(subtree, callTarget, firstArg);
+                }
+            }
+          }
+        }
       }
     }
     return subtree;
@@ -614,43 +630,6 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     parent.replaceChild(n, resultNode);
     reportCodeChange();
     return resultNode;
-  }
-
-  private Node tryReplaceSubstrWithCharAt(Node n, Node callTarget, Node firstArg) {
-    if (n.hasXChildren(3)) {
-      Double maybeLength = NodeUtil.getNumberValue(firstArg.getNext(), useTypes);
-      if (maybeLength != null) {
-        int length = maybeLength.intValue();
-        if (length == 1) {
-          return replaceWithCharAt(n, callTarget, firstArg);
-        }
-      }
-    }
-    return n;
-  }
-
-  private Node tryReplaceSubstringOrSliceWithCharAt(Node n, Node callTarget, Node firstArg) {
-    if (!n.hasXChildren(3)) {
-      return n;
-    }
-    Double maybeStart = NodeUtil.getNumberValue(firstArg, useTypes);
-    if (maybeStart == null) {
-      return n;
-    }
-    Node secondArg = firstArg.getNext();
-    Double maybeEnd = NodeUtil.getNumberValue(secondArg, useTypes);
-    if (maybeEnd == null) {
-      return n;
-    }
-    int start = maybeStart.intValue();
-    int end = maybeEnd.intValue();
-    if (start >= end) {
-      return n; // Bail out for simplicity
-    }
-    if (end - start == 1) {
-      return replaceWithCharAt(n, callTarget, firstArg);
-    }
-    return n;
   }
 
   private Node replaceWithCharAt(Node n, Node callTarget, Node firstArg) {

@@ -328,6 +328,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   public void testReplaceWithCharAt() {
     enableTypeCheck();
     foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
+    foldStringTyped("a.substring(-4, -3)", "a.charAt(-4)");
     foldSameStringTyped("a.substring(i, j + 1)");
     foldSameStringTyped("a.substring(i, i + 1)");
     foldSameStringTyped("a.substring(1, 2, 3)");
@@ -351,9 +352,9 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
     foldStringTyped("a.substr(0, 1)", "a.charAt(0)");
     foldStringTyped("a.substr(2, 1)", "a.charAt(2)");
-    foldStringTyped("a.substr(-2, 1)", "a.charAt(-2)");
-    foldStringTyped("a.substr(bar(), 1)", "a.charAt(bar())");
-    foldStringTyped("''.substr(bar(), 1)", "''.charAt(bar())");
+    foldSameStringTyped("a.substr(-2, 1)");
+    foldSameStringTyped("a.substr(bar(), 1)");
+    foldSameStringTyped("''.substr(bar(), 1)");
     foldSameStringTyped("a.substr(2, 1, 3)");
     foldSameStringTyped("a.substr(1, 2, 3)");
     foldSameStringTyped("a.substr()");
