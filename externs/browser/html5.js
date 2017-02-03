@@ -3272,6 +3272,9 @@ Document.prototype.webkitIsFullScreen;
 
 Document.prototype.webkitCancelFullScreen = function() {};
 
+/** @type {boolean} */
+Document.prototype.webkitFullscreenEnabled;
+
 /** @type {Element} */
 Document.prototype.webkitCurrentFullScreenElement;
 
