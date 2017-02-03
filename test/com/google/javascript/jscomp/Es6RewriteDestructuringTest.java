@@ -526,6 +526,16 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         "function f(zero, one) {   one = (one === undefined) ? void g() : one; }");
   }
 
+  public void testCatch() {
+    test(
+        "try {} catch ({message}) {}",
+        LINE_JOINER.join(
+            "try {} catch($jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  let message = $jscomp$destructuring$var1.message",
+            "}"));
+  }
+
   public void testTypeCheck() {
     enableTypeCheck();
 
