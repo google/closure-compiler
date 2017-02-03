@@ -2817,6 +2817,10 @@ public class Parser {
       return parseYield(expressionIn);
     }
 
+    if (peekAsyncArrowFunction()) {
+      return parseAsyncArrowFunction(expressionIn);
+    }
+
     SourcePosition start = getTreeStartLocation();
     // TODO(blickly): Allow TypeScript syntax in arrow function parameters
     ParseTree left = parseConditional(expressionIn);
@@ -2839,12 +2843,20 @@ public class Parser {
     return left;
   }
 
+  private boolean peekAsyncArrowFunction() {
+    if (!peekPredefinedString(ASYNC)) {
+      return false;
+    } else if (peekImplicitSemiColon(1)) {
+      // No newline allowed between `async` and argument list.
+      return false;
+    } else {
+      return peek(1, TokenType.OPEN_PAREN) || peek(1, TokenType.IDENTIFIER);
+    }
+  }
+
   private ParseTree completeAssignmentExpressionParseAtArrow(
       ParseTree leftOfArrow, Expression expressionIn) {
     if (leftOfArrow.type == ParseTreeType.CALL_EXPRESSION) {
-      // Could be:
-      //   ... async (args) => ...
-      // or
       //   ... someAssignmentExpression // implicit semicolon
       //   (args) =>
       return completeAssignmentExpressionParseAtArrow(leftOfArrow.asCallExpression(), expressionIn);
@@ -2909,10 +2921,6 @@ public class Parser {
       // () => { doSomething; };
       resetScannerAfter(operand);
       result = operand;
-    } else if (isAsyncId(operand)) {
-      // e.g. async () => { doSomething; };
-      resetScanner(operand);
-      result = parseAsyncArrowFunction(expressionIn);
     } else {
       reportError("'=>' unexpected");
       result = callExpression;
@@ -2924,8 +2932,20 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     features = features.require(Feature.ARROW_FUNCTIONS).require(Feature.ASYNC_FUNCTIONS);
     eatPredefinedString(ASYNC);
-    FormalParameterListTree arrowParameterList =
-        parseFormalParameterList(ParamContext.IMPLEMENTATION);
+    if (peekImplicitSemiColon()) {
+      reportError("No newline allowed between `async` and arrow function parameter list");
+    }
+    FormalParameterListTree arrowParameterList = null;
+    if (peek(TokenType.OPEN_PAREN)) {
+      // async (...) =>
+      arrowParameterList = parseFormalParameterList(ParamContext.IMPLEMENTATION);
+    } else {
+      // async arg =>
+      final IdentifierExpressionTree singleParameter = parseIdentifierExpression();
+      arrowParameterList =
+          new FormalParameterListTree(
+              singleParameter.location, ImmutableList.<ParseTree>of(singleParameter));
+    }
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed before '=>'");
     }
@@ -2954,17 +2974,6 @@ public class Parser {
 
   private FormalParameterListTree newEmptyFormalParameterList(SourceRange location) {
     return new FormalParameterListTree(location, ImmutableList.<ParseTree>of());
-  }
-
-  /**
-   * Does {@code parseTree} represent the 'async' keyword?
-   */
-  private boolean isAsyncId(ParseTree parseTree) {
-    if (parseTree.type == ParseTreeType.IDENTIFIER_EXPRESSION) {
-      return parseTree.asIdentifierExpression().identifierToken.value.equals(ASYNC);
-    } else {
-      return false;
-    }
   }
 
   /**

@@ -2977,7 +2977,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testAsyncArrowFunction() {
-    String arrowFunctionSource = "f = async (x) => x + 1";
+    doAsyncArrowFunctionTest("f = async (x) => x + 1");
+    doAsyncArrowFunctionTest("f = async x => x + 1");
+  }
+
+  private void doAsyncArrowFunctionTest(String arrowFunctionSource) {
     expectFeatures(Feature.ASYNC_FUNCTIONS, Feature.ARROW_FUNCTIONS);
 
     for (LanguageMode m : LanguageMode.values()) {
@@ -3002,10 +3006,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT8;
     strictMode = STRICT;
     parseError("f = not_async (x) => x + 1;", "'=>' unexpected");
-
-    expectFeatures(Feature.ARROW_FUNCTIONS);
-    // async requires parens
-    parseError("f = async x => x + 1;", SEMICOLON_EXPECTED);
   }
 
   public void testAsyncMethod() {
