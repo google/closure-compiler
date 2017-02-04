@@ -549,6 +549,22 @@ public final class NormalizeTest extends Es6CompilerTestCase {
             "}"));
   }
 
+  public void testDeclInCatchBlock() {
+    testEs6(
+        LINE_JOINER.join(
+            "var x;",
+            "try {",
+            "} catch (e) {",
+            "  let x;",
+            "}"),
+        LINE_JOINER.join(
+            "var x;",
+            "try {",
+            "} catch (e) {",
+            "  let x$jscomp$1",
+            "}"));
+  }
+
   public void testIssue() {
     super.allowExternsChanges(true);
     test("var a,b,c; var a,b", "a(), b()", "a(), b()", null, null);

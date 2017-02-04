@@ -144,15 +144,6 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         break;
       }
 
-      case CATCH: {
-        Renamer renamer = nameStack.peek().createForChildScope(false);
-
-        String name = n.getFirstChild().getString();
-        renamer.addDeclaredName(name, false);
-
-        nameStack.push(renamer);
-        break;
-      }
       default:
         break;
     }
@@ -189,10 +180,6 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         // visit of PARAM_LIST, but remove it when when we exit the function above.
         break;
 
-      case CATCH:
-        // Remove catch except name from the stack of names.
-        nameStack.pop();
-        break;
       default:
         break;
     }
@@ -214,29 +201,33 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
   /**
    * Traverses the current scope and collects declared names.  Does not
-   * decent into functions or add CATCH exceptions.
+   * descend into functions or add CATCH exceptions.
    * @param recursive Whether this is being called recursively.
    */
   private void findDeclaredNames(Node n, Renamer renamer, boolean recursive) {
     Node parent = n.getParent();
 
-    // Do a shallow traversal, so don't traverse into function declarations,
-    // except for the name of the function itself.
-    if (!recursive
-        || !parent.isFunction()
-        || n == parent.getFirstChild()) {
-      if (NodeUtil.isVarDeclaration(n)) {
-        renamer.addDeclaredName(n.getString(), true);
-      } else if (NodeUtil.isBlockScopedDeclaration(n) && !parent.isCatch()) {
-        renamer.addDeclaredName(n.getString(), false);
-      } else if (NodeUtil.isFunctionDeclaration(n)) {
-        Node nameNode = n.getFirstChild();
-        renamer.addDeclaredName(nameNode.getString(), true);
-      }
+    // Don't traverse into the block containing the CATCH node.
+    if (recursive && n.isNormalBlock() && parent.isTry() && n == parent.getSecondChild()) {
+      return;
+    }
 
-      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-        findDeclaredNames(c, renamer, true);
-      }
+    // Don't traverse into function declarations, except for the name of the function itself.
+    if (recursive && parent.isFunction() && n != parent.getFirstChild()) {
+      return;
+    }
+
+    if (NodeUtil.isVarDeclaration(n)) {
+      renamer.addDeclaredName(n.getString(), true);
+    } else if (NodeUtil.isBlockScopedDeclaration(n)) {
+      renamer.addDeclaredName(n.getString(), false);
+    } else if (NodeUtil.isFunctionDeclaration(n)) {
+      Node nameNode = n.getFirstChild();
+      renamer.addDeclaredName(nameNode.getString(), true);
+    }
+
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      findDeclaredNames(c, renamer, true);
     }
   }
 
