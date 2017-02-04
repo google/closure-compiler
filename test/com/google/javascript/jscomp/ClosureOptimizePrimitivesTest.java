@@ -25,8 +25,10 @@ import static com.google.javascript.jscomp.ClosureOptimizePrimitives.DUPLICATE_S
  */
 public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
+  private boolean propertyRenamingEnabled = true;
+
   @Override public CompilerPass getProcessor(final Compiler compiler) {
-    return new ClosureOptimizePrimitives(compiler);
+    return new ClosureOptimizePrimitives(compiler, propertyRenamingEnabled);
   }
 
   public void testObjectCreateNonConstKey() {
@@ -93,5 +95,16 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
     test("goog$dom$createDom(goog$dom$TagName$A)", "goog$dom$createDom('A')");
     test("goog.dom.createDom(goog.dom.TagName.A + 'REA')", "goog.dom.createDom('A' + 'REA')");
     test("goog.dom.TagName.function__new_goog_dom_TagName__string___undefined$DIV", "'DIV'");
+  }
+
+  public void testPropertyReflectionSimple() {
+    propertyRenamingEnabled = false;
+    test("goog.reflect.objectProperty('push', [])", "'push'");
+    test("JSCompiler_renameProperty('push', [])", "'push'");
+  }
+
+  public void testPropertyReflectionAdvanced() {
+    test("goog.reflect.objectProperty('push', [])", "JSCompiler_renameProperty('push', [])");
+    testSame("JSCompiler_renameProperty('push', [])");
   }
 }

@@ -45,6 +45,9 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   /** Reference to the JS compiler */
   private final AbstractCompiler compiler;
 
+  /** Whether property renaming is enabled */
+  private final boolean propertyRenamingEnabled;
+
   /**
    * Identifies all calls to closure primitive functions
    */
@@ -70,11 +73,10 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     }
   }
 
-  /**
-   * @param compiler The AbstractCompiler
-   */
-  ClosureOptimizePrimitives(AbstractCompiler compiler) {
+  /** @param compiler The AbstractCompiler */
+  ClosureOptimizePrimitives(AbstractCompiler compiler, boolean propertyRenamingEnabled) {
     this.compiler = compiler;
+    this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
   @Override
@@ -117,6 +119,18 @@ final class ClosureOptimizePrimitives implements CompilerPass {
    * do so.
    */
   private void processRenamePropertyCall(Node callNode) {
+    // Property reflection calls are only needed if
+    // property renaming is enabled. Replace the call with the
+    // first argument in all other cases.
+    if (!propertyRenamingEnabled) {
+      Node propName = NodeUtil.getArgumentForCallOrNew(callNode, 0);
+      if (propName != null) {
+        callNode.replaceWith(propName.detach());
+        compiler.reportCodeChange();
+        return;
+      }
+    }
+
     Node nameNode = callNode.getFirstChild();
     if (nameNode.matchesQualifiedName(NodeUtil.JSC_PROPERTY_NAME_FN)) {
       return;

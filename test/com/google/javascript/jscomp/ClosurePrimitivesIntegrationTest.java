@@ -47,6 +47,8 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
       "/** @param {*} input */ Console.prototype.log = function(input) {};",
       "/** @type {Console} */ var console;");
 
+  private boolean useSimpleMode = false;
+
   public void testPrototypePropRename() {
     test(createCompilerOptions(),
         new String[] {
@@ -74,6 +76,38 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
     );
   }
 
+  public void testPrototypePropRenameSimple() {
+    useSimpleMode = true;
+    test(
+        createCompilerOptions(),
+        new String[] {
+          EXTERNS,
+          RENAME_FN_DEFINITION,
+          LINE_JOINER.join(
+              "/** @constructor */ function Foo() {}",
+              "window['Foo'] = Foo;",
+              "Foo.prototype.log = function(input) { console.log(input) };",
+              "Foo.prototype['log'] = Foo.prototype.log;",
+              "var foo = new Foo;",
+              "console.log(goog.reflect.objectProperty('log', foo));",
+              "foo.log('foobar');")
+        },
+        new String[] {
+          "",
+          LINE_JOINER.join(
+              "var goog= { reflect: {} };",
+              "goog.reflect.objectProperty = function(a,b) { return a; };"),
+          LINE_JOINER.join(
+              "function Foo() {}",
+              "window.Foo = Foo;",
+              "Foo.prototype.log = function(a) { console.log(a); };",
+              "Foo.prototype.log = Foo.prototype.log;",
+              "var foo = new Foo;",
+              "console.log('log');",
+              "foo.log('foobar');")
+        });
+  }
+
   public void testStaticPropRename() {
     test(createCompilerOptions(),
         LINE_JOINER.join(
@@ -88,11 +122,35 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
             "b.a('foobar');"));
   }
 
+  public void testStaticPropRenameSimple() {
+    useSimpleMode = true;
+    test(
+        createCompilerOptions(),
+        LINE_JOINER.join(
+            RENAME_FN_DEFINITION,
+            "/** @const */ var foo = {};",
+            "foo.log = function(input) { alert(input) };",
+            "alert(goog.reflect.objectProperty('log', foo));",
+            "foo.log('foobar');"),
+        LINE_JOINER.join(
+            "var goog= { reflect: {} };",
+            "goog.reflect.objectProperty = function(a,b) { return a; };",
+            "var foo = {",
+            "  log: function(a) { alert(a) }",
+            "};",
+            "alert('log');",
+            "foo.log('foobar');"));
+  }
+
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    if (useSimpleMode) {
+      CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    } else {
+      CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+      CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    }
     options.setCodingConvention(new ClosureCodingConvention());
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
 
