@@ -27,20 +27,13 @@
 
 
 /**
- * @enum {string}
+ * @typedef {string}
  * @see https://w3c.github.io/webappsec-referrer-policy/#enumdef-referrerpolicy
+ * Possible values: '', 'no-referrer', 'no-referrer-when-downgrade',
+ *  'same-origin', 'origin', 'strict-origin', 'origin-when-cross-origin',
+ *  'strict-origin-when-cross-origin', 'unsafe-url'
  */
-var ReferrerPolicy = {
-  NONE: '',
-  NO_REFERRER: 'no-referrer',
-  NO_REFERRER_WHEN_DOWNGRADE: 'no-referrer-when-downgrade',
-  SAMEO_RIGIN: 'same-origin',
-  ORIGIN: 'origin',
-  STRICT_ORIGIN: 'strict-origin',
-  ORIGIN_WHEN_CROSS_ORIGIN: 'origin-when-cross-origin',
-  STRICT_ORIGIN_WHEN_CROSS_ORIGIN: 'strict-origin-when-cross-origin',
-  UNSAFE_URL: 'unsafe-url'
-};
+var ReferrerPolicy;
 
 
 /**
@@ -253,97 +246,61 @@ RequestInit.prototype.cache;
 RequestInit.prototype.redirect;
 
 /** @type {(undefined|string)} */
-RequestInit.prototype.intergrity;
+RequestInit.prototype.integrity;
 
 /** @type {(undefined|null)} */
 RequestInit.prototype.window;
 
-
 /**
- * @enum {string}
+ * @typedef {string}
  * @see https://fetch.spec.whatwg.org/#requesttype
+ *  Possible values: '', 'audio', 'font', 'image', 'script', 'style',
+ *  'track', 'video'
  */
-var FetchRequestType = {
-  NONE: '',
-  AUDIO: 'audio',
-  FONT: 'font',
-  IMAGE: 'image',
-  SCRIPT: 'script',
-  STYLE: 'style',
-  TRACK: 'track',
-  VIDEO: 'video'
-};
+var FetchRequestType;
 
 
 /**
- * @enum {string}
+ * @typedef {string}
  * @see https://fetch.spec.whatwg.org/#requestdestination
+ * Possible values: '', 'document', 'embed', 'font', 'image', 'manifest',
+ *  'media', 'object', 'report', 'script', 'serviceworker', 'sharedworker',
+ *  'style', 'worker', 'xslt'
  */
-var RequestDestination = {
-  NONE: '',
-  DOCUMENT: 'document',
-  EMBED: 'embed',
-  FONT: 'font',
-  IMAGE: 'image',
-  MANIFEST: 'manifest',
-  MEDIA: 'media',
-  OBJECT: 'object',
-  REPORT: 'report',
-  SCRIPT: 'script',
-  SERVICEWORKER: 'serviceworker',
-  SHAREDWORKER: 'sharedworker',
-  STYLE: 'style',
-  WORKER: 'worker',
-  XSLT: 'xslt'
-};
+var RequestDestination;
 
 
 /**
- * @enum {string}
+ * @typedef {string}
  * @see https://fetch.spec.whatwg.org/#requestmode
+ * Possible values: 'navigate', 'same-origin', 'no-cors', 'cors'
  */
-var RequestMode = {
-  NAVIGATE: 'navigate',
-  SAME_ORIGIN: 'same-origin',
-  NO_CORS: 'no-cors',
-  CORS: 'cors'
-};
+var RequestMode ;
 
 
 /**
- * @enum {string}
+ * @typedef {string}
  * @see https://fetch.spec.whatwg.org/#requestcredentials
+ * Possible values: 'omit', 'same-origin', 'include'
  */
-var RequestCredentials = {
-  OMIT: 'omit',
-  SAME_ORIGIN: 'same-origin',
-  INCLUDE: 'include'
-};
+var RequestCredentials;
 
 
 /**
- * @enum {string}
+ * @typedef {string}
  * @see https://fetch.spec.whatwg.org/#requestcache
+ *  Possible values: 'default', 'no-store', 'reload', 'no-cache', 'force-cache',
+ * 'only-if-cached'
  */
-var RequestCache = {
-  DEFAULT: 'default',
-  NO_STORE: 'no-store',
-  RELOAD: 'reload',
-  NO_CACHE: 'no-cache',
-  FORCE_CACHE: 'force-cache',
-  ONLY_IF_CACHED: 'only-if-cached'
-};
+var RequestCache;
 
 
 /**
- * @enum {string}
+ * @typedef {string}
  * @see https://fetch.spec.whatwg.org/#requestredirect
+ * Possible values: 'follow', 'error', 'manual'
  */
-var RequestRedirect = {
-  FOLLOW: 'follow',
-  ERROR: 'error',
-  MANUAL: 'manual'
-};
+var RequestRedirect;
 
 
 /**
@@ -431,18 +388,12 @@ ResponseInit.prototype.headers;
 
 
 /**
- * @enum {string}
+ * @typedef {string}
  * @see https://fetch.spec.whatwg.org/#responsetype
+ * Possible values: 'basic', 'cors', 'default', 'error', 'opaque',
+ *  'opaqueredirect'
  */
-var ResponseType = {
-  BASIC: 'basic',
-  CORS: 'cors',
-  DEFAULT: 'default',
-  ERROR: 'error',
-  OPAQUE: 'opaque',
-  OPAQUEREDIRECT: 'opaqueredirect'
-};
-
+var ResponseType;
 
 /**
  * @param {!RequestInfo} input
