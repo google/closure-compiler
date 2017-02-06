@@ -321,7 +321,7 @@ class VarCheck extends AbstractPostOrderCallback implements
           default:
             // Don't warn for simple var assignments "/** @const */ var foo = bar;"
             // They are used to infer the types of namespace aliases.
-            if (!parent.isName() || parent.getParent() == null
+            if (!parent.isName()
                 || !NodeUtil.isNameDeclaration(parent.getParent())) {
               t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
             }

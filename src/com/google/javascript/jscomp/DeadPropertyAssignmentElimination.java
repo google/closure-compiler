@@ -545,8 +545,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       }
 
       Node objectLit = keyNode.getParent();
-      return objectLit.getParent() != null
-          && NodeUtil.isObjectDefinePropertiesDefinition(objectLit.getParent())
+      return NodeUtil.isObjectDefinePropertiesDefinition(objectLit.getParent())
           && objectLit.getParent().getLastChild() == objectLit
           && !keyNode.getFirstChild().isObjectLit();
     }

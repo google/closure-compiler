@@ -473,11 +473,9 @@ class OptimizeParameters
    * @param value The initial value of the variable.
    */
   private void addVariableToFunction(Node function, Node varName, Node value) {
-    Preconditions.checkArgument(function.isFunction(),
-        "Node must be a function.");
+    Preconditions.checkArgument(function.isFunction(), "Expected function, got: %s", function);
 
-    Node block = function.getLastChild();
-    Preconditions.checkArgument(block.isNormalBlock(), "Node must be a block.");
+    Node block = NodeUtil.getFunctionBody(function);
 
     Preconditions.checkState(value.getParent() == null);
     Node stmt;

@@ -310,9 +310,9 @@ class GlobalNamespace
         case MEMBER_FUNCTION_DEF:
           // This may be a key in an object literal declaration.
           name = null;
-          if (parent != null && parent.isObjectLit()) {
+          if (parent.isObjectLit()) {
             name = getNameForObjLitKey(n);
-          } else if (parent != null && parent.isClassMembers()) {
+          } else if (parent.isClassMembers()) {
             name = getNameForClassMembers(n);
           }
           if (name == null) {
@@ -336,47 +336,45 @@ class GlobalNamespace
           break;
         case NAME:
           // This may be a variable get or set.
-          if (parent != null) {
-            switch (parent.getToken()) {
-              case VAR:
-              case LET:
-              case CONST:
+          switch (parent.getToken()) {
+            case VAR:
+            case LET:
+            case CONST:
+              isSet = true;
+              Node rvalue = n.getFirstChild();
+              type = (rvalue == null) ? Name.Type.OTHER : getValueType(rvalue);
+              break;
+            case ASSIGN:
+              if (parent.getFirstChild() == n) {
                 isSet = true;
-                Node rvalue = n.getFirstChild();
-                type = rvalue == null ? Name.Type.OTHER : getValueType(rvalue);
-                break;
-              case ASSIGN:
-                if (parent.getFirstChild() == n) {
-                  isSet = true;
-                  type = getValueType(n.getNext());
-                }
-                break;
-              case GETPROP:
+                type = getValueType(n.getNext());
+              }
+              break;
+            case GETPROP:
+              return;
+            case FUNCTION:
+              Node grandparent = parent.getParent();
+              if (grandparent == null || NodeUtil.isFunctionExpression(parent)) {
                 return;
-              case FUNCTION:
-                Node grandparent = parent.getParent();
-                if (grandparent == null || NodeUtil.isFunctionExpression(parent)) {
-                  return;
-                }
-                isSet = true;
-                type = Name.Type.FUNCTION;
-                break;
-              case CATCH:
-              case INC:
-              case DEC:
+              }
+              isSet = true;
+              type = Name.Type.FUNCTION;
+              break;
+            case CATCH:
+            case INC:
+            case DEC:
+              isSet = true;
+              type = Name.Type.OTHER;
+              break;
+            case CLASS:
+              isSet = true;
+              type = Name.Type.CLASS;
+              break;
+            default:
+              if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
                 isSet = true;
                 type = Name.Type.OTHER;
-                break;
-              case CLASS:
-                isSet = true;
-                type = Name.Type.CLASS;
-                break;
-              default:
-                if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
-                  isSet = true;
-                  type = Name.Type.OTHER;
-                }
-            }
+              }
           }
           name = n.getString();
           break;
@@ -1115,7 +1113,7 @@ class GlobalNamespace
     boolean isSimpleStubDeclaration() {
       if (getRefs().size() == 1) {
         Ref ref = refs.get(0);
-        if (ref.node.getParent() != null && ref.node.getParent().isExprResult()) {
+        if (ref.node.getParent().isExprResult()) {
           return true;
         }
       }

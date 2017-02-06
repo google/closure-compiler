@@ -478,27 +478,25 @@ public final class CodePrinter {
     boolean breakAfterBlockFor(Node n,  boolean isStatementContext) {
       Preconditions.checkState(n.isNormalBlock(), n);
       Node parent = n.getParent();
-      if (parent != null) {
-        Token type = parent.getToken();
-        switch (type) {
-          case DO:
-            // Don't break before 'while' in DO-WHILE statements.
-            return false;
-          case FUNCTION:
-            // FUNCTIONs are handled separately, don't break here.
-            return false;
-          case TRY:
-            // Don't break before catch
-            return n != parent.getFirstChild();
-          case CATCH:
-            // Don't break before finally
-            return !NodeUtil.hasFinally(getTryForCatch(parent));
-          case IF:
-            // Don't break before else
-            return n == parent.getLastChild();
-          default:
-            break;
-        }
+      Token type = parent.getToken();
+      switch (type) {
+        case DO:
+          // Don't break before 'while' in DO-WHILE statements.
+          return false;
+        case FUNCTION:
+          // FUNCTIONs are handled separately, don't break here.
+          return false;
+        case TRY:
+          // Don't break before catch
+          return n != parent.getFirstChild();
+        case CATCH:
+          // Don't break before finally
+          return !NodeUtil.hasFinally(getTryForCatch(parent));
+        case IF:
+          // Don't break before else
+          return n == parent.getLastChild();
+        default:
+          break;
       }
       return true;
     }

@@ -879,9 +879,7 @@ public class NodeTraversal {
   /** Determines whether the traversal is currently in the scope of the block of a function. */
   public boolean inFunctionBlockScope() {
     Node scopeRoot = getScopeRoot();
-    return scopeRoot.isNormalBlock()
-        && scopeRoot.getParent() != null
-        && scopeRoot.getParent().isFunction();
+    return scopeRoot.isNormalBlock() && scopeRoot.getParent().isFunction();
   }
 
   /**

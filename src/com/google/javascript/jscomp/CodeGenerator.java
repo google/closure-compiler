@@ -631,7 +631,6 @@ public class CodeGenerator {
               type == Token.SCRIPT
                   || (type == Token.BLOCK
                       && !preserveBlock
-                      && n.getParent() != null
                       && n.getParent().isScript());
           for (Node c = first; c != null; c = c.getNext()) {
             add(c, Context.STATEMENT);

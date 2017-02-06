@@ -498,7 +498,6 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     Node parent = node.getParent();
     // Special case, don't add a block of empty CATCH block to the graph.
     if (node.isNormalBlock()
-        && parent != null
         && parent.isTry()
         && NodeUtil.getCatchBlock(parent) == node
         && !NodeUtil.hasCatchHandler(node)) {

@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -393,11 +392,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
      */
     private String getPrototypePropertyNameFromRValue(Node rValue) {
       Node lValue = NodeUtil.getBestLValue(rValue);
-      if (lValue == null ||
-          lValue.getParent() == null ||
-          lValue.getGrandparent() == null ||
-          !((NodeUtil.isObjectLitKey(lValue) && !lValue.isQuotedString()) ||
-            NodeUtil.isExprAssign(lValue.getGrandparent()))) {
+      if (lValue == null
+          || !((NodeUtil.isObjectLitKey(lValue) && !lValue.isQuotedString())
+              || NodeUtil.isExprAssign(lValue.getGrandparent()))) {
         return null;
       }
 

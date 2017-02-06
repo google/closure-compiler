@@ -836,7 +836,7 @@ class RemoveUnusedVars
           toRemove.getFirstChild().setString("");
         }
         // Don't remove bleeding functions.
-      } else if (parent != null && parent.isForIn()) {
+      } else if (parent.isForIn()) {
         // foreach iterations have 3 children. Leave them alone.
       } else if (toRemove.isVar() &&
           nameNode.hasChildren() &&
