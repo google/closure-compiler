@@ -180,6 +180,34 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "goog.provide('a.b.c');   /** @private @const {*} */ a.b.c.helper_;");
   }
 
+  public void testOverrideAnnotationCountsAsDeclaration() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.provide('x.y.z.Bar');",
+            "",
+            "goog.require('a.b.c.Foo');",
+            "",
+            "/** @constructor @extends {a.b.c.Foo} */",
+            "x.y.z.Bar = function() {};",
+            "",
+            "/** @override */",
+            "x.y.z.Bar.prototype.method = function(a, b, c) {};"));
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const {Foo} = goog.require('a.b.c');",
+            "",
+            "/** @constructor @extends {Foo} */",
+            "const Bar = class {",
+            "   /** @override */",
+            "   method(a, b, c) {}",
+            "}",
+            "exports.Bar = Bar;"));
+
+  }
+
   public void testConstJsdocPropagationForNames_optional() {
     test(
         LINE_JOINER.join(
