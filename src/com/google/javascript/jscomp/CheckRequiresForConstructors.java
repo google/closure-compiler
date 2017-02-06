@@ -263,63 +263,25 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
     // For every usage, check that there is a goog.require, and warn if not.
     for (Map.Entry<String, Node> entry : usages.entrySet()) {
       String namespace = entry.getKey();
-      if (namespace.endsWith(".call") || namespace.endsWith(".apply")) {
-        namespace = namespace.substring(0, namespace.lastIndexOf('.'));
-      }
-      if (namespace.startsWith("goog.global.")
-          // Most functions in base.js are goog.someName, but
-          // goog.module.{get,declareLegacyNamespace} are the exceptions, so just check for them
-          // explicitly.
-          || namespace.equals("goog.module.get")
-          || namespace.equals("goog.module.declareLegacyNamespace")) {
-        continue;
-      }
-
       Node node = entry.getValue();
-      JSDocInfo info = NodeUtil.getBestJSDocInfo(NodeUtil.getEnclosingStatement(node));
-      if (info != null && info.getSuppressions().contains("missingRequire")) {
-        continue;
+      boolean isMissing = isMissingRequire(namespace, node);
+      if (isMissing && (namespace.endsWith(".call") || namespace.endsWith(".apply"))) {
+        // assume that the user is calling the corresponding built in function and only look for
+        // imports 'above' it.
+        String namespaceMinusApply = namespace.substring(0, namespace.lastIndexOf('.'));
+        isMissing = isMissingRequire(namespaceMinusApply, node);
       }
-
-      List<String> classNames = getClassNames(namespace);
-      // The parent namespace of the outermost class is also checked, so that classes
-      // used by goog.module are still checked properly. This may cause missing requires
-      // to be missed but in practice that should happen rarely.
-      String nonNullClassName = Iterables.getFirst(classNames, namespace);
-      String parentNamespace = null;
-      int separatorIndex = nonNullClassName.lastIndexOf('.');
-      if (separatorIndex > 0) {
-        parentNamespace = nonNullClassName.substring(0, separatorIndex);
-      }
-      if ("goog".equals(parentNamespace)
-          && !isClassName(nonNullClassName.substring(separatorIndex + 1))) {
-        // This is probably something provided in Closure's base.js so it doesn't need
-        // to be required.
-        continue;
-      }
-
-      boolean providedByConstructors =
-          providedNames.contains(namespace) || providedNames.contains(parentNamespace);
-      boolean providedByRequires =
-          requires.containsKey(namespace) || requires.containsKey(parentNamespace);
-
-      for (String className : classNames) {
-        if (providedNames.contains(className)) {
-          providedByConstructors = true;
-        }
-        if (requires.containsKey(className)) {
-          providedByRequires = true;
-        }
-      }
-
-      if (!providedByConstructors && !providedByRequires && !namespaces.contains(namespace)) {
+      if (isMissing && !namespaces.contains(namespace)) {
         // TODO(mknichel): If the symbol is not explicitly provided, find the next best
         // symbol from the provides in the same file.
         String rootName = Splitter.on('.').split(namespace).iterator().next();
         if (mode != Mode.SINGLE_FILE || closurizedNamespaces.contains(rootName)) {
           if (node.isCall()) {
-            String defaultName = parentNamespace != null ? parentNamespace : namespace;
-            String nameToReport = Iterables.getFirst(classNames, defaultName);
+            String defaultName =
+                namespace.lastIndexOf('.') > 0
+                    ? namespace.substring(0, namespace.lastIndexOf('.'))
+                    : namespace;
+            String nameToReport = Iterables.getFirst(getClassNames(namespace), defaultName);
             compiler.report(t.makeError(node, MISSING_REQUIRE_STRICT_WARNING, nameToReport));
           } else if (node.getParent().isName()
               && node.getParent().getGrandparent() == googScopeBlock) {
@@ -345,6 +307,57 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
         reportExtraRequireWarning(call, require);
       }
     }
+  }
+
+  /** Returns true if the given namespace is not satisfied by any {@code goog.provide}. */
+  private boolean isMissingRequire(String namespace, Node node) {
+    if (namespace.startsWith("goog.global.")
+        // Most functions in base.js are goog.someName, but
+        // goog.module.{get,declareLegacyNamespace} are the exceptions, so just check for them
+        // explicitly.
+        || namespace.equals("goog.module.get")
+        || namespace.equals("goog.module.declareLegacyNamespace")) {
+      return false;
+    }
+
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(NodeUtil.getEnclosingStatement(node));
+    if (info != null && info.getSuppressions().contains("missingRequire")) {
+      return false;
+    }
+
+    List<String> classNames = getClassNames(namespace);
+    // The parent namespace of the outermost class is also checked, so that classes
+    // used by goog.module are still checked properly. This may cause missing requires
+    // to be missed but in practice that should happen rarely.
+    String nonNullClassName = Iterables.getFirst(classNames, namespace);
+    String parentNamespace = null;
+    int separatorIndex = nonNullClassName.lastIndexOf('.');
+    if (separatorIndex > 0) {
+      parentNamespace = nonNullClassName.substring(0, separatorIndex);
+    }
+    if ("goog".equals(parentNamespace)
+        && !isClassName(nonNullClassName.substring(separatorIndex + 1))) {
+      // This is probably something provided in Closure's base.js so it doesn't need
+      // to be required.
+      return false;
+    }
+
+    boolean providedByConstructors =
+        providedNames.contains(namespace) || providedNames.contains(parentNamespace);
+    boolean providedByRequires =
+        requires.containsKey(namespace) || requires.containsKey(parentNamespace);
+
+    for (String className : classNames) {
+      if (providedNames.contains(className)) {
+        providedByConstructors = true;
+        break;
+      }
+      if (requires.containsKey(className)) {
+        providedByRequires = true;
+        break;
+      }
+    }
+    return !providedByRequires && !providedByConstructors;
   }
 
   private void reportExtraRequireWarning(Node call, String require) {

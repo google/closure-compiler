@@ -310,24 +310,26 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   public void testDotCall() {
     String js = "foo.bar.baz.call();";
-    testMissingRequireStrict(js, "missing require: 'foo.bar'");
+    testMissingRequireStrict(js, "missing require: 'foo.bar.baz'");
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
     test(externs, js, js, null, null, null);
 
+    testSame("goog.require('foo.bar.baz.call'); " + js);
     testSame("goog.require('foo.bar.baz'); " + js);
     testSame("goog.require('foo.bar'); " + js);
   }
 
   public void testDotApply() {
-    String js = "foo.bar.baz.call();";
-    testMissingRequireStrict(js, "missing require: 'foo.bar'");
+    String js = "foo.bar.baz.apply();";
+    testMissingRequireStrict(js, "missing require: 'foo.bar.baz'");
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
     test(externs, js, js, null, null, null);
 
+    testSame("goog.require('foo.bar.baz.apply'); " + js);
     testSame("goog.require('foo.bar.baz'); " + js);
     testSame("goog.require('foo.bar'); " + js);
   }
