@@ -2562,6 +2562,21 @@ angular.$templateCache;
  */
 angular.$timeout;
 
+/**
+ * Augment the angular.$timeout type definition by reopening the type via an
+ * artificial angular.$timeout instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$timeout}
+ */
+angular.$timeout_;
+
+/**
+ * @type {function(angular.$q.Promise=):boolean}
+ */
+angular.$timeout_.cancel = function(promise) {};
 
 /******************************************************************************
  * $transclude Service
