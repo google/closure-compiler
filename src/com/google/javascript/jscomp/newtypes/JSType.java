@@ -29,6 +29,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -467,8 +468,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return false;
   }
 
+  @Override
   public boolean isEnumElement() {
     return getMask() == ENUM_MASK && getEnums().size() == 1;
+  }
+
+  @Override
+  public boolean isEnumObject() {
+    throw new UnsupportedOperationException();
   }
 
   public boolean isUnion() {
@@ -491,11 +498,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   // Only makes sense for a JSType that represents a single enum
-  public JSType getEnumeratedType() {
+  @Override
+  public JSType getEnumeratedTypeOfEnumElement() {
     return isEnumElement() ?
         Iterables.getOnlyElement(getEnums()).getEnumeratedType() : null;
   }
 
+  @Override
   public JSType autobox() {
     if (isTop() || isUnknown()) {
       return this;
@@ -1824,11 +1833,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isPrototypeObject() {
-    // TODO(aravindpg): this is just a complete stub to ensure that we never enter a codepath
-    // that depends on us being a prototype object.
+    // TODO(dimvar): DisambiguateProperties needs a proper implementation here, not a stub.
+    // Either add the 'constructor' property to prototype objects, or change DisambiguateProperties
+    // to not require this method.
     return false;
   }
 
+  @Override
   public boolean isUnknownObject() {
     return isSingletonObj() && getNominalTypeIfSingletonObj().isBuiltinObject();
   }
@@ -1896,6 +1907,78 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     }
     return this;
   }
+
+  @Override
+  public boolean isBoxableScalar() {
+    return isNumber() || isString() || isBoolean();
+  }
+
+  @Override
+  public final boolean isObjectType() {
+    return !isBottom() && !isUnknown() && isSubtypeOf(this.commonTypes.getTopObject());
+  }
+
+  @Override
+  public final boolean isGeneric() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Collection<ObjectTypeI> getAncestorInterfaces() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean isStructuralInterface() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean hasOwnProperty(String propertyName) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ObjectTypeI getRawType() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public final boolean isLegacyNamedType() {
+    return false;
+  }
+
+  @Override
+  public TypeI getLegacyResolvedType() {
+    throw new UnsupportedOperationException(
+        "NTI does not have NamedType. This method should never be called on NTI types.");
+  }
+
+  @Override
+  public TypeI getGreatestSubtypeWithProperty(String propName) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Collection<JSType> getDirectImplementors() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ObjectTypeI getPrototypeProperty() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ObjectTypeI getTopDefiningInterface(String propName) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public FunctionTypeI getOwnerFunction() {
+    throw new UnsupportedOperationException();
+  }
+
 }
 
 final class UnionType extends JSType {

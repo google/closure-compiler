@@ -959,8 +959,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * be returned.  {@code interfaceInstance} must be an ObjectType for the
    * instance of the interface.
    */
-  public Collection<FunctionType> getDirectImplementors(
-      ObjectType interfaceInstance) {
+  public Collection<FunctionType> getDirectImplementors(ObjectType interfaceInstance) {
     return interfaceToImplementors.get(interfaceInstance.getReferenceName());
   }
 
@@ -1059,8 +1058,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         String propName = n.getLastChild().getString();
         if (objectType.getConstructor() != null
             && objectType.getConstructor().isInterface()) {
-          objectType = FunctionType.getTopDefiningInterface(
-              objectType, propName);
+          objectType = objectType.getTopDefiningInterface(propName);
         } else {
           // classes
           while (objectType != null && !objectType.hasOwnProperty(propName)) {

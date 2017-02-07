@@ -2715,7 +2715,7 @@ final class NewTypeInference implements CompilerPass {
     }
     String pname = NodeUtil.getObjectLitKeyName(objLit.getFirstChild());
     JSType enumeratedType =
-        requiredType.getProp(new QualifiedName(pname)).getEnumeratedType();
+        requiredType.getProp(new QualifiedName(pname)).getEnumeratedTypeOfEnumElement();
     if (enumeratedType == null) {
       // enumeratedType is null only if there is some other type error
       return new EnvTypePair(inEnv, requiredType);
@@ -3820,7 +3820,7 @@ final class NewTypeInference implements CompilerPass {
     }
     String pname = NodeUtil.getObjectLitKeyName(objLit.getFirstChild());
     JSType enumeratedType =
-        requiredType.getProp(new QualifiedName(pname)).getEnumeratedType();
+        requiredType.getProp(new QualifiedName(pname)).getEnumeratedTypeOfEnumElement();
     if (enumeratedType == null) {
       return new EnvTypePair(outEnv, requiredType);
     }
@@ -4206,7 +4206,7 @@ final class NewTypeInference implements CompilerPass {
         obj, lvalue.type, null, lvalue.env);
     JSType lvalueType = pair.type;
     if (lvalueType.isEnumElement()) {
-      lvalueType = lvalueType.getEnumeratedType();
+      lvalueType = lvalueType.getEnumeratedTypeOfEnumElement();
     }
     if (!lvalueType.isSubtypeOf(TOP_OBJECT)) {
       warnings.add(JSError.make(obj, ADDING_PROPERTY_TO_NON_OBJECT,

@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino;
 
+import java.util.Collection;
+
 /**
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
@@ -75,7 +77,13 @@ public interface ObjectTypeI extends TypeI {
   // true for "classy" objects only?
   boolean isInstanceType();
 
+  boolean isGeneric();
+
+  ObjectTypeI getRawType();
+
   boolean hasProperty(String propertyName);
+
+  boolean hasOwnProperty(String propertyName);
 
   Iterable<String> getOwnPropertyNames();
 
@@ -89,4 +97,24 @@ public interface ObjectTypeI extends TypeI {
    * this method returns a Foo in OTI and a Bar in NTI.
    */
   ObjectTypeI normalizeObjectForCheckAccessControls();
+
+  boolean isUnknownObject();
+
+  /**
+   * The old type checker uses NamedType to wrap types (e.g., defined by typedefs), and to represent
+   * unresolved forward declares. NTI does not do that; unresolved types just become unknown.
+   * This method always returns false for NTI types.
+   */
+  boolean isLegacyNamedType();
+
+  /**
+   * Only called on instances of NamedType. See also isLegacyNamedType.
+   */
+  TypeI getLegacyResolvedType();
+
+  Collection<? extends FunctionTypeI> getDirectImplementors();
+
+  ObjectTypeI getTopDefiningInterface(String propName);
+
+  FunctionTypeI getOwnerFunction();
 }

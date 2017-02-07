@@ -370,6 +370,11 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
+  @Override
+  public JSType getGreatestSubtypeWithProperty(String propName) {
+    return this.registry.getGreatestSubtypeWithProperty(this, propName);
+  }
+
   /**
    * Downcasts this to a UnionType, or returns null if this is not a UnionType.
    *
@@ -418,6 +423,17 @@ public abstract class JSType implements TypeI, Serializable {
     return toMaybeEnumElementType() != null;
   }
 
+  @Override
+  public final boolean isEnumElement() {
+    return isEnumElementType();
+  }
+
+  @Override
+  public final JSType getEnumeratedTypeOfEnumElement() {
+    EnumElementType e = toMaybeEnumElementType();
+    return e == null ? null : e.getPrimitiveType();
+  }
+
   /**
    * Downcasts this to an EnumElementType, or returns null if this is not an EnumElementType.
    */
@@ -427,6 +443,11 @@ public abstract class JSType implements TypeI, Serializable {
 
   public boolean isEnumType() {
     return toMaybeEnumType() != null;
+  }
+
+  @Override
+  public final boolean isEnumObject() {
+    return isEnumType();
   }
 
   /**
@@ -440,6 +461,10 @@ public abstract class JSType implements TypeI, Serializable {
     return toMaybeNamedType() != null;
   }
 
+  public boolean isLegacyNamedType() {
+    return isNamedType();
+  }
+
   public NamedType toMaybeNamedType() {
     return null;
   }
@@ -448,6 +473,7 @@ public abstract class JSType implements TypeI, Serializable {
     return toMaybeRecordType() != null;
   }
 
+  @Override
   public boolean isStructuralInterface() {
     return false;
   }
@@ -466,6 +492,10 @@ public abstract class JSType implements TypeI, Serializable {
 
   public final boolean isTemplatizedType() {
     return toMaybeTemplatizedType() != null;
+  }
+
+  public final boolean isGeneric() {
+    return isTemplatizedType();
   }
 
   /**
@@ -530,6 +560,11 @@ public abstract class JSType implements TypeI, Serializable {
    */
   public boolean isObject() {
     return false;
+  }
+
+  @Override
+  public final boolean isObjectType() {
+    return isObject();
   }
 
   /**
@@ -837,6 +872,11 @@ public abstract class JSType implements TypeI, Serializable {
     return null;
   }
 
+  @Override
+  public boolean isBoxableScalar() {
+    return autoboxesTo() != null;
+  }
+
   /**
    * Turn an object type to its corresponding scalar type.
    *
@@ -862,6 +902,7 @@ public abstract class JSType implements TypeI, Serializable {
    * Filters null/undefined and autoboxes the resulting type.
    * Never returns null.
    */
+  @Override
   public JSType autobox() {
     JSType restricted = restrictByNotNullOrUndefined();
     JSType autobox = restricted.autoboxesTo();
@@ -1308,7 +1349,7 @@ public abstract class JSType implements TypeI, Serializable {
   @Override
   public Iterable<JSType> getUnionMembers() {
     return isUnionType()
-        ? this.toMaybeUnionType().getAlternates()
+        ? this.toMaybeUnionType().getAlternatesWithoutStructuralTyping()
         : null;
   }
 

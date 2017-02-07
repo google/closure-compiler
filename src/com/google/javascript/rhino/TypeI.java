@@ -56,6 +56,10 @@ public interface TypeI {
 
   boolean isUnresolved();
 
+  boolean isBoxableScalar();
+
+  TypeI autobox();
+
   // Hacky method to abstract away corner case handling of the way OTI
   // represents unresolved types.
   boolean isUnresolvedOrResolvedUnknown();
@@ -68,6 +72,8 @@ public interface TypeI {
 
   boolean isInterface();
 
+  boolean isStructuralInterface();
+
   boolean isSubtypeOf(TypeI type);
 
   boolean containsArray();
@@ -75,6 +81,8 @@ public interface TypeI {
   boolean isUnknownType();
 
   boolean isSomeUnknownType();
+
+  boolean isObjectType();
 
   boolean isUnionType();
 
@@ -89,6 +97,8 @@ public interface TypeI {
   boolean isPrototypeObject();
 
   boolean isInstanceofObject();
+
+  boolean isEnumElement();
 
   ObjectTypeI autoboxAndGetObject();
 
@@ -121,4 +131,10 @@ public interface TypeI {
   TypeI meetWith(TypeI other);
 
   String getDisplayName();
+
+  TypeI getGreatestSubtypeWithProperty(String propName);
+
+  TypeI getEnumeratedTypeOfEnumElement();
+
+  boolean isEnumObject();
 }

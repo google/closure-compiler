@@ -2111,6 +2111,14 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     assertThat(getLastCompiler().getErrors()[0].toString()).contains("foobar");
   }
 
+  public void testDontCrashOnNonConstructorsWithPrototype() {
+    String externs = LINE_JOINER.join(
+        "function f(x) { return x; }",
+        "f.prototype.method = function() {};");
+
+    test(externs, "" , "", null, null);
+  }
+
   private void testSets(String js, String expected, String fieldTypes) {
     test(js, expected);
     assertEquals(

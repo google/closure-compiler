@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -81,4 +82,8 @@ public interface FunctionTypeI extends TypeI {
 
   /** Checks if a call to this function with the given list of arguments is valid. */
   boolean acceptsArguments(List<? extends TypeI> argumentTypes);
+
+  Collection<ObjectTypeI> getAncestorInterfaces();
+
+  ObjectTypeI getPrototypeProperty();
 }

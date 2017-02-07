@@ -48,9 +48,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -386,6 +388,11 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
+  @Override
+  public ObjectType getPrototypeProperty() {
+    return getPrototype();
+  }
+
   /**
    * Gets the {@code prototype} property of this function type. This is
    * equivalent to {@code (ObjectType) getPropertyType("prototype")}.
@@ -577,6 +584,17 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         addRelatedInterfaces(interfaceType, set);
       }
     }
+  }
+
+  @Override
+  public Collection<ObjectTypeI> getAncestorInterfaces() {
+    Set<ObjectTypeI> result = new HashSet<>();
+    if (isConstructor()) {
+      result.addAll((Collection<? extends ObjectTypeI>) getImplementedInterfaces());
+    } else {
+      result.addAll((Collection<? extends ObjectTypeI>) getExtendedInterfaces());
+    }
+    return result;
   }
 
   /** Returns interfaces implemented directly by a class or its superclass. */
@@ -913,24 +931,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /**
-   * Given an interface and a property, finds the top-most super interface
-   * that has the property defined (including this interface).
-   */
-  public static ObjectType getTopDefiningInterface(ObjectType type,
-      String propertyName) {
-    ObjectType foundType = null;
-    if (type.hasProperty(propertyName)) {
-      foundType = type;
-    }
-    for (ObjectType interfaceType : type.getCtorExtendedInterfaces()) {
-      if (interfaceType.hasProperty(propertyName)) {
-        foundType = getTopDefiningInterface(interfaceType, propertyName);
-      }
-    }
-    return foundType;
-  }
-
-  /**
    * Given a constructor or an interface type and a property, finds the
    * top-most superclass that has the property defined (including this
    * constructor).
@@ -941,7 +941,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     FunctionType ctor = this;
 
     if (isInterface()) {
-      return getTopDefiningInterface(getInstanceType(), propertyName);
+      return getInstanceType().getTopDefiningInterface(propertyName);
     }
 
     ObjectType topInstanceType = null;

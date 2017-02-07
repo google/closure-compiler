@@ -51,6 +51,7 @@ import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -248,6 +249,17 @@ public abstract class ObjectType
   }
 
   @Override
+  public boolean isUnknownObject() {
+    return !hasReferenceName();
+  }
+
+  @Override
+  public ObjectType getRawType() {
+    TemplatizedType t = toMaybeTemplatizedType();
+    return t == null ? null : t.getReferencedType();
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     // super
     TernaryValue result = super.testForEquality(that);
@@ -279,6 +291,28 @@ public abstract class ObjectType
     }
     iproto = iproto.getPrototypeObject();
     return iproto == null ? null : iproto.getConstructor();
+  }
+
+  /**
+   * Given an interface and a property, finds the top-most super interface
+   * that has the property defined (including this interface).
+   */
+  public ObjectType getTopDefiningInterface(String propertyName) {
+    ObjectType foundType = null;
+    if (hasProperty(propertyName)) {
+      foundType = this;
+    }
+    for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
+      if (interfaceType.hasProperty(propertyName)) {
+        foundType = interfaceType.getTopDefiningInterface(propertyName);
+      }
+    }
+    return foundType;
+  }
+
+  @Override
+  public Collection<FunctionType> getDirectImplementors() {
+    return this.registry.getDirectImplementors(this);
   }
 
   /**
@@ -480,6 +514,7 @@ public abstract class ObjectType
    * Checks whether the property whose name is given is present directly on
    * the object.  Returns false even if it is declared on a supertype.
    */
+  @Override
   public boolean hasOwnProperty(String propertyName) {
     return getOwnSlot(propertyName) != null;
   }
@@ -722,6 +757,11 @@ public abstract class ObjectType
   /** Whether this is a built-in object. */
   public boolean isNativeObjectType() {
     return false;
+  }
+
+  @Override
+  public JSType getLegacyResolvedType() {
+    return toMaybeNamedType().getReferencedType();
   }
 
   /**
