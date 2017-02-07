@@ -150,7 +150,7 @@ class CoverageInstrumentationCallback extends
     if (node.isScript()) {
       String fileName = getFileName(traversal);
       if (instrumentationData.get(fileName) != null) {
-        node.addChildToFront(newHeaderNode(traversal, node));
+        node.addChildrenToFront(newHeaderNode(traversal, node).removeChildren());
       }
       compiler.reportCodeChange();
       return;

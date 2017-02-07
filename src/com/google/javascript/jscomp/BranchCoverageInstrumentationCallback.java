@@ -51,7 +51,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
     if (node.isScript()) {
       if (instrumentationData.get(fileName) != null) {
         // Add instrumentation code
-        node.addChildToFront(newHeaderNode(traversal, node));
+        node.addChildrenToFront(newHeaderNode(traversal, node).removeChildren());
         instrumentBranchCoverage(traversal, instrumentationData.get(fileName));
       }
       compiler.reportCodeChange();
