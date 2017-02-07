@@ -1802,6 +1802,22 @@ angular.$interpolate;
  */
 angular.$interval;
 
+/**
+ * Augment the angular.$interval type definition by reopening the type via an
+ * artificial angular.$interval instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$interval}
+ */
+angular.$interval_;
+
+/**
+ * @type {function(!angular.$q.Promise):boolean}
+ */
+angular.$interval_.cancel = function(promise) {};
+
 
 /******************************************************************************
  * $locale Service
@@ -2561,6 +2577,22 @@ angular.$templateCache;
  * @typedef {function(Function=, number=, boolean=, ...*):!angular.$q.Promise}
  */
 angular.$timeout;
+
+/**
+ * Augment the angular.$timeout type definition by reopening the type via an
+ * artificial angular.$timeout instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$timeout}
+ */
+angular.$timeout_;
+
+/**
+ * @type {function(angular.$q.Promise=):boolean}
+ */
+angular.$timeout_.cancel = function(promise) {};
 
 
 /******************************************************************************
