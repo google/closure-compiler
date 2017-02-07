@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -182,7 +181,8 @@ class ConvertToTypedInterface implements CompilerPass {
    * This is cleared after each file to make sure that the analysis is working on a per-file basis.
    */
   private static class FileInfo {
-    private final Set<String> prefixNames = new HashSet<>();
+    private final Set<String> providedNamespaces = new HashSet<>();
+    private final Set<String> requiredLocalNames = new HashSet<>();
     private final Set<String> seenNames = new HashSet<>();
     private final List<Node> constructorsToProcess = new ArrayList<>();
 
@@ -191,12 +191,16 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     boolean isPrefixProvided(String fullyQualifiedName) {
-      for (String prefix : Iterables.concat(seenNames, prefixNames)) {
+      for (String prefix : Iterables.concat(seenNames, providedNamespaces)) {
         if (fullyQualifiedName.startsWith(prefix)) {
           return true;
         }
       }
       return false;
+    }
+
+    boolean isRequiredName(String fullyQualifiedName) {
+      return requiredLocalNames.contains(fullyQualifiedName);
     }
 
     void markConstructorToProcess(Node ctorNode) {
@@ -208,12 +212,16 @@ class ConvertToTypedInterface implements CompilerPass {
       seenNames.add(fullyQualifiedName);
     }
 
-    void markPrefixDefined(String namespacePrefix) {
-      prefixNames.add(namespacePrefix);
+    void markProvided(String providedName) {
+      providedNamespaces.add(providedName);
+    }
+
+    void markImportedName(String requiredLocalName) {
+      requiredLocalNames.add(requiredLocalName);
     }
 
     void clear() {
-      prefixNames.clear();
+      providedNamespaces.clear();
       seenNames.clear();
       constructorsToProcess.clear();
     }
@@ -284,7 +292,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 t.report(n, UNSUPPORTED_GOOG_SCOPE);
                 return false;
               } else if (callee.matchesQualifiedName("goog.provide")) {
-                currentFile.markPrefixDefined(expr.getLastChild().getString());
+                currentFile.markProvided(expr.getLastChild().getString());
                 Node childBefore;
                 while (null != (childBefore = n.getPrevious())
                     && childBefore.getBooleanProp(Node.IS_NAMESPACE)) {
@@ -294,8 +302,9 @@ class ConvertToTypedInterface implements CompilerPass {
               } else if (callee.matchesQualifiedName("goog.define")) {
                 expr.getLastChild().detach();
                 compiler.reportCodeChange();
-              } else if (!callee.matchesQualifiedName("goog.require")
-                  && !callee.matchesQualifiedName("goog.module")) {
+              } else if (callee.matchesQualifiedName("goog.require")) {
+                processRequire(expr);
+              } else if (!callee.matchesQualifiedName("goog.module")) {
                 n.detach();
                 compiler.reportCodeChange();
               }
@@ -317,8 +326,14 @@ class ConvertToTypedInterface implements CompilerPass {
         case VAR:
         case CONST:
         case LET:
-          if (n.hasOneChild() && NodeUtil.isStatement(n) && !isModuleImport(n)) {
-            processName(n.getFirstChild(), n);
+          if (n.hasOneChild() && NodeUtil.isStatement(n)) {
+            Node lhs = n.getFirstChild();
+            Node rhs = lhs.getLastChild();
+            if (rhs != null && isImportRhs(rhs)) {
+              processRequire(rhs);
+            } else {
+              processName(lhs, n);
+            }
           }
           break;
         case THROW:
@@ -380,6 +395,19 @@ class ConvertToTypedInterface implements CompilerPass {
           break;
         default:
           break;
+      }
+    }
+
+    private void processRequire(Node requireNode) {
+      Preconditions.checkArgument(requireNode.isCall());
+      Preconditions.checkArgument(requireNode.getLastChild().isString());
+      Node parent = requireNode.getParent();
+      if (parent.isExprResult()) {
+        currentFile.markImportedName(requireNode.getLastChild().getString());
+      } else {
+        for (Node importedName : NodeUtil.getLhsNodesOfDeclaration(parent.getParent())) {
+          currentFile.markImportedName(importedName.getString());
+        }
       }
     }
 
@@ -473,6 +501,7 @@ class ConvertToTypedInterface implements CompilerPass {
           || (isExport && (rhs.isQualifiedName() || rhs.isObjectLit()))
           || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
           || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"))
+          || (jsdoc != null && jsdoc.isConstructor() && rhs.isQualifiedName())
           || (rhs.isObjectLit()
               && !rhs.hasChildren()
               && (jsdoc == null || !hasAnnotatedType(jsdoc)))) {
@@ -491,6 +520,9 @@ class ConvertToTypedInterface implements CompilerPass {
         return RemovalType.REMOVE_ALL;
       }
       if (isInferrableConst(jsdoc, nameNode, isExport)) {
+        if (rhs.isQualifiedName() && currentFile.isRequiredName(rhs.getQualifiedName())) {
+          return RemovalType.PRESERVE_ALL;
+        }
         jsdocNode.setJSDocInfo(pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
       }
       return RemovalType.REMOVE_RHS;
@@ -596,18 +628,6 @@ class ConvertToTypedInterface implements CompilerPass {
         || jsdoc.isConstructorOrInterface()
         || jsdoc.hasThisType()
         || jsdoc.hasEnumParameterType();
-  }
-
-  private static boolean isModuleImport(Node importNode) {
-    Preconditions.checkArgument(NodeUtil.isNameDeclaration(importNode));
-    Preconditions.checkArgument(importNode.hasOneChild());
-    Node declarationLhs = importNode.getFirstChild();
-    if (declarationLhs.hasChildren()) {
-      Node importRhs = declarationLhs.getLastChild();
-      return NodeUtil.isCallTo(importRhs, "goog.require")
-          || NodeUtil.isCallTo(importRhs, "goog.forwardDeclare");
-    }
-    return false;
   }
 
   private static boolean isClassMemberFunction(Node functionNode) {

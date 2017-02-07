@@ -4384,7 +4384,7 @@ public final class NodeUtil {
   /** Return declared JSDoc type for the given name declaration, or null if none present. */
   @Nullable
   static JSTypeExpression getDeclaredTypeExpression(Node declaration) {
-    Preconditions.checkArgument(declaration.isName());
+    Preconditions.checkArgument(declaration.isName() || declaration.isStringKey());
     JSDocInfo nameJsdoc = getBestJSDocInfo(declaration);
     if (nameJsdoc != null) {
       return nameJsdoc.getType();
