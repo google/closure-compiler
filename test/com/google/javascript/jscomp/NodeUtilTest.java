@@ -884,28 +884,13 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testRemoveTryChild4() {
-    // Test removing the catch clause without a finally.
+    // Test removing the block that contains the catch clause.
     Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
     Node catchBlocks = tryNode.getSecondChild();
 
     NodeUtil.removeChild(tryNode, catchBlocks);
-    String expected = "try {foo()} finally {}";
-    String difference = parse(expected).checkTreeEquals(actual);
-    if (difference != null) {
-      fail("Nodes do not match:\n" + difference);
-    }
-  }
-
-  public void testRemoveTryChild5() {
-    Node actual = parse("try {foo()} catch(e) {} finally {}");
-
-    Node tryNode = actual.getFirstChild();
-    Node catchBlocks = tryNode.getSecondChild();
-    Node catchBlock = catchBlocks.getFirstChild();
-
-    NodeUtil.removeChild(catchBlocks, catchBlock);
     String expected = "try {foo()} finally {}";
     String difference = parse(expected).checkTreeEquals(actual);
     if (difference != null) {
