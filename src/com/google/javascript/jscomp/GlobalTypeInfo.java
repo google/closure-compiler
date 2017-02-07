@@ -595,11 +595,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     // Munge inherited types of methods
     for (String pname : propMethodTypesToProcess.keySet()) {
-      Collection<DeclaredFunctionType> methodTypes =
-          propMethodTypesToProcess.get(pname);
+      Collection<DeclaredFunctionType> methodTypes = propMethodTypesToProcess.get(pname);
       Preconditions.checkState(!methodTypes.isEmpty());
-      PropertyDef localPropDef =
-          propertyDefs.get(rawType, pname);
+      PropertyDef localPropDef = propertyDefs.get(rawType, pname);
       // To find the declared type of a method, we must meet declared types
       // from all inherited methods.
       DeclaredFunctionType superMethodType = DeclaredFunctionType.meet(methodTypes);
@@ -702,9 +700,18 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     Collection<PropertyDef> inheritedPropDefs;
     if (superType.isInterface()) {
       inheritedPropDefs = getPropDefsFromInterface(superType, pname);
+      // If a class is defined by mixin application, add missing property defs from the
+      // super interface, o/w checkSuperProperty will break for its subclasses.
+      if (isCtorDefinedByCall(NodeUtil.getBestLValue(current.getDefSite()))) {
+        for (PropertyDef inheritedDef : inheritedPropDefs) {
+          if (!current.mayHaveProp(pname)) {
+            propertyDefs.put(current, pname, inheritedDef);
+          }
+        }
+      }
     } else {
-      inheritedPropDefs =
-          ImmutableSet.of(getPropDefFromClass(superType, pname));
+      PropertyDef propdef = Preconditions.checkNotNull(getPropDefFromClass(superType, pname));
+      inheritedPropDefs = ImmutableSet.of(propdef);
     }
     if (superType.isInterface()
         && current.isClass()
@@ -1878,8 +1885,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
       // Only add the definition node if the property is not already defined.
       if (!propertyDefs.contains(rawType, pname)) {
-        propertyDefs.put(rawType, pname,
-            new PropertyDef(getProp, null, null));
+        propertyDefs.put(rawType, pname, new PropertyDef(getProp, null, null));
       }
     }
 

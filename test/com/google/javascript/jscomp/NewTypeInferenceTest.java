@@ -19042,4 +19042,42 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return (x.foo === undefined ? 123 : x.foo);",
         "}"));
   }
+
+  public void testMixedClassInheritance() {
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "function IToggle() {}",
+        "/** @return {number} */",
+        "IToggle.prototype.foo = function() {};",
+        "/**",
+        " * @param {function(new:T)} superClass",
+        " * @template T",
+        " */",
+        "function addToggle(superClass) {",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {superClass}",
+        "   * @implements {IToggle}",
+        "   */",
+        "  var Toggle = function() {};",
+        "  Toggle.prototype.foo = function() { return 5; };",
+        "  return Toggle;",
+        "}",
+        "/** @struct @constructor */",
+        "var Bar = function() {};",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " * @implements {IToggle}",
+        " */",
+        "var ToggleBar = addToggle(Bar);",
+        "/**",
+        " * @constructor",
+        " * @extends {ToggleBar}",
+        " */",
+        "var Foo = function() {};",
+        "/** @override @return {string} */",
+        "Foo.prototype.foo = function() { return ''; };"),
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+  }
 }

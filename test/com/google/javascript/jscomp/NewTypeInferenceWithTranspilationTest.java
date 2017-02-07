@@ -433,4 +433,35 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "  class Foo extends clazz {}",
         "}"));
   }
+
+  public void testMixedClassInheritance() {
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "function IToggle(){}",
+        "/** @return {number} */",
+        "IToggle.prototype.foo = function(){};",
+        "/**",
+        " * @template T",
+        " * @param {function(new:T)} superClass",
+        " */",
+        "function addToggle(superClass) {",
+        "  /** @implements {IToggle} */",
+        "  class Toggle extends superClass {",
+        "    foo() {",
+        "      return 5;",
+        "    }",
+        "  }",
+        "  return Toggle;",
+        "}",
+        "class Bar {}",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " * @implements {IToggle}",
+        " */",
+        "const ToggleBar = addToggle(Bar);",
+        "class Foo extends ToggleBar {}",
+        "const instance = new Foo();",
+        "const number = instance.foo();"));
+  }
 }

@@ -484,8 +484,7 @@ public final class RawNominalType extends Namespace {
       if (this.superclass != null) {
         builder.addAll(this.superclass.getAllPropsOfClass());
       }
-      this.allProps = builder.addAll(classProps.keySet())
-          .addAll(protoProps.keySet()).build();
+      this.allProps = builder.addAll(classProps.keySet()).addAll(protoProps.keySet()).build();
     }
     return this.allProps;
   }
