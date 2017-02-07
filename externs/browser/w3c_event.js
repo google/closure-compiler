@@ -431,3 +431,43 @@ AddEventListenerOptions.prototype.passive;
 
 /** @type {boolean|undefined} */
 AddEventListenerOptions.prototype.once;
+
+/**
+ * @typedef {{
+ *   bubbles: (boolean|undefined),
+ *   cancelable: (boolean|undefined),
+ *   view: (Window|undefined),
+ *   detail: (number|undefined),
+ *   data: (string|undefined),
+ *   isComposed: (boolean|undefined),
+ *   inputType: (string|undefined),
+ *   dataTransfer: (DataTransfer|undefined)
+ * }}
+ */
+var InputEventInit;
+
+
+// TODO(charleyroy): Add getTargetRanges() once a consensus has been made
+// regarding how to structure these values. See
+// https://github.com/w3c/input-events/issues/38.
+/**
+ * @constructor
+ * @extends {UIEvent}
+ * @param {string} type
+ * @param {InputEventInit=} opt_eventInitDict
+ * @see https://www.w3.org/TR/uievents/#interface-inputevent
+ * @see https://w3c.github.io/input-events/#interface-InputEvent
+ */
+function InputEvent(type, opt_eventInitDict) {}
+
+/** @type {string} */
+InputEvent.prototype.data;
+
+/** @type {boolean} */
+InputEvent.prototype.isComposed;
+
+/** @type {string} */
+InputEvent.prototype.inputType;
+
+/** @type {?DataTransfer} */
+InputEvent.prototype.dataTransfer;
