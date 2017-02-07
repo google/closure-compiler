@@ -194,6 +194,17 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
     testSame(source);
   }
 
+  public void testRewriteUnusedResult9() throws Exception {
+    // Proves that the deleted function scope is reported.
+    String source = newlineJoin(
+        "function a(){return function() {}}",
+        "a()");
+    String expected = newlineJoin(
+        "function a(){return}",
+        "a()");
+    test(source, expected);
+  }
+
   public void testNoRewriteObjLit1() throws Exception {
     String source = newlineJoin(
         "var a = {b:function(){return 1;}}",

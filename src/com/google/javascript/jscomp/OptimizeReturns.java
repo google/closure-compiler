@@ -144,6 +144,8 @@ class OptimizeReturns
             if (keepValue) {
               node.getParent().addChildBefore(
                 IR.exprResult(result).srcref(result), node);
+            } else {
+              NodeUtil.markFunctionsDeleted(result, compiler);
             }
             compiler.reportChangeToEnclosingScope(body);
           }
