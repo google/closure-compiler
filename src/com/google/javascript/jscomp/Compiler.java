@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -2517,7 +2519,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public SourceFile getSourceFileByName(String sourceName) {
+  SourceFile getSourceFileByName(String sourceName) {
     // Here we assume that the source name is the input name, this
     // is try of JavaScript parsed from source.
     if (sourceName != null) {
@@ -2531,6 +2533,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     return null;
+  }
+
+  public CharSequence getSourceFileContentByName(String sourceName) {
+    SourceFile file = getSourceFileByName(sourceName);
+    checkNotNull(file);
+    try {
+      return file.getCode();
+    } catch (IOException e) {
+      return null;
+    }
   }
 
   @Override

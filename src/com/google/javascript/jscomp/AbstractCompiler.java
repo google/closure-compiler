@@ -70,9 +70,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   public abstract CompilerInput getInput(InputId inputId);
 
-  /**
-   * Looks up a source file by name. May return null.
-   */
+  /** Looks up a source file by name. May return null. */
+  @Nullable
   abstract SourceFile getSourceFileByName(String sourceName);
 
   /**
