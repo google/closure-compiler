@@ -493,6 +493,20 @@ public final class NormalizeTest extends Es6CompilerTestCase {
              "}"));
   }
 
+  public void testIssue166g() {
+    test(
+        LINE_JOINER.join(
+            "function a() {",
+            "  try { throw 1 } catch(e) {}",
+            "  var e = 2;",
+            "}"),
+        LINE_JOINER.join(
+             "function a() {",
+             "  try { throw 1 } catch(e$jscomp$1) {}",
+             "  var e = 2;",
+             "}"));
+  }
+
   public void testLetsInSeparateBlocks() {
     testEs6(
         LINE_JOINER.join(
