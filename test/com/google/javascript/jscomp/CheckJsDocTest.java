@@ -280,6 +280,11 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         MISPLACED_MSG_ANNOTATION);
   }
 
+  public void testJSDocDescInExterns() {
+    testWarning("/** @desc Foo. */ x.y.z.MSG_bar;", MISPLACED_MSG_ANNOTATION);
+    testSame("/** @desc Foo. */ x.y.z.MSG_bar;", "", null);
+  }
+
   public void testJSDocTypeAttachment() {
     testWarning(
         "function f() {  /** @type {string} */ if (true) return; };", MISPLACED_ANNOTATION);

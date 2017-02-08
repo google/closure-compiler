@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -343,22 +344,19 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (info.getDescription() != null || info.isHidden() || info.getMeaning() != null) {
       boolean descOkay = false;
       switch (n.getToken()) {
-        case ASSIGN: {
-          Node lhs = n.getFirstChild();
-          if (lhs.isName()) {
-            descOkay = lhs.getString().startsWith("MSG_");
-          } else if (lhs.isQualifiedName()) {
-            descOkay = lhs.getLastChild().getString().startsWith("MSG_");
-          }
-          break;
-        }
+        case ASSIGN:
         case VAR:
         case LET:
         case CONST:
-          descOkay = n.getFirstChild().getString().startsWith("MSG_");
+          descOkay = isValidMsgName(n.getFirstChild());
           break;
         case STRING_KEY:
-          descOkay = n.getString().startsWith("MSG_");
+          descOkay = isValidMsgName(n);
+          break;
+        case GETPROP:
+          if (n.isFromExterns() && n.isQualifiedName()) {
+            descOkay = isValidMsgName(n);
+          }
           break;
         default:
           break;
@@ -366,6 +364,16 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       if (!descOkay) {
         report(n, MISPLACED_MSG_ANNOTATION);
       }
+    }
+  }
+
+  /** Returns whether of not the given name is valid target for the result of goog.getMsg */
+  private boolean isValidMsgName(Node nameNode) {
+    if (nameNode.isName() || nameNode.isStringKey()) {
+      return nameNode.getString().startsWith("MSG_");
+    } else {
+      Preconditions.checkState(nameNode.isQualifiedName());
+      return nameNode.getLastChild().getString().startsWith("MSG_");
     }
   }
 
