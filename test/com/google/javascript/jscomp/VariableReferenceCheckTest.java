@@ -374,6 +374,20 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertNoWarning("goog.module('example'); var X = goog.require('foo.X');");
   }
 
+  public void testGoogModule_forwardDeclare() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var X = goog.forwardDeclare('foo.X');",
+            "",
+            "/** @type {X} */ var x = 0;",
+            "alert(x);"));
+
+    assertNoWarning("goog.module('example'); var X = goog.forwardDeclare('foo.X');");
+  }
+
   public void testGoogModule_usedInTypeAnnotation() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning(
