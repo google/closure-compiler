@@ -116,7 +116,8 @@ class SyntacticScopeCreator implements ScopeCreator {
       scanVars(body);
     } else {
       // It's either a module or the global block
-      Preconditions.checkState(n.isModuleBody() || scope.getParent() == null);
+      Preconditions.checkState(n.isModuleBody() || scope.getParent() == null,
+          "Expected %s to be a module body, or %s to be the global scope.", n, scope);
       scanVars(n);
     }
   }
