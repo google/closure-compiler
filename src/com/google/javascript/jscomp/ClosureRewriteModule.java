@@ -246,8 +246,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return "." + exportName;
     }
 
-    boolean hasInlinableName() {
+    boolean hasInlinableName(Set<Var> exportedNames) {
       if (nameDecl == null
+          || exportedNames.contains(nameDecl)
           || !INLINABLE_NAME_PARENTS.contains(nameDecl.getParentNode().getToken())) {
         return false;
       }
@@ -261,10 +262,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     String getLocalName() {
-      if (hasInlinableName()) {
-        return nameDecl.getName();
-      }
-      return null;
+      return nameDecl.getName();
     }
   }
 
@@ -868,7 +866,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         Node rhs = key.hasChildren() ? key.getFirstChild() : key;
         ExportDefinition namedExport = ExportDefinition.newNamedExport(t, exportName, rhs);
         currentScript.namedExports.add(exportName);
-        if (currentScript.declareLegacyNamespace || !namedExport.hasInlinableName()) {
+        if (currentScript.declareLegacyNamespace
+            || !namedExport.hasInlinableName(currentScript.exportsToInline.keySet())) {
           areAllExportsInlinable = false;
         } else {
           inlinableExports.add(namedExport);
@@ -888,7 +887,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     currentScript.defaultExportRhs = exportRhs;
     currentScript.willCreateExportsObject = true;
     ExportDefinition defaultExport = ExportDefinition.newDefaultExport(t, exportRhs);
-    if (!currentScript.declareLegacyNamespace && defaultExport.hasInlinableName()) {
+    if (!currentScript.declareLegacyNamespace
+        && defaultExport.hasInlinableName(currentScript.exportsToInline.keySet())) {
       String localName = defaultExport.getLocalName();
       currentScript.defaultExportLocalName = localName;
       recordExportToInline(defaultExport);
@@ -1127,7 +1127,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       ExportDefinition namedExport = ExportDefinition.newNamedExport(t, exportName, exportRhs);
       if (!currentScript.declareLegacyNamespace
           && currentScript.defaultExportRhs == null
-          && namedExport.hasInlinableName()) {
+          && namedExport.hasInlinableName(currentScript.exportsToInline.keySet())) {
         recordExportToInline(namedExport);
         parent.getParent().detach();
       }
@@ -1461,7 +1461,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordExportToInline(ExportDefinition exportDefinition) {
-    currentScript.exportsToInline.put(exportDefinition.nameDecl, exportDefinition);
+    Preconditions.checkState(
+        exportDefinition.hasInlinableName(currentScript.exportsToInline.keySet()));
+    Preconditions.checkState(
+        null == currentScript.exportsToInline.put(exportDefinition.nameDecl, exportDefinition),
+        "Already found a mapping for inlining export: %s", exportDefinition.nameDecl);
     String localName = exportDefinition.getLocalName();
     String fullExportedName =
         currentScript.getBinaryNamespace() + exportDefinition.getExportPostfix();

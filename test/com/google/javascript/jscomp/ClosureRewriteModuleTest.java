@@ -2085,6 +2085,21 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         });
   }
 
+  public void testMultiplyExportedSymbolDoesntCrash() {
+    testEs6(
+        LINE_JOINER.join(
+            "goog.module('mod');",
+            "",
+            "class Foo {}",
+            "",
+            "exports.name1 = Foo;",
+            "exports.name2 = Foo;"),
+        LINE_JOINER.join(
+            "/** @const */ var module$exports$mod = {};",
+            "module$exports$mod.name1 = class {};",
+            "/** @const */ module$exports$mod.name2 = module$exports$mod.name1;"));
+  }
+
   public void testIjsFileInExterns() {
     allowExternsChanges(true);
     test(
