@@ -2080,11 +2080,13 @@ public final class DefaultPassConfig extends PassConfig {
   /** Special case optimizations for closure functions. */
   private final PassFactory closureOptimizePrimitives =
       new PassFactory("closureOptimizePrimitives", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new ClosureOptimizePrimitives(compiler);
-    }
-  };
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new ClosureOptimizePrimitives(
+              compiler,
+              compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
+        }
+      };
 
   /** Puts global symbols into a single object. */
   private final PassFactory rescopeGlobalSymbols =
