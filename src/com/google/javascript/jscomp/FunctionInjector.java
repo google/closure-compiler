@@ -537,7 +537,7 @@ class FunctionInjector {
     switch (callSiteType) {
       case VAR_DECL_SIMPLE_ASSIGNMENT:
         // Remove the call from the name node.
-        parent.removeChild(parent.getFirstChild());
+        parent.removeFirstChild();
         Preconditions.checkState(parent.getFirstChild() == null);
         // Add the call, after the VAR.
         greatGrandParent.addChildAfter(newBlock, grandParent);

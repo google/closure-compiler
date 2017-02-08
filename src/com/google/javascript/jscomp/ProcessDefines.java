@@ -342,7 +342,7 @@ class ProcessDefines implements CompilerPass {
           parent.replaceChild(n, last);
         } else {
           Preconditions.checkState(n.isName(), n);
-          n.removeChild(n.getFirstChild());
+          n.removeFirstChild();
         }
         compiler.reportCodeChange();
       }
