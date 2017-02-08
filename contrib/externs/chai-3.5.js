@@ -307,9 +307,24 @@ assert.isUndefined = function(value, opt_message) {};
 assert.isDefined = function(value, opt_message) {};
 
 /**
+ * @param {*} object
+ * @param {function(new: Object)} constructor
+ * @param {string=} opt_message
+ */
+assert.instanceOf = function(object, constructor, opt_message) {};
+
+/**
  * @param {?Object|undefined} object
  * @param {string} property
  * @param {*} value
  * @param {string=} opt_message
  */
 assert.propertyVal = function(object, property, value, opt_message) {};
+
+/**
+ * @param {function()} fn
+ * @param {function(new: Object)|string|!RegExp} constructor
+ * @param {string|!RegExp=} opt_regexp
+ * @param {string=} opt_message
+ */
+assert.throws = function(fn, constructor, opt_regexp, opt_message) {};
