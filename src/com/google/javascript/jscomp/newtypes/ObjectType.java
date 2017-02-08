@@ -959,7 +959,7 @@ final class ObjectType implements TypeWithProperties {
     } else {
       props = joinProps(obj1.props, obj2.props, nt1, nt2);
     }
-    NominalType nominal = NominalType.pickSuperclass(nt1, nt2);
+    NominalType nominal = NominalType.join(nt1, nt2);
     if (nominal.isBuiltinObject() && fn != null) {
       if (isLoose) {
         nominal = obj1.commonTypes.getFunctionType();

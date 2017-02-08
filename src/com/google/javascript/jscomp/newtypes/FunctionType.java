@@ -583,7 +583,7 @@ public final class FunctionType {
     NominalType n1 = getNominalTypeIfSingletonObj(nt1);
     NominalType n2 = getNominalTypeIfSingletonObj(nt2);
     if (n1 != null && n2 != null) {
-      NominalType tmp = NominalType.pickSuperclass(n1, n2);
+      NominalType tmp = NominalType.join(n1, n2);
       if (tmp != null) {
         return tmp.getInstanceAsJSType();
       }
