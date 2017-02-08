@@ -17,6 +17,9 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Static methods that operate on {@code TypeWithProperties} instances.
@@ -56,6 +59,18 @@ final class TypeWithPropertiesStatics {
       }
     }
     return ptype;
+  }
+
+  static Collection<JSType> getSubtypesWithProperty(
+      ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
+    if (types == null) {
+      return ImmutableSet.of();
+    }
+    Set<JSType> typesWithProp = new HashSet<>();
+    for (TypeWithProperties t : types) {
+      typesWithProp.addAll(t.getSubtypesWithProperty(qname));
+    }
+    return typesWithProp;
   }
 
   static boolean mayHaveProp(

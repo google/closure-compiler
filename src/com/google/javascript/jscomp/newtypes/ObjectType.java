@@ -18,12 +18,14 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.google.javascript.jscomp.newtypes.ObjectsBuilder.ResolveConflictsBy;
 import com.google.javascript.rhino.Node;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -907,6 +909,21 @@ final class ObjectType implements TypeWithProperties {
     return this == this.commonTypes.getBottomObject();
   }
 
+  boolean isEnumObject() {
+    if (!this.nominalType.isLiteralObject()) {
+      return false;
+    }
+    EnumType e = null;
+    for (Property p : this.props.values()) {
+      JSType t = p.getType();
+      if (t.isEnumElement()) {
+        e = Iterables.getOnlyElement(t.getEnums());
+        break;
+      }
+    }
+    return e != null && this.equals(e.toJSType().getObjTypeIfSingletonObj());
+  }
+
   static ObjectType meet(ObjectType obj1, ObjectType obj2) {
     Preconditions.checkState(areRelatedNominalTypes(obj1.nominalType, obj2.nominalType));
     if (obj1.isTopObject() || obj2.isBottomObject()) {
@@ -1121,10 +1138,9 @@ final class ObjectType implements TypeWithProperties {
     return null;
   }
 
-  // NOTE(aravindpg): This method is currently only used to obtain the defsite of an own prop, and
-  // deliberately does not return the more specialized version of a property if it is already
-  // present on the nominal type. This may be unsuitable from a typing point of view. Revisit if
-  // needed.
+  // NOTE(aravindpg): This method deliberately does not return the more specialized version of
+  // a property if it is already present on the nominal type. This may be unsuitable from a
+  // typing point of view. Revisit if needed.
   private Property getLeftmostOwnProp(QualifiedName qname) {
     String pname = qname.getLeftmostName();
     Property p = props.get(pname);
@@ -1176,6 +1192,11 @@ final class ObjectType implements TypeWithProperties {
     Preconditions.checkArgument(qname.isIdentifier());
     Property p = getLeftmostProp(qname);
     return p != null;
+  }
+
+  boolean hasOwnPropery(QualifiedName qname) {
+    Preconditions.checkArgument(qname.isIdentifier());
+    return getLeftmostOwnProp(qname) != null;
   }
 
   @Override
@@ -1403,5 +1424,10 @@ final class ObjectType implements TypeWithProperties {
   @Override
   public int hashCode() {
     return Objects.hash(this.fn, this.ns, this.props, this.nominalType);
+  }
+
+  @Override
+  public Collection<JSType> getSubtypesWithProperty(QualifiedName qname) {
+    return this.nominalType.getSubtypesWithProperty(qname);
   }
 }

@@ -229,4 +229,9 @@ public final class EnumType extends Namespace implements TypeWithProperties {
     }
     return true;
   }
+
+  @Override
+  public Collection<JSType> getSubtypesWithProperty(QualifiedName qname) {
+    return declaredType.getSubtypesWithProperty(qname);
+  }
 }

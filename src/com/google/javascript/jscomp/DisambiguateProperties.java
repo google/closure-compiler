@@ -325,7 +325,7 @@ class DisambiguateProperties implements CompilerPass {
   DisambiguateProperties(
       AbstractCompiler compiler, Map<String, CheckLevel> propertiesToErrorFor) {
     this.compiler = compiler;
-    this.registry = compiler.getTypeRegistry();
+    this.registry = compiler.getTypeIRegistry();
     this.BOTTOM_OBJECT =
         this.registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE).toMaybeObjectType();
     this.invalidatingTypes = new HashSet<>(ImmutableSet.of(

@@ -60,6 +60,12 @@ public final class NominalType {
     return this.rawType;
   }
 
+  // This is used for DisambiguateProperties. Do not call during NewTypeInference.
+  // See note for getRawNominalType.
+  public RawNominalType getRawNominalTypeAfterTypeChecking() {
+    return this.rawType;
+  }
+
   // NOTE(dimvar): we need this to get access to the static properties of the class.
   // It'd be good if these properties were on the type returned by getConstructorFunction,
   // but there are some circularity issues when we're computing the namespace types.
@@ -614,6 +620,11 @@ public final class NominalType {
   boolean isPropDefinedOnSubtype(QualifiedName pname) {
     Preconditions.checkArgument(pname.isIdentifier());
     return this.rawType.isPropDefinedOnSubtype(pname.getLeftmostName());
+  }
+
+  Set<JSType> getSubtypesWithProperty(QualifiedName pname) {
+    Preconditions.checkArgument(pname.isIdentifier());
+    return this.rawType.getSubtypesWithProperty(pname.getLeftmostName());
   }
 
   static boolean equalRawTypes(NominalType n1, NominalType n2) {

@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -253,16 +254,19 @@ public final class RawNominalType extends Namespace {
     }
   }
 
-  boolean isPropDefinedOnSubtype(String pname) {
+  Set<JSType> getSubtypesWithProperty(String pname) {
     if (mayHaveProp(pname)) {
-      return true;
+      return ImmutableSet.of(getInstanceAsJSType());
     }
+    HashSet<JSType> typesWithProp = new HashSet<>();
     for (RawNominalType subtype : this.subtypes) {
-      if (subtype.isPropDefinedOnSubtype(pname)) {
-        return true;
-      }
+      typesWithProp.addAll(subtype.getSubtypesWithProperty(pname));
     }
-    return false;
+    return typesWithProp;
+  }
+
+  boolean isPropDefinedOnSubtype(String pname) {
+    return !getSubtypesWithProperty(pname).isEmpty();
   }
 
   boolean hasAncestorInterface(RawNominalType ancestor) {

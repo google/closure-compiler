@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import java.util.Collection;
+
 /**
  * A type that can contain properties,
  * such as an ObjectType, NominalType, or a Namespace.
@@ -35,4 +37,10 @@ interface TypeWithProperties {
 
   /** Return whether this type contains a constant property */
   boolean hasConstantProp(QualifiedName qname);
+
+  /**
+   * Return all topmost subtypes of this type that have the given property.
+   * If the type itself has the property then only this type is included in the result.
+   */
+  Collection<JSType> getSubtypesWithProperty(QualifiedName qname);
 }

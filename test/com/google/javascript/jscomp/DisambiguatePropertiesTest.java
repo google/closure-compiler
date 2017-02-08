@@ -19,7 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +31,7 @@ import java.util.TreeSet;
  *
  */
 
-public final class DisambiguatePropertiesTest extends CompilerTestCase {
+public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   private DisambiguateProperties lastPass;
   private static String renameFunctionDefinition =
       "/** @const */ var goog = {};\n"
@@ -40,6 +39,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
           + "/** @return {string} */ goog.reflect.objectProperty = function(prop, obj) {};\n";
 
   public DisambiguatePropertiesTest() {
+    super(DEFAULT_EXTERNS);
     parseTypeInfo = true;
   }
 
@@ -47,7 +47,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableNormalize();
-    super.enableTypeCheck();
+    this.mode = TypeInferenceMode.OTI_ONLY;
   }
 
   @Override
@@ -599,8 +599,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "Bar.prototype.Bar_prototype$a=0;";
 
     setExpectParseWarningsThisTest();
-    testSets(BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES, js,
-        output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+    testSets(js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
   }
 
   public void testNamedType() {
@@ -798,10 +797,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   public void testUntypedExterns() {
-    String externs =
-        BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES
-        + "var window;"
-        + "window.alert = function() {x};";
+    String externs = "var window; window.alert = function() {x};";
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;\n"
@@ -988,7 +984,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   public void testObjectLiteralDefineProperties() {
     String externs =
         LINE_JOINER.join(
-            "/** @const */ var Object = {};",
             "Object.defineProperties = function(typeRef, definitions) {}",
             "/** @constructor */ function FooBar() {}",
             "/** @type {string} */ FooBar.prototype.bar_;",
@@ -1029,7 +1024,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   public void testObjectLiteralDefinePropertiesQuoted() {
     String externs =
         LINE_JOINER.join(
-            "/** @const */ var Object = {};",
             "Object.defineProperties = function(typeRef, definitions) {}",
             "/** @constructor */ function FooBar() {}",
             "/** @type {string} */ FooBar.prototype.bar_;",
@@ -1117,30 +1111,18 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   public void testSkipNativeFunctionMethod() {
-    String externs = ""
-        + "/** @constructor \n @param {*} var_args */"
-        + "function Function(var_args) {}"
-        + "Function.prototype.call = function() {};";
     String js = ""
         + "/** @constructor */ function Foo(){};"
         + "/** @constructor\n @extends Foo */"
         + "function Bar() { Foo.call(this); };"; // call should not be renamed
-    testSame(externs, js, null);
+    testSame(js, null);
   }
 
   public void testSkipNativeObjectMethod() {
-    String externs = ""
-        + "/**"
-        + " * @constructor\n"
-        + " * @param {*} opt_v\n"
-        + " * @return {!Object}\n"
-        + " */\n"
-        + "function Object(opt_v) {}"
-        + "Object.prototype.hasOwnProperty;";
     String js = ""
         + "/** @constructor */ function Foo(){};"
         + "(new Foo).hasOwnProperty('x');";
-    testSets(externs, js, js, "{}");
+    testSets(js, js, "{}");
   }
 
   public void testExtendNativeType() {
@@ -1157,10 +1139,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   public void testStringFunction() {
     // Extern functions are not renamed, but user functions on a native
     // prototype object are.
-    String externs = "/**@constructor\n@param {*} opt_str \n @return {string}*/"
-         + "function String(opt_str) {};\n"
-         + "/** @override \n @return {string} */\n"
-         + "String.prototype.toString = function() { };\n";
     String js = ""
          + "/** @constructor */ function Foo() {};\n"
          + "Foo.prototype.foo = function() {};\n"
@@ -1172,7 +1150,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
          + "String.prototype.String_prototype$foo = function() {};\n"
          + "var a = 'str'.toString().String_prototype$foo();\n";
 
-    testSets(externs, js, output, "{foo=[[Foo.prototype], [String.prototype]]}");
+    testSets(js, output, "{foo=[[Foo.prototype], [String.prototype]]}");
   }
 
   public void testUnusedTypeInExterns() {
@@ -1960,11 +1938,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "}" +
         "Foo.inheritsFrom(Object);";
 
-    String externs =
-        "function Function(var_args) {}"
-        + "/** @return {*} */Function.prototype.call = function(var_args) {};";
-
-    testSets(externs, js, js, "{}");
+    testSets(js, js, "{}");
   }
 
   public void testSkipNativeFunctionStaticProperty() {
@@ -2069,7 +2043,24 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "/** @override */",
         "MyAbstractCollection.prototype.iterator = function() {};");
 
-    testSets(js, js, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
+    String output = LINE_JOINER.join(
+        "/** @interface */",
+        "function MyIterable() {}",
+        "MyIterable.prototype.MyAbstractCollection_prototype$iterator = function() {};",
+        "/**",
+        " * @interface",
+        " * @extends {MyIterable}",
+        " */",
+        "function MyCollection() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {MyCollection}",
+        " */",
+        "function MyAbstractCollection() {}",
+        "/** @override */",
+        "MyAbstractCollection.prototype.MyAbstractCollection_prototype$iterator = function() {};");
+
+    testSets(js, output, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
   }
 
   public void testErrorOnProtectedProperty() {
@@ -2132,7 +2123,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   private void testSets(String externs, String js, String expected,
        String fieldTypes, DiagnosticType warning, String description) {
-    test(externs, js, expected, null, warning, description);
+    test(DEFAULT_EXTERNS + externs, js, expected, null, warning, description);
     assertEquals(
         fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }

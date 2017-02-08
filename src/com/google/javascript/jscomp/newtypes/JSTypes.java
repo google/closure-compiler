@@ -416,6 +416,15 @@ public final class JSTypes {
         return getTopObject();
       case TRUTHY:
         return TRUTHY;
+      case NO_OBJECT_TYPE:
+        return JSType.fromObjectType(getBottomObject());
+      case FUNCTION_PROTOTYPE:
+        return getFunctionType().getPrototypePropertyOfCtor();
+      case FUNCTION_INSTANCE_TYPE:
+        return getFunctionType().getInstanceAsJSType();
+      case OBJECT_PROTOTYPE:
+      case TOP_LEVEL_PROTOTYPE:
+        return getTopObject().getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
       default:
         throw new RuntimeException("Native type " + typeId.name() + " not found");
     }
