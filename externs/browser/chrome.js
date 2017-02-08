@@ -335,7 +335,39 @@ MessageSender.prototype.tlsChannelId;
 
 
 /**
- * @see https://developer.chrome.com/extensions/tabs
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/tabs#type-MutedInfoReason
+ */
+var MutedInfoReason = {
+  USER: '',
+  CAPTURE: '',
+  EXTENSION: '',
+};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#type-MutedInfo
+ * @constructor
+ */
+var MutedInfo = function() {};
+
+
+/** @type {boolean} */
+MutedInfo.prototype.muted;
+
+
+/** @type {!MutedInfoReason|string|undefined} */
+MutedInfo.prototype.reason;
+
+
+/** @type {string|undefined} */
+MutedInfo.prototype.extensionId;
+
+
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#type-Tab
  * @constructor
  */
 function Tab() {}
@@ -369,6 +401,22 @@ Tab.prototype.active;
 
 /** @type {boolean} */
 Tab.prototype.pinned;
+
+
+/** @type {boolean|undefined} */
+Tab.prototype.audible;
+
+
+/** @type {boolean} */
+Tab.prototype.discarded;
+
+
+/** @type {boolean} */
+Tab.prototype.autoDiscardable;
+
+
+/** @type {!MutedInfo|undefined} */
+Tab.prototype.mutedInfo;
 
 
 // TODO: Make this field optional once dependent projects have been updated.

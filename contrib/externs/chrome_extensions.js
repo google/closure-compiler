@@ -2543,7 +2543,7 @@ chrome.runtime.MessageSenderEvent.prototype.hasListeners = function() {};
 
 /**
  * @const
- * @see https://developer.chrome.com/extensions/tabs.html
+ * @see https://developer.chrome.com/extensions/tabs
  */
 chrome.tabs = {};
 
@@ -2754,7 +2754,11 @@ chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
  * @typedef {?{
  *   active: (boolean|undefined),
  *   pinned: (boolean|undefined),
+ *   audible: (boolean|undefined),
+ *   muted: (boolean|undefined),
  *   highlighted: (boolean|undefined),
+ *   discarded: (boolean|undefined),
+ *   autoDiscardable: (boolean|undefined),
  *   currentWindow: (boolean|undefined),
  *   lastFocusedWindow: (boolean|undefined),
  *   status: (!chrome.tabs.TabStatus|string|undefined),
