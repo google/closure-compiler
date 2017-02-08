@@ -47,9 +47,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   static final DiagnosticType REDECLARED_VARIABLE =
       DiagnosticType.warning("JSC_REDECLARED_VARIABLE", "Redeclared variable: {0}");
 
-  static final DiagnosticType AMBIGUOUS_FUNCTION_DECL =
-      DiagnosticType.error("AMBIGUOUS_FUNCTION_DECL", "Ambiguous use of a named function: {0}.");
-
   static final DiagnosticType EARLY_REFERENCE_ERROR =
       DiagnosticType.error(
           "JSC_REFERENCE_BEFORE_DECLARE_ERROR",
@@ -216,7 +213,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     private void checkVar(Var v, List<Reference> references) {
       blocksWithDeclarations.clear();
       boolean isDeclaredInScope = false;
-      boolean isUnhoistedNamedFunction = false;
       boolean hasErrors = false;
       boolean isRead = false;
       Reference hoistedFn = null;
@@ -229,8 +225,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           isDeclaredInScope = true;
           hoistedFn = reference;
           break;
-        } else if (NodeUtil.isFunctionDeclaration(reference.getNode().getParent())) {
-          isUnhoistedNamedFunction = true;
         }
       }
 
@@ -329,18 +323,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           }
         } else {
           isRead = true;
-        }
-
-        if (isUnhoistedNamedFunction && !isDeclaration && isDeclaredInScope) {
-          // Only allow an unhoisted named function to be used within the
-          // block it is declared.
-          for (BasicBlock declaredBlock : blocksWithDeclarations) {
-            if (!declaredBlock.provablyExecutesBefore(basicBlock)) {
-              compiler.report(JSError.make(referenceNode, AMBIGUOUS_FUNCTION_DECL, v.name));
-              hasErrors = true;
-              break;
-            }
-          }
         }
 
         boolean isUndeclaredReference = false;
