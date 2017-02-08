@@ -126,4 +126,68 @@ public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
   public void testReferenceInDestructuringParam() {
     testSameEs6("var {a = new Bar()} = b;");
   }
+
+  public void testPassForwardDeclareInModule() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var Event = goog.forwardDeclare('goog.events.Event');",
+            "",
+            "/**",
+            " * @param {!Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}",
+            "",
+            "exports = listener;"));
+  }
+
+  public void testFailForwardDeclareInModule() {
+    testError(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var Event = goog.forwardDeclare('goog.events.Event');",
+            "var Unused = goog.forwardDeclare('goog.events.Unused');",
+            "",
+            "/**",
+            " * @param {!Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}",
+            "",
+            "exports = listener;"),
+        EXTRA_REQUIRE_WARNING);
+  }
+
+  public void testPassForwardDeclare() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.forwardDeclare('goog.events.Event');",
+            "",
+            "/**",
+            " * @param {!goog.events.Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}"));
+  }
+
+  public void testFailForwardDeclare() {
+    testError(
+        LINE_JOINER.join(
+            "goog.forwardDeclare('goog.events.Event');",
+            "goog.forwardDeclare('goog.events.Unused');",
+            "",
+            "/**",
+            " * @param {!goog.events.Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}"),
+        EXTRA_REQUIRE_WARNING);
+  }
 }

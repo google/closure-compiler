@@ -169,6 +169,10 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
     return extractNamespace(call, "goog.require");
   }
 
+  private String extractNamespaceIfForwardDeclare(Node call) {
+    return extractNamespace(call, "goog.forwardDeclare");
+  }
+
   private String extractNamespaceIfProvide(Node call) {
     return extractNamespace(call, "goog.provide");
   }
@@ -417,6 +421,15 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
     }
   }
 
+  private void visitForwardDeclare(String namespace, Node forwardDeclareCall, Node parent) {
+    // For now, we just treat this as though it were a goog.require. There are lots of forward
+    // declarations in generated files, so only warn in single-file mode.
+    // TODO(tbreisacher): Warn if this is used in code, but not if it's used in a type annotation.
+    if (mode == Mode.SINGLE_FILE) {
+      visitGoogRequire(namespace, forwardDeclareCall, parent);
+    }
+  }
+
   private void visitGoogRequire(String namespace, Node googRequireCall, Node parent) {
     maybeAddClosurizedNamespace(namespace);
     if (parent.isName()) {
@@ -438,6 +451,11 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
     String required = extractNamespaceIfRequire(call);
     if (required != null) {
       visitGoogRequire(required, call, parent);
+      return;
+    }
+    String declare = extractNamespaceIfForwardDeclare(call);
+    if (declare != null) {
+      visitForwardDeclare(declare, call, parent);
       return;
     }
     String provided = extractNamespaceIfProvide(call);

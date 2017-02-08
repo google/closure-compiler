@@ -33,6 +33,7 @@ import java.util.List;
 public final class MissingRequireTest extends Es6CompilerTestCase {
   private CheckRequiresForConstructors.Mode mode;
 
+  @Override
   public void setUp() {
     mode = CheckRequiresForConstructors.Mode.FULL_COMPILE;
   }
@@ -203,6 +204,36 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "",
             "exports = getElems;"),
         "missing require: 'goog.dom'");
+  }
+
+  public void testPassForwardDeclare() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var Event = goog.forwardDeclare('goog.events.Event');",
+            "",
+            "/**",
+            " * @param {!Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}",
+            "",
+            "exports = listener;"));
+  }
+
+  public void testFailForwardDeclare() {
+    // TODO(tbreisacher): This should be a missing-require error.
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var Event = goog.forwardDeclare('goog.events.Event');",
+            "",
+            "var e = new Event();",
+            "",
+            "exports = listener;"));
   }
 
   public void testPassGoogModule_noRewriting() {

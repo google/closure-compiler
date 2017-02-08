@@ -155,6 +155,70 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
             EXTRA_REQUIRE_WARNING);
   }
 
+  public void testPassForwardDeclareInModule() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var Event = goog.forwardDeclare('goog.events.Event');",
+            "",
+            "/**",
+            " * @param {!Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}",
+            "",
+            "exports = listener;"));
+  }
+
+  public void testUnusedForwardDeclareInModule() {
+    // Reports extra require warning, but only in single-file mode.
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var Event = goog.forwardDeclare('goog.events.Event');",
+            "var Unused = goog.forwardDeclare('goog.events.Unused');",
+            "",
+            "/**",
+            " * @param {!Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}",
+            "",
+            "exports = listener;"));
+  }
+
+  public void testPassForwardDeclare() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.forwardDeclare('goog.events.Event');",
+            "",
+            "/**",
+            " * @param {!goog.events.Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}"));
+  }
+
+  public void testFailForwardDeclare() {
+    // Reports extra require warning, but only in single-file mode.
+    testSame(
+        LINE_JOINER.join(
+            "goog.forwardDeclare('goog.events.Event');",
+            "goog.forwardDeclare('goog.events.Unused');",
+            "",
+            "/**",
+            " * @param {!goog.events.Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}"));
+  }
+
   public void testGoogModuleGet() {
     testSame(
         LINE_JOINER.join(
