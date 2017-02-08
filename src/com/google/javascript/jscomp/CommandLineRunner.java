@@ -279,10 +279,14 @@ public class CommandLineRunner extends
         + "Options: NONE, IIFE")
     private IsolationMode isolationMode = IsolationMode.NONE;
 
-    @Option(name = "--output_wrapper",
-        usage = "Interpolate output into this string at the place denoted"
-        + " by the marker token %output%. Use marker token %output|jsstring%"
-        + " to do js string escaping on the output.")
+    @Option(
+      name = "--output_wrapper",
+      usage =
+          "Interpolate output into this string at the place denoted"
+              + " by the marker token %output%. Use marker token %output|jsstring%"
+              + " to do js string escaping on the output."
+              + " Consider using the --isolation_mode flag instead."
+    )
     private String outputWrapper = "";
 
     @Option(name = "--output_wrapper_file",
@@ -794,6 +798,7 @@ public class CommandLineRunner extends
                     "export_local_property_definitions",
                     "formatting",
                     "generate_exports",
+                    "isolation_mode",
                     "output_wrapper",
                     "output_wrapper_file"))
             .putAll("Dependency Management", ImmutableList.of("dependency_mode", "entry_point"))
