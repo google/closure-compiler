@@ -412,6 +412,13 @@ public class CommandLineRunner extends
         usage = "Don't generate output. Run checks, but no optimization passes.")
     private boolean checksOnly = false;
 
+    @Option(
+      name = "--incremental_check_mode",
+      usage = "Generate or check externs-like .i.js files representing individual libraries."
+    )
+    private CompilerOptions.IncrementalCheckMode incrementalCheckMode =
+        CompilerOptions.IncrementalCheckMode.OFF;
+
     @Option(name = "--continue_after_errors",
         handler = BooleanOptionHandler.class,
         usage = "Continue trying to compile after an error is encountered.")
@@ -1601,6 +1608,8 @@ public class CommandLineRunner extends
     if (flags.checksOnly) {
       options.setOutputJs(CompilerOptions.OutputJs.NONE);
     }
+
+    options.setIncrementalChecks(flags.incrementalCheckMode);
 
     options.setContinueAfterErrors(flags.continueAfterErrors);
 
