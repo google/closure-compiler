@@ -31,7 +31,7 @@ var md = {};
  *****************************************************************************/
 
 
-/** @constructor */
+/** @interface */
 md.$bottomSheet = function() {};
 
 /**
@@ -77,7 +77,7 @@ md.$bottomSheet.prototype.cancel = function(opt_response) {};
  *****************************************************************************/
 
 
-/** @constructor */
+/** @interface */
 md.$dialog = function() {};
 
 
@@ -112,8 +112,8 @@ md.$dialog = function() {};
 md.$dialog.options;
 
 
-/** @constructor */
-md.$dialog.AlertConfig_;
+/** @interface */
+md.$dialog.AlertConfig_ = function() {};
 
 /**
  * @param {string} title
@@ -190,8 +190,8 @@ md.$dialog.AlertConfig_.prototype.css = function(css) {};
 md.$dialog.AlertConfig_.prototype.parent = function(parent) {};
 
 
-/** @constructor */
-md.$dialog.ConfirmConfig_;
+/** @interface */
+md.$dialog.ConfirmConfig_ = function() {};
 
 /**
  * @param {string} title
@@ -274,8 +274,8 @@ md.$dialog.ConfirmConfig_.prototype.parent = function(parent) {};
 md.$dialog.ConfirmConfig_.prototype.css = function(css) {};
 
 
-/** @constructor */
-md.$dialog.PromptConfig_;
+/** @interface */
+md.$dialog.PromptConfig_ = function() {};
 
 /**
  * @param {string} title
@@ -575,7 +575,7 @@ md.$mdAriaProvider.prototype.disableWarnings = function() {};
  * $mdThemingProvider
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 md.$mdThemingProvider = function() {};
 
 /** @param {boolean} alwaysWatch */
@@ -615,7 +615,7 @@ md.$mdThemingProvider.prototype.setNonce = function(nonce) {};
  * $mdTheming service
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 md.$mdTheming = function() {};
 
 /**
@@ -635,7 +635,7 @@ md.$mdTheming.prototype.generateTheme = function(name) {};
 
 /**
  * @param {string} name
- * @constructor
+ * @interface
  */
 md.$mdThemingProvider.Theme = function(name) {};
 
@@ -696,7 +696,7 @@ md.$mdIcon;
  * $mdIconProvider Service
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 md.$mdIconProvider = function() {};
 
 /**
@@ -747,7 +747,7 @@ md.$mdMedia;
  * $mdMenu Service
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 md.$mdMenu = function() {};
 
 /**
@@ -790,32 +790,32 @@ md.$select.prototype.cancel = function(opt_reason, opt_options) {};
  * $mdDateLocaleProvider
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 md.$mdDateLocaleProvider = function() {};
 
 /** @type {Array<string>} */
-md.$mdDateLocaleProvider.prototype.months = [];
+md.$mdDateLocaleProvider.prototype.months;
 
 /** @type {Array<string>} */
-md.$mdDateLocaleProvider.prototype.shortMonths = [];
+md.$mdDateLocaleProvider.prototype.shortMonths;
 
 /** @type {Array<string>} */
-md.$mdDateLocaleProvider.prototype.days = [];
+md.$mdDateLocaleProvider.prototype.days;
 
 /** @type {Array<string>} */
-md.$mdDateLocaleProvider.prototype.shortDays = [];
+md.$mdDateLocaleProvider.prototype.shortDays;
 
 /** @type {number} */
-md.$mdDateLocaleProvider.prototype.firstDayOfWeek = 1;
+md.$mdDateLocaleProvider.prototype.firstDayOfWeek;
 
 /** @type {Array<string|number>} */
-md.$mdDateLocaleProvider.prototype.dates = [];
+md.$mdDateLocaleProvider.prototype.dates;
 
 /** @type {string} */
-md.$mdDateLocaleProvider.prototype.msgCalendar = '';
+md.$mdDateLocaleProvider.prototype.msgCalendar;
 
 /** @type {string} */
-md.$mdDateLocaleProvider.prototype.msgOpenCalendar = '';
+md.$mdDateLocaleProvider.prototype.msgOpenCalendar;
 
 // The functions on $mdDateLocaleProvider are defined as fields because
 // they are meant to be directly set by consuming code.
@@ -840,7 +840,7 @@ md.$mdDateLocaleProvider.prototype.longDateFormatter = function(date) {};
  * $mdGestureProvider
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 md.$mdGestureProvider = function() {};
 
 /**
@@ -853,7 +853,7 @@ md.$mdGestureProvider.prototype.skipClickHijack = function() {};
  * VirtualRepeatContainerController
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 md.VirtualRepeatContainerController = function() {};
 
 /** @return {boolean} */
@@ -882,7 +882,7 @@ md.VirtualRepeatContainerController.prototype.resetScroll = function() {};
  * VirtualRepeatController
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 md.VirtualRepeatController = function() {};
 
 /** @return {?number} */
@@ -1010,7 +1010,7 @@ md.$panel.prototype.closeReasons = {
 /**
  * @param {!md.$panel.config} config
  * @param {!angular.$injector} $injector
- * @constructor
+ * @interface
  */
 md.$panel.MdPanelRef = function(config, $injector) {};
 
@@ -1096,7 +1096,7 @@ md.$panel.MdPanelRef.prototype.updatePosition = function(position) {};
 
 /**
  * @param {!angular.$window} $window
- * @constructor
+ * @interface
  */
 md.$panel.MdPanelPosition = function($window) {};
 
@@ -1164,7 +1164,7 @@ md.$panel.MdPanelPosition.prototype.withOffsetY = function(offsetY) {};
 
 /**
  * @param {!angular.$injector} $injector
- * @constructor
+ * @interface
  */
 md.$panel.MdPanelAnimation = function($injector) {};
 
