@@ -379,7 +379,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testConstPolymerNotAllowed() {
     CompilerOptions options = createCompilerOptions();
-    options.setPolymerPass(true);
+    options.setPolymerVersion(1);
     options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 

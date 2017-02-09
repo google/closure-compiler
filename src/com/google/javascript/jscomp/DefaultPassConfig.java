@@ -338,7 +338,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
     // and *before* the suspicious code checks. This is enforced in the assertValidOrder method.
-    if (options.polymerPass) {
+    if (options.polymerVersion != null) {
       checks.add(polymerPass);
     }
 
@@ -946,7 +946,7 @@ public final class DefaultPassConfig extends PassConfig {
         // getters/setters for many properties in compiled code. Dead property assignment
         // elimination is only safe when it knows about getters/setters. Therefore, we skip
         // it if the polymer pass is enabled.
-        if (!options.polymerPass) {
+        if (options.polymerVersion == null) {
           passes.add(deadPropertyAssignmentElimination);
         }
       }

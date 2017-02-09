@@ -56,7 +56,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
     // Global this is used deliberately to refer to Window in these tests
     options.setWarningLevel(new DiagnosticGroup(NewTypeInference.GLOBAL_THIS), CheckLevel.OFF);
-    options.setPolymerPass(true);
+    options.setPolymerVersion(1);
     return options;
   }
 
