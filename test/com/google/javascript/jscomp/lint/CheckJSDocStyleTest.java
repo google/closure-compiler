@@ -287,6 +287,16 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("class Foo { constructor() {} }");
   }
 
+  public void testMissingJsDoc_googModule() {
+    testWarning("goog.module('a.b.c'); function f() {}", MISSING_JSDOC);
+    testWarning("goog.module('a.b.c'); var f = function() {};", MISSING_JSDOC);
+  }
+
+  public void testMissingJsDoc_googModule_noWarning() {
+    testSame("goog.module('a.b.c'); /** @type {function()} */ function f() {}");
+    testSame("goog.module('a.b.c'); /** @type {function()} */ var f = function() {};");
+  }
+
   private String inIIFE(String js) {
     return "(function() {\n" + js + "\n})()";
   }
