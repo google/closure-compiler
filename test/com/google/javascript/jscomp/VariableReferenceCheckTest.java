@@ -304,6 +304,17 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertNoWarning("var a = 2;");
   }
 
+  public void testUnusedGlobalInBlockNoWarning() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("if (true) { var a = 2; }");
+  }
+
+  public void testUnusedLocalInBlock() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertUnusedEs6("if (true) { let a = 2; }");
+    assertUnusedEs6("if (true) { const a = 2; }");
+  }
+
   public void testUnusedAssignedInInnerFunction() {
     enableUnusedLocalAssignmentCheck = true;
     assertUnused("function f() { var x = 1; function g() { x = 2; } }");

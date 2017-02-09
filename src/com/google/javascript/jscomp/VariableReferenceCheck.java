@@ -387,6 +387,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   // TODO(tbreisacher): Consider moving UNUSED_LOCAL_ASSIGNMENT into its own check pass, so
   // that we can run it after goog.scope processing, and get rid of the inGoogScope check.
   private void checkForUnusedLocalVar(Var v, Reference unusedAssignment) {
+    if (!v.isLocal()) {
+      return;
+    }
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(unusedAssignment.getNode());
     if (jsDoc != null && jsDoc.hasTypedefType()) {
       return;
