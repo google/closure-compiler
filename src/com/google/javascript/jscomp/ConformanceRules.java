@@ -37,7 +37,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -46,7 +45,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
 import javax.annotation.Nullable;
 
 /**
@@ -502,23 +500,26 @@ public final class ConformanceRules {
     private ConformanceResult checkConformance(NodeTraversal t, Node n, Property prop) {
       if (isCandidatePropUse(n, prop)) {
         TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
-        TypeI methodClassType = registry.getType(prop.type);
+        TypeI typeWithBannedProp = registry.getType(prop.type);
         Node lhs = n.getFirstChild();
-        if (methodClassType != null && lhs.getTypeI() != null) {
-          TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
-          if (targetType.isSomeUnknownType()
-             || targetType.isTypeVariable()
-             || targetType.isBottom()
-             || targetType.isTop()
-             || targetType.isEquivalentTo(
-                 registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+        if (typeWithBannedProp != null && lhs.getTypeI() != null) {
+          TypeI foundType = lhs.getTypeI().restrictByNotNullOrUndefined();
+          if (foundType.toMaybeObjectType() != null
+              && foundType.toMaybeObjectType().isGeneric()) {
+            foundType = foundType.toMaybeObjectType().getRawType();
+          }
+          if (foundType.isSomeUnknownType()
+             || foundType.isTypeVariable()
+             || foundType.isBottom()
+             || foundType.isTop()
+             || foundType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
             if (reportLooseTypeViolations) {
               return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
             }
-          } else if (targetType.isSubtypeOf(methodClassType)) {
+          } else if (foundType.isSubtypeOf(typeWithBannedProp)) {
             return ConformanceResult.VIOLATION;
-          } else if (methodClassType.isSubtypeOf(targetType)) {
-            if (matchesPrototype(methodClassType, targetType)) {
+          } else if (typeWithBannedProp.isSubtypeOf(foundType)) {
+            if (matchesPrototype(typeWithBannedProp, foundType)) {
               return ConformanceResult.VIOLATION;
             } else if (reportLooseTypeViolations) {
               // Access of a banned property through a super class may be a violation

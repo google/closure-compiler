@@ -622,6 +622,17 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
+  public void testBannedProperty5() {
+    configuration = LINE_JOINER.join(
+        "requirement: {",
+        "  type: BANNED_PROPERTY",
+        "  value: 'Array.prototype.push'",
+        "  error_message: 'banned Array.prototype.push'",
+        "}");
+
+    testConformance("[1, 2, 3].push(4);\n", CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
   public void testBannedPropertyWrite() {
     configuration =
         "requirement: {\n" +
