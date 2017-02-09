@@ -447,6 +447,13 @@ function fit(description, handler) {}
 
 
 /**
+ * @param {string} description
+ * @param {function(this:jasmine.Spec, function())} handler
+ */
+function pending(description, handler) {}
+
+
+/**
  * @param {Object} spiedOnObject
  * @param {string} methodName
  * @return {!jasmine.Spy} spy
