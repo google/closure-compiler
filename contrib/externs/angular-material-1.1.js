@@ -848,6 +848,16 @@ md.$mdGestureProvider = function() {};
  */
 md.$mdGestureProvider.prototype.skipClickHijack = function() {};
 
+/******************************************************************************
+ * $mdInkRippleProvider
+ *****************************************************************************/
+
+/** @interface */
+md.$mdInkRippleProvider = function() {};
+
+
+md.$mdInkRippleProvider.prototype.disableInkRipple = function() {};
+
 
 /******************************************************************************
  * VirtualRepeatContainerController

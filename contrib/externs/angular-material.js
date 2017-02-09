@@ -600,7 +600,6 @@ md.$mdTheming.prototype.generateTheme = function(name) {};
 
 /******************************************************************************/
 
-
 /**
  * @param {string} name
  * @constructor
@@ -815,6 +814,16 @@ md.$mdGestureProvider = function() {};
  * @return {boolean}
  */
 md.$mdGestureProvider.prototype.skipClickHijack = function() {};
+
+/******************************************************************************
+ * $mdInkRippleProvider
+ *****************************************************************************/
+
+/** @interface */
+md.$mdInkRippleProvider = function() {};
+
+
+md.$mdInkRippleProvider.prototype.disableInkRipple = function() {};
 
 
 /******************************************************************************
