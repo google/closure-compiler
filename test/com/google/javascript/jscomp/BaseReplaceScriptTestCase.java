@@ -16,16 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
+import junit.framework.TestCase;
 
 public abstract class BaseReplaceScriptTestCase extends TestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
@@ -70,7 +70,7 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
     Result result =
         runReplaceScript(getOptions(), sources, 0, 0, newSource, newSourceInd, true).getResult();
     assertNoWarningsOrErrors(result);
-    assertTrue(result.success);
+    assertThat(result.success).isTrue();
   }
 
   protected void runReplaceScriptWithError(
@@ -78,7 +78,7 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
     Result result =
         runReplaceScript(getOptions(), sources, 0, 0, newSource, newSourceInd, true).getResult();
     assertNumWarningsAndErrors(result, 1, 0);
-    assertEquals(result.errors[0].getType(), errorType);
+    assertError(result.errors[0]).hasType(errorType);
   }
 
   /**
@@ -147,12 +147,13 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
     Compiler.setLoggingLevel(Level.INFO);
     Result result = compiler.compile(EXTERNS, inputs, options);
     if (expectedCompileErrors == 0) {
-      assertTrue("Expected no errors, found: " + Arrays.toString(result.errors), result.success);
+      assertThat(compiler.getErrors()).isEmpty();
+      assertThat(result.success).isTrue();
     } else {
-      assertFalse(result.success);
-      assertEquals(expectedCompileErrors, compiler.getErrorCount());
+      assertThat(compiler.getErrors()).hasLength(expectedCompileErrors);
+      assertThat(result.success).isFalse();
     }
-    assertEquals(expectedCompileWarnings, compiler.getWarningCount());
+    assertThat(compiler.getWarnings()).hasLength(expectedCompileWarnings);
     if (flushResults) {
       flushResults(compiler);
     }
@@ -177,17 +178,13 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
   }
 
   protected void assertNumWarningsAndErrors(Result result, int e, int w) {
-    assertEquals(
-        "Unexpected warnings:\n" + Joiner.on("\n").join(result.warnings),
-        w,
-        result.warnings.length);
-    assertEquals(
-        "Unexpected errors:\n" + Joiner.on("\n").join(result.errors), e, result.errors.length);
-    assertEquals(e == 0, result.success);
+    assertThat(result.warnings).hasLength(w);
+    assertThat(result.errors).hasLength(e);
+    assertThat(result.success).isEqualTo(e == 0);
   }
 
   protected void assertErrorType(JSError e, DiagnosticType type, int lineNumber) {
-    assertEquals(e.getType(), type);
+    assertError(e).hasType(type);
     assertEquals(e.lineNumber, lineNumber);
   }
 

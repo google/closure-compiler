@@ -27,7 +27,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -258,7 +257,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("in", "bad!()"));
     try {
-      Result result = compiler.compile(EXTERNS, inputs, options);
+      compiler.compile(EXTERNS, inputs, options);
     } catch (RuntimeException e) {
       fail("replaceScript threw a RuntimeException on a parse error.");
     }
@@ -299,8 +298,9 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     String source0 = "var ns = {};\n goog.provide('ns.Bar');\n"
         + "/** @constructor */ ns.Bar = function() {};";
     String source1 = "var a = new ns.Bar();";
-    Result result = runReplaceScript(options, ImmutableList.of(source0,
-        source1), 1, 0, source1, 1, true).getResult();
+    Result result =
+        runReplaceScript(options, ImmutableList.of(source0, source1), 1, 0, source1, 1, true)
+            .getResult();
     // TODO(joeltine): Change back to asserting an error when b/28869281
     // is fixed.
     assertTrue(result.success);
@@ -877,10 +877,8 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         //ImmutableList.of(src0, modifiedSrc1), 1, 0, modifiedSrc1, 1, true);
     assertFalse(result.success);
     assertThat(result.errors).hasLength(1);
-    JSError e = result.errors[0];
     assertErrorType(result.errors[0],
         CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS, 5);
-    assertEquals(e.lineNumber, 5);
   }
 
   /**
@@ -912,7 +910,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Compiler compiler = new Compiler();
     Compiler.setLoggingLevel(Level.INFO);
     compiler.compile(externs, inputs, options);
-    assertTrue(compiler.getResult().success);
+    assertThat(compiler.getResult().success).isTrue();
     TypedScope oldGlobalScope = compiler.getTopScope();
 
     SourceFile newSource1 = SourceFile.fromCode("in1", src1);
