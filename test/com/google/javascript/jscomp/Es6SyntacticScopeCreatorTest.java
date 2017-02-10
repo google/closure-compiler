@@ -709,4 +709,15 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Scope classScope = scopeCreator.createScope(classNode, forScope);
     assertTrue(classScope.isDeclared("Clazz", false));
   }
+
+  public void testVarsInModulesNotGlobal() {
+    Node root = getRoot("goog.module('example'); var x;");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("x", false));
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertTrue(moduleScope.isDeclared("x", false));
+  }
 }

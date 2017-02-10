@@ -198,6 +198,14 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         inputId = n.getInputId();
         Preconditions.checkNotNull(inputId);
         break;
+
+      case MODULE_BODY:
+        // Module bodies are not part of global scope.
+        if (scope.isGlobal()) {
+          return;
+        }
+        break;
+
       default:
         break;
     }
@@ -209,8 +217,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     // Variables can only occur in statement-level nodes, so
     // we only need to traverse children in a couple special cases.
     if (NodeUtil.isControlStructure(n) || NodeUtil.isStatementBlock(n)) {
-      for (Node child = n.getFirstChild();
-           child != null;) {
+      for (Node child = n.getFirstChild(); child != null;) {
         Node next = child.getNext();
         scanVars(child, scanInnerBlockScopes, false);
         child = next;
