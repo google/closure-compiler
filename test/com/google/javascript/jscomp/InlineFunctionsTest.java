@@ -2186,55 +2186,65 @@ public final class InlineFunctionsTest extends CompilerTestCase {
   public void testIssue423() {
     assumeMinimumCapture = false;
     test(
-        "(function($) {\n" +
-        "  $.fn.multicheck = function(options) {\n" +
-        "    initialize.call(this, options);\n" +
-        "  };\n" +
-        "\n" +
-        "  function initialize(options) {\n" +
-        "    options.checkboxes = $(this).siblings(':checkbox');\n" +
-        "    preload_check_all.call(this);\n" +
-        "  }\n" +
-        "\n" +
-        "  function preload_check_all() {\n" +
-        "    $(this).data('checkboxes');\n" +
-        "  }\n" +
-        "})(jQuery)",
-        "(function($){" +
-        "  $.fn.multicheck=function(options$jscomp$1){" +
-        "    {" +
-        "     options$jscomp$1.checkboxes=$(this).siblings(\":checkbox\");" +
-        "     {" +
-        "       $(this).data(\"checkboxes\")" +
-        "     }" +
-        "    }" +
-        "  }" +
-        "})(jQuery)");
+        LINE_JOINER.join(
+            "(function($) {",
+            "  $.fn.multicheck = function(options) {",
+            "    initialize.call(this, options);",
+            "  };",
+            "",
+            "  function initialize(options) {",
+            "    options.checkboxes = $(this).siblings(':checkbox');",
+            "    preload_check_all.call(this);",
+            "  }",
+            "",
+            "  function preload_check_all() {",
+            "    $(this).data('checkboxes');",
+            "  }",
+            "})(jQuery)"),
+        LINE_JOINER.join(
+            "(function($){",
+            "  $.fn.multicheck=function(options$jscomp$1) {",
+            "    {",
+            "      options$jscomp$1.checkboxes=$(this).siblings(':checkbox');",
+            "      {",
+            "        $(this).data('checkboxes');",
+            "      }",
+            "    }",
+            "  }",
+            "})(jQuery)"));
+  }
 
+  public void testIssue423_minCap() {
     assumeMinimumCapture = true;
     test(
-        "(function($) {\n" +
-        "  $.fn.multicheck = function(options) {\n" +
-        "    initialize.call(this, options);\n" +
-        "  };\n" +
-        "\n" +
-        "  function initialize(options) {\n" +
-        "    options.checkboxes = $(this).siblings(':checkbox');\n" +
-        "    preload_check_all.call(this);\n" +
-        "  }\n" +
-        "\n" +
-        "  function preload_check_all() {\n" +
-        "    $(this).data('checkboxes');\n" +
-        "  }\n" +
-        "})(jQuery)",
-        "{var $$jscomp$inline_0=jQuery;\n" +
-        "$$jscomp$inline_0.fn.multicheck=function(options$jscomp$inline_4){\n" +
-        "  {options$jscomp$inline_4.checkboxes=" +
-            "$$jscomp$inline_0(this).siblings(\":checkbox\");\n" +
-        "  {$$jscomp$inline_0(this).data(\"checkboxes\")}" +
-        "  }\n" +
-        "}\n" +
-        "}");
+        LINE_JOINER.join(
+            "(function($) {",
+            "  $.fn.multicheck = function(options) {",
+            "    initialize.call(this, options);",
+            "  };",
+            "",
+            "  function initialize(options) {",
+            "    options.checkboxes = $(this).siblings(':checkbox');",
+            "    preload_check_all.call(this);",
+            "  }",
+            "",
+            "  function preload_check_all() {",
+            "    $(this).data('checkboxes');",
+            "  }",
+            "})(jQuery)"),
+        LINE_JOINER.join(
+            "{",
+            "  var $$jscomp$inline_0=jQuery;",
+            "  $$jscomp$inline_0.fn.multicheck=function(options$jscomp$inline_4) {",
+            "    {",
+            "      options$jscomp$inline_4.checkboxes =",
+            "          $$jscomp$inline_0(this).siblings(':checkbox');",
+            "      {",
+            "         $$jscomp$inline_0(this).data('checkboxes')",
+            "      }",
+            "    }",
+            "  }",
+            "}"));
   }
 
   public void testIssue728() {
