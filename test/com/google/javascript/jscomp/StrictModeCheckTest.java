@@ -239,15 +239,15 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
 
     testSame("{var g = function () {}}");
     testSame("{(function g() {})()}");
-    testErrorEs6("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
+    testError("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
 
     testSame("var x;if (x) {var g = function () {}}");
     testSame("var x;if (x) {(function g() {})()}");
-    testErrorEs6("var x;if (x) { function g(){} }", StrictModeCheck.BAD_FUNCTION_DECLARATION);
+    testError("var x;if (x) { function g(){} }", StrictModeCheck.BAD_FUNCTION_DECLARATION);
   }
 
   public void testFunctionDecl2() {
-    testErrorEs6("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
+    testError("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
   }
 
   public void testClass() {
