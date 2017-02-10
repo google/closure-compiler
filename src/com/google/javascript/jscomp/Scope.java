@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
-
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -48,8 +47,7 @@ public class Scope implements StaticScope {
     Preconditions.checkNotNull(parent);
     Preconditions.checkNotNull(rootNode);
     Preconditions.checkArgument(
-        rootNode != parent.rootNode,
-        "Root node: %s\nParent's root node: %s", rootNode, parent.rootNode);
+        rootNode != parent.rootNode, "rootNode should not be the parent's root node", rootNode);
 
     this.parent = parent;
     this.rootNode = rootNode;
