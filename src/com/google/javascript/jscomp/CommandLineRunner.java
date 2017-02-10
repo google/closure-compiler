@@ -541,8 +541,13 @@ public class CommandLineRunner extends
 
     @Option(name = "--polymer_pass",
         handler = BooleanOptionHandler.class,
-        usage = "Rewrite Polymer classes to be compiler-friendly.")
+        usage = "Equivalent to --polymer_version=1")
+    @Deprecated
     private boolean polymerPass = false;
+
+    @Option(name = "--polymer_version",
+        usage = "Which version of Polymer is being used (1 or 2).")
+    private Integer polymerVersion = null;
 
     @Option(name = "--chrome_pass",
         handler = BooleanOptionHandler.class,
@@ -1642,7 +1647,11 @@ public class CommandLineRunner extends
 
     options.angularPass = flags.angularPass;
 
-    options.polymerPass = flags.polymerPass;
+    if (flags.polymerPass) {
+      options.polymerVersion = 1;
+    } else {
+      options.polymerVersion = flags.polymerVersion;
+    }
 
     options.chromePass = flags.chromePass;
 

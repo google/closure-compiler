@@ -88,7 +88,9 @@ public final class GwtRunner implements EntryPoint {
     boolean checksOnly;
     boolean newTypeInf;
     String outputWrapper;
+    @Deprecated
     boolean polymerPass;
+    Integer polymerVersion;
     boolean preserveTypeAnnotations;
     boolean processCommonJsModules;
     public String renamePrefixNamespace;
@@ -127,7 +129,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.languageOut = "ECMASCRIPT5";
     defaultFlags.newTypeInf = false;
     defaultFlags.outputWrapper = null;
-    defaultFlags.polymerPass = false;
+    defaultFlags.polymerVersion = null;
     defaultFlags.preserveTypeAnnotations = false;
     defaultFlags.processCommonJsModules = false;
     defaultFlags.renamePrefixNamespace = null;
@@ -388,7 +390,11 @@ public final class GwtRunner implements EntryPoint {
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
     options.setGenerateExports(flags.generateExports);
     options.setNewTypeInference(flags.newTypeInf);
-    options.setPolymerPass(flags.polymerPass);
+    if (flags.polymerPass) {
+      options.setPolymerVersion(1);
+    } else {
+      options.setPolymerVersion(flags.polymerVersion);
+    }
     options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
     options.setProcessCommonJSModules(flags.processCommonJsModules);
     options.setRenamePrefixNamespace(flags.renamePrefixNamespace);

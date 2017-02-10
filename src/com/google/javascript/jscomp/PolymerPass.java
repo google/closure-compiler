@@ -60,6 +60,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     this.compiler = compiler;
     tagNameMap = TagNameToType.getMap();
     nativeExternsAdded = new HashSet<>();
+
+    if (compiler.getOptions().polymerVersion != 1) {
+      throw new IllegalStateException("Polymer version not supported: "
+          + compiler.getOptions().polymerVersion);
+    }
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
@@ -37,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Compiler options
@@ -716,8 +719,9 @@ public class CompilerOptions {
   /** Processes AngularJS-specific annotations */
   boolean angularPass;
 
-  /** Processes Polymer calls */
-  boolean polymerPass;
+  /** If non-null, processes Polymer code */
+  @Nullable
+  Integer polymerVersion;
 
   /** Processes cr.* functions */
   boolean chromePass;
@@ -1200,7 +1204,7 @@ public class CompilerOptions {
     preserveGoogProvidesAndRequires = false;
     jqueryPass = false;
     angularPass = false;
-    polymerPass = false;
+    polymerVersion = null;
     dartPass = false;
     j2clPassMode = J2clPassMode.OFF;
     removeAbstractMethods = false;
@@ -1669,8 +1673,15 @@ public class CompilerOptions {
     this.angularPass = angularPass;
   }
 
+  @Deprecated
   public void setPolymerPass(boolean polymerPass) {
-    this.polymerPass = polymerPass;
+    this.setPolymerVersion(1);
+  }
+
+  public void setPolymerVersion(Integer polymerVersion) {
+    checkArgument(polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
+        "Invalid Polymer version:", polymerVersion);
+    this.polymerVersion = polymerVersion;
   }
 
   public void setDartPass(boolean dartPass) {
@@ -2785,7 +2796,7 @@ public class CompilerOptions {
                 "parentModuleCanSeeSymbolsDeclaredInChildren",
                 parentModuleCanSeeSymbolsDeclaredInChildren)
             .add("parseJsDocDocumentation", isParseJsDocDocumentation())
-            .add("polymerPass", polymerPass)
+            .add("polymerVersion", polymerVersion)
             .add("preferLineBreakAtEndOfFile", preferLineBreakAtEndOfFile)
             .add("preferSingleQuotes", preferSingleQuotes)
             .add("preferStableNames", preferStableNames)
