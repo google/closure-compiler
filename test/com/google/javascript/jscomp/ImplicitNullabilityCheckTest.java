@@ -56,6 +56,12 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
         "/** @return {Object} */ function f(x){ return {}; }");
   }
 
+  public void testParameterizedObject() {
+    warnImplicitlyNullable(LINE_JOINER.join(
+        "/** @param {Object<string, string>=} opt_values */",
+        "function getMsg(opt_values) {};"));
+  }
+
   public void testNullableTypedef() {
     // Arguable whether or not this deserves a warning, so leaving
     // out of NTI for now.

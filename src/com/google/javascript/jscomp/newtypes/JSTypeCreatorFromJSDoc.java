@@ -418,13 +418,12 @@ public final class JSTypeCreatorFromJSDoc {
         JSType result;
         if (n.hasChildren()) {
           // We consider a parameterized Object<...> as an alias of IObject.
-          NominalType iobject = this.commonTypes.getIObjectType();
+          RawNominalType iobject = this.commonTypes.getIObjectType();
           if (iobject == null) {
             // Can happen when using old externs.
             return this.commonTypes.UNKNOWN;
           }
-          result = getNominalTypeHelper(
-              iobject.getRawNominalType(), n, registry, outerTypeParameters);
+          result = getNominalTypeHelper(iobject, n, registry, outerTypeParameters);
         } else {
           result = this.commonTypes.getTopObject();
         }

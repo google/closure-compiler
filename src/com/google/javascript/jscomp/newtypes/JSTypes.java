@@ -323,8 +323,8 @@ public final class JSTypes {
     return this.bottomObject;
   }
 
-  public NominalType getIObjectType() {
-    return this.iObject == null ? null : this.iObject.getAsNominalType();
+  public RawNominalType getIObjectType() {
+    return this.iObject;
   }
 
   public JSType getArrayInstance(JSType t) {
