@@ -2121,8 +2121,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           return objLitType;
         }
         case GETPROP:
-          return simpleInferPropAccessType(
-              n.getFirstChild(), n.getLastChild().getString());
+          return simpleInferPropAccessType(n.getFirstChild(), n.getLastChild().getString());
         case GETELEM:
           return simpleInferGetelemType(n);
         case COMMA:
@@ -2241,9 +2240,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return commonTypes.fromFunctionType(ctorFn)
             .withProperty(CONST_INFERENCE_MARKER, commonTypes.UNKNOWN);
       }
-      if (decl.getNamespace() != null) {
-        return null;
-      }
       if (decl.getTypeOfSimpleDecl() != null) {
         return decl.getTypeOfSimpleDecl();
       }
@@ -2331,8 +2327,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       // For an unannotated function, check if we can grab a type signature for
       // it from the surrounding code where it appears.
       if (fnDoc == null && !NodeUtil.functionHasInlineJsdocs(declNode)) {
-        DeclaredFunctionType t = getDeclaredFunctionTypeFromContext(
-            functionName, declNode, parentScope);
+        DeclaredFunctionType t =
+            getDeclaredFunctionTypeFromContext(functionName, declNode, parentScope);
         if (t != null) {
           return t;
         }
@@ -2436,14 +2432,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
       // The function literal is an argument at a call
       if (parent.isCall() && declNode != parent.getFirstChild()) {
-        DeclaredFunctionType calleeDeclType = getDeclaredFunctionTypeOfCalleeIfAny(
-            parent.getFirstChild(), parentScope);
+        DeclaredFunctionType calleeDeclType =
+            getDeclaredFunctionTypeOfCalleeIfAny(parent.getFirstChild(), parentScope);
         if (calleeDeclType != null && !calleeDeclType.isGeneric()) {
           int index = parent.getIndexOfChild(declNode) - 1;
           JSType declTypeFromCallee = calleeDeclType.getFormalType(index);
           if (declTypeFromCallee != null) {
-            DeclaredFunctionType t =
-                computeFnDeclaredTypeFromCallee(declNode, declTypeFromCallee);
+            DeclaredFunctionType t = computeFnDeclaredTypeFromCallee(declNode, declTypeFromCallee);
             if (t != null) {
               return t;
             }
@@ -2452,6 +2447,21 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
 
       return null;
+    }
+
+    private DeclaredFunctionType getDeclaredFunctionTypeOfCalleeIfAny(
+        Node fn, NTIScope currentScope) {
+      Preconditions.checkArgument(fn.getParent().isCall());
+      if (fn.isThis() || (!fn.isFunction() && !fn.isQualifiedName())) {
+        return null;
+      }
+      if (fn.isFunction()) {
+        return currentScope.getScope(getFunInternalName(fn)).getDeclaredFunctionType();
+      }
+      Preconditions.checkState(fn.isQualifiedName(), fn);
+      JSType t = simpleInferExprType(fn);
+      FunctionType funType = t == null ? null : t.getFunType();
+      return funType == null ? null : funType.toDeclaredFunctionType();
     }
 
     /**
@@ -2575,32 +2585,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     } else {
       return varType;
     }
-  }
-
-  private DeclaredFunctionType getDeclaredFunctionTypeOfCalleeIfAny(
-      Node fn, NTIScope currentScope) {
-    Preconditions.checkArgument(fn.getParent().isCall());
-    if (fn.isThis() || (!fn.isFunction() && !fn.isQualifiedName())) {
-      return null;
-    }
-    if (fn.isFunction()) {
-      return currentScope.getScope(getFunInternalName(fn)).getDeclaredFunctionType();
-    }
-    Preconditions.checkState(fn.isQualifiedName());
-    Declaration decl = currentScope.getDeclaration(QualifiedName.fromNode(fn), false);
-    if (decl == null) {
-      return null;
-    }
-    if (decl.getFunctionScope() != null) {
-      return decl.getFunctionScope().getDeclaredFunctionType();
-    }
-    if (decl.getTypeOfSimpleDecl() != null) {
-      FunctionType funType = decl.getTypeOfSimpleDecl().getFunType();
-      if (funType != null && !funType.isGeneric()) {
-        return funType.toDeclaredFunctionType();
-      }
-    }
-    return null;
   }
 
   private static boolean isClassPropertyDeclaration(Node n, NTIScope s) {

@@ -12202,6 +12202,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @const */",
         "var g = f;",
         "g(function(x) { return x - 1; });"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @param {function(this:Array)} x */",
+        "Foo.prototype.method = function(x) {};",
+        "function f(/** !Foo */ obj) {",
+        "  obj.method(function() {",
+        "    var /** null */ n = this;",
+        "  });",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testNamespacesWithNonEmptyObjectLiteral() {

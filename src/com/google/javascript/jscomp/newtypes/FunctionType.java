@@ -354,7 +354,7 @@ public final class FunctionType {
       return this.commonTypes.QMARK_FUNCTION;
     }
     if (isGeneric()) {
-      return instantiateGenericsWithUnknown(this).transformByApplyProperty();
+      return instantiateGenericsWithUnknown().transformByApplyProperty();
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     builder.addReqFormal(fromReceiverToFirstFormal());
@@ -390,8 +390,10 @@ public final class FunctionType {
       return DeclaredFunctionType.qmarkFunctionDeclaration(this.commonTypes);
     }
     Preconditions.checkState(!isLoose(), "Loose function: %s", this);
-    Preconditions.checkState(!isGeneric(), "Generic function: %s", this);
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
+    if (isGeneric()) {
+      builder.addTypeParameters(this.typeParameters);
+    }
     for (JSType type : this.requiredFormals) {
       builder.addReqFormal(type);
     }
@@ -495,7 +497,7 @@ public final class FunctionType {
       // NOTE(dimvar): This is a bug. The code that triggers this should be rare
       // and the fix is not trivial, so for now we decided to not fix.
       // See unit tests in NewTypeInferenceTest#testGenericsSubtyping
-      return instantiateGenericsWithUnknown(this)
+      return instantiateGenericsWithUnknown()
           .isSubtypeOfHelper(other, checkThisType, subSuperMap, boxedInfo);
     }
 
@@ -633,10 +635,10 @@ public final class FunctionType {
 
     // We lose precision for generic funs that are not in a subtype relation.
     if (f1.isGeneric()) {
-      f1 = instantiateGenericsWithUnknown(f1);
+      f1 = f1.instantiateGenericsWithUnknown();
     }
     if (f2.isGeneric()) {
-      f2 = instantiateGenericsWithUnknown(f2);
+      f2 = f2.instantiateGenericsWithUnknown();
     }
 
     JSTypes commonTypes = f1.commonTypes;
@@ -705,10 +707,10 @@ public final class FunctionType {
 
     // We lose precision for generic funs that are not in a subtype relation.
     if (f1.isGeneric()) {
-      f1 = instantiateGenericsWithUnknown(f1);
+      f1 = f1.instantiateGenericsWithUnknown();
     }
     if (f2.isGeneric()) {
-      f2 = instantiateGenericsWithUnknown(f2);
+      f2 = f2.instantiateGenericsWithUnknown();
     }
 
     JSTypes commonTypes = f1.commonTypes;
@@ -790,7 +792,7 @@ public final class FunctionType {
       return true;
     }
     if (other.isGeneric()) {
-      other = instantiateGenericsWithUnknown(other);
+      other = other.instantiateGenericsWithUnknown();
     }
     if (!acceptsAnyArguments()) {
       if (other.requiredFormals.size() > this.requiredFormals.size()) {
@@ -850,11 +852,11 @@ public final class FunctionType {
         other.returnType, typeParameters, typeMultimap, subSuperMap);
   }
 
-  private static FunctionType instantiateGenericsWithUnknown(FunctionType f) {
-    if (!f.isGeneric()) {
-      return f;
+  private FunctionType instantiateGenericsWithUnknown() {
+    if (!isGeneric()) {
+      return this;
     }
-    return f.instantiateGenerics(f.commonTypes.MAP_TO_UNKNOWN);
+    return instantiateGenerics(this.commonTypes.MAP_TO_UNKNOWN);
   }
 
   /**
@@ -869,10 +871,10 @@ public final class FunctionType {
       return null;
     }
     if (!f1.typeParameters.isEmpty()) {
-      f1 = instantiateGenericsWithUnknown(f1);
+      f1 = f1.instantiateGenericsWithUnknown();
     }
     if (!f2.typeParameters.isEmpty()) {
-      f2 = instantiateGenericsWithUnknown(f2);
+      f2 = f2.instantiateGenericsWithUnknown();
     }
     Preconditions.checkState(!f1.isLoose() && !f2.isLoose());
     if (f1.equals(f2)) {
