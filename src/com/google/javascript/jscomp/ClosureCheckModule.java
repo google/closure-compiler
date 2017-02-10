@@ -45,6 +45,12 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "@export is not allowed here in a non-legacy goog.module."
           + " Consider using goog.exportSymbol instead.");
 
+  // TODO(tbreisacher): Make this an error when existing violations are fixed.
+  static final DiagnosticType GOOG_MODULE_IN_NON_MODULE =
+      DiagnosticType.disabled(
+          "JSC_GOOG_MODULE_IN_NON_MODULE",
+          "goog.module() call must be the first statement in a module.");
+
   static final DiagnosticType GOOG_MODULE_REFERENCES_THIS = DiagnosticType.error(
       "JSC_GOOG_MODULE_REFERENCES_THIS",
       "The body of a goog.module cannot reference 'this'.");
@@ -192,6 +198,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (currentModule == null) {
+      if (NodeUtil.isCallTo(n, "goog.module")) {
+        t.report(n, GOOG_MODULE_IN_NON_MODULE);
+      }
       return;
     }
     JSDocInfo jsDoc = n.getJSDocInfo();
