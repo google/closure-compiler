@@ -539,10 +539,13 @@ public class CommandLineRunner extends
         + "annotated with @ngInject")
     private boolean angularPass = false;
 
-    @Option(name = "--polymer_pass",
-        handler = BooleanOptionHandler.class,
-        usage = "Rewrite Polymer classes to be compiler-friendly.")
-    private boolean polymerPass = false;
+    @Option(
+      name = "--polymer_pass",
+      handler = OptIntegerOptionHandler.class,
+      usage =
+          "Rewrite Polymer classes to be compiler-friendly. Specify Polymer major version: 1 or 2."
+    )
+    private Integer polymerPass = null;
 
     @Option(name = "--chrome_pass",
         handler = BooleanOptionHandler.class,
@@ -1092,6 +1095,46 @@ public class CommandLineRunner extends
       }
     }
 
+    // Our own option parser to be backwards-compatible.
+    // It needs to be public because of the crazy reflection that args4j does.
+    public static class OptIntegerOptionHandler extends OptionHandler<Integer> {
+      private static final String ERR_MESSAGE = "Bad value for %s: %s";
+
+      public OptIntegerOptionHandler(
+          CmdLineParser parser, OptionDef option, Setter<? super Integer> setter) {
+        super(parser, option, setter);
+      }
+
+      @Override
+      public int parseArguments(Parameters params) throws CmdLineException {
+        String param = null;
+        int version = 1;
+        try {
+          param = params.getParameter(0);
+        } catch (CmdLineException e) {
+          param = null; // to stop linter complaints
+        }
+
+        if (param == null) {
+          setter.addValue(version);
+          return 0;
+        } else {
+          try {
+            version = Integer.parseInt(param);
+          } catch (NumberFormatException e) {
+            throw new CmdLineException("Bad value for " + option.toString() + ": " + param);
+          }
+          setter.addValue(version);
+          return 1;
+        }
+      }
+
+      @Override
+      public String getDefaultMetaVariable() {
+        return null;
+      }
+    }
+
     // Our own parser for warning guards that preserves the original order
     // of the flags.
     public static class WarningGuardErrorOptionHandler
@@ -1419,6 +1462,10 @@ public class CommandLineRunner extends
       reportError("--output_wrapper and --isolation_mode may not be used together.");
     }
 
+    if (flags.polymerPass != null && (flags.polymerPass < 1 || flags.polymerPass > 2)) {
+      reportError("--polymer_pass may only have a value of 1 or 2.");
+    }
+
     if (flags.isolationMode == IsolationMode.IIFE) {
       flags.outputWrapper = "(function(){%output%}).call(this);";
     }
@@ -1642,7 +1689,7 @@ public class CommandLineRunner extends
 
     options.angularPass = flags.angularPass;
 
-    options.polymerPass = flags.polymerPass;
+    options.polymerVersion = flags.polymerPass;
 
     options.chromePass = flags.chromePass;
 
