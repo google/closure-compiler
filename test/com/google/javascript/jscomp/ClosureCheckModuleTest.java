@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ClosureCheckModule.DUPLICATE_NAME_SHORT_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_MODULE_LEVEL_STATEMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ERROR;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
@@ -373,6 +374,22 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "",
             "var {foo, bar: {name}} = goog.require('other.x');"),
         INVALID_DESTRUCTURING_REQUIRE);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var foo = goog.require('abc.foo');",
+            "var foo = goog.require('def.foo');"),
+        DUPLICATE_NAME_SHORT_REQUIRE);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "var {foo, bar} = goog.require('abc');",
+            "var foo = goog.require('def.foo');"),
+        DUPLICATE_NAME_SHORT_REQUIRE);
   }
 
   public void testIllegalShortImportReferencedByLongName() {

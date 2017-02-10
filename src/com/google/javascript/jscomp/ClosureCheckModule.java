@@ -22,7 +22,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Checks that goog.module() is used correctly.
@@ -55,6 +57,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       "JSC_GOOG_MODULE_USES_GOOG_MODULE_GET",
       "It's illegal to use a 'goog.module.get' at the module top-level."
       + " Did you mean to use goog.require instead?");
+
+  static final DiagnosticType DUPLICATE_NAME_SHORT_REQUIRE =
+      DiagnosticType.error(
+          "JSC_DUPLICATE_NAME_SHORT_REQUIRE",
+          "Found multiple goog.require statements importing identifier ''{0}''.");
 
   static final DiagnosticType INVALID_DESTRUCTURING_REQUIRE =
       DiagnosticType.error(
@@ -133,6 +140,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     private final String name;
     // Mapping from fully qualified goog.required names to the import LHS node
     private final Map<String, Node> importsByLongRequiredName = new HashMap<>();
+    // Module-local short names for goog.required symbols.
+    private final Set<String> shortImportNames = new HashSet<>();
     // The node of the default (non-named) export of this module, if it exists.
     private Node defaultExportNode = null;
 
@@ -341,7 +350,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     Preconditions.checkState(callNode.isCall());
     switch (parent.getToken()) {
       case EXPR_RESULT:
-        checkShortGoogRequireCall(t, callNode, parent);
+        currentModule.importsByLongRequiredName.put(extractFirstArgumentName(callNode), parent);
         return;
       case NAME:
       case DESTRUCTURING_LHS:
@@ -354,21 +363,25 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   }
 
   private void checkShortGoogRequireCall(NodeTraversal t, Node callNode, Node declaration) {
-    Node lhs = null;
-    if (NodeUtil.isNameDeclaration(declaration)) {
-      if (declaration.isLet()
-          && !callNode.getFirstChild().matchesQualifiedName("goog.forwardDeclare")) {
-        t.report(declaration, LET_GOOG_REQUIRE);
-      }
-      if (!declaration.hasOneChild()) {
-        t.report(declaration, ONE_REQUIRE_PER_DECLARATION);
-      }
-      lhs = declaration.getFirstChild();
-      if (lhs.isDestructuringLhs() && !isValidDestructuringImport(lhs)) {
-        t.report(declaration, INVALID_DESTRUCTURING_REQUIRE);
-      }
+    if (declaration.isLet()
+        && !callNode.getFirstChild().matchesQualifiedName("goog.forwardDeclare")) {
+      t.report(declaration, LET_GOOG_REQUIRE);
+    }
+    if (!declaration.hasOneChild()) {
+      t.report(declaration, ONE_REQUIRE_PER_DECLARATION);
+      return;
+    }
+    Node lhs = declaration.getFirstChild();
+    if (lhs.isDestructuringLhs() && !isValidDestructuringImport(lhs)) {
+      t.report(declaration, INVALID_DESTRUCTURING_REQUIRE);
     }
     currentModule.importsByLongRequiredName.put(extractFirstArgumentName(callNode), lhs);
+    for (Node nameNode : NodeUtil.getLhsNodesOfDeclaration(declaration)) {
+      String name = nameNode.getString();
+      if (!currentModule.shortImportNames.add(name)) {
+         t.report(nameNode, DUPLICATE_NAME_SHORT_REQUIRE, name);
+      }
+    }
   }
 
   private static boolean isValidDestructuringImport(Node destructuringLhs) {
