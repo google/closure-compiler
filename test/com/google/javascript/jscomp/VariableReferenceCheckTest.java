@@ -405,6 +405,17 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
         "goog.module('example'); var X = goog.require('foo.X'); /** @type {X} */ var y; use(y);");
   }
 
+  public void testGoogModule_duplicateRequire() {
+    assertRedeclareError(
+        "goog.module('bar'); const X = goog.require('foo.X'); const X = goog.require('foo.X');");
+    assertRedeclareError(
+        "goog.module('bar'); let X = goog.require('foo.X'); let X = goog.require('foo.X');");
+    assertRedeclareError(
+        "goog.module('bar'); const X = goog.require('foo.X'); let X = goog.require('foo.X');");
+    assertRedeclareError(
+        "goog.module('bar'); let X = goog.require('foo.X'); const X = goog.require('foo.X');");
+  }
+
   public void testUndeclaredLet() {
     assertEarlyReferenceError("if (a) { x = 3; let x;}");
 
