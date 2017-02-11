@@ -234,6 +234,11 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertNoWarningEs6("function g() { if (false) { function f() { f(); g(); }}}");
   }
 
+  public void testForOf() {
+    assertEarlyReferenceError("for (let x of []) { console.log(x); let x = 123; }");
+    assertNoWarningEs6("for (let x of []) { let x; }");
+  }
+
   public void testDestructuringInFor() {
     testSameEs6("for (let [key, val] of X){}");
     testSameEs6("for (let [key, [nestKey, nestVal], val] of X){}");

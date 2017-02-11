@@ -2147,7 +2147,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    $jscomp$key$i = $jscomp$iter$0.next();",
             "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
             "  var i = $jscomp$key$i.value;",
-            "  console.log(i);",
+            "  {",
+            "    console.log(i);",
+            "  }",
             "}"));
     assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
 
@@ -2159,7 +2161,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    $jscomp$key$i = $jscomp$iter$0.next();",
             "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
             "  i = $jscomp$key$i.value;",
-            "  console.log(i);",
+            "  {",
+            "    console.log(i);",
+            "  }",
             "}"));
 
     // With name instead of array literal.
@@ -2170,7 +2174,20 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    $jscomp$key$i = $jscomp$iter$0.next();",
             "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
             "  var i = $jscomp$key$i.value;",
-            "  console.log(i);",
+            "  {",
+            "    console.log(i);",
+            "  }",
+            "}"));
+
+    // With empty loop body.
+    test(
+        "for (var i of [1,2,3]);",
+        LINE_JOINER.join(
+            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
+            "    $jscomp$key$i = $jscomp$iter$0.next();",
+            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
+            "  var i = $jscomp$key$i.value;",
+            "  {}",
             "}"));
 
     // With no block in for loop body.
@@ -2181,7 +2198,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    $jscomp$key$i = $jscomp$iter$0.next();",
             "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
             "  var i = $jscomp$key$i.value;",
-            "  console.log(i);",
+            "  {",
+            "    console.log(i);",
+            "  }",
             "}"));
 
     // Iteration var shadows an outer var ()
@@ -2193,9 +2212,28 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    $jscomp$key$i = $jscomp$iter$0.next();",
             "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
             "  var i$1 = $jscomp$key$i.value;",
-            "  alert(i$1);",
+            "  {",
+            "    alert(i$1);",
+            "  }",
             "}",
             "alert(i);"));
+  }
+
+  public void testForOfRedeclaredVar() {
+    test(
+        LINE_JOINER.join(
+            "for (let x of []) {",
+            "  let x = 0;",
+            "}"),
+        LINE_JOINER.join(
+            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
+            "    $jscomp$key$x=$jscomp$iter$0.next();",
+            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
+            "  var x = $jscomp$key$x.value;",
+            "  {",
+            "    var x$1 = 0;",
+            "  }",
+            "}"));
   }
 
   public void testSpreadArray() {

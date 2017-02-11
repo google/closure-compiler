@@ -319,9 +319,8 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       declarationOrAssign.getFirstChild().addChildToBack(
           IR.getprop(iterResult.cloneTree(), IR.string("value")));
     }
-    body.addChildToFront(declarationOrAssign);
-
-    Node newFor = IR.forNode(init, cond, incr, body);
+    Node newBody = IR.block(declarationOrAssign, body).useSourceInfoFrom(body);
+    Node newFor = IR.forNode(init, cond, incr, newBody);
     newFor.useSourceInfoIfMissingFromForTree(node);
     parent.replaceChild(node, newFor);
     compiler.reportCodeChange();

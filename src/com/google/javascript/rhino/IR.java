@@ -655,6 +655,7 @@ public class IR {
 
       case BLOCK:
       case BREAK:
+      case CLASS:
       case CONST:
       case CONTINUE:
       case DEBUGGER:
@@ -663,6 +664,7 @@ public class IR {
       case FOR:
       case IF:
       case LABEL:
+      case LET:
       case SWITCH:
       case THROW:
       case TRY:
