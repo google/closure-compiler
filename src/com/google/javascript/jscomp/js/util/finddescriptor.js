@@ -22,7 +22,7 @@
  * Helper function to find a descriptor.
  * @param {!Object} target
  * @param {string} propertyKey
- * @return {!Object|undefined} Property descriptor, or undefined.
+ * @return {!ObjectPropertyDescriptor|undefined}
  */
 $jscomp.findDescriptor = function(target, propertyKey) {
   var /** ?Object */ obj = target;
