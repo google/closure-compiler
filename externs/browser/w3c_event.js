@@ -76,12 +76,20 @@ EventListener.prototype.handleEvent = function(evt) {};
 // https://dvcs.w3.org/hg/d4e/raw-file/tip/source_respec.htm#event-constructors
 
 /**
- * @typedef {{
- *   bubbles: (boolean|undefined),
- *   cancelable: (boolean|undefined)
- * }}
+ * @record
+ * @see https://dom.spec.whatwg.org/#dictdef-eventinit
  */
-var EventInit;
+function EventInit() {};
+
+/** @type {(undefined|boolean)} */
+EventInit.prototype.bubbles;
+
+/** @type {(undefined|boolean)} */
+EventInit.prototype.cancelable;
+
+/** @type {(undefined|boolean)} */
+EventInit.prototype.composed;
+
 
 /**
  * @constructor
