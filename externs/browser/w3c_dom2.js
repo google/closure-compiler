@@ -153,37 +153,37 @@ HTMLDocument.prototype.domain;
 HTMLDocument.prototype.URL;
 
 /**
- * @type {HTMLBodyElement}
+ * @type {!HTMLBodyElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-56360201
  */
 HTMLDocument.prototype.body;
 
 /**
- * @type {HTMLCollection<!HTMLImageElement>}
+ * @type {!HTMLCollection<!HTMLImageElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-90379117
  */
 HTMLDocument.prototype.images;
 
 /**
- * @type {HTMLCollection<!HTMLAppletElement>}
+ * @type {!HTMLCollection<!HTMLAppletElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-85113862
  */
 HTMLDocument.prototype.applets;
 
 /**
- * @type {HTMLCollection<(!HTMLAnchorElement|!HTMLAreaElement)>}
+ * @type {!HTMLCollection<(!HTMLAnchorElement|!HTMLAreaElement)>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-7068919
  */
 HTMLDocument.prototype.links;
 
 /**
- * @type {HTMLCollection<!HTMLFormElement>}
+ * @type {!HTMLCollection<!HTMLFormElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-1689064
  */
 HTMLDocument.prototype.forms;
 
 /**
- * @type {HTMLCollection<!HTMLAnchorElement>}
+ * @type {!HTMLCollection<!HTMLAnchorElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-7577272
  */
 HTMLDocument.prototype.anchors;
