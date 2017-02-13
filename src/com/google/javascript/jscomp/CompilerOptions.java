@@ -1675,7 +1675,7 @@ public class CompilerOptions {
 
   @Deprecated
   public void setPolymerPass(boolean polymerPass) {
-    this.setPolymerVersion(1);
+    this.setPolymerVersion(polymerPass ? 1 : null);
   }
 
   public void setPolymerVersion(Integer polymerVersion) {
