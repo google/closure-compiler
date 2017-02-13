@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
-
 import java.util.List;
 
 /**
@@ -44,9 +43,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
-        earlyLintChecks,
-        closureRewriteClass,
-        lateLintChecks);
+        earlyLintChecks, variableReferenceCheck, closureRewriteClass, lateLintChecks);
   }
 
   @Override protected List<PassFactory> getOptimizations() {
@@ -75,6 +72,14 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckUselessBlocks(compiler),
                   new ClosureCheckModule(compiler),
                   new Es6SuperCheck(compiler)));
+        }
+      };
+
+  private final PassFactory variableReferenceCheck =
+      new PassFactory("variableReferenceCheck", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new VariableReferenceCheck(compiler);
         }
       };
 
