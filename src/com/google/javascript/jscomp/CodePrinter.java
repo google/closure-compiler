@@ -731,7 +731,7 @@ public final class CodePrinter {
      */
     public Builder setCompilerOptions(CompilerOptions options) {
       this.options = options;
-      this.prettyPrint = options.isPrettyPrint();
+      this.prettyPrint = options.prettyPrint;
       this.lineBreak = options.lineBreak;
       return this;
     }

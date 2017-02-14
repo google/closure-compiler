@@ -876,7 +876,7 @@ public class CompilerOptions {
   public boolean preserveTypeAnnotations;
 
   /** Output in pretty indented format */
-  private boolean prettyPrint;
+  public boolean prettyPrint;
 
   /** Line break the output a bit more aggressively */
   public boolean lineBreak;
@@ -2477,10 +2477,6 @@ public class CompilerOptions {
 
   public void setPrettyPrint(boolean prettyPrint) {
     this.prettyPrint = prettyPrint;
-  }
-
-  public boolean isPrettyPrint() {
-    return this.prettyPrint;
   }
 
   public void setLineBreak(boolean lineBreak) {
