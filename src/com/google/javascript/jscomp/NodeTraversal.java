@@ -38,9 +38,6 @@ public class NodeTraversal {
   /** Contains the current node*/
   private Node curNode;
 
-  public static final DiagnosticType NODE_TRAVERSAL_ERROR =
-      DiagnosticType.error("JSC_NODE_TRAVERSAL_ERROR", "{0}");
-
   /**
    * Stack containing the Scopes that have been created. The Scope objects
    * are lazily created; so the {@code scopeRoots} stack contains the
@@ -287,11 +284,9 @@ public class NodeTraversal {
     // very useful to find out at least which function caused the exception.
     if (inputId != null) {
       message =
-          unexpectedException.getMessage() + "\n" +
-          formatNodeContext("Node", curNode) +
-          (curNode == null ?
-              "" :
-              formatNodeContext("Parent", curNode.getParent()));
+          unexpectedException.getMessage() + "\n"
+          + formatNodeContext("Node", curNode)
+          + (curNode == null ?  "" : formatNodeContext("Parent", curNode.getParent()));
     }
     compiler.throwInternalError(message, unexpectedException);
   }
@@ -359,11 +354,11 @@ public class NodeTraversal {
 
   /**
    * Traverses a parse tree recursively with a scope, starting with the given
-   * root. This should only be used in the global scope. Otherwise, use
+   * root. This should only be used in the global scope or module scopes. Otherwise, use
    * {@link #traverseAtScope}.
    */
   void traverseWithScope(Node root, Scope s) {
-    Preconditions.checkState(s.isGlobal());
+    Preconditions.checkState(s.isGlobal() || s.isModuleScope());
     try {
       setInputId(null, "");
       curNode = root;
@@ -416,7 +411,8 @@ public class NodeTraversal {
 
       popScope();
     } else {
-      Preconditions.checkState(s.isGlobal(), "Expected global scope. Got:", s);
+      Preconditions.checkState(s.isGlobal() || s.isModuleScope(),
+          "Expected global or module scope. Got:", s);
       traverseWithScope(n, s);
     }
   }
@@ -630,7 +626,7 @@ public class NodeTraversal {
     if (type == Token.FUNCTION) {
       traverseFunction(n, parent);
     } else if (type == Token.CLASS) {
-      traverseClass(n, parent);
+      traverseClass(n);
     } else if (type == Token.MODULE_BODY) {
       traverseModule(n);
     } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
@@ -677,7 +673,7 @@ public class NodeTraversal {
   }
 
   /** Traverses a class. */
-  private void traverseClass(Node n, Node parent) {
+  private void traverseClass(Node n) {
     final Node className = n.getFirstChild();
     boolean isClassExpression = NodeUtil.isClassExpression(n);
 

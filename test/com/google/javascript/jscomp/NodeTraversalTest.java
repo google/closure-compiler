@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
@@ -125,7 +125,7 @@ public final class NodeTraversalTest extends TestCase {
 
   public void testGetScopeRoot() {
     Compiler compiler = new Compiler();
-    String code = Joiner.on('\n').join(
+    String code = LINE_JOINER.join(
         "var a;",
         "function foo() {",
         "  var b",
@@ -224,7 +224,7 @@ public final class NodeTraversalTest extends TestCase {
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 
-    String code = Joiner.on('\n').join(
+    String code = LINE_JOINER.join(
         "var a;",
         "function foo() {",
         "  var b;",
@@ -255,13 +255,13 @@ public final class NodeTraversalTest extends TestCase {
   public void testTraverseAtScopeWithBlockScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     compiler.initOptions(options);
     ScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 
-    String code = Joiner.on('\n').join(
+    String code = LINE_JOINER.join(
         "function foo() {",
         "  if (bar) {",
         "    let x;",
@@ -280,6 +280,31 @@ public final class NodeTraversalTest extends TestCase {
     Scope blockScope = creator.createScope(innerBlock, topScope);
     callback.expect(innerBlock, innerBlock);
     t.traverseAtScope(blockScope);
+    callback.assertEntered();
+  }
+
+  public void testTraverseAtScopeWithModuleScope() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    compiler.initOptions(options);
+    ScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
+    NodeTraversal t = new NodeTraversal(compiler, callback, creator);
+
+    String code = LINE_JOINER.join(
+        "goog.module('example.module');",
+        "",
+        "var x;");
+
+    Node tree = parse(compiler, code);
+    Node moduleBody = tree.getFirstChild();
+    Scope moduleScope = creator.createScope(moduleBody, null);
+
+    callback.expect(moduleBody, moduleBody);
+
+    t.traverseAtScope(moduleScope);
+
     callback.assertEntered();
   }
 
