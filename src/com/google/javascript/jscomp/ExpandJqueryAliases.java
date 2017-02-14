@@ -48,24 +48,27 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       Logger.getLogger(ExpandJqueryAliases.class.getName());
 
   static final DiagnosticType JQUERY_UNABLE_TO_EXPAND_INVALID_LIT_ERROR =
-      DiagnosticType.warning("JSC_JQUERY_UNABLE_TO_EXPAND_INVALID_LIT",
-          "jQuery.expandedEach call cannot be expanded because the first " +
-          "argument must be an object literal or an array of strings " +
-          "literal.");
+      DiagnosticType.warning(
+          "JSC_JQUERY_UNABLE_TO_EXPAND_INVALID_LIT",
+          "jQuery.expandedEach call cannot be expanded because the first "
+              + "argument must be an object literal or an array of strings "
+              + "literal.");
 
   static final DiagnosticType JQUERY_UNABLE_TO_EXPAND_INVALID_NAME =
-      DiagnosticType.error("JSC_JQUERY_UNABLE_TO_EXPAND_INVALID_NAME",
+      DiagnosticType.error(
+          "JSC_JQUERY_UNABLE_TO_EXPAND_INVALID_NAME",
           "jQuery.expandedEach expansion would result in an invalid property name.");
 
   static final DiagnosticType JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_WITH_NAME =
-      DiagnosticType.error("JSC_JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_WITH_NAME",
-          "jQuery.expandedEach expansion would result in the invalid " +
-          "property name \"{0}\".");
+      DiagnosticType.error(
+          "JSC_JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_WITH_NAME",
+          "jQuery.expandedEach expansion would result in the invalid " + "property name \"{0}\".");
 
   static final DiagnosticType JQUERY_USELESS_EACH_EXPANSION =
-      DiagnosticType.warning("JSC_JQUERY_USELESS_EACH_EXPANSION",
-          "jQuery.expandedEach was not expanded as no valid property " +
-          "assignments were encountered. Consider using jQuery.each instead.");
+      DiagnosticType.warning(
+          "JSC_JQUERY_USELESS_EACH_EXPANSION",
+          "jQuery.expandedEach was not expanded as no valid property "
+              + "assignments were encountered. Consider using jQuery.each instead.");
 
   private static final Set<String> JQUERY_EXTEND_NAMES = ImmutableSet.of(
       "jQuery.extend", "jQuery.fn.extend", "jQuery.prototype.extend");
@@ -194,9 +197,9 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       extendArg = objectToExtend;
       objectToExtend = callTarget.getFirstChild();
       ensureObjectDefined = false;
-    } else if (objectToExtend.isGetProp() &&
-          (objectToExtend.getLastChild().getString().equals("prototype") ||
-          convention.isPrototypeAlias(objectToExtend))) {
+    } else if (objectToExtend.isGetProp()
+        && (objectToExtend.getLastChild().getString().equals("prototype")
+            || convention.isPrototypeAlias(objectToExtend))) {
       ensureObjectDefined = false;
     }
 
@@ -283,8 +286,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
   /**
    * Expand a jQuery.expandedEach call
    *
-   * Expanded jQuery.expandedEach calls will replace the GETELEM nodes of a
-   * property assignment with GETPROP nodes to allow for renaming.
+   * <p>Expanded jQuery.expandedEach calls will replace the GETELEM nodes of a property assignment
+   * with GETPROP nodes to allow for renaming.
    */
   private void maybeExpandJqueryEachCall(NodeTraversal t, Node n) {
     Node objectToLoopOver = n.getSecondChild();
@@ -309,9 +312,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
     // Check to see if the first argument is something we recognize and can
     // expand.
-    if (!objectToLoopOver.isObjectLit() &&
-        !(objectToLoopOver.isArrayLit() &&
-        isArrayLitValidForExpansion(objectToLoopOver))) {
+    if (!objectToLoopOver.isObjectLit()
+        && !(objectToLoopOver.isArrayLit() && isArrayLitValidForExpansion(objectToLoopOver))) {
       t.report(n, JQUERY_UNABLE_TO_EXPAND_INVALID_LIT_ERROR, (String) null);
       return;
     }
@@ -321,10 +323,13 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     List<Node> valueNodeReferences = new ArrayList<>();
 
     new NodeTraversal(
-        compiler,
-        new FindCallbackArgumentReferences(callbackFunction,
-            keyNodeReferences, valueNodeReferences,
-            objectToLoopOver.isArrayLit()))
+            compiler,
+            new FindCallbackArgumentReferences(
+                callbackFunction,
+                keyNodeReferences,
+                valueNodeReferences,
+                objectToLoopOver.isArrayLit()),
+            new Es6SyntacticScopeCreator(compiler))
         .traverseInnerNode(
             NodeUtil.getFunctionBody(callbackFunction), callbackFunction, t.getScope());
 
@@ -338,7 +343,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         keyNodeReferences, valueNodeReferences);
 
     if (fncBlock != null && fncBlock.hasChildren()) {
-        replaceOriginalJqueryEachCall(n, fncBlock);
+      replaceOriginalJqueryEachCall(n, fncBlock);
     } else {
       // We didn't do anything useful ...
       t.report(n, JQUERY_USELESS_EACH_EXPANSION, (String) null);
@@ -393,8 +398,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
         // Walk up the tree to see if the key is used in a GETELEM
         // assignment
-        while (ancestor != null && !NodeUtil.isStatement(ancestor) &&
-            !ancestor.isGetElem()) {
+        while (ancestor != null && !NodeUtil.isStatement(ancestor) && !ancestor.isGetElem()) {
           ancestor = ancestor.getParent();
         }
 
@@ -413,20 +417,17 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
           peepholePasses.process(null, ancestorClone.getSecondChild());
           Node prop = ancestorClone.getSecondChild();
 
-          if (prop.isString() &&
-            NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {
+          if (prop.isString()
+              && NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {
             Node target = ancestorClone.getFirstChild();
-            Node newGetProp = IR.getprop(target.detach(),
-                prop.detach());
+            Node newGetProp = IR.getprop(target.detach(), prop.detach());
             newGetProps.add(newGetProp);
             origGetElems.add(ancestor);
             ancestor.replaceWith(newGetProp);
           } else {
-            if (prop.isString() &&
-                !NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {
-              t.report(n,
-                  JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_WITH_NAME,
-                  prop.getString());
+            if (prop.isString()
+                && !NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {
+              t.report(n, JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_WITH_NAME, prop.getString());
             }
             isValidExpansion = false;
           }
@@ -519,8 +520,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
   }
 
   /**
-   * Given a jQuery.expandedEach callback function, traverse it and collect any
-   * references to its parameter names.
+   * Given a jQuery.expandedEach callback function, traverse it and collect any references to its
+   * parameter names.
    */
   static class FindCallbackArgumentReferences extends AbstractPostOrderCallback
       implements ScopedCallback {
@@ -568,8 +569,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
     private boolean isShadowed(String name, Scope scope) {
       Var nameVar = scope.getVar(name);
-      return nameVar != null &&
-          nameVar.getScope() != this.startingScope;
+      return nameVar != null && nameVar.getScope() != this.startingScope;
     }
 
     @Override
@@ -584,8 +584,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         String nodeValue = isThis ? null : n.getString();
         if (!isThis && keyName != null && nodeValue.equals(keyName)) {
           keyReferences.add(n);
-        } else if (isThis || (valueName != null &&
-            nodeValue.equals(valueName))) {
+        } else if (isThis || (valueName != null && nodeValue.equals(valueName))) {
           valueReferences.add(n);
         }
       }

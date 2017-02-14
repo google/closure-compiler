@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for {@link ExpandJqueryAliases}
  */
-public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
+public final class ExpandJqueryAliasesTest extends CompilerTestCase {
   private JqueryCodingConvention conv = new JqueryCodingConvention();
 
   static final DiagnosticType INVALID_LIT_ERROR =
@@ -36,8 +38,13 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
     return new ExpandJqueryAliases(compiler);
   }
 
+  @Override
+  public void setUp() {
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT3);
+  }
+
   public void testJqueryFnAliasExpansion() {
-    String setupCode = "var jQuery={};jQuery.fn=jQuery.prototype;";
+    String setupCode = "var jQuery={};jQuery.fn=jQuery.prototype;\n";
 
     testSame(setupCode);
 
@@ -92,10 +99,10 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
   public void testJqueryExtendEs6MethodDeclarations() {
     String setupCode = "var jQuery={},obj2={};";
 
-    testEs6(
+    test(
         setupCode + "jQuery.extend({ a(){}, b(){} })",
         setupCode + "{jQuery.a = function(){}; jQuery.b = function(){}}");
-    testEs6(
+    test(
         setupCode + "jQuery.extend(obj2, { a(){}, b(){} })",
         setupCode + "{obj2=obj2||{}; obj2.a = function(){}; obj2.b = function(){}}");
   }
@@ -103,10 +110,10 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
   public void testJqueryExtendEs6Shorthand() {
     String setupCode = "var jQuery={},obj2={};";
 
-    testEs6(
+    test(
         setupCode + "jQuery.extend({a, b})",
         setupCode + "{jQuery.a = a; jQuery.b = b;}");
-    testEs6(
+    test(
         setupCode + "jQuery.extend(obj2, {a, b})",
         setupCode + "{obj2=obj2||{}; obj2.a = a; obj2.b = b;}");
   }
@@ -114,32 +121,30 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
   public void testJqueryExtendExpansionEs6ComputedProp() {
     String setupCode = "var jQuery={},obj2={};";
 
-    testEs6(
+    test(
         setupCode + "jQuery.extend( {[comp + 'Prop']: 1} )",
         setupCode + "{jQuery[comp + 'Prop'] = 1;}");
-    testEs6(
+    test(
         setupCode + "jQuery.extend( {[comp]: 1} )",
         setupCode + "{jQuery[comp] = 1;}");
-    testEs6(
+    test(
         setupCode + "jQuery.extend( {[comp + 'Prop' + name]: 1} )",
         setupCode + "{jQuery[comp + 'Prop' + name] = 1;}");
 
-    testEs6(
+    test(
         setupCode + "jQuery.extend(obj2, {[comp + 'Prop']: 1} )",
         setupCode + "{obj2=obj2||{}; obj2[comp + 'Prop'] = 1;}");
-    testEs6(
+    test(
         setupCode + "jQuery.extend(obj2, {[comp]: 1} )",
         setupCode + "{obj2=obj2||{}; obj2[comp] = 1;}");
-    testEs6(
+    test(
         setupCode + "jQuery.extend(obj2, {[comp + 'Prop' + name]: 1} )",
         setupCode + "{obj2=obj2||{}; obj2[comp + 'Prop' + name] = 1;}");
   }
 
   public void testJqueryExpandedEachExpansion() {
-    String setupCode = "var jQuery={};" +
-        "jQuery.expandedEach=function(vals, callback){};";
-    String resultCode =
-        "var jQuery={ expandedEach: function(vals, callback){} };";
+    String setupCode = "var jQuery={};\njQuery.expandedEach=function(vals, callback){};\n";
+    String resultCode = "var jQuery={ expandedEach: function(vals, callback){} };\n";
 
     testSame(setupCode);
 
@@ -230,7 +235,7 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
     String resultCode =
         "var jQuery={ expandedEach: function(vals, callback){} };";
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             setupCode,
             "jQuery.expandedEach({ a(){}, b(){} },",
@@ -247,7 +252,7 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
     String resultCode =
         "var jQuery={ expandedEach: function(vals, callback){} };";
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             setupCode,
             "jQuery.expandedEach({a, b},",
@@ -259,7 +264,7 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
   }
 
   public void testJqueryExpandedEachExpansionEs6ComputedProp() {
-    testErrorEs6(
+    testError(
         LINE_JOINER.join(
             "var jQuery={}; jQuery.expandedEach=function(vals, callback){};",
             "jQuery.expandedEach({ [comp + 'Prop']: 1},",
