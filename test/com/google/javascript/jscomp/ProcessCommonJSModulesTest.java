@@ -483,6 +483,19 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "goog.provide('module$test');",
             "var module$test = function() {};",
             "module$test.prototype = new Date();"));
+
+    testModules(
+        LINE_JOINER.join(
+            "function foo() {}",
+            "Object.assign(foo, { bar: foobar });",
+            "function foobar() {}",
+            "module.exports = foo;",
+            "module.exports.bar = foobar;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = function () {};",
+            "module$test.bar = function() {};",
+            "Object.assign(module$test, { bar: module$test.bar });"));
   }
 
   public void testClassRewriting() {
