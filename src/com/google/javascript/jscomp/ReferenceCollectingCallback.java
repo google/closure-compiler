@@ -45,7 +45,7 @@ import java.util.Set;
  *
  * @author kushal@google.com (Kushal Dave)
  */
-class ReferenceCollectingCallback implements ScopedCallback,
+public final class ReferenceCollectingCallback implements ScopedCallback,
     HotSwapCompilerPass,
     StaticSymbolTable<Var, ReferenceCollectingCallback.Reference> {
 
@@ -90,7 +90,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Constructor initializes block stack.
    */
-  ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior, ScopeCreator creator) {
+  public ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior,
+      ScopeCreator creator) {
     this(compiler, behavior, creator, Predicates.<Var>alwaysTrue());
   }
 
@@ -349,7 +350,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     referenceInfo.add(reference);
   }
 
-  interface ReferenceMap {
+  public interface ReferenceMap {
     ReferenceCollection getReferences(Var var);
   }
 
@@ -370,7 +371,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    * Way for callers to add specific behavior during traversal that
    * utilizes the built-up reference information.
    */
-  interface Behavior {
+  public interface Behavior {
     /**
      * Called after we finish with a scope.
      */
@@ -386,7 +387,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    * A collection of references. Can be subclassed to apply checks or
    * store additional state when adding.
    */
-  static class ReferenceCollection implements Iterable<Reference> {
+  public static final class ReferenceCollection implements Iterable<Reference> {
 
     List<Reference> references = new ArrayList<>();
 
@@ -589,7 +590,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Represents a single declaration or reference to a variable.
    */
-  static final class Reference implements StaticRef {
+  public static final class Reference implements StaticRef {
 
     private static final Set<Token> DECLARATION_PARENTS =
         ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.PARAM_LIST,
@@ -695,7 +696,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       return DECLARATION_PARENTS.contains(parent.getToken());
     }
 
-    boolean isVarDeclaration() {
+    public boolean isVarDeclaration() {
       return getParent().isVar();
     }
 
@@ -703,7 +704,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       return getParent().isLet();
     }
 
-    boolean isConstDeclaration() {
+    public boolean isConstDeclaration() {
       return getParent().isConst();
     }
 
@@ -714,7 +715,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     /**
      * Determines whether the variable is initialized at the declaration.
      */
-    boolean isInitializingDeclaration() {
+    public boolean isInitializingDeclaration() {
       // VAR and LET are the only types of variable declarations that may not initialize
       // their variables. Catch blocks, named functions, and parameters all do.
       return (isDeclaration() && !getParent().isVar() && !getParent().isLet())
@@ -747,7 +748,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       return NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == n;
     }
 
-    boolean isSimpleAssignmentToName() {
+    public boolean isSimpleAssignmentToName() {
       Node parent = getParent();
       return parent.isAssign()
           && parent.getFirstChild() == nameNode;
@@ -758,7 +759,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
      * TODO(tbreisacher): This method disagrees with NodeUtil#isLValue for
      * "var x;" and "let x;". Consider updating it to match.
      */
-    boolean isLvalue() {
+    public boolean isLvalue() {
       Node parent = getParent();
       Token parentType = parent.getToken();
       switch (parentType) {

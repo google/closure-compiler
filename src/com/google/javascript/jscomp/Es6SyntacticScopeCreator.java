@@ -33,7 +33,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author moz@google.com (Michael Zhou)
  */
-class Es6SyntacticScopeCreator implements ScopeCreator {
+public final class Es6SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;
   private Scope scope;
   private InputId inputId;
@@ -43,7 +43,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   // but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
 
-  Es6SyntacticScopeCreator(AbstractCompiler compiler) {
+  public Es6SyntacticScopeCreator(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.redeclarationHandler = new DefaultRedeclarationHandler();
   }
