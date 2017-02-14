@@ -115,9 +115,10 @@ class CollapseProperties implements CompilerPass {
    */
   private void checkNamespaces() {
     for (Name name : nameMap.values()) {
-      if (name.isNamespaceObjectLit() &&
-          (name.aliasingGets > 0 || name.localSets + name.globalSets > 1 ||
-           name.deleteProps > 0)) {
+      if (name.isNamespaceObjectLit()
+          && (name.aliasingGets > 0
+              || name.localSets + name.globalSets > 1
+              || name.deleteProps > 0)) {
         boolean initialized = name.getDeclaration() != null;
         for (Ref ref : name.getRefs()) {
           if (ref == name.getDeclaration()) {
@@ -259,8 +260,7 @@ class CollapseProperties implements CompilerPass {
       // 2) References inside a complex assign. (a = x.y = 0). These are
       //    called TWIN references, because they show up twice in the
       //    reference list. Only collapse the set, not the alias.
-      if (!NodeUtil.isObjectLitKey(r.node) &&
-          (r.getTwin() == null || r.isSet())) {
+      if (!NodeUtil.isObjectLitKey(r.node) && (r.getTwin() == null || r.isSet())) {
         flattenNameRef(alias, r.node, rParent, originalName);
       }
     }
@@ -289,8 +289,7 @@ class CollapseProperties implements CompilerPass {
     // initialized is fully qualified (i.e. not an object literal key).
     String originalName = n.getFullName();
     Ref decl = n.getDeclaration();
-    if (decl != null && decl.node != null &&
-        decl.node.isGetProp()) {
+    if (decl != null && decl.node != null && decl.node.isGetProp()) {
       flattenNameRefAtDepth(alias, decl.node, depth, originalName);
     }
 
@@ -403,12 +402,13 @@ class CollapseProperties implements CompilerPass {
       // Recur first so that saved node ancestries are intact when needed.
       collapseDeclarationOfNameAndDescendants(
           p, appendPropForAlias(alias, p.getBaseName()));
-      if (!p.inExterns && canCollapseChildNames &&
-          p.getDeclaration() != null &&
-          p.canCollapse() &&
-          p.getDeclaration().node != null &&
-          p.getDeclaration().node.getParent() != null &&
-          p.getDeclaration().node.getParent().isAssign()) {
+      if (!p.inExterns
+          && canCollapseChildNames
+          && p.getDeclaration() != null
+          && p.canCollapse()
+          && p.getDeclaration().node != null
+          && p.getDeclaration().node.getParent() != null
+          && p.getDeclaration().node.getParent().isAssign()) {
         updateSimpleDeclaration(
             appendPropForAlias(alias, p.getBaseName()), p, p.getDeclaration());
       }
@@ -581,8 +581,8 @@ class CollapseProperties implements CompilerPass {
           alias, ref.node.getAncestor(2), n.getFullName());
 
       JSDocInfo info = NodeUtil.getBestJSDocInfo(ref.node.getParent());
-      if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME) ||
-          (info != null && info.isConstant())) {
+      if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)
+          || (info != null && info.isConstant())) {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
 
@@ -624,8 +624,7 @@ class CollapseProperties implements CompilerPass {
       final Name name) {
     // A function is getting collapsed. Make sure that if it refers to
     // "this", it must be a constructor or documented with @this.
-    if (docInfo == null ||
-        (!docInfo.isConstructor() && !docInfo.hasThisType())) {
+    if (docInfo == null || (!docInfo.isConstructor() && !docInfo.hasThisType())) {
       NodeTraversal.traverseEs6(compiler, function.getLastChild(),
           new NodeTraversal.AbstractShallowCallback() {
             @Override
@@ -740,10 +739,8 @@ class CollapseProperties implements CompilerPass {
       // this object literal's child names wouldn't be collapsible.) The only
       // reason that we don't eliminate them entirely is the off chance that
       // their values are expressions that have side effects.
-      boolean isJsIdentifier = !key.isNumber() &&
-                               TokenStream.isJSIdentifier(key.getString());
-      String propName = isJsIdentifier ?
-          key.getString() : String.valueOf(++arbitraryNameCounter);
+      boolean isJsIdentifier = !key.isNumber() && TokenStream.isJSIdentifier(key.getString());
+      String propName = isJsIdentifier ? key.getString() : String.valueOf(++arbitraryNameCounter);
 
       // If the name cannot be collapsed, skip it.
       String qName = objlitName.getFullName() + '.' + propName;
