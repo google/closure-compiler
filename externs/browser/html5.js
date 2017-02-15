@@ -1695,7 +1695,7 @@ HTMLMediaElement.prototype.loop;
 
 /**
  * Starts playing the media.
- * @return {!Promise<undefined>}
+ * @return {undefined}
  */
 HTMLMediaElement.prototype.play = function() {};
 
