@@ -1387,7 +1387,7 @@ Object.values = function(obj) {};
 
 /**
  * @param {!Object<T>} obj
- * @return {!Array<!Array<(string|T)>>} entries
+ * @return {!Array<!Array<(string)>>} entries
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries
  * @throws {Error}
  * @template T
