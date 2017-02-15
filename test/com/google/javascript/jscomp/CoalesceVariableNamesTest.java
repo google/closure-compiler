@@ -407,7 +407,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         );
   }
 
-  public void testUsePseduoNames() {
+  public void testUsePseudoNames() {
     usePseudoName = true;
     inFunction("var x   = 0; print(x  ); var   y = 1; print(  y)",
                "var x_y = 0; print(x_y);     x_y = 1; print(x_y)");
