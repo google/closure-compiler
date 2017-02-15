@@ -1194,7 +1194,7 @@ public class CommandLineRunner extends
     private void applyToOptions(CompilerOptions options) {
       switch (this) {
         case PRETTY_PRINT:
-          options.prettyPrint = true;
+          options.setPrettyPrint(true);
           break;
         case PRINT_INPUT_DELIMITER:
           options.printInputDelimiter = true;
