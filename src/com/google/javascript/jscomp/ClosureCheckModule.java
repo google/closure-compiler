@@ -45,9 +45,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "@export is not allowed here in a non-legacy goog.module."
           + " Consider using goog.exportSymbol instead.");
 
-  // TODO(tbreisacher): Make this an error when existing violations are fixed.
   static final DiagnosticType GOOG_MODULE_IN_NON_MODULE =
-      DiagnosticType.disabled(
+      DiagnosticType.error(
           "JSC_GOOG_MODULE_IN_NON_MODULE",
           "goog.module() call must be the first statement in a module.");
 
