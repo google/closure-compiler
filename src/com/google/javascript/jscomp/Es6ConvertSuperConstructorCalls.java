@@ -178,6 +178,9 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
   }
 
   private boolean isKnownToReturnOnlyUndefined(String functionQName) {
+    if (globalNamespace == null) {
+      return false;
+    }
     Name globalName = globalNamespace.getSlot(functionQName);
     if (globalName == null) {
       return false;
