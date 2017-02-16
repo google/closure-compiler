@@ -175,18 +175,22 @@ TouchList.prototype.identifiedTouch = function(identifier) {};
 Document.prototype.createTouchList = function(touches) {};
 
 /**
- * @typedef {{
- *   bubbles: (boolean|undefined),
- *   cancelable: (boolean|undefined),
- *   view: (Window|undefined),
- *   detail: (number|undefined),
- *   relatedTarget: (EventTarget|undefined),
- *   touches: (!Array<Touch>|undefined),
- *   targetTouches: (!Array<Touch>|undefined),
- *   changedTouches: (!Array<Touch>|undefined)
- * }}
+ * @record
+ * @extends {UIEventInit}
  */
-var TouchEventInit;
+function TouchEventInit() {};
+
+/** @type {undefined|?EventTarget} */
+TouchEventInit.prototype.relatedTarget;
+
+/** @type {undefined|!Array<Touch>} */
+TouchEventInit.prototype.touches;
+
+/** @type {undefined|!Array<Touch>} */
+TouchEventInit.prototype.targetTouches;
+
+/** @type {undefined|!Array<Touch>} */
+TouchEventInit.prototype.changedTouches;
 
 /**
  * The TouchEvent class encapsulates information about a touch event.
