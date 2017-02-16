@@ -299,6 +299,10 @@ function RTCRtpSender() {}
  */
 RTCRtpSender.prototype.track;
 
+/**
+ * @param {!MediaStreamTrack} track
+ */
+RTCRtpSender.prototype.replaceTrack = function(track) {};
 
 /**
  * @interface

@@ -81,6 +81,13 @@ HTMLCanvasElement.prototype.toDataURL = function(opt_type, var_args) {};
  */
 HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 
+/**
+ * @see https://www.w3.org/TR/mediacapture-fromelement/
+ * @param {number=} opt_framerate
+ * @return {!MediaStream}
+ * @throws {Error}
+ * */
+HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
 
 /**
  * @interface
