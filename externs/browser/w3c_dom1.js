@@ -598,6 +598,14 @@ Attr.prototype.value;
 function Element() {}
 
 /**
+ * An Element always contains a non-null NamedNodeMap containing the attributes
+ * of this node.
+ * @type {!NamedNodeMap<!Attr>}
+ * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-attributes
+ */
+Element.prototype.attributes;
+
+/**
  * @type {string}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-tagName
  */
