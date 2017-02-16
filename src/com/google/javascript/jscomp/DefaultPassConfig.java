@@ -312,10 +312,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkProvides);
     }
 
-    if (options.jqueryPass) {
-      checks.add(jqueryAliases);
-    }
-
     if (options.angularPass) {
       checks.add(angularPass);
     }
@@ -1296,14 +1292,6 @@ public final class DefaultPassConfig extends PassConfig {
           pass.hotSwapScript(scriptRoot, originalRoot);
         }
       };
-    }
-  };
-
-  /** Expand jQuery Primitives and Aliases pass. */
-  private final PassFactory jqueryAliases = new PassFactory("jqueryAliases", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new ExpandJqueryAliases(compiler);
     }
   };
 

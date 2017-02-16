@@ -713,9 +713,6 @@ public class CompilerOptions {
   /** Do not strip goog.provide()/goog.require() calls from the code. */
   private boolean preserveGoogProvidesAndRequires;
 
-  /** Processes jQuery aliases */
-  public boolean jqueryPass;
-
   /** Processes AngularJS-specific annotations */
   boolean angularPass;
 
@@ -1202,7 +1199,6 @@ public class CompilerOptions {
     markAsCompiled = false;
     closurePass = false;
     preserveGoogProvidesAndRequires = false;
-    jqueryPass = false;
     angularPass = false;
     polymerVersion = null;
     dartPass = false;
@@ -2774,7 +2770,6 @@ public class CompilerOptions {
             .add("instrumentForCoverage", instrumentForCoverage)
             .add("instrumentBranchCoverage", instrumentBranchCoverage)
             .add("j2clPassMode", j2clPassMode)
-            .add("jqueryPass", jqueryPass)
             .add("labelRenaming", labelRenaming)
             .add("languageIn", getLanguageIn())
             .add("languageOut", getLanguageOut())

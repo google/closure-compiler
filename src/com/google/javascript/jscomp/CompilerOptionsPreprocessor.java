@@ -70,11 +70,6 @@ final class CompilerOptionsPreprocessor {
       }
     }
 
-    if (options.jqueryPass && options.closurePass) {
-      throw new InvalidOptionsException(
-          "The jQuery pass and the Closure pass cannot both be enabled.");
-    }
-
     if (options.dartPass) {
       if (!options.getLanguageOut().isEs5OrHigher()) {
         throw new InvalidOptionsException("Dart requires --language_out=ES5 or higher.");

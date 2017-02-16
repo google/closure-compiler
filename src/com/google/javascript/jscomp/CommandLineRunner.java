@@ -526,13 +526,6 @@ public class CommandLineRunner extends
       usage = "Deprecated: use --entry_point.")
     private List<String> closureEntryPoint = new ArrayList<>();
 
-    @Option(name = "--process_jquery_primitives",
-        hidden = true,
-        handler = BooleanOptionHandler.class,
-        usage = "Processes built-ins from the Jquery library, such as "
-        + "jQuery.fn and jQuery.extend()")
-    private boolean processJqueryPrimitives = false;
-
     @Option(name = "--angular_pass",
         handler = BooleanOptionHandler.class,
         usage = "Generate $inject properties for AngularJS for functions "
@@ -1444,8 +1437,6 @@ public class CommandLineRunner extends
       CodingConvention conv;
       if (flags.thirdParty) {
         conv = CodingConventions.getDefault();
-      } else if (flags.processJqueryPrimitives) {
-        conv = new JqueryCodingConvention();
       } else if (flags.chromePass) {
         conv = new ChromeCodingConvention();
       } else {
@@ -1592,11 +1583,7 @@ public class CommandLineRunner extends
       }
     }
 
-    if (flags.processJqueryPrimitives) {
-      options.setCodingConvention(new JqueryCodingConvention());
-    } else {
-      options.setCodingConvention(new ClosureCodingConvention());
-    }
+    options.setCodingConvention(new ClosureCodingConvention());
 
     options.setExtraAnnotationNames(flags.extraAnnotationName);
 
@@ -1641,9 +1628,6 @@ public class CommandLineRunner extends
     }
 
     options.closurePass = flags.processClosurePrimitives;
-
-    options.jqueryPass = CompilationLevel.ADVANCED_OPTIMIZATIONS == level &&
-        flags.processJqueryPrimitives;
 
     options.angularPass = flags.angularPass;
 
