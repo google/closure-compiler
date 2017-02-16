@@ -121,10 +121,11 @@ Object.defineProperties = function(obj, props) {};
 
 
 /**
- * @param {!Object} obj
+ * @param {T} obj
  * @param {string} prop
- * @return {!ObjectPropertyDescriptor|undefined}
+ * @return {!ObjectPropertyDescriptor<T>|undefined}
  * @nosideeffects
+ * @template T
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
  */
 Object.getOwnPropertyDescriptor = function(obj, prop) {};
