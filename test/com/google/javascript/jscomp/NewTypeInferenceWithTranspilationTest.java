@@ -464,4 +464,28 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "const instance = new Foo();",
         "const number = instance.foo();"));
   }
+
+  public void testLoopVariableTranspiledToProperty() {
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  for (let i = 0; i < 1; ++i) {",
+        "    const x = 1;",
+        "    function b() {",
+        "      return x;",
+        "    }",
+        "  }",
+        "}"));
+
+    // TODO(dimvar): catch this warning once we typecheck ES6 natively.
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  for (let i = 0; i < 1; ++i) {",
+        "    const x = 1;",
+        "    x = 2;",
+        "    function b() {",
+        "      return x;",
+        "    }",
+        "  }",
+        "}"));
+  }
 }

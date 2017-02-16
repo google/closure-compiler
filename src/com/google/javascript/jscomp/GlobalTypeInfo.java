@@ -1889,6 +1889,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
     }
 
+    private boolean isTranspiledLoopVariable(Node getProp) {
+      Node recv = getProp.getFirstChild();
+      return recv.isName() && recv.getString().startsWith("$jscomp$loop$");
+    }
+
     private void visitOtherPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
       Preconditions.checkArgument(getProp.isQualifiedName());
@@ -1899,7 +1904,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             getProp, null, this.currentScope);
         return;
       }
-      if (isAnnotatedAsConst(getProp)) {
+      if (isAnnotatedAsConst(getProp) && !isTranspiledLoopVariable(getProp)) {
         warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
       }
       Node recv = getProp.getFirstChild();
