@@ -174,7 +174,7 @@ public final class ApplySuggestedFixes {
     }
 
     private boolean canPut(SuggestedFix fix) {
-      for (String filename : fix.getReplacements().keys()) {
+      for (String filename : fix.getReplacements().keySet()) {
         List<CodeReplacement> replacements = new ArrayList<>(map.get(filename));
         replacements.addAll(fix.getReplacements().get(filename));
         replacements = ORDER_CODE_REPLACEMENTS.sortedCopy(replacements);
