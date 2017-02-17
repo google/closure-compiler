@@ -234,7 +234,7 @@ public class Scope implements StaticScope {
   }
 
   public boolean isFunctionBlockScope() {
-    return isBlockScope() && parent != null && parent.getRootNode().isFunction();
+    return NodeUtil.isFunctionBlock(getRootNode());
   }
 
   public boolean isFunctionScope() {
