@@ -706,7 +706,7 @@ enum CompilationParam {
   POLYMER_PASS(ParamGroup.SPECIAL_PASSES) {
     @Override
     void apply(CompilerOptions options, boolean value) {
-      options.setPolymerPass(value);
+      options.setPolymerVersion(value ? 1 : null);
     }
   },
 

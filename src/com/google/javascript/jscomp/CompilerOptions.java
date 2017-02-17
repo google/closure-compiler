@@ -1669,11 +1669,6 @@ public class CompilerOptions {
     this.angularPass = angularPass;
   }
 
-  @Deprecated
-  public void setPolymerPass(boolean polymerPass) {
-    this.setPolymerVersion(polymerPass ? 1 : null);
-  }
-
   public void setPolymerVersion(Integer polymerVersion) {
     checkArgument(polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
         "Invalid Polymer version:", polymerVersion);
