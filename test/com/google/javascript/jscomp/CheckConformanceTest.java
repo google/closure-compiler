@@ -453,6 +453,27 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         null);
   }
 
+  public void testDontCrashOnNonConstructorWithPrototype() {
+    configuration =
+        LINE_JOINER.join(
+            "requirement: {",
+            "  type: BANNED_PROPERTY_WRITE",
+            "  value: 'Bar.prototype.method'",
+            "  error_message: 'asdf'",
+            "  report_loose_type_violations: false",
+            "}");
+
+    testSame(
+        DEFAULT_EXTERNS + LINE_JOINER.join(
+            "/** @constructor */",
+            "function Bar() {}",
+            "Bar.prototype.method = function() {};"),
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.method = function() {};"),
+        null, null);
+  }
+
   private void testConformance(String src, DiagnosticType warning) {
     testConformance(src, "", warning);
   }

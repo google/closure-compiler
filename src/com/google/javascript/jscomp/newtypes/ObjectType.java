@@ -184,6 +184,21 @@ final class ObjectType implements TypeWithProperties {
     return this.ns != null;
   }
 
+  boolean isPrototypeObject() {
+    return getOwnerFunction() != null;
+  }
+
+  FunctionType getOwnerFunction() {
+    JSType t = getProp(new QualifiedName("constructor"));
+    if (t != null && t.isFunctionType()) {
+      FunctionType maybeCtor = t.getFunTypeIfSingletonObj();
+      if (maybeCtor.isSomeConstructorOrInterface()) {
+        return maybeCtor;
+      }
+    }
+    return null;
+  }
+
   private boolean hasNonPrototypeProperties() {
     for (String pname : this.props.keySet()) {
       if (!pname.equals("prototype")) {
@@ -1361,6 +1376,9 @@ final class ObjectType implements TypeWithProperties {
   }
 
   StringBuilder appendTo(StringBuilder builder) {
+    if (isPrototypeObject()) {
+      return builder.append(getOwnerFunction().getInstanceTypeOfCtor()).append(".prototype");
+    }
     if (!hasNonPrototypeProperties()) {
       if (fn != null) {
         return fn.appendTo(builder);
