@@ -94,7 +94,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
    * should not have to drop definitions itself.
    */
   private void dropUntypedExterns() {
-    for (String externName : nameDefinitionMultimap.keys()) {
+    for (String externName : nameDefinitionMultimap.keySet()) {
       for (Definition def : new ArrayList<Definition>(nameDefinitionMultimap.get(externName))) {
         if (def instanceof ExternalNameOnlyDefinition) {
           Node node = def.getLValue();
