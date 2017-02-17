@@ -123,7 +123,7 @@ public class Scope implements StaticScope {
    */
   void undeclare(Var var) {
     Preconditions.checkState(var.scope == this);
-    Preconditions.checkState(vars.get(var.name) == var);
+    Preconditions.checkState(vars.get(var.name).equals(var));
     vars.remove(var.name);
   }
 
