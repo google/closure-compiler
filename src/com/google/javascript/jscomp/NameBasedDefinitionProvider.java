@@ -102,10 +102,10 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
             for (Definition prevDef : nameDefinitionMultimap.get(externName)) {
               if (prevDef != def && node.matchesQualifiedName(prevDef.getLValue())) {
                 nameDefinitionMultimap.remove(externName, def);
+                DefinitionSite site = definitionNodeByDefinitionSite.remove(def.getLValue());
+
                 // Since it's a stub we know its keyed by the name/getProp node.
-                Preconditions.checkState(
-                    definitionNodeByDefinitionSite.containsKey(def.getLValue()));
-                definitionNodeByDefinitionSite.remove(def.getLValue());
+                Preconditions.checkNotNull(site);
                 break;
               }
             }
