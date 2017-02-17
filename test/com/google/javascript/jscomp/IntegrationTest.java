@@ -3051,11 +3051,11 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testSuppressEs5StrictWarning() {
     CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.WARNING);
     test(options,
-        "/** @suppress{es5Strict} */\n" +
-        "function f() { var arguments; }",
-        "function f() {}");
+        "/** @suppress{es5Strict} */ function f() { var arguments; }",
+        "");
   }
 
   public void testCheckProvidesWarning() {

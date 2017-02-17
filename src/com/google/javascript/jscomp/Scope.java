@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
@@ -41,7 +43,7 @@ public class Scope implements StaticScope {
   /**
    * Creates a Scope given the parent Scope and the root node of the scope.
    * @param parent  The parent Scope. Cannot be null.
-   * @param rootNode  Typically the FUNCTION node.
+   * @param rootNode
    */
   Scope(Scope parent, Node rootNode) {
     Preconditions.checkNotNull(parent);
@@ -67,6 +69,13 @@ public class Scope implements StaticScope {
   }
 
   static Scope createGlobalScope(Node rootNode) {
+    // TODO(tbreisacher): Can we tighten this to allow only ROOT nodes?
+    checkArgument(
+        rootNode.isRoot()
+            || rootNode.isScript()
+            || rootNode.isModuleBody()
+            || rootNode.isFunction(),
+        rootNode);
     return new Scope(rootNode);
   }
 

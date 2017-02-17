@@ -120,8 +120,8 @@ public final class Es6SyntacticScopeCreator implements ScopeCreator {
           n.isRoot() || NodeUtil.isFunctionBlock(n) || n.isModuleBody();
       scanVars(n, scanInnerBlocks, true);
     } else {
-      // n is the global SCRIPT node
-      checkState(scope.getParent() == null);
+      // n is the global scope
+      checkState(scope.isGlobal(), scope);
       scanVars(n, true, true);
     }
   }
@@ -249,7 +249,7 @@ public final class Es6SyntacticScopeCreator implements ScopeCreator {
     CompilerInput input = compiler.getInput(inputId);
     if (v != null
         || isShadowingDisallowed(name)
-        || (scope.isLocal() && name.equals(ARGUMENTS))) {
+        || ((scope.isFunctionScope() || scope.isFunctionBlockScope()) && name.equals(ARGUMENTS))) {
       redeclarationHandler.onRedeclaration(scope, name, n, input);
     } else {
       scope.declare(name, n, input);

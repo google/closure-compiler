@@ -16,16 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.Node;
-
 import junit.framework.TestCase;
 
 /**
@@ -268,7 +268,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuring() {
-    String js = Joiner.on('\n').join(
+    String js = LINE_JOINER.join(
         "function foo() {",
         "  var {a, b} = bar();",
         "}");
@@ -287,7 +287,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuring2() {
-    String js = Joiner.on('\n').join(
+    String js = LINE_JOINER.join(
         "function foo() {",
         "  var {a: b = 1} = bar();",
         "}");
@@ -306,7 +306,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuringComputedProp() {
-    String js = Joiner.on('\n').join(
+    String js = LINE_JOINER.join(
         "function foo() {",
         "  var {['s']: a} = bar();",
         "}");
@@ -335,7 +335,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuringNested() {
-    String js = Joiner.on('\n').join(
+    String js = LINE_JOINER.join(
         "function foo() {",
         "  var {a:{b}} = bar();",
         "}");
@@ -354,7 +354,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuringWithInitializer() {
-    String js = Joiner.on('\n').join(
+    String js = LINE_JOINER.join(
         "function foo() {",
         "  var {a=1} = bar();",
         "}");
@@ -431,8 +431,12 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertFalse(globalScope.isBlockScope());
     assertEquals(globalScope, globalScope.getClosestHoistScope());
 
-    Node fooBlockNode = root.getFirstChild().getLastChild();
-    Scope fooScope = scopeCreator.createScope(fooBlockNode, null);
+    Node function = root.getFirstChild();
+    checkState(function.isFunction(), function);
+    Scope functionScope = scopeCreator.createScope(function, globalScope);
+
+    Node fooBlockNode = NodeUtil.getFunctionBody(function);
+    Scope fooScope = scopeCreator.createScope(fooBlockNode, functionScope);
     assertEquals(fooBlockNode, fooScope.getRootNode());
     assertTrue(fooScope.isBlockScope());
     assertEquals(fooScope, fooScope.getClosestHoistScope());
@@ -522,22 +526,40 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
   public void testFunctionArgument() {
     String js = "function f(x) { if (true) { let y = 3; } }";
-    Node functionBlock = getRoot(js).getLastChild();
-    Scope functionScope = scopeCreator.createScope(functionBlock, null);
-    assertTrue(functionScope.isDeclared("x", false));
-    assertFalse(functionScope.isDeclared("y", false));
+    Node root = getRoot(js);
+    Scope global = scopeCreator.createScope(root, null);
+    Node function = root.getLastChild();
+    checkState(function.isFunction(), function);
+    Scope functionScope = scopeCreator.createScope(function, global);
 
-    Node ifBlock = functionBlock.getLastChild().getLastChild().getLastChild();
-    Scope blockScope = scopeCreator.createScope(ifBlock, functionScope);
-    assertTrue(blockScope.isDeclared("x", false));
+    Node functionBlock = NodeUtil.getFunctionBody(function);
+    Scope fBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertTrue(fBlockScope.isDeclared("x", false));
+    assertFalse(fBlockScope.isDeclared("y", false));
+
+    Node ifBlock = functionBlock.getLastChild().getLastChild();
+    checkState(ifBlock.isNormalBlock(), ifBlock);
+    Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
+    assertFalse(blockScope.isDeclared("x", false));
+    assertTrue(blockScope.isDeclared("x", true));
     assertTrue(blockScope.isDeclared("y", false));
   }
 
   public void testTheArgumentsVariable() {
     String js = "function f() { if (true) { let arguments = 3; } }";
-    Node ifBlock = getRoot(js).getLastChild().getLastChild()
-        .getLastChild().getLastChild();
-    Scope blockScope = scopeCreator.createScope(ifBlock, null);
+    Node root = getRoot(js);
+    Scope global = scopeCreator.createScope(root, null);
+
+    Node function = root.getFirstChild();
+    checkState(function.isFunction(), function);
+    Scope fScope = scopeCreator.createScope(function, global);
+
+    Node fBlock = NodeUtil.getFunctionBody(function);
+    Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
+
+    Node ifBlock = fBlock.getFirstChild().getLastChild();
+    Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
     assertTrue(blockScope.isDeclared("arguments", false));
   }
 
@@ -588,17 +610,22 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testVarAfterLet() {
-    String js = Joiner.on('\n').join(
+    String js = LINE_JOINER.join(
         "function f() {",
         "  if (a) {",
         "    let x;",
         "  }",
         "  var y;",
-        "}"
-    );
+        "}");
+
     Node root = getRoot(js);
+    Scope global = scopeCreator.createScope(root, null);
+    Node function = root.getFirstChild();
+    Scope fScope = scopeCreator.createScope(function, global);
+
     Node fBlock = root.getFirstChild().getLastChild();
-    Scope fBlockScope = scopeCreator.createScope(fBlock, null);
+    Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
+    checkNotNull(fBlockScope);
     assertFalse(fBlockScope.isDeclared("x", false));
     assertTrue(fBlockScope.isDeclared("y", false));
 
@@ -611,15 +638,16 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   public void testSimpleFunctionParam() {
     String js = "function f(x) {}";
     Node root = getRoot(js);
-    Node fNode = root.getFirstChild();
-
     Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node fNode = root.getFirstChild();
+    checkState(fNode.isFunction(), fNode);
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
     assertTrue(fScope.isDeclared("x", false));
 
-    Node fBlock = fNode.getLastChild();
-    Scope fBlockScope = scopeCreator.createScope(fBlock, null);
-    assertFalse(fBlockScope.isDeclared("x", false));
+    Node fBlock = NodeUtil.getFunctionBody(fNode);
+    Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
+    assertTrue(fBlockScope.isDeclared("x", false));
   }
 
   public void testOnlyOneDeclaration() {

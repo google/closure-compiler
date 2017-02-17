@@ -50,7 +50,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   private final GlobalVarReferenceMap map = new GlobalVarReferenceMap(
       ImmutableList.of(INPUT1, INPUT2, INPUT3), ImmutableList.of(EXTERN1));
   private final Map<Var, ReferenceCollection> globalMap = new HashMap<>();
-  private final Node root = new Node(Token.BLOCK);
+  private final Node root = new Node(Token.ROOT);
   private final Scope globalScope = Scope.createGlobalScope(root);
   private Node scriptRoot = new Node(Token.SCRIPT);
 
