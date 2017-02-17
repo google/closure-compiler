@@ -638,24 +638,21 @@ public final class RawNominalType extends Namespace {
         }
       }
     }
+    // NOTE(dimvar): We currently don't add the "constructor" property to the
+    // prototype object. A tricky issue with it is that it needs to be ignored
+    // during subtyping, eg, when you are comparing a @record Foo with an
+    // object literal that has the same properties, they would still differ
+    // at the "constructor" property.
+    // If in future we decide that it's important to model this property,
+    // we'll have to address the subtyping issues.
     NominalType protoNT = this.superclass;
     if (protoNT == null) {
       NominalType builtinObj = Preconditions.checkNotNull(this.commonTypes.getObjectType(),
           "Missing externs for the builtin Object type");
       protoNT = builtinObj;
     }
-    JSType ctorJstype = this.commonTypes.fromFunctionType(ctorFn);
     JSType protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
-        this.commonTypes, protoNT,
-        // NOTE(dimvar): We add the "constructor" property to the prototype object, but we
-        // don't update the this.protoProps map. As a result, for a class Foo,
-        // Foo.prototype.constructor has a more precise type than (new Foo).constructor,
-        // which points back to the definition in Object.prototype.constructor.
-        // This handling is a bit imprecise, but still more precise than the old type checker.
-        // We do it to work around some tricky type checking issues.
-        // For example, when passing an object literal to a context that expects some
-        // record Bar, you don't want to include the "constructor" property in the comparison.
-        this.protoProps.with("constructor", Property.make(ctorJstype, null)),
+        this.commonTypes, protoNT, this.protoProps,
         null, null, false, ObjectKind.UNRESTRICTED));
     addCtorProperty("prototype", null, protoObject, false);
     this.isFinalized = true;

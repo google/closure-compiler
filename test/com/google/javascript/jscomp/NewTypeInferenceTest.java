@@ -19122,26 +19122,4 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Foo.prototype.foo = function() { return ''; };"),
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
   }
-
-  public void testConstructorProperty() {
-    typeCheck(LINE_JOINER.join(
-        "/** @constructor */",
-        "function Foo() {}",
-        "var /** !Foo */ x = new Foo.prototype.constructor;"));
-
-    typeCheck(LINE_JOINER.join(
-        "/** @constructor */",
-        "function Foo() {}",
-        "var /** null */ x = new Foo.prototype.constructor;"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
-
-    // Resolves to the Object.prototype.constructor property, not to Foo.prototype.constructor
-    typeCheck(LINE_JOINER.join(
-        "/** @constructor */",
-        "function Foo() {}",
-        "var ctor = (new Foo).constructor;",
-        "if (ctor != null) {",
-        "  var /** null */ n = new ctor;",
-        "}"));
-  }
 }
