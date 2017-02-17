@@ -252,11 +252,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return type;
     } else if (type.isConstructor() || type.isInterface()) {
       return type.toMaybeFunctionType().getInstanceType();
-    } else {
-      ObjectTypeI obj = type.toMaybeObjectType();
-      if (obj != null) {
-        return obj.normalizeObjectForCheckAccessControls();
-      }
+    } else if (type.isPrototypeObject()) {
+      return type.toMaybeObjectType().normalizeObjectForCheckAccessControls();
     }
     return type;
   }
@@ -552,8 +549,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * @param t The current traversal.
    * @param getprop The getprop node.
    */
-  private void checkConstantProperty(NodeTraversal t,
-      Node getprop) {
+  private void checkConstantProperty(NodeTraversal t, Node getprop) {
     // Check whether the property is modified
     Node parent = getprop.getParent();
     boolean isDelete = parent.isDelProp();
@@ -577,8 +573,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       }
 
       if (isDelete) {
-        compiler.report(
-            t.makeError(getprop, CONST_PROPERTY_DELETED, propertyName));
+        compiler.report(t.makeError(getprop, CONST_PROPERTY_DELETED, propertyName));
         return;
       }
 
@@ -593,18 +588,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
       ObjectTypeI oType = objectType;
       while (oType != null) {
-        if (initializedConstantProperties.containsEntry(
-            oType, propertyName)) {
-          compiler.report(
-              t.makeError(getprop, CONST_PROPERTY_REASSIGNED_VALUE,
-                  propertyName));
-            break;
-          }
+        if (initializedConstantProperties.containsEntry(oType, propertyName)
+            || initializedConstantProperties.containsEntry(
+                getCanonicalInstance(oType), propertyName)) {
+          compiler.report(t.makeError(getprop, CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
+          break;
+        }
         oType = oType.getPrototypeObject();
       }
 
-      initializedConstantProperties.put(objectType,
-          propertyName);
+      initializedConstantProperties.put(objectType, propertyName);
 
       // Add the prototype when we're looking at an instance object
       if (objectType.isInstanceType()) {
@@ -614,6 +607,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         }
       }
     }
+  }
+
+  /**
+   * Return an object with the same nominal type as obj,
+   * but without any possible extra properties that exist on obj.
+   */
+  static ObjectTypeI getCanonicalInstance(ObjectTypeI obj) {
+    FunctionTypeI ctor = obj.getConstructor();
+    // In NTI ctor is never null, but it might be in OTI.
+    return ctor == null ? obj : ctor.getInstanceType();
   }
 
   /**

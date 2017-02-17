@@ -195,21 +195,13 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testWarningForPrototypeProperty() {
-    // TODO(aravindpg): in NTI the string representation of prototype object types is less than
-    // ideal due to the way NTI represents them. Fix if possible.
     String js =
         "/** @constructor */ function Foo() {}"
         + "/** @deprecated It is now in production, use that model... */ Foo.prototype.bar = 3;"
         + "Foo.prototype.baz = function() { alert(Foo.prototype.bar); };";
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testDepProp(
         js,
         "Property bar of type Foo.prototype has been deprecated:"
-            + " It is now in production, use that model...");
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testDepProp(
-        js,
-        "Property bar of type {bar:?, baz:function(this:Foo):?} has been deprecated:"
             + " It is now in production, use that model...");
   }
 

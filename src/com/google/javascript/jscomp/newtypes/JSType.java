@@ -1835,10 +1835,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isPrototypeObject() {
-    // TODO(dimvar): DisambiguateProperties needs a proper implementation here, not a stub.
-    // Either add the 'constructor' property to prototype objects, or change DisambiguateProperties
-    // to not require this method.
-    return false;
+    return isSingletonObj() && getObjTypeIfSingletonObj().isPrototypeObject();
   }
 
   @Override
@@ -2003,7 +2000,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public FunctionTypeI getOwnerFunction() {
-    throw new UnsupportedOperationException();
+    if (isPrototypeObject()) {
+      return this.commonTypes.fromFunctionType(getObjTypeIfSingletonObj().getOwnerFunction());
+    }
+    return null;
   }
 }
 

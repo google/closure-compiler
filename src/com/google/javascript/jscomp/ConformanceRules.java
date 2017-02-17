@@ -504,9 +504,13 @@ public final class ConformanceRules {
         Node lhs = n.getFirstChild();
         if (typeWithBannedProp != null && lhs.getTypeI() != null) {
           TypeI foundType = lhs.getTypeI().restrictByNotNullOrUndefined();
-          if (foundType.toMaybeObjectType() != null
-              && foundType.toMaybeObjectType().isGeneric()) {
-            foundType = foundType.toMaybeObjectType().getRawType();
+          ObjectTypeI foundObj = foundType.toMaybeObjectType();
+          if (foundObj != null) {
+            if (foundObj.isPrototypeObject()) {
+              foundType = foundObj.getOwnerFunction().getInstanceType();
+            } else if (foundObj.isGeneric()) {
+              foundType = foundObj.getRawType();
+            }
           }
           if (foundType.isSomeUnknownType()
              || foundType.isTypeVariable()
@@ -534,8 +538,7 @@ public final class ConformanceRules {
     private boolean matchesPrototype(TypeI type, TypeI maybePrototype) {
       ObjectTypeI methodClassObjectType = type.toMaybeObjectType();
       if (methodClassObjectType != null) {
-        if (methodClassObjectType.getPrototypeObject().isEquivalentTo(
-            maybePrototype)) {
+        if (methodClassObjectType.getPrototypeObject().isEquivalentTo(maybePrototype)) {
           return true;
         }
       }
