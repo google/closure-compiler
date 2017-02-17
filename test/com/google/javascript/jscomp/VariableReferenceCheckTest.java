@@ -115,6 +115,10 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertRedeclare("function f() { var a = 2; var a = 3; }");
     assertRedeclare("function f(a) { var a = 2; }");
     assertRedeclare("function f(a) { if (!a) var a = 6; }");
+    // NOTE: We decided to not give warnings to the following cases. The function won't be
+    // overwritten at runtime anyway.
+    assertNoWarning("function f() { var f = 1; }");
+    assertNoWarningEs6("function f() { let f = 1; }");
   }
 
   public void testIssue166a() {

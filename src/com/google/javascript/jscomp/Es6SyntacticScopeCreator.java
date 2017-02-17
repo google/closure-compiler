@@ -260,7 +260,8 @@ public final class Es6SyntacticScopeCreator implements ScopeCreator {
   // function parameters.
   private boolean isShadowingDisallowed(String name) {
     if (scope.isFunctionBlockScope()) {
-      return scope.getParent().getOwnSlot(name) != null;
+      Var maybeParam = scope.getParent().getOwnSlot(name);
+      return maybeParam != null && maybeParam.isParam();
     }
     return false;
   }

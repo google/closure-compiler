@@ -663,6 +663,20 @@ public final class NormalizeTest extends Es6CompilerTestCase {
          "var x = {/** @expose */ 'a': 1, 'b': 2}; x['a'] = 3; /** @expose */ x['b'] = 5;");
   }
 
+  public void testShadowFunctionName() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var f = 'test';",
+            "  console.log(f);",
+            "}"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  var f$jscomp$1 = 'test';",
+            "  console.log(f$jscomp$1);",
+            "}"));
+  }
+
   private Set<Node> findNodesWithProperty(Node root, final int prop) {
     final Set<Node> set = new HashSet<>();
     NodeTraversal.traverseEs6(
