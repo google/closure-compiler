@@ -6016,18 +6016,17 @@ chrome.webNavigation.onHistoryStateUpdated;
 
 /**
  * Most event listeners for WebRequest take extra arguments.
- * @see https://developer.chrome.com/extensions/webRequest.html.
+ * @see https://developer.chrome.com/extensions/webRequest
  * @constructor
  */
 function WebRequestEvent() {}
 
 
 /**
- * @param {function(!Object): (void|!BlockingResponse)} listener Listener
- *     function.
+ * @param {function(!Object): void} listener Listener function.
  * @param {!RequestFilter} filter A set of filters that restrict
  *     the events that will be sent to this listener.
- * @param {Array<string>=} opt_extraInfoSpec Array of extra information
+ * @param {!Array<string>=} opt_extraInfoSpec Array of extra information
  *     that should be passed to the listener function.
  * @return {undefined}
  */
@@ -6036,33 +6035,123 @@ WebRequestEvent.prototype.addListener =
 
 
 /**
- * @param {function(!Object): (void|!BlockingResponse)} listener Listener
- *     function.
+ * @param {function(!Object): void} listener Listener function.
  * @return {undefined}
  */
 WebRequestEvent.prototype.removeListener = function(listener) {};
 
 
 /**
- * @param {function(!Object): (void|!BlockingResponse)} listener Listener
- *     function.
+ * @param {function(!Object): void} listener Listener function.
  * @return {undefined}
  */
 WebRequestEvent.prototype.hasListener = function(listener) {};
 
 
 /**
- * @param {function(!Object): (void|!BlockingResponse)} listener Listener
- *     function.
+ * @param {function(!Object): void} listener Listener function.
  * @return {undefined}
  */
 WebRequestEvent.prototype.hasListeners = function(listener) {};
 
 
+/**
+ * Some event listeners can be optionally synchronous.
+ * @see https://developer.chrome.com/extensions/webRequest
+ * @constructor
+ */
+function WebRequestOptionallySynchronousEvent() {}
+
 
 /**
- * The onErrorOccurred event takes one less parameter than the others.
- * @see https://developer.chrome.com/extensions/webRequest.html.
+ * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
+ *     function.
+ * @param {!RequestFilter} filter A set of filters that restrict
+ *     the events that will be sent to this listener.
+ * @param {!Array<string>=} opt_extraInfoSpec Array of extra information
+ *     that should be passed to the listener function.
+ * @return {undefined}
+ */
+WebRequestOptionallySynchronousEvent.prototype.addListener = function(
+    listener, filter, opt_extraInfoSpec) {};
+
+
+/**
+ * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
+ *     function.
+ * @return {undefined}
+ */
+WebRequestOptionallySynchronousEvent.prototype.removeListener = function(
+    listener) {};
+
+
+/**
+ * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
+ *     function.
+ * @return {undefined}
+ */
+WebRequestOptionallySynchronousEvent.prototype.hasListener = function(
+    listener) {};
+
+
+/**
+ * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
+ *     function.
+ * @return {undefined}
+ */
+WebRequestOptionallySynchronousEvent.prototype.hasListeners = function(
+    listener) {};
+
+
+/**
+ * The onAuthRequired event listener can be optionally synchronous, and can also
+ * optionally take a callback.
+ * @see https://developer.chrome.com/extensions/webRequest
+ * @constructor
+ */
+function WebRequestOnAuthRequiredEvent() {}
+
+
+/**
+ * @param {function(!Object, function(!BlockingResponse)=):
+ *     (undefined|!BlockingResponse)} listener Listener function.
+ * @param {!RequestFilter} filter A set of filters that restrict
+ *     the events that will be sent to this listener.
+ * @param {!Array<string>=} opt_extraInfoSpec Array of extra information
+ *     that should be passed to the listener function.
+ * @return {undefined}
+ */
+WebRequestOnAuthRequiredEvent.prototype.addListener = function(
+    listener, filter, opt_extraInfoSpec) {};
+
+
+/**
+ * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
+ *     function.
+ * @return {undefined}
+ */
+WebRequestOnAuthRequiredEvent.prototype.removeListener = function(listener) {};
+
+
+/**
+ * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
+ *     function.
+ * @return {undefined}
+ */
+WebRequestOnAuthRequiredEvent.prototype.hasListener = function(listener) {};
+
+
+/**
+ * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
+ *     function.
+ * @return {undefined}
+ */
+WebRequestOnAuthRequiredEvent.prototype.hasListeners = function(listener) {};
+
+
+/**
+ * The onErrorOccurred event takes one fewer parameter than the others.
+ * @see https://developer.chrome.com/extensions/webRequest
  * @constructor
  */
 function WebRequestOnErrorOccurredEvent() {}
@@ -6101,7 +6190,7 @@ WebRequestOnErrorOccurredEvent.prototype.hasListeners = function(listener) {};
 
 /**
  * @const
- * @see https://developer.chrome.com/extensions/webRequest.html
+ * @see https://developer.chrome.com/extensions/webRequest
  */
 chrome.webRequest = {};
 
@@ -6113,7 +6202,7 @@ chrome.webRequest = {};
 chrome.webRequest.handlerBehaviorChanged = function(opt_callback) {};
 
 
-/** @type {!WebRequestEvent} */
+/** @type {!WebRequestOnAuthRequiredEvent} */
 chrome.webRequest.onAuthRequired;
 
 
@@ -6121,11 +6210,11 @@ chrome.webRequest.onAuthRequired;
 chrome.webRequest.onBeforeRedirect;
 
 
-/** @type {!WebRequestEvent} */
+/** @type {!WebRequestOptionallySynchronousEvent} */
 chrome.webRequest.onBeforeRequest;
 
 
-/** @type {!WebRequestEvent} */
+/** @type {!WebRequestOptionallySynchronousEvent} */
 chrome.webRequest.onBeforeSendHeaders;
 
 
@@ -6137,7 +6226,7 @@ chrome.webRequest.onCompleted;
 chrome.webRequest.onErrorOccurred;
 
 
-/** @type {!WebRequestEvent} */
+/** @type {!WebRequestOptionallySynchronousEvent} */
 chrome.webRequest.onHeadersReceived;
 
 
@@ -7022,82 +7111,49 @@ ChromeSetting.prototype.onChange;
 
 
 /**
- * @see https://developer.chrome.com/extensions/webRequest.html#type-RequestFilter
- * @constructor
+ * @see https://developer.chrome.com/extensions/webRequest#type-RequestFilter
+ * @typedef {?{
+ *   urls: !Array<string>,
+ *   types: (!Array<string>|undefined),
+ *   tabId: (number|undefined),
+ *   windowId: (number|undefined),
+ * }}
  */
-function RequestFilter() {}
-
-
-/** @type {!Array<string>} */
-RequestFilter.prototype.urls;
-
-
-/** @type {!Array<string>} */
-RequestFilter.prototype.types;
-
-
-/** @type {number} */
-RequestFilter.prototype.tabId;
-
-
-/** @type {number} */
-RequestFilter.prototype.windowId;
+var RequestFilter;
 
 
 
 /**
- * @see https://developer.chrome.com/extensions/webRequest.html#type-HttpHeaders
- * @constructor
+ * @see https://developer.chrome.com/extensions/webRequest#type-HttpHeaders
+ * @typedef {?{
+ *   name: string,
+ *   value: (string|undefined),
+ *   binaryValue: (!Array<number>|undefined),
+ * }}
  */
-function HttpHeader() {}
-
-
-/** @type {string} */
-HttpHeader.prototype.name;
-
-
-/** @type {string} */
-HttpHeader.prototype.value;
-
-
-/** @type {!Array<number>} */
-HttpHeader.prototype.binaryValue;
-
-
-/**
- * @see https://developer.chrome.com/extensions/webRequest.html#type-HttpHeaders
- * @typedef {Array<!HttpHeader>}
- * @private
- */
-var HttpHeaders_;
+var HttpHeader;
 
 
 
 /**
- * @see https://developer.chrome.com/extensions/webRequest.html#type-BlockingResponse
- * @constructor
+ * @see https://developer.chrome.com/extensions/webRequest#type-HttpHeaders
+ * @typedef {?Array<!HttpHeader>}
  */
-function BlockingResponse() {}
+chrome.webRequest.HttpHeaders;
 
 
-/** @type {boolean} */
-BlockingResponse.prototype.cancel;
 
-
-/** @type {string} */
-BlockingResponse.prototype.redirectUrl;
-
-
-/** @type {!HttpHeaders_} */
-BlockingResponse.prototype.requestHeaders;
-
-
-/** @type {!HttpHeaders_} */
-BlockingResponse.prototype.responseHeaders;
-
-
-/** @type {Object<string,string>} */
-BlockingResponse.prototype.authCredentials;
+/**
+ * @see https://developer.chrome.com/extensions/webRequest#type-BlockingResponse
+ * @typedef {?{
+ *   cancel: (boolean|undefined),
+ *   redirectUrl: (string|undefined),
+ *   requestHeaders: (!chrome.webRequest.HttpHeaders|undefined),
+ *   responseHeaders: (!chrome.webRequest.HttpHeaders|undefined),
+ *   authCredentials: (!{username: string, password: string}|undefined),
+ * }}
+ */
+var BlockingResponse;
 
 
 
