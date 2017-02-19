@@ -357,7 +357,7 @@ public final class CommandLineRunnerTest extends TestCase {
     test("/** @return {number */ function f(a) { return a; }",
          RhinoErrorReporter.TYPE_PARSE_ERROR);
     test("/** @return {n} */ function f(a) { return a; }",
-         RhinoErrorReporter.TYPE_PARSE_ERROR);
+         RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }
 
   public void testTypeCheckOverride1() {
@@ -942,7 +942,7 @@ public final class CommandLineRunnerTest extends TestCase {
            "var beer = {}; function f(a) {}",
            ""
          },
-         RhinoErrorReporter.TYPE_PARSE_ERROR);
+         RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }
 
   public void testOnlyClosureDependenciesEmptyEntryPoints() throws Exception {

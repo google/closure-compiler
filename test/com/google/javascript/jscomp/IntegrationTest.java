@@ -788,7 +788,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testTypeNameParser() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
-    test(options, "/** @type {n} */ var n = window.name;", RhinoErrorReporter.TYPE_PARSE_ERROR);
+    test(options, "/** @type {n} */ var n = window.name;",
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }
 
   // This tests that the TypedScopeCreator is memoized so that it only creates a
@@ -864,6 +865,36 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  /** @constructor */",
             "  var Boolean = function() {};",
             "})();"));
+  }
+
+  public void testSilenceUnknownTypeWarningFromOTI() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    options.setNewTypeInference(true);
+
+    test(options,
+        LINE_JOINER.join(
+            "/**",
+            " * @param {T} x",
+            " * @template T",
+            " */",
+            "function f(x) {",
+            "  function g(y) {",
+            "    var w = /** @type {T} */ (y);",
+            "    var /** T */ z = x;",
+            "  };",
+            "}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @param {T} x",
+            " * @template T",
+            " */",
+            "function f(x) {",
+            "  function g(y) {",
+            "    var w = y;",
+            "    var /** T */ z = x;",
+            "  };",
+            "}"));
   }
 
   public void testNTIConstWarningsOverrideAccessControls() {

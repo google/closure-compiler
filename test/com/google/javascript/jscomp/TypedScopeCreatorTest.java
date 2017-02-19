@@ -37,7 +37,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.testing.Asserts;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -535,7 +534,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "function Foo() {}" +
         "Foo.prototype.bar = 1;" +
         "var x = new Foo();",
-        RhinoErrorReporter.TYPE_PARSE_ERROR);
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Foo", x.toString());
     assertTrue(x.getImplicitPrototype().hasOwnProperty("bar"));
@@ -550,7 +549,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "function Foo() {}" +
         "Foo.prototype = {bar: 1};" +
         "var x = new Foo();",
-        RhinoErrorReporter.TYPE_PARSE_ERROR);
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Foo", x.toString());
     assertEquals("Foo.prototype", x.getImplicitPrototype().toString());

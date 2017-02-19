@@ -35,6 +35,9 @@ class RhinoErrorReporter {
   static final DiagnosticType TYPE_PARSE_ERROR =
       DiagnosticType.warning("JSC_TYPE_PARSE_ERROR", "{0}");
 
+  static final DiagnosticType UNRECOGNIZED_TYPE_ERROR =
+      DiagnosticType.warning("JSC_UNRECOGNIZED_TYPE_ERROR", "{0}");
+
   // This is separate from TYPE_PARSE_ERROR because there are many instances of this warning
   // and it is unfeasible to fix them all right away.
   static final DiagnosticType JSDOC_MISSING_BRACES_WARNING =
@@ -149,16 +152,16 @@ class RhinoErrorReporter {
             // Type annotation warnings.
             .put(
                 Pattern.compile(
-                    "^Bad type annotation\\. Type annotations should have curly braces.*"),
+                    ".*Type annotations should have curly braces.*"),
                 JSDOC_MISSING_BRACES_WARNING)
 
             .put(Pattern.compile("Missing type declaration\\."), JSDOC_MISSING_TYPE_WARNING)
 
+            // Unresolved types that aren't forward declared.
+            .put(Pattern.compile(".*Unknown type.*"), UNRECOGNIZED_TYPE_ERROR)
+
             // Type annotation errors.
-            .put(
-                Pattern.compile(
-                    "^Bad type annotation.*(?!Type annotations should have curly braces\\.)"),
-                TYPE_PARSE_ERROR)
+            .put(Pattern.compile("^Bad type annotation.*"), TYPE_PARSE_ERROR)
 
             // Parse tree too deep.
             .put(Pattern.compile("Too deep recursion while parsing"), PARSE_TREE_TOO_DEEP)
