@@ -78,9 +78,14 @@ $jscomp.polyfill('fetch', function(nativeFetch) {
       	  break;
       }
 
-      request.headers.forEach(function(value, key) {
+      var headerIterator = request.headers.entries();
+      var head;
+      while ((head = headerIterator.next()) && (!head.done)) {
+        var key = head.value[0];
+        var value = request.headers.getAll(key).join(',');
+
         xhr.setRequestHeader(key, value);
-      });
+      };
 
       xhr.onload = function() {
         var body = /** @type {string} */ ('response' in xhr ? xhr.response : xhr.responseText);
