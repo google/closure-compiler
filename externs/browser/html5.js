@@ -2256,29 +2256,23 @@ DataTransfer.prototype.addElement = function(elem) {};
 MouseEvent.prototype.dataTransfer;
 
 /**
- * @typedef {{
- *   bubbles: (boolean|undefined),
- *   cancelable: (boolean|undefined),
- *   view: (Window|undefined),
- *   detail: (number|undefined),
- *   screenX: (number|undefined),
- *   screenY: (number|undefined),
- *   clientX: (number|undefined),
- *   clientY: (number|undefined),
- *   ctrlKey: (boolean|undefined),
- *   shiftKey: (boolean|undefined),
- *   altKey: (boolean|undefined),
- *   metaKey: (boolean|undefined),
- *   button: (number|undefined),
- *   buttons: (number|undefined),
- *   relatedTarget: (EventTarget|undefined),
- *   deltaX: (number|undefined),
- *   deltaY: (number|undefined),
- *   deltaZ: (number|undefined),
- *   deltaMode: (number|undefined)
- * }}
+ * @record
+ * @extends {MouseEventInit}
+ * @see https://w3c.github.io/uievents/#idl-wheeleventinit
  */
-var WheelEventInit;
+function WheelEventInit() {};
+
+/** @type {undefined|number} */
+WheelEventInit.prototype.deltaX;
+
+/** @type {undefined|number} */
+WheelEventInit.prototype.deltaY;
+
+/** @type {undefined|number} */
+WheelEventInit.prototype.deltaZ;
+
+/** @type {undefined|number} */
+WheelEventInit.prototype.deltaMode;
 
 /**
  * @param {string} type
@@ -2395,26 +2389,14 @@ DataTransferItemList.prototype.clear = function() {};
 DataTransfer.prototype.items;
 
 /**
- * @typedef {{
- *   bubbles: (boolean|undefined),
- *   cancelable: (boolean|undefined),
- *   view: (Window|undefined),
- *   detail: (number|undefined),
- *   screenX: (number|undefined),
- *   screenY: (number|undefined),
- *   clientX: (number|undefined),
- *   clientY: (number|undefined),
- *   ctrlKey: (boolean|undefined),
- *   shiftKey: (boolean|undefined),
- *   altKey: (boolean|undefined),
- *   metaKey: (boolean|undefined),
- *   button: (number|undefined),
- *   buttons: (number|undefined),
- *   relatedTarget: (EventTarget|undefined),
- *   dataTransfer: (DataTransfer|undefined)
- * }}
+ * @record
+ * @extends {MouseEventInit}
+ * @see http://w3c.github.io/html/editing.html#dictdef-drageventinit
  */
-var DragEventInit;
+function DragEventInit() {};
+
+/** @type {undefined|?DataTransfer} */
+DragEventInit.prototype.dataTransfer;
 
 
 /**
@@ -2431,13 +2413,20 @@ DragEvent.prototype.dataTransfer;
 
 
 /**
- * @typedef {{
- *   lengthComputable: (boolean|undefined),
- *   loaded: (number|undefined),
- *   total: (number|undefined)
- * }}
+ * @record
+ * @extends {EventInit}
+ * @see https://www.w3.org/TR/progress-events/#progresseventinit
  */
-var ProgressEventInit;
+function ProgressEventInit() {};
+
+/** @type {undefined|boolean} */
+ProgressEventInit.prototype.lengthComputable;
+
+/** @type {undefined|number} */
+ProgressEventInit.prototype.loaded;
+
+/** @type {undefined|number} */
+ProgressEventInit.prototype.total;
 
 /**
  * @constructor
@@ -3627,19 +3616,26 @@ ErrorEvent.prototype.error;
 
 
 /**
- * @see http://www.w3.org/TR/html5/webappapis.html#the-errorevent-interface
- *
- * @typedef {{
- *   bubbles: (boolean|undefined),
- *   cancelable: (boolean|undefined),
- *   message: string,
- *   filename: string,
- *   lineno: number,
- *   colno: number,
- *   error: *
- * }}
+ * @record
+ * @extends {EventInit}
+ * @see https://www.w3.org/TR/html5/webappapis.html#erroreventinit
  */
- var ErrorEventInit;
+function ErrorEventInit() {};
+
+/** @type {undefined|string} */
+ErrorEventInit.prototype.message;
+
+/** @type {undefined|string} */
+ErrorEventInit.prototype.filename;
+
+/** @type {undefined|number} */
+ErrorEventInit.prototype.lineno;
+
+/** @type {undefined|number} */
+ErrorEventInit.prototype.colno;
+
+/** @type {*} */
+ErrorEventInit.prototype.error;
 
 
 /**
