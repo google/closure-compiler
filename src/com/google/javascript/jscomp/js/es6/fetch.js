@@ -15,7 +15,10 @@
  */
 
 'require base';
+//'require es6/headers';
 'require es6/promise';
+//'require es6/request';
+//'require es6/response';
 'require util/global';
 'require util/polyfill';
 
@@ -29,6 +32,21 @@ $jscomp.polyfill('fetch', function(nativeFetch) {
   if (nativeFetch &&!$jscomp.FORCE_POLYFILL_FETCH) {
     return nativeFetch;
   }
+
+  /**
+   * @param {!string} url
+   * @return {!string}
+   */
+  var getHost = function(url) {
+    if (URL) {
+      return new URL(url).host;
+    }
+
+    // Fallback for IE and other old browsers
+    var parser = document.createElement('a');
+    parser.href = url;
+    return parser.host;
+  };
 
   /**
    * @param {!RequestInfo} input
@@ -48,10 +66,7 @@ $jscomp.polyfill('fetch', function(nativeFetch) {
       switch (request.credentials) {
       	// Check if it's the same domain
       	case 'same-origin':
-      	  // TODO: Make it work in serviceworkers
-      	  var parser = document.createElement('a');
-      	  parser.href = request.url;
-      	  xhr.withCredentials = (location.host === parser.host);
+      	  xhr.withCredentials = (location.host === getHost(request.url));
       	  break;
 
       	case 'include':
@@ -68,12 +83,24 @@ $jscomp.polyfill('fetch', function(nativeFetch) {
       });
 
       xhr.onload = function() {
-        var body = 'response' in xhr ? xhr.response : xhr.responseText;
-        
+        var body = /** @type {string} */ ('response' in xhr ? xhr.response : xhr.responseText);
+        var headers = new Headers();
+
+        // Parse xhr-response-headers and add them to response-headers
+        var re = /\s*([^\s:]*):\s*([^\n]*)\r?\n/g;
+        var responseHeaders = xhr.getAllResponseHeaders();
+        var head = re.exec(responseHeaders);
+        while (head) {
+          for (var entry in head[2].split(",")) {
+            headers.set(head[1], entry);
+          }
+          head = re.exec(responseHeaders);
+        }
+
         var response = new Response(body, {
           status: xhr.status,
           statusText: xhr.statusText,
-//        headers: ''
+          headers: headers
         });
 
         // This won`t do anything on a native Response,
