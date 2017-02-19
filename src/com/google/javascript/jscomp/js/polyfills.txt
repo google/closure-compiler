@@ -7,6 +7,7 @@ Array.prototype.find es6-impl es3 es6/array/find
 Array.prototype.findIndex es6-impl es3 es6/array/findindex
 Array.prototype.keys es6-impl es3 es6/array/keys
 Array.prototype.values es6 es3 es6/array/values
+fetch es6-impl es3 es6/fetch
 Map es6-impl es3 es6/map
 Math.acosh es6-impl es3 es6/math/acosh
 Math.asinh es6-impl es3 es6/math/asinh
