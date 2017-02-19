@@ -41,7 +41,7 @@ $jscomp.polyfill('fetch', function(nativeFetch) {
       var xhr = new XMLHttpRequest();
 
       xhr.onerror = function() {
-        reject(new TypeError("Error when attempting to fetch resource."))
+        reject(new TypeError("Error when attempting to fetch resource."));
       };
       xhr.ontimeout = xhr.onerror;
 
@@ -73,7 +73,7 @@ $jscomp.polyfill('fetch', function(nativeFetch) {
         var response = new Response(body, {
           status: xhr.status,
           statusText: xhr.statusText,
-          headers: ''
+//        headers: ''
         });
 
         // This won`t do anything on a native Response,
