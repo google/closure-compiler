@@ -54,6 +54,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.TestErrorReporter;
+import java.util.Collection;
 import junit.framework.TestCase;
 
 public class JSDocInfoTest extends TestCase {
@@ -525,6 +526,16 @@ public class JSDocInfoTest extends TestCase {
     assertEquals("Because it does.", info.getThrowsDescriptionForType(errorType));
     assertEquals("", info.getThrowsDescriptionForType(otherType));
     assertNull(info.getThrowsDescriptionForType(fromString("NeverSeen")));
+  }
+
+  public void testIssue2328() {
+    JSDocInfo info = new JSDocInfo();
+
+    // should be added to implemented interfaces
+    assertTrue("", info.addImplementedInterface(null));
+
+    Collection<Node> nodes = info.getTypeNodes();
+    assertTrue("", 0 == nodes.size());
   }
 
   /** Gets the type expression for a simple type name. */
