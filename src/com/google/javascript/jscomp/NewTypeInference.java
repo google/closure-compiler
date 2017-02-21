@@ -1705,10 +1705,11 @@ final class NewTypeInference implements CompilerPass {
     EnvTypePair objPair, ctorPair;
 
     // First, evaluate ignoring the specialized context
-    objPair = analyzeExprFwd(obj, inEnv, TOP_OBJECT);
+    objPair = analyzeExprFwd(obj, inEnv);
     JSType objType = objPair.type;
     if (!objType.isTop()
         && !objType.isUnknown()
+        && !objType.isTrueOrTruthy()
         && !objType.hasNonScalar()
         && !objType.hasTypeVariable()) {
       warnInvalidOperand(
@@ -1737,9 +1738,14 @@ final class NewTypeInference implements CompilerPass {
 
     // We are in a specialized context *and* we know the constructor type
     JSType instanceType = ctorFunType.getInstanceTypeOfCtor();
-    JSType instanceSpecType = specializedType.isTrueOrTruthy()
-        ? objType.specialize(instanceType)
-        : objType.removeType(instanceType);
+    JSType instanceSpecType;
+    if (specializedType.isTrueOrTruthy()) {
+      instanceSpecType = objType.specialize(instanceType);
+    } else if (objType.isTop()) {
+      instanceSpecType = objType;
+    } else {
+      instanceSpecType = objType.removeType(instanceType);
+    }
     if (!instanceSpecType.isBottom()) {
       objPair = analyzeExprFwd(obj, inEnv, UNKNOWN, instanceSpecType);
       ctorPair = analyzeExprFwd(ctor, objPair.env, commonTypes.topFunction());

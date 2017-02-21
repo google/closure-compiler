@@ -1147,6 +1147,41 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame("throw new Error('test');");
   }
 
+  public void testCustomRestrictThrow3() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanThrowOfNonErrorTypes'\n" +
+        "  error_message: 'BanThrowOfNonErrorTypes Message'\n" +
+        "}";
+
+    testSame(LINE_JOINER.join(
+        "/** @param {*} x */",
+        "function f(x) {",
+        "  throw x;",
+        "}"));
+  }
+
+  public void testCustomRestrictThrow4() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanThrowOfNonErrorTypes'\n" +
+        "  error_message: 'BanThrowOfNonErrorTypes Message'\n" +
+        "}";
+
+    testSame(LINE_JOINER.join(
+        "/** @constructor @extends {Error} */",
+        "function MyError() {}",
+        "/** @param {*} x */",
+        "function f(x) {",
+        "  if (x instanceof MyError) {",
+        "  } else {",
+        "    throw x;",
+        "  }",
+        "}"));
+  }
+
   public void testCustomBanUnknownThis1() {
     configuration =
         "requirement: {\n" +

@@ -19144,4 +19144,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** null */ n = new ctor;",
         "}"));
   }
+
+  public void testDontSpecializeTopInInstanceofElseBranch() {
+    typeCheck(LINE_JOINER.join(
+        "/** @param {*} x */",
+        "function f(x) {",
+        "  if (x instanceof Function) {",
+        "  } else {",
+        "    var /** !Object */ obj = x;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
