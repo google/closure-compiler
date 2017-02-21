@@ -1232,8 +1232,7 @@ public final class NodeUtil {
       return false;
     }
 
-    if (callNode.isOnlyModifiesArgumentsCall() &&
-        allArgsUnescapedLocal(callNode)) {
+    if (callNode.isOnlyModifiesArgumentsCall() && allArgsUnescapedLocal(callNode)) {
       return false;
     }
 
@@ -1343,6 +1342,8 @@ public final class NodeUtil {
             return false;
           case "random":
             return !callNode.hasOneChild(); // no parameters
+          default:
+            // Unknown Math.* function, so fall out of this switch statement.
         }
       }
 
