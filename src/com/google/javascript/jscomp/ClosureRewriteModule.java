@@ -1149,7 +1149,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     safeSetMaybeQualifiedString(exportsNameNode, exportedNamespace);
 
     Node jsdocNode = parent.isAssign() ? parent : getpropNode;
-    markConstAndCopyJsDoc(jsdocNode, jsdocNode, parent.getLastChild());
+    markConstAndCopyJsDoc(jsdocNode, jsdocNode);
 
     // When seeing the first "exports.foo = ..." line put a "var module$exports$pkg$Foo = {};"
     // before it.
@@ -1269,7 +1269,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
     }
 
-    markConstAndCopyJsDoc(target, target, value);
+    markConstAndCopyJsDoc(target, target);
   }
 
   /**
@@ -1308,7 +1308,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       jsdocNode = exportsObjectCreationNode;
       currentScript.hasCreatedExportObject = true;
     }
-    markConstAndCopyJsDoc(assignNode, jsdocNode, rhs);
+    markConstAndCopyJsDoc(assignNode, jsdocNode);
     compiler.reportCodeChange();
 
     maybeUpdateExportObjectLiteral(t, rhs);
@@ -1453,7 +1453,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     statementNode.getParent().addChildBefore(IR.var(nameNode, rhsNode), statementNode);
   }
 
-  private void markConstAndCopyJsDoc(Node from, Node target, Node value) {
+  private static void markConstAndCopyJsDoc(Node from, Node target) {
     JSDocInfo info = from.getJSDocInfo();
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
     builder.recordConstancy();
