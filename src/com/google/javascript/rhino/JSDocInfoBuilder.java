@@ -1171,7 +1171,7 @@ public final class JSDocInfoBuilder {
    * Records an implemented interface.
    */
   public boolean recordImplementedInterface(JSTypeExpression interfaceName) {
-    if (currentInfo.addImplementedInterface(interfaceName)) {
+    if (interfaceName != null && currentInfo.addImplementedInterface(interfaceName)) {
       populated = true;
       return true;
     } else {
@@ -1183,7 +1183,7 @@ public final class JSDocInfoBuilder {
    * Records an extended interface type.
    */
   public boolean recordExtendedInterface(JSTypeExpression interfaceType) {
-    if (currentInfo.addExtendedInterface(interfaceType)) {
+    if (interfaceType != null && currentInfo.addExtendedInterface(interfaceType)) {
       populated = true;
       return true;
     } else {
