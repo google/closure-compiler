@@ -417,6 +417,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
                   if (var != null && var.getParentNode().isCatch()) {
                     return true;
                   }
+                  // fall through
                 default:
                   break;
               }

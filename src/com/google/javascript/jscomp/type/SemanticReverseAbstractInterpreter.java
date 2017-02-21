@@ -162,6 +162,7 @@ public final class SemanticReverseAbstractInterpreter
                 resultEqualsValue, blindScope);
           }
         }
+        break;
       default:
         break;
     }

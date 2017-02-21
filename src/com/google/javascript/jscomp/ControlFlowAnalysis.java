@@ -785,6 +785,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
           }
           return computeFollowNode(fromNode, parent, cfa);
         }
+        // fall through
       default:
         break;
     }

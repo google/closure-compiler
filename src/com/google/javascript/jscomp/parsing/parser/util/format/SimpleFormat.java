@@ -435,6 +435,7 @@ public final class SimpleFormat {
           if (arg == null) {
             return "null";
           }
+          // fall through
         case 'd':
           if (arg instanceof Integer
               || arg instanceof Long

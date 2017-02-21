@@ -675,6 +675,7 @@ class ExpressionDecomposer {
           if (child == parent.getFirstChild()) {
             return parent;
           }
+          // fall through
         case FOR_IN:
         case SCRIPT:
         case BLOCK:
