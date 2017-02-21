@@ -140,6 +140,13 @@ AudioContext.prototype.createDelay = function(maxDelayTime) {};
 AudioContext.prototype.createBiquadFilter = function() {};
 
 /**
+ * @param {!IArrayLike<number>} feedforward
+ * @param {!IArrayLike<number>} feedback
+ * @return {!IIRFilterNode}
+ */
+AudioContext.prototype.createIIRFilter = function(feedforward, feedback) {};
+
+/**
  * @return {!WaveShaperNode}
  */
 AudioContext.prototype.createWaveShaper = function() {};
@@ -873,8 +880,23 @@ BiquadFilterNode.prototype.gain;
  * @param {Float32Array} phaseResponse
  * @return {undefined}
  */
-BiquadFilterNode.prototype.getFrequencyResponse = function(frequencyHz,
-    magResponse, phaseResponse) {};
+BiquadFilterNode.prototype.getFrequencyResponse = function(
+    frequencyHz, magResponse, phaseResponse) {};
+
+/**
+ * @constructor
+ * @extends {AudioNode}
+ */
+function IIRFilterNode() {}
+
+/**
+ * @param {!Float32Array} frequencyHz
+ * @param {!Float32Array} magResponse
+ * @param {!Float32Array} phaseResponse
+ * @return {undefined}
+ */
+IIRFilterNode.prototype.getFrequencyResponse = function(
+    frequencyHz, magResponse, phaseResponse) {};
 
 /**
  * @constructor
