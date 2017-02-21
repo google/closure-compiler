@@ -284,8 +284,6 @@ public final class DefaultPassConfig extends PassConfig {
       return checks;
     }
 
-    checks.add(checkVariableReferences);
-
     if (options.closurePass) {
       checks.add(closureCheckModule);
       checks.add(closureRewriteModule);
@@ -301,6 +299,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkMissingSuper);
+    checks.add(checkVariableReferences);
 
     if (options.closurePass) {
       checks.add(closureGoogScopeAliases);
@@ -1086,6 +1085,12 @@ public final class DefaultPassConfig extends PassConfig {
    * @param checks The list of check passes
    */
   private void assertValidOrderForChecks(List<PassFactory> checks) {
+    assertPassOrder(
+        checks,
+        closureRewriteModule,
+        checkVariableReferences,
+        "If checkVariableReferences runs before closureRewriteModule, it will produce invalid"
+            + " warnings because it will think of module-scoped variables as global variables.");
     assertPassOrder(
         checks,
         closureRewriteModule,
