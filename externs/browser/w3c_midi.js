@@ -261,12 +261,17 @@ MIDIMessageEvent.prototype.data;
 
 
 /**
- * @typedef {{
- *   receivedTime: number,
- *   data: !Uint8Array
- * }}
+ * @record
+ * @extends {EventInit}
+ * @see https://www.w3.org/TR/webmidi/#midimessageeventinit-interface
  */
-var MIDIMessageEventInit;
+function MIDIMessageEventInit() {}
+
+/** @type {undefined|number} */
+MIDIMessageEventInit.prototype.receivedTime;
+
+/** @type {undefined|!Uint8Array} */
+MIDIMessageEventInit.prototype.data;
 
 
 
@@ -286,8 +291,11 @@ MIDIConnectionEvent.prototype.port;
 
 
 /**
- * @typedef {{
- *   port: !MIDIPort
- * }}
+ * @record
+ * @extends {EventInit}
+ * @see https://www.w3.org/TR/webmidi/#idl-def-MIDIConnectionEventInit
  */
-var MIDIConnectionEventInit;
+function MIDIConnectionEventInit() {}
+
+/** @type {undefined|!MIDIPort} */
+MIDIConnectionEventInit.prototype.port;

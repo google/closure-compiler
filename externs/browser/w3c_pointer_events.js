@@ -43,33 +43,35 @@ Navigator.prototype.maxTouchPoints;
 
 
 /**
- * @typedef {{
- *   bubbles: (boolean|undefined),
- *   cancelable: (boolean|undefined),
- *   view: (Window|undefined),
- *   detail: (number|undefined),
- *   screenX: (number|undefined),
- *   screenY: (number|undefined),
- *   clientX: (number|undefined),
- *   clientY: (number|undefined),
- *   ctrlKey: (boolean|undefined),
- *   shiftKey: (boolean|undefined),
- *   altKey: (boolean|undefined),
- *   metaKey: (boolean|undefined),
- *   button: (number|undefined),
- *   buttons: (number|undefined),
- *   relatedTarget: (EventTarget|undefined),
- *   pointerId: (number|undefined),
- *   width: (number|undefined),
- *   height: (number|undefined),
- *   pressure: (number|undefined),
- *   tiltX: (number|undefined),
- *   tiltY: (number|undefined),
- *   pointerType: (string|undefined),
- *   isPrimary: (boolean|undefined)
- * }}
+ * @record
+ * @extends {MouseEventInit}
+ * @see https://www.w3.org/TR/pointerevents/#idl-def-PointerEventInit
  */
-var PointerEventInit;
+function PointerEventInit() {}
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.pointerId;
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.width;
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.height;
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.pressure;
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.tiltX;
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.tiltY;
+
+/** @type {undefined|string} */
+PointerEventInit.prototype.pointerType;
+
+/** @type {undefined|boolean} */
+PointerEventInit.prototype.isPrimary;
 
 /**
  * @constructor
