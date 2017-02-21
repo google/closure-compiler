@@ -603,14 +603,14 @@ public class DToA {
         break;
       case 2:
         leftright = false;
-        /* no break */
+        // fall through
       case 4:
         if (ndigits <= 0) ndigits = 1;
         ilim = ilim1 = i = ndigits;
         break;
       case 3:
         leftright = false;
-        /* no break */
+        // fall through
       case 5:
         i = ndigits + k + 1;
         ilim = i;
