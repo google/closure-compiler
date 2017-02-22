@@ -340,6 +340,7 @@ var BufferSource;
 /**
  * @constructor
  * @implements {IArrayLike<number>}
+ * @implements {Iterable<number>}
  * @extends {ArrayBufferView}
  */
 function TypedArray() {};
@@ -577,6 +578,8 @@ TypedArray.prototype.toLocaleString = function() {};
  */
 TypedArray.prototype.toString = function() {};
 
+/** @override */
+TypedArray.prototype[Symbol.iterator] = function() {};
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
