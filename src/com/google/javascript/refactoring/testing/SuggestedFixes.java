@@ -28,10 +28,7 @@ import com.google.javascript.refactoring.SuggestedFix;
 import java.util.List;
 import java.util.Set;
 
-
-/**
- * Utilities for testing SuggestedFix-related code.
- */
+/** Utilities for testing SuggestedFix-related code. */
 public final class SuggestedFixes {
   private SuggestedFixes() {}
 
@@ -56,8 +53,9 @@ public final class SuggestedFixes {
   public static void assertChanges(
       List<SuggestedFix> fixes, String externs, String originalCode, String expectedCode) {
     assertThat(fixes).isNotEmpty();
-    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        fixes, ImmutableMap.of("test", originalCode)).get("test");
+    String newCode =
+        ApplySuggestedFixes.applySuggestedFixesToCode(fixes, ImmutableMap.of("test", originalCode))
+            .get("test");
     assertEquals(expectedCode, newCode);
   }
 }
