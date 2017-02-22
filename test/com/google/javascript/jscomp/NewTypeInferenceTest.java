@@ -8184,6 +8184,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var c = f({ length: 1 });",
         "function g() { return c; }"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " * @param {T=} x",
+        " */",
+        "function Foo(x) {}",
+        "/** @const */",
+        "var c = new Foo;",
+        "(function() { var /** !Foo */ x = c; });"));
   }
 
   public void testInferConstTypeFromNestedObjectLiterals() {

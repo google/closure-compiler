@@ -1076,8 +1076,7 @@ public final class FunctionType {
     return substituteParametricGenerics(typeMap);
   }
 
-  public FunctionType instantiateGenericsFromArgumentTypes(
-      List<JSType> argTypes) {
+  public FunctionType instantiateGenericsFromArgumentTypes(List<JSType> argTypes) {
     Preconditions.checkState(isGeneric());
     if (argTypes.size() < getMinArity() || argTypes.size() > getMaxArity()) {
       return null;
@@ -1092,10 +1091,13 @@ public final class FunctionType {
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     for (String typeParam : typeParameters) {
       Collection<JSType> types = typeMultimap.get(typeParam);
-      if (types.size() != 1) {
+      if (types.size() > 1) {
         return null;
+      } else if (types.isEmpty()) {
+        builder.put(typeParam, this.commonTypes.UNKNOWN);
+      } else {
+        builder.put(typeParam, Iterables.getOnlyElement(types));
       }
-      builder.put(typeParam, Iterables.getOnlyElement(types));
     }
     return substituteParametricGenerics(builder.build());
   }
