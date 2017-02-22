@@ -181,8 +181,7 @@ public final class JSModule implements DependencyInfo, Serializable {
     while (!stack.isEmpty()) {
       JSModule module = stack.pop();
       List<JSModule> moduleDeps = module.deps;
-      for (int i = 0; i < moduleDeps.size(); i++) {
-        JSModule dep = moduleDeps.get(i);
+      for (JSModule dep : moduleDeps) {
         if (allDeps.add(dep)) {
           stack.push(dep);
         }

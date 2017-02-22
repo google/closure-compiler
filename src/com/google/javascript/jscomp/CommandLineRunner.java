@@ -131,9 +131,9 @@ public class CommandLineRunner extends
     // Some clients run a few copies of the compiler through CommandLineRunner
     // on parallel threads (thankfully, with the same flags),
     // so the access to these lists should be synchronized.
-    private static List<FlagEntry<CheckLevel>> guardLevels =
+    private static final List<FlagEntry<CheckLevel>> guardLevels =
         Collections.synchronizedList(new ArrayList<FlagEntry<CheckLevel>>());
-    private static List<FlagEntry<JsSourceType>> mixedJsSources =
+    private static final List<FlagEntry<JsSourceType>> mixedJsSources =
         Collections.synchronizedList(new ArrayList<FlagEntry<JsSourceType>>());
 
     @Option(
@@ -741,7 +741,7 @@ public class CommandLineRunner extends
     private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
-    private static final Map<String, CompilationLevel> COMPILATION_LEVEL_MAP =
+    private static final ImmutableMap<String, CompilationLevel> COMPILATION_LEVEL_MAP =
         ImmutableMap.of(
             "WHITESPACE_ONLY",
             CompilationLevel.WHITESPACE_ONLY,
@@ -940,7 +940,7 @@ public class CommandLineRunner extends
           "    " + input.substring(foundMatch ? endIndex + 1 : endIndex), outputStream);
     }
 
-    private void printShortUsageAfterErrors(PrintStream ps) {
+    private static void printShortUsageAfterErrors(PrintStream ps) {
       ps.print("Sample usage: ");
       ps.println("--compilation_level (-O) VAL --externs VAL --js VAL"
           + " --js_output_file VAL"
@@ -1047,10 +1047,8 @@ public class CommandLineRunner extends
     // Our own option parser to be backwards-compatible.
     // It needs to be public because of the crazy reflection that args4j does.
     public static class BooleanOptionHandler extends OptionHandler<Boolean> {
-      private static final Set<String> TRUES =
-          ImmutableSet.of("true", "on", "yes", "1");
-      private static final Set<String> FALSES =
-          ImmutableSet.of("false", "off", "no", "0");
+      private static final ImmutableSet<String> TRUES = ImmutableSet.of("true", "on", "yes", "1");
+      private static final ImmutableSet<String> FALSES = ImmutableSet.of("false", "off", "no", "0");
 
       public BooleanOptionHandler(
           CmdLineParser parser, OptionDef option,
@@ -1400,8 +1398,7 @@ public class CommandLineRunner extends
 
     if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
       try {
-        flags.outputWrapper = Files.toString(
-            new File(flags.outputWrapperFile), UTF_8);
+        flags.outputWrapper = Files.asCharSource(new File(flags.outputWrapperFile), UTF_8).read();
       } catch (Exception e) {
         reportError("ERROR - invalid output_wrapper_file specified.");
       }
@@ -1422,7 +1419,7 @@ public class CommandLineRunner extends
     }
 
     if (errors) {
-      flags.printShortUsageAfterErrors(errorStream);
+      Flags.printShortUsageAfterErrors(errorStream);
     } else if (flags.displayHelp) {
       flags.printUsage(out);
     } else if (flags.version) {
@@ -1735,7 +1732,7 @@ public class CommandLineRunner extends
     }
   }
 
-  private ImmutableList<ConformanceConfig> loadConformanceConfigs(List<String> configPaths) {
+  private static ImmutableList<ConformanceConfig> loadConformanceConfigs(List<String> configPaths) {
     ImmutableList.Builder<ConformanceConfig> configs =
         ImmutableList.builder();
 
@@ -1752,7 +1749,7 @@ public class CommandLineRunner extends
 
   private static ConformanceConfig loadConformanceConfig(String configFile)
       throws IOException {
-    String textProto = Files.toString(new File(configFile), UTF_8);
+    String textProto = Files.asCharSource(new File(configFile), UTF_8).read();
 
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
 

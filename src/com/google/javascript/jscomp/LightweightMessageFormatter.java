@@ -30,7 +30,7 @@ import com.google.javascript.rhino.TokenUtil;
  *
  */
 public final class LightweightMessageFormatter extends AbstractMessageFormatter {
-  private SourceExcerpt excerpt;
+  private final SourceExcerpt excerpt;
   private static final ExcerptFormatter excerptFormatter =
       new LineNumberingFormatter();
   private boolean includeLocation = true;

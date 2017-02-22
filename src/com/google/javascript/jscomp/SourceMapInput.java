@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapParseException;
-
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,7 +30,7 @@ public final class SourceMapInput {
   private static final Logger logger =
       Logger.getLogger(SourceMapInput.class.getName());
 
-  private SourceFile sourceFile;
+  private final SourceFile sourceFile;
   private volatile SourceMapConsumerV3 parsedSourceMap = null;
 
   public SourceMapInput(SourceFile sourceFile) {

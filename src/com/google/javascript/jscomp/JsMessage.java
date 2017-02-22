@@ -277,9 +277,8 @@ public final class JsMessage {
 
     @Override
     public boolean equals(Object o) {
-      return o == this ||
-             o instanceof PlaceholderReference &&
-             name.equals(((PlaceholderReference) o).name);
+      return o == this
+          || (o instanceof PlaceholderReference && name.equals(((PlaceholderReference) o).name));
     }
 
     @Override
@@ -317,8 +316,8 @@ public final class JsMessage {
     private String desc;
     private boolean hidden;
 
-    private List<CharSequence> parts = new LinkedList<>();
-    private Set<String> placeholders = new HashSet<>();
+    private final List<CharSequence> parts = new LinkedList<>();
+    private final Set<String> placeholders = new HashSet<>();
 
     private String sourceName;
 

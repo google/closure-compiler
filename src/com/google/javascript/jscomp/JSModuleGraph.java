@@ -53,13 +53,13 @@ import java.util.Set;
  */
 public final class JSModuleGraph {
 
-  private List<JSModule> modules;
+  private final List<JSModule> modules;
 
   /**
-   * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a
-   * list of the modules at depth 3, for example.
+   * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a list of the modules at
+   * depth 3, for example.
    */
-  private List<List<JSModule>> modulesByDepth;
+  private final List<List<JSModule>> modulesByDepth;
 
   /**
    * dependencyMap is a cache of dependencies that makes the dependsOn function faster. Each map

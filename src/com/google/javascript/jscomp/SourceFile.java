@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -588,7 +589,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
       if (cachedCode == null) {
         cachedCode = Files.toString(file, this.getCharset());
-        super.setCode(cachedCode, this.getCharset() == StandardCharsets.UTF_8);
+        super.setCode(cachedCode, Objects.equals(this.getCharset(), StandardCharsets.UTF_8));
         // Byte Order Mark can be removed by setCode
         cachedCode = super.getCode();
       }
@@ -691,7 +692,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
         // Must close the stream or else the cache won't be cleared.
         inputStream.close();
 
-        super.setCode(cachedCode, this.getCharset() == StandardCharsets.UTF_8);
+        super.setCode(cachedCode, Objects.equals(this.getCharset(), StandardCharsets.UTF_8));
         // Byte Order Mark can be removed by setCode
         cachedCode = super.getCode();
       }

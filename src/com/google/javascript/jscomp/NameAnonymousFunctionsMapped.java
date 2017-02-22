@@ -42,8 +42,8 @@ import java.util.logging.Logger;
  */
 class NameAnonymousFunctionsMapped implements CompilerPass {
 
-  private static Logger logger = Logger.getLogger(
-      NameAnonymousFunctionsMapped.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(NameAnonymousFunctionsMapped.class.getName());
 
   static final char PREFIX = '$';
   static final String PREFIX_STRING = "$";

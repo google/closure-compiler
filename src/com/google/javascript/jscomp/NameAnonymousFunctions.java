@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-
 import java.util.logging.Logger;
 
 /**
@@ -65,7 +64,7 @@ class NameAnonymousFunctions implements CompilerPass {
    */
   private class AnonymousFunctionNamer
       implements AnonymousFunctionNamingCallback.FunctionNamer {
-    private NodeNameExtractor nameExtractor;
+    private final NodeNameExtractor nameExtractor;
 
     AnonymousFunctionNamer() {
       this.nameExtractor = new NodeNameExtractor(DELIMITER);

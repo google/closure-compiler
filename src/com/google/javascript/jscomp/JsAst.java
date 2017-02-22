@@ -35,9 +35,9 @@ import java.util.ArrayList;
 public class JsAst implements SourceAst {
   private static final long serialVersionUID = 1L;
 
-  private transient InputId inputId;
+  private final transient InputId inputId;
   private transient SourceFile sourceFile;
-  private String fileName;
+  private final String fileName;
   private Node root;
   private FeatureSet features;
 
@@ -119,7 +119,7 @@ public class JsAst implements SourceAst {
   private static class RecordingReporterProxy implements ErrorReporter {
     final ArrayList<RhinoError> errors = new ArrayList<>();
     final ArrayList<RhinoError> warnings = new ArrayList<>();
-    private ErrorReporter delegateReporter;
+    private final ErrorReporter delegateReporter;
 
     RecordingReporterProxy(ErrorReporter delegateReporter) {
       this.delegateReporter = delegateReporter;
