@@ -769,4 +769,16 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @constructor */ function Bar$$module$test(Foo) { this.foo = new Foo(); }",
             "module$test.prototype.test = new Bar$$module$test(module$test);"));
   }
+
+  public void testIssue2308() {
+    setFilename("test");
+    testModules(
+        LINE_JOINER.join("exports.y = null;", "var x;", "x = exports.y;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test = {};",
+            "module$test.y = null;",
+            "var x$$module$test;",
+            "x$$module$test = module$test.y"));
+  }
 }
