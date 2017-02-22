@@ -2042,13 +2042,17 @@ public class JSDocInfo implements Serializable {
 
       if (info.extendedInterfaces != null) {
         for (JSTypeExpression interfaceType : info.extendedInterfaces) {
-          nodes.add(interfaceType.getRoot());
+          if (interfaceType != null) {
+            nodes.add(interfaceType.getRoot());
+          }
         }
       }
 
       if (info.implementedInterfaces != null) {
         for (JSTypeExpression interfaceType : info.implementedInterfaces) {
-          nodes.add(interfaceType.getRoot());
+          if (interfaceType != null) {
+            nodes.add(interfaceType.getRoot());
+          }
         }
       }
 
