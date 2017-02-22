@@ -295,17 +295,17 @@ public final class NormalizeTest extends Es6CompilerTestCase {
     test(
         LINE_JOINER.join(
             "function f() { ",
-            "function foo() {} ",
-            "if (x) return;",
-            "foo(); ",
-            "function bar() {} ",
+            "  function foo() {} ",
+            "  if (x) return;",
+            "  foo(); ",
+            "  function bar() {} ",
             "}"),
         LINE_JOINER.join(
             "function f() {",
-            "function foo() {}",
-            "function bar() {}",
-            "if (x) return;",
-            "foo();",
+            "  function foo() {}",
+            "  function bar() {}",
+            "  if (x) return;",
+            "  foo();",
             "}"));
   }
 

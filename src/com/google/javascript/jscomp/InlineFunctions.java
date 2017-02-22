@@ -148,7 +148,6 @@ class InlineFunctions implements CompilerPass {
   private static boolean isAlwaysInlinable(Node fn) {
     Preconditions.checkArgument(fn.isFunction());
     Node body = NodeUtil.getFunctionBody(fn);
-    int numOfStmsInBody = body.getChildCount();
     return (!body.hasChildren())
         || (body.hasOneChild() && body.getFirstChild().isReturn());
   }
