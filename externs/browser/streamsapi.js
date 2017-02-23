@@ -54,13 +54,13 @@ TransformStream.prototype.readable;
  */
 function PipeOptions() {};
 
-/** @type {boolean} */
+/** @type {undefined|boolean} */
 PipeOptions.prototype.preventClose;
 
-/** @type {boolean} */
+/** @type {undefined|boolean} */
 PipeOptions.prototype.preventAbort;
 
-/** @type {boolean} */
+/** @type {undefined|boolean} */
 PipeOptions.prototype.preventCancel;
 
 
