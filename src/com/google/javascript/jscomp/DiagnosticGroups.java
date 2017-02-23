@@ -644,6 +644,13 @@ public class DiagnosticGroups {
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
+  // This diagnostic group is intentionally absent in ParserConfig.properties.
+  // Conformance checks are supposed to be enforced project-wide, so we don't
+  // allow suppressions on individual functions.
+  // In the future, we may carve out a subset of the conformance checks that is
+  // OK to suppress.
+  // For now, the only way to suppress a check at a granularity smaller than
+  // the file level is by using a whitelist file.
   @GwtIncompatible("Conformance")
   public static final DiagnosticGroup CONFORMANCE_VIOLATIONS =
       DiagnosticGroups.registerGroup("conformanceViolations",
