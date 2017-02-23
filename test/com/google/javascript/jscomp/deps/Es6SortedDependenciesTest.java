@@ -26,7 +26,7 @@ import junit.framework.TestCase;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class Es6SortedDependenciesTest extends TestCase {
-  private SortedDependencies<SimpleDependencyInfo> createSortedDependencies(
+  private static SortedDependencies<SimpleDependencyInfo> createSortedDependencies(
       List<SimpleDependencyInfo> shuffled) {
     return new Es6SortedDependencies<>(shuffled);
   }
@@ -219,32 +219,32 @@ public class Es6SortedDependenciesTest extends TestCase {
     assertThat(sorted.getSortedList()).containsExactly(c, a, b).inOrder();
   }
 
-  private void assertSortedInputs(
-      List<SimpleDependencyInfo> expected,
-      List<SimpleDependencyInfo> shuffled) throws Exception {
+  private static void assertSortedInputs(
+      List<SimpleDependencyInfo> expected, List<SimpleDependencyInfo> shuffled) throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffled);
     assertThat(sorted.getSortedList()).isEqualTo(expected);
   }
 
-  private void assertSortedDeps(
+  private static void assertSortedDeps(
       List<SimpleDependencyInfo> expected,
       List<SimpleDependencyInfo> shuffled,
-      List<SimpleDependencyInfo> roots) throws Exception {
+      List<SimpleDependencyInfo> roots)
+      throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffled);
     assertThat(sorted.getSortedDependenciesOf(roots)).isEqualTo(expected);
   }
 
-  private void assertOrder(ImmutableList<SimpleDependencyInfo> shuffle,
-      ImmutableList<SimpleDependencyInfo> expected) {
+  private static void assertOrder(
+      ImmutableList<SimpleDependencyInfo> shuffle, ImmutableList<SimpleDependencyInfo> expected) {
     SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffle);
     assertThat(sorted.getSortedList()).isEqualTo(expected);
   }
 
-  private List<String> requires(String ... strings) {
+  private static List<String> requires(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 
-  private List<String> provides(String ... strings) {
+  private static List<String> provides(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 }

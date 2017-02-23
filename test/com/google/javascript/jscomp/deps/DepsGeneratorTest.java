@@ -466,11 +466,11 @@ public final class DepsGeneratorTest extends TestCase {
     assertThat(errorManager.getErrors()[0].description).isEqualTo(message);
   }
 
-  private void assertContains(String part, String whole) {
+  private static void assertContains(String part, String whole) {
     assertWithMessage("Expected string to contain: " + part).that(whole.contains(part)).isTrue();
   }
 
-  private void assertNotContains(String part, String whole) {
+  private static void assertNotContains(String part, String whole) {
     assertWithMessage("Expected string not to contain: " + part)
         .that(whole.contains(part))
         .isFalse();

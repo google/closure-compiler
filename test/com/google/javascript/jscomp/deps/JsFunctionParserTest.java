@@ -35,8 +35,7 @@ public final class JsFunctionParserTest extends TestCase {
   private static final String SRC_PATH = "a";
   private JsFunctionParser parser;
   private ErrorManager errorManager;
-  private Collection<String> functions = ImmutableList.of(
-      "goog.require", "goog.provide");
+  private final Collection<String> functions = ImmutableList.of("goog.require", "goog.provide");
 
   @Override
   public void setUp() {
