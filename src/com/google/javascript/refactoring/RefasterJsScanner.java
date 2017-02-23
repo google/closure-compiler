@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.TypeMatchingStrategy;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeIRegistry;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -78,8 +77,8 @@ public final class RefasterJsScanner extends Scanner {
         templateJs == null, "Can't load RefasterJs template since a template is already loaded.");
     this.templateJs =
         Thread.currentThread().getContextClassLoader().getResource(refasterjsTemplate) != null
-        ? Resources.toString(Resources.getResource(refasterjsTemplate), UTF_8)
-        : Files.toString(new File(refasterjsTemplate), UTF_8);
+            ? Resources.toString(Resources.getResource(refasterjsTemplate), UTF_8)
+            : Files.asCharSource(new File(refasterjsTemplate), UTF_8).read();
   }
 
   /**

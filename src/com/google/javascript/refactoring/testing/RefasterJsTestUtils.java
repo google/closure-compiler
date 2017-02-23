@@ -25,7 +25,6 @@ import com.google.javascript.refactoring.ApplySuggestedFixes;
 import com.google.javascript.refactoring.RefactoringDriver;
 import com.google.javascript.refactoring.RefasterJsScanner;
 import com.google.javascript.refactoring.SuggestedFix;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -84,7 +83,7 @@ public final class RefasterJsTestUtils {
   }
 
   private static String slurpFile(String originalFile) throws IOException {
-    return Files.toString(new File(originalFile), StandardCharsets.UTF_8);
+    return Files.asCharSource(new File(originalFile), StandardCharsets.UTF_8).read();
   }
 
   private RefasterJsTestUtils() {}

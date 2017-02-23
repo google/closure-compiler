@@ -74,12 +74,12 @@ public final class ApplySuggestedFixes {
 
     Map<String, String> filenameToCodeMap = new HashMap<>();
     for (String filename : filenames) {
-      filenameToCodeMap.put(filename, Files.toString(new File(filename), UTF_8));
+      filenameToCodeMap.put(filename, Files.asCharSource(new File(filename), UTF_8).read());
     }
 
     Map<String, String> newCode = applySuggestedFixesToCode(fixes, filenameToCodeMap);
     for (Map.Entry<String, String> entry : newCode.entrySet()) {
-      Files.write(entry.getValue(), new File(entry.getKey()), UTF_8);
+      Files.asCharSink(new File(entry.getKey()), UTF_8).write(entry.getValue());
     }
   }
 

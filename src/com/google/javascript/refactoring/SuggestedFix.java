@@ -696,7 +696,7 @@ public final class SuggestedFix {
       return this;
     }
 
-    private Node findGoogRequireNode(Node n, NodeMetadata metadata, String namespace) {
+    private static Node findGoogRequireNode(Node n, NodeMetadata metadata, String namespace) {
       Node script = NodeUtil.getEnclosingScript(n);
       if (script.getFirstChild().isModuleBody()) {
         script = script.getFirstChild();
