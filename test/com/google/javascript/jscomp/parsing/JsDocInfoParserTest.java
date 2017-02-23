@@ -4521,11 +4521,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param endCharno The ending character of the text.
    * @return The marker, for chaining purposes.
    */
-  private JSDocInfo.Marker assertDocumentationInMarker(JSDocInfo.Marker marker,
-                                                       String description,
-                                                       int startCharno,
-                                                       int endLineno,
-                                                       int endCharno) {
+  private static JSDocInfo.Marker assertDocumentationInMarker(
+      JSDocInfo.Marker marker, String description, int startCharno, int endLineno, int endCharno) {
     assertThat(marker.getDescription()).isNotNull();
     assertThat(marker.getDescription().getItem()).isEqualTo(description);
 
@@ -4544,13 +4541,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    *
    * @param typeName The name of the type expected in the type field.
    * @param startCharno The starting character of the type declaration.
-   * @param hasBrackets Whether the type in the type field is expected
-   *     to have brackets.
+   * @param hasBrackets Whether the type in the type field is expected to have brackets.
    * @return The marker, for chaining purposes.
    */
-  private JSDocInfo.Marker assertTypeInMarker(
-      JSDocInfo.Marker marker, String typeName,
-      int startLineno, int startCharno, int endLineno, int endCharno,
+  private static JSDocInfo.Marker assertTypeInMarker(
+      JSDocInfo.Marker marker,
+      String typeName,
+      int startLineno,
+      int startCharno,
+      int endLineno,
+      int endCharno,
       boolean hasBrackets) {
     assertThat(marker.getType()).isNotNull();
     assertThat(marker.getType().getItem().isString()).isTrue();
@@ -4577,8 +4577,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param startCharno The starting character of the text.
    * @return The marker, for chaining purposes.
    */
-  private JSDocInfo.Marker assertNameInMarker(JSDocInfo.Marker marker,
-      String name, int startLine, int startCharno) {
+  private static JSDocInfo.Marker assertNameInMarker(
+      JSDocInfo.Marker marker, String name, int startLine, int startCharno) {
     assertThat(marker.getNameNode()).isNotNull();
     assertThat(marker.getNameNode().getItem().getString()).isEqualTo(name);
 
@@ -4592,41 +4592,35 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Asserts that an annotation marker of a given annotation name
-   * is found in the given JSDocInfo.
+   * Asserts that an annotation marker of a given annotation name is found in the given JSDocInfo.
    *
    * @param jsdoc The JSDocInfo in which to search for the annotation marker.
-   * @param annotationName The name/type of the annotation for which to
-   *   search. Example: "author" for an "@author" annotation.
+   * @param annotationName The name/type of the annotation for which to search. Example: "author"
+   *     for an "@author" annotation.
    * @param startLineno The expected starting line number of the marker.
    * @param startCharno The expected character on the starting line.
    * @return The marker found, for further testing.
    */
-  private JSDocInfo.Marker assertAnnotationMarker(JSDocInfo jsdoc,
-                                                  String annotationName,
-                                                  int startLineno,
-                                                  int startCharno) {
+  private static JSDocInfo.Marker assertAnnotationMarker(
+      JSDocInfo jsdoc, String annotationName, int startLineno, int startCharno) {
     return assertAnnotationMarker(jsdoc, annotationName, startLineno,
                                   startCharno, 0);
   }
 
   /**
-   * Asserts that the index-th annotation marker of a given annotation name
-   * is found in the given JSDocInfo.
+   * Asserts that the index-th annotation marker of a given annotation name is found in the given
+   * JSDocInfo.
    *
    * @param jsdoc The JSDocInfo in which to search for the annotation marker.
-   * @param annotationName The name/type of the annotation for which to
-   *   search. Example: "author" for an "@author" annotation.
+   * @param annotationName The name/type of the annotation for which to search. Example: "author"
+   *     for an "@author" annotation.
    * @param startLineno The expected starting line number of the marker.
    * @param startCharno The expected character on the starting line.
    * @param index The index of the marker.
    * @return The marker found, for further testing.
    */
-  private JSDocInfo.Marker assertAnnotationMarker(JSDocInfo jsdoc,
-                                                  String annotationName,
-                                                  int startLineno,
-                                                  int startCharno,
-                                                  int index) {
+  private static JSDocInfo.Marker assertAnnotationMarker(
+      JSDocInfo jsdoc, String annotationName, int startLineno, int startCharno, int index) {
 
     Collection<JSDocInfo.Marker> markers = jsdoc.getMarkers();
 
@@ -4657,7 +4651,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     return null;
   }
 
-  private <T> void assertContains(Collection<T> collection, T item) {
+  private static <T> void assertContains(Collection<T> collection, T item) {
     assertThat(collection).contains(item);
   }
 
@@ -4750,7 +4744,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     }
   }
 
-  private Node parseType(String typeComment) {
+  private static Node parseType(String typeComment) {
     return JsDocInfoParser.parseTypeString(typeComment);
   }
 

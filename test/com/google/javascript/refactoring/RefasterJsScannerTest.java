@@ -727,18 +727,19 @@ public class RefasterJsScannerTest {
     assertChanges(externs, originalCode, null, template);
   }
 
-  private Compiler createCompiler() {
+  private static Compiler createCompiler() {
     return new Compiler();
   }
 
-  private RefasterJsScanner createScanner(Compiler compiler, String template) throws Exception {
+  private static RefasterJsScanner createScanner(Compiler compiler, String template)
+      throws Exception {
     RefasterJsScanner scanner = new RefasterJsScanner();
     scanner.loadRefasterJsTemplateFromCode(template);
     scanner.initialize(compiler);
     return scanner;
   }
 
-  private void compileTestCode(Compiler compiler, String testCode, String externs) {
+  private static void compileTestCode(Compiler compiler, String testCode, String externs) {
     CompilerOptions options = RefactoringDriver.getCompilerOptions();
     compiler.compile(
         ImmutableList.of(SourceFile.fromCode("externs", "function Symbol() {};" + externs)),
@@ -746,7 +747,7 @@ public class RefasterJsScannerTest {
         options);
   }
 
-  private void assertChanges(
+  private static void assertChanges(
       String externs, String originalCode, String expectedCode, String refasterJsTemplate)
       throws Exception {
     RefasterJsScanner scanner = new RefasterJsScanner();

@@ -39,7 +39,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeDeclarationsIR;
-
 import junit.framework.TestCase;
 
 /**
@@ -778,11 +777,12 @@ public final class TypeSyntaxTest extends TestCase {
     assertDeclaredType(message, expectedType, varDecl.getFirstChild());
   }
 
-  private void assertDeclaredType(String message, TypeDeclarationNode expectedType, Node typed) {
+  private static void assertDeclaredType(
+      String message, TypeDeclarationNode expectedType, Node typed) {
     assertTreeEquals(message, expectedType, typed.getDeclaredTypeExpression());
   }
 
-  private void assertTreeEquals(String message, Node expected, Node actual) {
+  private static void assertTreeEquals(String message, Node expected, Node actual) {
     String treeDiff = expected.checkTreeEquals(actual);
     assertNull(message + ": " + treeDiff, treeDiff);
   }

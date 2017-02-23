@@ -27,13 +27,11 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.Node;
-
+import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Test case for {@link ApplySuggestedFixes}.
@@ -181,17 +179,15 @@ public class ApplySuggestedFixesTest {
     } catch (IllegalArgumentException expected) {}
   }
 
-  /**
-   * Returns the root script node produced from the compiled JS input.
-   */
-  private Node compileToScriptRoot(Compiler compiler) {
+  /** Returns the root script node produced from the compiled JS input. */
+  private static Node compileToScriptRoot(Compiler compiler) {
     Node root = compiler.getRoot();
     // The last child of the compiler root is a Block node, and the first child
     // of that is the Script node.
     return root.getLastChild().getFirstChild();
   }
 
-  private Compiler getCompiler(String jsInput) {
+  private static Compiler getCompiler(String jsInput) {
     Compiler compiler = new Compiler();
     CompilerOptions options = RefactoringDriver.getCompilerOptions();
     compiler.init(

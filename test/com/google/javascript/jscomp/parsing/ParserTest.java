@@ -984,7 +984,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError(js, "primary expression expected");
   }
 
-  private void assertNodeEquality(Node expected, Node found) {
+  private static void assertNodeEquality(Node expected, Node found) {
     String message = expected.checkTreeEquals(found);
     if (message != null) {
       fail(message);
@@ -1106,7 +1106,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
         parse("a = b + c(d + e).print()"));
   }
 
-  private Node createScript(Node n) {
+  private static Node createScript(Node n) {
     Node script = new Node(Token.SCRIPT);
     script.addChildToBack(n);
     return script;
@@ -3490,11 +3490,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
   }
 
-  private String getRequiresEs6Message(Feature feature) {
+  private static String getRequiresEs6Message(Feature feature) {
     return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT6, feature);
   }
 
-  private String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {
+  private static String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {
     return String.format(
         "this language feature is only supported for %s mode or better: %s",
         languageMode,
@@ -3506,11 +3506,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     return n;
   }
 
-  private Node expr(Node n) {
+  private static Node expr(Node n) {
     return new Node(Token.EXPR_RESULT, n);
   }
 
-  private Node regex(String regex) {
+  private static Node regex(String regex) {
     return new Node(Token.REGEXP, Node.newString(regex));
   }
 

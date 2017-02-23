@@ -26,7 +26,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.Format;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -413,7 +412,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             + "}\n");
   }
 
-  private String getEmptyMapFor(String name) throws IOException {
+  private static String getEmptyMapFor(String name) throws IOException {
     StringWriter out = new StringWriter();
     SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
     generator.appendTo(out, name);
@@ -636,7 +635,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     return count(js);
   }
 
-  private JsonObject parseJsonObject(String json) {
+  private static JsonObject parseJsonObject(String json) {
     return new Gson().fromJson(json, JsonObject.class);
   }
 }

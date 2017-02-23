@@ -38,7 +38,7 @@ public final class Base64Test extends TestCase {
     assertThat(Base64.base64EncodeInt(0xffffffff)).isEqualTo("/////w");
   }
 
-  private void testValue(int value) {
+  private static void testValue(int value) {
     assertThat(Base64.fromBase64(Base64.toBase64(value))).isEqualTo(value);
   }
 }

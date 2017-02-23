@@ -1576,7 +1576,7 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
-  private void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
+  private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
     List<PassFactory> factories = new ArrayList<>();
     TranspilationPasses.addEs6EarlyPasses(factories);
     TranspilationPasses.addEs6LatePasses(factories);
@@ -1597,7 +1597,7 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
-  private void normalizeActualCode(Compiler compiler, Node externsRoot, Node mainRoot) {
+  private static void normalizeActualCode(Compiler compiler, Node externsRoot, Node mainRoot) {
     Normalize normalize = new Normalize(compiler, false);
     normalize.process(externsRoot, mainRoot);
   }

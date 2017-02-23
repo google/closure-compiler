@@ -83,7 +83,7 @@ public final class Base64VLQTest extends TestCase {
   }
 
 
-  private void testValue(int value) {
+  private static void testValue(int value) {
     try {
       StringBuilder sb = new StringBuilder();
       Base64VLQ.encode(sb, value);

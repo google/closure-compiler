@@ -83,10 +83,10 @@ public final class CommandLineRunnerTest extends TestCase {
     STAR
   }
 
-  private List<String> args = new ArrayList<>();
+  private final List<String> args = new ArrayList<>();
 
   /** Externs for the test */
-  private static final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
+  private static final ImmutableList<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
     SourceFile.fromCode("externs", Joiner.on('\n').join(
         "var arguments;",
         "/**",
@@ -2149,7 +2149,7 @@ public final class CommandLineRunnerTest extends TestCase {
     return new FlagEntry<>(JsSourceType.JS_ZIP, tempZipFile.getAbsolutePath());
   }
 
-  private FlagEntry<JsSourceType> createJsFile(String filename, String fileContent)
+  private static FlagEntry<JsSourceType> createJsFile(String filename, String fileContent)
       throws IOException {
     File tempJsFile = File.createTempFile(filename, ".js",
         java.nio.file.Files.createTempDirectory("jscomp").toFile());

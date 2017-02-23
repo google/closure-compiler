@@ -671,7 +671,7 @@ public class SuggestedFixTest {
     assertThat(replacementMap).isEmpty();
   }
 
-  private void assertAddGoogRequire(String before, String after, String namespace) {
+  private static void assertAddGoogRequire(String before, String after, String namespace) {
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -796,17 +796,15 @@ public class SuggestedFixTest {
     assertTrue(info.isInClosurizedFile());
   }
 
-  /**
-   * Returns the root script node produced from the compiled JS input.
-   */
-  private Node compileToScriptRoot(Compiler compiler) {
+  /** Returns the root script node produced from the compiled JS input. */
+  private static Node compileToScriptRoot(Compiler compiler) {
     Node root = compiler.getRoot();
     // The last child of the compiler root is a Block node, and the first child
     // of that is the Script node.
     return root.getLastChild().getFirstChild();
   }
 
-  private Compiler getCompiler(String jsInput) {
+  private static Compiler getCompiler(String jsInput) {
     Compiler compiler = new Compiler();
     CompilerOptions options = RefactoringDriver.getCompilerOptions();
     compiler.init(
