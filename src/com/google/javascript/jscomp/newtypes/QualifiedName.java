@@ -19,7 +19,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -30,7 +30,7 @@ import com.google.javascript.rhino.Node;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class QualifiedName {
-  private ImmutableList<String> parts;
+  private final ImmutableList<String> parts;
 
   private QualifiedName(ImmutableList<String> parts) {
     this.parts = parts;
@@ -80,7 +80,7 @@ public final class QualifiedName {
   }
 
   public String getRightmostName() {
-    return parts.get(parts.size() - 1);
+    return Iterables.getLast(parts);
   }
 
   @Override

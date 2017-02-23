@@ -27,12 +27,12 @@ import com.google.common.base.Preconditions;
  */
 public class Declaration {
   // Type of local, formal, or extern that the declaration refers to
-  private JSType simpleType;
-  private Typedef typedef;
-  private Namespace ns;
-  private DeclaredTypeRegistry funScope;
-  private boolean isTypeVar;
-  private boolean isConstant;
+  private final JSType simpleType;
+  private final Typedef typedef;
+  private final Namespace ns;
+  private final DeclaredTypeRegistry funScope;
+  private final boolean isTypeVar;
+  private final boolean isConstant;
 
   public Declaration(JSType simpleType, Typedef typedef, Namespace ns,
       DeclaredTypeRegistry funScope, boolean isTypeVar, boolean isConstant) {

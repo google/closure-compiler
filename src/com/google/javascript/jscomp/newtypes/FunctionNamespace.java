@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class FunctionNamespace extends Namespace {
-  private DeclaredTypeRegistry scope;
+  private final DeclaredTypeRegistry scope;
 
   public FunctionNamespace(
       JSTypes commonTypes, String name, DeclaredTypeRegistry scope, Node defSite) {

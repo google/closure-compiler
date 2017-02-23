@@ -48,7 +48,7 @@ public final class EnumType extends Namespace implements TypeWithProperties {
   // The type of the enum's properties, a subtype of the previous field.
   private JSType enumPropType;
   // All properties have the same type, so we only need a set, not a map.
-  private ImmutableSet<String> props;
+  private final ImmutableSet<String> props;
 
   private EnumType(JSTypes commonTypes, String name, Node defSite,
       JSTypeExpression typeExpr, Collection<String> props) {

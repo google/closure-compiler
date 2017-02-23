@@ -2088,7 +2088,7 @@ class MaskType extends JSType {
 }
 
 final class ObjsType extends JSType {
-  private ImmutableSet<ObjectType> objs;
+  private final ImmutableSet<ObjectType> objs;
 
   ObjsType(JSTypes commonTypes, ImmutableSet<ObjectType> objs) {
     super(commonTypes);
@@ -2117,7 +2117,7 @@ final class ObjsType extends JSType {
 }
 
 final class NullableObjsType extends JSType {
-  private ImmutableSet<ObjectType> objs;
+  private final ImmutableSet<ObjectType> objs;
 
   NullableObjsType(JSTypes commonTypes, ImmutableSet<ObjectType> objs) {
     super(commonTypes);

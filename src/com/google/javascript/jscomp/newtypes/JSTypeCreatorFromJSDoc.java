@@ -202,9 +202,9 @@ public final class JSTypeCreatorFromJSDoc {
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
 
-  private Set<JSError> warnings = new LinkedHashSet<>();
+  private final Set<JSError> warnings = new LinkedHashSet<>();
   // Unknown type names indexed by JSDoc AST node at which they were found.
-  private Map<Node, String> unknownTypeNames = new LinkedHashMap<>();
+  private final Map<Node, String> unknownTypeNames = new LinkedHashMap<>();
 
   public JSTypeCreatorFromJSDoc(JSTypes commonTypes,
       CodingConvention convention, UniqueNameGenerator nameGen,
@@ -218,7 +218,7 @@ public final class JSTypeCreatorFromJSDoc {
     this.recordPropertyName = recordPropertyName;
   }
 
-  private FunctionAndSlotType qmarkFunctionDeclared;
+  private final FunctionAndSlotType qmarkFunctionDeclared;
   private static final boolean NULLABLE_TYPES_BY_DEFAULT = true;
 
   public JSType maybeMakeNullable(JSType t) {
@@ -1085,8 +1085,8 @@ public final class JSTypeCreatorFromJSDoc {
   }
 
   private static class ParameterType {
-    private JSType type;
-    private ParameterKind kind;
+    private final JSType type;
+    private final ParameterKind kind;
 
     ParameterType(JSType type, ParameterKind kind) {
       this.type = type;

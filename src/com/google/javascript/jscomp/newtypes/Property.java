@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,7 +45,7 @@ class Property {
     OPTIONAL,
     REQUIRED;
   }
-  private Attribute attribute;
+  private final Attribute attribute;
 
   private Property(Node defSite, JSType inferredType, JSType declaredType, Attribute attribute) {
     Preconditions.checkArgument(inferredType != null);

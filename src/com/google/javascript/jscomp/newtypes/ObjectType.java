@@ -1395,7 +1395,7 @@ final class ObjectType implements TypeWithProperties {
     } else if (isDict()) {
       builder.append("dict");
     } else if (this.ns != null) {
-      builder.append(this.ns.toString());
+      builder.append(this.ns);
     }
     if (this.fn != null) {
       builder.append("<|");

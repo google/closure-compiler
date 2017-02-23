@@ -28,7 +28,7 @@ public class ObjectKind {
   // No matter how you access its properties, it complains.
   private static final int BOTH_MASK = 3;
 
-  private int mask;
+  private final int mask;
 
   public static final ObjectKind UNRESTRICTED = new ObjectKind(UNRESTRICTED_MASK);
   public static final ObjectKind STRUCT = new ObjectKind(STRUCT_MASK);
