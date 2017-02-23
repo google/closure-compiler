@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -287,35 +286,23 @@ public final class DeclaredFunctionType {
     }
     Map<String, JSType> typeMap = nt.getTypeMap();
     Preconditions.checkState(!typeMap.isEmpty());
-    Map<String, JSType> reducedMap = typeMap;
-    boolean foundShadowedTypeParam = false;
+    // Before switching to unique generated names for type variables, a method's type variables
+    // could shadow type variables defined on the class. Check that it no longer happens.
     for (String typeParam : typeParameters) {
-      if (typeMap.containsKey(typeParam)) {
-        foundShadowedTypeParam = true;
-        break;
-      }
-    }
-    if (foundShadowedTypeParam) {
-      ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-      for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
-        if (!typeParameters.contains(entry.getKey())) {
-          builder.put(entry);
-        }
-      }
-      reducedMap = builder.build();
+      Preconditions.checkState(!typeMap.containsKey(typeParam));
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     for (JSType reqFormal : requiredFormals) {
-      builder.addReqFormal(reqFormal == null ? null : reqFormal.substituteGenerics(reducedMap));
+      builder.addReqFormal(reqFormal == null ? null : reqFormal.substituteGenerics(typeMap));
     }
     for (JSType optFormal : optionalFormals) {
-      builder.addOptFormal(optFormal == null ? null : optFormal.substituteGenerics(reducedMap));
+      builder.addOptFormal(optFormal == null ? null : optFormal.substituteGenerics(typeMap));
     }
     if (restFormals != null) {
-      builder.addRestFormals(restFormals.substituteGenerics(reducedMap));
+      builder.addRestFormals(restFormals.substituteGenerics(typeMap));
     }
     if (returnType != null) {
-      builder.addRetType(returnType.substituteGenerics(reducedMap));
+      builder.addRetType(returnType.substituteGenerics(typeMap));
     }
     // Explicitly forget nominalType and receiverType. This method is used when
     // calculating the declared type of a method using the inherited types.
@@ -324,8 +311,7 @@ public final class DeclaredFunctionType {
     return builder.buildDeclaration();
   }
 
-  public static DeclaredFunctionType meet(
-      Collection<DeclaredFunctionType> toMeet) {
+  public static DeclaredFunctionType meet(Collection<DeclaredFunctionType> toMeet) {
     DeclaredFunctionType result = null;
     for (DeclaredFunctionType declType : toMeet) {
       if (result == null) {
@@ -337,29 +323,24 @@ public final class DeclaredFunctionType {
     return result;
   }
 
-  private static DeclaredFunctionType meet(
-      DeclaredFunctionType f1, DeclaredFunctionType f2) {
+  private static DeclaredFunctionType meet(DeclaredFunctionType f1, DeclaredFunctionType f2) {
     if (f1.equals(f2)) {
       return f1;
     }
     JSTypes commonTypes = f1.commonTypes;
     FunctionTypeBuilder builder = new FunctionTypeBuilder(f1.commonTypes);
-    int minRequiredArity = Math.min(
-        f1.requiredFormals.size(), f2.requiredFormals.size());
+    int minRequiredArity = Math.min(f1.requiredFormals.size(), f2.requiredFormals.size());
     for (int i = 0; i < minRequiredArity; i++) {
-      builder.addReqFormal(nullAcceptingJoin(
-          f1.getFormalType(i), f2.getFormalType(i)));
+      builder.addReqFormal(nullAcceptingJoin(f1.getFormalType(i), f2.getFormalType(i)));
     }
     int maxTotalArity = Math.max(
         f1.requiredFormals.size() + f1.optionalFormals.size(),
         f2.requiredFormals.size() + f2.optionalFormals.size());
     for (int i = minRequiredArity; i < maxTotalArity; i++) {
-      builder.addOptFormal(nullAcceptingJoin(
-          f1.getFormalType(i), f2.getFormalType(i)));
+      builder.addOptFormal(nullAcceptingJoin(f1.getFormalType(i), f2.getFormalType(i)));
     }
     if (f1.restFormals != null || f2.restFormals != null) {
-      builder.addRestFormals(
-          nullAcceptingJoin(f1.restFormals, f2.restFormals));
+      builder.addRestFormals(nullAcceptingJoin(f1.restFormals, f2.restFormals));
     }
     JSType retType = nullAcceptingMeet(f1.returnType, f2.returnType);
     if (commonTypes.BOTTOM.equals(retType)) {

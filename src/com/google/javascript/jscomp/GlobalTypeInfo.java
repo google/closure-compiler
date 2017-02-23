@@ -516,15 +516,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     this.compiler.setExternProperties(ImmutableSet.copyOf(this.externPropertyNames));
   }
 
-  private Collection<PropertyDef> getPropDefsFromInterface(
-      NominalType nominalType, String pname) {
+  private Collection<PropertyDef> getPropDefsFromInterface(NominalType nominalType, String pname) {
     Preconditions.checkArgument(nominalType.isFinalized());
-    Preconditions.checkArgument(
-        nominalType.isInterface() || nominalType.isBuiltinObject());
+    Preconditions.checkArgument(nominalType.isInterface() || nominalType.isBuiltinObject());
     if (nominalType.getPropDeclaredType(pname) == null) {
       return ImmutableSet.of();
     } else if (propertyDefs.get(nominalType.getId(), pname) != null) {
-      return ImmutableSet.of(propertyDefs.get(nominalType.getId(), pname));
+      PropertyDef propDef = propertyDefs.get(nominalType.getId(), pname);
+      return ImmutableSet.of(
+          nominalType.isGeneric() ? propDef.substituteNominalGenerics(nominalType) : propDef);
     }
     ImmutableSet.Builder<PropertyDef> result = ImmutableSet.builder();
     for (NominalType interf : nominalType.getInstantiatedInterfaces()) {
@@ -539,7 +539,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       Preconditions.checkArgument(nominalType.isClass());
 
       if (propertyDefs.get(nominalType.getId(), pname) != null) {
-        return propertyDefs.get(nominalType.getId(), pname);
+        PropertyDef propDef = propertyDefs.get(nominalType.getId(), pname);
+        return nominalType.isGeneric() ? propDef.substituteNominalGenerics(nominalType) : propDef;
       }
       nominalType = nominalType.getInstantiatedSuperclass();
     }
@@ -749,8 +750,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       // If we are looking at a method definition, munging may be needed
       for (PropertyDef inheritedPropDef : inheritedPropDefs) {
         if (inheritedPropDef.methodType != null) {
-          propMethodTypesToProcess.put(pname,
-              inheritedPropDef.methodType.substituteNominalGenerics(superType));
+          propMethodTypesToProcess.put(pname, inheritedPropDef.methodType);
         }
       }
     }
@@ -2710,11 +2710,25 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       this.methodScope = methodScope;
     }
 
+    PropertyDef substituteNominalGenerics(NominalType nt) {
+      Preconditions.checkArgument(nt.isGeneric(), nt);
+      if (this.methodType == null) {
+        return this;
+      }
+      return new PropertyDef(
+          this.defSite, this.methodType.substituteNominalGenerics(nt), this.methodScope);
+    }
+
     void updateMethodType(DeclaredFunctionType updatedType) {
       this.methodType = updatedType;
       if (this.methodScope != null) {
         this.methodScope.setDeclaredType(updatedType);
       }
+    }
+
+    @Override
+    public String toString() {
+      return "PropertyDef(" + defSite + ", " + methodType + ")";
     }
   }
 
