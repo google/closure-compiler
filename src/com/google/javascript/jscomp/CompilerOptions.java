@@ -2012,15 +2012,6 @@ public class CompilerOptions {
     return continueAfterErrors;
   }
 
-
-  @Deprecated
-  public void setParseJsDocDocumentation(boolean parseJsDocDocumentation) {
-    setParseJsDocDocumentation(
-        parseJsDocDocumentation
-            ? Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE
-            : Config.JsDocParsing.TYPES_ONLY);
-  }
-
   /**
    * Enables or disables the parsing of JSDoc documentation, and optionally also
    * the preservation of all whitespace and formatting within a JSDoc comment.
