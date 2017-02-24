@@ -286,8 +286,8 @@ public final class DeclaredFunctionType {
     }
     Map<String, JSType> typeMap = nt.getTypeMap();
     Preconditions.checkState(!typeMap.isEmpty());
-    // Before switching to unique generated names for type variables, a method's type variables
-    // could shadow type variables defined on the class. Check that it no longer happens.
+    // Before we switched to unique generated names for type variables, a method's type variables
+    // could shadow type variables defined on the class. Check that this no longer happens.
     for (String typeParam : typeParameters) {
       Preconditions.checkState(!typeMap.containsKey(typeParam));
     }

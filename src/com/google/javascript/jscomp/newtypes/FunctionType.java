@@ -965,36 +965,24 @@ public final class FunctionType {
     if (typeMap.isEmpty() || this.isTopFunction()) {
       return this;
     }
-    Map<String, JSType> reducedMap = typeMap;
     if (!this.commonTypes.MAP_TO_UNKNOWN.equals(typeMap)) {
-      boolean foundShadowedTypeParam = false;
+      // Before we switched to unique generated names for type variables, a method's type variables
+      // could shadow type variables defined on the class. Check that this no longer happens.
       for (String typeParam : this.typeParameters) {
-        if (typeMap.containsKey(typeParam)) {
-          foundShadowedTypeParam = true;
-          break;
-        }
-      }
-      if (foundShadowedTypeParam) {
-        ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-        for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
-          if (!typeParameters.contains(entry.getKey())) {
-            builder.put(entry);
-          }
-        }
-        reducedMap = builder.build();
+        Preconditions.checkState(!typeMap.containsKey(typeParam));
       }
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     for (JSType reqFormal : this.requiredFormals) {
-      builder.addReqFormal(reqFormal.substituteGenerics(reducedMap));
+      builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
     }
     for (JSType optFormal : this.optionalFormals) {
-      builder.addOptFormal(optFormal.substituteGenerics(reducedMap));
+      builder.addOptFormal(optFormal.substituteGenerics(typeMap));
     }
     if (this.restFormals != null) {
-      builder.addRestFormals(restFormals.substituteGenerics(reducedMap));
+      builder.addRestFormals(restFormals.substituteGenerics(typeMap));
     }
-    builder.addRetType(this.returnType.substituteGenerics(reducedMap));
+    builder.addRetType(this.returnType.substituteGenerics(typeMap));
     if (isLoose()) {
       builder.addLoose();
     }
