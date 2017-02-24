@@ -19,9 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -210,18 +208,15 @@ class InlineSimpleMethods extends MethodCompilerPass {
     return expectedBlock.isNormalBlock() ? expectedBlock : null;
   }
 
-  /**
-   * Given a set of method definitions, verify they are the same.
-   */
-  private boolean allDefinitionsEquivalent(
-      Collection<Node> definitions) {
-    List<Node> list = new ArrayList<>();
-    list.addAll(definitions);
-    Node node0 = list.get(0);
-    for (int i = 1; i < list.size(); i++) {
-      if (!compiler.areNodesEqualForInlining(list.get(i), node0)) {
+  /** Given a set of method definitions, verify they are the same. */
+  private boolean allDefinitionsEquivalent(Collection<Node> definitions) {
+    Node first = null;
+    for (Node n : definitions) {
+      if (first == null) {
+        first = n;
+      } else if (!compiler.areNodesEqualForInlining(first, n)) {
         return false;
-      }
+      } // else continue
     }
     return true;
   }
