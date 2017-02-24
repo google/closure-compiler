@@ -59,8 +59,7 @@ public class DepsGenerator {
     DO_NOT_DUPLICATE
   }
 
-  private static Logger logger =
-      Logger.getLogger(DepsGenerator.class.getName());
+  private static final Logger logger = Logger.getLogger(DepsGenerator.class.getName());
 
   // See the Flags in MakeJsDeps for descriptions of these.
   private final Collection<SourceFile> srcs;
@@ -394,10 +393,8 @@ public class DepsGenerator {
     return path;
   }
 
-  /**
-   * Writes goog.addDependency() lines for each DependencyInfo in depInfos.
-   */
-  private void writeDepInfos(PrintStream out, Collection<DependencyInfo> depInfos)
+  /** Writes goog.addDependency() lines for each DependencyInfo in depInfos. */
+  private static void writeDepInfos(PrintStream out, Collection<DependencyInfo> depInfos)
       throws IOException {
     // Print dependencies.
     // Lines look like this:

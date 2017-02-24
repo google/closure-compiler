@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.deps.DefaultDependencyResolver.CLOSUR
 
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.LoggerErrorManager;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,8 +42,7 @@ public final class DependencyFile implements SourceFile {
   private final SourceFile delegate;
 
   /** Logger for DependencyResolver. */
-  private static Logger logger =
-      Logger.getLogger(DependencyFile.class.getName());
+  private static final Logger logger = Logger.getLogger(DependencyFile.class.getName());
 
   /** Creates a new dependency file. */
   public DependencyFile(SourceFile delegate) {

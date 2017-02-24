@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.JSError;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -54,7 +53,7 @@ public abstract class JsFileLineParser {
    */
   static class ParseException extends Exception {
     public static final long serialVersionUID = 1L;
-    private boolean fatal;
+    private final boolean fatal;
 
     /**
      * Constructor.
@@ -77,7 +76,7 @@ public abstract class JsFileLineParser {
       "\\s*(?:'((?:\\\\'|[^'])*?)'|\"((?:\\\\\"|[^\"])*?)\")\\s*");
 
   /** Matcher used in the parsing string literals. */
-  private Matcher valueMatcher = STRING_LITERAL_PATTERN.matcher("");
+  private final Matcher valueMatcher = STRING_LITERAL_PATTERN.matcher("");
 
   /** Path of the file currently being parsed. */
   String filePath;

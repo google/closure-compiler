@@ -23,7 +23,6 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.ErrorManager;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -47,7 +46,7 @@ import java.util.regex.Pattern;
 @GwtIncompatible("java.util.regex")
 public final class DepsFileParser extends JsFileLineParser {
 
-  private static Logger logger = Logger.getLogger(DepsFileParser.class.getName());
+  private static final Logger logger = Logger.getLogger(DepsFileParser.class.getName());
 
   /**
    * Pattern for matching JavaScript string literals. The group is:

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.deps;
 
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.LoggerErrorManager;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -54,8 +53,7 @@ public final class DefaultDependencyResolver implements DependencyResolver  {
   private final boolean strictRequires;
 
   /** Logger for DependencyResolver. */
-  private static Logger logger =
-      Logger.getLogger(DefaultDependencyResolver.class.getName());
+  private static final Logger logger = Logger.getLogger(DefaultDependencyResolver.class.getName());
 
   /**
    * Creates a new dependency resolver.
@@ -140,12 +138,8 @@ public final class DefaultDependencyResolver implements DependencyResolver  {
     }
   }
 
-  /**
-   * Parses a block of code for goog.require statements and extracts the
-   * required symbols.
-   */
-  private Collection<String> parseRequires(
-      String code, boolean addClosureBase) {
+  /** Parses a block of code for goog.require statements and extracts the required symbols. */
+  private static Collection<String> parseRequires(String code, boolean addClosureBase) {
     ErrorManager errorManager = new LoggerErrorManager(logger);
     JsFileParser parser = new JsFileParser(errorManager);
     DependencyInfo deps =
