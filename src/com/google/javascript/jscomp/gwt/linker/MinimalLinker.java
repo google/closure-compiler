@@ -46,7 +46,7 @@ public class MinimalLinker extends AbstractLinker {
    * @param context LinkerContext containing properties
    * @return Whether to export, default false
    */
-  private boolean getExportProperty(LinkerContext context) {
+  private static boolean getExportProperty(LinkerContext context) {
     for (SelectionProperty prop : context.getProperties()) {
       if (EXPORT_PROPERTY.equals(prop.getName())) {
         String value = prop.tryGetValue();
@@ -63,7 +63,7 @@ public class MinimalLinker extends AbstractLinker {
    * @param export Whether to export via JSInterop.
    * @return Formatted, linked code.
    */
-  private String formatOutput(String js, boolean export) {
+  private static String formatOutput(String js, boolean export) {
     StringBuilder output = new StringBuilder();
 
     // If $wnd is set to this, then JSInterop's normal export will run. If export is false, fake

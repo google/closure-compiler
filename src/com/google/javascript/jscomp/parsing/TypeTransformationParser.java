@@ -33,11 +33,12 @@ import java.util.HashSet;
  */
 public final class TypeTransformationParser {
 
-  private String typeTransformationString;
+  private final String typeTransformationString;
   private Node typeTransformationAst;
-  private StaticSourceFile sourceFile;
-  private ErrorReporter errorReporter;
-  private int templateLineno, templateCharno;
+  private final StaticSourceFile sourceFile;
+  private final ErrorReporter errorReporter;
+  private final int templateLineno;
+  private final int templateCharno;
 
   private static final int VAR_ARGS = Integer.MAX_VALUE;
 
@@ -78,7 +79,8 @@ public final class TypeTransformationParser {
     UNKNOWN("unknown", 0, 0, OperationKind.TYPE_CONSTRUCTOR);
 
     public final String name;
-    public final int minParamCount, maxParamCount;
+    public final int minParamCount;
+    public final int maxParamCount;
     public final OperationKind kind;
 
     Keywords(String name, int minParamCount, int maxParamCount,

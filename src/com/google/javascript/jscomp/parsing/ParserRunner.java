@@ -185,7 +185,7 @@ public final class ParserRunner {
 
   private static class Es6ErrorReporter
       extends com.google.javascript.jscomp.parsing.parser.util.ErrorReporter {
-    private ErrorReporter reporter;
+    private final ErrorReporter reporter;
     private boolean errorSeen = false;
     private final boolean reportAllErrors;
 

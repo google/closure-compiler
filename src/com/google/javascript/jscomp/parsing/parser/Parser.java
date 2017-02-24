@@ -239,8 +239,7 @@ public class Parser {
   private static final String BASE64_URL_PREFIX = "data:application/json;base64,";
 
   private class CommentRecorder implements Scanner.CommentRecorder {
-    private ImmutableList.Builder<Comment> comments =
-        ImmutableList.builder();
+    private final ImmutableList.Builder<Comment> comments = ImmutableList.builder();
     @Override
     public void recordComment(
         Comment.Type type, SourceRange range, String value) {
@@ -2972,7 +2971,7 @@ public class Parser {
     return arrowFunctionBody;
   }
 
-  private FormalParameterListTree newEmptyFormalParameterList(SourceRange location) {
+  private static FormalParameterListTree newEmptyFormalParameterList(SourceRange location) {
     return new FormalParameterListTree(location, ImmutableList.<ParseTree>of());
   }
 

@@ -18,16 +18,7 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.javascript.jscomp.graph.Annotatable;
-import com.google.javascript.jscomp.graph.Annotation;
-import com.google.javascript.jscomp.graph.DiGraph;
-import com.google.javascript.jscomp.graph.Graph;
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
-import com.google.javascript.jscomp.graph.GraphNode;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
-import com.google.javascript.jscomp.graph.SubGraph;
-import com.google.javascript.jscomp.graph.UndiGraph;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -360,7 +351,7 @@ public final class GraphTest extends TestCase {
     assertThat(subGraph.isIndependentOf("c")).isTrue();
   }
 
-  private <T extends GraphNode<String, String>> void assertListCount(
+  private static <T extends GraphNode<String, String>> void assertListCount(
       List<T> list, String target, int count) {
     for (GraphNode<String, String> node : list) {
       if (node.getValue().equals(target)) {
@@ -370,8 +361,8 @@ public final class GraphTest extends TestCase {
     assertThat(count).isEqualTo(0);
   }
 
-  private <T extends GraphNode<String, String>> void assertSetEquals(
-      List<T> list, String ... targets) {
+  private static <T extends GraphNode<String, String>> void assertSetEquals(
+      List<T> list, String... targets) {
     Set<String> set = new HashSet<>();
     for (GraphNode<String, String> node : list) {
       set.add(node.getValue());

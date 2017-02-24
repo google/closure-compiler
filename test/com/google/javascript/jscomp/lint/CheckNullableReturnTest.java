@@ -29,7 +29,8 @@ import com.google.javascript.jscomp.TypeICompilerTestCase;
  *
  */
 public final class CheckNullableReturnTest extends TypeICompilerTestCase {
-  private static String externs = DEFAULT_EXTERNS + "/** @constructor */ function SomeType() {}";
+  private static final String EXTERNS =
+      DEFAULT_EXTERNS + "/** @constructor */ function SomeType() {}";
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -258,11 +259,11 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   private void testOk(String js) {
-    testSame(externs, js, null);
+    testSame(EXTERNS, js, null);
   }
 
   private void testError(String js) {
-    testSame(externs, js, CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+    testSame(EXTERNS, js, CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
   }
 
   private void testBodyOk(String body) {

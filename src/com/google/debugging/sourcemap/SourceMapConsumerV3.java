@@ -21,7 +21,6 @@ import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +49,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
   private Map<String, Map<Integer, Collection<OriginalMapping>>>
       reverseSourceMapping;
   private String sourceRoot;
-  private Map<String, Object> extensions = new LinkedHashMap<>();
+  private final Map<String, Object> extensions = new LinkedHashMap<>();
 
   static class DefaultSourceMapSupplier implements SourceMapSupplier {
     @Override

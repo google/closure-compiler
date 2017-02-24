@@ -729,11 +729,10 @@ public class Scanner {
   }
 
   /**
-   * Converts unicode escapes in the given string to the equivalent unicode character.
-   * If there are no escapes, returns the input unchanged.
-   * If there is an invalid escape sequence, returns null.
+   * Converts unicode escapes in the given string to the equivalent unicode character. If there are
+   * no escapes, returns the input unchanged. If there is an invalid escape sequence, returns null.
    */
-  private String processUnicodeEscapes(String value) {
+  private static String processUnicodeEscapes(String value) {
     while (value.contains("\\")) {
       int escapeStart = value.indexOf('\\');
       try {

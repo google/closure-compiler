@@ -88,7 +88,7 @@ public final class ClosureReverseAbstractInterpreter
       };
 
   /** Functions used to restrict types. */
-  private Map<String, Function<TypeRestriction, JSType>> restricters;
+  private final Map<String, Function<TypeRestriction, JSType>> restricters;
 
   public ClosureReverseAbstractInterpreter(final JSTypeRegistry typeRegistry) {
     super(typeRegistry);

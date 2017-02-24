@@ -297,7 +297,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("goog.module('a.b.c'); /** @type {function()} */ var f = function() {};");
   }
 
-  private String inIIFE(String js) {
+  private static String inIIFE(String js) {
     return "(function() {\n" + js + "\n})()";
   }
 

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.graph;
 
 import com.google.common.base.Preconditions;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
@@ -301,8 +300,8 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * over a node's neighbors.
    */
   static class SimpleSubGraph<N, E> implements SubGraph<N, E> {
-    private Graph<N, E> graph;
-    private List<GraphNode<N, E>> nodes = new ArrayList<>();
+    private final Graph<N, E> graph;
+    private final List<GraphNode<N, E>> nodes = new ArrayList<>();
 
     SimpleSubGraph(Graph<N, E> graph) {
       this.graph = graph;
