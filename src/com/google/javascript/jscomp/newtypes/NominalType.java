@@ -304,8 +304,7 @@ public final class NominalType {
 
   public JSType getPrototypePropertyOfCtor() {
     Preconditions.checkState(this.rawType.isFinalized());
-    return this.rawType.getCtorPropDeclaredType("prototype")
-        .substituteGenerics(typeMap);
+    return this.rawType.getCtorPropDeclaredType("prototype");
   }
 
   // We require finalization for the interfaces here because the inheritance

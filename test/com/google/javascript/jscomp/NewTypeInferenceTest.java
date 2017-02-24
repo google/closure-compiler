@@ -19312,4 +19312,49 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "};",
         "Baz.prototype.foo = function() { return this.foo_; };"));
   }
+
+  public void testInstantiatePrototypeObjectWithUnknowns() {
+    // When accessing a supertype property from an instance of the subclass,
+    // generics instantiation works as expected.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  /** @type {T} */",
+        "  this.prop;",
+        "}",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo<T>}",
+        " * @template T",
+        " */",
+        "function Bar() {}",
+        "function f(/** !Bar<number> */ x) {",
+        "  var /** string */ s = x.prop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // But all instances of the subclass share a prototype object,
+    // which is instantiated with unknowns.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  /** @type {T} */",
+        "  this.prop;",
+        "}",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo<T>}",
+        " * @template T",
+        " */",
+        "function Bar() {}",
+        "function f(/** !Bar<number> */ x) {",
+        "  var /** string */ s = Bar.prototype.prop;",
+        "}"));
+  }
 }

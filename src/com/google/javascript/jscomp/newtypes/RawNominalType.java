@@ -644,6 +644,12 @@ public final class RawNominalType extends Namespace {
           "Missing externs for the builtin Object type");
       protoNT = builtinObj;
     }
+    // When Bar<T> extends Foo<T>, all Bar instances (Bar<number>, Bar<string>, ...) have the same
+    // prototype object. To avoid instantiating it again and again in
+    // NominalType#getPrototypePropertyOfCtor, we instantiate it here with unknowns.
+    if (protoNT.isGeneric()) {
+      protoNT = protoNT.instantiateGenericsWithUnknown();
+    }
     JSType ctorJstype = this.commonTypes.fromFunctionType(ctorFn);
     JSType protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
         this.commonTypes, protoNT,
