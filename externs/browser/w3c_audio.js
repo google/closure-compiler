@@ -493,6 +493,16 @@ AudioBufferSourceNode.prototype.loopStart;
 AudioBufferSourceNode.prototype.loopEnd;
 
 /**
+ * @type {Object}
+ */
+AudioBufferSourceNode.prototype.detune;
+
+/**
+ * @type {number}
+ */
+AudioBufferSourceNode.prototype.detune.value;
+
+/**
  * @param {number} when
  * @param {number=} opt_offset
  * @param {number=} opt_duration
