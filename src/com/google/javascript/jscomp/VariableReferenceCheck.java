@@ -421,10 +421,12 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         Node lhs = statement.getFirstChild();
         Node rhs = lhs.getFirstChild();
         if (rhs != null
-            && rhs.isCall()
-            && (rhs.getFirstChild().matchesQualifiedName("goog.forwardDeclare")
-                || rhs.getFirstChild().matchesQualifiedName("goog.require"))) {
-          // No warning. Will be caught by the unused-require check anyway.
+            && (NodeUtil.isCallTo(rhs, "goog.forwardDeclare")
+                || NodeUtil.isCallTo(rhs, "goog.require")
+                || rhs.isQualifiedName())) {
+          // No warning. goog.{require,forwardDeclare} will be caught by the unused-require check,
+          // and if the right side is a qualified name then this is likely an alias used in type
+          // annotations.
           return;
         }
       }
