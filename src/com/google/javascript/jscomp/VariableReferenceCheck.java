@@ -212,97 +212,42 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
      */
     private void checkVar(Var v, List<Reference> references) {
       blocksWithDeclarations.clear();
-      boolean isDeclaredInScope = false;
+      boolean hasSeenDeclaration = false;
       boolean hasErrors = false;
       boolean isRead = false;
-      Reference hoistedFn = null;
       Reference unusedAssignment = null;
 
-      // Look for hoisted functions.
-      for (Reference reference : references) {
-        if (reference.isHoistedFunction()) {
-          blocksWithDeclarations.add(reference.getBasicBlock());
-          isDeclaredInScope = true;
-          hoistedFn = reference;
-          break;
-        }
+      Reference hoistedFn = lookForHoistedFunction(references);
+      if (hoistedFn != null) {
+        hasSeenDeclaration = true;
       }
 
       for (Reference reference : references) {
         if (reference == hoistedFn) {
           continue;
         }
+
+        Node referenceNode = reference.getNode();
         BasicBlock basicBlock = reference.getBasicBlock();
         boolean isDeclaration = reference.isDeclaration();
-        Node referenceNode = reference.getNode();
         boolean isAssignment = isDeclaration || reference.isLvalue();
 
-        boolean allowDupe = VarCheck.hasDuplicateDeclarationSuppression(referenceNode, v);
-        boolean letConstShadowsVar =
-            v.getParentNode().isVar()
-                && (reference.isLetDeclaration() || reference.isConstDeclaration());
-        boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();
-        // We disallow redeclaration of caught exceptions
-        boolean shadowCatchVar =
-            isDeclaration
-                && v.getParentNode().isCatch()
-                && !isVarNodeSameAsReferenceNode;
-        boolean shadowParam =
-            isDeclaration
-                && v.isParam()
-                && NodeUtil.isBlockScopedDeclaration(referenceNode)
-                && v.getScope() == reference.getScope().getParent();
-        boolean shadowDetected = false;
-        if (isDeclaration && !allowDupe) {
-          // Look through all the declarations we've found so far, and
-          // check if any of them are before this block.
-          for (BasicBlock declaredBlock : blocksWithDeclarations) {
-            if (declaredBlock.provablyExecutesBefore(basicBlock)) {
-              shadowDetected = true;
-              DiagnosticType diagnosticType;
-              Node warningNode = referenceNode;
-              if (v.isLet()
-                  || v.isConst()
-                  || v.isClass()
-                  || letConstShadowsVar
-                  || shadowCatchVar
-                  || shadowParam) {
-                // These cases are all hard errors that violate ES6 semantics
-                diagnosticType = REDECLARED_VARIABLE_ERROR;
-              } else if (reference.getNode().getParent().isCatch() || allowDupe) {
-                return;
-              } else {
-                // These diagnostics are for valid, but suspicious, code, and are suppressible.
-                // For vars defined in the global scope, give the same error as VarCheck
-                diagnosticType =
-                    v.getScope().isGlobal()
-                        ? VarCheck.VAR_MULTIPLY_DECLARED_ERROR
-                        : REDECLARED_VARIABLE;
-                // Since we skip hoisted functions, we would have the wrong warning node in cases
-                // where the redeclaration is a function declaration. Check for that case.
-                if (isVarNodeSameAsReferenceNode
-                    && hoistedFn != null
-                    && v.name.equals(hoistedFn.getNode().getString())) {
-                  warningNode = hoistedFn.getNode();
-                }
-              }
-              compiler.report(
-                  JSError.make(
-                      warningNode,
-                      diagnosticType,
-                      v.name,
-                      v.input != null ? v.input.getName() : "??"));
-              hasErrors = true;
-              break;
-            }
+        if (isDeclaration) {
+          // Checks for declarations
+          hasSeenDeclaration = true;
+          hasErrors = checkRedeclaration(v, reference, referenceNode, hoistedFn, basicBlock);
+          // Add the current basic block after checking redeclarations
+          blocksWithDeclarations.add(basicBlock);
+          checkBlocklessDeclaration(v, reference, referenceNode);
+        } else {
+          // Checks for references
+          if (!hasSeenDeclaration) {
+            hasErrors = checkEarlyReference(v, reference, referenceNode);
           }
-        }
 
-        if (!shadowDetected
-            && isDeclaration
-            && (letConstShadowsVar || shadowCatchVar)
-            && v.getScope() == reference.getScope()) {
-          compiler.report(JSError.make(referenceNode, REDECLARED_VARIABLE_ERROR, v.name));
+          if (!hasErrors && v.isConst() && reference.isLvalue()) {
+            compiler.report(JSError.make(referenceNode, REASSIGNED_CONSTANT, v.name));
+          }
         }
 
         if (isAssignment) {
@@ -324,63 +269,130 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         } else {
           isRead = true;
         }
-
-        boolean isUndeclaredReference = false;
-        if (!isDeclaration && !isDeclaredInScope) {
-          // Don't check the order of refer in externs files.
-          if (!referenceNode.isFromExterns()) {
-            // Special case to deal with var goog = goog || {}. Note that
-            // let x = x || {} is illegal, just like var y = x || {}; let x = y;
-            if (v.isVar()) {
-              Node curr = reference.getParent();
-              while (curr.isOr() && curr.getParent().getFirstChild() == curr) {
-                curr = curr.getParent();
-              }
-              if (curr.isName() && curr.getString().equals(v.name)) {
-                continue;
-              }
-            }
-
-            // Only generate warnings if the scopes do not match in order
-            // to deal with possible forward declarations and recursion
-            // TODO(moz): Remove the bypass for "goog" once VariableReferenceCheck
-            // is run after the Closure passes.
-            if (reference.getScope() == v.scope && !v.getName().equals("goog")) {
-              isUndeclaredReference = true;
-              compiler.report(
-                  JSError.make(
-                      reference.getNode(),
-                      (v.isLet() || v.isConst() || v.isClass() || v.isParam())
-                          ? EARLY_REFERENCE_ERROR
-                          : EARLY_REFERENCE,
-                      v.name));
-              hasErrors = true;
-            }
-          }
-        }
-
-        if (!isDeclaration && !isUndeclaredReference && v.isConst() && reference.isLvalue()) {
-          compiler.report(JSError.make(referenceNode, REASSIGNED_CONSTANT, v.name));
-        }
-
-        if (isDeclaration
-            && !reference.isVarDeclaration()
-            && reference.getGrandparent().isAddedBlock()
-            && BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS.contains(
-                reference.getGrandparent().getParent().getToken())) {
-          compiler.report(JSError.make(referenceNode, DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.name));
-        }
-
-        if (isDeclaration) {
-          blocksWithDeclarations.add(basicBlock);
-          isDeclaredInScope = true;
-        }
       }
 
       if (unusedAssignment != null && !isRead && !hasErrors) {
         checkForUnusedLocalVar(v, unusedAssignment);
       }
     }
+  }
+
+  /**
+   * @return The reference to the hoisted function, if the variable is one
+   */
+  private Reference lookForHoistedFunction(List<Reference> references) {
+    for (Reference reference : references) {
+      if (reference.isHoistedFunction()) {
+        blocksWithDeclarations.add(reference.getBasicBlock());
+        return reference;
+      }
+    }
+    return null;
+  }
+
+  private void checkBlocklessDeclaration(Var v, Reference reference, Node referenceNode) {
+    if (!reference.isVarDeclaration() && reference.getGrandparent().isAddedBlock()
+        && BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS.contains(
+        reference.getGrandparent().getParent().getToken())) {
+      compiler.report(JSError.make(referenceNode, DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.name));
+    }
+  }
+
+  /**
+   * @return If a redeclaration error has been found
+   */
+  private boolean checkRedeclaration(
+      Var v, Reference reference, Node referenceNode, Reference hoistedFn, BasicBlock basicBlock) {
+    boolean allowDupe = VarCheck.hasDuplicateDeclarationSuppression(referenceNode, v);
+    boolean letConstShadowsVar = v.getParentNode().isVar()
+        && (reference.isLetDeclaration() || reference.isConstDeclaration());
+    boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();
+    // We disallow redeclaration of caught exceptions
+    boolean shadowCatchVar = v.getParentNode().isCatch() && !isVarNodeSameAsReferenceNode;
+    boolean shadowParam = v.isParam() && NodeUtil.isBlockScopedDeclaration(referenceNode)
+        && v.getScope() == reference.getScope().getParent();
+    boolean shadowDetected = false;
+    if (!allowDupe) {
+      // Look through all the declarations we've found so far, and
+      // check if any of them are before this block.
+      for (BasicBlock declaredBlock : blocksWithDeclarations) {
+        if (declaredBlock.provablyExecutesBefore(basicBlock)) {
+          shadowDetected = true;
+          DiagnosticType diagnosticType;
+          Node warningNode = referenceNode;
+          if (v.isLet() || v.isConst() || v.isClass() || letConstShadowsVar || shadowCatchVar
+              || shadowParam) {
+            // These cases are all hard errors that violate ES6 semantics
+            diagnosticType = REDECLARED_VARIABLE_ERROR;
+          } else if (reference.getNode().getParent().isCatch() || allowDupe) {
+            return false;
+          } else {
+            // These diagnostics are for valid, but suspicious, code, and are suppressible.
+            // For vars defined in the global scope, give the same error as VarCheck
+            diagnosticType =
+                v.getScope().isGlobal()
+                    ? VarCheck.VAR_MULTIPLY_DECLARED_ERROR
+                    : REDECLARED_VARIABLE;
+            // Since we skip hoisted functions, we would have the wrong warning node in cases
+            // where the redeclaration is a function declaration. Check for that case.
+            if (isVarNodeSameAsReferenceNode
+                && hoistedFn != null
+                && v.name.equals(hoistedFn.getNode().getString())) {
+              warningNode = hoistedFn.getNode();
+            }
+          }
+          compiler.report(
+              JSError.make(
+                  warningNode,
+                  diagnosticType,
+                  v.name,
+                  v.input != null ? v.input.getName() : "??"));
+          return true;
+        }
+      }
+    }
+
+    if (!shadowDetected && (letConstShadowsVar || shadowCatchVar)
+        && v.getScope() == reference.getScope()) {
+      compiler.report(JSError.make(referenceNode, REDECLARED_VARIABLE_ERROR, v.name));
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * @return If an early reference has been found
+   */
+  private boolean checkEarlyReference(Var v, Reference reference, Node referenceNode) {
+    // Don't check the order of refer in externs files.
+    if (!referenceNode.isFromExterns()) {
+      // Special case to deal with var goog = goog || {}. Note that
+      // let x = x || {} is illegal, just like var y = x || {}; let x = y;
+      if (v.isVar()) {
+        Node curr = reference.getParent();
+        while (curr.isOr() && curr.getParent().getFirstChild() == curr) {
+          curr = curr.getParent();
+        }
+        if (curr.isName() && curr.getString().equals(v.name)) {
+          return false;
+        }
+      }
+
+      // Only generate warnings if the scopes do not match in order
+      // to deal with possible forward declarations and recursion
+      // TODO(moz): See if we can remove the bypass for "goog"
+      if (reference.getScope() == v.scope && !v.getName().equals("goog")) {
+        compiler.report(
+            JSError.make(
+                reference.getNode(),
+                (v.isLet() || v.isConst() || v.isClass() || v.isParam())
+                    ? EARLY_REFERENCE_ERROR
+                    : EARLY_REFERENCE,
+                v.name));
+        return true;
+      }
+    }
+    return false;
   }
 
   // Only check for unused local if not in a goog.scope function.
