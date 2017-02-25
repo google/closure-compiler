@@ -548,7 +548,8 @@ md.$toast.prototype.simple = function() {};
  *   isOpen: function():boolean,
  *   toggle: function(),
  *   open: function(),
- *   close: function()
+ *   close: function(),
+ *   onClose: function(function()),
  * }}
  */
 md._sidenavService;
