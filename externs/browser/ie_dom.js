@@ -1021,6 +1021,7 @@ Element.prototype.createTextRange;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms535231(VS.85).aspx
+ * @type {?CSSStyleDeclaration}
  */
 Element.prototype.currentStyle;
 
