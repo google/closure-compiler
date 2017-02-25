@@ -248,6 +248,12 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           if (!hasErrors && v.isConst() && reference.isLvalue()) {
             compiler.report(JSError.make(referenceNode, REASSIGNED_CONSTANT, v.name));
           }
+
+          // Check for temporal dead zone of let / const declarations in for-in and for-of loops
+          if ((v.isLet() || v.isConst()) && v.getScope() == reference.getScope()
+              && NodeUtil.isEnhancedFor(reference.getScope().getRootNode())) {
+            compiler.report(JSError.make(referenceNode, EARLY_REFERENCE_ERROR, v.name));
+          }
         }
 
         if (isAssignment) {

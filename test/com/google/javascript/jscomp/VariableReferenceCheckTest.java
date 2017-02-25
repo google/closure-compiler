@@ -773,6 +773,15 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     testSameEs6("for (let [{length: z}, w] in obj) {}");
   }
 
+  public void testEnhancedForLoopTemporalDeadZone() {
+    assertEarlyReferenceError("for (let x of [x]);");
+    assertEarlyReferenceError("for (let x in [x]);");
+    assertEarlyReferenceError("for (const x of [x]);");
+    testSameEs6("for (var x of [x]);");
+    testSameEs6("for (let x of [() => x]);");
+    testSameEs6("let x = 1; for (let y of [x]);");
+  }
+
   /**
    * Expects the JS to generate one bad-read error.
    */
