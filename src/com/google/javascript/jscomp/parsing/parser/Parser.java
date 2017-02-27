@@ -173,12 +173,20 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class Parser {
+
+  /**
+   * Indicates the type of function currently being parsed.
+   */
+  private enum FunctionFlavor {
+    NORMAL, GENERATOR, ASYNC;
+  }
+
   private final Scanner scanner;
   private final ErrorReporter errorReporter;
   private final Config config;
   private final boolean parseInlineSourceMaps;
   private final CommentRecorder commentRecorder = new CommentRecorder();
-  private final ArrayDeque<Boolean> inGeneratorContext = new ArrayDeque<>();
+  private final ArrayDeque<FunctionFlavor> functionContextStack = new ArrayDeque<>();
   private FeatureSet features = FeatureSet.ES3;
   private SourcePosition lastSourcePosition;
   @Nullable
@@ -190,7 +198,8 @@ public class Parser {
     this.errorReporter = errorReporter;
     this.parseInlineSourceMaps = parseInlineSourceMaps;
     this.scanner = new Scanner(errorReporter, commentRecorder, source, offset);
-    this.inGeneratorContext.add(initialGeneratorContext);
+    this.functionContextStack.addLast(
+        initialGeneratorContext ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL);
     lastSourcePosition = scanner.getPosition();
   }
 
@@ -1043,14 +1052,15 @@ public class Parser {
   }
 
   private void parseFunctionTail(FunctionDeclarationTree.Builder builder, boolean isGenerator) {
-    inGeneratorContext.addLast(isGenerator);
+    FunctionFlavor functionFlavor = isGenerator ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL;
+    functionContextStack.addLast(functionFlavor);
     builder
         .setGenerator(isGenerator)
         .setGenerics(maybeParseGenericTypes())
         .setFormalParameterList(parseFormalParameterList(ParamContext.IMPLEMENTATION))
         .setReturnType(maybeParseColonType())
         .setFunctionBody(parseFunctionBody());
-    inGeneratorContext.removeLast();
+    functionContextStack.removeLast();
   }
 
   private NamespaceDeclarationTree parseNamespaceDeclaration(boolean isAmbient) {
@@ -2960,14 +2970,14 @@ public class Parser {
   }
 
   private ParseTree parseArrowFunctionBody(Expression expressionIn) {
-    inGeneratorContext.addLast(false);
+    functionContextStack.addLast(FunctionFlavor.NORMAL);
     ParseTree arrowFunctionBody;
     if (peek(TokenType.OPEN_CURLY)) {
       arrowFunctionBody = parseFunctionBody();
     } else {
       arrowFunctionBody = parseAssignment(expressionIn);
     }
-    inGeneratorContext.removeLast();
+    functionContextStack.removeLast();
     return arrowFunctionBody;
   }
 
@@ -3035,7 +3045,7 @@ public class Parser {
 
   private boolean inGeneratorContext() {
     // disallow yield outside of generators
-    return inGeneratorContext.peekLast();
+    return functionContextStack.peekLast() == FunctionFlavor.GENERATOR;
   }
 
   // yield [no line terminator] (*)? AssignExpression
