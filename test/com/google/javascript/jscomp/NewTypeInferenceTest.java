@@ -14731,6 +14731,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** !Bar */ a = new module$input0.default();",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "/** @constructor */",
+        "ns.Bar = function() {};",
+        "ns.Baz = ns.Foo;",
+        "ns.Baz = ns.Bar;"));
   }
 
   public void testOptionalPropertiesInRecordTypes() {
