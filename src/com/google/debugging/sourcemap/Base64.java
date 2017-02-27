@@ -63,7 +63,7 @@ public final class Base64 {
   public static int fromBase64(char c) {
     int result = BASE64_DECODE_MAP[c];
     assert (result != -1) : "invalid char";
-    return BASE64_DECODE_MAP[c];
+    return result;
   }
 
   /**
