@@ -8235,6 +8235,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @const */",
         "var c = new Foo;",
         "(function() { var /** !Foo */ x = c; });"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @type {!Array<number>} */",
+            "var arr = [1,2,3];",
+            "/** @const */",
+            "var c = arr.shift();",
+            "function f() {",
+            "  var /** string */ s = c;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testInferConstTypeFromNestedObjectLiterals() {

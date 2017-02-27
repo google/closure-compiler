@@ -2053,6 +2053,17 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return null;
       }
       if (funType.isGeneric()) {
+        // The receiver type is useful for inference when funType has a @this annotation
+        // that includes a type variable.
+        JSType recvType = null;
+        if (callee.isGetProp() && callee.getFirstChild().isQualifiedName()) {
+          Node recv = callee.getFirstChild();
+          QualifiedName recvQname = QualifiedName.fromNode(recv);
+          Declaration decl = this.currentScope.getDeclaration(recvQname, false);
+          if (decl != null) {
+            recvType = decl.getTypeOfSimpleDecl();
+          }
+        }
         ImmutableList.Builder<JSType> argTypes = ImmutableList.builder();
         for (Node argNode = n.getSecondChild();
              argNode != null;
@@ -2063,7 +2074,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           }
           argTypes.add(t);
         }
-        funType = funType.instantiateGenericsFromArgumentTypes(argTypes.build());
+        funType = funType.instantiateGenericsFromArgumentTypes(recvType, argTypes.build());
         if (funType == null) {
           return null;
         }
@@ -2181,6 +2192,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return simpleInferPrototypeProperty(recv.getFirstChild(), pname);
       }
       QualifiedName propQname = new QualifiedName(pname);
+      JSType recvType = null;
       if (recv.isQualifiedName()) {
         QualifiedName recvQname = QualifiedName.fromNode(recv);
         Declaration decl = this.currentScope.getDeclaration(recvQname, false);
@@ -2193,9 +2205,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           if (ns != null) {
             return simpleInferDeclaration(ns.getDeclaration(propQname));
           }
+          recvType = decl.getTypeOfSimpleDecl();
         }
       }
-      JSType recvType = simpleInferExprTypeRecur(recv);
+      if (recvType == null) {
+        recvType = simpleInferExprTypeRecur(recv);
+      }
       if (recvType != null && recvType.isScalar()) {
         recvType = recvType.autobox();
       }

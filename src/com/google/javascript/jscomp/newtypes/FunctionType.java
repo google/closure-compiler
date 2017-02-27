@@ -1064,12 +1064,17 @@ public final class FunctionType {
     return substituteParametricGenerics(typeMap);
   }
 
-  public FunctionType instantiateGenericsFromArgumentTypes(List<JSType> argTypes) {
+  public FunctionType instantiateGenericsFromArgumentTypes(JSType recvtype, List<JSType> argTypes) {
     Preconditions.checkState(isGeneric());
     if (argTypes.size() < getMinArity() || argTypes.size() > getMaxArity()) {
       return null;
     }
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
+    if (recvtype != null
+        && !getThisType()
+            .unifyWithSubtype(recvtype, typeParameters, typeMultimap, SubtypeCache.create())) {
+      return null;
+    }
     for (int i = 0, size = argTypes.size(); i < size; i++) {
       if (!this.getFormalType(i).unifyWithSubtype(
           argTypes.get(i), typeParameters, typeMultimap, SubtypeCache.create())) {
