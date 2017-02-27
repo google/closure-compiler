@@ -2559,17 +2559,19 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /**
-   * Renames properties so that the two properties that never appear on
-   * the same object get the same name.
+   * Renames properties so that the two properties that never appear on the same object get the same
+   * name.
    */
   private final PassFactory ambiguateProperties =
       new PassFactory("ambiguateProperties", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new AmbiguateProperties(
-          compiler, options.anonymousFunctionNaming.getReservedCharacters());
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new AmbiguateProperties(
+              compiler,
+              options.getPropertyReservedNamingFirstChars(),
+              options.getPropertyReservedNamingNonFirstChars());
+        }
+      };
 
   /**
    * Mark the point at which the normalized AST assumptions no longer hold.
@@ -2603,25 +2605,24 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /**
-   * Renames properties.
-   */
+  /** Renames properties. */
   private final PassFactory renameProperties =
       new PassFactory("renameProperties", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           Preconditions.checkState(options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
           final VariableMap prevPropertyMap = options.inputPropertyMap;
+
           return new CompilerPass() {
             @Override
             public void process(Node externs, Node root) {
-              char[] reservedChars = options.anonymousFunctionNaming.getReservedCharacters();
               RenameProperties rprop =
                   new RenameProperties(
                       compiler,
                       options.generatePseudoNames,
                       prevPropertyMap,
-                      reservedChars,
+                      options.getPropertyReservedNamingFirstChars(),
+                      options.getPropertyReservedNamingNonFirstChars(),
                       options.nameGenerator);
               rprop.process(externs, root);
               propertyMap = rprop.getPropertyMap();

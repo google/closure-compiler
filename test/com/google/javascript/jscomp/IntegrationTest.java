@@ -19,15 +19,18 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.testing.NodeSubject;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -4020,6 +4023,46 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "SetCustomData1(window, \"foo\", \"bar\");"),
         "window._customData.foo=\"bar\";");
+  }
+
+  public void testAngularPropertyNameRestrictions() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setAngularPass(true);
+
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < 250; i++) {
+      sb.append("window.foo").append(i).append("=true;\n");
+    }
+
+    Compiler compiler = compile(options, sb.toString());
+    assertEquals(
+        "Expected no warnings or errors\n"
+            + "Errors: \n"
+            + Joiner.on("\n").join(compiler.getErrors())
+            + "\n"
+            + "Warnings: \n"
+            + Joiner.on("\n").join(compiler.getWarnings()),
+        0,
+        compiler.getErrors().length + compiler.getWarnings().length);
+
+    Node root = compiler.getRoot().getLastChild();
+    assertNotNull(root);
+    Node script = root.getFirstChild();
+    assertNotNull(script);
+    ImmutableSet<Character> restrictedChars =
+        ImmutableSet.copyOf(Chars.asList(AngularPass.PROPERTY_RESERVED_FIRST_CHARS));
+    for (Node expr : script.children()) {
+      NodeSubject.assertNode(expr).hasType(Token.EXPR_RESULT);
+      NodeSubject.assertNode(expr.getFirstChild()).hasType(Token.ASSIGN);
+      NodeSubject.assertNode(expr.getFirstFirstChild()).hasType(Token.GETPROP);
+      Node getProp = expr.getFirstFirstChild();
+      NodeSubject.assertNode(getProp.getSecondChild()).hasType(Token.STRING);
+      String propName = getProp.getSecondChild().getString();
+      assertFalse(restrictedChars.contains(propName.charAt(0)));
+    }
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

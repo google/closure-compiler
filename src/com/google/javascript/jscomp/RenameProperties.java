@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
 import javax.annotation.Nullable;
 
 /**
@@ -77,7 +75,8 @@ class RenameProperties implements CompilerPass {
   private final List<Node> stringNodesToRename = new ArrayList<>();
   private final Map<Node, Node> callNodeToParentMap =
       new HashMap<>();
-  private final char[] reservedCharacters;
+  private final char[] reservedFirstCharacters;
+  private final char[] reservedNonFirstCharacters;
 
   // Map from property name to Property object
   private final Map<String, Property> propertyMap = new HashMap<>();
@@ -131,7 +130,7 @@ class RenameProperties implements CompilerPass {
    */
   RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames,
       NameGenerator nameGenerator) {
-    this(compiler, generatePseudoNames, null, null, nameGenerator);
+    this(compiler, generatePseudoNames, null, null, null, nameGenerator);
   }
 
   /**
@@ -149,33 +148,35 @@ class RenameProperties implements CompilerPass {
   RenameProperties(AbstractCompiler compiler,
       boolean generatePseudoNames, VariableMap prevUsedPropertyMap,
       NameGenerator nameGenerator) {
-    this(compiler, generatePseudoNames, prevUsedPropertyMap, null,
-        nameGenerator);
+    this(compiler, generatePseudoNames, prevUsedPropertyMap, null, null, nameGenerator);
   }
 
   /**
    * Creates an instance.
    *
    * @param compiler The JSCompiler.
-   * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
-   *        of compact obfuscated names. This is used for debugging.
-   * @param prevUsedPropertyMap The property renaming map used in a previous
-   *        compilation.
-   * @param reservedCharacters If specified these characters won't be used in
-   *        generated names
-   * @param nameGenerator a shared NameGenerator that this instance can use;
-   *        the instance may reset or reconfigure it, so the caller should
-   *        not expect any state to be preserved
+   * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead of compact
+   *     obfuscated names. This is used for debugging.
+   * @param prevUsedPropertyMap The property renaming map used in a previous compilation.
+   * @param reservedFirstCharacters If specified these characters won't be used in generated names
+   *     for the first character
+   * @param reservedNonFirstCharacters If specified these characters won't be used in generated
+   *     names for characters after the first
+   * @param nameGenerator a shared NameGenerator that this instance can use; the instance may reset
+   *     or reconfigure it, so the caller should not expect any state to be preserved
    */
-  RenameProperties(AbstractCompiler compiler,
+  RenameProperties(
+      AbstractCompiler compiler,
       boolean generatePseudoNames,
       VariableMap prevUsedPropertyMap,
-      @Nullable char[] reservedCharacters,
+      @Nullable char[] reservedFirstCharacters,
+      @Nullable char[] reservedNonFirstCharacters,
       NameGenerator nameGenerator) {
     this.compiler = compiler;
     this.generatePseudoNames = generatePseudoNames;
     this.prevUsedPropertyMap = prevUsedPropertyMap;
-    this.reservedCharacters = reservedCharacters;
+    this.reservedFirstCharacters = reservedFirstCharacters;
+    this.reservedNonFirstCharacters = reservedNonFirstCharacters;
     this.nameGenerator = nameGenerator;
     externedNames.addAll(compiler.getExternProperties());
   }
@@ -279,7 +280,7 @@ class RenameProperties implements CompilerPass {
    *     renamed
    */
   private void generateNames(Set<Property> props, Set<String> reservedNames) {
-    nameGenerator.reset(reservedNames, "", reservedCharacters);
+    nameGenerator.reset(reservedNames, "", reservedFirstCharacters, reservedNonFirstCharacters);
     for (Property p : props) {
       if (generatePseudoNames) {
         p.newName = "$" + p.oldName + "$";

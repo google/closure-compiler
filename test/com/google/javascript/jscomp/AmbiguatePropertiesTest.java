@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,8 +50,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        lastPass = AmbiguateProperties.makePassForTesting(
-            compiler, new char[]{'$'});
+        lastPass =
+            AmbiguateProperties.makePassForTesting(compiler, new char[] {'$'}, new char[] {'$'});
         lastPass.process(externs, root);
       }
     };
