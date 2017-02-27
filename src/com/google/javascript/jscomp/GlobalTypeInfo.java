@@ -757,8 +757,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   }
 
   private boolean isValidOverride(JSType localPropType, JSType inheritedPropType) {
-    FunctionType localFunType = localPropType.getFunTypeIfSingletonObj();
-    FunctionType inheritedFunType = inheritedPropType.getFunTypeIfSingletonObj();
+    FunctionType localFunType = localPropType.getFunType();
+    FunctionType inheritedFunType = inheritedPropType.getFunType();
     if (localFunType == null) {
       return localPropType.isSubtypeOf(inheritedPropType);
     } else if (inheritedFunType == null) {
@@ -773,7 +773,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       return false;
     }
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(pd.defSite);
-    return jsdoc == null || (jsdoc.isOverride() && !jsdoc.containsFunctionDeclaration());
+    if (jsdoc == null) {
+      return true;
+    }
+    return (jsdoc.isOverride() || jsdoc.isExport()) && !jsdoc.containsFunctionDeclaration();
   }
 
   /**

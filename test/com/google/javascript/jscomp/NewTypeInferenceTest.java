@@ -4222,7 +4222,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
   }
 
-  public void testInvalidMethodPropertyOverride() {
+  public void testMethodPropertyOverride() {
     typeCheck(LINE_JOINER.join(
         "/** @interface */ function Parent() {}",
         "/** @type {number} */ Parent.prototype.y;",
@@ -4259,6 +4259,46 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Bar() {}",
         "/** @override */",
         "Bar.prototype.f = function(x) {};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {function()|undefined} */",
+        "Foo.prototype.method;",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "function Baz() {}",
+        "/** @export */",
+        "Baz.prototype.method = function() {};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {function(number=)} */",
+        "Foo.prototype.method;",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "function Baz() {}",
+        "/** @export */",
+        "Baz.prototype.method = function(x) {};",
+        "(new Baz).method();"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {function(number)|undefined} */",
+        "Foo.prototype.method;",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "function Baz() {}",
+        "/** @param {number} x */",
+        "Baz.prototype.method = function(x) {};"));
   }
 
   public void testMultipleObjects() {
