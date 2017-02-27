@@ -195,11 +195,15 @@ HTMLDocument.prototype.anchors;
 HTMLDocument.prototype.cookie;
 
 /**
+ * @param {string=} opt_mimeType
+ * @param {string=} opt_replace
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-72161170
+ * Even though official spec says "no parameters" some old browsers might take
+ * optional parameters: https://msdn.microsoft.com/en-us/library/ms536652(v=vs.85).aspx
  * @override
  */
-HTMLDocument.prototype.open = function() {};
+HTMLDocument.prototype.open = function(opt_mimeType, opt_replace) {};
 
 /**
  * @return {undefined}
