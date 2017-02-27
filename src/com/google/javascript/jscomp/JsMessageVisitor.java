@@ -814,14 +814,14 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
   private void visitFallbackFunctionCall(NodeTraversal t, Node call) {
     // Check to make sure the function call looks like:
     // goog.getMsgWithFallback(MSG_1, MSG_2);
-    if (call.getChildCount() != 3 ||
-        !call.getChildAtIndex(1).isName() ||
-        !call.getChildAtIndex(2).isName()) {
+    if (call.getChildCount() != 3
+        || !call.getSecondChild().isName()
+        || !call.getLastChild().isName()) {
       compiler.report(t.makeError(call, BAD_FALLBACK_SYNTAX));
       return;
     }
 
-    Node firstArg = call.getChildAtIndex(1);
+    Node firstArg = call.getSecondChild();
     JsMessage firstMessage = getTrackedMessage(t, firstArg.getString());
     if (firstMessage == null) {
       compiler.report(

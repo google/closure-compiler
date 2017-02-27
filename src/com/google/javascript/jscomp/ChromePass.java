@@ -138,7 +138,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
   private void visitPropertyDefinition(Node call, Node parent) {
     Node callee = call.getFirstChild();
-    String target = call.getChildAtIndex(1).getQualifiedName();
+    String target = call.getSecondChild().getQualifiedName();
     if (callee.matchesQualifiedName(CR_DEFINE_PROPERTY) && !target.endsWith(".prototype")) {
       target += ".prototype";
     }
@@ -186,7 +186,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private boolean visitMakePublic(Node call, Node exprResult) {
     boolean changesMade = false;
     Node scope = exprResult.getParent();
-    String className = call.getChildAtIndex(1).getQualifiedName();
+    String className = call.getSecondChild().getQualifiedName();
     String prototype = className + ".prototype";
     Node methods = call.getChildAtIndex(2);
 
@@ -206,7 +206,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
     for (Node child : scope.children()) {
       if (isAssignmentToPrototype(child, prototype)) {
-        Node objectLit = child.getFirstChild().getChildAtIndex(1);
+        Node objectLit = child.getFirstChild().getSecondChild();
         for (Node stringKey : objectLit.children()) {
           String field = stringKey.getString();
           changesMade |=
@@ -289,7 +289,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
       return;
     }
 
-    Node pathArg = crExportPathNode.getChildAtIndex(1);
+    Node pathArg = crExportPathNode.getSecondChild();
     if (pathArg.isString()) {
       // TODO(dbeam): support cr.exportPath('ns').value.
       createAndInsertObjectsForQualifiedName(parent, pathArg.getString());
@@ -308,7 +308,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
       compiler.report(JSError.make(crDefineCallNode, CR_DEFINE_WRONG_NUMBER_OF_ARGUMENTS));
     }
 
-    Node namespaceArg = crDefineCallNode.getChildAtIndex(1);
+    Node namespaceArg = crDefineCallNode.getSecondChild();
     Node function = crDefineCallNode.getChildAtIndex(2);
 
     if (!namespaceArg.isString()) {

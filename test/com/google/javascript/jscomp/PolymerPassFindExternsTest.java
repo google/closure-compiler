@@ -108,8 +108,8 @@ public final class PolymerPassFindExternsTest extends Es6CompilerTestCase {
   }
 
   private String getPropertyName(Node node) {
-    Node rightName = node.getFirstChild().getChildAtIndex(1);
+    Node rightName = node.getFirstChild().getSecondChild();
     return rightName.isFunction()
-        ? node.getFirstFirstChild().getChildAtIndex(1).getString() : rightName.getString();
+        ? node.getFirstFirstChild().getSecondChild().getString() : rightName.getString();
   }
 }
