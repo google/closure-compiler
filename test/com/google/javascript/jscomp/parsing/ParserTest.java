@@ -1978,6 +1978,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function * f() { (yield) + (yield); }"); // OK
     parse("function * f() { return yield; }"); // OK
     parse("function * f() { return yield 1; }"); // OK
+    parse(LINE_JOINER.join(
+        "function * f() {",
+        "  yield *", // line break allowed here
+        "      [1, 2, 3];",
+        "}"));
+    expectFeatures();
+    parseError(LINE_JOINER.join(
+        "function * f() {",
+        "  yield", // line break not allowed here
+        "      *[1, 2, 3];",
+        "}"),
+        "'}' expected");
+    parseError("function * f() { yield *; }", "yield* requires an expression");
   }
 
   public void testYield3() {

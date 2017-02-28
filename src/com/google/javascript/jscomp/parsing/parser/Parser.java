@@ -3059,6 +3059,8 @@ public class Parser {
       isYieldFor = eatOpt(TokenType.STAR) != null;
       if (peekAssignmentExpression()) {
         expression = parseAssignment(expressionIn);
+      } else if (isYieldFor) {
+        reportError("yield* requires an expression");
       }
     }
     return new YieldExpressionTree(
