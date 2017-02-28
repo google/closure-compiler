@@ -26,7 +26,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -66,6 +65,12 @@ public final class CodingConventions {
     }
     // n is a call
     return n.getFirstChild().matchesQualifiedName(alwaysThrowsFunctionName);
+  }
+
+  static boolean isAliasingGlobalThis(CodingConvention convention, Node n) {
+    return n.isAssign()
+        && n.getFirstChild().matchesQualifiedName(convention.getGlobalObject())
+        && n.getLastChild().isThis();
   }
 
   /**
@@ -265,6 +270,11 @@ public final class CodingConventions {
     @Override
     public String getGlobalObject() {
       return nextConvention.getGlobalObject();
+    }
+
+    @Override
+    public boolean isAliasingGlobalThis(Node n) {
+      return nextConvention.isAliasingGlobalThis(n);
     }
 
     @Override
@@ -519,6 +529,11 @@ public final class CodingConventions {
     @Override
     public String getGlobalObject() {
       return "window";
+    }
+
+    @Override
+    public boolean isAliasingGlobalThis(Node n) {
+      return CodingConventions.isAliasingGlobalThis(this, n);
     }
 
     @Override

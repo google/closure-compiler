@@ -293,6 +293,11 @@ public interface CodingConvention extends Serializable {
   public String getGlobalObject();
 
   /**
+   * Whether this statement is creating an alias of the global object
+   */
+  public boolean isAliasingGlobalThis(Node n);
+
+  /**
    * A Bind instance or null.
    */
   public Bind describeFunctionBind(Node n);

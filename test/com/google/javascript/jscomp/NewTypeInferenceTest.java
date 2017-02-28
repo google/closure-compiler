@@ -19434,4 +19434,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return x.asdf;",
         "}"));
   }
+
+  public void testGoogGlobalAsWindow() {
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "goog.global = this;",
+        "/** @type {!Object<string, string>|undefined} */",
+        "goog.global.foo;",
+        "if (goog.global.foo) {",
+        "  var z = goog.global.foo;",
+        "}"));
+  }
 }

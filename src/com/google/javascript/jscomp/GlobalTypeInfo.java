@@ -902,8 +902,23 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         visitEnum(qnameNode);
       } else if (isAliasedNamespaceDefinition(qnameNode)) {
         visitAliasedNamespace(qnameNode);
+      } else if (isAliasingGlobalThis(qnameNode)) {
+        visitGlobalThisAlias(qnameNode);
       } else if (isQualifiedFunctionDefinition(qnameNode)) {
         maybeAddFunctionToNamespace(qnameNode);
+      }
+    }
+
+    private boolean isAliasingGlobalThis(Node qnameNode) {
+      return convention.isAliasingGlobalThis(qnameNode.getParent())
+          && this.currentScope.isTopLevel();
+    }
+
+    private void visitGlobalThisAlias(Node qnameNode) {
+      Namespace ns = globalScope.getNamespace(WINDOW_INSTANCE);
+      if (ns != null) {
+        qnameNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+        this.currentScope.addNamespace(qnameNode, ns);
       }
     }
 
@@ -1258,9 +1273,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       Node rhs = NodeUtil.getRValueOfLValue(lhs);
       QualifiedName rhsQname = QualifiedName.fromNode(rhs);
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(lhs);
-
+      Namespace ns = this.currentScope.getNamespace(rhsQname);
       if (jsdoc != null && jsdoc.isConstructorOrInterface()) {
-        RawNominalType rawType = this.currentScope.getNominalType(rhsQname);
+        RawNominalType rawType = ns instanceof RawNominalType ? (RawNominalType) ns : null;
         if (jsdoc.isConstructor()
             && (rawType == null || rawType.isInterface())) {
           warnings.add(JSError.make(rhs, EXPECTED_CONSTRUCTOR, rhsQname.toString()));
@@ -1272,7 +1287,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           return;
         }
       }
-      Namespace ns = this.currentScope.getNamespace(rhsQname);
       if (ns != null) {
         lhs.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         this.currentScope.addNamespace(lhs, ns);
