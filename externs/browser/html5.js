@@ -1702,7 +1702,9 @@ HTMLMediaElement.prototype.loop;
 
 /**
  * Starts playing the media.
- * @return {undefined}
+ * @return {?Promise<undefined>} This is a *nullable* Promise on purpose unlike
+ *     the HTML5 spec because supported older browsers (incl. Smart TVs) don't
+ *     return a Promise.
  */
 HTMLMediaElement.prototype.play = function() {};
 
