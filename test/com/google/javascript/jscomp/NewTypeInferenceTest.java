@@ -19418,4 +19418,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** string */ s = Bar.prototype.prop;",
         "}"));
   }
+
+  public void testSuppressMissingProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Object} x",
+        " * @suppress {missingProperties}",
+        " */",
+        "function f(x) {",
+        "  return x.asdf;",
+        "}"));
+  }
 }

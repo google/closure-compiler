@@ -235,7 +235,9 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("missingProperties",
           TypeCheck.INEXISTENT_PROPERTY,
           TypeCheck.INEXISTENT_PROPERTY_WITH_SUGGESTION,
-          TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+          TypeCheck.POSSIBLE_INEXISTENT_PROPERTY,
+          NewTypeInference.INEXISTENT_PROPERTY,
+          NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY);
 
   public static final DiagnosticGroup J2CL_CHECKS =
       DiagnosticGroups.registerGroup("j2clChecks",
