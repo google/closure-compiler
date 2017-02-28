@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 
-import java.util.Set;
 
 /**
  * Lints against passing arrays to goog.object methods with the intention of
@@ -35,7 +34,7 @@ public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOr
     implements HotSwapCompilerPass {
   final AbstractCompiler compiler;
 
-  private static final Set<String> GOOG_OBJECT_METHODS =
+  private static final ImmutableSet<String> GOOG_OBJECT_METHODS =
       ImmutableSet.of(
           "goog.object.forEach",
           "goog.object.filter",
@@ -55,7 +54,6 @@ public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOr
           "goog.object.remove",
           "goog.object.equals",
           "goog.object.clone",
-          "goog.object.unsafeClone",
           "goog.object.transpose");
 
   public static final DiagnosticType ARRAY_PASSED_TO_GOOG_OBJECT =
