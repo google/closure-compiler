@@ -364,7 +364,8 @@ public final class FunctionType {
     } else {
       arrayContents = this.commonTypes.UNKNOWN;
     }
-    builder.addOptFormal(this.commonTypes.getIArrayLikeInstance(arrayContents));
+    builder.addOptFormal(
+        JSType.join(this.commonTypes.NULL, this.commonTypes.getIArrayLikeInstance(arrayContents)));
     builder.addRetType(this.returnType);
     builder.addAbstract(this.isAbstract);
     return builder.buildFunction();

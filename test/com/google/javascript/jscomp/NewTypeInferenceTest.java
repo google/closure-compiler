@@ -13774,6 +13774,11 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  String.fromCharCode.apply(null, x);",
         "}"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {...number} var_args */",
+        "function f(var_args) {}",
+        "f.apply({}, null);"));
   }
 
   public void testDontWarnOnPropAccessOfBottom() {
