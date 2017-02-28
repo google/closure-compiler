@@ -2959,6 +2959,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("f( (x,y)\n=>2)", "No newline allowed before '=>'");
   }
 
+  public void testInvalidAwait() {
+    parseError("await 15;", "'await' used in a non-async function context");
+    parseError(
+        "function f() { return await 5; }", "'await' used in a non-async function context");
+  }
+
   public void testAsyncFunction() {
     String asyncFunctionExpressionSource = "f = async function() {};";
     String asyncFunctionDeclarationSource = "async function f() {}";

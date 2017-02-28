@@ -178,7 +178,7 @@ public class Parser {
    * Indicates the type of function currently being parsed.
    */
   private enum FunctionFlavor {
-    NORMAL, GENERATOR, ASYNC;
+    NORMAL, GENERATOR, ASYNCHRONOUS;
   }
 
   private final Scanner scanner;
@@ -919,7 +919,7 @@ public class Parser {
                 .setName(name)
                 .setStatic(partial.isStatic)
                 .setAccess(accessOnFunction);
-        parseFunctionTail(builder, isGenerator);
+        parseFunctionTail(builder, isGenerator ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL);
 
         function = builder.build(getTreeLocation(partial.start));
       }
@@ -981,7 +981,7 @@ public class Parser {
             .setFunctionBody(new EmptyStatementTree(getTreeLocation(partial.start)));
         eatPossibleImplicitSemiColon();
       } else {
-        parseFunctionTail(builder, /* isGenerator */ false);
+        parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
       }
 
       return builder.build(getTreeLocation(name.getStart()));
@@ -995,7 +995,7 @@ public class Parser {
           FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
               .setAsync(true)
               .setStatic(partial.isStatic);
-      parseFunctionTail(builder, /* isGenerator */ false);
+      parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
 
       ParseTree function = builder.build(getTreeLocation(nameExpr.getStart()));
       return new ComputedPropertyMethodTree(
@@ -1043,19 +1043,11 @@ public class Parser {
     return builder.build(getTreeLocation(start));
   }
 
-  private void parseFunctionTail(FunctionDeclarationTree.Builder builder) {
-    parseFunctionTail(builder, /* isGenerator */ false);
-  }
-
-  private void parseGeneratorFunctionTail(FunctionDeclarationTree.Builder builder) {
-    parseFunctionTail(builder, /* isGenerator */ true);
-  }
-
-  private void parseFunctionTail(FunctionDeclarationTree.Builder builder, boolean isGenerator) {
-    FunctionFlavor functionFlavor = isGenerator ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL;
+  private void parseFunctionTail(
+      FunctionDeclarationTree.Builder builder, FunctionFlavor functionFlavor) {
     functionContextStack.addLast(functionFlavor);
     builder
-        .setGenerator(isGenerator)
+        .setGenerator(functionFlavor == FunctionFlavor.GENERATOR)
         .setGenerics(maybeParseGenericTypes())
         .setFormalParameterList(parseFormalParameterList(ParamContext.IMPLEMENTATION))
         .setReturnType(maybeParseColonType())
@@ -1218,7 +1210,7 @@ public class Parser {
 
     FunctionDeclarationTree.Builder builder =
         FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.DECLARATION).setName(eatId());
-    parseFunctionTail(builder, isGenerator);
+    parseFunctionTail(builder, isGenerator ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL);
     return builder.build(getTreeLocation(start));
   }
 
@@ -1230,7 +1222,7 @@ public class Parser {
     FunctionDeclarationTree.Builder builder =
         FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
             .setName(eatIdOpt());
-    parseFunctionTail(builder, isGenerator);
+    parseFunctionTail(builder, isGenerator ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL);
 
     return builder.build(getTreeLocation(start));
   }
@@ -1251,7 +1243,7 @@ public class Parser {
             .setName(eatId())
             .setAsync(true);
 
-    parseFunctionTail(builder);
+    parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
     return builder.build(getTreeLocation(start));
   }
 
@@ -1271,7 +1263,7 @@ public class Parser {
             .setName(eatIdOpt())
             .setAsync(true);
 
-    parseFunctionTail(builder);
+    parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
     return builder.build(getTreeLocation(start));
   }
 
@@ -2487,7 +2479,7 @@ public class Parser {
       } else {
         FunctionDeclarationTree.Builder builder =
             FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION);
-        parseFunctionTail(builder);
+        parseFunctionTail(builder, FunctionFlavor.NORMAL);
         ParseTree value = builder.build(getTreeLocation(start));
         return new ComputedPropertyMethodTree(
             getTreeLocation(start), null, name, value);
@@ -2513,7 +2505,7 @@ public class Parser {
       FunctionDeclarationTree.Builder builder =
           FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION);
 
-      parseGeneratorFunctionTail(builder);
+      parseFunctionTail(builder, FunctionFlavor.GENERATOR);
       ParseTree value = builder.build(getTreeLocation(start));
       return new ComputedPropertyMethodTree(getTreeLocation(start), null, name, value);
     }
@@ -2882,7 +2874,7 @@ public class Parser {
       reportError("No newline allowed before '=>'");
     }
     eat(TokenType.ARROW);
-    ParseTree arrowFunctionBody = parseArrowFunctionBody(expressionIn);
+    ParseTree arrowFunctionBody = parseArrowFunctionBody(expressionIn, FunctionFlavor.NORMAL);
 
     FunctionDeclarationTree.Builder builder =
         FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.ARROW)
@@ -2959,7 +2951,7 @@ public class Parser {
       reportError("No newline allowed before '=>'");
     }
     eat(TokenType.ARROW);
-    ParseTree arrowFunctionBody = parseArrowFunctionBody(expressionIn);
+    ParseTree arrowFunctionBody = parseArrowFunctionBody(expressionIn, FunctionFlavor.ASYNCHRONOUS);
 
     FunctionDeclarationTree.Builder builder =
         FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.ARROW)
@@ -2969,8 +2961,8 @@ public class Parser {
     return builder.build(getTreeLocation(start));
   }
 
-  private ParseTree parseArrowFunctionBody(Expression expressionIn) {
-    functionContextStack.addLast(FunctionFlavor.NORMAL);
+  private ParseTree parseArrowFunctionBody(Expression expressionIn, FunctionFlavor functionFlavor) {
+    functionContextStack.addLast(functionFlavor);
     ParseTree arrowFunctionBody;
     if (peek(TokenType.OPEN_CURLY)) {
       arrowFunctionBody = parseFunctionBody();
@@ -3316,13 +3308,15 @@ public class Parser {
   private static final String AWAIT = "await";
 
   private boolean peekAwaitExpression() {
-    // TODO(bradfordcsmith): This should be handled such that it's treated as special only within an
-    //     async function.
     return peekPredefinedString(AWAIT);
   }
 
   private ParseTree parseAwaitExpression() {
     SourcePosition start = getTreeStartLocation();
+    if (functionContextStack.isEmpty()
+        || functionContextStack.peekLast() != FunctionFlavor.ASYNCHRONOUS) {
+      reportError("'await' used in a non-async function context");
+    }
     eatPredefinedString(AWAIT);
     ParseTree expression = parseUnaryExpression();
     return new AwaitExpressionTree(getTreeLocation(start), expression);
