@@ -69,6 +69,10 @@ public class ModuleNames {
   }
 
   static String toModuleName(String path) {
+    if (path.startsWith(MODULE_SLASH)) {
+      path = path.substring(1);
+    }
+
     return "module$" + toJSIdentifier(path);
   }
 

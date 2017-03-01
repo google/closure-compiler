@@ -1554,10 +1554,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         Map<String, CompilerInput> inputModuleIdentifiers = new HashMap<>();
         for (CompilerInput input : inputs) {
           if (input.getKnownProvides().isEmpty()) {
-            ModuleIdentifier modInfo =
-                ModuleIdentifier.forFile(input.getSourceFile().getOriginalPath());
-
-            inputModuleIdentifiers.put(modInfo.getClosureNamespace(), input);
+            ModuleLoader.ModulePath modPath =
+                moduleLoader.resolve(input.getSourceFile().getOriginalPath());
+            inputModuleIdentifiers.put(modPath.toModuleName(), input);
           }
         }
 
