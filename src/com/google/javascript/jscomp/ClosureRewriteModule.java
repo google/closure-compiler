@@ -1499,7 +1499,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         compiler.report(
             JSError.make(
                 requireNode,
-                MISSING_MODULE_OR_PROVIDE.level,
                 MISSING_MODULE_OR_PROVIDE,
                 legacyNamespace));
         // Remove the require node so this problem isn't reported all over again in
@@ -1511,9 +1510,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       // The required thing actually was available somewhere in the program but just wasn't
       // available as early as the require statement would have liked.
       if (unrecognizedRequire.mustBeOrdered) {
-        compiler.report(
-            JSError.make(
-                requireNode, LATE_PROVIDE_ERROR.level, LATE_PROVIDE_ERROR, legacyNamespace));
+        compiler.report(JSError.make(requireNode, LATE_PROVIDE_ERROR, legacyNamespace));
       }
     }
 
