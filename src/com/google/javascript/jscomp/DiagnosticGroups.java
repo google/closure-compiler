@@ -188,7 +188,8 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup INVALID_CASTS =
       DiagnosticGroups.registerGroup("invalidCasts",
-          TypeValidator.INVALID_CAST);
+          TypeValidator.INVALID_CAST,
+          NewTypeInference.INVALID_CAST);
 
   @Deprecated
   public static final DiagnosticGroup INFERRED_CONST_CHECKS =

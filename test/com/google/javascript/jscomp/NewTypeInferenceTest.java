@@ -19445,4 +19445,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var z = goog.global.foo;",
         "}"));
   }
+
+  public void testSuppressInvalidCasts() {
+    typeCheck(LINE_JOINER.join(
+        "/** @suppress {invalidCasts} */",
+        "function f() {",
+        "  /** @type {number} */ ('asdf');",
+        "}"));
+  }
 }
