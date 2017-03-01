@@ -607,6 +607,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         || concreteTypes.isEmpty()) {
       return this;
     }
+    // TODO(dimvar): By adding prints, I found that the majority of the time, when
+    // we substitute generics in obj, it has no effect; the result is equal to the type
+    // before substitution. I did some timing tests to estimate what the improvement
+    // would be if we did better here, and they were inconclusive because of large variance
+    // in the test runs. Intuitively though, it seems that we can save time here,
+    // so revisit this in the future when I have time to dig in deeper.
     ImmutableSet.Builder<ObjectType> builder = ImmutableSet.builder();
     for (ObjectType obj : getObjs()) {
       builder.add(obj.substituteGenerics(concreteTypes));
