@@ -72,6 +72,7 @@ Document.prototype.importNode = function(externalNode, deep) {};
  * @constructor
  * @implements {IObject<(string|number),T>}
  * @implements {IArrayLike<T>}
+ * @implements {Iterable<T>}
  * @template T
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-75708506
  */
