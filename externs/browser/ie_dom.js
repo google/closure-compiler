@@ -965,6 +965,7 @@ Document.prototype.namespaces;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms537487(VS.85).aspx
+ * @type {!HTMLCollection<!HTMLScriptElement>}
  */
 Document.prototype.scripts;
 
