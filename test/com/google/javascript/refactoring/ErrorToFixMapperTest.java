@@ -893,6 +893,40 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testSwitchToShorthand_JSDoc7() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Array<world.util.Animal.Turtle>} */",
+            "var turtles;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Array<Animal.Turtle>} */",
+            "var turtles;"));
+  }
+
+  @Test
+  public void testSwitchToShorthand_JSDoc8() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var AnimalAltName = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Array<world.util.Animal.Turtle>} */",
+            "var turtles;"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "var AnimalAltName = goog.require('world.util.Animal');",
+            "",
+            "/** @type {?Array<AnimalAltName.Turtle>} */",
+            "var turtles;"));
+  }
+
+  @Test
   public void testMissingRequireInGoogModule_atExtends_qname() {
     assertChanges(
         LINE_JOINER.join(

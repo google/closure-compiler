@@ -201,19 +201,25 @@ public final class ErrorToFixMapper {
     NodeMetadata metadata = new NodeMetadata(compiler);
     Match match = new Match(error.node, metadata);
 
+    Matcher fullNameMatcher = FULLY_QUALIFIED_NAME.matcher(error.description);
+    Preconditions.checkState(fullNameMatcher.matches(), error.description);
+    String fullName = fullNameMatcher.group(1);
+
     Matcher shortNameMatcher = USE_SHORT_NAME.matcher(error.description);
     String shortName;
     if (shortNameMatcher.matches()) {
       shortName = shortNameMatcher.group(1);
     } else {
-      Matcher fullNameMatcher = FULLY_QUALIFIED_NAME.matcher(error.description);
-      Preconditions.checkState(fullNameMatcher.matches(), error.description);
-      String namespace = fullNameMatcher.group(1);
-      shortName = namespace.substring(namespace.lastIndexOf('.') + 1);
-      fix.addLhsToGoogRequire(match, namespace);
+      shortName = fullName.substring(fullName.lastIndexOf('.') + 1);
+      fix.addLhsToGoogRequire(match, fullName);
     }
 
-    return fix.replace(error.node, NodeUtil.newQName(compiler, shortName), compiler).build();
+    String oldName =
+        error.node.isQualifiedName() ? error.node.getQualifiedName() : error.node.getString();
+
+    return fix.replace(
+            error.node, NodeUtil.newQName(compiler, oldName.replace(fullName, shortName)), compiler)
+        .build();
   }
 
   private static List<SuggestedFix> getFixesForImplicitlyNullableJsDoc(
