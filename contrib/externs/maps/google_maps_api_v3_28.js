@@ -2930,7 +2930,7 @@ google.maps.MVCObject.prototype.addListener = function(eventName, handler) {};
 
 /**
  * @param {string} key
- * @param {google.maps.MVCObject} target
+ * @param {?} target
  * @param {?string=} opt_targetKey
  * @param {boolean=} opt_noNotify
  * @return {undefined}
