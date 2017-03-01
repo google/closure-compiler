@@ -2565,7 +2565,8 @@ public final class NodeUtil {
           Token.MODULE_BODY,
           Token.BLOCK,
           Token.LABEL,
-          Token.NAMESPACE_ELEMENTS);
+          Token.NAMESPACE_ELEMENTS,
+          Token.INTERFACE_MEMBERS);
 
   static boolean isStatementParent(Node parent) {
     // It is not possible to determine definitely if a node is a statement

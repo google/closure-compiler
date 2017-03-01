@@ -627,6 +627,17 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "/** @type {!Function} */ goog.foo = function() {};"),
         Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED,
         Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
+
+    // Test to make sure nested functions with the same names declared in different functions are
+    // not considered overloads. For now, our parser rejects overloaded nested functions so we can't
+    // have a better test case.
+    testSame(LINE_JOINER.join(
+        "function f() {",
+        "  function g() {}",
+        "}",
+        "function h() {",
+        "  function g() {}",
+        "}"));
   }
 
   public void testSpecializedSignature() {

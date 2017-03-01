@@ -122,6 +122,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (NodeUtil.isStatementParent(n)) {
+      pushOverloads();
+    }
+
     switch (n.getToken()) {
       case NAMESPACE:
         if (currNamespace == null && parent.getToken() != Token.DECLARE) {
@@ -129,12 +133,6 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
           return false;
         }
         currNamespace = nodeNamespaceMap.get(n);
-        pushOverloads();
-        return true;
-      case SCRIPT:
-      case INTERFACE:
-      case CLASS:
-        pushOverloads();
         return true;
       default:
         return true;
@@ -146,11 +144,9 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     switch (n.getToken()) {
       case CLASS:
         visitClass(n, parent);
-        popOverloads();
         break;
       case INTERFACE:
         visitInterface(n, parent);
-        popOverloads();
         break;
       case ENUM:
         visitEnum(n, parent);
@@ -173,7 +169,6 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         break;
       case NAMESPACE:
         visitNamespaceDeclaration(n, parent);
-        popOverloads();
         break;
       case VAR:
       case LET:
@@ -181,9 +176,12 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         visitVarInsideNamespace(n, parent);
         break;
       case SCRIPT:
-        popOverloads();
         break;
       default:
+    }
+
+    if (NodeUtil.isStatementParent(n)) {
+      popOverloads();
     }
   }
 
