@@ -22,10 +22,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
-
-import junit.framework.TestCase;
-
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link DepsFileParser}.
@@ -37,7 +35,7 @@ public final class DepsFileParserTest extends TestCase {
   private DepsFileParser parser;
   private ErrorManager errorManager;
   private static final String SRC_PATH = "/path/1.js";
-  private static final List<String> EMPTY = ImmutableList.of();
+  private static final ImmutableList<String> EMPTY = ImmutableList.of();
 
   @Override
   public void setUp() {
