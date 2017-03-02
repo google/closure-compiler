@@ -19453,4 +19453,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  /** @type {number} */ ('asdf');",
         "}"));
   }
+
+  public void testRegisterStrayPropertyOnReceiverWithUndefined() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(/** (!Foo|undefined) */ x) {",
+        "  x.myprop;",
+        "}",
+        "function g(/** !Foo */ x) {",
+        "  return x.myprop;",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+  }
 }

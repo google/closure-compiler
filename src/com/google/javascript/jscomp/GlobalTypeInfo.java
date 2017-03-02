@@ -1937,7 +1937,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (recvType == null) {
         return;
       }
-      recvType = recvType.removeType(commonTypes.NULL);
+      recvType = recvType.removeType(commonTypes.NULL_OR_UNDEFINED);
       NominalType nt = recvType.getNominalTypeIfSingletonObj();
       // Don't add stray properties to Object.
       if (nt == null || nt.equals(commonTypes.getObjectType())) {
