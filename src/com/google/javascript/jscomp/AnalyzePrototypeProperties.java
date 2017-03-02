@@ -30,7 +30,6 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 
 /**
@@ -59,7 +58,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   private final JSModule firstModule;
 
   // Properties that are implicitly used as part of the JS language.
-  private static final Set<String> IMPLICITLY_USED_PROPERTIES =
+  private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
       ImmutableSet.of("length", "toString", "valueOf");
 
   // A graph where the nodes are property names or variable names,

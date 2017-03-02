@@ -65,14 +65,8 @@ public final class NodeUtil {
   static final char LARGEST_BASIC_LATIN = 0x7f;
 
   /** the set of builtin constructors that don't have side effects. */
-  private static final Set<String> CONSTRUCTORS_WITHOUT_SIDE_EFFECTS =
-      ImmutableSet.of(
-        "Array",
-        "Date",
-        "Error",
-        "Object",
-        "RegExp",
-        "XMLHttpRequest");
+  private static final ImmutableSet<String> CONSTRUCTORS_WITHOUT_SIDE_EFFECTS =
+      ImmutableSet.of("Array", "Date", "Error", "Object", "RegExp", "XMLHttpRequest");
 
   // Utility class; do not instantiate.
   private NodeUtil() {}
@@ -1243,14 +1237,12 @@ public final class NodeUtil {
   // A list of built-in object creation or primitive type cast functions that
   // can also be called as constructors but lack side-effects.
   // TODO(johnlenz): consider adding an extern annotation for this.
-  private static final Set<String> BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS =
-      ImmutableSet.of(
-          "Object", "Array", "String", "Number", "Boolean", "RegExp", "Error");
-  private static final Set<String> OBJECT_METHODS_WITHOUT_SIDEEFFECTS =
+  private static final ImmutableSet<String> BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS =
+      ImmutableSet.of("Object", "Array", "String", "Number", "Boolean", "RegExp", "Error");
+  private static final ImmutableSet<String> OBJECT_METHODS_WITHOUT_SIDEEFFECTS =
       ImmutableSet.of("toString", "valueOf");
-  private static final Set<String> REGEXP_METHODS =
-      ImmutableSet.of("test", "exec");
-  private static final Set<String> STRING_REGEXP_METHODS =
+  private static final ImmutableSet<String> REGEXP_METHODS = ImmutableSet.of("test", "exec");
+  private static final ImmutableSet<String> STRING_REGEXP_METHODS =
       ImmutableSet.of("match", "replace", "search", "split");
 
   /**
