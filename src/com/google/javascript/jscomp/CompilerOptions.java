@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
@@ -3207,5 +3208,35 @@ public class CompilerOptions {
   public CompilerOptions setStrictModeInput(boolean isStrictModeInput) {
     this.isStrictModeInput = isStrictModeInput;
     return this;
+  }
+
+  public char[] getPropertyReservedNamingFirstChars() {
+    char[] reservedChars = anonymousFunctionNaming.getReservedCharacters();
+    if (polymerVersion != null && polymerVersion > 1) {
+      if (reservedChars == null) {
+        reservedChars = PolymerPass.PROPERTY_RESERVED_FIRST_CHARS;
+      } else {
+        reservedChars = Chars.concat(reservedChars, PolymerPass.PROPERTY_RESERVED_FIRST_CHARS);
+      }
+    } else if (angularPass) {
+      if (reservedChars == null) {
+        reservedChars = AngularPass.PROPERTY_RESERVED_FIRST_CHARS;
+      } else {
+        reservedChars = Chars.concat(reservedChars, AngularPass.PROPERTY_RESERVED_FIRST_CHARS);
+      }
+    }
+    return reservedChars;
+  }
+
+  public char[] getPropertyReservedNamingNonFirstChars() {
+    char[] reservedChars = anonymousFunctionNaming.getReservedCharacters();
+    if (polymerVersion != null && polymerVersion > 1) {
+      if (reservedChars == null) {
+        reservedChars = PolymerPass.PROPERTY_RESERVED_NON_FIRST_CHARS;
+      } else {
+        reservedChars = Chars.concat(reservedChars, PolymerPass.PROPERTY_RESERVED_NON_FIRST_CHARS);
+      }
+    }
+    return reservedChars;
   }
 }

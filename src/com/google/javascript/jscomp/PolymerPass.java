@@ -29,7 +29,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +46,8 @@ import java.util.Set;
 final class PolymerPass extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 
   static final String VIRTUAL_FILE = "<PolymerPass.java>";
+  static final char[] PROPERTY_RESERVED_FIRST_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
+  static final char[] PROPERTY_RESERVED_NON_FIRST_CHARS = "_$".toCharArray();
 
   private final AbstractCompiler compiler;
   private final Map<String, String> tagNameMap;

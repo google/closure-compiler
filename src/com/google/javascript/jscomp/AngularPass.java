@@ -71,6 +71,8 @@ import java.util.List;
  */
 class AngularPass extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
+  static final char[] PROPERTY_RESERVED_FIRST_CHARS = {'$'};
+
   final AbstractCompiler compiler;
 
   /** Nodes annotated with @ngInject */

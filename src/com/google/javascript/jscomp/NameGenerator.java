@@ -17,27 +17,41 @@
 package com.google.javascript.jscomp;
 
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
  * A class that generates unique JavaScript variable/property names.
  */
 interface NameGenerator {
+
   /**
    * Reconfigures this NameGenerator, and resets it to the initial state.
    *
-   * @param reservedNames set of names that are reserved; generated names will
-   *   not include these names. This set is referenced rather than copied,
-   *   so changes to the set will be reflected in how names are generated.
+   * @param reservedNames set of names that are reserved; generated names will not include these
+   *     names. This set is referenced rather than copied, so changes to the set will be reflected
+   *     in how names are generated.
    * @param prefix all generated names begin with this prefix.
-   * @param reservedCharacters If specified these characters won't be used in
-   *   generated names
+   * @param reservedCharacters If specified these characters won't be used in generated names
+   */
+  void reset(Set<String> reservedNames, String prefix, @Nullable char[] reservedCharacters);
+
+  /**
+   * Reconfigures this NameGenerator, and resets it to the initial state.
+   *
+   * @param reservedNames set of names that are reserved; generated names will not include these
+   *     names. This set is referenced rather than copied, so changes to the set will be reflected
+   *     in how names are generated.
+   * @param prefix all generated names begin with this prefix.
+   * @param reservedFirstCharacters If specified these characters won't be used as the first
+   *     character in generated names
+   * @param reservedNonFirstCharacters If specified these characters won't be used for characters
+   *     (after the first) in generated names
    */
   void reset(
       Set<String> reservedNames,
       String prefix,
-      @Nullable char[] reservedCharacters);
+      @Nullable char[] reservedFirstCharacters,
+      @Nullable char[] reservedNonFirstCharacters);
 
   /**
    * Returns a clone of this NameGenerator, reconfigured and reset.
