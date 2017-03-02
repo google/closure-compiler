@@ -181,6 +181,17 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private static final String MODULE_CONTENTS_PREFIX = "module$contents$";
 
+  // Prebuilt Nodes to speed up Node.matchesQualifiedName() calls
+  private static final Node GOOG_FORWARDDECLARE =
+      IR.getprop(IR.name("goog"), IR.string("forwardDeclare"));
+  private static final Node GOOG_LOADMODULE = IR.getprop(IR.name("goog"), IR.string("loadModule"));
+  private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), IR.string("module"));
+  private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
+      IR.getprop(GOOG_MODULE, IR.string("declareLegacyNamespace"));
+  private static final Node GOOG_MODULE_GET = IR.getprop(GOOG_MODULE.cloneTree(), IR.string("get"));
+  private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), IR.string("provide"));
+  private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), IR.string("require"));
+
   private final AbstractCompiler compiler;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
 
@@ -222,7 +233,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // Null if the export is of anything other than a name
     @Nullable Var nameDecl;
 
-    private static final Set<Token> INLINABLE_NAME_PARENTS =
+    private static final ImmutableSet<Token> INLINABLE_NAME_PARENTS =
         ImmutableSet.of(Token.VAR, Token.CONST, Token.LET, Token.FUNCTION, Token.CLASS);
 
     static ExportDefinition newDefaultExport(NodeTraversal t, Node rhs) {
@@ -253,12 +264,19 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         return false;
       }
       Node initialValue = nameDecl.getInitialValue();
-      if (initialValue == null) {
+      if (initialValue == null || !initialValue.isCall()) {
         return true;
       }
-      return !NodeUtil.isCallTo(initialValue, "goog.require")
-          && !NodeUtil.isCallTo(initialValue, "goog.forwardDeclare")
-          && !NodeUtil.isCallTo(initialValue, "goog.getMsg");
+      Node method = initialValue.getFirstChild();
+      if (!method.isGetProp()) {
+        return true;
+      }
+      Node maybeGoog = method.getFirstChild();
+      if (!maybeGoog.isName() || !maybeGoog.getString().equals("goog")) {
+        return true;
+      }
+      String name = maybeGoog.getNext().getString();
+      return !name.equals("require") && !name.equals("forwardDeclare") && !name.equals("getMsg");
     }
 
     String getLocalName() {
@@ -327,25 +345,23 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
       switch (n.getToken()) {
         case CALL:
-          if (NodeUtil.isCallTo(n, "goog.loadModule") && n.getLastChild().isFunction()) {
+          Node method = n.getFirstChild();
+          if (!method.isGetProp()) {
+            break;
+          }
+          if (method.matchesQualifiedName(GOOG_LOADMODULE) && n.getLastChild().isFunction()) {
             recordGoogLoadModule(n);
-          }
-          if (NodeUtil.isCallTo(n, "goog.module")) {
+          } else if (method.matchesQualifiedName(GOOG_MODULE)) {
             recordGoogModule(t, n);
-          }
-          if (NodeUtil.isCallTo(n, "goog.module.declareLegacyNamespace")) {
+          } else if (method.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
             recordGoogDeclareLegacyNamespace();
-          }
-          if (NodeUtil.isCallTo(n, "goog.provide")) {
+          } else if (method.matchesQualifiedName(GOOG_PROVIDE)) {
             recordGoogProvide(t, n);
-          }
-          if (NodeUtil.isCallTo(n, "goog.require")) {
+          } else if (method.matchesQualifiedName(GOOG_REQUIRE)) {
             recordGoogRequire(t, n, true /** mustBeOrdered */);
-          }
-          if (NodeUtil.isCallTo(n, "goog.forwardDeclare") && !parent.isExprResult()) {
+          } else if (method.matchesQualifiedName(GOOG_FORWARDDECLARE) && !parent.isExprResult()) {
             recordGoogForwardDeclare(t, n);
-          }
-          if (NodeUtil.isCallTo(n, "goog.module.get")) {
+          } else if (method.matchesQualifiedName(GOOG_MODULE_GET)) {
             recordGoogModuleGet(t, n);
           }
           break;
@@ -406,19 +422,19 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           break;
 
         case CALL:
-          if (NodeUtil.isCallTo(n, "goog.module")) {
+          Node method = n.getFirstChild();
+          if (!method.isGetProp()) {
+            break;
+          }
+          if (method.matchesQualifiedName(GOOG_MODULE)) {
             updateGoogModule(n);
-          }
-          if (NodeUtil.isCallTo(n, "goog.module.declareLegacyNamespace")) {
+          } else if (method.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
             updateGoogDeclareLegacyNamespace(n);
-          }
-          if (NodeUtil.isCallTo(n, "goog.require")) {
+          } else if (method.matchesQualifiedName(GOOG_REQUIRE)) {
             updateGoogRequire(t, n);
-          }
-          if (NodeUtil.isCallTo(n, "goog.forwardDeclare") && !parent.isExprResult()) {
+          } else if (method.matchesQualifiedName(GOOG_FORWARDDECLARE) && !parent.isExprResult()) {
             updateGoogForwardDeclare(t, n);
-          }
-          if (NodeUtil.isCallTo(n, "goog.module.get")) {
+          } else if (method.matchesQualifiedName(GOOG_MODULE_GET)) {
             updateGoogModuleGetCall(n);
           }
           break;
@@ -474,8 +490,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private static boolean isGoogLoadModuleStatement(Node exprResult) {
     Preconditions.checkArgument(exprResult.isExprResult());
     Node call = exprResult.getFirstChild();
-    return call != null
-        && NodeUtil.isCallTo(call, "goog.loadModule") && call.getLastChild().isFunction();
+    return call != null && isCallTo(call, GOOG_LOADMODULE) && call.getLastChild().isFunction();
   }
 
   /**
@@ -815,7 +830,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       // Even if it was to a var in our scope it should still only rewrite if the var looked like:
       //   let x = goog.forwardDeclare('a.namespace');
       Node aliasVarNodeRhs = NodeUtil.getRValueOfLValue(aliasVar.getNode());
-      if (aliasVarNodeRhs == null || !NodeUtil.isCallTo(aliasVarNodeRhs, "goog.forwardDeclare")) {
+      if (aliasVarNodeRhs == null || !isCallTo(aliasVarNodeRhs, GOOG_FORWARDDECLARE)) {
         t.report(call, INVALID_GET_ALIAS);
         return;
       }
@@ -1180,7 +1195,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         && nameNode.getParent().isStringKey()
         && nameNode.getGrandparent().isObjectPattern()) {
       Node destructuringLhsNode = nameNode.getGrandparent().getParent();
-      if (NodeUtil.isCallTo(destructuringLhsNode.getLastChild(), "goog.require")) {
+      if (isCallTo(destructuringLhsNode.getLastChild(), GOOG_REQUIRE)) {
         return;
       }
     }
@@ -1637,5 +1652,20 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node node = Node.newString(n.getString()).useSourceInfoFrom(n);
     node.putBooleanProp(Node.IS_MODULE_NAME, true);
     return node;
+  }
+
+  /**
+   * A faster version of NodeUtil.isCallTo() for methods in the GETPROP form.
+   *
+   * @param n The CALL node to be checked.
+   * @param targetMethod A prebuilt GETPROP node representing a target method.
+   * @return Whether n is a call to the target method.
+   */
+  private static boolean isCallTo(Node n, Node targetMethod) {
+    if (!n.isCall()) {
+      return false;
+    }
+    Node method = n.getFirstChild();
+    return method.isGetProp() && method.matchesQualifiedName(targetMethod);
   }
 }
