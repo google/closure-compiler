@@ -32,6 +32,58 @@
  */
 function Range() {}
 
+// constants on the constructor
+
+/**
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
+ */
+Range.START_TO_START = 0;
+
+/**
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
+ */
+Range.START_TO_END = 1;
+
+/**
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
+ */
+Range.END_TO_END = 2;
+
+/**
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
+ */
+Range.END_TO_START = 3;
+
+// constants repeated on the prototype
+
+/**
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
+ */
+Range.prototype.START_TO_START = 0;
+
+/**
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
+ */
+Range.prototype.START_TO_END = 1;
+
+/**
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
+ */
+Range.prototype.END_TO_END = 2;
+
+/**
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
+ */
+Range.prototype.END_TO_START = 3;
+
 /**
  * @type {Node}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-attr-startParent
@@ -132,30 +184,6 @@ Range.prototype.selectNode = function(refNode) {};
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-method-selectNodeContents
  */
 Range.prototype.selectNodeContents = function(refNode) {};
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
- */
-Range.prototype.START_TO_START = 0;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
- */
-Range.prototype.START_TO_END = 1;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
- */
-Range.prototype.END_TO_END = 2;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
- */
-Range.prototype.END_TO_START = 3;
 
 /**
  * @param {number} how
