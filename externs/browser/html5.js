@@ -482,7 +482,7 @@ CanvasRenderingContext2D.prototype.drawImage = function(
 /**
  * @param {number} sw
  * @param {number} sh
- * @return {ImageData}
+ * @return {!ImageData}
  * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
@@ -492,7 +492,7 @@ CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
  * @param {number} sy
  * @param {number} sw
  * @param {number} sh
- * @return {ImageData}
+ * @return {!ImageData}
  * @throws {Error}
  */
 CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
