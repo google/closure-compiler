@@ -17549,6 +17549,60 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "C.prototype = new C;"));
   }
 
+  public void testFilterNoResolvedType() throws Exception {
+    testClosureTypes(
+        LINE_JOINER.join(
+            "goog.forwardDeclare('Foo');",
+            "/**",
+            " * @param {boolean} pred",
+            " * @param {?Foo} x",
+            " */",
+            "function f(pred, x) {",
+            "  var y;",
+            "  if (pred) {",
+            "    y = null;",
+            "  } else {",
+            "    y = x;",
+            "  }",
+            "  var /** number */ z = y;",
+            "}"),
+        // Tests that the type of y is (NoResolvedType|null) and not (Foo|null)
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : (NoResolvedType|null)",
+            "required: number"));
+  }
+
+  public void testNoResolvedTypeDoesntCauseInfiniteLoop() throws Exception {
+    testClosureTypes(LINE_JOINER.join(
+        "goog.forwardDeclare('Foo');",
+        "goog.forwardDeclare('Bar');",
+        "/** @const */",
+        "var goog = {};",
+        "goog.forwardDeclare = function(x) {};",
+        "/** @const */",
+        "goog.asserts = {};",
+        "goog.asserts.assert = function(x, y) {};",
+        "/** @interface */",
+        "var Baz = function() {};",
+        "/** @return {!Bar} */",
+        "Baz.prototype.getBar = function() {};",
+        "/** @constructor */",
+        "var Qux = function() {",
+        "  /** @type {?Foo} */",
+        "  this.jobRuntimeTracker_ = null;",
+        "};",
+        "/** @param {!Baz} job */",
+        "Qux.prototype.runRenderJobs_ = function(job) {",
+        "  for (var i = 0; i < 10; i++) {",
+        "    if (this.jobRuntimeTracker_) {",
+        "      goog.asserts.assert(job.getBar, '');",
+        "    }",
+        "  }",
+        "};"),
+        null);
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }
