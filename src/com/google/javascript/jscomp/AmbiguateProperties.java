@@ -78,7 +78,9 @@ class AmbiguateProperties implements CompilerPass {
 
   private final List<Node> stringNodesToRename = new ArrayList<>();
   // Can't use these as property names.
-  private final char[] reservedCharacters;
+  private final char[] reservedFirstCharacters;
+  // Can't use these as property names.
+  private final char[] reservedNonFirstCharacters;
 
   /** Map from property name to Property object */
   private final Map<String, Property> propertyMap = new HashMap<>();
@@ -125,11 +127,14 @@ class AmbiguateProperties implements CompilerPass {
    */
   static final String SKIP_PREFIX = "JSAbstractCompiler";
 
-  AmbiguateProperties(AbstractCompiler compiler,
-      char[] reservedCharacters) {
+  AmbiguateProperties(
+      AbstractCompiler compiler,
+      char[] reservedFirstCharacters,
+      char[] reservedNonFirstCharacters) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
     this.compiler = compiler;
-    this.reservedCharacters = reservedCharacters;
+    this.reservedFirstCharacters = reservedFirstCharacters;
+    this.reservedNonFirstCharacters = reservedNonFirstCharacters;
 
     JSTypeRegistry r = compiler.getTypeRegistry();
     invalidatingTypes = new HashSet<>(ImmutableSet.of(
@@ -157,9 +162,11 @@ class AmbiguateProperties implements CompilerPass {
   }
 
   static AmbiguateProperties makePassForTesting(
-      AbstractCompiler compiler, char[] reservedCharacters) {
+      AbstractCompiler compiler,
+      char[] reservedFirstCharacters,
+      char[] reservedNonFirstCharacters) {
     AmbiguateProperties ap =
-        new AmbiguateProperties(compiler, reservedCharacters);
+        new AmbiguateProperties(compiler, reservedFirstCharacters, reservedNonFirstCharacters);
     ap.renamingMap = new HashMap<>();
     return ap;
   }
@@ -230,8 +237,9 @@ class AmbiguateProperties implements CompilerPass {
     int numNewPropertyNames = coloring.color();
 
     // Generate new names for the properties that will be renamed.
-    NameGenerator nameGen = new DefaultNameGenerator(
-        reservedNames.build(), "", reservedCharacters);
+    NameGenerator nameGen =
+        new DefaultNameGenerator(
+            reservedNames.build(), "", reservedFirstCharacters, reservedNonFirstCharacters);
     String[] colorMap = new String[numNewPropertyNames];
     for (int i = 0; i < numNewPropertyNames; ++i) {
       colorMap[i] = nameGen.generateNextName();

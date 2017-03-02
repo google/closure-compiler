@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
@@ -48,6 +49,11 @@ import javax.annotation.Nullable;
 public class CompilerOptions {
   // The number of characters after which we insert a line break in the code
   static final int DEFAULT_LINE_LENGTH_THRESHOLD = 500;
+
+  static final char[] POLYMER_PROPERTY_RESERVED_FIRST_CHARS =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
+  static final char[] POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS = "_$".toCharArray();
+  static final char[] ANGULAR_PROPERTY_RESERVED_FIRST_CHARS = {'$'};
 
   /**
    * A common enum for compiler passes that can run either globally or locally.
@@ -3207,5 +3213,35 @@ public class CompilerOptions {
   public CompilerOptions setStrictModeInput(boolean isStrictModeInput) {
     this.isStrictModeInput = isStrictModeInput;
     return this;
+  }
+
+  public char[] getPropertyReservedNamingFirstChars() {
+    char[] reservedChars = anonymousFunctionNaming.getReservedCharacters();
+    if (polymerVersion != null && polymerVersion > 1) {
+      if (reservedChars == null) {
+        reservedChars = POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
+      } else {
+        reservedChars = Chars.concat(reservedChars, POLYMER_PROPERTY_RESERVED_FIRST_CHARS);
+      }
+    } else if (angularPass) {
+      if (reservedChars == null) {
+        reservedChars = ANGULAR_PROPERTY_RESERVED_FIRST_CHARS;
+      } else {
+        reservedChars = Chars.concat(reservedChars, ANGULAR_PROPERTY_RESERVED_FIRST_CHARS);
+      }
+    }
+    return reservedChars;
+  }
+
+  public char[] getPropertyReservedNamingNonFirstChars() {
+    char[] reservedChars = anonymousFunctionNaming.getReservedCharacters();
+    if (polymerVersion != null && polymerVersion > 1) {
+      if (reservedChars == null) {
+        reservedChars = POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS;
+      } else {
+        reservedChars = Chars.concat(reservedChars, POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS);
+      }
+    }
+    return reservedChars;
   }
 }

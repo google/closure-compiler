@@ -24,14 +24,12 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -110,18 +108,6 @@ public final class RandomNameGenerator implements NameGenerator {
     reset(new HashSet<String>(), "", null);
   }
 
-  /**
-   * Creates a RandomNameGenerator.
-   *
-   * @param reservedNames set of names that are reserved; generated names will
-   *   not include these names. This set is referenced rather than copied,
-   *   so changes to the set will be reflected in how names are generated
-   * @param prefix all generated names begin with this prefix (a name
-   *   consisting of only this prefix, with no suffix, will not be generated)
-   * @param reservedCharacters if specified these characters won't be used in
-   *   generated names
-   * @param random source of randomness when generating random names
-   */
   RandomNameGenerator(
       Set<String> reservedNames,
       String prefix,
@@ -131,18 +117,51 @@ public final class RandomNameGenerator implements NameGenerator {
     reset(reservedNames, prefix, reservedCharacters);
   }
 
+  /**
+   * Creates a RandomNameGenerator.
+   *
+   * @param reservedNames set of names that are reserved; generated names will not include these
+   *     names. This set is referenced rather than copied, so changes to the set will be reflected
+   *     in how names are generated
+   * @param prefix all generated names begin with this prefix (a name consisting of only this
+   *     prefix, with no suffix, will not be generated)
+   * @param reservedFirstCharacters if specified these characters won't be used in generated names
+   *     for the first character
+   * @param reservedNonFirstCharacters if specified these characters won't be used in generated
+   *     names for characters after the first
+   * @param random source of randomness when generating random names
+   */
+  RandomNameGenerator(
+      Set<String> reservedNames,
+      String prefix,
+      @Nullable char[] reservedFirstCharacters,
+      @Nullable char[] reservedNonFirstCharacters,
+      Random random) {
+    this.random = random;
+    reset(reservedNames, prefix, reservedFirstCharacters, reservedNonFirstCharacters);
+  }
+
   @Override
   public void reset(
       Set<String> reservedNames,
       String prefix,
       @Nullable char[] reservedCharacters) {
+    reset(reservedNames, prefix, reservedCharacters, reservedCharacters);
+  }
+
+  @Override
+  public void reset(
+      Set<String> reservedNames,
+      String prefix,
+      @Nullable char[] reservedFirstCharacters,
+      @Nullable char[] reservedNonFirstCharacters) {
     this.reservedNames = reservedNames;
     this.prefix = prefix;
     nameCount = 0;
 
     // Build the character arrays to use
-    this.firstChars = reserveCharacters(FIRST_CHAR, reservedCharacters);
-    this.nonFirstChars = reserveCharacters(NONFIRST_CHAR, reservedCharacters);
+    this.firstChars = reserveCharacters(FIRST_CHAR, reservedFirstCharacters);
+    this.nonFirstChars = reserveCharacters(NONFIRST_CHAR, reservedNonFirstCharacters);
 
     checkPrefix(prefix);
     shuffleAlphabets(random);
