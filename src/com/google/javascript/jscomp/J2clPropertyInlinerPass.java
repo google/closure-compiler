@@ -26,8 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This pass targets j2cl output. It looks for static get and set methods defined within a class
- * that match the signature of j2cl static fields and inlines them at their
+ * This pass targets J2CL output. It looks for static get and set methods defined within a class
+ * that match the signature of J2CL static fields and inlines them at their
  * call sites.  This is done for performance reasons since getter and setter accesses are slower
  * than regular field accesses.
  *
@@ -96,7 +96,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
     }
 
     /**
-     * <li> We match j2cl property getters  by looking for the following signature:
+     * <li> We match J2CL property getters  by looking for the following signature:
      * <pre>{@code
      * get: function() { return (ClassName.$clinit(), ClassName.$fieldName)};
      * </pre>
@@ -136,7 +136,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
     }
 
     /**
-     * <li> We match j2cl property getters  by looking for the following signature:
+     * <li> We match J2CL property getters  by looking for the following signature:
      * <pre>{@code
      * set: function(value) { (ClassName.$clinit(), ClassName.$fieldName = value)};
      * </pre>

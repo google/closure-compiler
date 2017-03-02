@@ -88,7 +88,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
       return false;
     }
     // NOTE: This should be rewritten to use method name + file name of definition site
-    // like other j2cl passes, which is more precise.
+    // like other J2CL passes, which is more precise.
     String originalQname = fnName.getOriginalQualifiedName();
     return originalQname.endsWith(".$same") && originalQname.contains("Equality");
   }

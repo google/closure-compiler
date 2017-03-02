@@ -86,8 +86,8 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     + "var x = A.x;")));
   }
 
-  // In this test we want to remove the j2cl property but not the entire Object.defineProperties
-  // since it also defines another non j2cl property.
+  // In this test we want to remove the J2CL property but not the entire Object.defineProperties
+  // since it also defines another non J2CL property.
   public void testNoStripDefineProperties() {
     test(
         Lists.newArrayList(

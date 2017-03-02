@@ -1823,7 +1823,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   public void testPreservesCastInformation() {
-    // Only set the suffix instead of both prefix and suffix, because j2cl pass
+    // Only set the suffix instead of both prefix and suffix, because J2CL pass
     // looks for that exact suffix, and IntegrationTestCase adds an input
     // id number between prefix and suffix.
     inputFileNameSuffix = "vmbootstrap/Arrays.impl.java.js";
