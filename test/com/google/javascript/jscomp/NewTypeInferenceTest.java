@@ -2912,6 +2912,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  } else if (typeof x.prop.prop2 === 'number') {",
         "  }",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (typeof x === 'symbol') {",
+        // We don't know what symbols are yet.
+        "    var /** null */ n = x;",
+        "  }",
+        "}"));
   }
 
   public void testAssignWithOp() {

@@ -2457,6 +2457,7 @@ final class NewTypeInference implements CompilerPass {
       case "undefined":
       case "function":
       case "object":
+      case "symbol":
       case "unknown": // IE-specific type name
         break;
       default:
