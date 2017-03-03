@@ -431,17 +431,24 @@ function fdescribe(description, handler) {}
  */
 function expect(expectedValue) {}
 
+/** @typedef {function()} */
+var DoneFunc;
+
+/** @type {DoneFunc} */
+var doneFuncInst_;
+/** @type {function()} */
+doneFuncInst_.fail;
 
 /**
  * @param {string} description
- * @param {function(this:jasmine.Spec, function())} handler
+ * @param {function(this:jasmine.Spec, DoneFunc)} handler
  */
 function it(description, handler) {}
 
 
 /**
  * @param {string} description
- * @param {function(this:jasmine.Spec, function())} handler
+ * @param {function(this:jasmine.Spec, DoneFunc)} handler
  */
 function fit(description, handler) {}
 
@@ -471,7 +478,7 @@ function xdescribe(description, handler) {}
 
 /**
  * @param {string} description
- * @param {function(this:jasmine.Spec, function()=)} handler
+ * @param {function(this:jasmine.Spec, DoneFunc)} handler
  */
 function xit(description, handler) {}
 
