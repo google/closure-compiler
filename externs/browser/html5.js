@@ -3483,6 +3483,7 @@ Document.prototype.fonts;
 
 
 /**
+ * @type {?HTMLScriptElement}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/currentScript
  */
 Document.prototype.currentScript;
