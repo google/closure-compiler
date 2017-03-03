@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
@@ -79,7 +80,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
   // These types do not permit a block-scoped declaration inside them without an explicit block.
   // e.g. if (b) let x;
-  private static final Set<Token> BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS =
+  private static final ImmutableSet<Token> BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS =
       Sets.immutableEnumSet(Token.IF, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.WHILE);
 
   public VariableReferenceCheck(AbstractCompiler compiler) {

@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 
-import java.util.Set;
 
 /**
  * Abstract message formatter providing default behavior for implementations
@@ -43,11 +42,8 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
     return source;
   }
 
-  private static final Set<String> SUPPORTED_COLOR_TERMINALS =
-      ImmutableSet.of("xterm",
-                      "xterm-color",
-                      "xterm-256color",
-                      "screen-bce");
+  private static final ImmutableSet<String> SUPPORTED_COLOR_TERMINALS =
+      ImmutableSet.of("xterm", "xterm-color", "xterm-256color", "screen-bce");
 
   static boolean termSupportsColor(String term) {
     return SUPPORTED_COLOR_TERMINALS.contains(term);

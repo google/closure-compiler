@@ -19,17 +19,12 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
-
-import junit.framework.TestCase;
-
 import java.util.Collections;
-import java.util.Set;
+import junit.framework.TestCase;
 
 public final class DefaultNameGeneratorTest extends TestCase {
 
-  private static final Set<String> RESERVED_NAMES = ImmutableSet.of(
-      "ba",
-      "xba");
+  private static final ImmutableSet<String> RESERVED_NAMES = ImmutableSet.of("ba", "xba");
 
   private static String[] generate(
       DefaultNameGenerator ng, String prefix, int num) throws Exception {

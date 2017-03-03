@@ -121,8 +121,7 @@ final class NameAnalyzer implements CompilerPass {
   private static final String FUNCTION = "Function";
 
   /** All of these refer to global scope. These can be moved to config */
-  static final Set<String> DEFAULT_GLOBAL_NAMES = ImmutableSet.of(
-      "window", "goog.global");
+  static final ImmutableSet<String> DEFAULT_GLOBAL_NAMES = ImmutableSet.of("window", "goog.global");
 
   /** Whether to remove unreferenced variables in main pass */
   private final boolean removeUnreferenced;

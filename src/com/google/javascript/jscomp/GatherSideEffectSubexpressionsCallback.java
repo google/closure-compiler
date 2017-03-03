@@ -23,10 +23,8 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Callback that gathers subexpressions that may have side effects
@@ -186,8 +184,8 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     }
   }
 
-  private static final Set<Token> FORBIDDEN_TYPES = ImmutableSet.of(
-      Token.BLOCK, Token.SCRIPT, Token.VAR, Token.EXPR_RESULT, Token.RETURN);
+  private static final ImmutableSet<Token> FORBIDDEN_TYPES =
+      ImmutableSet.of(Token.BLOCK, Token.SCRIPT, Token.VAR, Token.EXPR_RESULT, Token.RETURN);
   private final AbstractCompiler compiler;
   private final SideEffectAccumulator accumulator;
 
