@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -259,44 +258,56 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             // when we see a provides/requires, and don't worry about
             // reporting the change when we actually do the replacement.
             String methodName = name.getNext().getString();
-            if ("base".equals(methodName)) {
-              processBaseClassCall(t, n);
-            } else if ("define".equals(methodName)) {
-              if (validPrimitiveCall(t, n)) {
-                processDefineCall(t, n, parent);
-              }
-            } else if ("require".equals(methodName)) {
-              if (validPrimitiveCall(t, n)) {
-                processRequireCall(t, n, parent);
-              }
-            } else if ("provide".equals(methodName)) {
-              if (validPrimitiveCall(t, n)) {
-                processProvideCall(t, n, parent);
-              }
-            } else if ("inherits".equals(methodName)) {
-              // Note: inherits is allowed in local scope
-              processInheritsCall(n);
-            } else if ("exportSymbol".equals(methodName)) {
-              // Note: exportSymbol is allowed in local scope
-              Node arg = left.getNext();
-              if (arg.isString()) {
-                int dot = arg.getString().indexOf('.');
-                if (dot == -1) {
-                  exportedVariables.add(arg.getString());
-                } else {
-                  exportedVariables.add(arg.getString().substring(0, dot));
+            switch (methodName) {
+              case "base":
+                processBaseClassCall(t, n);
+                break;
+              case "define":
+                if (validPrimitiveCall(t, n)) {
+                  processDefineCall(t, n, parent);
                 }
-              }
-            } else if ("forwardDeclare".equals(methodName)){
-              if (validPrimitiveCall(t, n)) {
-                processForwardDeclare(t, n, parent);
-              }
-            } else if ("addDependency".equals(methodName)) {
-              if (validPrimitiveCall(t, n)) {
-                processAddDependency(n, parent);
-              }
-            } else if ("setCssNameMapping".equals(methodName)) {
-              processSetCssNameMapping(t, n, parent);
+                break;
+              case "require":
+                if (validPrimitiveCall(t, n)) {
+                  processRequireCall(t, n, parent);
+                }
+                break;
+              case "provide":
+                if (validPrimitiveCall(t, n)) {
+                  processProvideCall(t, n, parent);
+                }
+                break;
+              case "inherits":
+                // Note: inherits is allowed in local scope
+                processInheritsCall(n);
+                break;
+              case "exportSymbol":
+                // Note: exportSymbol is allowed in local scope
+                Node arg = left.getNext();
+                if (arg.isString()) {
+                  String argString = arg.getString();
+                  int dot = argString.indexOf('.');
+                  if (dot == -1) {
+                    exportedVariables.add(argString);
+                  } else {
+                    exportedVariables.add(argString.substring(0, dot));
+                  }
+                }
+                break;
+              case "forwardDeclare":
+                if (validPrimitiveCall(t, n)) {
+                  processForwardDeclare(t, n, parent);
+                }
+                break;
+              case "addDependency":
+                if (validPrimitiveCall(t, n)) {
+                  processAddDependency(n, parent);
+                }
+                break;
+              case "setCssNameMapping":
+                processSetCssNameMapping(t, n, parent);
+                break;
+              default: // fall out
             }
           } else if (left.getLastChild().getString().equals("base")) {
             // maybe an "base" setup by goog.inherits
@@ -620,7 +631,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           callee,
           NodeUtil.newQName(
             compiler,
-            SimpleFormat.format("%s.call", baseClassNode.getQualifiedName()),
+            baseClassNode.getQualifiedName() + ".call",
             callee, "goog.base"));
       compiler.reportCodeChange();
     } else {
@@ -646,8 +657,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           callee,
           NodeUtil.newQName(
             compiler,
-            SimpleFormat.format("%s.superClass_.%s.call",
-                className.getQualifiedName(), methodName),
+            className.getQualifiedName() + ".superClass_." + methodName + ".call",
             callee, "goog.base"));
       n.removeChild(methodNameNode);
       compiler.reportCodeChange();
@@ -769,7 +779,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           callee,
           NodeUtil.newQName(
             compiler,
-            SimpleFormat.format("%s.call", baseClassNode.getQualifiedName()),
+            baseClassNode.getQualifiedName() + ".call",
             callee, enclosingQname + ".base"));
       n.removeChild(methodNameNode);
       compiler.reportCodeChange();
@@ -821,8 +831,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           callee,
           NodeUtil.newQName(
             compiler,
-            SimpleFormat.format("%s.superClass_.%s.call",
-                className.getQualifiedName(), methodName),
+            className.getQualifiedName() + ".superClass_." + methodName + ".call",
             callee, enclosingQname + ".base"));
       n.removeChild(methodNameNode);
       compiler.reportCodeChange();
