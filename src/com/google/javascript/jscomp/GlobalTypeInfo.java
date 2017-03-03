@@ -2151,6 +2151,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           JSType rhs = simpleInferExprTypeRecur(n.getLastChild());
           return lhs == null || rhs == null ? null : JSType.join(lhs, rhs);
         }
+        case FUNCTION: {
+          NTIScope s = this.currentScope.getScope(getFunInternalName(n));
+          DeclaredFunctionType dft = s.getDeclaredFunctionType();
+          return dft == null ? null : commonTypes.fromFunctionType(dft.toFunctionType());
+        }
         default:
           switch (NodeUtil.getKnownValueType(n)) {
             case NULL:
@@ -2205,10 +2210,19 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (recvType == null) {
         recvType = simpleInferExprTypeRecur(recv);
       }
-      if (recvType != null && recvType.isScalar()) {
+      if (recvType == null) {
+        return null;
+      }
+      if (recvType.isScalar()) {
         recvType = recvType.autobox();
       }
-      if (recvType != null && recvType.mayHaveProp(propQname)) {
+      FunctionType ft = recvType.getFunTypeIfSingletonObj();
+      if (ft != null && pname.equals("call")) {
+        return commonTypes.fromFunctionType(ft.transformByCallProperty());
+      } else if (ft != null && pname.equals("apply")) {
+        return commonTypes.fromFunctionType(ft.transformByApplyProperty());
+      }
+      if (recvType.mayHaveProp(propQname)) {
         return recvType.getProp(propQname);
       }
       return null;
@@ -2413,14 +2427,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return null;
       }
       int numFormals = declNode.getSecondChild().getChildCount();
-      int reqArity = declType.getRequiredArity();
       int optArity = declType.getOptionalArity();
       boolean hasRestFormals = declType.hasRestFormals();
-      if (reqArity == optArity && !hasRestFormals) {
-        return numFormals == reqArity ? declType : null;
-      }
-      if ((numFormals == optArity && !hasRestFormals)
-          || (numFormals == (optArity + 1) && hasRestFormals)) {
+      if ((hasRestFormals && numFormals <= optArity + 1)
+          || (!hasRestFormals && numFormals <= optArity)) {
         return declType;
       }
       return null;
@@ -2450,22 +2460,21 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       // The function literal is an argument at a call
       if (parent.isCall() && declNode != parent.getFirstChild()) {
         Node callee = parent.getFirstChild();
-        DeclaredFunctionType calleeDeclType = getDeclFuncTypeOfCalleeIfAny(callee, parentScope);
-        FunctionType calleeType = calleeDeclType == null ? null : calleeDeclType.toFunctionType();
-        if (calleeType == null) {
-          return null;
-        }
-        if (calleeType.isGeneric()) {
-          calleeType = getInstantiatedCalleeType(parent, calleeType, false);
-          if (calleeType == null) {
-            return null;
+        JSType calleeType = simpleInferExprType(callee);
+        FunctionType calleeFunType = calleeType == null ? null : calleeType.getFunType();
+        if (calleeFunType != null) {
+          if (calleeFunType.isGeneric()) {
+            calleeFunType = getInstantiatedCalleeType(parent, calleeFunType, false);
+            if (calleeFunType == null) {
+              return null;
+            }
           }
-        }
-        int index = parent.getIndexOfChild(declNode) - 1;
-        JSType callbackType = calleeType.getFormalType(index);
-        DeclaredFunctionType t = computeFnDeclaredTypeFromCallee(declNode, callbackType);
-        if (t != null) {
-          return t;
+          int index = parent.getIndexOfChild(declNode) - 1;
+          JSType callbackType = calleeFunType.getFormalType(index);
+          DeclaredFunctionType t = computeFnDeclaredTypeFromCallee(declNode, callbackType);
+          if (t != null) {
+            return t;
+          }
         }
       }
 
@@ -2504,20 +2513,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         argTypes.add(t);
       }
       return calleeType.instantiateGenericsFromArgumentTypes(recvType, argTypes.build());
-    }
-
-    private DeclaredFunctionType getDeclFuncTypeOfCalleeIfAny(Node fn, NTIScope currentScope) {
-      Preconditions.checkArgument(fn.getParent().isCall());
-      if (fn.isThis() || (!fn.isFunction() && !fn.isQualifiedName())) {
-        return null;
-      }
-      if (fn.isFunction()) {
-        return currentScope.getScope(getFunInternalName(fn)).getDeclaredFunctionType();
-      }
-      Preconditions.checkState(fn.isQualifiedName(), fn);
-      JSType t = simpleInferExprType(fn);
-      FunctionType funType = t == null ? null : t.getFunType();
-      return funType == null ? null : funType.toDeclaredFunctionType();
     }
 
     /**

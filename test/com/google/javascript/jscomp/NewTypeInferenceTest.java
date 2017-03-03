@@ -12296,7 +12296,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @param {function(!Foo, !Foo)} fun",
         " */",
         "function f(x, fun) { fun(x, x); }",
-        "f(new Foo, function(x) { x.myprop = 'asdf'; });"));
+        "f(new Foo, function(x) { x.myprop = 'asdf'; });"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testNamespacesWithNonEmptyObjectLiteral() {
@@ -19536,5 +19537,47 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f(x, y, fun) {}",
         "f(123, 'asdf', function(x) { var /** null */ n = x; });"),
         NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @this {?IArrayLike<T>|string}",
+        " * @param {?function(T, number)} callback",
+        " * @template T",
+        " */",
+        "function myforeach(callback) {}",
+        "function f(/** !IArrayLike<number> */ a) {",
+        "  Array.prototype.forEach.call(a, function(item) {",
+        "    var /** string */ s = item;",
+        "  });",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testInferConstCallApply() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @return {number} */",
+        "Foo.prototype.method = function() { return 123; };",
+        "/** @const */",
+        "var c = Foo.prototype.method.call(new Foo);",
+        "function f() { var /** string */ s = c; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @return {number} */",
+        "Foo.prototype.method = function() { return 123; };",
+        "/** @const */",
+        "var c = Foo.prototype.method.apply(new Foo);",
+        "function f() { var /** string */ s = c; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testTryGettingSignatureFromCalleeDontCrash() {
+    typeCheck(
+        "(123)(function() {});",
+        NewTypeInference.NOT_CALLABLE);
   }
 }

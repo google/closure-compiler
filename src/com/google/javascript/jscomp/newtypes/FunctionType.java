@@ -332,7 +332,7 @@ public final class FunctionType {
       return this.commonTypes.QMARK_FUNCTION;
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    builder.addReqFormal(fromReceiverToFirstFormal());
+    builder.addReqFormal(this.receiverType == null ? this.commonTypes.UNKNOWN : this.receiverType);
     for (JSType type : this.requiredFormals) {
       builder.addReqFormal(type);
     }
@@ -357,32 +357,18 @@ public final class FunctionType {
       return instantiateGenericsWithUnknown().transformByApplyProperty();
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    builder.addReqFormal(fromReceiverToFirstFormal());
+    builder.addReqFormal(this.receiverType == null ? this.commonTypes.UNKNOWN : this.receiverType);
     JSType arrayContents;
     if (getMaxArityWithoutRestFormals() == 0 && hasRestFormals()) {
       arrayContents = getRestFormalsType();
     } else {
       arrayContents = this.commonTypes.UNKNOWN;
     }
-    builder.addOptFormal(
-        JSType.join(this.commonTypes.NULL, this.commonTypes.getIArrayLikeInstance(arrayContents)));
+    JSType varargsArray = this.commonTypes.getIArrayLikeInstance(arrayContents);
+    builder.addOptFormal(JSType.join(this.commonTypes.NULL, varargsArray));
     builder.addRetType(this.returnType);
     builder.addAbstract(this.isAbstract);
     return builder.buildFunction();
-  }
-
-  private JSType fromReceiverToFirstFormal() {
-    if (this.receiverType == null) {
-      return this.commonTypes.UNKNOWN;
-    }
-    NominalType nt = this.receiverType.getNominalTypeIfSingletonObj();
-    if (nt == null || nt.isBuiltinObject()) {
-      return this.receiverType;
-    }
-    if (nt.isGeneric()) {
-      return nt.instantiateGenerics(this.commonTypes.MAP_TO_UNKNOWN).getInstanceAsJSType();
-    }
-    return nt.getInstanceAsJSType();
   }
 
   // Should only be used during GlobalTypeInfo.
