@@ -2068,28 +2068,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return null;
       }
       if (funType.isGeneric()) {
-        // The receiver type is useful for inference when funType has a @this annotation
-        // that includes a type variable.
-        JSType recvType = null;
-        if (callee.isGetProp() && callee.getFirstChild().isQualifiedName()) {
-          Node recv = callee.getFirstChild();
-          QualifiedName recvQname = QualifiedName.fromNode(recv);
-          Declaration decl = this.currentScope.getDeclaration(recvQname, false);
-          if (decl != null) {
-            recvType = decl.getTypeOfSimpleDecl();
-          }
-        }
-        ImmutableList.Builder<JSType> argTypes = ImmutableList.builder();
-        for (Node argNode = n.getSecondChild();
-             argNode != null;
-             argNode = argNode.getNext()) {
-          JSType t = simpleInferExprTypeRecur(argNode);
-          if (t == null) {
-            return null;
-          }
-          argTypes.add(t);
-        }
-        funType = funType.instantiateGenericsFromArgumentTypes(recvType, argTypes.build());
+        funType = getInstantiatedCalleeType(n, funType, true);
         if (funType == null) {
           return null;
         }
@@ -2470,25 +2449,64 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
       // The function literal is an argument at a call
       if (parent.isCall() && declNode != parent.getFirstChild()) {
-        DeclaredFunctionType calleeDeclType =
-            getDeclaredFunctionTypeOfCalleeIfAny(parent.getFirstChild(), parentScope);
-        if (calleeDeclType != null && !calleeDeclType.isGeneric()) {
-          int index = parent.getIndexOfChild(declNode) - 1;
-          JSType declTypeFromCallee = calleeDeclType.getFormalType(index);
-          if (declTypeFromCallee != null) {
-            DeclaredFunctionType t = computeFnDeclaredTypeFromCallee(declNode, declTypeFromCallee);
-            if (t != null) {
-              return t;
-            }
+        Node callee = parent.getFirstChild();
+        DeclaredFunctionType calleeDeclType = getDeclFuncTypeOfCalleeIfAny(callee, parentScope);
+        FunctionType calleeType = calleeDeclType == null ? null : calleeDeclType.toFunctionType();
+        if (calleeType == null) {
+          return null;
+        }
+        if (calleeType.isGeneric()) {
+          calleeType = getInstantiatedCalleeType(parent, calleeType, false);
+          if (calleeType == null) {
+            return null;
           }
+        }
+        int index = parent.getIndexOfChild(declNode) - 1;
+        JSType callbackType = calleeType.getFormalType(index);
+        DeclaredFunctionType t = computeFnDeclaredTypeFromCallee(declNode, callbackType);
+        if (t != null) {
+          return t;
         }
       }
 
       return null;
     }
 
-    private DeclaredFunctionType getDeclaredFunctionTypeOfCalleeIfAny(
-        Node fn, NTIScope currentScope) {
+    private FunctionType getInstantiatedCalleeType(
+        Node call, FunctionType calleeType, boolean bailForUntypedArguments) {
+      Node callee = call.getFirstChild();
+      Preconditions.checkArgument(calleeType.isGeneric(),
+          "Expected generic type for %s but found %s", callee, calleeType);
+      // The receiver type is useful for inference when calleeType has a @this annotation
+      // that includes a type variable.
+      JSType recvType = null;
+      if (callee.isGetProp() && callee.getFirstChild().isQualifiedName()) {
+        Node recv = callee.getFirstChild();
+        QualifiedName recvQname = QualifiedName.fromNode(recv);
+        Declaration decl = this.currentScope.getDeclaration(recvQname, false);
+        if (decl != null) {
+          recvType = decl.getTypeOfSimpleDecl();
+        }
+      }
+      ImmutableList.Builder<JSType> argTypes = ImmutableList.builder();
+      for (Node argNode = call.getSecondChild(); argNode != null; argNode = argNode.getNext()) {
+        JSType t = simpleInferExprTypeRecur(argNode);
+        if (t == null) {
+          if (bailForUntypedArguments && !argNode.isFunction()) {
+            // Used for @const inference, where we want to be strict.
+            return null;
+          } else {
+            // Used when inferring a signature for unannotated callbacks passed to generic
+            // functions. Whatever type variable we can't infer will become unknown.
+            t = commonTypes.BOTTOM;
+          }
+        }
+        argTypes.add(t);
+      }
+      return calleeType.instantiateGenericsFromArgumentTypes(recvType, argTypes.build());
+    }
+
+    private DeclaredFunctionType getDeclFuncTypeOfCalleeIfAny(Node fn, NTIScope currentScope) {
       Preconditions.checkArgument(fn.getParent().isCall());
       if (fn.isThis() || (!fn.isFunction() && !fn.isQualifiedName())) {
         return null;

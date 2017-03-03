@@ -1077,8 +1077,12 @@ public final class FunctionType {
       return null;
     }
     for (int i = 0, size = argTypes.size(); i < size; i++) {
+      JSType argType = argTypes.get(i);
+      if (argType.isBottom()) {
+        continue;
+      }
       if (!this.getFormalType(i).unifyWithSubtype(
-          argTypes.get(i), typeParameters, typeMultimap, SubtypeCache.create())) {
+          argType, typeParameters, typeMultimap, SubtypeCache.create())) {
         return null;
       }
     }
