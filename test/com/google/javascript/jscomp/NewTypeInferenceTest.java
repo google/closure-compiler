@@ -19580,4 +19580,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "(123)(function() {});",
         NewTypeInference.NOT_CALLABLE);
   }
+
+  public void testPromoteTrueAndFalseToBooleanWhenInstantiatingGenerics() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {...T} var_args",
+        " * @template T",
+        " */",
+        "function x(var_args) {}",
+        "x(true, false);"));
+  }
 }

@@ -284,8 +284,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return TRUTHY_MASK == getMask() || TRUE_MASK == getMask();
   }
 
-  private boolean hasTruthyMask() {
+  private boolean isTheTruthyType() {
     return TRUTHY_MASK == getMask();
+  }
+
+  private boolean isTheTrueType() {
+    return TRUE_MASK == getMask();
   }
 
   public boolean isFalseOrFalsy() {
@@ -306,8 +310,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return mask != BOTTOM_MASK && (mask | falsyMask) == falsyMask;
   }
 
-  private boolean hasFalsyMask() {
+  private boolean isTheFalsyType() {
     return FALSY_MASK == getMask();
+  }
+
+  private boolean isTheFalseType() {
+    return FALSE_MASK == getMask();
   }
 
   public boolean isBoolean() {
@@ -482,7 +490,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public boolean isUnion() {
     if (isBottom() || isTop() || isUnknown()
         || isScalar() || isTypeVariable() || isEnumElement()
-        || hasTruthyMask() || hasFalsyMask()) {
+        || isTheTruthyType() || isTheFalsyType()) {
       return false;
     }
     return !(getMask() == NON_SCALAR_MASK && getObjs().size() == 1);
@@ -574,8 +582,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (rhs.isBottom()) {
       return lhs;
     }
-    if (lhs.hasTruthyMask() || lhs.hasFalsyMask()
-        || rhs.hasTruthyMask() || rhs.hasFalsyMask()) {
+    if (lhs.isTheTruthyType() || lhs.isTheFalsyType()
+        || rhs.isTheTruthyType() || rhs.isTheFalsyType()) {
       return commonTypes.UNKNOWN;
     }
     if (lhs.getTypeVar() != null && rhs.getTypeVar() != null
@@ -762,10 +770,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   boolean unifyWithSubtype(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
     Preconditions.checkNotNull(other);
+    if (other.isTheTrueType() || other.isTheFalseType()) {
+      other = this.commonTypes.BOOLEAN;
+    }
     if (this.isUnknown() || this.isTop()) {
       return true;
-    } else if (getMask() == TYPEVAR_MASK
-        && typeParameters.contains(getTypeVar())) {
+    } else if (getMask() == TYPEVAR_MASK && typeParameters.contains(getTypeVar())) {
       updateTypemap(typeMultimap, getTypeVar(), other);
       return true;
     } else if (other.isUnknown() || other.isTrueOrTruthy()) {
@@ -846,10 +856,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (other.isTop() || other.isUnknown() || this == other) {
       return this;
     }
-    if (other.hasTruthyMask()) {
+    if (other.isTheTruthyType()) {
       return makeTruthy();
     }
-    if (hasTruthyMask()) {
+    if (isTheTruthyType()) {
       // If the only thing we know about this type is that it's truthy, that's very
       // little information, so we loosen the other type to avoid spurious warnings.
       JSType otherTruthy = other.makeTruthy();
@@ -857,10 +867,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
           ? otherTruthy.withLoose()
           : otherTruthy;
     }
-    if (other.hasFalsyMask()) {
+    if (other.isTheFalsyType()) {
       return makeFalsy();
     }
-    if (hasFalsyMask()) {
+    if (isTheFalsyType()) {
       return other.makeFalsy();
     }
     if (this.isTop()) {
@@ -927,16 +937,16 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (lhs.isBottom() || rhs.isBottom()) {
       return lhs.commonTypes.BOTTOM;
     }
-    if (lhs.hasTruthyMask()) {
+    if (lhs.isTheTruthyType()) {
       return rhs.makeTruthy();
     }
-    if (lhs.hasFalsyMask()) {
+    if (lhs.isTheFalsyType()) {
       return rhs.makeFalsy();
     }
-    if (rhs.hasTruthyMask()) {
+    if (rhs.isTheTruthyType()) {
       return lhs.makeTruthy();
     }
-    if (rhs.hasFalsyMask()) {
+    if (rhs.isTheFalsyType()) {
       return lhs.makeFalsy();
     }
     int newMask = lhs.getMask() & rhs.getMask();
@@ -1129,10 +1139,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (isUnknown() || other.isUnknown() || other.isTop()) {
       return true;
     }
-    if (hasTruthyMask()) {
+    if (isTheTruthyType()) {
       return !other.makeTruthy().isBottom();
     }
-    if (hasFalsyMask()) {
+    if (isTheFalsyType()) {
       return !other.makeFalsy().isBottom();
     }
     if (!EnumType.areSubtypes(this, other, subSuperMap)) {
@@ -1313,7 +1323,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   public JSType getProp(QualifiedName qname) {
-    if (isBottom() || isUnknown() || hasTruthyMask()) {
+    if (isBottom() || isUnknown() || isTheTruthyType()) {
       return this.commonTypes.UNKNOWN;
     }
     Preconditions.checkState(!getObjs().isEmpty() || !getEnums().isEmpty(),
