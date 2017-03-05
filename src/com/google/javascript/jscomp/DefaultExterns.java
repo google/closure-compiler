@@ -30,34 +30,32 @@ public final class DefaultExterns {
   private DefaultExterns() {}
 
   // Core language externs. When the environment is CUSTOM, only these externs will be included.
-  private static final List<String> BUILTIN_LANG_EXTERNS = ImmutableList.of(
-      "es3.js",
-      "es5.js",
-      "es6.js",
-      "es6_collections.js");
+  private static final ImmutableList<String> BUILTIN_LANG_EXTERNS =
+      ImmutableList.of("es3.js", "es5.js", "es6.js", "es6_collections.js");
 
   // Ordered browser externs. Externs not included in this list are added last.
-  private static final List<String> BROWSER_EXTERN_DEP_ORDER = ImmutableList.of(
-      //-- browser externs --
-      "intl.js",
-      "w3c_event.js",
-      "w3c_event3.js",
-      "gecko_event.js",
-      "ie_event.js",
-      "webkit_event.js",
-      "w3c_device_sensor_event.js",
-      "w3c_dom1.js",
-      "w3c_dom2.js",
-      "w3c_dom3.js",
-      "w3c_dom4.js",
-      "gecko_dom.js",
-      "ie_dom.js",
-      "webkit_dom.js",
-      "w3c_css.js",
-      "gecko_css.js",
-      "ie_css.js",
-      "webkit_css.js",
-      "w3c_touch_event.js");
+  private static final ImmutableList<String> BROWSER_EXTERN_DEP_ORDER =
+      ImmutableList.of(
+          //-- browser externs --
+          "intl.js",
+          "w3c_event.js",
+          "w3c_event3.js",
+          "gecko_event.js",
+          "ie_event.js",
+          "webkit_event.js",
+          "w3c_device_sensor_event.js",
+          "w3c_dom1.js",
+          "w3c_dom2.js",
+          "w3c_dom3.js",
+          "w3c_dom4.js",
+          "gecko_dom.js",
+          "ie_dom.js",
+          "webkit_dom.js",
+          "w3c_css.js",
+          "gecko_css.js",
+          "ie_css.js",
+          "webkit_css.js",
+          "w3c_touch_event.js");
 
   /**
    * Filters and orders the passed externs for the specified environment.

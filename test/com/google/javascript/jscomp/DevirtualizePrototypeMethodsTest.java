@@ -96,29 +96,31 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "JSCompiler_StaticMethods_bar(o, 2);",
             "JSCompiler_StaticMethods_baz(o)");
 
-    static final List<String> EXPECTED_TYPE_CHECKING_OFF = ImmutableList.of(
-        "FUNCTION a = null",
-        "NAME JSCompiler_StaticMethods_foo$self = null",
-        "FUNCTION JSCompiler_StaticMethods_foo = null",
-        "NAME JSCompiler_StaticMethods_bar$self = null",
-        "FUNCTION JSCompiler_StaticMethods_bar = null",
-        "FUNCTION JSCompiler_StaticMethods_baz = null",
-        "NEW a = null",
-        "CALL JSCompiler_StaticMethods_foo = null",
-        "CALL JSCompiler_StaticMethods_bar = null",
-        "CALL JSCompiler_StaticMethods_baz = null");
+    static final ImmutableList<String> EXPECTED_TYPE_CHECKING_OFF =
+        ImmutableList.of(
+            "FUNCTION a = null",
+            "NAME JSCompiler_StaticMethods_foo$self = null",
+            "FUNCTION JSCompiler_StaticMethods_foo = null",
+            "NAME JSCompiler_StaticMethods_bar$self = null",
+            "FUNCTION JSCompiler_StaticMethods_bar = null",
+            "FUNCTION JSCompiler_StaticMethods_baz = null",
+            "NEW a = null",
+            "CALL JSCompiler_StaticMethods_foo = null",
+            "CALL JSCompiler_StaticMethods_bar = null",
+            "CALL JSCompiler_StaticMethods_baz = null");
 
-    static final List<String> EXPECTED_TYPE_CHECKING_ON = ImmutableList.of(
-        "FUNCTION a = function (new:a): undefined",
-        "NAME JSCompiler_StaticMethods_foo$self = a",
-        "FUNCTION JSCompiler_StaticMethods_foo = function (a): number",
-        "NAME JSCompiler_StaticMethods_bar$self = a",
-        "FUNCTION JSCompiler_StaticMethods_bar = function (a, number): number",
-        "FUNCTION JSCompiler_StaticMethods_baz = function (a): undefined",
-        "NEW a = a",
-        "CALL JSCompiler_StaticMethods_foo = number",
-        "CALL JSCompiler_StaticMethods_bar = number",
-        "CALL JSCompiler_StaticMethods_baz = undefined");
+    static final ImmutableList<String> EXPECTED_TYPE_CHECKING_ON =
+        ImmutableList.of(
+            "FUNCTION a = function (new:a): undefined",
+            "NAME JSCompiler_StaticMethods_foo$self = a",
+            "FUNCTION JSCompiler_StaticMethods_foo = function (a): number",
+            "NAME JSCompiler_StaticMethods_bar$self = a",
+            "FUNCTION JSCompiler_StaticMethods_bar = function (a, number): number",
+            "FUNCTION JSCompiler_StaticMethods_baz = function (a): undefined",
+            "NEW a = a",
+            "CALL JSCompiler_StaticMethods_foo = number",
+            "CALL JSCompiler_StaticMethods_bar = number",
+            "CALL JSCompiler_StaticMethods_baz = undefined");
 
     private RewritePrototypeMethodTestInput() {}
   }

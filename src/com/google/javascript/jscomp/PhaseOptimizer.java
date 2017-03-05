@@ -91,20 +91,22 @@ class PhaseOptimizer implements CompilerPass {
   // new pass scheduler was written. If we need to revisit this order in the
   // future, we should write new code to do it.
   @VisibleForTesting
-  static final List<String> OPTIMAL_ORDER = ImmutableList.of(
-     "inlineFunctions",
-     "inlineVariables",
-     "deadAssignmentsElimination",
-     "collapseObjectLiterals",
-     "removeUnusedVars",
-     "removeUnusedPrototypeProperties",
-     "removeUnusedClassProperties",
-     "peepholeOptimizations",
-     "minimizeExitPoints",
-     "removeUnreachableCode");
+  static final ImmutableList<String> OPTIMAL_ORDER =
+      ImmutableList.of(
+          "inlineFunctions",
+          "inlineVariables",
+          "deadAssignmentsElimination",
+          "collapseObjectLiterals",
+          "removeUnusedVars",
+          "removeUnusedPrototypeProperties",
+          "removeUnusedClassProperties",
+          "peepholeOptimizations",
+          "minimizeExitPoints",
+          "removeUnreachableCode");
 
-  static final List<String> CODE_MOTION_PASSES = ImmutableList.of(
-      Compiler.CROSS_MODULE_CODE_MOTION_NAME, Compiler.CROSS_MODULE_METHOD_MOTION_NAME);
+  static final ImmutableList<String> CODE_MOTION_PASSES =
+      ImmutableList.of(
+          Compiler.CROSS_MODULE_CODE_MOTION_NAME, Compiler.CROSS_MODULE_METHOD_MOTION_NAME);
 
   static final int MAX_LOOPS = 100;
   static final String OPTIMIZE_LOOP_ERROR =
