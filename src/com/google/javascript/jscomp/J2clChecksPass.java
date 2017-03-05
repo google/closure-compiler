@@ -21,7 +21,6 @@ import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
-import java.util.Map;
 
 /**
  * Performs correctness checks which are specific to J2CL-generated patterns.
@@ -34,10 +33,11 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
           "Reference equality may not be used with the specified type: {0}");
 
   /** Types for which using reference equality is an error. Mapped from name to filename. */
-  static final Map<String, String> REFERENCE_EQUALITY_TYPE_PATTERNS = ImmutableMap.of(
-      "java.lang.Integer", "java/lang/Integer.impl.java.js",
-      "java.lang.Float", "java/lang/Float.impl.java.js",
-      "goog.math.Long", "javascript/closure/math/long.js");
+  static final ImmutableMap<String, String> REFERENCE_EQUALITY_TYPE_PATTERNS =
+      ImmutableMap.of(
+          "java.lang.Integer", "java/lang/Integer.impl.java.js",
+          "java.lang.Float", "java/lang/Float.impl.java.js",
+          "goog.math.Long", "javascript/closure/math/long.js");
 
   private final AbstractCompiler compiler;
 
