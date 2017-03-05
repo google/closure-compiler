@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -114,8 +113,9 @@ public final class CheckConformance implements Callback, CompilerPass {
     return builder.build();
   }
 
-  private static final Set<String> EXTENDABLE_FIELDS = ImmutableSet.of(
-      "extends", "whitelist", "whitelist_regexp", "only_apply_to", "only_apply_to_regexp");
+  private static final ImmutableSet<String> EXTENDABLE_FIELDS =
+      ImmutableSet.of(
+          "extends", "whitelist", "whitelist_regexp", "only_apply_to", "only_apply_to_regexp");
 
   /**
    * Gets requirements from all configs. Merges whitelists of requirements with 'extends' equal to
