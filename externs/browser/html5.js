@@ -170,6 +170,98 @@ CanvasPathMethods.prototype.rect = function(x, y, w, h) {};
 CanvasPathMethods.prototype.arc = function(
     x, y, radius, startAngle, endAngle, opt_anticlockwise) {};
 
+/**
+ * @constructor
+ * @implements {CanvasPathMethods}
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#path2d-objects
+ */
+function Path2D() {}
+
+/**
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.closePath = function() {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.moveTo = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.lineTo = function(x, y) {};
+
+/**
+ * @param {number} cpx
+ * @param {number} cpy
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.quadraticCurveTo = function(cpx, cpy, x, y) {};
+
+/**
+ * @param {number} cp1x
+ * @param {number} cp1y
+ * @param {number} cp2x
+ * @param {number} cp2y
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.bezierCurveTo = function(
+    cp1x, cp1y, cp2x, cp2y, x, y) {};
+
+/**
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
+ * @param {number} radius
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.arcTo = function(x1, y1, x2, y2, radius) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.rect = function(x, y, w, h) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} radius
+ * @param {number} startAngle
+ * @param {number} endAngle
+ * @param {boolean=} optAnticlockwise
+ * @return {undefined}
+ * @override
+ */
+Path2D.prototype.arc = function(
+    x, y, radius, startAngle, endAngle, optAnticlockwise) {};
+
+/**
+ * @param {Path2D} path
+ * @return {undefined}
+ */
+Path2D.prototype.addPath = function(path) {}
+
 
 /**
  * @constructor
@@ -397,21 +489,24 @@ CanvasRenderingContext2D.prototype.ellipse = function(
 };
 
 /**
- * @param {string=} opt_fillRule
+ * @param {Path2D|string=} optFillRuleOrPath
+ * @param {string=} optFillRule
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.fill = function(opt_fillRule) {};
+CanvasRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRule) {};
 
 /**
+ * @param {Path2D=} optStroke
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.stroke = function() {};
+CanvasRenderingContext2D.prototype.stroke = function(optStroke) {};
 
 /**
- * @param {string=} opt_fillRule
+ * @param {Path2D|string=} optFillRuleOrPath
+ * @param {string=} optFillRule
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.clip = function(opt_fillRule) {};
+CanvasRenderingContext2D.prototype.clip = function(optFillRuleOrPath, optFillRule) {};
 
 /**
  * @param {number} x
