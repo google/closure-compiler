@@ -436,7 +436,7 @@ var DoneFunc;
 
 /** @type {DoneFunc} */
 var doneFuncInst_;
-/** @type {function()} */
+/** @type {function(?=)} */
 doneFuncInst_.fail;
 
 /**
