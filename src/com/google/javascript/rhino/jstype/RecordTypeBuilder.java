@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.javascript.rhino.Node;
+import java.util.HashMap;
 
 /**
  * A builder for record types.
@@ -50,8 +51,7 @@ public class RecordTypeBuilder {
   private boolean isEmpty = true;
   private boolean isDeclared = true;
   private final JSTypeRegistry registry;
-  private final ImmutableSortedMap.Builder<String, RecordProperty> properties =
-      ImmutableSortedMap.naturalOrder();
+  private final HashMap<String, RecordProperty> properties = new HashMap<>();
 
   public RecordTypeBuilder(JSTypeRegistry registry) {
     this.registry = registry;
@@ -87,8 +87,9 @@ public class RecordTypeBuilder {
     if (isEmpty) {
        return registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
     }
-
-    return new RecordType(registry, properties.build(), isDeclared);
+    ImmutableSortedMap.Builder<String, RecordProperty> m = ImmutableSortedMap.naturalOrder();
+    m.putAll(this.properties);
+    return new RecordType(registry, m.build(), isDeclared);
   }
 
   static class RecordProperty {
@@ -106,6 +107,11 @@ public class RecordTypeBuilder {
 
     public Node getPropertyNode() {
       return propertyNode;
+    }
+
+    @Override
+    public String toString() {
+      return "RecordProperty{type: " + this.type + ", node: " + this.propertyNode + "}";
     }
   }
 }
