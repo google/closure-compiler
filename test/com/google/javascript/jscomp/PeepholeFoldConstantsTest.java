@@ -1330,7 +1330,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("Object.defineProperties(a, {anything:1})");
   }
 
-  private static final List<String> LITERAL_OPERANDS =
+  private static final ImmutableList<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",
           "undefined",
