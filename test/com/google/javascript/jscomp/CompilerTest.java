@@ -242,8 +242,8 @@ public final class CompilerTest extends TestCase {
     return compiler;
   }
 
-  private static final List<SourceFile> EMPTY_EXTERNS = ImmutableList.of(
-      SourceFile.fromCode("externs", ""));
+  private static final ImmutableList<SourceFile> EMPTY_EXTERNS =
+      ImmutableList.of(SourceFile.fromCode("externs", ""));
 
   /**
    * Ensure that the printInputDelimiter option adds a "// Input #" comment
