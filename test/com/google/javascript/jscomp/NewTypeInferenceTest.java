@@ -19590,4 +19590,20 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function x(var_args) {}",
         "x(true, false);"));
   }
+
+  public void testExtendWindowDontCrash() {
+    typeCheck(LINE_JOINER.join(
+        "/** @type {number} */",
+        "var globalvar;",
+        "/**",
+        " * @constructor",
+        " * @extends {Window}",
+        " */",
+        "function FakeWindow() {}",
+        "function f(/** !Window */ w) {",
+        "  return w.globalvar;",
+        "}",
+        "f(new FakeWindow);"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+  }
 }

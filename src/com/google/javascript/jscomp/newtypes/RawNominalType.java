@@ -682,7 +682,7 @@ public final class RawNominalType extends Namespace {
 
   @Override
   protected JSType computeJSType() {
-    Preconditions.checkState(this.isFinalized);
+    Preconditions.checkState(this.isFinalized, "Unexpected not-finalized type: %s", this);
     Preconditions.checkState(this.namespaceType == null);
     return JSType.fromObjectType(ObjectType.makeObjectType(
         this.commonTypes, this.commonTypes.getFunctionType(), null, this.ctorFn,

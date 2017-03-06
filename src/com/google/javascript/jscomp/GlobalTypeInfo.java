@@ -472,10 +472,14 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     }
     JSType globalThisType;
     if (win != null) {
-      // Copy properties from window to Window.prototype, because in rare cases
+      // Copy properties from window to Window.prototype, because sometimes
       // people pass window around rather than using it directly.
+      // Copying the properties is correct only when there is a single object
+      // of type Window in the program. But in very rare cases, people subclass Window.
+      // Then, win is finalized here and we don't copy the properties.
+      // Window has been subclassed iff it is already finalized here.
       Namespace winNs = this.globalScope.getNamespace(WINDOW_INSTANCE);
-      if (winNs != null) {
+      if (winNs != null && !win.isFinalized()) {
         winNs.copyWindowProperties(this.commonTypes, win);
       }
       checkAndFinalizeNominalType(win);
