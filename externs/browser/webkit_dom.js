@@ -96,8 +96,7 @@ ScriptProfile.prototype.head;
 
 /**
  * @constructor
- * @see http://trac.webkit.org/browser/trunk/Source/WebCore/page/Console.idl
- * @see http://trac.webkit.org/browser/trunk/Source/WebCore/page/Console.cpp
+ * @see https://console.spec.whatwg.org/
  */
 function Console() {};
 
