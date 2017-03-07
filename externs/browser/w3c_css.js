@@ -418,6 +418,7 @@ function CSSUnknownRule() {}
  * @extends {CSSProperties}
  * @implements {IObject<(string|number), string>}
  * @implements {IArrayLike<string>}
+ * @implements {Iterable<string>}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration
  */
 function CSSStyleDeclaration() {}
