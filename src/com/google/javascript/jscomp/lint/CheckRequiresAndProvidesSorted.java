@@ -40,11 +40,13 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
     implements HotSwapCompilerPass {
   public static final DiagnosticType REQUIRES_NOT_SORTED =
       DiagnosticType.warning("JSC_REQUIRES_NOT_SORTED",
-      "goog.require() statements are not sorted. The correct order is:\n\n{0}\n");
+      "goog.require() statements are not sorted."
+          + " The correct order is:\n\n{0}\n");
 
   public static final DiagnosticType PROVIDES_NOT_SORTED =
       DiagnosticType.warning("JSC_PROVIDES_NOT_SORTED",
-          "goog.provide() statements are not sorted. The correct order is:\n\n{0}\n");
+          "goog.provide() statements are not sorted."
+              + " The correct order is:\n\n{0}\n");
 
   public static final DiagnosticType PROVIDES_AFTER_REQUIRES =
       DiagnosticType.warning(
