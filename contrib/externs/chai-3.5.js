@@ -243,6 +243,14 @@ ExpectChain.prototype.decrease = function(value, name, opt_message) {};
 var assert = {};
 
 /**
+ * @param {*} actual
+ * @param {*} expected
+ * @param {string=} opt_message
+ * @param {string=} opt_operator
+ */
+assert.fail = function(actual, expected, opt_message, opt_operator) {};
+
+/**
  * @param {*} object
  * @param {string=} opt_message
  */
