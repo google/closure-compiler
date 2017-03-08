@@ -35,19 +35,19 @@ function EventTarget() {}
  *
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
- * @param {boolean} useCapture
+ * @param {boolean=} opt_useCapture
  * @return {undefined}
  */
-EventTarget.prototype.addEventListener = function(type, listener, useCapture)
+EventTarget.prototype.addEventListener = function(type, listener, opt_useCapture)
     {};
 
 /**
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
- * @param {boolean} useCapture
+ * @param {boolean=} opt_useCapture
  * @return {undefined}
  */
-EventTarget.prototype.removeEventListener = function(type, listener, useCapture)
+EventTarget.prototype.removeEventListener = function(type, listener, opt_useCapture)
     {};
 
 /**
