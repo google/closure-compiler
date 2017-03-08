@@ -26,6 +26,7 @@
 
 /**
  * @interface
+ * @see https://dom.spec.whatwg.org/#interface-eventtarget
  */
 function EventTarget() {}
 
@@ -35,24 +36,27 @@ function EventTarget() {}
  *
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
- * @param {boolean} useCapture
+ * @param {(boolean|!AddEventListenerOptions)=} opt_options
  * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
  */
-EventTarget.prototype.addEventListener = function(type, listener, useCapture)
+EventTarget.prototype.addEventListener = function(type, listener, opt_options)
     {};
 
 /**
  * @param {string} type
  * @param {EventListener|function(!Event):(boolean|undefined)} listener
- * @param {boolean} useCapture
+ * @param {(boolean|!EventListenerOptions)=} opt_options
  * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-eventtarget-removeeventlistener
  */
-EventTarget.prototype.removeEventListener = function(type, listener, useCapture)
+EventTarget.prototype.removeEventListener = function(type, listener, opt_options)
     {};
 
 /**
  * @param {!Event} evt
  * @return {boolean}
+ * @see https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
  */
 EventTarget.prototype.dispatchEvent = function(evt) {};
 
