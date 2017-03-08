@@ -2989,7 +2989,7 @@ function Image(opt_width, opt_height) {}
  * Dataset collection.
  * This is really a DOMStringMap but it behaves close enough to an object to
  * pass as an object.
- * @type {Object}
+ * @type {Object<string, string>}
  * @const
  */
 HTMLElement.prototype.dataset;
