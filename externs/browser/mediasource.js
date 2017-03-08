@@ -28,20 +28,17 @@
 function MediaSource() {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
-MediaSource.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+MediaSource.prototype.addEventListener = function(type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 MediaSource.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override
@@ -106,20 +103,17 @@ MediaSource.isTypeSupported = function(type) {};
 function SourceBuffer() {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
-SourceBuffer.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+SourceBuffer.prototype.addEventListener = function(type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 SourceBuffer.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override

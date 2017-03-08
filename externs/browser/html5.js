@@ -977,20 +977,18 @@ Document.prototype.head;
 function DOMApplicationCache() {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 DOMApplicationCache.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 DOMApplicationCache.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override
@@ -1130,20 +1128,18 @@ function importScripts(var_args) {}
 function WebWorker() {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 WebWorker.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 WebWorker.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override
@@ -1185,20 +1181,18 @@ WebWorker.prototype.onerror;
 function Worker(opt_arg0) {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 Worker.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 Worker.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override
@@ -1252,20 +1246,18 @@ Worker.prototype.onerror;
 function SharedWorker(scriptURL, opt_name) {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 SharedWorker.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 SharedWorker.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override
@@ -1930,7 +1922,7 @@ TextTrack.prototype.mode;
  * @override
  * @return {undefined}
  */
-TextTrack.prototype.addEventListener = function(type, listener, useCapture) {};
+TextTrack.prototype.addEventListener = function(type, listener, options) {};
 
 /**
  * @override
@@ -1942,8 +1934,7 @@ TextTrack.prototype.dispatchEvent = function(evt) {};
  * @override
  * @return {undefined}
  */
-TextTrack.prototype.removeEventListener = function(type, listener, useCapture)
-    {};
+TextTrack.prototype.removeEventListener = function(type, listener, options) {};
 
 
 
@@ -2142,20 +2133,18 @@ MessageChannel.prototype.port2;
 function MessagePort() {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 MessagePort.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 MessagePort.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override
@@ -2293,14 +2282,14 @@ BroadcastChannel.prototype.close;
 
 /** @override */
 BroadcastChannel.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, options) {};
 
 /** @override */
 BroadcastChannel.prototype.dispatchEvent = function(evt) {};
 
 /** @override */
 BroadcastChannel.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, options) {};
 
 /**
  * An EventHandler property that specifies the function to execute when a
@@ -2635,20 +2624,18 @@ WebSocket.CLOSING = 2;
 WebSocket.CLOSED = 3;
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 WebSocket.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 WebSocket.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override
@@ -2941,20 +2928,18 @@ XMLHttpRequest.prototype.mozResponseArrayBuffer;
 function XMLHttpRequestEventTarget() {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 XMLHttpRequestEventTarget.prototype.addEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
  * @return {undefined}
  */
 XMLHttpRequestEventTarget.prototype.removeEventListener = function(
-    type, listener, opt_useCapture) {};
+    type, listener, options) {};
 
 /**
  * @override
